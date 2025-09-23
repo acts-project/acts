@@ -26,12 +26,12 @@
 namespace ActsExamples {
 
 /// Define the algebra type
-using DetrayAlgebraType = typename Acts::DetrayHostDetector::algebra_type;
+using DetrayAlgebraType =
+    typename ActsPlugins::DetrayHostDetector::algebra_type;
 
 /// Type that holds the intersection information
-using DetrayIntersection =
-    detray::intersection2D<typename Acts::DetrayHostDetector::surface_type,
-                           DetrayAlgebraType>;
+using DetrayIntersection = detray::intersection2D<
+    typename ActsPlugins::DetrayHostDetector::surface_type, DetrayAlgebraType>;
 
 /// Inspector that records all encountered surfaces
 using DetrayObjectTracer =
@@ -99,7 +99,7 @@ class DetrayPropagator : public PropagatorInterface {
 
       // Navigation with inspection
       using DetrayNavigator =
-          detray::navigator<Acts::DetrayHostDetector,
+          detray::navigator<ActsPlugins::DetrayHostDetector,
                             detray::navigation::default_cache_size,
                             DetrayInspector>;
 
@@ -157,7 +157,7 @@ class DetrayPropagator : public PropagatorInterface {
     } else {
       // Navigation with inspection
       using DetrayNavigator =
-          detray::navigator<Acts::DetrayHostDetector,
+          detray::navigator<ActsPlugins::DetrayHostDetector,
                             detray::navigation::default_cache_size>;
 
       // Propagator with empty actor chain (for the moment)

@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -20,9 +20,11 @@ namespace Acts {
 
 class Layer;
 
-namespace Svg {
+};
 
-using ProtoVolume = actsvg::proto::volume<std::vector<Vector3>>;
+namespace ActsPlugins::Svg {
+
+using ProtoVolume = actsvg::proto::volume<std::vector<Acts::Vector3>>;
 
 static std::array<double, 2> noLimitZ = {std::numeric_limits<double>::lowest(),
                                          std::numeric_limits<double>::max()};
@@ -44,7 +46,7 @@ struct Options {
   /// The name for the conversion object
   std::string name = "";
   /// The style of the surface objects
-  GeometryHierarchyMap<Style> surfaceStyles;
+  Acts::GeometryHierarchyMap<Style> surfaceStyles;
   /// The z limit for projections
   std::array<double, 2> zRange = noLimitZ;
   /// The phi limit for projections
@@ -65,12 +67,10 @@ struct Options {
 /// @param cOptions the conversion objects
 ///
 /// @return a vector of svg objects
-std::vector<actsvg::svg::object> convert(const GeometryContext& gctx,
-                                         const Layer& layer,
+std::vector<actsvg::svg::object> convert(const Acts::GeometryContext& gctx,
+                                         const Acts::Layer& layer,
                                          const Options& cOptions);
 
 }  // namespace LayerConverter
 
-}  // namespace Svg
-
-}  // namespace Acts
+}  // namespace ActsPlugins::Svg

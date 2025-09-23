@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/meta.hpp>
 
 #include <tuple>
@@ -22,12 +22,14 @@ namespace Acts {
 
 class SurfaceArray;
 
-namespace Svg::SurfaceArrayConverter {
+}  // namespace Acts
+
+namespace ActsPlugins::Svg::SurfaceArrayConverter {
 
 /// Nested options struct
 struct Options {
   /// Hierarchy map of styles
-  GeometryHierarchyMap<Style> surfaceStyles;
+  Acts::GeometryHierarchyMap<Style> surfaceStyles;
   /// The Grid converter options
   GridConverter::Options gridOptions;
 };
@@ -44,10 +46,8 @@ struct Options {
 ///       view function of the indexed surface grid
 ///
 /// @return a collection of proto surface object and a grid, and associations
-ProtoIndexedSurfaceGrid convert(const GeometryContext& gctx,
-                                const SurfaceArray& surfaceArray,
+ProtoIndexedSurfaceGrid convert(const Acts::GeometryContext& gctx,
+                                const Acts::SurfaceArray& surfaceArray,
                                 const Options& cOptions = Options());
 
-}  // namespace Svg::SurfaceArrayConverter
-
-}  // namespace Acts
+}  // namespace ActsPlugins::Svg::SurfaceArrayConverter

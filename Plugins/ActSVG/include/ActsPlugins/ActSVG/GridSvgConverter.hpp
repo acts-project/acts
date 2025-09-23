@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include <actsvg/core.hpp>
@@ -23,15 +23,16 @@
 namespace Acts {
 
 class Surface;
+}  // namespace Acts
 
-namespace Svg {
+namespace ActsPlugins::Svg {
 
 using ProtoGrid = actsvg::proto::grid;
 
 namespace GridConverter {
 
 // An optional range and binning value
-using AxisBound = std::tuple<std::array<double, 2u>, AxisDirection>;
+using AxisBound = std::tuple<std::array<double, 2u>, Acts::AxisDirection>;
 
 /// Nested Options struct
 struct Options {
@@ -55,7 +56,7 @@ struct Options {
 /// @return an ACTSVG proto grid for displaying
 template <typename grid_type>
 ProtoGrid convert(const grid_type& grid,
-                  const std::array<AxisDirection, grid_type::DIM>& aDirs,
+                  const std::array<Acts::AxisDirection, grid_type::DIM>& aDirs,
                   const GridConverter::Options& cOptions) {
   // The return object
   ProtoGrid pGrid;
@@ -70,15 +71,15 @@ ProtoGrid convert(const grid_type& grid,
 
   // 1D case (more to be filled in later)
   if constexpr (grid_type::DIM == 1u) {
-    if (aDirs[0u] == AxisDirection::AxisPhi &&
-        axes[0]->getBoundaryType() == AxisBoundaryType::Closed) {
+    if (aDirs[0u] == Acts::AxisDirection::AxisPhi &&
+        axes[0]->getBoundaryType() == Acts::AxisBoundaryType::Closed) {
       // swap     needed
       edges1 = axes[0]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_r_phi;
     }
     if (cOptions.optionalBound.has_value()) {
       auto [boundRange, boundValue] = cOptions.optionalBound.value();
-      if (boundValue == AxisDirection::AxisR) {
+      if (boundValue == Acts::AxisDirection::AxisR) {
         // good - no swap needed
         edges0 = {boundRange[0u], boundRange[1u]};
       }
@@ -89,26 +90,26 @@ ProtoGrid convert(const grid_type& grid,
     // Assign
     edges0 = axes[0]->getBinEdges();
     edges1 = axes[1]->getBinEdges();
-    if (aDirs[0] == AxisDirection::AxisPhi &&
-        aDirs[1] == AxisDirection::AxisZ) {
+    if (aDirs[0] == Acts::AxisDirection::AxisPhi &&
+        aDirs[1] == Acts::AxisDirection::AxisZ) {
       //  swap needed
       std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (aDirs[0] == AxisDirection::AxisPhi &&
-               aDirs[1] == AxisDirection::AxisR) {
+    } else if (aDirs[0] == Acts::AxisDirection::AxisPhi &&
+               aDirs[1] == Acts::AxisDirection::AxisR) {
       // swap needed
       std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_r_phi;
-    } else if (aDirs[0] == AxisDirection::AxisZ &&
-               aDirs[1] == AxisDirection::AxisPhi) {
+    } else if (aDirs[0] == Acts::AxisDirection::AxisZ &&
+               aDirs[1] == Acts::AxisDirection::AxisPhi) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (aDirs[0] == AxisDirection::AxisR &&
-               aDirs[1] == AxisDirection::AxisPhi) {
+    } else if (aDirs[0] == Acts::AxisDirection::AxisR &&
+               aDirs[1] == Acts::AxisDirection::AxisPhi) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_r_phi;
-    } else if (aDirs[0] == AxisDirection::AxisX &&
-               aDirs[1] == AxisDirection::AxisY) {
+    } else if (aDirs[0] == Acts::AxisDirection::AxisX &&
+               aDirs[1] == Acts::AxisDirection::AxisY) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_x_y;
     }
@@ -126,5 +127,4 @@ ProtoGrid convert(const grid_type& grid,
 }
 
 }  // namespace GridConverter
-}  // namespace Svg
-}  // namespace Acts
+}  // namespace ActsPlugins::Svg

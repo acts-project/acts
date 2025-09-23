@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
-#include "Acts/Plugins/Detray/DetrayConverter.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Traccc/DetrayPropagator.hpp"
 #include "ActsExamples/Traccc/DetrayStore.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 
 #include <detray/propagator/line_stepper.hpp>
@@ -23,6 +23,7 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 using namespace ActsExamples;
+using namespace ActsPlugins;
 
 namespace ActsPython {
 

@@ -10,17 +10,18 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
 namespace Acts {
 
 class Surface;
+}  // namespace Acts
 
-namespace Svg {
+namespace ActsPlugins::Svg {
 
-using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
+using ProtoSurface = actsvg::proto::surface<std::vector<Acts::Vector3>>;
 
 namespace SurfaceConverter {
 
@@ -39,14 +40,14 @@ struct Options {
 /// @param cOption is the conversion options struct
 ///
 /// @return a proto surface object
-ProtoSurface convert(const GeometryContext& gctx, const Surface& surface,
+ProtoSurface convert(const Acts::GeometryContext& gctx, const Acts::Surface& surface,
                      const SurfaceConverter::Options& cOptions);
 
 }  // namespace SurfaceConverter
 
 namespace View {
 
-/// Convert into an acts::svg::object with an x-y view
+/// Convert into an ActsPlugins::Svg::object with an x-y view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -58,7 +59,7 @@ static inline actsvg::svg::object xy(const ProtoSurface& pSurface,
   return actsvg::display::surface(identification, pSurface, xyView);
 }
 
-/// Convert into an acts::svg::object with an z-r view
+/// Convert into an ActsPlugins::Svg::object with an z-r view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -70,7 +71,7 @@ static inline actsvg::svg::object zr(const ProtoSurface& pSurface,
   return actsvg::display::surface(identification, pSurface, zrView);
 }
 
-/// Convert into an acts::svg::object with an z-phi view
+/// Convert into an ActsPlugins::Svg::object with an z-phi view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -82,7 +83,7 @@ static inline actsvg::svg::object zphi(const ProtoSurface& pSurface,
   return actsvg::display::surface(identification, pSurface, zphiView);
 }
 
-/// Convert into an acts::svg::object with an z-rphi view
+/// Convert into an ActsPlugins::Svg::object with an z-rphi view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -101,7 +102,7 @@ static inline actsvg::svg::object zrphi(const ProtoSurface& pSurface,
 
 namespace Sheet {
 
-/// Convert into an acts::svg::object with an XY sheet
+/// Convert into an ActsPlugins::Svg::object with an XY sheet
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -114,6 +115,4 @@ static inline actsvg::svg::object xy(const ProtoSurface& pSurface,
 
 }  // namespace Sheet
 
-}  // namespace Svg
-
-}  // namespace Acts
+}  // namespace ActsPlugins::Svg

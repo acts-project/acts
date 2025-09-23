@@ -17,7 +17,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts::Svg {
+namespace ActsPlugins::Svg {
 
 /// @brief Style struct
 struct Style {
@@ -217,4 +217,4 @@ inline static void toFile(const std::vector<actsvg::svg::object>& objects,
   fout.close();
 }
 
-}  // namespace Acts::Svg
+}  // namespace ActsPlugins::Svg

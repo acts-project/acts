@@ -9,8 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/DiamondBounds.hpp"
@@ -19,6 +17,8 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 
 #include <fstream>
 #include <numbers>
@@ -31,12 +31,13 @@ namespace {
 ///
 /// @param surface
 /// @param identification
-void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
+void runPlanarTests(const Acts::Surface& surface,
+                    const ActsPlugins::Svg::Style& style,
                     const std::string& identification) {
   // Default Geometry context
   Acts::GeometryContext geoCtx;
 
-  using SurfaceOptions = Acts::Svg::SurfaceConverter::Options;
+  using SurfaceOptions = ActsPlugins::Svg::SurfaceConverter::Options;
 
   SurfaceOptions sOptions;
   sOptions.style = style;
@@ -44,31 +45,33 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
 
   // Svg proto object & actual object
   auto svgTemplate =
-      Acts::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
+      ActsPlugins::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
   auto xyTemplate =
-      Acts::Svg::View::xy(svgTemplate, identification + "_template");
-  Acts::Svg::toFile({xyTemplate}, xyTemplate._id + ".svg");
+      ActsPlugins::Svg::View::xy(svgTemplate, identification + "_template");
+  ActsPlugins::Svg::toFile({xyTemplate}, xyTemplate._id + ".svg");
   // Positioned
   sOptions.templateSurface = false;
   auto svgObject =
-      Acts::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
-  auto xyObject = Acts::Svg::View::xy(svgObject, identification);
-  auto xyAxes = Acts::Svg::axesXY(static_cast<double>(xyObject._x_range[0]),
-                                  static_cast<double>(xyObject._x_range[1]),
-                                  static_cast<double>(xyObject._y_range[0]),
-                                  static_cast<double>(xyObject._y_range[1]));
+      ActsPlugins::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
+  auto xyObject = ActsPlugins::Svg::View::xy(svgObject, identification);
+  auto xyAxes =
+      ActsPlugins::Svg::axesXY(static_cast<double>(xyObject._x_range[0]),
+                               static_cast<double>(xyObject._x_range[1]),
+                               static_cast<double>(xyObject._y_range[0]),
+                               static_cast<double>(xyObject._y_range[1]));
 
-  Acts::Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
+  ActsPlugins::Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
   // As sheet
-  auto svgSheet = Acts::Svg::Sheet::xy(svgTemplate, identification + "_sheet");
-  Acts::Svg::toFile({svgSheet}, svgSheet._id + ".svg");
+  auto svgSheet =
+      ActsPlugins::Svg::Sheet::xy(svgTemplate, identification + "_sheet");
+  ActsPlugins::Svg::toFile({svgSheet}, svgSheet._id + ".svg");
 }
 
 }  // namespace
 
 BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   // Planar style
-  Acts::Svg::Style planarStyle;
+  ActsPlugins::Svg::Style planarStyle;
   planarStyle.fillColor = {51, 153, 255};
   planarStyle.fillOpacity = 0.75;
   planarStyle.highlightColor = {255, 153, 51};
@@ -114,10 +117,10 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   actsvg::proto::surface<std::vector<Acts::Vector3>> reference;
   reference._vertices =
       trapeozidPlaneTransformed->polyhedronRepresentation(geoCtx, 1u).vertices;
-  auto referenceTrapezoid = Acts::Svg::View::xy(reference, "trapezoid");
-  auto referenceAxes = Acts::Svg::axesXY(-200., 200., -200., 200);
-  Acts::Svg::toFile({referenceTrapezoid, referenceAxes},
-                    "trapezoid_reference.svg");
+  auto referenceTrapezoid = ActsPlugins::Svg::View::xy(reference, "trapezoid");
+  auto referenceAxes = ActsPlugins::Svg::axesXY(-200., 200., -200., 200);
+  ActsPlugins::Svg::toFile({referenceTrapezoid, referenceAxes},
+                           "trapezoid_reference.svg");
 
   // Let's create one with a flipped z-axis
   Acts::Vector3 flocalZ(0., 0., -1.);
@@ -139,9 +142,9 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
       ftrapeozidPlaneTransformed->polyhedronRepresentation(geoCtx, 1u).vertices;
 
   auto freferenceTrapezoid =
-      Acts::Svg::View::xy(freference, "flipped_trapezoid");
-  Acts::Svg::toFile({freferenceTrapezoid, referenceAxes},
-                    "flipped_trapezoid_reference.svg");
+      ActsPlugins::Svg::View::xy(freference, "flipped_trapezoid");
+  ActsPlugins::Svg::toFile({freferenceTrapezoid, referenceAxes},
+                           "flipped_trapezoid_reference.svg");
 
   // Diamond
   auto diamondBounds =
@@ -163,7 +166,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
 
 BOOST_AUTO_TEST_CASE(DiscSurfaces) {
   // Planar style
-  Acts::Svg::Style discStyle;
+  ActsPlugins::Svg::Style discStyle;
   discStyle.fillColor = {0, 204, 153};
   discStyle.fillOpacity = 0.75;
   discStyle.highlightColor = {153, 204, 0};

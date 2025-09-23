@@ -22,7 +22,7 @@ namespace Acts {
 class ISurfaceMaterial;
 class Surface;
 
-} // namespace Acts
+}  // namespace Acts
 
 namespace ActsPlugins {
 /// @class Geant4DetectorElement
@@ -46,7 +46,8 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Acts::Transform3& transform(const Acts::GeometryContext& gctx) const override;
+  const Acts::Transform3& transform(
+      const Acts::GeometryContext& gctx) const override;
 
   /// Return surface associated with this detector element
   const Acts::Surface& surface() const override;
@@ -71,4 +72,4 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
   double m_thickness{0.};
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

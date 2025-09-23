@@ -6,7 +6,7 @@ acts_add_library(
     src/DetrayGeometryConverter.cpp
     src/DetrayMaterialConverter.cpp
     src/DetraySurfaceGridsConverter.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 add_dependencies(ActsPluginDetray detray::core covfie::core vecmem::core)

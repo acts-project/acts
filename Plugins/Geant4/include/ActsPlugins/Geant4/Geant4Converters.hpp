@@ -130,7 +130,8 @@ struct Geant4ShapeConverter {
   /// @param g4Box a Geant4 box shape
   ///
   /// @return an ACTS Rectangle bounds shape,  axis orientation, and thickness
-  std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>, double>
+  std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>,
+             double>
   rectangleBounds(const G4Box& g4Box);
 
   /// @brief Convert to trapezoid bounds - from Trd
@@ -138,7 +139,8 @@ struct Geant4ShapeConverter {
   /// @param g4Trd a Geant4 trapezoid shape
   ///
   /// @return an ACTS Trapezoid bounds object, axis orientation, and thickness
-  std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>, double>
+  std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>,
+             double>
   trapezoidBounds(const G4Trd& g4Trd);
 
   /// @brief Convert to trapezoid bounds - from Trap
@@ -146,7 +148,8 @@ struct Geant4ShapeConverter {
   /// @param g4Trap a Geant4 trapezoid shape
   ///
   /// @return an ACTS Trapezoid bounds object, axis orientation, and thickness
-  std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>, double>
+  std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>,
+             double>
   trapezoidBounds(const G4Trap& g4Trap);
 
   /// @brief Convert to general solid into a planar shape
@@ -172,9 +175,9 @@ struct Geant4PhysicalVolumeConverter {
   ///
   /// @return a shared surface object
   std::shared_ptr<Acts::Surface> surface(const G4VPhysicalVolume& g4PhysVol,
-                                   const Acts::Transform3& toGlobal,
-                                   bool convertMaterial = false,
-                                   double compressed = 0.);
+                                         const Acts::Transform3& toGlobal,
+                                         bool convertMaterial = false,
+                                         double compressed = 0.);
 };
 
 struct Geant4MaterialConverter {
@@ -196,7 +199,8 @@ struct Geant4VolumeConverter {
   /// @param g4Tubs a Geant4 tube shape
   ///
   /// @return an Acts Cylinder bounds object
-  std::shared_ptr<Acts::CylinderVolumeBounds> cylinderBounds(const G4Tubs& g4Tubs);
+  std::shared_ptr<Acts::CylinderVolumeBounds> cylinderBounds(
+      const G4Tubs& g4Tubs);
 };
 
 }  // namespace ActsPlugins

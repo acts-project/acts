@@ -35,9 +35,10 @@ namespace ActsPlugins {
 /// @tparam kDim The number of dimensions for the KDTree
 /// @tparam bSize The maximum number of surfaces per KDTree leaf
 /// @tparam reference_generator The reference generator for the KDTree
-template <std::size_t kDim = 2u, std::size_t bSize = 100u,
-          typename reference_generator =
-              Acts::Experimental::detail::PolyhedronReferenceGenerator<1u, false>>
+template <
+    std::size_t kDim = 2u, std::size_t bSize = 100u,
+    typename reference_generator =
+        Acts::Experimental::detail::PolyhedronReferenceGenerator<1u, false>>
 class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
  public:
   /// Nested configuration struct
@@ -159,4 +160,4 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   G4Transform3D m_g4ToWorld;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace ActsPlugins

@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/PortalSvgConverter.hpp"
 
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
+
+using namespace Acts;
 
 namespace {
 
@@ -22,12 +24,12 @@ namespace {
 /// @param dVolume the volume this link is directing to
 ///
 /// @return a protoLink
-Acts::Svg::ProtoLink makeProtoLink(
-    const Acts::Svg::PortalConverter::Options& portalOptions,
-    const Acts::Vector3& position, const Acts::Vector3& direction,
-    const Acts::Experimental::DetectorVolume* dVolume) {
-  Acts::Svg::ProtoLink pLink;
-  Acts::Vector3 end3 = position + portalOptions.linkLength * direction;
+ActsPlugins::Svg::ProtoLink makeProtoLink(
+    const ActsPlugins::Svg::PortalConverter::Options& portalOptions,
+    const Vector3& position, const Vector3& direction,
+    const Experimental::DetectorVolume* dVolume) {
+  ActsPlugins::Svg::ProtoLink pLink;
+  Vector3 end3 = position + portalOptions.linkLength * direction;
   pLink._start = {position.x(), position.y(), position.z()};
   pLink._end = {end3.x(), end3.y(), end3.z()};
   auto linkIndexCandidate = portalOptions.volumeIndices.find(dVolume);
@@ -47,52 +49,52 @@ Acts::Svg::ProtoLink makeProtoLink(
 /// @param sign with respect to the normal vector
 ///
 /// @return it will return the proto links
-std::vector<Acts::Svg::ProtoLink> convertMultiLink(
-    const Acts::GeometryContext& gctx,
-    const Acts::Experimental::BoundVolumesGrid1Navigation& multiLink,
-    const Acts::Surface& surface, const Acts::Vector3& refPosition,
-    const Acts::Svg::PortalConverter::Options& portalOptions,
+std::vector<ActsPlugins::Svg::ProtoLink> convertMultiLink(
+    const GeometryContext& gctx,
+    const Experimental::BoundVolumesGrid1Navigation& multiLink,
+    const Surface& surface, const Vector3& refPosition,
+    const ActsPlugins::Svg::PortalConverter::Options& portalOptions,
     int sign) noexcept(false) {
-  const auto* regSurface = dynamic_cast<const Acts::RegularSurface*>(&surface);
+  const auto* regSurface = dynamic_cast<const RegularSurface*>(&surface);
   if (regSurface == nullptr) {
     throw std::invalid_argument(
         "convertMultiLink: surface is not RegularSurface.");
   }
   // The return links
-  std::vector<Acts::Svg::ProtoLink> pLinks;
+  std::vector<ActsPlugins::Svg::ProtoLink> pLinks;
   const auto& volumes = multiLink.indexedUpdater.extractor.dVolumes;
   const auto& casts = multiLink.indexedUpdater.casts;
 
   // Generate the proto-links of the multi-link
-  for (auto [il, v] : Acts::enumerate(volumes)) {
-    Acts::Vector3 position = refPosition;
+  for (auto [il, v] : enumerate(volumes)) {
+    Vector3 position = refPosition;
     if constexpr (decltype(multiLink.indexedUpdater)::grid_type::DIM == 1u) {
       // Get the binning value
-      Acts::AxisDirection bValue = casts[0u];
+      AxisDirection bValue = casts[0u];
       // Get the boundaries - take care, they are in local coordinates
       const auto& boundaries =
           multiLink.indexedUpdater.grid.axes()[0u]->getBinEdges();
 
       double refC = 0.5 * (boundaries[il + 1u] + boundaries[il]);
 
-      if (bValue == Acts::AxisDirection::AxisR) {
-        double phi = Acts::VectorHelpers::phi(refPosition);
-        position = Acts::Vector3(refC * std::cos(phi), refC * std::sin(phi),
-                                 refPosition.z());
-      } else if (bValue == Acts::AxisDirection::AxisZ) {
+      if (bValue == AxisDirection::AxisR) {
+        double phi = VectorHelpers::phi(refPosition);
+        position = Vector3(refC * std::cos(phi), refC * std::sin(phi),
+                           refPosition.z());
+      } else if (bValue == AxisDirection::AxisZ) {
         // correct to global
         refC += surface.transform(gctx).translation().z();
         position[2] = refC;
-      } else if (bValue == Acts::AxisDirection::AxisPhi) {
-        double r = Acts::VectorHelpers::perp(refPosition);
-        position = Acts::Vector3(r * std::cos(refC), r * std::sin(refC),
-                                 refPosition.z());
+      } else if (bValue == AxisDirection::AxisPhi) {
+        double r = VectorHelpers::perp(refPosition);
+        position =
+            Vector3(r * std::cos(refC), r * std::sin(refC), refPosition.z());
       } else {
         throw std::invalid_argument("convertMultiLink: incorrect binning.");
       }
-      Acts::Vector3 direction = regSurface->normal(gctx, position);
-      pLinks.push_back(makeProtoLink(portalOptions, position,
-                                     Acts::Vector3(sign * direction), v));
+      Vector3 direction = regSurface->normal(gctx, position);
+      pLinks.push_back(
+          makeProtoLink(portalOptions, position, Vector3(sign * direction), v));
     }
   }
   return pLinks;
@@ -100,7 +102,7 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
 
 }  // namespace
 
-Acts::Svg::ProtoPortal Acts::Svg::PortalConverter::convert(
+ActsPlugins::Svg::ProtoPortal ActsPlugins::Svg::PortalConverter::convert(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     const PortalConverter::Options& portalOptions) {
   ProtoPortal pPortal;

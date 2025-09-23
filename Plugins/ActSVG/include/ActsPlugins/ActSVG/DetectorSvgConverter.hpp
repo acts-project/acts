@@ -10,8 +10,8 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/DetectorVolumeSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -21,9 +21,11 @@ namespace Experimental {
 class Detector;
 }
 
-namespace Svg {
+}  // namespace Acts
 
-using ProtoDetector = actsvg::proto::detector<std::vector<Vector3>>;
+namespace ActsPlugins::Svg {
+
+using ProtoDetector = actsvg::proto::detector<std::vector<Acts::Vector3>>;
 
 namespace DetectorConverter {
 
@@ -40,15 +42,15 @@ struct Options {
 /// @param detectorOptions the conversion objects
 ///
 /// @return a vector of svg objects
-ProtoDetector convert(const GeometryContext& gctx,
-                      const Experimental::Detector& detector,
+ProtoDetector convert(const Acts::GeometryContext& gctx,
+                      const Acts::Experimental::Detector& detector,
                       const Options& detectorOptions);
 
 }  // namespace DetectorConverter
 
 namespace View {
 
-/// Convert into an acts::svg::object with an XY view
+/// Convert into an ActsPlugins::Svg::object with an XY view
 ///
 /// @param detector is the detector (proto representation)
 /// @param identification is the to be translated id_ for actsvg
@@ -60,7 +62,7 @@ static inline actsvg::svg::object xy(const ProtoDetector& detector,
   return actsvg::display::detector(identification, detector, xyView);
 }
 
-/// Convert into an acts::svg::object with an Zr view
+/// Convert into an ActsPlugins::Svg::object with an Zr view
 ///
 /// @param detector is the detector (proto representation)
 /// @param identification is the to be translated id_ for actsvg
@@ -74,6 +76,4 @@ static inline actsvg::svg::object zr(const ProtoDetector& detector,
 
 }  // namespace View
 
-}  // namespace Svg
-
-}  // namespace Acts
+}  // namespace ActsPlugins::Svg

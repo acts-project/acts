@@ -25,6 +25,10 @@ namespace Experimental {
 class DetectorVolume;
 }
 
+}  // namespace Acts
+
+namespace ActsPlugins {
+
 using DetrayMetaData = detray::default_metadata<detray::array<double>>;
 
 using DetrayHostDetector = detray::detector<DetrayMetaData>;
@@ -46,12 +50,12 @@ struct Cache {
   /// The volumes of the detector for index lookup
   std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes;
   /// This is a map to pass on volume link information
-  std::map<GeometryIdentifier, unsigned long> volumeLinks;
+  std::map<Acts::GeometryIdentifier, unsigned long> volumeLinks;
   /// This is a multimap to pass volume local surface link information
   /// The portal splitting requires a multimap implementation here
   ///
   /// These are volume local, hence indexed per volumes
-  std::map<std::size_t, std::multimap<GeometryIdentifier, unsigned long>>
+  std::map<std::size_t, std::multimap<Acts::GeometryIdentifier, unsigned long>>
       localSurfaceLinks;
 
   /// Find the position of the volume to point to
@@ -74,28 +78,28 @@ struct Cache {
 /// @param bOption the binning option
 ///
 /// @return a detray binning option
-detray::axis::bounds convertBinningOption(BinningOption bOption);
+detray::axis::bounds convertBinningOption(Acts::BinningOption bOption);
 
 /// Convert the binning value
 ///
 /// @param bValue the binning value
 ///
 /// @return a detray binning value
-detray::axis::label convertAxisDirection(AxisDirection bValue);
+detray::axis::label convertAxisDirection(Acts::AxisDirection bValue);
 
 /// Convert the binning type
 ///
 /// @param bType the binning type
 ///
 /// @return a detray binning type
-detray::axis::binning convertBinningType(BinningType bType);
+detray::axis::binning convertBinningType(Acts::BinningType bType);
 
 /// Convert the binning data to an axis
 ///
 /// @param bData the binning data to be converted
 ///
 /// @return a detray axis payload
-detray::io::axis_payload convertBinningData(const BinningData& bData);
+detray::io::axis_payload convertBinningData(const Acts::BinningData& bData);
 
 }  // namespace DetrayConversionUtils
-}  // namespace Acts
+}  // namespace ActsPlugins

@@ -10,9 +10,9 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/PortalSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -26,17 +26,18 @@ namespace Experimental {
 class DetectorVolume;
 class Portal;
 }  // namespace Experimental
+}  // namespace Acts
 
-namespace Svg {
+namespace ActsPlugins::Svg {
 
-using ProtoVolume = actsvg::proto::volume<std::vector<Vector3>>;
+using ProtoVolume = actsvg::proto::volume<std::vector<Acts::Vector3>>;
 
 namespace DetectorVolumeConverter {
 
 /// A nested options class for the layer conversion
 struct Options {
   /// The Portal indices
-  std::map<const Experimental::Portal*, unsigned int> portalIndices;
+  std::map<const Acts::Experimental::Portal*, unsigned int> portalIndices;
   /// The Portal converter options
   PortalConverter::Options portalOptions;
   /// The Surface converter options
@@ -53,14 +54,15 @@ struct Options {
 ///
 /// @return a vector of svg objects
 std::tuple<ProtoVolume, ProtoIndexedSurfaceGrid> convert(
-    const GeometryContext& gctx, const Experimental::DetectorVolume& dVolume,
+    const Acts::GeometryContext& gctx,
+    const Acts::Experimental::DetectorVolume& dVolume,
     const Options& volumeOptions);
 
 }  // namespace DetectorVolumeConverter
 
 namespace View {
 
-/// Convert into an acts::svg::object with an XY view
+/// Convert into an ActsPlugins::Svg::object with an XY view
 ///
 /// @param volume is the DetectorVolume (proto representation)
 /// @param identification is the to be translated id_ for actsvg
@@ -75,7 +77,7 @@ static inline actsvg::svg::object xy(const ProtoVolume& volume,
                                  displayPortals);
 }
 
-/// Convert into an acts::svg::object with an Zr view
+/// Convert into an ActsPlugins::Svg::object with an Zr view
 ///
 /// @param volume is the DetectorVolume (proto representation)
 /// @param identification is the to be translated id_ for actsvg
@@ -92,6 +94,4 @@ static inline actsvg::svg::object zr(const ProtoVolume& volume,
 
 }  // namespace View
 
-}  // namespace Svg
-
-}  // namespace Acts
+}  // namespace ActsPlugins::Svg

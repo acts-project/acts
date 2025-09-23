@@ -21,7 +21,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Plugins/ActSVG/DetectorSvgConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -31,6 +30,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/ActSVG/DetectorSvgConverter.hpp"
 
 #include <fstream>
 #include <memory>
@@ -39,6 +39,7 @@
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::Experimental;
+using namespace ActsPlugins;
 
 GeometryContext tContext;
 
@@ -47,9 +48,9 @@ BOOST_AUTO_TEST_SUITE(ActSvg)
 BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   auto detector = buildCylindricalDetector(tContext);
 
-  Acts::Svg::DetectorConverter::Options detectorOptions;
-  auto pDetector = Acts::Svg::DetectorConverter::convert(tContext, *detector,
-                                                         detectorOptions);
+  Svg::DetectorConverter::Options detectorOptions;
+  auto pDetector =
+      Svg::DetectorConverter::convert(tContext, *detector, detectorOptions);
   pDetector._name = detector->name();
 
   // Colorize in blue
@@ -68,8 +69,8 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   pDetector.colorize(colors);
 
   // As sheet
-  auto dv_zr = Acts::Svg::View::zr(pDetector, pDetector._name);
-  Acts::Svg::toFile({dv_zr}, pDetector._name + "_zr.svg");
+  auto dv_zr = Svg::View::zr(pDetector, pDetector._name);
+  Svg::toFile({dv_zr}, pDetector._name + "_zr.svg");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

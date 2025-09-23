@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "actsvg/core.hpp"
 #include "actsvg/meta.hpp"
@@ -29,9 +29,11 @@ class Portal;
 class DetectorVolume;
 }  // namespace Experimental
 
-namespace Svg {
+}  // namespace Acts
 
-using ProtoPortal = actsvg::proto::portal<std::vector<Vector3>>;
+namespace ActsPlugins::Svg {
+
+using ProtoPortal = actsvg::proto::portal<std::vector<Acts::Vector3>>;
 using ProtoLink = ProtoPortal::link;
 
 namespace PortalConverter {
@@ -43,7 +45,7 @@ struct Options {
   /// Link length
   double linkLength = 10.;
   /// Link index map
-  std::map<const Experimental::DetectorVolume*, unsigned int> volumeIndices;
+  std::map<const Acts::Experimental::DetectorVolume*, unsigned int> volumeIndices;
 };
 
 /// Convert into a ProtoPortal
@@ -53,15 +55,15 @@ struct Options {
 /// @param portalOptions is the conversion options struct
 ///
 /// @return a proto portal object
-ProtoPortal convert(const GeometryContext& gctx,
-                    const Experimental::Portal& portal,
+ProtoPortal convert(const Acts::GeometryContext& gctx,
+                    const Acts::Experimental::Portal& portal,
                     const PortalConverter::Options& portalOptions);
 
 }  // namespace PortalConverter
 
 namespace View {
 
-/// Convert into an acts::svg::object with an XY view
+/// Convert into an ActsPlugins::Svg::object with an XY view
 ///
 /// @param portal is the DetectorVolume portal (proto representation)
 /// @param identification is the to be translated id_ for actsvg
@@ -73,7 +75,7 @@ static inline actsvg::svg::object xy(const ProtoPortal& portal,
   return actsvg::display::portal(identification, portal, xyView);
 }
 
-/// Convert into an acts::svg::object with an Zr view
+/// Convert into an ActsPlugins::Svg::object with an Zr view
 ///
 /// @param portal is the DetectorVolume portal (proto representation)
 /// @param identification is the to be translated id_ for actsvg
@@ -87,6 +89,4 @@ static inline actsvg::svg::object zr(const ProtoPortal& portal,
 
 }  // namespace View
 
-}  // namespace Svg
-
-}  // namespace Acts
+}  // namespace ActsPlugins::Svg

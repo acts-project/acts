@@ -11,9 +11,9 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <detray/io/frontend/payloads.hpp>
 
@@ -23,7 +23,9 @@ namespace Experimental {
 class Detector;
 }
 
-namespace DetrayMaterialConverter {
+}  // namespace Acts
+
+namespace ActsPlugins::DetrayMaterialConverter {
 
 /// Conversion method for material slab
 ///
@@ -31,7 +33,7 @@ namespace DetrayMaterialConverter {
 ///
 /// @return a material slab payload
 detray::io::material_slab_payload convertMaterialSlab(
-    const MaterialSlab& materialSlab);
+    const Acts::MaterialSlab& materialSlab);
 
 /// Conversion method for homogeneous material
 ///
@@ -42,8 +44,8 @@ detray::io::material_slab_payload convertMaterialSlab(
 /// @return the volume_payload for portals and volumes by @param volume acts object
 detray::io::detector_homogeneous_material_payload
 convertHomogeneousSurfaceMaterial(const DetrayConversionUtils::Cache& cCache,
-                                  const Experimental::Detector& detector,
-                                  const Logger& logger);
+                                  const Acts::Experimental::Detector& detector,
+                                  const Acts::Logger& logger);
 
 /// Conversion method for grid based surface material
 ///
@@ -53,7 +55,7 @@ convertHomogeneousSurfaceMaterial(const DetrayConversionUtils::Cache& cCache,
 /// @return a surface material
 detray::io::grid_payload<detray::io::material_slab_payload,
                          detray::io::material_id>
-convertGridSurfaceMaterial(const ISurfaceMaterial& material,
+convertGridSurfaceMaterial(const Acts::ISurfaceMaterial& material,
                            const Acts::Logger& logger);
 
 /// Conversion method for material grids
@@ -66,9 +68,7 @@ convertGridSurfaceMaterial(const ISurfaceMaterial& material,
 detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                    detray::io::material_id>
 convertGridSurfaceMaterial(const DetrayConversionUtils::Cache& cCache,
-                           const Experimental::Detector& detector,
-                           const Logger& logger);
+                           const Acts::Experimental::Detector& detector,
+                           const Acts::Logger& logger);
 
-}  // namespace DetrayMaterialConverter
-
-}  // namespace Acts
+}  // namespace ActsPlugins::DetrayMaterialConverter
