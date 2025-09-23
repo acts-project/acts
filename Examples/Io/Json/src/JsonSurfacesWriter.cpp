@@ -12,6 +12,7 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -58,9 +59,9 @@ std::string JsonSurfacesWriter::name() const {
 namespace {
 
 using SurfaceContainer =
-    Acts::GeometryHierarchyMap<std::shared_ptr<const Acts::Surface>>;
+    Acts::GeometryHierarchyMap<Acts::SurfaceHandle<const Acts::Surface>>;
 using SurfaceConverter = Acts::GeometryHierarchyMapJsonConverter<
-    std::shared_ptr<const Acts::Surface>>;
+    Acts::SurfaceHandle<const Acts::Surface>>;
 
 /// Write all child surfaces and descend into confined volumes.
 void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,

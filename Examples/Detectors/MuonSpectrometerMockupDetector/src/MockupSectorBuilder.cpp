@@ -85,7 +85,7 @@ MockupSectorBuilder::buildChamber(
       *Acts::getDefaultLogger("MockupSectorBuilder", Acts::Logging::INFO));
 
   // The vector that holds the converted sensitive surfaces of the chamber
-  std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> strawSurfaces;
 
   std::array<std::pair<float, float>, 3> min_max;
   std::fill(min_max.begin(), min_max.end(),
@@ -228,7 +228,7 @@ MockupSectorBuilder::buildSector(
   transform *= rotZ;
 
   // create a vector for the shifted surfaces of each chamber
-  std::vector<std::shared_ptr<Acts::Surface>> shiftedSurfaces = {};
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> shiftedSurfaces = {};
 
   // creare an array of vectors that holds all the chambers of each sector
   std::vector<std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
@@ -291,7 +291,7 @@ MockupSectorBuilder::buildSector(
             Acts::Experimental::defaultPortalAndSubPortalGenerator(), gctx,
             "cylinder_volume_" + std::to_string(i), transform,
             std::move(cylinderVolumesBounds[i]),
-            std::vector<std::shared_ptr<Acts::Surface>>{}, chambersOfSectors[i],
+            std::vector<Acts::SurfaceHandle<Acts::Surface>>{}, chambersOfSectors[i],
             Acts::Experimental::tryAllSubVolumes(),
             Acts::Experimental::tryAllPortalsAndSurfaces()));
 
@@ -307,7 +307,7 @@ MockupSectorBuilder::buildSector(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), gctx,
       "detectorVolumeSector", transform,
       std::move(cylinderVolumesBoundsOfMother),
-      std::vector<std::shared_ptr<Acts::Surface>>{},
+      std::vector<Acts::SurfaceHandle<Acts::Surface>>{},
       detectorCylinderVolumesOfSector, Acts::Experimental::tryAllSubVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 

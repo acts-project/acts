@@ -32,7 +32,7 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
       ACTS_DEBUG("Build layer " << icl << " with target radius = " << layerR);
 
       // prepare the Surface vector
-      std::vector<std::shared_ptr<Acts::Surface>> sVector;
+      std::vector<Acts::SurfaceHandle<Acts::Surface>> sVector;
       // assign the current envelope
       double layerEnvelopeCoverZ =
           !m_cfg.centralLayerEnvelopes.empty()
@@ -191,7 +191,7 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
       // define the layer envelope
       double layerEnvelopeR = m_cfg.posnegLayerEnvelopeR.at(ipnl);
       // prepare for the r binning
-      std::vector<std::shared_ptr<Acts::Surface>> esVector;
+      std::vector<Acts::SurfaceHandle<Acts::Surface>> esVector;
       // now fill the vectors
       std::size_t ipnR = 0;
       for (auto& discModulePositions : m_cfg.posnegModulePositions.at(ipnl)) {

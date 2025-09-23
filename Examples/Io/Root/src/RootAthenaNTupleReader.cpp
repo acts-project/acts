@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -123,7 +124,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
   ACTS_DEBUG("Trying to read track parameters from ntuple.");
 
   Acts::Vector3 pos(0, 0, 0);
-  std::shared_ptr<Acts::PerigeeSurface> surface =
+  Acts::SurfaceHandle<Acts::PerigeeSurface> surface =
       Acts::Surface::makeShared<Acts::PerigeeSurface>(pos);
 
   if (context.eventNumber >= m_events) {

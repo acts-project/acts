@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 
 #include <memory>
@@ -35,7 +36,7 @@ class StructureSelector {
   /// Select a structure by its identifier
   /// @param geoId The identifier of the structure to select
   /// @return A vector of pointers to the selected surfaces
-  std::vector<std::shared_ptr<const Acts::Surface>> selectSurfaces(
+  std::vector<Acts::SurfaceHandle<const Acts::Surface>> selectSurfaces(
       const Acts::GeometryIdentifier& geoId) const;
 
   /// Select a structure by its identified transforms
@@ -48,6 +49,6 @@ class StructureSelector {
 
  private:
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
-  GeometryIdMultiset<std::shared_ptr<const Acts::Surface>> m_surfaceMultiSet;
+  GeometryIdMultiset<Acts::SurfaceHandle<const Acts::Surface>> m_surfaceMultiSet;
 };
 }  // namespace ActsExamples
