@@ -122,7 +122,7 @@ class SurfaceArray {
 
     /// @brief Default constructor
     ///
-    /// @param surface The representative surface for this lookup
+    /// @param representative The representative surface for this lookup
     /// @param tolerance The tolerance to be applied on the bounds
     /// @param axes The axes to build the grid data structure.
     /// @param bValues What the axes represent (optional)
