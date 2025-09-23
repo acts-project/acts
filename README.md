@@ -48,19 +48,29 @@ that a physics experiment is expected to use as part of its reconstruction code.
 All optional components are disabled by default. Please see the
 [getting started guide](docs/getting_started.md) on how-to enable them.
 
--   `Core/` contains the core library that provides functionality in the `Acts`
-    namespace.
+
+| *Folder*     | *include path*                              | *Namespace*       | *Python module*          |
+| :---         | :---                                        | :---              | :---                     |
+| `Core/`      | `#include "Acts/..."`                       | `Acts::`          | `acts`                   |
+| `Plugins/`   | `#include "ActsPlugins/PluginName/..."`     | `ActsPlugins::`   | `acts.pluginname`        |
+| `Fatras/`    | `#include "ActsFatras/..."`                 | `ActsFatras::`    | `acts.fatras`            |
+| `Alignment/` | `#include "ActsAlignment/..."`              | `ActsAlignment::` | `acts.alignment`         |
+| `Examples/`  | `#include "ActsExamples/..."`               | `ActsExamples::`  | `acts.examples`          |
+| `Python/`    | `#include "ActsPython/..."` (not much used) | `ActsPython::`    |  N/A                     |
+| `Tests/`     | `#include "ActsTests/..."` (not much used)  | `Acts::Tests::`   |  N/A                     |
+
+
+Short summary of the modules and directories:
+-   `Core/` contains all the core funcitionality with minimal depenendencies and no framework or I/O related code
 -   `Plugins/` contains plugins for core functionality that requires
-    additional external packages. The functionality also resides in the `Acts`
-    namespace.
+    additional external packages. T
 -   `Fatras/` provides fast track simulation tools based on the core
-    library. This is not part of the core functionality and thus resides in the
-    separate `ActsFatras` namespace.
+    library.
 -   `Examples/` contains simulation and reconstruction examples. These are
-    internal tools for manual full-chain development and tests and reside in
-    the `ActsExamples` namespace.
+    internal tools for manual full-chain development and tests.
 -   `Tests/` contains automated unit tests, integration tests, and
     (micro-)benchmarks.
+-   `Python/` contains the python bindings for the different modules
 -   `thirdparty/` contains external dependencies that are usually not available
     through the system package manager.
 
