@@ -50,7 +50,7 @@ class TrackJet {
 
   // TODO::Pass references instead of copies.
 
-  void setConstituents(const std::vector<int> &constituents) {
+  void setConstituents(const std::vector<int>& constituents) {
     m_constituents = constituents;
   }
 
