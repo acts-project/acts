@@ -39,7 +39,7 @@ class AmbiguityTrackClassifier {
   /// @param clusters is a map of clusters, each cluster correspond to a vector of track ID
   /// @param tracks is the input track container
   /// @return a vector of vector of track score. Due to the architecture of the network each track only have a size 1 score vector.
-  template <TrackContainerFrontend track_container_t>
+  template <Acts::TrackContainerFrontend track_container_t>
   std::vector<std::vector<float>> inferScores(
       std::unordered_map<std::size_t, std::vector<std::size_t>>& clusters,
       const track_container_t& tracks) const {
