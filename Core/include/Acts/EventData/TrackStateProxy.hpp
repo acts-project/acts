@@ -1001,7 +1001,7 @@ class TrackStateProxy {
     typeFlags() = other.typeFlags();
 
     if (other.hasReferenceSurface()) {
-      setReferenceSurface(other.referenceSurface().getSharedPtr());
+      setReferenceSurface(other.referenceSurface().getHandle());
     }
 
     m_traj->copyDynamicFrom(m_istate, other.container(), other.index());

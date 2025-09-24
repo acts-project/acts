@@ -350,7 +350,7 @@ struct GsfActor {
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
-      BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
+      BoundTrackParameters bound(proxy.referenceSurface().getHandle(),
                                  proxy.filtered(), proxy.filteredCovariance(),
                                  stepper.particleHypothesis(state.stepping));
 
@@ -524,7 +524,7 @@ struct GsfActor {
     // Finally loop over components
     for (const auto& [weight, pars, cov] : componentCache) {
       // Add the component to the stepper
-      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
+      BoundTrackParameters bound(surface.getHandle(), pars, cov,
                                  stepper.particleHypothesis(state.stepping));
 
       auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
@@ -741,7 +741,7 @@ struct GsfActor {
       auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
       result.currentTip = proxy.index();
 
-      proxy.setReferenceSurface(surface.getSharedPtr());
+      proxy.setReferenceSurface(surface.getHandle());
       proxy.copyFrom(firstCmpProxy, mask);
 
       auto [prtMean, prtCov] =

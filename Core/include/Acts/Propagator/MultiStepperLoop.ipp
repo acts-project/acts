@@ -61,7 +61,7 @@ auto MultiStepperLoop<S, R>::boundState(
   }
 
   return BoundState{MultiComponentBoundTrackParameters(
-                        surface.getSharedPtr(), cmps, state.particleHypothesis),
+                        surface.getHandle(), cmps, state.particleHypothesis),
                     Jacobian::Zero(), accumulatedPathLength};
 }
 

@@ -127,7 +127,7 @@ struct TelescopeDetector {
       auto detElement = std::make_shared<DetectorElementStub>(
           trafo, rBounds, 1._um, surfaceMaterial);
       // The surface is not right!!!
-      auto surface = detElement->surface().getSharedPtr();
+      auto surface = detElement->surface().getHandle();
       // Add it to the event store
       detectorStore.push_back(std::move(detElement));
       std::unique_ptr<SurfaceArray> surArray(new SurfaceArray(surface));

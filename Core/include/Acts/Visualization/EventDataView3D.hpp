@@ -274,7 +274,7 @@ struct EventDataView3D {
       if (predictedConfig.visible && state.hasPredicted()) {
         drawBoundTrackParameters(
             helper,
-            BoundTrackParameters(state.referenceSurface().getSharedPtr(),
+            BoundTrackParameters(state.referenceSurface().getHandle(),
                                  state.predicted(), state.predictedCovariance(),
                                  particleHypothesis),
             gctx, momentumScale, locErrorScale, angularErrorScale,
@@ -284,7 +284,7 @@ struct EventDataView3D {
       if (filteredConfig.visible && state.hasFiltered()) {
         drawBoundTrackParameters(
             helper,
-            BoundTrackParameters(state.referenceSurface().getSharedPtr(),
+            BoundTrackParameters(state.referenceSurface().getHandle(),
                                  state.filtered(), state.filteredCovariance(),
                                  particleHypothesis),
             gctx, momentumScale, locErrorScale, angularErrorScale,
@@ -294,7 +294,7 @@ struct EventDataView3D {
       if (smoothedConfig.visible && state.hasSmoothed()) {
         drawBoundTrackParameters(
             helper,
-            BoundTrackParameters(state.referenceSurface().getSharedPtr(),
+            BoundTrackParameters(state.referenceSurface().getHandle(),
                                  state.smoothed(), state.smoothedCovariance(),
                                  particleHypothesis),
             gctx, momentumScale, locErrorScale, angularErrorScale,

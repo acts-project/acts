@@ -759,7 +759,7 @@ class KalmanFitter {
         // Set the trackStateProxy components with the state from the ongoing
         // propagation
         {
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+          trackStateProxy.setReferenceSurface(surface->getHandle());
           // Bind the transported state to the current surface
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
@@ -1298,7 +1298,7 @@ class KalmanFitter {
       const auto& params = kalmanResult.fittedParameters.value();
       track.parameters() = params.parameters();
       track.covariance() = params.covariance().value();
-      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+      track.setReferenceSurface(params.referenceSurface().getHandle());
     }
 
     calculateTrackQuantities(track);

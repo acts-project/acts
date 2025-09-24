@@ -191,7 +191,7 @@ void addJson(Context& ctx) {
     py::class_<JsonDetectorElement, DetectorElementBase,
                std::shared_ptr<JsonDetectorElement>>(m, "JsonDetectorElement")
         .def("surface", [](JsonDetectorElement& self) {
-          return self.surface().getSharedPtr();
+          return self.surface().getHandle();
         });
 
     m.def("readDetectorElementsFromJson",

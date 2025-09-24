@@ -66,7 +66,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
     if (bins != m_binningMap.end()) {
       ACTS_VERBOSE("-> Found material for surface, assigning");
       surface.assignSurfaceMaterial(
-          binnedSurfaceMaterial(surface.getSharedPtr()));
+          binnedSurfaceMaterial(surface.getHandle()));
     }
   }
 

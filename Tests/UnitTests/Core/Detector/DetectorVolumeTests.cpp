@@ -45,7 +45,7 @@
 /// @returns a shared pointer
 template <typename referenced_type>
 std::shared_ptr<referenced_type> unpackToShared(referenced_type& rt) {
-  return rt.getSharedPtr();
+  return rt.getHandle();
 }
 
 using namespace Acts::Experimental;

@@ -64,7 +64,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The shared pointer
-  std::shared_ptr<Detector> getSharedPtr();
+  std::shared_ptr<Detector> getHandle();
 
   /// Retrieve a @c std::shared_ptr for this surface (const version)
   ///
@@ -75,7 +75,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The shared pointer
-  std::shared_ptr<const Detector> getSharedPtr() const;
+  std::shared_ptr<const Detector> getHandle() const;
 
   /// Non-const access to the root volumes
   ///

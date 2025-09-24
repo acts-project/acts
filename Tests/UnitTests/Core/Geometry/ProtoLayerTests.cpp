@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
       auto& element = detectorElements.emplace_back(
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
 
-      surfaces.push_back(element->surface().getSharedPtr());
+      surfaces.push_back(element->surface().getHandle());
     }
     return surfaces;
   };

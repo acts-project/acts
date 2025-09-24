@@ -22,7 +22,7 @@ struct SensitiveGetter {
       auto geoId = surface->geometryId();
       if (geoId.sensitive() != 0u ||
           surface->associatedDetectorElement() != nullptr) {
-        selected.emplace_back(Acts::SurfaceHandle{surface->getSharedPtr()});
+        selected.emplace_back(surface->getHandle());
       }
     }
   }

@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorConstruction) {
       std::make_shared<LayerStub>(nullptr),
       std::make_shared<LayerStub>(nullptr)};
   BOOST_CHECK_NO_THROW(GenericApproachDescriptor sharedLayerApproachDescriptor(
-      {sharedLayers.at(0)->surfaceRepresentation().getSharedPtr(),
-       sharedLayers.at(1)->surfaceRepresentation().getSharedPtr()}));
+      {sharedLayers.at(0)->surfaceRepresentation().getHandle(),
+       sharedLayers.at(1)->surfaceRepresentation().getHandle()}));
 }
 
 /// Unit test for testing GenericApproachDescriptor properties

@@ -195,18 +195,18 @@ void Acts::Experimental::DetectorVolume::construct(
     const GeometryContext& gctx, const PortalGenerator& portalGenerator) {
   // Create portals with the given generator
   auto portalSurfaces =
-      portalGenerator(transform(gctx), *m_bounds, getSharedPtr());
+      portalGenerator(transform(gctx), *m_bounds, getHandle());
   m_portals = ObjectStore<std::shared_ptr<Portal>>(portalSurfaces);
   createBoundingBox(gctx);
 }
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
-Acts::Experimental::DetectorVolume::getSharedPtr() {
+Acts::Experimental::DetectorVolume::getHandle() {
   return shared_from_this();
 }
 
 std::shared_ptr<const Acts::Experimental::DetectorVolume>
-Acts::Experimental::DetectorVolume::getSharedPtr() const {
+Acts::Experimental::DetectorVolume::getHandle() const {
   return shared_from_this();
 }
 

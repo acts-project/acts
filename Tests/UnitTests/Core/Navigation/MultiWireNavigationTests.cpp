@@ -66,7 +66,7 @@ void generateStrawSurfaces(
 
       element->surface().assignDetectorElement(*element);
 
-      strawSurfaces.push_back(element->surface().getSharedPtr());
+      strawSurfaces.push_back(element->surface().getHandle());
     }
 
     pos.y() = ipos.y() + 2 * (i + 1) * radius;

@@ -95,7 +95,7 @@ struct CubicTrackingGeometry {
       auto detElement = std::make_unique<const DetectorElementStub>(
           trafo, rBounds, 1._um, surfaceMaterial);
       // And remember the surface
-      surfaces[i] = detElement->surface().getSharedPtr();
+      surfaces[i] = detElement->surface().getHandle();
       // Add it to the event store
       detectorStore.push_back(std::move(detElement));
     }

@@ -77,7 +77,7 @@ ActsPlugins::detail::GeoPolygonConverter::operator()(
     auto detectorElement =
         GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
             geoPV, trapBounds, transform, unitLength * polygon.getDZ());
-    auto surface = detectorElement->surface().getSharedPtr();
+    auto surface = detectorElement->surface().getHandle();
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
   } else if (nVertices == 6) {
@@ -115,7 +115,7 @@ ActsPlugins::detail::GeoPolygonConverter::operator()(
     auto detectorElement =
         GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
             geoPV, diamondBounds, transform, unitLength * polygon.getDZ());
-    auto surface = detectorElement->surface().getSharedPtr();
+    auto surface = detectorElement->surface().getHandle();
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
   } else {

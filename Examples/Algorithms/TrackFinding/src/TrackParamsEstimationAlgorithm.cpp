@@ -137,7 +137,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
         config, params, bottomSP->t().has_value());
 
-    trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
+    trackParameters.emplace_back(surface->getHandle(), params, cov,
                                  m_cfg.particleHypothesis);
     if (m_outputSeeds.isInitialized()) {
       outputSeeds.push_back(seed);

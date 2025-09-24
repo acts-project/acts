@@ -53,7 +53,7 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
           Transform3::Identity(), std::make_shared<CylinderBounds>(r, 190),
           0.1);
       detectorStore.push_back(detElement);
-      layer0Surfaces.push_back(detElement->surface().getSharedPtr());
+      layer0Surfaces.push_back(detElement->surface().getHandle());
     } else {
       // Last 2 surfaces are passive
       layer0Surfaces.push_back(Surface::makeShared<CylinderSurface>(

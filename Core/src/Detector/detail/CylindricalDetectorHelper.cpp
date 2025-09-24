@@ -1115,7 +1115,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
 
     // First the left volume sector
     std::vector<std::shared_ptr<DetectorVolume>> innerVolumes = {
-        wrappingVolume->getSharedPtr()};
+        wrappingVolume->getHandle()};
 
     std::vector<double> zBoundaries = {-centralHalfLengthZ - 2 * nHalfLengthZ,
                                        centralHalfLengthZ};

@@ -149,7 +149,7 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
   auto detectorElement =
       GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
           geoPV, trapezoidBounds, transform, elA->thickness());
-  auto surface = detectorElement->surface().getSharedPtr();
+  auto surface = detectorElement->surface().getHandle();
 
   return std::make_tuple(detectorElement, surface);
 }

@@ -80,7 +80,7 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
     if (trackParameters != nullptr) {
       const auto& trackParams = trackParameters->at(i);
 
-      track.setReferenceSurface(trackParams.referenceSurface().getSharedPtr());
+      track.setReferenceSurface(trackParams.referenceSurface().getHandle());
       track.parameters() = trackParams.parameters();
       if (trackParams.covariance().has_value()) {
         track.covariance() = *trackParams.covariance();

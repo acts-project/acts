@@ -56,7 +56,7 @@ ProcessCode PropagationAlgorithm::execute(
                                             parameters)
             : m_cfg.propagatorImpl->execute(
                   context, m_cfg, logger(),
-                  TrackParameters(parameters.referenceSurface().getSharedPtr(),
+                  TrackParameters(parameters.referenceSurface().getHandle(),
                                   parameters.parameters(), std::nullopt,
                                   parameters.particleHypothesis()));
     if (!propagationResult.ok()) {

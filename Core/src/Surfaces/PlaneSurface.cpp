@@ -200,7 +200,7 @@ std::pair<SurfaceHandle<PlaneSurface>, bool> PlaneSurface::mergedWith(
 
   if (m_associatedDetElement != nullptr ||
       other.m_associatedDetElement != nullptr) {
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+    throw SurfaceMergingException(getHandle(), other.getHandle(),
                                   "PlaneSurface::merge: surfaces are "
                                   "associated with a detector element");
   }
@@ -217,7 +217,7 @@ std::pair<SurfaceHandle<PlaneSurface>, bool> PlaneSurface::mergedWith(
       tolerance) {
     ACTS_ERROR("PlaneSurface::merge: surfaces have relative rotation");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "PlaneSurface::merge: surfaces have relative rotation");
   }
 
@@ -227,12 +227,12 @@ std::pair<SurfaceHandle<PlaneSurface>, bool> PlaneSurface::mergedWith(
 
   if (thisBounds == nullptr || otherBounds == nullptr) {
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "PlaneSurface::merge: only Rectangle Bounds are supported");
   }
 
   if (direction != AxisDirection::AxisX && direction != AxisDirection::AxisY) {
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+    throw SurfaceMergingException(getHandle(), other.getHandle(),
                                   "PlaneSurface::merge: invalid direction " +
                                       axisDirectionName(direction));
   }
@@ -253,7 +253,7 @@ std::pair<SurfaceHandle<PlaneSurface>, bool> PlaneSurface::mergedWith(
     ACTS_ERROR(
         "PlaneSurface::merge: surfaces have different non-merging lengths");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "PlaneSurface::merge: surfaces have different non-merging lengths");
   }
   Vector3 otherTranslation = otherLocal.translation();
@@ -266,7 +266,7 @@ std::pair<SurfaceHandle<PlaneSurface>, bool> PlaneSurface::mergedWith(
     ACTS_ERROR(
         "PlaneSurface::merge: surfaces have relative translation in y/z");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "PlaneSurface::merge: surfaces have relative translation in y/z");
   }
 
@@ -284,7 +284,7 @@ std::pair<SurfaceHandle<PlaneSurface>, bool> PlaneSurface::mergedWith(
     ACTS_ERROR(
         "PlaneSurface::merge: surfaces have incompatible merge bound location");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "PlaneSurface::merge: surfaces have incompatible merge bound location");
   }
 

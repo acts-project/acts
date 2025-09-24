@@ -108,7 +108,7 @@ SurfaceHandle<const Surface> convertSurfaceFromPodio(
 
   if (const Surface* srf = helper.identifierToSurface(surface.identifier);
       srf != nullptr) {
-    result = srf->getSharedPtr();
+    result = srf->getHandle();
   }
 
   if (result) {

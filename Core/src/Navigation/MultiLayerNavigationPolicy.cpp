@@ -26,7 +26,7 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
     if (surface.associatedDetectorElement() == nullptr) {
       continue;
     }
-    surfaces.push_back(surface.getSharedPtr());
+    surfaces.push_back(surface.getHandle());
   }
 
   Experimental::detail::CenterReferenceGenerator rGenerator;

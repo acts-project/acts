@@ -361,7 +361,7 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
 
   if (m_associatedDetElement != nullptr ||
       other.m_associatedDetElement != nullptr) {
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+    throw SurfaceMergingException(getHandle(), other.getHandle(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");
   }
@@ -378,7 +378,7 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
       std::abs(otherLocal.linear().col(eY)[eZ]) >= tolerance) {
     ACTS_ERROR("CylinderSurface::merge: surfaces have relative rotation");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "CylinderSurface::merge: surfaces have relative rotation");
   }
 
@@ -388,7 +388,7 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
           "CylinderVolumeStack requires all volumes to have a bevel angle of "
           "0");
       throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
+          getHandle(), other.getHandle(),
           "CylinderVolumeStack requires all volumes to have a bevel angle of "
           "0");
     }
@@ -398,7 +398,7 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
           "CylinderVolumeStack requires all volumes to have a bevel angle of "
           "0");
       throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
+          getHandle(), other.getHandle(),
           "CylinderVolumeStack requires all volumes to have a bevel angle of "
           "0");
     }
@@ -412,7 +412,7 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
                other.bounds().get(CylinderBounds::eR)) > tolerance) {
     ACTS_ERROR("CylinderSurface::merge: surfaces have different radii");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "CylinderSurface::merge: surfaces have different radii");
   }
 
@@ -426,7 +426,7 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
     ACTS_ERROR(
         "CylinderSurface::merge: surfaces have relative translation in x/y");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "CylinderSurface::merge: surfaces have relative translation in x/y");
   }
 
@@ -451,7 +451,7 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
     if (std::abs(otherLocal.linear().col(eY)[eX]) >= tolerance &&
         (!bounds().coversFullAzimuth() ||
          !other.bounds().coversFullAzimuth())) {
-      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+      throw SurfaceMergingException(getHandle(), other.getHandle(),
                                     "CylinderSurface::merge: surfaces have "
                                     "relative rotation in z and phi sector");
     }
@@ -467,12 +467,12 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
         std::abs(minZ - otherMaxZ) > tolerance) {
       ACTS_ERROR("CylinderSurface::merge: surfaces have incompatible z bounds");
       throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
+          getHandle(), other.getHandle(),
           "CylinderSurface::merge: surfaces have incompatible z bounds");
     }
 
     if (hlPhi != otherHlPhi || avgPhi != otherAvgPhi) {
-      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+      throw SurfaceMergingException(getHandle(), other.getHandle(),
                                     "CylinderSurface::merge: surfaces have "
                                     "different phi sectors");
     }
@@ -499,13 +499,13 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
           "CylinderSurface::merge: surfaces have relative translation in z for "
           "rPhi merging");
       throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
+          getHandle(), other.getHandle(),
           "CylinderSurface::merge: surfaces have relative translation in z for "
           "rPhi merging");
     }
 
     if (hlZ != otherHlZ) {
-      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+      throw SurfaceMergingException(getHandle(), other.getHandle(),
                                     "CylinderSurface::merge: surfaces have "
                                     "different z bounds");
     }
@@ -546,11 +546,11 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
       return {Surface::makeShared<CylinderSurface>(newTransform, newBounds),
               reversed};
     } catch (const std::invalid_argument& e) {
-      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+      throw SurfaceMergingException(getHandle(), other.getHandle(),
                                     e.what());
     }
   } else {
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+    throw SurfaceMergingException(getHandle(), other.getHandle(),
                                   "CylinderSurface::merge: invalid direction " +
                                       axisDirectionName(direction));
   }

@@ -41,7 +41,7 @@ std::vector<Acts::SurfaceHandle<Acts::Surface>> unpackSurfaces(
   std::vector<Acts::SurfaceHandle<Acts::Surface>> uSurfaces;
   uSurfaces.reserve(surfaces.size());
   for (auto* s : surfaces) {
-    uSurfaces.push_back(s->getSharedPtr());
+    uSurfaces.push_back(s->getHandle());
   }
   return uSurfaces;
 }

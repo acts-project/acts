@@ -194,7 +194,7 @@ struct TrackStateCreator {
       }
 
       ts.pathLength() = pathLength;
-      ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
+      ts.setReferenceSurface(boundParams.referenceSurface().getHandle());
 
       // now calibrate the track state
       calibrator(gctx, calibrationContext, sourceLink, ts);

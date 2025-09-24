@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 
   // Test the getSharedPtr
   const auto surfacePtr = Surface::makeShared<const SurfaceStub>(detElement1);
-  const auto sharedSurfacePtr = surfacePtr->getSharedPtr();
+  const auto sharedSurfacePtr = surfacePtr->getHandle();
   BOOST_CHECK(*surfacePtr == *sharedSurfacePtr);
 }
 BOOST_AUTO_TEST_SUITE_END()

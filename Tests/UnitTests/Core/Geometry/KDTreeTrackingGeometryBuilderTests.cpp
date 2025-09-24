@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
 
     // Make a shared version out of it
     for (auto& sf : layerSurfaces) {
-      layerSurfacePtrs.push_back(sf->getSharedPtr());
+      layerSurfacePtrs.push_back(sf->getHandle());
     }
   }
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
         dModuleHalfY[ilp], dModuleThickness[ilp], dModuleTilt[ilp],
         discRadii[ilp], discZ[ilp], 2., discModules[ilp]);
     for (auto& sf : layerSurfaces) {
-      layerSurfacePtrs.push_back(sf->getSharedPtr());
+      layerSurfacePtrs.push_back(sf->getHandle());
     }
   }
 

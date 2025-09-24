@@ -381,7 +381,7 @@ std::pair<SurfaceHandle<DiscSurface>, bool> DiscSurface::mergedWith(
 
   if (m_associatedDetElement != nullptr ||
       other.m_associatedDetElement != nullptr) {
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+    throw SurfaceMergingException(getHandle(), other.getHandle(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");
   }
@@ -396,7 +396,7 @@ std::pair<SurfaceHandle<DiscSurface>, bool> DiscSurface::mergedWith(
       std::abs(otherLocal.linear().col(eY)[eZ]) >= tolerance) {
     ACTS_ERROR("DiscSurface::merge: surfaces have relative rotation");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "DiscSurface::merge: surfaces have relative rotation");
   }
 
@@ -408,7 +408,7 @@ std::pair<SurfaceHandle<DiscSurface>, bool> DiscSurface::mergedWith(
     ACTS_ERROR(
         "DiscSurface::merge: surfaces have relative translation in x/y/z");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "DiscSurface::merge: surfaces have relative translation in x/y/z");
   }
 
@@ -419,7 +419,7 @@ std::pair<SurfaceHandle<DiscSurface>, bool> DiscSurface::mergedWith(
   if (bounds == nullptr || otherBounds == nullptr) {
     ACTS_ERROR("DiscSurface::merge: surfaces have bounds other than radial");
     throw SurfaceMergingException(
-        getSharedPtr(), other.getSharedPtr(),
+        getHandle(), other.getHandle(),
         "DiscSurface::merge: surfaces have bounds other than radial");
   }
 
@@ -452,7 +452,7 @@ std::pair<SurfaceHandle<DiscSurface>, bool> DiscSurface::mergedWith(
   if (direction == AxisDirection::AxisR) {
     if (std::abs(otherLocal.linear().col(eY)[eX]) >= tolerance &&
         (!bounds->coversFullAzimuth() || !otherBounds->coversFullAzimuth())) {
-      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+      throw SurfaceMergingException(getHandle(), other.getHandle(),
                                     "DiscSurface::merge: surfaces have "
                                     "relative rotation in z and phi sector");
     }
@@ -461,21 +461,21 @@ std::pair<SurfaceHandle<DiscSurface>, bool> DiscSurface::mergedWith(
         std::abs(maxR - otherMinR) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces are not touching r");
       throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
+          getHandle(), other.getHandle(),
           "DiscSurface::merge: surfaces are not touching in r");
     }
 
     if (std::abs(avgPhi - otherAvgPhi) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces have different average phi");
       throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
+          getHandle(), other.getHandle(),
           "DiscSurface::merge: surfaces have different average phi");
     }
 
     if (std::abs(hlPhi - otherHlPhi) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces have different half phi sector");
       throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
+          getHandle(), other.getHandle(),
           "DiscSurface::merge: surfaces have different half phi sector");
     }
 
@@ -494,7 +494,7 @@ std::pair<SurfaceHandle<DiscSurface>, bool> DiscSurface::mergedWith(
         std::abs(minR - otherMinR) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces don't have same r bounds");
       throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
+          getHandle(), other.getHandle(),
           "DiscSurface::merge: surfaces don't have same r bounds");
     }
 
@@ -534,14 +534,14 @@ std::pair<SurfaceHandle<DiscSurface>, bool> DiscSurface::mergedWith(
       return {Surface::makeShared<DiscSurface>(newTransform, newBounds),
               reversed};
     } catch (const std::invalid_argument& e) {
-      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+      throw SurfaceMergingException(getHandle(), other.getHandle(),
                                     e.what());
     }
 
   } else {
     ACTS_ERROR("DiscSurface::merge: invalid direction " << direction);
 
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+    throw SurfaceMergingException(getHandle(), other.getHandle(),
                                   "DiscSurface::merge: invalid direction " +
                                       axisDirectionName(direction));
   }

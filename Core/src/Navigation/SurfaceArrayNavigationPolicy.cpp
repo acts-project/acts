@@ -39,7 +39,7 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     if (surface.associatedDetectorElement() == nullptr) {
       continue;
     }
-    surfaces.push_back(surface.getSharedPtr());
+    surfaces.push_back(surface.getHandle());
   }
 
   ACTS_VERBOSE("Number of surfaces passed to the surface array creation: "
