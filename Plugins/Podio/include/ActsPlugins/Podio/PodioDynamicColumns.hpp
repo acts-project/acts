@@ -15,7 +15,7 @@
 #include <podio/Frame.h>
 #include <podio/UserDataCollection.h>
 
-namespace Acts::podio_detail {
+namespace ActsPlugins::podio_detail {
 
 struct ConstDynamicColumnBase {
   explicit ConstDynamicColumnBase(std::string_view name) : m_name{name} {}
