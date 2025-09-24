@@ -123,4 +123,4 @@ struct DynamicColumn : public DynamicColumnBase {
   podio::UserDataCollection<T> m_collection;
 };
 
-}  // namespace Acts::podio_detail
+}  // namespace ActsPlugins::podio_detail

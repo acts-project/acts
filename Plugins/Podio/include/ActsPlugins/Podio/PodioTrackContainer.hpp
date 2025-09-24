@@ -14,9 +14,9 @@
 #include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsPlugins/Podio/PodioDynamicColumns.hpp"
 #include "ActsPlugins/Podio/PodioUtil.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsPodioEdm/Surface.h"
 
 #pragma GCC diagnostic push
@@ -37,16 +37,17 @@ namespace ActsPlugins {
 
 class MutablePodioTrackContainer;
 class ConstPodioTrackContainer;
-}
+}  // namespace ActsPlugins
 
 namespace Acts {
 template <>
-struct IsReadOnlyTrackContainer<ActsPlugins::MutablePodioTrackContainer> : std::false_type {
-};
+struct IsReadOnlyTrackContainer<ActsPlugins::MutablePodioTrackContainer>
+    : std::false_type {};
 
 template <>
-struct IsReadOnlyTrackContainer<ActsPlugins::ConstPodioTrackContainer> : std::true_type {};
-}
+struct IsReadOnlyTrackContainer<ActsPlugins::ConstPodioTrackContainer>
+    : std::true_type {};
+}  // namespace Acts
 
 namespace ActsPlugins {
 class PodioTrackContainerBase {
@@ -56,16 +57,19 @@ class PodioTrackContainerBase {
   static constexpr auto MeasurementSizeMax =
       Acts::MultiTrajectoryTraits::MeasurementSizeMax;
 
-  using Parameters = typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                                        false>::CoefficientsMap;
-  using Covariance = typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                                        false>::CovarianceMap;
+  using Parameters =
+      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
+                                               false>::CoefficientsMap;
+  using Covariance =
+      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
+                                               false>::CovarianceMap;
 
   using ConstParameters =
       typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                         true>::CoefficientsMap;
+                                               true>::CoefficientsMap;
   using ConstCovariance =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize, true>::CovarianceMap;
+      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
+                                               true>::CovarianceMap;
 
  protected:
   explicit PodioTrackContainerBase(const PodioUtil::ConversionHelper& helper)
@@ -131,8 +135,8 @@ class PodioTrackContainerBase {
   static auto dynamicKeys_impl(T& instance) {
     using column_type =
         typename decltype(instance.m_dynamic)::mapped_type::element_type;
-    return Acts::detail::DynamicKeyRange<column_type>{instance.m_dynamic.begin(),
-                                                instance.m_dynamic.end()};
+    return Acts::detail::DynamicKeyRange<column_type>{
+        instance.m_dynamic.begin(), instance.m_dynamic.end()};
   }
 
   template <typename T>
@@ -299,8 +303,8 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     }
   }
 
-  Acts::detail::DynamicKeyRange<podio_detail::DynamicColumnBase> dynamicKeys_impl()
-      const {
+  Acts::detail::DynamicKeyRange<podio_detail::DynamicColumnBase>
+  dynamicKeys_impl() const {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
