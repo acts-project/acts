@@ -54,7 +54,7 @@ template <typename T>
 concept MutableTrackContainerBackend =
     ConstTrackContainerBackend<T> &&
     requires(T v, HashedString key, TrackIndexType itrack, std::string col,
-             const T& other, SurfaceHandle<const Surface> sharedSurface) {
+             const T& other, MaybeSharedPtr<const Surface> sharedSurface) {
       { v.parameters(itrack) } -> std::same_as<detail::Parameters>;
 
       { v.covariance(itrack) } -> std::same_as<detail::Covariance>;

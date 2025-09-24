@@ -84,7 +84,7 @@ void DiscLayer::buildApproachDescriptor() {
         m_representingVolume->volumeBounds().orientedSurfaces(
             m_representingVolume->transform());
     // fill in the surfaces into the vector
-    std::vector<SurfaceHandle<const Surface>> aSurfaces;
+    std::vector<MaybeSharedPtr<const Surface>> aSurfaces;
     aSurfaces.push_back(bSurfaces.at(negativeFaceXY).surface);
     aSurfaces.push_back(bSurfaces.at(positiveFaceXY).surface);
     aSurfaces.push_back(bSurfaces.at(tubeInnerCover).surface);

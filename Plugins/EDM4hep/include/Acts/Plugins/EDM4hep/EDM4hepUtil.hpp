@@ -44,7 +44,7 @@ struct Parameters {
   // Dummy default
   ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
   std::optional<Acts::BoundSquareMatrix> covariance;
-  Acts::SurfaceHandle<const Acts::Surface> surface;
+  Acts::MaybeSharedPtr<const Acts::Surface> surface;
 };
 
 ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);

@@ -80,7 +80,7 @@ void CylinderLayer::buildApproachDescriptor() {
             m_representingVolume->transform());
 
     // fill in the surfaces into the vector
-    std::vector<SurfaceHandle<const Surface>> aSurfaces;
+    std::vector<MaybeSharedPtr<const Surface>> aSurfaces;
     if (bSurfaces.size() > static_cast<std::size_t>(tubeInnerCover)) {
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover).surface);
     }

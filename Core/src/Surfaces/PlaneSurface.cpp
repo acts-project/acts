@@ -195,7 +195,7 @@ ActsMatrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-std::pair<SurfaceHandle<PlaneSurface>, bool> PlaneSurface::mergedWith(
+std::pair<MaybeSharedPtr<RegularSurface>, bool> PlaneSurface::mergedWith(
     const PlaneSurface& other, AxisDirection direction,
     const Logger& logger) const {
   ACTS_VERBOSE("Merging plane surfaces in " << axisDirectionName(direction)

@@ -13,11 +13,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <cmath>
 #include <numbers>
@@ -31,16 +31,15 @@ using namespace Acts;
 // reference surfaces
 // this includes only those surfaces that can take unbounded local positions as
 // inputs, i.e. no angles or strictly positive radii.
-const auto surfaces =
-    bdata::make(std::vector<SurfaceHandle<const RegularSurface>>{
-        Surface::makeShared<CylinderSurface>(
-            Transform3::Identity(), 10 /* radius */, 100 /* half-length z */),
-        // TODO perigee roundtrip local->global->local does not seem to work
-        // Surface::makeShared<PerigeeSurface>(Vector3(0, 0, -1.5)),
-        CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface(),
-        CurvilinearSurface(Vector3::Zero(), Vector3::UnitY()).planeSurface(),
-        CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface(),
-    });
+const auto surfaces = bdata::make(std::vector<MaybeSharedPtr<RegularSurface>>{
+    Surface::makeShared<CylinderSurface>(
+        Transform3::Identity(), 10 /* radius */, 100 /* half-length z */),
+    // TODO perigee roundtrip local->global->local does not seem to work
+    // Surface::makeShared<PerigeeSurface>(Vector3(0, 0, -1.5)),
+    CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface(),
+    CurvilinearSurface(Vector3::Zero(), Vector3::UnitY()).planeSurface(),
+    CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface(),
+});
 // positions
 const auto posAngle = bdata::xrange(-std::numbers::pi, std::numbers::pi, 0.5);
 const auto posPositiveNonzero = bdata::xrange(0.25, 1.0, 0.25);

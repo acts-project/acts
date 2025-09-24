@@ -90,7 +90,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
   return result;
 }
 
-SurfaceHandle<const Surface> convertSurfaceFromPodio(
+MaybeSharedPtr<const Surface> convertSurfaceFromPodio(
     const ConversionHelper& helper, const ActsPodioEdm::Surface& surface) {
   if (surface.surfaceType == kNoSurface) {
     return nullptr;
@@ -102,7 +102,7 @@ SurfaceHandle<const Surface> convertSurfaceFromPodio(
   using T = Surface::SurfaceType;
   using B = SurfaceBounds;
 
-  SurfaceHandle<const Surface> result;
+  MaybeSharedPtr<const Surface> result;
 
   if (const Surface* srf = helper.identifierToSurface(surface.identifier);
       srf != nullptr) {

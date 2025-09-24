@@ -20,7 +20,7 @@
 namespace Acts::detail::Test {
 
 struct TestTrackState {
-  SurfaceHandle<Surface> surface;
+  MaybeSharedPtr<Surface> surface;
   TestSourceLink sourceLink;
   BoundTrackParameters predicted;
   BoundTrackParameters filtered;

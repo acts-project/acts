@@ -22,7 +22,7 @@
 namespace Acts {
 
 template <class T>
-class SurfaceHandle;
+class MaybeSharedPtr;
 
 }
 
@@ -67,7 +67,7 @@ struct ProtoSupport {
   // Building instructions 2 (surface is provided):
 
   /// The support surface can already be provided
-  Acts::SurfaceHandle<Surface> surface = {};
+  Acts::MaybeSharedPtr<Surface> surface = {};
 
   /// The (optional) binning description for proto material
   std::optional<std::vector<ProtoAxis>> protoMaterialBinning = std::nullopt;

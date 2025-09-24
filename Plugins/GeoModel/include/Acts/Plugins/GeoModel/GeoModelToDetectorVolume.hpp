@@ -42,6 +42,6 @@ std::shared_ptr<Volume> convertVolume(const Transform3& trf,
 /// @return A shared pointer initialized with the new Gen-2 volume
 std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
     const GeometryContext& context, Volume& vol, const std::string& name,
-    const std::vector<SurfaceHandle<Surface>>& sensitives);
+    const std::vector<MaybeSharedPtr<Surface>>& sensitives);
 
 }  // namespace Acts::GeoModel

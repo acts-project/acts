@@ -74,11 +74,11 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
   /// @note This will clear any previously registered proto layer
   /// @return Reference to this node for chaining
   LayerBlueprintNode& setSurfaces(
-      std::vector<SurfaceHandle<Surface>> surfaces);
+      std::vector<MaybeSharedPtr<Surface>> surfaces);
 
   /// Access the registered surfaces.
   /// @return The registered surfaces
-  const std::vector<SurfaceHandle<Surface>>& surfaces() const;
+  const std::vector<MaybeSharedPtr<Surface>>& surfaces() const;
 
   /// Register a proto layer with the layer node.
   /// @param protoLayer The proto layer to register

@@ -87,7 +87,7 @@ DD4hepLayerStructure::builder(DD4hepDetectorElement::Store& dd4hepStore,
   lsbConfig.binnings = fCache.binnings;
   lsbConfig.supports = fCache.supports;
 
-  std::vector<SurfaceHandle<Surface>> lSurfaces;
+  std::vector<MaybeSharedPtr<Surface>> lSurfaces;
   lSurfaces.reserve(fCache.sensitiveSurfaces.size() +
                     fCache.passiveSurfaces.size());
 

@@ -163,7 +163,7 @@ struct Geant4PhysicalVolumeConverter {
   /// @param compressed the compressed thickness of the converted material
   ///
   /// @return a shared surface object
-  SurfaceHandle<Surface> surface(const G4VPhysicalVolume& g4PhysVol,
+  MaybeSharedPtr<Surface> surface(const G4VPhysicalVolume& g4PhysVol,
                                    const Transform3& toGlobal,
                                    bool convertMaterial = false,
                                    double compressed = 0.);

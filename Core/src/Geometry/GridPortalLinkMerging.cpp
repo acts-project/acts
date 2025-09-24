@@ -29,7 +29,7 @@ namespace {
 
 template <typename... Args>
 std::unique_ptr<GridPortalLink> makeGrid(
-    const SurfaceHandle<RegularSurface>& surface, AxisDirection direction,
+    const MaybeSharedPtr<RegularSurface>& surface, AxisDirection direction,
     const Logger& logger, std::tuple<Args...> args, const IAxis* otherAxis,
     bool prepend) {
   // @TODO: PlaneSurface support
@@ -91,7 +91,7 @@ std::unique_ptr<GridPortalLink> makeGrid(
 }
 
 std::unique_ptr<GridPortalLink> mergeVariable(
-    const SurfaceHandle<RegularSurface>& mergedSurface, const IAxis& axisA,
+    const MaybeSharedPtr<RegularSurface>& mergedSurface, const IAxis& axisA,
     const IAxis& axisB, double /*tolerance*/, AxisDirection direction,
     const Logger& logger, const IAxis* otherAxis, bool prepend) {
   ACTS_VERBOSE("Variable merge: direction is " << direction);
@@ -134,7 +134,7 @@ std::unique_ptr<GridPortalLink> mergeVariable(
 }
 
 std::unique_ptr<GridPortalLink> mergeEquidistant(
-    const SurfaceHandle<RegularSurface>& mergedSurface, const IAxis& axisA,
+    const MaybeSharedPtr<RegularSurface>& mergedSurface, const IAxis& axisA,
     const IAxis& axisB, double tolerance, AxisDirection direction,
     const Logger& logger, const IAxis* otherAxis, bool prepend) {
   ACTS_VERBOSE("===> potentially equidistant merge: checking bin widths");
@@ -186,7 +186,7 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(
 }
 
 std::unique_ptr<GridPortalLink> colinearMerge(
-    const SurfaceHandle<RegularSurface>& mergedSurface, const IAxis& axisA,
+    const MaybeSharedPtr<RegularSurface>& mergedSurface, const IAxis& axisA,
     const IAxis& axisB, double tolerance, AxisDirection direction,
     const Logger& logger, const IAxis* otherAxis, bool prepend) {
   AxisType aType = axisA.getType();
@@ -246,25 +246,25 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
   // to be adjusteed to the input geometry.
   constexpr auto tolerance = s_onSurfaceTolerance;
 
-  SurfaceHandle<RegularSurface> mergedSurface;
+  MaybeSharedPtr<RegularSurface> mergedSurface;
   bool reversed = false;
 
   if (const auto* cylinderA = dynamic_cast<const CylinderSurface*>(surfaceA);
       cylinderA != nullptr) {
-    SurfaceHandle<CylinderSurface> tempSurface;
+    MaybeSharedPtr<RegularSurface> tempSurface;
     std::tie(tempSurface, reversed) =
         cylinderA->mergedWith(dynamic_cast<const CylinderSurface&>(*surfaceB),
                               direction, true, logger);
     mergedSurface = tempSurface;
   } else if (const auto* discA = dynamic_cast<const DiscSurface*>(surfaceA);
              discA != nullptr) {
-    SurfaceHandle<DiscSurface> tempSurface;
+    MaybeSharedPtr<RegularSurface> tempSurface;
     std::tie(tempSurface, reversed) = discA->mergedWith(
         dynamic_cast<const DiscSurface&>(*surfaceB), direction, true, logger);
     mergedSurface = tempSurface;
   } else if (const auto* planeA = dynamic_cast<const PlaneSurface*>(surfaceA);
              planeA != nullptr) {
-    SurfaceHandle<PlaneSurface> tempSurface;
+    MaybeSharedPtr<RegularSurface> tempSurface;
     std::tie(tempSurface, reversed) = planeA->mergedWith(
         dynamic_cast<const PlaneSurface&>(*surfaceB), direction, logger);
     mergedSurface = tempSurface;

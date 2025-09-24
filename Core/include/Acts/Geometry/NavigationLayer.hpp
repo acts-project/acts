@@ -33,7 +33,7 @@ class NavigationLayer : public Layer {
   ///
   /// @param sRepresentation is the representation for extrapolation
   /// @param thickness is the thickness for the binning
-  static LayerPtr create(SurfaceHandle<const Surface> sRepresentation,
+  static LayerPtr create(MaybeSharedPtr<const Surface> sRepresentation,
                          double thickness = 0.) {
     return LayerPtr(new NavigationLayer(std::move(sRepresentation), thickness));
   }
@@ -98,7 +98,7 @@ class NavigationLayer : public Layer {
   ///
   /// @param surfaceRepresentation is the surface of the layer
   /// @param thickness ithe layer thickness
-  NavigationLayer(SurfaceHandle<const Surface> surfaceRepresentation,
+  NavigationLayer(MaybeSharedPtr<const Surface> surfaceRepresentation,
                   double thickness);
 
   /// for the navigation Volume the surface
@@ -106,7 +106,7 @@ class NavigationLayer : public Layer {
   /// We will need to mutate this surface during the geometry building process,
   /// but the C++ type system has no const-correct way of expressing this.
   ///
-  SurfaceHandle<const Surface> m_surfaceRepresentation;
+  MaybeSharedPtr<const Surface> m_surfaceRepresentation;
 };
 
 inline const Surface& NavigationLayer::surfaceRepresentation() const {

@@ -85,7 +85,7 @@ class ConversionHelper {
   virtual SourceLink identifierToSourceLink(Identifier identifier) const = 0;
 };
 
-SurfaceHandle<const Surface> convertSurfaceFromPodio(
+MaybeSharedPtr<const Surface> convertSurfaceFromPodio(
     const ConversionHelper& helper, const ActsPodioEdm::Surface& surface);
 
 ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,

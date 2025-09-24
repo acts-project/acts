@@ -267,7 +267,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
       vtxInfo.linPoint = vtxInfo.oldPosition;
     }
 
-    const SurfaceHandle<PerigeeSurface> vtxPerigeeSurface =
+    const MaybeSharedPtr<Surface> vtxPerigeeSurface =
         Surface::makeShared<PerigeeSurface>(
             VectorHelpers::position(vtxInfo.linPoint));
 

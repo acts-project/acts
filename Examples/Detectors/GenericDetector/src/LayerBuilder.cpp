@@ -15,9 +15,9 @@
 namespace ActsExamples::Generic {
 
 namespace {
-std::vector<Acts::SurfaceHandle<const Acts::Surface>> makeConstSurfaces(
-    std::span<const Acts::SurfaceHandle<Acts::Surface>> surfaces) {
-  std::vector<Acts::SurfaceHandle<const Acts::Surface>> constSurfaces;
+std::vector<Acts::MaybeSharedPtr<const Acts::Surface>> makeConstSurfaces(
+    std::span<const Acts::MaybeSharedPtr<Acts::Surface>> surfaces) {
+  std::vector<Acts::MaybeSharedPtr<const Acts::Surface>> constSurfaces;
   constSurfaces.reserve(surfaces.size());
   for (const auto& surface : surfaces) {
     constSurfaces.push_back(surface);

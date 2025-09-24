@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 
 #include <array>
@@ -31,7 +32,7 @@ class ISurfaceMaterial;
 class Surface;
 
 template <class T>
-class SurfaceHandle;
+class MaybeSharedPtr;
 
 namespace Experimental {
 class DetectorVolume;
@@ -50,7 +51,7 @@ class Portal {
   /// Constructor from surface w/o portal links
   ///
   /// @param surface is the representing surface
-  explicit Portal(SurfaceHandle<RegularSurface> surface);
+  explicit Portal(MaybeSharedPtr<RegularSurface> surface);
 
   /// The vector of attached volumes forward/backward, this is useful in the
   /// geometry building
@@ -150,7 +151,7 @@ class Portal {
 
  private:
   /// The surface representation of this portal
-  SurfaceHandle<RegularSurface> m_surface;
+  MaybeSharedPtr<RegularSurface> m_surface;
 
   /// The portal targets along/opposite the normal vector
   std::array<ExternalNavigationDelegate, 2u> m_portalNavigation = {

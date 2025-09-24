@@ -71,7 +71,7 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
 }
 
 std::tuple<std::vector<nlohmann::json>,
-           std::vector<Acts::SurfaceHandle<Acts::Surface>>>
+           std::vector<Acts::MaybeSharedPtr<Acts::Surface>>>
 Acts::PortalJsonConverter::toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
@@ -86,7 +86,7 @@ Acts::PortalJsonConverter::toJsonDetray(
   // First assumption for outside link (along direction)
   std::size_t outside = 1u;
 
-  std::vector<Acts::SurfaceHandle<Acts::Surface>> subSurfaces = {};
+  std::vector<Acts::MaybeSharedPtr<Acts::Surface>> subSurfaces = {};
 
   // Find out if you need to take the outside or inside volume
   // for planar surfaces that's easy

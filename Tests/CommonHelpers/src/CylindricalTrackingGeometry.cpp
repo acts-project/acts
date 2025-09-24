@@ -239,7 +239,7 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1() {
                            [](Surface* s) { return s; });
 
     // Make a shared version out of it
-    std::vector<SurfaceHandle<const Surface>> layerSurfacePtrs;
+    std::vector<MaybeSharedPtr<const Surface>> layerSurfacePtrs;
     layerSurfacePtrs.reserve(layerSurfaces.size());
     for (auto& sf : layerSurfaces) {
       layerSurfacePtrs.push_back(sf->getSharedPtr());
@@ -337,7 +337,7 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
                            kLayerRadii[ilp], 2_mm, 5_mm, kLayerBinning[ilp]);
 
       // Make a shared version out of it
-      std::vector<SurfaceHandle<Surface>> layerSurfacePtrs;
+      std::vector<MaybeSharedPtr<Surface>> layerSurfacePtrs;
       layerSurfacePtrs.reserve(layerSurfaces.size());
       for (auto& sf : layerSurfaces) {
         layerSurfacePtrs.push_back(sf->getSharedPtr());

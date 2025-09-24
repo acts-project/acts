@@ -27,7 +27,7 @@ using AlignedGeoModelDetectorElement =
 
 std::shared_ptr<AlignedGeoModelDetectorElement>
 alignedGeoModelDetectorElementFactory(const PVConstLink& geoPhysVol,
-                                      Acts::SurfaceHandle<Acts::Surface> surface,
+                                      Acts::MaybeSharedPtr<Acts::Surface> surface,
                                       const Acts::Transform3& sfTransform,
                                       double thickness);
 

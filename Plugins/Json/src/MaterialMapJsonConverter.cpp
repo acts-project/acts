@@ -90,7 +90,7 @@ inline void decorateJson<Acts::ISurfaceMaterial>(
 namespace {
 
 Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
-    const Acts::SurfaceHandle<const Acts::Surface>& surface,
+    const Acts::MaybeSharedPtr<const Acts::Surface>& surface,
     const Acts::GeometryContext& context) {
   if (surface->surfaceMaterialSharedPtr() != nullptr) {
     return {surface, surface->surfaceMaterialSharedPtr(), context};

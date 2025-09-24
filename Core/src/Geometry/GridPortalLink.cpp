@@ -22,14 +22,14 @@
 
 namespace Acts {
 
-GridPortalLink::GridPortalLink(SurfaceHandle<RegularSurface> surface,
+GridPortalLink::GridPortalLink(MaybeSharedPtr<RegularSurface> surface,
                                AxisDirection direction)
     : PortalLinkBase(std::move(surface)), m_direction(direction) {}
 
 GridPortalLink::~GridPortalLink() = default;
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
-    const SurfaceHandle<RegularSurface>& surface, TrackingVolume& volume,
+    const MaybeSharedPtr<RegularSurface>& surface, TrackingVolume& volume,
     AxisDirection direction) {
   std::unique_ptr<GridPortalLink> grid;
 
@@ -380,7 +380,7 @@ void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
-    const SurfaceHandle<CylinderSurface>& surface, const IAxis* other) const {
+    const MaybeSharedPtr<CylinderSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
   if (direction() == AxisDirection::AxisRPhi) {
     const auto& axisRPhi = *grid().axes().front();
@@ -430,7 +430,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
-    const SurfaceHandle<DiscSurface>& surface, const IAxis* other) const {
+    const MaybeSharedPtr<DiscSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
 
   const auto* bounds = dynamic_cast<const RadialBounds*>(&surface->bounds());
@@ -484,7 +484,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
-    const SurfaceHandle<PlaneSurface>& surface, const IAxis* other) const {
+    const MaybeSharedPtr<PlaneSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
 
   const auto* bounds = dynamic_cast<const RectangleBounds*>(&surface->bounds());

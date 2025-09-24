@@ -457,7 +457,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<Acts::SurfaceHandle<Acts::Surface>, double>
+std::tuple<Acts::MaybeSharedPtr<Acts::Surface>, double>
 Acts::TGeoSurfaceConverter::toSurface(const TGeoShape& tgShape,
                                       const TGeoMatrix& tgMatrix,
                                       const std::string& axes,

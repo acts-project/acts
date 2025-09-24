@@ -120,7 +120,7 @@ struct ProtoLayerT : public ProtoLayerBase {
   /// @param surfaces The vector of surfaces to consider
   /// @param transformIn The local transform to evaluate the sizing in
   ProtoLayerT(const GeometryContext& gctx,
-              const std::vector<SurfaceHandle<SurfaceType>>& surfaces,
+              const std::vector<MaybeSharedPtr<SurfaceType>>& surfaces,
               const Transform3& transformIn = Transform3::Identity()) {
     transform = transformIn;
     m_surfaces.reserve(surfaces.size());
@@ -146,7 +146,7 @@ struct ProtoLayerT : public ProtoLayerBase {
   /// @param surfaces The vector of surfaces to consider
   /// @param transformIn The local transform to evaluate the sizing in
   ProtoLayerT(const GeometryContext& gctx,
-              const std::vector<SurfaceHandle<Surface>>& surfaces,
+              const std::vector<MaybeSharedPtr<Surface>>& surfaces,
               const Transform3& transformIn = Transform3::Identity())
     requires IsConst
   {

@@ -47,11 +47,11 @@ class DD4hepDetectorSurfaceFactory {
   /// Collect the sensitive surface & detector element
   using DD4hepSensitiveSurface =
       std::tuple<std::shared_ptr<DD4hepDetectorElement>,
-                 SurfaceHandle<Surface>>;
+                 MaybeSharedPtr<Surface>>;
 
   /// Collect the passive surfaces, bool whether it should be
   /// added as an "always try, i.e. assignToAll=true" surface
-  using DD4hepPassiveSurface = std::tuple<SurfaceHandle<Surface>, bool>;
+  using DD4hepPassiveSurface = std::tuple<MaybeSharedPtr<Surface>, bool>;
 
   /// Configuration struct
   struct Config {

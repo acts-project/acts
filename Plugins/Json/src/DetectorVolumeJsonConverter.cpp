@@ -101,7 +101,7 @@ Acts::DetectorVolumeJsonConverter::fromJson(const GeometryContext& gctx,
     return volume;
   }
   // Convert the surfaces
-  std::vector<SurfaceHandle<Surface>> surfaces;
+  std::vector<MaybeSharedPtr<Surface>> surfaces;
   for (const auto& js : jSurfaces) {
     surfaces.push_back(SurfaceJsonConverter::fromJson(js));
   }

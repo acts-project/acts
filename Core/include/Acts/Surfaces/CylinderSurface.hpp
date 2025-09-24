@@ -261,7 +261,7 @@ class CylinderSurface : public RegularSurface {
   /// @return The merged cylinder surface and a boolean indicating if surfaces are reversed
   /// @note The returned boolean is `false` if `this` is *left* or
   ///       *counter-clockwise* of @p other, and `true` if not.
-  std::pair<SurfaceHandle<CylinderSurface>, bool> mergedWith(
+  std::pair<MaybeSharedPtr<CylinderSurface>, bool> mergedWith(
       const CylinderSurface& other, AxisDirection direction,
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
 

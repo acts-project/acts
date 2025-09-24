@@ -25,7 +25,7 @@
 namespace Acts {
 
 template <class T>
-class SurfaceHandle;
+class MaybeSharedPtr;
 
 }
 
@@ -40,7 +40,7 @@ class MultiWireStructureBuilder {
     std::string name = "";
 
     /// The surfaces of the Multi Wire
-    std::vector<SurfaceHandle<Acts::Surface>> mlSurfaces = {};
+    std::vector<MaybeSharedPtr<Acts::Surface>> mlSurfaces = {};
 
     /// The transform of the Multi Wire
     Transform3 transform = Transform3::Identity();

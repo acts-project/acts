@@ -31,7 +31,7 @@ auto tContext = GeometryContext();
 BOOST_AUTO_TEST_SUITE(BinnedSurfaceMaterialAccumulaterSuite)
 
 BOOST_AUTO_TEST_CASE(InvalidSetupTest) {
-  std::vector<SurfaceHandle<Surface>> surfaces = {
+  std::vector<MaybeSharedPtr<Surface>> surfaces = {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30.0, 100.0),
   };
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(InvalidSetupTest) {
 }
 
 BOOST_AUTO_TEST_CASE(AccumulationTest) {
-  std::vector<SurfaceHandle<Surface>> surfaces = {
+  std::vector<MaybeSharedPtr<Surface>> surfaces = {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 50.0,

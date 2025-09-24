@@ -61,7 +61,7 @@ readTracksAndVertexCSV(const std::string& toolString,
   // String to store the read lines
   std::string line{};
 
-  SurfaceHandle<PerigeeSurface> perigeeSurface;
+  MaybeSharedPtr<Surface> perigeeSurface;
   std::vector<BoundTrackParameters> tracks;
   std::vector<VertexInfo> vertices;
   Vertex beamspotConstraint;
@@ -115,7 +115,7 @@ readTracksAndVertexCSV(const std::string& toolString,
         std::stod(row[25]) * 1. / (1_MeV), std::stod(row[26]);
 
     // TODO we do not have a hypothesis at hand here. defaulting to pion
-    tracks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), params, std::move(covMat),
+    tracks.emplace_back(MaybeSharedPtr<const Surface>(perigeeSurface), params, std::move(covMat),
                         ParticleHypothesis::pion());
   }
 

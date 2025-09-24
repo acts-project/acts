@@ -32,7 +32,7 @@ class PortalLinkBase {
   /// Constructor from a surface. This constructor is only
   /// called from derived classes
   /// @param surface The surface
-  explicit PortalLinkBase(SurfaceHandle<RegularSurface> surface)
+  explicit PortalLinkBase(MaybeSharedPtr<RegularSurface> surface)
       : m_surface(std::move(surface)) {
     if (!m_surface) {
       throw std::invalid_argument("Surface pointer must not be null");
@@ -97,15 +97,13 @@ class PortalLinkBase {
 
   /// Setter for the surface
   /// @param surface The surface
-  void setSurface(SurfaceHandle<RegularSurface> surface) {
+  void setSurface(MaybeSharedPtr<RegularSurface> surface) {
     m_surface = std::move(surface);
   }
 
   /// Getter for the underlying surface handle
   /// @return The surface handle to the surface
-  const SurfaceHandle<RegularSurface>& surfacePtr() const {
-    return m_surface;
-  }
+  const MaybeSharedPtr<RegularSurface>& surfacePtr() const { return m_surface; }
 
  protected:
   /// Helper function to check a number of preconditions before merging is
@@ -114,7 +112,7 @@ class PortalLinkBase {
                                       const PortalLinkBase& b,
                                       AxisDirection direction);
 
-  SurfaceHandle<RegularSurface> m_surface;
+  MaybeSharedPtr<RegularSurface> m_surface;
 };
 
 }  // namespace Acts

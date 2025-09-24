@@ -18,7 +18,7 @@ namespace Acts {
 class Surface;
 
 template <class T>
-class SurfaceHandle;
+class MaybeSharedPtr;
 
 namespace Experimental {
 
@@ -38,7 +38,7 @@ class ISurfacesProvider {
   /// @param gctx the geometry context at the creation of the internal structure
   ///
   /// @return a shared detector object
-  virtual std::vector<SurfaceHandle<Surface>> surfaces(
+  virtual std::vector<MaybeSharedPtr<Surface>> surfaces(
       const GeometryContext& gctx) const = 0;
 };
 

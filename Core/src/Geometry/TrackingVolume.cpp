@@ -600,7 +600,7 @@ TrackingVolume::MutableSurfaceRange TrackingVolume::surfaces() {
   return MutableSurfaceRange{m_surfaces};
 }
 
-void TrackingVolume::addSurface(SurfaceHandle<Surface> surface) {
+void TrackingVolume::addSurface(MaybeSharedPtr<Surface> surface) {
   if (surface == nullptr) {
     throw std::invalid_argument("Surface is nullptr");
   }

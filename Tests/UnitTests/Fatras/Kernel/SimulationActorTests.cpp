@@ -173,14 +173,14 @@ struct Fixture {
   double p = 1_GeV;
   double e;
   Generator generator;
-  Acts::SurfaceHandle<Acts::Surface> surface;
+  Acts::MaybeSharedPtr<Acts::Surface> surface;
   Actor actor;
   Result result;
   MockPropagatorState state;
   MockStepper stepper;
   MockNavigator navigator;
 
-  Fixture(double energyLoss, Acts::SurfaceHandle<Acts::Surface> surface_)
+  Fixture(double energyLoss, Acts::MaybeSharedPtr<Acts::Surface> surface_)
       : e(std::hypot(m, p)), generator(42), surface(std::move(surface_)) {
     const auto particle = Particle(pid, pdg, q, m)
                               .setProcess(proc)
@@ -200,7 +200,7 @@ struct Fixture {
 };
 
 // make a surface without material.
-Acts::SurfaceHandle<Acts::Surface> makeEmptySurface() {
+Acts::MaybeSharedPtr<Acts::Surface> makeEmptySurface() {
   auto surface =
       Acts::CurvilinearSurface(Acts::Vector3(1, 2, 3), Acts::Vector3(1, 0, 0))
           .planeSurface();
@@ -208,7 +208,7 @@ Acts::SurfaceHandle<Acts::Surface> makeEmptySurface() {
 }
 
 // make a surface with 1% X0/L0 material.
-Acts::SurfaceHandle<Acts::Surface> makeMaterialSurface() {
+Acts::MaybeSharedPtr<Acts::Surface> makeMaterialSurface() {
   auto surface = makeEmptySurface();
   auto slab = Acts::Test::makeUnitSlab();
   surface->assignSurfaceMaterial(

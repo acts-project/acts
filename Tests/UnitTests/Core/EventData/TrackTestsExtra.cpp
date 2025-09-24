@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t.covariance() = cov;
   BOOST_CHECK_EQUAL(t.covariance(), cov);
 
-  Acts::SurfaceHandle<PlaneSurface> surface =
+  Acts::MaybeSharedPtr<Acts::Surface> surface =
       CurvilinearSurface(Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0})
           .planeSurface();
 
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(ProxyAccessorHasColumn) {
       ConstProxyAccessor<std::optional<SourceLink>>("uncalibratedSourceLink")
           .hasColumn(ts));
   BOOST_CHECK(
-      ConstProxyAccessor<SurfaceHandle<const Surface>>("referenceSurface")
+      ConstProxyAccessor<MaybeSharedPtr<const Surface>>("referenceSurface")
           .hasColumn(ts));
   BOOST_CHECK(ConstProxyAccessor<std::uint8_t>("measdim").hasColumn(ts));
   BOOST_CHECK(ConstProxyAccessor<float>("chi2").hasColumn(ts));

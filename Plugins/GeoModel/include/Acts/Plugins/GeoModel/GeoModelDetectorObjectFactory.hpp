@@ -55,7 +55,7 @@ class GeoModelDetectorObjectFactory {
     /// @brief Name of the converted volume
     std::string name{};
     /// @brief List of surfaces belonging to this volume
-    std::vector<SurfaceHandle<Surface>> surfaces{};
+    std::vector<MaybeSharedPtr<Surface>> surfaces{};
   };
   using ConvertedVolList_t = std::vector<ConvertedGeoVol>;
 

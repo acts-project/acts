@@ -61,7 +61,7 @@ void PlaneLayer::buildApproachDescriptor() {
   // delete it
   m_approachDescriptor.reset(nullptr);
   // delete the surfaces
-  std::vector<SurfaceHandle<const Surface>> aSurfaces;
+  std::vector<MaybeSharedPtr<const Surface>> aSurfaces;
   // get the appropriate transform, the center and the normal vector
 
   //@todo fix with representing volume

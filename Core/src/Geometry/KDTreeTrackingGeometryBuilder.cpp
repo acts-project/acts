@@ -47,7 +47,7 @@ std::unique_ptr<const TrackingGeometry>
 KDTreeTrackingGeometryBuilder::trackingGeometry(
     const GeometryContext& gctx) const {
   using MeasuredSurface =
-      std::pair<std::array<double, 2u>, SurfaceHandle<Surface>>;
+      std::pair<std::array<double, 2u>, MaybeSharedPtr<Surface>>;
   // Prepare all the surfaces
   std::vector<MeasuredSurface> surfacesMeasured;
   surfacesMeasured.reserve(m_cfg.surfaces.size());
@@ -204,10 +204,10 @@ std::shared_ptr<const Layer> KDTreeTrackingGeometryBuilder::translateLayer(
 
   } else if (layerSurfaces.size() > 1u) {
     // Make a const collection out of the surfaces
-    std::vector<SurfaceHandle<const Surface>> cLayerSurfaces;
+    std::vector<MaybeSharedPtr<const Surface>> cLayerSurfaces;
     cLayerSurfaces.reserve(layerSurfaces.size());
     for (const auto& s : layerSurfaces) {
-      cLayerSurfaces.push_back(SurfaceHandle<const Surface>(s.second));
+      cLayerSurfaces.push_back(MaybeSharedPtr<const Surface>(s.second));
     }
 
     BinningType bType0 = equidistant;

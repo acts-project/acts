@@ -36,7 +36,7 @@ class StructureSelector {
   /// Select a structure by its identifier
   /// @param geoId The identifier of the structure to select
   /// @return A vector of pointers to the selected surfaces
-  std::vector<Acts::SurfaceHandle<const Acts::Surface>> selectSurfaces(
+  std::vector<Acts::MaybeSharedPtr<const Acts::Surface>> selectSurfaces(
       const Acts::GeometryIdentifier& geoId) const;
 
   /// Select a structure by its identified transforms
@@ -49,6 +49,6 @@ class StructureSelector {
 
  private:
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
-  GeometryIdMultiset<Acts::SurfaceHandle<const Acts::Surface>> m_surfaceMultiSet;
+  GeometryIdMultiset<Acts::MaybeSharedPtr<const Acts::Surface>> m_surfaceMultiSet;
 };
 }  // namespace ActsExamples

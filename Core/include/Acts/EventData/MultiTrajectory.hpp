@@ -715,7 +715,7 @@ class MultiTrajectory {
   }
 
   void setReferenceSurface(IndexType istate,
-                           SurfaceHandle<const Surface> surface)
+                           MaybeSharedPtr<const Surface> surface)
     requires(!ReadOnly)
   {
     self().setReferenceSurface_impl(istate, std::move(surface));

@@ -169,7 +169,7 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
     std::lock_guard<std::mutex> lock(m_read_mutex);
     // now read
 
-    Acts::SurfaceHandle<Acts::PerigeeSurface> perigeeSurface =
+    Acts::MaybeSharedPtr<Acts::Surface> perigeeSurface =
         Acts::Surface::makeShared<Acts::PerigeeSurface>(
             Acts::Vector3(0., 0., 0.));
 

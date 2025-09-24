@@ -59,9 +59,9 @@ std::string JsonSurfacesWriter::name() const {
 namespace {
 
 using SurfaceContainer =
-    Acts::GeometryHierarchyMap<Acts::SurfaceHandle<const Acts::Surface>>;
+    Acts::GeometryHierarchyMap<Acts::MaybeSharedPtr<const Acts::Surface>>;
 using SurfaceConverter = Acts::GeometryHierarchyMapJsonConverter<
-    Acts::SurfaceHandle<const Acts::Surface>>;
+    Acts::MaybeSharedPtr<const Acts::Surface>>;
 
 /// Write all child surfaces and descend into confined volumes.
 void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,

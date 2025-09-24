@@ -66,7 +66,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Configuration of the surface
     std::vector<SurfaceConfig> surfaceCfg;
     // Encapsulated surface
-    std::vector<SurfaceHandle<const Surface>> surfaces;
+    std::vector<MaybeSharedPtr<const Surface>> surfaces;
     // Boolean flag if layer is active
     bool active = false;
     // Bins in Y direction
@@ -138,7 +138,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// @param [in] cfg Configuration of the surface
   ///
   /// @return Pointer to the created surface
-  SurfaceHandle<const Surface> buildSurface(const GeometryContext& gctx,
+  MaybeSharedPtr<const Surface> buildSurface(const GeometryContext& gctx,
                                               const SurfaceConfig& cfg) const;
 
   /// @brief This function creates a layer with a surface encapsulated with a

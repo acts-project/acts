@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
   cov.setIdentity();
   cov(5, 5) = 25_ns;
 
-  BoundTrackParameters boundPar{SurfaceHandle<const Surface>(refSurface), par, cov,
+  BoundTrackParameters boundPar{MaybeSharedPtr<const Surface>(refSurface), par, cov,
                                 ParticleHypothesis::pion()};
 
   double Bz = 2_T;
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   cov.setIdentity();
   cov(5, 5) = 25_ns;
 
-  BoundTrackParameters planePar{SurfaceHandle<const Surface>(planeSurface), par, cov,
+  BoundTrackParameters planePar{MaybeSharedPtr<const Surface>(planeSurface), par, cov,
                                 ParticleHypothesis::pion()};
 
   double Bz = 2_T;
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
   par << 1_mm, 5_mm, 0, std::numbers::pi / 2., -1 / 1_GeV,
       5_ns;  // -> perpendicular to perigee and pointing right, should be PCA
 
-  BoundTrackParameters boundPar{SurfaceHandle<const Surface>(refSurface), par, std::nullopt,
+  BoundTrackParameters boundPar{MaybeSharedPtr<const Surface>(refSurface), par, std::nullopt,
                                 ParticleHypothesis::pion()};
 
   double Bz = 2_T;
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
   par << 1_mm, 5_mm, std::numbers::pi / 4., std::numbers::pi / 2., -1 / 1_GeV,
       5_ns;
 
-  BoundTrackParameters boundPar{SurfaceHandle<const Surface>(refSurface), par, std::nullopt,
+  BoundTrackParameters boundPar{MaybeSharedPtr<const Surface>(refSurface), par, std::nullopt,
                                 ParticleHypothesis::pion()};
 
   double Bz = 2_T;

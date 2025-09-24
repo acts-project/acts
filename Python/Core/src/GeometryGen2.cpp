@@ -119,13 +119,13 @@ void addGeometryGen2(py::module_& m) {
 
   {
     // The surface hierarchy map
-    using SurfaceHierarchyMap = GeometryHierarchyMap<SurfaceHandle<Surface>>;
+    using SurfaceHierarchyMap = GeometryHierarchyMap<MaybeSharedPtr<Surface>>;
 
     // Extract volume / layer surfaces
     m.def("extractVolumeLayerSurfaces", [](const SurfaceHierarchyMap& smap,
                                            bool sensitiveOnly) {
       std::map<unsigned int,
-               std::map<unsigned int, std::vector<SurfaceHandle<Surface>>>>
+               std::map<unsigned int, std::vector<MaybeSharedPtr<Surface>>>>
           surfaceVolumeLayerMap;
       for (const auto& surface : smap) {
         auto gid = surface->geometryId();
@@ -172,7 +172,7 @@ void addGeometryGen2(py::module_& m) {
                Experimental::ISurfacesProvider,
                std::shared_ptr<LayerStructureBuilder::SurfacesHolder>>(
         lsBuilder, "SurfacesHolder")
-        .def(py::init<std::vector<SurfaceHandle<Surface>>>());
+        .def(py::init<std::vector<MaybeSharedPtr<Surface>>>());
   }
 
   {
@@ -191,7 +191,7 @@ void addGeometryGen2(py::module_& m) {
     py::class_<KdtSurfacesDim1Bin100, std::shared_ptr<KdtSurfacesDim1Bin100>>(
         m, "KdtSurfacesDim1Bin100")
         .def(py::init<const GeometryContext&,
-                      const std::vector<SurfaceHandle<Surface>>&,
+                      const std::vector<MaybeSharedPtr<Surface>>&,
                       const std::array<AxisDirection, 1u>&>())
         .def("surfaces", py::overload_cast<const RangeXDDim1&>(
                              &KdtSurfacesDim1Bin100::surfaces, py::const_));
@@ -220,7 +220,7 @@ void addGeometryGen2(py::module_& m) {
     py::class_<KdtSurfacesDim2Bin100, std::shared_ptr<KdtSurfacesDim2Bin100>>(
         m, "KdtSurfacesDim2Bin100")
         .def(py::init<const GeometryContext&,
-                      const std::vector<SurfaceHandle<Surface>>&,
+                      const std::vector<MaybeSharedPtr<Surface>>&,
                       const std::array<AxisDirection, 2u>&>())
         .def("surfaces", py::overload_cast<const RangeXDDim2&>(
                              &KdtSurfacesDim2Bin100::surfaces, py::const_));

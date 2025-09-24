@@ -86,7 +86,7 @@ struct TGeoSurfaceConverter {
   ///
   /// @return shared pointer to a surface and the original thickness that
   /// has been condensed to the surface
-  static std::tuple<SurfaceHandle<Surface>, double> toSurface(
+  static std::tuple<MaybeSharedPtr<Surface>, double> toSurface(
       const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
       const std::string& axes, double scalor = 10.) noexcept(false);
 

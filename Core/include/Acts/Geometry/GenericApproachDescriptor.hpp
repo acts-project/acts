@@ -37,7 +37,7 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   ///
   /// @param aSurfaces are the approach surfaces
   explicit GenericApproachDescriptor(
-      std::vector<SurfaceHandle<const Surface>> aSurfaces)
+      std::vector<MaybeSharedPtr<const Surface>> aSurfaces)
       : ApproachDescriptor(),
         m_surfaces(std::move(aSurfaces)),
         m_surfaceCache() {
@@ -75,7 +75,7 @@ class GenericApproachDescriptor : public ApproachDescriptor {
 
  private:
   /// approach surfaces with ownership control
-  std::vector<SurfaceHandle<const Surface>> m_surfaces;
+  std::vector<MaybeSharedPtr<const Surface>> m_surfaces;
 
   /// the surface container cache
   ///

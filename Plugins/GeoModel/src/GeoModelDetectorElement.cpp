@@ -15,7 +15,7 @@
 #include <GeoModelKernel/GeoFullPhysVol.h>
 
 Acts::GeoModelDetectorElement::GeoModelDetectorElement(
-    PVConstLink geoPhysVol, SurfaceHandle<Surface> surface,
+    PVConstLink geoPhysVol, MaybeSharedPtr<Surface> surface,
     const Transform3& sfTransform, double thickness)
     : m_geoPhysVol(std::move(geoPhysVol)),
       m_surface(std::move(surface)),

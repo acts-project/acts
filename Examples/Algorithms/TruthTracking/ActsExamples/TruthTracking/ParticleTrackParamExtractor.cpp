@@ -36,7 +36,7 @@ ActsExamples::ProcessCode ParticleTrackParamExtractor::execute(
     const AlgorithmContext& ctx) const {
   const SimParticleContainer& particles = m_inputParticles(ctx);
 
-  std::unordered_map<SimBarcode, Acts::SurfaceHandle<Acts::PerigeeSurface>>
+  std::unordered_map<SimBarcode, Acts::MaybeSharedPtr<Acts::Surface>>
       perigeeSurfaces;
 
   for (auto&& [vtxId, vtxParticles] : groupByVertexId(particles)) {

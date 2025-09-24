@@ -33,7 +33,7 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   sacConfig.doPhiBinningOptimization = false;
   SurfaceArrayCreator sac{sacConfig, logger.clone("SrfArrCrtr")};
 
-  std::vector<SurfaceHandle<const Surface>> surfaces;
+  std::vector<MaybeSharedPtr<const Surface>> surfaces;
   surfaces.reserve(volume.surfaces().size());
   for (const auto& surface : volume.surfaces()) {
     if (surface.associatedDetectorElement() == nullptr) {

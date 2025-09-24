@@ -149,12 +149,12 @@ AlignmentToPathMatrix Surface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-SurfaceHandle<Surface> Surface::getSharedPtr() {
-  return SurfaceHandle<Surface>(shared_from_this());
+MaybeSharedPtr<Surface> Surface::getSharedPtr() {
+  return MaybeSharedPtr<Surface>(shared_from_this());
 }
 
-SurfaceHandle<const Surface> Surface::getSharedPtr() const {
-  return SurfaceHandle<const Surface>(shared_from_this());
+MaybeSharedPtr<const Surface> Surface::getSharedPtr() const {
+  return MaybeSharedPtr<const Surface>(shared_from_this());
 }
 
 Surface& Surface::operator=(const Surface& other) {

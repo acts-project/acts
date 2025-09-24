@@ -50,7 +50,7 @@ std::ostream& operator<<(std::ostream& os, const ITkIdentifier& id);
 class GeoModelDetectorElementITk : public GeoModelDetectorElement {
  public:
   GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
-                             SurfaceHandle<Surface> surface,
+                             MaybeSharedPtr<Surface> surface,
                              const Transform3& sfTransform, double thickness,
                              int hardware, int barrelEndcap, int layerWheel,
                              int etaModule, int phiModule, int side)
@@ -65,9 +65,9 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
   /// A new surface is constructed.
   /// @todo Remove redundancy in signature once plugin is refactored
   static std::tuple<std::shared_ptr<GeoModelDetectorElementITk>,
-                    SurfaceHandle<Surface>>
+                    MaybeSharedPtr<Surface>>
   convertFromGeomodel(std::shared_ptr<GeoModelDetectorElement> detEl,
-                      SurfaceHandle<Surface> srf, const GeometryContext& gctx,
+                      MaybeSharedPtr<Surface> srf, const GeometryContext& gctx,
                       int hardware, int barrelEndcap, int layerWheel,
                       int etaModule, int phiModule, int side);
 

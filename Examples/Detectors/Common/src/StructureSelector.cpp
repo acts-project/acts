@@ -8,12 +8,13 @@
 
 #include "ActsExamples/DetectorCommons/StructureSelector.hpp"
 
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
 
 namespace {
 
 struct SensitiveGetter {
-  std::vector<Acts::SurfaceHandle<const Acts::Surface>> selected;
+  std::vector<Acts::MaybeSharedPtr<const Acts::Surface>> selected;
   /// @brief Visitor call operator
   /// @param surface
   void operator()(const Acts::Surface* surface) {
@@ -21,7 +22,7 @@ struct SensitiveGetter {
       auto geoId = surface->geometryId();
       if (geoId.sensitive() != 0u ||
           surface->associatedDetectorElement() != nullptr) {
-        selected.emplace_back(Acts::SurfaceHandle{surface->getSharedPtr()});
+        selected.emplace_back(surface->getSharedPtr());
       }
     }
   }
@@ -37,11 +38,12 @@ ActsExamples::StructureSelector::StructureSelector(
   }
   SensitiveGetter getter;
   m_trackingGeometry->visitSurfaces(getter);
-  m_surfaceMultiSet = GeometryIdMultiset<Acts::SurfaceHandle<const Acts::Surface>>(
-      getter.selected.begin(), getter.selected.end());
+  m_surfaceMultiSet =
+      GeometryIdMultiset<Acts::MaybeSharedPtr<const Acts::Surface>>(
+          getter.selected.begin(), getter.selected.end());
 }
 
-std::vector<Acts::SurfaceHandle<const Acts::Surface>>
+std::vector<Acts::MaybeSharedPtr<const Acts::Surface>>
 ActsExamples::StructureSelector::selectSurfaces(
     const Acts::GeometryIdentifier& geoId) const {
   auto selectedRange =

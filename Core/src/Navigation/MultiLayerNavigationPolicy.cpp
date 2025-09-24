@@ -21,7 +21,7 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
                << m_volume.volumeName());
 
   // Fill the grid with surfaces
-  std::vector<SurfaceHandle<const Surface>> surfaces = {};
+  std::vector<MaybeSharedPtr<const Surface>> surfaces = {};
   for (const auto& surface : m_volume.surfaces()) {
     if (surface.associatedDetectorElement() == nullptr) {
       continue;

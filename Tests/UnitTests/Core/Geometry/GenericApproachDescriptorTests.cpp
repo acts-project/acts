@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(Layers)
 /// Unit test for creating compliant/non-compliant GenericApproachDescriptor
 /// object
 BOOST_AUTO_TEST_CASE(GenericApproachDescriptorConstruction) {
-  std::vector<SurfaceHandle<const Surface>> someSurfaces{
+  std::vector<MaybeSharedPtr<const Surface>> someSurfaces{
       Surface::makeShared<SurfaceStub>(), Surface::makeShared<SurfaceStub>()};
   BOOST_CHECK_NO_THROW(
       GenericApproachDescriptor minimallyConstructedApproachDescriptor(
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   double nearLimit = -100 * UnitConstants::um;
   double farLimit = std::numeric_limits<double>::max();
   //
-  std::vector<SurfaceHandle<const Surface>> someSurfaces{
+  std::vector<MaybeSharedPtr<const Surface>> someSurfaces{
       Surface::makeShared<SurfaceStub>(), Surface::makeShared<SurfaceStub>()};
   GenericApproachDescriptor approachDescriptor(someSurfaces);
   LayerStub aLayer(nullptr);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
   auto conCyl =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 10., 20.);
 
-  std::vector<SurfaceHandle<const Surface>> approachSurface = {conCyl};
+  std::vector<MaybeSharedPtr<const Surface>> approachSurface = {conCyl};
 
   GenericApproachDescriptor gad(approachSurface);
 

@@ -23,7 +23,7 @@ class VolumeBounds;
 class Surface;
 
 template <class T>
-class SurfaceHandle;
+class MaybeSharedPtr;
 
 namespace Experimental {
 
@@ -81,7 +81,7 @@ struct ExternalStructure {
 /// of contained volumes.
 struct InternalStructure {
   /// Contained surfaces of this volume, handled by the surfacesUpdater
-  std::vector<SurfaceHandle<Surface>> surfaces = {};
+  std::vector<MaybeSharedPtr<Surface>> surfaces = {};
   /// Contained volumes of this volume, handled by the volumeUpdater
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// Navigation delegate for surfaces

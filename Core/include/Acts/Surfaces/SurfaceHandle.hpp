@@ -16,7 +16,7 @@ namespace Acts {
 
 class Surface;
 
-/// @class SurfaceHandle
+/// @class MaybeSharedPtr
 ///
 /// @brief Handle for managing Surface ownership and access
 ///
@@ -27,58 +27,58 @@ class Surface;
 ///
 /// @tparam T Surface type (Surface or derived classes)
 template <class T>
-class SurfaceHandle {
+class MaybeSharedPtr {
   /// @brief Allow conversion between different SurfaceHandle types
   template <class U>
-  friend class SurfaceHandle;
+  friend class MaybeSharedPtr;
 
   /// @brief Friend functions for casting
   template <class U, class V>
-  friend SurfaceHandle<U> static_handle_cast(const SurfaceHandle<V>& handle);
+  friend MaybeSharedPtr<U> static_handle_cast(const MaybeSharedPtr<V>& handle);
   template <class U, class V>
-  friend SurfaceHandle<U> dynamic_handle_cast(const SurfaceHandle<V>& handle);
+  friend MaybeSharedPtr<U> dynamic_handle_cast(const MaybeSharedPtr<V>& handle);
 
  public:
   /// @brief Type alias for the element type
   using element_type = T;
 
   /// @brief Default constructor - creates empty handle
-  SurfaceHandle() = default;
+  MaybeSharedPtr() = default;
 
   /// @brief Construct from shared_ptr
   /// @param ptr Shared pointer to wrap
-  explicit SurfaceHandle(std::shared_ptr<T> ptr) : m_ptr(std::move(ptr)) {}
+  explicit MaybeSharedPtr(std::shared_ptr<T> ptr) : m_ptr(std::move(ptr)) {}
 
   /// NOLINTBEGIN(google-explicit-constructor)
-  SurfaceHandle(std::nullptr_t /*null*/) : m_ptr(nullptr) {}
+  MaybeSharedPtr(std::nullptr_t /*null*/) : m_ptr(nullptr) {}
 
-  /// @brief Construct from compatible SurfaceHandle (e.g., derived to base, non-const to const)
+  /// @brief Construct from compatible MaybeSharedPtr (e.g., derived to base, non-const to const)
   /// @param other Handle to convert from
   template <class U>
     requires std::convertible_to<U*, T*>
-  SurfaceHandle(const SurfaceHandle<U>& other) : m_ptr(other.m_ptr) {}
+  MaybeSharedPtr(const MaybeSharedPtr<U>& other) : m_ptr(other.m_ptr) {}
 
-  /// @brief Construct from compatible SurfaceHandle (move)
+  /// @brief Construct from compatible MaybeSharedPtr (move)
   /// @param other Handle to convert from
   template <class U>
     requires std::convertible_to<U*, T*>
-  SurfaceHandle(SurfaceHandle<U>&& other) : m_ptr(std::move(other.m_ptr)) {}
+  MaybeSharedPtr(MaybeSharedPtr<U>&& other) : m_ptr(std::move(other.m_ptr)) {}
   /// NOLINTEND(google-explicit-constructor)
 
   /// @brief Copy constructor
-  SurfaceHandle(const SurfaceHandle&) = default;
+  MaybeSharedPtr(const MaybeSharedPtr&) = default;
 
   /// @brief Move constructor
-  SurfaceHandle(SurfaceHandle&&) = default;
+  MaybeSharedPtr(MaybeSharedPtr&&) = default;
 
   /// @brief Copy assignment
-  SurfaceHandle& operator=(const SurfaceHandle&) = default;
+  MaybeSharedPtr& operator=(const MaybeSharedPtr&) = default;
 
   /// @brief Move assignment
-  SurfaceHandle& operator=(SurfaceHandle&&) = default;
+  MaybeSharedPtr& operator=(MaybeSharedPtr&&) = default;
 
   /// @brief Destructor
-  ~SurfaceHandle() = default;
+  ~MaybeSharedPtr() = default;
 
   /// @brief Dereference operator
   /// @return Reference to the managed object
@@ -109,7 +109,7 @@ class SurfaceHandle {
 
   /// @brief Swap with another handle
   /// @param other Handle to swap with
-  void swap(SurfaceHandle& other) noexcept { m_ptr.swap(other.m_ptr); }
+  void swap(MaybeSharedPtr& other) noexcept { m_ptr.swap(other.m_ptr); }
 
   /// @brief Get use count
   /// @return Number of shared owners
@@ -122,21 +122,21 @@ class SurfaceHandle {
   /// @brief Equality comparison
   /// @param other Handle to compare with
   /// @return true if both handles point to the same object
-  bool operator==(const SurfaceHandle& other) const noexcept {
+  bool operator==(const MaybeSharedPtr& other) const noexcept {
     return m_ptr == other.m_ptr;
   }
 
   /// @brief Inequality comparison
   /// @param other Handle to compare with
   /// @return true if handles point to different objects
-  bool operator!=(const SurfaceHandle& other) const noexcept {
+  bool operator!=(const MaybeSharedPtr& other) const noexcept {
     return m_ptr != other.m_ptr;
   }
 
   /// @brief Less-than comparison for container usage
   /// @param other Handle to compare with
   /// @return true if this handle's pointer is less than other's
-  bool operator<(const SurfaceHandle& other) const noexcept {
+  bool operator<(const MaybeSharedPtr& other) const noexcept {
     return m_ptr < other.m_ptr;
   }
 
@@ -159,60 +159,60 @@ class SurfaceHandle {
 
 /// @brief Compare nullptr with handle
 template <class T>
-bool operator==(std::nullptr_t, const SurfaceHandle<T>& handle) noexcept {
+bool operator==(std::nullptr_t, const MaybeSharedPtr<T>& handle) noexcept {
   return handle == nullptr;
 }
 
 /// @brief Compare nullptr with handle
 template <class T>
-bool operator!=(std::nullptr_t, const SurfaceHandle<T>& handle) noexcept {
+bool operator!=(std::nullptr_t, const MaybeSharedPtr<T>& handle) noexcept {
   return handle != nullptr;
 }
 
 /// @brief Swap two handles
 template <class T>
-void swap(SurfaceHandle<T>& lhs, SurfaceHandle<T>& rhs) noexcept {
+void swap(MaybeSharedPtr<T>& lhs, MaybeSharedPtr<T>& rhs) noexcept {
   lhs.swap(rhs);
 }
 
-/// @brief Static cast between SurfaceHandle types
+/// @brief Static cast between MaybeSharedPtr types
 /// @tparam U Target type
 /// @tparam T Source type
 /// @param handle Source handle
-/// @return SurfaceHandle of target type
+/// @return MaybeSharedPtr of target type
 template <class U, class T>
-SurfaceHandle<U> static_handle_cast(const SurfaceHandle<T>& handle) {
-  return SurfaceHandle<U>(std::static_pointer_cast<U>(handle.m_ptr));
+MaybeSharedPtr<U> static_handle_cast(const MaybeSharedPtr<T>& handle) {
+  return MaybeSharedPtr<U>(std::static_pointer_cast<U>(handle.m_ptr));
 }
 
-/// @brief Dynamic cast between SurfaceHandle types (returns empty handle if cast fails)
+/// @brief Dynamic cast between MaybeSharedPtr types (returns empty handle if cast fails)
 /// @tparam U Target type
 /// @tparam T Source type
 /// @param handle Source handle
-/// @return SurfaceHandle of target type or empty handle
+/// @return MaybeSharedPtr of target type or empty handle
 template <class U, class T>
-SurfaceHandle<U> dynamic_handle_cast(const SurfaceHandle<T>& handle) {
-  return SurfaceHandle<U>(std::dynamic_pointer_cast<U>(handle.m_ptr));
+MaybeSharedPtr<U> dynamic_handle_cast(const MaybeSharedPtr<T>& handle) {
+  return MaybeSharedPtr<U>(std::dynamic_pointer_cast<U>(handle.m_ptr));
 }
 
 /// Type aliases for common use cases
-using SurfacePtr = SurfaceHandle<Surface>;
-using ConstSurfacePtr = SurfaceHandle<const Surface>;
+using SurfacePtr = MaybeSharedPtr<Surface>;
+using ConstSurfacePtr = MaybeSharedPtr<const Surface>;
 
-/// @brief Stream operator for SurfaceHandle
+/// @brief Stream operator for MaybeSharedPtr
 template <class T>
-std::ostream& operator<<(std::ostream& os, const SurfaceHandle<T>& handle) {
+std::ostream& operator<<(std::ostream& os, const MaybeSharedPtr<T>& handle) {
   return os << handle.get();
 }
 
 }  // namespace Acts
 
-/// Hash specialization for SurfaceHandle
+/// Hash specialization for MaybeSharedPtr
 namespace std {
 
 template <class T>
-struct hash<Acts::SurfaceHandle<T>> {
-  std::size_t operator()(const Acts::SurfaceHandle<T>& handle) const noexcept {
+struct hash<Acts::MaybeSharedPtr<T>> {
+  std::size_t operator()(const Acts::MaybeSharedPtr<T>& handle) const noexcept {
     return std::hash<T*>{}(handle.get());
   }
 };

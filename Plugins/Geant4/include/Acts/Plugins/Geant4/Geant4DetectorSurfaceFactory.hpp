@@ -37,7 +37,7 @@ class Surface;
 class Geant4DetectorSurfaceFactory {
  public:
   using ElementFactory = std::function<std::shared_ptr<Geant4DetectorElement>(
-      SurfaceHandle<Surface>, const G4VPhysicalVolume&, const Transform3&,
+      MaybeSharedPtr<Surface>, const G4VPhysicalVolume&, const Transform3&,
       double)>;
 
   /// Nested configuration struct that holds
@@ -46,7 +46,7 @@ class Geant4DetectorSurfaceFactory {
     /// @cond
     /// The detector element factory with default implementation
     ElementFactory detectorElementFactory =
-        [](SurfaceHandle<Surface> surface, const G4VPhysicalVolume& g4physVol,
+        [](MaybeSharedPtr<Surface> surface, const G4VPhysicalVolume& g4physVol,
            const Transform3& toGlobal, double thickness) {
           return std::make_shared<Geant4DetectorElement>(
               std::move(surface), g4physVol, toGlobal, thickness);
@@ -57,10 +57,10 @@ class Geant4DetectorSurfaceFactory {
   // Collect the sensitive surfaces
   using Geant4SensitiveSurface =
       std::tuple<std::shared_ptr<Geant4DetectorElement>,
-                 SurfaceHandle<Surface>>;
+                 MaybeSharedPtr<Surface>>;
 
   // Collect the passive surfaces
-  using Geant4PassiveSurface = SurfaceHandle<Surface>;
+  using Geant4PassiveSurface = MaybeSharedPtr<Surface>;
 
   /// Nested cache that records the conversion status
   struct Cache {

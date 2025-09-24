@@ -14,7 +14,7 @@
 
 namespace Acts {
 
-Geant4DetectorElement::Geant4DetectorElement(SurfaceHandle<Surface> surface,
+Geant4DetectorElement::Geant4DetectorElement(MaybeSharedPtr<Surface> surface,
                                              const G4VPhysicalVolume& g4physVol,
                                              const Transform3& toGlobal,
                                              double thickness)

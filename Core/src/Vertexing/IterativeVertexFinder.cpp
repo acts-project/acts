@@ -309,7 +309,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
   // m_cfg.cutOffTrackWeight threshold and are hence outliers
   ACTS_DEBUG("Number of outliers: " << tracksToFit.size());
 
-  const SurfaceHandle<PerigeeSurface> vertexPerigeeSurface =
+  const MaybeSharedPtr<Surface> vertexPerigeeSurface =
       Surface::makeShared<PerigeeSurface>(
           VectorHelpers::position(vertex.fullPosition()));
 
@@ -432,7 +432,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
     const VertexingOptions& vertexingOptions, State& state) const {
   int numberOfAddedTracks = 0;
 
-  const SurfaceHandle<PerigeeSurface> currentVertexPerigeeSurface =
+  const MaybeSharedPtr<Surface> currentVertexPerigeeSurface =
       Surface::makeShared<PerigeeSurface>(
           VectorHelpers::position(currentVertex.fullPosition()));
 
@@ -444,7 +444,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
     auto tracksBegin = tracksAtVertex.begin();
     auto tracksEnd = tracksAtVertex.end();
 
-    const SurfaceHandle<PerigeeSurface> vertexItPerigeeSurface =
+    const MaybeSharedPtr<Surface> vertexItPerigeeSurface =
         Surface::makeShared<PerigeeSurface>(
             VectorHelpers::position(vertexIt.fullPosition()));
 

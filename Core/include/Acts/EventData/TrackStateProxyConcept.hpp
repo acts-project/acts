@@ -60,7 +60,7 @@ using EffectiveProjector =
 template <typename T>
 concept TrackStateProxyConcept =
     requires(const T& cv, T v, HashedString key,
-             SurfaceHandle<const Surface> surface) {
+             MaybeSharedPtr<const Surface> surface) {
       { cv.index() } -> std::same_as<TrackIndexType>;
 
       { cv.previous() } -> std::same_as<TrackIndexType>;
@@ -183,7 +183,7 @@ template <typename T>
 concept MutableTrackStateProxyConcept =
     TrackStateProxyConcept<T> &&
     requires(T v, HashedString key, TrackStatePropMask mask,
-             TrackIndexType index, SurfaceHandle<const Surface> surface,
+             TrackIndexType index, MaybeSharedPtr<const Surface> surface,
              Eigen::Matrix<double, 3, 6> projector,
              ProjectorBitset projectorBitset, SourceLink sl,
              std::size_t measdim) {

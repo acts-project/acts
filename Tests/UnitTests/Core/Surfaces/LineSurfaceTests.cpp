@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 
   auto surface = std::make_shared<LineSurfaceStub>(Transform3::Identity());
 
-  BoundTrackParameters initialParams{SurfaceHandle<const Surface>(surface), boundVector, std::nullopt,
+  BoundTrackParameters initialParams{MaybeSharedPtr<const Surface>(surface), boundVector, std::nullopt,
                                      ParticleHypothesis::pion()};
 
   using Propagator = Propagator<StraightLineStepper>;
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
           .closest();
   CHECK_CLOSE_ABS(intersection.pathLength(), pathLimit, eps);
 
-  BoundTrackParameters endParameters{SurfaceHandle<const Surface>(surface),
+  BoundTrackParameters endParameters{MaybeSharedPtr<const Surface>(surface),
                                      detail::Test::someBoundParametersA(),
                                      std::nullopt, ParticleHypothesis::pion()};
   {

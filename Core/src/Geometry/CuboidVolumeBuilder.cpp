@@ -33,10 +33,10 @@
 
 namespace Acts {
 
-SurfaceHandle<const Surface> CuboidVolumeBuilder::buildSurface(
+MaybeSharedPtr<const Surface> CuboidVolumeBuilder::buildSurface(
     const GeometryContext& /*gctx*/,
     const CuboidVolumeBuilder::SurfaceConfig& cfg) const {
-  SurfaceHandle<Surface> surface;
+  MaybeSharedPtr<Surface> surface;
 
   // Build transformation
   Transform3 trafo(Transform3::Identity() * cfg.rotation);

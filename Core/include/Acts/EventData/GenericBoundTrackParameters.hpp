@@ -58,7 +58,7 @@ class GenericBoundTrackParameters {
   /// @note The returned result indicates whether the free parameters could
   /// successfully be converted to on-surface parameters.
   static Result<GenericBoundTrackParameters> create(
-      const GeometryContext& geoCtx, SurfaceHandle<const Surface> surface,
+      const GeometryContext& geoCtx, MaybeSharedPtr<const Surface> surface,
       const Vector4& pos4, const Vector3& dir, double qOverP,
       std::optional<CovarianceMatrix> cov,
       ParticleHypothesis particleHypothesis,
@@ -88,7 +88,7 @@ class GenericBoundTrackParameters {
       std::optional<CovarianceMatrix> cov,
       ParticleHypothesis particleHypothesis) {
     return GenericBoundTrackParameters(
-        SurfaceHandle<const Surface>(CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface()),
+        MaybeSharedPtr<const Surface>(CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface()),
         transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
         std::move(cov), std::move(particleHypothesis));
   }
@@ -125,7 +125,7 @@ class GenericBoundTrackParameters {
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
   /// debug builds to check for consistency with the q/p parameter.
-  GenericBoundTrackParameters(SurfaceHandle<const Surface> surface,
+  GenericBoundTrackParameters(MaybeSharedPtr<const Surface> surface,
                               const ParametersVector& params,
                               std::optional<CovarianceMatrix> cov,
                               ParticleHypothesis particleHypothesis)
@@ -303,7 +303,7 @@ class GenericBoundTrackParameters {
   BoundVector m_params;
   std::optional<BoundSquareMatrix> m_cov;
   /// reference surface
-  SurfaceHandle<const Surface> m_surface;
+  MaybeSharedPtr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20
   ParticleHypothesis m_particleHypothesis;
 

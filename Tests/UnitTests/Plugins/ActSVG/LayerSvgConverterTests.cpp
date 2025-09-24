@@ -51,7 +51,7 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
   // Some preparations
   setupTools();
   unsigned int fullSegments = 4 * quarterSegments;
-  std::vector<Acts::SurfaceHandle<const Acts::Surface>> moduleSurfaces;
+  std::vector<Acts::MaybeSharedPtr<const Acts::Surface>> moduleSurfaces;
   double phiStep = 2 * std::numbers::pi / fullSegments;
   double rStep = (rOuter - rInner) / nRings;
   // Reserve & fill

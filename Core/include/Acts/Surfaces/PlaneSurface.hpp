@@ -226,7 +226,7 @@ class PlaneSurface : public RegularSurface {
   /// @return The merged plane surface and a boolean indicating if surfaces are reversed
   /// @note The returned boolean is `false` if `this` is *left* or
   ///       *counter-clockwise* of @p other, and `true` if not.
-  std::pair<SurfaceHandle<PlaneSurface>, bool> mergedWith(
+  std::pair<MaybeSharedPtr<RegularSurface>, bool> mergedWith(
       const PlaneSurface& other, AxisDirection direction,
       const Logger& logger = getDummyLogger()) const;
 
