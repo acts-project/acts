@@ -176,8 +176,8 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
   // Calculate first the center of gravity
   for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
     if (!strawMeas->isStraw()) {
-      ACTS_WARNING(__func__ << "() - " << __LINE__
-                            << ": The measurement is not a straw");
+      ACTS_DEBUG(__func__ << "() - " << __LINE__
+                          << ": The measurement is not a straw");
       continue;
     }
     const double cov = strawMeas->covariance()[s_covIdx];
