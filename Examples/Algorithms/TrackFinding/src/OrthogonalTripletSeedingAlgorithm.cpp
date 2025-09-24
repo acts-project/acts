@@ -237,19 +237,15 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   static thread_local Acts::Experimental::CylindricalSpacePointKDTree::
       Candidates candidates;
 
-  /*
-   * Run the seeding algorithm by iterating over all the points in the tree
-   * and seeing what happens if we take them to be our middle spacepoint.
-   */
+  // Run the seeding algorithm by iterating over all the points in the tree
+  // and seeing what happens if we take them to be our middle spacepoint.
   for (const auto &middle : kdTree) {
     ACTS_VERBOSE("Process middle " << middle.second);
 
     const auto spM = coreSpacePoints.at(middle.second).asConst();
 
-    /*
-     * Cut: Ensure that the middle spacepoint lies within a valid r-region for
-     * middle points.
-     */
+    // Cut: Ensure that the middle spacepoint lies within a valid r-region for
+    // middle points.
     const float rM = spM.zr()[1];
     if (m_cfg.useVariableMiddleSPRange) {
       if (rM < rMiddleSPRange.min() || rM > rMiddleSPRange.max()) {
@@ -262,8 +258,9 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     }
 
     // remove all middle SPs outside phi and z region of interest
-    if (const float zM = spM.zr()[0]; zM < m_cfg.zOutermostLayers.first ||
-                                      zM > m_cfg.zOutermostLayers.second) {
+    const float zM = spM.zr()[0];
+    if (zM < m_cfg.zOutermostLayers.first ||
+        zM > m_cfg.zOutermostLayers.second) {
       continue;
     }
     if (const float phiM = spM.phi();
@@ -275,13 +272,13 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     if (m_cfg.seedConfirmation) {
       // check if middle SP is in the central or forward region
       Acts::SeedConfirmationRangeConfig seedConfRange =
-          (spM.zr()[0] > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
-           spM.zr()[0] < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
+          (zM > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+           zM < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
               ? m_cfg.forwardSeedConfirmationRange
               : m_cfg.centralSeedConfirmationRange;
       // set the minimum number of top SP depending on whether the middle SP is
       // in the central or forward region
-      nTopSeedConf = spM.zr()[1] > seedConfRange.rMaxSeedConf
+      nTopSeedConf = rM > seedConfRange.rMaxSeedConf
                          ? seedConfRange.nTopForLargeR
                          : seedConfRange.nTopForSmallR;
     }
