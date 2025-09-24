@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/GraphStoreHook.hpp"
+#include "ActsPlugins/Gnn/GraphStoreHook.hpp"
 
-Acts::GraphStoreHook::GraphStoreHook() {
+ActsPlugins::GraphStoreHook::GraphStoreHook() {
   m_storedGraph = std::make_unique<Graph>();
 }
 
-void Acts::GraphStoreHook::operator()(const PipelineTensors &tensors,
-                                      const ExecutionContext &execCtx) const {
+void ActsPlugins::GraphStoreHook::operator()(
+    const PipelineTensors &tensors, const ExecutionContext &execCtx) const {
   auto edgeIndexTensor =
       tensors.edgeIndex.clone({Device::Cpu(), execCtx.stream});
 

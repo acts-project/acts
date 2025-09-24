@@ -8,18 +8,22 @@
 
 #pragma once
 
-#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <memory>
 
-namespace Acts {
+namespace ActsPlugins {
 
-class BoostTrackBuilding final : public Acts::TrackBuildingBase {
+class CudaTrackBuilding final : public TrackBuildingBase {
  public:
-  struct Config {};
+  struct Config {
+    bool useOneBlockImplementation = true;
+    bool doJunctionRemoval = false;
+  };
 
-  BoostTrackBuilding(const Config &cfg, std::unique_ptr<const Logger> logger)
+  CudaTrackBuilding(const Config &cfg,
+                    std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(
@@ -33,4 +37,4 @@ class BoostTrackBuilding final : public Acts::TrackBuildingBase {
   const auto &logger() const { return *m_logger; }
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

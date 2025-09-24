@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Plugins/Gnn/Tensor.hpp>
+#include <ActsPlugins/Gnn/Tensor.hpp>
 
 #ifdef ACTS_GNN_WITH_CUDA
 #include <cuda_runtime_api.h>

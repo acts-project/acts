@@ -17,7 +17,7 @@
 
 #define USE_LAUNCH_BOUNDS
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 template <class T>
 __global__ void rescaleFeature(std::size_t nbHits, T *data, T scale) {
@@ -487,4 +487,4 @@ __global__ void __launch_bounds__(512, 4)
   } while (__syncthreads_or(!sorted));
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

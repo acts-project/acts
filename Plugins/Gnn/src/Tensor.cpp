@@ -6,23 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/Tensor.hpp"
+#include "ActsPlugins/Gnn/Tensor.hpp"
 
 #ifdef ACTS_GNN_WITH_CUDA
-#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 #endif
 
 #include <cstring>
 #include <numeric>
 #include <span>
 
-namespace Acts {
+namespace ActsPlugins {
 
 namespace detail {
 
 TensorPtr createTensorMemory(std::size_t nbytes,
                              const ExecutionContext &execContext) {
-  if (execContext.device.type == Acts::Device::Type::eCPU) {
+  if (execContext.device.type == Device::Type::eCPU) {
     void *ptr = new std::byte[nbytes];
     if (ptr == nullptr) {
       throw std::bad_alloc{};
@@ -79,9 +79,9 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
 }  // namespace detail
 
 void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
-  if (tensor.device().type == Acts::Device::Type::eCUDA) {
+  if (tensor.device().type == Device::Type::eCUDA) {
 #ifdef ACTS_GNN_WITH_CUDA
-    return Acts::detail::cudaSigmoid(tensor, stream.value());
+    return ActsPlugins::detail::cudaSigmoid(tensor, stream.value());
 #else
     throw std::runtime_error(
         "Cannot apply sigmoid to CUDA tensor, library was not compiled with "
@@ -103,7 +103,7 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
   assert(scores.device() == edgeIndex.device());
   ExecutionContext execContext{scores.device(), stream};
 
-  if (scores.device().type == Acts::Device::Type::eCUDA) {
+  if (scores.device().type == Device::Type::eCUDA) {
 #ifdef ACTS_GNN_WITH_CUDA
     return detail::cudaApplyScoreCut(scores, edgeIndex, cut, stream.value());
 #else
@@ -169,7 +169,7 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
           edgeFeatures->clone({edgeFeatures->device(), stream});
     }
   } else if (edgeIndex.device().isCpu()) {
-    ExecutionContext cpuCtx{Acts::Device::Cpu(), {}};
+    ExecutionContext cpuCtx{Device::Cpu(), {}};
 
     std::span<const std::int64_t> edge0(edgeIndex.data(), maxEdges);
     std::span<const std::int64_t> edge1(edgeIndex.data() + nEdgesOld, maxEdges);
@@ -222,4 +222,4 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
           std::move(newEdgeFeatureTensor)};
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

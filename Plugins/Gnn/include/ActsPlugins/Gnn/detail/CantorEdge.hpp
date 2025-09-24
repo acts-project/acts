@@ -11,7 +11,7 @@
 #include <cmath>
 #include <cstdint>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 /// Class that encapsulates a cantor pair, which represents an edge of a graph
 /// By default ensures all edges are ordered, so the represented graph is
@@ -45,4 +45,4 @@ class CantorEdge {
   auto operator<=>(const CantorEdge<T>& other) const = default;
 };
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <chrono>
 #include <memory>
@@ -17,7 +17,7 @@
 
 #include <boost/container/small_vector.hpp>
 
-namespace Acts {
+namespace ActsPlugins {
 
 struct GnnTiming {
   using Duration = std::chrono::duration<float, std::milli>;
@@ -45,8 +45,7 @@ class GnnPipeline {
   std::vector<std::vector<int>> run(std::vector<float> &features,
                                     const std::vector<std::uint64_t> &moduleIds,
                                     std::vector<int> &spacepointIDs,
-                                    Acts::Device device,
-                                    const GnnHook &hook = {},
+                                    Device device, const GnnHook &hook = {},
                                     GnnTiming *timing = nullptr) const;
 
  private:
@@ -56,7 +55,7 @@ class GnnPipeline {
   std::vector<std::shared_ptr<EdgeClassificationBase>> m_edgeClassifiers;
   std::shared_ptr<TrackBuildingBase> m_trackBuilder;
 
-  const Logger &logger() const { return *m_logger; }
+  const Acts::Logger &logger() const { return *m_logger; }
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

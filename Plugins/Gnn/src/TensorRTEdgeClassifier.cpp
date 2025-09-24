@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/TensorRTEdgeClassifier.hpp"
+#include "ActsPlugins/Gnn/TensorRTEdgeClassifier.hpp"
 
-#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -54,7 +54,7 @@ class TensorRTLogger : public nvinfer1::ILogger {
 
 }  // namespace
 
-namespace Acts {
+namespace ActsPlugins {
 
 TensorRTEdgeClassifier::TensorRTEdgeClassifier(
     const Config &cfg, std::unique_ptr<const Logger> _logger)
@@ -246,4 +246,4 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
           std::nullopt, std::move(newScores)};
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/TorchMetricLearning.hpp"
+#include "ActsPlugins/Gnn/TorchMetricLearning.hpp"
 
-#include "Acts/Plugins/Gnn/detail/TensorVectorConversion.hpp"
-#include "Acts/Plugins/Gnn/detail/buildEdges.hpp"
+#include "ActsPlugins/Gnn/detail/TensorVectorConversion.hpp"
+#include "ActsPlugins/Gnn/detail/buildEdges.hpp"
 
 #ifndef ACTS_GNN_CPUONLY
 #include <c10/cuda/CUDAGuard.h>
@@ -24,7 +24,7 @@
 
 using namespace torch::indexing;
 
-namespace Acts {
+namespace ActsPlugins {
 
 TorchMetricLearning::TorchMetricLearning(const Config &cfg,
                                          std::unique_ptr<const Logger> _logger)
@@ -70,7 +70,7 @@ PipelineTensors TorchMetricLearning::operator()(
     const std::vector<std::uint64_t> & /*moduleIds*/,
     const ExecutionContext &execContext) {
   const auto device =
-      execContext.device.type == Acts::Device::Type::eCUDA
+      execContext.device.type == Device::Type::eCUDA
           ? torch::Device(torch::kCUDA, execContext.device.index)
           : torch::kCPU;
   ACTS_DEBUG("Start graph construction");
@@ -151,4 +151,4 @@ PipelineTensors TorchMetricLearning::operator()(
           detail::torchToActsTensor<std::int64_t>(edgeList, execContext),
           std::nullopt, std::nullopt};
 }
-}  // namespace Acts
+}  // namespace ActsPlugins

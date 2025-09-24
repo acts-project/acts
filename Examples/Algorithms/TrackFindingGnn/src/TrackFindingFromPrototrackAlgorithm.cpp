@@ -19,6 +19,8 @@
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 
+using namespace Acts;
+
 namespace {
 
 using namespace ActsExamples;
@@ -26,13 +28,13 @@ using namespace ActsExamples;
 struct ProtoTrackSourceLinkAccessor
     : GeometryIdMultisetAccessor<IndexSourceLink> {
   using BaseIterator = GeometryIdMultisetAccessor<IndexSourceLink>::Iterator;
-  using Iterator = Acts::SourceLinkAdapterIterator<BaseIterator>;
+  using Iterator = SourceLinkAdapterIterator<BaseIterator>;
 
-  std::unique_ptr<const Acts::Logger> loggerPtr;
+  std::unique_ptr<const Logger> loggerPtr;
   Container protoTrackSourceLinks;
 
   // get the range of elements with requested geoId
-  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
+  std::pair<Iterator, Iterator> range(const Surface& surface) const {
     const auto& logger = *loggerPtr;
 
     if (protoTrackSourceLinks.contains(surface.geometryId())) {
@@ -58,7 +60,7 @@ struct ProtoTrackSourceLinkAccessor
 namespace ActsExamples {
 
 TrackFindingFromPrototrackAlgorithm::TrackFindingFromPrototrackAlgorithm(
-    Config cfg, Acts::Logging::Level lvl)
+    Config cfg, Logging::Level lvl)
     : IAlgorithm(cfg.tag + "CkfFromProtoTracks", lvl), m_cfg(cfg) {
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
@@ -78,17 +80,16 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   }
 
   // Construct a perigee surface as the target surface
-  auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{0., 0., 0.});
+  auto pSurface = Surface::makeShared<PerigeeSurface>(Vector3{0., 0., 0.});
 
-  Acts::PropagatorPlainOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+  PropagatorPlainOptions pOptions(ctx.geoContext, ctx.magFieldContext);
   pOptions.maxSteps = 10000;
 
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
-  Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
-  Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
+  GainMatrixUpdater kfUpdater;
+  GainMatrixSmoother kfSmoother;
+  MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   // The source link accessor
   ProtoTrackSourceLinkAccessor sourceLinkAccessor;
@@ -96,20 +97,18 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   sourceLinkAccessor.container = &measurements.orderedIndices();
 
   using TrackStateCreatorType =
-      Acts::TrackStateCreator<IndexSourceLinkAccessor::Iterator,
-                              TrackContainer>;
+      TrackStateCreator<IndexSourceLinkAccessor::Iterator, TrackContainer>;
   TrackStateCreatorType trackStateCreator;
   trackStateCreator.sourceLinkAccessor
       .template connect<&ProtoTrackSourceLinkAccessor::range>(
           &sourceLinkAccessor);
   trackStateCreator.calibrator
       .connect<&MeasurementCalibratorAdapter::calibrate>(&calibrator);
-  trackStateCreator.measurementSelector
-      .connect<&Acts::MeasurementSelector::select<
-          typename TrackContainer::TrackStateContainerBackend>>(&measSel);
+  trackStateCreator.measurementSelector.connect<&MeasurementSelector::select<
+      typename TrackContainer::TrackStateContainerBackend>>(&measSel);
 
-  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
+  CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
+  extensions.updater.connect<&GainMatrixUpdater::operator()<
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.createTrackStates
       .template connect<&TrackStateCreatorType ::createTrackStates>(
@@ -124,13 +123,13 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
 
-  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
-  auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+  auto trackContainer = std::make_shared<VectorTrackContainer>();
+  auto trackStateContainer = std::make_shared<VectorMultiTrajectory>();
 
   TrackContainer tracks(trackContainer, trackStateContainer);
 
   tracks.addColumn<unsigned int>("trackGroup");
-  Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
+  ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   std::size_t nSeed = 0;
   std::size_t nFailed = 0;
@@ -195,12 +194,11 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
                      << " failed (" << ((100.f * nFailed) / nSeed) << "%)");
   ACTS_DEBUG("Finalized track finding with " << tracks.size()
                                              << " track candidates.");
-  auto constTrackStateContainer =
-      std::make_shared<Acts::ConstVectorMultiTrajectory>(
-          std::move(*trackStateContainer));
+  auto constTrackStateContainer = std::make_shared<ConstVectorMultiTrajectory>(
+      std::move(*trackStateContainer));
 
-  auto constTrackContainer = std::make_shared<Acts::ConstVectorTrackContainer>(
-      std::move(*trackContainer));
+  auto constTrackContainer =
+      std::make_shared<ConstVectorTrackContainer>(std::move(*trackContainer));
 
   ConstTrackContainer constTracks{constTrackContainer,
                                   constTrackStateContainer};

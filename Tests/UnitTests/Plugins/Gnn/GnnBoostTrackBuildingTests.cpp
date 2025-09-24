@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Gnn/BoostTrackBuilding.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Gnn/BoostTrackBuilding.hpp"
 
 #include <algorithm>
 #include <numeric>

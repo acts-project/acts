@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Gnn/TruthGraphMetricsHook.hpp"
+#include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
 
 #include <cassert>
 

@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <memory>
 #include <mutex>
@@ -36,7 +36,7 @@ class TensorRTEdgeClassifier final : public EdgeClassificationBase {
   };
 
   TensorRTEdgeClassifier(const Config &cfg,
-                         std::unique_ptr<const Logger> logger);
+                         std::unique_ptr<const Acts::Logger> logger);
   ~TensorRTEdgeClassifier();
 
   PipelineTensors operator()(PipelineTensors tensors,

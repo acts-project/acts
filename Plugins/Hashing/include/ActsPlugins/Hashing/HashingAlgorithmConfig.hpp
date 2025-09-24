@@ -26,4 +26,4 @@ namespace ActsPlugins {
   double layerZMax = 550;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

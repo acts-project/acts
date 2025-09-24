@@ -25,7 +25,6 @@ class HashingAnnoy {
       const double layerRMax, const double layerZMin, const double layerZMax);
   std::map<unsigned int, std::set<external_spacepoint_t>> m_bucketsSPMap;
 };
-
-}  // namespace Acts
+}  // namespace ActsPlugins
 
 #include "ActsPlugins/Hashing/HashingAnnoy.ipp"

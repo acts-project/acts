@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
+#include "ActsPlugins/Gnn/GnnPipeline.hpp"
 
-namespace Acts {
+namespace ActsPlugins {
 
 class GraphStoreHook : public GnnHook {
  public:
@@ -28,4 +28,4 @@ class GraphStoreHook : public GnnHook {
   const Graph &storedGraph() const { return *m_storedGraph; }
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

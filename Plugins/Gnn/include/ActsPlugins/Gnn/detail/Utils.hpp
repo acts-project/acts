@@ -10,7 +10,7 @@
 
 #include <ostream>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 template <typename It>
 struct RangePrinter {
@@ -31,4 +31,4 @@ inline std::ostream &operator<<(std::ostream &os, const RangePrinter<It> &r) {
   return os;
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

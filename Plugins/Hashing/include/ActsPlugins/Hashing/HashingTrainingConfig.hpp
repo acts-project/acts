@@ -20,4 +20,4 @@ struct HashingTrainingConfig {
   std::int32_t f = 1;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins
