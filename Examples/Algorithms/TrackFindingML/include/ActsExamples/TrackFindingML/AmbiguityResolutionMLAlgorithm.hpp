@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/AmbiguityResolutionML.hpp"
-#include "Acts/Plugins/Onnx/AmbiguityTrackClassifier.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsPlugins/Onnx/AmbiguityTrackClassifier.hpp"
 
 #include <string>
 

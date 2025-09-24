@@ -158,4 +158,4 @@ class FpeMonitor {
       m_recorded;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

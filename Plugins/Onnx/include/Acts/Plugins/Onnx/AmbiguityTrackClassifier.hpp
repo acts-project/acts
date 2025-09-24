@@ -12,8 +12,9 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
-#include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
 #include "Acts/TrackFinding/detail/AmbiguityTrackClustering.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsPlugins/Onnx/OnnxRuntimeBase.hpp"
 
 #include <map>
 #include <unordered_map>
@@ -21,7 +22,7 @@
 
 #include <onnxruntime_cxx_api.h>
 
-namespace Acts {
+namespace ActsPlugins {
 
 /// Onnx model implementation for track scoring and selection
 class AmbiguityTrackClassifier {
@@ -49,7 +50,7 @@ class AmbiguityTrackClassifier {
       trackNb += val.size();
     }
     // Input of the neural network
-    Acts::NetworkBatchInput networkInput(trackNb, 8);
+    NetworkBatchInput networkInput(trackNb, 8);
     std::size_t inputID = 0;
     // Get the input feature of the network for all the tracks
     for (const auto& [key, val] : clusters) {
@@ -106,7 +107,7 @@ class AmbiguityTrackClassifier {
   // ONNX environment
   Ort::Env m_env;
   // ONNX model for the duplicate neural network
-  Acts::OnnxRuntimeBase m_duplicateClassifier;
+  OnnxRuntimeBase m_duplicateClassifier;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

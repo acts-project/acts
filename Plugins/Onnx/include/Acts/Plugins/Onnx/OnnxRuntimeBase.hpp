@@ -13,7 +13,7 @@
 #include <Eigen/Dense>
 #include <onnxruntime_cxx_api.h>
 
-namespace Acts {
+namespace ActsPlugins {
 
 using NetworkBatchInput =
     Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
@@ -69,4 +69,4 @@ class OnnxRuntimeBase {
   std::vector<std::vector<std::int64_t>> m_outputNodeDims;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

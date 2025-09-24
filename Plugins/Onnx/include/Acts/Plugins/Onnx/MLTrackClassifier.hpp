@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
+#include "ActsPlugins/Onnx/OnnxRuntimeBase.hpp"
 
 #include <vector>
 
-namespace Acts {
+namespace ActsPlugins {
 
 // Specialized class that labels tracks as good/duplicate/fake using a
 // deep neural network.
@@ -46,4 +46,4 @@ class MLTrackClassifier : public OnnxRuntimeBase {
                    double decisionThreshProb) const;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins
