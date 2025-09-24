@@ -161,7 +161,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The shared pointer
-  std::shared_ptr<DetectorVolume> getSharedPtr();
+  std::shared_ptr<DetectorVolume> getHandle();
 
   /// Retrieve a @c std::shared_ptr for this surface (const version)
   ///
@@ -172,7 +172,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The shared pointer
-  std::shared_ptr<const DetectorVolume> getSharedPtr() const;
+  std::shared_ptr<const DetectorVolume> getHandle() const;
 
   /// Const access to the transform
   ///

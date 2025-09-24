@@ -73,7 +73,7 @@ struct GeometryIdentifierHookBinding : public GeometryIdentifierHook {
 
   GeometryIdentifier decorateIdentifier(GeometryIdentifier identifier,
                                         const Surface& surface) const override {
-    return callable(identifier, surface.getSharedPtr())
+    return callable(identifier, surface.getHandle())
         .cast<GeometryIdentifier>();
   }
 };

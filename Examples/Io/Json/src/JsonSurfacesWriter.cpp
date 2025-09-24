@@ -77,7 +77,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       }
       // Layer surface
       if (writeLayer) {
-        auto layerSurfacePtr = layer->surfaceRepresentation().getSharedPtr();
+        auto layerSurfacePtr = layer->surfaceRepresentation().getHandle();
         cSurfaces.push_back(SurfaceContainer::InputElement{
             layer->surfaceRepresentation().geometryId(), layerSurfacePtr});
       }
@@ -85,7 +85,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       if (writeApproach && layer->approachDescriptor() != nullptr) {
         for (auto sf : layer->approachDescriptor()->containedSurfaces()) {
           cSurfaces.push_back(SurfaceContainer::InputElement{
-              sf->geometryId(), sf->getSharedPtr()});
+              sf->geometryId(), sf->getHandle()});
         }
       }
       // Check for sensitive surfaces
@@ -93,7 +93,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
         for (const auto& surface : layer->surfaceArray()->surfaces()) {
           if (surface != nullptr) {
             cSurfaces.push_back(SurfaceContainer::InputElement{
-                surface->geometryId(), surface->getSharedPtr()});
+                surface->geometryId(), surface->getHandle()});
           }
         }
       }
@@ -103,7 +103,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       for (const auto& bsurface : volume.boundarySurfaces()) {
         const auto& bsRep = bsurface->surfaceRepresentation();
         cSurfaces.push_back(SurfaceContainer::InputElement{
-            bsRep.geometryId(), bsRep.getSharedPtr()});
+            bsRep.geometryId(), bsRep.getHandle()});
       }
     }
   }

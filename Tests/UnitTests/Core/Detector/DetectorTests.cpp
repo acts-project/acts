@@ -43,7 +43,7 @@
 /// @returns a shared pointer
 template <typename referenced_type>
 std::shared_ptr<referenced_type> unpackToShared(referenced_type& rt) {
-  return rt.getSharedPtr();
+  return rt.getHandle();
 }
 
 Acts::GeometryContext tContext;
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstructionWithHierarchyMap) {
     auto detElement = std::make_unique<Acts::Test::DetectorElementStub>(
         Acts::Transform3::Identity(),
         std::make_shared<Acts::CylinderBounds>(r, 190.), 0.1);
-    auto surface = detElement->surface().getSharedPtr();
+    auto surface = detElement->surface().getHandle();
     surface->assignGeometryId(Acts::GeometryIdentifier{}.withSensitive(ir + 1));
     surfaces.push_back(std::move(surface));
     detStore.push_back(std::move(detElement));

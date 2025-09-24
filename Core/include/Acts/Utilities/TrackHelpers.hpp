@@ -329,7 +329,7 @@ Result<void> extrapolateTrackToReferenceSurface(
     return propagateResult.error();
   }
 
-  track.setReferenceSurface(referenceSurface.getSharedPtr());
+  track.setReferenceSurface(referenceSurface.getHandle());
   track.parameters() = propagateResult->endParameters.value().parameters();
   track.covariance() =
       propagateResult->endParameters.value().covariance().value();

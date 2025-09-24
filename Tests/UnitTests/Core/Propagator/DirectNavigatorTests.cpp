@@ -248,7 +248,7 @@ void runSimpleTest(const std::vector<const Surface*>& surfaces,
 
   // Create the start parameters in the middle of the start surface
   BoundTrackParameters startParameters = BoundTrackParameters(
-      startSurface->getSharedPtr(),
+      startSurface->getHandle(),
       {0.0_mm, 0.0_mm, 0.0_rad, 0.0_rad, 1.0 / 1.0_GeV, 0.0_ns}, std::nullopt,
       ParticleHypothesis::muon());
 

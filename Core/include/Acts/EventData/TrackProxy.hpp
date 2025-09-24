@@ -716,7 +716,7 @@ class TrackProxy {
     setParticleHypothesis(other.particleHypothesis());
 
     if (other.hasReferenceSurface()) {
-      setReferenceSurface(other.referenceSurface().getSharedPtr());
+      setReferenceSurface(other.referenceSurface().getHandle());
       parameters() = other.parameters();
       covariance() = other.covariance();
     } else {
@@ -918,7 +918,7 @@ class TrackProxy {
   /// @note The parameters are created on the fly
   /// @return the track parameters
   BoundTrackParameters createParametersAtReference() const {
-    return BoundTrackParameters(referenceSurface().getSharedPtr(), parameters(),
+    return BoundTrackParameters(referenceSurface().getHandle(), parameters(),
                                 covariance(), particleHypothesis());
   }
 
@@ -927,7 +927,7 @@ class TrackProxy {
   /// @return the track parameters
   BoundTrackParameters createParametersFromState(
       const ConstTrackStateProxy& trackState) const {
-    return BoundTrackParameters(trackState.referenceSurface().getSharedPtr(),
+    return BoundTrackParameters(trackState.referenceSurface().getHandle(),
                                 trackState.parameters(),
                                 trackState.covariance(), particleHypothesis());
   }

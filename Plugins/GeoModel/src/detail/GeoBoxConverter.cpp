@@ -68,7 +68,7 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
       GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
           geoPV, rectangleBounds, transform,
           2 * unitLength * halfLengths[zIndex]);
-  auto surface = detectorElement->surface().getSharedPtr();
+  auto surface = detectorElement->surface().getHandle();
   // Return the detector element and surface
   return std::make_tuple(detectorElement, surface);
 }

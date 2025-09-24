@@ -312,7 +312,7 @@ class CombinatorialKalmanFilter {
             currentBranch.parameters() = boundParams.parameters();
             currentBranch.covariance() = *boundParams.covariance();
             currentBranch.setReferenceSurface(
-                boundParams.referenceSurface().getSharedPtr());
+                boundParams.referenceSurface().getHandle());
           }
 
           stepper.releaseStepSize(state.stepping,
@@ -709,7 +709,7 @@ class CombinatorialKalmanFilter {
       trackStateProxy.pathLength() = pathLength;
       // Set the surface
       trackStateProxy.setReferenceSurface(
-          boundParams.referenceSurface().getSharedPtr());
+          boundParams.referenceSurface().getHandle());
 
       // Set the track state flags
       auto typeFlags = trackStateProxy.typeFlags();

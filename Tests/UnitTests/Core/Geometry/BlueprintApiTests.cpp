@@ -73,7 +73,7 @@ inline std::vector<SurfaceHandle<Surface>> makeFanLayer(
 
     element->surface().assignDetectorElement(*element);
 
-    surfaces.push_back(element->surface().getSharedPtr());
+    surfaces.push_back(element->surface().getHandle());
   }
   return surfaces;
 }
@@ -102,7 +102,7 @@ inline std::vector<SurfaceHandle<Surface>> makeBarrelLayer(
       auto& element = elements.emplace_back(
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
       element->surface().assignDetectorElement(*element);
-      surfaces.push_back(element->surface().getSharedPtr());
+      surfaces.push_back(element->surface().getHandle());
     }
   }
 

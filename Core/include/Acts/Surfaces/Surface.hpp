@@ -130,6 +130,7 @@ class Surface : public virtual GeometryObject,
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The surface handle
+  [[deprecated("Use getHandle()")]]
   SurfaceHandle<Surface> getSharedPtr();
 
   /// Retrieve a @c SurfaceHandle for this surface (const version)
@@ -141,7 +142,16 @@ class Surface : public virtual GeometryObject,
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The surface handle
+  [[deprecated("Use getHandle()")]]
   SurfaceHandle<const Surface> getSharedPtr() const;
+
+  /// Retrieve a @c SurfaceHandle for this surface (non-const version)
+  /// @return The surface handle
+  SurfaceHandle<Surface> getHandle();
+
+  /// Retrieve a @c SurfaceHandle for this surface (const version)
+  /// @return The surface handle
+  SurfaceHandle<const Surface> getHandle() const;
 
   /// Assignment operator
   /// @note copy construction invalidates the association

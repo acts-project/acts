@@ -86,7 +86,7 @@ struct SteppingLogger {
 
     // Record the information about the surface
     if (navigator.currentSurface(state.navigation) != nullptr) {
-      step.surface = navigator.currentSurface(state.navigation)->getSharedPtr();
+      step.surface = navigator.currentSurface(state.navigation)->getHandle();
       step.geoID = step.surface->geometryId();
     } else if (navigator.currentVolume(state.navigation) != nullptr) {
       // If there's no surface but a volume, this sets the geoID

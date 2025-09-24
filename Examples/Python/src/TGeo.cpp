@@ -34,7 +34,7 @@ void addTGeo(Context& ctx) {
     py::class_<TGeoDetectorElement, std::shared_ptr<TGeoDetectorElement>>(
         tgeo, "TGeoDetectorElement")
         .def("surface", [](const TGeoDetectorElement& self) {
-          return self.surface().getSharedPtr();
+          return self.surface().getHandle();
         });
   }
 

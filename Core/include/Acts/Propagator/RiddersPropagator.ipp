@@ -159,7 +159,7 @@ auto RiddersPropagator<propagator_t>::propagate(
     BoundMatrix cov = jacobian * (*start.covariance()) * jacobian.transpose();
     // replace the covariance of the nominal result w/ the ridders covariance
     nominalResult.endParameters = BoundTrackParameters(
-        nominalFinalParameters.referenceSurface().getSharedPtr(),
+        nominalFinalParameters.referenceSurface().getHandle(),
         nominalFinalParameters.parameters(), std::move(cov),
         nominalFinalParameters.particleHypothesis());
   }
@@ -234,7 +234,7 @@ std::vector<BoundVector> RiddersPropagator<propagator_t>::wiggleParameter(
     values[param] += h;
 
     // Propagate with updated start parameters
-    BoundTrackParameters tp(start.referenceSurface().getSharedPtr(), values,
+    BoundTrackParameters tp(start.referenceSurface().getHandle(), values,
                             start.covariance(), start.particleHypothesis());
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope

@@ -101,7 +101,7 @@ template <typename trajectory_t, typename track_state_t>
 void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
                     track_state_t& ts) {
   // always set the reference surface
-  ts.setReferenceSurface(pc.predicted.referenceSurface().getSharedPtr());
+  ts.setReferenceSurface(pc.predicted.referenceSurface().getHandle());
 
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted)) {
     ts.predicted() = pc.predicted.parameters();

@@ -169,12 +169,12 @@ const std::string& Acts::Experimental::Detector::name() const {
 }
 
 std::shared_ptr<Acts::Experimental::Detector>
-Acts::Experimental::Detector::getSharedPtr() {
+Acts::Experimental::Detector::getHandle() {
   return shared_from_this();
 }
 
 std::shared_ptr<const Acts::Experimental::Detector>
-Acts::Experimental::Detector::getSharedPtr() const {
+Acts::Experimental::Detector::getHandle() const {
   return shared_from_this();
 }
 

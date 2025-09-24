@@ -211,7 +211,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
     // Create a new step for the step logging
     Acts::detail::Step pStep = stepFromG4Step(step);
     pStep.geoID = geoId;
-    pStep.surface = surface != nullptr ? surface->getSharedPtr() : nullptr;
+    pStep.surface = surface != nullptr ? surface->getHandle() : nullptr;
     // Check if last step was on same surface
     if (!pSummary.steps.empty() && pSummary.steps.back().geoID == geoId &&
         pSummary.steps.back().surface != nullptr) {

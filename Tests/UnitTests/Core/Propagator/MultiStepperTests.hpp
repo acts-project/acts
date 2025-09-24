@@ -741,7 +741,7 @@ struct MultiStepperTester {
     multi_stepper.initialize(multi_state, multi_pars);
 
     {
-      BoundTrackParameters pars(multi_pars.referenceSurface().getSharedPtr(),
+      BoundTrackParameters pars(multi_pars.referenceSurface().getHandle(),
                                 BoundVector::Ones(), std::nullopt,
                                 particleHypothesis);
       multi_stepper.addComponent(multi_state, pars, 0.0);

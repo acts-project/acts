@@ -101,7 +101,7 @@ ActsExamples::buildTelescopeDetector(
           surfaceMaterial);
     }
     // Get the surface
-    auto surface = detElement->surface().getSharedPtr();
+    auto surface = detElement->surface().getHandle();
     // Add the detector element to the detector store
     detectorStore.push_back(std::move(detElement));
     // Construct the surface array (one surface contained)

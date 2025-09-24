@@ -165,7 +165,7 @@ LayerBlueprintNode& LayerBlueprintNode::setProtoLayer(
   impl().m_surfaces.clear();
   // also take ownership of the surfaces now
   for (auto& surface : impl().m_protoLayer.value().surfaces()) {
-    impl().m_surfaces.push_back(surface->getSharedPtr());
+    impl().m_surfaces.push_back(surface->getHandle());
   }
   return *this;
 }

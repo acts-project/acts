@@ -269,7 +269,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
         for (const auto& tge : tgElements) {
           m_elementStore.push_back(tge);
-          layerSurfaces.push_back(tge->surface().getSharedPtr());
+          layerSurfaces.push_back(tge->surface().getHandle());
         }
       }
 
@@ -304,7 +304,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
           layerSurfaces.clear();
 
           for (const auto& lsurface : pLayer.surfaces()) {
-            layerSurfaces.push_back(lsurface->getSharedPtr());
+            layerSurfaces.push_back(lsurface->getHandle());
           }
           fillLayer(layerSurfaces, layerCfg, layer_id);
           layer_id++;

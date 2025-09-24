@@ -145,7 +145,7 @@ class GenericBoundTrackParameters {
   explicit GenericBoundTrackParameters(
       const GenericBoundTrackParameters<other_particle_hypothesis_t>& other)
       : GenericBoundTrackParameters(
-            other.referenceSurface().getSharedPtr(), other.parameters(),
+            other.referenceSurface().getHandle(), other.parameters(),
             other.covariance(),
             ParticleHypothesis{other.particleHypothesis()}) {}
 

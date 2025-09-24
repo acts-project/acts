@@ -123,7 +123,7 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
       gctx, params.parameters().template head<2>(), params.direction());
 
   Acts::SurfaceHandle<const Acts::Surface> refSurface =
-      params.referenceSurface().getSharedPtr();
+      params.referenceSurface().getHandle();
   Acts::BoundVector targetPars = params.parameters();
   std::optional<Acts::BoundSquareMatrix> targetCov = params.covariance();
 

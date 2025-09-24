@@ -272,7 +272,7 @@ class Particle {
     }
     Acts::BoundVector params;
     params << localResult.value(), phi(), theta(), qOverP(), time();
-    return Acts::BoundTrackParameters(referenceSurface()->getSharedPtr(),
+    return Acts::BoundTrackParameters(referenceSurface()->getHandle(),
                                       params, std::nullopt, hypothesis());
   }
 
