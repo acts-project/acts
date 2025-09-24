@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <memory>
 
@@ -23,27 +23,23 @@ enum class DeviceType : std::int8_t;
 
 namespace Acts {
 
-class TorchMetricLearning final : public Acts::GraphConstructionBase {
+class TorchEdgeClassifier final : public EdgeClassificationBase {
  public:
   struct Config {
     std::string modelPath;
     std::vector<int> selectedFeatures = {};
-    int embeddingDim = 8;
-    float rVal = 1.6;
-    int knnVal = 500;
-    bool shuffleDirections = false;
-    int deviceID = 0;  // default is the first GPU if available
-
-    // For edge features
-    float phiScale = 3.141592654;
+    float cut = 0.5;
+    int nChunks = 1;  // NOTE for GNN use 1
+    bool undirected = false;
+    int deviceID = 0;
+    bool useEdgeFeatures = false;
   };
 
-  TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);
-  ~TorchMetricLearning();
+  TorchEdgeClassifier(const Config &cfg,
+                      std::unique_ptr<const Acts::Logger> logger);
+  ~TorchEdgeClassifier();
 
-  PipelineTensors operator()(std::vector<float> &inputValues,
-                             std::size_t numNodes,
-                             const std::vector<std::uint64_t> &moduleIds,
+  PipelineTensors operator()(PipelineTensors tensors,
                              const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }

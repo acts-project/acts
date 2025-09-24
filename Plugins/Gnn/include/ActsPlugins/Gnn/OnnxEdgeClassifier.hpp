@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <memory>
 
@@ -19,16 +19,17 @@ class Session;
 class Value;
 }  // namespace Ort
 
-namespace Acts {
+namespace ActsPlugins {
 
-class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
+class OnnxEdgeClassifier final : public EdgeClassificationBase {
  public:
   struct Config {
     std::string modelPath;
     float cut = 0.5;
   };
 
-  OnnxEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
+  OnnxEdgeClassifier(const Config &cfg,
+                     std::unique_ptr<const Acts::Logger> logger);
   ~OnnxEdgeClassifier();
 
   PipelineTensors operator()(PipelineTensors tensors,
@@ -48,4 +49,4 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
   std::string m_outputName;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

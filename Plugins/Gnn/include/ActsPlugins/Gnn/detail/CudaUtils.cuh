@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 template <typename T>
 __global__ void iota(std::size_t size, T *array) {
@@ -21,4 +21,4 @@ __global__ void iota(std::size_t size, T *array) {
   array[i] = i;
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <memory>
 #include <string>
@@ -31,7 +31,7 @@ typedef CUstream_st *cudaStream_t;
 template <typename T>
 class CUDA_module_map_triplet;
 
-namespace Acts {
+namespace ActsPlugins {
 
 namespace detail {
 class GraphCreatorWrapperBase;
@@ -111,4 +111,4 @@ class ModuleMapCuda : public GraphConstructionBase {
                              const ExecutionContext &execContext = {}) override;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

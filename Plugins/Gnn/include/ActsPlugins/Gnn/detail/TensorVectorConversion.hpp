@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <Acts/Plugins/Gnn/Tensor.hpp>
+#include "ActsPlugins/Gnn/Tensor.hpp"
 
 #include <cstdint>
 #include <vector>
 
 #include <torch/torch.h>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 struct TensorDetails {
   const torch::Tensor &tensor;
@@ -139,4 +139,4 @@ Tensor<T> torchToActsTensor(const at::Tensor &tensor,
   return actsTensor;
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

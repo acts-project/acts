@@ -8,17 +8,17 @@
 
 #pragma once
 
-#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
-#include "Acts/Plugins/Gnn/detail/CantorEdge.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Gnn/GnnPipeline.hpp"
+#include "ActsPlugins/Gnn/detail/CantorEdge.hpp"
 
-namespace Acts {
+namespace ActsPlugins {
 
 class TruthGraphMetricsHook : public GnnHook {
-  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Acts::Logger> m_logger;
   std::vector<detail::CantorEdge<std::int64_t>> m_truthGraphCantor;
 
-  const Logger &logger() const { return *m_logger; }
+  const Acts::Logger &logger() const { return *m_logger; }
 
  public:
   TruthGraphMetricsHook(const std::vector<std::int64_t> &truthGraph,
@@ -28,4 +28,4 @@ class TruthGraphMetricsHook : public GnnHook {
                   const ExecutionContext &execCtx) const override;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

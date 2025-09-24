@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
+#include "ActsPlugins/Gnn/GnnPipeline.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 
 #ifdef ACTS_GNN_WITH_CUDA
-#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 
 namespace {
 struct CudaStreamGuard {
@@ -25,7 +25,7 @@ struct CudaStreamGuard {
 }  // namespace
 #endif
 
-namespace Acts {
+namespace ActsPlugins {
 
 GnnPipeline::GnnPipeline(
     std::shared_ptr<GraphConstructionBase> graphConstructor,
@@ -50,13 +50,13 @@ GnnPipeline::GnnPipeline(
 
 std::vector<std::vector<int>> GnnPipeline::run(
     std::vector<float> &features, const std::vector<std::uint64_t> &moduleIds,
-    std::vector<int> &spacepointIDs, Acts::Device device, const GnnHook &hook,
+    std::vector<int> &spacepointIDs, Device device, const GnnHook &hook,
     GnnTiming *timing) const {
   ExecutionContext ctx;
   ctx.device = device;
 #ifdef ACTS_GNN_WITH_CUDA
   std::optional<CudaStreamGuard> streamGuard;
-  if (ctx.device.type == Acts::Device::Type::eCUDA) {
+  if (ctx.device.type == Device::Type::eCUDA) {
     streamGuard.emplace();
     ctx.stream = streamGuard->stream;
   }
@@ -99,7 +99,7 @@ std::vector<std::vector<int>> GnnPipeline::run(
     }
 
     return res;
-  } catch (Acts::NoEdgesError &) {
+  } catch (NoEdgesError &) {
     ACTS_DEBUG("No edges left in GNN pipeline, return 0 track candidates");
     if (timing != nullptr) {
       while (timing->classifierTimes.size() < m_edgeClassifiers.size()) {
@@ -110,4 +110,4 @@ std::vector<std::vector<int>> GnnPipeline::run(
   }
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

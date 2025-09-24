@@ -126,4 +126,4 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
   }
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

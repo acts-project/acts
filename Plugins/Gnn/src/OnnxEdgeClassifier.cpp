@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/OnnxEdgeClassifier.hpp"
+#include "ActsPlugins/Gnn/OnnxEdgeClassifier.hpp"
 
 #include <boost/container/static_vector.hpp>
 #include <onnxruntime_cxx_api.h>
@@ -16,7 +16,7 @@ namespace bc = boost::container;
 namespace {
 
 template <typename T>
-Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
+Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, ActsPlugins::Tensor<T> &tensor,
                   std::size_t rank = 2) {
   assert(rank == 1 || rank == 2);
   ONNXTensorElementDataType onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
@@ -27,7 +27,7 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
     onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64;
   } else {
     throw std::runtime_error(
-        "Cannot convert Acts::Tensor to Ort::Value (datatype)");
+        "Cannot convert ActsPlugins::Tensor to Ort::Value (datatype)");
   }
 
   bc::static_vector<std::int64_t, 2> shape;
@@ -45,7 +45,7 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
 
 }  // namespace
 
-namespace Acts {
+namespace ActsPlugins {
 
 OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
                                        std::unique_ptr<const Logger> _logger)
@@ -118,7 +118,7 @@ OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 PipelineTensors OnnxEdgeClassifier::operator()(
     PipelineTensors tensors, const ExecutionContext &execContext) {
   const char *deviceStr = "Cpu";
-  if (execContext.device.type == Acts::Device::Type::eCUDA) {
+  if (execContext.device.type == Device::Type::eCUDA) {
     deviceStr = "Cuda";
   }
 
@@ -179,4 +179,4 @@ PipelineTensors OnnxEdgeClassifier::operator()(
           std::move(newScores)};
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

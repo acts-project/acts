@@ -25,7 +25,7 @@
 struct CUstream_st;
 using cudaStream_t = CUstream_st *;
 
-namespace Acts {
+namespace ActsPlugins {
 
 /// A simple device description struct
 struct Device {
@@ -54,7 +54,7 @@ inline std::ostream &operator<<(std::ostream &os, Device device) {
 
 /// Capture the context of the execution
 struct ExecutionContext {
-  Acts::Device device{Acts::Device::Type::eCPU};
+  Device device{Device::Type::eCPU};
   std::optional<cudaStream_t> stream;
 };
 
@@ -65,8 +65,7 @@ using TensorPtr = std::unique_ptr<void, TensorDeleter>;
 
 TensorPtr createTensorMemory(std::size_t nbytes, const ExecutionContext &ctx);
 TensorPtr cloneTensorMemory(const TensorPtr &ptrFrom, std::size_t nbytes,
-                            Acts::Device devFrom,
-                            const ExecutionContext &ctxTo);
+                            Device devFrom, const ExecutionContext &ctxTo);
 
 }  // namespace detail
 
@@ -110,7 +109,7 @@ class Tensor {
   std::size_t nbytes() const { return size() * sizeof(T); }
 
   /// Get the device of the tensor
-  Acts::Device device() const { return m_device; }
+  Device device() const { return m_device; }
 
  private:
   Tensor(Shape shape, detail::TensorPtr ptr, const ExecutionContext &ctx)
@@ -147,4 +146,4 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
     const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,
     std::optional<cudaStream_t> stream);
 
-}  // namespace Acts
+}  // namespace ActsPlugins

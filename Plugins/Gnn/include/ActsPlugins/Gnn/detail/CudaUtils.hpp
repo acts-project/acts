@@ -12,7 +12,7 @@
 
 #include <cuda_runtime_api.h>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 inline void cudaAssert(cudaError_t code, const char *file, int line) {
   if (code != cudaSuccess) {
@@ -23,7 +23,7 @@ inline void cudaAssert(cudaError_t code, const char *file, int line) {
   }
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail
 
 #define ACTS_CUDA_CHECK(ans)                             \
   do {                                                   \

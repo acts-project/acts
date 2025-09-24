@@ -13,7 +13,7 @@
 
 #include <cuda_runtime_api.h>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 /// Function to perform the basic junction reomval algorithm on a graph with
 /// scored edges: In case a node has more than one in/out edge, only the
@@ -27,4 +27,4 @@ std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
     const std::int64_t *srcNodes, const std::int64_t *dstNodes,
     cudaStream_t stream);
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

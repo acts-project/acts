@@ -14,7 +14,7 @@ namespace at {
 class Tensor;
 }
 
-namespace Acts {
+namespace ActsPlugins {
 namespace detail {
 
 /// Post process edges
@@ -44,4 +44,4 @@ at::Tensor buildEdges(at::Tensor& embedFeatures, float rVal, int kVal,
                       bool flipDirections = false);
 
 }  // namespace detail
-}  // namespace Acts
+}  // namespace ActsPlugins

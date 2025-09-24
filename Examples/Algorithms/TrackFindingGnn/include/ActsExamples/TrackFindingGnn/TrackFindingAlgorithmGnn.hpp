@@ -9,8 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
-#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Graph.hpp"
@@ -21,6 +19,8 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
+#include "ActsPlugins/Gnn/GnnPipeline.hpp"
+#include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <mutex>
 #include <string>
@@ -103,13 +103,14 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
     std::string outputGraph;
 
     /// Graph constructor
-    std::shared_ptr<Acts::GraphConstructionBase> graphConstructor;
+    std::shared_ptr<ActsPlugins::GraphConstructionBase> graphConstructor;
 
     /// List of edge classifiers
-    std::vector<std::shared_ptr<Acts::EdgeClassificationBase>> edgeClassifiers;
+    std::vector<std::shared_ptr<ActsPlugins::EdgeClassificationBase>>
+        edgeClassifiers;
 
     /// The track builder
-    std::shared_ptr<Acts::TrackBuildingBase> trackBuilder;
+    std::shared_ptr<ActsPlugins::TrackBuildingBase> trackBuilder;
 
     /// Node features
     std::vector<NodeFeature> nodeFeatures = {NodeFeature::eR, NodeFeature::ePhi,

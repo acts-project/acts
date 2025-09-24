@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <Acts/Plugins/Gnn/Tensor.hpp>
+#include "ActsPlugins/Gnn/Tensor.hpp"
 
 #include <cstdint>
 #include <exception>
 #include <optional>
 #include <vector>
 
-namespace Acts {
+namespace ActsPlugins {
 
 /// Error that is thrown if no edges are found
 struct NoEdgesError : std::exception {};
@@ -77,4 +77,4 @@ class TrackBuildingBase {
   virtual ~TrackBuildingBase() = default;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

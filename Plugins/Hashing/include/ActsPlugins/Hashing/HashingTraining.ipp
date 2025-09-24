@@ -79,4 +79,4 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
   return annoyModel;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

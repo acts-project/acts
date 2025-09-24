@@ -10,8 +10,8 @@
 
 #include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
 
-#include "ActsPlugins/Hashing/HashingAnnoy.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
+#include "ActsPlugins/Hashing/HashingAnnoy.hpp"
 
 #include <memory>
 
@@ -92,4 +92,4 @@ void HashingAlgorithm<external_spacepoint_t, SpacePointContainer>::execute(
   }
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

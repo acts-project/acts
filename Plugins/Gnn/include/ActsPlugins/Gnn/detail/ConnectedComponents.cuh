@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include "Acts/Plugins/Gnn/detail/CudaUtils.cuh"
-#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/CudaUtils.cuh"
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 
 #include <cstdint>
 
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 /// Implementation of the FastSV algorithm as shown in
 /// https://arxiv.org/abs/1910.05971
@@ -260,4 +260,4 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   return nLabels;
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail
