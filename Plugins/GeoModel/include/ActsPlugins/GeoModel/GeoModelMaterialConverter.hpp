@@ -11,13 +11,13 @@
 
 class GeoMaterial;
 
-namespace Acts::GeoModel {
+namespace ActsPlugins::GeoModel {
 
 /// @brief Convert GeoMaterial to Acts::Material
 ///
 /// @param gm The GeoMaterial to be converted
 /// @return the Acts::Material
-Material geoMaterialConverter(const GeoMaterial& gm,
-                              bool useMolarDensity = true);
+Acts::Material geoMaterialConverter(const GeoMaterial& gm,
+                                    bool useMolarDensity = true);
 
-}  // namespace Acts::GeoModel
+}  // namespace ActsPlugins::GeoModel

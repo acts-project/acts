@@ -13,7 +13,7 @@
 
 class GeoFullPhysVol;
 
-namespace Acts {
+namespace ActsPlugins {
 
 enum class GeoModelConversionError {
   // ensure all values are non-zero
@@ -23,12 +23,13 @@ enum class GeoModelConversionError {
   MissingLogicalVolume
 };
 
-std::error_code make_error_code(Acts::GeoModelConversionError e);
+std::error_code make_error_code(GeoModelConversionError e);
 
-}  // namespace Acts
+}  // namespace ActsPlugins
 
 namespace std {
 // register with STL
 template <>
-struct is_error_code_enum<Acts::GeoModelConversionError> : std::true_type {};
+struct is_error_code_enum<ActsPlugins::GeoModelConversionError>
+    : std::true_type {};
 }  // namespace std

@@ -11,15 +11,15 @@
 // In order to avoid conflicts with declarations in Geomodel that is fixed in
 // v3.5
 //  clang-formal off
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 // clang-formal on
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -27,6 +27,9 @@
 #include <GeoModelKernel/GeoTrap.h>
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoVPhysVol.h>
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
@@ -42,19 +45,19 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto physTube = make_intrusive<GeoFullPhysVol>(logTube);
 
   // create pars for conversion
-  Acts::GeoModelDetectorObjectFactory::Config gmConfig;
+  ActsPlugins::GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"Tube"};
-  Acts::GeometryContext gContext;
-  Acts::GeoModelDetectorObjectFactory::Cache gmCache;
+  GeometryContext gContext;
+  ActsPlugins::GeoModelDetectorObjectFactory::Cache gmCache;
 
   // create factory instance
-  Acts::GeoModelDetectorObjectFactory factory(gmConfig);
+  ActsPlugins::GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Tube", physTube, gmCache, gContext);
   BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
   const auto& volumeTube = gmCache.volumeBoxFPVs[0].volume;
-  const auto* bounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
-      &volumeTube->volumeBounds());
+  const auto* bounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&volumeTube->volumeBounds());
   std::vector<double> convDims = bounds->values();
   for (std::size_t i = 0; i < dims.size(); i++) {
     BOOST_CHECK(dims[i] == convDims[i]);

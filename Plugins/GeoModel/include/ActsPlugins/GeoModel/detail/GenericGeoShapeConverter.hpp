@@ -8,21 +8,21 @@
 
 #pragma once
 
-#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
-#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
+#include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoTube.h>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 template <typename Shape, typename Converter>
 struct GenericGeoShapeConverter : public IGeoShapeConverter {
-  Acts::Result<Acts::GeoModelSensitiveSurface> toSensitiveSurface(
-      PVConstLink geoPV, const Transform3& transform,
-      SurfaceBoundFactory& boundFactory) const override {
+  Acts::Result<GeoModelSensitiveSurface> toSensitiveSurface(
+      PVConstLink geoPV, const Acts::Transform3& transform,
+      Acts::SurfaceBoundFactory& boundFactory) const override {
     // Retrieve logical volume and absolute transform
     const GeoLogVol* logVol = geoPV->getLogVol();
     if (logVol != nullptr) {
@@ -32,16 +32,16 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
         return Converter{}(geoPV, *concreteShape, transform, boundFactory,
                            true);
       }
-      return Result<GeoModelSensitiveSurface>::failure(
+      return Acts::Result<GeoModelSensitiveSurface>::failure(
           GeoModelConversionError::WrongShapeForConverter);
     }
-    return Result<GeoModelSensitiveSurface>::failure(
+    return Acts::Result<GeoModelSensitiveSurface>::failure(
         GeoModelConversionError::MissingLogicalVolume);
   }
 
   Acts::Result<std::shared_ptr<Acts::Surface>> toPassiveSurface(
-      PVConstLink geoPV, const Transform3& transform,
-      SurfaceBoundFactory& boundFactory) const override {
+      PVConstLink geoPV, const Acts::Transform3& transform,
+      Acts::SurfaceBoundFactory& boundFactory) const override {
     // Retrieve logical volume and absolute transform
     const GeoLogVol* logVol = geoPV->getLogVol();
     if (logVol != nullptr) {
@@ -58,12 +58,12 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
 
         const auto& [el, surface] = res.value();
 
-        return Result<std::shared_ptr<Surface>>::success(surface);
+        return Acts::Result<std::shared_ptr<Acts::Surface>>::success(surface);
       }
-      return Result<std::shared_ptr<Surface>>::failure(
+      return Acts::Result<std::shared_ptr<Acts::Surface>>::failure(
           GeoModelConversionError::WrongShapeForConverter);
     }
-    return Result<std::shared_ptr<Surface>>::failure(
+    return Acts::Result<std::shared_ptr<Acts::Surface>>::failure(
         GeoModelConversionError::MissingLogicalVolume);
   }
 };

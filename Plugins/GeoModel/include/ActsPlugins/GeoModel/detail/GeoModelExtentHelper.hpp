@@ -17,7 +17,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts::detail::GeoModelExentHelper {
+namespace ActsPlugins::detail::GeoModelExentHelper {
 
 /// @brief Helper function to find out which ones are constraint from internal / external
 ///
@@ -25,7 +25,7 @@ namespace Acts::detail::GeoModelExentHelper {
 /// @param ctype the type of the constraint as string from the database
 ///
 /// @return a vector
-std::vector<AxisDirection> readBoundsConstaints(const std::string& boundsEntry,
+std::vector<Acts::AxisDirection> readBoundsConstaints(const std::string& boundsEntry,
                                                 const std::string& ctype = "i");
 
 /// @brief Helper function to find out which ones are constraint needed for binning
@@ -33,7 +33,7 @@ std::vector<AxisDirection> readBoundsConstaints(const std::string& boundsEntry,
 /// @param binningEntry the bounds entry from the database
 ///
 /// @return a vector
-std::vector<AxisDirection> readBinningConstraints(
+std::vector<Acts::AxisDirection> readBinningConstraints(
     const std::vector<std::string>& binningEntry);
 
 /// @brief Helper function to create the extent from database volume entry
@@ -44,9 +44,9 @@ std::vector<AxisDirection> readBinningConstraints(
 /// @param roundInternalExtent if the bounds should be rounded to the next integer value
 ///
 /// @return a tuple of the bounds type, the extent, and a list of binning values to be determined from the internals
-std::tuple<VolumeBounds::BoundsType, Extent> extentFromTable(
+std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent> extentFromTable(
     const std::vector<std::string>& boundsEntrySplit,
-    const Extent& externalExtent = Extent(),
-    const Extent& internalExtent = Extent(), bool roundInternalExtent = true);
+    const Acts::Extent& externalExtent = Acts::Extent(),
+    const Acts::Extent& internalExtent = Acts::Extent(), bool roundInternalExtent = true);
 
 }  // namespace Acts::detail::GeoModelExentHelper

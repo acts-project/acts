@@ -9,17 +9,17 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
 
-#include <GeoModelKernel/GeoShapeShift.h>
+#include <GeoModelKernel/GeoSimplePolygonBrep.h>
 
-namespace Acts::detail {
-
-struct GeoShiftConverter {
+namespace ActsPlugins::detail {
+struct GeoPolygonConverter {
   /// @brief Convert a GeoBox to a detector element and surface
   ///
   /// @param geoFPV The full physical volume to convert (contains shape)
@@ -28,11 +28,9 @@ struct GeoShiftConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
-                                              const GeoShapeShift& geoShift,
-                                              const Transform3& absTransform,
-                                              SurfaceBoundFactory& boundFactory,
-                                              bool sensitive) const;
+  Acts::Result<GeoModelSensitiveSurface> operator()(
+      const PVConstLink& geoPV, const GeoSimplePolygonBrep& geoPolygon,
+      const Acts::Transform3& absTransform, Acts::SurfaceBoundFactory& boundFactory,
+      bool sensitive) const;
 };
-
 }  // namespace Acts::detail

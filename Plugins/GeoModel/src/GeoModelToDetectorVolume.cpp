@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelToDetectorVolume.hpp"
+#include "ActsPlugins/GeoModel/GeoModelToDetectorVolume.hpp"
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
@@ -32,9 +32,11 @@
 #include <GeoModelKernel/GeoTubs.h>
 #include <GeoModelKernel/GeoVFullPhysVol.h>
 
-namespace Acts::GeoModel {
+using namespace Acts;
 
-Acts::Transform3 volumePosInSpace(const PVConstLink& physVol) {
+namespace ActsPlugins::GeoModel {
+
+Transform3 volumePosInSpace(const PVConstLink& physVol) {
   if (auto fullPhys = dynamic_pointer_cast<const GeoVFullPhysVol>(physVol);
       fullPhys != nullptr) {
     return fullPhys->getAbsoluteTransform();
@@ -141,9 +143,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   return Experimental::DetectorVolumeFactory::construct(
       portalGenerator, context, name, vol.transform(), vol.volumeBoundsPtr(),
-      sensitives,
-      std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
+      sensitives, std::vector<std::shared_ptr<Experimental::DetectorVolume>>{},
       Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
 }
 
-}  // namespace Acts::GeoModel
+}  // namespace ActsPlugins::GeoModel

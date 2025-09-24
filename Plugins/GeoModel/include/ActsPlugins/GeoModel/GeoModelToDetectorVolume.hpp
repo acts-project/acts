@@ -8,13 +8,13 @@
 #pragma once
 
 #include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 
 #include "GeoModelKernel/GeoDefinitions.h"
 class GeoShape;
 
-namespace Acts::GeoModel {
+namespace ActsPlugins::GeoModel {
 
 /// @brief Calculates the absolute volume position w.r.t. the world node
 ///        This is only possible, if the volume is not shared in multiple
@@ -30,9 +30,9 @@ Acts::Transform3 volumePosInSpace(const PVConstLink& physVol);
 /// @param boundFactory: Reference to the bound factory to avoid multiple instances of
 ///                      equivalent bound parameters
 /// @return A shared pointer initialized with the new volume
-std::shared_ptr<Volume> convertVolume(const Transform3& trf,
+std::shared_ptr<Acts::Volume> convertVolume(const Acts::Transform3& trf,
                                       const GeoShape* shape,
-                                      VolumeBoundFactory& boundFactory);
+                                      Acts::VolumeBoundFactory& boundFactory);
 
 /// @brief Converts a simple Volume into a Gen-2 DetectorVolume with associated sensitive surfaces inside
 /// @param context: GeometryContext to align the volume needed during the construction phase of the volume
@@ -40,8 +40,8 @@ std::shared_ptr<Volume> convertVolume(const Transform3& trf,
 /// @param name: Name of the constructed Gen-2 volume
 /// @param sensitives: List of sensitive surfaces to be put inside the detector volume.
 /// @return A shared pointer initialized with the new Gen-2 volume
-std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
-    const GeometryContext& context, Volume& vol, const std::string& name,
-    const std::vector<std::shared_ptr<Surface>>& sensitives);
+std::shared_ptr<Acts::Experimental::DetectorVolume> convertDetectorVolume(
+    const Acts::GeometryContext& context, Acts::Volume& vol, const std::string& name,
+    const std::vector<std::shared_ptr<Acts::Surface>>& sensitives);
 
-}  // namespace Acts::GeoModel
+}  // namespace ActsPlugins::GeoModel

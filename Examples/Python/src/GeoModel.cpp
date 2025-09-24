@@ -15,14 +15,6 @@
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -31,6 +23,14 @@
 #include "ActsExamples/GeoModelDetector/GeoModelMuonMockupBuilder.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
+#include "ActsPlugins/GeoModel/GeoModelBlueprintCreater.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElementITk.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelReader.hpp"
+#include "ActsPlugins/GeoModel/GeoModelTree.hpp"
+#include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -45,6 +45,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
+using namespace ActsPlugins;
 using namespace ActsExamples;
 
 namespace ActsPython {

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -22,7 +22,7 @@
 class GeoFullPhysVol;
 class GeoTube;
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 struct GeoUnionDoubleTrdConverter {
   /// Merge trapezoids up to this gap
@@ -36,11 +36,11 @@ struct GeoUnionDoubleTrdConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
+  Acts::Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
                                               const GeoShapeUnion& geoUnion,
-                                              const Transform3& absTransform,
-                                              SurfaceBoundFactory& boundFactory,
+                                              const Acts::Transform3& absTransform,
+                                              Acts::SurfaceBoundFactory& boundFactory,
                                               bool sensitive) const;
 };
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

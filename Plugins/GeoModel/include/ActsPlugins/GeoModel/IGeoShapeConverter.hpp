@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -19,9 +19,10 @@
 class GeoFullPhysVol;
 
 namespace Acts {
-
 class Surface;
+}
 
+namespace ActsPlugins {
 /// @class IGeoShapeConverter
 ///
 /// Interface for the conversion of GeoShapes to Acts surfaces
@@ -37,9 +38,9 @@ class IGeoShapeConverter {
   /// @param boundFactory: Reference to the bound factory to share equivalent bounds
   ///                      across multiple surfaces
   /// @return The detector element and surface
-  virtual Result<GeoModelSensitiveSurface> toSensitiveSurface(
-      PVConstLink geoPV, const Transform3& transform,
-      SurfaceBoundFactory& boundFactory) const = 0;
+  virtual Acts::Result<GeoModelSensitiveSurface> toSensitiveSurface(
+      PVConstLink geoPV, const Acts::Transform3& transform,
+      Acts::SurfaceBoundFactory& boundFactory) const = 0;
 
   /// @brief Convert a GeoShape into a passive surface
   /// @param geoFPV The physical volume to convert
@@ -47,9 +48,9 @@ class IGeoShapeConverter {
   /// @param boundFactory: Reference to the bound factory to share equivalent bounds
   ///                      across multiple surfaces
   /// @return The detector element and surface
-  virtual Result<std::shared_ptr<Surface>> toPassiveSurface(
-      PVConstLink geoPV, const Transform3& transform,
-      SurfaceBoundFactory& boundFactory) const = 0;
+  virtual Acts::Result<std::shared_ptr<Acts::Surface>> toPassiveSurface(
+      PVConstLink geoPV, const Acts::Transform3& transform,
+      Acts::SurfaceBoundFactory& boundFactory) const = 0;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

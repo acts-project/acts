@@ -14,7 +14,8 @@
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelRead/ReadGeoModel.h>
 
-namespace Acts {
+namespace ActsPlugins {
+
 /// @brief Holder struct to manage a GeoModel world. It holds the pointer to the
 ///        root volume of the world and provides additional links to dedicated
 ///        volumes inside the tree representing the sensors and chambers in a

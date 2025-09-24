@@ -24,15 +24,17 @@ namespace Acts {
 class CylinderBounds;
 class LineBounds;
 class PlanarBounds;
+}  // namespace Acts
 
+namespace ActsPlugins {
 /// @class GeoModelDetectorElement
 ///
 /// Detector element representative for GeoModel based
 /// sensitive elements.
-class GeoModelDetectorElement : public DetectorElementBase {
+class GeoModelDetectorElement : public Acts::DetectorElementBase {
  public:
   /// Broadcast the context type
-  using ContextType = GeometryContext;
+  using ContextType = Acts::GeometryContext;
 
   // Deleted default constructor
   GeoModelDetectorElement() = delete;
@@ -51,11 +53,11 @@ class GeoModelDetectorElement : public DetectorElementBase {
   template <typename SurfaceType, typename BoundsType>
   static std::shared_ptr<GeoModelDetectorElement> createDetectorElement(
       const PVConstLink& geoPhysVol, const std::shared_ptr<BoundsType> bounds,
-      const Transform3& sfTransform, double thickness) {
+      const Acts::Transform3& sfTransform, double thickness) {
     // First create the detector element with a nullptr
     auto detElement = std::make_shared<GeoModelDetectorElement>(
         geoPhysVol, nullptr, sfTransform, thickness);
-    auto surface = Surface::makeShared<SurfaceType>(bounds, *detElement);
+    auto surface = Acts::Surface::makeShared<SurfaceType>(bounds, *detElement);
     detElement->attachSurface(surface);
     return detElement;
   }
@@ -67,22 +69,23 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// @param sfTransform the surface transform
   /// @param thickness the thickness of the detector element
   GeoModelDetectorElement(PVConstLink geoPhysVol,
-                          std::shared_ptr<Surface> surface,
-                          const Transform3& sfTransform, double thickness);
+                          std::shared_ptr<Acts::Surface> surface,
+                          const Acts::Transform3& sfTransform,
+                          double thickness);
 
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3& transform(const GeometryContext& gctx) const override;
+  const Acts::Transform3& transform(const Acts::GeometryContext& gctx) const override;
 
   /// Return the nominal - non-contextual transform
-  const Transform3& nominalTransform() const;
+  const Acts::Transform3& nominalTransform() const;
 
   /// Return surface associated with this detector element
-  const Surface& surface() const override;
+  const Acts::Surface& surface() const override;
 
   /// Non-const access to surface associated with this detector element
-  Surface& surface() override;
+  Acts::Surface& surface() override;
 
   /// Return the thickness of this detector element
   double thickness() const override;
@@ -105,19 +108,18 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// Attach a surface
   ///
   /// @param surface The surface to attach
-  void attachSurface(std::shared_ptr<Surface> surface) {
+  void attachSurface(std::shared_ptr<Acts::Surface> surface) {
     m_surface = std::move(surface);
   }
 
  private:
   std::string m_entryName;
-
   /// The GeoModel full physical volume
   PVConstLink m_geoPhysVol{nullptr};
   /// The surface
-  std::shared_ptr<Surface> m_surface;
+  std::shared_ptr<Acts::Surface> m_surface;
   /// The global transformation before the volume
-  Transform3 m_surfaceTransform;
+  Acts::Transform3 m_surfaceTransform;
   ///  Thickness of this detector element
   double m_thickness{0.};
 };
@@ -125,6 +127,6 @@ class GeoModelDetectorElement : public DetectorElementBase {
 /// Collect the sensitive surface & detector element
 using GeoModelSensitiveSurface =
     std::tuple<std::shared_ptr<GeoModelDetectorElement>,
-               std::shared_ptr<Surface>>;
+               std::shared_ptr<Acts::Surface>>;
 
-}  // namespace Acts
+}  // namespace ActsPlugins

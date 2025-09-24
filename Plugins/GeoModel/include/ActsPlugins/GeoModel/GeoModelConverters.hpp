@@ -9,18 +9,18 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoBoxConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoIntersectionAnnulusConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoPolygonConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoShiftConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoSubtractionConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoTrdConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoTubeConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoBoxConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoIntersectionAnnulusConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoPolygonConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoShiftConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoSubtractionConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoTrdConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoTubeConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
@@ -32,7 +32,7 @@
 #include <GeoModelKernel/GeoShape.h>
 #include <GeoModelKernel/GeoShapeSubtraction.h>
 
-namespace Acts {
+namespace ActsPlugins {
 
 /// @brief The GeoBox converter
 ///

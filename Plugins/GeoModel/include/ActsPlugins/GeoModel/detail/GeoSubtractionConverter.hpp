@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -18,7 +18,7 @@
 
 #include <GeoModelKernel/GeoShapeSubtraction.h>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 struct GeoSubtractionConverter {
   /// @brief Convert a GeoBox to a detector element and surface
   ///
@@ -28,9 +28,9 @@ struct GeoSubtractionConverter {
   /// @param dummy to be compatible with other converters
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(
+  Acts::Result<GeoModelSensitiveSurface> operator()(
       [[maybe_unused]] const PVConstLink& geoPV,
-      const GeoShapeSubtraction& geoSub, const Transform3& absTransform,
-      SurfaceBoundFactory& boundFactory, [[maybe_unused]] bool sensitive) const;
+      const GeoShapeSubtraction& geoSub, const Acts::Transform3& absTransform,
+      Acts::SurfaceBoundFactory& boundFactory, [[maybe_unused]] bool sensitive) const;
 };
 }  // namespace Acts::detail

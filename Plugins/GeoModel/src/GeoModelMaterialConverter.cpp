@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelMaterialConverter.hpp"
+#include "ActsPlugins/GeoModel/GeoModelMaterialConverter.hpp"
 
 #include "Acts/Material/Material.hpp"
 
@@ -15,8 +15,11 @@
 namespace {
 constexpr double s_densityCnvFactor = 1. / GeoModelKernelUnits::gram;
 }
-Acts::Material Acts::GeoModel::geoMaterialConverter(const GeoMaterial& gm,
-                                                    bool useMolarDensity) {
+
+using namespace Acts;
+
+Material ActsPlugins::GeoModel::geoMaterialConverter(const GeoMaterial& gm,
+                                                     bool useMolarDensity) {
   double x0 = gm.getRadLength();
   double l0 = gm.getIntLength();
   double density = gm.getDensity() * s_densityCnvFactor;
