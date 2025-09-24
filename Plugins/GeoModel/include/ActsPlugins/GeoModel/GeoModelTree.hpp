@@ -84,4 +84,4 @@ struct GeoModelTree {
   std::string worldVolumeName{"World"};
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

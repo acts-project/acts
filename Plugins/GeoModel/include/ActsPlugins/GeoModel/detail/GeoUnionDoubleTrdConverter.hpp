@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
 #include <memory>
 #include <tuple>
@@ -36,11 +36,10 @@ struct GeoUnionDoubleTrdConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Acts::Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
-                                              const GeoShapeUnion& geoUnion,
-                                              const Acts::Transform3& absTransform,
-                                              Acts::SurfaceBoundFactory& boundFactory,
-                                              bool sensitive) const;
+  Acts::Result<GeoModelSensitiveSurface> operator()(
+      const PVConstLink& geoPV, const GeoShapeUnion& geoUnion,
+      const Acts::Transform3& absTransform,
+      Acts::SurfaceBoundFactory& boundFactory, bool sensitive) const;
 };
 
 }  // namespace ActsPlugins::detail

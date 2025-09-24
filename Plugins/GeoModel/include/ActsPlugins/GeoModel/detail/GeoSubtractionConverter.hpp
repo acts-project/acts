@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
 #include <memory>
 #include <tuple>
@@ -31,6 +31,7 @@ struct GeoSubtractionConverter {
   Acts::Result<GeoModelSensitiveSurface> operator()(
       [[maybe_unused]] const PVConstLink& geoPV,
       const GeoShapeSubtraction& geoSub, const Acts::Transform3& absTransform,
-      Acts::SurfaceBoundFactory& boundFactory, [[maybe_unused]] bool sensitive) const;
+      Acts::SurfaceBoundFactory& boundFactory,
+      [[maybe_unused]] bool sensitive) const;
 };
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Utilities/BoundFactory.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 #include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
-#include "Acts/Utilities/BoundFactory.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -68,4 +68,4 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
   }
 };
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
 #include <memory>
 #include <tuple>
@@ -30,7 +30,7 @@ struct GeoPolygonConverter {
   /// @return The detector element and surface
   Acts::Result<GeoModelSensitiveSurface> operator()(
       const PVConstLink& geoPV, const GeoSimplePolygonBrep& geoPolygon,
-      const Acts::Transform3& absTransform, Acts::SurfaceBoundFactory& boundFactory,
-      bool sensitive) const;
+      const Acts::Transform3& absTransform,
+      Acts::SurfaceBoundFactory& boundFactory, bool sensitive) const;
 };
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

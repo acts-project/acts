@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
@@ -21,7 +22,6 @@
 #include "ActsPlugins/GeoModel/detail/GeoTrdConverter.hpp"
 #include "ActsPlugins/GeoModel/detail/GeoTubeConverter.hpp"
 #include "ActsPlugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
-#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
@@ -104,4 +104,4 @@ inline std::shared_ptr<const IGeoShapeConverter> geoShapesConverters(
   return itr != converters.end() ? itr->second : nullptr;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

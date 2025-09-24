@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
 class GeoFullPhysVol;
 class GeoTube;
@@ -30,11 +30,10 @@ struct GeoTubeConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Acts::Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
-                                              const GeoTube& geoTube,
-                                              const Acts::Transform3& absTransform,
-                                              Acts::SurfaceBoundFactory& boundFactory,
-                                              bool sensitive) const;
+  Acts::Result<GeoModelSensitiveSurface> operator()(
+      const PVConstLink& geoPV, const GeoTube& geoTube,
+      const Acts::Transform3& absTransform,
+      Acts::SurfaceBoundFactory& boundFactory, bool sensitive) const;
 };
 
 }  // namespace ActsPlugins::detail
