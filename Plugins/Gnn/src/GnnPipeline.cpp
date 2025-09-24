@@ -43,7 +43,7 @@ GnnPipeline::GnnPipeline(
     throw std::invalid_argument("Missing track building module");
   }
   if (m_edgeClassifiers.empty() ||
-      rangeContainsValue(m_edgeClassifiers, nullptr)) {
+      Acts::rangeContainsValue(m_edgeClassifiers, nullptr)) {
     throw std::invalid_argument("Missing graph construction module");
   }
 }
