@@ -130,7 +130,7 @@ def run() -> None:
         "Acts::makeDefaultBetheHeitlerApprox",
         "Acts::reduceMixtureLargestWeights",
         "Acts::reduceMixtureWithKLDistance",
-        "Acts::convertDD4hepDetector",
+        "ActsPlugins::convertDD4hepDetector",
     }
 
     role_instances["enum"] = {

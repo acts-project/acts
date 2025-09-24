@@ -10,7 +10,7 @@ Both rely on the conversion of `G4VPhysicalVolume` into corresponding `Acts` obj
 Converting physical volumes into {class}`Acts::Surface` objects that represent sensitive detector elements, is done via the {class}`ActsPlugins::Geant4DetectorSurfaceFactory`.
 This helper class allows to select volumes from the Geant4 geometry and convert them either into pairs of {class}`ActsPlugins::Geant4DetectorElement` and {class}`Acts::Surface` objects in case of sensitive elements, or simply surfaces objects in the case of passive surfaces.
 
-The selection is hereby done by providing one or more {class}`Acts::IGeant4PhysicalVolumeSelector` objects to the surface factory.
+The selection is hereby done by providing one or more {class}`ActsPlugins::IGeant4PhysicalVolumeSelector` objects to the surface factory.
 
 Possible implementations of this type of conversions can be seen in the corresponding unit test `ActsUnitTestGeant4DetectorSurfaceFactory`
 

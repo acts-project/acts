@@ -191,7 +191,7 @@ The volumes are automatically built around the layers. Volume boundaries for
 the volumes are calculated automatically by adding a tolerance to the geometric
 extension of the contained layers. The tolerance parameters `layerEnvelopeR`
 and `layerEnvelopeZ` need to be set in the
-{func}`Acts::convertDD4hepDetector` function.
+{func}`ActsPlugins::convertDD4hepDetector` function.
 
 Furthermore, parameters can be handed over for material mapping or the axes
 orientation of modules.
@@ -263,7 +263,7 @@ ACTS geometry translation uses parameters attached to DD4hep detector elements v
 ## Usage
 
 To receive the {class}`Acts::TrackingGeometry` the global function
-{func}`Acts::convertDD4hepDetector` should be used, where the DD4hep world
+{func}`ActsPlugins::convertDD4hepDetector` should be used, where the DD4hep world
 `DetElement` needs to be handed over. For a valid translation, that all
 prerequisites described above are met and that the right `VariantParameters`
 are added during the DD4hep construction.
