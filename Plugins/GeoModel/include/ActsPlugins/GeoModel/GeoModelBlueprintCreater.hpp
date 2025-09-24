@@ -24,7 +24,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
+namespace ActsPlugins {
 
 struct GeoModelTree;
 
@@ -37,9 +37,9 @@ class GeoModelBlueprintCreater {
   struct Config {
     /// The detector surfaces - leave empty if filling is not done
     /// with a kdtree sorting structure
-    std::vector<std::shared_ptr<Surface>> detectorSurfaces = {};
+    std::vector<std::shared_ptr<Acts::Surface>> detectorSurfaces = {};
     /// The binning values for the KDTree sorting
-    std::vector<AxisDirection> kdtBinning = {};
+    std::vector<Acts::AxisDirection> kdtBinning = {};
     /// Polyhedron approximation: number of segments per circlequarter
     unsigned int quarterSegments = 1u;
   };
@@ -47,7 +47,7 @@ class GeoModelBlueprintCreater {
   /// The cache struct
   struct Cache {
     /// The kdtree of surfaces
-    std::shared_ptr<Experimental::KdtSurfaces<3u>> kdtSurfaces = nullptr;
+    std::shared_ptr<Acts::Experimental::KdtSurfaces<3u>> kdtSurfaces = nullptr;
   };
 
   /// The Options struct
@@ -100,16 +100,16 @@ class GeoModelBlueprintCreater {
   /// @param mlogger a screen output logger
   explicit GeoModelBlueprintCreater(
       const Config& cfg,
-      std::unique_ptr<const Logger> mlogger =
-          getDefaultLogger("GeoModelBlueprintCreater", Acts::Logging::INFO));
+      std::unique_ptr<const Acts::Logger> mlogger = Acts::getDefaultLogger(
+          "GeoModelBlueprintCreater", Acts::Logging::INFO));
 
   /// Method that reads the GeoModel blueprint from database
   ///
   /// @param gctx the geometry context
   /// @param gmTree the GeoModel tree
   /// @param options the options
-  Blueprint create(const GeometryContext& gctx, const GeoModelTree& gmTree,
-                   const Options& options) const;
+  Blueprint create(const Acts::GeometryContext& gctx,
+                   const GeoModelTree& gmTree, const Options& options) const;
 
  private:
   /// Create a blueprint node from a table entry
@@ -121,10 +121,10 @@ class GeoModelBlueprintCreater {
   /// @param motherExtent an extent given from external parameters (e.g. mother volume)
   ///
   /// @return a newly created node
-  std::unique_ptr<Experimental::Gen2Blueprint::Node> createNode(
-      Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
+  std::unique_ptr<Acts::Experimental::Gen2Blueprint::Node> createNode(
+      Cache& cache, const Acts::GeometryContext& gctx, const TableEntry& entry,
       const std::map<std::string, TableEntry>& tableEntryMap,
-      const Extent& motherExtent = Extent()) const;
+      const Acts::Extent& motherExtent = Acts::Extent()) const;
 
   /// Create an IInternalStructureBuilder
   ///
@@ -135,12 +135,13 @@ class GeoModelBlueprintCreater {
   /// @param interalContstraints a set of binning values to be estimated
   ///
   /// @return a newly created IInternalStructureBuilder and the internal extent from it
-  std::tuple<std::shared_ptr<const Experimental::IInternalStructureBuilder>,
-             Extent>
+  std::tuple<
+      std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
+      Acts::Extent>
   createInternalStructureBuilder(
-      Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
-      const Extent& externalExtent = Extent(),
-      const std::vector<AxisDirection>& internalConstraints = {}) const;
+      Cache& cache, const Acts::GeometryContext& gctx, const TableEntry& entry,
+      const Acts::Extent& externalExtent = Acts::Extent(),
+      const std::vector<Acts::AxisDirection>& internalConstraints = {}) const;
 
   /// @brief Parse bound value string from the database
   ///
@@ -150,19 +151,20 @@ class GeoModelBlueprintCreater {
   /// @param internalExtent the extend of the internal objects (marked "i" in the database)
   ///
   /// @return The bounds type, raw bound values, deduced bound values, and a translation vector
-  std::tuple<VolumeBounds::BoundsType, Extent, std::vector<double>, Vector3>
+  std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent, std::vector<double>,
+             Acts::Vector3>
   parseBounds(const std::string& boundsEntry,
-              const Extent& externalExtent = Extent(),
-              const Extent& internalExtent = Extent()) const;
+              const Acts::Extent& externalExtent = Acts::Extent(),
+              const Acts::Extent& internalExtent = Acts::Extent()) const;
 
   /// Private access to the logger
-  const Logger& logger() const { return *m_logger; }
+  const Acts::Logger& logger() const { return *m_logger; }
 
   /// The configuration
   Config m_cfg;
 
   /// Logging instance
-  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

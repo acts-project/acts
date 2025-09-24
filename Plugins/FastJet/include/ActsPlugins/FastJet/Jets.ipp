@@ -46,4 +46,4 @@ InputTracks<TrackContainer>::tracksInJet(const fastjet::PseudoJet& jet,
   return tracks;
 }
 
-}  // namespace Acts::FastJet
+}  // namespace ActsPlugins::FastJet

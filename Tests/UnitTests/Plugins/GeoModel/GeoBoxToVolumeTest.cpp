@@ -11,16 +11,16 @@
 // switching format off to avoid conflicting declaration in GeoModel
 // needed until Acts GeoModel bumps to 6.5
 //clang-format off
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 //clang-format on
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
@@ -29,6 +29,9 @@
 #include <GeoModelKernel/GeoTrap.h>
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoVPhysVol.h>
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
@@ -44,19 +47,19 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto physBox = make_intrusive<GeoFullPhysVol>(logBox);
 
   // create pars for conversion
-  Acts::GeoModelDetectorObjectFactory::Config gmConfig;
+  GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"Box"};
-  Acts::GeometryContext gContext;
-  Acts::GeoModelDetectorObjectFactory::Cache gmCache;
+  GeometryContext gContext;
+  GeoModelDetectorObjectFactory::Cache gmCache;
 
   // create factory instance
-  Acts::GeoModelDetectorObjectFactory factory(gmConfig);
+  GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Box", physBox, gmCache, gContext);
   BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
   const auto& volumeBox = gmCache.volumeBoxFPVs[0].volume;
   const auto* bounds =
-      dynamic_cast<const Acts::CuboidVolumeBounds*>(&volumeBox->volumeBounds());
+      dynamic_cast<const CuboidVolumeBounds*>(&volumeBox->volumeBounds());
   std::vector<double> convHls = bounds->values();
   for (std::size_t i = 0; i < hls.size(); i++) {
     BOOST_CHECK(hls[i] == convHls[i]);

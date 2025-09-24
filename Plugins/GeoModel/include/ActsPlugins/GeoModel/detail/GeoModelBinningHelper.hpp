@@ -18,13 +18,13 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::detail::GeoModelBinningHelper {
+namespace ActsPlugins::detail::GeoModelBinningHelper {
 
 /// @brief Helper to transform binning string to AxisDirection enum
 ///
 /// @param binning the binning string
-inline AxisDirection toAxisDirection(const std::string& binning) {
-  using enum AxisDirection;
+inline Acts::AxisDirection toAxisDirection(const std::string& binning) {
+  using enum Acts::AxisDirection;
   if (binning == "x") {
     return AxisX;
   } else if (binning == "y") {
@@ -48,6 +48,6 @@ inline AxisDirection toAxisDirection(const std::string& binning) {
 /// @return a DirectedProtoAxis object and the bin expansion
 std::tuple<Acts::DirectedProtoAxis, std::size_t> toProtoAxis(
     const std::string& binning,
-    const std::optional<Extent>& extent = std::nullopt);
+    const std::optional<Acts::Extent>& extent = std::nullopt);
 
-}  // namespace Acts::detail::GeoModelBinningHelper
+}  // namespace ActsPlugins::detail::GeoModelBinningHelper

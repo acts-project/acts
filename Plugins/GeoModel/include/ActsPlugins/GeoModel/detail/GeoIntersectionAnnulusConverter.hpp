@@ -9,28 +9,30 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
 
-#include <GeoModelKernel/GeoSimplePolygonBrep.h>
+#include <GeoModelKernel/GeoShapeIntersection.h>
 
-namespace Acts::detail {
-struct GeoPolygonConverter {
+namespace ActsPlugins::detail {
+
+struct GeoIntersectionAnnulusConverter {
   /// @brief Convert a GeoBox to a detector element and surface
   ///
   /// @param geoFPV The full physical volume to convert (contains shape)
-  /// @param geoBox The GeoBox to convert
+  /// @param geoIntersection The GeoIntersection to convert
   /// @param absTransform from the GeoPhysVol
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(
-      const PVConstLink& geoPV, const GeoSimplePolygonBrep& geoPolygon,
-      const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
+  Acts::Result<GeoModelSensitiveSurface> operator()(
+      const PVConstLink& geoPV, const GeoShapeIntersection& geoIntersection,
+      const Acts::Transform3& absTransform, Acts::SurfaceBoundFactory& boundFactory,
       bool sensitive) const;
 };
-}  // namespace Acts::detail
+
+}  // namespace ActsPlugins::detail

@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 
-namespace Acts {
+namespace ActsPlugins {
 
 class ITkIdentifier {
   Acts::MultiIndex<std::size_t, 1, 2, 20, 1, 19, 20, 1> m_identifier{};
@@ -50,8 +50,8 @@ std::ostream& operator<<(std::ostream& os, const ITkIdentifier& id);
 class GeoModelDetectorElementITk : public GeoModelDetectorElement {
  public:
   GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
-                             std::shared_ptr<Surface> surface,
-                             const Transform3& sfTransform, double thickness,
+                             std::shared_ptr<Acts::Surface> surface,
+                             const Acts::Transform3& sfTransform, double thickness,
                              int hardware, int barrelEndcap, int layerWheel,
                              int etaModule, int phiModule, int side)
       : GeoModelDetectorElement(geoPhysVol, std::move(surface), sfTransform,
@@ -65,9 +65,9 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
   /// A new surface is constructed.
   /// @todo Remove redundancy in signature once plugin is refactored
   static std::tuple<std::shared_ptr<GeoModelDetectorElementITk>,
-                    std::shared_ptr<Surface>>
+                    std::shared_ptr<Acts::Surface>>
   convertFromGeomodel(std::shared_ptr<GeoModelDetectorElement> detEl,
-                      std::shared_ptr<Surface> srf, const GeometryContext& gctx,
+                      std::shared_ptr<Acts::Surface> srf, const Acts::GeometryContext& gctx,
                       int hardware, int barrelEndcap, int layerWheel,
                       int etaModule, int phiModule, int side);
 

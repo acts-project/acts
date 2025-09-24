@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
 #include <memory>
 #include <tuple>
@@ -22,10 +22,11 @@ class GeoFullPhysVol;
 class GeoTrd;
 
 namespace Acts {
-
 class Surface;
+}
 
-namespace detail {
+namespace ActsPlugins::detail {
+
 struct GeoTrdConverter {
   /// @brief Convert a GeoTrd to a detector element and surface
   ///
@@ -35,12 +36,10 @@ struct GeoTrdConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
-                                              const GeoTrd& geoTrd,
-                                              const Transform3& absTransform,
-                                              SurfaceBoundFactory& boundFactory,
-                                              bool sensitive) const;
+  Acts::Result<GeoModelSensitiveSurface> operator()(
+      const PVConstLink& geoPV, const GeoTrd& geoTrd,
+      const Acts::Transform3& absTransform,
+      Acts::SurfaceBoundFactory& boundFactory, bool sensitive) const;
 };
-}  // namespace detail
 
-}  // namespace Acts
+}  // namespace ActsPlugins::detail

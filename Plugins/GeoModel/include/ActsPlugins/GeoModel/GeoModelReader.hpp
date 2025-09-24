@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+#include "ActsPlugins/GeoModel/GeoModelTree.hpp"
 
 #include <memory>
 #include <string>
 
-namespace Acts::GeoModelReader {
+namespace ActsPlugins::GeoModelReader {
 
 /// @brief Read the GeoModel from the database
 ///
@@ -22,4 +22,4 @@ namespace Acts::GeoModelReader {
 /// @return world/top volume of the GeoModel tree in memory
 GeoModelTree readFromDb(const std::string& dbPath);
 
-}  // namespace Acts::GeoModelReader
+}  // namespace ActsPlugins::GeoModelReader
