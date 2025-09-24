@@ -25,7 +25,7 @@ inline void cudaAssert(cudaError_t code, const char *file, int line) {
 
 }  // namespace ActsPlugins::detail
 
-#define ACTS_CUDA_CHECK(ans)                             \
-  do {                                                   \
-    Acts::detail::cudaAssert((ans), __FILE__, __LINE__); \
+#define ACTS_CUDA_CHECK(ans)                                    \
+  do {                                                          \
+    ActsPlugins::detail::cudaAssert((ans), __FILE__, __LINE__); \
   } while (0)
