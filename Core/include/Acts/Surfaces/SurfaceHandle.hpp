@@ -202,11 +202,7 @@ using ConstSurfacePtr = SurfaceHandle<const Surface>;
 /// @brief Stream operator for SurfaceHandle
 template <class T>
 std::ostream& operator<<(std::ostream& os, const SurfaceHandle<T>& handle) {
-  if (handle) {
-    return os << "SurfaceHandle[" << handle->name() << "]";
-  } else {
-    return os << "SurfaceHandle[nullptr]";
-  }
+  return os << handle.get();
 }
 
 }  // namespace Acts
