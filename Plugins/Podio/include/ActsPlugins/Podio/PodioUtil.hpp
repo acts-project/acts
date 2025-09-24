@@ -11,8 +11,8 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsPlugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "ActsPlugins/Podio/PodioDynamicColumns.hpp"
 
 #include <limits>
 #include <memory>
@@ -79,10 +79,12 @@ class ConversionHelper {
  public:
   virtual std::optional<Identifier> surfaceToIdentifier(
       const Acts::Surface& surface) const = 0;
-  virtual const Acts::Surface* identifierToSurface(Identifier identifier) const = 0;
+  virtual const Acts::Surface* identifierToSurface(
+      Identifier identifier) const = 0;
 
   virtual Identifier sourceLinkToIdentifier(const Acts::SourceLink& sl) = 0;
-  virtual Acts::SourceLink identifierToSourceLink(Identifier identifier) const = 0;
+  virtual Acts::SourceLink identifierToSourceLink(
+      Identifier identifier) const = 0;
 };
 
 std::shared_ptr<const Acts::Surface> convertSurfaceFromPodio(

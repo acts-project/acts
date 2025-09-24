@@ -303,8 +303,8 @@ class ConstPodioTrackStateContainer final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim>
-  calibratedCovariance_impl(IndexType index) const {
+  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType index) const {
     return ConstTrackStateProxy::CalibratedCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
@@ -324,7 +324,8 @@ class ConstPodioTrackStateContainer final
     return PodioTrackStateContainerBase::has_impl(*this, key, istate);
   }
 
-  Acts::MultiTrajectoryTraits::IndexType calibratedSize_impl(IndexType istate) const {
+  Acts::MultiTrajectoryTraits::IndexType calibratedSize_impl(
+      IndexType istate) const {
     return m_collection->at(istate).getData().measdim;
   }
 
@@ -360,7 +361,7 @@ static_assert(
     Acts::ConstMultiTrajectoryBackend<ConstPodioTrackStateContainer>,
     "ConstPodioTrackStateContainer does not fulfill TrackContainerBackend");
 
-} // namespace ActsPlugins
+}  // namespace ActsPlugins
 
 namespace Acts {
 
@@ -368,7 +369,7 @@ template <>
 struct IsReadOnlyMultiTrajectory<ActsPlugins::MutablePodioTrackStateContainer>
     : std::false_type {};
 
-} // namespace Acts
+}  // namespace Acts
 
 namespace ActsPlugins {
 
@@ -428,8 +429,8 @@ class MutablePodioTrackStateContainer final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim>
-  calibratedCovariance_impl(IndexType index) const {
+  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType index) const {
     return ConstTrackStateProxy::CalibratedCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
@@ -713,8 +714,8 @@ class MutablePodioTrackStateContainer final
     m_dynamic.clear();
   }
 
-  Acts::detail::DynamicKeyRange<podio_detail::DynamicColumnBase> dynamicKeys_impl()
-      const {
+  Acts::detail::DynamicKeyRange<podio_detail::DynamicColumnBase>
+  dynamicKeys_impl() const {
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
