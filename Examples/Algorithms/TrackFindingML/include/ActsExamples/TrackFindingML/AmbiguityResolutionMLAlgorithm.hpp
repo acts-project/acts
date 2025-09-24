@@ -26,7 +26,7 @@ namespace ActsExamples {
 ///  3) In each cluster keep the track with the highest score
 class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
   using AmbiguityResolution =
-      Acts::AmbiguityResolutionML<Acts::AmbiguityTrackClassifier>;
+      Acts::AmbiguityResolutionML<ActsPlugins::AmbiguityTrackClassifier>;
 
  public:
   struct Config {
