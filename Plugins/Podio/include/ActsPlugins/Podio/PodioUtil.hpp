@@ -11,7 +11,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
+#include "ActsPlugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <limits>
@@ -36,7 +36,7 @@ namespace podio {
 class Frame;
 }
 
-namespace Acts {
+namespace ActsPlugins {
 namespace PodioUtil {
 
 // We want to support podio 0.16 and 1.x for now
@@ -78,14 +78,14 @@ constexpr int kNoSurface = -1;
 class ConversionHelper {
  public:
   virtual std::optional<Identifier> surfaceToIdentifier(
-      const Surface& surface) const = 0;
-  virtual const Surface* identifierToSurface(Identifier identifier) const = 0;
+      const Acts::Surface& surface) const = 0;
+  virtual const Acts::Surface* identifierToSurface(Identifier identifier) const = 0;
 
-  virtual Identifier sourceLinkToIdentifier(const SourceLink& sl) = 0;
-  virtual SourceLink identifierToSourceLink(Identifier identifier) const = 0;
+  virtual Identifier sourceLinkToIdentifier(const Acts::SourceLink& sl) = 0;
+  virtual Acts::SourceLink identifierToSourceLink(Identifier identifier) const = 0;
 };
 
-std::shared_ptr<const Surface> convertSurfaceFromPodio(
+std::shared_ptr<const Acts::Surface> convertSurfaceFromPodio(
     const ConversionHelper& helper, const ActsPodioEdm::Surface& surface);
 
 ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
@@ -97,8 +97,8 @@ namespace podio_detail {
 /// implementation is shared here
 void recoverDynamicColumns(
     const podio::Frame& frame, const std::string& stem,
-    std::unordered_map<HashedString,
+    std::unordered_map<Acts::HashedString,
                        std::unique_ptr<podio_detail::ConstDynamicColumnBase>>&
         dynamic);
 }  // namespace podio_detail
-}  // namespace Acts
+}  // namespace ActsPlugins
