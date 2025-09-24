@@ -43,6 +43,8 @@ __attribute__((noinline)) void invalid2() {
 
 }  // namespace
 
+using namespace ActsPlugins;
+
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(FpeMonitorTest)
