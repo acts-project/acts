@@ -65,10 +65,12 @@ class AxisAlignedBoundingBox {
   static const std::size_t dim = DIM;
 
   /// Copy constructor from other bounding box.
+  /// @param other The other bounding box to copy from
   AxisAlignedBoundingBox(const self_t& other) = default;
 
   /// Copy assignment operator from other bounding box.
   /// @param other The other AABB
+  /// @return Reference to this bounding box after copying
   AxisAlignedBoundingBox& operator=(const self_t& other) = default;
 
   /// Constructor from an entity pointer, and the min and max vertices.
