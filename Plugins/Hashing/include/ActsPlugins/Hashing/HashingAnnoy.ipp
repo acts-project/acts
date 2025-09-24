@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/Hashing/HashingAnnoy.hpp"
+#include "ActsPlugins/Hashing/HashingAnnoy.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 
@@ -19,7 +19,7 @@
 #include <annoy/annoylib.h>
 #include <annoy/kissrandom.h>
 
-namespace Acts {
+namespace ActsPlugins {
 
 template <typename external_spacepoint_t, typename SpacePointContainer>
 void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::

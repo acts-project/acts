@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
+#include "ActsPlugins/Onnx/OnnxRuntimeBase.hpp"
 
 #include <vector>
 
@@ -31,7 +31,7 @@ class SeedClassifier {
   /// @param networkInput input of the network
   /// @return a vector of vector of seed score. Due to the architecture of the network each seed only have a size 1 score vector.
   std::vector<std::vector<float>> inferScores(
-      Acts::NetworkBatchInput& networkInput) const {
+      NetworkBatchInput& networkInput) const {
     // Use the network to compute a score for all the Seeds.
     std::vector<std::vector<float>> outputTensor =
         m_duplicateClassifier.runONNXInference(networkInput);
@@ -75,7 +75,7 @@ class SeedClassifier {
   /// @return a vector of seedID corresponding the the good seeds
   std::vector<std::size_t> solveAmbiguity(
       std::vector<std::vector<std::size_t>>& clusters,
-      Acts::NetworkBatchInput& networkInput, float minSeedScore = 0.1) const {
+      NetworkBatchInput& networkInput, float minSeedScore = 0.1) const {
     std::vector<std::vector<float>> outputTensor = inferScores(networkInput);
     std::vector<std::size_t> goodSeeds =
         seedSelection(clusters, outputTensor, minSeedScore);
@@ -86,7 +86,7 @@ class SeedClassifier {
   // ONNX environment
   Ort::Env m_env;
   // ONNX model for the duplicate neural network
-  Acts::OnnxRuntimeBase m_duplicateClassifier;
+  OnnxRuntimeBase m_duplicateClassifier;
 };
 
 }  // namespace Acts

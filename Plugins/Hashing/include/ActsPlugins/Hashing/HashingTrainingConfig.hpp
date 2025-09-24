@@ -10,21 +10,14 @@
 
 #include <cstdint>
 
-namespace Acts {
+namespace ActsPlugins {
 
-struct HashingAlgorithmConfig {
-  /// Size of the buckets = number of spacepoints in the bucket
-  std::uint32_t bucketSize = 10;
-  /// Number of zBins
-  std::uint32_t zBins = 0;
-  /// Number of phiBins
-  std::uint32_t phiBins = 50;
+struct HashingTrainingConfig {
+  /// Random seed for Annoy
+  std::uint32_t annoySeed = 123456789;
 
-  /// Layer selection
-  double layerRMin = 25;
-  double layerRMax = 40;
-  double layerZMin = -550;
-  double layerZMax = 550;
+  /// Number of features to use
+  std::int32_t f = 1;
 };
 
 }  // namespace Acts

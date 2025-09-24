@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "Acts/Plugins/Hashing/AnnoyForwardDeclarations.hpp"
+#include "ActsPlugins/Hashing/AnnoyForwardDeclarations.hpp"
 
 #include <map>
 #include <set>
 
-namespace Acts {
+namespace ActsPlugins {
 
 template <typename external_spacepoint_t, typename SpacePointContainer>
 class HashingAnnoy {
@@ -28,4 +28,4 @@ class HashingAnnoy {
 
 }  // namespace Acts
 
-#include "Acts/Plugins/Hashing/HashingAnnoy.ipp"
+#include "ActsPlugins/Hashing/HashingAnnoy.ipp"

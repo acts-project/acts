@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Plugins/Onnx/SeedClassifier.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsPlugins/Onnx/SeedClassifier.hpp"
 
 #include <string>
 

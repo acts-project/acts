@@ -20,9 +20,9 @@ class AnnoyIndexSingleThreadedBuildPolicy;  // Build policy
 }  // namespace Annoy
 
 // Define commonly used Annoy types
-namespace Acts {
+namespace ActsPlugins {
 using AnnoyMetric = Annoy::AngularEuclidean;
 using AnnoyModel =
     Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
                       Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
-}  // namespace Acts
+}  // namespace ActsPlugins

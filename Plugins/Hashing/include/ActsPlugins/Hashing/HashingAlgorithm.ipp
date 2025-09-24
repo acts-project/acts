@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
 
-#include "Acts/Plugins/Hashing/HashingAnnoy.hpp"
+#include "ActsPlugins/Hashing/HashingAnnoy.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <memory>

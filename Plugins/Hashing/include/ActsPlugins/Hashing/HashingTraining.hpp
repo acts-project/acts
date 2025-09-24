@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/Plugins/Hashing/AnnoyForwardDeclarations.hpp"
-#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
+#include "ActsPlugins/Hashing/AnnoyForwardDeclarations.hpp"
+#include "ActsPlugins/Hashing/HashingTrainingConfig.hpp"
 
-namespace Acts {
+namespace ActsPlugins {
 
 template <typename SpacePointContainer>
 class HashingTrainingAlgorithm {
@@ -35,6 +35,6 @@ class HashingTrainingAlgorithm {
   Config m_cfg;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins
 
-#include "Acts/Plugins/Hashing/HashingTraining.ipp"
+#include "ActsPlugins/Hashing/HashingTraining.ipp"
