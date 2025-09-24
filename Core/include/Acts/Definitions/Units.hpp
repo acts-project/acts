@@ -139,61 +139,95 @@ namespace Acts {
 
 namespace UnitConstants {
 // Length, native unit mm
+/// Millimeter - native unit for length
 constexpr double mm = 1.0;
+/// Femtometer - 1e-15 meter
 constexpr double fm = 1e-12 * mm;
+/// Picometer - 1e-12 meter
 constexpr double pm = 1e-9 * mm;
+/// Nanometer - 1e-9 meter
 constexpr double nm = 1e-6 * mm;
+/// Micrometer - 1e-6 meter
 constexpr double um = 1e-3 * mm;
+/// Centimeter - 1e-2 meter
 constexpr double cm = 1e1 * mm;
+/// Meter
 constexpr double m = 1e3 * mm;
+/// Kilometer - 1e3 meter
 constexpr double km = 1e6 * mm;
 // Shortcuts for commonly used area and volume units. This intentionally
 // contains not all possible combinations to avoid cluttering the namespace.
 // Missing area or volume units can always be defined on the fly using the
 // existing length units e.g. 1fm³ -> 1fm * 1fm * 1fm
 // Area, native unit mm²
+/// Square millimeter - native unit for area
 constexpr double mm2 = mm * mm;
+/// Square centimeter
 constexpr double cm2 = cm * cm;
+/// Square meter
 constexpr double m2 = m * m;
 // Volume, native unit mm³
+/// Cubic millimeter - native unit for volume
 constexpr double mm3 = mm * mm * mm;
+/// Cubic centimeter
 constexpr double cm3 = cm * cm * cm;
+/// Cubic meter
 constexpr double m3 = m * m * m;
 // Time, native unit mm = [speed-of-light * time] = mm/s * s
 /// @note Depends on speed of light in SI units
 constexpr double s = 299792458000.0;  // = 299792458.0 * (m / 1.0) * 1.0;
+/// Femtosecond - 1e-15 second
 constexpr double fs = 1e-15 * s;
+/// Picosecond - 1e-12 second
 constexpr double ps = 1e-12 * s;
+/// Nanosecond - 1e-9 second
 constexpr double ns = 1e-9 * s;
+/// Microsecond - 1e-6 second
 constexpr double us = 1e-6 * s;
+/// Millisecond - 1e-3 second
 constexpr double ms = 1e-3 * s;
+/// Minute - 60 seconds
 constexpr double min = 60.0 * s;
+/// Hour - 3600 seconds
 constexpr double h = 3600.0 * s;
 // Angles, native unit radian
+/// Milliradian - 1e-3 radian
 constexpr double mrad = 1e-3;
+/// Radian - native unit for angle
 constexpr double rad = 1.0;
+/// Degree - pi/180 radians
 constexpr double degree = std::numbers::pi / 180. / rad;
 // Energy/mass/momentum, native unit GeV
+/// Gigaelectronvolt - native unit for energy/mass/momentum
 constexpr double GeV = 1.0;
+/// Electronvolt - 1e-9 GeV
 constexpr double eV = 1e-9 * GeV;
+/// Kiloelectronvolt - 1e-6 GeV
 constexpr double keV = 1e-6 * GeV;
+/// Megaelectronvolt - 1e-3 GeV
 constexpr double MeV = 1e-3 * GeV;
+/// Teraelectronvolt - 1e3 GeV
 constexpr double TeV = 1e3 * GeV;
+/// Joule in GeV
 constexpr double J = 6241509074.460763 * GeV;
 /// atomic mass unit u
 constexpr double u = 0.93149410242;
-//     1eV/c² == 1.782662e-36kg
-//    1GeV/c² == 1.782662e-27kg
-// ->     1kg == (1/1.782662e-27)GeV/c²
-// ->      1g == (1/(1e3*1.782662e-27))GeV/c²
+/// Gram in GeV/c²
+/// @note 1eV/c² == 1.782662e-36kg
+///      1GeV/c² == 1.782662e-27kg
+///   ->     1kg == (1/1.782662e-27)GeV/c²
+///   ->      1g == (1/(1e3*1.782662e-27))GeV/c²
 constexpr double g = 1.0 / 1.782662e-24;
+/// Kilogram in GeV/c²
 constexpr double kg = 1.0 / 1.782662e-27;
 /// Charge, native unit e (elementary charge)
 constexpr double e = 1.0;
 /// Magnetic field, native unit (eV*s)/(e*m²)
 /// @note Depends on speed of light in SI units
 constexpr double T = 0.000299792458;  // = eV * s / (e * m2);
+/// Gauss - 1e-4 Tesla
 constexpr double Gauss = 1e-4 * T;
+/// Kilogauss - 1e-1 Tesla
 constexpr double kGauss = 1e-1 * T;
 /// Amount of substance, native unit mol
 constexpr double mol = 1.0;
@@ -256,6 +290,7 @@ ACTS_DEFINE_UNIT_LITERAL(mol)
 /// Unit constants are intentionally not listed.
 namespace PhysicalConstants {
 // Speed of light
+/// Speed of light in vacuum - native unit (dimensionless)
 constexpr double c = 1.0;
 /// Reduced Planck constant h/2*pi.
 ///
