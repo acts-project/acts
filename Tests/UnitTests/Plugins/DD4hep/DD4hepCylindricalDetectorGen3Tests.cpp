@@ -17,8 +17,8 @@
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -43,9 +43,12 @@
 
 #include "DD4hepTestsHelper.hpp"
 
-Acts::GeometryContext tContext;
-Acts::Test::CylindricalTrackingGeometry cGeometry =
-    Acts::Test::CylindricalTrackingGeometry(tContext);
+using namespace Acts;
+using namespace ActsPlugins;
+
+GeometryContext tContext;
+Test::CylindricalTrackingGeometry cGeometry =
+    Test::CylindricalTrackingGeometry(tContext);
 
 const char* beampipe_head_xml =
     R""""(
@@ -151,7 +154,7 @@ const char* indent_12_xml = "            ";
 namespace {
 
 void generateXML(const std::filesystem::path& xmlPath) {
-  Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  Test::CylindricalTrackingGeometry::DetectorStore dStore;
 
   // Nec surfaces
   double necZ = -800.;
@@ -161,7 +164,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
   auto necR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., necZ, 2., 22u);
 
-  std::vector<std::vector<Acts::Surface*>> necSurfaces = {necR0Surfaces,
+  std::vector<std::vector<Surface*>> necSurfaces = {necR0Surfaces,
                                                           necR1Surfaces};
 
   // Barrel surfaces
@@ -176,7 +179,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
   auto b2Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
                                                116., 3., 2., {52, 14});
 
-  std::vector<std::vector<Acts::Surface*>> barrelSurfaces = {
+  std::vector<std::vector<Surface*>> barrelSurfaces = {
       b0Surfaces, b1Surfaces, b2Surfaces};
 
   // Nec surfaces
@@ -187,7 +190,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
   auto pecR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., pecZ, 2., 22u);
 
-  std::vector<std::vector<Acts::Surface*>> pecSurfaces = {pecR0Surfaces,
+  std::vector<std::vector<Surface*>> pecSurfaces = {pecR0Surfaces,
                                                           pecR1Surfaces};
 
   // Create an XML from it
@@ -235,7 +238,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
     for (const auto& s : ring) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
   }
@@ -248,7 +251,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
   cxml << barrel_head_xml << '\n';
   cxml << indent_8_xml << "<layers>" << '\n';
   cxml << indent_8_xml << "<acts_container/> " << '\n';
-  for (const auto [ib, bs] : Acts::enumerate(barrelSurfaces)) {
+  for (const auto [ib, bs] : enumerate(barrelSurfaces)) {
     cxml << indent_4_xml << "<layer name=\"PixelBarrel_" << ib << "\" id=\""
          << ib << "\">" << '\n';
     cxml << indent_4_xml << "<acts_volume rmin=\"" << innerOuter[ib][0u]
@@ -257,7 +260,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
     for (const auto& s : bs) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
     cxml << indent_8_xml << "</modules>" << '\n';
@@ -277,7 +280,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
     for (const auto& s : ring) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
   }
@@ -295,14 +298,14 @@ void generateXML(const std::filesystem::path& xmlPath) {
 }  // namespace
 
 using namespace dd4hep;
-using namespace Acts::UnitLiterals;
+using namespace UnitLiterals;
 
-using enum Acts::AxisBoundaryType;
-using enum Acts::AxisDirection;
-using enum Acts::CylinderVolumeBounds::Face;
-using enum Acts::SurfaceArrayNavigationPolicy::LayerType;
-using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
-using ResizeStrategy = Acts::VolumeResizeStrategy;
+using enum AxisBoundaryType;
+using enum AxisDirection;
+using enum CylinderVolumeBounds::Face;
+using enum SurfaceArrayNavigationPolicy::LayerType;
+using AttachmentStrategy = VolumeAttachmentStrategy;
+using ResizeStrategy = VolumeResizeStrategy;
 
 // --------- Helper functions --------------
 // Print Element Tree
@@ -337,9 +340,9 @@ const DetElement* find_element(const DetElement& el, const std::string& el_name,
 }
 
 // Helper function to convert shared_ptr vector to const ptr vector
-std::vector<const Acts::Surface*> makeConstPtrVector(
-    const std::vector<std::shared_ptr<Acts::Surface>>& surfs) {
-  std::vector<const Acts::Surface*> constPtrs;
+std::vector<const Surface*> makeConstPtrVector(
+    const std::vector<std::shared_ptr<Surface>>& surfs) {
+  std::vector<const Surface*> constPtrs;
   constPtrs.reserve(surfs.size());
   for (const auto& surf : surfs) {
     constPtrs.push_back(surf.get());
@@ -349,19 +352,19 @@ std::vector<const Acts::Surface*> makeConstPtrVector(
 
 // Helper struct to keep ProtoLayer and its associated surfaces together
 struct LayerData {
-  Acts::ProtoLayer protoLayer;
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
+  ProtoLayer protoLayer;
+  std::vector<std::shared_ptr<Surface>> surfaces;
 
-  LayerData(const Acts::GeometryContext& gctx,
-            std::vector<std::shared_ptr<Acts::Surface>> surfs)
+  LayerData(const GeometryContext& gctx,
+            std::vector<std::shared_ptr<Surface>> surfs)
       : protoLayer(gctx, makeConstPtrVector(surfs)),
         surfaces(std::move(surfs)) {}
 };
 
 // Helper function to merge layers that overlap in z
-std::vector<LayerData> mergeLayers(const Acts::GeometryContext& gctx,
+std::vector<LayerData> mergeLayers(const GeometryContext& gctx,
                                    std::vector<LayerData> layers) {
-  using enum Acts::AxisDirection;
+  using enum AxisDirection;
 
   std::vector<LayerData> mergedLayers;
   if (layers.empty()) {
@@ -381,7 +384,7 @@ std::vector<LayerData> mergeLayers(const Acts::GeometryContext& gctx,
 
     if (overlap) {
       // Merge surfaces
-      std::vector<std::shared_ptr<Acts::Surface>> mergedSurfaces;
+      std::vector<std::shared_ptr<Surface>> mergedSurfaces;
       mergedSurfaces.reserve(current.surfaces.size() + prev.surfaces.size());
       mergedSurfaces.insert(mergedSurfaces.end(), current.surfaces.begin(),
                             current.surfaces.end());
@@ -406,7 +409,7 @@ std::vector<LayerData> mergeLayers(const Acts::GeometryContext& gctx,
 BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
 
 BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
-  Acts::Test::TemporaryDirectory tempDir{};
+  Test::TemporaryDirectory tempDir{};
   auto xmlPath = tempDir.path() / "CylindricalDetector.xml";
   generateXML(xmlPath);
 
@@ -426,14 +429,14 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
   auto worldSolidDim = lcdd->worldVolume().solid().dimensions();  // better way?
 
-  Acts::Experimental::Blueprint::Config cfg;
+  Experimental::Blueprint::Config cfg;
   // Is the following correct?
   cfg.envelope[AxisX] = {worldSolidDim[0], worldSolidDim[0]};
   cfg.envelope[AxisY] = {worldSolidDim[1], worldSolidDim[1]};
   cfg.envelope[AxisZ] = {worldSolidDim[2], worldSolidDim[2]};
   // cfg.envelope[AxisR] = {0_mm, worldSolidDim[1]};
 
-  auto blueprint = std::make_unique<Acts::Experimental::Blueprint>(cfg);
+  auto blueprint = std::make_unique<Experimental::Blueprint>(cfg);
   auto& cylinder = blueprint->addCylinderContainer("Detector", AxisR);
 
   // ------- Add Beam Pipe to Blueprint -------
@@ -441,9 +444,9 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   DetElement bpipe_top = level1_elements["BeamPipe"];
   auto bpipe_top_position = bpipe_top.placement().position();
 
-  Acts::Transform3 beamPipeTransform;
+  Transform3 beamPipeTransform;
   beamPipeTransform.setIdentity();
-  beamPipeTransform = Acts::Translation3(
+  beamPipeTransform = Translation3(
       bpipe_top_position.x(), bpipe_top_position.y(), bpipe_top_position.z());
 
   auto beamPipeDim = bpipe_top.solid().dimensions();
@@ -451,7 +454,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   double beamPipeRMax = beamPipeDim[1] * 1_cm;
   double beamPipeHalfZ = beamPipeDim[2] * 1_cm;
 
-  std::vector<std::shared_ptr<Acts::DD4hepDetectorElement>> detectorElements;
+  std::vector<std::shared_ptr<DD4hepDetectorElement>> detectorElements;
 
   cylinder.withGeometryIdentifier([&](auto& geoId) {
     geoId.setAllVolumeIdsTo(s_beamPipeVolumeId);
@@ -462,7 +465,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
            20},  // Where do these 20-s come from? (here and on the next line)
           {AxisZ, Bound, 20});
       mat.addStaticVolume(beamPipeTransform,
-                          std::make_shared<Acts::CylinderVolumeBounds>(
+                          std::make_shared<CylinderVolumeBounds>(
                               0, beamPipeRMax, beamPipeHalfZ),
                           "BeamPipe");
     });
@@ -483,10 +486,10 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
         .incrementLayerIds(1)
         .sortBy([](auto& a, auto& b) {
           auto& boundsA =
-              dynamic_cast<const Acts::CylinderVolumeBounds&>(a.volumeBounds());
+              dynamic_cast<const CylinderVolumeBounds&>(a.volumeBounds());
           auto& boundsB =
-              dynamic_cast<const Acts::CylinderVolumeBounds&>(b.volumeBounds());
-          using enum Acts::CylinderVolumeBounds::BoundValues;
+              dynamic_cast<const CylinderVolumeBounds&>(b.volumeBounds());
+          using enum CylinderVolumeBounds::BoundValues;
           double aMidR = (boundsA.get(eMinR) + boundsA.get(eMaxR)) / 2.0;
           double bMidR = (boundsB.get(eMinR) + boundsB.get(eMaxR)) / 2.0;
           return aMidR < bMidR;
@@ -496,13 +499,13 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
     barrel.setAttachmentStrategy(AttachmentStrategy::Gap);
     barrel.setResizeStrategy(ResizeStrategy::Gap);
 
-    std::map<int, std::vector<std::shared_ptr<Acts::Surface>>> layers{};
+    std::map<int, std::vector<std::shared_ptr<Surface>>> layers{};
     int layerId{0};
     for (const auto& [nameLayer, layer] : pixelBarrelElement->children()) {
       for (const auto& [nameModule, module] : layer.children()) {
         std::string detAxis =
-            Acts::getParamOr<std::string>("axis_definitions", module, "XYZ");
-        auto dd4hepDetEl = std::make_shared<Acts::DD4hepDetectorElement>(
+            getParamOr<std::string>("axis_definitions", module, "XYZ");
+        auto dd4hepDetEl = std::make_shared<DD4hepDetectorElement>(
             module, detAxis, 1_cm, false, nullptr);
         detectorElements.push_back(dd4hepDetEl);
         layers[layerId].push_back(dd4hepDetEl->surface().getSharedPtr());
@@ -511,7 +514,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
     }
 
     for (const auto& [ilayer, surfaces] : layers) {
-      Acts::Experimental::BlueprintNode* lparent = nullptr;
+      Experimental::BlueprintNode* lparent = nullptr;
 
       // Outermost layer can't have material, because it will get merged
       // with the outer cylinder shell of the endcap cylinders
@@ -555,16 +558,16 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
       // Set navigation policy for efficient surface lookup
       layer.setNavigationPolicyFactory(
-          Acts::NavigationPolicyFactory{}
-              .add<Acts::SurfaceArrayNavigationPolicy>(
-                  Acts::SurfaceArrayNavigationPolicy::Config{
+          NavigationPolicyFactory{}
+              .add<SurfaceArrayNavigationPolicy>(
+                  SurfaceArrayNavigationPolicy::Config{
                       .layerType = Cylinder, .bins = {30, 10}})
-              .add<Acts::TryAllNavigationPolicy>(
-                  Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+              .add<TryAllNavigationPolicy>(
+                  TryAllNavigationPolicy::Config{.sensitives = false})
               .asUniquePtr());
 
       layer.setSurfaces(surfaces);
-      layer.setEnvelope(Acts::ExtentEnvelope{{
+      layer.setEnvelope(ExtentEnvelope{{
           .z = {5_mm, 5_mm},  // ???
           .r = {2_mm, 2_mm},  // ???
       }});
@@ -580,7 +583,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       ec.setAttachmentStrategy(AttachmentStrategy::Gap);
       ec.setResizeStrategy(ResizeStrategy::Expand);
 
-      std::map<int, std::vector<std::shared_ptr<Acts::Surface>>>
+      std::map<int, std::vector<std::shared_ptr<Surface>>>
           initialLayers{};
       const DetElement* pixelEndcapElement =
           ecid == 1 ? find_element(*pixelElement, "PixelPositiveEndcap")
@@ -589,8 +592,8 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       for (const auto& [nameLayer, layer] : pixelEndcapElement->children()) {
         for (const auto& [nameModule, module] : layer.children()) {
           std::string detAxis =
-              Acts::getParamOr<std::string>("axis_definitions", module, "XYZ");
-          auto dd4hepDetEl = std::make_shared<Acts::DD4hepDetectorElement>(
+              getParamOr<std::string>("axis_definitions", module, "XYZ");
+          auto dd4hepDetEl = std::make_shared<DD4hepDetectorElement>(
               module, detAxis, 1_cm, false, nullptr);
           detectorElements.push_back(dd4hepDetEl);
           initialLayers[layerId].push_back(
@@ -604,7 +607,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       protoLayers.reserve(initialLayers.size());
       for (const auto& [key, surfaces] : initialLayers) {
         auto& layer =
-            protoLayers.emplace_back(Acts::GeometryContext(), surfaces);
+            protoLayers.emplace_back(GeometryContext(), surfaces);
         layer.protoLayer.envelope[AxisR] = {2_mm, 2_mm};
         layer.protoLayer.envelope[AxisZ] = {1_mm, 1_mm};
       }
@@ -616,10 +619,10 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
                         });
 
       std::vector<LayerData> mergedLayers =
-          mergeLayers(Acts::GeometryContext(), protoLayers);
+          mergeLayers(GeometryContext(), protoLayers);
 
       // Create layers from proto layers
-      for (const auto& [key, pl] : Acts::enumerate(mergedLayers)) {
+      for (const auto& [key, pl] : enumerate(mergedLayers)) {
         pl.protoLayer.medium(AxisZ);
         auto layerName = std::format("Pixel_{}EC_L{}", s, key);
         auto addLayer = [&layerName, &pl](auto& parent) {
@@ -627,16 +630,16 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
           auto& layer = parent.addLayer(layerName);
 
           layer.setNavigationPolicyFactory(
-              Acts::NavigationPolicyFactory{}
-                  .add<Acts::SurfaceArrayNavigationPolicy>(
-                      Acts::SurfaceArrayNavigationPolicy::Config{
+              NavigationPolicyFactory{}
+                  .add<SurfaceArrayNavigationPolicy>(
+                      SurfaceArrayNavigationPolicy::Config{
                           .layerType = Disc, .bins = {30, 30}})
-                  .add<Acts::TryAllNavigationPolicy>(
-                      Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+                  .add<TryAllNavigationPolicy>(
+                      TryAllNavigationPolicy::Config{.sensitives = false})
                   .asUniquePtr());
 
           layer.setSurfaces(pl.surfaces);
-          layer.setEnvelope(Acts::ExtentEnvelope{{
+          layer.setEnvelope(ExtentEnvelope{{
               .z = {1_mm, 1_mm},
               .r = {2_mm, 2_mm},
           }});
@@ -661,8 +664,8 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   blueprint->graphviz(dotOut);
 
   // Final step
-  Acts::GeometryContext gctx;
-  auto logger = Acts::getDefaultLogger("Geo", Acts::Logging::VERBOSE);
+  GeometryContext gctx;
+  auto logger = getDefaultLogger("Geo", Logging::VERBOSE);
   auto trackingGeometry = blueprint->construct({}, gctx, *logger);
 
   BOOST_REQUIRE_NE(&world, nullptr);
