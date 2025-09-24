@@ -90,7 +90,7 @@
       "inherits": "github-ci",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_FLAGS": "-Werror --coverage -g -gz -g1",
+        "CMAKE_CXX_FLAGS": "-Werror --coverage -g -gz -g1 -fprofile-update=atomic",
         "ACTS_BUILD_ODD": "OFF",
         "ACTS_BUILD_EXAMPLES_DD4HEP": "OFF",
         "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "OFF",
