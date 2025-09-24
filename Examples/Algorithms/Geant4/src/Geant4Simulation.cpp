@@ -9,7 +9,6 @@
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -26,6 +25,7 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4/SteppingActionList.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <stdexcept>
 #include <utility>
@@ -126,7 +126,7 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   {
-    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
+    ActsPlugins::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
     // Start simulation. each track is simulated as a separate Geant4 event.
     runManager().BeamOn(1);
   }

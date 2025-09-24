@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
 #include <Acts/Utilities/CalibrationContext.hpp>
@@ -50,7 +50,7 @@ struct AlgorithmContext {
   Acts::CalibrationContext calibContext;  ///< Per-event calibration context
   std::size_t threadId;                   ///< Thread ID
 
-  Acts::FpeMonitor* fpeMonitor = nullptr;
+  ActsPlugins::FpeMonitor* fpeMonitor = nullptr;
 };
 
 }  // namespace ActsExamples

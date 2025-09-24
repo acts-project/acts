@@ -22,7 +22,7 @@
 #include <boost/container/static_vector.hpp>
 #include <boost/stacktrace/stacktrace_fwd.hpp>
 
-namespace Acts {
+namespace ActsPlugins {
 
 enum class FpeType : std::uint32_t {
   INTDIV = FPE_INTDIV,
@@ -107,7 +107,7 @@ class FpeMonitor {
 
     bool hasStackTraces() const { return !m_stackTraces.empty(); }
 
-    void add(Acts::FpeType type, void *stackPtr, std::size_t bufferSize);
+    void add(FpeType type, void *stackPtr, std::size_t bufferSize);
 
    private:
     std::vector<FpeInfo> m_stackTraces;
