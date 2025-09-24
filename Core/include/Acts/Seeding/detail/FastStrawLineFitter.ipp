@@ -14,6 +14,8 @@
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <format>
+using namespace Acts::UnitLiterals;
+
 namespace Acts::Experimental::detail {
 
 template <CompositeSpacePointContainer StrawCont_t>
@@ -268,8 +270,11 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
         continue;
       }
       tRange.expand(strawMeas->time(), strawMeas->time());
+      //result.t0 = result.t0 ? std::min(result.t0, strawMeas->time()) : strawMeas->time();
     }
-    result.t0 = 0.5 * (tRange.min() + tRange.max());
+    //result.t0 = 0.5 * (tRange.min() + tRange.max());
+    //result.t0 *= 0.01;
+    result.t0 = 0.;
   }
 
   FitAuxiliariesWithT0 fitPars{
@@ -288,6 +293,14 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     }
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);
   }
+  ACTS_INFO("Printing all measurements:");
+  for (const auto& meas : measurements ){
+    ACTS_INFO("Pos: " << Acts::toString(meas->localPosition()) 
+        << ", t,t0: " << meas->time()/ 1._ns << ", " << result.t0 
+        << ", truthR, RecoR: " << meas->driftRadius() << ", " calibrator.driftRadius(ctx, *meas, result.t0)
+        << ", v: " << calibrator.driftVelocity(ctx, *meas, result.t0) << ", a: " << calibrator.driftAcceleration(ctx, *meas, result.t0));
+  }
+  ACTS_INFO("Result: " << result);
   return std::nullopt;
 }
 
@@ -325,7 +338,8 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
     const double z = strawMeas->localPosition().dot(strawMeas->planeNormal()) -
                      auxVars.centerZ;
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": # " << (spIdx + 1)
-                          << ") r: " << r << ", v: " << v << ", a: " << a);
+                          << ") t,t0: " << strawMeas->time()/1._ns << ", " << t0/1._ns 
+                          << " r: " << r << ", v: " << v << ", a: " << a);
     auxVars.fitY0 += sInvCov * r;
     auxVars.R_v += sInvCov * v;
     auxVars.R_a += sInvCov * a;
@@ -341,7 +355,8 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
 
     auxVars.T_ay += sInvCov * a * y;
     auxVars.T_az += sInvCov * a * z;
-    auxVars.R_va += sInvCov * v * a;
+    
+    auxVars.R_ar += invCov * a * r;
   }
   auxVars.fitY0 *= auxVars.covNorm;
   ACTS_DEBUG(__func__ << "() - " << __LINE__ << " Fit constants calculated \n"

@@ -49,7 +49,7 @@ void FastStrawLineFitter::FitAuxiliaries::print(std::ostream& ostr) const {
 void FastStrawLineFitter::FitAuxiliariesWithT0 ::print(
     std::ostream& ostr) const {
   ostr << std::format("R_vr: {:.3f}, ", R_vr);
-  ostr << std::format("R_va: {:.3f}, ", R_va);
+  ostr << std::format("R_ar: {:.3f}, ", R_ar);
   ostr << std::format("R_vv: {:.3f}, ", R_vv);
   ostr << std::format("R_a: {:.3f}, ", R_a);
   ostr << std::format("R_v: {:.3f}, ", R_v);
@@ -192,27 +192,20 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
 
   calcAngularDerivatives(angles, fitPars, grad[0], cov(0, 0));
   grad[1] = calcTimeGrad(angles, fitPars);
-  if (grad.norm() < m_cfg.precCutOff) {
-    completeResult(fitPars, cov(0, 0), fitResult);
-    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
-                        << fitResult);
-    return UpdateStatus::Converged;
-  }
   cov(1, 0) = cov(0, 1) =
       fitPars.T_vz * angles.cosTheta + fitPars.T_vy * angles.sinTheta;
 
-  cov(1, 1) = -fitPars.R_v * fitPars.R_v * fitPars.covNorm +
-              fitPars.R_vv
-              ///
-              + fitPars.fitY0 * fitPars.R_a + fitPars.R_va -
-              (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta);
+  cov(1, 1) = - fitPars.R_v * fitPars.R_v * fitPars.covNorm
+              - fitPars.fitY0 * fitPars.R_a 
+              + fitPars.R_vv + fitPars.R_ar 
+              - (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta);
   ACTS_VERBOSE(
       __func__
       << "() - " << __LINE__
       << ": -fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv: "
       << (-fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv)
       << ", fitPars.fitY0 * fitPars.R_a: " << (fitPars.fitY0 * fitPars.R_a)
-      << ", fitPars.R_va: " << fitPars.R_va
+      << ", fitPars.R_ar: " << fitPars.R_ar
       << ", fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta: "
       << (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta));
   const auto invCov = cov.inverse();

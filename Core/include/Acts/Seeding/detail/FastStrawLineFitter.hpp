@@ -144,7 +144,7 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t,
             CompositeSpacePointFastCalibrator<
                 Acts::RemovePointer_t<typename StrawCont_t::value_type>>
-                Calibrator_t>
+            Calibrator_t>
   std::optional<FitResultT0> fit(
       const Acts::CalibrationContext& ctx, const Calibrator_t& calibrator,
       const StrawCont_t& measurements, const std::vector<int>& signs,
@@ -218,7 +218,7 @@ class FastStrawLineFitter {
     ///@brief Expectation value of v * v
     double R_vv{0.};
     ///@brief Expectation value of r * a
-    double R_va{0.};
+    double R_ar{0.};
     ///@brief First derivative of the fitted Y0
     double R_v{0.};
     ///@brief Second derivative of the ftted Y0
