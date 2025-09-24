@@ -21,7 +21,10 @@ fi
 
 # detect if we are installed as there is no lib subdirectory
 if [ ! -d "$script_dir/lib" ]; then
-    script_dir=$( cd -- "$script_dir" &> /dev/null && cd .. &> /dev/null && pwd )
+    echo "DEBUG entered if script_dir/lib"
+    echo $script_dir
+    script_dir_new=$( cd -- "$script_dir" &> /dev/null && cd .. &> /dev/null && pwd )
+    echo $script_dir_new
 fi
 
 # source the python and ODD environment
