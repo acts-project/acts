@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <cmath>
 #include <optional>
