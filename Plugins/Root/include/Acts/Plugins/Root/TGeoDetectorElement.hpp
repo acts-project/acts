@@ -149,7 +149,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   ///  Thickness of this detector element
   double m_thickness{0.};
   /// Corresponding Surface
-  MaybeSharedPtr<Surface> m_surface{nullptr};
+  SurfaceHandle<Surface> m_surface{nullptr};
 };
 
 inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {

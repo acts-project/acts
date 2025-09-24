@@ -95,7 +95,7 @@ class CurvilinearSurface final {
   /// Return the plane surface representation of the curvilinear surface
   ///
   /// @return the plane surface representation of the curvilinear surface
-  MaybeSharedPtr<PlaneSurface> planeSurface() const;
+  SurfaceHandle<PlaneSurface> planeSurface() const;
 
   /// Return the surface representation of the curvilinear surface
   ///
@@ -103,7 +103,7 @@ class CurvilinearSurface final {
   ///   This is useful if the type of the surface is not relevant.
   ///
   /// @return the surface representation of the curvilinear surface
-  MaybeSharedPtr<Surface> surface() const;
+  SurfaceHandle<Surface> surface() const;
 
   /// Output operator
   ///

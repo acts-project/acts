@@ -34,7 +34,7 @@ class MultiWireInternalStructureBuilder
  public:
   struct Config {
     /// The internal surfaces
-    std::vector<Acts::MaybeSharedPtr<Acts::Surface>> iSurfaces;
+    std::vector<Acts::SurfaceHandle<Acts::Surface>> iSurfaces;
 
     /// Definition of Binning
     std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> binning;

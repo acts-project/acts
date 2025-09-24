@@ -42,24 +42,24 @@ void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
 }
 
 void Acts::to_json(nlohmann::json& j,
-                   const MaybeSharedPtr<const Surface>& surface) {
+                   const SurfaceHandle<const Surface>& surface) {
   Acts::GeometryContext gctx;
   j = SurfaceJsonConverter::toJson(gctx, *surface);
 }
 
 void Acts::toJson(nlohmann::json& j,
-                  const MaybeSharedPtr<const Surface>& surface,
+                  const SurfaceHandle<const Surface>& surface,
                   const Acts::GeometryContext& gctx) {
   j = SurfaceJsonConverter::toJson(gctx, *surface);
 }
 
-Acts::MaybeSharedPtr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
+Acts::SurfaceHandle<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
     const nlohmann::json& j) {
   // The types to understand the types
   auto sType = j["type"].get<Surface::SurfaceType>();
   auto bType = j["bounds"]["type"].get<SurfaceBounds::BoundsType>();
 
-  MaybeSharedPtr<Surface> mutableSf = nullptr;
+  SurfaceHandle<Surface> mutableSf = nullptr;
 
   /// Unroll the types
   switch (sType) {

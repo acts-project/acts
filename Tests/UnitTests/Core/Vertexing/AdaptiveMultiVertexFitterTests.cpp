@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     auto perigeeSurface =
         Surface::makeShared<PerigeeSurface>(vtxPosVec[vtxIdx]);
 
-    allTracks.emplace_back(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec, std::move(covMat),
+    allTracks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                            ParticleHypothesis::pion());
   }
 
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
     auto perigeeSurface =
         Surface::makeShared<PerigeeSurface>(trueVtxPos);
 
-    trks.emplace_back(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec, std::move(covMat),
+    trks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                       ParticleHypothesis::pion());
   }
 

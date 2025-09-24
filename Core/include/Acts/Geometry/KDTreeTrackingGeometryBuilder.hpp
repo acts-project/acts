@@ -47,7 +47,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
     /// The layer creator - for sensitives
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// The created surfaces
-    std::vector<MaybeSharedPtr<Surface>> surfaces = {};
+    std::vector<SurfaceHandle<Surface>> surfaces = {};
     /// The proto tracking geometry description
     ProtoDetector protoDetector;
     /// Optional geometry identifier hook to be used during closure
@@ -58,7 +58,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
   };
 
   using SurfaceKDT =
-      KDTree<2u, MaybeSharedPtr<Surface>, double, std::array, 100>;
+      KDTree<2u, SurfaceHandle<Surface>, double, std::array, 100>;
 
   /// Constructor
   ///

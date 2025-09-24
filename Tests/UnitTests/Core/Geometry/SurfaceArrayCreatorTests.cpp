@@ -54,11 +54,11 @@ namespace Acts::Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-using SrfVec = std::vector<MaybeSharedPtr<const Surface>>;
+using SrfVec = std::vector<SurfaceHandle<const Surface>>;
 
 struct SurfaceArrayCreatorFixture {
   SurfaceArrayCreator m_SAC;
-  std::vector<MaybeSharedPtr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 
   SurfaceArrayCreatorFixture()
       : m_SAC(SurfaceArrayCreator::Config(),
@@ -103,7 +103,7 @@ struct SurfaceArrayCreatorFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
 
-      MaybeSharedPtr<Surface> srf = MaybeSharedPtr<Surface>(
+      SurfaceHandle<Surface> srf = SurfaceHandle<Surface>(
           Surface::makeShared<PlaneSurface>(trans, bounds));
 
       res.push_back(srf);
@@ -134,7 +134,7 @@ struct SurfaceArrayCreatorFixture {
       trans.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
-      MaybeSharedPtr<Surface> srf = MaybeSharedPtr<Surface>(
+      SurfaceHandle<Surface> srf = SurfaceHandle<Surface>(
           Surface::makeShared<PlaneSurface>(trans, bounds));
 
       res.push_back(srf);
@@ -160,7 +160,7 @@ struct SurfaceArrayCreatorFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
 
-      MaybeSharedPtr<Surface> srf = MaybeSharedPtr<Surface>(
+      SurfaceHandle<Surface> srf = SurfaceHandle<Surface>(
           Surface::makeShared<PlaneSurface>(trans, bounds));
 
       res.push_back(srf);
@@ -209,12 +209,12 @@ struct SurfaceArrayCreatorFixture {
             Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
-        MaybeSharedPtr srfA = Surface::makeShared<PlaneSurface>(trans, bounds);
+        SurfaceHandle srfA = Surface::makeShared<PlaneSurface>(trans, bounds);
 
         Vector3 nrm = srfA->normal(tgContext);
         Transform3 transB = trans;
         transB.pretranslate(nrm * 0.1);
-        MaybeSharedPtr srfB = MaybeSharedPtr<Surface>(
+        SurfaceHandle srfB = SurfaceHandle<Surface>(
             Surface::makeShared<PlaneSurface>(transB, bounds));
 
         pairs.push_back(std::make_pair(srfA.get(), srfB.get()));
@@ -238,7 +238,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
   std::size_t nVtx = 0;
   for (const auto& srfx : surfaces) {
-    MaybeSharedPtr srf = dynamic_handle_cast<const PlaneSurface>(srfx);
+    SurfaceHandle srf = dynamic_handle_cast<const PlaneSurface>(srfx);
     const PlanarBounds* bounds =
         dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
@@ -539,7 +539,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
   auto ringB = fullPhiTestSurfacesEC(15, 0, 0, 15, 2, 3.5);
   auto ringC = fullPhiTestSurfacesEC(20, 0, 0, 20, 2, 3.8);
 
-  std::vector<MaybeSharedPtr<const Surface>> surfaces;
+  std::vector<SurfaceHandle<const Surface>> surfaces;
   std::copy(ringA.begin(), ringA.end(), std::back_inserter(surfaces));
   std::copy(ringB.begin(), ringB.end(), std::back_inserter(surfaces));
   std::copy(ringC.begin(), ringC.end(), std::back_inserter(surfaces));

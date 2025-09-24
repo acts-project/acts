@@ -131,7 +131,7 @@ class SurfaceArrayCreator {
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
       const GeometryContext& gctx,
-      std::vector<MaybeSharedPtr<const Surface>> surfaces, std::size_t binsPhi,
+      std::vector<SurfaceHandle<const Surface>> surfaces, std::size_t binsPhi,
       std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
@@ -154,7 +154,7 @@ class SurfaceArrayCreator {
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
       const GeometryContext& gctx,
-      std::vector<MaybeSharedPtr<const Surface>> surfaces,
+      std::vector<SurfaceHandle<const Surface>> surfaces,
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
@@ -177,7 +177,7 @@ class SurfaceArrayCreator {
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
       const GeometryContext& gctx,
-      std::vector<MaybeSharedPtr<const Surface>> surfaces, std::size_t binsR,
+      std::vector<SurfaceHandle<const Surface>> surfaces, std::size_t binsR,
       std::size_t binsPhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
@@ -204,7 +204,7 @@ class SurfaceArrayCreator {
   ///       This ignores bTypePhi and produces equidistant binning in phi
   std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
       const GeometryContext& gctx,
-      std::vector<MaybeSharedPtr<const Surface>> surfaces, BinningType bTypeR,
+      std::vector<SurfaceHandle<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
@@ -230,7 +230,7 @@ class SurfaceArrayCreator {
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
       const GeometryContext& gctx,
-      std::vector<MaybeSharedPtr<const Surface>> surfaces, std::size_t bins1,
+      std::vector<SurfaceHandle<const Surface>> surfaces, std::size_t bins1,
       std::size_t bins2, AxisDirection aDir,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
@@ -368,7 +368,7 @@ class SurfaceArrayCreator {
   /// @param pAxisB ProtoAxis object for axis B
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-  makeSurfaceGridLookup2D(MaybeSharedPtr<RegularSurface> surface,
+  makeSurfaceGridLookup2D(SurfaceHandle<RegularSurface> surface,
                           double layerTolerance, ProtoAxis pAxisA,
                           ProtoAxis pAxisB) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;

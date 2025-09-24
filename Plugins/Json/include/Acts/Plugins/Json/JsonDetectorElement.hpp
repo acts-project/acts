@@ -31,7 +31,7 @@ class JsonDetectorElement : public DetectorElementBase {
   const Transform3 &transform(const GeometryContext &gctx) const override;
 
  private:
-  MaybeSharedPtr<Surface> m_surface;
+  SurfaceHandle<Surface> m_surface;
   Transform3 m_transform{};
   double m_thickness{};
 };

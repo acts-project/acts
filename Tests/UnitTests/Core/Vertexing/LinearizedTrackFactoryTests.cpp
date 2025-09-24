@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., resT * resT;
-    tracks.emplace_back(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec, std::move(covMat),
+    tracks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                         ParticleHypothesis::pion());
   }
 

@@ -44,7 +44,7 @@ class GridPortalLink : public PortalLinkBase {
   /// class
   /// @param surface The surface
   /// @param direction The binning direction
-  GridPortalLink(MaybeSharedPtr<RegularSurface> surface,
+  GridPortalLink(SurfaceHandle<RegularSurface> surface,
                  AxisDirection direction);
 
  public:
@@ -62,7 +62,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @return A unique pointer to the grid portal link
   template <AxisConcept axis_t>
   static std::unique_ptr<GridPortalLinkT<axis_t>> make(
-      MaybeSharedPtr<RegularSurface> surface, AxisDirection direction,
+      SurfaceHandle<RegularSurface> surface, AxisDirection direction,
       axis_t&& axis) {
     using enum AxisDirection;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
@@ -92,7 +92,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @return A unique pointer to the grid portal link
   template <AxisConcept axis_1_t, AxisConcept axis_2_t>
   static std::unique_ptr<GridPortalLinkT<axis_1_t, axis_2_t>> make(
-      MaybeSharedPtr<RegularSurface> surface, axis_1_t axis1, axis_2_t axis2) {
+      SurfaceHandle<RegularSurface> surface, axis_1_t axis1, axis_2_t axis2) {
     std::optional<AxisDirection> direction;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
       direction = AxisDirection::AxisRPhi;
@@ -112,7 +112,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @param direction The binning direction
   /// @return A unique pointer to the grid portal link
   static std::unique_ptr<GridPortalLink> make(
-      const MaybeSharedPtr<RegularSurface>& surface, TrackingVolume& volume,
+      const SurfaceHandle<RegularSurface>& surface, TrackingVolume& volume,
       AxisDirection direction);
 
   /// Merge two grid portal links into a single one. The routine can merge
@@ -380,7 +380,7 @@ class GridPortalLink : public PortalLinkBase {
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
   std::unique_ptr<GridPortalLink> extendTo2dImpl(
-      const MaybeSharedPtr<CylinderSurface>& surface, const IAxis* other) const;
+      const SurfaceHandle<CylinderSurface>& surface, const IAxis* other) const;
 
   /// Expand a 1D grid to a 2D one for a disc surface
   /// @param surface The disc surface
@@ -388,7 +388,7 @@ class GridPortalLink : public PortalLinkBase {
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
   std::unique_ptr<GridPortalLink> extendTo2dImpl(
-      const MaybeSharedPtr<DiscSurface>& surface, const IAxis* other) const;
+      const SurfaceHandle<DiscSurface>& surface, const IAxis* other) const;
 
   /// Expand a 1D grid to a 2D one for a plane surface
   /// @param surface The plane surface
@@ -396,7 +396,7 @@ class GridPortalLink : public PortalLinkBase {
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
   std::unique_ptr<GridPortalLink> extendTo2dImpl(
-      const MaybeSharedPtr<PlaneSurface>& surface, const IAxis* other) const;
+      const SurfaceHandle<PlaneSurface>& surface, const IAxis* other) const;
 
   /// Helper enum to declare which local direction to fill
   enum class FillDirection {
@@ -437,7 +437,7 @@ class GridPortalLinkT : public GridPortalLink {
   /// @param direction The binning direction
   /// @param axes The axes for the grid
   /// @note The axes are checked for consistency with the bounds of @p surface.
-  GridPortalLinkT(MaybeSharedPtr<RegularSurface> surface,
+  GridPortalLinkT(SurfaceHandle<RegularSurface> surface,
                   AxisDirection direction, Axes&&... axes)
       : GridPortalLink(std::move(surface), direction),
         m_grid(std::tuple{std::move(axes)...}) {

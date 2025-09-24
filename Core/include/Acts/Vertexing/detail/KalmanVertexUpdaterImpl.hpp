@@ -386,7 +386,7 @@ void updateTrackWithVertexImpl(TrackAtVertex& track, const Vertex& vtx) {
       cache.wMat, crossCovVP, vtxCov, newTrkParams);
 
   // Create new refitted parameters
-  Acts::MaybeSharedPtr<Surface> perigeeSurface =
+  Acts::SurfaceHandle<Surface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtxPos.template head<3>());
 
   BoundTrackParameters refittedPerigee =

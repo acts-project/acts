@@ -25,7 +25,7 @@ class TrivialPortalLink final : public PortalLinkBase {
   /// Construct a trivial portal link from a surface and a volume
   /// @param surface is the surface
   /// @param volume is the target
-  TrivialPortalLink(MaybeSharedPtr<RegularSurface> surface,
+  TrivialPortalLink(SurfaceHandle<RegularSurface> surface,
                     TrackingVolume& volume)
       : PortalLinkBase(std::move(surface)), m_volume{&volume} {}
 

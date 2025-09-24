@@ -42,7 +42,7 @@ class TrackingGeometry;
 class TrackingVolume;
 
 using SurfaceAndMaterialWithContext =
-    std::tuple<Acts::MaybeSharedPtr<const Acts::Surface>,
+    std::tuple<Acts::SurfaceHandle<const Acts::Surface>,
                std::shared_ptr<const Acts::ISurfaceMaterial>,
                Acts::GeometryContext>;
 using TrackingVolumeAndMaterial =

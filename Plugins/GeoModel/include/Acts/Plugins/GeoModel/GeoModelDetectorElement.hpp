@@ -67,7 +67,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// @param sfTransform the surface transform
   /// @param thickness the thickness of the detector element
   GeoModelDetectorElement(PVConstLink geoPhysVol,
-                          MaybeSharedPtr<Surface> surface,
+                          SurfaceHandle<Surface> surface,
                           const Transform3& sfTransform, double thickness);
 
   /// Return local to global transform associated with this detector element
@@ -105,7 +105,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// Attach a surface
   ///
   /// @param surface The surface to attach
-  void attachSurface(MaybeSharedPtr<Surface> surface) {
+  void attachSurface(SurfaceHandle<Surface> surface) {
     m_surface = std::move(surface);
   }
 
@@ -115,7 +115,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// The GeoModel full physical volume
   PVConstLink m_geoPhysVol{nullptr};
   /// The surface
-  MaybeSharedPtr<Surface> m_surface;
+  SurfaceHandle<Surface> m_surface;
   /// The global transformation before the volume
   Transform3 m_surfaceTransform;
   ///  Thickness of this detector element
@@ -125,6 +125,6 @@ class GeoModelDetectorElement : public DetectorElementBase {
 /// Collect the sensitive surface & detector element
 using GeoModelSensitiveSurface =
     std::tuple<std::shared_ptr<GeoModelDetectorElement>,
-               MaybeSharedPtr<Surface>>;
+               SurfaceHandle<Surface>>;
 
 }  // namespace Acts

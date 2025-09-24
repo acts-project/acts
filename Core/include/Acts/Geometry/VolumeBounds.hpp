@@ -27,11 +27,8 @@ class Surface;
 class VolumeBounds;
 class Direction;
 
-template <class T>
-class MaybeSharedPtr;
-
 struct OrientedSurface {
-  MaybeSharedPtr<RegularSurface> surface;
+  SurfaceHandle<RegularSurface> surface;
   Direction direction = Direction::AlongNormal();
 };
 

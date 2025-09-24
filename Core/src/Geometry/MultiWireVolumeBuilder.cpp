@@ -49,7 +49,7 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
 
   // Add the surfaces to the tracking volume
   for (auto& surface : m_config.mlSurfaces) {
-    trackingVolume->addSurface(MaybeSharedPtr<Surface>(surface));
+    trackingVolume->addSurface(SurfaceHandle<Surface>(surface));
   }
 
   return trackingVolume;

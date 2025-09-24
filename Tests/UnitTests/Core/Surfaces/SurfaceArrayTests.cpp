@@ -42,9 +42,9 @@ namespace Acts::Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-using SrfVec = std::vector<MaybeSharedPtr<const Surface>>;
+using SrfVec = std::vector<SurfaceHandle<const Surface>>;
 struct SurfaceArrayFixture {
-  std::vector<MaybeSharedPtr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 
   SurfaceArrayFixture() { BOOST_TEST_MESSAGE("setup fixture"); }
   ~SurfaceArrayFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
@@ -63,7 +63,7 @@ struct SurfaceArrayFixture {
       trans.translate(Vector3(r, 0, z));
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1);
-      MaybeSharedPtr<const Surface> srf =
+      SurfaceHandle<const Surface> srf =
           Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
@@ -91,7 +91,7 @@ struct SurfaceArrayFixture {
       trans.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
-      MaybeSharedPtr<const Surface> srf =
+      SurfaceHandle<const Surface> srf =
           Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
@@ -117,7 +117,7 @@ struct SurfaceArrayFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
 
-      MaybeSharedPtr<const Surface> srf =
+      SurfaceHandle<const Surface> srf =
           Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
   auto srf1 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
 
   std::vector<const Surface*> sfPointers = {srf0.get(), srf1.get()};
-  std::vector<MaybeSharedPtr<const Surface>> surfaces = {srf0, srf1};
+  std::vector<SurfaceHandle<const Surface>> surfaces = {srf0, srf1};
 
   auto singleLookUp =
       std::make_unique<Acts::SurfaceArray::SingleElementLookup>(sfPointers);

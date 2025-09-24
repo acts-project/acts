@@ -282,7 +282,7 @@ inline Acts::Transform3 createCurvilinearTransform(
 
 /// Construct a z-cylinder centered at zero with the track on its surface.
 struct ZCylinderSurfaceBuilder {
-  Acts::MaybeSharedPtr<Acts::Surface> operator()(
+  Acts::SurfaceHandle<Acts::Surface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
@@ -296,7 +296,7 @@ struct ZCylinderSurfaceBuilder {
 
 /// Construct a disc at track position with plane normal along track tangent.
 struct DiscSurfaceBuilder {
-  Acts::MaybeSharedPtr<Acts::Surface> operator()(
+  Acts::SurfaceHandle<Acts::Surface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
@@ -319,7 +319,7 @@ struct DiscSurfaceBuilder {
 
 /// Construct a plane at track position with plane normal along track tangent.
 struct PlaneSurfaceBuilder {
-  Acts::MaybeSharedPtr<Acts::Surface> operator()(
+  Acts::SurfaceHandle<Acts::Surface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
@@ -331,7 +331,7 @@ struct PlaneSurfaceBuilder {
 
 /// Construct a z-straw at the track position.
 struct ZStrawSurfaceBuilder {
-  Acts::MaybeSharedPtr<Acts::Surface> operator()(
+  Acts::SurfaceHandle<Acts::Surface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;

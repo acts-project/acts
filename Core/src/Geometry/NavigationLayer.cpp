@@ -14,7 +14,7 @@
 namespace Acts {
 
 NavigationLayer::NavigationLayer(
-    MaybeSharedPtr<const Surface> surfaceRepresentation, double thickness)
+    SurfaceHandle<const Surface> surfaceRepresentation, double thickness)
     : Layer(nullptr),
       m_surfaceRepresentation(std::move(surfaceRepresentation)) {
   m_layerThickness = thickness;

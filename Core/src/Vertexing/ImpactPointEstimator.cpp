@@ -359,7 +359,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos;
 
   // Surface with normal vector in direction of the z axis of coordinateSystem
-  MaybeSharedPtr<Surface> planeSurface =
+  SurfaceHandle<Surface> planeSurface =
       Surface::makeShared<PlaneSurface>(coordinateSystem);
 
   auto intersection =
@@ -421,7 +421,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
     const BoundTrackParameters& track, const Vertex& vtx,
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     bool calculateTimeIP) const {
-  const MaybeSharedPtr<Surface> perigeeSurface =
+  const SurfaceHandle<Surface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
@@ -505,7 +505,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
     const BoundTrackParameters& track, const Vertex& vtx,
     const Vector3& direction, const GeometryContext& gctx,
     const MagneticFieldContext& mctx) const {
-  const MaybeSharedPtr<Surface> perigeeSurface =
+  const SurfaceHandle<Surface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
@@ -544,7 +544,7 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
     const BoundTrackParameters& track, const Vertex& vtx,
     const Vector3& direction, const GeometryContext& gctx,
     const MagneticFieldContext& mctx) const {
-  const MaybeSharedPtr<Surface> perigeeSurface =
+  const SurfaceHandle<Surface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options

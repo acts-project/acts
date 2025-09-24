@@ -48,7 +48,7 @@ namespace Acts::Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-using SrfVec = std::vector<MaybeSharedPtr<const Surface>>;
+using SrfVec = std::vector<SurfaceHandle<const Surface>>;
 
 void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
   std::ofstream os;
@@ -85,7 +85,7 @@ struct LayerCreatorFixture {
   std::shared_ptr<const SurfaceArrayCreator> p_SAC;
   std::shared_ptr<LayerCreator> p_LC;
 
-  std::vector<MaybeSharedPtr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 
   LayerCreatorFixture() {
     p_SAC = std::make_shared<const SurfaceArrayCreator>(
@@ -231,7 +231,7 @@ struct LayerCreatorFixture {
 BOOST_AUTO_TEST_SUITE(Tools)
 
 BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
-  std::vector<MaybeSharedPtr<const Surface>> srf;
+  std::vector<SurfaceHandle<const Surface>> srf;
 
   srf = makeBarrel(30, 7, 2, 1.5);
   draw_surfaces(srf, "LayerCreator_createCylinderLayer_BRL_1.obj");
@@ -324,7 +324,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
-  std::vector<MaybeSharedPtr<const Surface>> surfaces;
+  std::vector<SurfaceHandle<const Surface>> surfaces;
   auto ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
   surfaces.insert(surfaces.end(), ringa.begin(), ringa.end());
   auto ringb = fullPhiTestSurfacesEC(30, 0, 0, 15);

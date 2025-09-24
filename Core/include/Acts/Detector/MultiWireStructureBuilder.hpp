@@ -22,13 +22,6 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
-
-template <class T>
-class MaybeSharedPtr;
-
-}
-
 namespace Acts::Experimental {
 
 class MultiWireStructureBuilder {
@@ -40,7 +33,7 @@ class MultiWireStructureBuilder {
     std::string name = "";
 
     /// The surfaces of the Multi Wire
-    std::vector<MaybeSharedPtr<Acts::Surface>> mlSurfaces = {};
+    std::vector<SurfaceHandle<Acts::Surface>> mlSurfaces = {};
 
     /// The transform of the Multi Wire
     Transform3 transform = Transform3::Identity();

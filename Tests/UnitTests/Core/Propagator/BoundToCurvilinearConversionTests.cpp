@@ -176,7 +176,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
     AngleAxis3 surface_transform0;
     surface_transform0 = surface_rot;
 
-    MaybeSharedPtr<Surface> surface;
+    SurfaceHandle<Surface> surface;
     switch (test_data.surface_type) {
       case TestData::kPlane: {
         surface = dynamic_handle_cast<Surface>(

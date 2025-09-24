@@ -378,7 +378,7 @@ double DiscSurface::pathCorrection(const GeometryContext& gctx,
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 
-std::pair<MaybeSharedPtr<RegularSurface>, bool> DiscSurface::mergedWith(
+std::pair<SurfaceHandle<RegularSurface>, bool> DiscSurface::mergedWith(
     const DiscSurface& other, AxisDirection direction, bool externalRotation,
     const Logger& logger) const {
   using namespace UnitLiterals;

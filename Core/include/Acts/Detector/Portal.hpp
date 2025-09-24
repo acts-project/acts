@@ -31,9 +31,6 @@ namespace Acts {
 class ISurfaceMaterial;
 class Surface;
 
-template <class T>
-class MaybeSharedPtr;
-
 namespace Experimental {
 class DetectorVolume;
 struct NavigationState;
@@ -51,7 +48,7 @@ class Portal {
   /// Constructor from surface w/o portal links
   ///
   /// @param surface is the representing surface
-  explicit Portal(MaybeSharedPtr<RegularSurface> surface);
+  explicit Portal(SurfaceHandle<RegularSurface> surface);
 
   /// The vector of attached volumes forward/backward, this is useful in the
   /// geometry building
@@ -151,7 +148,7 @@ class Portal {
 
  private:
   /// The surface representation of this portal
-  MaybeSharedPtr<RegularSurface> m_surface;
+  SurfaceHandle<RegularSurface> m_surface;
 
   /// The portal targets along/opposite the normal vector
   std::array<ExternalNavigationDelegate, 2u> m_portalNavigation = {

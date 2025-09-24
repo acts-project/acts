@@ -83,7 +83,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     return;
   }
 
-  using LayerSurfaceVector = std::vector<MaybeSharedPtr<const Surface>>;
+  using LayerSurfaceVector = std::vector<SurfaceHandle<const Surface>>;
   LayerSurfaceVector layerSurfaces;
 
   std::vector<LayerConfig> layerConfigs = m_cfg.layerConfigurations[type + 1];

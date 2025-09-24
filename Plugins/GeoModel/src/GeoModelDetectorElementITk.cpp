@@ -87,10 +87,10 @@ std::ostream &operator<<(std::ostream &os, const ITkIdentifier &id) {
 }
 
 std::tuple<std::shared_ptr<Acts::GeoModelDetectorElementITk>,
-           Acts::MaybeSharedPtr<Acts::Surface>>
+           Acts::SurfaceHandle<Acts::Surface>>
 Acts::GeoModelDetectorElementITk::convertFromGeomodel(
     std::shared_ptr<GeoModelDetectorElement> detEl,
-    MaybeSharedPtr<Surface> srf, const GeometryContext &gctx, int hardware,
+    SurfaceHandle<Surface> srf, const GeometryContext &gctx, int hardware,
     int barrelEndcap, int layerWheel, int etaModule, int phiModule, int side) {
   auto helper = [&]<typename surface_t, typename bounds_t>() {
     auto bounds = std::make_shared<bounds_t>(

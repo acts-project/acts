@@ -24,7 +24,7 @@ struct LayerBlueprintNodeImpl {
 
   std::string m_name;
 
-  std::vector<MaybeSharedPtr<Surface>> m_surfaces{};
+  std::vector<SurfaceHandle<Surface>> m_surfaces{};
 
   /// If a proto layer is already given externally, this node will not perform
   /// sizing from surfaces
@@ -148,13 +148,13 @@ const std::string& LayerBlueprintNode::name() const {
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setSurfaces(
-    std::vector<MaybeSharedPtr<Surface>> surfaces) {
+    std::vector<SurfaceHandle<Surface>> surfaces) {
   impl().m_surfaces = std::move(surfaces);
   impl().m_protoLayer.reset();
   return *this;
 }
 
-const std::vector<MaybeSharedPtr<Surface>>& LayerBlueprintNode::surfaces()
+const std::vector<SurfaceHandle<Surface>>& LayerBlueprintNode::surfaces()
     const {
   return impl().m_surfaces;
 }

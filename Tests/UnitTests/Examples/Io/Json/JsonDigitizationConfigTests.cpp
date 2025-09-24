@@ -36,7 +36,7 @@ struct Fixture {
   Acts::GeometryIdentifier gid;
   ActsFatras::Barcode pid;
   // geometry information
-  Acts::MaybeSharedPtr<Acts::Surface> surface;
+  Acts::SurfaceHandle<Acts::Surface> surface;
   Acts::GeometryContext geoCtx;
   // local and global track parameters
   Acts::BoundVector boundParams;
@@ -44,7 +44,7 @@ struct Fixture {
   // hit information
   ActsFatras::Hit hit;
 
-  Fixture(std::uint64_t rngSeed, Acts::MaybeSharedPtr<Acts::Surface> surf)
+  Fixture(std::uint64_t rngSeed, Acts::SurfaceHandle<Acts::Surface> surf)
       : rng(rngSeed),
         gid(Acts::GeometryIdentifier().withVolume(1).withLayer(2).withSensitive(
             3)),

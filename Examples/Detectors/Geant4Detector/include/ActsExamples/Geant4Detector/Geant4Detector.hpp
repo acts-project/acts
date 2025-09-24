@@ -47,7 +47,7 @@ struct Geant4Detector : public Detector {
   /// @param logger a logger instance
   ///
   /// @return a tuple of surfaces and detector elements
-  static std::tuple<std::vector<Acts::MaybeSharedPtr<Acts::Surface>>,
+  static std::tuple<std::vector<Acts::SurfaceHandle<Acts::Surface>>,
                     std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>>
   buildGeant4Volumes(const Config& cfg, const Acts::Logger& logger);
 

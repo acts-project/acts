@@ -336,7 +336,7 @@ class DiscSurface : public RegularSurface {
   /// @return The merged disc surface and a boolean indicating if surfaces are reversed
   /// @note The returned boolean is `false` if `this` is *left* or
   ///       *counter-clockwise* of @p other, and `true` if not.
-  std::pair<MaybeSharedPtr<RegularSurface>, bool> mergedWith(
+  std::pair<SurfaceHandle<RegularSurface>, bool> mergedWith(
       const DiscSurface& other, AxisDirection direction, bool externalRotation,
       const Logger& logger = getDummyLogger()) const;
 

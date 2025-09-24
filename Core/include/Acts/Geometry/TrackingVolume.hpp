@@ -347,10 +347,10 @@ class TrackingVolume : public Volume {
 
   using MutableSurfaceRange =
       detail::TransformRange<detail::Dereference,
-                             std::vector<MaybeSharedPtr<Surface>>>;
+                             std::vector<SurfaceHandle<Surface>>>;
   using SurfaceRange =
       detail::TransformRange<detail::ConstDereference,
-                             const std::vector<MaybeSharedPtr<Surface>>>;
+                             const std::vector<SurfaceHandle<Surface>>>;
 
   /// Return all surfaces registered under this tracking volume
   /// @return the range of surfaces
@@ -362,7 +362,7 @@ class TrackingVolume : public Volume {
 
   /// Add a surface to this tracking volume
   /// @param surface The surface to add
-  void addSurface(MaybeSharedPtr<Surface> surface);
+  void addSurface(SurfaceHandle<Surface> surface);
 
   /// Add a child volume to this tracking volume
   /// @param volume The volume to add
@@ -579,7 +579,7 @@ class TrackingVolume : public Volume {
 
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
-  std::vector<MaybeSharedPtr<Surface>> m_surfaces;
+  std::vector<SurfaceHandle<Surface>> m_surfaces;
 
   std::unique_ptr<INavigationPolicy> m_navigationPolicy;
 

@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec, covMat,
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec, covMat,
                                ParticleHypothesis::pion());
 
   AdaptiveGridTrackDensity::Config cfg;
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec, covMat,
+  BoundTrackParameters params(SurfaceHandle<const Surface>(perigeeSurface), paramVec, covMat,
                               ParticleHypothesis::pion());
 
   ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
@@ -297,13 +297,13 @@ BOOST_AUTO_TEST_CASE(track_adding) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params0(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec0, covMat,
+  BoundTrackParameters params0(SurfaceHandle<const Surface>(perigeeSurface), paramVec0, covMat,
                                ParticleHypothesis::pion());
-  BoundTrackParameters params1(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec1, covMat,
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec1, covMat,
                                ParticleHypothesis::pion());
-  BoundTrackParameters params2(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec2, covMat,
+  BoundTrackParameters params2(SurfaceHandle<const Surface>(perigeeSurface), paramVec2, covMat,
                                ParticleHypothesis::pion());
-  BoundTrackParameters params3(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec3, covMat,
+  BoundTrackParameters params3(SurfaceHandle<const Surface>(perigeeSurface), paramVec3, covMat,
                                ParticleHypothesis::pion());
 
   // Empty map
@@ -368,9 +368,9 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec1, covMat,
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec1, covMat,
                                ParticleHypothesis::pion());
-  BoundTrackParameters params2(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec2, covMat,
+  BoundTrackParameters params2(SurfaceHandle<const Surface>(perigeeSurface), paramVec2, covMat,
                                ParticleHypothesis::pion());
 
   // Empty maps
@@ -448,9 +448,9 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec1, covMat,
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec1, covMat,
                                ParticleHypothesis::pion());
-  BoundTrackParameters params2(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec2, covMat,
+  BoundTrackParameters params2(SurfaceHandle<const Surface>(perigeeSurface), paramVec2, covMat,
                                ParticleHypothesis::pion());
 
   // Empty map
@@ -526,9 +526,9 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params0(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec0, covMat,
+  BoundTrackParameters params0(SurfaceHandle<const Surface>(perigeeSurface), paramVec0, covMat,
                                ParticleHypothesis::pion());
-  BoundTrackParameters params1(MaybeSharedPtr<const Surface>(perigeeSurface), paramVec1, covMat,
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec1, covMat,
                                ParticleHypothesis::pion());
 
   // Empty maps

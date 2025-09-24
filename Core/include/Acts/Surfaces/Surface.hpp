@@ -18,6 +18,7 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -38,9 +39,6 @@ class Layer;
 class TrackingVolume;
 class IVisualization3D;
 class Surface;
-
-template <class T>
-class MaybeSharedPtr;
 
 /// @class Surface
 ///
@@ -118,8 +116,8 @@ class Surface : public virtual GeometryObject,
   /// Will forward all parameters and will attempt to find a suitable
   /// constructor.
   template <class T, typename... Args>
-  static MaybeSharedPtr<T> makeShared(Args&&... args) {
-    return MaybeSharedPtr<T>(
+  static SurfaceHandle<T> makeShared(Args&&... args) {
+    return SurfaceHandle<T>(
         std::shared_ptr<T>(new T(std::forward<Args>(args)...)));
   }
 
@@ -132,7 +130,7 @@ class Surface : public virtual GeometryObject,
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The surface handle
-  MaybeSharedPtr<Surface> getSharedPtr();
+  SurfaceHandle<Surface> getSharedPtr();
 
   /// Retrieve a @c SurfaceHandle for this surface (const version)
   ///
@@ -143,7 +141,7 @@ class Surface : public virtual GeometryObject,
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The surface handle
-  MaybeSharedPtr<const Surface> getSharedPtr() const;
+  SurfaceHandle<const Surface> getSharedPtr() const;
 
   /// Assignment operator
   /// @note copy construction invalidates the association

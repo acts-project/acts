@@ -20,8 +20,8 @@ class Surface;
 /// @brief Exception type failures to merge two surfaces
 class SurfaceMergingException : public std::exception {
  public:
-  SurfaceMergingException(MaybeSharedPtr<const Surface> surfaceA,
-                          MaybeSharedPtr<const Surface> surfaceB,
+  SurfaceMergingException(SurfaceHandle<const Surface> surfaceA,
+                          SurfaceHandle<const Surface> surfaceB,
                           const std::string& reason)
       : m_surfaceA(surfaceA.weak_ptr()),
         m_surfaceB(surfaceB.weak_ptr()),

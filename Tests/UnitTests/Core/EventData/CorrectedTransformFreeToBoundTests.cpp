@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // construct two parallel plane surfaces with normal in x direction
   double distance = 10_mm;
-  Acts::MaybeSharedPtr<Acts::Surface> eSurface =
+  Acts::SurfaceHandle<Acts::Surface> eSurface =
       CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
           .planeSurface();
 

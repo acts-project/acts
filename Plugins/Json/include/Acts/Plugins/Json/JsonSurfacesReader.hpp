@@ -37,7 +37,7 @@ struct Options {
 /// @param options specifies which file and what to read
 ///
 /// @return  a vector of surfaces
-Acts::GeometryHierarchyMap<Acts::MaybeSharedPtr<Acts::Surface>> readHierarchyMap(
+Acts::GeometryHierarchyMap<Acts::SurfaceHandle<Acts::Surface>> readHierarchyMap(
     const Options& options);
 
 /// @brief Read the flat surfaces from the input file
@@ -46,7 +46,7 @@ Acts::GeometryHierarchyMap<Acts::MaybeSharedPtr<Acts::Surface>> readHierarchyMap
 /// @param options options for surface reading
 ///
 /// @return  a vector of surfaces
-std::vector<Acts::MaybeSharedPtr<Acts::Surface>> readVector(const Options& options);
+std::vector<Acts::SurfaceHandle<Acts::Surface>> readVector(const Options& options);
 
 /// @brief Read the surfaces from the input file and create
 /// detector elements

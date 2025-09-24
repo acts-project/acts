@@ -21,7 +21,7 @@
 using namespace Acts::UnitLiterals;
 
 struct Helper {
-  Acts::MaybeSharedPtr<Acts::Surface> surface;
+  Acts::SurfaceHandle<Acts::Surface> surface;
   Acts::BinUtility segmentation;
 
   Acts::GeometryContext gctx{};

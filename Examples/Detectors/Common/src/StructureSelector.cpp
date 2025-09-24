@@ -14,7 +14,7 @@
 namespace {
 
 struct SensitiveGetter {
-  std::vector<Acts::MaybeSharedPtr<const Acts::Surface>> selected;
+  std::vector<Acts::SurfaceHandle<const Acts::Surface>> selected;
   /// @brief Visitor call operator
   /// @param surface
   void operator()(const Acts::Surface* surface) {
@@ -39,11 +39,11 @@ ActsExamples::StructureSelector::StructureSelector(
   SensitiveGetter getter;
   m_trackingGeometry->visitSurfaces(getter);
   m_surfaceMultiSet =
-      GeometryIdMultiset<Acts::MaybeSharedPtr<const Acts::Surface>>(
+      GeometryIdMultiset<Acts::SurfaceHandle<const Acts::Surface>>(
           getter.selected.begin(), getter.selected.end());
 }
 
-std::vector<Acts::MaybeSharedPtr<const Acts::Surface>>
+std::vector<Acts::SurfaceHandle<const Acts::Surface>>
 ActsExamples::StructureSelector::selectSurfaces(
     const Acts::GeometryIdentifier& geoId) const {
   auto selectedRange =

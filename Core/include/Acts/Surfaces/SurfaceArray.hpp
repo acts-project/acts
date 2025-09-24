@@ -114,7 +114,7 @@ class SurfaceArray {
   struct SurfaceGridLookup : ISurfaceGridLookup {
     using Grid_t = Grid<SurfaceVector, Axis1, Axis2>;
 
-    SurfaceGridLookup(MaybeSharedPtr<RegularSurface> representative,
+    SurfaceGridLookup(SurfaceHandle<RegularSurface> representative,
                       double tolerance, std::tuple<Axis1, Axis2> axes,
                       std::vector<AxisDirection> bValues = {})
         : m_representative(std::move(representative)),
@@ -364,7 +364,7 @@ class SurfaceArray {
       return m_grid.globalBinFromPosition(gridLocal);
     }
 
-    MaybeSharedPtr<RegularSurface> m_representative;
+    SurfaceHandle<RegularSurface> m_representative;
     double m_tolerance{};
     Grid_t m_grid;
     std::vector<AxisDirection> m_binValues;
@@ -451,12 +451,12 @@ class SurfaceArray {
   /// bookkeeping, so we can ask
   /// @param transform Optional additional transform for this SurfaceArray
   explicit SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
-                        std::vector<MaybeSharedPtr<const Surface>> surfaces,
+                        std::vector<SurfaceHandle<const Surface>> surfaces,
                         const Transform3& transform = Transform3::Identity());
 
   /// @brief Constructor with a single surface
   /// @param srf The one and only surface
-  explicit SurfaceArray(MaybeSharedPtr<const Surface> srf);
+  explicit SurfaceArray(SurfaceHandle<const Surface> srf);
 
   /// @brief Get all surfaces in bin given by position @p pos.
   /// @param position the lookup position
@@ -546,7 +546,7 @@ class SurfaceArray {
  private:
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;
   // this vector makes sure we have shared ownership over the surfaces
-  std::vector<MaybeSharedPtr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
   // this vector is returned, so that (expensive) copying of the shared_ptr
   // vector does not happen by default
   SurfaceVector m_surfacesRawPointers;

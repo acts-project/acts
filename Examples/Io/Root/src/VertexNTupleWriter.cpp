@@ -876,7 +876,7 @@ void VertexNTupleWriter::writeTrackInfo(
   auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
 
   // Perigee at the true vertex position
-  Acts::MaybeSharedPtr<Acts::Surface> perigeeSurface;
+  Acts::SurfaceHandle<Acts::Surface> perigeeSurface;
   if (truthPos.has_value()) {
     perigeeSurface =
         Acts::Surface::makeShared<Acts::PerigeeSurface>(truthPos->head<3>());

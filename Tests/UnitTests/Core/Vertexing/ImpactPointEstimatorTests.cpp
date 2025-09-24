@@ -385,18 +385,18 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   paramVecFar[eBoundTime] = vt0 + sgnFar * timeDiffFar;
 
   // Track whose time is similar to the vertex time
-  BoundTrackParameters paramsClose(MaybeSharedPtr<const Surface>(planeSurface), paramVecClose,
+  BoundTrackParameters paramsClose(SurfaceHandle<const Surface>(planeSurface), paramVecClose,
                                    makeBoundParametersCovariance(30_ns),
                                    ParticleHypothesis::pion());
 
   // Track whose time is similar to the vertex time but with a larger time
   // variance
   BoundTrackParameters paramsCloseLargerCov(
-      MaybeSharedPtr<const Surface>(planeSurface), paramVecClose, makeBoundParametersCovariance(31_ns),
+      SurfaceHandle<const Surface>(planeSurface), paramVecClose, makeBoundParametersCovariance(31_ns),
       ParticleHypothesis::pion());
 
   // Track whose time differs slightly more from the vertex time
-  BoundTrackParameters paramsFar(MaybeSharedPtr<const Surface>(planeSurface), paramVecFar,
+  BoundTrackParameters paramsFar(SurfaceHandle<const Surface>(planeSurface), paramVecFar,
                                  makeBoundParametersCovariance(30_ns),
                                  ParticleHypothesis::pion());
 

@@ -108,7 +108,7 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
         }
 
         // create the navigation layer surface from the layer
-        MaybeSharedPtr<const Surface> navLayerSurface =
+        SurfaceHandle<const Surface> navLayerSurface =
             createNavigationSurface(gctx, *layIter, aDir,
                                     -std::abs(layerValue - navigationValue));
         ACTS_VERBOSE(
@@ -138,7 +138,7 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
       // create navigation layer only when necessary
       if (navigationValue != max && lastLayer != nullptr) {
         // create the navigation layer surface from the layer
-        MaybeSharedPtr<const Surface> navLayerSurface =
+        SurfaceHandle<const Surface> navLayerSurface =
             createNavigationSurface(gctx, *lastLayer, aDir,
                                     navigationValue - layerValue);
         ACTS_VERBOSE(
@@ -171,7 +171,7 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
                                                          std::move(binUtility));
 }
 
-MaybeSharedPtr<Surface> LayerArrayCreator::createNavigationSurface(
+SurfaceHandle<Surface> LayerArrayCreator::createNavigationSurface(
     const GeometryContext& gctx, const Layer& layer, AxisDirection aDir,
     double offset) const {
   // surface reference
@@ -206,7 +206,7 @@ MaybeSharedPtr<Surface> LayerArrayCreator::createNavigationSurface(
     }
   }
   // navigation surface
-  MaybeSharedPtr<Surface> navigationSurface;
+  SurfaceHandle<Surface> navigationSurface;
   // for everything else than a cylinder it's a copy with shift
   if (layerSurface.type() == Surface::Plane) {
     // create a transform that does the shift
