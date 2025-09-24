@@ -25,13 +25,15 @@ struct CudaStreamGuard {
 }  // namespace
 #endif
 
+using namespace Acts;
+
 namespace ActsPlugins {
 
 GnnPipeline::GnnPipeline(
     std::shared_ptr<GraphConstructionBase> graphConstructor,
     std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
     std::shared_ptr<TrackBuildingBase> trackBuilder,
-    std::unique_ptr<const Acts::Logger> logger)
+    std::unique_ptr<const Logger> logger)
     : m_logger(std::move(logger)),
       m_graphConstructor(std::move(graphConstructor)),
       m_edgeClassifiers(std::move(edgeClassifiers)),
@@ -43,7 +45,7 @@ GnnPipeline::GnnPipeline(
     throw std::invalid_argument("Missing track building module");
   }
   if (m_edgeClassifiers.empty() ||
-      Acts::rangeContainsValue(m_edgeClassifiers, nullptr)) {
+      rangeContainsValue(m_edgeClassifiers, nullptr)) {
     throw std::invalid_argument("Missing graph construction module");
   }
 }

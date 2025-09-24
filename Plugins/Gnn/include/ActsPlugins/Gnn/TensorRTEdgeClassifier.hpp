@@ -23,7 +23,7 @@ class ILogger;
 class IExecutionContext;
 }  // namespace nvinfer1
 
-namespace Acts {
+namespace ActsPlugins {
 
 class TensorRTEdgeClassifier final : public EdgeClassificationBase {
  public:
@@ -62,4 +62,4 @@ class TensorRTEdgeClassifier final : public EdgeClassificationBase {
   mutable std::vector<std::unique_ptr<nvinfer1::IExecutionContext>> m_contexts;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

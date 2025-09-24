@@ -49,10 +49,12 @@ class ScopedCudaPtr {
 
 }  // namespace
 
+using namespace Acts;
+
 namespace ActsPlugins {
 
 ModuleMapCuda::ModuleMapCuda(const Config &cfg,
-                             std::unique_ptr<const Acts::Logger> logger_)
+                             std::unique_ptr<const Logger> logger_)
     : m_logger(std::move(logger_)), m_cfg(cfg) {
   module_map_triplet<float> moduleMapCpu;
   moduleMapCpu.read_TTree(cfg.moduleMapPath.c_str());

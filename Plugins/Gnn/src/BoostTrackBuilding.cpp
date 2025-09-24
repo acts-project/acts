@@ -16,6 +16,8 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
 
+using namespace Acts;
+
 namespace {
 template <typename vertex_t, typename weight_t>
 auto weaklyConnectedComponents(vertex_t numNodes,
@@ -34,7 +36,7 @@ auto weaklyConnectedComponents(vertex_t numNodes,
   Graph g(numNodes);
 
   for (const auto [row, col, weight] :
-       Acts::zip(rowIndices, colIndices, edgeWeights)) {
+       zip(rowIndices, colIndices, edgeWeights)) {
     boost::add_edge(row, col, weight, g);
   }
 
@@ -100,7 +102,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
 
   std::vector<std::vector<int>> trackCandidates(numberLabels);
 
-  for (const auto [label, id] : Acts::zip(trackLabels, spacepointIDs)) {
+  for (const auto [label, id] : zip(trackLabels, spacepointIDs)) {
     trackCandidates[label].push_back(id);
   }
 

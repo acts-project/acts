@@ -10,10 +10,11 @@
 
 #include <algorithm>
 
+using namespace Acts;
+
 namespace {
 
-auto cantorize(std::vector<std::int64_t> edgeIndex,
-               const Acts::Logger& logger) {
+auto cantorize(std::vector<std::int64_t> edgeIndex, const Logger& logger) {
   // Use cantor pairing to store truth graph, so we can easily use set
   // operations to compute efficiency and purity
   std::vector<ActsPlugins::detail::CantorEdge<std::int64_t>> cantorEdgeIndex;
@@ -41,7 +42,7 @@ auto cantorize(std::vector<std::int64_t> edgeIndex,
 
 ActsPlugins::TruthGraphMetricsHook::TruthGraphMetricsHook(
     const std::vector<std::int64_t>& truthGraph,
-    std::unique_ptr<const Acts::Logger> l)
+    std::unique_ptr<const Logger> l)
     : m_logger(std::move(l)) {
   m_truthGraphCantor = cantorize(truthGraph, logger());
 }

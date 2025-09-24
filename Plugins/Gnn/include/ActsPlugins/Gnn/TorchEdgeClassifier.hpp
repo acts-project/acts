@@ -21,7 +21,7 @@ namespace c10 {
 enum class DeviceType : std::int8_t;
 }
 
-namespace Acts {
+namespace ActsPlugins {
 
 class TorchEdgeClassifier final : public EdgeClassificationBase {
  public:
@@ -52,4 +52,4 @@ class TorchEdgeClassifier final : public EdgeClassificationBase {
   std::unique_ptr<torch::jit::Module> m_model;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins
