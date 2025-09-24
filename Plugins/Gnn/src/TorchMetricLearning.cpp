@@ -24,6 +24,8 @@
 
 using namespace torch::indexing;
 
+using namespace Acts;
+
 namespace ActsPlugins {
 
 TorchMetricLearning::TorchMetricLearning(const Config &cfg,

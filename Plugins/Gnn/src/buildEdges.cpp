@@ -31,6 +31,8 @@
 
 using namespace torch::indexing;
 
+using namespace Acts;
+
 torch::Tensor ActsPlugins::detail::postprocessEdgeTensor(torch::Tensor edges,
                                                          bool removeSelfLoops,
                                                          bool removeDuplicates,
@@ -213,7 +215,7 @@ struct BuildEdgesKDTree {
     ////////////////
     // Build tree //
     ////////////////
-    using KDTree = Acts::KDTree<Dim, int, float, Span>;
+    using KDTree = KDTree<Dim, int, float, Span>;
 
     typename KDTree::vector_t features;
     features.reserve(embedFeatures.size(0));
@@ -235,9 +237,9 @@ struct BuildEdgesKDTree {
     for (int iself = 0; iself < embedFeatures.size(0); ++iself) {
       const Span<float, Dim> self{dataPtr + iself * Dim};
 
-      Acts::RangeXD<Dim, float> range;
+      RangeXD<Dim, float> range;
       for (auto j = 0ul; j < Dim; ++j) {
-        range[j] = Acts::Range1D<float>(self[j] - rVal, self[j] + rVal);
+        range[j] = Range1D<float>(self[j] - rVal, self[j] + rVal);
       }
 
       tree.rangeSearchMapDiscard(

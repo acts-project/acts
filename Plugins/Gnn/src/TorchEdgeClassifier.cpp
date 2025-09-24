@@ -24,6 +24,8 @@
 
 using namespace torch::indexing;
 
+using namespace Acts;
+
 namespace ActsPlugins {
 
 TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,

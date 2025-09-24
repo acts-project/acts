@@ -21,14 +21,16 @@
 
 #include "printCudaMemInfo.hpp"
 
+using namespace Acts;
+
 namespace {
 
 class TensorRTLogger : public nvinfer1::ILogger {
-  std::unique_ptr<const Acts::Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
  public:
-  TensorRTLogger(Acts::Logging::Level lvl)
-      : m_logger(Acts::getDefaultLogger("TensorRT", lvl)) {}
+  TensorRTLogger(Logging::Level lvl)
+      : m_logger(getDefaultLogger("TensorRT", lvl)) {}
 
   void log(Severity severity, const char *msg) noexcept override {
     const auto &logger = *m_logger;
@@ -140,7 +142,7 @@ TensorRTEdgeClassifier::~TensorRTEdgeClassifier() {}
 
 PipelineTensors TensorRTEdgeClassifier::operator()(
     PipelineTensors tensors, const ExecutionContext &execContext) {
-  assert(execContext.device.type == Acts::Device::Type::eCUDA);
+  assert(execContext.device.type == Device::Type::eCUDA);
 
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();

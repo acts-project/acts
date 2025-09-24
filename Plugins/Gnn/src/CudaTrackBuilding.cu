@@ -13,6 +13,8 @@
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 #include "ActsPlugins/Gnn/detail/JunctionRemoval.hpp"
 
+using namespace Acts;
+
 namespace ActsPlugins {
 
 std::vector<std::vector<int>> CudaTrackBuilding::operator()(
@@ -102,7 +104,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
 
   std::vector<std::vector<int>> trackCandidates(numberLabels);
 
-  for (const auto [label, id] : Acts::zip(trackLabels, spacepointIDs)) {
+  for (const auto [label, id] : zip(trackLabels, spacepointIDs)) {
     trackCandidates[label].push_back(id);
   }
 
