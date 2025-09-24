@@ -132,18 +132,21 @@ class Barcode {
   /// Return the primary vertex identifier.
   /// @return The primary vertex identifier value
   constexpr PrimaryVertexId vertexPrimary() const { return vertexPrimaryID; }
+
   /// Return the secondary vertex identifier.
   /// @return The secondary vertex identifier value
   constexpr SecondaryVertexId vertexSecondary() const {
     return vertexSecondaryID;
   }
-  constexpr Value vertexSecondary() const { return level(1); }
+
   /// Return the particle identifier.
   /// @return The particle identifier value
   constexpr ParticleId particle() const { return particleID; }
+
   /// Return the generation identifier.
   /// @return The generation identifier value
   constexpr GenerationId generation() const { return generationID; }
+
   /// Return the sub-particle identifier.
   /// @return The sub-particle identifier value
   constexpr SubParticleId subParticle() const { return subParticleID; }
