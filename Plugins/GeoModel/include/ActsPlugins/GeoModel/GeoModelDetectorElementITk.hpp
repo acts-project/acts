@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
 namespace ActsPlugins {
 
@@ -51,9 +51,10 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
  public:
   GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
                              std::shared_ptr<Acts::Surface> surface,
-                             const Acts::Transform3& sfTransform, double thickness,
-                             int hardware, int barrelEndcap, int layerWheel,
-                             int etaModule, int phiModule, int side)
+                             const Acts::Transform3& sfTransform,
+                             double thickness, int hardware, int barrelEndcap,
+                             int layerWheel, int etaModule, int phiModule,
+                             int side)
       : GeoModelDetectorElement(geoPhysVol, std::move(surface), sfTransform,
                                 thickness),
         m_identifier(hardware, barrelEndcap, layerWheel, etaModule, phiModule,
@@ -67,12 +68,13 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
   static std::tuple<std::shared_ptr<GeoModelDetectorElementITk>,
                     std::shared_ptr<Acts::Surface>>
   convertFromGeomodel(std::shared_ptr<GeoModelDetectorElement> detEl,
-                      std::shared_ptr<Acts::Surface> srf, const Acts::GeometryContext& gctx,
-                      int hardware, int barrelEndcap, int layerWheel,
-                      int etaModule, int phiModule, int side);
+                      std::shared_ptr<Acts::Surface> srf,
+                      const Acts::GeometryContext& gctx, int hardware,
+                      int barrelEndcap, int layerWheel, int etaModule,
+                      int phiModule, int side);
 
  private:
   ITkIdentifier m_identifier;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

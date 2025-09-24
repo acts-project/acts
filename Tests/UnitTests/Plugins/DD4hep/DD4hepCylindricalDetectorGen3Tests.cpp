@@ -17,8 +17,6 @@
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
-#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -27,6 +25,8 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include <Acts/Geometry/VolumeAttachmentStrategy.hpp>
 #include <Acts/Navigation/SurfaceArrayNavigationPolicy.hpp>
 #include <Acts/Navigation/TryAllNavigationPolicy.hpp>
@@ -165,7 +165,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
                                               0., 80., necZ, 2., 22u);
 
   std::vector<std::vector<Surface*>> necSurfaces = {necR0Surfaces,
-                                                          necR1Surfaces};
+                                                    necR1Surfaces};
 
   // Barrel surfaces
   std::vector<std::array<double, 2u>> innerOuter = {
@@ -179,8 +179,8 @@ void generateXML(const std::filesystem::path& xmlPath) {
   auto b2Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
                                                116., 3., 2., {52, 14});
 
-  std::vector<std::vector<Surface*>> barrelSurfaces = {
-      b0Surfaces, b1Surfaces, b2Surfaces};
+  std::vector<std::vector<Surface*>> barrelSurfaces = {b0Surfaces, b1Surfaces,
+                                                       b2Surfaces};
 
   // Nec surfaces
   double pecZ = 800.;
@@ -191,7 +191,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
                                               0., 80., pecZ, 2., 22u);
 
   std::vector<std::vector<Surface*>> pecSurfaces = {pecR0Surfaces,
-                                                          pecR1Surfaces};
+                                                    pecR1Surfaces};
 
   // Create an XML from it
   std::ofstream cxml;
@@ -560,8 +560,8 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       layer.setNavigationPolicyFactory(
           NavigationPolicyFactory{}
               .add<SurfaceArrayNavigationPolicy>(
-                  SurfaceArrayNavigationPolicy::Config{
-                      .layerType = Cylinder, .bins = {30, 10}})
+                  SurfaceArrayNavigationPolicy::Config{.layerType = Cylinder,
+                                                       .bins = {30, 10}})
               .add<TryAllNavigationPolicy>(
                   TryAllNavigationPolicy::Config{.sensitives = false})
               .asUniquePtr());
@@ -583,8 +583,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       ec.setAttachmentStrategy(AttachmentStrategy::Gap);
       ec.setResizeStrategy(ResizeStrategy::Expand);
 
-      std::map<int, std::vector<std::shared_ptr<Surface>>>
-          initialLayers{};
+      std::map<int, std::vector<std::shared_ptr<Surface>>> initialLayers{};
       const DetElement* pixelEndcapElement =
           ecid == 1 ? find_element(*pixelElement, "PixelPositiveEndcap")
                     : find_element(*pixelElement, "PixelNegativeEndcap");
@@ -606,8 +605,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       std::vector<LayerData> protoLayers;
       protoLayers.reserve(initialLayers.size());
       for (const auto& [key, surfaces] : initialLayers) {
-        auto& layer =
-            protoLayers.emplace_back(GeometryContext(), surfaces);
+        auto& layer = protoLayers.emplace_back(GeometryContext(), surfaces);
         layer.protoLayer.envelope[AxisR] = {2_mm, 2_mm};
         layer.protoLayer.envelope[AxisZ] = {1_mm, 1_mm};
       }
@@ -632,8 +630,8 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
           layer.setNavigationPolicyFactory(
               NavigationPolicyFactory{}
                   .add<SurfaceArrayNavigationPolicy>(
-                      SurfaceArrayNavigationPolicy::Config{
-                          .layerType = Disc, .bins = {30, 30}})
+                      SurfaceArrayNavigationPolicy::Config{.layerType = Disc,
+                                                           .bins = {30, 30}})
                   .add<TryAllNavigationPolicy>(
                       TryAllNavigationPolicy::Config{.sensitives = false})
                   .asUniquePtr());

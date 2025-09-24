@@ -76,7 +76,8 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Acts::Transform3& transform(const Acts::GeometryContext& gctx) const override;
+  const Acts::Transform3& transform(
+      const Acts::GeometryContext& gctx) const override;
 
   /// Return the nominal - non-contextual transform
   const Acts::Transform3& nominalTransform() const;

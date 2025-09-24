@@ -25,8 +25,8 @@ namespace ActsPlugins::detail::GeoModelExentHelper {
 /// @param ctype the type of the constraint as string from the database
 ///
 /// @return a vector
-std::vector<Acts::AxisDirection> readBoundsConstaints(const std::string& boundsEntry,
-                                                const std::string& ctype = "i");
+std::vector<Acts::AxisDirection> readBoundsConstaints(
+    const std::string& boundsEntry, const std::string& ctype = "i");
 
 /// @brief Helper function to find out which ones are constraint needed for binning
 ///
@@ -47,6 +47,7 @@ std::vector<Acts::AxisDirection> readBinningConstraints(
 std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent> extentFromTable(
     const std::vector<std::string>& boundsEntrySplit,
     const Acts::Extent& externalExtent = Acts::Extent(),
-    const Acts::Extent& internalExtent = Acts::Extent(), bool roundInternalExtent = true);
+    const Acts::Extent& internalExtent = Acts::Extent(),
+    bool roundInternalExtent = true);
 
-}  // namespace Acts::detail::GeoModelExentHelper
+}  // namespace ActsPlugins::detail::GeoModelExentHelper

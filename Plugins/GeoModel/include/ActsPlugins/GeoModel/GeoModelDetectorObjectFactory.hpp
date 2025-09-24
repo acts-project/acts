@@ -11,11 +11,11 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
+#include "Acts/Utilities/BoundFactory.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "ActsPlugins/GeoModel/GeoModelToDetectorVolume.hpp"
 #include "ActsPlugins/GeoModel/GeoModelTree.hpp"
-#include "Acts/Utilities/BoundFactory.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <GeoModelHelpers/getChildNodesWithTrf.h>
 
@@ -152,4 +152,4 @@ class GeoModelDetectorObjectFactory {
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
-}  // namespace Acts
+}  // namespace ActsPlugins
