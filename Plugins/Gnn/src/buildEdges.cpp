@@ -258,7 +258,7 @@ struct BuildEdgesKDTree {
 
 torch::Tensor ActsPlugins::detail::buildEdgesKDTree(
     torch::Tensor &embedFeatures, float rVal, int kVal, bool flipDirections) {
-  auto tensor = ActsPlugins::template_switch<BuildEdgesKDTree, 1, 12>(
+  auto tensor = template_switch<BuildEdgesKDTree, 1, 12>(
       embedFeatures.size(1), embedFeatures, rVal, kVal);
 
   return postprocessEdgeTensor(tensor, true, true, flipDirections);
