@@ -25,10 +25,12 @@ namespace Acts::Experimental {
 /// the grid.
 class MultiLayerNavigationPolicy : public INavigationPolicy {
  public:
+  /// Type alias for 2D equidistant grid holding surface indices
   using GridType =
       Grid<std::vector<std::size_t>,
            Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
            Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
+  /// Type alias for indexed surfaces navigation updater
   using IndexedUpdatorType = IndexedSurfacesNavigation<GridType>;
 
   struct Config {
