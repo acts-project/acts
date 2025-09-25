@@ -47,40 +47,6 @@ class NavigationStream {
     Vector3 direction = Vector3::Zero();
   };
 
-  /// This is a candidate object of the navigation stream, it holds:
-  ///
-  /// - a Surface intersection
-  /// - a Portal : set if the surface represents a portal
-  /// - a BoundaryTolerance : the boundary tolerance used for the intersection
-  struct Candidate {
-    /// The intersection
-    SurfaceIntersection intersection = SurfaceIntersection::invalid();
-    /// The portal
-    const Acts::Experimental::Portal* gen2Portal = nullptr;
-    /// Portal interface for navigation
-    const Portal* portal = nullptr;
-    /// The boundary tolerance
-    BoundaryTolerance bTolerance = BoundaryTolerance::None();
-    /// Convenience access to surface
-    /// @return Reference to the surface from the intersection
-    const Surface& surface() const { return intersection.surface(); }
-    /// Convenience access to the path length
-    /// @return Path length from the intersection
-    double pathLength() const { return intersection.pathLength(); }
-
-    /// Order along the path length
-    ///
-    /// @param aCandidate is the first candidate
-    /// @param bCandidate is the second candidate
-    ///
-    /// @return true if aCandidate is closer to the origin
-    constexpr static bool pathLengthOrder(const Candidate& aCandidate,
-                                          const Candidate& bCandidate) {
-      return SurfaceIntersection::pathLengthOrder(aCandidate.intersection,
-                                                  bCandidate.intersection);
-    }
-  };
-
   /// Switch to next next candidate
   ///
   /// @return true if a next candidate is available
@@ -94,7 +60,7 @@ class NavigationStream {
 
   /// Const access the current candidate
   /// @return Const reference to current candidate
-  const Candidate& currentCandidate() const {
+  const NavigationTarget& currentCandidate() const {
     return m_candidates.at(m_currentIndex);
   }
 
@@ -104,18 +70,22 @@ class NavigationStream {
 
   /// Non-const access the candidate vector
   /// @return Mutable reference to vector of navigation candidates
-  std::vector<Candidate>& candidates() { return m_candidates; }
+  std::vector<NavigationTarget>& candidates() { return m_candidates; }
 
   /// Const access the candidate vector
   /// @return Const reference to vector of navigation candidates
-  const std::vector<Candidate>& candidates() const { return m_candidates; }
+  const std::vector<NavigationTarget>& candidates() const {
+    return m_candidates;
+  }
 
   /// Non-const access the current candidate
   ///
   /// This will throw and out of bounds exception if the stream is not
   /// valid anymore.
   /// @return Mutable reference to current candidate
-  Candidate& currentCandidate() { return m_candidates.at(m_currentIndex); }
+  NavigationTarget& currentCandidate() {
+    return m_candidates.at(m_currentIndex);
+  }
 
   /// The number of active candidates
   /// @return Number of remaining candidates from current position onwards

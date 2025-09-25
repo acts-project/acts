@@ -43,19 +43,17 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
         continue;
       }
       candidate.intersection() = multiIntersection.at(0);
-      candidate.intersectionIndex() = 0;
     } else if (!firstValid && secondValid) {
       if (multiIntersection.at(1).pathLength() < -onSurfaceTolerance) {
         continue;
       }
       candidate.intersection() = multiIntersection.at(1);
-      candidate.intersectionIndex() = 1;
     } else {
       // Split them into valid intersections, keep track of potentially
       // additional candidates
       bool originalCandidateUpdated = false;
       for (auto [intersectionIndex, intersection] :
-           enumerate(multiIntersection)) {
+           Acts::enumerate(multiIntersection)) {
         // Skip negative solutions, respecting the on surface tolerance
         if (intersection.pathLength() < -onSurfaceTolerance) {
           continue;
@@ -64,7 +62,6 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
         if (intersection.isValid()) {
           if (!originalCandidateUpdated) {
             candidate.intersection() = intersection;
-            candidate.intersectionIndex() = intersectionIndex;
             originalCandidateUpdated = true;
           } else {
             NavigationTarget additionalCandidate = candidate;
@@ -124,7 +121,7 @@ bool NavigationStream::update(const GeometryContext& gctx,
                           candidate.boundaryTolerance(), onSurfaceTolerance);
     // Split them into valid intersections
     for (auto [intersectionIndex, intersection] :
-         enumerate(multiIntersection)) {
+         Acts::enumerate(multiIntersection)) {
       // Skip wrong index solution
       if (intersectionIndex != candidate.intersectionIndex()) {
         continue;

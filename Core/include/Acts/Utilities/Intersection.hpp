@@ -78,45 +78,46 @@ class Intersection {
   }
 
   /// Copy constructor
-  Intersection(const Intersection&) noexcept = default;
+  constexpr Intersection(const Intersection&) noexcept = default;
   /// Move constructor
-  Intersection(Intersection&&) noexcept = default;
+  constexpr Intersection(Intersection&&) noexcept = default;
   /// Copy assignment operator
   /// @return Reference to this intersection for chaining
-  Intersection& operator=(const Intersection&) noexcept = default;
+  constexpr Intersection& operator=(const Intersection&) noexcept = default;
   /// Move assignment operator
   /// @return Reference to this intersection for chaining
-  Intersection& operator=(Intersection&&) noexcept = default;
+  constexpr Intersection& operator=(Intersection&&) noexcept = default;
 
   /// Returns whether the intersection was successful or not
   /// @return True if intersection is reachable or on surface, false if unreachable
-  constexpr bool isValid() const {
+  constexpr bool isValid() const noexcept {
     return m_status != IntersectionStatus::unreachable;
   }
 
   /// Returns the position of the interseciton
   /// @return Position vector of the intersection point
-  constexpr Position position() const { return Position{m_position.data()}; }
+  Position position() const noexcept { return Position{m_position.data()}; }
 
-  /// Returns the path length to the interseciton
+  /// Returns the path length to the intersection
   /// @return Signed path length from origin to intersection point
-  constexpr double pathLength() const { return m_pathLength; }
+  constexpr double pathLength() const noexcept { return m_pathLength; }
 
   /// Returns the intersection status enum
   /// @return Status indicating if intersection is unreachable, reachable, or on surface
-  constexpr IntersectionStatus status() const { return m_status; }
+  constexpr IntersectionStatus status() const noexcept { return m_status; }
 
-  /// Static factory to creae an invalid instesection
+  /// Static factory to create an invalid intersection
   /// @return Invalid intersection with unreachable status
-  constexpr static Intersection invalid() { return Intersection(); }
+  constexpr static Intersection Invalid() noexcept { return Intersection(); }
 
   /// Comparison function for path length order i.e. intersection closest to
   /// -inf will be first.
   /// @param aIntersection First intersection to compare
   /// @param bIntersection Second intersection to compare
   /// @return True if first intersection has smaller path length than second
-  constexpr static bool pathLengthOrder(const Intersection& aIntersection,
-                                        const Intersection& bIntersection) {
+  constexpr static bool pathLengthOrder(
+      const Intersection& aIntersection,
+      const Intersection& bIntersection) noexcept {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return a < b;
@@ -127,10 +128,13 @@ class Intersection {
   /// @param aIntersection First intersection to compare
   /// @param bIntersection Second intersection to compare
   /// @return True if first intersection is closer to zero path length than second
-  constexpr static bool closestOrder(const Intersection& aIntersection,
-                                     const Intersection& bIntersection) {
-    if ((aIntersection.status() == IntersectionStatus::unreachable) &&
-        (bIntersection.status() != IntersectionStatus::unreachable)) {
+  constexpr static bool closestOrder(
+      const Intersection& aIntersection,
+      const Intersection& bIntersection) noexcept {
+    using enum IntersectionStatus;
+
+    if ((aIntersection.status() == unreachable) &&
+        (bIntersection.status() != unreachable)) {
       return false;
     }
     if ((aIntersection.status() != unreachable) &&
@@ -148,8 +152,9 @@ class Intersection {
   /// @param aIntersection First intersection to compare
   /// @param bIntersection Second intersection to compare
   /// @return True if first intersection is closer to zero with preference for forward direction
-  constexpr static bool closestForwardOrder(const Intersection& aIntersection,
-                                            const Intersection& bIntersection) {
+  constexpr static bool closestForwardOrder(
+      const Intersection& aIntersection,
+      const Intersection& bIntersection) noexcept {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return std::signbit(a) == std::signbit(b) ? std::abs(a) < std::abs(b)
@@ -176,11 +181,8 @@ static_assert(std::is_trivially_copy_constructible_v<Intersection2D>);
 static_assert(std::is_trivially_move_constructible_v<Intersection2D>);
 static_assert(std::is_trivially_move_assignable_v<Intersection2D>);
 
-static constexpr std::uint8_t s_maximumNumberOfIntersections = 2;
-/// Type alias for multiple 3D intersections container
-using MultiIntersection3D =
-    boost::container::static_vector<Intersection3D,
-                                    s_maximumNumberOfIntersections>;
+using IntersectionIndex = std::uint8_t;
+static constexpr IntersectionIndex s_maximumNumberOfIntersections = 2;
 
 template <unsigned int DIM>
 class MultiIntersection {

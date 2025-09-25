@@ -87,7 +87,6 @@ class Navigator {
   using NavigationSurfaces =
       boost::container::small_vector<NavigationTarget, 10>;
 
-  /// Type alias for navigation layer candidates container
   using NavigationLayers = boost::container::small_vector<NavigationTarget, 10>;
 
   /// Type alias for navigation boundary candidates container
@@ -193,16 +192,10 @@ class Navigator {
     /// the current candidate index of the navigation state
     std::optional<std::size_t> navCandidateIndex;
 
-    SurfaceIntersection& navSurface() {
+    NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
-
-    /// Get reference to current navigation layer
-    /// @return Reference to current layer intersection
     NavigationTarget& navLayer() { return navLayers.at(navLayerIndex.value()); }
-
-    /// Get reference to current navigation boundary
-    /// @return Reference to current boundary intersection
     NavigationTarget& navBoundary() {
       return navBoundaries.at(navBoundaryIndex.value());
     }
@@ -662,14 +655,16 @@ class Navigator {
                                     const Vector3& direction) const {
     // Try different approach to get navigation target for gen1 and gen3
     // configuration
-    if (m_geometryVersion == GeometryVersion::Gen1) {
-      // Try targeting the surfaces - then layers - then boundaries
 
-      if (state.navigationStage == Stage::initial) {
+    //This is common, in gen1 we start by surfaces and in gen3 we always look for surfaces
+
+    if (state.navigationStage == Stage::initial) {
         ACTS_VERBOSE(volInfo(state) << "Target surfaces.");
         state.navigationStage = Stage::surfaceTarget;
-      }
-
+    }
+    
+    if (m_geometryVersion == GeometryVersion::Gen1) {
+      // Try targeting the surfaces - then layers - then boundaries
       if (state.navigationStage == Stage::surfaceTarget) {
         if (!state.navSurfaceIndex.has_value()) {
           // First time, resolve the surfaces
@@ -1118,8 +1113,7 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state)
                  << "Try to find boundaries, we are at: " << toString(position)
                  << ", dir: " << toString(direction));
-
-    if (m_geometryVersion == GeometryVersion::Gen1) {
+   
       // Request the compatible boundaries
       state.navBoundaries = state.currentVolume->compatibleBoundaries(
           state.options.geoContext, position, direction, navOpts, logger());
@@ -1127,7 +1121,7 @@ class Navigator {
         return SurfaceIntersection::pathLengthOrder(a.intersection,
                                                     b.intersection);
       });
-    }
+  
 
     // Print boundary information
     if (logger().doPrint(Logging::VERBOSE)) {

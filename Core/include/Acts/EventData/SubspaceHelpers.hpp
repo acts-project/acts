@@ -269,13 +269,8 @@ class FixedSubspaceHelper
   /// Type alias for container storing subspace indices
   using Container = std::array<IndexType, kSubspaceSize>;
 
-  /// Type alias for size type
   using size_type = std::size_t;
 
-  /// Construct a fixed subspace helper with specified indices
-  ///
-  /// @tparam other_index_range_t Type of the index range
-  /// @param indices Range of indices defining the subspace, must match SubspaceSize
   template <std::ranges::sized_range other_index_range_t>
   explicit FixedSubspaceHelper(const other_index_range_t& indices) {
     assert(checkSubspaceIndices(indices, kFullSize, kSubspaceSize) &&
