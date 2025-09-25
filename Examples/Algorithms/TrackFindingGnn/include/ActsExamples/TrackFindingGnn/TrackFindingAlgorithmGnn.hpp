@@ -149,7 +149,7 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  Acts::GnnPipeline m_pipeline;
+  GnnPipeline m_pipeline;
   mutable std::mutex m_mutex;
 
   using Accumulator = boost::accumulators::accumulator_set<
