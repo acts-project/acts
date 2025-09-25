@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Plugins/FastJet/TrackJets.hpp>
+#include <Acts/Plugins/FastJet/Jets.hpp>
 
 class Track {
  public:
