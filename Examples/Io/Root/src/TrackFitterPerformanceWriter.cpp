@@ -163,7 +163,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   for (const auto& particle : particles) {
     bool isReconstructed = false;
     // Check if the particle has been reconstructed
-    if (rangeContainsValue(reconParticleIds, particle.particleId())) {
+    if (Acts::rangeContainsValue(reconParticleIds, particle.particleId())) {
       isReconstructed = true;
     }
     // Loop over all the other truth particle and find the distance to the

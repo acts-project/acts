@@ -17,9 +17,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 
 #include <cstddef>
 #include <limits>
@@ -72,10 +70,10 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   // registerLayer()
   BOOST_CHECK_NO_THROW(approachDescriptor.registerLayer(aLayer));
   // approachSurface
-  SurfaceIntersection surfIntersection = approachDescriptor.approachSurface(
+  NavigationTarget navigationTarget = approachDescriptor.approachSurface(
       tgContext, origin, zDir, boundaryTolerance, nearLimit, farLimit);
   double expectedIntersection = 20.0;  // property of SurfaceStub
-  CHECK_CLOSE_REL(surfIntersection.pathLength(), expectedIntersection, 1e-6);
+  CHECK_CLOSE_REL(navigationTarget.pathLength(), expectedIntersection, 1e-6);
   // containedSurfaces()
   BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
                     someSurfaces.size());
