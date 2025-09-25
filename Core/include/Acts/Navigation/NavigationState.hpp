@@ -72,7 +72,7 @@ struct NavigationState {
 
   /// Get the current surface candidate being processed
   /// @return Reference to the current surface candidate
-  const NavigationTarget& surfaceCandidate() const {
+  const SurfaceCandidate& surfaceCandidate() const {
     return surfaceCandidates.at(surfaceCandidateIndex);
   }
 };
