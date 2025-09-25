@@ -58,7 +58,7 @@ Result<BoundState> detail::boundState(
 
   // Create the bound state
   return std::make_tuple(
-      BoundTrackParameters(surface.getSharedPtr(), *bv, std::move(cov),
+      BoundTrackParameters(surface.getHandle(), *bv, std::move(cov),
                            particleHypothesis),
       fullTransportJacobian, accumulatedPath);
 }
@@ -238,7 +238,7 @@ Result<BoundTrackParameters> detail::boundToBoundConversion(
              boundToBoundJac.transpose();
   }
 
-  return BoundTrackParameters{targetSurface.getSharedPtr(), parOut, covOut,
+  return BoundTrackParameters{targetSurface.getHandle(), parOut, covOut,
                               boundParameters.particleHypothesis()};
 }
 

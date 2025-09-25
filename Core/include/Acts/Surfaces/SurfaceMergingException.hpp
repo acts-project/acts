@@ -12,17 +12,19 @@
 #include <memory>
 #include <string>
 
+#include "Acts/Surfaces/SurfaceHandle.hpp"
+
 namespace Acts {
 class Surface;
 
 /// @brief Exception type failures to merge two surfaces
 class SurfaceMergingException : public std::exception {
  public:
-  SurfaceMergingException(std::weak_ptr<const Surface> surfaceA,
-                          std::weak_ptr<const Surface> surfaceB,
+  SurfaceMergingException(SurfaceHandle<const Surface> surfaceA,
+                          SurfaceHandle<const Surface> surfaceB,
                           const std::string& reason)
-      : m_surfaceA(std::move(surfaceA)),
-        m_surfaceB(std::move(surfaceB)),
+      : m_surfaceA(surfaceA.weak_ptr()),
+        m_surfaceB(surfaceB.weak_ptr()),
         m_message(std::string{"Failure to merge surfaces: "} + reason) {}
 
   const char* what() const throw() override { return m_message.c_str(); }

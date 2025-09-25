@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   // Create the surfaces of the multiwire structure-straw surfaces
-  std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> strawSurfaces = {};
 
   // Set the number of surfaces along each dimension of the multi wire structure
   // aligned along z axis

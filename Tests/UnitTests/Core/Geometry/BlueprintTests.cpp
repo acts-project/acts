@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
   double yrot = 45_degree;
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
-  std::vector<std::shared_ptr<Surface>> surfaces;
+  std::vector<SurfaceHandle<Surface>> surfaces;
   std::vector<std::unique_ptr<DetectorElementBase>> elements;
   double r = 300_mm;
   std::size_t nSensors = 8;
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
 
     element->surface().assignDetectorElement(*element);
 
-    surfaces.push_back(element->surface().getSharedPtr());
+    surfaces.push_back(element->surface().getHandle());
   }
 
   std::function<void(LayerBlueprintNode&)> withSurfaces =
@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
   double yrot = 0_degree;
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
-  std::vector<std::shared_ptr<Surface>> surfaces;
+  std::vector<SurfaceHandle<Surface>> surfaces;
   std::vector<std::unique_ptr<DetectorElementBase>> elements;
 
   double r = 300_mm;
@@ -558,7 +558,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
       auto& element = elements.emplace_back(
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
       element->surface().assignDetectorElement(*element);
-      surfaces.push_back(element->surface().getSharedPtr());
+      surfaces.push_back(element->surface().getHandle());
     }
   }
 
@@ -1074,7 +1074,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
     Transform3 base =
         Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
-    std::vector<std::shared_ptr<Surface>> surfaces;
+    std::vector<SurfaceHandle<Surface>> surfaces;
     std::vector<std::unique_ptr<DetectorElementBase>> elements;
     double r = 300_mm;
     std::size_t nSensors = 8;
@@ -1094,7 +1094,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
 
       element->surface().assignDetectorElement(*element);
-      surfaces.push_back(element->surface().getSharedPtr());
+      surfaces.push_back(element->surface().getHandle());
     }
 
     Blueprint root{{.envelope = ExtentEnvelope{{
@@ -1137,7 +1137,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
     Transform3 base =
         Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
-    std::vector<std::shared_ptr<Surface>> surfaces;
+    std::vector<SurfaceHandle<Surface>> surfaces;
     std::vector<std::unique_ptr<DetectorElementBase>> elements;
 
     double r = 300_mm;
@@ -1164,7 +1164,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
         auto& element = elements.emplace_back(
             std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
         element->surface().assignDetectorElement(*element);
-        surfaces.push_back(element->surface().getSharedPtr());
+        surfaces.push_back(element->surface().getHandle());
       }
     }
 

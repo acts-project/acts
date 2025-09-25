@@ -78,7 +78,7 @@ struct ExternalStructure {
 /// of contained volumes.
 struct InternalStructure {
   /// Contained surfaces of this volume, handled by the surfacesUpdater
-  std::vector<std::shared_ptr<Surface>> surfaces = {};
+  std::vector<SurfaceHandle<Surface>> surfaces = {};
   /// Contained volumes of this volume, handled by the volumeUpdater
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// Navigation delegate for surfaces

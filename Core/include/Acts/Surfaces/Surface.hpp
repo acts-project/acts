@@ -18,6 +18,7 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -115,11 +116,12 @@ class Surface : public virtual GeometryObject,
   /// Will forward all parameters and will attempt to find a suitable
   /// constructor.
   template <class T, typename... Args>
-  static std::shared_ptr<T> makeShared(Args&&... args) {
-    return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+  static SurfaceHandle<T> makeShared(Args&&... args) {
+    return SurfaceHandle<T>(
+        std::shared_ptr<T>(new T(std::forward<Args>(args)...)));
   }
 
-  /// Retrieve a @c std::shared_ptr for this surface (non-const version)
+  /// Retrieve a @c SurfaceHandle for this surface (non-const version)
   ///
   /// @note Will error if this was not created through the @c makeShared factory
   ///       since it needs access to the original reference. In C++14 this is
@@ -127,10 +129,11 @@ class Surface : public virtual GeometryObject,
   ///       exception), in C++17 it is defined as that exception.
   /// @note Only call this if you need shared ownership of this object.
   ///
-  /// @return The shared pointer
-  std::shared_ptr<Surface> getSharedPtr();
+  /// @return The surface handle
+  [[deprecated("Use getHandle()")]]
+  SurfaceHandle<Surface> getSharedPtr();
 
-  /// Retrieve a @c std::shared_ptr for this surface (const version)
+  /// Retrieve a @c SurfaceHandle for this surface (const version)
   ///
   /// @note Will error if this was not created through the @c makeShared factory
   ///       since it needs access to the original reference. In C++14 this is
@@ -138,8 +141,17 @@ class Surface : public virtual GeometryObject,
   ///       exception, in C++17 it is defined as that exception.
   /// @note Only call this if you need shared ownership of this object.
   ///
-  /// @return The shared pointer
-  std::shared_ptr<const Surface> getSharedPtr() const;
+  /// @return The surface handle
+  [[deprecated("Use getHandle()")]]
+  SurfaceHandle<const Surface> getSharedPtr() const;
+
+  /// Retrieve a @c SurfaceHandle for this surface (non-const version)
+  /// @return The surface handle
+  SurfaceHandle<Surface> getHandle();
+
+  /// Retrieve a @c SurfaceHandle for this surface (const version)
+  /// @return The surface handle
+  SurfaceHandle<const Surface> getHandle() const;
 
   /// Assignment operator
   /// @note copy construction invalidates the association
@@ -538,3 +550,5 @@ class Surface : public virtual GeometryObject,
 };
 
 }  // namespace Acts
+
+#include "Acts/Surfaces/SurfaceHandle.hpp"

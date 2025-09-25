@@ -22,6 +22,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
@@ -206,7 +207,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     double t = vTDist(gen);
 
     Vector4 trueVertex(x, y, z, t);
-    std::shared_ptr<PerigeeSurface> perigeeSurface =
+    auto perigeeSurface =
         Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Calculate d0 and z0 corresponding to the vertex position
@@ -242,10 +243,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
           resT * resT;
-      tracks.emplace_back(BoundTrackParameters(perigeeSurface, paramVec, covMat,
+      tracks.emplace_back(BoundTrackParameters(SurfaceHandle<const Surface>(perigeeSurface), paramVec, covMat,
                                                ParticleHypothesis::pion()));
       customTracks.emplace_back(
-          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+          BoundTrackParameters(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                                ParticleHypothesis::pion()));
     }
 

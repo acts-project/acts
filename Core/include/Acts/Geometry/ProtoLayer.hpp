@@ -11,6 +11,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <iostream>
@@ -119,7 +120,7 @@ struct ProtoLayerT : public ProtoLayerBase {
   /// @param surfaces The vector of surfaces to consider
   /// @param transformIn The local transform to evaluate the sizing in
   ProtoLayerT(const GeometryContext& gctx,
-              const std::vector<std::shared_ptr<SurfaceType>>& surfaces,
+              const std::vector<SurfaceHandle<SurfaceType>>& surfaces,
               const Transform3& transformIn = Transform3::Identity()) {
     transform = transformIn;
     m_surfaces.reserve(surfaces.size());
@@ -145,7 +146,7 @@ struct ProtoLayerT : public ProtoLayerBase {
   /// @param surfaces The vector of surfaces to consider
   /// @param transformIn The local transform to evaluate the sizing in
   ProtoLayerT(const GeometryContext& gctx,
-              const std::vector<std::shared_ptr<Surface>>& surfaces,
+              const std::vector<SurfaceHandle<Surface>>& surfaces,
               const Transform3& transformIn = Transform3::Identity())
     requires IsConst
   {

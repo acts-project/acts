@@ -94,7 +94,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   /// the transform for positioning in 3D space
   const Acts::Transform3 m_elementTransform;
   /// the surface represented by it
-  std::shared_ptr<Acts::Surface> m_elementSurface;
+  Acts::SurfaceHandle<Acts::Surface> m_elementSurface;
   /// the element thickness
   double m_elementThickness;
   /// store either

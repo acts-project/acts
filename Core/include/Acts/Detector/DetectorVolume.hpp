@@ -37,6 +37,7 @@
 namespace Acts {
 
 class Surface;
+
 class IVolumeMaterial;
 class VolumeBounds;
 
@@ -110,7 +111,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   DetectorVolume(const GeometryContext& gctx, std::string name,
                  const Transform3& transform,
                  std::shared_ptr<VolumeBounds> bounds,
-                 std::vector<std::shared_ptr<Surface>> surfaces,
+                 std::vector<SurfaceHandle<Surface>> surfaces,
                  std::vector<std::shared_ptr<DetectorVolume>> volumes,
                  ExternalNavigationDelegate externalNavigation,
                  InternalNavigationDelegate internalNavigation) noexcept(false);
@@ -137,7 +138,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   static std::shared_ptr<DetectorVolume> makeShared(
       const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      std::vector<std::shared_ptr<Surface>> surfaces,
+      std::vector<SurfaceHandle<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
       ExternalNavigationDelegate externalNavigation,
       InternalNavigationDelegate internalNavigation);
@@ -160,7 +161,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The shared pointer
-  std::shared_ptr<DetectorVolume> getSharedPtr();
+  std::shared_ptr<DetectorVolume> getHandle();
 
   /// Retrieve a @c std::shared_ptr for this surface (const version)
   ///
@@ -171,7 +172,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The shared pointer
-  std::shared_ptr<const DetectorVolume> getSharedPtr() const;
+  std::shared_ptr<const DetectorVolume> getHandle() const;
 
   /// Const access to the transform
   ///
@@ -247,7 +248,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// Non-const access to the surfaces
   ///
   /// @return the surfaces shared pointer store
-  std::vector<std::shared_ptr<Surface>>& surfacePtrs();
+  std::vector<SurfaceHandle<Surface>>& surfacePtrs();
 
   /// Non-const access to the volumes
   ///
@@ -367,7 +368,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   void assignInternalNavigation(
       InternalNavigationDelegate internalNavigation,
-      const std::vector<std::shared_ptr<Surface>>& surfaces = {},
+      const std::vector<SurfaceHandle<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
   /// Const access to the navigation state updator
@@ -454,7 +455,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ObjectStore<std::shared_ptr<Portal>> m_portals;
 
   /// Surface store (internal/external)
-  ObjectStore<std::shared_ptr<Surface>> m_surfaces;
+  ObjectStore<SurfaceHandle<Surface>> m_surfaces;
 
   /// Volume store (internal/external)
   ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
@@ -490,7 +491,7 @@ class DetectorVolumeFactory {
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
       const std::string& name, const Transform3& transform,
       std::shared_ptr<VolumeBounds> bounds,
-      const std::vector<std::shared_ptr<Surface>>& surfaces,
+      const std::vector<SurfaceHandle<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
       ExternalNavigationDelegate externalNavigation,
       InternalNavigationDelegate internalNavigation, int nSeg = -1) {

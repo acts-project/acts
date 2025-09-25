@@ -32,6 +32,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -89,7 +90,7 @@ inline void decorateJson<Acts::ISurfaceMaterial>(
 namespace {
 
 Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
-    const std::shared_ptr<const Acts::Surface>& surface,
+    const Acts::SurfaceHandle<const Acts::Surface>& surface,
     const Acts::GeometryContext& context) {
   if (surface->surfaceMaterialSharedPtr() != nullptr) {
     return {surface, surface->surfaceMaterialSharedPtr(), context};
@@ -379,7 +380,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
             layRep.geometryId() != GeometryIdentifier()) {
           surfaceHierarchy.push_back(
               {layRep.geometryId(),
-               defaultSurfaceMaterial(layRep.getSharedPtr(), m_cfg.context)});
+               defaultSurfaceMaterial(layRep.getHandle(), m_cfg.context)});
         }
       }
       if (lay->approachDescriptor() != nullptr &&
@@ -389,7 +390,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
               m_cfg.processNonMaterial == true) {
             surfaceHierarchy.push_back(
                 {asf->geometryId(),
-                 defaultSurfaceMaterial(asf->getSharedPtr(), m_cfg.context)});
+                 defaultSurfaceMaterial(asf->getHandle(), m_cfg.context)});
           }
         }
       }
@@ -397,7 +398,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
         for (auto& ssf : lay->surfaceArray()->surfaces()) {
           if (ssf->surfaceMaterial() != nullptr ||
               m_cfg.processNonMaterial == true) {
-            auto sp = ssf->getSharedPtr();
+            auto sp = ssf->getHandle();
             auto sm = defaultSurfaceMaterial(sp, m_cfg.context);
             auto id = ssf->geometryId();
 
@@ -418,7 +419,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
           m_cfg.processNonMaterial == true) {
         surfaceHierarchy.push_back(
             {bssfRep.geometryId(),
-             defaultSurfaceMaterial(bssfRep.getSharedPtr(), m_cfg.context)});
+             defaultSurfaceMaterial(bssfRep.getHandle(), m_cfg.context)});
       }
     }
   }

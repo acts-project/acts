@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -41,9 +42,9 @@ namespace Acts::Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-using SrfVec = std::vector<std::shared_ptr<const Surface>>;
+using SrfVec = std::vector<SurfaceHandle<const Surface>>;
 struct SurfaceArrayFixture {
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 
   SurfaceArrayFixture() { BOOST_TEST_MESSAGE("setup fixture"); }
   ~SurfaceArrayFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
@@ -62,7 +63,7 @@ struct SurfaceArrayFixture {
       trans.translate(Vector3(r, 0, z));
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1);
-      std::shared_ptr<const Surface> srf =
+      SurfaceHandle<const Surface> srf =
           Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
@@ -90,7 +91,7 @@ struct SurfaceArrayFixture {
       trans.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
-      std::shared_ptr<const Surface> srf =
+      SurfaceHandle<const Surface> srf =
           Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
@@ -116,7 +117,7 @@ struct SurfaceArrayFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
 
-      std::shared_ptr<const Surface> srf =
+      SurfaceHandle<const Surface> srf =
           Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
@@ -149,8 +150,8 @@ struct SurfaceArrayFixture {
 
     std::size_t nVtx = 0;
     for (const auto& srfx : surfaces) {
-      std::shared_ptr<const PlaneSurface> srf =
-          std::dynamic_pointer_cast<const PlaneSurface>(srfx);
+      auto srf =
+          dynamic_handle_cast<const PlaneSurface>(srfx);
       const PlanarBounds* bounds =
           dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
@@ -239,7 +240,7 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
   auto srf1 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
 
   std::vector<const Surface*> sfPointers = {srf0.get(), srf1.get()};
-  std::vector<std::shared_ptr<const Surface>> surfaces = {srf0, srf1};
+  std::vector<SurfaceHandle<const Surface>> surfaces = {srf0, srf1};
 
   auto singleLookUp =
       std::make_unique<Acts::SurfaceArray::SingleElementLookup>(sfPointers);

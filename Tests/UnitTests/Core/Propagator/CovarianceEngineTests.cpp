@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Repeat transport to surface
   FreeToBoundCorrection freeToBoundCorrection(false);
-  std::shared_ptr<PlaneSurface> surface =
+  auto surface =
       CurvilinearSurface(position, direction).planeSurface();
   detail::transportCovarianceToBound(
       tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,
@@ -191,7 +191,7 @@ std::pair<BoundVector, BoundMatrix> boundToBound(const BoundVector& parIn,
                                                  const Surface& srfA,
                                                  const Surface& srfB,
                                                  const Vector3& bField) {
-  Acts::BoundTrackParameters boundParamIn{srfA.getSharedPtr(), parIn, covIn,
+  Acts::BoundTrackParameters boundParamIn{srfA.getHandle(), parIn, covIn,
                                           ParticleHypothesis::pion()};
 
   auto converted =
@@ -209,7 +209,7 @@ BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
   options.stepping.stepTolerance = 1e-10;
   options.surfaceTolerance = 1e-10;
 
-  BoundTrackParameters start{src.getSharedPtr(), local, std::nullopt,
+  BoundTrackParameters start{src.getHandle(), local, std::nullopt,
                              ParticleHypothesis::pion()};
 
   auto res = prop.propagate(start, dst, options).value();

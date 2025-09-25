@@ -55,7 +55,7 @@ Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
     auto detectorElement =
         GeoModelDetectorElement::createDetectorElement<StrawSurface>(
             geoPV, lineBounds, transform, 2 * outerRadius);
-    auto surface = detectorElement->surface().getSharedPtr();
+    auto surface = detectorElement->surface().getHandle();
     return std::make_tuple(detectorElement, surface);
     // Next option is translation to disc
   } else if (targetShape == Surface::SurfaceType::Disc) {
@@ -70,7 +70,7 @@ Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
     auto detectorElement =
         GeoModelDetectorElement::createDetectorElement<DiscSurface>(
             geoPV, radialBounds, transform, 2 * halfZ);
-    auto surface = detectorElement->surface().getSharedPtr();
+    auto surface = detectorElement->surface().getHandle();
     return std::make_tuple(detectorElement, surface);
   }
   // Finally cylinder to cylinder
@@ -85,6 +85,6 @@ Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
   auto detectorElement =
       GeoModelDetectorElement::createDetectorElement<CylinderSurface>(
           geoPV, cylinderBounds, transform, outerRadius - innerRadius);
-  auto surface = detectorElement->surface().getSharedPtr();
+  auto surface = detectorElement->surface().getHandle();
   return std::make_tuple(detectorElement, surface);
 }

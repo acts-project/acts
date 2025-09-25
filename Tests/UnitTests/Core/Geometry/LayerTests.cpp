@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(LayerConstruction) {
   LayerStub minallyConstructed(nullptr);
   BOOST_CHECK(minallyConstructed.constructedOk());
   /// Need an approach descriptor for the next level of complexity:
-  std::vector<std::shared_ptr<const Surface>> aSurfaces{
+  std::vector<SurfaceHandle<const Surface>> aSurfaces{
       Surface::makeShared<SurfaceStub>(), Surface::makeShared<SurfaceStub>()};
   std::unique_ptr<ApproachDescriptor> ad(
       new GenericApproachDescriptor(aSurfaces));
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(LayerProperties) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
   /// Constructor
-  const std::vector<std::shared_ptr<const Surface>> aSurfaces{
+  const std::vector<SurfaceHandle<const Surface>> aSurfaces{
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds),
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds)};
   std::unique_ptr<ApproachDescriptor> ad(

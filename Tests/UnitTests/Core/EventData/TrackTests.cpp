@@ -496,8 +496,8 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
   BOOST_CHECK_EQUAL(t.parameters(), t2.parameters());
   BOOST_CHECK_EQUAL(t.covariance(), t2.covariance());
 
-  BOOST_CHECK_EQUAL(t.referenceSurface().getSharedPtr(),
-                    t2.referenceSurface().getSharedPtr());
+  BOOST_CHECK_EQUAL(t.referenceSurface().getHandle(),
+                    t2.referenceSurface().getHandle());
   BOOST_CHECK_EQUAL(t.tipIndex(), t2.tipIndex());
 
   std::vector<decltype(tc)::TrackStateProxy> trackStates;

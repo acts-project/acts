@@ -33,7 +33,7 @@ class MultiWireStructureBuilder {
     std::string name = "";
 
     /// The surfaces of the Multi Wire
-    std::vector<std::shared_ptr<Acts::Surface>> mlSurfaces = {};
+    std::vector<SurfaceHandle<Acts::Surface>> mlSurfaces = {};
 
     /// The transform of the Multi Wire
     Transform3 transform = Transform3::Identity();

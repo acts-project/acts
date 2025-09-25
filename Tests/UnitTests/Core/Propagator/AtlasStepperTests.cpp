@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   auto newAbsMom = 0.9 * absMom;
 
   // example surface and bound parameters at the updated position
-  std::shared_ptr<PlaneSurface> plane =
+  auto plane =
       CurvilinearSurface(newPos, newUnitDir).planeSurface();
   auto params =
       BoundTrackParameters::create(geoCtx, plane, newPos4, newUnitDir,
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   stepper.initialize(state, cp);
 
   // example surface at the current state position
-  std::shared_ptr<PlaneSurface> plane =
+  auto plane =
       CurvilinearSurface(pos, unitDir).planeSurface();
 
   auto&& [pars, jac, pathLength] = stepper.boundState(state, *plane).value();
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   stepper.initialize(state, cp);
 
   auto distance = 10_mm;
-  std::shared_ptr<PlaneSurface> target =
+  auto target =
       CurvilinearSurface(pos + navDir * distance * unitDir, unitDir)
           .planeSurface();
 

@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_SUITE(MaterialInteractionAssignmentSuite)
 
 BOOST_AUTO_TEST_CASE(AssignToClosest) {
   // Create a vector of surfaces
-  std::vector<std::shared_ptr<Surface>> surfaces = {
+  std::vector<SurfaceHandle<Surface>> surfaces = {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 50.0,
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest) {
 
 BOOST_AUTO_TEST_CASE(AssignToClosest_withGlobalVeto) {
   // Create a vector of surfaces
-  std::vector<std::shared_ptr<Surface>> surfaces = {
+  std::vector<SurfaceHandle<Surface>> surfaces = {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 50.0,
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withGlobalVeto) {
 
 BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
   // Create a vector of surfaces
-  std::vector<std::shared_ptr<Surface>> surfaces = {
+  std::vector<SurfaceHandle<Surface>> surfaces = {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 50.0,
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
 
 BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
   // Create a vector of surfaces
-  std::vector<std::shared_ptr<Surface>> surfaces = {
+  std::vector<SurfaceHandle<Surface>> surfaces = {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 50.0,

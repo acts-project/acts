@@ -106,7 +106,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   // the aligned transforms
   std::vector<std::unique_ptr<Acts::Transform3>> m_alignedTransforms = {};
   /// the surface represented by it
-  std::shared_ptr<Acts::Surface> m_elementSurface = nullptr;
+  Acts::SurfaceHandle<Acts::Surface> m_elementSurface = nullptr;
   /// the element thickness
   double m_elementThickness = 0.;
   /// the planar bounds

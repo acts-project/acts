@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
@@ -238,10 +239,10 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1() {
                            [](Surface* s) { return s; });
 
     // Make a shared version out of it
-    std::vector<std::shared_ptr<const Surface>> layerSurfacePtrs;
+    std::vector<SurfaceHandle<const Surface>> layerSurfacePtrs;
     layerSurfacePtrs.reserve(layerSurfaces.size());
     for (auto& sf : layerSurfaces) {
-      layerSurfacePtrs.push_back(sf->getSharedPtr());
+      layerSurfacePtrs.push_back(sf->getHandle());
     }
 
     // create the layer and store it
@@ -336,10 +337,10 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
                            kLayerRadii[ilp], 2_mm, 5_mm, kLayerBinning[ilp]);
 
       // Make a shared version out of it
-      std::vector<std::shared_ptr<Surface>> layerSurfacePtrs;
+      std::vector<SurfaceHandle<Surface>> layerSurfacePtrs;
       layerSurfacePtrs.reserve(layerSurfaces.size());
       for (auto& sf : layerSurfaces) {
-        layerSurfacePtrs.push_back(sf->getSharedPtr());
+        layerSurfacePtrs.push_back(sf->getHandle());
       }
 
       // create the layer and store it

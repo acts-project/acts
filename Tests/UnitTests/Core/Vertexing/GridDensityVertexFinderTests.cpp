@@ -18,6 +18,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -90,7 +91,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
   // Perigee surface for track parameters
   Vector3 pos0{0, 0, 0};
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
@@ -147,7 +148,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     pos[eZ] = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
-                           geoContext, perigeeSurface, makeVector4(pos, 0),
+                           geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos, 0),
                            direction, charge / pt, covMat,
                            ParticleHypothesis::pion())
                            .value());
@@ -206,7 +207,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   // Perigee surface for track parameters
   Vector3 pos0{0, 0, 0};
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
@@ -266,7 +267,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     pos[eZ] = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
-                           geoContext, perigeeSurface, makeVector4(pos, 0),
+                           geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos, 0),
                            direction, charge / pt, covMat,
                            ParticleHypothesis::pion())
                            .value());
@@ -375,7 +376,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   // Perigee surface for track parameters
   Vector3 pos0{0, 0, 0};
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
@@ -435,7 +436,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     pos[eZ] = z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
-                           geoContext, perigeeSurface, makeVector4(pos, 0),
+                           geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos, 0),
                            direction, charge / pt, covMat,
                            ParticleHypothesis::pion())
                            .value());

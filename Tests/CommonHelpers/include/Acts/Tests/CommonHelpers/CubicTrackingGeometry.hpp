@@ -77,7 +77,7 @@ struct CubicTrackingGeometry {
     rotAngle.push_back(-0.026);
 
     // Construct surfaces
-    std::array<std::shared_ptr<const Surface>, 6> surfaces;
+    std::array<SurfaceHandle<const Surface>, 6> surfaces;
     for (unsigned int i = 0; i < translations.size(); i++) {
       RotationMatrix3 rotation_strip;
       double angle = rotAngle[i];
@@ -95,7 +95,7 @@ struct CubicTrackingGeometry {
       auto detElement = std::make_unique<const DetectorElementStub>(
           trafo, rBounds, 1._um, surfaceMaterial);
       // And remember the surface
-      surfaces[i] = detElement->surface().getSharedPtr();
+      surfaces[i] = detElement->surface().getHandle();
       // Add it to the event store
       detectorStore.push_back(std::move(detElement));
     }

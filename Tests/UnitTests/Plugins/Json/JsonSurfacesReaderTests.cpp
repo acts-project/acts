@@ -25,8 +25,8 @@
 #include <Eigen/Geometry>
 #include <nlohmann/json.hpp>
 
-const std::vector<std::shared_ptr<Acts::Surface>> surfaces = []() {
-  std::vector<std::shared_ptr<Acts::Surface>> v;
+const std::vector<Acts::SurfaceHandle<Acts::Surface>> surfaces = []() {
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> v;
 
   for (int i = 0; i < 3; ++i) {
     auto bounds = std::make_shared<Acts::RectangleBounds>(1.0, 1.0);

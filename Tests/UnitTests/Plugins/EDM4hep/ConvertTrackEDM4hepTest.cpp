@@ -23,6 +23,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -75,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
   cov.setIdentity();
   cov(5, 5) = 25_ns;
 
-  BoundTrackParameters boundPar{refSurface, par, cov,
+  BoundTrackParameters boundPar{SurfaceHandle<const Surface>(refSurface), par, cov,
                                 ParticleHypothesis::pion()};
 
   double Bz = 2_T;
@@ -108,7 +109,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
-  std::shared_ptr<PlaneSurface> planeSurface =
+  auto planeSurface =
       CurvilinearSurface(Vector3{50, 30, 20}, Vector3{1, 1, 0.3}.normalized())
           .planeSurface();
 
@@ -120,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   cov.setIdentity();
   cov(5, 5) = 25_ns;
 
-  BoundTrackParameters planePar{planeSurface, par, cov,
+  BoundTrackParameters planePar{SurfaceHandle<const Surface>(planeSurface), par, cov,
                                 ParticleHypothesis::pion()};
 
   double Bz = 2_T;
@@ -181,7 +182,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
   par << 1_mm, 5_mm, 0, std::numbers::pi / 2., -1 / 1_GeV,
       5_ns;  // -> perpendicular to perigee and pointing right, should be PCA
 
-  BoundTrackParameters boundPar{refSurface, par, std::nullopt,
+  BoundTrackParameters boundPar{SurfaceHandle<const Surface>(refSurface), par, std::nullopt,
                                 ParticleHypothesis::pion()};
 
   double Bz = 2_T;
@@ -208,7 +209,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
-  std::shared_ptr<PlaneSurface> refSurface =
+  auto refSurface =
       CurvilinearSurface(Vector3{50, 30, 20}, Vector3{1, 1, 0.3}.normalized())
           .planeSurface();
 
@@ -216,7 +217,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
   par << 1_mm, 5_mm, std::numbers::pi / 4., std::numbers::pi / 2., -1 / 1_GeV,
       5_ns;
 
-  BoundTrackParameters boundPar{refSurface, par, std::nullopt,
+  BoundTrackParameters boundPar{SurfaceHandle<const Surface>(refSurface), par, std::nullopt,
                                 ParticleHypothesis::pion()};
 
   double Bz = 2_T;

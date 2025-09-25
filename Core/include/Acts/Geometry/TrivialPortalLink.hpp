@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 namespace Acts {
@@ -24,7 +25,7 @@ class TrivialPortalLink final : public PortalLinkBase {
   /// Construct a trivial portal link from a surface and a volume
   /// @param surface is the surface
   /// @param volume is the target
-  TrivialPortalLink(std::shared_ptr<RegularSurface> surface,
+  TrivialPortalLink(SurfaceHandle<RegularSurface> surface,
                     TrackingVolume& volume)
       : PortalLinkBase(std::move(surface)), m_volume{&volume} {}
 

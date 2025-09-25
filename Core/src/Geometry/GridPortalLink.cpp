@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
@@ -21,14 +22,14 @@
 
 namespace Acts {
 
-GridPortalLink::GridPortalLink(std::shared_ptr<RegularSurface> surface,
+GridPortalLink::GridPortalLink(SurfaceHandle<RegularSurface> surface,
                                AxisDirection direction)
     : PortalLinkBase(std::move(surface)), m_direction(direction) {}
 
 GridPortalLink::~GridPortalLink() = default;
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
-    const std::shared_ptr<RegularSurface>& surface, TrackingVolume& volume,
+    const SurfaceHandle<RegularSurface>& surface, TrackingVolume& volume,
     AxisDirection direction) {
   std::unique_ptr<GridPortalLink> grid;
 
@@ -379,7 +380,7 @@ void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
-    const std::shared_ptr<CylinderSurface>& surface, const IAxis* other) const {
+    const SurfaceHandle<CylinderSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
   if (direction() == AxisDirection::AxisRPhi) {
     const auto& axisRPhi = *grid().axes().front();
@@ -429,7 +430,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
-    const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const {
+    const SurfaceHandle<DiscSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
 
   const auto* bounds = dynamic_cast<const RadialBounds*>(&surface->bounds());
@@ -483,7 +484,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
-    const std::shared_ptr<PlaneSurface>& surface, const IAxis* other) const {
+    const SurfaceHandle<PlaneSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
 
   const auto* bounds = dynamic_cast<const RectangleBounds*>(&surface->bounds());

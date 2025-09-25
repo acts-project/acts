@@ -12,6 +12,7 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -58,9 +59,9 @@ std::string JsonSurfacesWriter::name() const {
 namespace {
 
 using SurfaceContainer =
-    Acts::GeometryHierarchyMap<std::shared_ptr<const Acts::Surface>>;
+    Acts::GeometryHierarchyMap<Acts::SurfaceHandle<const Acts::Surface>>;
 using SurfaceConverter = Acts::GeometryHierarchyMapJsonConverter<
-    std::shared_ptr<const Acts::Surface>>;
+    Acts::SurfaceHandle<const Acts::Surface>>;
 
 /// Write all child surfaces and descend into confined volumes.
 void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
@@ -76,7 +77,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       }
       // Layer surface
       if (writeLayer) {
-        auto layerSurfacePtr = layer->surfaceRepresentation().getSharedPtr();
+        auto layerSurfacePtr = layer->surfaceRepresentation().getHandle();
         cSurfaces.push_back(SurfaceContainer::InputElement{
             layer->surfaceRepresentation().geometryId(), layerSurfacePtr});
       }
@@ -84,7 +85,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       if (writeApproach && layer->approachDescriptor() != nullptr) {
         for (auto sf : layer->approachDescriptor()->containedSurfaces()) {
           cSurfaces.push_back(SurfaceContainer::InputElement{
-              sf->geometryId(), sf->getSharedPtr()});
+              sf->geometryId(), sf->getHandle()});
         }
       }
       // Check for sensitive surfaces
@@ -92,7 +93,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
         for (const auto& surface : layer->surfaceArray()->surfaces()) {
           if (surface != nullptr) {
             cSurfaces.push_back(SurfaceContainer::InputElement{
-                surface->geometryId(), surface->getSharedPtr()});
+                surface->geometryId(), surface->getHandle()});
           }
         }
       }
@@ -102,7 +103,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       for (const auto& bsurface : volume.boundarySurfaces()) {
         const auto& bsRep = bsurface->surfaceRepresentation();
         cSurfaces.push_back(SurfaceContainer::InputElement{
-            bsRep.geometryId(), bsRep.getSharedPtr()});
+            bsRep.geometryId(), bsRep.getHandle()});
       }
     }
   }

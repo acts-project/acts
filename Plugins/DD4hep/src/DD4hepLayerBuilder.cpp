@@ -73,7 +73,7 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
     for (auto& detElement : dendcapLayers) {
       ACTS_VERBOSE("=> Translating layer from: " << detElement.name());
       // prepare the layer surfaces
-      std::vector<std::shared_ptr<const Surface>> layerSurfaces;
+      std::vector<SurfaceHandle<const Surface>> layerSurfaces;
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
@@ -245,7 +245,7 @@ const LayerVector DD4hepLayerBuilder::centralLayers(
     for (auto& detElement : m_cfg.centralLayers) {
       ACTS_VERBOSE("=> Translating layer from: " << detElement.name());
       // prepare the layer surfaces
-      std::vector<std::shared_ptr<const Surface>> layerSurfaces;
+      std::vector<SurfaceHandle<const Surface>> layerSurfaces;
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
@@ -377,7 +377,7 @@ const LayerVector DD4hepLayerBuilder::positiveLayers(
 
 void DD4hepLayerBuilder::resolveSensitive(
     const dd4hep::DetElement& detElement,
-    std::vector<std::shared_ptr<const Surface>>& surfaces) const {
+    std::vector<SurfaceHandle<const Surface>>& surfaces) const {
   const dd4hep::DetElement::Children& children = detElement.children();
   if (!children.empty()) {
     for (auto& child : children) {
@@ -391,7 +391,7 @@ void DD4hepLayerBuilder::resolveSensitive(
   }
 }
 
-std::shared_ptr<const Surface> DD4hepLayerBuilder::createSensitiveSurface(
+SurfaceHandle<const Surface> DD4hepLayerBuilder::createSensitiveSurface(
     const dd4hep::DetElement& detElement, bool isDisc) const {
   std::string detAxis =
       getParamOr<std::string>("axis_definitions", detElement, "XYZ");
@@ -404,7 +404,7 @@ std::shared_ptr<const Surface> DD4hepLayerBuilder::createSensitiveSurface(
           DD4hepDetectorElementExtension(dd4hepDetElement)));
 
   // return the surface
-  return dd4hepDetElement->surface().getSharedPtr();
+  return dd4hepDetElement->surface().getHandle();
 }
 
 Transform3 DD4hepLayerBuilder::convertTransform(

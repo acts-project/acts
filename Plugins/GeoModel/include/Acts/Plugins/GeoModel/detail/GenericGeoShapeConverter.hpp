@@ -39,7 +39,7 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
         GeoModelConversionError::MissingLogicalVolume);
   }
 
-  Acts::Result<std::shared_ptr<Acts::Surface>> toPassiveSurface(
+  Acts::Result<Acts::SurfaceHandle<Acts::Surface>> toPassiveSurface(
       PVConstLink geoPV, const Transform3& transform,
       SurfaceBoundFactory& boundFactory) const override {
     // Retrieve logical volume and absolute transform
@@ -58,12 +58,12 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
 
         const auto& [el, surface] = res.value();
 
-        return Result<std::shared_ptr<Surface>>::success(surface);
+        return Result<SurfaceHandle<Surface>>::success(surface);
       }
-      return Result<std::shared_ptr<Surface>>::failure(
+      return Result<SurfaceHandle<Surface>>::failure(
           GeoModelConversionError::WrongShapeForConverter);
     }
-    return Result<std::shared_ptr<Surface>>::failure(
+    return Result<SurfaceHandle<Surface>>::failure(
         GeoModelConversionError::MissingLogicalVolume);
   }
 };

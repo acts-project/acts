@@ -16,6 +16,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <cstddef>
 #include <vector>
@@ -79,7 +80,7 @@ void CylinderLayer::buildApproachDescriptor() {
             m_representingVolume->transform());
 
     // fill in the surfaces into the vector
-    std::vector<std::shared_ptr<const Surface>> aSurfaces;
+    std::vector<SurfaceHandle<const Surface>> aSurfaces;
     if (bSurfaces.size() > static_cast<std::size_t>(tubeInnerCover)) {
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover).surface);
     }

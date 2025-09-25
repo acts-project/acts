@@ -46,7 +46,7 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
   std::vector<double> layer0Radii = {100, 102, 104, 106, 108, 110};
   auto layer0VolumeBounds =
       std::make_unique<CylinderVolumeBounds>(80, 130, 200);
-  std::vector<std::shared_ptr<Surface>> layer0Surfaces = {};
+  std::vector<SurfaceHandle<Surface>> layer0Surfaces = {};
   for (const auto [ir, r] : enumerate(layer0Radii)) {
     // First 4 surfaces are active
     if (ir < 4u) {
@@ -54,7 +54,7 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
           Transform3::Identity(), std::make_shared<CylinderBounds>(r, 190),
           0.1);
       detectorStore.push_back(detElement);
-      layer0Surfaces.push_back(detElement->surface().getSharedPtr());
+      layer0Surfaces.push_back(detElement->surface().getHandle());
     } else {
       // Last 2 surfaces are passive
       layer0Surfaces.push_back(Surface::makeShared<CylinderSurface>(

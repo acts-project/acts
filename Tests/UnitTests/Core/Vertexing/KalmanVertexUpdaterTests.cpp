@@ -22,6 +22,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
@@ -110,7 +111,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   auto fieldCache = bField->makeCache(magFieldContext);
 
   // Create perigee surface at origin
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   // Creates a random tracks around origin and a random vertex.
@@ -147,10 +148,10 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat),
+    BoundTrackParameters params(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                                 ParticleHypothesis::pion());
 
-    std::shared_ptr<PerigeeSurface> perigee =
+    auto perigee =
         Surface::makeShared<PerigeeSurface>(Vector3::Zero());
 
     // Linearized state of the track
@@ -237,7 +238,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   auto fieldCache = bField->makeCache(magFieldContext);
 
   // Create perigee surface at origin
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   // Create random tracks around origin and a random vertex.
@@ -272,10 +273,10 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat),
+    BoundTrackParameters params(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                                 ParticleHypothesis::pion());
 
-    std::shared_ptr<PerigeeSurface> perigee =
+    auto perigee =
         Surface::makeShared<PerigeeSurface>(Vector3::Zero());
 
     // Linearized state of the track

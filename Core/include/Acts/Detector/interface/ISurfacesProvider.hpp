@@ -35,7 +35,7 @@ class ISurfacesProvider {
   /// @param gctx the geometry context at the creation of the internal structure
   ///
   /// @return a shared detector object
-  virtual std::vector<std::shared_ptr<Surface>> surfaces(
+  virtual std::vector<SurfaceHandle<Surface>> surfaces(
       const GeometryContext& gctx) const = 0;
 };
 
