@@ -29,15 +29,20 @@ class CylindricalSpacePointGrid2 {
  public:
   /// Space point index type used in the grid.
   using SpacePointIndex = std::uint32_t;
+  /// Type alias for bin container holding space point indices
   using BinType = std::vector<SpacePointIndex>;
+  /// Type alias for phi axis with equidistant binning and closed boundaries
   using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+  /// Type alias for z axis with variable binning and open boundaries
   using ZAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
+  /// Type alias for r axis with variable binning and open boundaries
   using RAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
   /// Cylindrical space point grid type, which is a grid over `BinType` with
   /// axes defined by `PhiAxisType`, `ZAxisType`, and `RAxisType`.
   /// The grid is a 3D grid with the axes representing azimuthal angle (phi),
   /// z-coordinate, and radial distance (r).
   using GridType = Grid<BinType, PhiAxisType, ZAxisType, RAxisType>;
+  /// Type alias for binned group over the cylindrical grid
   using BinnedGroupType = BinnedGroup<GridType>;
 
   struct Config {
@@ -91,6 +96,8 @@ class CylindricalSpacePointGrid2 {
 
   /// Construct a cylindrical space point grid with the given configuration and
   /// an optional logger.
+  /// @param config Configuration for the cylindrical grid
+  /// @param logger Optional logger instance for debugging output
   explicit CylindricalSpacePointGrid2(
       const Config& config,
       std::unique_ptr<const Logger> logger =

@@ -32,6 +32,7 @@ class ConstantBField final : public MagneticFieldProvider {
   explicit ConstantBField(Vector3 B) : m_BField(std::move(B)) {}
 
   /// @brief Get the B field at a position
+  /// @return The constant magnetic field vector
   Vector3 getField() const { return m_BField; }
 
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const

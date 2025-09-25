@@ -13,7 +13,28 @@
 
 namespace Acts {
 
-/// Alias for the multi-stepper based on the Acts::EigenStepper
+/// @brief Type alias for loop reducer based on maximum momentum
+/// @details Reduces multiple loop iterations based on momentum criteria
+using MaxMomentumReducerLoop =
+    detail::SingleComponentReducer<detail::MaxMomentumComponent>;
+
+/// @brief Type alias for loop reducer based on maximum weight
+/// @details Reduces multiple loop iterations based on weight criteria
+using MaxWeightReducerLoop =
+    detail::SingleComponentReducer<detail::MaxWeightComponent>;
+
+/// @brief Stepper based on the EigenStepper, but handles Multi-Component Tracks
+/// (e.g., for the GSF). Internally, this only manages a vector of
+/// EigenStepper::States. This simplifies implementation, but has several
+/// drawbacks:
+/// * There are certain redundancies between the global State and the
+/// component states
+/// * The components do not share a single magnetic-field-cache
+/// @tparam extension_t See EigenStepper for details
+/// @tparam component_reducer_t How to map the multi-component state to a single
+/// component
+/// @tparam small_vector_size A size-hint how much memory should be allocated
+/// by the small vector
 template <typename extension_t = EigenStepperDefaultExtension,
           typename reducer_t = MaxWeightReducerLoop>
 using MultiEigenStepperLoop =

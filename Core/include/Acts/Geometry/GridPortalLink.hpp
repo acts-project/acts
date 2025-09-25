@@ -357,7 +357,11 @@ class GridPortalLink : public PortalLinkBase {
   /// @param os The output stream
   void printContents(std::ostream& os) const;
 
+  /// Get the artifact portal links
+  /// @return Span of artifact portal links
   std::span<const TrivialPortalLink> artifactPortalLinks() const;
+  /// Set the artifact portal links
+  /// @param links Vector of trivial portal links to set
   void setArtifactPortalLinks(std::vector<TrivialPortalLink> links);
 
  protected:

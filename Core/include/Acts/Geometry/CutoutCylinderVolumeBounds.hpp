@@ -127,6 +127,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

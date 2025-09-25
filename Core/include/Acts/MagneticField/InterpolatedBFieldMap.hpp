@@ -74,8 +74,11 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
 template <typename grid_t>
 class InterpolatedBFieldMap : public InterpolatedMagneticField {
  public:
+  /// Type alias for magnetic field grid
   using Grid = grid_t;
+  /// Type alias for magnetic field vector type
   using FieldType = typename Grid::value_type;
+  /// Dimensionality of the position space for field interpolation
   static constexpr std::size_t DIM_POS = Grid::DIM;
 
   /// @brief struct representing smallest grid unit in magnetic field grid
@@ -174,6 +177,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
   /// @brief default constructor
   ///
+  /// @param cfg Configuration containing grid and scaling factor
   explicit InterpolatedBFieldMap(Config cfg) : m_cfg{std::move(cfg)} {
     typename Grid::index_t minBin{};
     minBin.fill(1);
@@ -287,6 +291,13 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
         m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition), position));
   }
 
+  /// Get magnetic field value without bounds checking (faster).
+  ///
+  /// @param position Global 3D position for the lookup
+  /// @return Magnetic field value at the given position
+  ///
+  /// @warning No bounds checking is performed. The caller must ensure
+  ///          the position is within the valid range of the field map.
   Vector3 getFieldUnchecked(const Vector3& position) const final {
     const auto gridPosition = m_cfg.transformPos(position);
     return m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition),

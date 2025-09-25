@@ -25,14 +25,17 @@ namespace Acts {
 class IVolumeMaterial;
 class TrackingVolume;
 
-/// Conversion of a pair of tracking volume and material used for the material
-/// mapping
+/// Convert tracking volume and material pair to JSON
+/// @param j Destination JSON object
+/// @param volume Source tracking volume and material pair to convert
 void to_json(
     nlohmann::json& j,
     const std::pair<const Acts::TrackingVolume*,
                     std::shared_ptr<const Acts::IVolumeMaterial>>& volume);
 
-/// Conversion of a tracking volume
+/// Convert TrackingVolume to JSON
+/// @param j Destination JSON object
+/// @param volume Source TrackingVolume to convert
 void to_json(nlohmann::json& j, const Acts::TrackingVolume& volume);
 
 }  // namespace Acts

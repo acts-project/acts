@@ -19,9 +19,15 @@ namespace Acts {
 struct Color {
   // Copy and move constructors are defaulted
   Color() = default;
+  /// Copy constructor
   Color(const Color&) = default;
+  /// Move constructor
   Color(Color&&) = default;
+  /// Copy assignment operator
+  /// @return Reference to this Color after copying
   Color& operator=(const Color&) = default;
+  /// Move assignment operator
+  /// @return Reference to this Color after moving
   Color& operator=(Color&&) = default;
 
   /// Constructor from raw integer rgb values [0, 255]
@@ -109,11 +115,15 @@ struct Color {
     return os;
   }
 
+  /// RGB color values (0-255) for red, green, blue components
   std::array<int, 3> rgb{};
 };
 
+/// Default color for surfaces
 constexpr Color s_defaultSurfaceColor{"#0000aa"};
+/// Default color for portals
 constexpr Color s_defaultPortalColor{"#308c48"};
+/// Default color for volumes
 constexpr Color s_defaultVolumColor{"#ffaa00"};
 
 /// @brief Struct to concentrate all visualization configurations

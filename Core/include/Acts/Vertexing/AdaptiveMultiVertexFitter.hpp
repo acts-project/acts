@@ -38,37 +38,46 @@ class AdaptiveMultiVertexFitter {
  public:
   /// @brief The fitter state
   struct State {
+    /// Constructor for multi-vertex fitter state
+    /// @param field Magnetic field provider for track extrapolation
+    /// @param magContext Magnetic field context for field evaluations
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
         : ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
 
-    // Vertex collection to be fitted
+    /// Vertex collection to be fitted
     std::vector<Vertex*> vertexCollection;
 
-    // Annealing state
+    /// Annealing state for thermodynamic track weighting
     AnnealingUtility::State annealingState;
 
+    /// Impact point estimator state for track parameter calculations
     ImpactPointEstimator::State ipState;
 
+    /// Magnetic field cache for field evaluations during fitting
     MagneticFieldProvider::Cache fieldCache;
 
-    // Map to store vertices information
-    // @TODO Does this have to be a mutable pointer?
+    /// Map storing vertex information for each vertex in the fit
+    /// @todo Does this have to be a mutable pointer?
     std::map<Vertex*, VertexInfo> vtxInfoMap;
 
+    /// Multimap connecting tracks to their associated vertices
     std::multimap<InputTrack, Vertex*> trackToVerticesMultiMap;
 
+    /// Map storing track-at-vertex information for each track-vertex pair
     std::map<std::pair<InputTrack, Vertex*>, TrackAtVertex> tracksAtVerticesMap;
 
-    // Adds a vertex to trackToVerticesMultiMap
+    /// Adds a vertex to trackToVerticesMultiMap
+    /// @param vtx Vertex to add to the multimap with its associated tracks
     void addVertexToMultiMap(Vertex& vtx) {
       for (auto trk : vtxInfoMap[&vtx].trackLinks) {
         trackToVerticesMultiMap.emplace(trk, &vtx);
       }
     }
 
-    // Removes a vertex from trackToVerticesMultiMap
+    /// Removes a vertex from trackToVerticesMultiMap
+    /// @param vtx Vertex to remove from the multimap along with its track associations
     void removeVertexFromMultiMap(Vertex& vtx) {
       for (auto iter = trackToVerticesMultiMap.begin();
            iter != trackToVerticesMultiMap.end();) {
@@ -80,6 +89,10 @@ class AdaptiveMultiVertexFitter {
       }
     }
 
+    /// Remove a vertex from the vertex collection
+    /// @param vtxToRemove Vertex to remove from the collection
+    /// @param logger Logger for diagnostic messages
+    /// @return Result indicating success or failure of the removal operation
     Result<void> removeVertexFromCollection(Vertex& vtxToRemove,
                                             const Logger& logger) {
       auto it = std::ranges::find(vertexCollection, &vtxToRemove);

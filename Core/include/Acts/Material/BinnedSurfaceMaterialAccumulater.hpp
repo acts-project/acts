@@ -25,6 +25,7 @@ class BinnedSurfaceMaterialAccumulater final
  public:
   /// @brief Nested config struct
   struct Config {
+    /// Geometry context for coordinate transformations
     GeometryContext geoContext;
 
     /// Correct for empty bins (recommended)
@@ -51,6 +52,7 @@ class BinnedSurfaceMaterialAccumulater final
           getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::INFO));
 
   /// Factory for creating the state
+  /// @return Unique pointer to newly created accumulator state
   std::unique_ptr<ISurfaceMaterialAccumulater::State> createState()
       const override;
 
@@ -71,6 +73,7 @@ class BinnedSurfaceMaterialAccumulater final
   /// @param state the state of the accumulator
   ///
   /// @note this does the run average over the (binned) material
+  /// @return Map of surface materials indexed by geometry identifiers
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
   finalizeMaterial(ISurfaceMaterialAccumulater::State& state) const override;
 
