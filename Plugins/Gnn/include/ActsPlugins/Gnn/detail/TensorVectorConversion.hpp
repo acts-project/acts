@@ -105,8 +105,8 @@ std::vector<T> tensor2DToVector(const at::Tensor &tensor) {
 }
 
 template <typename T>
-torch::Tensor actsToNonOwningTorchTensor(Acts::Tensor<T> &tensor) {
-  const auto device = tensor.device().type == Acts::Device::Type::eCUDA
+torch::Tensor actsToNonOwningTorchTensor(Tensor<T> &tensor) {
+  const auto device = tensor.device().type == Device::Type::eCUDA
                           ? torch::Device(torch::kCUDA, tensor.device().index)
                           : torch::kCPU;
   return torch::from_blob(
@@ -130,7 +130,7 @@ Tensor<T> torchToActsTensor(const at::Tensor &tensor,
   } else {
     shape[1] = 1;
   }
-  auto actsTensor = Acts::Tensor<T>::Create(shape, execContext);
+  auto actsTensor = Tensor<T>::Create(shape, execContext);
   // Create a non owning torch tensor and copy the data
   auto tmpTensor =
       torch::from_blob(actsTensor.data(), tensor.sizes(), tensor.options());
