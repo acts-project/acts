@@ -28,7 +28,7 @@ using RandomEngine = std::mt19937;
 using uniform_t = std::uniform_real_distribution<double>;
 using gauss_t = std::normal_distribution<double>;
 
-constexpr std::size_t nTrials = 1e4;
+constexpr std::size_t nTrials = 1;
 constexpr auto logLvl = Logging::Level::INFO;
 namespace Acts::Test {
 

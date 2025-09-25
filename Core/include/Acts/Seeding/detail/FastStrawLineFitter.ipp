@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <format>
-
 namespace Acts::Experimental::detail {
 
 template <CompositeSpacePointContainer StrawCont_t>
