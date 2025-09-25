@@ -108,6 +108,7 @@ std::array<value_t, kDIM> toArray(const std::vector<value_t>& vecvals) {
 /// @tparam NMAX Maximum value up to which to attempt a dispatch
 /// @param v The runtime value to dispatch on
 /// @param args Additional arguments passed to @c Callable::invoke().
+/// @return The result of calling the dispatched template instance
 /// @note @c Callable is expected to have a static member function @c invoke
 /// that is callable with @c Args
 template <template <std::size_t> class Callable, std::size_t N,
@@ -137,6 +138,7 @@ auto template_switch(std::size_t v, Args&&... args) {
 /// @param v The runtime value to dispatch on
 /// @param func The lambda to invoke
 /// @param args Additional arguments passed to @p func
+/// @return The result of calling the dispatched lambda function
 template <std::size_t N, std::size_t NMAX, typename Lambda, typename... Args>
 auto template_switch_lambda(std::size_t v, Lambda&& func, Args&&... args) {
   if (v == N) {
@@ -183,6 +185,9 @@ std::tuple<typename T::value_type, double> range_medium(const T& tseries) {
   return {range, medium};
 }
 
+/// Convert enum to its underlying type value
+/// @param value Enum value to convert
+/// @return Underlying type value
 template <typename enum_t>
 constexpr std::underlying_type_t<enum_t> toUnderlying(enum_t value) {
   return static_cast<std::underlying_type_t<enum_t>>(value);
@@ -219,6 +224,7 @@ struct overloaded : Ts... {
   using Ts::operator()...;
 };
 
+/// Deduction guide for overloaded visitor pattern
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
