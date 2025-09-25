@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <ActsPlugins/Gnn/detail/ConnectedComponents.cuh>
+#include "ActsPlugins/Gnn/detail/ConnectedComponents.cuh"
 
 #include <filesystem>
 #include <fstream>
@@ -19,7 +19,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
 
-using namespace Acts::detail;
+using namespace ActsPlugins::detail;
 
 using BoostGraph =
     boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS>;

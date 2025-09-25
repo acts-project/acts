@@ -14,6 +14,8 @@
 
 #include <torch/torch.h>
 
+using namespace ActsPlugins::detail;
+
 BOOST_AUTO_TEST_CASE(test_vector_tensor_conversion_int_2cols) {
   std::vector<std::int64_t> start_vec = {
       // clang-format off
@@ -24,7 +26,7 @@ BOOST_AUTO_TEST_CASE(test_vector_tensor_conversion_int_2cols) {
       // clang-format on
   };
 
-  auto tensor = Acts::detail::vectorToTensor2D(start_vec, 2).clone();
+  auto tensor = vectorToTensor2D(start_vec, 2).clone();
 
   BOOST_CHECK_EQUAL(tensor.options().dtype(), torch::kInt64);
   BOOST_CHECK_EQUAL(tensor.sizes().size(), 2);
@@ -43,7 +45,7 @@ BOOST_AUTO_TEST_CASE(test_vector_tensor_conversion_int_2cols) {
   BOOST_CHECK_EQUAL(tensor[3][0].item<std::int64_t>(), 3);
   BOOST_CHECK_EQUAL(tensor[3][1].item<std::int64_t>(), 4);
 
-  auto test_vec = Acts::detail::tensor2DToVector<std::int64_t>(tensor);
+  auto test_vec = tensor2DToVector<std::int64_t>(tensor);
 
   BOOST_CHECK_EQUAL(test_vec, start_vec);
 }
@@ -58,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test_vector_tensor_conversion_float_3cols) {
       // clang-format on
   };
 
-  auto tensor = Acts::detail::vectorToTensor2D(start_vec, 3).clone();
+  auto tensor = vectorToTensor2D(start_vec, 3).clone();
 
   BOOST_CHECK_EQUAL(tensor.options().dtype(), torch::kFloat32);
   BOOST_CHECK_EQUAL(tensor.sizes().size(), 2);
@@ -71,7 +73,7 @@ BOOST_AUTO_TEST_CASE(test_vector_tensor_conversion_float_3cols) {
     BOOST_CHECK_EQUAL(tensor[i][2].item<std::int64_t>(), static_cast<float>(i));
   }
 
-  auto test_vec = Acts::detail::tensor2DToVector<float>(tensor);
+  auto test_vec = tensor2DToVector<float>(tensor);
 
   BOOST_CHECK_EQUAL(test_vec, start_vec);
 }
@@ -86,7 +88,7 @@ BOOST_AUTO_TEST_CASE(test_slicing) {
       // clang-format on
   };
 
-  auto tensor = Acts::detail::vectorToTensor2D(start_vec, 3).clone();
+  auto tensor = vectorToTensor2D(start_vec, 3).clone();
 
   using namespace torch::indexing;
   tensor = tensor.index({Slice{}, Slice{0, None, 2}});
@@ -103,7 +105,7 @@ BOOST_AUTO_TEST_CASE(test_slicing) {
       // clang-format on
   };
 
-  const auto test_vec = Acts::detail::tensor2DToVector<float>(tensor);
+  const auto test_vec = tensor2DToVector<float>(tensor);
 
   BOOST_CHECK_EQUAL(test_vec, ref_vec);
 }
