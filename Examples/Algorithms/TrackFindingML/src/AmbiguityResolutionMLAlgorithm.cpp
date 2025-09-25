@@ -54,7 +54,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
       trackMap =
           m_ambiML.mapTrackHits(tracks, &sourceLinkHash, &sourceLinkEquality);
   // Cluster the tracks based on the shared hits
-  auto cluster = detail::clusterDuplicateTracks(trackMap);
+  auto cluster = Acts::detail::clusterDuplicateTracks(trackMap);
   // Select the ID of the track we want to keep
   std::vector<std::size_t> goodTracks =
       m_ambiML.solveAmbiguity(cluster, tracks);
