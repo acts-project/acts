@@ -71,7 +71,7 @@ class SeedFilterMLAlgorithm : public IAlgorithm {
  private:
   Config m_cfg;
   // ONNX model for track selection
-  Acts::SeedClassifier m_seedClassifier;
+  ActsPlugins::SeedClassifier m_seedClassifier;
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
       this, "InputTrackParameters"};
   ReadDataHandle<SimSeedContainer> m_inputSimSeeds{this, "InputSimSeeds"};
