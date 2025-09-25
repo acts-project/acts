@@ -254,7 +254,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode TrackFindingAlgorithmGnn::finalize() {
+ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::finalize() {
   namespace ba = boost::accumulators;
 
   auto print = [](const auto& t) {
