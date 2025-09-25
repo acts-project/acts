@@ -27,12 +27,18 @@ class Grid;
 template <typename T, class... Axes>
 class GridGlobalIterator {
  public:
+  /// Dimensionality of the grid (number of axes)
   static constexpr std::size_t DIM = sizeof...(Axes);
 
+  /// Iterator category for standard algorithms
   using iterator_category = std::random_access_iterator_tag;
+  /// Type of values stored in grid bins
   using value_type = T;
+  /// Type for iterator arithmetic
   using difference_type = std::ptrdiff_t;
+  /// Pointer type to grid values
   using pointer = value_type*;
+  /// Reference type to grid values
   using reference = value_type&;
 
   /// @brief Default constructor
@@ -151,12 +157,18 @@ class GridGlobalIterator {
 template <typename T, class... Axes>
 class GridLocalIterator {
  public:
+  /// Dimensionality of the grid (number of axes)
   static constexpr std::size_t DIM = sizeof...(Axes);
 
+  /// Iterator category for standard algorithms
   using iterator_category = std::bidirectional_iterator_tag;
+  /// Type of values stored in grid bins
   using value_type = T;
+  /// Type for iterator arithmetic
   using difference_type = std::ptrdiff_t;
+  /// Pointer type to grid values
   using pointer = value_type*;
+  /// Reference type to grid values
   using reference = value_type&;
 
   /// @brief Default constructor
@@ -282,6 +294,9 @@ class GridLocalIterator {
   std::array<std::vector<std::size_t>, DIM> m_navigationIndex{};
 };
 
+/// Deduction guide for GridGlobalIterator
+/// @param grid Grid to iterate over
+/// @param idx Starting index
 template <typename T, class... Axes>
 GridGlobalIterator(const Grid<T, Axes...>& grid,
                    std::size_t idx) -> GridGlobalIterator<T, Axes...>;
