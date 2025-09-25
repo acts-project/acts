@@ -14,39 +14,12 @@
 #include <vector>
 
 namespace ActsExamples {
-// TODO: Capitalize enum names for consistency
-enum jetlabel { unknown = -99, ljet = 0, cjet = 4, bjet = 5 };
-// TODO: Remove hadronlabel
-enum hadronlabel {
-  Hadron = 1,
-  BBbarMesonPart = 2,
-  CCbarMesonPart = 3,
-  BottomMesonPart = 4,
-  BottomBaryonPart = 5,
-  CharmedMesonPart = 6,
-  CharmedBaryonPart = 7,
-  StrangeMesonPart = 8,
-  StrangeBaryonPart = 9,
-  LightMesonPart = 10,
-  LightBaryonPart = 11,
-  Unknown = 12
-};
 
 class TrackJet {
  public:
   explicit TrackJet(const Acts::Vector4& fm) {
     m_fourMomentum = fm;
-    m_label = ActsExamples::unknown;
   }
-
-  TrackJet(const Acts::Vector4& fm, const ActsExamples::jetlabel jl) {
-    m_fourMomentum = fm;
-    m_label = jl;
-  }
-
-  void setLabel(const ActsExamples::jetlabel jl) { m_label = jl; }
-
-  ActsExamples::jetlabel getLabel() const { return m_label; }
 
   // TODO::Pass references instead of copies.
 
@@ -85,7 +58,6 @@ class TrackJet {
 
  private:
   Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
-  ActsExamples::jetlabel m_label{ActsExamples::unknown};
 
   // The indices of the constituexonts wrt the global container
   std::vector<int> m_constituents{};

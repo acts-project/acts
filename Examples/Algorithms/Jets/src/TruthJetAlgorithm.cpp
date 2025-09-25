@@ -77,14 +77,11 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     std::vector<int> constituentIndices;
     constituentIndices.reserve(jetConstituents.size());
 
-    // Get the jet classification label later here! For now, we use "unknown"
-    ActsExamples::jetlabel label = ActsExamples::unknown;
-
     Acts::Vector4 jetFourMomentum(jets[i].px(), jets[i].py(), jets[i].pz(),
                                   jets[i].e());
 
-    // Initialize the (track) jet with 4-momentum and jet label
-    ActsExamples::TrackJet storedJet(jetFourMomentum, label);
+    // Initialize the (track) jet with 4-momentum
+    ActsExamples::TrackJet storedJet(jetFourMomentum);
 
     // Add the jet constituents to the (track)jet
     for (unsigned int j = 0; j < jetConstituents.size(); j++) {
