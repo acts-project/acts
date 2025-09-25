@@ -44,7 +44,7 @@ inline Intersection<N> lineIntersect(const ActsVector<N>& linePosA,
   /// If the two directions are parallel to each other there's no way of
   /// intersection
   if (std::abs(divisor) < std::numeric_limits<double>::epsilon()) {
-    return Intersection<N>::invalid();
+    return Intersection<N>::Invalid();
   }
   const ActsVector<N> aMinusB = linePosA - linePosB;
   const double pathLength =

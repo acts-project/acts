@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 namespace {
 
@@ -211,7 +210,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   CHECK_CLOSE_ABS(
       nStream.currentCandidate().pathLength(), s_onSurfaceTolerance,
       std::numeric_limits<double>::epsilon() + s_onSurfaceTolerance);
-  BOOST_CHECK_EQUAL(nStream.currentCandidate().intersection.status(),
+  BOOST_CHECK_EQUAL(nStream.currentCandidate().status(),
                     IntersectionStatus::onSurface);
   // Let's say the stepper confirms this
   BOOST_CHECK(nStream.switchToNextCandidate());
