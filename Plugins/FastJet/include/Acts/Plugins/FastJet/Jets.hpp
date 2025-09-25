@@ -47,17 +47,17 @@ class InputTracks {
   TrackContainer& m_tracks;
 };
 
-class TrackJetSequence {
+class TrackJetBuilder {
  public:
   /// Factory function to create a sequence of track jets
   ///
   /// @param tracks the input tracks
   /// @jetDef the jet definition to use, defaults to "DefaultJetDefinition"
-  static TrackJetSequence create(
+  static TrackJetBuilder create(
       std::vector<fastjet::PseudoJet>& tracks,
       const fastjet::JetDefinition& jetDef = DefaultJetDefinition);
 
-  static TrackJetSequence create(
+  static TrackJetBuilder create(
       std::vector<fastjet::PseudoJet>&& tracks,
       const fastjet::JetDefinition& jetDef = DefaultJetDefinition) {
     return create(tracks, jetDef);
@@ -74,10 +74,10 @@ class TrackJetSequence {
                                        float etaMax = 2.5);
 
  private:
-  /// Main constructor. Users should call "TrackJetSequence::create" instead
+  /// Main constructor. Users should call "TrackJetBuilder::create" instead
   ///
   /// @param clusterSeq the fastjet::ClusterSequence object
-  explicit TrackJetSequence(const fastjet::ClusterSequence& clusterSeq)
+  explicit TrackJetBuilder(const fastjet::ClusterSequence& clusterSeq)
       : m_clusterSeq{clusterSeq} {}
 
   fastjet::ClusterSequence m_clusterSeq{};
