@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 
 #include <any>
 #include <cstddef>
@@ -32,24 +32,9 @@ class DetectorVolume;
 /// It relies on Surfaces and Portals, all navigation entities have to be
 /// described in these terms.
 struct NavigationState {
-  /// @brief  A surface candidate and its intersection
-  ///
-  /// A candidates can either be a surface or a portal (which contain a surface)
-  struct SurfaceCandidate {
-    /// A candidate intersection, in Surface view
-    SurfaceIntersection objectIntersection;
-    /// A candidate is either a detector Surface
-    const Surface* surface = nullptr;
-    /// Or a portal
-    const Portal* portal = nullptr;
-    /// The boundary check used for the candidate, boundary checks
-    /// can differ for sensitive surfaces and portals
-    BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
-  };
-
   /// Surface candidate vector alias, this allows to use e.g. boost_small vector
   /// or other stl like containers
-  using SurfaceCandidates = std::vector<SurfaceCandidate>;
+  using SurfaceCandidates = std::vector<NavigationTarget>;
 
   /// The current position
   Vector3 position = Vector3(0., 0., 0.);
@@ -87,7 +72,7 @@ struct NavigationState {
 
   /// Get the current surface candidate being processed
   /// @return Reference to the current surface candidate
-  const SurfaceCandidate& surfaceCandidate() const {
+  const NavigationTarget& surfaceCandidate() const {
     return surfaceCandidates.at(surfaceCandidateIndex);
   }
 };
