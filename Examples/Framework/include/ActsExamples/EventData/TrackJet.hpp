@@ -17,9 +17,7 @@ namespace ActsExamples {
 
 class TrackJet {
  public:
-  explicit TrackJet(const Acts::Vector4& fm) {
-    m_fourMomentum = fm;
-  }
+  explicit TrackJet(const Acts::Vector4& fm) { m_fourMomentum = fm; }
 
   // TODO::Pass references instead of copies.
 
