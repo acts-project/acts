@@ -84,13 +84,12 @@ struct NavigationOptions {
 class Navigator {
  public:
   using NavigationSurfaces =
-      boost::container::small_vector<SurfaceIntersection, 10>;
+      boost::container::small_vector<NavigationTarget, 10>;
 
-  using NavigationLayers =
-      boost::container::small_vector<LayerIntersection, 10>;
+  using NavigationLayers = boost::container::small_vector<NavigationTarget, 10>;
 
   using NavigationBoundaries =
-      boost::container::small_vector<BoundaryIntersection, 4>;
+      boost::container::small_vector<NavigationTarget, 4>;
 
   using Candidate = NavigationStream::Candidate;
 
@@ -181,13 +180,11 @@ class Navigator {
     /// the current candidate index of the navigation state
     std::optional<std::size_t> navCandidateIndex;
 
-    SurfaceIntersection& navSurface() {
+    NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
-    LayerIntersection& navLayer() {
-      return navLayers.at(navLayerIndex.value());
-    }
-    BoundaryIntersection& navBoundary() {
+    NavigationTarget& navLayer() { return navLayers.at(navLayerIndex.value()); }
+    NavigationTarget& navBoundary() {
       return navBoundaries.at(navBoundaryIndex.value());
     }
 
@@ -550,11 +547,11 @@ class Navigator {
     }
 
     if (state.navigationStage == Stage::layerTarget &&
-        &state.navLayer().first.surface() == &surface) {
+        &state.navLayer().surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling layer status.");
 
       // Switch to the next layer
-      state.currentLayer = state.navLayer().second;
+      state.currentLayer = &state.navLayer().layer();
       state.navigationStage = Stage::surfaceTarget;
 
       // partial reset
@@ -564,7 +561,7 @@ class Navigator {
     }
 
     if (state.navigationStage == Stage::boundaryTarget &&
-        &state.navBoundary().intersection.surface() == &surface) {
+        &state.navBoundary().surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling boundary status.");
 
       // Switch to the next volume using the boundary
@@ -604,14 +601,16 @@ class Navigator {
                                     const Vector3& direction) const {
     // Try different approach to get navigation target for gen1 and gen3
     // configuration
-    if (m_geometryVersion == GeometryVersion::Gen1) {
-      // Try targeting the surfaces - then layers - then boundaries
 
-      if (state.navigationStage == Stage::initial) {
+    //This is common, in gen1 we start by surfaces and in gen3 we always look for surfaces
+
+    if (state.navigationStage == Stage::initial) {
         ACTS_VERBOSE(volInfo(state) << "Target surfaces.");
         state.navigationStage = Stage::surfaceTarget;
-      }
-
+    }
+    
+    if (m_geometryVersion == GeometryVersion::Gen1) {
+      // Try targeting the surfaces - then layers - then boundaries
       if (state.navigationStage == Stage::surfaceTarget) {
         if (!state.navSurfaceIndex.has_value()) {
           // First time, resolve the surfaces
@@ -779,7 +778,6 @@ class Navigator {
                        const Vector3& direction) const {
     ACTS_VERBOSE(volInfo(state) << "Searching for compatible surfaces.");
 
-    if (m_geometryVersion == GeometryVersion::Gen1) {
       const Layer* currentLayer = state.currentLayer;
 
       if (currentLayer == nullptr) {
@@ -816,27 +814,26 @@ class Navigator {
       // Sort the surfaces by path length.
       // Special care is taken for the external surfaces which should always
       // come first, so they are preferred to be targeted and hit first.
-      std::ranges::sort(
-          state.navSurfaces,
-          [&state](const SurfaceIntersection& a, const SurfaceIntersection& b) {
-            // Prefer to sort by path length. We assume surfaces are at the same
-            // distance if the difference is smaller than the tolerance.
-            if (std::abs(a.pathLength() - b.pathLength()) >
-                state.options.surfaceTolerance) {
-              return SurfaceIntersection::pathLengthOrder(a, b);
-            }
-            // If the path length is practically the same, sort by geometry.
-            // First we check if one of the surfaces is external.
-            bool aIsExternal = a.boundaryTolerance().isInfinite();
-            bool bIsExternal = b.boundaryTolerance().isInfinite();
-            if (aIsExternal == bIsExternal) {
-              // If both are external or both are not external, sort by geometry
-              // identifier
-              return a.surface().geometryId() < b.surface().geometryId();
-            }
-            // If only one is external, it should come first
-            return aIsExternal;
-          });
+      std::ranges::sort(state.navSurfaces, [&state](const NavigationTarget& a,
+                                                    const NavigationTarget& b) {
+        // Prefer to sort by path length. We assume surfaces are at the same
+        // distance if the difference is smaller than the tolerance.
+        if (std::abs(a.pathLength() - b.pathLength()) >
+            state.options.surfaceTolerance) {
+          return NavigationTarget::pathLengthOrder(a, b);
+        }
+        // If the path length is practically the same, sort by geometry.
+        // First we check if one of the surfaces is external.
+        bool aIsExternal = a.boundaryTolerance().isInfinite();
+        bool bIsExternal = b.boundaryTolerance().isInfinite();
+        if (aIsExternal == bIsExternal) {
+          // If both are external or both are not external, sort by geometry
+          // identifier
+          return a.surface().geometryId() < b.surface().geometryId();
+        }
+        // If only one is external, it should come first
+        return aIsExternal;
+      });
       // For now we implicitly remove overlapping surfaces.
       // For track finding it might be useful to discover overlapping surfaces
       // and check for compatible measurements. This is under investigation
@@ -853,8 +850,7 @@ class Navigator {
                      << " overlapping surfaces.");
       }
       state.navSurfaces.erase(toBeRemoved.begin(), toBeRemoved.end());
-    }
-
+    
     // Print surface information
     if (logger().doPrint(Logging::VERBOSE)) {
       std::ostringstream os;
@@ -893,9 +889,7 @@ class Navigator {
     // Request the compatible layers
     state.navLayers = state.currentVolume->compatibleLayers(
         state.options.geoContext, position, direction, navOpts);
-    std::ranges::sort(state.navLayers, [](const auto& a, const auto& b) {
-      return SurfaceIntersection::pathLengthOrder(a.first, b.first);
-    });
+    std::ranges::sort(state.navLayers, NavigationTarget::pathLengthOrder);
 
     // Print layer information
     if (logger().doPrint(Logging::VERBOSE)) {
@@ -903,7 +897,7 @@ class Navigator {
       os << state.navLayers.size();
       os << " layer candidates found at path(s): ";
       for (auto& lc : state.navLayers) {
-        os << lc.first.pathLength() << "  ";
+        os << lc.pathLength() << "  ";
       }
       logger().log(Logging::VERBOSE, os.str());
     }
@@ -932,8 +926,7 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state)
                  << "Try to find boundaries, we are at: " << toString(position)
                  << ", dir: " << toString(direction));
-
-    if (m_geometryVersion == GeometryVersion::Gen1) {
+   
       // Request the compatible boundaries
       state.navBoundaries = state.currentVolume->compatibleBoundaries(
           state.options.geoContext, position, direction, navOpts, logger());
@@ -941,15 +934,15 @@ class Navigator {
         return SurfaceIntersection::pathLengthOrder(a.intersection,
                                                     b.intersection);
       });
-    }
+  
 
     // Print boundary information
     if (logger().doPrint(Logging::VERBOSE)) {
       std::ostringstream os;
       os << state.navBoundaries.size();
       os << " boundary candidates found at path(s): ";
-      for (auto& bc : state.navBoundaries) {
-        os << bc.intersection.pathLength() << "  ";
+      for (const auto& bc : state.navBoundaries) {
+        os << bc.pathLength() << "  ";
       }
       logger().log(Logging::VERBOSE, os.str());
     }
