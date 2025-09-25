@@ -59,8 +59,11 @@ class DetectorNavigator {
   /// created for every propagation/extrapolation step
   /// and keep thread-local navigation information
   struct State : public NavigationState {
+    /// Construct navigation state with configuration options.
+    /// @param options_ Configuration options for the detector navigator
     explicit State(const Options& options_) : options(options_) {}
 
+    /// Configuration options for the detector navigator
     Options options;
 
     /// Navigation state - external state: the current surface

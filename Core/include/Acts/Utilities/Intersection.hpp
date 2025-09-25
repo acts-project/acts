@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -30,6 +29,9 @@ enum class IntersectionStatus : int {
 };
 
 /// Ostream-operator for the IntersectionStatus enum
+/// @param os Output stream
+/// @param status IntersectionStatus to output
+/// @return Reference to output stream
 inline std::ostream& operator<<(std::ostream& os, IntersectionStatus status) {
   constexpr static std::array<const char*, 3> names = {
       {"missed/unreachable", "reachable", "onSurface"}};
@@ -56,41 +58,63 @@ class Intersection {
       : Intersection(std::span<const double, DIM>{position.data(), DIM},
                      pathLength, status) {}
 
+  /// Constructor from position vector, path length, and status
+  /// @param position The intersection position
+  /// @param pathLength The path length to the intersection
+  /// @param status The intersection status
   constexpr Intersection(const Position& position, double pathLength,
                          IntersectionStatus status) noexcept
       : Intersection(std::span<const double, DIM>{position.data(), DIM},
                      pathLength, status) {}
 
+  /// Constructor from position span, path length, and status
+  /// @param position Span of position coordinates
+  /// @param pathLength The path length to the intersection
+  /// @param status The intersection status
   constexpr Intersection(std::span<const double, DIM> position,
                          double pathLength, IntersectionStatus status) noexcept
       : m_pathLength(pathLength), m_status(status) {
     std::ranges::copy(position, m_position.begin());
   }
 
+  /// Copy constructor
   constexpr Intersection(const Intersection&) noexcept = default;
+  /// Move constructor
   constexpr Intersection(Intersection&&) noexcept = default;
+  /// Copy assignment operator
+  /// @return Reference to this intersection for chaining
   constexpr Intersection& operator=(const Intersection&) noexcept = default;
+  /// Move assignment operator
+  /// @return Reference to this intersection for chaining
   constexpr Intersection& operator=(Intersection&&) noexcept = default;
 
   /// Returns whether the intersection was successful or not
+  /// @return True if intersection is reachable or on surface, false if unreachable
   constexpr bool isValid() const noexcept {
     return m_status != IntersectionStatus::unreachable;
   }
 
   /// Returns the position of the interseciton
+  /// @return Position vector of the intersection point
   Position position() const noexcept { return Position{m_position.data()}; }
 
-  /// Returns the path length to the interseciton
+  /// Returns the path length to the intersection
+  /// @return Signed path length from origin to intersection point
   constexpr double pathLength() const noexcept { return m_pathLength; }
 
   /// Returns the intersection status enum
+  /// @return Status indicating if intersection is unreachable, reachable, or on surface
   constexpr IntersectionStatus status() const noexcept { return m_status; }
 
   /// Static factory to create an invalid intersection
+  /// @return Invalid intersection with unreachable status
   constexpr static Intersection Invalid() noexcept { return Intersection(); }
 
   /// Comparison function for path length order i.e. intersection closest to
   /// -inf will be first.
+  /// @param aIntersection First intersection to compare
+  /// @param bIntersection Second intersection to compare
+  /// @return True if first intersection has smaller path length than second
   constexpr static bool pathLengthOrder(
       const Intersection& aIntersection,
       const Intersection& bIntersection) noexcept {
@@ -101,6 +125,9 @@ class Intersection {
 
   /// Comparison function for closest order i.e. intersection closest to 0 will
   /// be first.
+  /// @param aIntersection First intersection to compare
+  /// @param bIntersection Second intersection to compare
+  /// @return True if first intersection is closer to zero path length than second
   constexpr static bool closestOrder(
       const Intersection& aIntersection,
       const Intersection& bIntersection) noexcept {
@@ -122,6 +149,9 @@ class Intersection {
 
   /// Comparison function for closest forward order i.e. intersection closest to
   /// 0 with positive path length will be first.
+  /// @param aIntersection First intersection to compare
+  /// @param bIntersection Second intersection to compare
+  /// @return True if first intersection is closer to zero with preference for forward direction
   constexpr static bool closestForwardOrder(
       const Intersection& aIntersection,
       const Intersection& bIntersection) noexcept {
@@ -142,7 +172,9 @@ class Intersection {
   constexpr Intersection() noexcept = default;
 };
 
+/// Type alias for 2D intersection
 using Intersection2D = Intersection<2>;
+/// Type alias for 3D intersection
 using Intersection3D = Intersection<3>;
 
 static_assert(std::is_trivially_copy_constructible_v<Intersection2D>);

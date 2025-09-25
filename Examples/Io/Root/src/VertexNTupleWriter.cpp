@@ -166,12 +166,12 @@ const SimParticle* findParticle(
 
   const TrackMatchEntry& particleMatch = imatched->second;
 
-  auto iparticle = particles.find(SimBarcode{particleMatch.particle->value()});
+  auto iparticle = particles.find(SimBarcode{particleMatch.particle.value()});
   if (iparticle == particles.end()) {
     ACTS_DEBUG(
         "Truth particle found but not monitored with this track, index = "
         << track.index() << " tip index = " << track.tipIndex()
-        << " and this barcode = " << particleMatch.particle->value());
+        << " and this barcode = " << particleMatch.particle.value());
     return {};
   }
 
@@ -927,7 +927,7 @@ void VertexNTupleWriter::writeTrackInfo(
     }
 
     if (particle != nullptr) {
-      innerTrkParticleId.push_back(particle->particleId().value());
+      innerTrkParticleId.push_back(particle->particleId().asVector());
 
       trueUnitDir = particle->direction();
       trueMom.head<2>() = Acts::makePhiThetaFromDirection(trueUnitDir);
@@ -939,7 +939,7 @@ void VertexNTupleWriter::writeTrackInfo(
     } else {
       ACTS_VERBOSE("Track has no matching truth particle.");
 
-      innerTrkParticleId.push_back(-1);
+      innerTrkParticleId.push_back(ActsFatras::Barcode::Invalid().asVector());
 
       innerTruthPhi.push_back(nan);
       innerTruthTheta.push_back(nan);

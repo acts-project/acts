@@ -29,6 +29,7 @@
 
 namespace Acts {
 
+/// Strategy for track extrapolation to target surface
 enum class TrackExtrapolationStrategy {
   /// Use the first track state to reach target surface
   first,
@@ -39,13 +40,20 @@ enum class TrackExtrapolationStrategy {
   firstOrLast,
 };
 
+/// Error codes for track extrapolation operations
 enum class TrackExtrapolationError {
   CompatibleTrackStateNotFound = 1,
   ReferenceSurfaceUnreachable = 2,
 };
 
+/// Create error code from TrackExtrapolationError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(TrackExtrapolationError e);
 
+/// Find the first measurement state in a track
+/// @param track The track to search
+/// @return Result containing the first measurement state proxy or error
 template <TrackProxyConcept track_proxy_t>
 Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
     const track_proxy_t &track) {
@@ -73,6 +81,9 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
       TrackExtrapolationError::CompatibleTrackStateNotFound);
 }
 
+/// Find the last measurement state in a track
+/// @param track The track to search
+/// @return Result containing the last measurement state proxy or error
 template <TrackProxyConcept track_proxy_t>
 Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
     const track_proxy_t &track) {
