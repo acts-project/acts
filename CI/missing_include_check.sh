@@ -17,5 +17,4 @@ function check_includes {
 
 export -f check_includes
 
-find Core/include/ -name "*.hpp" | grep -v "/detail/" | parallel check_includes
-find Core/include/ -name "*.ipp" | parallel check_includes
+find Core/include/ -type f -name "*.hpp" -o -name "*.ipp"| parallel check_includes
