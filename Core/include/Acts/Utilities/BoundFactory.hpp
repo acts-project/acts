@@ -73,6 +73,7 @@ class BoundFactory {
     return insert(std::make_shared<BoundsImpl_t>(args...));
   }
   /// @brief Returns the number of cached objects inside the bound factory
+  /// @return Number of cached bounds objects in the factory
   std::size_t size() const { return m_boundSet.size(); }
 
  private:
