@@ -26,7 +26,8 @@
 #include "createFeatures.hpp"
 
 using namespace Acts;
-using namespace ActsPlugins using namespace Acts::UnitLiterals;
+using namespace ActsPlugins;
+using namespace Acts::UnitLiterals;
 
 namespace {
 
