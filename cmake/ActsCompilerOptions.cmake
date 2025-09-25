@@ -75,7 +75,7 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 message(CHECK_START "Checking C++20 std::format support")
 try_compile(
     HAVE_STDFORMAT
-    SOURCES ${CMAKE_SOURCE_DIR}/cmake/src/format.cpp
+    SOURCES ${PROJECT_SOURCE_DIR}/cmake/src/format.cpp
     CXX_STANDARD 20
 )
 

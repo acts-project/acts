@@ -4,6 +4,6 @@ include(ActsCodegen)
 
 acts_code_generation(
     ADD_TO_TARGET ActsCore
-    PYTHON ${CMAKE_SOURCE_DIR}/Fatras/scripts/generate_particle_data_table.py
+    PYTHON ${PROJECT_SOURCE_DIR}/Fatras/scripts/generate_particle_data_table.py
     OUTPUT ParticleDataTable.hpp
 )
