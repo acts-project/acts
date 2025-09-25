@@ -27,12 +27,13 @@ namespace Acts {
 /// to empirically determine a scale factor which reproduces this field value
 /// in the center.
 ///
-/// E_1(k^2) = complete elliptic integral of the 1st kind
-/// E_2(k^2) = complete elliptic integral of the 2nd kind
+/// $E_1(k^2)$ = complete elliptic integral of the 1st kind
+/// $E_2(k^2)$ = complete elliptic integral of the 2nd kind
 ///
-/// E_1(k^2) and E_2(k^2) are usually indicated as K(k^2) and E(k^2) in
+/// $E_1(k^2)$ and $E_2(k^2)$ are usually indicated as $K(k^2)$ and $E(k^2)$ in
 /// literature,
 /// respectively
+/// ```
 ///              _
 ///     2       /  pi / 2          2    2          - 1 / 2
 /// E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -65,6 +66,7 @@ namespace Acts {
 /// B (r,z)  =  ----- ---- |  | -------------- | E (k )  +  E (k )   |
 ///  z           4pi    __ |  |           2    |  2          1       |
 ///                   |/Rr |_ \   2r(1 - k )   /                    _|
+/// ```
 ///
 class SolenoidBField final : public MagneticFieldProvider {
  public:
@@ -90,11 +92,13 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// @brief the constructor with a shared pointer
   /// @note since it is a shared field, we enforce it to be const
   /// @tparam bField is the shared BField to be stored
+  /// @param config Configuration struct containing solenoid parameters
   explicit SolenoidBField(Config config);
 
   /// @brief Retrieve magnetic field value in local (r,z) coordinates
   ///
   /// @param [in] position local 2D position
+  /// @return Magnetic field vector in local (r,z) coordinates
   Vector2 getField(const Vector2& position) const;
 
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
@@ -104,6 +108,7 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// @brief Get the B field at a position
   ///
   /// @param position The position to query at
+  /// @return Magnetic field vector in global coordinates
   Vector3 getField(const Vector3& position) const;
 
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const

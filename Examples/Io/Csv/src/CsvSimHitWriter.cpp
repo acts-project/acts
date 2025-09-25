@@ -52,7 +52,12 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
     const Acts::Vector4& momentum4Before = simHit.momentum4Before();
 
     simhit.geometry_id = simHit.geometryId().value();
-    simhit.particle_id = simHit.particleId().value();
+    const auto particleID = simHit.particleId().asVector();
+    simhit.particle_id_pv = particleID[0];
+    simhit.particle_id_sv = particleID[1];
+    simhit.particle_id_part = particleID[2];
+    simhit.particle_id_gen = particleID[3];
+    simhit.particle_id_subpart = particleID[4];
     // hit position
     simhit.tx = globalPos4[Acts::ePos0] / Acts::UnitConstants::mm;
     simhit.ty = globalPos4[Acts::ePos1] / Acts::UnitConstants::mm;

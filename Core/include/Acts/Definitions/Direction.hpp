@@ -27,15 +27,27 @@ class Direction final {
   };
 
  public:
+  /// Create negative direction (-1)
+  /// @return Direction with negative value
   static constexpr Direction Negative() { return Direction{Value::Negative}; }
+  /// Create positive direction (+1)
+  /// @return Direction with positive value
   static constexpr Direction Positive() { return Direction{Value::Positive}; }
 
+  /// Create backward direction (equivalent to negative)
+  /// @return Direction with negative value for backward propagation
   static constexpr Direction Backward() { return Direction{Value::Negative}; }
+  /// Create forward direction (equivalent to positive)
+  /// @return Direction with positive value for forward propagation
   static constexpr Direction Forward() { return Direction{Value::Positive}; }
 
+  /// Create direction opposite to normal (negative)
+  /// @return Direction with negative value, opposite to surface normal
   static constexpr Direction OppositeNormal() {
     return Direction{Value::Negative};
   }
+  /// Create direction along normal (positive)
+  /// @return Direction with positive value, along surface normal
   static constexpr Direction AlongNormal() {
     return Direction{Value::Positive};
   }
@@ -65,6 +77,7 @@ class Direction final {
   /// std::array<T, 2u>
   ///
   /// @param index is the direction at input
+  /// @return Direction corresponding to the index (0->Negative, 1->Positive)
   static constexpr Direction fromIndex(std::size_t index) {
     return index == 0u ? Negative() : Positive();
   }
@@ -92,6 +105,8 @@ class Direction final {
     return *this == Positive() ? Negative() : Positive();
   }
 
+  /// Convert direction to string representation
+  /// @return String representation of the direction ("positive" or "negative")
   std::string toString() const;
 
   friend constexpr bool operator==(Direction lhs, Direction rhs) {
@@ -104,61 +119,113 @@ class Direction final {
   Value m_value = Value::Positive;
 };
 
+/// Stream operator for Direction
+/// @param os Output stream
+/// @param dir Direction to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, Direction dir);
 
 // Direction * T
 
+/// Multiply Direction with integer
+/// @param dir Direction value
+/// @param value Integer to multiply
+/// @return Signed integer result
 constexpr int operator*(Direction dir, int value) {
   return dir.sign() * value;
 }
 
+/// Multiply Direction with float
+/// @param dir Direction value
+/// @param value Float to multiply
+/// @return Signed float result
 constexpr float operator*(Direction dir, float value) {
   return dir.sign() * value;
 }
 
+/// Multiply Direction with double
+/// @param dir Direction value
+/// @param value Double to multiply
+/// @return Signed double result
 constexpr double operator*(Direction dir, double value) {
   return dir.sign() * value;
 }
 
+/// Multiply Direction with Vector3
+/// @param dir Direction value
+/// @param value Vector3 to multiply
+/// @return Signed Vector3 result
 inline Acts::Vector3 operator*(Direction dir, const Acts::Vector3& value) {
   return dir.sign() * value;
 }
 
 // T * Direction
 
+/// Multiply integer with Direction
+/// @param value Integer to multiply
+/// @param dir Direction value
+/// @return Signed integer result
 constexpr int operator*(int value, Direction dir) {
   return value * dir.sign();
 }
 
+/// Multiply float with Direction
+/// @param value Float to multiply
+/// @param dir Direction value
+/// @return Signed float result
 constexpr float operator*(float value, Direction dir) {
   return value * dir.sign();
 }
 
+/// Multiply double with Direction
+/// @param value Double to multiply
+/// @param dir Direction value
+/// @return Signed double result
 constexpr double operator*(double value, Direction dir) {
   return value * dir.sign();
 }
 
+/// Multiply Vector3 with Direction
+/// @param value Vector3 to multiply
+/// @param dir Direction value
+/// @return Signed Vector3 result
 inline Acts::Vector3 operator*(const Acts::Vector3& value, Direction dir) {
   return value * dir.sign();
 }
 
 // T *= Direction
 
+/// Multiply-assign integer with Direction
+/// @param value Integer reference to modify
+/// @param dir Direction value
+/// @return Reference to modified integer
 constexpr int operator*=(int& value, Direction dir) {
   value *= dir.sign();
   return value;
 }
 
+/// Multiply-assign float with Direction
+/// @param value Float reference to modify
+/// @param dir Direction value
+/// @return Reference to modified float
 constexpr float operator*=(float& value, Direction dir) {
   value *= dir.sign();
   return value;
 }
 
+/// Multiply-assign double with Direction
+/// @param value Double reference to modify
+/// @param dir Direction value
+/// @return Reference to modified double
 constexpr double operator*=(double& value, Direction dir) {
   value *= dir.sign();
   return value;
 }
 
+/// Multiply-assign Vector3 with Direction
+/// @param value Vector3 reference to modify
+/// @param dir Direction value
+/// @return Reference to modified Vector3
 inline Acts::Vector3& operator*=(Acts::Vector3& value, Direction dir) {
   value *= dir.sign();
   return value;

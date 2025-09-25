@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <mutex>
 #include <string>
+#include <vector>
 
 class TFile;
 class TTree;
@@ -115,7 +116,7 @@ class TrackFinderPerformanceWriter final : public WriterT<ConstTrackContainer> {
 
   /// Variables to fill in the TTree
   std::uint32_t m_treeEventNr{};
-  std::uint64_t m_treeParticleId{};
+  std::vector<std::uint32_t> m_treeParticleId{};
   bool m_treeIsMatched{};
 
   // Adding numbers for efficiency, fake, duplicate calculations
