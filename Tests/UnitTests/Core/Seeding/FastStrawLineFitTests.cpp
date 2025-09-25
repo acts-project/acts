@@ -408,8 +408,8 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
                             << " did not lead to any valid measurement ");
       continue;
     }
-    //BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
-    //               1.e-12);
+    BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
+                   1.e-12);
 
     /// Fold-in the general offset
     const std::vector<int> trueDriftSigns =
@@ -423,8 +423,6 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
                         meas->driftRadius(), 1.e-12);
       meas->setTimeRecord(dTime + timeOffSet);
 
-      ACTS_DEBUG("Drift time: " << inNanoS(dTime) << " Total time: " << inNanoS(meas->time()));
-        /*
       const double updatedR =
           StrawTestCalibrator::driftRadius(dTime + timeOffSet);
       
@@ -435,7 +433,8 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
                  << toString(meas->localPosition()) << " from "
                  << meas->driftRadius() << " to " << updatedR
                  << ", dTime: " << inNanoS(dTime));
-      meas->setRadius(updatedR, StrawTestCalibrator::calcDriftUncert(updatedR)); */
+      meas->setRadius(updatedR, StrawTestCalibrator::calcDriftUncert(updatedR)); 
+      
       /// Calculate the numerical derivatives
       constexpr double h = 1.e-8_ns;
       const double numV =
@@ -449,7 +448,7 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
     }
 
     auto result = fastFitter.fit(cctx, calibrator, strawPoints, trueDriftSigns,
-                                 std::nullopt);//timeOffSet);//
+                                 std::nullopt);
 
     if (!result) {
       continue;
@@ -538,8 +537,8 @@ BOOST_AUTO_TEST_CASE(FitterTests) {
 
   BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
 
-  //testSimpleStrawFit(engine, *outFile);
-  //testStripFit(engine, *outFile);
+  testSimpleStrawFit(engine, *outFile);
+  testStripFit(engine, *outFile);
   testFitWithT0(engine, *outFile);
 }
 

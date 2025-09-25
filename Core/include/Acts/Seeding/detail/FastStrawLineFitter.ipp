@@ -258,24 +258,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   }
 
   FitResultT0 result{};
-  if (startT0.has_value()) {
-    result.t0 = startT0.value_or(0.);
-  } else {
-    Range1D<double> tRange{std::numeric_limits<double>::max(),
-                           -std::numeric_limits<double>::max()};
-    for (const auto& strawMeas : measurements) {
-      if (!strawMeas->isStraw()) {
-        ACTS_WARNING(__func__ << "() - " << __LINE__
-                              << ": The measurement is not a straw");
-        continue;
-      }
-      tRange.expand(strawMeas->time(), strawMeas->time());
-      //result.t0 = result.t0 ? std::min(result.t0, strawMeas->time()) : strawMeas->time();
-    }
-    //result.t0 = 0.5 * (tRange.min() + tRange.max());
-    //result.t0 *= 0.01;
-    result.t0 = 0.;
-  }
+  result.t0 = startT0.value_or(0.);
 
   FitAuxiliariesWithT0 fitPars{
       fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0)};
@@ -293,14 +276,15 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     }
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);
   }
-  ACTS_INFO("Printing all measurements:");
+  ACTS_VERBOSE("Fit failed, printing all measurements:");
   for (const auto& meas : measurements ){
-    ACTS_INFO("Pos: " << Acts::toString(meas->localPosition()) 
+    ACTS_VERBOSE("Pos: " << Acts::toString(meas->localPosition()) 
         << ", t,t0: " << meas->time()/ 1._ns << ", " << result.t0 
-        << ", truthR, RecoR: " << meas->driftRadius() << ", " calibrator.driftRadius(ctx, *meas, result.t0)
-        << ", v: " << calibrator.driftVelocity(ctx, *meas, result.t0) << ", a: " << calibrator.driftAcceleration(ctx, *meas, result.t0));
+        << ", truthR, RecoR: " << meas->driftRadius() << ", " << calibrator.driftRadius(ctx, *meas, result.t0)
+        << ", v: " << calibrator.driftVelocity(ctx, *meas, result.t0)*1._ns 
+        << ", a: " << calibrator.driftAcceleration(ctx, *meas, result.t0)*1._ns*1._ns);
   }
-  ACTS_INFO("Result: " << result);
+  ACTS_VERBOSE("Result: " << result);
   return std::nullopt;
 }
 
@@ -339,7 +323,7 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
                      auxVars.centerZ;
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": # " << (spIdx + 1)
                           << ") t,t0: " << strawMeas->time()/1._ns << ", " << t0/1._ns 
-                          << " r: " << r << ", v: " << v << ", a: " << a);
+                          << " r: " << r << ", v: " << v*1._ns << ", a: " << a*1._ns*1._ns);
     auxVars.fitY0 += sInvCov * r;
     auxVars.R_v += sInvCov * v;
     auxVars.R_a += sInvCov * a;
