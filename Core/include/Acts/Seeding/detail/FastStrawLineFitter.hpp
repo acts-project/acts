@@ -144,7 +144,7 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t,
             CompositeSpacePointFastCalibrator<
                 Acts::RemovePointer_t<typename StrawCont_t::value_type>>
-            Calibrator_t>
+                Calibrator_t>
   std::optional<FitResultT0> fit(
       const Acts::CalibrationContext& ctx, const Calibrator_t& calibrator,
       const StrawCont_t& measurements, const std::vector<int>& signs,

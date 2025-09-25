@@ -192,6 +192,13 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
 
   calcAngularDerivatives(angles, fitPars, grad[0], cov(0, 0));
   grad[1] = calcTimeGrad(angles, fitPars);
+  if (grad.norm() < m_cfg.precCutOff) {
+    completeResult(fitPars, cov(0, 0), fitResult);
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
+                        << fitResult);
+    return UpdateStatus::Converged;
+  }
+  
   cov(1, 0) = cov(0, 1) =
       fitPars.T_vz * angles.cosTheta + fitPars.T_vy * angles.sinTheta;
 

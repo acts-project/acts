@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <format>
-using namespace Acts::UnitLiterals;
 
 namespace Acts::Experimental::detail {
 
@@ -277,9 +276,10 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);
   }
   ACTS_VERBOSE("Fit failed, printing all measurements:");
+  using namespace Acts::UnitLiterals;
   for (const auto& meas : measurements ){
     ACTS_VERBOSE("Pos: " << Acts::toString(meas->localPosition()) 
-        << ", t,t0: " << meas->time()/ 1._ns << ", " << result.t0 
+        << ", t,t0: " << meas->time()/ 1._ns << ", " << result.t0/ 1._ns
         << ", truthR, RecoR: " << meas->driftRadius() << ", " << calibrator.driftRadius(ctx, *meas, result.t0)
         << ", v: " << calibrator.driftVelocity(ctx, *meas, result.t0)*1._ns 
         << ", a: " << calibrator.driftAcceleration(ctx, *meas, result.t0)*1._ns*1._ns);
@@ -321,6 +321,7 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
                      auxVars.centerY;
     const double z = strawMeas->localPosition().dot(strawMeas->planeNormal()) -
                      auxVars.centerZ;
+    using namespace Acts::UnitLiterals;
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": # " << (spIdx + 1)
                           << ") t,t0: " << strawMeas->time()/1._ns << ", " << t0/1._ns 
                           << " r: " << r << ", v: " << v*1._ns << ", a: " << a*1._ns*1._ns);
