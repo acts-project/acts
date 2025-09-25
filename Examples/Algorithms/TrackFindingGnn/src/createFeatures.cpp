@@ -11,6 +11,8 @@
 #include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+using namespace Acts;
+
 namespace ActsExamples {
 
 std::vector<float> createFeatures(
@@ -46,16 +48,16 @@ std::vector<float> createFeatures(
 
     using NF = TrackFindingAlgorithmGnn::NodeFeature;
 
-    using namespace Acts::VectorHelpers;
-    using namespace Acts::AngleHelpers;
+    using namespace VectorHelpers;
+    using namespace AngleHelpers;
 
     // clang-format off
 #define MAKE_CLUSTER_FEATURES(n) \
-    break; case NF::eCluster##n##X:   f[ift] = cl##n->globalPosition[Acts::ePos0]; \
-    break; case NF::eCluster##n##Y:   f[ift] = cl##n->globalPosition[Acts::ePos1]; \
+    break; case NF::eCluster##n##X:   f[ift] = cl##n->globalPosition[ePos0]; \
+    break; case NF::eCluster##n##Y:   f[ift] = cl##n->globalPosition[ePos1]; \
     break; case NF::eCluster##n##R:   f[ift] = perp(cl##n->globalPosition); \
     break; case NF::eCluster##n##Phi: f[ift] = phi(cl##n->globalPosition); \
-    break; case NF::eCluster##n##Z:   f[ift] = cl##n->globalPosition[Acts::ePos2]; \
+    break; case NF::eCluster##n##Z:   f[ift] = cl##n->globalPosition[ePos2]; \
     break; case NF::eCluster##n##Eta: f[ift] = eta(cl##n->globalPosition); \
     break; case NF::eCellCount##n:    f[ift] = cl##n->channels.size(); \
     break; case NF::eChargeSum##n:    f[ift] = cl##n->sumActivations(); \
@@ -73,7 +75,7 @@ std::vector<float> createFeatures(
     break; case NF::ePhiAngle##n:     f[ift] = cl##n->phiAngle;
     // clang-format on
 
-    Acts::Vector3 spPos{sp.x(), sp.y(), sp.z()};
+    Vector3 spPos{sp.x(), sp.y(), sp.z()};
 
     for (auto ift = 0ul; ift < nodeFeatures.size(); ++ift) {
       // clang-format off
