@@ -15,10 +15,9 @@
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -27,6 +26,7 @@
 namespace Acts {
 
 class Surface;
+class SurfaceArray;
 class ISurfaceMaterial;
 class BinUtility;
 class Volume;
@@ -36,9 +36,6 @@ class ApproachDescriptor;
 class IMaterialDecorator;
 template <typename object_t>
 struct NavigationOptions;
-
-// Simple surface intersection
-using SurfaceIntersection = ObjectIntersection<Surface>;
 
 // master typedef
 class Layer;
@@ -89,19 +86,8 @@ class Layer : public virtual GeometryObject {
   friend class Gen1GeometryClosureVisitor;
 
  public:
-  /// Default Constructor - deleted
-  Layer() = delete;
-
-  /// Copy Constructor - deleted
-  Layer(const Layer&) = delete;
-
   /// Destructor
-  virtual ~Layer() = default;
-
-  /// Assignment operator - forbidden, layer assignment must not be ambiguous
-  ///
-  /// @param layer is the source layer for assignment
-  Layer& operator=(const Layer& layer) = delete;
+  ~Layer() noexcept override;
 
   /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray
   const SurfaceArray* surfaceArray() const;
@@ -169,7 +155,7 @@ class Layer : public virtual GeometryObject {
   /// @param options The navigation options
   ///
   /// @return list of intersection of surfaces on the layer
-  boost::container::small_vector<SurfaceIntersection, 10> compatibleSurfaces(
+  boost::container::small_vector<NavigationTarget, 10> compatibleSurfaces(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const NavigationOptions<Surface>& options) const;
@@ -184,7 +170,7 @@ class Layer : public virtual GeometryObject {
   /// @param options The  navigation options
   ///
   /// @return the Surface intersection of the approach surface
-  SurfaceIntersection surfaceOnApproach(
+  NavigationTarget surfaceOnApproach(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
@@ -246,24 +232,24 @@ class Layer : public virtual GeometryObject {
   /// This array will be modified during signature and constant afterwards, but
   /// the C++ type system unfortunately cannot cleanly express this.
   ///
-  std::unique_ptr<const SurfaceArray> m_surfaceArray = nullptr;
+  std::unique_ptr<const SurfaceArray> m_surfaceArray;
 
   /// Thickness of the Layer
-  double m_layerThickness = 0.;
+  double m_layerThickness = 0;
 
   /// descriptor for surface on approach
   ///
   /// The descriptor may need to be modified during geometry building, and will
   /// remain constant afterwards, but again C++ cannot currently express this.
   ///
-  std::unique_ptr<const ApproachDescriptor> m_approachDescriptor = nullptr;
+  std::unique_ptr<const ApproachDescriptor> m_approachDescriptor;
 
   /// the enclosing TrackingVolume
   const TrackingVolume* m_trackingVolume = nullptr;
 
   /// Representing Volume
   /// can be used as approach surface sources
-  std::unique_ptr<Volume> m_representingVolume = nullptr;
+  std::unique_ptr<Volume> m_representingVolume;
 
   /// make a passive/active either way
   LayerType m_layerType;

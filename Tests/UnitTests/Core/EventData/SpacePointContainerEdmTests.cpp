@@ -79,7 +79,8 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_traits) {
   using container_t =
       Acts::SpacePointContainer<adapter_t, Acts::detail::RefHolder>;
   using proxy_t = Acts::SpacePointProxy<container_t>;
-  using iterator_t = Acts::ContainerIndexIterator<container_t, proxy_t&, false>;
+  using iterator_t = Acts::detail::ContainerIterator<container_t, proxy_t&,
+                                                     std::size_t, false>;
 
   static_assert(std::ranges::range<container_t>);
   static_assert(std::same_as<typename iterator_t::iterator_category,
@@ -148,17 +149,19 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
       std::same_as<typename proxy_t::ValueType, Acts::Test::SpacePoint>);
 
   using iterator_t =
-      Acts::ContainerIndexIterator<decltype(spContainer), proxy_t&, false>;
+      Acts::detail::ContainerIterator<decltype(spContainer), proxy_t&,
+                                      std::size_t, false>;
   using const_iterator_t =
-      Acts::ContainerIndexIterator<decltype(spContainer), const proxy_t&, true>;
+      Acts::detail::ContainerIterator<decltype(spContainer), const proxy_t&,
+                                      std::size_t, true>;
   static_assert(
       std::same_as<iterator_t, typename decltype(spContainer)::iterator>);
   static_assert(std::same_as<const_iterator_t,
                              typename decltype(spContainer)::const_iterator>);
   static_assert(
       std::same_as<iterator_t, decltype(std::ranges::begin(spContainer))>);
-  static_assert(std::same_as<const_iterator_t,
-                             decltype(std::ranges::cbegin(spContainer))>);
+  static_assert(
+      std::same_as<const_iterator_t, decltype(std::cbegin(spContainer))>);
 
   std::size_t n = 0ul;
   for (const proxy_t& proxy : spContainer) {

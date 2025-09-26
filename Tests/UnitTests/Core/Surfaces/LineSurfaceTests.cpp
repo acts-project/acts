@@ -36,8 +36,6 @@
 #include <memory>
 #include <numbers>
 #include <optional>
-#include <ostream>
-#include <tuple>
 #include <vector>
 
 namespace Acts::Test {
@@ -118,7 +116,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // intersection
   {
     const Vector3 direction{0., 1., 2.};
-    auto sfIntersection =
+    Intersection3D sfIntersection =
         line.intersect(tgContext, {0., 0., 0.}, direction.normalized(),
                        BoundaryTolerance::Infinite())
             .closest();
@@ -126,7 +124,6 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
     Vector3 expectedIntersection(0, 1., 2.);
     CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
                     1e-6);  // need more tests..
-    BOOST_CHECK_EQUAL(sfIntersection.object(), &line);
   }
 
   // isOnSurface
@@ -246,7 +243,8 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
   LineSurfaceStub surface(Transform3::Identity());
 
   auto roundTrip = [&surface](const Vector3& pos, const Vector3& dir) {
-    auto intersection = surface.intersect(tgContext, pos, dir).closest();
+    Intersection3D intersection =
+        surface.intersect(tgContext, pos, dir).closest();
     Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
     Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
@@ -283,7 +281,8 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
     Vector3 dir = makeDirectionFromPhiEta(std::numbers::pi / 2., eta);
     Vector3 pos = pca + dir;
 
-    auto intersection = surface.intersect(tgContext, pos, dir).closest();
+    Intersection3D intersection =
+        surface.intersect(tgContext, pos, dir).closest();
 
     Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
@@ -331,7 +330,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
     displacedParameters = result.value().endParameters.value();
   }
 
-  auto intersection =
+  Intersection3D intersection =
       surface
           ->intersect(tgContext, displacedParameters.position(tgContext),
                       displacedParameters.direction())

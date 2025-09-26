@@ -17,23 +17,14 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include <ActsExamples/Digitization/MeasurementCreation.hpp>
 
+#include <algorithm>
+
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
 
 using namespace Acts::UnitLiterals;
 
 namespace {
-std::uint64_t concatInts(int a, int b) {
-  auto va = static_cast<std::uint32_t>(a);
-  auto vb = static_cast<std::uint32_t>(b);
-  std::uint64_t value = (static_cast<std::uint64_t>(va) << 32) | vb;
-  return value;
-}
-
-std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
-  return {static_cast<std::uint32_t>((v & 0xFFFFFFFF00000000LL) >> 32),
-          static_cast<std::uint32_t>(v & 0xFFFFFFFFLL)};
-}
 
 /// In cases when there is built up a particle collection in an iterative way it
 /// can be way faster to build up a vector and afterwards use a special
@@ -42,10 +33,10 @@ inline auto particleVectorToSet(
     std::vector<ActsExamples::SimParticle>& particles) {
   using namespace ActsExamples;
   auto cmp = [](const auto& a, const auto& b) {
-    return a.particleId().value() == b.particleId().value();
+    return a.particleId() == b.particleId();
   };
 
-  std::sort(particles.begin(), particles.end(), detail::CompareParticleId{});
+  std::ranges::sort(particles, detail::CompareParticleId{});
   particles.erase(std::unique(particles.begin(), particles.end(), cmp),
                   particles.end());
 
@@ -249,8 +240,14 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
       continue;
     }
 
-    SimBarcode dummyBarcode{
-        concatInts(Part_barcode[ip], Part_event_number[ip])};
+    SimBarcode dummyBarcode =
+        SimBarcode()
+            .withVertexPrimary(
+                static_cast<SimBarcode::PrimaryVertexId>(Part_event_number[ip]))
+            .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                Part_barcode[ip] < s_maxBarcodeForPrimary ? 0 : 1))
+            .withParticle(
+                static_cast<SimBarcode::ParticleId>(Part_barcode[ip]));
     SimParticleState particle(dummyBarcode,
                               static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
@@ -454,7 +451,13 @@ RootAthenaDumpReader::readMeasurements(
       for (const auto& [subevt, barcode] :
            Acts::zip(CLparticleLink_eventIndex->at(im),
                      CLparticleLink_barcode->at(im))) {
-        SimBarcode dummyBarcode{concatInts(barcode, subevt)};
+        SimBarcode dummyBarcode =
+            SimBarcode()
+                .withVertexPrimary(
+                    static_cast<SimBarcode::PrimaryVertexId>(subevt))
+                .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                    barcode < s_maxBarcodeForPrimary ? 0 : 1))
+                .withParticle(static_cast<SimBarcode::ParticleId>(barcode));
         // If we don't find the particle, create one with default values
         if (particles.find(dummyBarcode) == particles.end()) {
           ACTS_VERBOSE("Particle with subevt "
@@ -653,32 +656,30 @@ RootAthenaDumpReader::reprocessParticles(
     const auto [begin, end] = partMeasMap.equal_range(particle.particleId());
 
     if (begin == end) {
-      ACTS_VERBOSE("Particle " << particle.particleId().value()
+      ACTS_VERBOSE("Particle " << particle.particleId()
                                << " has no measurements");
       continue;
     }
 
-    auto [athBarcode, athSubevent] = splitInt(particle.particleId().value());
-    auto primary = (athBarcode < s_maxBarcodeForPrimary);
-
-    ActsFatras::Barcode fatrasBarcode;
+    auto primary = particle.particleId().vertexSecondary() == 0;
 
     // vertex primary shouldn't be zero for a valid particle
-    fatrasBarcode.setVertexPrimary(1);
+    ActsFatras::Barcode fatrasBarcode =
+        ActsFatras::Barcode().withVertexPrimary(1);
     if (primary) {
-      fatrasBarcode.setVertexSecondary(0);
-      fatrasBarcode.setParticle(primaryCount);
+      fatrasBarcode =
+          fatrasBarcode.withVertexSecondary(0).withParticle(primaryCount);
       assert(primaryCount < std::numeric_limits<std::uint16_t>::max());
       primaryCount++;
     } else {
-      fatrasBarcode.setVertexSecondary(1);
-      fatrasBarcode.setParticle(secondaryCount);
+      fatrasBarcode =
+          fatrasBarcode.withVertexSecondary(1).withParticle(secondaryCount);
       assert(primaryCount < std::numeric_limits<std::uint16_t>::max());
       secondaryCount++;
     }
 
     auto newParticle = particle.withParticleId(fatrasBarcode);
-    newParticle.final().setNumberOfHits(std::distance(begin, end));
+    newParticle.finalState().setNumberOfHits(std::distance(begin, end));
     newParticles.push_back(newParticle);
 
     for (auto it = begin; it != end; ++it) {

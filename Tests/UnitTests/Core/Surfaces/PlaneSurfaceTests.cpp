@@ -167,17 +167,17 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test intersection
   Vector3 direction{0., 0., 1.};
-  auto sfIntersection = planeSurfaceObject
-                            ->intersect(tgContext, offSurface, direction,
-                                        BoundaryTolerance::None())
-                            .closest();
+  Intersection3D sfIntersection =
+      planeSurfaceObject
+          ->intersect(tgContext, offSurface, direction,
+                      BoundaryTolerance::None())
+          .closest();
   Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    IntersectionStatus::reachable};
   BOOST_CHECK(sfIntersection.isValid());
   BOOST_CHECK_EQUAL(sfIntersection.position(), expectedIntersect.position());
   BOOST_CHECK_EQUAL(sfIntersection.pathLength(),
                     expectedIntersect.pathLength());
-  BOOST_CHECK_EQUAL(sfIntersection.object(), planeSurfaceObject.get());
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(tgContext, offSurface,

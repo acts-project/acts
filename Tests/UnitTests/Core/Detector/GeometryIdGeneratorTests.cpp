@@ -22,7 +22,6 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -104,7 +103,7 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   /// @param cache is the cache object for e.g. object counting
   /// @param portal the portal to assign the geometry id to
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
-                        Portal& portal) const final {
+                        Acts::Experimental::Portal& portal) const final {
     auto pgid = portal.surface().geometryId();
     portal.surface().assignGeometryId(pgid.withBoundary(pgid.boundary() + 1));
   }

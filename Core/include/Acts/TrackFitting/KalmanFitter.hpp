@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -29,6 +26,7 @@
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -489,7 +487,10 @@ class KalmanFitter {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.unset(TrackStatePropMask::Smoothed);
-                    trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
+                    if (trackState.typeFlags().test(
+                            TrackStateFlag::MeasurementFlag)) {
+                      trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
+                    }
                   }
                 });
           }
@@ -726,7 +727,7 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
-        auto fittedStates = *result.fittedStates;
+        auto& fittedStates = *result.fittedStates;
 
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.
@@ -966,7 +967,7 @@ class KalmanFitter {
           result.fittedStates->getTrackState(result.lastMeasurementIndex);
 
       // Lambda to get the intersection of the free params on the target surface
-      auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
+      auto target = [&](const FreeVector& freeVector) -> Intersection3D {
         return targetReached.surface
             ->intersect(
                 state.geoContext, freeVector.segment<3>(eFreePos0),

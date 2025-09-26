@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -981,7 +980,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
             ACTS_VERBOSE("~> Creating new gap volume at inner r");
             auto gapBounds = std::make_shared<CylinderVolumeBounds>(
                 newMinR, oldMinR, newHlZ);
-            auto gapTransform = m_groupTransform;
+            auto gapTransform = newVolume.globalTransform;
             auto gapVolume = addGapVolume(gapTransform, gapBounds);
             volumeTuples.insert(volumeTuples.begin(),
                                 VolumeTuple{*gapVolume, m_groupTransform});
@@ -1016,9 +1015,9 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
             ACTS_VERBOSE("~> Creating new gap volume at outer r");
             auto gapBounds = std::make_shared<CylinderVolumeBounds>(
                 oldMaxR, newMaxR, newHlZ);
-            auto gapTransform = m_groupTransform;
+            auto gapTransform = newVolume.globalTransform;
             auto gapVolume = addGapVolume(gapTransform, gapBounds);
-            volumeTuples.emplace_back(*gapVolume, m_groupTransform);
+            volumeTuples.emplace_back(*gapVolume, newVolume.globalTransform);
             auto gap = volumeTuples.back();
             printGapDimensions(gap);
           }

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/PointerTraits.hpp"
 
 #include <algorithm>
 #include <array>
@@ -22,18 +23,36 @@
 
 namespace Acts {
 
+/// Helper function to unpack a vector of smart pointers (e.g. @c shared_ptr ) into a vector of raw
+/// const pointers
+/// @tparam T the stored type
+/// @param items The vector of smart pointers
+/// @return The unpacked vector
+
+template <SmartPointerConcept T>
+std::vector<std::add_pointer_t<std::add_const_t<typename T::element_type>>>
+unpackConstSmartPointers(const std::vector<T>& items) {
+  std::vector<std::add_pointer_t<std::add_const_t<typename T::element_type>>>
+      rawPtrs{};
+  rawPtrs.reserve(items.size());
+  for (const auto& ptr : items) {
+    rawPtrs.push_back(ptr.operator->());
+  }
+  return rawPtrs;
+}
+
 /// Helper function to unpack a vector of @c shared_ptr into a vector of raw
 /// pointers
 /// @tparam T the stored type
 /// @param items The vector of @c shared_ptr
 /// @return The unpacked vector
-template <typename T>
-std::vector<T*> unpack_shared_vector(
-    const std::vector<std::shared_ptr<T>>& items) {
-  std::vector<T*> rawPtrs;
+template <SmartPointerConcept T>
+std::vector<std::add_pointer_t<typename T::element_type>> unpackSmartPointers(
+    const std::vector<T>& items) {
+  std::vector<std::add_pointer_t<typename T::element_type>> rawPtrs{};
   rawPtrs.reserve(items.size());
-  for (const std::shared_ptr<T>& item : items) {
-    rawPtrs.push_back(item.get());
+  for (const auto& ptr : items) {
+    rawPtrs.push_back(&*ptr);
   }
   return rawPtrs;
 }
@@ -44,27 +63,11 @@ std::vector<T*> unpack_shared_vector(
 /// @param items The vector of @c shared_ptr
 /// @return The unpacked vector
 template <typename T>
-std::vector<const T*> unpack_shared_vector(
+std::vector<const T*> unpackSmartPointers(
     const std::vector<std::shared_ptr<const T>>& items) {
   std::vector<const T*> rawPtrs;
   rawPtrs.reserve(items.size());
   for (const std::shared_ptr<const T>& item : items) {
-    rawPtrs.push_back(item.get());
-  }
-  return rawPtrs;
-}
-
-/// Helper function to unpack a vector of @c shared_ptr into a vector of raw
-/// pointers
-/// @tparam T the stored type
-/// @param items The vector of @c shared_ptr
-/// @return The unpacked vector
-template <typename T>
-std::vector<const T*> unpack_shared_const_vector(
-    const std::vector<std::shared_ptr<T>>& items) {
-  std::vector<const T*> rawPtrs;
-  rawPtrs.reserve(items.size());
-  for (const std::shared_ptr<T>& item : items) {
     rawPtrs.push_back(item.get());
   }
   return rawPtrs;
@@ -105,6 +108,7 @@ std::array<value_t, kDIM> toArray(const std::vector<value_t>& vecvals) {
 /// @tparam NMAX Maximum value up to which to attempt a dispatch
 /// @param v The runtime value to dispatch on
 /// @param args Additional arguments passed to @c Callable::invoke().
+/// @return The result of calling the dispatched template instance
 /// @note @c Callable is expected to have a static member function @c invoke
 /// that is callable with @c Args
 template <template <std::size_t> class Callable, std::size_t N,
@@ -134,6 +138,7 @@ auto template_switch(std::size_t v, Args&&... args) {
 /// @param v The runtime value to dispatch on
 /// @param func The lambda to invoke
 /// @param args Additional arguments passed to @p func
+/// @return The result of calling the dispatched lambda function
 template <std::size_t N, std::size_t NMAX, typename Lambda, typename... Args>
 auto template_switch_lambda(std::size_t v, Lambda&& func, Args&&... args) {
   if (v == N) {
@@ -180,6 +185,9 @@ std::tuple<typename T::value_type, double> range_medium(const T& tseries) {
   return {range, medium};
 }
 
+/// Convert enum to its underlying type value
+/// @param value Enum value to convert
+/// @return Underlying type value
 template <typename enum_t>
 constexpr std::underlying_type_t<enum_t> toUnderlying(enum_t value) {
   return static_cast<std::underlying_type_t<enum_t>>(value);
@@ -216,6 +224,7 @@ struct overloaded : Ts... {
   using Ts::operator()...;
 };
 
+/// Deduction guide for overloaded visitor pattern
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 

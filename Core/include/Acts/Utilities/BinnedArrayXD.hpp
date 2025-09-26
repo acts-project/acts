@@ -39,8 +39,7 @@ class BinnedArrayXD : public BinnedArray<T> {
 
  public:
   /// Constructor for single object
-  ///
-  /// @tparam object is the single object
+  /// @param object The single object to store
   explicit BinnedArrayXD(T object)
       : BinnedArray<T>(),
         m_objectGrid(
@@ -102,11 +101,9 @@ class BinnedArrayXD : public BinnedArray<T> {
     for (auto& o2 : m_objectGrid) {
       for (auto& o1 : o2) {
         for (auto& o0 : o1) {
-          if (o0) {
-            /// fill the unique m_arrayObjects
-            if (!rangeContainsValue(m_arrayObjects, o0)) {
-              m_arrayObjects.push_back(o0);
-            }
+          /// fill the unique m_arrayObjects
+          if (o0 && !rangeContainsValue(m_arrayObjects, o0)) {
+            m_arrayObjects.push_back(o0);
           }
         }
       }

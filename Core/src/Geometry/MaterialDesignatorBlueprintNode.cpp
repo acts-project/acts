@@ -152,14 +152,14 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CylinderVolumeBounds::Face face,
-    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material) {
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   if (material == nullptr) {
     throw std::invalid_argument(prefix() + "Material is nullptr");
   }
 
   impl().m_designator = impl().m_designator->merged(
-      detail::HomogeneousMaterialDesignator<CylinderVolumeBounds::Face,
-                                            CylinderPortalShell>(
+      detail::ISurfaceMaterialDesignator<CylinderVolumeBounds::Face,
+                                         CylinderPortalShell>(
           face, std::move(material)));
 
   return *this;
@@ -176,14 +176,14 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face,
-    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material) {
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   if (material == nullptr) {
     throw std::invalid_argument(prefix() + "Material is nullptr");
   }
 
   impl().m_designator = impl().m_designator->merged(
-      detail::HomogeneousMaterialDesignator<CuboidVolumeBounds::Face,
-                                            CuboidPortalShell>(
+      detail::ISurfaceMaterialDesignator<CuboidVolumeBounds::Face,
+                                         CuboidPortalShell>(
           face, std::move(material)));
 
   return *this;

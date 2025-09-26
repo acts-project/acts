@@ -120,7 +120,6 @@ RootTrackParameterWriter::RootTrackParameterWriter(
   m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
 
   // The truth track parameters
-  m_outputTree->Branch("particleId", &m_t_particleId);
   m_outputTree->Branch("t_loc0", &m_t_loc0);
   m_outputTree->Branch("t_loc1", &m_t_loc1);
   m_outputTree->Branch("t_phi", &m_t_phi);
@@ -232,7 +231,7 @@ ProcessCode RootTrackParameterWriter::writeT(
 
     if (particleHitCounts.size() == 1) {
       m_t_matched = true;
-      m_t_particleId = particleHitCounts.front().particleId.value();
+      m_t_particleId = particleHitCounts.front().particleId.asVector();
       m_nMajorityHits = particleHitCounts.front().hitCount;
 
       // Get the index of the first space point
@@ -274,7 +273,7 @@ ProcessCode RootTrackParameterWriter::writeT(
           m_t_pt = perp(p);
         } else {
           ACTS_WARNING("Truth particle with barcode " << particleId << "="
-                                                      << particleId.value()
+                                                      << particleId.hash()
                                                       << " not found!");
         }
       }
@@ -302,7 +301,7 @@ ProcessCode RootTrackParameterWriter::writeT(
       m_pull_time = getPull(m_res_time, m_err_time);
     } else {
       m_t_matched = false;
-      m_t_particleId = 0;
+      m_t_particleId = ActsFatras::Barcode::Invalid().asVector();
       m_nMajorityHits = 0;
 
       m_t_loc0 = NaNfloat;

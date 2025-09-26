@@ -22,35 +22,31 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <algorithm>
-#include <array>
 #include <iterator>
 #include <ostream>
 #include <set>
 #include <utility>
 
 namespace Acts {
-class PlanarBounds;
-}  // namespace Acts
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+using VectorHelpers::perp;
+using VectorHelpers::phi;
 
-Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
-                                 std::unique_ptr<const Logger> logger)
+LayerCreator::LayerCreator(const LayerCreator::Config& lcConfig,
+                           std::unique_ptr<const Logger> logger)
     : m_cfg(lcConfig), m_logger(std::move(logger)) {}
 
-void Acts::LayerCreator::setConfiguration(
-    const Acts::LayerCreator::Config& lcConfig) {
+void LayerCreator::setConfiguration(const LayerCreator::Config& lcConfig) {
   // @todo check consistency
   // copy the configuration
   m_cfg = lcConfig;
 }
 
-void Acts::LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger) {
+void LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
+MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> _protoLayer,
@@ -90,9 +86,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // create the layer transforms if not given
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
-  Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3::Identity())) {
-    addTranslation = Translation3(0., 0., layerZ);
+  Transform3 fullTransform = transform;
+  if (fullTransform.isApprox(Transform3::Identity())) {
+    fullTransform = Translation3(0, 0, layerZ) * fullTransform;
     ACTS_VERBOSE(" - layer z shift  = " << -layerZ);
   }
 
@@ -104,7 +100,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer);
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, fullTransform);
 
     checkBinning(gctx, *sArray);
   }
@@ -114,9 +110,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
       new CylinderBounds(layerR, layerHalfZ));
 
   // create the layer
-  MutableLayerPtr cLayer = CylinderLayer::create(
-      addTranslation * transform, cBounds, std::move(sArray), layerThickness,
-      std::move(ad), active);
+  MutableLayerPtr cLayer =
+      CylinderLayer::create(fullTransform, cBounds, std::move(sArray),
+                            layerThickness, std::move(ad), active);
 
   if (!cLayer) {
     ACTS_ERROR("Creation of cylinder layer did not succeed!");
@@ -127,7 +123,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   return cLayer;
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
+MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
@@ -167,9 +163,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
   // create the layer transforms if not given
-  Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3::Identity()) && bTypeZ == equidistant) {
-    addTranslation = Translation3(0., 0., layerZ);
+  Transform3 fullTransform = transform;
+  if (fullTransform.isApprox(Transform3::Identity()) && bTypeZ == equidistant) {
+    fullTransform = Translation3(0, 0, layerZ) * fullTransform;
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
   }
 
@@ -182,7 +178,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer);
+        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer, fullTransform);
 
     checkBinning(gctx, *sArray);
   }
@@ -192,9 +188,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
       new CylinderBounds(layerR, layerHalfZ));
 
   // create the layer
-  MutableLayerPtr cLayer = CylinderLayer::create(
-      addTranslation * transform, cBounds, std::move(sArray), layerThickness,
-      std::move(ad), active);
+  MutableLayerPtr cLayer =
+      CylinderLayer::create(fullTransform, cBounds, std::move(sArray),
+                            layerThickness, std::move(ad), active);
 
   if (!cLayer) {
     ACTS_ERROR("Creation of cylinder layer did not succeed!");
@@ -205,7 +201,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   return cLayer;
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
+MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
@@ -242,15 +238,15 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
                                        << binsR << " x " << binsPhi << ")");
 
   // create the layer transforms if not given
-  Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3::Identity())) {
-    addTranslation = Translation3(0., 0., layerZ);
+  Transform3 fullTransform = transform;
+  if (fullTransform.isApprox(Transform3::Identity())) {
+    fullTransform = Translation3(0, 0, layerZ) * fullTransform;
   }
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, transform);
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, fullTransform);
 
     checkBinning(gctx, *sArray);
   }
@@ -264,7 +260,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   // we use the same transform here as for the layer itself
   // for disk this is fine since we don't bin in Z, so does not matter
   MutableLayerPtr dLayer =
-      DiscLayer::create(addTranslation * transform, dBounds, std::move(sArray),
+      DiscLayer::create(fullTransform, dBounds, std::move(sArray),
                         layerThickness, std::move(ad), active);
 
   if (!dLayer) {
@@ -275,7 +271,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   return dLayer;
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
+MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
@@ -287,8 +283,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     protoLayer.envelope[AxisDirection::AxisZ] = m_cfg.defaultEnvelopeZ;
   }
 
-  double layerZ = protoLayer.medium(AxisDirection::AxisZ);
-  double layerThickness = protoLayer.range(AxisDirection::AxisZ);
+  const double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+  const double layerThickness = protoLayer.range(AxisDirection::AxisZ);
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -311,16 +307,16 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   ACTS_VERBOSE(" - # of modules     = " << surfaces.size());
 
   // create the layer transforms if not given
-  Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3::Identity())) {
-    addTranslation = Translation3(0., 0., layerZ);
+  Transform3 fullTransform = transform;
+  if (fullTransform.isApprox(Transform3::Identity())) {
+    fullTransform = Translation3(0, 0, layerZ) * fullTransform;
   }
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, transform);
+        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, fullTransform);
 
     checkBinning(gctx, *sArray);
   }
@@ -332,7 +328,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 
   // create the layers
   MutableLayerPtr dLayer =
-      DiscLayer::create(addTranslation * transform, dBounds, std::move(sArray),
+      DiscLayer::create(fullTransform, dBounds, std::move(sArray),
                         layerThickness, std::move(ad), active);
   if (!dLayer) {
     ACTS_ERROR("Creation of disc layer did not succeed!");
@@ -342,7 +338,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   return dLayer;
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
+MutableLayerPtr LayerCreator::planeLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
@@ -359,42 +355,30 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   double layerHalf1 = 0, layerHalf2 = 0, layerThickness = 0;
   switch (aDir) {
     case AxisDirection::AxisX: {
-      layerHalf1 = 0.5 * (protoLayer.max(AxisDirection::AxisY) -
-                          protoLayer.min(AxisDirection::AxisY));
-      layerHalf2 = 0.5 * (protoLayer.max(AxisDirection::AxisZ) -
-                          protoLayer.min(AxisDirection::AxisZ));
-      layerThickness = (protoLayer.max(AxisDirection::AxisX) -
-                        protoLayer.min(AxisDirection::AxisX));
+      layerHalf1 = 0.5 * protoLayer.range(AxisDirection::AxisY);
+      layerHalf2 = 0.5 * protoLayer.range(AxisDirection::AxisZ);
+      layerThickness = protoLayer.range(AxisDirection::AxisX);
       break;
     }
     case AxisDirection::AxisY: {
-      layerHalf1 = 0.5 * (protoLayer.max(AxisDirection::AxisX) -
-                          protoLayer.min(AxisDirection::AxisX));
-      layerHalf2 = 0.5 * (protoLayer.max(AxisDirection::AxisZ) -
-                          protoLayer.min(AxisDirection::AxisZ));
-      layerThickness = (protoLayer.max(AxisDirection::AxisY) -
-                        protoLayer.min(AxisDirection::AxisY));
+      layerHalf1 = 0.5 * protoLayer.range(AxisDirection::AxisX);
+      layerHalf2 = 0.5 * protoLayer.range(AxisDirection::AxisZ);
+      layerThickness = protoLayer.range(AxisDirection::AxisY);
       break;
     }
     case AxisDirection::AxisZ: {
-      layerHalf1 = 0.5 * (protoLayer.max(AxisDirection::AxisX) -
-                          protoLayer.min(AxisDirection::AxisX));
-      layerHalf2 = 0.5 * (protoLayer.max(AxisDirection::AxisY) -
-                          protoLayer.min(AxisDirection::AxisY));
-      layerThickness = (protoLayer.max(AxisDirection::AxisZ) -
-                        protoLayer.min(AxisDirection::AxisZ));
+      layerHalf1 = 0.5 * protoLayer.range(AxisDirection::AxisX);
+      layerHalf2 = 0.5 * protoLayer.range(AxisDirection::AxisY);
+      layerThickness = protoLayer.range(AxisDirection::AxisZ);
       break;
     }
     default:
       throw std::invalid_argument("Invalid binning value");
   }
 
-  double centerX = 0.5 * (protoLayer.max(AxisDirection::AxisX) +
-                          protoLayer.min(AxisDirection::AxisX));
-  double centerY = 0.5 * (protoLayer.max(AxisDirection::AxisY) +
-                          protoLayer.min(AxisDirection::AxisY));
-  double centerZ = 0.5 * (protoLayer.max(AxisDirection::AxisZ) +
-                          protoLayer.min(AxisDirection::AxisZ));
+  const double centerX = protoLayer.medium(AxisDirection::AxisX);
+  const double centerY = protoLayer.medium(AxisDirection::AxisY);
+  const double centerZ = protoLayer.medium(AxisDirection::AxisZ);
 
   ACTS_VERBOSE("Creating a plane Layer:");
   ACTS_VERBOSE(" - with layer center     = "
@@ -413,9 +397,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   // create the layer transforms if not given
   // we need to transform in case centerX/centerY/centerZ != 0, so that the
   // layer will be correctly defined
-  Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3::Identity())) {
-    addTranslation = Translation3(centerX, centerY, centerZ);
+  Transform3 fullTransform = transform;
+  if (fullTransform.isApprox(Transform3::Identity())) {
+    fullTransform = Translation3(centerX, centerY, centerZ) * fullTransform;
     ACTS_VERBOSE(" - layer shift  = " << "(" << centerX << ", " << centerY
                                       << ", " << centerZ << ")");
   }
@@ -423,7 +407,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
-        gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer, transform);
+        gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer,
+        fullTransform);
 
     checkBinning(gctx, *sArray);
   }
@@ -433,7 +418,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
 
   // create the layer
   MutableLayerPtr pLayer =
-      PlaneLayer::create(addTranslation * transform, pBounds, std::move(sArray),
+      PlaneLayer::create(fullTransform, pBounds, std::move(sArray),
                          layerThickness, std::move(ad), active);
 
   if (!pLayer) {
@@ -445,7 +430,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   return pLayer;
 }
 
-void Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const {
+void LayerCreator::associateSurfacesToLayer(Layer& layer) const {
   if (layer.surfaceArray() != nullptr) {
     auto surfaces = layer.surfaceArray()->surfaces();
 
@@ -456,8 +441,8 @@ void Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const {
   }
 }
 
-bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
-                                      const SurfaceArray& sArray) const {
+bool LayerCreator::checkBinning(const GeometryContext& gctx,
+                                const SurfaceArray& sArray) const {
   // do consistency check: can we access all sensitive surfaces
   // through the binning? If not, surfaces get lost and the binning does not
   // work
@@ -487,7 +472,7 @@ bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
     nBinsChecked++;
   }
 
-  std::vector<const Acts::Surface*> diff;
+  std::vector<const Surface*> diff;
   std::set_difference(sensitiveSurfaces.begin(), sensitiveSurfaces.end(),
                       accessibleSurfaces.begin(), accessibleSurfaces.end(),
                       std::inserter(diff, diff.begin()));
@@ -495,7 +480,8 @@ bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
   ACTS_VERBOSE(" - Checked " << nBinsChecked << " valid bins");
 
   if (nEmptyBins > 0) {
-    ACTS_ERROR(" -- Not all bins point to surface. " << nEmptyBins << " empty");
+    ACTS_VERBOSE(" -- Not all bins point to surface. " << nEmptyBins
+                                                       << " empty");
   } else {
     ACTS_VERBOSE(" -- All bins point to a surface");
   }
@@ -521,5 +507,7 @@ bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
     ACTS_VERBOSE(" -- All sensitive surfaces are accessible through binning.");
   }
 
-  return nEmptyBins == 0 && diff.empty();
+  return diff.empty();
 }
+
+}  // namespace Acts

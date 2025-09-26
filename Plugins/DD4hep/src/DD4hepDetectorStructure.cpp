@@ -10,7 +10,6 @@
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
@@ -21,15 +20,16 @@
 
 #include <DD4hep/DetElement.h>
 
-Acts::Experimental::DD4hepDetectorStructure::DD4hepDetectorStructure(
+namespace Acts::Experimental {
+
+DD4hepDetectorStructure::DD4hepDetectorStructure(
     std::unique_ptr<const Logger> mlogger)
     : m_logger(std::move(mlogger)) {}
 
-std::tuple<std::shared_ptr<const Acts::Experimental::Detector>,
-           Acts::DD4hepDetectorElement::Store>
-Acts::Experimental::DD4hepDetectorStructure::construct(
-    const GeometryContext& gctx, const dd4hep::DetElement& dd4hepElement,
-    const Options& options) const {
+std::tuple<std::shared_ptr<const Detector>, DD4hepDetectorElement::Store>
+DD4hepDetectorStructure::construct(const GeometryContext& gctx,
+                                   const dd4hep::DetElement& dd4hepElement,
+                                   const Options& options) const {
   ACTS_DEBUG("Building detector from " << dd4hepElement.name());
 
   // Return objects
@@ -37,7 +37,9 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
   DD4hepDetectorElement::Store detectorStore;
 
   // Set up the tools
+  DD4hepDetectorSurfaceFactory::Config surfaceFactoryConfig;
   auto surfaceFactory = std::make_shared<DD4hepDetectorSurfaceFactory>(
+      surfaceFactoryConfig,
       getDefaultLogger("DD4hepDetectorSurfaceFactory", options.logLevel));
 
   auto layerStructure = std::make_shared<DD4hepLayerStructure>(
@@ -102,3 +104,5 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
   }
   return {detector, detectorStore};
 }
+
+}  // namespace Acts::Experimental

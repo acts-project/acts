@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesDigitization
+acts_add_library(
+    ExamplesDigitization
     SHARED
     src/DigitizationAlgorithm.cpp
     src/DigitizationConfig.cpp
@@ -7,19 +7,17 @@ add_library(
     src/MeasurementCreation.cpp
     src/DigitizationConfigurator.cpp
     src/ModuleClusters.cpp
+    src/MuonSpacePointDigitizer.cpp
 )
 target_include_directories(
     ActsExamplesDigitization
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
 target_link_libraries(
     ActsExamplesDigitization
-    PUBLIC ActsCore ActsExamplesFramework
+    PUBLIC Acts::ExamplesFramework
+    PRIVATE ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
 
-acts_compile_headers(ActsExamplesDigitization GLOB "include/**/*.hpp")
-
-install(
-    TARGETS ActsExamplesDigitization
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+acts_compile_headers(ExamplesDigitization GLOB "include/**/*.hpp")

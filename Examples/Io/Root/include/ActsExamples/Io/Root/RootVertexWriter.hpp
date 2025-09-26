@@ -29,7 +29,7 @@ struct AlgorithmContext;
 /// Each entry in the TTree corresponds to one vertex for optimum writing
 /// speed. The event number is part of the written data.
 ///
-/// Safe to use from multiple writer threads. To avoid thread-saftey issues,
+/// Safe to use from multiple writer threads. To avoid thread-safety issues,
 /// the writer must be the sole owner of the underlying file. Thus, the
 /// output file pointer can not be given from the outside.
 class RootVertexWriter final : public WriterT<SimVertexContainer> {
@@ -87,12 +87,14 @@ class RootVertexWriter final : public WriterT<SimVertexContainer> {
   std::vector<float> m_vy;
   std::vector<float> m_vz;
   std::vector<float> m_vt;
+  /// Incoming particles to the vertex.
+  std::vector<std::vector<std::vector<std::uint32_t>>> m_incomingParticles;
   /// Outgoing particles from the vertex.
-  std::vector<std::vector<std::uint64_t>> m_outgoingParticles;
+  std::vector<std::vector<std::vector<std::uint32_t>>> m_outgoingParticles;
   // Decoded vertex identifier; see Barcode definition for details.
-  std::vector<std::uint32_t> m_vertexPrimary;
-  std::vector<std::uint32_t> m_vertexSecondary;
-  std::vector<std::uint32_t> m_generation;
+  std::vector<std::uint16_t> m_vertexPrimary;
+  std::vector<std::uint16_t> m_vertexSecondary;
+  std::vector<std::uint8_t> m_generation;
 };
 
 }  // namespace ActsExamples

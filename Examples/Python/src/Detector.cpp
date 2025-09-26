@@ -11,15 +11,17 @@
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/StructureSelector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/GenericDetector/AlignedGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 #include <optional>
@@ -32,19 +34,14 @@
 #include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
+
+using namespace Acts;
 using namespace ActsExamples;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addDetector(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-
-  {
-    py::class_<IContextDecorator, std::shared_ptr<IContextDecorator>>(
-        mex, "IContextDecorator")
-        .def("decorate", &IContextDecorator::decorate)
-        .def("name", &IContextDecorator::name);
-  }
+  auto& mex = ctx.get("examples");
 
   {
     py::class_<Detector, std::shared_ptr<Detector>>(mex, "DetectorBase")
@@ -62,6 +59,14 @@ void addDetector(Context& ctx) {
   }
 
   {
+    py::class_<StructureSelector, std::shared_ptr<StructureSelector>>(
+        mex, "StructureSelector")
+        .def(py::init<std::shared_ptr<const TrackingGeometry>>())
+        .def("selectSurfaces", &StructureSelector::selectSurfaces)
+        .def("selectedTransforms", &StructureSelector::selectedTransforms);
+  }
+
+  {
     auto d =
         py::class_<GenericDetector, Detector, std::shared_ptr<GenericDetector>>(
             mex, "GenericDetector")
@@ -74,6 +79,13 @@ void addDetector(Context& ctx) {
   }
 
   {
+    auto ad = py::class_<AlignedGenericDetector, GenericDetector,
+                         std::shared_ptr<AlignedGenericDetector>>(
+                  mex, "AlignedGenericDetector")
+                  .def(py::init<const GenericDetector::Config&>());
+  }
+
+  {
     auto d =
         py::class_<TelescopeDetector, Detector,
                    std::shared_ptr<TelescopeDetector>>(mex, "TelescopeDetector")
@@ -83,24 +95,6 @@ void addDetector(Context& ctx) {
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness,
                        surfaceType, binValue, materialDecorator, logLevel);
-  }
-
-  {
-    auto d =
-        py::class_<AlignedDetector, Detector, std::shared_ptr<AlignedDetector>>(
-            mex, "AlignedDetector")
-            .def(py::init<const AlignedDetector::Config&>());
-
-    auto c = py::class_<AlignedDetector::Config, GenericDetector::Config>(
-                 d, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, seed, iovSize, flushSize, doGarbageCollection,
-                       sigmaInPlane, sigmaOutPlane, sigmaInRot, sigmaOutRot,
-                       firstIovNominal, decoratorLogLevel, mode);
-
-    py::enum_<AlignedDetector::Config::Mode>(c, "Mode")
-        .value("Internal", AlignedDetector::Config::Mode::Internal)
-        .value("External", AlignedDetector::Config::Mode::External);
   }
 
   {
@@ -126,9 +120,9 @@ void addDetector(Context& ctx) {
         .value("Central", TGeoDetector::Config::SubVolume::Central)
         .value("Positive", TGeoDetector::Config::SubVolume::Positive);
 
-    py::enum_<Acts::BinningType>(c, "BinningType")
-        .value("equidistant", Acts::BinningType::equidistant)
-        .value("arbitrary", Acts::BinningType::arbitrary);
+    py::enum_<BinningType>(c, "BinningType")
+        .value("equidistant", BinningType::equidistant)
+        .value("arbitrary", BinningType::arbitrary);
 
     auto volume =
         py::class_<TGeoDetector::Config::Volume>(c, "Volume").def(py::init<>());
@@ -161,7 +155,7 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletInterval", Options::Interval{});
     regTriplet("LayerTripletDouble", double{5.5});
     regTriplet("LayerTripletVectorBinning",
-               std::vector<std::pair<int, Acts::BinningType>>{});
+               std::vector<std::pair<int, BinningType>>{});
 
     ACTS_PYTHON_STRUCT(c, surfaceLogLevel, layerLogLevel, volumeLogLevel,
                        fileName, buildBeamPipe, beamPipeRadius,
@@ -173,10 +167,9 @@ void addDetector(Context& ctx) {
   }
 
   {
-    py::class_<Acts::DetectorElementBase,
-               std::shared_ptr<Acts::DetectorElementBase>>(
+    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
         mex, "DetectorElementBase");
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

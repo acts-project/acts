@@ -32,7 +32,7 @@ outputDir = pathlib.Path.cwd() / "itk_output"
 
 detector = acts.examples.itk.buildITkGeometry(geo_dir)
 trackingGeometry = detector.trackingGeometry()
-field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
+field = acts.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
 s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
@@ -99,7 +99,7 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    seedingAlgorithm=SeedingAlgorithm.Default,
+    seedingAlgorithm=SeedingAlgorithm.GridTriplet,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),

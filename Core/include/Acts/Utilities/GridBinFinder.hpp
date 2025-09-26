@@ -19,18 +19,23 @@
 
 namespace Acts {
 
-/// @class BinFinder
 /// @tparam DIM Dimension of the Grid on which the GridBinFinder will be used
 ///
-/// The BinFinder is used by the ISPGroupSelector. It can be
-/// used to find both bins that could be bottom bins as well as bins that could
-/// be top bins, which are assumed to be the same bins. Does not take
-/// interaction region into account to limit z-bins.
+/// The GridBinFinder is used by the ISPGroupSelector. It can be used to find
+/// both bins that could be bottom bins as well as bins that could be top bins,
+/// which are assumed to be the same bins. Does not take interaction region into
+/// account to limit z-bins.
 template <std::size_t DIM>
 class GridBinFinder {
  public:
+  /// Number of neighbor bins in 3^DIM grid configuration
   static constexpr std::size_t dimCubed = detail::ipow(3, DIM);
-  /// @brief Constructor
+
+  /// Type alias for variant storing different bin finding configurations
+  using stored_values_t =
+      std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
+
+  /// @brief Constructor that takes the individual values for each axis
   /// @tparam args ... Input parameters provided by the user
   ///
   /// @param [in] vals The input parameters that define how many neighbours we need to find
@@ -48,6 +53,16 @@ class GridBinFinder {
   {
     storeValue(std::forward<args>(vals)...);
   }
+
+  /// @brief Constructor that takes an array of axes values
+  ///
+  /// @param [in] values The array of stored values that define how many neighbours we need to find
+  explicit GridBinFinder(std::array<stored_values_t, DIM> values)
+      : m_values(std::move(values)) {}
+
+  /// Get the stored bin edge values for all dimensions
+  /// @return Array of bin edge values for each dimension
+  const std::array<stored_values_t, DIM>& values() const { return m_values; }
 
   /// @brief Retrieve the neighbouring bins given a local position in the grid
   ///
@@ -105,8 +120,6 @@ class GridBinFinder {
   bool isGridCompatible(const Grid<stored_t, Axes...>& grid) const;
 
  private:
-  using stored_values_t =
-      std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
   /// @brief the instructions for retrieving the nieghbouring bins for each given axis in the grid
   /// These values are provided by the user and can be ints, a pair of ints or a
   /// vector of pair of ints. In the first case, the neighbours will be +/- bins

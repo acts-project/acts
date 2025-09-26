@@ -14,17 +14,16 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include <Acts/Surfaces/AnnulusBounds.hpp>
-#include <Acts/Surfaces/CylinderBounds.hpp>
-#include <Acts/Surfaces/RadialBounds.hpp>
-#include <Acts/Surfaces/SurfaceBounds.hpp>
-#include <Acts/Surfaces/TrapezoidBounds.hpp>
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <algorithm>
-#include <fstream>
 #include <map>
-#include <mutex>
 #include <numbers>
 
 // Convenience shorthand
@@ -40,9 +39,6 @@ namespace Acts {
 class MappingMaterialDecorator : public IMaterialDecorator {
  public:
   using BinningMap = std::map<std::uint64_t, std::pair<int, int>>;
-
-  using VolumeMaterialMap =
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
   MappingMaterialDecorator(const Acts::TrackingGeometry& tGeometry,
                            Acts::Logging::Level level,
@@ -276,7 +272,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
  private:
   BinningMap m_binningMap;
 
-  VolumeMaterialMap m_volumeMaterialMap;
+  VolumeMaterialMaps m_volumeMaterialMap;
 
   bool m_clearSurfaceMaterial{true};
   bool m_clearVolumeMaterial{true};

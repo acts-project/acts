@@ -17,29 +17,32 @@
 
 #include "Acts/Utilities/StringHelpers.hpp"
 
-#include "TString.h"
+#include <format>
+
+namespace ActsExamples {
 
 std::ostream& operator<<(std::ostream& ostr,
                          const ActsExamples::MuonSpacePoint::MuonId& id) {
-  ostr << Form("%s in %2d on %s",
-               ActsExamples::to_string(id.msStation()).c_str(), id.sector(),
-               ActsExamples::to_string(id.side()).c_str());
+  ostr << id.toString();
   return ostr;
 }
 std::ostream& operator<<(std::ostream& ostr,
                          const ActsExamples::MuonSpacePoint& sp) {
-  ostr << "Id: " << sp.id() << ", pos: " << Acts::toString(sp.localPosition())
-       << ", dir: " << Acts::toString(sp.sensorDirection())
-       << ", covariance: " << Acts::toString(sp.covariance());
+  ostr << std::format(
+      "Muon-ID: {}, position: {}, orientation (d/n/o): {}/{}/{}, covariance: "
+      "({:.2f}, {:.2f}, {:.2f})",
+      sp.id().toString(), Acts::toString(sp.localPosition()),
+      Acts::toString(sp.sensorDirection()), Acts::toString(sp.toNextSensor()),
+      Acts::toString(sp.planeNormal()), sp.covariance()[0], sp.covariance()[1],
+      sp.covariance()[2]);
   return ostr;
 }
 
-namespace ActsExamples {
 using TechField = MuonSpacePoint::MuonId::TechField;
 using StationName = MuonSpacePoint::MuonId::StationName;
 using DetSide = MuonSpacePoint::MuonId::DetSide;
 
-std::string to_string(const StationName st) {
+std::string MuonSpacePoint::MuonId::toString(const StationName st) {
   switch (st) {
     case StationName::BIS:
       return "BIS";
@@ -75,7 +78,7 @@ std::string to_string(const StationName st) {
       return "Unknown";
   }
 }
-std::string to_string(const TechField tech) {
+std::string MuonSpacePoint::MuonId::toString(const TechField tech) {
   switch (tech) {
     case TechField::Mdt:
       return "Mdt";
@@ -91,7 +94,7 @@ std::string to_string(const TechField tech) {
       return "Unknown";
   }
 }
-std::string to_string(const DetSide side) {
+std::string MuonSpacePoint::MuonId::toString(const DetSide side) {
   switch (side) {
     case DetSide::A:
       return "A-side";
@@ -100,6 +103,10 @@ std::string to_string(const DetSide side) {
     default:
       return "Unknown";
   }
+}
+std::string MuonSpacePoint::MuonId::toString() const {
+  return std::format("{:} in {:2d} on {:}", toString(msStation()), sector(),
+                     toString(side()));
 }
 void MuonSpacePoint::MuonId::setChamber(StationName stName, DetSide side,
                                         int sector, TechField tech) {
@@ -117,12 +124,12 @@ void MuonSpacePoint::MuonId::setCoordFlags(bool measEta, bool measPhi) {
   m_measPhi = measPhi;
 }
 void MuonSpacePoint::defineCoordinates(Acts::Vector3&& pos,
-                                       Acts::Vector3&& sensorDir) {
+                                       Acts::Vector3&& sensorDir,
+                                       Acts::Vector3&& toNextSensor) {
   m_pos = std::move(pos);
   m_dir = std::move(sensorDir);
-}
-void MuonSpacePoint::defineNormal(Acts::Vector3&& norm) {
-  m_norm = std::move(norm);
+  m_toNext = std::move(toNextSensor);
+  m_norm = m_dir.cross(m_toNext).normalized();
 }
 void MuonSpacePoint::setRadius(const double r) {
   m_radius = r;
@@ -130,14 +137,16 @@ void MuonSpacePoint::setRadius(const double r) {
 void MuonSpacePoint::setTime(const double t) {
   m_time = t;
 }
-void MuonSpacePoint::setSpatialCov(const double xx, const double xy,
-                                   const double yx, const double yy) {
-  m_cov(Acts::eX, Acts::eX) = xx;
-  m_cov(Acts::eX, Acts::eY) = xy;
-  m_cov(Acts::eY, Acts::eX) = yx;
-  m_cov(Acts::eY, Acts::eY) = yy;
+void MuonSpacePoint::setCovariance(const double covX, const double covY,
+                                   const double covT) {
+  m_cov[0] = covX;
+  m_cov[1] = covY;
+  m_cov[2] = covT;
 }
 void MuonSpacePoint::setId(const MuonId& id) {
   m_id = id;
+}
+void MuonSpacePoint::setGeometryId(const Acts::GeometryIdentifier& geoId) {
+  m_geoId = geoId;
 }
 }  // namespace ActsExamples

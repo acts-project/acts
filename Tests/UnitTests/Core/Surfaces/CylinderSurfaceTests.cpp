@@ -23,7 +23,6 @@
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -203,7 +202,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   double pn = sfIntersection[0].pathLength();
   double pa = sfIntersection[1].pathLength();
   BOOST_CHECK_LT(std::abs(pn), std::abs(pa));
-  BOOST_CHECK_EQUAL(sfIntersection.object(), cylinderSurfaceObject.get());
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,

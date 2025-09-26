@@ -186,7 +186,7 @@ interactive testing with one-off configuration specified by command-line options
         "--seeding-algorithm",
         action=EnumAction,
         enum=SeedingAlgorithm,
-        default=SeedingAlgorithm.Default,
+        default=SeedingAlgorithm.GridTriplet,
         help="Select the seeding algorithm to use",
     )
     parser.add_argument(
@@ -349,7 +349,7 @@ def full_chain(args):
         field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
     else:
         logger.info("Create magnetic field map from %s" % str(bFieldFile))
-        field = acts.examples.MagneticFieldMapXyz(str(bFieldFile))
+        field = acts.MagneticFieldMapXyz(str(bFieldFile))
     rnd = acts.examples.RandomNumbers(seed=42)
 
     from acts.examples.simulation import (
@@ -551,7 +551,7 @@ def full_chain(args):
         VertexFinder,
     )
 
-    if args.itk and args.seeding_algorithm == SeedingAlgorithm.Default:
+    if args.itk and args.seeding_algorithm == SeedingAlgorithm.GridTriplet:
         seedingAlgConfig = itk.itkSeedingAlgConfig(
             itk.InputSpacePointsType.PixelSpacePoints
         )

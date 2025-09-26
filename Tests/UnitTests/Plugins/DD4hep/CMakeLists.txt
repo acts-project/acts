@@ -6,13 +6,15 @@ add_library(
     PrimitivesFactory.cpp
 )
 
+add_library(Acts::TestsDD4hepFactories ALIAS ActsTestsDD4hepFactories)
+
 target_include_directories(
     ActsTestsDD4hepFactories
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 target_link_libraries(
     ActsTestsDD4hepFactories
-    PUBLIC ActsPluginDD4hep DD4hep::DDCore
+    PUBLIC Acts::PluginDD4hep DD4hep::DDCore
 )
 
 # Not sure why this needs to be set, but dd4hep fails to compile otherwise
@@ -28,7 +30,7 @@ find_library(dd4hep_core_library DDCore)
 
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0")
     set(factory_path
-        "$<PATH:GET_PARENT_PATH,$<TARGET_FILE:ActsTestsDD4hepFactories>>"
+        "$<PATH:GET_PARENT_PATH,$<TARGET_FILE:Acts::TestsDD4hepFactories>>"
     )
 else()
     set(factory_path "${CMAKE_CURRENT_BINARY_DIR}")
@@ -37,13 +39,14 @@ endif()
 if(NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
     cmake_path(GET dd4hep_core_library PARENT_PATH DD4HEP_LIBRARY_PATH)
     # set test library dependencies
-    set(unittest_extra_libraries ActsTestsDD4hepFactories ActsPluginDD4hep)
+    set(unittest_extra_libraries Acts::TestsDD4hepFactories Acts::PluginDD4hep)
     set(dd4hep_tests
         DD4hepCylinderLayerStructure
         DD4hepCylindricalDetector
         DD4hepDetectorElement
         DD4hepDiscLayerStructure
-        DD4hepGeometryContext
+        DD4hepDetectorSurfaceFactory
+        DD4hepCylindricalDetectorGen3
     )
     foreach(_test ${dd4hep_tests})
         add_unittest(${_test} ${_test}Tests.cpp)

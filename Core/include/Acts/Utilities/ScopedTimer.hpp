@@ -11,7 +11,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <chrono>
-#include <iostream>
 
 namespace Acts {
 
@@ -32,6 +31,7 @@ namespace Acts {
 ///
 class ScopedTimer {
  public:
+  /// Type alias for high resolution clock used for timing
   using clock_type = std::chrono::high_resolution_clock;
 
   /// @brief Construct a new Scoped Timer
@@ -68,6 +68,7 @@ class ScopedTimer {
 /// information.
 class AveragingScopedTimer {
  public:
+  /// Type alias for high resolution clock used for timing measurements
   using clock_type = std::chrono::high_resolution_clock;
 
   /// @brief RAII wrapper class for measuring individual timing samples
@@ -77,13 +78,14 @@ class AveragingScopedTimer {
   class Sample {
    public:
     /// @brief Construct a new sample and start timing
+    /// @param parent The parent averaging scoped timer to record to
     explicit Sample(AveragingScopedTimer& parent);
     /// @brief Record the duration when destroyed
     ~Sample();
     Sample(const Sample&) = delete;
     Sample& operator=(const Sample&) = delete;
     /// @brief Move constructor that transfers ownership of timing to new sample
-    Sample(Sample&& /*other*/);
+    Sample(Sample&& /*other*/) noexcept;
     Sample& operator=(Sample&&) = delete;
 
    private:
@@ -119,8 +121,8 @@ class AveragingScopedTimer {
  private:
   /// @brief Add a timing sample to the statistics
   ///
-  /// @param duration Duration of the sample in milliseconds
-  void addSample(std::chrono::milliseconds duration);
+  /// @param duration Duration of the sample in nanoseconds
+  void addSample(std::chrono::nanoseconds duration);
 
   double m_sumDuration = 0;  ///< Sum of all sample durations
   double m_sumDurationSquared =

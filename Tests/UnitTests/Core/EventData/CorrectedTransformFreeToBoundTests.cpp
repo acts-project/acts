@@ -16,18 +16,14 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <optional>
-#include <ostream>
-#include <string>
 #include <tuple>
 
 using namespace Acts;
@@ -76,12 +72,12 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   // the intersection of the track with the end surface
-  SurfaceIntersection intersection =
+  Intersection3D intersection =
       eSurface
           ->intersect(geoCtx, Vector3(0, 0, 0), dir, BoundaryTolerance::None())
           .closest();
   Vector3 tpos = intersection.position();
-  auto s = intersection.pathLength();
+  double s = intersection.pathLength();
 
   BOOST_CHECK_EQUAL(s, distance * std::numbers::sqrt2);
 
@@ -139,5 +135,6 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   // loc0 at end position = distance * tan(theta) * sin(phi),
   // dloc0/dphi = distance * tan(theta) * cos(phi) = distance,
   // resolution of loc0 at end position = dloc0/dphi * resLoc0 = 2.5
-  CHECK_CLOSE_REL(eCorrectedBoundCov(eBoundLoc0, eBoundLoc0), pow(2.5, 2), eps);
+  CHECK_CLOSE_REL(eCorrectedBoundCov(eBoundLoc0, eBoundLoc0), std::pow(2.5, 2),
+                  eps);
 }

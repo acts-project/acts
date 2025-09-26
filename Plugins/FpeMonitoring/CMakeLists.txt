@@ -1,4 +1,9 @@
-add_library(ActsPluginFpeMonitoring SHARED src/FpeMonitor.cpp)
+acts_add_library(
+    PluginFpeMonitoring
+    SHARED
+    src/FpeMonitor.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
+)
 target_include_directories(
     ActsPluginFpeMonitoring
     PUBLIC
@@ -6,7 +11,7 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsPluginFpeMonitoring PUBLIC ActsCore)
+target_link_libraries(ActsPluginFpeMonitoring PUBLIC Acts::Core)
 
 # Fpe flags
 set(_fpe_options "")
@@ -28,6 +33,7 @@ else()
             boost_stacktrace_include
             NAMES "boost/stacktrace.hpp"
             REQUIRED
+            PATHS ${Boost_INCLUDE_DIRS}
         )
         if(Backtrace_FOUND)
             # check if we need to link against bracktrace or not
@@ -177,10 +183,3 @@ else()
 endif()
 
 target_compile_options(ActsPluginFpeMonitoring PUBLIC "${_fpe_options}")
-
-install(
-    TARGETS ActsPluginFpeMonitoring
-    EXPORT ActsPluginFpeMonitoringTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

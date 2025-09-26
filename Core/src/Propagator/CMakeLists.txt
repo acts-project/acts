@@ -7,6 +7,7 @@ target_sources(
         SympyStepper.cpp
         PropagatorError.cpp
         StraightLineStepper.cpp
+        detail/MaterialEffectsAccumulator.cpp
         detail/PointwiseMaterialInteraction.cpp
         detail/CovarianceEngine.cpp
         detail/JacobianEngine.cpp
@@ -17,35 +18,28 @@ target_sources(
 include(ActsCodegen)
 
 acts_code_generation(
-      TARGET SympyCovarianceEngine
-      PYTHON detail/generate_sympy_cov.py
-      WITH_REQUIREMENTS ${CMAKE_SOURCE_DIR}/codegen/requirements.txt
-      WITH ${CMAKE_SOURCE_DIR}/codegen
-      ISOLATED
-      OUTPUT codegen/sympy_cov_math.hpp
+    ADD_TO_TARGET ActsCore
+    PYTHON detail/generate_sympy_cov.py
+    WITH_REQUIREMENTS ${PROJECT_SOURCE_DIR}/codegen/requirements.txt
+    WITH ${PROJECT_SOURCE_DIR}/codegen
+    ISOLATED
+    OUTPUT codegen/sympy_cov_math.hpp
 )
 
 acts_code_generation(
-      TARGET SympyStepperMath
-      PYTHON generate_sympy_stepper.py
-      WITH_REQUIREMENTS ${CMAKE_SOURCE_DIR}/codegen/requirements.txt
-      WITH ${CMAKE_SOURCE_DIR}/codegen
-      ISOLATED
-      OUTPUT codegen/sympy_stepper_math.hpp
+    ADD_TO_TARGET ActsCore
+    PYTHON generate_sympy_stepper.py
+    WITH_REQUIREMENTS ${PROJECT_SOURCE_DIR}/codegen/requirements.txt
+    WITH ${PROJECT_SOURCE_DIR}/codegen
+    ISOLATED
+    OUTPUT codegen/sympy_stepper_math.hpp
 )
 
 acts_code_generation(
-      TARGET SympyJacobianEngine
-      PYTHON detail/generate_sympy_jac.py
-      WITH_REQUIREMENTS ${CMAKE_SOURCE_DIR}/codegen/requirements.txt
-      WITH ${CMAKE_SOURCE_DIR}/codegen
-      ISOLATED
-      OUTPUT codegen/sympy_jac_math.hpp
+    ADD_TO_TARGET ActsCore
+    PYTHON detail/generate_sympy_jac.py
+    WITH_REQUIREMENTS ${PROJECT_SOURCE_DIR}/codegen/requirements.txt
+    WITH ${PROJECT_SOURCE_DIR}/codegen
+    ISOLATED
+    OUTPUT codegen/sympy_jac_math.hpp
 )
-
-target_link_libraries(
-    ActsCore
-    PRIVATE SympyCovarianceEngine SympyStepperMath SympyJacobianEngine
-)
-
-# message(FATAL_ERROR "stop")

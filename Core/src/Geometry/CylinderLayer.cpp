@@ -10,23 +10,31 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <cstddef>
 #include <vector>
 
 namespace Acts {
-class CylinderBounds;
-}  // namespace Acts
 
-using Acts::VectorHelpers::phi;
+using VectorHelpers::phi;
 
-Acts::CylinderLayer::CylinderLayer(
+std::shared_ptr<CylinderLayer> CylinderLayer::create(
+    const Transform3& transform,
+    const std::shared_ptr<const CylinderBounds>& cbounds,
+    std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+    std::unique_ptr<ApproachDescriptor> ad, LayerType laytyp) {
+  return std::shared_ptr<CylinderLayer>(
+      new CylinderLayer(transform, cbounds, std::move(surfaceArray), thickness,
+                        std::move(ad), laytyp));
+}
+
+CylinderLayer::CylinderLayer(
     const Transform3& transform,
     const std::shared_ptr<const CylinderBounds>& cBounds,
     std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
@@ -51,16 +59,15 @@ Acts::CylinderLayer::CylinderLayer(
   }
 }
 
-const Acts::CylinderSurface& Acts::CylinderLayer::surfaceRepresentation()
-    const {
+const CylinderSurface& CylinderLayer::surfaceRepresentation() const {
   return (*this);
 }
 
-Acts::CylinderSurface& Acts::CylinderLayer::surfaceRepresentation() {
+CylinderSurface& CylinderLayer::surfaceRepresentation() {
   return (*this);
 }
 
-void Acts::CylinderLayer::buildApproachDescriptor() {
+void CylinderLayer::buildApproachDescriptor() {
   // delete and reset as you build a new one
   m_approachDescriptor.reset(nullptr);
 
@@ -89,3 +96,5 @@ void Acts::CylinderLayer::buildApproachDescriptor() {
     }
   }
 }
+
+}  // namespace Acts

@@ -25,7 +25,6 @@
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -34,7 +33,6 @@
 #include <cmath>
 #include <memory>
 #include <numbers>
-#include <ostream>
 #include <string>
 
 using namespace Acts::UnitLiterals;
@@ -205,10 +203,11 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
 
   // intersect is a struct of (Vector3) position, pathLength, distance and
   // (bool) valid, it's contained in a Surface intersection
-  auto sfIntersection = discSurfaceObject
-                            ->intersect(tgContext, globalPosition, direction,
-                                        BoundaryTolerance::Infinite())
-                            .closest();
+  Intersection3D sfIntersection =
+      discSurfaceObject
+          ->intersect(tgContext, globalPosition, direction,
+                      BoundaryTolerance::Infinite())
+          .closest();
   Intersection3D expectedIntersect{Vector3{1.2, 0., 0.}, 10.,
                                    IntersectionStatus::reachable};
   BOOST_CHECK(sfIntersection.isValid());
@@ -216,7 +215,6 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
                   1e-9);
   CHECK_CLOSE_ABS(sfIntersection.pathLength(), expectedIntersect.pathLength(),
                   1e-9);
-  BOOST_CHECK_EQUAL(sfIntersection.object(), discSurfaceObject.get());
 
   /// Test name
   boost::test_tools::output_test_stream nameOuput;

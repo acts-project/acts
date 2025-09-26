@@ -137,7 +137,7 @@ const SurfaceBounds& LineSurface::bounds() const {
   return s_noBounds;
 }
 
-SurfaceMultiIntersection LineSurface::intersect(
+MultiIntersection3D LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -160,7 +160,7 @@ SurfaceMultiIntersection LineSurface::intersect(
   // small number so `u` does not explode
   if (std::abs(denom) < std::abs(tolerance)) {
     // return a false intersection
-    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
+    return MultiIntersection3D(Intersection3D::Invalid());
   }
 
   double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
@@ -180,7 +180,7 @@ SurfaceMultiIntersection LineSurface::intersect(
     }
   }
 
-  return {{Intersection3D(result, u, status), Intersection3D::invalid()}, this};
+  return MultiIntersection3D(Intersection3D(result, u, status));
 }
 
 BoundToFreeMatrix LineSurface::boundToFreeJacobian(

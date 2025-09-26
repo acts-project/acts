@@ -10,25 +10,36 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <vector>
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-Acts::DiscLayer::DiscLayer(const Transform3& transform,
-                           const std::shared_ptr<const DiscBounds>& dbounds,
-                           std::unique_ptr<SurfaceArray> surfaceArray,
-                           double thickness,
-                           std::unique_ptr<ApproachDescriptor> ades,
-                           LayerType laytyp)
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+std::shared_ptr<DiscLayer> DiscLayer::create(
+    const Transform3& transform,
+    const std::shared_ptr<const DiscBounds>& dbounds,
+    std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+    std::unique_ptr<ApproachDescriptor> ad, LayerType laytyp) {
+  return std::shared_ptr<DiscLayer>(
+      new DiscLayer(transform, dbounds, std::move(surfaceArray), thickness,
+                    std::move(ad), laytyp));
+}
+
+DiscLayer::DiscLayer(const Transform3& transform,
+                     const std::shared_ptr<const DiscBounds>& dbounds,
+                     std::unique_ptr<SurfaceArray> surfaceArray,
+                     double thickness, std::unique_ptr<ApproachDescriptor> ades,
+                     LayerType laytyp)
     : DiscSurface(transform, dbounds),
       Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp) {
   // In case we have Radial bounds
@@ -54,15 +65,15 @@ Acts::DiscLayer::DiscLayer(const Transform3& transform,
   }
 }
 
-const Acts::DiscSurface& Acts::DiscLayer::surfaceRepresentation() const {
+const DiscSurface& DiscLayer::surfaceRepresentation() const {
   return (*this);
 }
 
-Acts::DiscSurface& Acts::DiscLayer::surfaceRepresentation() {
+DiscSurface& DiscLayer::surfaceRepresentation() {
   return (*this);
 }
 
-void Acts::DiscLayer::buildApproachDescriptor() {
+void DiscLayer::buildApproachDescriptor() {
   // delete it
   m_approachDescriptor.reset(nullptr);
   // take the boundary surfaces of the representving volume if they exist
@@ -90,3 +101,5 @@ void Acts::DiscLayer::buildApproachDescriptor() {
     }
   }
 }
+
+}  // namespace Acts

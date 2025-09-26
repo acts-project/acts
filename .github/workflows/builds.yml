@@ -20,18 +20,17 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
-  DEPENDENCY_TAG: v10.0.0
 
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:74
+    container: ghcr.io/acts-project/ubuntu2404:80
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -125,13 +124,13 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:74
+    container: ghcr.io/acts-project/ubuntu2404:80
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -141,7 +140,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: acts-linux-ubuntu
 
@@ -159,18 +158,18 @@ jobs:
           source build/this_acts_withdeps.sh
           python3 -m pip install -r Examples/Python/tests/requirements.txt
           python3 -m pip install pytest-md-report
-          pytest -rfExw -k "not exatrkx" -v
+          pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:74
+    container: ghcr.io/acts-project/ubuntu2404:80
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -182,19 +181,12 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: acts-linux-ubuntu
 
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
-
-      - name: Save PR number
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          mkdir -p physmon
-          echo ${{ github.event.number }} > physmon/pr_number
-          echo ${{ github.event.pull_request.head.sha }} > physmon/sha
 
       - name: Physics performance checks
         shell: bash
@@ -217,7 +209,9 @@ jobs:
 
       - name: Post step summary
         if: always()
-        run: cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
+        run: |
+          mkdir -p physmon
+          cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -233,7 +227,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.2
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: physmon
           path: physmon
@@ -258,19 +252,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2204
-            std: 20
-            cxx: g++
           - image: ubuntu2404_clang19
             std: 20
             cxx: clang++-19
-    container: ghcr.io/acts-project/${{ matrix.image }}:74
+    container: ghcr.io/acts-project/${{ matrix.image }}:80
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -339,16 +330,21 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
+
+      - name: Setup Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.3.0"
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -414,3 +410,102 @@ jobs:
         run: >
           PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && ./build-downstream/bin/ShowActsVersion
+
+  external_eic-shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+          path: acts
+
+      - uses: actions/checkout@v5
+        with:
+          repository: eic/EICrecon
+          path: EICrecon
+
+      - name: Setup CMVFS
+        uses: cvmfs-contrib/github-action-cvmfs@v5
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Build
+        id: build
+        uses: addnab/docker-run-action@v3
+        continue-on-error: true
+        with:
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work
+          shell: bash
+          run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            cd /work
+            set -ue
+
+            pushd acts
+            ccache -z && \
+            export CMAKE_INSTALL_PREFIX=$HOME/prefix
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            echo "::group::Acts configure phase"
+            cmake -B build -S . \
+              -GNinja \
+              -DACTS_BUILD_EXAMPLES=ON \
+              -DACTS_BUILD_FATRAS=ON \
+              -DACTS_BUILD_PLUGIN_DD4HEP=ON
+            echo "::endgroup::"
+            echo "::group::Acts build phase"
+            cmake --build build
+            echo "::endgroup::"
+            echo "::group::Acts install phase"
+            cmake --install build
+            echo "::endgroup::"
+            popd
+
+            pushd EICrecon
+            echo "::group::EICrecon configure phase"
+            ccache -z && \
+            cmake -B build -S . \
+              -GNinja \
+              -DActs_ROOT=$CMAKE_INSTALL_PREFIX
+            echo "::endgroup::"
+            echo "::group::EICrecon build phase"
+            cmake --build build
+            echo "::endgroup::"
+            popd
+
+            ccache -s
+
+      - name: Create comment body
+        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        run: |
+          cat >comment-50-external-failure.md <<EOF
+          # ❗️: Downstream build failure
+
+           - eic-shell (cc @acts-project/epic-contacts)
+          EOF
+
+      - name: Upload Artifact
+        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: comment-50-external-failure.md
+          path: comment-50-external-failure.md
+          retention-days: 5
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}

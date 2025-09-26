@@ -13,7 +13,16 @@ inputs:
   spack_version:
     description: 'Version of Spack to use'
     required: false
-    default: 'develop-2025-05-25'
+    default: 'v1.0.0'
+  spack_repo_version:
+    description: 'Version of Spack builtin repo to use'
+    required: false
+    default: 'v2025.07.0'
+  DEPENDENCY_TAG:
+    description: 'Dependency tag to pull from'
+    required: false
+    default: 'v13.0.0'
+
 
 runs:
   using: 'composite'
@@ -29,7 +38,7 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: spack_cache
-        key: spack-r2-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-r2-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Extract cached Spack
       if: steps.cache-restore.outputs.cache-hit == 'true'
@@ -63,6 +72,8 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
+        DEPENDENCY_TAG: ${{ inputs.DEPENDENCY_TAG }}
       run: |
         if [ -n "${{ inputs.compiler }}" ]; then
           echo "With compiler"

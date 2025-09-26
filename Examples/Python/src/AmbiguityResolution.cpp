@@ -6,9 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/AmbiguityResolution/ScoreBasedAmbiguityResolutionAlgorithm.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 
@@ -20,10 +21,10 @@ namespace py = pybind11;
 using namespace Acts;
 using namespace ActsExamples;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addAmbiguityResolution(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,
@@ -37,4 +38,4 @@ void addAmbiguityResolution(Context& ctx) {
       maxSharedTracksPerMeasurement, useAmbiguityScoring);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

@@ -29,7 +29,7 @@ struct AlgorithmContext;
 /// Each entry in the TTree corresponds to one particle for optimum writing
 /// speed. The event number is part of the written data.
 ///
-/// Safe to use from multiple writer threads. To avoid thread-saftey issues,
+/// Safe to use from multiple writer threads. To avoid thread-safety issues,
 /// the writer must be the sole owner of the underlying file. Thus, the
 /// output file pointer can not be given from the outside.
 class RootParticleWriter final : public WriterT<SimParticleContainer> {
@@ -78,8 +78,8 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
 
   /// Event identifier.
   std::uint32_t m_eventId = 0;
-  /// Event-unique particle identifier a.k.a barcode.
-  std::vector<std::uint64_t> m_particleId;
+  /// Event-unique particle identifier, i.e hash of the barcode.
+  std::vector<std::size_t> m_particleHash;
   /// Particle type a.k.a. PDG particle number
   std::vector<std::int32_t> m_particleType;
   /// Production process type, i.e. what generated the particle.

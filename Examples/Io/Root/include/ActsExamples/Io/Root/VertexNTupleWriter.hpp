@@ -48,7 +48,7 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
   struct Config {
     /// Input vertex collection.
     std::string inputVertices;
-    /// Tracks object from track finidng.
+    /// Tracks object from track finding.
     std::string inputTracks;
     /// Optional. Input truth vertex collection.
     std::string inputTruthVertices;
@@ -235,7 +235,7 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
   std::vector<std::vector<double>> m_recoThetaFitted;
   std::vector<std::vector<double>> m_recoQOverPFitted;
 
-  std::vector<std::vector<std::uint64_t>> m_trkParticleId;
+  std::vector<std::vector<std::vector<std::uint32_t>>> m_trkParticleId;
 
   // True track momenta at the vertex
   std::vector<std::vector<double>> m_truthPhi;

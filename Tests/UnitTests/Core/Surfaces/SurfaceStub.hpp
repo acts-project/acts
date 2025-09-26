@@ -83,15 +83,14 @@ class SurfaceStub : public RegularSurface {
   }
 
   /// Surface intersction
-  SurfaceMultiIntersection intersect(
-      const GeometryContext& /*gctx*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/,
-      const BoundaryTolerance& /*boundaryTolerance*/,
-      const double /*tolerance*/) const final {
+  MultiIntersection3D intersect(const GeometryContext& /*gctx*/,
+                                const Vector3& /*position*/,
+                                const Vector3& /*direction*/,
+                                const BoundaryTolerance& /*boundaryTolerance*/,
+                                const double /*tolerance*/) const final {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
                                     IntersectionStatus::reachable);
-    return SurfaceMultiIntersection(
-        {stubIntersection, Intersection3D::invalid()}, this);
+    return MultiIntersection3D(stubIntersection, Intersection3D::Invalid());
   }
 
   /// Return properly formatted class name

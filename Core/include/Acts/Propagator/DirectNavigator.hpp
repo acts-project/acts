@@ -18,6 +18,7 @@
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -259,12 +260,10 @@ class DirectNavigator {
     // TODO we do not know the intersection index - passing the closer one
     const Surface& surface = state.navSurface();
     const double farLimit = std::numeric_limits<double>::max();
-    const auto intersection = chooseIntersection(
-        state.options.geoContext, surface, position, direction,
-        BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
-        state.options.surfaceTolerance);
-    return NavigationTarget(surface, intersection.index(),
-                            BoundaryTolerance::Infinite());
+    return chooseIntersection(state.options.geoContext, surface, position,
+                              direction, BoundaryTolerance::Infinite(),
+                              state.options.nearLimit, farLimit,
+                              state.options.surfaceTolerance);
   }
 
   /// @brief Check if the current target is still valid
@@ -315,7 +314,7 @@ class DirectNavigator {
   }
 
  private:
-  ObjectIntersection<Surface> chooseIntersection(
+  NavigationTarget chooseIntersection(
       const GeometryContext& gctx, const Surface& surface,
       const Vector3& position, const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance, double nearLimit,
@@ -323,14 +322,16 @@ class DirectNavigator {
     auto intersections = surface.intersect(gctx, position, direction,
                                            boundaryTolerance, tolerance);
 
-    for (auto& intersection : intersections.split()) {
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(intersections)) {
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger())) {
-        return intersection;
+        return NavigationTarget(intersection, intersectionIndex, surface,
+                                boundaryTolerance);
       }
     }
 
-    return ObjectIntersection<Surface>::invalid();
+    return NavigationTarget::None();
   }
 
   const Logger& logger() const { return *m_logger; }

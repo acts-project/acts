@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
@@ -181,8 +180,8 @@ class PlaneSurface : public RegularSurface {
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return the @c SurfaceMultiIntersection object
-  SurfaceMultiIntersection intersect(
+  /// @return the @c MultiIntersection3D object
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =

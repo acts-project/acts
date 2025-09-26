@@ -22,9 +22,9 @@
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -268,39 +268,45 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
   return jacToLocal;
 }
 
-SurfaceMultiIntersection DiscSurface::intersect(
+MultiIntersection3D DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
   // Get the contextual transform
-  auto gctxTransform = transform(gctx);
+  const Transform3& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
-  auto intersection =
+  const Intersection3D intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
-  auto status = intersection.status();
-  // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != IntersectionStatus::unreachable &&
-      m_bounds != nullptr && !boundaryTolerance.isInfinite()) {
-    // Built-in local to global for speed reasons
-    const auto& tMatrix = gctxTransform.matrix();
-    const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
-    const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
-    if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
-        absoluteBound.has_value() && m_bounds->coversFullAzimuth()) {
-      double modifiedTolerance = tolerance + absoluteBound->tolerance0;
-      if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
-                                        modifiedTolerance)) {
-        status = IntersectionStatus::unreachable;
-      }
-    } else if (!insideBounds(localCartesianToPolar(lcartesian),
-                             boundaryTolerance)) {
+  IntersectionStatus status = intersection.status();
+  if (status == IntersectionStatus::unreachable) {
+    return MultiIntersection3D(Intersection3D::Invalid());
+  }
+  if (m_bounds == nullptr || boundaryTolerance.isInfinite()) {
+    return MultiIntersection3D(intersection);
+  }
+  // Built-in local to global for speed reasons
+  const auto& tMatrix = gctxTransform.matrix();
+  const Vector3 fromCenter =
+      intersection.position() - tMatrix.block<3, 1>(0, 3);
+  if (m_bounds->coversFullAzimuth() && boundaryTolerance.isNone()) {
+    // avoids `atan2` in case of full phi coverage
+    const double r2 = fromCenter.squaredNorm();
+    const bool isInside =
+        (r2 >= square(m_bounds->rMin())) && (r2 <= square(m_bounds->rMax()));
+    if (!isInside) {
+      status = IntersectionStatus::unreachable;
+    }
+  } else {
+    const Vector2 localCartesian =
+        tMatrix.block<3, 2>(0, 0).transpose() * fromCenter;
+    const bool isInside =
+        insideBounds(localCartesianToPolar(localCartesian), boundaryTolerance);
+    if (!isInside) {
       status = IntersectionStatus::unreachable;
     }
   }
-  return {{Intersection3D(intersection.position(), intersection.pathLength(),
-                          status),
-           Intersection3D::invalid()},
-          this};
+  return MultiIntersection3D(Intersection3D(intersection.position(),
+                                            intersection.pathLength(), status));
 }
 
 ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(

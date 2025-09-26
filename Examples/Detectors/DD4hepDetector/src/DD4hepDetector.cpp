@@ -41,7 +41,7 @@ DD4hepDetector::DD4hepDetector(const Config& cfg)
       m_detector->world(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
       m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
       m_cfg.sortDetectors, m_nominalGeometryContext, m_cfg.materialDecorator,
-      m_cfg.geometryIdentifierHook);
+      m_cfg.geometryIdentifierHook, m_cfg.detectorElementFactory);
 }
 
 dd4hep::Detector& DD4hepDetector::dd4hepDetector() {

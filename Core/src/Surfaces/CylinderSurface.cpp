@@ -18,7 +18,6 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -82,7 +81,7 @@ Vector3 CylinderSurface::referencePosition(const GeometryContext& gctx,
   if (aDir == AxisDirection::AxisR || aDir == AxisDirection::AxisRPhi) {
     double R = bounds().get(CylinderBounds::eR);
     double phi = bounds().get(CylinderBounds::eAveragePhi);
-    return localToGlobal(gctx, Vector2{phi * R, 0}, Vector3{});
+    return localToGlobal(gctx, Vector2{phi * R, 0});
   }
   // give the center as default for all of these binning types
   // AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ,
@@ -219,7 +218,7 @@ detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   return detail::RealQuadraticEquation(a, b, c);
 }
 
-SurfaceMultiIntersection CylinderSurface::intersect(
+MultiIntersection3D CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -230,7 +229,8 @@ SurfaceMultiIntersection CylinderSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
+    return MultiIntersection3D(Intersection3D::Invalid(),
+                               Intersection3D::Invalid());
   }
 
   // Check the validity of the first solution
@@ -246,17 +246,14 @@ SurfaceMultiIntersection CylinderSurface::intersect(
     if (boundaryTolerance.isInfinite()) {
       return status;
     }
-    const auto& cBounds = bounds();
-    if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
-        absoluteBound.has_value() && cBounds.coversFullAzimuth()) {
+    if (boundaryTolerance.isNone() && bounds().coversFullAzimuth()) {
       // Project out the current Z value via local z axis
       // Built-in local to global for speed reasons
       const auto& tMatrix = gctxTransform.matrix();
       // Create the reference vector in local
       const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
-      double modifiedTolerance = tolerance + absoluteBound->tolerance1;
-      double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
+      double hZ = bounds().get(CylinderBounds::eHalfLengthZ) + tolerance;
       return std::abs(cZ) < std::abs(hZ) ? status
                                          : IntersectionStatus::unreachable;
     }
@@ -269,7 +266,7 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
   if (qe.solutions == 1) {
-    return {{first, first}, this};
+    return MultiIntersection3D(first, first);
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
@@ -281,9 +278,9 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   Intersection3D second(solution2, qe.second, status2);
   // Order based on path length
   if (first.pathLength() <= second.pathLength()) {
-    return {{first, second}, this};
+    return MultiIntersection3D(first, second);
   }
-  return {{second, first}, this};
+  return MultiIntersection3D(second, first);
 }
 
 AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(

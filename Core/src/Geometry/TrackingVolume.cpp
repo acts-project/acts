@@ -16,12 +16,14 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
@@ -34,7 +36,6 @@
 
 namespace Acts {
 
-// constructor for arguments
 TrackingVolume::TrackingVolume(
     const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
@@ -52,9 +53,7 @@ TrackingVolume::TrackingVolume(
   interlinkLayers();
   connectDenseBoundarySurfaces(denseVolumeVector);
 
-  DelegateChainBuilder{m_navigationDelegate}
-      .add<&INavigationPolicy::noopInitializeCandidates>()
-      .store(m_navigationDelegate);
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
 TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
@@ -364,7 +363,7 @@ void TrackingVolume::interlinkLayers() {
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
-boost::container::small_vector<BoundaryIntersection, 4>
+boost::container::small_vector<NavigationTarget, 4>
 TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                                      const Vector3& position,
                                      const Vector3& direction,
@@ -372,7 +371,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                                      const Logger& logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
 
-  boost::container::small_vector<BoundaryIntersection, 4> intersections;
+  boost::container::small_vector<NavigationTarget, 4> targets;
 
   // The limits for this navigation step
   double nearLimit = options.nearLimit;
@@ -380,9 +379,9 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
 
   // Helper function to test intersection
   auto checkIntersection =
-      [&](SurfaceMultiIntersection& candidates,
-          const BoundarySurface* boundary) -> BoundaryIntersection {
-    for (const auto& intersection : candidates.split()) {
+      [&](MultiIntersection3D& candidates,
+          const BoundarySurface* boundary) -> NavigationTarget {
+    for (auto [intersectionIndex, intersection] : Acts::enumerate(candidates)) {
       if (!intersection.isValid()) {
         continue;
       }
@@ -391,19 +390,20 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                    << boundary->surfaceRepresentation().geometryId());
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
-        return BoundaryIntersection(intersection, boundary);
+        return {intersection, intersectionIndex, *boundary,
+                options.boundaryTolerance};
       }
     }
 
     ACTS_VERBOSE("No intersection accepted");
-    return BoundaryIntersection(SurfaceIntersection::invalid(), nullptr);
+    return NavigationTarget::None();
   };
 
   /// Helper function to process boundary surfaces
   auto processBoundaries =
       [&](const TrackingVolumeBoundaries& boundaries) -> void {
     // Loop over the boundary surfaces
-    for (auto& boundary : boundaries) {
+    for (const auto& boundary : boundaries) {
       // Get the boundary surface pointer
       const auto& surface = boundary->surfaceRepresentation();
       ACTS_VERBOSE("Consider boundary surface " << surface.geometryId());
@@ -416,15 +416,16 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
         continue;
       }
 
-      auto candidates = surface.intersect(gctx, position, direction,
-                                          options.boundaryTolerance);
+      auto intersections = surface.intersect(gctx, position, direction,
+                                             options.boundaryTolerance);
       // Intersect and continue
-      auto intersection = checkIntersection(candidates, boundary.get());
-      if (intersection.first.isValid()) {
+      NavigationTarget candidate =
+          checkIntersection(intersections, boundary.get());
+      if (candidate.isValid()) {
         ACTS_VERBOSE(" - Proceed with surface");
-        intersections.push_back(intersection);
+        targets.push_back(candidate);
       } else {
-        ACTS_VERBOSE(" - Surface intersecion invalid");
+        ACTS_VERBOSE(" - Surface intersection invalid");
       }
     }
   };
@@ -444,15 +445,15 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
     processBoundaries(surfacesConfined);
   }
 
-  return intersections;
+  return targets;
 }
 
-boost::container::small_vector<LayerIntersection, 10>
+boost::container::small_vector<NavigationTarget, 10>
 TrackingVolume::compatibleLayers(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // the layer intersections which are valid
-  boost::container::small_vector<LayerIntersection, 10> lIntersections;
+  boost::container::small_vector<NavigationTarget, 10> targets;
 
   // the confinedLayers
   if (m_confinedLayers == nullptr) {
@@ -460,45 +461,41 @@ TrackingVolume::compatibleLayers(
   }
 
   // start layer given or not - test layer
-  const Layer* tLayer = options.startObject != nullptr
-                            ? static_cast<const Layer*>(options.startObject)
-                            : associatedLayer(gctx, position);
-  while (tLayer != nullptr) {
+  const Layer* layer = options.startObject != nullptr
+                           ? options.startObject
+                           : associatedLayer(gctx, position);
+  while (layer != nullptr) {
     // check if the layer needs resolving
     // - resolveSensitive -> always take layer if it has a surface array
     // - resolveMaterial -> always take layer if it has material
     // - resolvePassive -> always take, unless it's a navigation layer
     // skip the start object
-    if (tLayer != options.startObject && tLayer->resolve(options)) {
+    if (layer != options.startObject && layer->resolve(options)) {
       // if it's a resolveable start layer, you are by definition on it
       // layer on approach intersection
-      auto atIntersection =
-          tLayer->surfaceOnApproach(gctx, position, direction, options);
+      auto candidate =
+          layer->surfaceOnApproach(gctx, position, direction, options);
       // Intersection is ok - take it (move to surface on approach)
-      if (atIntersection.isValid()) {
+      if (candidate.isValid()) {
         // create a layer intersection
-        lIntersections.push_back(LayerIntersection(atIntersection, tLayer));
+        targets.push_back(candidate);
       }
     }
     // move to next one or break because you reached the end layer
-    tLayer = (tLayer == options.endObject)
-                 ? nullptr
-                 : tLayer->nextLayer(gctx, position, direction);
+    layer = layer == options.endObject
+                ? nullptr
+                : layer->nextLayer(gctx, position, direction);
   }
 
   // In case of cylindrical layers we might resolve far intersection solutions
   // which are not valid for navigation. These are discarded here by checking
   // against the minimum path length.
-  auto min = std::min_element(
-      lIntersections.begin(), lIntersections.end(),
-      [](const LayerIntersection& a, const LayerIntersection& b) {
-        return a.first.pathLength() < b.first.pathLength();
-      });
-  std::rotate(lIntersections.begin(), min, lIntersections.end());
-  lIntersections.resize(std::distance(min, lIntersections.end()),
-                        {SurfaceIntersection::invalid(), nullptr});
+  auto min =
+      std::ranges::min_element(targets, NavigationTarget::pathLengthOrder);
+  std::ranges::rotate(targets, min);
+  targets.resize(std::distance(min, targets.end()), NavigationTarget::None());
 
-  return lIntersections;
+  return targets;
 }
 
 const std::string& TrackingVolume::volumeName() const {
@@ -548,8 +545,8 @@ void TrackingVolume::setMotherVolume(TrackingVolume* mvol) {
   m_motherVolume = mvol;
 }
 
-const Acts::Layer* TrackingVolume::associatedLayer(
-    const GeometryContext& /*gctx*/, const Vector3& position) const {
+const Layer* TrackingVolume::associatedLayer(const GeometryContext& /*gctx*/,
+                                             const Vector3& position) const {
   // confined static layers - highest hierarchy
   if (m_confinedLayers != nullptr) {
     return (m_confinedLayers->object(position).get());
@@ -640,6 +637,14 @@ void TrackingVolume::visualize(IVisualization3D& helper,
   }
 }
 
+const INavigationPolicy* TrackingVolume::navigationPolicy() const {
+  return m_navigationPolicy.get();
+}
+
+INavigationPolicy* TrackingVolume::navigationPolicy() {
+  return m_navigationPolicy.get();
+}
+
 void TrackingVolume::setNavigationPolicy(
     std::unique_ptr<INavigationPolicy> policy) {
   if (policy == nullptr) {
@@ -658,7 +663,7 @@ void TrackingVolume::initializeNavigationCandidates(
 
 namespace {
 
-void visitLayer(const Acts::Layer& layer, TrackingGeometryVisitor& visitor) {
+void visitLayer(const Layer& layer, TrackingGeometryVisitor& visitor) {
   visitor.visitLayer(layer);
   // Surfaces contained in the surface array
   if (layer.surfaceArray() != nullptr) {
@@ -683,12 +688,10 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
   // Visit the boundary surfaces
   for (const auto& bs : m_boundarySurfaces) {
     visitor.visitBoundarySurface(*bs);
-    visitor.visitSurface(bs->surfaceRepresentation());
   }
 
   for (const auto& portal : portals()) {
     visitor.visitPortal(portal);
-    visitor.visitSurface(portal.surface());
   }
 
   // Internal structure
@@ -714,13 +717,23 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
   }
 }
 
-void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
+void TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
+  // if the visitor is configured for inner--->outer volume visiting we visit
+  // the children first
+  if (visitor.visitDepthFirst()) {
+    for (auto& volume : volumes()) {
+      volume.apply(visitor);
+    }
+  }
+
   visitor.visitVolume(*this);
 
   // Visit the boundary surfaces
   // This does const casts because Gen1 substructure does not have transitive
   // const-ness
+
   // @TODO: Remove this when Gen1 is remoeved
+
   for (const auto& bs : m_boundarySurfaces) {
     visitor.visitBoundarySurface(
         const_cast<BoundarySurfaceT<TrackingVolume>&>(*bs));
@@ -771,8 +784,12 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
     visitor.visitSurface(surface);
   }
 
-  for (auto& volume : volumes()) {
-    volume.apply(visitor);
+  if (!visitor.visitDepthFirst()) {
+    // if the visitor is configured for outer--->inner volume visiting we visit
+    // the children last
+    for (auto& volume : volumes()) {
+      volume.apply(visitor);
+    }
   }
 }
 

@@ -9,7 +9,10 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
 
@@ -23,47 +26,49 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
 
-  // De-duplicate first (necessary to deal correctly with multiple
-  // intersections) - sort them by surface pointer
-  std::ranges::sort(m_candidates, [](const Candidate& a, const Candidate& b) {
-    return (&a.surface()) < (&b.surface());
-  });
-  // Remove duplicates on basis of the surface pointer
-  m_candidates.erase(std::unique(m_candidates.begin(), m_candidates.end(),
-                                 [](const Candidate& a, const Candidate& b) {
-                                   return (&a.surface()) == (&b.surface());
-                                 }),
-                     m_candidates.end());
-
   // A container collecting additional candidates from multiple
-  // valid interseciton
-  std::vector<Candidate> additionalCandidates = {};
-  for (auto& [sIntersection, gen2Portal, portal, bTolerance] : m_candidates) {
+  // valid intersections
+  std::vector<NavigationTarget> additionalCandidates = {};
+  for (auto& candidate : m_candidates) {
     // Get the surface from the object intersection
-    const Surface* surface = sIntersection.object();
+    const Surface& surface = candidate.surface();
     // Intersect the surface
-    auto multiIntersection = surface->intersect(gctx, position, direction,
-                                                cTolerance, onSurfaceTolerance);
+    auto multiIntersection = surface.intersect(gctx, position, direction,
+                                               cTolerance, onSurfaceTolerance);
 
-    // Split them into valid intersections, keep track of potentially
-    // additional candidates
-    bool originalCandidateUpdated = false;
-    for (const auto& rsIntersection : multiIntersection.split()) {
-      // Skip negative solutions, respecting the on surface tolerance
-      if (rsIntersection.pathLength() < -onSurfaceTolerance) {
+    bool firstValid = multiIntersection.at(0).isValid();
+    bool secondValid = multiIntersection.at(1).isValid();
+    if (firstValid && !secondValid) {
+      if (multiIntersection.at(0).pathLength() < -onSurfaceTolerance) {
         continue;
       }
-      // Valid solution is either on surface or updates the distance
-      if (rsIntersection.isValid()) {
-        if (!originalCandidateUpdated) {
-          sIntersection = rsIntersection;
-          originalCandidateUpdated = true;
-        } else {
-          additionalCandidates.emplace_back(
-              Candidate{.intersection = rsIntersection,
-                        .gen2Portal = gen2Portal,
-                        .portal = portal,
-                        .bTolerance = bTolerance});
+      candidate.intersection() = multiIntersection.at(0);
+    } else if (!firstValid && secondValid) {
+      if (multiIntersection.at(1).pathLength() < -onSurfaceTolerance) {
+        continue;
+      }
+      candidate.intersection() = multiIntersection.at(1);
+    } else {
+      // Split them into valid intersections, keep track of potentially
+      // additional candidates
+      bool originalCandidateUpdated = false;
+      for (auto [intersectionIndex, intersection] :
+           Acts::enumerate(multiIntersection)) {
+        // Skip negative solutions, respecting the on surface tolerance
+        if (intersection.pathLength() < -onSurfaceTolerance) {
+          continue;
+        }
+        // Valid solution is either on surface or updates the distance
+        if (intersection.isValid()) {
+          if (!originalCandidateUpdated) {
+            candidate.intersection() = intersection;
+            originalCandidateUpdated = true;
+          } else {
+            NavigationTarget additionalCandidate = candidate;
+            additionalCandidate.intersection() = intersection;
+            additionalCandidate.intersectionIndex() = intersectionIndex;
+            additionalCandidates.emplace_back(additionalCandidate);
+          }
         }
       }
     }
@@ -74,17 +79,25 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
                       additionalCandidates.end());
 
   // Sort the candidates by path length
-  std::ranges::sort(m_candidates, Candidate::pathLengthOrder);
+  std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
+
+  // If we have duplicates, we expect them to be close by in path length, so we
+  // don't need to re-sort Remove duplicates on basis of the surface pointer
+  auto nonUniqueRange = std::ranges::unique(
+      m_candidates.begin(), m_candidates.end(),
+      [](const NavigationTarget& a, const NavigationTarget& b) {
+        return &a.surface() == &b.surface();
+      });
+  m_candidates.erase(nonUniqueRange.begin(), nonUniqueRange.end());
 
   // The we find the first invalid candidate
-  auto firstInvalid =
-      std::ranges::find_if(m_candidates, [](const Candidate& a) {
-        const auto& [aIntersection, aGen2Portal, aPortal, aTolerance] = a;
-        return !aIntersection.isValid();
-      });
+  auto firstInvalid = std::ranges::find_if(
+      m_candidates,
+      [](const NavigationTarget& a) { return !a.intersection().isValid(); });
 
   // Set the range and initialize
-  m_candidates.resize(std::distance(m_candidates.begin(), firstInvalid));
+  m_candidates.resize(std::distance(m_candidates.begin(), firstInvalid),
+                      NavigationTarget::None());
 
   m_currentIndex = 0;
   if (m_candidates.empty()) {
@@ -99,22 +112,23 @@ bool NavigationStream::update(const GeometryContext& gctx,
   // Loop over the (currently valid) candidates and update
   for (; m_currentIndex < m_candidates.size(); ++m_currentIndex) {
     // Get the candidate, and resolve the tuple
-    Candidate& candidate = currentCandidate();
+    NavigationTarget& candidate = currentCandidate();
     // Get the surface from the object intersection
-    const Surface* surface = candidate.intersection.object();
+    const Surface& surface = candidate.surface();
     // (re-)Intersect the surface
     auto multiIntersection =
-        surface->intersect(gctx, queryPoint.position, queryPoint.direction,
-                           candidate.bTolerance, onSurfaceTolerance);
+        surface.intersect(gctx, queryPoint.position, queryPoint.direction,
+                          candidate.boundaryTolerance(), onSurfaceTolerance);
     // Split them into valid intersections
-    for (const auto& rsIntersection : multiIntersection.split()) {
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(multiIntersection)) {
       // Skip wrong index solution
-      if (rsIntersection.index() != candidate.intersection.index()) {
+      if (intersectionIndex != candidate.intersectionIndex()) {
         continue;
       }
       // Valid solution is either on surface or updates the distance
-      if (rsIntersection.isValid()) {
-        candidate.intersection = rsIntersection;
+      if (intersection.isValid()) {
+        candidate.intersection() = intersection;
         return true;
       }
     }
@@ -123,44 +137,41 @@ bool NavigationStream::update(const GeometryContext& gctx,
   return false;
 }
 
+void NavigationStream::reset() {
+  m_candidates.clear();
+  m_currentIndex = 0;
+}
+
 void NavigationStream::addSurfaceCandidate(
     const Surface& surface, const BoundaryTolerance& bTolerance) {
-  m_candidates.emplace_back(
-      Candidate{.intersection = ObjectIntersection<Surface>::invalid(&surface),
-                .bTolerance = bTolerance});
+  m_candidates.emplace_back(Intersection3D::Invalid(), 0, surface, bTolerance);
 }
 
 void NavigationStream::addSurfaceCandidates(
     std::span<const Surface*> surfaces, const BoundaryTolerance& bTolerance) {
-  std::ranges::for_each(surfaces, [&](const auto* surface) {
-    m_candidates.emplace_back(
-        Candidate{.intersection = ObjectIntersection<Surface>::invalid(surface),
-                  .bTolerance = bTolerance});
+  m_candidates.reserve(m_candidates.size() + surfaces.size());
+  std::ranges::for_each(surfaces, [&](const Surface* surface) {
+    m_candidates.emplace_back(Intersection3D::Invalid(), 0, *surface,
+                              bTolerance);
   });
 }
 
 void NavigationStream::addPortalCandidate(const Experimental::Portal& portal) {
-  m_candidates.emplace_back(Candidate{
-      .intersection = ObjectIntersection<Surface>::invalid(&portal.surface()),
-      .gen2Portal = &portal,
-      .bTolerance = BoundaryTolerance::None()});
+  m_candidates.emplace_back(Intersection3D::Invalid(), 0, portal,
+                            BoundaryTolerance::None());
 }
 
 void NavigationStream::addPortalCandidate(const Portal& portal) {
-  m_candidates.emplace_back(Candidate{
-      .intersection = ObjectIntersection<Surface>::invalid(&portal.surface()),
-      .portal = &portal,
-      .bTolerance = BoundaryTolerance::None()});
+  m_candidates.emplace_back(Intersection3D::Invalid(), 0, portal,
+                            BoundaryTolerance::None());
 }
 
 void NavigationStream::addPortalCandidates(
     std::span<const Experimental::Portal*> portals) {
+  m_candidates.reserve(m_candidates.size() + portals.size());
   std::ranges::for_each(portals, [&](const auto& portal) {
-    m_candidates.emplace_back(Candidate{
-        .intersection =
-            ObjectIntersection<Surface>::invalid(&(portal->surface())),
-        .gen2Portal = portal,
-        .bTolerance = BoundaryTolerance::None()});
+    m_candidates.emplace_back(Intersection3D::Invalid(), 0, *portal,
+                              BoundaryTolerance::None());
   });
 }
 

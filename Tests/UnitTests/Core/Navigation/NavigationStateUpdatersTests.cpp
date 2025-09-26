@@ -8,13 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
 #include <algorithm>
@@ -99,8 +97,8 @@ struct IndexedSurfacesExtractor {
     // The extracted surfaces
     std::vector<const Surface*> eSurfaces;
     eSurfaces.reserve(indices.size());
-    std::for_each(indices.begin(), indices.end(),
-                  [&](const auto& i) { eSurfaces.push_back(surfaces[i]); });
+    std::ranges::for_each(
+        indices, [&](const auto& i) { eSurfaces.push_back(surfaces[i]); });
     return eSurfaces;
   }
 };

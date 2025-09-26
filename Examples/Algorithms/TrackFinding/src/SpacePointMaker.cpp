@@ -20,6 +20,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
 
 #include <algorithm>
@@ -91,10 +92,6 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
                             << " geometry selection duplicates");
     m_cfg.geometrySelection.erase(geoSelLastUnique, geoSelEnd);
   }
-  ACTS_INFO("Space point geometry selection:");
-  for (const auto& geoId : m_cfg.geometrySelection) {
-    ACTS_INFO("  " << geoId);
-  }
   auto spBuilderConfig = Acts::SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
 
@@ -119,6 +116,15 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   if (!m_cfg.stripGeometrySelection.empty()) {
     initializeStripPartners();
   }
+}
+
+ActsExamples::ProcessCode ActsExamples::SpacePointMaker::initialize() {
+  ACTS_INFO("Space point geometry selection:");
+  for (const auto& geoId : m_cfg.geometrySelection) {
+    ACTS_INFO("  " << geoId);
+  }
+
+  return ProcessCode::SUCCESS;
 }
 
 void ActsExamples::SpacePointMaker::initializeStripPartners() {
@@ -249,6 +255,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   // Loop over the geometry selections
   std::vector<std::pair<Acts::SourceLink, Acts::SourceLink>> stripSLPairs;
   for (auto sel : m_cfg.stripGeometrySelection) {
+    auto nSpacepointsBefore = spacePoints.size();
     stripSLPairs.clear();
     ACTS_VERBOSE("Process strip selection " << sel);
 
@@ -382,6 +389,9 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
       m_spacePointBuilder.buildSpacePoint(ctx.geoContext, {sl1, sl2}, spOpt,
                                           std::back_inserter(spacePoints));
     }
+
+    ACTS_DEBUG("Built " << spacePoints.size() - nSpacepointsBefore
+                        << " spacepoints for selector " << sel);
   }
 
   spacePoints.shrink_to_fit();

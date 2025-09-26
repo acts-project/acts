@@ -42,8 +42,8 @@ HepMC3InputConverter::HepMC3InputConverter(const Config& config,
 ProcessCode HepMC3InputConverter::execute(const AlgorithmContext& ctx) const {
   ACTS_DEBUG("HepMC3InputConverter::execute");
   const auto& genEvent = *m_inputEvent(ctx);
-  ACTS_DEBUG("Have " << genEvent.vertices_size() << " vertices");
-  ACTS_DEBUG("Have " << genEvent.particles_size() << " particles");
+  ACTS_DEBUG("Have " << genEvent.vertices().size() << " vertices");
+  ACTS_DEBUG("Have " << genEvent.particles().size() << " particles");
   ACTS_DEBUG("Have " << genEvent.event_number() << " event number");
 
   convertHepMC3ToInternalEdm(ctx, genEvent);
@@ -78,7 +78,7 @@ std::string printListing(const auto& vertices, const auto& particles) {
   for (const auto& vertex : vertices) {
     ss << "Vtx:    " << vertex.vertexId() << " at "
        << vertex.position4.transpose() << "\n";
-    for (const auto& [idx, particleId] : enumerate(vertex.incoming)) {
+    for (const auto& [idx, particleId] : Acts::enumerate(vertex.incoming)) {
       const auto& particle = findParticle(particleId);
       if (idx == 0) {
         ss << " I:     ";
@@ -89,7 +89,7 @@ std::string printListing(const auto& vertices, const auto& particles) {
       ss << "\n";
     }
 
-    for (const auto& [idx, particleId] : enumerate(vertex.outgoing)) {
+    for (const auto& [idx, particleId] : Acts::enumerate(vertex.outgoing)) {
       const auto& particle = findParticle(particleId);
       if (idx == 0) {
         ss << " O:     ";
@@ -140,7 +140,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         SimVertex secondaryVertex;
         nSecondaryVertices += 1;
         secondaryVertex.id =
-            SimVertexBarcode{vertex.id}.setVertexSecondary(nSecondaryVertices);
+            SimVertexBarcode{vertex.id}.withVertexSecondary(nSecondaryVertices);
         secondaryVertex.position4 = convertPosition(endVertex.position());
 
         handleVertex(endVertex, secondaryVertex, vertices, particles,
@@ -158,11 +158,12 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
                    << kUndecayedParticleStatus << ")");
       }
       // This particle is a final state particle
-      SimBarcode particleId{0u};
       nParticles += 1;
-      particleId.setVertexPrimary(vertex.vertexId().vertexPrimary())
-          .setVertexSecondary(vertex.vertexId().vertexSecondary())
-          .setParticle(nParticles);
+      SimBarcode particleId =
+          SimBarcode()
+              .withVertexPrimary(vertex.vertexId().vertexPrimary())
+              .withVertexSecondary(vertex.vertexId().vertexSecondary())
+              .withParticle(nParticles);
 
       Acts::PdgParticle pdg{particle->pdg_id()};
       double mass = 0.0;
@@ -192,15 +193,15 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
       }
 
       SimParticle simParticle{particleId, pdg, charge, mass};
-      simParticle.initial().setPosition4(vertex.position4);
+      simParticle.initialState().setPosition4(vertex.position4);
 
       const HepMC3::FourVector& genMomentum = particle->momentum();
       Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,
                              genMomentum.pz() * 1_GeV};
       double p = momentum.norm();
 
-      simParticle.initial().setDirection(momentum.normalized());
-      simParticle.initial().setAbsoluteMomentum(p);
+      simParticle.initialState().setDirection(momentum.normalized());
+      simParticle.initialState().setAbsoluteMomentum(p);
 
       particles.push_back(simParticle);
       vertex.outgoing.insert(particleId);
@@ -212,8 +213,8 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
     const AlgorithmContext& ctx, const HepMC3::GenEvent& genEvent) const {
   ACTS_DEBUG("Converting HepMC3 event to internal EDM");
 
-  ACTS_VERBOSE("Have " << genEvent.vertices_size() << " vertices");
-  ACTS_VERBOSE("Have " << genEvent.particles_size() << " particles");
+  ACTS_VERBOSE("Have " << genEvent.vertices().size() << " vertices");
+  ACTS_VERBOSE("Have " << genEvent.particles().size() << " particles");
 
   using VertexCluster = std::vector<HepMC3::ConstGenVertexPtr>;
   std::vector<VertexCluster> vertexClusters;
@@ -271,7 +272,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
   std::vector<SimParticle> particlesUnordered;
 
   std::vector<bool> seenVertices;
-  seenVertices.resize(genEvent.vertices_size());
+  seenVertices.resize(genEvent.vertices().size());
 
   for (const auto& cluster : vertexClusters) {
     for (const auto& vertex : cluster) {
@@ -292,9 +293,10 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
     }
     ACTS_DEBUG("Found " << nUndecayedParticles
                         << " undecayed particles in the event");
-    ACTS_DEBUG("Reserving " << genEvent.vertices_size() / 2 << " vertices and "
-                            << nUndecayedParticles << " particles");
-    verticesUnordered.reserve(genEvent.vertices_size() / 2);
+    ACTS_DEBUG("Reserving " << genEvent.vertices().size() / 2
+                            << " vertices and " << nUndecayedParticles
+                            << " particles");
+    verticesUnordered.reserve(genEvent.vertices().size() / 2);
     particlesUnordered.reserve(nUndecayedParticles);
 
     for (auto& cluster : vertexClusters) {
@@ -313,7 +315,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
 
       nPrimaryVertices += 1;
       SimVertex primaryVertex;
-      primaryVertex.id = SimVertexBarcode{}.setVertexPrimary(nPrimaryVertices);
+      primaryVertex.id = SimVertexBarcode().withVertexPrimary(nPrimaryVertices);
       primaryVertex.position4 = convertPosition(cluster.at(0)->position());
 
       std::size_t nSecondaryVertices = 0;

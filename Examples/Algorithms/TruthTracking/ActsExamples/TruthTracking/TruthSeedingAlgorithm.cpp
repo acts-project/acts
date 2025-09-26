@@ -61,17 +61,31 @@ TruthSeedingAlgorithm::TruthSeedingAlgorithm(Config cfg,
     throw std::invalid_argument("Missing proto tracks output collections");
   }
 
+  if (m_cfg.inputSimHits.empty()) {
+    throw std::invalid_argument("Missing input simulated hits collection");
+  }
+
+  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing input simulated hits measurements map");
+  }
+
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputParticleMeasurementsMap.initialize(m_cfg.inputParticleMeasurementsMap);
   m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 }
 
 ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // prepare input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& measurementSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   // construct the combined input container of space point pointers from all
   // configured input sources.
@@ -119,8 +133,34 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // fill measurement indices to create the proto track
     ProtoTrack track;
     track.reserve(measurements.size());
-    for (const auto& measurement : measurements) {
-      track.push_back(measurement.second);
+
+    std::vector<std::pair<const SimHit*, Index>> hits;
+    hits.reserve(measurements.size());
+
+    for (const auto& [barcode, index] : measurements) {
+      const auto simHitMapIt = measurementSimHitsMap.find(index);
+      if (simHitMapIt == measurementSimHitsMap.end()) {
+        ACTS_WARNING("No sim hit found for measurement index " << index);
+        continue;
+      }
+
+      const auto simHitIt = simHits.nth(simHitMapIt->second);
+      if (simHitIt == simHits.end()) {
+        ACTS_WARNING("No sim hit found for index " << simHitMapIt->second);
+        continue;
+      }
+
+      const auto& simHit = *simHitIt;
+
+      hits.emplace_back(&simHit, index);
+    }
+
+    std::sort(hits.begin(), hits.end(), [](const auto& a, const auto& b) {
+      return a.first->time() < b.first->time();
+    });
+
+    for (const auto& [hit, index] : hits) {
+      track.push_back(index);
     }
 
     // The list of measurements and the initial start parameters
@@ -143,9 +183,19 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     if (spacePointsOnTrack.size() < 3) {
       continue;
     }
-    // Sort the space points
-    std::ranges::sort(spacePointsOnTrack, {}, [](const SimSpacePoint* s) {
-      return std::hypot(s->r(), s->z());
+
+    // Sort the space points time
+    std::ranges::sort(spacePointsOnTrack, [&](const auto* a, const auto* b) {
+      auto ta = a->t();
+      auto tb = b->t();
+      if (!ta.has_value()) {
+        return false;
+      }
+      if (!tb.has_value()) {
+        return true;
+      }
+
+      return *ta < *tb;
     });
 
     // Loop over the found space points to find the seed with maximum deltaR
@@ -162,12 +212,11 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
           double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
                                      spacePointsOnTrack[im]->r());
           if (bmDeltaR >= m_cfg.deltaRMin && bmDeltaR <= m_cfg.deltaRMax &&
-              mtDeltaR >= m_cfg.deltaRMin && mtDeltaR <= m_cfg.deltaRMax) {
-            if ((bmDeltaR + mtDeltaR) > maxDeltaR) {
-              maxDeltaR = bmDeltaR + mtDeltaR;
-              bestSPIndices = {ib, im, it};
-              seedFound = true;
-            }
+              mtDeltaR >= m_cfg.deltaRMin && mtDeltaR <= m_cfg.deltaRMax &&
+              (bmDeltaR + mtDeltaR) > maxDeltaR) {
+            maxDeltaR = bmDeltaR + mtDeltaR;
+            bestSPIndices = {ib, im, it};
+            seedFound = true;
           }
         }
       }

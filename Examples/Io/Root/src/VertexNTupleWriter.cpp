@@ -16,6 +16,7 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
@@ -165,12 +166,12 @@ const SimParticle* findParticle(
 
   const TrackMatchEntry& particleMatch = imatched->second;
 
-  auto iparticle = particles.find(SimBarcode{particleMatch.particle->value()});
+  auto iparticle = particles.find(SimBarcode{particleMatch.particle.value()});
   if (iparticle == particles.end()) {
     ACTS_DEBUG(
         "Truth particle found but not monitored with this track, index = "
         << track.index() << " tip index = " << track.tipIndex()
-        << " and this barcode = " << particleMatch.particle->value());
+        << " and this barcode = " << particleMatch.particle.value());
     return {};
   }
 
@@ -507,7 +508,7 @@ ProcessCode VertexNTupleWriter::writeT(
       fmap[vtxId].second += weight;
     }
     double truthMajorityVertexTrackWeights = 0;
-    SimVertexBarcode truthMajorityVertexId{0};
+    std::optional<SimVertexBarcode> truthMajorityVertexId = std::nullopt;
     for (const auto& [vtxId, counter] : fmap) {
       if (counter.second > truthMajorityVertexTrackWeights) {
         truthMajorityVertexId = vtxId;
@@ -538,7 +539,13 @@ ProcessCode VertexNTupleWriter::writeT(
     auto& recoToTruth = recoToTruthMatching.back();
 
     // We have to decide if this reco vertex is a split vertex.
-    if (auto it = truthToRecoMatching.find(truthMajorityVertexId);
+    if (!truthMajorityVertexId.has_value()) {
+      // No truth vertex matched to this reconstructed vertex
+      ACTS_DEBUG("No truth vertex matched to this reconstructed vertex.");
+      continue;
+    }
+
+    if (auto it = truthToRecoMatching.find(truthMajorityVertexId.value());
         it != truthToRecoMatching.end()) {
       // This truth vertex is already matched to a reconstructed vertex so we
       // are dealing with a split vertex.
@@ -563,7 +570,7 @@ ProcessCode VertexNTupleWriter::writeT(
         it->second = {vtxIndex, sumPt2};
       }
     } else {
-      truthToRecoMatching[truthMajorityVertexId] = {vtxIndex, sumPt2};
+      truthToRecoMatching[truthMajorityVertexId.value()] = {vtxIndex, sumPt2};
     }
   }
 
@@ -632,7 +639,8 @@ ProcessCode VertexNTupleWriter::writeT(
     if (toTruthMatching.vertexId.has_value()) {
       auto iTruthVertex = truthVertices.find(toTruthMatching.vertexId.value());
       if (iTruthVertex == truthVertices.end()) {
-        ACTS_ERROR("Truth vertex not found.");
+        ACTS_ERROR("Truth vertex not found for id: "
+                   << toTruthMatching.vertexId.value());
         continue;
       }
       const SimVertex& truthVertex = *iTruthVertex;
@@ -880,7 +888,7 @@ void VertexNTupleWriter::writeTrackInfo(
       return std::nullopt;
     }
 
-    auto intersection =
+    Acts::Intersection3D intersection =
         perigeeSurface
             ->intersect(ctx.geoContext, params.position(ctx.geoContext),
                         params.direction(), Acts::BoundaryTolerance::Infinite())
@@ -919,7 +927,7 @@ void VertexNTupleWriter::writeTrackInfo(
     }
 
     if (particle != nullptr) {
-      innerTrkParticleId.push_back(particle->particleId().value());
+      innerTrkParticleId.push_back(particle->particleId().asVector());
 
       trueUnitDir = particle->direction();
       trueMom.head<2>() = Acts::makePhiThetaFromDirection(trueUnitDir);
@@ -931,7 +939,7 @@ void VertexNTupleWriter::writeTrackInfo(
     } else {
       ACTS_VERBOSE("Track has no matching truth particle.");
 
-      innerTrkParticleId.push_back(-1);
+      innerTrkParticleId.push_back(ActsFatras::Barcode::Invalid().asVector());
 
       innerTruthPhi.push_back(nan);
       innerTruthTheta.push_back(nan);
