@@ -112,7 +112,7 @@ std::optional<SimSpacePoint> createStripSpacePoint(
   Acts::Vector3 global = Acts::Vector3::Zero();
   const bool success =
       Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
-          *stripEnds1, *stripEnds2, Acts::Vector3::Zero(), global, 0.01, 0.01);
+          *stripEnds1, *stripEnds2, Acts::Vector3::Zero(), 0.01, 0.01, global);
   if (!success) {
     return std::nullopt;
   }

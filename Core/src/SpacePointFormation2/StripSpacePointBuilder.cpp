@@ -262,8 +262,8 @@ bool recoverConstrainedFormationState(FormationState& state,
 
 bool StripSpacePointBuilder::computeConstrainedSpacePoint(
     const StripEnds& stripEnds1, const StripEnds& stripEnds2,
-    const Vector3& vertex, Vector3& spacePoint, double stripLengthTolerance,
-    double stripLengthGapTolerance) {
+    const Vector3& vertex, double stripLengthTolerance,
+    double stripLengthGapTolerance, Vector3& spacePoint) {
   FormationState state;
 
   bool success = computeConstrainedFormationState(

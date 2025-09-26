@@ -57,17 +57,18 @@ bool computeCosmicSpacePoint(const StripEnds& stripEnds1,
 /// @param stripEnds1 The ends of first strip
 /// @param stripEnds2 The ends of second strip
 /// @param vertex Position of the vertex
-/// @param spacePoint The calculated space point
 /// @param stripLengthTolerance Tolerance scaling factor on the
 /// strip detector element length
 /// @param stripLengthGapTolerance Tolerance scaling factor of
 /// the gap between strip detector elements
+/// @param spacePoint The calculated space point
 /// @return whether the space point calculation was successful
 bool computeConstrainedSpacePoint(const StripEnds& stripEnds1,
                                   const StripEnds& stripEnds2,
-                                  const Vector3& vertex, Vector3& spacePoint,
+                                  const Vector3& vertex,
                                   double stripLengthTolerance,
-                                  double stripLengthGapTolerance);
+                                  double stripLengthGapTolerance,
+                                  Vector3& spacePoint);
 
 /// @brief Calculate the z and r covariance from the front and back SourceLink in the strip SP formation
 /// @param gctx The current geometry context object, e.g. alignment
