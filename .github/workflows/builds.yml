@@ -523,14 +523,6 @@ jobs:
           path: k4ActsTracking
       - name: Setup CVMFS
         uses: cvmfs-contrib/github-action-cvmfs@v5
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Build Key4hep dependents
         id: build
@@ -539,6 +531,7 @@ jobs:
         with:
           container: ubuntu2404
           view-path: /cvmfs/sw-nightlies.hsf.org/key4hep
+          ccache-key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}
           run: |
             pushd acts
             ccache -z
@@ -595,9 +588,3 @@ jobs:
           path: comment-51-key4hep-external-failure.md
           retention-days: 5
 
-      - name: Save ccache
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: ${{ github.workspace }}/acts/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
