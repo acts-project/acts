@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 
+#include <optional>
+
 namespace Acts {
 
 class GeometryContext;
