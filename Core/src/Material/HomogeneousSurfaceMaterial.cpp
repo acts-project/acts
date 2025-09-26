@@ -19,11 +19,6 @@ HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(const MaterialSlab& full,
                                                        MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType), m_fullMaterial(full) {}
 
-HomogeneousSurfaceMaterial& HomogeneousSurfaceMaterial::scale(double factor) {
-  m_fullMaterial.scaleThickness(factor);
-  return *this;
-}
-
 const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
     const Vector2& /*lp*/) const {
   return m_fullMaterial;
