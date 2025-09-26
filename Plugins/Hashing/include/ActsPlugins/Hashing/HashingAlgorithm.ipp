@@ -15,7 +15,7 @@
 
 #include <memory>
 
-namespace Acts {
+namespace ActsPlugins {
 
 // constructor
 template <typename external_spacepoint_t, typename SpacePointContainer>

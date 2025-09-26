@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
-#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Plugins/Hashing/HashingTraining.hpp"
-#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithmConfig.hpp"
+#include "ActsPlugins/Hashing/HashingTraining.hpp"
+#include "ActsPlugins/Hashing/HashingTrainingConfig.hpp"
 
 #include <cstdlib>
 #include <memory>

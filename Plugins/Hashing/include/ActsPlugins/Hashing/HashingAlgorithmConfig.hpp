@@ -11,7 +11,7 @@
 #include <cstdint>
 
 namespace ActsPlugins {
-  struct HashingAlgorithmConfig {
+struct HashingAlgorithmConfig {
   /// Size of the buckets = number of spacepoints in the bucket
   std::uint32_t bucketSize = 10;
   /// Number of zBins
