@@ -47,6 +47,8 @@ class DirectNavigator {
 
   /// @brief The nested options struct
   struct Options : public NavigatorPlainOptions {
+    /// Constructor from geometry context
+    /// @param gctx The geometry context
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
 
@@ -65,6 +67,8 @@ class DirectNavigator {
     /// The far limit to resolve surfaces
     double farLimit = std::numeric_limits<double>::max();
 
+    /// Set the plain navigator options
+    /// @param options The plain navigator options to copy
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
@@ -76,10 +80,14 @@ class DirectNavigator {
   /// propagation/extrapolation step and keep thread-local navigation
   /// information
   struct State {
+    /// Constructor from options
+    /// @param options_ The navigator options
     explicit State(const Options& options_) : options(options_) {}
 
+    /// Configuration options for the direct navigator
     Options options;
 
+    /// Propagation direction (forward or backward)
     Direction direction = Direction::Forward();
 
     /// Index of the next surface to try
@@ -96,10 +104,14 @@ class DirectNavigator {
     /// Navigation statistics
     NavigatorStatistics statistics;
 
+    /// Get the current navigation surface
+    /// @return Reference to the surface at the current surface index
     const Surface& navSurface() const {
       return *options.surfaces.at(surfaceIndex);
     }
 
+    /// Move to the next surface in the sequence
+    /// Increments or decrements surface index based on propagation direction
     void nextSurface() {
       if (direction == Direction::Forward()) {
         ++surfaceIndex;
@@ -108,6 +120,8 @@ class DirectNavigator {
       }
     }
 
+    /// Check if we have reached the end of the surface sequence
+    /// @return True if no more surfaces remain in the propagation direction
     bool endOfSurfaces() const {
       if (direction == Direction::Forward()) {
         return surfaceIndex >= static_cast<int>(options.surfaces.size());
@@ -115,6 +129,8 @@ class DirectNavigator {
       return surfaceIndex < 0;
     }
 
+    /// Get the number of surfaces remaining in the sequence
+    /// @return Number of surfaces left to process in the propagation direction
     int remainingSurfaces() const {
       if (direction == Direction::Forward()) {
         return options.surfaces.size() - surfaceIndex;
@@ -122,6 +138,9 @@ class DirectNavigator {
       return surfaceIndex + 1;
     }
 
+    /// Reset the surface index to the initial position
+    /// Sets index to before first surface (forward) or after last surface
+    /// (backward)
     void resetSurfaceIndex() {
       surfaceIndex = direction == Direction::Forward()
                          ? -1
@@ -129,38 +148,70 @@ class DirectNavigator {
     }
   };
 
+  /// Constructor with optional logger
+  /// @param _logger Logger instance for navigation messages
   explicit DirectNavigator(std::unique_ptr<const Logger> _logger =
                                getDefaultLogger("DirectNavigator",
                                                 Logging::INFO))
       : m_logger{std::move(_logger)} {}
 
+  /// Create a new navigation state from options
+  /// @param options The navigator options
+  /// @return New state initialized with the provided options
   State makeState(const Options& options) const {
     State state(options);
     return state;
   }
 
+  /// Get the current surface from the navigation state
+  /// @param state The navigation state
+  /// @return Pointer to current surface, nullptr if none
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
 
-  const TrackingVolume* currentVolume(const State& /*state*/) const {
+  /// Get the current tracking volume (not used by DirectNavigator)
+  /// @param state The navigation state (unused)
+  /// @return Always returns nullptr as DirectNavigator doesn't use volumes
+  const TrackingVolume* currentVolume(const State& state) const {
+    static_cast<void>(state);
     return nullptr;
   }
 
-  const IVolumeMaterial* currentVolumeMaterial(const State& /*state*/) const {
+  /// Get the current volume material (not used by DirectNavigator)
+  /// @param state The navigation state (unused)
+  /// @return Always returns nullptr as DirectNavigator doesn't use volume material
+  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
+    static_cast<void>(state);
     return nullptr;
   }
 
+  /// Get the start surface from the navigation state
+  /// @param state The navigation state
+  /// @return Pointer to start surface, nullptr if none
   const Surface* startSurface(const State& state) const {
     return state.options.startSurface;
   }
 
+  /// Get the target surface from the navigation state
+  /// @param state The navigation state
+  /// @return Pointer to target surface, nullptr if none
   const Surface* targetSurface(const State& state) const {
     return state.options.targetSurface;
   }
 
-  bool endOfWorldReached(State& /*state*/) const { return false; }
+  /// Check if the end of world has been reached (not applicable for
+  /// DirectNavigator)
+  /// @param state The navigation state (unused)
+  /// @return Always returns false as DirectNavigator operates on a surface sequence
+  bool endOfWorldReached(State& state) const {
+    static_cast<void>(state);
+    return false;
+  }
 
+  /// Check if navigation should break/stop
+  /// @param state The navigation state
+  /// @return True if navigation should break, false otherwise
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
   }
@@ -173,6 +224,7 @@ class DirectNavigator {
   /// @param position The start position
   /// @param direction The start direction
   /// @param propagationDirection The propagation direction
+  /// @return Always returns success result as DirectNavigator initialization cannot fail
   [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
                                         const Vector3& direction,
                                         Direction propagationDirection) const {
