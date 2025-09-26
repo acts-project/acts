@@ -60,6 +60,7 @@ class Detector;
 /// object ownership is done by shared/unique pointers.
 class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
  public:
+  /// Type alias for axis-aligned bounding box of detector volume
   using BoundingBox =
       Acts::AxisAlignedBoundingBox<Acts::Experimental::DetectorVolume, double,
                                    3>;
@@ -131,9 +132,30 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
                  std::shared_ptr<VolumeBounds> bounds,
                  InternalNavigationDelegate internalNavigation) noexcept(false);
 
-  /// Factory method for producing memory managed instances of DetectorVolume.
+  // === Factory Methods ===
+
+  /// @fn static std::shared_ptr<DetectorVolume> makeShared(const GeometryContext& gctx, std::string name, const Transform3& transform, std::shared_ptr<VolumeBounds> bounds, std::vector<std::shared_ptr<Surface>> surfaces, std::vector<std::shared_ptr<DetectorVolume>> volumes, ExternalNavigationDelegate externalNavigation, InternalNavigationDelegate internalNavigation)
+  /// @brief Protected factory method for producing memory managed instances of DetectorVolume.
+  ///
+  /// This overload creates a detector volume with full navigation capabilities,
+  /// supporting both external navigation (to other volumes) and internal
+  /// navigation (within the volume). It can contain both surfaces and
+  /// sub-volumes for complex detector hierarchies.
+  ///
+  /// @param gctx The geometry context for this call
+  /// @param name The name of the detector volume
+  /// @param transform The transform3 object of the volume
+  /// @param bounds Shared pointer to the volume bounds
+  /// @param surfaces Vector of shared pointers to surfaces
+  /// @param volumes Vector of shared pointers to sub-volumes
+  /// @param externalNavigation The external navigation delegate
+  /// @param internalNavigation The internal navigation delegate
+  ///
+  /// @return A shared pointer to the created detector volume
   ///
   /// @note This is called by the @class DetectorVolumeFactory
+  /// @note This is the full-featured factory method for complex detector volumes
+  /// @note This is a protected static method for controlled object creation
   static std::shared_ptr<DetectorVolume> makeShared(
       const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
@@ -142,9 +164,24 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       ExternalNavigationDelegate externalNavigation,
       InternalNavigationDelegate internalNavigation);
 
-  /// Factory method for producing memory managed instances of DetectorVolume.
+  /// @fn static std::shared_ptr<DetectorVolume> makeShared(const GeometryContext& gctx, std::string name, const Transform3& transform, std::shared_ptr<VolumeBounds> bounds, InternalNavigationDelegate internalNavigation)
+  /// @brief Protected factory method for producing memory managed instances of DetectorVolume.
+  ///
+  /// This overload creates a simpler detector volume with only internal
+  /// navigation capabilities. It is suitable for volumes that don't need
+  /// to navigate to other volumes or contain complex sub-structures.
+  ///
+  /// @param gctx The geometry context for this call
+  /// @param name The name of the detector volume
+  /// @param transform The transform3 object of the volume
+  /// @param bounds Shared pointer to the volume bounds
+  /// @param internalNavigation The internal navigation delegate
+  ///
+  /// @return A shared pointer to the created detector volume
   ///
   /// @note This is called by the @class DetectorVolumeFactory
+  /// @note This is the simplified factory method for basic detector volumes
+  /// @note This is a protected static method for controlled object creation
   static std::shared_ptr<DetectorVolume> makeShared(
       const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
@@ -282,6 +319,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   const std::vector<const DetectorVolume*>& volumes() const;
 
   /// Const access to the detector volume updator
+  /// @return Reference to the external navigation delegate
   const ExternalNavigationDelegate& externalNavigation() const;
 
   /// @brief Visit all reachable surfaces of the detector
@@ -371,6 +409,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
   /// Const access to the navigation state updator
+  /// @return Reference to the internal navigation delegate
   const InternalNavigationDelegate& internalNavigation() const;
 
   /// Update a portal given a portal index
@@ -395,6 +434,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   void assignVolumeMaterial(std::shared_ptr<const IVolumeMaterial> material);
 
   /// Const access to the volume amterial
+  /// @return Pointer to the volume material, nullptr if none assigned
   const IVolumeMaterial* volumeMaterial() const;
 
   /// @return the name of the volume
@@ -414,8 +454,11 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   void assignDetector(const Detector& detector);
 
   /// Const access to the detector
+  /// @return Pointer to the parent detector, nullptr if none assigned
   const Detector* detector() const;
 
+  /// Get the bounding box of this detector volume
+  /// @return Const reference to the bounding box
   const BoundingBox& getBoundingBox() const;
 
  private:
@@ -486,6 +529,17 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
 class DetectorVolumeFactory {
  public:
   /// Create a detector volume - from factory
+  /// @param portalGenerator Generator for volume portals
+  /// @param gctx Geometry context for construction
+  /// @param name Name of the detector volume
+  /// @param transform Volume transformation
+  /// @param bounds Volume boundaries
+  /// @param surfaces Collection of surfaces within the volume
+  /// @param volumes Collection of sub-volumes
+  /// @param externalNavigation External navigation delegate
+  /// @param internalNavigation Internal navigation delegate
+  /// @param nSeg Number of segments for containment check
+  /// @return Shared pointer to the constructed detector volume
   static std::shared_ptr<DetectorVolume> construct(
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
       const std::string& name, const Transform3& transform,
@@ -510,6 +564,13 @@ class DetectorVolumeFactory {
   }
 
   /// Create a detector volume - from factory
+  /// @param portalGenerator Generator for volume portals
+  /// @param gctx Geometry context for construction
+  /// @param name Name of the detector volume
+  /// @param transform Volume transformation
+  /// @param bounds Volume boundaries
+  /// @param internalNavigation Internal navigation delegate
+  /// @return Shared pointer to the constructed detector volume
   static std::shared_ptr<DetectorVolume> construct(
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
       std::string name, const Transform3& transform,
