@@ -519,6 +519,7 @@ def addFatras(
         s,
         alg.config.outputSimHits,
         outputParticles,
+        field,
         outputDirCsv,
         outputDirRoot,
         outputDirObj,
@@ -532,6 +533,7 @@ def addSimWriters(
     s: acts.examples.Sequencer,
     simHits: str = "simhits",
     particlesSimulated: str = "particles_simulated",
+    field: acts.MagneticFieldProvider = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirObj: Optional[Union[Path, str]] = None,
@@ -568,6 +570,7 @@ def addSimWriters(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=particlesSimulated,
+                bField=field,
                 filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
@@ -689,6 +692,7 @@ def addGeant4(
         s,
         alg.config.outputSimHits,
         outputParticles,
+        field,
         outputDirCsv,
         outputDirRoot,
         outputDirObj,
