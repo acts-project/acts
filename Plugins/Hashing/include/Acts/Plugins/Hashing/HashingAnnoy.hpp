@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Hashing/AnnoyForwardDeclarations.hpp"
 
 #include <map>
@@ -26,6 +25,7 @@ class HashingAnnoy {
       const double layerRMax, const double layerZMin, const double layerZMax);
   std::map<unsigned int, std::set<external_spacepoint_t>> m_bucketsSPMap;
 };
+
 }  // namespace Acts
 
 #include "Acts/Plugins/Hashing/HashingAnnoy.ipp"
