@@ -87,6 +87,7 @@ class Navigator {
   using NavigationSurfaces =
       boost::container::small_vector<NavigationTarget, 10>;
 
+  /// Type alias for navigation layer candidates container
   using NavigationLayers = boost::container::small_vector<NavigationTarget, 10>;
 
   /// Type alias for navigation boundary candidates container
@@ -195,7 +196,13 @@ class Navigator {
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
+
+    /// Get reference to current navigation layer
+    /// @return Reference to current layer intersection
     NavigationTarget& navLayer() { return navLayers.at(navLayerIndex.value()); }
+
+    /// Get reference to current navigation boundary
+    /// @return Reference to current boundary intersection
     NavigationTarget& navBoundary() {
       return navBoundaries.at(navBoundaryIndex.value());
     }
@@ -226,7 +233,7 @@ class Navigator {
     /// Statistics collection for navigation performance
     NavigatorStatistics statistics;
 
-    /// Gen3 surface stream
+    /// Stream for navigation debugging and monitoring
     NavigationStream stream;
 
     /// Reset navigation state after switching layers

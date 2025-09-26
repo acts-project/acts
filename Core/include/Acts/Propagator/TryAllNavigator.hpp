@@ -298,6 +298,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
     explicit State(const Options& options_)
         : TryAllNavigatorBase::State(options_) {}
 
+    /// Current navigation candidates with intersection information
     std::vector<NavigationTarget> currentTargets;
   };
 
@@ -623,10 +624,13 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     std::optional<Vector3> lastPosition;
 
     /// Provides easy access to the active intersection target
+    /// @return Reference to the currently active intersection candidate
     const NavigationTarget& activeTarget() const {
       return activeTargets.at(activeTargetIndex);
     }
 
+    /// @brief Check if all navigation candidates have been processed
+    /// @return True if no more candidates are available for navigation
     bool endOfTargets() const {
       return activeTargetIndex >= static_cast<int>(activeTargets.size());
     }
