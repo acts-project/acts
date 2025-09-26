@@ -51,9 +51,11 @@ class ConeLayer : virtual public ConeSurface, public Layer {
   ConeLayer& operator=(const ConeLayer&) = delete;
 
   /// Transforms the layer into a Surface representation for extrapolation
+  /// @return Const reference to the cone surface representing this layer
   const ConeSurface& surfaceRepresentation() const override;
 
-  // Non-const version
+  /// Non-const version of surface representation access
+  /// @return Mutable reference to the cone surface
   ConeSurface& surfaceRepresentation() override;
 
  protected:
