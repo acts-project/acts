@@ -26,15 +26,22 @@ class TripletSeeder {
   /// Cache for storing intermediate results during triplet seeding to avoid
   /// reallocation.
   struct Cache {
+    /// Cache for bottom doublets associated with middle space points
     DoubletsForMiddleSp bottomDoublets;
+    /// Cache for top doublets associated with middle space points
     DoubletsForMiddleSp topDoublets;
 
+    /// Sorted container of bottom doublet indices with cotangent theta values
     std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedBottoms;
+    /// Sorted container of top doublet indices with cotangent theta values
     std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedTops;
 
+    /// Cache for triplet top candidates during seed formation
     TripletTopCandidates tripletTopCandidates;
   };
 
+  /// Construct a TripletSeeder with optional logger.
+  /// @param logger Logger instance for debug output (defaults to INFO level)
   explicit TripletSeeder(std::unique_ptr<const Logger> logger =
                              getDefaultLogger("TripletSeeder",
                                               Logging::Level::INFO));

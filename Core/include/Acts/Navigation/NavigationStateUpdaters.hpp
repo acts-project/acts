@@ -9,20 +9,15 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
-#include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <array>
-#include <memory>
 
 namespace Acts::Experimental {
 
@@ -47,27 +42,34 @@ inline void intitializeCandidates(const GeometryContext& gctx,
 
   for (auto& sc : nState.surfaceCandidates) {
     // Get the surface representation: either native surface of portal
-    const Surface& surface =
-        sc.surface != nullptr ? *sc.surface : sc.portal->surface();
+    const Surface& surface = sc.surface();
     // Only allow overstepping if it's not a portal
     double overstepTolerance =
-        sc.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
+        sc.isPortalTarget() ? s_onSurfaceTolerance : nState.overstepTolerance;
     // Boundary tolerance is forced to 0 for portals
-    BoundaryTolerance boundaryTolerance =
-        sc.portal != nullptr ? BoundaryTolerance::None() : sc.boundaryTolerance;
+    BoundaryTolerance boundaryTolerance = sc.isPortalTarget()
+                                              ? BoundaryTolerance::None()
+                                              : sc.boundaryTolerance();
     // Check the surface intersection
-    auto sIntersection = surface.intersect(
+    auto multiIntersection = surface.intersect(
         gctx, position, direction, boundaryTolerance, s_onSurfaceTolerance);
-    for (auto& si : sIntersection.split()) {
-      if (si.isValid() && si.pathLength() > overstepTolerance) {
-        confirmedCandidates.emplace_back(NavigationState::SurfaceCandidate{
-            si, sc.surface, sc.portal, boundaryTolerance});
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(multiIntersection)) {
+      if (intersection.isValid() &&
+          intersection.pathLength() > overstepTolerance) {
+        if (sc.isPortalTarget()) {
+          confirmedCandidates.emplace_back(intersection, intersectionIndex,
+                                           sc.gen2Portal(), boundaryTolerance);
+        } else {
+          confirmedCandidates.emplace_back(intersection, intersectionIndex,
+                                           surface, boundaryTolerance);
+        }
       }
     }
   }
 
   std::ranges::sort(confirmedCandidates, {}, [](const auto& c) {
-    return c.objectIntersection.pathLength();
+    return c.intersection().pathLength();
   });
 
   nState.surfaceCandidates = std::move(confirmedCandidates);
@@ -121,6 +123,7 @@ class SingleObjectNavigation : public navigation_type {
   }
 
   /// Const Access to the object
+  /// @return Pointer to the object or nullptr if not set
   const object_type* object() const { return m_object; }
 
  private:

@@ -14,7 +14,7 @@ namespace Acts {
 
 struct HashingTrainingConfig {
   /// Random seed for Annoy
-  unsigned int annoySeed = 123456789;
+  std::uint32_t annoySeed = 123456789;
 
   /// Number of features to use
   std::int32_t f = 1;
