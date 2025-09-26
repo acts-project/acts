@@ -146,6 +146,10 @@ class Material {
   }
 };
 
+/// Stream operator for Material
+/// @param os Output stream
+/// @param material Material to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, const Material& material);
 
 }  // namespace Acts
