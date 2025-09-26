@@ -535,6 +535,7 @@ jobs:
       - name: Build Key4hep dependents
         id: build
         uses: aidasoft/run-lcg-view@v5
+        continue-on-error: true
         with:
           container: ubuntu2404
           view-path: /cvmfs/sw-nightlies.hsf.org/key4hep
