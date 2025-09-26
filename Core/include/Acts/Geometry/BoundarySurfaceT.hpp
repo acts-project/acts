@@ -133,6 +133,7 @@ class BoundarySurfaceT {
   }
 
   /// The Surface Representation of this
+  /// @return Reference to the surface representation of this boundary
   virtual const RegularSurface& surfaceRepresentation() const {
     return *m_surface;
   }
