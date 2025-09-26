@@ -12,6 +12,7 @@ namespace Acts {
 
 template <typename T>
 struct TypeTag {};
+/// Convenience variable for creating TypeTag instances
 template <typename T>
 constexpr TypeTag<T> Type;
 

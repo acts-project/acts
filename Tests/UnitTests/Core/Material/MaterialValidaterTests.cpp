@@ -14,14 +14,13 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/MaterialValidater.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
-#include <limits>
 #include <numbers>
 
 namespace Acts::Test {
@@ -54,20 +53,20 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
     // Intersect the surfaces
     for (auto& surface : surfaces) {
       // Get the intersection
-      auto sMultiIntersection = surface->intersect(gctx, position, direction,
-                                                   BoundaryTolerance::None());
+      auto multiIntersection = surface->intersect(gctx, position, direction,
+                                                  BoundaryTolerance::None());
       // One solution, take it
-      if (sMultiIntersection.size() == 1u &&
-          sMultiIntersection[0u].status() >=
+      if (multiIntersection.size() == 1u &&
+          multiIntersection.at(0).status() >=
               Acts::IntersectionStatus::reachable &&
-          sMultiIntersection[0u].pathLength() >= 0.0) {
+          multiIntersection.at(0).pathLength() >= 0.0) {
         surfaceAssignments.push_back(
-            {surface, sMultiIntersection[0u].position(), direction});
+            {surface, multiIntersection.at(0).position(), direction});
         continue;
       }
-      if (sMultiIntersection.size() > 1u) {
+      if (multiIntersection.size() > 1u) {
         // Multiple intersections, take the closest
-        auto closestForward = sMultiIntersection.closestForward();
+        Intersection3D closestForward = multiIntersection.closestForward();
         if (closestForward.status() >= Acts::IntersectionStatus::reachable &&
             closestForward.pathLength() > 0.0) {
           surfaceAssignments.push_back(

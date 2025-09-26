@@ -12,6 +12,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -105,16 +106,16 @@ struct SurfaceReached {
     const double farLimit = std::numeric_limits<double>::max();
     const double tolerance = state.options.surfaceTolerance;
 
-    const auto sIntersection = surface->intersect(
+    const MultiIntersection3D multiIntersection = surface->intersect(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping),
         boundaryTolerance, tolerance);
-    const auto closest = sIntersection.closest();
+    const Intersection3D closestIntersection = multiIntersection.closest();
 
     bool reached = false;
 
-    if (closest.status() == IntersectionStatus::onSurface) {
-      const double distance = closest.pathLength();
+    if (closestIntersection.status() == IntersectionStatus::onSurface) {
+      const double distance = closestIntersection.pathLength();
       ACTS_VERBOSE(
           "SurfaceReached aborter | "
           "Target surface reached at distance (tolerance) "
@@ -124,7 +125,8 @@ struct SurfaceReached {
 
     bool intersectionFound = false;
 
-    for (const auto& intersection : sIntersection.split()) {
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(multiIntersection)) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {

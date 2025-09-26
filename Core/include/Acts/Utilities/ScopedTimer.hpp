@@ -31,6 +31,7 @@ namespace Acts {
 ///
 class ScopedTimer {
  public:
+  /// Type alias for high resolution clock used for timing
   using clock_type = std::chrono::high_resolution_clock;
 
   /// @brief Construct a new Scoped Timer
@@ -67,6 +68,7 @@ class ScopedTimer {
 /// information.
 class AveragingScopedTimer {
  public:
+  /// Type alias for high resolution clock used for timing measurements
   using clock_type = std::chrono::high_resolution_clock;
 
   /// @brief RAII wrapper class for measuring individual timing samples
@@ -76,6 +78,7 @@ class AveragingScopedTimer {
   class Sample {
    public:
     /// @brief Construct a new sample and start timing
+    /// @param parent The parent averaging scoped timer to record to
     explicit Sample(AveragingScopedTimer& parent);
     /// @brief Record the duration when destroyed
     ~Sample();
