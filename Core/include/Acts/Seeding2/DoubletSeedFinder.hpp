@@ -185,6 +185,10 @@ struct MiddleSpInfo {
   float cosPhiM{};
   /// ratio between middle SP y position and radius
   float sinPhiM{};
+  /// deltaZ maximum for bottom doublet
+  float maxDeltaZbottom{};
+  /// deltaZ maximum for top doublet
+  float maxDeltaZtop{};
 };
 
 /// Interface and a collection of standard implementations for a doublet seed

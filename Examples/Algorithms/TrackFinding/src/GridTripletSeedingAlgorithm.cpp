@@ -62,6 +62,16 @@ static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
 
 }  // namespace
 
+float GridTripletSeedingAlgorithm::getDeltaZbottom(float, float) const
+{
+  return std::numeric_limits<float>::max();
+}
+
+float GridTripletSeedingAlgorithm::getDeltaZtop(float, float) const
+{
+  return std::numeric_limits<float>::max();
+}
+  
 GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
     : IAlgorithm("GridTripletSeedingAlgorithm", lvl), m_cfg(cfg) {
@@ -128,8 +138,13 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
 
   m_filterLogger = logger().cloneWithSuffix("Filter");
 
+  Acts::Experimental::TripletSeeder::Config config;
+  config.experimentDeltaZbottom.connect<&ActsExamples::GridTripletSeedingAlgorithm::getDeltaZbottom>(this);
+  config.experimentDeltaZtop.connect<&ActsExamples::GridTripletSeedingAlgorithm::getDeltaZtop>(this);
+  
   m_seedFinder =
-      Acts::Experimental::TripletSeeder(logger().cloneWithSuffix("Finder"));
+    Acts::Experimental::TripletSeeder(std::move(config),
+                                      logger().cloneWithSuffix("Finder"));
 }
 
 ProcessCode GridTripletSeedingAlgorithm::execute(
