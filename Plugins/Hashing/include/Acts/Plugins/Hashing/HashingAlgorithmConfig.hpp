@@ -8,14 +8,17 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace Acts {
+
 struct HashingAlgorithmConfig {
   /// Size of the buckets = number of spacepoints in the bucket
-  unsigned int bucketSize = 10;
+  std::uint32_t bucketSize = 10;
   /// Number of zBins
-  unsigned int zBins = 0;
+  std::uint32_t zBins = 0;
   /// Number of phiBins
-  unsigned int phiBins = 50;
+  std::uint32_t phiBins = 50;
 
   /// Layer selection
   double layerRMin = 25;

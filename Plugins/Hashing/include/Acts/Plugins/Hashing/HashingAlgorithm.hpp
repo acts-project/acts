@@ -16,7 +16,9 @@ namespace Acts {
 template <typename external_spacepoint_t, typename SpacePointContainer>
 class HashingAlgorithm {
  public:
-  explicit HashingAlgorithm(const HashingAlgorithmConfig& cfg);
+  using Config = HashingAlgorithmConfig;
+
+  explicit HashingAlgorithm(const Config& cfg);
 
   HashingAlgorithm() = default;
 
@@ -25,10 +27,10 @@ class HashingAlgorithm {
                collection_t& outputCollection) const;
 
   /// Get readonly access to the config parameters
-  const Acts::HashingAlgorithmConfig& config() const { return m_cfg; }
+  const Config& config() const { return m_cfg; }
 
  private:
-  HashingAlgorithmConfig m_cfg;
+  Config m_cfg;
 };
 
 }  // namespace Acts
