@@ -117,8 +117,8 @@ class StrawTestCalibrator {
  public:
   /// @brief Choose the coefficient to arrive at a drift time of 750 ns
   ///        for 15 mm
-  static const double CoeffRtoT = 750._ns / std::pow(15._mm, 1./3.);
-  static const double CoeffTtoR = 1 / std::pow(CoeffRtoT, 3);
+  inline static const double CoeffRtoT = 750._ns / std::pow(15._mm, 1./3.);
+  inline static const double CoeffTtoR = 1 / std::pow(CoeffRtoT, 3);
 
   static double calcDriftUncert(const double driftR) {
     return 0.1_mm + 0.15_mm * std::pow(1._mm + std::abs(driftR), -2.);
