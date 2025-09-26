@@ -35,7 +35,7 @@ TruthJetAlgorithm::TruthJetAlgorithm(const Config& cfg,
 
 ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  TrackJetContainer outputJets;
+  Acts::FastJet::TrackJetContainer outputJets;
 
   const auto& truthParticles = m_inputTruthParticles(ctx);
 
@@ -58,7 +58,8 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     inputPseudoJets.push_back(pseudoJet);
     particleIndex++;
   }
-  ACTS_DEBUG("Number of input pseudo jets: " << inputPseudoJets.size());
+  ACTS_DEBUG("Number of input pseudo jets from truth particles: "
+             << inputPseudoJets.size());
 
   // Run the jet clustering
   fastjet::ClusterSequence clusterSeq(inputPseudoJets, defaultJetDefinition);
@@ -66,7 +67,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   // Get the jets above a certain pt threshold
   std::vector<fastjet::PseudoJet> jets =
       sorted_by_pt(clusterSeq.inclusive_jets(m_cfg.jetPtMin));
-  ACTS_DEBUG("Number of clustered jets: " << jets.size());
+  ACTS_DEBUG("Number of clustered truth jets: " << jets.size());
 
   // Prepare jets for the storage - conversion of jets to custom track jet class
   // (and later add here the jet classification)
@@ -81,7 +82,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
                                   jets[i].e());
 
     // Initialize the (track) jet with 4-momentum
-    ActsExamples::TrackJet storedJet(jetFourMomentum);
+    Acts::FastJet::TruthJetBuilder storedJet(jetFourMomentum);
 
     // Add the jet constituents to the (track)jet
     for (unsigned int j = 0; j < jetConstituents.size(); j++) {
@@ -89,14 +90,11 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
       constituentIndices.push_back(jetConstituents[j].user_index());
     }
 
-    storedJet.setConstituents(constituentIndices);
+    Acts::FastJet::JetProperties jetProps(jets[i]);
+    jetProps.setConstituents(constituentIndices);
 
     outputJets.push_back(storedJet);
-    ACTS_DEBUG("Stored jet " << i << " with 4-momentum: " << jetFourMomentum(0)
-                             << ", " << jetFourMomentum(1) << ", "
-                             << jetFourMomentum(2) << ", " << jetFourMomentum(3)
-                             << " and " << constituentIndices.size()
-                             << " constituents.");
+    ACTS_DEBUG("Stored jet properties: " << jetProps);
   }
 
   m_outputJets(ctx, std::move(outputJets));

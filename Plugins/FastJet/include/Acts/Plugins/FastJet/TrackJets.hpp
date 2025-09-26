@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 
@@ -82,6 +83,74 @@ class TrackJetSequence {
 
   fastjet::ClusterSequence m_clusterSeq{};
 };
+
+class TruthJetBuilder {
+ public:
+  explicit TruthJetBuilder(const Acts::Vector4& fm) { m_fourMomentum = fm; }
+
+ private:
+  Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
+};
+
+class JetProperties {
+ public:
+  /// Constructor; saves a reference to the jet
+  /// @param jet the jet
+  explicit JetProperties(const fastjet::PseudoJet& jet) : m_jet{jet} {}
+
+  /// @brief Set the jet constituents
+  /// @param constituents the indices of the constituent tracks
+  void setConstituents(const std::vector<int>& constituents) {
+    m_constituents = constituents;
+  }
+  /// @brief Get the jet constituents
+  /// @return the indices of the constituent tracks
+  const std::vector<int>& getConstituents() const { return m_constituents; }
+
+  /// @brief Get the jet 4-momentum
+  /// @return the jet 4-momentum as an Acts::Vector4
+  Acts::Vector4 getFourMomentum() const { return m_fourMomentum; }
+
+  /// @brief Add a track to the jet
+  /// @param trk_idx the index of the track to add
+  void addTrack(const int trackIndex) { m_trackIndices.push_back(trackIndex); }
+
+  /// @brief Get the tracks associated to this jet
+  /// @return the indices of the associated tracks
+  const std::vector<int>& getTracks() const { return m_trackIndices; }
+
+  /// @brief Print the jet information
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const JetProperties& jetProps) {
+    os << "Jet 4-momentum: " << jetProps.getFourMomentum().transpose()
+       << std::endl;
+    os << "Constituents: ";
+    for (const auto& constituent : jetProps.getConstituents()) {
+      os << constituent << " ";
+    }
+    os << std::endl;
+    if (!jetProps.getTracks().empty()) {
+      os << "Associated tracks: ";
+      for (const auto& trkidx : jetProps.getTracks()) {
+        os << trkidx << " ";
+      }
+      os << std::endl;
+    } else {
+      os << "No associated tracks." << std::endl;
+    }
+    return os;
+  }
+
+ private:
+  const fastjet::PseudoJet& m_jet;
+  Acts::Vector4 m_fourMomentum{m_jet.px(), m_jet.py(), m_jet.pz(), m_jet.e()};
+  // The indices of the constituents wrt the global container
+  std::vector<int> m_constituents{};
+  // The indices of the tracks associated to this jet
+  std::vector<int> m_trackIndices{};
+};
+
+using TrackJetContainer = std::vector<TruthJetBuilder>;
 
 }  // namespace Acts::FastJet
 

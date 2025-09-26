@@ -165,16 +165,16 @@ def make_sequencer(
 
     s.addAlgorithm(truthJetAlg)
 
-    addTrackToTruthJetAlg(
-        s,
-        TrackToTruthJetConfig(
-            inputTracks="tracks",
-            inputJets="truth_jets",
-            outputTrackJets="track_jets",
-            maxDeltaR=0.4,
-        ),
-        loglevel=acts.logging.DEBUG,
-    )
+    # addTrackToTruthJetAlg(
+    #    s,
+    #    TrackToTruthJetConfig(
+    #        inputTracks="tracks",
+    #        inputJets="truth_jets",
+    #        outputTrackJets="track_jets",
+    #        maxDeltaR=0.4,
+    #    ),
+    #    loglevel=acts.logging.DEBUG,
+    # )
 
 
 def make_geometry():
