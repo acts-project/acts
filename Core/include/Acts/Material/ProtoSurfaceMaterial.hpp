@@ -110,8 +110,12 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   MaterialSlab m_materialSlab = MaterialSlab::Nothing();
 };
 
+/// @brief Type alias for a prototype surface material using BinUtility
+/// @details A surface material implementation that uses BinUtility for binning
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
+/// @brief Type alias for a prototype surface material using a grid of ProtoAxis
+/// @details A surface material implementation that uses a vector of ProtoAxis for grid-based binning
 using ProtoGridSurfaceMaterial =
     ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
 

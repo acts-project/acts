@@ -14,6 +14,7 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <cstddef>
 #include <ranges>
 
 #include <boost/container/static_vector.hpp>
@@ -106,6 +107,8 @@ class SubspaceHelperBase {
   static constexpr std::size_t kFullSize = FullSize;
 
   using FullSquareMatrix = ActsSquareMatrix<kFullSize>;
+
+  using size_type = std::size_t;
 
   bool empty() const { return self().empty(); }
   std::size_t size() const { return self().size(); }
@@ -235,6 +238,8 @@ class FixedSubspaceHelper
 
   using IndexType = index_t;
   using Container = std::array<IndexType, kSubspaceSize>;
+
+  using size_type = std::size_t;
 
   template <std::ranges::sized_range other_index_range_t>
   explicit FixedSubspaceHelper(const other_index_range_t& indices) {
