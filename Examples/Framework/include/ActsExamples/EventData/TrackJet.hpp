@@ -31,7 +31,7 @@ class TrackJet {
 
   void addTrack(const int trk_idx) { m_trk_idxs.push_back(trk_idx); }
 
-  std::vector<int> getTracks() const { return m_trk_idxs; }
+  const std::vector<int>& getTracks() const { return m_trk_idxs; }
 
   void print() const {
     std::cout << "Printing Jet information" << std::endl;
