@@ -598,5 +598,5 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: ${{ github.workspace }}/ccache
+          path: ${{ github.workspace }}/acts/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
