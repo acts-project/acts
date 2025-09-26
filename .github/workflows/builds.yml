@@ -583,7 +583,7 @@ jobs:
           cat >comment-51-key4hep-external-failure.md <<EOF
           # ❗️: Downstream build failure
 
-            - Key4hep
+            - Key4hep (cc @acts-project/key4hep-contacts)
           EOF
 
       - name: Upload Artifact
