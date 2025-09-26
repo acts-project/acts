@@ -10,7 +10,6 @@
 
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 
@@ -25,7 +24,7 @@ namespace Acts {
 // constructor
 template <typename SpacePointContainer>
 HashingTrainingAlgorithm<SpacePointContainer>::HashingTrainingAlgorithm(
-    const Acts::HashingTrainingConfig& cfg)
+    const Config& cfg)
     : m_cfg(cfg) {
   if (m_cfg.f <= 0) {
     throw std::invalid_argument("Invalid f, f must be positive");
