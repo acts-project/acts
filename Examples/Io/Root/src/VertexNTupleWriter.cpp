@@ -16,6 +16,7 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
@@ -887,7 +888,7 @@ void VertexNTupleWriter::writeTrackInfo(
       return std::nullopt;
     }
 
-    auto intersection =
+    Acts::Intersection3D intersection =
         perigeeSurface
             ->intersect(ctx.geoContext, params.position(ctx.geoContext),
                         params.direction(), Acts::BoundaryTolerance::Infinite())

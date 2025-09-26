@@ -17,7 +17,6 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -189,9 +188,7 @@ class DetectorNavigator {
 
     // Take the surface
     const auto& candidate = state.surfaceCandidate();
-    const auto& surface = (candidate.surface != nullptr)
-                              ? (*candidate.surface)
-                              : (candidate.portal->surface());
+    const auto& surface = candidate.surface();
     // Screen output which surface you are on
     ACTS_VERBOSE(volInfo(state)
                  << posInfo(state, position)
@@ -201,8 +198,7 @@ class DetectorNavigator {
 
     state.currentSurface = nullptr;
     state.currentPortal = nullptr;
-    return NavigationTarget(surface, candidate.objectIntersection.index(),
-                            candidate.boundaryTolerance);
+    return candidate;
   }
 
   bool checkTargetValid(const State& state, const Vector3& position,
@@ -242,17 +238,11 @@ class DetectorNavigator {
     const Surface* nextSurface = nullptr;
     bool isPortal = false;
 
-    if (state.surfaceCandidate().surface != nullptr) {
-      nextSurface = state.surfaceCandidate().surface;
-    } else if (state.surfaceCandidate().portal != nullptr) {
-      nextPortal = state.surfaceCandidate().portal;
+    nextSurface = &state.surfaceCandidate().surface();
+    if (state.surfaceCandidate().isPortalTarget()) {
+      nextPortal = &state.surfaceCandidate().gen2Portal();
       nextSurface = &nextPortal->surface();
       isPortal = true;
-    } else {
-      std::string msg = "DetectorNavigator: " + volInfo(state) +
-                        posInfo(state, position) +
-                        "panic: not a surface not a portal - what is it?";
-      throw std::runtime_error(msg);
     }
 
     ACTS_VERBOSE(volInfo(state)
@@ -357,9 +347,7 @@ class DetectorNavigator {
 
     // Sort properly the surface candidates
     auto& nCandidates = state.surfaceCandidates;
-    std::ranges::sort(nCandidates, {}, [](const auto& c) {
-      return c.objectIntersection.pathLength();
-    });
+    std::ranges::sort(nCandidates, NavigationTarget::pathLengthOrder);
     state.surfaceCandidateIndex = -1;
   }
 
