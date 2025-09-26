@@ -38,24 +38,24 @@ struct StripEnds {
 
 /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two measurements
 ///
-/// @param globalCluster1 Global position of the first measurements
-/// @param globalCluster2 Global position the second measurements
+/// @param globalCluster1 Global position of the measurements on the first strip
+/// @param globalCluster2 Global position of the measurements on the second strip
 /// @param options Pairing options
 ///
-/// @return Result with the squared sum within configuration parameters.
+/// @return If available, squared sum within configuration parameters
 std::optional<double> computeClusterPairDistance(
     const Vector3& globalCluster1, const Vector3& globalCluster2,
     const ClusterPairingOptions& options);
 
-/// @param stripEnds1 The ends of one strip
-/// @param stripEnds2 The ends of another strip
+/// @param stripEnds1 The ends of first strip
+/// @param stripEnds2 The ends of second strip
 /// @param spacePoint The calculated space point
 /// @return whether the space point calculation was successful
 bool computeCosmicSpacePoint(const StripEnds& stripEnds1,
                              const StripEnds& stripEnds2, Vector3& spacePoint);
 
-/// @param stripEnds1 The ends of one strip
-/// @param stripEnds2 The ends of another strip
+/// @param stripEnds1 The ends of first strip
+/// @param stripEnds2 The ends of second strip
 /// @param vertex Position of the vertex
 /// @param spacePoint The calculated space point
 /// @param stripLengthTolerance Tolerance scaling factor on the
