@@ -24,6 +24,7 @@ class DetectorVolume;
 ///
 class IGeometryIdGenerator {
  public:
+  /// Type alias for geometry ID cache storage
   using GeoIdCache = std::any;
 
   virtual ~IGeometryIdGenerator() = default;
