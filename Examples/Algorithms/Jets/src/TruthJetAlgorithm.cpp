@@ -90,7 +90,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
       constituentIndices.push_back(jetConstituents[j].user_index());
     }
 
-    Acts::FastJet::JetProperties jetProps(jets[i]);
+    Acts::FastJet::JetProperties jetProps(storedJet);
     jetProps.setConstituents(constituentIndices);
 
     outputJets.push_back(storedJet);

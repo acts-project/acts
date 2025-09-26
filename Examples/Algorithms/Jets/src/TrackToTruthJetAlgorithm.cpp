@@ -37,7 +37,7 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
   const auto& tracks = m_inputTracks(ctx);
   const auto& truthJets = m_inputJets(ctx);
   // Take a copy that we will modify
-  TrackJetContainer jets = truthJets;
+  Acts::FastJet::TrackJetContainer jets = truthJets;
 
   ACTS_DEBUG("TrackToTruthJetAlg - Number of tracks: " << tracks.size());
   ACTS_DEBUG("TrackToTruthJetAlg - Number of truth jets: " << truthJets.size());
@@ -51,16 +51,16 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
                                  << ", " << track.momentum().y() << ", "
                                  << track.momentum().z());
 
-    TrackJet* matchedJet = nullptr;
+    Acts::FastJet::TruthJetBuilder* matchedJet = nullptr;
 
     // Loop over the jets to find the closest one
     std::size_t i = 0;
     for (auto& jet : jets) {
-      // Calculate eta and phi of the jet and track
+      Acts::FastJet::JetProperties jetProps(jet);
 
-      double jetPx = jet.getFourMomentum().x();
-      double jetPy = jet.getFourMomentum().y();
-      double jetPz = jet.getFourMomentum().z();
+      double jetPx = jetProps.getFourMomentum().x();
+      double jetPy = jetProps.getFourMomentum().y();
+      double jetPz = jetProps.getFourMomentum().z();
       double trackPx = track.momentum().x();
       double trackPy = track.momentum().y();
       double trackPz = track.momentum().z();
@@ -94,7 +94,7 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
 
       ACTS_DEBUG("Track " << track.index() << " delta R to jet " << i << ": "
                           << deltaR
-                          << ", jet px: " << jet.getFourMomentum().head<1>());
+                          << ", jet px: " << jetProps.getFourMomentum().x());
       if (deltaR < m_cfg.maxDeltaR) {
         ACTS_DEBUG("Track " << track.index() << " matches jet " << i
                             << " with delta R: " << deltaR);
@@ -103,8 +103,10 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
       i++;
     }  // loop over jets
 
+    Acts::FastJet::JetProperties matchedJetProps(*matchedJet);
+
     if (matchedJet != nullptr) {
-      matchedJet->addTrack(track.index());
+      matchedJetProps.addTrack(track.index());
     }
 
   }  // loop over tracks

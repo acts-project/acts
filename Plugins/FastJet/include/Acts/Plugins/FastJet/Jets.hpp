@@ -87,6 +87,7 @@ class TrackJetBuilder {
 class TruthJetBuilder {
  public:
   explicit TruthJetBuilder(const Acts::Vector4& fm) { m_fourMomentum = fm; }
+  const Acts::Vector4 getTruthJetFourMomentum() const { return m_fourMomentum; }
 
  private:
   Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
@@ -96,7 +97,8 @@ class JetProperties {
  public:
   /// Constructor; saves a reference to the jet
   /// @param jet the jet
-  explicit JetProperties(const fastjet::PseudoJet& jet) : m_jet{jet} {}
+  explicit JetProperties(const TruthJetBuilder& truthJet)
+      : m_truthJet{truthJet} {}
 
   /// @brief Set the jet constituents
   /// @param constituents the indices of the constituent tracks
@@ -142,8 +144,8 @@ class JetProperties {
   }
 
  private:
-  const fastjet::PseudoJet& m_jet;
-  Acts::Vector4 m_fourMomentum{m_jet.px(), m_jet.py(), m_jet.pz(), m_jet.e()};
+  const TruthJetBuilder& m_truthJet;
+  Acts::Vector4 m_fourMomentum{m_truthJet.getTruthJetFourMomentum()};
   // The indices of the constituents wrt the global container
   std::vector<int> m_constituents{};
   // The indices of the tracks associated to this jet
