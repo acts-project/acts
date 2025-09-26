@@ -25,7 +25,7 @@ class TrackJet {
     m_constituents = constituents;
   }
 
-  std::vector<int> getConstituents() const { return m_constituents; }
+  const std::vector<int>& getConstituents() const { return m_constituents; }
 
   Acts::Vector4 getFourMomentum() const { return m_fourMomentum; }
 
