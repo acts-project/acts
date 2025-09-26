@@ -8,21 +8,15 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 
 #include <array>
-#include <map>
 #include <memory>
-#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -31,6 +25,7 @@ class ISurfaceMaterial;
 class Surface;
 
 namespace Experimental {
+
 class DetectorVolume;
 struct NavigationState;
 

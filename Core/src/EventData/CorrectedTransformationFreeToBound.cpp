@@ -10,18 +10,13 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <memory>
 #include <ostream>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -150,7 +145,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     FreeVector correctedFreeParams = params;
 
     // Reintersect to get the corrected free params without boundary check
-    SurfaceIntersection intersection =
+    Intersection3D intersection =
         surface
             .intersect(geoContext, params.segment<3>(eFreePos0),
                        navDir * params.segment<3>(eFreeDir0),

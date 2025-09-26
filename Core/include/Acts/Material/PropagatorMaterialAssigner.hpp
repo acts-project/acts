@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <map>
 #include <utility>
 #include <vector>
 
