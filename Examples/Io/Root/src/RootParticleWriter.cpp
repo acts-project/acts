@@ -10,6 +10,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"  // or EigenStepper / RKStepper
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -138,14 +141,17 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     // derived kinematic quantities
     m_eta.push_back(Acts::clampValue<float>(
         Acts::VectorHelpers::eta(particle.direction())));
-    m_phi.push_back(Acts::clampValue<float>(
-        Acts::VectorHelpers::phi(particle.direction())));
     m_pt.push_back(Acts::clampValue<float>(
         p * Acts::VectorHelpers::perp(particle.direction())));
-    m_theta.push_back(Acts::clampValue<float>(
-        Acts::VectorHelpers::theta(particle.direction())));
-    m_qop.push_back(Acts::clampValue<float>(
-        particle.qOverP() * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
+    if (!m_cfg.writeHelixParameters) {  // need to update p, px, py, pz as well
+      m_phi.push_back(Acts::clampValue<float>(
+          Acts::VectorHelpers::phi(particle.direction())));
+      m_theta.push_back(Acts::clampValue<float>(
+          Acts::VectorHelpers::theta(particle.direction())));
+      m_qop.push_back(
+          Acts::clampValue<float>(particle.qOverP() * Acts::UnitConstants::GeV /
+                                  Acts::UnitConstants::e));
+    }
     // decoded barcode components
     m_vertexPrimary.push_back(particle.particleId().vertexPrimary());
     m_vertexSecondary.push_back(particle.particleId().vertexSecondary());
@@ -166,6 +172,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     float d0 = NaNfloat;
     float z0 = NaNfloat;
 
+    // Neutral particles have no helix -> skip d0/z0
     if (particle.charge() == 0) {
       ACTS_WARNING("Particle has zero charge, can't write d0/z0");
       m_d0.push_back(NaNfloat);
@@ -173,25 +180,84 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       continue;
     }
 
+    // Perigee surface at configured reference point
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
         Acts::Vector3(m_cfg.referencePoint[0], m_cfg.referencePoint[1],
                       m_cfg.referencePoint[2]));
 
-    auto intersection = pSurface
-                            ->intersect(ctx.geoContext, particle.position(),
-                                        particle.direction(),
-                                        Acts::BoundaryTolerance::Infinite())
-                            .closest();
-    auto position = intersection.position();
+    // Start from truth curvilinear parameters (position, direction, q/p)
+    const Acts::Vector4 startPos =
+        particle.fourPosition();  // world coordinates + time
+    const Acts::Vector3 startDir = particle.direction();  // unit vector
+    const auto qOverP = particle.qOverP();                // ACTS units
+    auto intersection =
+        pSurface
+            ->intersect(ctx.geoContext, particle.position(), startDir,
+                        Acts::BoundaryTolerance::Infinite())
+            .closest();
 
-    // get the truth perigee parameter
-    auto lpResult =
-        pSurface->globalToLocal(ctx.geoContext, position, particle.direction());
-    if (lpResult.ok()) {
-      d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
-      z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
+    if (!m_cfg.writeHelixParameters) {
+      auto position = intersection.position();
+
+      // get the truth perigee parameter
+      auto lpResult =
+          pSurface->globalToLocal(ctx.geoContext, position, startDir);
+      if (lpResult.ok()) {
+        d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
+        z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
+      } else {
+        ACTS_ERROR("Global to local transformation did not succeed.");
+      }
     } else {
-      ACTS_ERROR("Global to local transformation did not succeed.");
+      // Build a propagator and propagate the *truth parameters* to the
+      // perigee Stepper + propagator
+      using Stepper = Acts::SympyStepper;  // or EigenStepper / RKStepper
+      Stepper stepper(m_cfg.bField);
+      using PropagatorT = Acts::Propagator<Stepper>;
+      auto propagator = std::make_shared<PropagatorT>(stepper);
+
+      Acts::BoundTrackParameters startParams =
+          Acts::BoundTrackParameters::createCurvilinear(
+              particle.fourPosition(), startDir, qOverP, std::nullopt,
+              Acts::ParticleHypothesis::pion());
+
+      // Propagation options (need event contexts)
+      using PropOptions = PropagatorT::Options<>;
+      PropOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+
+      // Choose propagation direction based on the closest intersection
+      pOptions.direction =
+          Acts::Direction::fromScalarZeroAsPositive(intersection.pathLength());
+
+      // Do the propagation to the perigee surface
+      auto propRes = propagator->propagate(startParams, *pSurface, pOptions);
+      if (!propRes.ok() || !propRes->endParameters.has_value()) {
+        ACTS_ERROR("Propagation to perigee surface failed.");
+        m_phi.push_back(NaNfloat);
+        m_theta.push_back(NaNfloat);
+        m_qop.push_back(NaNfloat);
+        m_d0.push_back(NaNfloat);
+        m_z0.push_back(NaNfloat);
+        continue;
+      }
+      const Acts::BoundTrackParameters& atPerigee = *propRes->endParameters;
+
+      // By construction, atPerigee is *bound on the perigee surface*.
+      // Its parameter vector is [loc0, loc1, phi, theta, q/p, t]
+      const auto& pars = atPerigee.parameters();
+
+      d0 = pars[Acts::BoundIndices::eBoundLoc0];
+      z0 = pars[Acts::BoundIndices::eBoundLoc1];
+
+      // truth phi;theta;q/p *at the perigee*,
+      const auto phi = pars[Acts::BoundIndices::eBoundPhi];
+      const auto theta = pars[Acts::BoundIndices::eBoundTheta];
+      const auto qop = pars[Acts::BoundIndices::eBoundQOverP];
+
+      m_phi.push_back(Acts::clampValue<float>(phi));
+      m_theta.push_back(Acts::clampValue<float>(theta));
+      m_qop.push_back(Acts::clampValue<float>(qop * Acts::UnitConstants::GeV /
+                                              Acts::UnitConstants::e));
     }
 
     // Push the truth particle info.
