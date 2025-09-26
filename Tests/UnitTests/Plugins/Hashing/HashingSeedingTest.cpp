@@ -8,17 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
 #include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Plugins/Hashing/HashingAnnoy.hpp"
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
 #include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
-#include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
-#include <cmath>
 #include <cstdlib>
 #include <memory>
 #include <vector>
@@ -50,7 +44,9 @@ std::vector<std::unique_ptr<const SpacePoint>> createTestVector() {
       104.412, -63.1851, -268.468, 110.0, 1, 0.0133333, 0.4, t, varianceT));
   return testVector;
 }
+
 namespace Acts::Test {
+
 BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   using SpacePointPtrVector = std::vector<const SpacePoint*>;
 
@@ -183,4 +179,5 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
     }
   }
 }
+
 }  // namespace Acts::Test

@@ -438,11 +438,21 @@ jobs:
 
       - name: Build
         id: build
-        uses: eic/run-cvmfs-osg-eic-shell@main
+        uses: addnab/docker-run-action@v3
         continue-on-error: true
         with:
-          platform-release: "eic_xl:nightly"
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work
+          shell: bash
           run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            cd /work
+            set -ue
+
             pushd acts
             ccache -z && \
             export CMAKE_INSTALL_PREFIX=$HOME/prefix
@@ -463,11 +473,8 @@ jobs:
             popd
 
             pushd EICrecon
-            export LD_LIBRARY_PATH="$CMAKE_INSTALL_PREFIX/lib:$LD_LIBRARY_PATH"
             echo "::group::EICrecon configure phase"
             ccache -z && \
-            env CXXFLAGS="-I$CMAKE_INSTALL_PREFIX/include -L$CMAKE_INSTALL_PREFIX/lib" \
-                LDFLAGS="-L$CMAKE_INSTALL_PREFIX/lib" \
             cmake -B build -S . \
               -GNinja \
               -DActs_ROOT=$CMAKE_INSTALL_PREFIX
