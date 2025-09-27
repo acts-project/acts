@@ -183,6 +183,6 @@ for label, seeding in [
     ("truth_smeared", SeedingAlgorithm.TruthSmeared),
     ("truth_estimated", SeedingAlgorithm.TruthEstimated),
     ("seeded", SeedingAlgorithm.GridTriplet),
-    ("orthogonal", SeedingAlgorithm.Orthogonal),
+    ("orthogonal", SeedingAlgorithm.OrthogonalTriplet),
 ]:
     run_ckf_tracking(label, seeding)

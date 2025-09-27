@@ -4,6 +4,7 @@ target_sources(
         detail/CandidatesForMiddleSp2.cpp
         BroadTripletSeedFilter.cpp
         CylindricalSpacePointGrid2.cpp
+        CylindricalSpacePointKDTree.cpp
         DoubletSeedFinder.cpp
         TripletSeedFinder.cpp
         TripletSeeder.cpp

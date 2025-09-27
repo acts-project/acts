@@ -360,7 +360,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
         field,
         outputDir=str(tmp_path),
         s=seq,
-        seedingAlgorithm=SeedingAlgorithm.Orthogonal,
+        seedingAlgorithm=SeedingAlgorithm.OrthogonalTriplet,
     ).run()
 
     for fn, tn in root_files:
