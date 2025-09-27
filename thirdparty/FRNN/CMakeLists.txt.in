@@ -29,11 +29,10 @@ add_library(frnn STATIC
 
 target_include_directories(frnn
     SYSTEM PUBLIC
-        ${TORCH_INCLUDE_DIRS}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/frnn/csrc>
 )
 
-target_link_libraries(frnn PRIVATE ${TORCH_LIBRARIES})
+target_link_libraries(frnn PUBLIC torch)
 
 set_property(TARGET frnn PROPERTY CXX_STANDARD 17)
 set_property(TARGET frnn PROPERTY POSITION_INDEPENDENT_CODE ON)
