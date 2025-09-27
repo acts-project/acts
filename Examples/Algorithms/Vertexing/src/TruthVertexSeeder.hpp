@@ -22,6 +22,7 @@ class TruthVertexSeeder final : public Acts::IVertexFinder {
   struct Config {
     bool useXY = false;
     bool useTime = false;
+    std::size_t simultaneousSeeds = 1;
   };
 
   struct State {
