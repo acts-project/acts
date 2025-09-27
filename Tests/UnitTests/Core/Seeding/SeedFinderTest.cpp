@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
   config.zMax = 2800._mm;
   config.maxSeedsPerSpM = 5;
   // 2.7 eta
-  config.cotThetaMax = 7.40627;
+  config.cotThetaMax = 10.01788;
   config.sigmaScattering = 1.00000;
 
   config.minPt = 500._MeV;

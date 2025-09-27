@@ -66,9 +66,11 @@ class GenericApproachDescriptor : public ApproachDescriptor {
                                    double farLimit) const override;
 
   /// return all contained surfaces of this approach descriptor
+  /// @return Const reference to vector of contained surface pointers
   const std::vector<const Surface*>& containedSurfaces() const override;
 
   /// Non-const version
+  /// @return Mutable reference to vector of contained surface pointers
   std::vector<const Surface*>& containedSurfaces() override;
 
  private:
