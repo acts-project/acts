@@ -14,7 +14,7 @@
 
 #include <Eigen/Dense>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 
@@ -201,4 +201,4 @@ void TripletSeeder::createSeedsFromGroups(
   }
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

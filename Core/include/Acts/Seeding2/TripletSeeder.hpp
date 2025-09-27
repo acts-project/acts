@@ -17,7 +17,7 @@
 
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Full triplet seeder which depends on a doublet and triplet seed finder, and
 /// a triplet seed filter.
@@ -98,4 +98,4 @@ class TripletSeeder {
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

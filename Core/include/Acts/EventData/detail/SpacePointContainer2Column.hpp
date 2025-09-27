@@ -11,7 +11,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class SpacePointContainer2;
 template <typename T, bool read_only>
@@ -74,4 +74,4 @@ class ColumnHolder final : public ColumnHolderBase {
 };
 
 }  // namespace detail::sp
-}  // namespace Acts::Experimental
+}  // namespace Acts

@@ -15,7 +15,6 @@
 #include <stdexcept>
 
 using namespace Acts;
-using namespace Acts::Experimental;
 
 BOOST_AUTO_TEST_SUITE(EventDataSpacePointContainer2)
 

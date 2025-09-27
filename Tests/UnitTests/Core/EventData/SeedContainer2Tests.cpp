@@ -11,7 +11,6 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 
 using namespace Acts;
-using namespace Acts::Experimental;
 
 BOOST_AUTO_TEST_SUITE(EventDataSeedContainer2)
 

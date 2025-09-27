@@ -18,7 +18,7 @@
 #include <numbers>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// A cylindrical space point grid used for seeding in a cylindrical detector
 /// geometry.
@@ -204,4 +204,4 @@ class CylindricalSpacePointGrid2 {
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
