@@ -22,8 +22,9 @@ static constexpr TrackIndexType kTrackIndexInvalid =
 
 using ProjectorBitset = std::uint64_t;
 
+using SubspaceIndex = std::uint8_t;
 template <std::size_t measdim>
-using SubspaceIndices = std::array<std::uint8_t, measdim>;
+using SubspaceIndices = std::array<SubspaceIndex, measdim>;
 using BoundSubspaceIndices = SubspaceIndices<eBoundSize>;
 static constexpr BoundSubspaceIndices kBoundSubspaceIndicesInvalid = {
     eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize, eBoundSize};
