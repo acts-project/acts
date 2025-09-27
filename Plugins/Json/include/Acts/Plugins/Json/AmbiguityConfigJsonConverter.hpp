@@ -24,5 +24,6 @@ using ConfigPair =
 /// This function is used to convert the ScoreBasedAmbiguityResolutionCongig
 /// from JSON to C++
 void from_json(const nlohmann::json& j, ConfigPair& p);
-
+void from_json(const nlohmann::json& j,
+               std::vector<std::string>* detectorNames);
 }  // namespace Acts
