@@ -59,9 +59,9 @@ except ImportError:
     edm4hepEnabled = False
 
 try:
-    import acts.examples.onnx
+    import acts.examples
 
-    onnxEnabled = True
+    onnxEnabled = hasattr(acts.examples, "onnx")
 except ImportError:
     onnxEnabled = False
 
@@ -106,11 +106,6 @@ except ImportError:
 
 isCI = os.environ.get("CI") is not None
 
-if isCI:
-    for k, v in dict(locals()).items():
-        if k.endswith("Enabled"):
-            locals()[k] = True
-
 
 class AssertCollectionExistsAlg(IAlgorithm):
     events_seen = 0
@@ -142,7 +137,15 @@ class AssertCollectionExistsAlg(IAlgorithm):
             raise
 
 
-doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ
+doHashChecks = False
+_hashEnvVar = os.environ.get("ROOT_HASH_CHECKS")
+
+if _hashEnvVar is not None:
+    if _hashEnvVar.lower() not in ("off", "0", "false"):
+        doHashChecks = True
+else:
+    if "CI" in os.environ:
+        doHashChecks = True
 
 
 @contextlib.contextmanager
