@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Plugins/Onnx/SeedClassifier.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsPlugins/Onnx/SeedClassifier.hpp"
 
 #include <string>
 
@@ -71,7 +71,7 @@ class SeedFilterMLAlgorithm : public IAlgorithm {
  private:
   Config m_cfg;
   // ONNX model for track selection
-  Acts::SeedClassifier m_seedClassifier;
+  ActsPlugins::SeedClassifier m_seedClassifier;
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
       this, "InputTrackParameters"};
   ReadDataHandle<SimSeedContainer> m_inputSimSeeds{this, "InputSimSeeds"};

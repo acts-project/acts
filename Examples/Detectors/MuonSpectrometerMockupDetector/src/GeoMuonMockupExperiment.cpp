@@ -48,7 +48,7 @@ using FpvLink = GeoMuonMockupExperiment::FpvLink;
 GeoMuonMockupExperiment::GeoMuonMockupExperiment(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg{cfg}, m_logger{std::move(logger)} {}
-Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
+ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   const double worldR = m_cfg.barrelRadii[2] + 0.5 * GeoModelKernelUnits::m;
 
   const double barrelZ =
@@ -137,10 +137,10 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   ACTS_VERBOSE("Printout of the  entire world \n " << printVolume(world));
 
   clearSharedCaches();
-  Acts::GeoModelTree outTree{};
+  ActsPlugins::GeoModelTree outTree{};
   outTree.worldVolume = world;
 
-  using VolumeMap_t = Acts::GeoModelTree::VolumePublisher::VolumeMap_t;
+  using VolumeMap_t = ActsPlugins::GeoModelTree::VolumePublisher::VolumeMap_t;
   VolumeMap_t publishedVol{};
   for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
     try {

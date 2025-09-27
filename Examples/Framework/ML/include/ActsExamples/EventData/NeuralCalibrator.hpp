@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include <Acts/Plugins/Onnx/OnnxRuntimeBase.hpp>
-#include <ActsExamples/EventData/MeasurementCalibration.hpp>
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsPlugins/Onnx/OnnxRuntimeBase.hpp"
 
 #include <filesystem>
 
@@ -61,7 +61,7 @@ class NeuralCalibrator : public MeasurementCalibrator {
 
  private:
   Ort::Env m_env;
-  Acts::OnnxRuntimeBase m_model;
+  ActsPlugins::OnnxRuntimeBase m_model;
   std::size_t m_nComponents;
   std::size_t m_nInputs =
       57;  // TODO make this configurable? e.g. for changing matrix size?

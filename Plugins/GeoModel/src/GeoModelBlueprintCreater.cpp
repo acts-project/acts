@@ -6,20 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
+#include "ActsPlugins/GeoModel/GeoModelBlueprintCreater.hpp"
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoModelExtentHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+#include "ActsPlugins/GeoModel/GeoModelTree.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoModelBinningHelper.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoModelExtentHelper.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -27,18 +27,19 @@
 
 #include <boost/algorithm/string.hpp>
 
+using namespace Acts;
 using namespace Acts::detail;
 
-Acts::GeoModelBlueprintCreater::GeoModelBlueprintCreater(
+ActsPlugins::GeoModelBlueprintCreater::GeoModelBlueprintCreater(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
-Acts::GeoModelBlueprintCreater::Blueprint
-Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
-                                       const GeoModelTree& gmTree,
-                                       const Options& options) const {
+ActsPlugins::GeoModelBlueprintCreater::Blueprint
+ActsPlugins::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
+                                              const GeoModelTree& gmTree,
+                                              const Options& options) const {
   // The blueprint to be created
-  Acts::GeoModelBlueprintCreater::Blueprint blueprint;
+  GeoModelBlueprintCreater::Blueprint blueprint;
 
   // The GeoModel tree must have a reader
   if (gmTree.dbMgr == nullptr) {
@@ -144,8 +145,8 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   return blueprint;
 }
 
-std::unique_ptr<Acts::Experimental::Gen2Blueprint::Node>
-Acts::GeoModelBlueprintCreater::createNode(
+std::unique_ptr<Experimental::Gen2Blueprint::Node>
+ActsPlugins::GeoModelBlueprintCreater::createNode(
     Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
     const std::map<std::string, TableEntry>& tableEntryMap,
     const Extent& motherExtent) const {
@@ -188,7 +189,7 @@ Acts::GeoModelBlueprintCreater::createNode(
 
   ACTS_VERBOSE("Creating with extent " << extent.toString());
 
-  Transform3 transform = Acts::Transform3::Identity();
+  Transform3 transform = Transform3::Identity();
   transform.translation() = translation;
 
   std::vector<std::string> entryTypeSplit;
@@ -263,7 +264,7 @@ Acts::GeoModelBlueprintCreater::createNode(
     }
 
     // Create the binnings
-    std::vector<Acts::AxisDirection> binnings;
+    std::vector<AxisDirection> binnings;
     std::ranges::for_each(entry.binnings, [&binnings](const std::string& b) {
       binnings.push_back(detail::GeoModelBinningHelper::toAxisDirection(b));
     });
@@ -310,9 +311,9 @@ Acts::GeoModelBlueprintCreater::createNode(
   return nullptr;
 }
 
-std::tuple<std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
-           Acts::Extent>
-Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
+std::tuple<std::shared_ptr<const Experimental::IInternalStructureBuilder>,
+           Extent>
+ActsPlugins::GeoModelBlueprintCreater::createInternalStructureBuilder(
     Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
     const Extent& externalExtent,
     const std::vector<AxisDirection>& internalConstraints) const {
@@ -405,9 +406,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
   return {nullptr, Extent()};
 }
 
-std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent, std::vector<double>,
-           Acts::Vector3>
-Acts::GeoModelBlueprintCreater::parseBounds(
+std::tuple<VolumeBounds::BoundsType, Extent, std::vector<double>, Vector3>
+ActsPlugins::GeoModelBlueprintCreater::parseBounds(
     const std::string& boundsEntry, const Extent& externalExtent,
     const Extent& internalExtent) const {
   std::vector<std::string> boundsEntrySplit;
@@ -422,7 +422,7 @@ Acts::GeoModelBlueprintCreater::parseBounds(
   // Switch on the bounds type
   if (boundsType == VolumeBounds::BoundsType::eCylinder) {
     // Create the translation & bound values
-    translation = Acts::Vector3(0., 0., extent.medium(AxisDirection::AxisZ));
+    translation = Vector3(0., 0., extent.medium(AxisDirection::AxisZ));
     boundValues = {extent.min(AxisDirection::AxisR),
                    extent.max(AxisDirection::AxisR),
                    0.5 * extent.interval(AxisDirection::AxisZ)};

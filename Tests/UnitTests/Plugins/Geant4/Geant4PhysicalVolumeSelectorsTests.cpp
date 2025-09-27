@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
+#include "ActsPlugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 
 #include <string>
 
@@ -17,6 +17,9 @@
 #include "G4PVPlacement.hh"
 #include "G4RotationMatrix.hh"
 #include "G4ThreeVector.hh"
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 class G4VPhysicalVolume;
 
@@ -35,17 +38,17 @@ BOOST_AUTO_TEST_CASE(Geant4PhysicalVolumeSelectors_test) {
   G4VPhysicalVolume* boxPV = new G4PVPlacement(nullptr, G4ThreeVector(), boxLV,
                                                "Box", worldLV, false, 0, true);
 
-  auto allSelector = Acts::Geant4PhysicalVolumeSelectors::AllSelector();
+  auto allSelector = ActsPlugins::Geant4PhysicalVolumeSelectors::AllSelector();
   BOOST_CHECK(allSelector.select(*worldPV));
   BOOST_CHECK(allSelector.select(*boxPV));
 
   auto nameSelector =
-      Acts::Geant4PhysicalVolumeSelectors::NameSelector({"ox"}, false);
+      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector({"ox"}, false);
   BOOST_CHECK(!nameSelector.select(*worldPV));
   BOOST_CHECK(nameSelector.select(*boxPV));
 
   auto nameSelectorE =
-      Acts::Geant4PhysicalVolumeSelectors::NameSelector({"ox"}, true);
+      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector({"ox"}, true);
   BOOST_CHECK(!nameSelectorE.select(*worldPV));
   BOOST_CHECK(!nameSelectorE.select(*boxPV));
 }

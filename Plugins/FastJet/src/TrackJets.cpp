@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/FastJet/TrackJets.hpp"
+#include "ActsPlugins/FastJet/TrackJets.hpp"
 
-namespace Acts::FastJet {
+namespace ActsPlugins::FastJet {
 
 TrackJetSequence TrackJetSequence::create(
     std::vector<fastjet::PseudoJet>& tracks,
@@ -23,4 +23,4 @@ std::vector<fastjet::PseudoJet> TrackJetSequence::jets(float ptMin,
   return sel_eta(m_clusterSeq.inclusive_jets(ptMin));
 }
 
-}  // namespace Acts::FastJet
+}  // namespace ActsPlugins::FastJet

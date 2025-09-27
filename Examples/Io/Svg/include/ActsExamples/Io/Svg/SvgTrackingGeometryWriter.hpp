@@ -11,8 +11,8 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Svg/SvgDefaults.hpp"
-#include <Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp>
 #include <Acts/Utilities/Logger.hpp>
+#include <ActsPlugins/ActSVG/TrackingGeometrySvgConverter.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -36,7 +36,7 @@ class SvgTrackingGeometryWriter {
   /// The nested config class for this writer
   class Config {
    public:
-    Acts::Svg::TrackingGeometryConverter::Options converterOptions =
+    ActsPlugins::Svg::TrackingGeometryConverter::Options converterOptions =
         s_trackingGeometryOptions;
 
     std::string outputDir = "";

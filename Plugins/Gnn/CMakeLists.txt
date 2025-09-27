@@ -6,7 +6,7 @@ acts_add_library(
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
     src/GraphStoreHook.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 if(ACTS_GNN_ENABLE_CUDA)

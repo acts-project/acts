@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Covfie/FieldConversion.hpp"
+#include "ActsPlugins/Covfie/FieldConversion.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 
 #include <string>
@@ -17,6 +17,7 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 using namespace Acts;
+using namespace ActsPlugins;
 
 namespace ActsPython {
 
@@ -43,20 +44,19 @@ void addCovfie(Context& ctx) {
       .def("at", [](const covfie::array::array<float, 3ul>& self,
                     std::size_t i) { return self[i]; });
 
-  declareCovfieField<CovfiePlugin::ConstantField, float>(m,
-                                                         "CovfieConstantField");
-  declareCovfieField<CovfiePlugin::InterpolatedField, float>(
+  declareCovfieField<Covfie::ConstantField, float>(m, "CovfieConstantField");
+  declareCovfieField<Covfie::InterpolatedField, float>(
       m, "CovfieAffineLinearStridedField");
 
   m.def("makeCovfieField", py::overload_cast<const InterpolatedMagneticField&>(
-                               &CovfiePlugin::covfieField));
+                               &Covfie::covfieField));
   m.def("makeCovfieField",
-        py::overload_cast<const ConstantBField&>(&CovfiePlugin::covfieField));
+        py::overload_cast<const ConstantBField&>(&Covfie::covfieField));
   m.def("makeCovfieField",
         py::overload_cast<
             const MagneticFieldProvider&, MagneticFieldProvider::Cache&,
             const std::array<std::size_t, 3>&, const Vector3&, const Vector3&>(
-            &CovfiePlugin::covfieField));
+            &Covfie::covfieField));
 }
 
 }  // namespace ActsPython

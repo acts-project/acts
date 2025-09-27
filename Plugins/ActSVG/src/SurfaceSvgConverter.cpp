@@ -6,13 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
+using namespace Acts;
+
+ActsPlugins::Svg::ProtoSurface ActsPlugins::Svg::SurfaceConverter::convert(
     const GeometryContext& gctx, const Surface& surface,
     const SurfaceConverter::Options& cOptions) {
   ProtoSurface pSurface;
@@ -27,8 +29,7 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
   } else {
     // In case it's a template surface, only the bounds matter
     // Check if planar bounds
-    auto planarBounds =
-        dynamic_cast<const Acts::PlanarBounds*>(&(surface.bounds()));
+    auto planarBounds = dynamic_cast<const PlanarBounds*>(&(surface.bounds()));
     if (planarBounds != nullptr) {
       auto vertices2D = planarBounds->vertices(cOptions.style.quarterSegments);
       pSurface._vertices.reserve(vertices2D.size());
@@ -38,7 +39,7 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
     } else {
       // Or annulus bounds
       auto annulusBounds =
-          dynamic_cast<const Acts::AnnulusBounds*>(&(surface.bounds()));
+          dynamic_cast<const AnnulusBounds*>(&(surface.bounds()));
       if (annulusBounds != nullptr) {
         auto vertices2D =
             annulusBounds->vertices(cOptions.style.quarterSegments);
@@ -46,10 +47,10 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
         for (const auto& v2 : vertices2D) {
           pSurface._vertices.push_back({v2[0], v2[1], 0.});
         }
-      } else if (surface.type() == Acts::Surface::SurfaceType::Disc) {
+      } else if (surface.type() == Surface::SurfaceType::Disc) {
         // Or disc bounds
         const auto& boundValues = surface.bounds().values();
-        if (surface.bounds().type() == Acts::SurfaceBounds::BoundsType::eDisc) {
+        if (surface.bounds().type() == SurfaceBounds::BoundsType::eDisc) {
           // The radii
           actsvg::scalar ri = static_cast<actsvg::scalar>(boundValues[0]);
           actsvg::scalar ro = static_cast<actsvg::scalar>(boundValues[1]);
@@ -79,30 +80,30 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
   const auto& boundValues = surface.bounds().values();
   auto bType = surface.bounds().type();
   auto bValues = surface.bounds().values();
-  if (bType == Acts::SurfaceBounds::BoundsType::eRectangle) {
+  if (bType == SurfaceBounds::BoundsType::eRectangle) {
     pSurface._type = ProtoSurface::type::e_rectangle;
     // Set the measure
     pSurface._measures = {
         static_cast<actsvg::scalar>(0.5 * (boundValues[2] - boundValues[0])),
         static_cast<actsvg::scalar>(0.5 * (boundValues[3] - boundValues[1]))};
-  } else if (bType == Acts::SurfaceBounds::BoundsType::eTrapezoid) {
+  } else if (bType == SurfaceBounds::BoundsType::eTrapezoid) {
     pSurface._type = ProtoSurface::type::e_trapez;
     // Set the measure
     pSurface._measures = {static_cast<actsvg::scalar>(boundValues[0]),
                           static_cast<actsvg::scalar>(boundValues[1]),
                           static_cast<actsvg::scalar>(boundValues[2])};
-  } else if (bType == Acts::SurfaceBounds::BoundsType::eDiamond) {
+  } else if (bType == SurfaceBounds::BoundsType::eDiamond) {
     // Set the measure
     for (const auto& bv : boundValues) {
       pSurface._measures.push_back(static_cast<actsvg::scalar>(bv));
     }
-  } else if (bType == Acts::SurfaceBounds::BoundsType::eAnnulus) {
+  } else if (bType == SurfaceBounds::BoundsType::eAnnulus) {
     pSurface._type = ProtoSurface::type::e_trapez;
     // Set the measure
     for (const auto& bv : boundValues) {
       pSurface._measures.push_back(static_cast<actsvg::scalar>(bv));
     }
-  } else if (bType == Acts::SurfaceBounds::BoundsType::eDisc) {
+  } else if (bType == SurfaceBounds::BoundsType::eDisc) {
     pSurface._type = ProtoSurface::type::e_disc;
     // Set the openings
     actsvg::scalar ri = static_cast<actsvg::scalar>(boundValues[0]);

@@ -13,10 +13,10 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Plugins/Root/RootMaterialMapIo.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "ActsPlugins/Root/RootMaterialMapIo.hpp"
 
 #include <memory>
 #include <tuple>
@@ -25,6 +25,7 @@
 #include "TFile.h"
 
 using namespace Acts;
+using namespace ActsPlugins;
 
 using IdentifiedMaterial =
     std::tuple<GeometryIdentifier, std::shared_ptr<ISurfaceMaterial>>;

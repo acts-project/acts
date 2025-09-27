@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerBuilder.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
@@ -17,14 +17,14 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepMaterialHelpers.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -43,7 +43,9 @@
 #include <TGeoMatrix.h>
 #include <boost/algorithm/string.hpp>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 DD4hepLayerBuilder::DD4hepLayerBuilder(const DD4hepLayerBuilder::Config& config,
                                        std::unique_ptr<const Logger> logger)
@@ -430,4 +432,4 @@ DD4hepLayerBuilder::defaultDetectorElementFactory(
       detElement, detAxis, thickness, isDisc, std::move(surfaceMaterial));
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

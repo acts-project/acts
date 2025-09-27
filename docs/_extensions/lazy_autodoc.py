@@ -72,9 +72,9 @@ def run() -> None:
     }
 
     role_instances["struct"] |= {
-        "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
-        "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
-        "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
+        "ActsPlugins::Geant4PhysicalVolumeSelectors::AllSelector",
+        "ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector",
+        "ActsPlugins::Geant4PhysicalVolumeSelectors::PositionSelector",
         "Acts::OrientedSurface",
         "Acts::TrackStateCreator",
     }
@@ -130,7 +130,7 @@ def run() -> None:
         "Acts::makeDefaultBetheHeitlerApprox",
         "Acts::reduceMixtureLargestWeights",
         "Acts::reduceMixtureWithKLDistance",
-        "Acts::convertDD4hepDetector",
+        "ActsPlugins::convertDD4hepDetector",
     }
 
     role_instances["enum"] = {

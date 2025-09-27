@@ -6,19 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsPlugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 
 #include <utility>
 
-std::tuple<Acts::Svg::ProtoVolume, Acts::Svg::ProtoIndexedSurfaceGrid>
-Acts::Svg::DetectorVolumeConverter::convert(
+using namespace Acts;
+
+std::tuple<ActsPlugins::Svg::ProtoVolume,
+           ActsPlugins::Svg::ProtoIndexedSurfaceGrid>
+ActsPlugins::Svg::DetectorVolumeConverter::convert(
     const GeometryContext& gctx, const Experimental::DetectorVolume& dVolume,
     const DetectorVolumeConverter::Options& volumeOptions) {
   ProtoVolume pVolume;
@@ -28,7 +31,7 @@ Acts::Svg::DetectorVolumeConverter::convert(
 
   // The detector volume is of cylindrical shape
   const auto& boundValues = dVolume.volumeBounds().values();
-  if (dVolume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
+  if (dVolume.volumeBounds().type() == VolumeBounds::eCylinder) {
     // we keep 6 for the moment
     for (unsigned int ib = 0; ib < 2u; ++ib) {
       pVolume._bound_values.push_back(
@@ -72,10 +75,10 @@ Acts::Svg::DetectorVolumeConverter::convert(
       volumeOptions.indexedSurfacesOptions;
   // Use or transfer the surface style
   if (isOptions.surfaceStyles.empty()) {
-    std::pair<Acts::GeometryIdentifier, Acts::Svg::Style> style{
+    std::pair<GeometryIdentifier, ActsPlugins::Svg::Style> style{
         dVolume.geometryId(), volumeOptions.surfaceOptions.style};
     isOptions.surfaceStyles =
-        Acts::GeometryHierarchyMap<Acts::Svg::Style>({style});
+        GeometryHierarchyMap<ActsPlugins::Svg::Style>({style});
   }
 
   auto pSurfacesGrid = IndexedSurfacesConverter::convert(

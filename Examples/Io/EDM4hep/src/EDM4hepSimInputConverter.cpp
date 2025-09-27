@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
@@ -22,6 +20,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -78,8 +78,9 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
-    const auto* detElement = dynamic_cast<const Acts::DD4hepDetectorElement*>(
-        surface->associatedDetectorElement());
+    const auto* detElement =
+        dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(
+            surface->associatedDetectorElement());
 
     if (detElement == nullptr) {
       ACTS_ERROR("Surface has no associated detector element");
@@ -267,7 +268,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
 
     for (const auto& hit : inputHits) {
-      auto particle = Acts::EDM4hepUtil::getParticle(hit);
+      auto particle = ActsPlugins::EDM4hepUtil::getParticle(hit);
 
       std::size_t index = particle.getObjectID().index;
 
@@ -573,7 +574,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
           itGen->finalState().setNumberOfHits(
               itGen->finalState().numberOfHits() + 1);
         } else {
-          const auto& ptcl = Acts::EDM4hepUtil::getParticle(hit);
+          const auto& ptcl = ActsPlugins::EDM4hepUtil::getParticle(hit);
           ACTS_ERROR("SimHit (r="
                      << Acts::VectorHelpers::perp(simHit.position())
                      << ", z=" << simHit.position()[Acts::eFreePos2]

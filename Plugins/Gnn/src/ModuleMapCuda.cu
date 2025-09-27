@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/ModuleMapCuda.hpp"
-#include "Acts/Plugins/Gnn/detail/CudaUtils.cuh"
-#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
-#include "Acts/Plugins/Gnn/detail/ModuleMapUtils.cuh"
+#include "ActsPlugins/Gnn/ModuleMapCuda.hpp"
+#include "ActsPlugins/Gnn/detail/CudaUtils.cuh"
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/ModuleMapUtils.cuh"
 
 #include <CUDA_graph_creator>
 #include <CUDA_module_map_doublet>
@@ -49,10 +49,12 @@ class ScopedCudaPtr {
 
 }  // namespace
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 ModuleMapCuda::ModuleMapCuda(const Config &cfg,
-                             std::unique_ptr<const Acts::Logger> logger_)
+                             std::unique_ptr<const Logger> logger_)
     : m_logger(std::move(logger_)), m_cfg(cfg) {
   module_map_triplet<float> moduleMapCpu;
   moduleMapCpu.read_TTree(cfg.moduleMapPath.c_str());
@@ -145,8 +147,7 @@ PipelineTensors ModuleMapCuda::operator()(
 
   // Full node features to device
 
-  auto nodeFeatures =
-      Acts::Tensor<float>::Create({nHits, nFeatures}, execContext);
+  auto nodeFeatures = Tensor<float>::Create({nHits, nFeatures}, execContext);
   float *cudaNodeFeaturePtr = nodeFeatures.data();
   ACTS_CUDA_CHECK(cudaMemcpyAsync(cudaNodeFeaturePtr, features.data(),
                                   features.size() * sizeof(float),
@@ -162,7 +163,7 @@ PipelineTensors ModuleMapCuda::operator()(
   // module map kernels in one block
   ScopedCudaPtr<float> cudaNodeFeaturesTransposed(6 * nHits, stream);
 
-  Acts::detail::CUDA_hit_data<float> inputData{};
+  ActsPlugins::detail::CUDA_hit_data<float> inputData{};
   inputData.m_size = nHits;
   inputData.m_cuda_R = cudaNodeFeaturesTransposed.data() + 0 * nHits;
   inputData.m_cuda_phi = cudaNodeFeaturesTransposed.data() + 1 * nHits;
@@ -254,8 +255,7 @@ PipelineTensors ModuleMapCuda::operator()(
                               << ", blockDim: " << blockDim.x);
 
   // Make edge features
-  auto edgeFeatures =
-      Acts::Tensor<float>::Create({edgeData.nEdges, 6}, execContext);
+  auto edgeFeatures = Tensor<float>::Create({edgeData.nEdges, 6}, execContext);
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   detail::makeEdgeFeatures<<<gridDimEdges, blockDim, 0, stream>>>(
@@ -630,4 +630,4 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   return edge_data;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

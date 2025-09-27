@@ -8,11 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Gnn/BoostTrackBuilding.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Gnn/BoostTrackBuilding.hpp"
 
 #include <algorithm>
 #include <numeric>
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 BOOST_AUTO_TEST_CASE(test_track_building) {
   // Make some spacepoint IDs
@@ -39,21 +42,20 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
     }
   }
 
-  Acts::ExecutionContext execCtx{Acts::Device::Cpu(), {}};
+  ExecutionContext execCtx{Device::Cpu(), {}};
 
-  auto edgeTensor = Acts::Tensor<std::int64_t>::Create({2, e0.size()}, execCtx);
+  auto edgeTensor = Tensor<std::int64_t>::Create({2, e0.size()}, execCtx);
   std::copy(e0.begin(), e0.end(), edgeTensor.data());
   std::copy(e1.begin(), e1.end(), edgeTensor.data() + e0.size());
 
-  auto dummyNodes =
-      Acts::Tensor<float>::Create({spacepointIds.size(), 16}, execCtx);
-  auto dummyWeights = Acts::Tensor<float>::Create({e0.size(), 1}, execCtx);
+  auto dummyNodes = Tensor<float>::Create({spacepointIds.size(), 16}, execCtx);
+  auto dummyWeights = Tensor<float>::Create({e0.size(), 1}, execCtx);
   std::fill(dummyWeights.data(), dummyWeights.data() + dummyWeights.size(),
             1.f);
 
   // Run Track building
-  auto logger = Acts::getDefaultLogger("TestLogger", Acts::Logging::ERROR);
-  Acts::BoostTrackBuilding trackBuilder({}, std::move(logger));
+  auto logger = getDefaultLogger("TestLogger", Logging::ERROR);
+  BoostTrackBuilding trackBuilder({}, std::move(logger));
 
   auto testTracks = trackBuilder({std::move(dummyNodes), std::move(edgeTensor),
                                   std::nullopt, std::move(dummyWeights)},
@@ -70,6 +72,6 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
 
   // Check what we have here
   for (const auto &refTrack : refTracks) {
-    BOOST_CHECK(Acts::rangeContainsValue(testTracks, refTrack));
+    BOOST_CHECK(rangeContainsValue(testTracks, refTrack));
   }
 }

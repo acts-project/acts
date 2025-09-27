@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
 
-#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoShiftConverter.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoShiftConverter.hpp"
 
 namespace {
 
@@ -44,7 +44,9 @@ bool trapezoidsAreMergeable(const std::vector<Acts::Vector3> &vtxsa,
 
 }  // namespace
 
-namespace Acts::detail {
+using namespace Acts;
+
+namespace ActsPlugins::detail {
 
 Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
     const PVConstLink &geoPV, const GeoShapeUnion &geoUnion,
@@ -152,4 +154,4 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
   return std::make_tuple(detectorElement, surface);
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

@@ -8,21 +8,24 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Gnn/TruthGraphMetricsHook.hpp"
+#include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
 
 #include <cassert>
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 void testTruthTestGraph(std::vector<std::int64_t> &truthGraph,
                         std::vector<std::int64_t> &testGraph,
                         const std::string &resStr) {
   std::stringstream ss;
-  auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO, &ss);
+  auto logger = getDefaultLogger("Test", Logging::INFO, &ss);
 
-  Acts::TruthGraphMetricsHook hook(truthGraph, std::move(logger));
+  TruthGraphMetricsHook hook(truthGraph, std::move(logger));
 
   auto numTestEdges = testGraph.size() / 2;
-  auto edgeIndexTensor = Acts::Tensor<std::int64_t>::Create(
-      {2, numTestEdges}, {Acts::Device::Cpu(), {}});
+  auto edgeIndexTensor =
+      Tensor<std::int64_t>::Create({2, numTestEdges}, {Device::Cpu(), {}});
 
   // Transpose the input vector into the tensor
   for (auto i = 0ul; i < numTestEdges; ++i) {
@@ -30,13 +33,12 @@ void testTruthTestGraph(std::vector<std::int64_t> &truthGraph,
     *(edgeIndexTensor.data() + numTestEdges + i) = testGraph.at(2 * i + 1);
   }
 
-  Acts::PipelineTensors tensors{
-      Acts::Tensor<float>::Create({1, 1}, {Acts::Device::Cpu(), {}}),
-      std::move(edgeIndexTensor),
-      {},
-      {}};
+  PipelineTensors tensors{Tensor<float>::Create({1, 1}, {Device::Cpu(), {}}),
+                          std::move(edgeIndexTensor),
+                          {},
+                          {}};
 
-  hook(tensors, {Acts::Device::Cpu(), {}});
+  hook(tensors, {Device::Cpu(), {}});
 
   const auto str = ss.str();
 

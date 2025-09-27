@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
@@ -16,8 +16,8 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
-#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -34,7 +34,9 @@
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 GeoModelDetectorObjectFactory::GeoModelDetectorObjectFactory(
     const Config &cfg, std::unique_ptr<const Logger> mlogger)
@@ -217,4 +219,4 @@ bool GeoModelDetectorObjectFactory::matches(const std::string &name,
   }
   return match;
 }
-}  // namespace Acts
+}  // namespace ActsPlugins

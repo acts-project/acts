@@ -2,7 +2,7 @@ acts_add_library(
     PluginFpeMonitoring
     SHARED
     src/FpeMonitor.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 target_include_directories(
     ActsPluginFpeMonitoring

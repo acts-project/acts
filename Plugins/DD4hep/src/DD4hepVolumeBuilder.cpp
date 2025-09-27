@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
+#include "ActsPlugins/DD4hep/DD4hepVolumeBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include <stdexcept>
 #include <utility>
@@ -21,7 +22,9 @@
 #include <DD4hep/Volumes.h>
 #include <RtypesCore.h>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 DD4hepVolumeBuilder::DD4hepVolumeBuilder(
     const DD4hepVolumeBuilder::Config& config,
@@ -103,4 +106,4 @@ Transform3 DD4hepVolumeBuilder::convertTransform(
               translation[2] * UnitConstants::cm));
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

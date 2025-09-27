@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/detail/GeoBoxConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoBoxConverter.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
@@ -21,15 +21,16 @@
 #include <GeoModelKernel/GeoShape.h>
 #include <GeoModelKernel/Units.h>
 
-Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
-                                          const GeoBox& geoBox,
-                                          const Transform3& absTransform,
-                                          SurfaceBoundFactory& boundFactory,
-                                          bool sensitive) const {
+using namespace Acts;
+
+Result<ActsPlugins::GeoModelSensitiveSurface>
+ActsPlugins::detail::GeoBoxConverter::operator()(
+    const PVConstLink& geoPV, const GeoBox& geoBox,
+    const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
+    bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr double unitLength =
-      Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
+      UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
   Transform3 transform = Transform3::Identity();
@@ -56,8 +57,7 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
   // Create the surface bounds
   double halfX = unitLength * halfLengths[xIndex];
   double halfY = unitLength * halfLengths[yIndex];
-  auto rectangleBounds =
-      boundFactory.makeBounds<Acts::RectangleBounds>(halfX, halfY);
+  auto rectangleBounds = boundFactory.makeBounds<RectangleBounds>(halfX, halfY);
   if (!sensitive) {
     auto surface =
         Surface::makeShared<PlaneSurface>(transform, rectangleBounds);

@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include <Acts/Plugins/ActSVG/LayerSvgConverter.hpp>
-#include <Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp>
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
+#include <ActsPlugins/ActSVG/LayerSvgConverter.hpp>
+#include <ActsPlugins/ActSVG/TrackingGeometrySvgConverter.hpp>
 
 namespace {
 
-static inline Acts::Svg::Style layerStyle() {
-  Acts::Svg::Style lStyle;
+static inline ActsPlugins::Svg::Style layerStyle() {
+  ActsPlugins::Svg::Style lStyle;
   lStyle.fillColor = {51, 153, 255};
   lStyle.fillOpacity = 0.75;
   lStyle.highlightColor = {255, 153, 51};
@@ -27,8 +27,8 @@ static inline Acts::Svg::Style layerStyle() {
   return lStyle;
 }
 
-static inline Acts::Svg::Style infoStyle() {
-  Acts::Svg::Style iStyle;
+static inline ActsPlugins::Svg::Style infoStyle() {
+  ActsPlugins::Svg::Style iStyle;
   iStyle.fillColor = {0, 0, 180};
   iStyle.fillOpacity = 0.8;
   iStyle.highlights = {};
@@ -36,8 +36,8 @@ static inline Acts::Svg::Style infoStyle() {
   return iStyle;
 }
 
-static inline Acts::Svg::Style backgroundStyle() {
-  Acts::Svg::Style bgStyle;
+static inline ActsPlugins::Svg::Style backgroundStyle() {
+  ActsPlugins::Svg::Style bgStyle;
   bgStyle.fillColor = {55, 55, 55};
   bgStyle.fillOpacity = 0.50;
   bgStyle.highlights = {};
@@ -47,8 +47,8 @@ static inline Acts::Svg::Style backgroundStyle() {
   return bgStyle;
 }
 
-static inline Acts::Svg::Style pointStyle() {
-  Acts::Svg::Style pStyle;
+static inline ActsPlugins::Svg::Style pointStyle() {
+  ActsPlugins::Svg::Style pStyle;
   pStyle.fillColor = {200, 0, 0};
   pStyle.fillOpacity = 1.0;
   pStyle.highlightColor = {0, 200, 0};
@@ -60,43 +60,43 @@ static inline Acts::Svg::Style pointStyle() {
   return pStyle;
 }
 
-static inline Acts::Svg::TrackingGeometryConverter::Options
+static inline ActsPlugins::Svg::TrackingGeometryConverter::Options
 trackingGeometryOptions() {
   Acts::GeometryIdentifier geoID(0);
 
-  Acts::Svg::LayerConverter::Options lOptions;
+  ActsPlugins::Svg::LayerConverter::Options lOptions;
 
   lOptions.name = "layer";
-  lOptions.surfaceStyles =
-      Acts::GeometryHierarchyMap<Acts::Svg::Style>({{geoID, layerStyle()}});
+  lOptions.surfaceStyles = Acts::GeometryHierarchyMap<ActsPlugins::Svg::Style>(
+      {{geoID, layerStyle()}});
 
-  Acts::Svg::TrackingGeometryConverter::Options tgOptions;
+  ActsPlugins::Svg::TrackingGeometryConverter::Options tgOptions;
   tgOptions.prefix = "";
   tgOptions.layerOptions =
-      Acts::GeometryHierarchyMap<Acts::Svg::LayerConverter::Options>(
+      Acts::GeometryHierarchyMap<ActsPlugins::Svg::LayerConverter::Options>(
           {{geoID, lOptions}});
 
   return tgOptions;
 }
 
-static inline Acts::Svg::TrackingGeometryConverter::Options
+static inline ActsPlugins::Svg::TrackingGeometryConverter::Options
 backgroundGeometryOptions() {
   Acts::GeometryIdentifier geoID(0);
 
-  Acts::Svg::LayerConverter::Options lOptions;
+  ActsPlugins::Svg::LayerConverter::Options lOptions;
 
   lOptions.name = "layer";
-  lOptions.surfaceStyles = Acts::GeometryHierarchyMap<Acts::Svg::Style>(
+  lOptions.surfaceStyles = Acts::GeometryHierarchyMap<ActsPlugins::Svg::Style>(
       {{geoID, backgroundStyle()}});
   lOptions.moduleInfo = false;
   lOptions.gridInfo = false;
   lOptions.zRange = {-100, 100};
   lOptions.phiRange = {-0.2, 0.2};
 
-  Acts::Svg::TrackingGeometryConverter::Options tgOptions;
+  ActsPlugins::Svg::TrackingGeometryConverter::Options tgOptions;
   tgOptions.prefix = "";
   tgOptions.layerOptions =
-      Acts::GeometryHierarchyMap<Acts::Svg::LayerConverter::Options>(
+      Acts::GeometryHierarchyMap<ActsPlugins::Svg::LayerConverter::Options>(
           {{geoID, lOptions}});
 
   return tgOptions;
@@ -106,16 +106,16 @@ backgroundGeometryOptions() {
 
 namespace ActsExamples {
 
-static Acts::Svg::Style s_layerStyle = layerStyle();
+static ActsPlugins::Svg::Style s_layerStyle = layerStyle();
 
-static Acts::Svg::Style s_pointStyle = pointStyle();
+static ActsPlugins::Svg::Style s_pointStyle = pointStyle();
 
-static Acts::Svg::Style s_infoStyle = infoStyle();
+static ActsPlugins::Svg::Style s_infoStyle = infoStyle();
 
-static Acts::Svg::TrackingGeometryConverter::Options s_trackingGeometryOptions =
-    trackingGeometryOptions();
+static ActsPlugins::Svg::TrackingGeometryConverter::Options
+    s_trackingGeometryOptions = trackingGeometryOptions();
 
-static Acts::Svg::TrackingGeometryConverter::Options
+static ActsPlugins::Svg::TrackingGeometryConverter::Options
     s_backgroundTrackingGeometryOptions = backgroundGeometryOptions();
 
 }  // namespace ActsExamples

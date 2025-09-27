@@ -7,8 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/Detector.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
-#include "Acts/Plugins/Detray/DetrayConverter.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -27,6 +27,7 @@ using namespace Acts;
 using namespace Acts::Experimental;
 using namespace detray;
 using namespace detray::io::detail;
+using namespace ActsPlugins;
 
 namespace ActsPython {
 

@@ -12,9 +12,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 
 namespace ActsExamples {
 
@@ -25,9 +25,9 @@ namespace ActsExamples {
 class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
  public:
   /** @brief Recycle the tuple of Volume, DetectorVolume, PVConstLink */
-  using SensitiveSurfaces = std::vector<Acts::GeoModelSensitiveSurface>;
+  using SensitiveSurfaces = std::vector<ActsPlugins::GeoModelSensitiveSurface>;
   using ConvertedVolList_t =
-      Acts::GeoModelDetectorObjectFactory::ConvertedVolList_t;
+      ActsPlugins::GeoModelDetectorObjectFactory::ConvertedVolList_t;
 
   struct Config {
     /// The converted GeoModel volume objects

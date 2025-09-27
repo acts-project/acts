@@ -9,11 +9,11 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
 
 #include <stdexcept>
 

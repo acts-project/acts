@@ -28,8 +28,11 @@ class TTree;
 
 namespace Acts {
 class Surface;
-class RootMeasurementIo;
 }  // namespace Acts
+
+namespace ActsPlugins {
+class RootMeasurementIo;
+}  // namespace ActsPlugins
 
 namespace ActsExamples {
 
@@ -108,7 +111,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   std::vector<std::vector<std::uint32_t>> m_particles = {};
 
   /// the output tree
-  std::unique_ptr<Acts::RootMeasurementIo> m_measurementIo;
+  std::unique_ptr<ActsPlugins::RootMeasurementIo> m_measurementIo;
 
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};

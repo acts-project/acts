@@ -8,8 +8,8 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackInputConverter.hpp"
 
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <stdexcept>
 
@@ -37,7 +37,7 @@ ProcessCode EDM4hepTrackInputConverter::convert(
 
   for (const auto& inputTrack : trackCollection) {
     auto track = tracks.makeTrack();
-    Acts::EDM4hepUtil::readTrack(inputTrack, track, m_cfg.Bz);
+    ActsPlugins::EDM4hepUtil::readTrack(inputTrack, track, m_cfg.Bz);
   }
 
   ConstTrackContainer constTracks{

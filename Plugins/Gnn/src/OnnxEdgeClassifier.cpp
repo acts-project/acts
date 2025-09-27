@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/OnnxEdgeClassifier.hpp"
+#include "ActsPlugins/Gnn/OnnxEdgeClassifier.hpp"
 
 #include <boost/container/static_vector.hpp>
 #include <onnxruntime_cxx_api.h>
@@ -16,7 +16,7 @@ namespace bc = boost::container;
 namespace {
 
 template <typename T>
-Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
+Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, ActsPlugins::Tensor<T> &tensor,
                   std::size_t rank = 2) {
   assert(rank == 1 || rank == 2);
   ONNXTensorElementDataType onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
@@ -27,7 +27,7 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
     onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64;
   } else {
     throw std::runtime_error(
-        "Cannot convert Acts::Tensor to Ort::Value (datatype)");
+        "Cannot convert ActsPlugins::Tensor to Ort::Value (datatype)");
   }
 
   bc::static_vector<std::int64_t, 2> shape;
@@ -45,7 +45,9 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
 
 }  // namespace
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
                                        std::unique_ptr<const Logger> _logger)
@@ -54,22 +56,22 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
 
   OrtLoggingLevel onnxLevel = ORT_LOGGING_LEVEL_WARNING;
   switch (m_logger->level()) {
-    case Acts::Logging::VERBOSE:
+    case Logging::VERBOSE:
       onnxLevel = ORT_LOGGING_LEVEL_VERBOSE;
       break;
-    case Acts::Logging::DEBUG:
+    case Logging::DEBUG:
       onnxLevel = ORT_LOGGING_LEVEL_INFO;
       break;
-    case Acts::Logging::INFO:
+    case Logging::INFO:
       onnxLevel = ORT_LOGGING_LEVEL_WARNING;
       break;
-    case Acts::Logging::WARNING:
+    case Logging::WARNING:
       onnxLevel = ORT_LOGGING_LEVEL_WARNING;
       break;
-    case Acts::Logging::ERROR:
+    case Logging::ERROR:
       onnxLevel = ORT_LOGGING_LEVEL_ERROR;
       break;
-    case Acts::Logging::FATAL:
+    case Logging::FATAL:
       onnxLevel = ORT_LOGGING_LEVEL_FATAL;
       break;
     default:
@@ -118,7 +120,7 @@ OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 PipelineTensors OnnxEdgeClassifier::operator()(
     PipelineTensors tensors, const ExecutionContext &execContext) {
   const char *deviceStr = "Cpu";
-  if (execContext.device.type == Acts::Device::Type::eCUDA) {
+  if (execContext.device.type == Device::Type::eCUDA) {
     deviceStr = "Cuda";
   }
 
@@ -138,7 +140,7 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   inputNames.push_back(m_inputNames.at(1).c_str());
 
   // Edge feature tensor
-  std::optional<Acts::Tensor<float>> edgeFeatures;
+  std::optional<Tensor<float>> edgeFeatures;
   if (m_inputNames.size() == 3 && tensors.edgeFeatures.has_value()) {
     inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
@@ -146,8 +148,8 @@ PipelineTensors OnnxEdgeClassifier::operator()(
 
   // Output score tensor
   ACTS_DEBUG("Create score tensor");
-  auto scores = Acts::Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul},
-                                            execContext);
+  auto scores =
+      Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul}, execContext);
 
   std::vector<Ort::Value> outputTensors;
   auto outputRank = m_model->GetOutputTypeInfo(0)
@@ -170,7 +172,7 @@ PipelineTensors OnnxEdgeClassifier::operator()(
              << newEdgeIndex.shape()[1] << " edges.");
 
   if (newEdgeIndex.shape()[1] == 0) {
-    throw Acts::NoEdgesError{};
+    throw NoEdgesError{};
   }
 
   return {std::move(tensors.nodeFeatures),
@@ -179,4 +181,4 @@ PipelineTensors OnnxEdgeClassifier::operator()(
           std::move(newScores)};
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

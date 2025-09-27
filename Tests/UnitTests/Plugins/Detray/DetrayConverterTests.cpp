@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Detray/DetrayConverter.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
+#include "ActsPlugins/Detray/DetrayConverter.hpp"
 
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -17,6 +17,7 @@
 using namespace Acts;
 using namespace Acts::Experimental;
 using namespace Acts::Test;
+using namespace ActsPlugins;
 
 GeometryContext tContext;
 

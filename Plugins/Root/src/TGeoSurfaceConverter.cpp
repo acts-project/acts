@@ -6,10 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -21,6 +20,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include <algorithm>
 #include <array>
@@ -47,13 +47,13 @@
 #include "TGeoTrd2.h"
 #include "TGeoTube.h"
 
-std::tuple<std::shared_ptr<const Acts::CylinderBounds>, const Acts::Transform3,
-           double>
-Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
-                                               const Double_t* rotation,
-                                               const Double_t* translation,
-                                               const std::string& axes,
-                                               double scalor) noexcept(false) {
+using namespace Acts;
+
+std::tuple<std::shared_ptr<const CylinderBounds>, const Transform3, double>
+ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
+    const TGeoShape& tgShape, const Double_t* rotation,
+    const Double_t* translation, const std::string& axes,
+    double scalor) noexcept(false) {
   std::shared_ptr<const CylinderBounds> bounds = nullptr;
   Transform3 transform = Transform3::Identity();
   double thickness = 0.;
@@ -114,13 +114,11 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<const Acts::DiscBounds>, const Acts::Transform3,
-           double>
-Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
-                                           const Double_t* rotation,
-                                           const Double_t* translation,
-                                           const std::string& axes,
-                                           double scalor) noexcept(false) {
+std::tuple<std::shared_ptr<const DiscBounds>, const Transform3, double>
+ActsPlugins::TGeoSurfaceConverter::discComponents(
+    const TGeoShape& tgShape, const Double_t* rotation,
+    const Double_t* translation, const std::string& axes,
+    double scalor) noexcept(false) {
   using Line2D = Eigen::Hyperplane<double, 2>;
   std::shared_ptr<const DiscBounds> bounds = nullptr;
   Transform3 transform = Transform3::Identity();
@@ -273,13 +271,11 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<const Acts::PlanarBounds>, const Acts::Transform3,
-           double>
-Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
-                                            const Double_t* rotation,
-                                            const Double_t* translation,
-                                            const std::string& axes,
-                                            double scalor) noexcept(false) {
+std::tuple<std::shared_ptr<const PlanarBounds>, const Transform3, double>
+ActsPlugins::TGeoSurfaceConverter::planeComponents(
+    const TGeoShape& tgShape, const Double_t* rotation,
+    const Double_t* translation, const std::string& axes,
+    double scalor) noexcept(false) {
   // Create translation and rotation
   Vector3 t(scalor * translation[0], scalor * translation[1],
             scalor * translation[2]);
@@ -457,11 +453,11 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<Acts::Surface>, double>
-Acts::TGeoSurfaceConverter::toSurface(const TGeoShape& tgShape,
-                                      const TGeoMatrix& tgMatrix,
-                                      const std::string& axes,
-                                      double scalor) noexcept(false) {
+std::tuple<std::shared_ptr<Surface>, double>
+ActsPlugins::TGeoSurfaceConverter::toSurface(const TGeoShape& tgShape,
+                                             const TGeoMatrix& tgMatrix,
+                                             const std::string& axes,
+                                             double scalor) noexcept(false) {
   // Get the placement and orientation in respect to its mother
   const Double_t* rotation = tgMatrix.GetRotationMatrix();
   const Double_t* translation = tgMatrix.GetTranslation();

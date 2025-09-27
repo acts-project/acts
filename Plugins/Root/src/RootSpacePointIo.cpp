@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootSpacePointIo.hpp"
+#include "ActsPlugins/Root/RootSpacePointIo.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
@@ -15,7 +15,10 @@
 #include <TChain.h>
 #include <TTree.h>
 
-namespace Acts {
+using namespace Acts;
+using namespace Experimental;
+
+namespace ActsPlugins {
 
 void RootSpacePointIo::connectForRead(
     TChain& tchain, const Experimental::SpacePointContainer2& spacePoints) {
@@ -164,4 +167,4 @@ void RootSpacePointIo::read(TChain& tchain,
   }
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

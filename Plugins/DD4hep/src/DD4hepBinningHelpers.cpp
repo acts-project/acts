@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBinningHelpers.hpp"
 
 #include <numbers>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 std::vector<std::tuple<DirectedProtoAxis, std::size_t>>
 DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
@@ -76,4 +78,4 @@ DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
   return protoBinnings;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

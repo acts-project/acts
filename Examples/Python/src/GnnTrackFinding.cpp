@@ -6,19 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/BoostTrackBuilding.hpp"
-#include "Acts/Plugins/Gnn/CudaTrackBuilding.hpp"
-#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
-#include "Acts/Plugins/Gnn/ModuleMapCuda.hpp"
-#include "Acts/Plugins/Gnn/OnnxEdgeClassifier.hpp"
-#include "Acts/Plugins/Gnn/TensorRTEdgeClassifier.hpp"
-#include "Acts/Plugins/Gnn/TorchEdgeClassifier.hpp"
-#include "Acts/Plugins/Gnn/TorchMetricLearning.hpp"
-#include "Acts/Plugins/Gnn/TruthGraphMetricsHook.hpp"
 #include "ActsExamples/TrackFindingGnn/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
 #include "ActsExamples/TrackFindingGnn/TrackFindingFromPrototrackAlgorithm.hpp"
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
+#include "ActsPlugins/Gnn/BoostTrackBuilding.hpp"
+#include "ActsPlugins/Gnn/CudaTrackBuilding.hpp"
+#include "ActsPlugins/Gnn/GnnPipeline.hpp"
+#include "ActsPlugins/Gnn/ModuleMapCuda.hpp"
+#include "ActsPlugins/Gnn/OnnxEdgeClassifier.hpp"
+#include "ActsPlugins/Gnn/TensorRTEdgeClassifier.hpp"
+#include "ActsPlugins/Gnn/TorchEdgeClassifier.hpp"
+#include "ActsPlugins/Gnn/TorchMetricLearning.hpp"
+#include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -52,6 +52,7 @@
 namespace py = pybind11;
 
 using namespace ActsExamples;
+using namespace ActsPlugins;
 using namespace Acts;
 using namespace py::literals;
 

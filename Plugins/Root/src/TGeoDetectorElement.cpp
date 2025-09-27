@@ -6,15 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
+#include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
 #include <utility>
 
@@ -23,9 +23,11 @@
 #include "RtypesCore.h"
 #include "TGeoBoolNode.h"
 
+using namespace Acts;
+
 using Line2D = Eigen::Hyperplane<double, 2>;
 
-namespace Acts {
+namespace ActsPlugins {
 
 TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
@@ -114,4 +116,4 @@ const Transform3& TGeoDetectorElement::nominalTransform() const {
   return m_transform;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

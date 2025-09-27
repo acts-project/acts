@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <cmath>
 #include <optional>
@@ -42,6 +42,8 @@ __attribute__((noinline)) void invalid2() {
 }
 
 }  // namespace
+
+using namespace ActsPlugins;
 
 namespace Acts::Test {
 

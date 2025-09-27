@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Table.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -22,6 +21,7 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -90,7 +90,7 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
   }
 
   if (m_cfg.trackFpes && !m_cfg.fpeMasks.empty() &&
-      !Acts::FpeMonitor::canSymbolize()) {
+      !ActsPlugins::FpeMonitor::canSymbolize()) {
     ACTS_ERROR("FPE monitoring is enabled but symbolization is not available");
     throw std::runtime_error(
         "FPE monitoring is enabled but symbolization is not available");
@@ -483,7 +483,7 @@ int Sequencer::run() {
             ACTS_VERBOSE("Execute sequence elements");
 
             for (auto& [alg, fpe] : m_sequenceElements) {
-              std::optional<Acts::FpeMonitor> mon;
+              std::optional<ActsPlugins::FpeMonitor> mon;
               if (m_cfg.trackFpes) {
                 mon.emplace();
                 context.fpeMonitor = &mon.value();
@@ -516,7 +516,7 @@ int Sequencer::run() {
                        << " exceeded configured per-event threshold of "
                        << nMasked << " (mask: " << maskLoc
                        << ") (seen: " << count << " FPEs)\n"
-                       << Acts::FpeMonitor::stackTraceToString(
+                       << ActsPlugins::FpeMonitor::stackTraceToString(
                               *st, m_cfg.fpeStackTraceLength);
 
                     m_nUnmaskedFpe += (count - nMasked);
@@ -609,7 +609,7 @@ void Sequencer::fpeReport() const {
 
   for (auto& [alg, fpe] : m_sequenceElements) {
     auto merged = std::accumulate(
-        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        fpe.begin(), fpe.end(), ActsPlugins::FpeMonitor::Result{},
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
     if (!merged.hasStackTraces()) {
       // no FPEs to report
@@ -619,7 +619,8 @@ void Sequencer::fpeReport() const {
     ACTS_INFO("FPE summary for " << alg->typeName() << ": " << alg->name());
     ACTS_INFO("-----------------------------------");
 
-    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+    std::vector<
+        std::reference_wrapper<const ActsPlugins::FpeMonitor::Result::FpeInfo>>
         sorted;
     std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
                    std::back_inserter(sorted),
@@ -627,7 +628,8 @@ void Sequencer::fpeReport() const {
     std::ranges::sort(sorted, std::greater{},
                       [](const auto& s) { return s.get().count; });
 
-    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+    std::vector<
+        std::reference_wrapper<const ActsPlugins::FpeMonitor::Result::FpeInfo>>
         remaining;
 
     for (const auto& el : sorted) {
@@ -638,7 +640,7 @@ void Sequencer::fpeReport() const {
                                            " per event by " + maskLoc + "]"
                                      : "")
                      << "\n"
-                     << Acts::FpeMonitor::stackTraceToString(
+                     << ActsPlugins::FpeMonitor::stackTraceToString(
                             *st, m_cfg.fpeStackTraceLength));
     }
   }
@@ -651,9 +653,9 @@ void Sequencer::fpeReport() const {
 }
 
 std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
-    const boost::stacktrace::stacktrace& st, Acts::FpeType type) const {
+    const boost::stacktrace::stacktrace& st, ActsPlugins::FpeType type) const {
   for (const auto& frame : st) {
-    std::string loc = Acts::FpeMonitor::getSourceLocation(frame);
+    std::string loc = ActsPlugins::FpeMonitor::getSourceLocation(frame);
     auto it = loc.find_last_of(':');
     std::string locFile = loc.substr(0, it);
     unsigned int locLine = std::stoi(loc.substr(it + 1));
@@ -671,11 +673,11 @@ std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
   return {"NONE", 0};
 }
 
-Acts::FpeMonitor::Result Sequencer::fpeResult() const {
-  Acts::FpeMonitor::Result merged;
+ActsPlugins::FpeMonitor::Result Sequencer::fpeResult() const {
+  ActsPlugins::FpeMonitor::Result merged;
   for (auto& [alg, fpe] : m_sequenceElements) {
     merged.merge(std::accumulate(
-        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        fpe.begin(), fpe.end(), ActsPlugins::FpeMonitor::Result{},
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); }));
   }
   return merged;

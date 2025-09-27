@@ -8,10 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include <string>
 #include <vector>
+
+using namespace ActsPlugins;
 
 namespace Acts::Test {
 

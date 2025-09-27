@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 ///
-#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/GeoModel/GeoModelTree.hpp"
 
 #include <array>
 #include <cmath>
@@ -31,9 +31,9 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   enum class MuonLayer { Inner, Middle, Outer, nLayers };
 
   /// @brief Abrivation of the memory-managed FullPhysVols
-  using FpvLink = Acts::GeoModelTree::FpvLink;
+  using FpvLink = ActsPlugins::GeoModelTree::FpvLink;
   /// @brief Abrivation of the memory-managed const FullPhysVols
-  using FpvConstLink = Acts::GeoModelTree::FpvConstLink;
+  using FpvConstLink = ActsPlugins::GeoModelTree::FpvConstLink;
   /// @brief Configuration object to steer the geometry building
   struct Config {
     /// @brief Switch toggling whether the built detector should be persitified to SQLite
@@ -96,7 +96,7 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
           "GeoMuonMockupExperiment", Acts::Logging::DEBUG));
 
   /// @brief Triggers construction of the Muon mockup detector
-  Acts::GeoModelTree constructMS();
+  ActsPlugins::GeoModelTree constructMS();
 
  private:
   Config m_cfg{};
