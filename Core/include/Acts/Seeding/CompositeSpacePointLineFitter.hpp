@@ -76,7 +76,7 @@ class CompositeSpacePointLineFitter {
     /// @brief Threshold on the fast straw chi2 above which the fit is reattempted but with
     ///        swapped straw signs.
     double badFastChi2SignSwap{5.};
-    /// @brief Switch to use the fast fitter as pre-fitter. The flag <useFastFitter> needs to be enabled
+    /// @brief Switch to use the fast fitter as pre-fitter. The flag useFastFitter needs to be enabled
     bool fastPreFitter{true};
     /// @brief Use the second derivative in the residual calculation
     bool useHessian{false};
