@@ -60,11 +60,11 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
         // navigator, so we skip this target.
         // This can also happen in a well-behaved geometry with external
         // surfaces.
-        if (options.onSurfaceAccept) {
+        if (state.options.onSurfaceAccept) {
           ACTS_VERBOSE(
               "Pre-step surface status is onSurface and flag is enabled, keep "
               "the target "
-              << nextTarget.surface->geometryId());
+              << nextTarget.surface().geometryId());
           return nextTarget;
         }
 
