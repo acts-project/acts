@@ -98,6 +98,7 @@ class Navigator {
 
   using NavigationCandidates = boost::container::small_vector<Candidate, 10>;
 
+  /// Type alias for external surfaces map indexed by layer ID
   using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
 
   /// Type alias for geometry version enumeration
