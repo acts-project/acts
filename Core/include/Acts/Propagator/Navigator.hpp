@@ -98,7 +98,6 @@ class Navigator {
   using NavigationCandidates =
       boost::container::small_vector<NavigationTarget, 10>;
 
-
   /// Type alias for external surfaces map indexed by layer ID
   using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
 
@@ -753,7 +752,6 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state) << "Target set to next candidate.");
         return state.navCandidate();
       } else {
-
         ACTS_VERBOSE(volInfo(state)
                      << "Candidate targets exhausted. Renavigate.");
         return NavigationTarget::None();
@@ -806,7 +804,6 @@ class Navigator {
       }
 
       state.navCandidates.emplace_back(candidate);
-
     }
 
     // Sort the candidates with the path length
@@ -988,12 +985,11 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state)
                  << "Try to find boundaries, we are at: " << toString(position)
                  << ", dir: " << toString(direction));
-    
+
     // Request the compatible boundaries
     state.navBoundaries = state.currentVolume->compatibleBoundaries(
         state.options.geoContext, position, direction, navOpts, logger());
     std::ranges::sort(state.navBoundaries, NavigationTarget::pathLengthOrder);
-
 
     // Print boundary information
     if (logger().doPrint(Logging::VERBOSE)) {
