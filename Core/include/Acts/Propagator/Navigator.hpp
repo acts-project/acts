@@ -585,6 +585,10 @@ class Navigator {
 
         if (state.currentVolume != nullptr) {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
+
+          // this is set only for the check target validity since gen3 does not
+          // care
+          state.navigationStage = Stage::surfaceTarget;
         } else {
           ACTS_VERBOSE(
               volInfo(state)
@@ -658,13 +662,14 @@ class Navigator {
     // Try different approach to get navigation target for gen1 and gen3
     // configuration
 
-    //This is common, in gen1 we start by surfaces and in gen3 we always look for surfaces
+    // This is common, in gen1 we start by surfaces and in gen3 we always look
+    // for surfaces
 
     if (state.navigationStage == Stage::initial) {
-        ACTS_VERBOSE(volInfo(state) << "Target surfaces.");
-        state.navigationStage = Stage::surfaceTarget;
+      ACTS_VERBOSE(volInfo(state) << "Target surfaces.");
+      state.navigationStage = Stage::surfaceTarget;
     }
-    
+
     if (m_geometryVersion == GeometryVersion::Gen1) {
       // Try targeting the surfaces - then layers - then boundaries
       if (state.navigationStage == Stage::surfaceTarget) {
@@ -788,6 +793,10 @@ class Navigator {
                             BoundaryTolerance::None(),
                             state.options.surfaceTolerance);
 
+    ACTS_VERBOSE(volInfo(state)
+                 << "Now " << state.stream.candidates().size()
+                 << " navigation candidates after initialization");
+
     state.navCandidates.clear();
 
     for (auto& candidate : state.stream.candidates()) {
@@ -804,9 +813,6 @@ class Navigator {
     std::ranges::sort(state.navCandidates, [](const auto& a, const auto& b) {
       return a.intersection.pathLength() < b.intersection.pathLength();
     });
-
-    ACTS_VERBOSE(volInfo(state) << "Now " << state.navCandidates.size()
-                                << " candidates after initialization");
 
     // Print the navigation candidates
 
@@ -834,79 +840,79 @@ class Navigator {
                        const Vector3& direction) const {
     ACTS_VERBOSE(volInfo(state) << "Searching for compatible surfaces.");
 
-      const Layer* currentLayer = state.currentLayer;
+    const Layer* currentLayer = state.currentLayer;
 
-      if (currentLayer == nullptr) {
-        ACTS_VERBOSE(volInfo(state) << "No layer to resolve surfaces.");
-        return;
+    if (currentLayer == nullptr) {
+      ACTS_VERBOSE(volInfo(state) << "No layer to resolve surfaces.");
+      return;
+    }
+
+    const Surface* layerSurface = &currentLayer->surfaceRepresentation();
+
+    NavigationOptions<Surface> navOpts;
+    navOpts.resolveSensitive = m_cfg.resolveSensitive;
+    navOpts.resolveMaterial = m_cfg.resolveMaterial;
+    navOpts.resolvePassive = m_cfg.resolvePassive;
+    navOpts.startObject = state.currentSurface;
+    navOpts.endObject = state.targetSurface;
+    navOpts.nearLimit = state.options.nearLimit;
+    navOpts.farLimit = state.options.farLimit;
+
+    if (!state.options.externalSurfaces.empty()) {
+      auto layerId = layerSurface->geometryId().layer();
+      auto externalSurfaceRange =
+          state.options.externalSurfaces.equal_range(layerId);
+      navOpts.externalSurfaces.reserve(
+          state.options.externalSurfaces.count(layerId));
+      for (auto itSurface = externalSurfaceRange.first;
+           itSurface != externalSurfaceRange.second; itSurface++) {
+        navOpts.externalSurfaces.push_back(itSurface->second);
       }
+    }
 
-      const Surface* layerSurface = &currentLayer->surfaceRepresentation();
-
-      NavigationOptions<Surface> navOpts;
-      navOpts.resolveSensitive = m_cfg.resolveSensitive;
-      navOpts.resolveMaterial = m_cfg.resolveMaterial;
-      navOpts.resolvePassive = m_cfg.resolvePassive;
-      navOpts.startObject = state.currentSurface;
-      navOpts.endObject = state.targetSurface;
-      navOpts.nearLimit = state.options.nearLimit;
-      navOpts.farLimit = state.options.farLimit;
-
-      if (!state.options.externalSurfaces.empty()) {
-        auto layerId = layerSurface->geometryId().layer();
-        auto externalSurfaceRange =
-            state.options.externalSurfaces.equal_range(layerId);
-        navOpts.externalSurfaces.reserve(
-            state.options.externalSurfaces.count(layerId));
-        for (auto itSurface = externalSurfaceRange.first;
-             itSurface != externalSurfaceRange.second; itSurface++) {
-          navOpts.externalSurfaces.push_back(itSurface->second);
-        }
+    // Request the compatible surfaces
+    state.navSurfaces = currentLayer->compatibleSurfaces(
+        state.options.geoContext, position, direction, navOpts);
+    // Sort the surfaces by path length.
+    // Special care is taken for the external surfaces which should always
+    // come first, so they are preferred to be targeted and hit first.
+    std::ranges::sort(state.navSurfaces, [&state](const NavigationTarget& a,
+                                                  const NavigationTarget& b) {
+      // Prefer to sort by path length. We assume surfaces are at the same
+      // distance if the difference is smaller than the tolerance.
+      if (std::abs(a.pathLength() - b.pathLength()) >
+          state.options.surfaceTolerance) {
+        return NavigationTarget::pathLengthOrder(a, b);
       }
-
-      // Request the compatible surfaces
-      state.navSurfaces = currentLayer->compatibleSurfaces(
-          state.options.geoContext, position, direction, navOpts);
-      // Sort the surfaces by path length.
-      // Special care is taken for the external surfaces which should always
-      // come first, so they are preferred to be targeted and hit first.
-      std::ranges::sort(state.navSurfaces, [&state](const NavigationTarget& a,
-                                                    const NavigationTarget& b) {
-        // Prefer to sort by path length. We assume surfaces are at the same
-        // distance if the difference is smaller than the tolerance.
-        if (std::abs(a.pathLength() - b.pathLength()) >
-            state.options.surfaceTolerance) {
-          return NavigationTarget::pathLengthOrder(a, b);
-        }
-        // If the path length is practically the same, sort by geometry.
-        // First we check if one of the surfaces is external.
-        bool aIsExternal = a.boundaryTolerance().isInfinite();
-        bool bIsExternal = b.boundaryTolerance().isInfinite();
-        if (aIsExternal == bIsExternal) {
-          // If both are external or both are not external, sort by geometry
-          // identifier
-          return a.surface().geometryId() < b.surface().geometryId();
-        }
-        // If only one is external, it should come first
-        return aIsExternal;
-      });
-      // For now we implicitly remove overlapping surfaces.
-      // For track finding it might be useful to discover overlapping surfaces
-      // and check for compatible measurements. This is under investigation
-      // and might be implemented in the future.
-      auto toBeRemoved = std::ranges::unique(
-          state.navSurfaces, [&](const auto& a, const auto& b) {
-            return std::abs(a.pathLength() - b.pathLength()) <
-                   state.options.surfaceTolerance;
-          });
-      if (toBeRemoved.begin() != toBeRemoved.end()) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Removing "
-                     << std::distance(toBeRemoved.begin(), toBeRemoved.end())
-                     << " overlapping surfaces.");
+      // If the path length is practically the same, sort by geometry.
+      // First we check if one of the surfaces is external.
+      bool aIsExternal = a.boundaryTolerance().isInfinite();
+      bool bIsExternal = b.boundaryTolerance().isInfinite();
+      if (aIsExternal == bIsExternal) {
+        // If both are external or both are not external, sort by geometry
+        // identifier
+        return a.surface().geometryId() < b.surface().geometryId();
       }
-      state.navSurfaces.erase(toBeRemoved.begin(), toBeRemoved.end());
-    
+      // If only one is external, it should come first
+      return aIsExternal;
+    });
+    // For now we implicitly remove overlapping surfaces.
+    // For track finding it might be useful to discover overlapping surfaces
+    // and check for compatible measurements. This is under investigation
+    // and might be implemented in the future.
+    auto toBeRemoved = std::ranges::unique(
+        state.navSurfaces, [&](const auto& a, const auto& b) {
+          return std::abs(a.pathLength() - b.pathLength()) <
+                 state.options.surfaceTolerance;
+        });
+    if (toBeRemoved.begin() != toBeRemoved.end()) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Removing "
+                   << std::distance(toBeRemoved.begin(), toBeRemoved.end())
+                   << " overlapping surfaces.");
+    }
+    state.navSurfaces.erase(toBeRemoved.begin(), toBeRemoved.end());
+
     // Print surface information
     if (logger().doPrint(Logging::VERBOSE)) {
       std::ostringstream os;
@@ -982,15 +988,14 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state)
                  << "Try to find boundaries, we are at: " << toString(position)
                  << ", dir: " << toString(direction));
-   
-      // Request the compatible boundaries
-      state.navBoundaries = state.currentVolume->compatibleBoundaries(
-          state.options.geoContext, position, direction, navOpts, logger());
-      std::ranges::sort(state.navBoundaries, [](const auto& a, const auto& b) {
-        return SurfaceIntersection::pathLengthOrder(a.intersection,
-                                                    b.intersection);
-      });
-  
+
+    // Request the compatible boundaries
+    state.navBoundaries = state.currentVolume->compatibleBoundaries(
+        state.options.geoContext, position, direction, navOpts, logger());
+    std::ranges::sort(state.navBoundaries, [](const auto& a, const auto& b) {
+      return SurfaceIntersection::pathLengthOrder(a.intersection,
+                                                  b.intersection);
+    });
 
     // Print boundary information
     if (logger().doPrint(Logging::VERBOSE)) {
