@@ -474,7 +474,8 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
   auto inverseH = safeInverse(miniHessian);
   // The Hessian can safely be inverted
   if (inverseH) {
-    covariance.block<N, N>(firstIdx, firstIdx) = (*inverseH);
+    auto covBlock = covariance.block<N, N>(firstIdx, firstIdx);
+    covBlock = (*inverseH);
     ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                         << ": Evaluated covariance: \n"
                         << covariance);
