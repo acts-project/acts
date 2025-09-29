@@ -30,12 +30,12 @@ class CompositeSpacePointLineSeeder {
   /// @brief Enumeration to pick one of the four tangent lines to
   ///       the straw circle pair.
   enum class TangentAmbi : std::uint8_t {
-    RR = 0,  /// Both circles are on the right side
-    RL = 1,  // The top circle is on the right and the bottom circle on the left
-             // side
-    LR = 2,  // The top circle is  on the left and the bottom circle on the
-             // right side
-    LL = 3,  // Both circles are on the left side
+    RR = 0,  //< Both circles are on the right side
+    RL = 1,  //< The top circle is on the right and the bottom circle on the left
+             //< side
+    LR = 2,  //< The top circle is  on the left and the bottom circle on the
+             //< right side
+    LL = 3,  //< Both circles are on the left side
   };
   /// @brief Converts the line tangent ambiguity into a string
   static std::string toString(const TangentAmbi ambi);

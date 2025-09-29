@@ -66,7 +66,7 @@ class CompositeSpacePointLineFitter {
     /// @brief Gradient decent step size if the Hessian is singular
     double gradientStep{1.e-4};
     /// @brief Number of iterations
-    unsigned maxIter{1000};
+    std::size_t maxIter{1000};
     /// @brief Fit the time offset if possible
     bool fitT0{false};
     /// @brief Recalibrate the hits between two iterations
@@ -91,7 +91,7 @@ class CompositeSpacePointLineFitter {
     ///         speed of light in the time residual calculations
     bool includeToF{true};
     /// @brief Abort the fit as soon as more than n parameters leave the fit range
-    unsigned int nParsOutOfBounds{1};
+    std::size_t nParsOutOfBounds{1};
     /// @brief Allowed parameter ranges
     using RangeArray = std::array<std::array<double, 2>, s_nPars>;
     RangeArray ranges{};
@@ -131,11 +131,11 @@ class CompositeSpacePointLineFitter {
     /// @brief Covariance on the local line parameters
     CovMat_t covariance{CovMat_t::Identity()};
     /// @brief Number of degrees of freedom
-    unsigned nDoF{0};
+    std::size_t nDoF{0};
     /// @brief Fitted chi2
     double chi2{0.};
     /// @brief Number of iterations to converge
-    unsigned nIter{0};
+    std::size_t nIter{0};
     /// @brief Convergence of the fit
     bool converged{false};
   };
