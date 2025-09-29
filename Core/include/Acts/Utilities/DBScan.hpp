@@ -46,19 +46,19 @@ template <std::size_t kDims, typename scalar_t = double,
           std::size_t kLeafSize = 4>
 class DBScan {
  public:
-  // The type of coordinates for points.
+  /// Type alias for coordinates of points in N-dimensional space
   using Point = std::array<scalar_t, kDims>;
 
-  // The type of a vector of coordinate.
+  /// Type alias for vector of coordinate points
   using VectorPoints = std::vector<Point>;
 
-  // The type to pair the points with an ID.
+  /// Type alias for pair of point coordinates with unique identifier
   using Pair = std::pair<Point, std::size_t>;
 
-  // The type of a vector of coordinate-ID pairs.
+  /// Type alias for vector of coordinate-ID pairs
   using VectorPairs = std::vector<Pair>;
 
-  // KDTree used before the DBScan algorithm to find the neighbours.
+  /// Type alias for KDTree used for neighbor search during clustering
   using Tree = KDTree<kDims, std::size_t, scalar_t, std::array, kLeafSize>;
 
   // Remove the default constructor.

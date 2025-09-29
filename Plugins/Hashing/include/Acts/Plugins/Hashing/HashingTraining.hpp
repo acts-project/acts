@@ -16,7 +16,9 @@ namespace Acts {
 template <typename SpacePointContainer>
 class HashingTrainingAlgorithm {
  public:
-  explicit HashingTrainingAlgorithm(const HashingTrainingConfig &cfg);
+  using Config = HashingTrainingConfig;
+
+  explicit HashingTrainingAlgorithm(const Config &cfg);
 
   HashingTrainingAlgorithm() = default;
   HashingTrainingAlgorithm(
@@ -27,10 +29,10 @@ class HashingTrainingAlgorithm {
   AnnoyModel execute(SpacePointContainer spacePoints) const;
 
   // / Get readonly access to the config parameters
-  const Acts::HashingTrainingConfig &config() const { return m_cfg; }
+  const Config &config() const { return m_cfg; }
 
  private:
-  HashingTrainingConfig m_cfg;
+  Config m_cfg;
 };
 
 }  // namespace Acts

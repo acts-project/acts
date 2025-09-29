@@ -13,6 +13,7 @@
 
 namespace Acts {
 
+/// Error codes for propagator operations
 enum class PropagatorError {
   // ensure all values are non-zero
   Failure = 1,
@@ -20,6 +21,9 @@ enum class PropagatorError {
   NextTargetLimitReached,
 };
 
+/// Create error code from PropagatorError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::PropagatorError e);
 
 }  // namespace Acts
