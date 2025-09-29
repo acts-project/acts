@@ -75,9 +75,9 @@ void ActsPlugins::TGeoParser::select(
         if (auto* shape =
                 dynamic_cast<TGeoBBox*>(state.node->GetVolume()->GetShape());
             shape != nullptr) {
-          // @TODO this should be replace by a proper TGeo to VolumeBounds
-          // and vertices converision which would make a more appropriate
-          // parsomg
+          // @TODO this should be replaced by a proper TGeo to VolumeBounds
+          // and vertices conversion which would make a more appropriate
+          // parsing
           double dx = options.unit * shape->GetDX();
           double dy = options.unit * shape->GetDY();
           double dz = options.unit * shape->GetDZ();

@@ -61,9 +61,9 @@ All optional components are disabled by default. Please see the
 
 
 Short summary of the modules and directories:
--   `Core/` contains all the core funcitionality with minimal dependencies and no framework or I/O related code
--   `Plugins/` contains plugins for core functionality that requires
-    additional external packages. T
+-   `Core/` contains all the core functionality with minimal dependencies and no framework or I/O related code
+-   `Plugins/` contains plugins for core functionality that require
+    additional external packages.
 -   `Fatras/` provides fast track simulation tools based on the core
     library.
 -   `Examples/` contains simulation and reconstruction examples. These are
