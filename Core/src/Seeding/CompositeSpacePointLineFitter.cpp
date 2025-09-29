@@ -26,17 +26,18 @@ std::vector<CompositeSpacePointLineFitter::FitParIndex>
 CompositeSpacePointLineFitter::extractFitablePars(
     const std::array<std::size_t, 3>& hitCounts) {
   std::vector<FitParIndex> pars{};
+  using enum FitParIndex;
   const auto& [nLoc0, nLoc1, nTime] = hitCounts;
   if (nLoc0 > 1) {
-    pars.insert(pars.end(), {FitParIndex::x0, FitParIndex::phi});
+    pars.insert(pars.end(), {x0, phi});
   }
   // Measurements in the bending direction
   if (nLoc1 > 1) {
-    pars.insert(pars.end(), {FitParIndex::y0, FitParIndex::theta});
+    pars.insert(pars.end(), {y0, theta});
   }
   // Time measurements
   if (nTime > 1) {
-    pars.push_back(FitParIndex::t0);
+    pars.push_back(t0);
   }
   std::ranges::sort(pars);
   return pars;

@@ -217,6 +217,13 @@ class CompositeSpacePointLineFitter {
   FitParameters fastFit(const Cont_t& measurements, const Line_t& initialGuess,
                         const std::vector<FitParIndex>& parsToUse) const;
 
+  using FastFitResult = std::optional<detail::FastStrawLineFitter::FitResult>;
+
+  template <CompositeSpacePointContainer Cont_t>
+  FastFitResult fastPrecFit(const Cont_t& measurements,
+                            const Line_t& initialGuess,
+                            const std::vector<FitParIndex>& parsToUse) const;
+
   /// @brief Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was
   ///        sufficiently small such that the fit is converged
