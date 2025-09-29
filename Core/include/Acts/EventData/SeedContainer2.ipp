@@ -14,7 +14,7 @@
 
 #include <limits>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 inline MutableSeedProxy2 SeedContainer2::createSeed() noexcept {
   ++m_size;
@@ -49,4 +49,4 @@ inline ConstSeedProxy2 SeedContainer2::operator[](Index index) const noexcept {
   return ConstProxy(*this, index);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
