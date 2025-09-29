@@ -157,7 +157,11 @@ void ActsExamples::from_json(const nlohmann::json& j,
     for (const auto& jvar : jvariances) {
       auto idx =
           static_cast<Acts::BoundIndices>(jvar["index"].get<std::size_t>());
-      auto vars = jvar["rms"].get<std::vector<double>>();
+      auto rms = jvar["rms"].get<std::vector<double>>();
+      auto vars = rms;
+      // Square the RMS values to get the variances
+      std::transform(vars.begin(), vars.end(), vars.begin(),
+                     [](double val) { return val * val; });
       gdc.varianceMap[idx] = vars;
     }
   }

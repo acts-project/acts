@@ -1,39 +1,32 @@
-acts_add_library(PythonUtilities INTERFACE)
-target_include_directories(ActsPythonUtilities INTERFACE include)
-
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(_python_install_dir "python/acts")
 
-pybind11_add_module(ActsPythonBindings
-  src/ModuleEntry.cpp
-  src/Framework.cpp
-  src/Base.cpp
-  src/Alignment.cpp
-  src/Detector.cpp
-  src/Digitization.cpp
-  src/Material.cpp
-  src/Geometry.cpp
-  src/GeometryBuildingGen1.cpp
-  src/Blueprint.cpp
-  src/ExampleAlgorithms.cpp
-  src/MagneticField.cpp
-  src/Output.cpp
-  src/Input.cpp
-  src/Propagation.cpp
-  src/Navigation.cpp
-  src/Generators.cpp
-  src/Obj.cpp
-  src/TruthTracking.cpp
-  src/TrackFitting.cpp
-  src/TrackFinding.cpp
-  src/Vertexing.cpp
-  src/AmbiguityResolution.cpp
-  src/EventData.cpp
-  src/Utilities.cpp
+target_sources(
+    ActsPythonBindings
+    PRIVATE
+        src/ModuleEntry.cpp
+        src/Framework.cpp
+        src/Alignment.cpp
+        src/Detector.cpp
+        src/Digitization.cpp
+        src/MaterialMapping.cpp
+        src/ExampleAlgorithms.cpp
+        src/Output.cpp
+        src/Input.cpp
+        src/Propagation.cpp
+        src/Generators.cpp
+        src/Obj.cpp
+        src/TruthTracking.cpp
+        src/TrackFitting.cpp
+        src/TrackFinding.cpp
+        src/Vertexing.cpp
+        src/AmbiguityResolution.cpp
+        src/Utilities.cpp
 )
+
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 
 set_target_properties(
@@ -48,13 +41,11 @@ set_target_properties(
 target_link_libraries(
     ActsPythonBindings
     PUBLIC
-        Acts::Core
         Acts::PythonUtilities
         Acts::ExamplesFramework
         Acts::ExamplesGeometry
         Acts::ExamplesDetectorGeneric
         Acts::ExamplesDetectorTGeo
-        Acts::ExamplesMagneticField
         Acts::ExamplesIoCsv
         Acts::ExamplesIoObj
         Acts::ExamplesIoJson
@@ -74,13 +65,11 @@ target_link_libraries(
 )
 
 set(py_files
-    __init__.py
     examples/__init__.py
     examples/simulation.py
     examples/reconstruction.py
     examples/itk.py
     examples/odd.py
-    _adapter.py
 )
 
 if(ACTS_BUILD_EXAMPLES_ROOT)
@@ -198,14 +187,14 @@ target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesIoHepMC3)
 target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
 list(APPEND py_files examples/hepmc3.py)
 
-if(ACTS_BUILD_EXAMPLES_EXATRKX)
+if(ACTS_BUILD_EXAMPLES_GNN)
     target_link_libraries(
         ActsPythonBindings
-        PUBLIC Acts::ExamplesTrackFindingExaTrkX
+        PUBLIC Acts::ExamplesTrackFindingGnn
     )
-    target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/GnnTrackFinding.cpp)
 else()
-    target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFindingStub.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/GnnTrackFindingStub.cpp)
 endif()
 
 if(ACTS_BUILD_EXAMPLES_EDM4HEP)
@@ -275,9 +264,6 @@ if(ACTS_BUILD_EXAMPLES_HASHING)
 else()
     target_sources(ActsPythonBindings PRIVATE src/HashingStub.cpp)
 endif()
-
-configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
-install(FILES ${_python_dir}/setup.sh DESTINATION "python")
 
 foreach(f ${py_files})
     set(_target ${_python_dir}/acts/${f})

@@ -19,6 +19,11 @@ else
     exit 1
 fi
 
+# detect if we are installed as there is no lib subdirectory
+if [ ! -d "$script_dir/lib" ] && [ ! -d "$script_dir/lib64" ]; then
+    script_dir=$( cd -- "$script_dir" &> /dev/null && cd .. &> /dev/null && pwd )
+fi
+
 # source the python and ODD environment
 # first check if python bindings are enabled
 # then check if the setup.sh file exists

@@ -143,6 +143,7 @@ class TrackProxy {
 
   /// Equality operator with another track proxy
   /// Checks the container identity and the track index
+  /// @param other Other track proxy to compare with
   /// @return True if the track proxies refer to the same track
   bool operator==(const TrackProxy& other) const {
     return &(*m_container) == &(*other.m_container) && m_index == other.m_index;
@@ -557,7 +558,26 @@ class TrackProxy {
 
   /// @anchor track_proxy_track_state_manipulation
   /// @name TrackProxy track state manipulation
-  /// Methods that manipulate the track states of a track represented by @c TrackProxy.
+  /// Methods that manipulate the track states of a track represented by @c
+  /// TrackProxy.
+  ///
+  /// **Copy Methods Overview:**
+  ///
+  /// Three main copy methods are available with different behaviors:
+  /// - @c copyFrom(): Deep copy including all track states (creates new track
+  ///                 states)
+  /// - @c copyFromWithoutStates(): Copy only track properties, invalidate
+  ///                               track state indices
+  /// - @c copyFromShallow(): Shallow copy sharing the same track states (copy
+  ///                         indices only)
+  ///
+  /// Choose based on your needs:
+  /// - Use @c copyFrom() for independent track copies with separate track
+  ///   states
+  /// - Use @c copyFromWithoutStates() to update track metadata without
+  ///   affecting trajectories
+  /// - Use @c copyFromShallow() for lightweight copies when track states can
+  ///   be shared
   /// @{
 
   /// Forward connect a track.
@@ -595,24 +615,105 @@ class TrackProxy {
   /// @param other The track proxy
   /// @param copyTrackStates Copy the track state sequence from @p other
   template <TrackProxyConcept track_proxy_t>
-  void copyFrom(const track_proxy_t& other, bool copyTrackStates = true)
+  [[deprecated(
+      "copyFrom() with copyTrackStates == false is deprecated, use "
+      "copyFromWithoutStates()")]]
+  void copyFrom(const track_proxy_t& other, bool copyTrackStates)
     requires(!ReadOnly)
   {
-    // @TODO: Add constraint on which track proxies are allowed,
-    // this is only implicit right now
-
     if (copyTrackStates) {
-      // append track states (cheap), but they're in the wrong order
-      for (const auto& srcTrackState : other.trackStatesReversed()) {
-        auto destTrackState = appendTrackState(srcTrackState.getMask());
-        destTrackState.copyFrom(srcTrackState, Acts::TrackStatePropMask::All,
-                                true);
-      }
+      copyFrom(other);
+    } else {
+      // Emulate previous behavior
+      auto prevTipIndex = tipIndex();
+      auto prevStemIndex = stemIndex();
+      copyFromWithoutStates(other);
+      // Reset to previous values
+      tipIndex() = prevTipIndex;
+      stemIndex() = prevStemIndex;
+    }
+  }
 
-      // reverse using standard linked list reversal algorithm
-      reverseTrackStates();
+  /// Create a complete deep copy of another track, including all track states.
+  /// This creates new track states in the destination trajectory and copies
+  /// all data from the source track states. The track state sequence order
+  /// is preserved.
+  ///
+  /// **Implementation details:**
+  /// - Track states are initially copied in reversed order for efficiency
+  /// - The track state links are then updated using reverseTrackStates()
+  /// - As a consequence, the resulting track is forward-linked
+  ///
+  /// **What gets copied:**
+  /// - All track-level properties (parameters, covariance, particle hypothesis,
+  ///   etc.)
+  /// - Reference surface (shared pointer is copied)
+  /// - Track summary data (nMeasurements, nHoles, chi2, etc.)
+  /// - All dynamic track columns
+  /// - Complete sequence of track states with all their data
+  /// - All dynamic track state columns
+  ///
+  /// **Result:**
+  /// - The destination track will have newly created track states
+  /// - tipIndex() and stemIndex() will point to the new track states
+  /// - Track state indices will be different from the source
+  /// - All track state data will be identical to the source
+  /// - The track will be forward-linked (stemIndex() will be valid)
+  ///
+  /// @note Only available if the track proxy is not read-only
+  /// @note Both track containers must have compatible dynamic columns
+  /// @tparam track_proxy_t the other track proxy's type
+  /// @param other The source track proxy to copy from
+  template <TrackProxyConcept track_proxy_t>
+  void copyFrom(const track_proxy_t& other)
+    requires(!ReadOnly)
+  {
+    copyFromWithoutStates(other);
+
+    // append track states (cheap), but they're in the wrong order
+    for (const auto& srcTrackState : other.trackStatesReversed()) {
+      auto destTrackState = appendTrackState(srcTrackState.getMask());
+      destTrackState.copyFrom(srcTrackState, Acts::TrackStatePropMask::All,
+                              true);
     }
 
+    // reverse using standard linked list reversal algorithm
+    reverseTrackStates();
+  }
+
+  /// Copy track-level properties from another track, but not the track states.
+  /// This copies all track metadata and properties but leaves the track state
+  /// sequence unchanged. Useful when you want to copy track properties to an
+  /// existing track that may already have track states.
+  ///
+  /// **What gets copied:**
+  /// - Track parameters at reference surface
+  /// - Covariance matrix at reference surface
+  /// - Particle hypothesis
+  /// - Reference surface (shared pointer is copied)
+  /// - Track summary data (nMeasurements, nHoles, nOutliers, nSharedHits, chi2,
+  /// nDoF)
+  /// - All dynamic track columns
+  ///
+  /// **What does NOT get copied:**
+  /// - Track states (existing track states remain unchanged in the container)
+  ///
+  /// **Result:**
+  /// - All track-level properties are updated to match the source
+  /// - tipIndex() and stemIndex() are set to kInvalid (track states become
+  /// inaccessible)
+  /// - Existing track states remain in the container but are no longer linked
+  /// to this track
+  /// - nTrackStates() will return 0 due to invalid indices
+  ///
+  /// @note Only available if the track proxy is not read-only
+  /// @note Both track containers must have compatible dynamic columns
+  /// @tparam track_proxy_t the other track proxy's type
+  /// @param other The source track proxy to copy properties from
+  template <TrackProxyConcept track_proxy_t>
+  void copyFromWithoutStates(const track_proxy_t& other)
+    requires(!ReadOnly)
+  {
     setParticleHypothesis(other.particleHypothesis());
 
     if (other.hasReferenceSurface()) {
@@ -632,24 +733,71 @@ class TrackProxy {
 
     m_container->copyDynamicFrom(m_index, other.m_container->container(),
                                  other.m_index);
+
+    tipIndex() = kInvalid;
+    stemIndex() = kInvalid;
   }
 
   /// Creates  a *shallow copy* of the track. Track states are not copied, but
   /// the resulting track points at the same track states as the original.
   /// @note Only available if the track proxy is not read-only
+  /// @return A shallow copy of this track proxy
+  [[deprecated("Use copyFromShallow() instead")]]
   TrackProxy shallowCopy()
     requires(!ReadOnly)
   {
-    auto ts = container().makeTrack();
-    ts.copyFrom(*this, false);
-    ts.tipIndex() = tipIndex();
-    ts.stemIndex() = stemIndex();
-    return ts;
+    auto t = container().makeTrack();
+    t.copyFromShallow(*this);
+    return t;
+  }
+
+  /// Create a shallow copy from another track, sharing the same track states.
+  /// This copies all track-level properties and makes the destination track
+  /// point to the same track state sequence as the source. The track states
+  /// themselves are not duplicated - both tracks will reference the same
+  /// track state objects in memory.
+  ///
+  /// **What gets copied:**
+  /// - All track-level properties (parameters, covariance, particle hypothesis,
+  /// etc.)
+  /// - Reference surface (shared pointer is copied)
+  /// - Track summary data (nMeasurements, nHoles, chi2, etc.)
+  /// - All dynamic track columns
+  /// - tipIndex() and stemIndex() (track state linking information)
+  ///
+  /// **What gets shared (not duplicated):**
+  /// - Track states (both tracks reference the same track state objects)
+  ///
+  /// **Result:**
+  /// - The destination track will have the same nTrackStates() as the source
+  /// - Both tracks will iterate over the same track state sequence
+  /// - Modifications to track states will be visible in both tracks
+  /// - Track state indices will be identical between tracks
+  /// - The destination track will have a different track index than the source
+  ///
+  /// @warning Modifying track states through either track will affect both tracks
+  ///          since they share the same track state objects
+  /// @warning It is the user's responsibility to ensure that the tip and stem
+  ///          indices from the source track are valid in the destination
+  ///          track's track state container. No validation is performed -
+  ///          invalid indices will lead to undefined behavior when accessing
+  ///          track states
+  /// @note Only available if the track proxy is not read-only
+  /// @note Both track containers must have compatible dynamic columns
+  /// @tparam track_proxy_t the other track proxy's type
+  /// @param other The source track proxy to create a shallow copy from
+  template <TrackProxyConcept track_proxy_t>
+  void copyFromShallow(const track_proxy_t& other)
+    requires(!ReadOnly)
+  {
+    copyFromWithoutStates(other);
+    tipIndex() = other.tipIndex();
+    stemIndex() = other.stemIndex();
   }
 
   /// Reverse the ordering of track states for this track
-  /// Afterwards, the previous endpoint of the track state sequence will be the
-  /// "innermost" track state
+  /// Afterwards, the previous endpoint of the track state sequence will be
+  /// the "innermost" track state
   /// @note Only available if the track proxy is not read-only
   /// @note This is dangerous with branching track state sequences, as it will break them
   /// @note This also automatically forward-links the track!
@@ -778,6 +926,7 @@ class TrackProxy {
 
   /// Convert a track state into track parameters
   /// @note The parameters are created on the fly
+  /// @param trackState Track state to convert to parameters
   /// @return the track parameters
   BoundTrackParameters createParametersFromState(
       const ConstTrackStateProxy& trackState) const {

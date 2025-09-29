@@ -26,6 +26,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace Acts {
@@ -70,7 +71,11 @@ class Surface : public virtual GeometryObject,
   };
 
   /// Helper strings for screen output
-  static std::array<std::string, SurfaceType::Other> s_surfaceTypeNames;
+  static constexpr std::array<std::string_view, Surface::SurfaceType::Other + 1>
+      s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",        "Perigee",
+                            "Plane", "Straw",    "Curvilinear", "Other"};
+
+  friend std::ostream& operator<<(std::ostream& os, SurfaceType type);
 
  protected:
   /// Constructor with Transform3 as a shared object
@@ -104,7 +109,7 @@ class Surface : public virtual GeometryObject,
           const Transform3& shift);
 
  public:
-  virtual ~Surface();
+  ~Surface() noexcept override;
 
   /// Factory for producing memory managed instances of Surface.
   /// Will forward all parameters and will attempt to find a suitable
@@ -395,8 +400,8 @@ class Surface : public virtual GeometryObject,
   /// @param boundaryTolerance the BoundaryTolerance
   /// @param tolerance the tolerance used for the intersection
   ///
-  /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
-  virtual SurfaceMultiIntersection intersect(
+  /// @return @c MultiIntersection3D intersection object
+  virtual MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =

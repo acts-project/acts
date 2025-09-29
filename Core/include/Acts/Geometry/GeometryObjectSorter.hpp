@@ -8,11 +8,6 @@
 
 #pragma once
 
-// clang-format off
-// Workaround for building on clang+libstdc++. Must always be first
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-// clang-format on
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -96,9 +91,8 @@ class DistanceSorterT {
         m_refEta(VectorHelpers::eta(reference)) {}
 
   /// Comparison operator
-  ///
-  /// @tparam one first object
-  /// @tparam two second object
+  /// @param one First object to compare
+  /// @param two Second object to compare
   ///
   /// @return boolean indicator
   bool operator()(T one, T two) const {

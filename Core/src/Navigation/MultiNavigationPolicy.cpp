@@ -46,4 +46,12 @@ void MultiNavigationPolicy::initializeCandidates(
   }
 }
 
+void MultiNavigationPolicy::visit(
+    const std::function<void(const INavigationPolicy&)>& visitor) const {
+  visitor(*this);
+  for (const auto& policy : m_policyPtrs) {
+    visitor(*policy);
+  }
+}
+
 }  // namespace Acts

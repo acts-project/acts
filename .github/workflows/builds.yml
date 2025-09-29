@@ -30,7 +30,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -130,7 +130,7 @@ jobs:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -140,7 +140,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: acts-linux-ubuntu
 
@@ -158,7 +158,7 @@ jobs:
           source build/this_acts_withdeps.sh
           python3 -m pip install -r Examples/Python/tests/requirements.txt
           python3 -m pip install pytest-md-report
-          pytest -rfExw -k "not exatrkx" -v
+          pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
@@ -169,7 +169,7 @@ jobs:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -181,7 +181,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: acts-linux-ubuntu
 
@@ -227,7 +227,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.2
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: physmon
           path: physmon
@@ -261,7 +261,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -336,7 +336,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -414,12 +414,12 @@ jobs:
   external_eic-shell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           path: acts
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: eic/EICrecon
           path: EICrecon
@@ -438,11 +438,21 @@ jobs:
 
       - name: Build
         id: build
-        uses: eic/run-cvmfs-osg-eic-shell@main
+        uses: addnab/docker-run-action@v3
         continue-on-error: true
         with:
-          platform-release: "eic_xl:nightly"
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work
+          shell: bash
           run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            cd /work
+            set -ue
+
             pushd acts
             ccache -z && \
             export CMAKE_INSTALL_PREFIX=$HOME/prefix
@@ -463,11 +473,8 @@ jobs:
             popd
 
             pushd EICrecon
-            export LD_LIBRARY_PATH="$CMAKE_INSTALL_PREFIX/lib:$LD_LIBRARY_PATH"
             echo "::group::EICrecon configure phase"
             ccache -z && \
-            env CXXFLAGS="-I$CMAKE_INSTALL_PREFIX/include -L$CMAKE_INSTALL_PREFIX/lib" \
-                LDFLAGS="-L$CMAKE_INSTALL_PREFIX/lib" \
             cmake -B build -S . \
               -GNinja \
               -DActs_ROOT=$CMAKE_INSTALL_PREFIX

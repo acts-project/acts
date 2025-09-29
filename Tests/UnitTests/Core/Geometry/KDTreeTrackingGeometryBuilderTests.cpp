@@ -63,15 +63,14 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
 
   // Fill surfaces from cylinder layers
   for (std::size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
-    std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
+    std::vector<Acts::Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
         detectorStore, pModuleHalfX[ilp], pModuleHalfY[ilp],
         pModuleThickness[ilp], pModuleTiltPhi[ilp], pLayerRadii[ilp], 2_mm,
         5_mm, pLayerBinning[ilp]);
 
     // Make a shared version out of it
     for (auto& sf : layerSurfaces) {
-      Surface* mutableSf = const_cast<Surface*>(sf);
-      layerSurfacePtrs.push_back(mutableSf->getSharedPtr());
+      layerSurfacePtrs.push_back(sf->getSharedPtr());
     }
   }
 
@@ -87,13 +86,12 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   std::vector<double> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   for (std::size_t ilp = 0; ilp < discZ.size(); ++ilp) {
-    std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
+    std::vector<Acts::Surface*> layerSurfaces = ctGeometry.surfacesRing(
         detectorStore, dModuleHalfXMinY[ilp], dModuleHalfXMaxY[ilp],
         dModuleHalfY[ilp], dModuleThickness[ilp], dModuleTilt[ilp],
         discRadii[ilp], discZ[ilp], 2., discModules[ilp]);
     for (auto& sf : layerSurfaces) {
-      Surface* mutableSf = const_cast<Surface*>(sf);
-      layerSurfacePtrs.push_back(mutableSf->getSharedPtr());
+      layerSurfacePtrs.push_back(sf->getSharedPtr());
     }
   }
 

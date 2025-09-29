@@ -26,8 +26,6 @@
 
 #include <cmath>
 #include <cstdlib>
-#include <exception>
-#include <iomanip>
 #include <iostream>
 #include <typeinfo>
 

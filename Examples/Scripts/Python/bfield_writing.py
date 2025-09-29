@@ -44,7 +44,7 @@ def runBFieldWriting(outputDir: Path, rewrites: int = 0):
     for i in range(rewrites):
         print(f"Now read back {cfg.fileName}")
 
-        field2 = acts.examples.MagneticFieldMapRz(cfg.fileName, tree="solenoid")
+        field2 = acts.MagneticFieldMapRz(cfg.fileName, tree="solenoid")
         cfg2 = RootBFieldWrite(field2, outputDir / f"solenoid{i+2}.root")
         CsvBFieldWrite(field2, outputDir / f"solenoid{i+2}.csv")
         cfg = cfg2

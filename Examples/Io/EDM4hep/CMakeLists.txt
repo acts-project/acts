@@ -22,7 +22,6 @@ target_link_libraries(
         EDM4HEP::edm4hep
         Acts::PluginEDM4hep
         podio::podioRootIO
-        Acts::Core
         Acts::Fatras
         Acts::ExamplesFramework
         Acts::ExamplesDigitization

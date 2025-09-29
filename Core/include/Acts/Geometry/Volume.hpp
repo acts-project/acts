@@ -31,6 +31,8 @@ class VolumeBounds;
 /// information.
 class Volume : public GeometryObject {
  public:
+  /// @brief Type alias for the axis-aligned bounding box of the volume
+  /// @details Used to define the spatial extent of the volume in 3D space
   using BoundingBox = AxisAlignedBoundingBox<Volume, double, 3>;
 
   /// Explicit constructor with shared arguments
@@ -45,35 +47,44 @@ class Volume : public GeometryObject {
   /// @param shift is the optional shift applied as : shift * vol.transform()
   Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
 
-  Volume() = delete;
-  virtual ~Volume() = default;
+  ~Volume() noexcept override = default;
 
   /// Assignment operator
   ///
   /// @param vol is the source volume to be copied
+  /// @return Reference to this volume for assignment chaining
   Volume& operator=(const Volume& vol);
 
-  /// Return methods for geometry transform
+  /// @brief Get the transform matrix that positions the volume in 3D space
+  /// @return Const reference to the transform matrix
   const Transform3& transform() const;
 
-  /// Returns the inverted transform of this volume.
+  /// @brief Get the inverse transform matrix of the volume
+  /// @return Const reference to the inverse transform matrix
   const Transform3& itransform() const;
 
+  /// @brief Set the transform matrix for the volume and update internal state
+  /// @param transform The new transform matrix to be applied
   void setTransform(const Transform3& transform);
 
-  /// returns the center of the volume
+  /// @brief Get the center position of the volume
+  /// @return Const reference to the center position vector
   const Vector3& center() const;
 
-  /// Returns a const reference to the volume bounds
+  /// @brief Get the volume bounds that define the shape of the volume
+  /// @return Const reference to the volume bounds object
   const VolumeBounds& volumeBounds() const;
 
-  /// Returns a mutable reference to the volume bounds
+  /// @brief Get mutable access to the volume bounds
+  /// @return Reference to the volume bounds object
   VolumeBounds& volumeBounds();
 
-  /// Returns shared pointer to the volume bounds
+  /// @brief Get shared pointer to the const volume bounds
+  /// @return Const shared pointer to the volume bounds object
   std::shared_ptr<const VolumeBounds> volumeBoundsPtr() const;
 
-  /// Returns shared pointer to the volume bounds
+  /// @brief Get shared pointer to the mutable volume bounds
+  /// @return Shared pointer to the volume bounds object
   std::shared_ptr<VolumeBounds> volumeBoundsPtr();
 
   /// Set volume bounds and update volume bounding boxes implicitly
@@ -116,6 +127,9 @@ class Volume : public GeometryObject {
   Vector3 referencePosition(const GeometryContext& gctx,
                             AxisDirection aDir) const override;
 
+  /// @brief Compare this volume with another for equality
+  /// @param other The other volume to compare with
+  /// @return True if the volumes are equal
   bool operator==(const Volume& other) const;
 
   /// Produces a 3D visualization of this volume
@@ -126,15 +140,24 @@ class Volume : public GeometryObject {
                  const ViewConfig& viewConfig) const;
 
  protected:
+  /// @brief Transform matrix that positions the volume in 3D space
   Transform3 m_transform;
+
+  /// @brief Inverse of the transform matrix for efficient calculations
   Transform3 m_itransform;
+
+  /// @brief Center position of the volume in global coordinates
   Vector3 m_center;
 
  private:
+  /// @brief Volume bounds that define the shape and extent of the volume
   std::shared_ptr<VolumeBounds> m_volumeBounds;
 };
 
 /**Overload of << operator for std::ostream for debug output*/
+/// @param sl Output stream
+/// @param vol Volume to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& sl, const Volume& vol);
 
 }  // namespace Acts

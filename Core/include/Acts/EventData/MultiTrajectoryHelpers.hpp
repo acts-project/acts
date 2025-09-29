@@ -24,18 +24,31 @@ namespace Acts::MultiTrajectoryHelpers {
 /// @brief Struct for brief trajectory summary info
 ///
 struct TrajectoryState {
+  /// Total number of track states in trajectory
   std::size_t nStates = 0;
+  /// Number of track states with measurements
   std::size_t nMeasurements = 0;
+  /// Number of track states marked as outliers
   std::size_t nOutliers = 0;
+  /// Number of hole states in trajectory
   std::size_t nHoles = 0;
+  /// Sum of chi-squared values from measurements
   double chi2Sum = 0;
+  /// Chi-squared contribution from each measurement
   std::vector<double> measurementChi2 = {};
+  /// Chi-squared contribution from each outlier
   std::vector<double> outlierChi2 = {};
+  /// Number of degrees of freedom in track fit
   std::size_t NDF = 0;
+  /// Volume identifiers for measurement surfaces
   std::vector<unsigned int> measurementVolume = {};
+  /// Layer identifiers for measurement surfaces
   std::vector<unsigned int> measurementLayer = {};
+  /// Volume identifiers for outlier surfaces
   std::vector<unsigned int> outlierVolume = {};
+  /// Layer identifiers for outlier surfaces
   std::vector<unsigned int> outlierLayer = {};
+  /// Number of hits shared with other tracks
   std::size_t nSharedHits = 0;
 };
 

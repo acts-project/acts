@@ -9,7 +9,7 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/Root/RootMeasurementIo.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -25,205 +25,40 @@
 #include <TFile.h>
 #include <TTree.h>
 
+namespace {
+
+std::tuple<std::vector<double>, std::vector<double>, std::vector<unsigned int>>
+prepareBoundMeasurement(
+    const ActsExamples::ConstVariableBoundMeasurementProxy& m) {
+  std::vector<double> measurements = {};
+  std::vector<double> variances = {};
+  std::vector<unsigned int> subspaceIndex = {};
+
+  for (unsigned int i = 0; i < m.size(); ++i) {
+    auto ib = m.subspaceIndexVector()[i];
+
+    measurements.push_back(m.parameters()[i]);
+    variances.push_back(m.covariance()(i, i));
+    subspaceIndex.push_back(static_cast<unsigned int>(ib));
+  }
+
+  return {measurements, variances, subspaceIndex};
+}
+
+std::vector<std::tuple<int, int, float>> prepareChannels(
+    const ActsExamples::Cluster& c) {
+  std::vector<std::tuple<int, int, float>> channels = {};
+  for (auto ch : c.channels) {
+    channels.emplace_back(static_cast<int>(ch.bin[0]),
+                          static_cast<int>(ch.bin[1]),
+                          static_cast<float>(ch.activation));
+  }
+  return channels;
+}
+
+}  // namespace
+
 namespace ActsExamples {
-
-struct RootMeasurementWriter::DigitizationTree {
-  const std::array<std::string, Acts::eBoundSize> bNames = {
-      "loc0", "loc1", "phi", "theta", "qop", "time"};
-
-  TTree* tree = nullptr;
-
-  // Identification parameters
-  int eventNr = 0;
-  int volumeID = 0;
-  int layerID = 0;
-  int surfaceID = 0;
-  int extraID = 0;
-
-  // Reconstruction information
-  float recBound[Acts::eBoundSize] = {};
-  float varBound[Acts::eBoundSize] = {};
-  float recGx = 0.;
-  float recGy = 0.;
-  float recGz = 0.;
-
-  // Truth parameters
-  float trueBound[Acts::eBoundSize] = {};
-  float trueGx = 0.;
-  float trueGy = 0.;
-  float trueGz = 0.;
-  float incidentPhi = 0.;
-  float incidentTheta = 0.;
-
-  // Residuals and pulls
-  float residual[Acts::eBoundSize] = {};
-  float pull[Acts::eBoundSize] = {};
-
-  // Cluster information comprised of
-  // nch :  number of channels
-  // cSize : cluster size in loc0 and loc1
-  // chId : channel identification
-  // chValue: value/activation of the channel
-  int nch = 0;
-  int cSize[2] = {};
-  std::array<std::vector<int>, 2> chId;
-  std::vector<float> chValue;
-
-  /// Constructor from tree name
-  DigitizationTree(const std::string& treeName,
-                   const std::vector<Acts::BoundIndices>& recoIndices,
-                   const std::vector<Acts::BoundIndices>& clusterIndices) {
-    tree = new TTree(treeName.c_str(), treeName.c_str());
-
-    tree->Branch("event_nr", &eventNr);
-    tree->Branch("volume_id", &volumeID);
-    tree->Branch("layer_id", &layerID);
-    tree->Branch("surface_id", &surfaceID);
-    tree->Branch("extra_id", &extraID);
-
-    for (auto ib : recoIndices) {
-      tree->Branch(("rec_" + bNames[ib]).c_str(), &recBound[ib]);
-    }
-    for (auto ib : recoIndices) {
-      tree->Branch(("var_" + bNames[ib]).c_str(), &varBound[ib]);
-    }
-    tree->Branch("rec_x", &recGx);
-    tree->Branch("rec_y", &recGy);
-    tree->Branch("rec_z", &recGz);
-
-    tree->Branch("clus_size", &nch);
-    tree->Branch("channel_value", &chValue);
-    // Both are allocated, but only relevant ones are set
-    for (auto ib : clusterIndices) {
-      if (static_cast<unsigned int>(ib) < 2) {
-        tree->Branch(("channel_" + bNames[ib]).c_str(), &chId[ib]);
-        tree->Branch(("clus_size_" + bNames[ib]).c_str(), &cSize[ib]);
-      }
-    }
-
-    for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
-      tree->Branch(("true_" + bNames[ib]).c_str(), &trueBound[ib]);
-    }
-    tree->Branch("true_x", &trueGx);
-    tree->Branch("true_y", &trueGy);
-    tree->Branch("true_z", &trueGz);
-    tree->Branch("true_incident_phi", &incidentPhi);
-    tree->Branch("true_incident_theta", &incidentTheta);
-
-    for (auto ib : recoIndices) {
-      tree->Branch(("residual_" + bNames[ib]).c_str(), &residual[ib]);
-    }
-    for (auto ib : recoIndices) {
-      tree->Branch(("pull_" + bNames[ib]).c_str(), &pull[ib]);
-    }
-
-    clear();
-  }
-
-  /// Convenience function to register identification
-  ///
-  /// @param eventNr The event number
-  /// @param geoID The geometry identifier of the measurement
-  void fillIdentification(int evnt, Acts::GeometryIdentifier geoId) {
-    eventNr = evnt;
-    volumeID = geoId.volume();
-    layerID = geoId.layer();
-    surfaceID = geoId.sensitive();
-    extraID = geoId.extra();
-  }
-
-  /// Convenience function to register the truth parameters
-  ///
-  /// @param lp The true local position
-  /// @param xt The true 4D global position
-  /// @param dir The true particle direction
-  /// @param angles The incident angles
-  /// @param qop The true q/p
-  void fillTruthParameters(const Acts::Vector2& lp, const Acts::Vector4& xt,
-                           const Acts::Vector3& dir,
-                           const std::pair<double, double> angles) {
-    trueBound[Acts::eBoundLoc0] = lp[Acts::eBoundLoc0];
-    trueBound[Acts::eBoundLoc1] = lp[Acts::eBoundLoc1];
-    trueBound[Acts::eBoundPhi] = Acts::VectorHelpers::phi(dir);
-    trueBound[Acts::eBoundTheta] = Acts::VectorHelpers::theta(dir);
-    trueBound[Acts::eBoundTime] = xt[Acts::eTime];
-
-    trueGx = xt[Acts::ePos0];
-    trueGy = xt[Acts::ePos1];
-    trueGz = xt[Acts::ePos2];
-
-    incidentPhi = angles.first;
-    incidentTheta = angles.second;
-  }
-
-  /// Convenience function to fill bound parameters
-  ///
-  /// @param m The measurement
-  void fillBoundMeasurement(const ConstVariableBoundMeasurementProxy& m) {
-    for (unsigned int i = 0; i < m.size(); ++i) {
-      auto ib = m.subspaceIndexVector()[i];
-
-      recBound[ib] = m.parameters()[i];
-      varBound[ib] = m.covariance()(i, i);
-
-      residual[ib] = recBound[ib] - trueBound[ib];
-      pull[ib] = residual[ib] / std::sqrt(varBound[ib]);
-    }
-  }
-
-  void fillGlobalMeasurement(const Acts::GeometryContext& gctx,
-                             const Acts::Surface& surface,
-                             const ConstVariableBoundMeasurementProxy& m) {
-    // passing invalid direction but we expect this to be a regular surface
-    Acts::Vector3 global = surface.localToGlobal(
-        gctx, m.fullParameters().head<2>(), Acts::Vector3::Zero());
-    recGx = global[Acts::ePos0];
-    recGy = global[Acts::ePos1];
-    recGz = global[Acts::ePos2];
-  }
-
-  /// Convenience function to fill the cluster information
-  ///
-  /// @param c The cluster
-  void fillCluster(const Cluster& c) {
-    nch = static_cast<int>(c.channels.size());
-    cSize[0] = static_cast<int>(c.sizeLoc0);
-    cSize[1] = static_cast<int>(c.sizeLoc1);
-    for (auto ch : c.channels) {
-      chId[0].push_back(static_cast<int>(ch.bin[0]));
-      chId[1].push_back(static_cast<int>(ch.bin[1]));
-      chValue.push_back(static_cast<float>(ch.activation));
-    }
-  }
-
-  /// Fill the tree
-  void fill() { tree->Fill(); }
-
-  /// Clear the tree
-  void clear() {
-    for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
-      trueBound[ib] = std::numeric_limits<float>::quiet_NaN();
-      recBound[ib] = std::numeric_limits<float>::quiet_NaN();
-      varBound[ib] = std::numeric_limits<float>::quiet_NaN();
-      residual[ib] = std::numeric_limits<float>::quiet_NaN();
-      pull[ib] = std::numeric_limits<float>::quiet_NaN();
-    }
-    recGx = std::numeric_limits<float>::quiet_NaN();
-    recGy = std::numeric_limits<float>::quiet_NaN();
-    recGz = std::numeric_limits<float>::quiet_NaN();
-    trueGx = std::numeric_limits<float>::quiet_NaN();
-    trueGy = std::numeric_limits<float>::quiet_NaN();
-    trueGz = std::numeric_limits<float>::quiet_NaN();
-    incidentPhi = std::numeric_limits<float>::quiet_NaN();
-    incidentTheta = std::numeric_limits<float>::quiet_NaN();
-    nch = 0;
-    cSize[0] = 0;
-    cSize[1] = 0;
-    chId[0].clear();
-    chId[1].clear();
-    chValue.clear();
-  }
-};
 
 RootMeasurementWriter::RootMeasurementWriter(
     const RootMeasurementWriter::Config& config, Acts::Logging::Level level)
@@ -252,10 +87,13 @@ RootMeasurementWriter::RootMeasurementWriter(
   }
 
   m_outputFile->cd();
+  m_outputTree = new TTree(m_cfg.treeName.c_str(), "Measurements");
+  m_outputTree->Branch("particles", &m_particles);
 
-  std::vector bIndices = {Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime};
-  m_outputTree =
-      std::make_unique<DigitizationTree>("measurements", bIndices, bIndices);
+  Acts::RootMeasurementIo::Config treeCfg{m_cfg.boundIndices,
+                                          m_cfg.clusterIndices};
+  m_measurementIo = std::make_unique<Acts::RootMeasurementIo>(treeCfg);
+  m_measurementIo->connectForWrite(*m_outputTree);
 }
 
 RootMeasurementWriter::~RootMeasurementWriter() {
@@ -267,7 +105,7 @@ RootMeasurementWriter::~RootMeasurementWriter() {
 ProcessCode RootMeasurementWriter::finalize() {
   /// Close the file if it's yours
   m_outputFile->cd();
-  m_outputTree->tree->Write();
+  m_outputTree->Write();
   m_outputFile->Close();
 
   return ProcessCode::SUCCESS;
@@ -299,7 +137,8 @@ ProcessCode RootMeasurementWriter::writeT(
     const Acts::Surface& surface = *(surfaceItr->second);
 
     // Fill the identification
-    m_outputTree->fillIdentification(ctx.eventNumber, geoId);
+    m_measurementIo->fillIdentification(static_cast<int>(ctx.eventNumber),
+                                        geoId);
 
     // Fill reco information
     m_outputTree->fillBoundMeasurement(meas);
@@ -320,11 +159,25 @@ ProcessCode RootMeasurementWriter::writeT(
             .inverse();
     std::pair<double, double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);
+    for (auto [_, i] : indices) {
+      m_particles.push_back(simHits.nth(i)->particleId().asVector());
+    }
+    m_measurementIo->fillTruthParameters(local, pos4, dir, angles);
 
-    m_outputTree->fillTruthParameters(local, pos4, dir, angles);
+    // Fill the measurement parameters & clusters still
+    auto [msm, vcs, ssi] = prepareBoundMeasurement(meas);
+    m_measurementIo->fillBoundMeasurement(msm, vcs, ssi);
 
-    m_outputTree->fill();
-    m_outputTree->clear();
+    // Fill the cluster information if available
+    if (clusters != nullptr) {
+      const auto& cluster = (*clusters)[hitIdx];
+      m_measurementIo->fillGlobalPosition(cluster.globalPosition);
+      m_measurementIo->fillCluster(prepareChannels(cluster));
+    }
+
+    m_outputTree->Fill();
+    m_particles.clear();
+    m_measurementIo->clear();
   }
 
   return ProcessCode::SUCCESS;

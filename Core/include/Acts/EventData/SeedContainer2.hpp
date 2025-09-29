@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Utilities/ContainerIterator.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <cassert>
 #include <span>
@@ -29,8 +29,11 @@ using ConstSeedProxy2 = SeedProxy2<true>;
 /// handling.
 class SeedContainer2 {
  public:
+  /// Type alias for seed index type
   using Index = SeedIndex2;
+  /// Type alias for mutable seed proxy
   using MutableProxy = MutableSeedProxy2;
+  /// Type alias for const seed proxy
   using ConstProxy = ConstSeedProxy2;
 
   /// Constructs and empty seed container.
@@ -165,19 +168,30 @@ class SeedContainer2 {
     return m_vertexZs[index];
   }
 
+  /// Type alias for iterator template over seed container
   template <bool read_only>
-  using Iterator = ContainerIterator<
+  using Iterator = detail::ContainerIterator<
       SeedContainer2,
       std::conditional_t<read_only, ConstSeedProxy2, MutableSeedProxy2>, Index,
       read_only>;
 
+  /// Type alias for mutable iterator over seeds
   using iterator = Iterator<false>;
+  /// Type alias for const iterator over seeds
   using const_iterator = Iterator<true>;
 
+  /// Get mutable iterator to the beginning of seeds
+  /// @return Mutable iterator to the first seed
   iterator begin() noexcept { return iterator(*this, 0); }
+  /// Get mutable iterator to the end of seeds
+  /// @return Mutable iterator past the last seed
   iterator end() noexcept { return iterator(*this, size()); }
 
+  /// Get const iterator to the beginning of seeds
+  /// @return Const iterator to the first seed
   const_iterator begin() const noexcept { return const_iterator(*this, 0); }
+  /// Get const iterator to the end of seeds
+  /// @return Const iterator past the last seed
   const_iterator end() const noexcept { return const_iterator(*this, size()); }
 
  private:

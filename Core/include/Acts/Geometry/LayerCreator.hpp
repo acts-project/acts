@@ -12,7 +12,6 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -27,7 +26,9 @@ namespace Acts {
 namespace Test {
 struct LayerCreatorFixture;
 }
+
 class Surface;
+class SurfaceArray;
 class SurfaceArrayCreator;
 class Layer;
 
@@ -197,6 +198,7 @@ class LayerCreator {
   void setConfiguration(const Config& lcConfig);
 
   /// Access th configuration object
+  /// @return Copy of the current configuration object
   Config getConfiguration() const;
 
   /// set logging instance
@@ -204,6 +206,7 @@ class LayerCreator {
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// associate surfaces contained by this layer to this layer
+  /// @param layer Layer to associate surfaces with
   void associateSurfacesToLayer(Layer& layer) const;
 
  private:

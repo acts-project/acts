@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
-#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -33,6 +32,7 @@ class NavigationLayer : public Layer {
   ///
   /// @param sRepresentation is the representation for extrapolation
   /// @param thickness is the thickness for the binning
+  /// @return Shared pointer to the created navigation layer
   static LayerPtr create(std::shared_ptr<const Surface> sRepresentation,
                          double thickness = 0.) {
     return LayerPtr(new NavigationLayer(std::move(sRepresentation), thickness));
@@ -62,9 +62,11 @@ class NavigationLayer : public Layer {
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// In general, extrapolation to a surface should be avoided
+  /// @return Const reference to the navigation surface
   const Surface& surfaceRepresentation() const final;
 
-  // Non-const version
+  /// Non-const version of surface representation access
+  /// @return Mutable reference to the navigation surface
   Surface& surfaceRepresentation() final;
 
   /// Geometric isOnLayer() method

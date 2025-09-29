@@ -62,6 +62,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
 
     /// Return the surfaces from the holder
     /// @param gctx is the geometry context
+    /// @return Vector of surfaces held by this holder
     std::vector<std::shared_ptr<Surface>> surfaces(
         [[maybe_unused]] const GeometryContext& gctx) const final {
       return m_surfaces;
