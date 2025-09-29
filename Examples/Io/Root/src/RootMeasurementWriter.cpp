@@ -140,14 +140,6 @@ ProcessCode RootMeasurementWriter::writeT(
     m_measurementIo->fillIdentification(static_cast<int>(ctx.eventNumber),
                                         geoId);
 
-    // Fill reco information
-    m_outputTree->fillBoundMeasurement(meas);
-    if (clusters != nullptr) {
-      const auto& c = (*clusters)[hitIdx];
-      m_outputTree->fillCluster(c);
-    }
-    m_outputTree->fillGlobalMeasurement(ctx.geoContext, surface, meas);
-
     // Find the contributing simulated hits
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     // Use average truth in the case of multiple contributing sim hits
