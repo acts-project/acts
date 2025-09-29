@@ -36,16 +36,32 @@ namespace Test {
 struct SurfaceArrayCreatorFixture;
 }
 
+/// Function type for comparing two surfaces in a given geometry context and
+/// axis direction.
+/// @param gctx The geometry context for the comparison
+/// @param dir The axis direction to consider
+/// @param s1 First surface to compare
+/// @param s2 Second surface to compare
+/// @return True if the surfaces are considered equivalent for binning purposes
 using SurfaceMatcher =
     std::function<bool(const GeometryContext& gctx, AxisDirection,
                        const Surface*, const Surface*)>;
 
+/// Vector of pointers to constant Surface objects
 using SurfaceVector = std::vector<const Surface*>;
+/// Matrix (2D vector) of pointers to constant Surface objects
 using SurfaceMatrix = std::vector<SurfaceVector>;
 
+/// @typedef V3Vector
+/// Vector of 3D vectors, used for storing collections of 3D points.
 using V3Vector = std::vector<Vector3>;
+
+/// @typedef V3Matrix
+/// Matrix (2D vector) of 3D vectors, used for storing grid-like collections of
+/// 3D points.
 using V3Matrix = std::vector<V3Vector>;
 
+/// @brief Scalar type used for axis values in surface array binning
 using AxisScalar = Vector3::Scalar;
 
 /// @class SurfaceArrayCreator
@@ -240,6 +256,7 @@ class SurfaceArrayCreator {
   /// @param aDir the axis direction for the binning
   /// @param a first surface for checking
   /// @param b second surface for checking
+  /// @return true if surfaces are equivalent for binning purposes
   static bool isSurfaceEquivalent(const GeometryContext& gctx,
                                   AxisDirection aDir, const Surface* a,
                                   const Surface* b) {
