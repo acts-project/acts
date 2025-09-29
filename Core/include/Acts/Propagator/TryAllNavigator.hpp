@@ -57,6 +57,8 @@ class TryAllNavigatorBase {
 
   /// @brief Options for this Navigator
   struct Options : public NavigatorPlainOptions {
+    /// @brief Constructor with geometry context
+    /// @param gctx The geometry context for this navigator instance
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
 
@@ -69,6 +71,8 @@ class TryAllNavigatorBase {
     /// The far limit to resolve surfaces
     double farLimit = std::numeric_limits<double>::max();
 
+    /// @brief Set plain options from NavigatorPlainOptions
+    /// @param options The plain options to copy
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
@@ -79,23 +83,30 @@ class TryAllNavigatorBase {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
+    /// @brief Constructor with options
+    /// @param options_ The navigator options for this state
     explicit State(const Options& options_) : options(options_) {}
 
+    /// Navigation options containing configuration for this propagation
     Options options;
 
     // Starting geometry information of the navigation which should only be set
     // while initialization. NOTE: This information is mostly used by actors to
     // check if we are on the starting surface (e.g. MaterialInteraction).
+    /// Surface where the propagation started
     const Surface* startSurface = nullptr;
 
     // Target geometry information of the navigation which should only be set
     // while initialization. NOTE: This information is mostly used by actors to
     // check if we are on the target surface (e.g. MaterialInteraction).
+    /// Surface that is the target of the propagation
     const Surface* targetSurface = nullptr;
 
     // Current geometry information of the navigation which is set during
     // initialization and potentially updated after each step.
+    /// Currently active surface during propagation
     const Surface* currentSurface = nullptr;
+    /// Currently active tracking volume during propagation
     const TrackingVolume* currentVolume = nullptr;
 
     /// The vector of navigation candidates to work through
@@ -115,14 +126,23 @@ class TryAllNavigatorBase {
   TryAllNavigatorBase(Config cfg, std::unique_ptr<const Logger> logger)
       : m_cfg(std::move(cfg)), m_logger{std::move(logger)} {}
 
+  /// @brief Get the current surface from the navigation state
+  /// @param state The navigation state
+  /// @return Pointer to the current surface, or nullptr if none
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
 
+  /// @brief Get the current tracking volume from the navigation state
+  /// @param state The navigation state
+  /// @return Pointer to the current tracking volume, or nullptr if none
   const TrackingVolume* currentVolume(const State& state) const {
     return state.currentVolume;
   }
 
+  /// @brief Get the material of the current tracking volume
+  /// @param state The navigation state
+  /// @return Pointer to the volume material, or nullptr if no volume or no material
   const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
     if (state.currentVolume == nullptr) {
       return nullptr;
@@ -130,18 +150,30 @@ class TryAllNavigatorBase {
     return state.currentVolume->volumeMaterial();
   }
 
+  /// @brief Get the start surface from the navigation state
+  /// @param state The navigation state
+  /// @return Pointer to the start surface, or nullptr if none
   const Surface* startSurface(const State& state) const {
     return state.startSurface;
   }
 
+  /// @brief Get the target surface from the navigation state
+  /// @param state The navigation state
+  /// @return Pointer to the target surface, or nullptr if none
   const Surface* targetSurface(const State& state) const {
     return state.targetSurface;
   }
 
+  /// @brief Check if the end of the world has been reached
+  /// @param state The navigation state
+  /// @return True if no current volume is set (end of world reached)
   bool endOfWorldReached(State& state) const {
     return state.currentVolume == nullptr;
   }
 
+  /// @brief Check if navigation has been interrupted
+  /// @param state The navigation state
+  /// @return True if navigation break flag is set
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
   }
@@ -155,6 +187,7 @@ class TryAllNavigatorBase {
   /// @param position The starting position
   /// @param direction The starting direction
   /// @param propagationDirection The propagation direction
+  /// @return Result indicating success or failure of initialization
   [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
                                         const Vector3& direction,
                                         Direction propagationDirection) const {
@@ -205,6 +238,7 @@ class TryAllNavigatorBase {
 
  protected:
   /// Helper method to initialize navigation candidates for the current volume.
+  /// @param state Navigation state to initialize candidates for
   void initializeVolumeCandidates(State& state) const {
     const TrackingVolume* volume = state.currentVolume;
     ACTS_VERBOSE(volInfo(state) << "Initialize volume");
@@ -221,16 +255,23 @@ class TryAllNavigatorBase {
         m_cfg.boundaryToleranceSurfaceApproach, logger());
   }
 
+  /// @brief Get volume information string for logging
+  /// @param state The navigation state
+  /// @return String containing volume name or "No Volume" followed by separator
   std::string volInfo(const State& state) const {
     return (state.currentVolume != nullptr ? state.currentVolume->volumeName()
                                            : "No Volume") +
            " | ";
   }
 
+  /// @brief Get the logger instance
+  /// @return Reference to the logger instance
   const Logger& logger() const { return *m_logger; }
 
+  /// Configuration object for this navigator
   Config m_cfg;
 
+  /// Logger instance for this navigator
   std::unique_ptr<const Logger> m_logger;
 };
 
@@ -245,14 +286,19 @@ class TryAllNavigatorBase {
 ///
 class TryAllNavigator : public TryAllNavigatorBase {
  public:
+  /// Type alias for navigator configuration
   using Config = TryAllNavigatorBase::Config;
+  /// Type alias for navigator options
   using Options = TryAllNavigatorBase::Options;
 
   /// @brief Nested State struct
   struct State : public TryAllNavigatorBase::State {
+    /// @brief Constructor for navigator state
+    /// @param options_ Navigator options to initialize state with
     explicit State(const Options& options_)
         : TryAllNavigatorBase::State(options_) {}
 
+    /// Current navigation candidates with intersection information
     std::vector<NavigationTarget> currentTargets;
   };
 
@@ -265,6 +311,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
                                                             Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
+  /// @brief Creates a new navigator state
+  /// @param options Navigator options for state initialization
+  /// @return Initialized navigator state with current candidates storage
   State makeState(const Options& options) const {
     State state(options);
     return state;
@@ -287,6 +336,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @param position The starting position
   /// @param direction The starting direction
   /// @param propagationDirection The propagation direction
+  /// @return Result indicating success or failure of initialization
   [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
                                         const Vector3& direction,
                                         Direction propagationDirection) const {
@@ -549,8 +599,10 @@ class TryAllNavigator : public TryAllNavigatorBase {
 ///
 class TryAllOverstepNavigator : public TryAllNavigatorBase {
  public:
+  /// Type alias for navigator configuration
   using Config = TryAllNavigatorBase::Config;
 
+  /// Type alias for navigator options
   using Options = TryAllNavigatorBase::Options;
 
   /// @brief Nested State struct
@@ -558,6 +610,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State : public TryAllNavigatorBase::State {
+    /// @brief Constructor for overstep navigator state
+    /// @param options_ Navigator options to initialize state with
     explicit State(const Options& options_)
         : TryAllNavigatorBase::State(options_) {}
 
@@ -570,10 +624,13 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     std::optional<Vector3> lastPosition;
 
     /// Provides easy access to the active intersection target
+    /// @return Reference to the currently active intersection candidate
     const NavigationTarget& activeTarget() const {
       return activeTargets.at(activeTargetIndex);
     }
 
+    /// @brief Check if all navigation candidates have been processed
+    /// @return True if no more candidates are available for navigation
     bool endOfTargets() const {
       return activeTargetIndex >= static_cast<int>(activeTargets.size());
     }
@@ -588,6 +645,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
                       "TryAllOverstepNavigator", Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
+  /// @brief Creates a new overstep navigator state
+  /// @param options Navigator options for state initialization
+  /// @return Initialized navigator state with active candidates and position tracking
   State makeState(const Options& options) const {
     State state(options);
     return state;
@@ -610,6 +670,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @param position The starting position
   /// @param direction The starting direction
   /// @param propagationDirection The propagation direction
+  /// @return Result indicating success or failure of initialization
   [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
                                         const Vector3& direction,
                                         Direction propagationDirection) const {

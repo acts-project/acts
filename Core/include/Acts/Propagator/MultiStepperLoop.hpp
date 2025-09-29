@@ -194,10 +194,17 @@ class MultiStepperLoop : public single_stepper_t {
   struct State {
     /// The struct that stores the individual components
     struct Component {
+      /// Individual component state for propagation
       SingleState state;
+      /// Statistical weight of this component
       double weight;
+      /// Intersection status of this component
       IntersectionStatus status;
 
+      /// Constructor for a multi-stepper component
+      /// @param state_ The single state for this component
+      /// @param weight_ The weight of this component
+      /// @param status_ The intersection status of this component
       Component(SingleState state_, double weight_, IntersectionStatus status_)
           : state(std::move(state_)), weight(weight_), status(status_) {}
     };
@@ -231,12 +238,16 @@ class MultiStepperLoop : public single_stepper_t {
 
   /// Constructor from a magnetic field and a optionally provided Logger
   /// TODO this requires that every stepper can be constructed like this...
+  /// @param bField Magnetic field provider to use for propagation
+  /// @param logger Logger instance for debugging output
   explicit MultiStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("GSF", Logging::INFO))
       : SingleStepper(std::move(bField)), m_logger(std::move(logger)) {}
 
   /// Constructor from a configuration and optionally provided Logger
+  /// @param config Configuration object containing stepper settings
+  /// @param logger Logger instance for debugging output
   explicit MultiStepperLoop(const Config& config,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("MultiStepperLoop",
@@ -246,11 +257,17 @@ class MultiStepperLoop : public single_stepper_t {
             config.stepLimitAfterFirstComponentOnSurface),
         m_logger(std::move(logger)) {}
 
+  /// Create a state object for multi-stepping
+  /// @param options The propagation options
+  /// @return Initialized state object for multi-stepper
   State makeState(const Options& options) const {
     State state(options);
     return state;
   }
 
+  /// Initialize the stepper state from multi-component bound track parameters
+  /// @param state The stepper state to initialize
+  /// @param par The multi-component bound track parameters
   void initialize(State& state,
                   const MultiComponentBoundTrackParameters& par) const {
     if (par.components().empty()) {
@@ -293,8 +310,10 @@ class MultiStepperLoop : public single_stepper_t {
 
   /// Creates an iterable which can be plugged into a range-based for-loop to
   /// iterate over components
+  /// @param state Multi-component stepper state to iterate over
   /// @note Use a for-loop with by-value semantics, since the Iterable returns a
   /// proxy internally holding a reference
+  /// @return Iterable range object that can be used in range-based for-loops
   auto componentIterable(State& state) const {
     struct Iterator {
       using difference_type [[maybe_unused]] = std::ptrdiff_t;
@@ -327,8 +346,10 @@ class MultiStepperLoop : public single_stepper_t {
 
   /// Creates an constant iterable which can be plugged into a range-based
   /// for-loop to iterate over components
+  /// @param state Multi-component stepper state to iterate over (const)
   /// @note Use a for-loop with by-value semantics, since the Iterable returns a
   /// proxy internally holding a reference
+  /// @return Const iterable range object for read-only iteration over components
   auto constComponentIterable(const State& state) const {
     struct ConstIterator {
       using difference_type [[maybe_unused]] = std::ptrdiff_t;
@@ -362,6 +383,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// Get the number of components
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
+  /// @return Number of components in the multi-component state
   std::size_t numberComponents(const State& state) const {
     return state.components.size();
   }
@@ -408,6 +430,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// valid in the end.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
+  /// @return ComponentProxy for the newly added component or error
   Result<ComponentProxy> addComponent(State& state,
                                       const BoundTrackParameters& pars,
                                       double weight) const {
@@ -427,6 +450,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @param [in] pos is the field position
   ///
   /// @note This uses the cache of the first component stored in the state
+  /// @return Magnetic field vector at the given position or error
   Result<Vector3> getField(State& state, const Vector3& pos) const {
     return SingleStepper::getField(state.components.front().state, pos);
   }
@@ -434,6 +458,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Global position vector from the reduced component state
   Vector3 position(const State& state) const {
     return Reducer::position(state);
   }
@@ -441,6 +466,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Normalized momentum direction vector from the reduced component state
   Vector3 direction(const State& state) const {
     return Reducer::direction(state);
   }
@@ -448,11 +474,13 @@ class MultiStepperLoop : public single_stepper_t {
   /// QoP access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Charge over momentum (q/p) value from the reduced component state
   double qOverP(const State& state) const { return Reducer::qOverP(state); }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Absolute momentum magnitude from the reduced component state
   double absoluteMomentum(const State& state) const {
     return Reducer::absoluteMomentum(state);
   }
@@ -460,6 +488,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// Momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Momentum vector from the reduced component state
   Vector3 momentum(const State& state) const {
     return Reducer::momentum(state);
   }
@@ -467,11 +496,13 @@ class MultiStepperLoop : public single_stepper_t {
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Electric charge value from the reduced component state
   double charge(const State& state) const { return Reducer::charge(state); }
 
   /// Particle hypothesis
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Particle hypothesis used for this multi-component state
   ParticleHypothesis particleHypothesis(const State& state) const {
     return state.particleHypothesis;
   }
@@ -479,6 +510,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Time coordinate from the reduced component state
   double time(const State& state) const { return Reducer::time(state); }
 
   /// Update surface status
@@ -494,6 +526,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
   /// @param [in] logger A @c Logger instance
+  /// @return IntersectionStatus indicating the overall status of all components relative to the surface
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
@@ -607,6 +640,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @note This returns the smallest step size of all components. It uses
   /// std::abs for comparison to handle backward propagation and negative
   /// step sizes correctly.
+  /// @return Smallest step size among all components for the requested type
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
     return std::min_element(state.components.begin(), state.components.end(),
                             [=](const auto& a, const auto& b) {
@@ -629,6 +663,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// Output the Step Size of all components into one std::string
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
+  /// @return String representation of all component step sizes concatenated
   std::string outputStepSize(const State& state) const {
     std::stringstream ss;
     for (const auto& component : state.components) {

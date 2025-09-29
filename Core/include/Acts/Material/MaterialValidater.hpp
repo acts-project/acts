@@ -29,6 +29,7 @@ class MaterialValidater {
  public:
   /// Nested configuration struct
   struct Config {
+    /// Assignment finder for material interaction collection
     std::shared_ptr<const IAssignmentFinder> materialAssigner = nullptr;
   };
 
