@@ -57,6 +57,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
     std::string hierarchyIndent = "  ";
   };
 
+  /// Type alias for 2D KDTree containing surface pointers
   using SurfaceKDT =
       KDTree<2u, std::shared_ptr<Surface>, double, std::array, 100>;
 

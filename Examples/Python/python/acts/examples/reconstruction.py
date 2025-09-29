@@ -735,7 +735,7 @@ def addStandardSeeding(
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
 
-    seedFinderConfig = acts.SeedFinderConfig(
+    seedFinderConfig = acts.examples.SeedFinderConfig(
         **acts.examples.defaultKWArgs(
             rMin=seedFinderConfigArg.r[0],
             rMax=seedFinderConfigArg.r[1],
@@ -1074,7 +1074,7 @@ def addOrthogonalSeeding(
     For parameters description see addSeeding
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
-    seedFinderConfig = acts.SeedFinderOrthogonalConfig(
+    seedFinderConfig = acts.examples.SeedFinderOrthogonalConfig(
         **acts.examples.defaultKWArgs(
             rMin=seedFinderConfigArg.r[0],
             rMax=seedFinderConfigArg.r[1],
@@ -1183,7 +1183,7 @@ def addHashingSeeding(
     from acts.examples.hashing import SeedingAlgorithmHashing
 
     # Same configuration than the standard seeding
-    seedFinderConfig = acts.SeedFinderConfig(
+    seedFinderConfig = acts.examples.SeedFinderConfig(
         **acts.examples.defaultKWArgs(
             rMin=seedFinderConfigArg.r[0],
             rMax=seedFinderConfigArg.r[1],
@@ -2393,7 +2393,9 @@ def addVertexFitting(
     maxIterations: Optional[int] = None,
     initialVariances: Optional[List[float]] = None,
     useTime: Optional[bool] = False,
-    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
+    seeder: Optional[
+        acts.examples.VertexSeedFinder
+    ] = acts.examples.VertexSeedFinder.GaussianSeeder,
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,

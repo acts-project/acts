@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -35,16 +36,32 @@ namespace Test {
 struct SurfaceArrayCreatorFixture;
 }
 
+/// Function type for comparing two surfaces in a given geometry context and
+/// axis direction.
+/// @param gctx The geometry context for the comparison
+/// @param dir The axis direction to consider
+/// @param s1 First surface to compare
+/// @param s2 Second surface to compare
+/// @return True if the surfaces are considered equivalent for binning purposes
 using SurfaceMatcher =
     std::function<bool(const GeometryContext& gctx, AxisDirection,
                        const Surface*, const Surface*)>;
 
+/// Vector of pointers to constant Surface objects
 using SurfaceVector = std::vector<const Surface*>;
+/// Matrix (2D vector) of pointers to constant Surface objects
 using SurfaceMatrix = std::vector<SurfaceVector>;
 
+/// @typedef V3Vector
+/// Vector of 3D vectors, used for storing collections of 3D points.
 using V3Vector = std::vector<Vector3>;
+
+/// @typedef V3Matrix
+/// Matrix (2D vector) of 3D vectors, used for storing grid-like collections of
+/// 3D points.
 using V3Matrix = std::vector<V3Vector>;
 
+/// @brief Scalar type used for axis values in surface array binning
 using AxisScalar = Vector3::Scalar;
 
 /// @class SurfaceArrayCreator
@@ -81,8 +98,8 @@ class SurfaceArrayCreator {
 
   // Configuration struct
   struct Config {
-    /// Type-erased function which determines whether two surfaces are supposed
-    /// to be considered equivalent in terms of the binning
+    /// Type-erased function which determines whether two surfaces are
+    /// supposed to be considered equivalent in terms of the binning
     SurfaceMatcher surfaceMatcher = SurfaceArrayCreator::isSurfaceEquivalent;
 
     /// Optimize the binning in phi for disc layers. Reduces the number
@@ -136,8 +153,8 @@ class SurfaceArrayCreator {
   /// SurfaceArrayCreator interface method
   ///
   /// - create an array in a cylinder, binned in phi, z when extremas and bin
-  /// numbers are unknown - this method goes through the surfaces and finds out
-  /// the needed information
+  /// numbers are unknown - this method goes through the surfaces and finds
+  /// out the needed information
   /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the cylinder
@@ -183,8 +200,8 @@ class SurfaceArrayCreator {
   /// SurfaceArrayCreator interface method
   ///
   /// - create an array in a cylinder, binned in phi, r when extremas and bin
-  /// numbers are unknown - this method goes through the surfaces and finds out
-  /// the needed information
+  /// numbers are unknown - this method goes through the surfaces and finds
+  /// out the needed information
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -239,6 +256,7 @@ class SurfaceArrayCreator {
   /// @param aDir the axis direction for the binning
   /// @param a first surface for checking
   /// @param b second surface for checking
+  /// @return true if surfaces are equivalent for binning purposes
   static bool isSurfaceEquivalent(const GeometryContext& gctx,
                                   AxisDirection aDir, const Surface* a,
                                   const Surface* b) {
@@ -306,9 +324,9 @@ class SurfaceArrayCreator {
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
   /// direction) are extracted. The boundary value between two surfaces is the
-  /// mean value of the two center position in the binning direction. The first
-  /// and the last boundaries are calculated from the vertices of the first and
-  /// last surface.
+  /// mean value of the two center position in the binning direction. The
+  /// first and the last boundaries are calculated from the vertices of the
+  /// first and last surface.
   /// @note currently implemented for phi, r and z bining
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
@@ -331,8 +349,8 @@ class SurfaceArrayCreator {
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
-  /// direction) are extracted. The number of key surfaces euqals the number of
-  /// bins. Afterwards the minimum and maximum are calculated by
+  /// direction) are extracted. The number of key surfaces euqals the number
+  /// of bins. Afterwards the minimum and maximum are calculated by
   /// subtracting/adding half of a bin size to the center position (in the
   /// binning direction) to the first/last surface.
   /// @note currently implemented for phi, r and z bining
@@ -360,17 +378,15 @@ class SurfaceArrayCreator {
   /// that is required by the templating.
   /// @tparam bdtA AxisBoundaryType of axis A
   /// @tparam bdtB AxisBoundaryType of axis B
-  /// @param type The surface type, this determines the local to global calculation
-  /// @param transform The transform to apply to the surface`
-  /// @param R the radius (interpretation depends on @p type)
-  /// @param Z the z position (interpretation depends on @p type)
+  /// @param surface the surface of the grid
+  /// @param layerTolerance the layer tolerance
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-  makeSurfaceGridLookup2D(Surface::SurfaceType type,
-                          const Transform3& transform, double R, double Z,
-                          ProtoAxis pAxisA, ProtoAxis pAxisB) {
+  makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
+                          double layerTolerance, ProtoAxis pAxisA,
+                          ProtoAxis pAxisB) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 
@@ -382,9 +398,9 @@ class SurfaceArrayCreator {
 
       using SGL =
           SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr =
-          std::make_unique<SGL>(type, transform, R, Z, std::pair{axisA, axisB},
-                                std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
       Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
@@ -393,9 +409,9 @@ class SurfaceArrayCreator {
 
       using SGL =
           SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr =
-          std::make_unique<SGL>(type, transform, R, Z, std::pair{axisA, axisB},
-                                std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
@@ -404,9 +420,9 @@ class SurfaceArrayCreator {
 
       using SGL =
           SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr =
-          std::make_unique<SGL>(type, transform, R, Z, std::pair{axisA, axisB},
-                                std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
@@ -414,9 +430,9 @@ class SurfaceArrayCreator {
 
       using SGL =
           SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr =
-          std::make_unique<SGL>(type, transform, R, Z, std::pair{axisA, axisB},
-                                std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
     }
 
     return ptr;
@@ -424,36 +440,6 @@ class SurfaceArrayCreator {
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
-
-  /// Private helper method to complete the binning
-  ///
-  ///
-  ///  given a grid point o
-  ///    |  0  |  1 |  2  |  3 |  4  |
-  ///    ------------------------------
-  ///  0 |  x  |    |     |    |  x  |
-  ///  1 |     |    |  o  |    |     |
-  ///  2 |  x  |    |     |    |  x  |
-  ///
-  /// This is being called when you chose to use more bins thans surfaces
-  /// I.e. to put a finer granularity binning onto your surface
-  /// Neighbour bins are then filled to contain pointers as well
-  /// This method delegates to SurfaceGridLookup itself.
-  /// @param [in] gctx the geometry context for this call
-  /// @param sl The @c SurfaceGridLookup
-  /// @param surfaces the surfaces
-  void completeBinning(const GeometryContext& gctx,
-                       SurfaceArray::ISurfaceGridLookup& sl,
-                       const std::vector<const Surface*>& surfaces) const {
-    ACTS_VERBOSE(
-        "Complete binning by filling closest neighbour surfaces into "
-        "empty bins.");
-
-    std::size_t binCompleted = sl.completeBinning(gctx, surfaces);
-
-    ACTS_VERBOSE("       filled  : " << binCompleted
-                                     << " (includes under/overflow)");
-  }
 
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates

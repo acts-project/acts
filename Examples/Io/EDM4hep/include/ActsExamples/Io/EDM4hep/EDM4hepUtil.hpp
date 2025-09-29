@@ -34,7 +34,7 @@ using MapParticleIdTo =
 
 inline ActsFatras::Barcode zeroParticleMapper(
     const edm4hep::MCParticle& /*particle*/) {
-  return ActsFatras::Barcode();
+  return ActsFatras::Barcode::Invalid();
 }
 
 using MapGeometryIdFrom =

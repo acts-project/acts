@@ -447,6 +447,8 @@ class TrackStateProxy {
         component<IndexType, hashString("predicted")>());
   }
 
+  /// Predicted track parameters vector (non-const version)
+  /// @return The predicted parameters with mutable access
   Parameters predicted()
     requires(!ReadOnly)
   {
@@ -463,6 +465,8 @@ class TrackStateProxy {
         component<IndexType, hashString("predicted")>());
   }
 
+  /// Predicted track parameters covariance matrix (non-const version)
+  /// @return The predicted track parameter covariance with mutable access
   Covariance predictedCovariance()
     requires(!ReadOnly)
   {
@@ -780,6 +784,7 @@ class TrackStateProxy {
 
   /// Allocate storage to be able to store a measurement of size @p measdim.
   /// This must be called **before** setting the measurement content.
+  /// @param measdim Number of measurement dimensions to allocate
   /// @note This does not allocate if an allocation of the same size already exists
   /// @note This will zero-initialize the allocated storage
   /// @note This is an error if an existing allocation has different size

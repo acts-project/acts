@@ -14,6 +14,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
@@ -61,6 +62,7 @@ class SympyStepper {
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
         : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
+    /// Configuration options for the stepper
     Options options;
 
     /// Internal free vector parameters
@@ -72,6 +74,7 @@ class SympyStepper {
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
     bool covTransport = false;
+    /// Covariance matrix for error propagation
     Covariance cov = Covariance::Zero();
 
     /// The full jacobian of the transport entire transport
@@ -109,6 +112,7 @@ class SympyStepper {
     /// Statistics of the stepper
     StepperStatistics statistics;
 
+    /// Accumulator for material effects along the trajectory
     detail::MaterialEffectsAccumulator materialEffectsAccumulator;
   };
 
@@ -223,14 +227,13 @@ class SympyStepper {
   /// the surface is reached.
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param target [in] The NavigationTarget
   /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+  void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
     (void)direction;
-    double stepSize = oIntersection.pathLength();
+    double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
 

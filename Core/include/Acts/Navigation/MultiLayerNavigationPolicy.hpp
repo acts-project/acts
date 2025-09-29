@@ -16,7 +16,6 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts::Experimental {
 
@@ -25,10 +24,12 @@ namespace Acts::Experimental {
 /// the grid.
 class MultiLayerNavigationPolicy : public INavigationPolicy {
  public:
+  /// Type alias for 2D equidistant grid holding surface indices
   using GridType =
       Grid<std::vector<std::size_t>,
            Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
            Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
+  /// Type alias for indexed surfaces navigation updater
   using IndexedUpdatorType = IndexedSurfacesNavigation<GridType>;
 
   struct Config {
