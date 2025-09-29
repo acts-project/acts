@@ -14,13 +14,13 @@
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <memory>
-#include <vector>
 
 namespace Acts {
+
 // constructor
 template <typename external_spacepoint_t, typename SpacePointContainer>
 HashingAlgorithm<external_spacepoint_t, SpacePointContainer>::HashingAlgorithm(
-    const HashingAlgorithmConfig& cfg)
+    const Config& cfg)
     : m_cfg(cfg) {
   if (m_cfg.bucketSize <= 0) {
     throw std::invalid_argument("Invalid bucket size");

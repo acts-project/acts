@@ -143,6 +143,7 @@ class Affine3Transformed : public IGlobalToGridLocal {
 template <AxisDirection... Args>
 class GlobalSubspace : public IGlobalToGridLocal {
  public:
+  /// Type alias for grid-local coordinate array
   using grid_local_t = std::array<double, sizeof...(Args)>;
 
   /// Assert that size has to be bigger than 0

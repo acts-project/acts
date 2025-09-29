@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 namespace Acts {
@@ -17,6 +16,8 @@ namespace Acts {
 class Surface;
 
 namespace Experimental {
+
+struct NavigationState;
 
 /// Base class for navigation delegates that handle internal
 /// volume navigation updates

@@ -8,35 +8,21 @@
 
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Utilities/GroupBy.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <iterator>
+#include <map>
 #include <numeric>
 #include <ostream>
-#include <stack>
 #include <stdexcept>
-#include <variant>
 
 namespace ActsExamples {
+
 // Helper class describing one section of the accumulator space
 AccumulatorSection::AccumulatorSection(float xw, float yw, float xBegin,
                                        float yBegin, int div,
