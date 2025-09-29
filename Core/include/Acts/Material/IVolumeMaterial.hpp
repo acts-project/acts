@@ -29,6 +29,7 @@ class IVolumeMaterial {
   ///
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
+  /// @return The material properties at the given position
   virtual const Material material(const Vector3& position) const = 0;
 
   /// @brief output stream operator
@@ -44,6 +45,8 @@ class IVolumeMaterial {
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes
+  /// @param sl Output stream to write to
+  /// @return Reference to the output stream for method chaining
   virtual std::ostream& toStream(std::ostream& sl) const = 0;
 };
 

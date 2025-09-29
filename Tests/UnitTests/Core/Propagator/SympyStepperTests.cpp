@@ -360,23 +360,24 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::Type::Navigator),
                   navDir * 2., eps);
 
+  const auto getNavigationTarget = [&](const Surface& s,
+                                       const BoundaryTolerance& bt) {
+    auto [intersection, intersectionIndex] =
+        s.intersect(tgContext, es.position(esState),
+                    navDir * es.direction(esState), bt)
+            .closestWithIndex();
+    return NavigationTarget(intersection, intersectionIndex, s, bt);
+  };
+
   // Test the step size modification in the context of a surface
   es.updateStepSize(
-      esState,
-      targetSurface
-          ->intersect(tgContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryTolerance::None())
-          .closest(),
+      esState, getNavigationTarget(*targetSurface, BoundaryTolerance::None()),
       navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setUser(navDir * stepSize);
   es.releaseStepSize(esState, ConstrainedStep::Type::Navigator);
   es.updateStepSize(
-      esState,
-      targetSurface
-          ->intersect(tgContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryTolerance::None())
-          .closest(),
+      esState, getNavigationTarget(*targetSurface, BoundaryTolerance::None()),
       navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 

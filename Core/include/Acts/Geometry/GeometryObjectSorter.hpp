@@ -91,9 +91,8 @@ class DistanceSorterT {
         m_refEta(VectorHelpers::eta(reference)) {}
 
   /// Comparison operator
-  ///
-  /// @tparam one first object
-  /// @tparam two second object
+  /// @param one First object to compare
+  /// @param two Second object to compare
   ///
   /// @return boolean indicator
   bool operator()(T one, T two) const {
