@@ -429,11 +429,12 @@ if args.reco:
                 maxShared=2,
                 minUnshared=3,
                 maxSharedTracksPerMeasurement=2,
-                useAmbiguityScoring=False,
+                useAmbiguityScoring=True,
             ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
             ambiVolumeFile=ambi_config,
+            ambiMonitorFile=outputDir / "scoreMonitor.root",
             writeCovMat=True,
         )
     else:

@@ -49,6 +49,9 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     // configuration file for the detector map
     std::string configFile = "detectorConfigs.json";
 
+    // score monitor file path
+    std::string monitorFile = "scoreMonitor.root";
+
     // maximum number of shared tracks per measurement
     std::size_t maxSharedTracksPerMeasurement = 10;
     // maximum number of shared hit per track
