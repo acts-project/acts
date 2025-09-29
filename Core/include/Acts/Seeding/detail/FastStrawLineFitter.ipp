@@ -276,12 +276,16 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   }
   ACTS_VERBOSE("Fit failed, printing all measurements:");
   using namespace Acts::UnitLiterals;
-  for (const auto& meas : measurements ){
-    ACTS_VERBOSE("Pos: " << Acts::toString(meas->localPosition()) 
-        << ", t,t0: " << meas->time()/ 1._ns << ", " << result.t0/ 1._ns
-        << ", truthR, RecoR: " << meas->driftRadius() << ", " << calibrator.driftRadius(ctx, *meas, result.t0)
-        << ", v: " << calibrator.driftVelocity(ctx, *meas, result.t0)*1._ns 
-        << ", a: " << calibrator.driftAcceleration(ctx, *meas, result.t0)*1._ns*1._ns);
+  for (const auto& meas : measurements) {
+    ACTS_VERBOSE(
+        "Pos: " << Acts::toString(meas->localPosition()) << ", t,t0: "
+                << meas->time() / 1._ns << ", " << result.t0 / 1._ns
+                << ", truthR, RecoR: " << meas->driftRadius() << ", "
+                << calibrator.driftRadius(ctx, *meas, result.t0) << ", v: "
+                << calibrator.driftVelocity(ctx, *meas, result.t0) * 1._ns
+                << ", a: "
+                << calibrator.driftAcceleration(ctx, *meas, result.t0) * 1._ns *
+                       1._ns);
   }
   ACTS_VERBOSE("Result: " << result);
   return std::nullopt;
@@ -322,8 +326,9 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
                      auxVars.centerZ;
     using namespace Acts::UnitLiterals;
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": # " << (spIdx + 1)
-                          << ") t,t0: " << strawMeas->time()/1._ns << ", " << t0/1._ns 
-                          << " r: " << r << ", v: " << v*1._ns << ", a: " << a*1._ns*1._ns);
+                          << ") t,t0: " << strawMeas->time() / 1._ns << ", "
+                          << t0 / 1._ns << " r: " << r << ", v: " << v * 1._ns
+                          << ", a: " << a * 1._ns * 1._ns);
     auxVars.fitY0 += sInvCov * r;
     auxVars.R_v += sInvCov * v;
     auxVars.R_a += sInvCov * a;
@@ -339,7 +344,7 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
 
     auxVars.T_ay += sInvCov * a * y;
     auxVars.T_az += sInvCov * a * z;
-    
+
     auxVars.R_ar += invCov * a * r;
   }
   auxVars.fitY0 *= auxVars.covNorm;

@@ -198,14 +198,13 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
                         << fitResult);
     return UpdateStatus::Converged;
   }
-  
+
   cov(1, 0) = cov(0, 1) =
       fitPars.T_vz * angles.cosTheta + fitPars.T_vy * angles.sinTheta;
 
-  cov(1, 1) = - fitPars.R_v * fitPars.R_v * fitPars.covNorm
-              - fitPars.fitY0 * fitPars.R_a 
-              + fitPars.R_vv + fitPars.R_ar 
-              - (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta);
+  cov(1, 1) = -fitPars.R_v * fitPars.R_v * fitPars.covNorm -
+              fitPars.fitY0 * fitPars.R_a + fitPars.R_vv + fitPars.R_ar -
+              (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta);
   ACTS_VERBOSE(
       __func__
       << "() - " << __LINE__
