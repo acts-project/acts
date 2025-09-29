@@ -8,21 +8,15 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 
 #include <array>
-#include <map>
 #include <memory>
-#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -31,6 +25,7 @@ class ISurfaceMaterial;
 class Surface;
 
 namespace Experimental {
+
 class DetectorVolume;
 struct NavigationState;
 
@@ -60,9 +55,11 @@ class Portal {
   Portal() = delete;
 
   /// Const access to the surface representation
+  /// @return Const reference to the surface
   const RegularSurface& surface() const;
 
   /// Non-const access to the surface reference
+  /// @return Mutable reference to the surface
   RegularSurface& surface();
 
   /// @brief Visit all reachable surfaces of the detector
@@ -102,6 +99,7 @@ class Portal {
   ///
   /// @param aPortal is the first portal to fuse
   /// @param bPortal is the second portal to fuse
+  /// @return Shared pointer to the fused portal
   ///
   /// @note this will combine the portal links from the both
   /// portals into a new one, it will throw an exception if the
@@ -139,10 +137,12 @@ class Portal {
                               std::vector<std::shared_ptr<DetectorVolume>>
                                   attachedVolumes) noexcept(false);
 
-  // Access to the portal targets: opposite/along normal vector
+  /// Access to the portal targets: opposite/along normal vector
+  /// @return Const reference to array of navigation delegates
   const std::array<ExternalNavigationDelegate, 2u>& portalNavigation() const;
 
-  // Access to the attached volumes - non-const access
+  /// Access to the attached volumes - non-const access
+  /// @return Reference to attached detector volumes
   AttachedDetectorVolumes& attachedDetectorVolumes();
 
  private:

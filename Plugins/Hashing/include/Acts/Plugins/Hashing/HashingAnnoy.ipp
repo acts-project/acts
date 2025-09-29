@@ -10,10 +10,8 @@
 
 #include "Acts/Plugins/Hashing/HashingAnnoy.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 
-#include <map>
 #include <numbers>
 #include <set>
 #include <vector>

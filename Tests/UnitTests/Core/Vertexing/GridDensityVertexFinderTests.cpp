@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -138,7 +137,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection =
+    Intersection3D intersection =
         perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 
@@ -257,7 +256,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection =
+    Intersection3D intersection =
         perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 
@@ -428,7 +427,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection =
+    Intersection3D intersection =
         perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 

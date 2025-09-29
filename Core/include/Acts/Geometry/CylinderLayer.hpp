@@ -55,9 +55,11 @@ class CylinderLayer : public CylinderSurface, public Layer {
 
   /// Transforms the layer into a Surface representation
   /// This is for positioning and extrapolation
+  /// @return Const reference to the cylinder surface representing this layer
   const CylinderSurface& surfaceRepresentation() const override;
 
-  // Non-const version
+  /// Non-const version of surface representation access
+  /// @return Mutable reference to the cylinder surface
   CylinderSurface& surfaceRepresentation() override;
 
  private:

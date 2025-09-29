@@ -13,11 +13,15 @@
 
 namespace Acts {
 
+/// Error codes for magnetic field operations
 enum class MagneticFieldError {
   OutOfBounds = 1,
   NotImplemented = 2,
 };
 
+/// Create error code from MagneticFieldError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::MagneticFieldError e);
 
 }  // namespace Acts

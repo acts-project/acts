@@ -51,6 +51,7 @@ struct visit_measurement_callable {
 /// @param cov The covariance matrix
 /// @param dim The actual dimension as a runtime value
 /// @param lambda The lambda to call with the statically sized subsets
+/// @return The result of calling the lambda with the statically sized measurement components
 template <typename L, typename A, typename B>
 auto visit_measurement(A&& param, B&& cov, std::size_t dim, L&& lambda) {
   return template_switch<detail::visit_measurement_callable, 1, eBoundSize>(

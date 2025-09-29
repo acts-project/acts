@@ -40,6 +40,7 @@ struct InteractionVolume {
       : detectorVolume(dv) {}
 
   /// Forward the geometry identifier
+  /// @return The geometry identifier from the contained volume, or invalid ID if empty
   GeometryIdentifier geometryId() const {
     if (trackingVolume != nullptr) {
       return trackingVolume->geometryId();
@@ -51,6 +52,7 @@ struct InteractionVolume {
   }
 
   /// Check if the volume is valid
+  /// @return True if both tracking volume and detector volume pointers are null
   bool empty() const {
     return trackingVolume == nullptr && detectorVolume == nullptr;
   }
@@ -94,7 +96,7 @@ struct MaterialInteraction {
 /// It mainly acts as an internal state which is
 /// created for every propagation/extrapolation step
 struct RecordedMaterial {
-  // The accumulated materialInX0
+  /// The accumulated material in units of X0 (radiation length)
   double materialInX0 = 0.;
   /// The accumulated materialInL0
   double materialInL0 = 0.;

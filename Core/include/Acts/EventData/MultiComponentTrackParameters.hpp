@@ -12,6 +12,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <memory>
 #include <type_traits>
@@ -31,9 +32,13 @@ namespace Acts {
 /// TODO Add constructor from range and projector maybe?
 class MultiComponentBoundTrackParameters {
  public:
+  /// Type alias for bound track parameters
   using Parameters = BoundTrackParameters;
+  /// Type alias for particle hypothesis
   using ParticleHypothesis = Parameters::ParticleHypothesis;
+  /// Type alias for bound parameters vector
   using ParametersVector = typename Parameters::ParametersVector;
+  /// Type alias for covariance matrix
   using CovarianceMatrix = typename Parameters::CovarianceMatrix;
 
  private:
@@ -66,10 +71,16 @@ class MultiComponentBoundTrackParameters {
   }
 
  public:
+  /// Type alias for construction tuple containing weight, position, direction,
+  /// q/p, and covariance
   using ConstructionTuple = std::tuple<double, Acts::Vector4, Acts::Vector3,
                                        double, CovarianceMatrix>;
 
   /// We need this helper function in order to construct the base class properly
+  /// @param geoCtx Geometry context for construction
+  /// @param curvi Vector of construction tuples containing component data
+  /// @param particleHypothesis Particle hypothesis for the parameters
+  /// @return Multi-component bound track parameters in curvilinear representation
   static MultiComponentBoundTrackParameters createCurvilinear(
       const GeometryContext& geoCtx,
       const std::vector<ConstructionTuple>& curvi,
@@ -90,10 +101,11 @@ class MultiComponentBoundTrackParameters {
 
     // Project the position onto the surface, keep everything else as is
     for (const auto& [w, pos4, dir, qop, cov] : curvi) {
-      Vector3 newPos = s->intersect(geoCtx, pos4.template segment<3>(eFreePos0),
-                                    dir, BoundaryTolerance::Infinite())
-                           .closest()
-                           .position();
+      Intersection3D closestIntersection =
+          s->intersect(geoCtx, pos4.template segment<3>(eFreePos0), dir,
+                       BoundaryTolerance::Infinite())
+              .closest();
+      const Vector3& newPos = closestIntersection.position();
 
       ParametersVector bv =
           transformFreeToCurvilinearParameters(pos4[eTime], dir, qop);
@@ -109,6 +121,9 @@ class MultiComponentBoundTrackParameters {
   }
 
   /// Construct from multiple components
+  /// @param surface Surface on which the parameters are bound
+  /// @param cmps Vector of weight, parameters vector, and covariance components
+  /// @param particleHypothesis Particle hypothesis for the parameters
   template <typename covariance_t>
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface,
@@ -153,26 +168,37 @@ class MultiComponentBoundTrackParameters {
 
   /// Parameters are not default constructible due to the charge type.
   MultiComponentBoundTrackParameters() = delete;
+  /// Copy constructor
   MultiComponentBoundTrackParameters(
       const MultiComponentBoundTrackParameters&) = default;
+  /// Move constructor
   MultiComponentBoundTrackParameters(MultiComponentBoundTrackParameters&&) =
       default;
   ~MultiComponentBoundTrackParameters() = default;
+  /// Copy assignment operator
+  /// @return Reference to this object after copying
   MultiComponentBoundTrackParameters& operator=(
       const MultiComponentBoundTrackParameters&) = default;
+  /// Move assignment operator
+  /// @return Reference to this object after moving
   MultiComponentBoundTrackParameters& operator=(
       MultiComponentBoundTrackParameters&&) = default;
 
   /// Comply with bound convertible, in this case return a copy
+  /// @return Copy of this multi-component track parameters
   MultiComponentBoundTrackParameters toBound() const { return *this; }
 
   /// Access the parameters
+  /// @return Reference to the vector of parameter components
   const auto& components() const { return m_components; }
 
   /// Reference surface onto which the parameters are bound.
+  /// @return Reference to the bound reference surface
   const Surface& referenceSurface() const { return *m_surface; }
 
   /// Get the weight and a GenericBoundTrackParameters object for one component
+  /// @param i Index of the component to access
+  /// @return Pair of weight and bound track parameters for the component
   std::pair<double, Parameters> operator[](std::size_t i) const {
     return {
         std::get<double>(m_components[i]),
@@ -182,11 +208,13 @@ class MultiComponentBoundTrackParameters {
   }
 
   /// Parameters vector.
+  /// @return Weighted average of parameters from all components
   ParametersVector parameters() const {
     return reduce([](const Parameters& p) { return p.parameters(); });
   }
 
   /// Optional covariance matrix.
+  /// @return Optional weighted average covariance matrix, nullopt if all components have zero covariance
   std::optional<CovarianceMatrix> covariance() const {
     const auto ret = reduce([](const Parameters& p) {
       return p.covariance() ? *p.covariance() : CovarianceMatrix::Zero();
@@ -202,6 +230,7 @@ class MultiComponentBoundTrackParameters {
   /// Access a single parameter value identified by its index.
   ///
   /// @tparam kIndex Track parameter index
+  /// @return Weighted average of the parameter at the specified index
   template <BoundIndices kIndex>
   double get() const {
     return reduce([&](const Parameters& p) { return p.get<kIndex>(); });
@@ -211,6 +240,7 @@ class MultiComponentBoundTrackParameters {
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global
   /// transformation
+  /// @return Weighted average four-dimensional position vector
   Vector4 fourPosition(const GeometryContext& geoCtx) const {
     return reduce([&](const Parameters& p) { return p.fourPosition(geoCtx); });
   }
@@ -219,52 +249,63 @@ class MultiComponentBoundTrackParameters {
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global
   /// transformation
+  /// @return Weighted average three-dimensional position vector
   Vector3 position(const GeometryContext& geoCtx) const {
     return reduce([&](const Parameters& p) { return p.position(geoCtx); });
   }
 
   /// Time coordinate.
+  /// @return Weighted average time coordinate
   double time() const {
     return reduce([](const Parameters& p) { return p.time(); });
   }
 
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
+  /// @return Weighted average normalized direction vector
   Vector3 direction() const {
     return reduce([](const Parameters& p) { return p.direction(); })
         .normalized();
   }
 
   /// Phi direction.
+  /// @return Azimuthal angle phi derived from average direction
   double phi() const { return VectorHelpers::phi(direction()); }
 
   /// Theta direction.
+  /// @return Polar angle theta derived from average direction
   double theta() const { return VectorHelpers::theta(direction()); }
 
   /// Charge over momentum.
+  /// @return Weighted average charge over momentum ratio
   double qOverP() const { return get<eBoundQOverP>(); }
 
   /// Absolute momentum.
+  /// @return Weighted average absolute momentum magnitude
   double absoluteMomentum() const {
     return reduce([](const Parameters& p) { return p.absoluteMomentum(); });
   }
 
   /// Transverse momentum.
+  /// @return Weighted average transverse momentum magnitude
   double transverseMomentum() const {
     return reduce([](const Parameters& p) { return p.transverseMomentum(); });
   }
 
   /// Momentum three-vector.
+  /// @return Weighted average three-dimensional momentum vector
   Vector3 momentum() const {
     return reduce([](const Parameters& p) { return p.momentum(); });
   }
 
   /// Particle electric charge.
+  /// @return Weighted average particle electric charge
   double charge() const {
     return reduce([](const Parameters& p) { return p.charge(); });
   }
 
   /// Particle hypothesis.
+  /// @return Reference to the particle hypothesis
   const ParticleHypothesis& particleHypothesis() const {
     return m_particleHypothesis;
   }
