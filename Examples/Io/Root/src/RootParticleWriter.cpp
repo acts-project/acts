@@ -122,12 +122,6 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
                                            Acts::UnitConstants::mm));
     m_vt.push_back(Acts::clampValue<float>(particle.fourPosition().w() /
                                            Acts::UnitConstants::mm));
-    // momentum
-    const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
-    m_p.push_back(Acts::clampValue<float>(p));
-    m_px.push_back(Acts::clampValue<float>(p * particle.direction().x()));
-    m_py.push_back(Acts::clampValue<float>(p * particle.direction().y()));
-    m_pz.push_back(Acts::clampValue<float>(p * particle.direction().z()));
 
     // particle constants
     if (!std::isfinite(particle.mass()) || !std::isfinite(particle.charge())) {
@@ -138,12 +132,18 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
     m_q.push_back(
         Acts::clampValue<float>(particle.charge() / Acts::UnitConstants::e));
-    // derived kinematic quantities
-    m_eta.push_back(Acts::clampValue<float>(
-        Acts::VectorHelpers::eta(particle.direction())));
-    m_pt.push_back(Acts::clampValue<float>(
-        p * Acts::VectorHelpers::perp(particle.direction())));
-    if (!m_cfg.writeHelixParameters) {  // need to update p, px, py, pz as well
+    if (!m_cfg.writeHelixParameters) {
+      // momentum
+      const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
+      m_p.push_back(Acts::clampValue<float>(p));
+      m_px.push_back(Acts::clampValue<float>(p * particle.direction().x()));
+      m_py.push_back(Acts::clampValue<float>(p * particle.direction().y()));
+      m_pz.push_back(Acts::clampValue<float>(p * particle.direction().z()));
+      // derived kinematic quantities
+      m_eta.push_back(Acts::clampValue<float>(
+          Acts::VectorHelpers::eta(particle.direction())));
+      m_pt.push_back(Acts::clampValue<float>(
+          p * Acts::VectorHelpers::perp(particle.direction())));
       m_phi.push_back(Acts::clampValue<float>(
           Acts::VectorHelpers::phi(particle.direction())));
       m_theta.push_back(Acts::clampValue<float>(
@@ -238,6 +238,12 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         m_qop.push_back(NaNfloat);
         m_d0.push_back(NaNfloat);
         m_z0.push_back(NaNfloat);
+        m_p.push_back(NaNfloat);
+        m_px.push_back(NaNfloat);
+        m_py.push_back(NaNfloat);
+        m_pz.push_back(NaNfloat);
+        m_eta.push_back(NaNfloat);
+        m_pt.push_back(NaNfloat);
         continue;
       }
       const Acts::BoundTrackParameters& atPerigee = *propRes->endParameters;
@@ -258,6 +264,17 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       m_theta.push_back(Acts::clampValue<float>(theta));
       m_qop.push_back(Acts::clampValue<float>(qop * Acts::UnitConstants::GeV /
                                               Acts::UnitConstants::e));
+      // update p, px, py, pz, eta, pt
+      const auto p = atPerigee.absoluteMomentum() / Acts::UnitConstants::GeV;
+      m_p.push_back(Acts::clampValue<float>(p));
+      const auto dir = atPerigee.direction();
+      m_px.push_back(Acts::clampValue<float>(p * dir.x()));
+      m_py.push_back(Acts::clampValue<float>(p * dir.y()));
+      m_pz.push_back(Acts::clampValue<float>(p * dir.z()));
+      m_eta.push_back(Acts::clampValue<float>(
+          Acts::VectorHelpers::eta(atPerigee.direction())));
+      m_pt.push_back(Acts::clampValue<float>(
+          p * Acts::VectorHelpers::perp(atPerigee.direction())));
     }
 
     // Push the truth particle info.
