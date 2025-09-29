@@ -18,7 +18,7 @@
 #include <boost/mp11.hpp>
 #include <boost/mp11/algorithm.hpp>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 
@@ -538,4 +538,4 @@ std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
   return result;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

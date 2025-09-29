@@ -82,6 +82,7 @@ struct ProtoVolume {
   /// Define an operator==
   ///
   /// @param ptVolume the proto volume to be checked
+  /// @return True if the proto volumes are equal, false otherwise
   bool operator==(const ProtoVolume& ptVolume) const;
 
   /// Harmonize the detector information, this can run in two
@@ -113,13 +114,16 @@ struct ProtoVolume {
 
   /// Write the tracking volume to screen
   /// @param indent the current indentation
+  /// @return String representation of the proto volume
   std::string toString(const std::string& indent = "") const;
 };
 
 /// A proto detector description being used to define an overall
 /// structure of either a TrackingGeometry or Experimental::Detector
 struct ProtoDetector {
+  /// Name identifier for the detector
   std::string name = "";
+  /// Root volume containing all detector components
   ProtoVolume worldVolume;
 
   /// Harmonize the detector information, this can run in two
@@ -136,6 +140,7 @@ struct ProtoDetector {
 
   /// Write the tracking volume to screen
   /// @param indent the current indentation
+  /// @return String representation of the proto detector
   std::string toString(const std::string& indent = "") const;
 };
 

@@ -137,14 +137,18 @@ class RiddersPropagator {
   /// Typedef the navigator state
   using NavigatorState = typename Navigator::State;
 
+  /// Type alias for propagator state
   template <typename propagator_options_t, typename... extension_state_t>
   using State = typename propagator_t::template State<
       propagator_options_t, StepperState, NavigatorState, extension_state_t...>;
 
+  /// Type alias for stepper options
   using StepperOptions = typename Stepper::Options;
 
+  /// Type alias for navigator options
   using NavigatorOptions = typename Navigator::Options;
 
+  /// Type alias for Ridders propagator options
   template <typename actor_list_t = ActorList<>>
   using Options = RiddersPropagatorOptions<propagator_t, actor_list_t>;
 

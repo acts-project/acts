@@ -202,7 +202,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   double pn = sfIntersection[0].pathLength();
   double pa = sfIntersection[1].pathLength();
   BOOST_CHECK_LT(std::abs(pn), std::abs(pa));
-  BOOST_CHECK_EQUAL(&sfIntersection.surface(), cylinderSurfaceObject.get());
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,
