@@ -77,6 +77,7 @@ constexpr int kNoSurface = -1;
 // @TODO: We might want to consider making this a type erased type that's not an interface
 class ConversionHelper {
  public:
+  virtual ~ConversionHelper() = default;
   virtual std::optional<Identifier> surfaceToIdentifier(
       const Acts::Surface& surface) const = 0;
   virtual const Acts::Surface* identifierToSurface(

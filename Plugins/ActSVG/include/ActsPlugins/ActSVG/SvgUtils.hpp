@@ -48,15 +48,15 @@ struct Style {
   std::tuple<actsvg::style::fill, actsvg::style::stroke> fillAndStroke() const {
     actsvg::style::fill fll;
     fll._fc._rgb = fillColor;
-    fll._fc._opacity = fillOpacity;
+    fll._fc._opacity = static_cast<actsvg::scalar>(fillOpacity);
     fll._fc._hl_rgb = highlightColor;
     fll._fc._highlight = highlights;
 
     actsvg::style::stroke str;
     str._sc._rgb = strokeColor;
     str._sc._hl_rgb = highlightStrokeColor;
-    str._width = strokeWidth;
-    str._hl_width = highlightStrokeWidth;
+    str._width = static_cast<actsvg::scalar>(strokeWidth);
+    str._hl_width = static_cast<actsvg::scalar>(highlightStrokeWidth);
     str._dasharray = strokeDasharray;
 
     return {fll, str};

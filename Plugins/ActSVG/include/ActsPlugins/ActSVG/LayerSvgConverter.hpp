@@ -26,10 +26,11 @@ namespace ActsPlugins::Svg {
 
 using ProtoVolume = actsvg::proto::volume<std::vector<Acts::Vector3>>;
 
-static std::array<double, 2> noLimitZ = {std::numeric_limits<double>::lowest(),
-                                         std::numeric_limits<double>::max()};
+static const std::array<double, 2> noLimitZ = {
+    std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
 
-static std::array<double, 2> noLimitPhi = {-std::numbers::pi, std::numbers::pi};
+static const std::array<double, 2> noLimitPhi = {-std::numbers::pi,
+                                                 std::numbers::pi};
 
 namespace LayerConverter {
 

@@ -278,17 +278,17 @@ std::shared_ptr<const TrackingGeometry> buildTGeoDetector(
                                    config.layerEnvelopeR};
     auto ringLayoutConfiguration =
         [&](const std::vector<ActsPlugins::TGeoLayerBuilder::LayerConfig>&
-                lConfigs) -> void {
-      for (const auto& lcfg : lConfigs) {
-        for (const auto& scfg : lcfg.splitConfigs) {
-          if (scfg.first == AxisDirection::AxisR && scfg.second > 0.) {
-            volumeConfig.ringTolerance =
-                std::max(volumeConfig.ringTolerance, scfg.second);
-            volumeConfig.checkRingLayout = true;
+                lConfigs) {
+          for (const auto& lcfg : lConfigs) {
+            for (const auto& scfg : lcfg.splitConfigs) {
+              if (scfg.first == AxisDirection::AxisR && scfg.second > 0.) {
+                volumeConfig.ringTolerance =
+                    std::max(volumeConfig.ringTolerance, scfg.second);
+                volumeConfig.checkRingLayout = true;
+              }
+            }
           }
-        }
-      }
-    };
+        };
     ringLayoutConfiguration(lbc.layerConfigurations[0]);
     ringLayoutConfiguration(lbc.layerConfigurations[2]);
     volumeConfig.layerBuilder = layerBuilder;

@@ -20,13 +20,10 @@
 #include <string>
 #include <tuple>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 class DetectorVolume;
 class Portal;
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace ActsPlugins::Svg {
 

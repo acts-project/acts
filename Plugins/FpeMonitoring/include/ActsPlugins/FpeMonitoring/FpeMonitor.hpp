@@ -45,15 +45,15 @@ class FpeMonitor {
           m_size{bufferSize} {}
 
     Buffer(const Buffer &) = delete;
-    Buffer(Buffer &&other) noexcept {
-      m_data = std::move(other.m_data);
-      m_size = other.m_size;
-      m_offset = other.m_offset;
+    Buffer(Buffer &&other) noexcept
+        : m_data(std::move(other.m_data)),
+          m_size(other.m_size),
+          m_offset(other.m_offset) {
       other.m_size = 0;
       other.m_offset = 0;
     }
 
-    std::pair<void *, std::size_t> next() {
+    std::pair<void *, std::size_t> next() const {
       return {m_data.get() + m_offset, m_size - m_offset};
     }
 

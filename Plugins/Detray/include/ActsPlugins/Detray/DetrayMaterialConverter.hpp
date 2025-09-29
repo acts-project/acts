@@ -17,13 +17,9 @@
 
 #include <detray/io/frontend/payloads.hpp>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 class Detector;
-}
-
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace ActsPlugins::DetrayMaterialConverter {
 

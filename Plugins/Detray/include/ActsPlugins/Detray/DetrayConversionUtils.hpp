@@ -19,13 +19,9 @@
 #include <detray/detectors/default_metadata.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 class DetectorVolume;
-}
-
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace ActsPlugins {
 
@@ -65,8 +61,8 @@ struct Cache {
   /// @note throws exception if volume is not found
   std::size_t volumeIndex(
       const Acts::Experimental::DetectorVolume* volume) const {
-    auto candidate = std::ranges::find(detectorVolumes, volume);
-    if (candidate != detectorVolumes.end()) {
+    if (auto candidate = std::ranges::find(detectorVolumes, volume);
+        candidate != detectorVolumes.end()) {
       return std::distance(detectorVolumes.begin(), candidate);
     }
     throw std::invalid_argument("Volume not found in the cache");

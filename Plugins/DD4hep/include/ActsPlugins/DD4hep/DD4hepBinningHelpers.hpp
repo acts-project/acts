@@ -25,7 +25,7 @@
 
 namespace ActsPlugins {
 
-static std::vector<std::tuple<std::string, Acts::AxisDirection>>
+static const std::vector<std::tuple<std::string, Acts::AxisDirection>>
     allowedBinnings = {{"x", Acts::AxisDirection::AxisX},
                        {"y", Acts::AxisDirection::AxisY},
                        {"z", Acts::AxisDirection::AxisZ},

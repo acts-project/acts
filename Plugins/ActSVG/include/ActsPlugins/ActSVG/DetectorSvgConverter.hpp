@@ -15,13 +15,9 @@
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 class Detector;
-}
-
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace ActsPlugins::Svg {
 
