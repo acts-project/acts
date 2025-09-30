@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
+#include "ActsExamples/Utilities/MultiplicityGenerators.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -34,11 +35,18 @@ void addHepMC3(Context& ctx) {
                              perEvent, inputEvent, compression,
                              maxEventsPending, writeEventsInOrder);
 
-  ACTS_PYTHON_DECLARE_READER(HepMC3Reader, hepmc3, "HepMC3Reader", inputPath,
-                             inputPaths, outputEvent, printListing, numEvents,
+  // Expose nested Input struct
+  auto input = py::class_<HepMC3Reader::Config::Input>(hepmc3, "Input")
+      .def(py::init<>())
+      .def_readwrite("path", &HepMC3Reader::Config::Input::path)
+      .def_readwrite("numEvents", &HepMC3Reader::Config::Input::numEvents)
+      .def_readwrite("multiplicityGenerator",
+                     &HepMC3Reader::Config::Input::multiplicityGenerator);
+
+  ACTS_PYTHON_DECLARE_READER(HepMC3Reader, hepmc3, "HepMC3Reader", inputs,
+                             outputEvent, printListing, numEvents,
                              checkEventNumber, maxEventBufferSize,
-                             vertexGenerator, randomNumbers,
-                             multiplicityGenerator, multiplicityInputIndex);
+                             vertexGenerator, randomNumbers);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HepMC3OutputConverter, hepmc3,
                                 "HepMC3OutputConverter", inputParticles,
