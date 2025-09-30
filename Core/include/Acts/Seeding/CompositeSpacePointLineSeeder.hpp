@@ -32,7 +32,7 @@ class CompositeSpacePointLineSeeder {
   enum class TangentAmbi : std::uint8_t {
     RR = 0,  //< Both circles are on the right side
     RL = 1,  //< The top circle is on the right and the bottom circle on the
-             //left < side
+             // left < side
     LR = 2,  //< The top circle is  on the left and the bottom circle on the
              //< right side
     LL = 3,  //< Both circles are on the left side
