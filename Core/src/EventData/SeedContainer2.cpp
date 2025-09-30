@@ -10,7 +10,7 @@
 
 #include "Acts/EventData/Types.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 SeedContainer2::SeedContainer2() noexcept = default;
 
@@ -87,4 +87,4 @@ void SeedContainer2::assignSpacePointIndices(
                        spacePointIndices.end());
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
