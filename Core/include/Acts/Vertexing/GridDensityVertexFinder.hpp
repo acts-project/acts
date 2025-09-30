@@ -31,7 +31,9 @@ namespace Acts {
 /// with the highest track density is returned as a vertex candidate.
 class GridDensityVertexFinder final : public IVertexFinder {
  public:
+  /// Type alias for main grid vector used in density calculations
   using MainGridVector = GaussianGridTrackDensity::MainGridVector;
+  /// Type alias for track grid vector used for individual track density
   using TrackGridVector = GaussianGridTrackDensity::TrackGridVector;
 
   /// @brief The Config struct
@@ -40,7 +42,7 @@ class GridDensityVertexFinder final : public IVertexFinder {
     explicit Config(GaussianGridTrackDensity gDensity)
         : gridDensity(gDensity) {}
 
-    // The grid density object
+    /// The grid density object for track density calculations
     GaussianGridTrackDensity gridDensity;
 
     // Cache the main grid and the density contributions (trackGrid and z-bin)
@@ -49,18 +51,21 @@ class GridDensityVertexFinder final : public IVertexFinder {
     // only once in the first iteration. If tracks are removed from the track
     // collection, the individual track density contributions to the main grid
     // can just be removed without calculating the entire grid from scratch.
+    /// Flag to enable caching grid state for efficient track removal
     bool cacheGridStateForTrackRemoval = true;
 
-    // Maximum d0 impact parameter significance to use a track
+    /// Maximum d0 impact parameter significance to use a track
     double maxD0TrackSignificance = 3.5;
-    // Maximum z0 impact parameter significance to use a track
+    /// Maximum z0 impact parameter significance to use a track
     double maxZ0TrackSignificance = 12.;
-    // The actual corresponding cut values in the algorithm
+    /// The actual corresponding cut values in the algorithm for d0
     double d0SignificanceCut = maxD0TrackSignificance * maxD0TrackSignificance;
+    /// The actual corresponding cut values in the algorithm for z0
     double z0SignificanceCut = maxZ0TrackSignificance * maxZ0TrackSignificance;
+    /// Flag to enable seed width estimation from track density
     bool estimateSeedWidth = false;
 
-    // Function to extract parameters from InputTrack
+    /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
   };
 
@@ -68,21 +73,24 @@ class GridDensityVertexFinder final : public IVertexFinder {
   ///
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
+    /// Constructor with main grid vector
+    /// @param mainGrid_ The main density grid for vertex finding
     explicit State(MainGridVector mainGrid_) : mainGrid(std::move(mainGrid_)) {}
 
-    // The main density grid
+    /// The main density grid for vertex finding
     MainGridVector mainGrid;
-    // Map to store z-bin and track grid (i.e. the density contribution of
-    // a single track to the main grid) for every single track
+    /// Map to store z-bin and track grid (i.e. the density contribution of
+    /// a single track to the main grid) for every single track
     std::map<InputTrack, std::pair<int, TrackGridVector>> binAndTrackGridMap;
 
-    // Map to store bool if track has passed track selection or not
+    /// Map to store bool if track has passed track selection or not
     std::map<InputTrack, bool> trackSelectionMap;
 
-    // Store tracks that have been removed from track collection. These
-    // track will be removed from the main grid
+    /// Store tracks that have been removed from track collection. These
+    /// track will be removed from the main grid
     std::vector<InputTrack> tracksToRemove;
 
+    /// Flag indicating if the state has been initialized
     bool isInitialized = false;
   };
 
