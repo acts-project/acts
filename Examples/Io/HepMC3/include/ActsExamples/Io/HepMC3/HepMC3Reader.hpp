@@ -12,6 +12,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Utilities/MultiplicityGenerators.hpp"
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
 
 #include <filesystem>
@@ -66,6 +67,16 @@ class HepMC3Reader final : public IReader {
     std::shared_ptr<const RandomNumbers> randomNumbers;
     /// Position generator that will be used to shift read events
     std::shared_ptr<PrimaryVertexPositionGenerator> vertexGenerator;
+
+    /// Optional multiplicity generator for one of the inputs (e.g. pileup).
+    /// If set, the number of events to read for the input at
+    /// `multiplicityInputIndex` will be sampled per logical event using this
+    /// generator. Other inputs continue to use their fixed multiplicity from
+    /// `inputPaths`.
+    std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator;
+    /// The index into `inputPaths` to which `multiplicityGenerator` applies.
+    /// If unset, behavior defaults to no multiplicity sampling.
+    std::optional<std::size_t> multiplicityInputIndex = std::nullopt;
   };
 
   /// Construct the particle reader.

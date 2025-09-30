@@ -75,6 +75,21 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
         "randomNumbers must be set if vertexGenerator is set");
   }
 
+  if (m_cfg.multiplicityGenerator != nullptr) {
+    if (!m_cfg.multiplicityInputIndex.has_value()) {
+      throw std::invalid_argument(
+          "multiplicityInputIndex must be set if multiplicityGenerator is set");
+    }
+    if (*m_cfg.multiplicityInputIndex >= m_inputs.size()) {
+      throw std::invalid_argument(
+          "multiplicityInputIndex is out of bounds for inputPaths");
+    }
+    if (m_cfg.randomNumbers == nullptr) {
+      throw std::invalid_argument(
+          "randomNumbers must be set if multiplicityGenerator is set");
+    }
+  }
+
   ACTS_DEBUG("HepMC3Reader: " << m_eventsRange.first << " - "
                               << m_eventsRange.second << " events");
 }
@@ -335,9 +350,24 @@ ProcessCode HepMC3Reader::readLogicalEvent(
 
   // @TODO: Add the index as an attribute to the event and it's content
 
-  for (const auto& [reader, numEvents, path] : m_inputs) {
-    ACTS_VERBOSE("Reading " << numEvents << " events from " << path);
-    for (std::size_t i = 0; i < numEvents; ++i) {
+  auto rng = (m_cfg.multiplicityGenerator != nullptr)
+                 ? std::optional<RandomEngine>(m_cfg.randomNumbers->spawnGenerator(ctx))
+                 : std::nullopt;
+
+  for (std::size_t inputIndex = 0; inputIndex < m_inputs.size(); ++inputIndex) {
+    auto& reader = m_inputs[inputIndex].reader;
+    auto& path = m_inputs[inputIndex].path;
+    std::size_t fixedCount = m_inputs[inputIndex].numEvents;
+
+    std::size_t count = fixedCount;
+    if (m_cfg.multiplicityGenerator != nullptr &&
+        m_cfg.multiplicityInputIndex.has_value() &&
+        *m_cfg.multiplicityInputIndex == inputIndex) {
+      count = (*m_cfg.multiplicityGenerator)(*rng);
+    }
+
+    ACTS_VERBOSE("Reading " << count << " events from " << path);
+    for (std::size_t i = 0; i < count; ++i) {
       auto event = makeEvent();
 
       reader->read_event(*event);
