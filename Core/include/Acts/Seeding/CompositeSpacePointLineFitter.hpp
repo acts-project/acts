@@ -160,9 +160,7 @@ class CompositeSpacePointLineFitter {
     /// @brief Initial parameter guess
     ParamVec_t startParameters{filledArray<double, s_nPars>(0)};
     /// @brief Standard constructor
-    FitOptions() {
-      selector.template connect<&detail::passThroughSelector<Sp_t>>();
-    }
+    FitOptions() = default;
   };
   /// @brief Counts how many measurements measure loc0, loc1 & time
   /// @param measurements: Collection of composite space points of interest
