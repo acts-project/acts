@@ -73,8 +73,10 @@ class NumericalTrackLinearizer {
     explicit Config(std::shared_ptr<const BasePropagator> prop)
         : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
+    /// Magnetic field provider for numerical linearization
     std::shared_ptr<const MagneticFieldProvider> bField;
 
+    /// Track propagator for numerical calculations
     std::shared_ptr<const BasePropagator> propagator;
 
     /// Tolerance determining how close we need to get to a surface to

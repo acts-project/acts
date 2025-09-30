@@ -57,6 +57,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     /// ImpactPointEstimator
     ImpactPointEstimator ipEstimator;
 
+    /// Magnetic field provider for track propagation and vertex finding
     std::shared_ptr<const MagneticFieldProvider> bField;
 
     /// Max z interval used for adding tracks to fit:
@@ -159,8 +160,10 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 
   /// State struct for fulfilling interface
   struct State {
+    /// Magnetic field context for field evaluations
     std::reference_wrapper<const MagneticFieldContext> magContext;
 
+    /// State object for the seed vertex finder
     IVertexFinder::State seedFinderState;
   };
 
@@ -187,6 +190,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     }
   }
 
+  /// Move constructor
   AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
 
   /// @brief Function that performs the adaptive
