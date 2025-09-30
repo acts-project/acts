@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointProxy2.hpp"
 #include "Acts/EventData/Types.hpp"
 
 class TChain;
@@ -23,19 +24,21 @@ class RootSpacePointIo {
   ///
   /// @param ttree the TTree to write to
   /// @param spacePoints the space points to write
-  void connectForWrite(TTree& ttree, const Acts::SpacePointContainer2& spacePoints);
+  void connectForWrite(TTree& ttree,
+                       const Acts::SpacePointContainer2& spacePoints);
 
   /// @brief sets the branch connection for reading from a file
   ///
   /// @param tchain the TChain to read from
   /// @param spacePoints the space points to read into
-  void connectForRead(TChain& tchain, const Acts::SpacePointContainer2& spacePoints);
+  void connectForRead(TChain& tchain,
+                      const Acts::SpacePointContainer2& spacePoints);
 
   /// @brief Write a space point to the tree
   /// @note the caller has to do the TTree::Fill() after this call
   ///
   /// @param spacePoint the space point to write
-  void write(const Acts::SpacePointProxy2& spacePoint);
+  void write(const Acts::ConstSpacePointProxy2& spacePoint);
 
   /// @brief Write the space points to the tree
   ///
@@ -48,7 +51,8 @@ class RootSpacePointIo {
   ///
   /// @param spacePoint the space point to read into
   /// @param index the original index of the space point in the ROOT file
-  void read(Acts::MutableSpacePointProxy2& spacePoint, Acts::SpacePointIndex2 index);
+  void read(Acts::MutableSpacePointProxy2& spacePoint,
+            Acts::SpacePointIndex2 index);
 
   /// @brief Read the space points from the tree
   ///
