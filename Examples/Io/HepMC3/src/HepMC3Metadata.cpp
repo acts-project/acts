@@ -1,0 +1,70 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include "ActsExamples/Io/HepMC3/HepMC3Metadata.hpp"
+
+#include <fstream>
+#include <nlohmann/json.hpp>
+
+namespace ActsExamples::HepMC3Metadata {
+
+std::filesystem::path getSidecarPath(
+    const std::filesystem::path& hepmc3File) {
+  return hepmc3File.string() + ".meta";
+}
+
+std::optional<std::size_t> readSidecar(
+    const std::filesystem::path& hepmc3File) {
+  auto sidecarPath = getSidecarPath(hepmc3File);
+
+  if (!std::filesystem::exists(sidecarPath)) {
+    return std::nullopt;
+  }
+
+  try {
+    std::ifstream file(sidecarPath);
+    if (!file.is_open()) {
+      return std::nullopt;
+    }
+
+    nlohmann::json j;
+    file >> j;
+
+    if (!j.contains("eventCount") || !j["eventCount"].is_number_unsigned()) {
+      return std::nullopt;
+    }
+
+    return j["eventCount"].get<std::size_t>();
+  } catch (...) {
+    // Any error reading or parsing the file
+    return std::nullopt;
+  }
+}
+
+bool writeSidecar(const std::filesystem::path& hepmc3File,
+                  std::size_t eventCount) {
+  auto sidecarPath = getSidecarPath(hepmc3File);
+
+  try {
+    nlohmann::json j;
+    j["eventCount"] = eventCount;
+
+    std::ofstream file(sidecarPath);
+    if (!file.is_open()) {
+      return false;
+    }
+
+    file << j.dump(2);  // Pretty print with 2-space indent
+    return file.good();
+  } catch (...) {
+    // Silent failure - directory might not be writable
+    return false;
+  }
+}
+
+}  // namespace ActsExamples::HepMC3Metadata

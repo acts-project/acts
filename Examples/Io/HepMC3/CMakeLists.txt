@@ -7,6 +7,7 @@ acts_add_library(
     src/HepMC3OutputConverter.cpp
     src/HepMC3Util.cpp
     src/HepMC3FactoryWrappers.cpp
+    src/HepMC3Metadata.cpp
 )
 target_include_directories(
     ActsExamplesIoHepMC3
