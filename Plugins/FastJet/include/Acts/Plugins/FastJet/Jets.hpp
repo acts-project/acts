@@ -115,7 +115,7 @@ class TruthJetBuilder {
       : m_fourMomentum(fm), m_label(label) {}
 
   const Acts::Vector4 getTruthJetFourMomentum() const { return m_fourMomentum; }
-  const JetLabel getTruthLabel() const { return m_label; }
+  JetLabel getTruthLabel() const { return m_label; }
   Acts::Vector3 getDirection() const {
     return m_fourMomentum.head<3>().normalized();
   }
