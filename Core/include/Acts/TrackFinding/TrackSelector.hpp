@@ -13,6 +13,7 @@
 #include <limits>
 #include <ostream>
 #include <vector>
+#include <algorithm>
 
 namespace Acts {
 
