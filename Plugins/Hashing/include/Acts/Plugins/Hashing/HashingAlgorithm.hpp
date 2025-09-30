@@ -8,23 +8,36 @@
 
 #pragma once
 
-#include "Acts/Plugins/Hashing/AnnoyForwardDeclarations.hpp"
-#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
+#include "Acts/Plugins/Hashing/HashingModel.hpp"
+
+#include <cstdint>
 
 namespace Acts {
 
-template <typename external_spacepoint_t, typename SpacePointContainer>
 class HashingAlgorithm {
  public:
-  using Config = HashingAlgorithmConfig;
+  struct Config {
+    /// Size of the buckets = number of spacepoints in the bucket
+    std::uint32_t bucketSize = 10;
+    /// Number of zBins
+    std::uint32_t zBins = 0;
+    /// Number of phiBins
+    std::uint32_t phiBins = 50;
+
+    /// Layer selection
+    double layerRMin = 25;
+    double layerRMax = 40;
+    double layerZMin = -550;
+    double layerZMax = 550;
+  };
 
   explicit HashingAlgorithm(const Config& cfg);
 
-  HashingAlgorithm() = default;
-
-  template <typename collection_t>
-  void execute(SpacePointContainer& spacePoints, AnnoyModel* annoyModel,
-               collection_t& outputCollection) const;
+  std::vector<std::vector<SpacePointIndex2>> execute(
+      const AnnoyModel& annoyModel,
+      const SpacePointContainer2& spacePoints) const;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -34,5 +47,3 @@ class HashingAlgorithm {
 };
 
 }  // namespace Acts
-
-#include "Acts/Plugins/Hashing/HashingAlgorithm.ipp"

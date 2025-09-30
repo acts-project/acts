@@ -8,23 +8,15 @@
 
 #pragma once
 
+#include "Acts/Plugins/Hashing/AnnoyForwardDeclarations.hpp"
+
 #include <cstdint>
 
 namespace Acts {
 
-struct HashingAlgorithmConfig {
-  /// Size of the buckets = number of spacepoints in the bucket
-  std::uint32_t bucketSize = 10;
-  /// Number of zBins
-  std::uint32_t zBins = 0;
-  /// Number of phiBins
-  std::uint32_t phiBins = 50;
-
-  /// Layer selection
-  double layerRMin = 25;
-  double layerRMax = 40;
-  double layerZMin = -550;
-  double layerZMax = 550;
-};
+using AnnoyMetric = Annoy::AngularEuclidean;
+using AnnoyModel =
+    Annoy::AnnoyIndex<std::uint32_t, float, AnnoyMetric, Annoy::Kiss32Random,
+                      Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
 }  // namespace Acts

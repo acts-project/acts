@@ -7,8 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
@@ -30,7 +28,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <tuple>
 #include <utility>
 #include <vector>
 

@@ -6,13 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
-#include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
+#include "ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-
-#include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -27,31 +23,26 @@ namespace ActsPython {
 void addHashing(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  auto hashingModule = m.def_submodule("hashing");
   auto hashingExampleModule = mex.def_submodule("_hashing");
 
-  {
-    using Config = HashingAlgorithmConfig;
-    auto c = py::class_<Config>(hashingModule, "HashingAlgorithmConfig")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, bucketSize, zBins, phiBins);
-    patchKwargsConstructor(c);
-  }
-
-  {
-    using Config = HashingTrainingConfig;
-    auto c = py::class_<Config>(hashingModule, "HashingTrainingConfig")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, annoySeed, f);
-    patchKwargsConstructor(c);
-  }
-
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      SeedingAlgorithmHashing, hashingExampleModule, "SeedingAlgorithmHashing",
-      inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,
-      seedFinderConfig, seedFinderOptions, gridConfig, gridOptions,
-      allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors,
-      hashingConfig, hashingTrainingConfig);
+      HashingPrototypeSeedingAlgorithm, hashingExampleModule,
+      "HashingPrototypeSeedingAlgorithm", inputSpacePoints, outputSeeds,
+      bFieldInZ, minPt, cotThetaMax, impactMax, deltaRMin, deltaRMax,
+      deltaRMinTop, deltaRMaxTop, deltaRMinBottom, deltaRMaxBottom, rMin, rMax,
+      zMin, zMax, phiMin, phiMax, phiBinDeflectionCoverage, maxPhiBins,
+      zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, zBinEdges,
+      zBinsCustomLooping, rMinMiddle, rMaxMiddle, useVariableMiddleSPRange,
+      rRangeMiddleSP, deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, deltaZMin,
+      deltaZMax, interactionPointCut, collisionRegionMin, collisionRegionMax,
+      helixCutTolerance, sigmaScattering, radLengthPerSeed, toleranceParam,
+      deltaInvHelixDiameter, compatSeedWeight, impactWeightFactor,
+      zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit, seedWeightIncrement,
+      numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
+      forwardSeedConfirmationRange, maxSeedsPerSpMConf,
+      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts,
+      annoySeed, f, bucketSize, zBins, phiBins, layerRMin, layerRMax, layerZMin,
+      layerZMax);
 }
 
 }  // namespace ActsPython

@@ -18,11 +18,3 @@ class AnnoyIndex;  // AnnoyIndex template class
 
 class AnnoyIndexSingleThreadedBuildPolicy;  // Build policy
 }  // namespace Annoy
-
-// Define commonly used Annoy types
-namespace Acts {
-using AnnoyMetric = Annoy::AngularEuclidean;
-using AnnoyModel =
-    Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
-                      Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
-}  // namespace Acts

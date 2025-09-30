@@ -38,7 +38,7 @@ class Config:
         bucketSize: int = 100,
         maxSeedsPerSpM: int = 1000,
         detector: DetectorName = DetectorName.generic,
-        seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Hashing,
+        seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.HashingPrototype,
         metric: str = HashingMetric.dphi,
         annoySeed: int = 123456789,
         zBins: int = 100_000,
