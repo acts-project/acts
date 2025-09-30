@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <limits>
 #include <ostream>
 #include <vector>
-#include <algorithm>
 
 namespace Acts {
 
