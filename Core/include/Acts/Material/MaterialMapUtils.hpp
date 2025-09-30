@@ -59,6 +59,7 @@ class Material;
 /// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
+/// @return A material mapper for RZ coordinate system with equidistant grid
 MaterialMapper<
     Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
          Axis<Acts::AxisType::Equidistant>>>
@@ -112,6 +113,7 @@ materialMapperRZ(
 /// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
+/// @return A material mapper for XYZ coordinate system with equidistant grid
 MaterialMapper<
     Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
          Axis<Acts::AxisType::Equidistant>, Axis<Acts::AxisType::Equidistant>>>

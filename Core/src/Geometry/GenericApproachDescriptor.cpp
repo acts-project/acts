@@ -10,9 +10,8 @@
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-
-#include <algorithm>
 
 #include <boost/container/small_vector.hpp>
 
@@ -20,35 +19,37 @@ namespace Acts {
 
 void GenericApproachDescriptor::registerLayer(const Layer& lay) {
   // go through the surfaces
-  for (auto& sf : m_surfaceCache) {
-    auto mutableSf = const_cast<Surface*>(sf);
-    mutableSf->associateLayer(lay);
+  for (const Surface* surface : m_surfaceCache) {
+    auto* mutableSurface = const_cast<Surface*>(surface);
+    mutableSurface->associateLayer(lay);
   }
 }
 
-SurfaceIntersection GenericApproachDescriptor::approachSurface(
+NavigationTarget GenericApproachDescriptor::approachSurface(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double nearLimit, double farLimit) const {
   // almost always 2
-  boost::container::small_vector<SurfaceIntersection, 4> sIntersections;
-  sIntersections.reserve(m_surfaceCache.size());
-  for (const auto& sf : m_surfaceCache) {
-    auto sfIntersection =
-        sf->intersect(gctx, position, direction, boundaryTolerance);
-    for (const auto& intersection : sfIntersection.split()) {
+  boost::container::small_vector<NavigationTarget, 4> targets;
+  targets.reserve(m_surfaceCache.size());
+  for (const Surface* surface : m_surfaceCache) {
+    auto multiIntersection =
+        surface->intersect(gctx, position, direction, boundaryTolerance);
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(multiIntersection)) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit)) {
-        sIntersections.push_back(intersection);
+        targets.emplace_back(intersection, intersectionIndex,
+                             *surface->associatedLayer(), *surface,
+                             boundaryTolerance);
       }
     }
   }
-  if (sIntersections.empty()) {
-    return SurfaceIntersection::invalid();
+  if (targets.empty()) {
+    return NavigationTarget::None();
   }
-  return *std::min_element(sIntersections.begin(), sIntersections.end(),
-                           SurfaceIntersection::pathLengthOrder);
+  return *std::ranges::min_element(targets, NavigationTarget::pathLengthOrder);
 }
 
 const std::vector<const Surface*>&

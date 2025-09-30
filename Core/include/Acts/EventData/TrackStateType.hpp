@@ -39,7 +39,9 @@ class ConstTrackStateType;
 /// This view allows modifications.
 class TrackStateType {
  public:
+  /// Type alias for underlying raw data type
   using raw_type = std::uint64_t;
+  /// Number of bits available in the raw storage type
   static constexpr std::size_t kRawBits =
       std::numeric_limits<std::make_unsigned_t<raw_type>>::digits;
 
@@ -109,7 +111,9 @@ class TrackStateType {
 /// This view does not allow modifications
 class ConstTrackStateType {
  public:
+  /// Type alias for underlying raw storage type (64-bit unsigned integer)
   using raw_type = std::uint64_t;
+  /// Number of bits available in the raw storage type
   static constexpr std::size_t kRawBits =
       std::numeric_limits<std::make_unsigned_t<raw_type>>::digits;
 

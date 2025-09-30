@@ -15,6 +15,8 @@
 
 namespace Acts {
 
+/// @brief Type alias for accessing parameter covariance matrices
+/// @details Function type for retrieving covariance matrices from measurement parameters
 using ParamCovAccessor =
     std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
         const SourceLink&)>;
