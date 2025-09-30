@@ -13,7 +13,7 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Interface for triplet seed filtering.
 ///
@@ -53,4 +53,4 @@ class ITripletSeedFilter {
       SeedContainer2& outputCollection) const = 0;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
