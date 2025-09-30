@@ -252,7 +252,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   // container
   std::unordered_map<int, detail::ParticleInfo> edm4hepParticleMap;
 
-  std::vector<std::uint8_t> numSimHits;
+  std::vector<std::uint16_t> numSimHits;
   numSimHits.resize(mcParticleCollection.size());
 
   std::size_t nGeneratorParticles = 0;
@@ -285,7 +285,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     }
   }
 
-  std::function<std::uint8_t(const edm4hep::MCParticle&)> getNumHits =
+  std::function<std::uint16_t(const edm4hep::MCParticle&)> getNumHits =
       [&numSimHits](const edm4hep::MCParticle& p) {
         return numSimHits.at(p.getObjectID().index);
       };
