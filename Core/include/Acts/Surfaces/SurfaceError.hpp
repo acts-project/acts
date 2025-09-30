@@ -13,11 +13,15 @@
 
 namespace Acts {
 
+/// Error codes for surface operations
 enum class SurfaceError {
   // ensure all values are non-zero
   GlobalPositionNotOnSurface = 1,
 };
 
+/// Create error code from SurfaceError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::SurfaceError e);
 
 }  // namespace Acts
