@@ -172,8 +172,6 @@ void labelClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
 /// into actual clusters. The Cluster type must have the following function
 /// defined:
 ///   void clusterAddCell(Cluster&, const Cell&)
-///
-/// @return nothing
 template <typename CellCollection, typename ClusterCollection>
   requires(Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
                                     typename ClusterCollection::value_type>)
