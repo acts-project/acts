@@ -41,8 +41,10 @@ namespace Acts {
 /// @tparam track_container_t Type of the track container
 template <typename track_container_t>
 struct CombinatorialKalmanFilterOptions {
+  /// Type alias for track state container backend
   using TrackStateContainerBackend =
       typename track_container_t::TrackStateContainerBackend;
+  /// Type alias for track state proxy from the container
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
 
   /// PropagatorOptions with context

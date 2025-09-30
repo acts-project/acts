@@ -132,6 +132,7 @@ class SurfaceBounds {
 
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param os is the outstream in which the string dump is done
+  /// @return Modified ostream for chaining
   virtual std::ostream& toStream(std::ostream& os) const = 0;
 
   friend bool operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {
