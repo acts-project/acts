@@ -11,7 +11,6 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/TripletSeeder.hpp"
-#include "Acts/Utilities/KDTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -234,9 +233,9 @@ class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  Acts::Experimental::BroadTripletSeedFilter::Config m_filterConfig;
+  Acts::BroadTripletSeedFilter::Config m_filterConfig;
   std::unique_ptr<const Acts::Logger> m_filterLogger;
-  std::optional<Acts::Experimental::TripletSeeder> m_seedFinder;
+  std::optional<Acts::TripletSeeder> m_seedFinder;
 
   Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector;
 

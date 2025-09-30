@@ -16,7 +16,7 @@
 #include <algorithm>
 #include <numeric>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 
@@ -381,4 +381,4 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
   ACTS_VERBOSE("Identified " << numTotalSeeds << " seeds");
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

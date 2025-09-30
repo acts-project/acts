@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 CandidatesForMiddleSp2::CandidatesForMiddleSp2()
     : CandidatesForMiddleSp2(kNoSize, kNoSize) {}
@@ -92,4 +92,4 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   clear();
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

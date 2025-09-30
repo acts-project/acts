@@ -30,8 +30,8 @@ namespace ActsExamples {
 namespace {
 
 static inline bool itkFastTrackingCuts(
-    const Acts::Experimental::ConstSpacePointProxy2 & /*middle*/,
-    const Acts::Experimental::ConstSpacePointProxy2 &other, float cotTheta,
+    const Acts::ConstSpacePointProxy2 & /*middle*/,
+    const Acts::ConstSpacePointProxy2 &other, float cotTheta,
     bool isBottomCandidate) {
   static float rMin = 45;
   static float cotThetaMax = 1.5;
@@ -94,21 +94,17 @@ OrthogonalTripletSeedingAlgorithm::OrthogonalTripletSeedingAlgorithm(
 
   m_filterLogger = logger().cloneWithSuffix("Filter");
 
-  m_seedFinder =
-      Acts::Experimental::TripletSeeder(logger().cloneWithSuffix("Finder"));
+  m_seedFinder = Acts::TripletSeeder(logger().cloneWithSuffix("Finder"));
 }
 
 ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     const AlgorithmContext &ctx) const {
   const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  Acts::Experimental::SpacePointContainer2 coreSpacePoints(
-      Acts::Experimental::SpacePointColumns::SourceLinks |
-      Acts::Experimental::SpacePointColumns::XY |
-      Acts::Experimental::SpacePointColumns::ZR |
-      Acts::Experimental::SpacePointColumns::Phi |
-      Acts::Experimental::SpacePointColumns::VarianceZ |
-      Acts::Experimental::SpacePointColumns::VarianceR);
+  Acts::SpacePointContainer2 coreSpacePoints(
+      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::XY |
+      Acts::SpacePointColumns::ZR | Acts::SpacePointColumns::Phi |
+      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR);
   coreSpacePoints.reserve(spacePoints.size());
 
   Acts::Experimental::CylindricalSpacePointKDTreeBuilder kdTreeBuilder;
@@ -124,7 +120,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
       continue;
     }
 
-    Acts::Experimental::SpacePointIndex2 newSpIndex = coreSpacePoints.size();
+    Acts::SpacePointIndex2 newSpIndex = coreSpacePoints.size();
     auto newSp = coreSpacePoints.createSpacePoint();
     newSp.assignSourceLinks(
         std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
@@ -170,7 +166,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   hlOptions.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
 
-  Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
+  Acts::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.spacePointsSortedByRadius = false;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
   bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
@@ -191,22 +187,22 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  auto bottomDoubletFinder = Acts::Experimental::DoubletSeedFinder::create(
-      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+  auto bottomDoubletFinder =
+      Acts::DoubletSeedFinder::create(Acts::DoubletSeedFinder::DerivedConfig(
           bottomDoubletFinderConfig, m_cfg.bFieldInZ));
 
-  Acts::Experimental::DoubletSeedFinder::Config topDoubletFinderConfig =
+  Acts::DoubletSeedFinder::Config topDoubletFinderConfig =
       bottomDoubletFinderConfig;
   topDoubletFinderConfig.candidateDirection = Acts::Direction::Forward();
   topDoubletFinderConfig.deltaRMin =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
   topDoubletFinderConfig.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
-  auto topDoubletFinder = Acts::Experimental::DoubletSeedFinder::create(
-      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+  auto topDoubletFinder =
+      Acts::DoubletSeedFinder::create(Acts::DoubletSeedFinder::DerivedConfig(
           topDoubletFinderConfig, m_cfg.bFieldInZ));
 
-  Acts::Experimental::TripletSeedFinder::Config tripletFinderConfig;
+  Acts::TripletSeedFinder::Config tripletFinderConfig;
   tripletFinderConfig.useStripInfo = false;
   tripletFinderConfig.sortedByCotTheta = true;
   tripletFinderConfig.minPt = m_cfg.minPt;
@@ -215,9 +211,9 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   tripletFinderConfig.impactMax = m_cfg.impactMax;
   tripletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletFinderConfig.toleranceParam = m_cfg.toleranceParam;
-  auto tripletFinder = Acts::Experimental::TripletSeedFinder::create(
-      Acts::Experimental::TripletSeedFinder::DerivedConfig(tripletFinderConfig,
-                                                           m_cfg.bFieldInZ));
+  auto tripletFinder =
+      Acts::TripletSeedFinder::create(Acts::TripletSeedFinder::DerivedConfig(
+          tripletFinderConfig, m_cfg.bFieldInZ));
 
   // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
@@ -227,13 +223,13 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
           m_cfg.deltaRMiddleMaxSPRange);
 
   // run the seeding
-  Acts::Experimental::SeedContainer2 seeds;
-  Acts::Experimental::BroadTripletSeedFilter::State filterState;
-  Acts::Experimental::BroadTripletSeedFilter::Cache filterCache;
-  Acts::Experimental::BroadTripletSeedFilter seedFilter(
-      m_filterConfig, filterState, filterCache, *m_filterLogger);
+  Acts::SeedContainer2 seeds;
+  Acts::BroadTripletSeedFilter::State filterState;
+  Acts::BroadTripletSeedFilter::Cache filterCache;
+  Acts::BroadTripletSeedFilter seedFilter(m_filterConfig, filterState,
+                                          filterCache, *m_filterLogger);
 
-  static thread_local Acts::Experimental::TripletSeeder::Cache cache;
+  static thread_local Acts::TripletSeeder::Cache cache;
   static thread_local Acts::Experimental::CylindricalSpacePointKDTree::
       Candidates candidates;
 
@@ -286,9 +282,9 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     candidates.clear();
     kdTree.validTuples(lhOptions, hlOptions, spM, nTopSeedConf, candidates);
 
-    Acts::Experimental::SpacePointContainer2::ConstSubset bottomSps =
+    Acts::SpacePointContainer2::ConstSubset bottomSps =
         coreSpacePoints.subset(candidates.bottom_lh_v).asConst();
-    Acts::Experimental::SpacePointContainer2::ConstSubset topSps =
+    Acts::SpacePointContainer2::ConstSubset topSps =
         coreSpacePoints.subset(candidates.top_lh_v).asConst();
     m_seedFinder->createSeedsFromGroup(
         cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,

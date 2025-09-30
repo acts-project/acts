@@ -124,8 +124,8 @@ class CylindricalSpacePointKDTree {
                                        const ConstSpacePointProxy2& high) const;
 
   void validTuples(const Options& lhOptions, const Options& hlOptions,
-                   const Acts::Experimental::ConstSpacePointProxy2& spM,
-                   std::size_t nTopSeedConf, Candidates& candidates) const;
+                   const ConstSpacePointProxy2& spM, std::size_t nTopSeedConf,
+                   Candidates& candidates) const;
 
  private:
   Tree m_tree;
