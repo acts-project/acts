@@ -67,11 +67,15 @@ class VolumeStack : public Volume {
   std::shared_ptr<Volume> addGapVolume(
       const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds);
 
+  /// Direction axis along which volumes are stacked
   AxisDirection m_direction{};
 
+  /// Resize strategies for volume attachment and modification
   ResizeStrategies m_resizeStrategies;
 
+  /// Container of gap volumes created during volume attachment or resizing
   std::vector<std::shared_ptr<Volume>> m_gaps{};
+  /// Reference to the vector of volumes in the stack
   std::vector<Volume*>& m_volumes;
 };
 }  // namespace Acts

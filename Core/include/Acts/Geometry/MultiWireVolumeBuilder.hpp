@@ -27,7 +27,7 @@ class MultiWireVolumeBuilder {
     /// The name of the tracking volume
     std::string name = "undefined";
 
-    // The surfaces to be wrapped from the tracking volume
+    /// The surfaces to be wrapped from the tracking volume
     std::vector<std::shared_ptr<Surface>> mlSurfaces = {};
 
     /// The transform of the tracking volume
@@ -36,6 +36,7 @@ class MultiWireVolumeBuilder {
     /// The bounds of the tracking volume
     std::shared_ptr<Acts::VolumeBounds> bounds = nullptr;
 
+    /// Binning configuration for multi-wire volume
     std::vector<Binning> binning = {};
   };
   /// Constructor
@@ -52,6 +53,7 @@ class MultiWireVolumeBuilder {
 
   /// @brief Creates a multilayer navigation policy factory that can be used for the trackingVolume
   /// or attached to a blueprint node
+  /// @return Unique pointer to the created navigation policy factory
   std::unique_ptr<NavigationPolicyFactory> createNavigationPolicyFactory()
       const;
 
