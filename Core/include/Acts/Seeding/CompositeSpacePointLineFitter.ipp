@@ -19,10 +19,7 @@ namespace Acts::Experimental {
 template <CompositeSpacePointContainer Cont_t>
 std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
     const Cont_t& measurements) const {
-  using Sp_t = SpacePoint_t<Cont_t>;
-  Selector_t<Sp_t> selector{};
-  selector.template connect<&detail::passThroughSelector<Sp_t>>();
-  return countDof(measurements, selector);
+  return countDoF(measurements, Selector_t<SpacePoint_t<Cont_t>>{});
 }
 
 template <CompositeSpacePointContainer Cont_t>
@@ -33,7 +30,7 @@ std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
   auto counts = filledArray<std::size_t, 3>(0u);
   std::size_t nValid{0};
   for (const auto& sp : measurements) {
-    if (!selector(*sp)) {
+    if (selector.connected() && !selector(*sp)) {
       continue;
     }
     ++nValid;
@@ -186,12 +183,13 @@ template <CompositeSpacePointContainer Cont_t,
 CompositeSpacePointLineFitter::FitResult<Cont_t>
 CompositeSpacePointLineFitter::fit(
     FitOptions<Cont_t, Calibrator_t>&& fitOpts) const {
+  using namespace Acts::UnitLiterals;
+
   if (!fitOpts.calibrator) {
     throw std::invalid_argument(
         "CompositeSpacePointLineFitter::fit() - Please provide a valid pointer "
         "to a calibrator.");
   }
-  using namespace Acts::UnitLiterals;
 
   FitResult<Cont_t> result{};
   result.measurements = std::move(fitOpts.measurements);
@@ -296,7 +294,7 @@ CompositeSpacePointLineFitter::fit(
     // Calculate the new chi2
     for (const auto& spacePoint : result.measurements) {
       // Skip bad measurements
-      if (!fitOpts.selector(*spacePoint)) {
+      if (fitOpts.selector.connected() && !fitOpts.selector(*spacePoint)) {
         continue;
       }
       double driftV{0.};

@@ -17,16 +17,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts::Experimental {
-
-namespace detail {
-
-/// @brief Dummy space point selector that is connected with the Selector delegate inside the fitter class
-template <CompositeSpacePoint Sp_t>
-bool passThroughSelector(const Sp_t& /*sp*/) {
-  return true;
-}
-}  // namespace detail
-
 /// @brief Generic Implementation to fit a straight line to set of composite space point measurements.
 ///        The line is parameterized by x_{0}, y_{0}, theta, phi, where the
 ///        first two parameters are the line's intercept at z=0 and the latter
@@ -139,9 +129,11 @@ class CompositeSpacePointLineFitter {
     /// @brief Convergence of the fit
     bool converged{false};
   };
-
+  /// @brief  Fit parameters together with the calibrated measurements.
+  /// @tparam Cont_t Space point container type
   template <CompositeSpacePointContainer Cont_t>
   struct FitResult : public FitParameters {
+    /// @param List of measurements post-fit
     Cont_t measurements{};
   };
 
@@ -219,6 +211,14 @@ class CompositeSpacePointLineFitter {
 
   using FastFitResult = std::optional<detail::FastStrawLineFitter::FitResult>;
 
+  /// @brief Executes the fast line fit in the bending direction. Returns
+  ///        the result containing the chi2 and the parameters from the fast
+  ///        fitter if succeeds otherwise a nullopt
+  /// @param measurements: List of measurements to be fitted. Only the ones with measuresLoc1() are
+  ///                       considered by the fast fitter
+  /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
+  /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
+  ///                   at least enough measurements parsed for the fit.
   template <CompositeSpacePointContainer Cont_t>
   FastFitResult fastPrecFit(const Cont_t& measurements,
                             const Line_t& initialGuess,
