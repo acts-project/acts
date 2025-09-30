@@ -400,8 +400,8 @@ class Surface : public virtual GeometryObject,
   /// @param boundaryTolerance the BoundaryTolerance
   /// @param tolerance the tolerance used for the intersection
   ///
-  /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
-  virtual SurfaceMultiIntersection intersect(
+  /// @return @c MultiIntersection3D intersection object
+  virtual MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =

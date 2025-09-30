@@ -198,6 +198,7 @@ class LayerCreator {
   void setConfiguration(const Config& lcConfig);
 
   /// Access th configuration object
+  /// @return Copy of the current configuration object
   Config getConfiguration() const;
 
   /// set logging instance
@@ -205,6 +206,7 @@ class LayerCreator {
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// associate surfaces contained by this layer to this layer
+  /// @param layer Layer to associate surfaces with
   void associateSurfacesToLayer(Layer& layer) const;
 
  private:

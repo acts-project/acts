@@ -18,6 +18,7 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
@@ -239,7 +240,7 @@ struct GaussianSumFitter {
     const auto gsfBackward = gsfForward.invert();
 
     // Check if the start parameters are on the start surface
-    auto intersectionStatusStartSurface =
+    IntersectionStatus intersectionStatusStartSurface =
         sParameters.referenceSurface()
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
