@@ -19,6 +19,7 @@
 #include <limits>
 #include <ostream>
 #include <vector>
+#include <algorithm>
 
 #include <boost/container/small_vector.hpp>
 
