@@ -114,19 +114,15 @@ class TruthJetBuilder {
   TruthJetBuilder(const Acts::Vector4& fm, const JetLabel label)
       : m_fourMomentum(fm), m_label(label) {}
 
-  void setLabel(JetLabel jl) { m_label = jl; }
-  JetLabel getLabel() const { return m_label; }
-
-  void getLabelHadron(const HepMC3::GenParticle* hadron){
-    m_labelHadron = hadron;
-  }
-  const HepMC3::GenParticle* getLabelHadron() const { return m_labelHadron; }
   const Acts::Vector4 getTruthJetFourMomentum() const { return m_fourMomentum; }
+  const JetLabel getTruthLabel() const { return m_label; }
+  Acts::Vector3 getDirection() const {
+    return m_fourMomentum.head<3>().normalized();
+  }
 
  private:
   Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
   JetLabel m_label{JetLabel::Unknown};
-  const HepMC3::GenParticle* m_labelHadron{nullptr};
 };
 
 class JetProperties {
@@ -148,6 +144,14 @@ class JetProperties {
   /// @brief Get the jet 4-momentum
   /// @return the jet 4-momentum as an Acts::Vector4
   Acts::Vector4 getFourMomentum() const { return m_fourMomentum; }
+
+  void setLabel(JetLabel jl) { m_label = jl; }
+  JetLabel getLabel() const { return m_label; }
+
+  void setLabelHadron(const HepMC3::GenParticle* hadron) {
+    m_labelHadron = hadron;
+  }
+  const HepMC3::GenParticle* getLabelHadron() const { return m_labelHadron; }
 
   /// @brief Add a track to the jet
   /// @param trk_idx the index of the track to add
@@ -186,6 +190,8 @@ class JetProperties {
   std::vector<int> m_constituents{};
   // The indices of the tracks associated to this jet
   std::vector<int> m_trackIndices{};
+  JetLabel m_label{m_truthJet.getTruthLabel()};
+  const HepMC3::GenParticle* m_labelHadron{nullptr};
 };
 
 using TrackJetContainer = std::vector<TruthJetBuilder>;

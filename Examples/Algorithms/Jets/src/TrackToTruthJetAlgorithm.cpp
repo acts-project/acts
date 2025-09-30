@@ -39,7 +39,7 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
   // Take a copy that we will modify
   Acts::FastJet::TrackJetContainer jets;
 
-  for(const auto& truthJet : truthJets) {
+  for (const auto& truthJet : truthJets) {
     jets.emplace_back(truthJet);
   }
 
@@ -105,8 +105,7 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
       }
 
       ACTS_DEBUG("Track " << track.index() << " delta R to jet " << i << ": "
-                          << deltaR
-                          << ", jet px: " << jetProps.getFourMomentum().x());
+                          << deltaR);
       if (deltaR < m_cfg.maxDeltaR) {
         ACTS_DEBUG("Track " << track.index() << " matches jet " << i
                             << " with delta R: " << deltaR);
@@ -115,9 +114,8 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
       i++;
     }  // loop over jets
 
-    Acts::FastJet::JetProperties matchedJetProps(*matchedJet);
-
     if (matchedJet != nullptr) {
+      Acts::FastJet::JetProperties matchedJetProps(*matchedJet);
       matchedJetProps.addTrack(track.index());
     }
 

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #include <iosfwd>
 #include <optional>

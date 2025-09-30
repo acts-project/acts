@@ -161,20 +161,21 @@ def make_sequencer(
         inputTruthParticles="jet_input_particles",
         outputJets="truth_jets",
         jetPtMin=10 * u.GeV,
+        inputHepMC3Event="pythia8-event",
     )
 
     s.addAlgorithm(truthJetAlg)
 
-    # addTrackToTruthJetAlg(
-    #    s,
-    #    TrackToTruthJetConfig(
-    #        inputTracks="tracks",
-    #        inputJets="truth_jets",
-    #        outputTrackJets="track_jets",
-    #        maxDeltaR=0.4,
-    #    ),
-    #    loglevel=acts.logging.DEBUG,
-    # )
+    addTrackToTruthJetAlg(
+        s,
+        TrackToTruthJetConfig(
+            inputTracks="tracks",
+            inputJets="truth_jets",
+            outputTrackJets="track_jets",
+            maxDeltaR=0.4,
+        ),
+        loglevel=acts.logging.INFO,
+    )
 
 
 def make_geometry():

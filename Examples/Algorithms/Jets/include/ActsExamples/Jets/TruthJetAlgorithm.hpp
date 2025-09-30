@@ -53,6 +53,12 @@ class TruthJetAlgorithm final : public IAlgorithm {
     double jetLabelingHadronPtMin = 5 * Acts::UnitConstants::GeV;
     bool jetLabelingHardScatterHadronsOnly = true;
 
+    // Isolated TRUTH lepton overlap removal
+    bool doOverlapRemoval = false;
+    double overlapRemovalDeltaR = 0.2;
+    double overlapRemovalIsolationDeltaR = 0.2;
+    double overlapRemovalIsolation = 0.1;
+
     bool debugCsvOutput = false;
   };
 
@@ -62,16 +68,16 @@ class TruthJetAlgorithm final : public IAlgorithm {
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  ProcessCode finalize() override;
-
   const Config& config() const { return m_cfg; }
 
  private:
+  void overlapRemoval(const SimParticleContainer& truthParticles,
+                      Acts::FastJet::TrackJetContainer& jets) const;
   Config m_cfg;
   ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
       this, "inputTruthParticles"};
   WriteDataHandle<Acts::FastJet::TrackJetContainer> m_outputJets{this,
-                                                               "outputJets"};
+                                                                 "outputJets"};
 
   ReadDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_inputHepMC3Event{
       this, "inputHepMC3Event"};
@@ -82,7 +88,6 @@ class TruthJetAlgorithm final : public IAlgorithm {
   mutable std::atomic<std::size_t> m_numLightJets = 0;
   mutable std::atomic<std::size_t> m_numCJets = 0;
   mutable std::atomic<std::size_t> m_numBJets = 0;
-
 };
 
 }  // namespace ActsExamples

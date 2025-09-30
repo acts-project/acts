@@ -9,6 +9,8 @@
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <ostream>
 #include <utility>
@@ -885,5 +887,6 @@ std::ostream& operator<<(std::ostream& os, HadronType hadron) {
     case Unknown:
       return os << "Unknown";
   }
+  return os;
 }
 }  // namespace Acts
