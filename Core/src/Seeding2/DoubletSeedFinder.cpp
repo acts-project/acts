@@ -16,7 +16,7 @@
 #include <boost/mp11.hpp>
 #include <boost/mp11/algorithm.hpp>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 
@@ -356,4 +356,4 @@ MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
   return {uIP, uIP2, cosPhiM, sinPhiM};
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
