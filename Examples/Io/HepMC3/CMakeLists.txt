@@ -22,11 +22,30 @@ target_link_libraries(
     PRIVATE Acts::Fatras
 )
 
+# Standalone HepMC3 normalizer executable
+find_package(Boost REQUIRED COMPONENTS program_options)
+
+add_executable(ActsHepMC3Normalize HepMC3Normalize.cpp)
+
+target_link_libraries(
+    ActsHepMC3Normalize
+    PRIVATE
+        ${HEPMC3_LIBRARIES}
+        Boost::program_options
+        nlohmann_json::nlohmann_json
+)
+
+target_include_directories(
+    ActsHepMC3Normalize
+    SYSTEM
+    PRIVATE ${HEPMC3_INCLUDE_DIR}
+)
+
 # HepMC3 version < 3.3.0 had non-inline pseudo static members that give linker errors:
 # https://gitlab.cern.ch/hepmc/HepMC3/-/merge_requests/284
 if(${HEPMC3_VERSION} VERSION_GREATER_EQUAL 3.2.7)
     # The code below conditionally tries to find a number of compression libraries,
-    # and will then configure the HepMC3 IO target to make use of them
+    # and will then configure the HepMC3 IO targets to make use of them
     # conditionally.
     target_compile_definitions(
         ActsExamplesIoHepMC3
@@ -42,6 +61,11 @@ if(${HEPMC3_VERSION} VERSION_GREATER_EQUAL 3.2.7)
             ActsExamplesIoHepMC3
             PRIVATE HEPMC3_Z_SUPPORT=1
         )
+        target_link_libraries(ActsHepMC3Normalize PRIVATE ZLIB::ZLIB)
+        target_compile_definitions(
+            ActsHepMC3Normalize
+            PRIVATE HEPMC3_Z_SUPPORT=1
+        )
     else()
         message(CHECK_PASS "not found")
     endif()
@@ -53,6 +77,11 @@ if(${HEPMC3_VERSION} VERSION_GREATER_EQUAL 3.2.7)
         target_link_libraries(ActsExamplesIoHepMC3 PRIVATE LibLZMA::LibLZMA)
         target_compile_definitions(
             ActsExamplesIoHepMC3
+            PRIVATE HEPMC3_LZMA_SUPPORT=1
+        )
+        target_link_libraries(ActsHepMC3Normalize PRIVATE LibLZMA::LibLZMA)
+        target_compile_definitions(
+            ActsHepMC3Normalize
             PRIVATE HEPMC3_LZMA_SUPPORT=1
         )
     else()
@@ -68,6 +97,11 @@ if(${HEPMC3_VERSION} VERSION_GREATER_EQUAL 3.2.7)
             ActsExamplesIoHepMC3
             PRIVATE HEPMC3_BZ2_SUPPORT=1
         )
+        target_link_libraries(ActsHepMC3Normalize PRIVATE BZip2::BZip2)
+        target_compile_definitions(
+            ActsHepMC3Normalize
+            PRIVATE HEPMC3_BZ2_SUPPORT=1
+        )
     else()
         message(CHECK_PASS "not found")
     endif()
@@ -81,9 +115,19 @@ if(${HEPMC3_VERSION} VERSION_GREATER_EQUAL 3.2.7)
             ActsExamplesIoHepMC3
             PRIVATE HEPMC3_ZSTD_SUPPORT=1
         )
+        target_link_libraries(ActsHepMC3Normalize PRIVATE ZSTD::ZSTD)
+        target_compile_definitions(
+            ActsHepMC3Normalize
+            PRIVATE HEPMC3_ZSTD_SUPPORT=1
+        )
     else()
         message(CHECK_PASS "not found")
     endif()
+
+    target_compile_definitions(
+        ActsHepMC3Normalize
+        PRIVATE HEPMC3_USE_COMPRESSION
+    )
 endif()
 
 message(CHECK_START "Examples HepMC3 IO: checking for ROOT IO")
@@ -94,6 +138,13 @@ if(TARGET HepMC3::rootIO)
         ActsExamplesIoHepMC3
         PRIVATE ACTS_HEPMC3_ROOT_SUPPORT=1
     )
+    target_link_libraries(ActsHepMC3Normalize PRIVATE HepMC3::rootIO)
+    target_compile_definitions(
+        ActsHepMC3Normalize
+        PRIVATE ACTS_HEPMC3_ROOT_SUPPORT=1
+    )
 else()
     message(CHECK_PASS "not found")
 endif()
+
+install(TARGETS ActsHepMC3Normalize RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
