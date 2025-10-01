@@ -103,9 +103,8 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
       i++;
     }  // loop over jets
 
-    Acts::FastJet::JetProperties matchedJetProps(*matchedJet);
-
     if (matchedJet != nullptr) {
+      Acts::FastJet::JetProperties matchedJetProps(*matchedJet);
       matchedJetProps.addTrack(track.index());
     }
 

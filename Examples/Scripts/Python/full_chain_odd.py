@@ -398,11 +398,10 @@ if args.jet_clustering:
     )
 
     truthJetAlg = acts.examples.TruthJetAlgorithm(
-        level=acts.logging.DEBUG,
+        level=acts.logging.INFO,
         inputTruthParticles="jet_input_particles",
         outputJets="truth_jets",
-        jetPtMin=10 * u.GeV,
-        inputHepMC3Event="pythia8-event",
+        jetPtMin=10 * u.GeV
     )
 
     s.addAlgorithm(truthJetAlg)
