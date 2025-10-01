@@ -39,6 +39,8 @@
 
 namespace Acts {
 
+/// Strategy for selecting track states when reaching target surface in Kalman
+/// filter
 enum class KalmanFitterTargetSurfaceStrategy {
   /// Use the first trackstate to reach target surface
   first,
@@ -52,22 +54,30 @@ enum class KalmanFitterTargetSurfaceStrategy {
 /// Extension struct which holds delegates to customise the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
+  /// Type alias for track state proxy from trajectory
   using TrackStateProxy = typename traj_t::TrackStateProxy;
+  /// Type alias for const track state proxy from trajectory
   using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
+  /// Type alias for track parameters from track state proxy
   using Parameters = typename TrackStateProxy::Parameters;
 
+  /// Type alias for measurement calibrator delegate
   using Calibrator =
       Delegate<void(const GeometryContext&, const CalibrationContext&,
                     const SourceLink&, TrackStateProxy)>;
 
+  /// Type alias for track smoothing delegate
   using Smoother = Delegate<Result<void>(const GeometryContext&, traj_t&,
                                          std::size_t, const Logger&)>;
 
+  /// Type alias for Kalman filter update delegate
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         const Logger&)>;
 
+  /// Type alias for outlier detection delegate
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
+  /// Type alias for reverse filtering decision delegate
   using ReverseFilteringLogic = Delegate<bool(ConstTrackStateProxy)>;
 
   /// The Calibrator is a dedicated calibration algorithm that allows
@@ -153,6 +163,7 @@ struct KalmanFitterOptions {
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
+  /// Extensions for calibration and outlier finding
   KalmanFitterExtensions<traj_t> extensions;
 
   /// The trivial propagator options
@@ -266,6 +277,9 @@ class KalmanFitter {
       std::is_same_v<KalmanNavigator, DirectNavigator>;
 
  public:
+  /// Constructor with propagator and logger
+  /// @param pPropagator Propagator instance for track propagation
+  /// @param _logger Logger for diagnostic output
   explicit KalmanFitter(propagator_t pPropagator,
                         std::unique_ptr<const Logger> _logger =
                             getDefaultLogger("KalmanFitter", Logging::INFO))

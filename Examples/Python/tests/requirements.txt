@@ -22,6 +22,7 @@ iniconfig==2.1.0
     # via pytest
 numpy==2.3.3
     # via
+    #   -r Examples/Python/tests/requirements.in
     #   awkward
     #   awkward-cpp
     #   pyhepmc
@@ -53,9 +54,9 @@ pytest-timeout==2.4.0
     # via -r Examples/Python/tests/requirements.in
 pytest-xdist==3.8.0
     # via -r Examples/Python/tests/requirements.in
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via -r Examples/Python/tests/requirements.in
-uproot==5.6.5
+uproot==5.6.6
     # via -r Examples/Python/tests/requirements.in
 xxhash==3.5.0
     # via uproot

@@ -15,7 +15,7 @@
 #include <span>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 template <bool read_only>
 class SeedProxy2;
@@ -217,6 +217,6 @@ class SeedContainer2 {
   }
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
 
 #include "Acts/EventData/SeedContainer2.ipp"

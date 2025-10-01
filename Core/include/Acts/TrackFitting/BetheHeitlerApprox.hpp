@@ -69,10 +69,13 @@ inline auto inverseTransformComponent(double transformed_weight,
 /// only component approximation (then probably for debugging)
 struct BetheHeitlerApproxSingleCmp {
   /// Returns the number of components the returned mixture will have
+  /// @return Number of components (always 1 for single component approximation)
   constexpr auto numComponents() const { return 1; }
 
   /// Checks if an input is valid for the parameterization. The threshold for
   /// x/x0 is 0.002 and orientates on the values used in ATLAS
+  /// @param x The x/x0 value to check
+  /// @return True if x/x0 is below the threshold for single component approximation
   constexpr bool validXOverX0(double x) const {
     return x < 0.002;
     ;
@@ -82,6 +85,7 @@ struct BetheHeitlerApproxSingleCmp {
   /// Bethe-Heitler-Distribution
   ///
   /// @param x pathlength in terms of the radiation length
+  /// @return Array containing single Gaussian component approximating Bethe-Heitler distribution
   static auto mixture(const double x) {
     std::array<detail::GaussianComponent, 1> ret{};
 
@@ -114,6 +118,7 @@ class AtlasBetheHeitlerApprox {
     std::array<double, PolyDegree + 1> varCoeffs;
   };
 
+  /// Type alias for array of polynomial data for all components
   using Data = std::array<PolyData, NComponents>;
 
  private:
@@ -155,11 +160,13 @@ class AtlasBetheHeitlerApprox {
         m_clampToRange(clampToRange) {}
 
   /// Returns the number of components the returned mixture will have
+  /// @return Number of components in the mixture (template parameter NComponents)
   constexpr auto numComponents() const { return NComponents; }
 
   /// Checks if an input is valid for the parameterization
   ///
   /// @param x pathlength in terms of the radiation length
+  /// @return True if x/x0 is within valid range for this parameterization
   constexpr bool validXOverX0(double x) const {
     if (m_clampToRange) {
       return true;
@@ -172,6 +179,7 @@ class AtlasBetheHeitlerApprox {
   /// that the sum of all weights is 1
   ///
   /// @param x pathlength in terms of the radiation length
+  /// @return Vector of Gaussian components representing the Bethe-Heitler distribution
   auto mixture(double x) const {
     using Array =
         boost::container::static_vector<detail::GaussianComponent, NComponents>;
@@ -255,6 +263,7 @@ class AtlasBetheHeitlerApprox {
   /// @param lowLimit the upper limit for the low x/x0-data
   /// @param highLimit the upper limit for the high x/x0-data
   /// @param clampToRange forwarded to constructor
+  /// @return AtlasBetheHeitlerApprox instance loaded from parameter files
   static auto loadFromFiles(const std::string &low_parameters_path,
                             const std::string &high_parameters_path,
                             double lowLimit = 0.1, double highLimit = 0.2,
@@ -311,6 +320,8 @@ class AtlasBetheHeitlerApprox {
 /// configuration, that are stored as static data in the source code.
 /// This may not be an optimal configuration, but should allow to run
 /// the GSF without the need to load files
+/// @param clampToRange Whether to clamp values to the valid range
+/// @return AtlasBetheHeitlerApprox with default ATLAS configuration parameters
 AtlasBetheHeitlerApprox<6, 5> makeDefaultBetheHeitlerApprox(
     bool clampToRange = false);
 
