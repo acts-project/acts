@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 
@@ -16,6 +17,10 @@
 
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
+
+namespace HepMC3 {
+class GenParticle;
+}
 
 namespace Acts::FastJet {
 
@@ -82,6 +87,114 @@ class TrackJetBuilder {
 
   fastjet::ClusterSequence m_clusterSeq{};
 };
+
+enum class JetLabel { Unknown = -99, LightJet = 0, CJet = 4, BJet = 5 };
+
+inline std::ostream& operator<<(std::ostream& os, const JetLabel& label) {
+  switch (label) {
+    case JetLabel::Unknown:
+      os << "Unknown";
+      break;
+    case JetLabel::LightJet:
+      os << "LightJet";
+      break;
+    case JetLabel::CJet:
+      os << "CJet";
+      break;
+    case JetLabel::BJet:
+      os << "BJet";
+      break;
+  }
+  return os;
+}
+
+class TruthJetBuilder {
+ public:
+  explicit TruthJetBuilder(const Acts::Vector4& fm) { m_fourMomentum = fm; }
+  TruthJetBuilder(const Acts::Vector4& fm, const JetLabel label)
+      : m_fourMomentum(fm), m_label(label) {}
+
+  const Acts::Vector4 getTruthJetFourMomentum() const { return m_fourMomentum; }
+  JetLabel getTruthLabel() const { return m_label; }
+  Acts::Vector3 getDirection() const {
+    return m_fourMomentum.head<3>().normalized();
+  }
+
+ private:
+  Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
+  JetLabel m_label{JetLabel::Unknown};
+};
+
+class JetProperties {
+ public:
+  /// Constructor; saves a reference to the jet
+  /// @param jet the jet
+  explicit JetProperties(const TruthJetBuilder& truthJet)
+      : m_truthJet{truthJet} {}
+
+  /// @brief Set the jet constituents
+  /// @param constituents the indices of the constituent tracks
+  void setConstituents(const std::vector<int>& constituents) {
+    m_constituents = constituents;
+  }
+  /// @brief Get the jet constituents
+  /// @return the indices of the constituent tracks
+  const std::vector<int>& getConstituents() const { return m_constituents; }
+
+  /// @brief Get the jet 4-momentum
+  /// @return the jet 4-momentum as an Acts::Vector4
+  Acts::Vector4 getFourMomentum() const { return m_fourMomentum; }
+
+  void setLabel(JetLabel jl) { m_label = jl; }
+  JetLabel getLabel() const { return m_label; }
+
+  void setLabelHadron(const HepMC3::GenParticle* hadron) {
+    m_labelHadron = hadron;
+  }
+  const HepMC3::GenParticle* getLabelHadron() const { return m_labelHadron; }
+
+  /// @brief Add a track to the jet
+  /// @param trk_idx the index of the track to add
+  void addTrack(const int trackIndex) { m_trackIndices.push_back(trackIndex); }
+
+  /// @brief Get the tracks associated to this jet
+  /// @return the indices of the associated tracks
+  const std::vector<int>& getTracks() const { return m_trackIndices; }
+
+  /// @brief Print the jet information
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const JetProperties& jetProps) {
+    os << "Jet 4-momentum: " << jetProps.getFourMomentum().transpose()
+       << std::endl;
+    os << "Constituents: ";
+    for (const auto& constituent : jetProps.getConstituents()) {
+      os << constituent << " ";
+    }
+    os << std::endl;
+    if (!jetProps.getTracks().empty()) {
+      os << "Associated tracks: ";
+      for (const auto& trkidx : jetProps.getTracks()) {
+        os << trkidx << " ";
+      }
+      os << std::endl;
+    } else {
+      os << "No associated tracks." << std::endl;
+    }
+    return os;
+  }
+
+ private:
+  const TruthJetBuilder& m_truthJet;
+  Acts::Vector4 m_fourMomentum{m_truthJet.getTruthJetFourMomentum()};
+  // The indices of the constituents wrt the global container
+  std::vector<int> m_constituents{};
+  // The indices of the tracks associated to this jet
+  std::vector<int> m_trackIndices{};
+  JetLabel m_label{m_truthJet.getTruthLabel()};
+  const HepMC3::GenParticle* m_labelHadron{nullptr};
+};
+
+using TrackJetContainer = std::vector<TruthJetBuilder>;
 
 }  // namespace Acts::FastJet
 

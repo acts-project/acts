@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Jets/TrackToTruthJetAlgorithm.hpp"
 #include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -26,7 +27,22 @@ namespace ActsPython {
 void addTruthJet(Context& ctx) {
   auto& mex = ctx.get("examples");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(TruthJetAlgorithm, mex, "TruthJetAlgorithm",
-                                inputTruthParticles, outputJets, jetPtMin);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TruthJetAlgorithm, mex, "TruthJetAlgorithm", outputJets,
+      jetPtMin, inputHepMC3Event, doJetLabeling, jetClusteringR,
+      inputTruthParticles, jetLabelingHadronPtMin,
+      clusterHardScatterParticlesOnly, jetLabelingHardScatterHadronsOnly,
+      debugCsvOutput, jetEtaRange, jetLabelingDeltaR, doOverlapRemoval,
+      overlapRemovalDeltaR, overlapRemovalIsolationDeltaR,
+      overlapRemovalIsolation);
 }  // addTruthJet
+
+void addTrackToTruthJet(Context& ctx) {
+  auto mex = ctx.get("examples");
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(TrackToTruthJetAlgorithm, mex,
+                                "TrackToTruthJetAlgorithm", inputTracks,
+                                inputJets, outputTrackJets, maxDeltaR);
+}  // addTrackToTruthJet
+
 }  // namespace ActsPython

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/FastJet/Jets.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -20,6 +21,15 @@ namespace fastjet {
 class PseudoJet;
 }
 
+namespace HepMC3 {
+class GenEvent;
+}
+
+namespace ActsFastJet {
+class TruthJetBuilder;
+class JetProperties;
+}  // namespace ActsFastJet
+
 namespace ActsExamples {
 struct AlgorithmContext;
 
@@ -31,22 +41,53 @@ class TruthJetAlgorithm final : public IAlgorithm {
     /// Output jets collection.
     std::string outputJets;
     /// Minimum jet pT.
-    double jetPtMin;
+    double jetPtMin = 20 * Acts::UnitConstants::GeV;
+    std::pair<std::optional<double>, std::optional<double>> jetEtaRange = {
+        std::nullopt, std::nullopt};
+    double jetClusteringR = 0.4;
+    bool clusterHardScatterParticlesOnly = true;
+
+    std::optional<std::string> inputHepMC3Event;
+    bool doJetLabeling = true;
+    double jetLabelingDeltaR = 0.4;
+    double jetLabelingHadronPtMin = 5 * Acts::UnitConstants::GeV;
+    bool jetLabelingHardScatterHadronsOnly = true;
+
+    // Isolated TRUTH lepton overlap removal
+    bool doOverlapRemoval = false;
+    double overlapRemovalDeltaR = 0.2;
+    double overlapRemovalIsolationDeltaR = 0.2;
+    double overlapRemovalIsolation = 0.1;
+
+    bool debugCsvOutput = false;
   };
 
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
+  ProcessCode initialize() override;
+
   ProcessCode execute(const AlgorithmContext& ctx) const override;
-  ProcessCode finalize() override;
 
   const Config& config() const { return m_cfg; }
 
  private:
+  void overlapRemoval(const SimParticleContainer& truthParticles,
+                      Acts::FastJet::TrackJetContainer& jets) const;
   Config m_cfg;
   ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
       this, "inputTruthParticles"};
-  WriteDataHandle<std::vector<fastjet::PseudoJet>> m_outputJets{this,
-                                                                "outputJets"};
+  WriteDataHandle<Acts::FastJet::TrackJetContainer> m_outputJets{this,
+                                                                 "outputJets"};
+
+  ReadDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_inputHepMC3Event{
+      this, "inputHepMC3Event"};
+
+  // Statistics
+  mutable std::atomic<std::size_t> m_numJets = 0;
+  mutable std::atomic<std::size_t> m_numJetsAfterOverlapRemoval = 0;
+  mutable std::atomic<std::size_t> m_numLightJets = 0;
+  mutable std::atomic<std::size_t> m_numCJets = 0;
+  mutable std::atomic<std::size_t> m_numBJets = 0;
 };
 
 }  // namespace ActsExamples
