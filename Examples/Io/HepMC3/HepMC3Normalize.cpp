@@ -9,6 +9,7 @@
 /// @file HepMC3Normalize.cpp
 /// @brief Standalone tool to normalize and chunk HepMC files
 
+#include <chrono>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -217,6 +218,8 @@ int main(int argc, char** argv) {
                             "Output file prefix")(
         "events-per-file,n", po::value<std::size_t>()->default_value(10000),
         "Number of events per output file")(
+        "max-events,m", po::value<std::size_t>()->default_value(0),
+        "Maximum number of events to read (0 = all events)")(
         "compression,c", po::value<std::string>()->default_value("none"),
         "Compression type: none, zlib, lzma, bzip2, zstd")(
         "compression-level,l", po::value<int>()->default_value(6),
@@ -268,6 +271,7 @@ int main(int argc, char** argv) {
     auto outputDir = std::filesystem::path(vm["output-dir"].as<std::string>());
     auto outputPrefix = vm["output-prefix"].as<std::string>();
     auto eventsPerFile = vm["events-per-file"].as<std::size_t>();
+    auto maxEvents = vm["max-events"].as<std::size_t>();
     auto compression = vm["compression"].as<std::string>();
     auto compressionLevel = vm["compression-level"].as<int>();
     auto format = vm["format"].as<std::string>();
@@ -302,6 +306,9 @@ int main(int argc, char** argv) {
       std::cout << "  Input files: " << inputFiles.size() << "\n";
       std::cout << "  Output dir: " << outputDir << "\n";
       std::cout << "  Events per file: " << eventsPerFile << "\n";
+      if (maxEvents > 0) {
+        std::cout << "  Max events to read: " << maxEvents << "\n";
+      }
       std::cout << "  Format: " << format << "\n";
       std::cout << "  Compression: " << compression << " (level "
                 << compressionLevel << ")\n\n";
@@ -317,6 +324,11 @@ int main(int argc, char** argv) {
     std::uintmax_t totalInputSize = 0;
     std::uintmax_t totalOutputSize = 0;
     std::vector<std::filesystem::path> outputFiles;
+
+    // Timing tracking
+    double totalCopyTime = 0.0;
+    double totalWriteTime = 0.0;
+    double totalReadTime = 0.0;
 
     // Process each input file
     for (const auto& inputFile : inputFiles) {
@@ -345,7 +357,16 @@ int main(int argc, char** argv) {
       constexpr std::size_t progressInterval = 1000;
 
       while (!reader->failed()) {
+        // Check if we've reached the maximum number of events
+        if (maxEvents > 0 && globalEventIndex >= maxEvents) {
+          break;
+        }
+
+        auto readStart = std::chrono::high_resolution_clock::now();
         reader->read_event(event);
+        auto readEnd = std::chrono::high_resolution_clock::now();
+        totalReadTime += std::chrono::duration<double>(readEnd - readStart).count();
+
         if (reader->failed()) {
           break;
         }
@@ -427,9 +448,17 @@ int main(int argc, char** argv) {
 
         // Copy and write event
         HepMC3::GenEvent outEvent;
+
+        auto copyStart = std::chrono::high_resolution_clock::now();
         copyEvent(event, outEvent);
         outEvent.set_event_number(globalEventIndex);
+        auto copyEnd = std::chrono::high_resolution_clock::now();
+        totalCopyTime += std::chrono::duration<double>(copyEnd - copyStart).count();
+
+        auto writeStart = std::chrono::high_resolution_clock::now();
         currentWriter->write_event(outEvent);
+        auto writeEnd = std::chrono::high_resolution_clock::now();
+        totalWriteTime += std::chrono::duration<double>(writeEnd - writeStart).count();
 
         globalEventIndex++;
         eventsInCurrentFile++;
@@ -493,6 +522,14 @@ int main(int argc, char** argv) {
         // Clear progress line and print final count
         std::cout << "  Read " << eventsReadFromFile << " events from "
                   << inputFile << "                    \n";
+      }
+
+      // Check if we've reached the maximum number of events
+      if (maxEvents > 0 && globalEventIndex >= maxEvents) {
+        if (verbose) {
+          std::cout << "Reached maximum event limit (" << maxEvents << ")\n";
+        }
+        break;
       }
     }
 
@@ -585,6 +622,35 @@ int main(int argc, char** argv) {
                      static_cast<double>(totalInputSize);
       std::cout << "  Compression ratio: " << std::fixed << std::setprecision(2)
                 << (ratio * 100.0) << "%\n";
+    }
+
+    // Print timing information
+    if (verbose && globalEventIndex > 0) {
+      std::cout << "\nTiming breakdown:\n";
+      std::cout << "  Reading events:  " << std::fixed << std::setprecision(3)
+                << totalReadTime << " s ("
+                << (totalReadTime / globalEventIndex * 1000.0) << " ms/event)\n";
+      std::cout << "  Copying events:  " << std::fixed << std::setprecision(3)
+                << totalCopyTime << " s ("
+                << (totalCopyTime / globalEventIndex * 1000.0) << " ms/event)\n";
+      std::cout << "  Writing events:  " << std::fixed << std::setprecision(3)
+                << totalWriteTime << " s ("
+                << (totalWriteTime / globalEventIndex * 1000.0) << " ms/event)\n";
+
+      double totalProcessingTime = totalReadTime + totalCopyTime + totalWriteTime;
+      std::cout << "  Total processing: " << std::fixed << std::setprecision(3)
+                << totalProcessingTime << " s\n";
+
+      // Show percentage breakdown
+      if (totalProcessingTime > 0) {
+        std::cout << "\nTime distribution:\n";
+        std::cout << "  Reading: " << std::fixed << std::setprecision(1)
+                  << (totalReadTime / totalProcessingTime * 100.0) << "%\n";
+        std::cout << "  Copying: " << std::fixed << std::setprecision(1)
+                  << (totalCopyTime / totalProcessingTime * 100.0) << "%\n";
+        std::cout << "  Writing: " << std::fixed << std::setprecision(1)
+                  << (totalWriteTime / totalProcessingTime * 100.0) << "%\n";
+      }
     }
 
     return 0;
