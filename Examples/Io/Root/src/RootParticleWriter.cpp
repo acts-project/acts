@@ -177,6 +177,17 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       ACTS_WARNING("Particle has zero charge, can't write d0/z0");
       m_d0.push_back(NaNfloat);
       m_z0.push_back(NaNfloat);
+      if (m_cfg.writeHelixParameters) {
+        m_phi.push_back(NaNfloat);
+        m_theta.push_back(NaNfloat);
+        m_qop.push_back(NaNfloat);
+        m_p.push_back(NaNfloat);
+        m_px.push_back(NaNfloat);
+        m_py.push_back(NaNfloat);
+        m_pz.push_back(NaNfloat);
+        m_eta.push_back(NaNfloat);
+        m_pt.push_back(NaNfloat);
+      }
       continue;
     }
 
