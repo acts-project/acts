@@ -36,8 +36,19 @@ void addHepMC3(Context& ctx) {
                              maxEventsPending, writeEventsInOrder);
 
   // Expose nested Input struct
-  auto input = py::class_<HepMC3Reader::Config::Input>(hepmc3, "Input")
+  py::class_<HepMC3Reader::Config::Input>(hepmc3, "Input")
       .def(py::init<>())
+      .def(py::init([](const std::filesystem::path& path, std::size_t numEvents,
+                       std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator) {
+             HepMC3Reader::Config::Input inp;
+             inp.path = path;
+             inp.numEvents = numEvents;
+             inp.multiplicityGenerator = multiplicityGenerator;
+             return inp;
+           }),
+           py::arg("path"),
+           py::arg("numEvents") = 1,
+           py::arg("multiplicityGenerator") = nullptr)
       .def_readwrite("path", &HepMC3Reader::Config::Input::path)
       .def_readwrite("numEvents", &HepMC3Reader::Config::Input::numEvents)
       .def_readwrite("multiplicityGenerator",

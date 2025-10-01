@@ -15,6 +15,7 @@
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
 
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <string>
 
@@ -24,6 +25,8 @@ class Reader;
 }  // namespace HepMC3
 
 namespace ActsExamples {
+
+struct MultiplicityGenerator;
 
 /// HepMC3 event reader.
 class HepMC3Reader final : public IReader {
@@ -36,7 +39,7 @@ class HepMC3Reader final : public IReader {
       /// Fixed number of events to read per logical event (used if multiplicityGenerator is null)
       std::size_t numEvents = 1;
       /// Optional multiplicity generator for variable event sampling
-      std::shared_ptr<const class MultiplicityGenerator> multiplicityGenerator = nullptr;
+      std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator = nullptr;
     };
 
     /// Input files to read. For each file, a specific number of events is
