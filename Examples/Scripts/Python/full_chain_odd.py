@@ -401,7 +401,7 @@ if args.jet_clustering:
         level=acts.logging.INFO,
         inputTruthParticles="jet_input_particles",
         outputJets="truth_jets",
-        jetPtMin=10 * u.GeV
+        jetPtMin=10 * u.GeV,
     )
 
     s.addAlgorithm(truthJetAlg)
