@@ -35,9 +35,7 @@ class Portal;
 
 }  // namespace Acts
 
-namespace ActsPlugins {
-
-namespace DetrayGeometryConverter {
+namespace ActsPlugins::DetrayGeometryConverter {
 
 /// Conversion method for transform objects to detray::transform payloads
 ///
@@ -110,5 +108,4 @@ detray::io::detector_payload convertDetector(
     DetrayConversionUtils::Cache& cCache, const Acts::GeometryContext& gctx,
     const Acts::Experimental::Detector& detector, const Acts::Logger& logger);
 
-}  // namespace DetrayGeometryConverter
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::DetrayGeometryConverter

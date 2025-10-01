@@ -184,7 +184,7 @@ inline static actsvg::svg::object axesXY(double xMin, double xMax, double yMin,
 inline static actsvg::svg::object infoBox(
     double xPos, double yPos, const std::string& title, const Style& titleStyle,
     const std::vector<std::string>& info, const Style& infoStyle,
-    actsvg::svg::object& object,
+    const actsvg::svg::object& object,
     const std::vector<std::string>& highlights = {"mouseover", "mouseout"}) {
   auto [titleFill, titleStroke, titleFont] = titleStyle.fillStrokeFont();
   auto [infoFill, infoStroke, infoFont] = infoStyle.fillStrokeFont();
