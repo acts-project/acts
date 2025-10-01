@@ -431,43 +431,44 @@ class KalmanFitter {
       // when all track states have been handled or the navigation is breaked,
       // reset navigation&stepping before run reversed filtering or
       // proceed to run smoothing
-      const bool isTrackComplete =
-          result.measurementStates == inputMeasurements->size();
-      const bool isEndOfWorldReached =
-          endOfWorldReached.checkAbort(state, stepper, navigator, logger());
-      const bool isVolumeConstraintReached = volumeConstraintAborter.checkAbort(
-          state, stepper, navigator, logger());
-      const bool isPathLimitReached = result.pathLimitReached.checkAbort(
-          state, stepper, navigator, logger());
-      const bool isTargetReached =
-          targetReached.checkAbort(state, stepper, navigator, logger());
-      if (isTrackComplete || isEndOfWorldReached || isVolumeConstraintReached ||
-          isPathLimitReached || isTargetReached) {
-        // Remove the missing surfaces that occur after the last measurement
-        result.missedActiveSurfaces.resize(result.measurementHoles);
-        // now get track state proxy for the smoothing logic
-        typename traj_t::ConstTrackStateProxy trackStateProxy{
-            result.fittedStates->getTrackState(result.lastMeasurementIndex)};
-        if (reversedFiltering ||
-            extensions.reverseFilteringLogic(trackStateProxy)) {
-          // Start to run reversed filtering:
-          // Reverse navigation direction and reset navigation and stepping
-          // state to last measurement
-          ACTS_VERBOSE("Reverse navigation direction.");
-          auto res = reverse(state, stepper, navigator, result);
-          if (!res.ok()) {
-            ACTS_ERROR("Error in reversing navigation: " << res.error());
-            result.result = res.error();
-          }
-        } else {
-          // --> Search the starting state to run the smoothing
-          // --> Call the smoothing
-          // --> Set a stop condition when all track states have been handled
-          ACTS_VERBOSE("Finalize/run smoothing");
-          auto res = finalize(state, stepper, navigator, result);
-          if (!res.ok()) {
-            ACTS_ERROR("Error in finalize: " << res.error());
-            result.result = res.error();
+      if (!result.smoothed && !result.reversed) {
+        const bool isTrackComplete =
+            result.measurementStates == inputMeasurements->size();
+        const bool isEndOfWorldReached =
+            endOfWorldReached.checkAbort(state, stepper, navigator, logger());
+        const bool isVolumeConstraintReached =
+            volumeConstraintAborter.checkAbort(state, stepper, navigator,
+                                               logger());
+        const bool isPathLimitReached = result.pathLimitReached.checkAbort(
+            state, stepper, navigator, logger());
+        if (isTrackComplete || isEndOfWorldReached ||
+            isVolumeConstraintReached || isPathLimitReached) {
+          // Remove the missing surfaces that occur after the last measurement
+          result.missedActiveSurfaces.resize(result.measurementHoles);
+          // now get track state proxy for the smoothing logic
+          typename traj_t::ConstTrackStateProxy trackStateProxy{
+              result.fittedStates->getTrackState(result.lastMeasurementIndex)};
+          if (reversedFiltering ||
+              extensions.reverseFilteringLogic(trackStateProxy)) {
+            // Start to run reversed filtering:
+            // Reverse navigation direction and reset navigation and stepping
+            // state to last measurement
+            ACTS_VERBOSE("Reverse navigation direction.");
+            auto res = reverse(state, stepper, navigator, result);
+            if (!res.ok()) {
+              ACTS_ERROR("Error in reversing navigation: " << res.error());
+              result.result = res.error();
+            }
+          } else {
+            // --> Search the starting state to run the smoothing
+            // --> Call the smoothing
+            // --> Set a stop condition when all track states have been handled
+            ACTS_VERBOSE("Finalize/run smoothing");
+            auto res = finalize(state, stepper, navigator, result);
+            if (!res.ok()) {
+              ACTS_ERROR("Error in finalize: " << res.error());
+              result.result = res.error();
+            }
           }
         }
       }
