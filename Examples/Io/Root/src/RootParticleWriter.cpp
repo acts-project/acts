@@ -132,6 +132,22 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
     m_q.push_back(
         Acts::clampValue<float>(particle.charge() / Acts::UnitConstants::e));
+    // decoded barcode components
+    m_vertexPrimary.push_back(particle.particleId().vertexPrimary());
+    m_vertexSecondary.push_back(particle.particleId().vertexSecondary());
+    m_particle.push_back(particle.particleId().particle());
+    m_generation.push_back(particle.particleId().generation());
+    m_subParticle.push_back(particle.particleId().subParticle());
+
+    m_eLoss.push_back(Acts::clampValue<float>(particle.energyLoss() /
+                                              Acts::UnitConstants::GeV));
+    m_pathInX0.push_back(
+        Acts::clampValue<float>(particle.pathInX0() / Acts::UnitConstants::mm));
+    m_pathInL0.push_back(
+        Acts::clampValue<float>(particle.pathInL0() / Acts::UnitConstants::mm));
+    m_numberOfHits.push_back(particle.numberOfHits());
+    m_outcome.push_back(static_cast<std::uint32_t>(particle.outcome()));
+
     if (!m_cfg.writeHelixParameters) {
       // momentum
       const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
@@ -151,22 +167,11 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       m_qop.push_back(
           Acts::clampValue<float>(particle.qOverP() * Acts::UnitConstants::GeV /
                                   Acts::UnitConstants::e));
+      // d0, z0 are 0 (reference point is at production vertex)
+      m_d0.push_back(0);
+      m_z0.push_back(0);
+      continue;
     }
-    // decoded barcode components
-    m_vertexPrimary.push_back(particle.particleId().vertexPrimary());
-    m_vertexSecondary.push_back(particle.particleId().vertexSecondary());
-    m_particle.push_back(particle.particleId().particle());
-    m_generation.push_back(particle.particleId().generation());
-    m_subParticle.push_back(particle.particleId().subParticle());
-
-    m_eLoss.push_back(Acts::clampValue<float>(particle.energyLoss() /
-                                              Acts::UnitConstants::GeV));
-    m_pathInX0.push_back(
-        Acts::clampValue<float>(particle.pathInX0() / Acts::UnitConstants::mm));
-    m_pathInL0.push_back(
-        Acts::clampValue<float>(particle.pathInL0() / Acts::UnitConstants::mm));
-    m_numberOfHits.push_back(particle.numberOfHits());
-    m_outcome.push_back(static_cast<std::uint32_t>(particle.outcome()));
 
     // Perigee surface at configured reference point
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
