@@ -17,6 +17,7 @@ namespace Acts {
 
 class TrackingVolume;
 class INavigationPolicy;
+class Surface;
 
 /// Concept for a navigation policy
 /// This exists so `updateState` can be a non-virtual method and we still have a
