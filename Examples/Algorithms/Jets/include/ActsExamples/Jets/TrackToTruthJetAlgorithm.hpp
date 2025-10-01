@@ -8,39 +8,37 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/FastJet/Jets.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
 
-namespace fastjet {
-class PseudoJet;
-}
-
-namespace ActsFastJet {
-class TruthJetBuilder;
-class JetProperties;
-}  // namespace ActsFastJet
+#include <fastjet/ClusterSequence.hh>
 
 namespace ActsExamples {
 struct AlgorithmContext;
 
-class TruthJetAlgorithm final : public IAlgorithm {
+/// Print all particles.
+class TrackToTruthJetAlgorithm : public IAlgorithm {
  public:
   struct Config {
-    /// Input particles collection.
-    std::string inputTruthParticles;
-    /// Output jets collection.
-    std::string outputJets;
-    /// Minimum jet pT.
-    double jetPtMin;
+    /// Input tracks collection.
+    std::string inputTracks;
+    /// Input jets collection.
+    std::string inputJets;
+    /// Output track jets collection.
+    std::string outputTrackJets;
+    /// Maximum delta R for track to jet matching.
+    double maxDeltaR = 0.4;
   };
 
-  TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  TrackToTruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
   ProcessCode finalize() override;
@@ -49,10 +47,11 @@ class TruthJetAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
-      this, "inputTruthParticles"};
-  WriteDataHandle<Acts::FastJet::TrackJetContainer> m_outputJets{this,
-                                                                 "outputJets"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "inputTracks"};
+  ReadDataHandle<Acts::FastJet::TrackJetContainer> m_inputJets{this,
+                                                               "inputJets"};
+  WriteDataHandle<Acts::FastJet::TrackJetContainer> m_outputTrackJets{
+      this, "outputTrackJets"};
 };
 
 }  // namespace ActsExamples

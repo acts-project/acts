@@ -12,8 +12,10 @@ from acts.examples.simulation import (
     PhiConfig,
     ParticleConfig,
     ParticleSelectorConfig,
+    TrackToTruthJetConfig,
     addParticleGun,
     addPythia8,
+    addTrackToTruthJetAlg,
     addGenParticleSelection,
     addFatras,
     addGeant4,
@@ -23,8 +25,10 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
+    SeedingAlgorithm,
     CkfConfig,
     addCKFTracks,
+    addKalmanTracks,
     TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -142,6 +146,12 @@ parser.add_argument(
     default=True,
     action=argparse.BooleanOptionalAction,
 )
+parser.add_argument(
+    "--jet-clustering",
+    help="Switch jet clustering on/off",
+    default=False,
+    action=argparse.BooleanOptionalAction,
+)
 
 args = parser.parse_args()
 
@@ -181,6 +191,10 @@ s = acts.examples.Sequencer(
     numThreads=1 if args.geant4 else -1,
     outputDir=str(outputDir),
 )
+
+if args.jet_clustering:
+    args.reco = False  # disable track reco if jet clustering is requested
+    args.ttbar = True  # force ttbar for jet clustering
 
 if args.edm4hep:
     import acts.examples.edm4hep
@@ -329,6 +343,79 @@ addDigiParticleSelection(
         removeNeutral=True,
     ),
 )
+
+if args.jet_clustering:
+    addSeeding(
+        s,
+        trackingGeometry,
+        field,
+        rnd=rnd,
+        inputParticles="particles_generated",
+        particleHypothesis=acts.ParticleHypothesis.pion,
+        seedingAlgorithm=SeedingAlgorithm.TruthEstimated,
+        geoSelectionConfigFile=oddSeedingSel,
+        initialSigmas=[
+            1 * u.mm,
+            1 * u.mm,
+            1 * u.degree,
+            1 * u.degree,
+            0 * u.e / u.GeV,
+            1 * u.ns,
+        ],
+        initialSigmaQoverPt=0.1 * u.e / u.GeV,
+        initialSigmaPtRel=0.1,
+        initialVarInflation=[1.0] * 6,
+    )
+
+    reverseFilteringMomThreshold = 0 * u.GeV
+
+    addKalmanTracks(
+        s,
+        trackingGeometry,
+        field,
+        reverseFilteringMomThreshold,
+        logLevel=acts.logging.FATAL,
+    )
+
+    s.addAlgorithm(
+        acts.examples.TrackSelectorAlgorithm(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTracks="selected-tracks",
+            selectorConfig=acts.TrackSelector.Config(
+                minMeasurements=7,
+            ),
+        )
+    )
+    s.addWhiteboardAlias("tracks", "selected-tracks")
+
+    s.addAlgorithm(
+        acts.examples.ParticleSelector(
+            level=acts.logging.INFO,
+            inputParticles="particles_generated",
+            outputParticles="jet_input_particles",
+        )
+    )
+
+    truthJetAlg = acts.examples.TruthJetAlgorithm(
+        level=acts.logging.INFO,
+        inputTruthParticles="jet_input_particles",
+        outputJets="truth_jets",
+        jetPtMin=10 * u.GeV,
+    )
+
+    s.addAlgorithm(truthJetAlg)
+
+    addTrackToTruthJetAlg(
+        s,
+        TrackToTruthJetConfig(
+            inputTracks="tracks",
+            inputJets="truth_jets",
+            outputTrackJets="track_jets",
+            maxDeltaR=0.4,
+        ),
+        loglevel=acts.logging.INFO,
+    )
 
 if args.reco:
     addSeeding(

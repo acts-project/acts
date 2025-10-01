@@ -35,6 +35,8 @@ TruthJetAlgorithm::TruthJetAlgorithm(const Config& cfg,
 
 ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  Acts::FastJet::TrackJetContainer outputJets;
+
   const auto& truthParticles = m_inputTruthParticles(ctx);
 
   ACTS_DEBUG("Number of truth particles: " << truthParticles.size());
@@ -56,16 +58,46 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     inputPseudoJets.push_back(pseudoJet);
     particleIndex++;
   }
-  ACTS_DEBUG("Number of input pseudo jets: " << inputPseudoJets.size());
+  ACTS_DEBUG("Number of input pseudo jets from truth particles: "
+             << inputPseudoJets.size());
+
   // Run the jet clustering
   fastjet::ClusterSequence clusterSeq(inputPseudoJets, defaultJetDefinition);
+
   // Get the jets above a certain pt threshold
   std::vector<fastjet::PseudoJet> jets =
       sorted_by_pt(clusterSeq.inclusive_jets(m_cfg.jetPtMin));
-  ACTS_DEBUG("Number of clustered jets: " << jets.size());
-  // Store the jets in the output data handle
-  m_outputJets(ctx, std::move(jets));
+  ACTS_DEBUG("Number of clustered truth jets: " << jets.size());
 
+  // Prepare jets for the storage - conversion of jets to custom track jet class
+  // (and later add here the jet classification)
+
+  for (unsigned int i = 0; i < jets.size(); i++) {
+    // Get information on the jet constituents
+    std::vector<fastjet::PseudoJet> jetConstituents = jets[i].constituents();
+    std::vector<int> constituentIndices;
+    constituentIndices.reserve(jetConstituents.size());
+
+    Acts::Vector4 jetFourMomentum(jets[i].px(), jets[i].py(), jets[i].pz(),
+                                  jets[i].e());
+
+    // Initialize the (track) jet with 4-momentum
+    Acts::FastJet::TruthJetBuilder storedJet(jetFourMomentum);
+
+    // Add the jet constituents to the (track)jet
+    for (unsigned int j = 0; j < jetConstituents.size(); j++) {
+      // Get the index of the constituent in the original input pseudo jets
+      constituentIndices.push_back(jetConstituents[j].user_index());
+    }
+
+    Acts::FastJet::JetProperties jetProps(storedJet);
+    jetProps.setConstituents(constituentIndices);
+
+    outputJets.push_back(storedJet);
+    ACTS_DEBUG("Stored jet properties: " << jetProps);
+  }
+
+  m_outputJets(ctx, std::move(outputJets));
   return ProcessCode::SUCCESS;
 }
 

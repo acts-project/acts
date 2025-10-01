@@ -53,10 +53,11 @@ ParticleSelectorConfig = namedtuple(
     defaults=[(None, None)] * 10 + [None] * 4,
 )
 
-TruthJetConfig = namedtuple(
-    "TruthJetConfig",
-    ["inputTruthParticles", "outputJets", "jetPtMin"],
-    defaults=[None, None],
+
+TrackToTruthJetConfig = namedtuple(
+    "TrackToTruthJetConfig",
+    ["inputTracks", "inputJets", "outputTrackJets", "maxDeltaR"],
+    defaults=[None, None, None, None],
 )
 
 
@@ -89,11 +90,12 @@ def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
     }
 
 
-def _getTruthJetKWargs(config: TruthJetConfig) -> dict:
+def _getTrackToTruthJetKWargs(config: TrackToTruthJetConfig) -> dict:
     return {
-        "inputTruthParticles": config.inputTruthParticles,
-        "outputJets": config.outputJets,
-        "jetPtMin": config.jetPtMin,
+        "inputTracks": config.inputTracks,
+        "inputJets": config.inputJets,
+        "outputTrackJets": config.outputTrackJets,
+        "maxDeltaR": config.maxDeltaR,
     }
 
 
@@ -852,17 +854,17 @@ def addDigiParticleSelection(
     )
 
 
-def addTruthJetAlg(
+def addTrackToTruthJetAlg(
     s: acts.examples.Sequencer,
-    config: TruthJetConfig,
+    config: TrackToTruthJetConfig,
     loglevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    from acts.examples import TruthJetAlgorithm
+    from acts.examples import TrackToTruthJetAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, loglevel)
-    truthJetAlg = acts.examples.TruthJetAlgorithm(
-        **acts.examples.defaultKWArgs(**_getTruthJetKWargs(config)),
+    trackToTruthJetAlg = acts.examples.TrackToTruthJetAlgorithm(
+        **acts.examples.defaultKWArgs(**_getTrackToTruthJetKWargs(config)),
         level=customLogLevel(),
     )
 
-    s.addAlgorithm(truthJetAlg)
+    s.addAlgorithm(trackToTruthJetAlg)
