@@ -185,20 +185,21 @@ class DoubletsForMiddleSp {
     return Range(*this, range);
   }
 
-  class Subset : public detail::ContainerSubset<Subset, DoubletsForMiddleSp,
-                                                Proxy, Index, true> {
+  class Subset
+      : public detail::ContainerSubset<Subset, Subset, DoubletsForMiddleSp,
+                                       Proxy, Index, true> {
    public:
-    using Base = detail::ContainerSubset<Subset, DoubletsForMiddleSp, Proxy,
-                                         Index, true>;
+    using Base = detail::ContainerSubset<Subset, Subset, DoubletsForMiddleSp,
+                                         Proxy, Index, true>;
 
     using Base::Base;
   };
   class Subset2
-      : public detail::ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
-                                       IndexAndCotTheta, true> {
+      : public detail::ContainerSubset<Subset2, Subset2, DoubletsForMiddleSp,
+                                       Proxy2, IndexAndCotTheta, true> {
    public:
-    using Base = detail::ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
-                                         IndexAndCotTheta, true>;
+    using Base = detail::ContainerSubset<Subset2, Subset2, DoubletsForMiddleSp,
+                                         Proxy2, IndexAndCotTheta, true>;
 
     using Base::Base;
   };
