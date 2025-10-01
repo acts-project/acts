@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -58,6 +59,64 @@ std::string compressionExtension(const std::string& compression) {
   return "";
 }
 
+/// Detect compression type from file extension
+std::string detectCompression(const std::filesystem::path& path) {
+  std::string ext = path.extension().string();
+  if (ext == ".gz") {
+    return "zlib";
+  } else if (ext == ".xz") {
+    return "lzma";
+  } else if (ext == ".bz2") {
+    return "bzip2";
+  } else if (ext == ".zst") {
+    return "zstd";
+  }
+  return "none";
+}
+
+/// Detect format from file path
+std::string detectFormat(const std::filesystem::path& path) {
+  std::string pathStr = path.string();
+
+  // Check for ROOT format: ends with .root
+  if (std::regex_search(pathStr, std::regex(R"(\.root$)"))) {
+    return "root";
+  }
+
+  // Check for HepMC3 ASCII format: ends with .hepmc3[.compression_ext] or
+  // .hepmc[.compression_ext] Allowed compression extensions: .gz, .xz, .bz2,
+  // .zst
+  if (std::regex_search(pathStr,
+                        std::regex(R"(\.hepmc3?(?:\.(?:gz|xz|bz2|zst))?$)"))) {
+    return "ascii";
+  }
+
+  // If no pattern matches, throw an error
+  throw std::invalid_argument(
+      "Unable to detect format from filename: " + pathStr +
+      "\nExpected patterns: *.hepmc3[.gz|.xz|.bz2|.zst], "
+      "*.hepmc[.gz|.xz|.bz2|.zst], or *.root");
+}
+
+/// Generate output filename based on mode and parameters
+std::string generateOutputFilename(const std::string& prefix,
+                                   const std::string& format,
+                                   const std::string& compression,
+                                   std::size_t eventIndex) {
+  // Multi-file mode: append event index
+  std::string filename = std::format("{}_{:06d}", prefix, eventIndex);
+
+  // Add format extension
+  if (format == "ascii") {
+    filename += ".hepmc3";
+    filename += compressionExtension(compression);
+  } else {
+    filename += ".root";
+  }
+
+  return filename;
+}
+
 #ifdef HEPMC3_USE_COMPRESSION
 /// Convert string to bxz::Compression enum
 bxz::Compression stringToCompression(const std::string& compression) {
@@ -91,11 +150,11 @@ bxz::Compression stringToCompression(const std::string& compression) {
 /// Write metadata sidecar file
 void writeMetadata(const std::filesystem::path& hepmcFile,
                    std::size_t eventCount) {
-  auto metaPath = hepmcFile.string() + ".meta";
+  auto metaPath = hepmcFile.string() + ".json";
 
   try {
     nlohmann::json j;
-    j["eventCount"] = eventCount;
+    j["num_events"] = eventCount;
 
     std::ofstream out(metaPath);
     if (out.is_open()) {
@@ -103,64 +162,6 @@ void writeMetadata(const std::filesystem::path& hepmcFile,
     }
   } catch (...) {
     // Silent failure - not critical
-  }
-}
-
-/// Copy event with full attribute preservation
-void copyEvent(const HepMC3::GenEvent& src, HepMC3::GenEvent& dst) {
-  // Copy basic properties
-  dst.set_event_number(src.event_number());
-  dst.set_units(src.momentum_unit(), src.length_unit());
-
-  // Copy event-level attributes
-  for (const auto& attr : src.attribute_names()) {
-    auto value = src.attribute_as_string(attr);
-    dst.add_attribute(attr, std::make_shared<HepMC3::StringAttribute>(value));
-  }
-
-  // Copy particles (keep indexed for topology reconstruction)
-  std::vector<std::shared_ptr<HepMC3::GenParticle>> particles;
-  particles.reserve(src.particles().size());
-
-  for (const auto& srcParticle : src.particles()) {
-    auto particle = std::make_shared<HepMC3::GenParticle>();
-    particle->set_momentum(srcParticle->momentum());
-    particle->set_generated_mass(srcParticle->generated_mass());
-    particle->set_pid(srcParticle->pid());
-    particle->set_status(srcParticle->status());
-
-    // Copy particle attributes
-    for (const auto& attr : srcParticle->attribute_names()) {
-      auto value = srcParticle->attribute_as_string(attr);
-      particle->add_attribute(attr,
-                              std::make_shared<HepMC3::StringAttribute>(value));
-    }
-
-    particles.push_back(particle);
-    dst.add_particle(particle);
-  }
-
-  // Copy vertices with topology
-  for (const auto& srcVertex : src.vertices()) {
-    auto vertex = std::make_shared<HepMC3::GenVertex>(srcVertex->position());
-    vertex->set_status(srcVertex->status());
-
-    // Copy vertex attributes
-    for (const auto& attr : srcVertex->attribute_names()) {
-      auto value = srcVertex->attribute_as_string(attr);
-      vertex->add_attribute(attr,
-                            std::make_shared<HepMC3::StringAttribute>(value));
-    }
-
-    dst.add_vertex(vertex);
-
-    // Reconnect particle topology using indexed particle array
-    for (const auto& srcParticle : srcVertex->particles_in()) {
-      vertex->add_particle_in(particles.at(srcParticle->id() - 1));
-    }
-    for (const auto& srcParticle : srcVertex->particles_out()) {
-      vertex->add_particle_out(particles.at(srcParticle->id() - 1));
-    }
   }
 }
 
@@ -204,78 +205,134 @@ std::unique_ptr<HepMC3::Writer> createWriter(const std::filesystem::path& path,
 #endif
 }
 
+void printHelp(const po::options_description& desc, std::string_view command) {
+  std::cerr << desc << "\n";
+  std::cerr << "Examples:\n";
+  std::cerr << "  # Multi-file mode with chunking\n";
+  std::cerr << "  " << command
+            << " -i input1.hepmc3.gz input2.hepmc3 -n 1000 -c zstd -l 9\n";
+  std::cerr << "  " << command
+            << " -i file.root -o normalized/ -p events -n 5000\n\n";
+  std::cerr << "  # Single output mode (format/compression auto-detected)\n";
+  std::cerr << "  " << command
+            << " -i input1.hepmc3.gz input2.hepmc3 -S combined.hepmc3.zst\n";
+  std::cerr << "  " << command
+            << " -i input.hepmc3.gz -S output/events.hepmc3.gz\n";
+}
+
 int main(int argc, char** argv) {
   try {
     // Define command-line options
     po::options_description desc("HepMC3 File Normalizer\n\nOptions");
-    desc.add_options()("help,h", "Show this help message")(
-        "list-compressions", "List available compression modes and exit")(
-        "input,i", po::value<std::vector<std::string>>(),
-        "Input HepMC files (can be specified multiple times)")(
-        "output-dir,o", po::value<std::string>()->default_value("."),
-        "Output directory")("output-prefix,p",
-                            po::value<std::string>()->default_value("events"),
-                            "Output file prefix")(
-        "events-per-file,n", po::value<std::size_t>()->default_value(10000),
-        "Number of events per output file")(
-        "max-events,m", po::value<std::size_t>()->default_value(0),
-        "Maximum number of events to read (0 = all events)")(
-        "compression,c", po::value<std::string>()->default_value("none"),
-        "Compression type: none, zlib, lzma, bzip2, zstd")(
-        "compression-level,l", po::value<int>()->default_value(6),
-        "Compression level (0-9, higher = more compression)")(
-        "format,f", po::value<std::string>()->default_value("ascii"),
-        "Output format: ascii or root")("verbose,v", "Verbose output");
+    // clang-format off
+    desc.add_options()
+      ("help,h", "Show this help message")
+      ("list-compressions",
+        "List available compression modes and exit")
+      ("input,i",
+        po::value<std::vector<std::string>>()->multitoken(),
+        "Input HepMC files")
+      ("single-output,S",
+        po::value<std::string>(),
+        "Write all events to a single output file. Format and compression are detected from filename.")
+      ("output-dir,o",
+        po::value<std::string>()->default_value("."),
+        "Output directory (ignored with --single-output)")
+      ("output-prefix,p",
+        po::value<std::string>()->default_value("events"),
+        "Output file prefix")
+      ("events-per-file,n",
+        po::value<std::size_t>()->default_value(10000),
+        "Number of events per output file (ignored with --single-output)")
+      ("max-events,m",
+        po::value<std::size_t>()->default_value(0),
+        "Maximum number of events to read (0 = all events)")
+      ("compression,c",
+        po::value<std::string>()->default_value("none"),
+        "Compression type: none, zlib, lzma, bzip2, zstd (ignored with --single-output)")
+      ("compression-level,l",
+        po::value<int>()->default_value(6),
+        "Compression level (higher = more compression)")
+      ("format,f",
+        po::value<std::string>()->default_value("ascii"),
+       "Output format: ascii or root (ignored with --single-output)")
+      ("json,j",
+        "Write JSON output with list of created files to stdout")
+      ("verbose,v", "Verbose output");
+    // clang-format on
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    if (vm.count("help")) {
-      std::cout << desc << "\n";
-      std::cout << "Examples:\n";
-      std::cout << "  " << argv[0]
-                << " -i input1.hepmc3.gz -i input2.hepmc3 -n 1000 -c zstd -l "
-                   "9\n";
-      std::cout << "  " << argv[0]
-                << " -i file.root -o normalized/ -p events -n 5000\n";
+    if (vm.count("help") > 0) {
+      printHelp(desc, argv[0]);
       return 0;
     }
 
-    if (vm.count("list-compressions")) {
-      std::cout << "Available compression modes:\n";
-      std::cout << "  none       - No compression\n";
+    if (vm.count("list-compressions") > 0) {
+      std::cerr << "Available compression modes:\n";
+      std::cerr << "  none       - No compression\n";
 #ifdef HEPMC3_Z_SUPPORT
-      std::cout << "  zlib       - gzip compression (.gz)\n";
+      std::cerr << "  zlib       - gzip compression (.gz)\n";
 #endif
 #ifdef HEPMC3_LZMA_SUPPORT
-      std::cout << "  lzma       - LZMA compression (.xz)\n";
+      std::cerr << "  lzma       - LZMA compression (.xz)\n";
 #endif
 #ifdef HEPMC3_BZ2_SUPPORT
-      std::cout << "  bzip2      - bzip2 compression (.bz2)\n";
+      std::cerr << "  bzip2      - bzip2 compression (.bz2)\n";
 #endif
 #ifdef HEPMC3_ZSTD_SUPPORT
-      std::cout << "  zstd       - Zstandard compression (.zst)\n";
+      std::cerr << "  zstd       - Zstandard compression (.zst)\n";
 #endif
-      std::cout << "\nAvailable formats:\n";
-      std::cout << "  ascii      - HepMC3 ASCII format\n";
+      std::cerr << "\nAvailable formats:\n";
+      std::cerr << "  ascii      - HepMC3 ASCII format\n";
 #ifdef ACTS_HEPMC3_ROOT_SUPPORT
-      std::cout << "  root       - ROOT format (has its own compression)\n";
+      std::cerr << "  root       - ROOT format (has its own compression)\n";
 #endif
       return 0;
     }
 
     po::notify(vm);
 
+    if (vm.count("input") == 0) {
+      std::cerr << "ERROR: No input files specified\n";
+      printHelp(desc, argv[0]);
+      return 1;
+    }
+
     // Extract configuration
     auto inputFiles = vm["input"].as<std::vector<std::string>>();
-    auto outputDir = std::filesystem::path(vm["output-dir"].as<std::string>());
-    auto outputPrefix = vm["output-prefix"].as<std::string>();
+    bool singleOutput = vm.count("single-output") > 0;
+    std::filesystem::path singleOutputPath;
+    std::filesystem::path outputDir;
+    std::string outputPrefix;
+    std::string compression;
+    std::string format;
+
+    if (singleOutput) {
+      // Single output mode: detect format and compression from filename
+      singleOutputPath = vm["single-output"].as<std::string>();
+      compression = detectCompression(singleOutputPath);
+      format = detectFormat(singleOutputPath);
+      // Create parent directory if needed
+      if (singleOutputPath.has_parent_path()) {
+        outputDir = singleOutputPath.parent_path();
+      } else {
+        outputDir = ".";
+      }
+    } else {
+      // Multi-file mode: use provided options
+      outputDir = std::filesystem::path(vm["output-dir"].as<std::string>());
+      outputPrefix = vm["output-prefix"].as<std::string>();
+      compression = vm["compression"].as<std::string>();
+      format = vm["format"].as<std::string>();
+    }
+
     auto eventsPerFile = vm["events-per-file"].as<std::size_t>();
     auto maxEvents = vm["max-events"].as<std::size_t>();
-    auto compression = vm["compression"].as<std::string>();
     auto compressionLevel = vm["compression-level"].as<int>();
-    auto format = vm["format"].as<std::string>();
     bool verbose = vm.count("verbose") > 0;
+    bool writeJson = vm.count("json") > 0;
 
     // Validate inputs
     if (inputFiles.empty()) {
@@ -283,7 +340,7 @@ int main(int argc, char** argv) {
       return 1;
     }
 
-    if (eventsPerFile == 0) {
+    if (!singleOutput && eventsPerFile == 0) {
       std::cerr << "ERROR: events-per-file must be > 0\n";
       return 1;
     }
@@ -298,20 +355,35 @@ int main(int argc, char** argv) {
       return 1;
     }
 
+    if (format == "root" && compression != "none") {
+      std::cerr
+          << "ERROR: ROOT format does not support compression parameter\n";
+      return 1;
+    }
+
     // Create output directory
     std::filesystem::create_directories(outputDir);
 
     if (verbose) {
-      std::cout << "Configuration:\n";
-      std::cout << "  Input files: " << inputFiles.size() << "\n";
-      std::cout << "  Output dir: " << outputDir << "\n";
-      std::cout << "  Events per file: " << eventsPerFile << "\n";
-      if (maxEvents > 0) {
-        std::cout << "  Max events to read: " << maxEvents << "\n";
+      std::cerr << "Configuration:\n";
+      std::cerr << "  Input files: " << inputFiles.size() << "\n";
+      if (singleOutput) {
+        std::cerr << "  Single output file: " << singleOutputPath << "\n";
+        std::cerr << "  Format (detected): " << format << "\n";
+        std::cerr << "  Compression (detected): " << compression << " (level "
+                  << compressionLevel << ")\n";
+      } else {
+        std::cerr << "  Output dir: " << outputDir << "\n";
+        std::cerr << "  Output prefix: " << outputPrefix << "\n";
+        std::cerr << "  Events per file: " << eventsPerFile << "\n";
+        std::cerr << "  Format: " << format << "\n";
+        std::cerr << "  Compression: " << compression << " (level "
+                  << compressionLevel << ")\n";
       }
-      std::cout << "  Format: " << format << "\n";
-      std::cout << "  Compression: " << compression << " (level "
-                << compressionLevel << ")\n\n";
+      if (maxEvents > 0) {
+        std::cerr << "  Max events to read: " << maxEvents << "\n";
+      }
+      std::cerr << "\n";
     }
 
     // Processing state
@@ -326,14 +398,13 @@ int main(int argc, char** argv) {
     std::vector<std::filesystem::path> outputFiles;
 
     // Timing tracking
-    double totalCopyTime = 0.0;
     double totalWriteTime = 0.0;
     double totalReadTime = 0.0;
 
     // Process each input file
     for (const auto& inputFile : inputFiles) {
       if (verbose) {
-        std::cout << "Reading " << inputFile << "...\n";
+        std::cerr << "Reading " << inputFile << "...\n";
       }
 
       if (!std::filesystem::exists(inputFile)) {
@@ -354,7 +425,7 @@ int main(int argc, char** argv) {
       std::size_t eventsReadFromFile = 0;
       std::size_t lastProgressUpdate = 0;
       // Update every 1000 events
-      constexpr std::size_t progressInterval = 1000;
+      constexpr std::size_t progressInterval = 100;
 
       while (!reader->failed()) {
         // Check if we've reached the maximum number of events
@@ -365,7 +436,8 @@ int main(int argc, char** argv) {
         auto readStart = std::chrono::high_resolution_clock::now();
         reader->read_event(event);
         auto readEnd = std::chrono::high_resolution_clock::now();
-        totalReadTime += std::chrono::duration<double>(readEnd - readStart).count();
+        totalReadTime +=
+            std::chrono::duration<double>(readEnd - readStart).count();
 
         if (reader->failed()) {
           break;
@@ -374,7 +446,7 @@ int main(int argc, char** argv) {
         // Show progress
         if (verbose &&
             (eventsReadFromFile - lastProgressUpdate) >= progressInterval) {
-          std::cout << "    Progress: " << eventsReadFromFile
+          std::cerr << "    Progress: " << eventsReadFromFile
                     << " events read...\r" << std::flush;
           lastProgressUpdate = eventsReadFromFile;
         }
@@ -393,7 +465,7 @@ int main(int argc, char** argv) {
               outputFiles.push_back(currentOutputPath);
 
               if (verbose) {
-                std::cout << "  Wrote " << currentOutputPath << " ("
+                std::cerr << "  Wrote " << currentOutputPath << " ("
                           << eventsPerFile << " events, ";
 
                 // Format file size
@@ -412,7 +484,8 @@ int main(int argc, char** argv) {
                   }
                 }
 
-                double sizePerEvent = static_cast<double>(fileSize) / static_cast<double>(eventsPerFile);
+                double sizePerEvent = static_cast<double>(fileSize) /
+                                      static_cast<double>(eventsPerFile);
                 const char* perEventUnit = "B";
                 if (sizePerEvent >= 1024.0) {
                   sizePerEvent /= 1024.0;
@@ -423,49 +496,46 @@ int main(int argc, char** argv) {
                   }
                 }
 
-                std::cout << std::fixed << std::setprecision(2) << size << " "
-                          << unit << ", " << sizePerEvent << " " << perEventUnit << "/event)\n";
+                std::cerr << std::fixed << std::setprecision(2) << size << " "
+                          << unit << ", " << sizePerEvent << " " << perEventUnit
+                          << "/event)\n";
               }
             }
           }
 
-          // Generate output filename: events_000000.hepmc3.zst
-          std::ostringstream filename;
-          filename << outputPrefix << "_" << std::setw(6) << std::setfill('0')
-                   << globalEventIndex;
-
-          if (format == "ascii") {
-            filename << ".hepmc3";
-            filename << compressionExtension(compression);
+          // Generate output path based on mode
+          if (singleOutput) {
+            currentOutputPath = singleOutputPath;
           } else {
-            filename << ".root";
+            std::string filename = generateOutputFilename(
+                outputPrefix, format, compression, globalEventIndex);
+            currentOutputPath = outputDir / filename;
           }
-
-          currentOutputPath = outputDir / filename.str();
           currentWriter = createWriter(currentOutputPath, format, compression,
                                        compressionLevel);
         }
 
-        // Copy and write event
-        HepMC3::GenEvent outEvent;
+        // Set event number
+        event.set_event_number(globalEventIndex);
 
-        auto copyStart = std::chrono::high_resolution_clock::now();
-        copyEvent(event, outEvent);
-        outEvent.set_event_number(globalEventIndex);
-        auto copyEnd = std::chrono::high_resolution_clock::now();
-        totalCopyTime += std::chrono::duration<double>(copyEnd - copyStart).count();
+        // Clear run info from events that are not the first in their output
+        // file
+        if (eventsInCurrentFile > 0) {
+          event.set_run_info(nullptr);
+        }
 
         auto writeStart = std::chrono::high_resolution_clock::now();
-        currentWriter->write_event(outEvent);
+        currentWriter->write_event(event);
         auto writeEnd = std::chrono::high_resolution_clock::now();
-        totalWriteTime += std::chrono::duration<double>(writeEnd - writeStart).count();
+        totalWriteTime +=
+            std::chrono::duration<double>(writeEnd - writeStart).count();
 
         globalEventIndex++;
         eventsInCurrentFile++;
         eventsReadFromFile++;
 
-        // Close file if chunk is complete
-        if (eventsInCurrentFile >= eventsPerFile) {
+        // Close file if chunk is complete (only in multi-file mode)
+        if (!singleOutput && eventsInCurrentFile >= eventsPerFile) {
           currentWriter->close();
 
           // Get file size
@@ -476,7 +546,7 @@ int main(int argc, char** argv) {
             outputFiles.push_back(currentOutputPath);
 
             if (verbose) {
-              std::cout << "  Wrote " << currentOutputPath << " ("
+              std::cerr << "  Wrote " << currentOutputPath << " ("
                         << eventsInCurrentFile << " events, ";
 
               // Format file size
@@ -495,7 +565,8 @@ int main(int argc, char** argv) {
                 }
               }
 
-              double sizePerEvent = static_cast<double>(fileSize) / static_cast<double>(eventsInCurrentFile);
+              double sizePerEvent = static_cast<double>(fileSize) /
+                                    static_cast<double>(eventsInCurrentFile);
               const char* perEventUnit = "B";
               if (sizePerEvent >= 1024.0) {
                 sizePerEvent /= 1024.0;
@@ -506,8 +577,8 @@ int main(int argc, char** argv) {
                 }
               }
 
-              std::cout << std::format("{:.2f} {}, {:.2f} {}/event)\n",
-                                       size, unit, sizePerEvent, perEventUnit);
+              std::cerr << std::format("{:.2f} {}, {:.2f} {}/event)\n", size,
+                                       unit, sizePerEvent, perEventUnit);
             }
           }
 
@@ -520,14 +591,14 @@ int main(int argc, char** argv) {
 
       if (verbose) {
         // Clear progress line and print final count
-        std::cout << "  Read " << eventsReadFromFile << " events from "
+        std::cerr << "  Read " << eventsReadFromFile << " events from "
                   << inputFile << "                    \n";
       }
 
       // Check if we've reached the maximum number of events
       if (maxEvents > 0 && globalEventIndex >= maxEvents) {
         if (verbose) {
-          std::cout << "Reached maximum event limit (" << maxEvents << ")\n";
+          std::cerr << "Reached maximum event limit (" << maxEvents << ")\n";
         }
         break;
       }
@@ -545,7 +616,7 @@ int main(int argc, char** argv) {
         outputFiles.push_back(currentOutputPath);
 
         if (verbose) {
-          std::cout << "  Wrote " << currentOutputPath << " ("
+          std::cerr << "  Wrote " << currentOutputPath << " ("
                     << eventsInCurrentFile << " events, ";
 
           // Format file size
@@ -564,7 +635,8 @@ int main(int argc, char** argv) {
             }
           }
 
-          double sizePerEvent = static_cast<double>(fileSize) / static_cast<double>(eventsInCurrentFile);
+          double sizePerEvent = static_cast<double>(fileSize) /
+                                static_cast<double>(eventsInCurrentFile);
           const char* perEventUnit = "B";
           if (sizePerEvent >= 1024.0) {
             sizePerEvent /= 1024.0;
@@ -575,8 +647,9 @@ int main(int argc, char** argv) {
             }
           }
 
-          std::cout << std::fixed << std::setprecision(2) << size << " " << unit
-                    << ", " << sizePerEvent << " " << perEventUnit << "/event)\n";
+          std::cerr << std::fixed << std::setprecision(2) << size << " " << unit
+                    << ", " << sizePerEvent << " " << perEventUnit
+                    << "/event)\n";
         }
       }
     }
@@ -589,11 +662,16 @@ int main(int argc, char** argv) {
     }
 
     // Print summary
-    std::size_t totalFiles =
-        (globalEventIndex + eventsPerFile - 1) / eventsPerFile;
-    std::cout << "\nSummary:\n";
-    std::cout << "  Processed " << globalEventIndex << " events into "
-              << totalFiles << " file(s)\n";
+    std::cerr << "\nSummary:\n";
+    if (singleOutput) {
+      std::cerr << "  Processed " << globalEventIndex
+                << " events into single file\n";
+    } else {
+      std::size_t totalFiles =
+          (globalEventIndex + eventsPerFile - 1) / eventsPerFile;
+      std::cerr << "  Processed " << globalEventIndex << " events into "
+                << totalFiles << " file(s)\n";
+    }
 
     // Format file sizes
     auto formatSize = [](std::uintmax_t bytes) -> std::string {
@@ -612,45 +690,73 @@ int main(int argc, char** argv) {
       return oss.str();
     };
 
-    std::cout << "  Total input size:  " << formatSize(totalInputSize) << " ("
-              << totalInputSize << " bytes)\n";
-    std::cout << "  Total output size: " << formatSize(totalOutputSize) << " ("
-              << totalOutputSize << " bytes)\n";
+    if (globalEventIndex > 0) {
+      double bytesPerEvent = static_cast<double>(totalOutputSize) /
+                             static_cast<double>(globalEventIndex);
+      std::cerr << "  Total input size:  " << formatSize(totalInputSize)
+                << "\n";
+      std::cerr << "  Total output size: " << formatSize(totalOutputSize)
+                << " ("
+                << formatSize(static_cast<std::uintmax_t>(bytesPerEvent))
+                << "/event)\n";
 
-    if (totalInputSize > 0) {
-      double ratio = static_cast<double>(totalOutputSize) /
-                     static_cast<double>(totalInputSize);
-      std::cout << "  Compression ratio: " << std::fixed << std::setprecision(2)
-                << (ratio * 100.0) << "%\n";
+      if (totalInputSize > 0) {
+        double ratio = static_cast<double>(totalOutputSize) /
+                       static_cast<double>(totalInputSize);
+        std::cerr << "  Compression ratio: " << std::fixed
+                  << std::setprecision(2) << (ratio * 100.0) << "%\n";
+      }
+    } else {
+      std::cerr << "  Total input size:  " << formatSize(totalInputSize)
+                << "\n";
+      std::cerr << "  Total output size: " << formatSize(totalOutputSize)
+                << "\n";
     }
 
     // Print timing information
     if (verbose && globalEventIndex > 0) {
-      std::cout << "\nTiming breakdown:\n";
-      std::cout << "  Reading events:  " << std::fixed << std::setprecision(3)
+      std::cerr << "\nTiming breakdown:\n";
+      std::cerr << "  Reading events:  " << std::fixed << std::setprecision(3)
                 << totalReadTime << " s ("
-                << (totalReadTime / globalEventIndex * 1000.0) << " ms/event)\n";
-      std::cout << "  Copying events:  " << std::fixed << std::setprecision(3)
-                << totalCopyTime << " s ("
-                << (totalCopyTime / globalEventIndex * 1000.0) << " ms/event)\n";
-      std::cout << "  Writing events:  " << std::fixed << std::setprecision(3)
+                << (totalReadTime / globalEventIndex * 1000.0)
+                << " ms/event)\n";
+      std::cerr << "  Writing events:  " << std::fixed << std::setprecision(3)
                 << totalWriteTime << " s ("
-                << (totalWriteTime / globalEventIndex * 1000.0) << " ms/event)\n";
+                << (totalWriteTime / globalEventIndex * 1000.0)
+                << " ms/event)\n";
 
-      double totalProcessingTime = totalReadTime + totalCopyTime + totalWriteTime;
-      std::cout << "  Total processing: " << std::fixed << std::setprecision(3)
+      double totalProcessingTime = totalReadTime + totalWriteTime;
+      std::cerr << "  Total processing: " << std::fixed << std::setprecision(3)
                 << totalProcessingTime << " s\n";
 
       // Show percentage breakdown
       if (totalProcessingTime > 0) {
-        std::cout << "\nTime distribution:\n";
-        std::cout << "  Reading: " << std::fixed << std::setprecision(1)
+        std::cerr << "\nTime distribution:\n";
+        std::cerr << "  Reading: " << std::fixed << std::setprecision(1)
                   << (totalReadTime / totalProcessingTime * 100.0) << "%\n";
-        std::cout << "  Copying: " << std::fixed << std::setprecision(1)
-                  << (totalCopyTime / totalProcessingTime * 100.0) << "%\n";
-        std::cout << "  Writing: " << std::fixed << std::setprecision(1)
+        std::cerr << "  Writing: " << std::fixed << std::setprecision(1)
                   << (totalWriteTime / totalProcessingTime * 100.0) << "%\n";
       }
+    }
+
+    // Write JSON output if requested
+    if (writeJson) {
+      nlohmann::json j;
+      j["num_events"] = globalEventIndex;
+      j["num_files"] = outputFiles.size();
+      j["files"] = nlohmann::json::array();
+
+      for (const auto& file : outputFiles) {
+        nlohmann::json fileInfo;
+        // Use absolute path
+        fileInfo["path"] = std::filesystem::absolute(file).string();
+        if (std::filesystem::exists(file)) {
+          fileInfo["size"] = std::filesystem::file_size(file);
+        }
+        j["files"].push_back(fileInfo);
+      }
+
+      std::cout << j.dump(2) << std::endl;
     }
 
     return 0;
