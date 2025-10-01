@@ -178,9 +178,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         Acts::Vector3(m_cfg.referencePoint[0], m_cfg.referencePoint[1],
                       m_cfg.referencePoint[2]));
 
-    // Start from truth curvilinear parameters (position, direction, q/p)
-    const Acts::Vector4 startPos =
-        particle.fourPosition();  // world coordinates + time
+    // Start from truth curvilinear parameters (direction, q/p)
     const Acts::Vector3 startDir = particle.direction();  // unit vector
     const auto qOverP = particle.qOverP();                // ACTS units
     auto intersection =
