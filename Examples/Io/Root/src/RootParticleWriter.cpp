@@ -194,8 +194,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       ACTS_WARNING(
           "Particle has zero charge, linearly extrapolating to perigee");
       // Initialize the truth particle info
-      const auto d0 = NaNfloat;
-      const auto z0 = NaNfloat;
+      auto d0 = NaNfloat;
+      auto z0 = NaNfloat;
 
       const auto position = intersection.position();
 
