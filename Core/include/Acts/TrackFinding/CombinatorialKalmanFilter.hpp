@@ -473,8 +473,7 @@ class CombinatorialKalmanFilter {
       auto currentBranch = result.activeBranches.back();
       TrackIndexType prevTip = currentBranch.tipIndex();
 
-      using TrackStatesResult =
-          Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
+      using TrackStatesResult = Result<CkfTypes::BranchVector<TrackIndexType>>;
       TrackStatesResult tsRes = TrackStatesResult::success({});
       if (isSensitive) {
         // extend trajectory with measurements associated to the current surface
@@ -605,7 +604,7 @@ class CombinatorialKalmanFilter {
     /// @param result which contains among others the new states, and the list of active branches
     /// @return the number of newly added branches or an error
     Result<unsigned int> processNewTrackStates(
-        const Acts::GeometryContext& gctx,
+        const GeometryContext& gctx,
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList,
         result_type& result) const {
       using PM = TrackStatePropMask;

@@ -206,14 +206,14 @@ struct KalmanFitterResult {
   /// This is the index of the 'tip' of the track stored in multitrajectory.
   /// This corresponds to the last measurement state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
-  /// Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
-  std::size_t lastMeasurementIndex = Acts::MultiTrajectoryTraits::kInvalid;
+  /// MultiTrajectoryTraits::kInvalid is the start of a trajectory.
+  std::size_t lastMeasurementIndex = MultiTrajectoryTraits::kInvalid;
 
   /// This is the index of the 'tip' of the states stored in multitrajectory.
   /// This corresponds to the last state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
-  /// Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
-  std::size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
+  /// MultiTrajectoryTraits::kInvalid is the start of a trajectory.
+  std::size_t lastTrackIndex = MultiTrajectoryTraits::kInvalid;
 
   /// The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
@@ -443,8 +443,7 @@ class KalmanFitter {
             state, stepper, navigator, logger());
         if (isTrackComplete || isEndOfWorldReached ||
             isVolumeConstraintReached || isPathLimitReached) {
-          if (result.lastMeasurementIndex ==
-              Acts::MultiTrajectoryTraits::kInvalid) {
+          if (result.lastMeasurementIndex == MultiTrajectoryTraits::kInvalid) {
             ACTS_INFO(
                 "No measurements were found on the track, cannot proceed "
                 "to smoothing or reversed filtering.");
@@ -576,8 +575,7 @@ class KalmanFitter {
                          const navigator_t& navigator,
                          result_type& result) const {
       // Check if there is a measurement on track
-      if (result.lastMeasurementIndex ==
-          Acts::MultiTrajectoryTraits::kInvalid) {
+      if (result.lastMeasurementIndex == MultiTrajectoryTraits::kInvalid) {
         ACTS_ERROR("No point to reverse for a track without measurements.");
         return KalmanFitterError::ReversePropagationFailed;
       }
@@ -685,8 +683,7 @@ class KalmanFitter {
         result.lastTrackIndex = trackStateProxy.index();
 
         // Update the stepper if it is not an outlier
-        if (trackStateProxy.typeFlags().test(
-                Acts::TrackStateFlag::MeasurementFlag)) {
+        if (trackStateProxy.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
           // Update the stepping state with filtered parameters
           ACTS_VERBOSE("Filtering step successful, updated parameters are:\n"
                        << trackStateProxy.filtered().transpose());
@@ -794,8 +791,8 @@ class KalmanFitter {
             TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
             TrackStatePropMask::Smoothed | TrackStatePropMask::Jacobian |
             TrackStatePropMask::Calibrated;
-        const std::size_t currentTrackIndex = fittedStates.addTrackState(
-            mask, Acts::MultiTrajectoryTraits::kInvalid);
+        const std::size_t currentTrackIndex =
+            fittedStates.addTrackState(mask, MultiTrajectoryTraits::kInvalid);
 
         // now get track state proxy back
         typename traj_t::TrackStateProxy trackStateProxy =
