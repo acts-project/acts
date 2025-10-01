@@ -134,7 +134,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         SimVertex secondaryVertex;
         nSecondaryVertices += 1;
         secondaryVertex.id =
-            SimVertexBarcode{vertex.id}.setVertexSecondary(nSecondaryVertices);
+            SimVertexBarcode{vertex.id}.withVertexSecondary(nSecondaryVertices);
         secondaryVertex.position4 =
             HepMC3Util::convertPosition(endVertex.position());
 
@@ -317,7 +317,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
 
       nPrimaryVertices += 1;
       SimVertex primaryVertex;
-      primaryVertex.id = SimVertexBarcode{}.setVertexPrimary(nPrimaryVertices);
+      primaryVertex.id = SimVertexBarcode{}.withVertexPrimary(nPrimaryVertices);
       primaryVertex.position4 =
           HepMC3Util::convertPosition(cluster.at(0)->position());
 
