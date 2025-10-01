@@ -16,8 +16,8 @@
 
 namespace Acts::detail {
 
-template <typename Derived, typename Container, typename Value, typename Index,
-          bool ReadOnly>
+template <typename Derived, typename DerivedReadOnly, typename Container,
+          typename Value, typename Index, bool ReadOnly>
 class ContainerSubset {
  public:
   using container_type = const_if_t<ReadOnly, Container>;
@@ -142,13 +142,12 @@ class ContainerSubset {
       : m_container(&container), m_subset(subset) {}
   template <bool OtherReadOnly>
   explicit constexpr ContainerSubset(
-      const ContainerSubset<Derived, Container, Value, Index, OtherReadOnly>
-          &other) noexcept
+      const ContainerSubset<Derived, DerivedReadOnly, Container, Value, Index,
+                            OtherReadOnly> &other) noexcept
     requires(ReadOnly && !OtherReadOnly)
       : m_container(&other.container()), m_subset(other.subset()) {}
 
-  constexpr ContainerSubset<Derived, Container, Value, Index, true> asConst()
-      const noexcept
+  constexpr DerivedReadOnly asConst() const noexcept
     requires(!ReadOnly)
   {
     return {*m_container, m_subset};
