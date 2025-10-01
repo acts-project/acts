@@ -443,13 +443,24 @@ class KalmanFitter {
             state, stepper, navigator, logger());
         if (isTrackComplete || isEndOfWorldReached ||
             isVolumeConstraintReached || isPathLimitReached) {
+          if (result.lastMeasurementIndex ==
+              Acts::MultiTrajectoryTraits::kInvalid) {
+            ACTS_INFO(
+                "No measurements were found on the track, cannot proceed "
+                "to smoothing or reversed filtering.");
+            result.finished = true;
+            return;
+          }
+
           // Remove the missing surfaces that occur after the last measurement
           result.missedActiveSurfaces.resize(result.measurementHoles);
-          // now get track state proxy for the smoothing logic
+          // now get track state proxy for the outlier logic
           typename traj_t::ConstTrackStateProxy trackStateProxy{
               result.fittedStates->getTrackState(result.lastMeasurementIndex)};
-          if (reversedFiltering ||
-              extensions.reverseFilteringLogic(trackStateProxy)) {
+          const bool doReverseFiltering =
+              reversedFiltering ||
+              extensions.reverseFilteringLogic(trackStateProxy);
+          if (doReverseFiltering) {
             // Start to run reversed filtering:
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement
