@@ -151,14 +151,7 @@ ambi_scoring = args.ambi_solver == "scoring"
 ambi_config = args.ambi_config
 seedFilter_ML = args.MLSeedFilter
 geoDir = getOpenDataDetectorDirectory()
-actsDir = os.environ["ACTS_SOURCE_DIR"]
-if actsDir is None:
-    # Compute relative to this script
-    actsDir = pathlib.Path(__file__).parent.parent.parent.parent
-else:
-    # Convert string from environment to Path
-    actsDir = pathlib.Path(actsDir)
-
+actsDir = pathlib.Path(__file__).parent.parent.parent.parent
 # acts.examples.dump_args_calls(locals())  # show python binding calls
 
 oddMaterialMap = (
