@@ -71,8 +71,6 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("p", &m_p);
   m_outputTree->Branch("q_over_p", &m_qop);
   m_outputTree->Branch("theta", &m_theta);
-  m_outputTree->Branch("d0", &m_d0);
-  m_outputTree->Branch("z0", &m_z0);
   m_outputTree->Branch("vertex_primary", &m_vertexPrimary);
   m_outputTree->Branch("vertex_secondary", &m_vertexSecondary);
   m_outputTree->Branch("particle", &m_particle);
@@ -179,9 +177,6 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         Acts::VectorHelpers::theta(particle.direction())));
     m_qop.push_back(Acts::clampValue<float>(
         particle.qOverP() * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
-    // d0, z0 are 0 (reference point is at production vertex)
-    m_d0.push_back(0);
-    m_z0.push_back(0);
 
     if (!m_cfg.writeHelixParameters) {
       // done with this particle
@@ -352,8 +347,6 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   m_outcome.clear();
   m_pathInX0.clear();
   m_pathInL0.clear();
-  m_d0.clear();
-  m_z0.clear();
 
   if (m_cfg.writeHelixParameters) {
     m_perigee_d0.clear();

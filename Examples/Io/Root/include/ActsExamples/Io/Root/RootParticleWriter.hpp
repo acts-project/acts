@@ -119,15 +119,9 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<float> m_theta;
   /// Charge over momentum in e.GeV^-1.
   std::vector<float> m_qop;
-  /// Transverse impact parameter in mm.
-  std::vector<float> m_d0;
-  /// Longitudinal impact parameter in mm.
-  std::vector<float> m_z0;
 
   /// Add perigee prefix to the above parameters
   /// if m_cfg.writeHelixParameters is true.
-  std::vector<float> m_perigee_d0;
-  std::vector<float> m_perigee_z0;
   std::vector<float> m_perigee_phi;
   std::vector<float> m_perigee_theta;
   std::vector<float> m_perigee_qop;
@@ -137,6 +131,10 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<float> m_perigee_pz;
   std::vector<float> m_perigee_eta;
   std::vector<float> m_perigee_pt;
+  /// Transverse impact parameter in mm.
+  std::vector<float> m_perigee_d0;
+  /// Longitudinal impact parameter in mm.
+  std::vector<float> m_perigee_z0;
 
   // Decoded particle identifier; see Barcode definition for details.
   std::vector<std::uint32_t> m_vertexPrimary;
