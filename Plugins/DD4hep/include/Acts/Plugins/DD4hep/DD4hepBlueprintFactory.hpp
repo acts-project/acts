@@ -34,6 +34,7 @@ class DD4hepBlueprintFactory {
  public:
   /// @brief Nested config object
   struct Config {
+    /// Configuration for DD4hep layer structure extraction
     std::shared_ptr<Experimental::DD4hepLayerStructure> layerStructure =
         nullptr;
 
@@ -43,6 +44,7 @@ class DD4hepBlueprintFactory {
 
   /// @brief Nested cache object for the detector store
   struct Cache {
+    /// Storage for DD4hep detector elements
     DD4hepDetectorElement::Store dd4hepStore;
   };
 
