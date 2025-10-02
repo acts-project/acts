@@ -255,16 +255,10 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   std::unique_ptr<const Acts::Logger> m_filterLogger;
   std::optional<Acts::TripletSeeder> m_seedFinder;
 
-  Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector{
-      Acts::DelegateFuncTag<voidSpacePointSelector>{}};
-
-  static bool voidSpacePointSelector(const SimSpacePoint& /*sp*/) {
-    return true;
-  }
+  Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
-
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// Get the proper radius validity range given a middle space point candidate.

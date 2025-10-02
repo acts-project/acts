@@ -13,18 +13,18 @@
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "ActsPlugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 
 #include <numbers>
 #include <tuple>
 
 using namespace Acts;
-using namespace Acts::Svg;
+using namespace ActsPlugins::Svg;
 using namespace Acts::Test;
 using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;

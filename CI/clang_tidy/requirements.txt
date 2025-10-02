@@ -16,7 +16,7 @@ jinja2==3.1.6
     # via codereport
 markdown-it-py==4.0.0
     # via rich
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
@@ -30,7 +30,7 @@ pygments==2.19.2
     #   rich
 python-slugify==6.1.2
     # via codereport
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via -r CI/clang_tidy/requirements.in
 rich==14.1.0
     # via -r CI/clang_tidy/requirements.in

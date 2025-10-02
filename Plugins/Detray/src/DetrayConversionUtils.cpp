@@ -6,9 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
-detray::axis::label Acts::DetrayConversionUtils::convertAxisDirection(
+using namespace Acts;
+
+detray::axis::label ActsPlugins::DetrayConversionUtils::convertAxisDirection(
     AxisDirection bValue) {
   switch (bValue) {
     case AxisDirection::AxisX:
@@ -29,7 +31,7 @@ detray::axis::label Acts::DetrayConversionUtils::convertAxisDirection(
   }
 }
 
-detray::axis::bounds Acts::DetrayConversionUtils::convertBinningOption(
+detray::axis::bounds ActsPlugins::DetrayConversionUtils::convertBinningOption(
     BinningOption bOption) {
   // That's a bit of a mind bender, but the conversion is correct
   // closed -> axis are closed, i.e. circular
@@ -46,7 +48,7 @@ detray::axis::bounds Acts::DetrayConversionUtils::convertBinningOption(
   }
 }
 
-detray::axis::binning Acts::DetrayConversionUtils::convertBinningType(
+detray::axis::binning ActsPlugins::DetrayConversionUtils::convertBinningType(
     BinningType bType) {
   switch (bType) {
     case BinningType::equidistant:
@@ -59,7 +61,7 @@ detray::axis::binning Acts::DetrayConversionUtils::convertBinningType(
   }
 }
 
-detray::io::axis_payload Acts::DetrayConversionUtils::convertBinningData(
+detray::io::axis_payload ActsPlugins::DetrayConversionUtils::convertBinningData(
     const BinningData& bData) {
   detray::io::axis_payload axis;
 

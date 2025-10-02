@@ -10,7 +10,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default GridTriplet TruthSmeared TruthEstimated Orthogonal HoughTransform AdaptiveHoughTransform Gbts Hashing",
+    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet OrthogonalTriplet",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -342,9 +342,9 @@ def addSeeding(
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     hashingTrainingConfigArg : HashingTrainingConfigArg(annoySeed, f)
-                                Defaults specified in Plugins/Hashing/include/Acts/Plugins/Hashing/HashingTrainingConfig.hpp
+                                Defaults specified in Plugins/Hashing/include/ActsPlugins/Hashing/HashingTrainingConfig.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
-                                Defaults specified in Plugins/Hashing/include/Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp
+                                Defaults specified in Plugins/Hashing/include/ActsPlugins/Hashing/HashingAlgorithmConfig.hpp
     truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
         Currently only deltaR=(min,max) range specified here.
     particleHypothesis : Optional[acts.ParticleHypothesis]
@@ -402,18 +402,6 @@ def addSeeding(
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
             seeds = addStandardSeeding(
-                s,
-                spacePoints,
-                seedingAlgorithmConfigArg,
-                seedFinderConfigArg,
-                seedFinderOptionsArg,
-                seedFilterConfigArg,
-                spacePointGridConfigArg,
-                logLevel,
-            )
-        elif seedingAlgorithm == SeedingAlgorithm.GridTriplet:
-            logger.info("Using grid triplet seeding")
-            seeds = addGridTripletSeeding(
                 s,
                 spacePoints,
                 seedingAlgorithmConfigArg,
@@ -485,6 +473,30 @@ def addSeeding(
                 spacePointGridConfigArg,
                 hashingTrainingConfigArg,
                 hashingAlgorithmConfigArg,
+                logLevel,
+            )
+        elif seedingAlgorithm == SeedingAlgorithm.GridTriplet:
+            logger.info("Using grid triplet seeding")
+            seeds = addGridTripletSeeding(
+                s,
+                spacePoints,
+                seedingAlgorithmConfigArg,
+                seedFinderConfigArg,
+                seedFinderOptionsArg,
+                seedFilterConfigArg,
+                spacePointGridConfigArg,
+                logLevel,
+            )
+        elif seedingAlgorithm == SeedingAlgorithm.OrthogonalTriplet:
+            logger.info("Using orthogonal triplet seeding")
+            seeds = addOrthogonalTripletSeeding(
+                s,
+                spacePoints,
+                seedingAlgorithmConfigArg,
+                seedFinderConfigArg,
+                seedFinderOptionsArg,
+                seedFilterConfigArg,
+                spacePointGridConfigArg,
                 logLevel,
             )
         else:
@@ -873,12 +885,106 @@ def addGridTripletSeeding(
     logLevel: acts.logging.Level = None,
     outputSeeds: str = "seeds",
 ):
-    """adds triplet seeding
+    """adds grid triplet seeding
     For parameters description see addSeeding
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
 
     seedingAlg = acts.examples.GridTripletSeedingAlgorithm(
+        level=logLevel,
+        inputSpacePoints=spacePoints,
+        outputSeeds=outputSeeds,
+        **acts.examples.defaultKWArgs(
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            minPt=seedFinderConfigArg.minPt,
+            cotThetaMax=seedFinderConfigArg.cotThetaMax,
+            impactMax=seedFinderConfigArg.impactMax,
+            deltaRMin=seedFinderConfigArg.deltaR[0],
+            deltaRMax=seedFinderConfigArg.deltaR[1],
+            deltaRMinTop=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRTopSP[0] is None
+                else seedFinderConfigArg.deltaRTopSP[0]
+            ),
+            deltaRMaxTop=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRTopSP[1] is None
+                else seedFinderConfigArg.deltaRTopSP[1]
+            ),
+            deltaRMinBottom=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRBottomSP[0] is None
+                else seedFinderConfigArg.deltaRBottomSP[0]
+            ),
+            deltaRMaxBottom=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRBottomSP[1] is None
+                else seedFinderConfigArg.deltaRBottomSP[1]
+            ),
+            rMin=seedFinderConfigArg.r[0],
+            rMax=seedFinderConfigArg.r[1],
+            zMin=seedFinderConfigArg.z[0],
+            zMax=seedFinderConfigArg.z[1],
+            phiMin=spacePointGridConfigArg.phi[0],
+            phiMax=spacePointGridConfigArg.phi[1],
+            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
+            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
+            zBinEdges=spacePointGridConfigArg.zBinEdges,
+            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+            rMinMiddle=None,
+            rMaxMiddle=None,
+            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
+            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
+            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
+            deltaZMin=None,
+            deltaZMax=None,
+            interactionPointCut=seedFinderConfigArg.interactionPointCut,
+            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+            helixCutTolerance=None,
+            sigmaScattering=seedFinderConfigArg.sigmaScattering,
+            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+            toleranceParam=None,
+            deltaInvHelixDiameter=None,
+            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
+            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
+            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
+            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
+            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
+            seedConfirmation=seedFinderConfigArg.seedConfirmation,
+            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
+            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
+            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
+            useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
+        ),
+    )
+    sequence.addAlgorithm(seedingAlg)
+
+    return seedingAlg.config.outputSeeds
+
+
+def addOrthogonalTripletSeeding(
+    sequence: acts.examples.Sequencer,
+    spacePoints: str,
+    seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg,
+    seedFinderConfigArg: SeedFinderConfigArg,
+    seedFinderOptionsArg: SeedFinderOptionsArg,
+    seedFilterConfigArg: SeedFilterConfigArg,
+    spacePointGridConfigArg: SpacePointGridConfigArg,
+    logLevel: acts.logging.Level = None,
+    outputSeeds: str = "seeds",
+):
+    """adds orthogonal triplet seeding
+    For parameters description see addSeeding
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+
+    seedingAlg = acts.examples.OrthogonalTripletSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,

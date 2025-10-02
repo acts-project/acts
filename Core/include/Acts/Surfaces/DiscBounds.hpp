@@ -22,9 +22,11 @@ namespace Acts {
 class DiscBounds : public SurfaceBounds {
  public:
   /// Return method for inner Radius
+  /// @return Minimum radius of the disc bounds
   virtual double rMin() const = 0;
 
   /// Return method for outer Radius
+  /// @return Maximum radius of the disc bounds
   virtual double rMax() const = 0;
 
   /// Return the vertices
@@ -38,15 +40,21 @@ class DiscBounds : public SurfaceBounds {
       unsigned int quarterSegments = 2u) const = 0;
 
   /// Returns a reference radius for binning
+  /// @return Reference radius value used for binning purposes
   virtual double binningValueR() const = 0;
 
   /// Returns a refererance phi for binning
+  /// @return Reference phi angle value used for binning purposes
   virtual double binningValuePhi() const = 0;
 
   /// Returns true for full phi coverage
+  /// @return True if the bounds cover the full azimuthal range, false otherwise
   virtual bool coversFullAzimuth() const = 0;
 
   /// Checks if it's inside the radius
+  /// @param R The radius value to check
+  /// @param tolerance The tolerance for the check
+  /// @return True if the radius is within the bounds, false otherwise
   virtual bool insideRadialBounds(double R, double tolerance = 0.) const = 0;
 };
 
