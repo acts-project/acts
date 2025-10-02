@@ -14,13 +14,13 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
 
 #include <array>
 #include <cstddef>
@@ -31,6 +31,8 @@
 
 #include "TGeoManager.h"
 
+using namespace Acts;
+using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {

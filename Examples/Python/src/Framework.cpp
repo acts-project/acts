@@ -26,6 +26,7 @@ using namespace py::literals;
 using namespace Acts;
 using namespace ActsExamples;
 using namespace ActsPython;
+using namespace ActsPlugins;
 
 namespace {
 #if defined(__clang__)

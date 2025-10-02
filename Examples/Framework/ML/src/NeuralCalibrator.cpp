@@ -19,6 +19,9 @@
 
 #include <TFile.h>
 
+using namespace Acts;
+using namespace ActsPlugins;
+
 namespace detail {
 
 template <typename Array>
@@ -77,23 +80,21 @@ ActsExamples::NeuralCalibrator::NeuralCalibrator(
 
 void ActsExamples::NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
-    const Acts::GeometryContext& gctx, const Acts::CalibrationContext& cctx,
-    const Acts::SourceLink& sourceLink,
-    Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
-        trackState) const {
-  trackState.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
+    const GeometryContext& gctx, const CalibrationContext& cctx,
+    const SourceLink& sourceLink,
+    MultiTrajectory<VectorMultiTrajectory>::TrackStateProxy& trackState) const {
+  trackState.setUncalibratedSourceLink(SourceLink{sourceLink});
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
   assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
-  if (!Acts::rangeContainsValue(m_volumeIds,
-                                idxSourceLink.geometryId().volume())) {
+  if (!rangeContainsValue(m_volumeIds, idxSourceLink.geometryId().volume())) {
     m_fallback.calibrate(measurements, clusters, gctx, cctx, sourceLink,
                          trackState);
     return;
   }
 
-  Acts::NetworkBatchInput inputBatch(1, m_nInputs);
+  NetworkBatchInput inputBatch(1, m_nInputs);
   auto input = inputBatch(0, Eigen::all);
 
   // TODO: Matrix size should be configurable perhaps?
@@ -105,28 +106,28 @@ void ActsExamples::NeuralCalibrator::calibrate(
   input[iInput++] = idxSourceLink.geometryId().volume();
   input[iInput++] = idxSourceLink.geometryId().layer();
 
-  const Acts::Surface& referenceSurface = trackState.referenceSurface();
+  const Surface& referenceSurface = trackState.referenceSurface();
   auto trackParameters = trackState.parameters();
 
   const ConstVariableBoundMeasurementProxy measurement =
       measurements.getMeasurement(idxSourceLink.index());
 
-  assert(measurement.contains(Acts::eBoundLoc0) &&
+  assert(measurement.contains(eBoundLoc0) &&
          "Measurement does not contain the required bound loc0");
-  assert(measurement.contains(Acts::eBoundLoc1) &&
+  assert(measurement.contains(eBoundLoc1) &&
          "Measurement does not contain the required bound loc1");
 
-  auto boundLoc0 = measurement.indexOf(Acts::eBoundLoc0);
-  auto boundLoc1 = measurement.indexOf(Acts::eBoundLoc1);
+  auto boundLoc0 = measurement.indexOf(eBoundLoc0);
+  auto boundLoc1 = measurement.indexOf(eBoundLoc1);
 
-  Acts::Vector2 localPosition{measurement.parameters()[boundLoc0],
-                              measurement.parameters()[boundLoc1]};
-  Acts::Vector2 localCovariance{measurement.covariance()(boundLoc0, boundLoc0),
-                                measurement.covariance()(boundLoc1, boundLoc1)};
+  Vector2 localPosition{measurement.parameters()[boundLoc0],
+                        measurement.parameters()[boundLoc1]};
+  Vector2 localCovariance{measurement.covariance()(boundLoc0, boundLoc0),
+                          measurement.covariance()(boundLoc1, boundLoc1)};
 
-  Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(
-      trackParameters[Acts::eBoundPhi], trackParameters[Acts::eBoundTheta]);
-  Acts::Vector3 globalPosition =
+  Vector3 dir = makeDirectionFromPhiTheta(trackParameters[eBoundPhi],
+                                          trackParameters[eBoundTheta]);
+  Vector3 globalPosition =
       referenceSurface.localToGlobal(gctx, localPosition, dir);
 
   // Rotation matrix. When applied to global coordinates, they
@@ -134,10 +135,9 @@ void ActsExamples::NeuralCalibrator::calibrate(
   // surface. Note that this such a rotation can be found by
   // inverting a matrix whose columns correspond to the
   // coordinate axes of the local coordinate system.
-  Acts::RotationMatrix3 rot =
+  RotationMatrix3 rot =
       referenceSurface.referenceFrame(gctx, globalPosition, dir).inverse();
-  std::pair<double, double> angles =
-      Acts::VectorHelpers::incidentAngles(dir, rot);
+  std::pair<double, double> angles = VectorHelpers::incidentAngles(dir, rot);
 
   input[iInput++] = angles.first;
   input[iInput++] = angles.second;
@@ -174,15 +174,15 @@ void ActsExamples::NeuralCalibrator::calibrate(
   std::size_t iLoc0 = m_nComponents + iMax * 2;
   std::size_t iVar0 = 3 * m_nComponents + iMax * 2;
 
-  Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
+  visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
         static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
             measurement);
 
-    Acts::ActsVector<kMeasurementSize> calibratedParameters =
+    ActsVector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();
-    Acts::ActsSquareMatrix<kMeasurementSize> calibratedCovariance =
+    ActsSquareMatrix<kMeasurementSize> calibratedCovariance =
         fixedMeasurement.covariance();
 
     calibratedParameters[boundLoc0] = output[iLoc0];
