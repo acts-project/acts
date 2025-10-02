@@ -79,6 +79,20 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("generation", &m_generation);
   m_outputTree->Branch("sub_particle", &m_subParticle);
 
+  if (m_cfg.writeHelixParameters) {
+    m_outputTree->Branch("perigee_d0", &m_perigee_d0);
+    m_outputTree->Branch("perigee_z0", &m_perigee_z0);
+    m_outputTree->Branch("perigee_phi", &m_perigee_phi);
+    m_outputTree->Branch("perigee_theta", &m_perigee_theta);
+    m_outputTree->Branch("perigee_q_over_p", &m_perigee_qop);
+    m_outputTree->Branch("perigee_p", &m_perigee_p);
+    m_outputTree->Branch("perigee_px", &m_perigee_px);
+    m_outputTree->Branch("perigee_py", &m_perigee_py);
+    m_outputTree->Branch("perigee_pz", &m_perigee_pz);
+    m_outputTree->Branch("perigee_eta", &m_perigee_eta);
+    m_outputTree->Branch("perigee_pt", &m_perigee_pt);
+  }
+
   m_outputTree->Branch("e_loss", &m_eLoss);
   m_outputTree->Branch("total_x0", &m_pathInX0);
   m_outputTree->Branch("total_l0", &m_pathInL0);
@@ -148,28 +162,29 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_numberOfHits.push_back(particle.numberOfHits());
     m_outcome.push_back(static_cast<std::uint32_t>(particle.outcome()));
 
+    // momentum
+    const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
+    m_p.push_back(Acts::clampValue<float>(p));
+    m_px.push_back(Acts::clampValue<float>(p * particle.direction().x()));
+    m_py.push_back(Acts::clampValue<float>(p * particle.direction().y()));
+    m_pz.push_back(Acts::clampValue<float>(p * particle.direction().z()));
+    // derived kinematic quantities
+    m_eta.push_back(Acts::clampValue<float>(
+        Acts::VectorHelpers::eta(particle.direction())));
+    m_pt.push_back(Acts::clampValue<float>(
+        p * Acts::VectorHelpers::perp(particle.direction())));
+    m_phi.push_back(Acts::clampValue<float>(
+        Acts::VectorHelpers::phi(particle.direction())));
+    m_theta.push_back(Acts::clampValue<float>(
+        Acts::VectorHelpers::theta(particle.direction())));
+    m_qop.push_back(Acts::clampValue<float>(
+        particle.qOverP() * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
+    // d0, z0 are 0 (reference point is at production vertex)
+    m_d0.push_back(0);
+    m_z0.push_back(0);
+
     if (!m_cfg.writeHelixParameters) {
-      // momentum
-      const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
-      m_p.push_back(Acts::clampValue<float>(p));
-      m_px.push_back(Acts::clampValue<float>(p * particle.direction().x()));
-      m_py.push_back(Acts::clampValue<float>(p * particle.direction().y()));
-      m_pz.push_back(Acts::clampValue<float>(p * particle.direction().z()));
-      // derived kinematic quantities
-      m_eta.push_back(Acts::clampValue<float>(
-          Acts::VectorHelpers::eta(particle.direction())));
-      m_pt.push_back(Acts::clampValue<float>(
-          p * Acts::VectorHelpers::perp(particle.direction())));
-      m_phi.push_back(Acts::clampValue<float>(
-          Acts::VectorHelpers::phi(particle.direction())));
-      m_theta.push_back(Acts::clampValue<float>(
-          Acts::VectorHelpers::theta(particle.direction())));
-      m_qop.push_back(
-          Acts::clampValue<float>(particle.qOverP() * Acts::UnitConstants::GeV /
-                                  Acts::UnitConstants::e));
-      // d0, z0 are 0 (reference point is at production vertex)
-      m_d0.push_back(0);
-      m_z0.push_back(0);
+      // done with this particle
       continue;
     }
 
@@ -207,23 +222,28 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         ACTS_ERROR("Global to local transformation did not succeed.");
       }
       // truth parameters at perigee are the same as at production vertex
-      m_phi.push_back(Acts::clampValue<float>(particle.phi()));
-      m_theta.push_back(Acts::clampValue<float>(particle.theta()));
-      m_qop.push_back(Acts::clampValue<float>(
+      m_perigee_phi.push_back(Acts::clampValue<float>(particle.phi()));
+      m_perigee_theta.push_back(Acts::clampValue<float>(particle.theta()));
+      m_perigee_qop.push_back(Acts::clampValue<float>(
           qOverP * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
-      m_p.push_back(Acts::clampValue<float>(particle.absoluteMomentum() /
-                                            Acts::UnitConstants::GeV));
-      m_px.push_back(Acts::clampValue<float>(m_p.back() * startDir.x()));
-      m_py.push_back(Acts::clampValue<float>(m_p.back() * startDir.y()));
-      m_pz.push_back(Acts::clampValue<float>(m_p.back() * startDir.z()));
-      m_eta.push_back(Acts::clampValue<float>(
+      m_perigee_p.push_back(Acts::clampValue<float>(
+          particle.absoluteMomentum() / Acts::UnitConstants::GeV));
+      m_perigee_px.push_back(
+          Acts::clampValue<float>(m_p.back() * startDir.x()));
+      m_perigee_py.push_back(
+          Acts::clampValue<float>(m_p.back() * startDir.y()));
+      m_perigee_pz.push_back(
+          Acts::clampValue<float>(m_p.back() * startDir.z()));
+      m_perigee_eta.push_back(Acts::clampValue<float>(
           Acts::VectorHelpers::eta(particle.direction())));
-      m_pt.push_back(Acts::clampValue<float>(
+      m_perigee_pt.push_back(Acts::clampValue<float>(
           m_p.back() * Acts::VectorHelpers::perp(particle.direction())));
 
       // Push the extrapolated parameters
-      m_d0.push_back(Acts::clampValue<float>(d0 / Acts::UnitConstants::mm));
-      m_z0.push_back(Acts::clampValue<float>(z0 / Acts::UnitConstants::mm));
+      m_perigee_d0.push_back(
+          Acts::clampValue<float>(d0 / Acts::UnitConstants::mm));
+      m_perigee_z0.push_back(
+          Acts::clampValue<float>(z0 / Acts::UnitConstants::mm));
       continue;
     }
 
@@ -252,17 +272,17 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     auto propRes = propagator->propagate(startParams, *pSurface, pOptions);
     if (!propRes.ok() || !propRes->endParameters.has_value()) {
       ACTS_ERROR("Propagation to perigee surface failed.");
-      m_phi.push_back(NaNfloat);
-      m_theta.push_back(NaNfloat);
-      m_qop.push_back(NaNfloat);
-      m_d0.push_back(NaNfloat);
-      m_z0.push_back(NaNfloat);
-      m_p.push_back(NaNfloat);
-      m_px.push_back(NaNfloat);
-      m_py.push_back(NaNfloat);
-      m_pz.push_back(NaNfloat);
-      m_eta.push_back(NaNfloat);
-      m_pt.push_back(NaNfloat);
+      m_perigee_phi.push_back(NaNfloat);
+      m_perigee_theta.push_back(NaNfloat);
+      m_perigee_qop.push_back(NaNfloat);
+      m_perigee_d0.push_back(NaNfloat);
+      m_perigee_z0.push_back(NaNfloat);
+      m_perigee_p.push_back(NaNfloat);
+      m_perigee_px.push_back(NaNfloat);
+      m_perigee_py.push_back(NaNfloat);
+      m_perigee_pz.push_back(NaNfloat);
+      m_perigee_eta.push_back(NaNfloat);
+      m_perigee_pt.push_back(NaNfloat);
       continue;
     }
     const Acts::BoundTrackParameters& atPerigee = *propRes->endParameters;
@@ -279,25 +299,27 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     const auto theta = pars[Acts::BoundIndices::eBoundTheta];
     const auto qop = pars[Acts::BoundIndices::eBoundQOverP];
 
-    m_phi.push_back(Acts::clampValue<float>(phi));
-    m_theta.push_back(Acts::clampValue<float>(theta));
-    m_qop.push_back(Acts::clampValue<float>(qop * Acts::UnitConstants::GeV /
-                                            Acts::UnitConstants::e));
+    m_perigee_phi.push_back(Acts::clampValue<float>(phi));
+    m_perigee_theta.push_back(Acts::clampValue<float>(theta));
+    m_perigee_qop.push_back(Acts::clampValue<float>(
+        qop * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
     // update p, px, py, pz, eta, pt
     const auto p = atPerigee.absoluteMomentum() / Acts::UnitConstants::GeV;
-    m_p.push_back(Acts::clampValue<float>(p));
+    m_perigee_p.push_back(Acts::clampValue<float>(p));
     const auto dir = atPerigee.direction();
-    m_px.push_back(Acts::clampValue<float>(p * dir.x()));
-    m_py.push_back(Acts::clampValue<float>(p * dir.y()));
-    m_pz.push_back(Acts::clampValue<float>(p * dir.z()));
-    m_eta.push_back(Acts::clampValue<float>(
+    m_perigee_px.push_back(Acts::clampValue<float>(p * dir.x()));
+    m_perigee_py.push_back(Acts::clampValue<float>(p * dir.y()));
+    m_perigee_pz.push_back(Acts::clampValue<float>(p * dir.z()));
+    m_perigee_eta.push_back(Acts::clampValue<float>(
         Acts::VectorHelpers::eta(atPerigee.direction())));
-    m_pt.push_back(Acts::clampValue<float>(
+    m_perigee_pt.push_back(Acts::clampValue<float>(
         p * Acts::VectorHelpers::perp(atPerigee.direction())));
 
     // Push the perigee parameters
-    m_d0.push_back(Acts::clampValue<float>(d0 / Acts::UnitConstants::mm));
-    m_z0.push_back(Acts::clampValue<float>(z0 / Acts::UnitConstants::mm));
+    m_perigee_d0.push_back(
+        Acts::clampValue<float>(d0 / Acts::UnitConstants::mm));
+    m_perigee_z0.push_back(
+        Acts::clampValue<float>(z0 / Acts::UnitConstants::mm));
   }
 
   m_outputTree->Fill();
@@ -332,6 +354,20 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   m_pathInL0.clear();
   m_d0.clear();
   m_z0.clear();
+
+  if (m_cfg.writeHelixParameters) {
+    m_perigee_d0.clear();
+    m_perigee_z0.clear();
+    m_perigee_phi.clear();
+    m_perigee_theta.clear();
+    m_perigee_qop.clear();
+    m_perigee_p.clear();
+    m_perigee_px.clear();
+    m_perigee_py.clear();
+    m_perigee_pz.clear();
+    m_perigee_eta.clear();
+    m_perigee_pt.clear();
+  }
 
   return ProcessCode::SUCCESS;
 }
