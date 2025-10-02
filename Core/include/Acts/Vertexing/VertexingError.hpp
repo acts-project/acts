@@ -26,6 +26,7 @@ enum class VertexingError {
   NonPositiveVariance,
   MatrixNotPositiveDefinite,
   InvalidInput,
+  CouldNotRemoveTrack,
 };
 
 /// Create error code from VertexingError
