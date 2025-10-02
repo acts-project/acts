@@ -6,15 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBlueprintFactory.hpp"
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBinningHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
-namespace Acts::Experimental {
+using namespace Acts;
+using namespace Acts::Experimental;
+
+namespace ActsPlugins {
 
 DD4hepBlueprintFactory::DD4hepBlueprintFactory(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
@@ -306,4 +309,4 @@ DD4hepBlueprintFactory::extractInternals(
   return {internalsBuilder, rootsFinderBuilder, geoIdGenerator, aux, ext};
 }
 
-}  // namespace Acts::Experimental
+}  // namespace ActsPlugins

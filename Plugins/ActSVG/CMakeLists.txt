@@ -9,7 +9,7 @@ acts_add_library(
     src/SurfaceArraySvgConverter.cpp
     src/SurfaceSvgConverter.cpp
     src/TrackingGeometrySvgConverter.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 target_include_directories(
