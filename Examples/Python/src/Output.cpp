@@ -21,6 +21,7 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvVertexWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjSimHitWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
@@ -133,6 +134,10 @@ void addOutput(Context& ctx) {
                              inputTrackParameters, inputSimSeeds, inputSimHits,
                              inputMeasurementParticlesMap,
                              inputMeasurementSimHitsMap, fileName, outputDir);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvVertexWriter, mex,
+                             "CsvVertexWriter", inputVertices, outputDir,
+                             outputStem, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(
       CsvTrackingGeometryWriter, mex, "CsvTrackingGeometryWriter",

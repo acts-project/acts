@@ -12,6 +12,7 @@ from acts.examples import (
     ParticlesPrinter,
     RootParticleWriter,
     RootVertexWriter,
+    CsvVertexWriter,
 )
 
 import acts.examples.hepmc3
