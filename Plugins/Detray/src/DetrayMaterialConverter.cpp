@@ -6,28 +6,30 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetrayMaterialConverter.hpp"
+#include "ActsPlugins/Detray/DetrayMaterialConverter.hpp"
 
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <numbers>
 #include <stdexcept>
 
+using namespace Acts;
+
 namespace {
 
 struct MaterialSurfaceSelector {
-  std::vector<const Acts::Surface*> surfaces = {};
+  std::vector<const Surface*> surfaces = {};
 
   /// @param surface is the test surface
-  void operator()(const Acts::Surface* surface) {
+  void operator()(const Surface* surface) {
     if (surface->surfaceMaterial() != nullptr &&
         !rangeContainsValue(surfaces, surface)) {
       surfaces.push_back(surface);
@@ -38,7 +40,7 @@ struct MaterialSurfaceSelector {
 }  // namespace
 
 detray::io::material_slab_payload
-Acts::DetrayMaterialConverter::convertMaterialSlab(
+ActsPlugins::DetrayMaterialConverter::convertMaterialSlab(
     const MaterialSlab& materialSlab) {
   detray::io::material_slab_payload slab;
   // Fill the material parameters and the thickness
@@ -52,7 +54,7 @@ Acts::DetrayMaterialConverter::convertMaterialSlab(
 }
 
 detray::io::detector_homogeneous_material_payload
-Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
+ActsPlugins::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
     const DetrayConversionUtils::Cache& cCache,
     const Experimental::Detector& detector, const Logger& logger) {
   detray::io::detector_homogeneous_material_payload materialPayload;
@@ -113,7 +115,7 @@ Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
 
 detray::io::grid_payload<detray::io::material_slab_payload,
                          detray::io::material_id>
-Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+ActsPlugins::DetrayMaterialConverter::convertGridSurfaceMaterial(
     const ISurfaceMaterial& material, const Logger& logger) {
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
@@ -224,9 +226,8 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
     return materialGrid;
   }
 
-  if (dynamic_cast<const Acts::ProtoSurfaceMaterial*>(&material) != nullptr ||
-      dynamic_cast<const Acts::ProtoGridSurfaceMaterial*>(&material) !=
-          nullptr) {
+  if (dynamic_cast<const ProtoSurfaceMaterial*>(&material) != nullptr ||
+      dynamic_cast<const ProtoGridSurfaceMaterial*>(&material) != nullptr) {
     ACTS_WARNING(
         "DetrayMaterialConverter: ProtoSurfaceMaterial and "
         "ProtoGridSurfaceMaterial are not being translated, consider to switch "
@@ -240,7 +241,7 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
 
 detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                    detray::io::material_id>
-Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+ActsPlugins::DetrayMaterialConverter::convertGridSurfaceMaterial(
     const DetrayConversionUtils::Cache& cCache,
     const Experimental::Detector& detector, const Logger& logger) {
   // The material grid payload

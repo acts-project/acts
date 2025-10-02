@@ -2,7 +2,7 @@ acts_add_library(
     PluginCovfie
     SHARED
     src/FieldConversion.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 target_include_directories(
