@@ -160,7 +160,7 @@ if actsDir is None:
 else:
     # Convert string from environment to Path
     actsDir = pathlib.Path(actsDir)
-    
+
 # acts.examples.dump_args_calls(locals())  # show python binding calls
 
 oddMaterialMap = (
