@@ -12,7 +12,7 @@
 #include <Acts/Geometry/Layer.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Plugins/ActSVG/LayerSvgConverter.hpp>
+#include <ActsPlugins/ActSVG/LayerSvgConverter.hpp>
 
 #include <iostream>
 #include <string>
@@ -32,12 +32,13 @@ ActsExamples::ProcessCode ActsExamples::SvgTrackingGeometryWriter::write(
 
   m_writeMutex.lock();
 
-  auto geometrySheets = Acts::Svg::TrackingGeometryConverter::convert(
+  auto geometrySheets = ActsPlugins::Svg::TrackingGeometryConverter::convert(
       context.geoContext, tGeometry, m_cfg.converterOptions);
 
   // Write them out
   for (const auto& sheet : geometrySheets) {
-    Acts::Svg::toFile({sheet}, joinPaths(m_cfg.outputDir, sheet._id + ".svg"));
+    ActsPlugins::Svg::toFile({sheet},
+                             joinPaths(m_cfg.outputDir, sheet._id + ".svg"));
   }
   // Successfully done
   return ActsExamples::ProcessCode::SUCCESS;

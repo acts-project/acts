@@ -9,10 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
-#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Plugins/Hashing/HashingTraining.hpp"
-#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -25,6 +22,10 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithmConfig.hpp"
+#include "ActsPlugins/Hashing/HashingTraining.hpp"
+#include "ActsPlugins/Hashing/HashingTrainingConfig.hpp"
 
 #include <memory>
 #include <string>
@@ -58,8 +59,8 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
     Acts::CylindricalSpacePointGridConfig gridConfig;
     Acts::CylindricalSpacePointGridOptions gridOptions;
     Acts::SeedFinderOptions seedFinderOptions;
-    Acts::HashingAlgorithmConfig hashingConfig;
-    Acts::HashingTrainingConfig hashingTrainingConfig;
+    ActsPlugins::HashingAlgorithmConfig hashingConfig;
+    ActsPlugins::HashingTrainingConfig hashingTrainingConfig;
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
     bool allowSeparateRMax = false;
@@ -106,10 +107,10 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<std::vector<SimSpacePointContainer>> m_outputBuckets{
       this, "OutputBuckets"};
-  Acts::HashingAlgorithm<const SimSpacePoint*,
-                         std::vector<const SimSpacePoint*>>
+  ActsPlugins::HashingAlgorithm<const SimSpacePoint*,
+                                std::vector<const SimSpacePoint*>>
       m_hashing;
-  Acts::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>
+  ActsPlugins::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>
       m_hashingTraining;
 };
 
