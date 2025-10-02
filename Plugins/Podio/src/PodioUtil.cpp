@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Podio//PodioUtil.hpp"
+#include "ActsPlugins/Podio//PodioUtil.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -33,7 +33,9 @@
 #include <limits>
 #include <memory>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 namespace PodioUtil {
 
 namespace {
@@ -53,7 +55,7 @@ std::shared_ptr<const bounds_t> createBounds(
 }  // namespace
 
 ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
-                                            const Acts::Surface& surface) {
+                                            const Surface& surface) {
   ActsPodioEdm::Surface result;
 
   std::optional<Identifier> identifier = helper.surfaceToIdentifier(surface);
@@ -83,7 +85,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
 
     // This is safe ONLY(!) if there is no associated detector element, since
     // the surface will not inspect the geometry context at all by itself.
-    Acts::GeometryContext gctx;
+    GeometryContext gctx;
     trf = surface.transform(gctx).matrix();
   }
 
@@ -119,14 +121,14 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
 
     case T::Cone:
       throw_assert(surface.boundsType == B::eCone, "Unexpected bounds type");
-      result = Acts::Surface::makeShared<ConeSurface>(
+      result = Surface::makeShared<ConeSurface>(
           transform, createBounds<ConeBounds>(surface));
       break;
 
     case T::Cylinder:
       throw_assert(surface.boundsType == B::eCylinder,
                    "Unexpected bounds type");
-      result = Acts::Surface::makeShared<CylinderSurface>(
+      result = Surface::makeShared<CylinderSurface>(
           transform, createBounds<CylinderBounds>(surface));
       break;
 
@@ -148,14 +150,14 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
           dBounds = createBounds<DiscTrapezoidBounds>(surface);
           break;
       }
-      result = Acts::Surface::makeShared<DiscSurface>(transform, dBounds);
+      result = Surface::makeShared<DiscSurface>(transform, dBounds);
       break;
     }
 
     case T::Perigee:
       throw_assert(surface.boundsType == B::eBoundless,
                    "Unexpected bounds type");
-      result = Acts::Surface::makeShared<PerigeeSurface>(transform);
+      result = Surface::makeShared<PerigeeSurface>(transform);
       break;
 
     case T::Plane: {
@@ -183,21 +185,21 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
           break;
       }
       assert(pBounds && "No PlanarBounds");
-      result = Acts::Surface::makeShared<PlaneSurface>(transform, pBounds);
+      result = Surface::makeShared<PlaneSurface>(transform, pBounds);
 
       break;
     }
 
     case T::Straw:
       throw_assert(surface.boundsType == B::eLine, "Unexpected bounds type");
-      result = Acts::Surface::makeShared<StrawSurface>(
+      result = Surface::makeShared<StrawSurface>(
           transform, createBounds<LineBounds>(surface));
       break;
 
     case T::Curvilinear:
       throw_assert(surface.boundsType == B::eBoundless,
                    "Unexpected bounds type");
-      result = Acts::Surface::makeShared<PlaneSurface>(transform);
+      result = Surface::makeShared<PlaneSurface>(transform);
       break;
   }
 
@@ -267,4 +269,4 @@ void recoverDynamicColumns(
 }
 
 }  // namespace podio_detail
-}  // namespace Acts
+}  // namespace ActsPlugins

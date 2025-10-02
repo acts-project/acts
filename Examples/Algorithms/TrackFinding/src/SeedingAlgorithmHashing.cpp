@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Seed.hpp"
-#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
-#include "Acts/Plugins/Hashing/HashingTraining.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingTraining.hpp"
 
 namespace ActsExamples {
 
@@ -187,11 +187,11 @@ SeedingAlgorithmHashing::SeedingAlgorithmHashing(
       Acts::SeedFinder<SpacePointProxy_type,
                        Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(
           m_cfg.seedFinderConfig);
-  m_hashing = Acts::HashingAlgorithm<const SimSpacePoint*,
-                                     std::vector<const SimSpacePoint*>>(
+  m_hashing = ActsPlugins::HashingAlgorithm<const SimSpacePoint*,
+                                            std::vector<const SimSpacePoint*>>(
       m_cfg.hashingConfig);
   m_hashingTraining =
-      Acts::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>(
+      ActsPlugins::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>(
           m_cfg.hashingTrainingConfig);
 }
 
@@ -228,7 +228,8 @@ ProcessCode SeedingAlgorithmHashing::execute(
   spOptions.beamPos = {0., 0.};
 
   // Hashing Training
-  Acts::AnnoyModel annoyModel = m_hashingTraining.execute(spacePointPtrs);
+  ActsPlugins::AnnoyModel annoyModel =
+      m_hashingTraining.execute(spacePointPtrs);
   // Hashing
   static thread_local std::vector<SpacePointPtrVector> bucketsPtrs;
   bucketsPtrs.clear();
