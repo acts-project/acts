@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
-#include "Acts/Plugins/Hashing/HashingTraining.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingTraining.hpp"
 
 #include <cstdlib>
 #include <vector>
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   double layerZMin = -550;
   double layerZMax = 550;
 
-  Acts::HashingAlgorithm::Config hashingConfig;
+  ActsPlugins::HashingAlgorithm::Config hashingConfig;
   hashingConfig.bucketSize = bucketSize;
   hashingConfig.zBins = zBins;
   hashingConfig.phiBins = phiBins;
@@ -81,15 +81,15 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   hashingConfig.layerZMin = layerZMin;
   hashingConfig.layerZMax = layerZMax;
 
-  Acts::HashingTraining::Config hashingTrainingConfig;
+  ActsPlugins::HashingTraining::Config hashingTrainingConfig;
   hashingTrainingConfig.annoySeed = annoySeed;
   hashingTrainingConfig.f = nf;
 
-  Acts::HashingTraining hashingTraining(hashingTrainingConfig);
-  Acts::HashingAlgorithm hashing(hashingConfig);
+  ActsPlugins::HashingTraining hashingTraining(hashingTrainingConfig);
+  ActsPlugins::HashingAlgorithm hashing(hashingConfig);
 
   // Hashing Training
-  Acts::AnnoyModel annoyModel = hashingTraining.execute(testVector);
+  ActsPlugins::AnnoyModel annoyModel = hashingTraining.execute(testVector);
 
   // Hashing
   auto result = hashing.execute(annoyModel, testVector);
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   double layerZMin = -550;
   double layerZMax = 550;
 
-  Acts::HashingAlgorithm::Config hashingConfig;
+  ActsPlugins::HashingAlgorithm::Config hashingConfig;
   hashingConfig.bucketSize = bucketSize;
   hashingConfig.zBins = zBins;
   hashingConfig.phiBins = phiBins;
@@ -130,15 +130,15 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   hashingConfig.layerZMin = layerZMin;
   hashingConfig.layerZMax = layerZMax;
 
-  Acts::HashingTraining::Config hashingTrainingConfig;
+  ActsPlugins::HashingTraining::Config hashingTrainingConfig;
   hashingTrainingConfig.annoySeed = annoySeed;
   hashingTrainingConfig.f = nf;
 
-  Acts::HashingTraining hashingTraining(hashingTrainingConfig);
-  Acts::HashingAlgorithm hashing(hashingConfig);
+  ActsPlugins::HashingTraining hashingTraining(hashingTrainingConfig);
+  ActsPlugins::HashingAlgorithm hashing(hashingConfig);
 
   // Hashing Training
-  Acts::AnnoyModel annoyModel = hashingTraining.execute(testVector);
+  ActsPlugins::AnnoyModel annoyModel = hashingTraining.execute(testVector);
 
   // Hashing
   auto result = hashing.execute(annoyModel, testVector);

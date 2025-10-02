@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Plugins/Hashing/HashingModel.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "ActsPlugins/Hashing/HashingModel.hpp"
 
 #include <numbers>
 #include <set>
@@ -19,16 +19,16 @@
 #include <annoy/annoylib.h>
 #include <annoy/kissrandom.h>
 
-namespace Acts {
+namespace ActsPlugins {
 
 namespace {
 
-std::vector<std::vector<SpacePointIndex2>> computeSpacePointsBuckets(
-    const AnnoyModel& annoyModel, const SpacePointContainer2& spacePoints,
+std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
+    const AnnoyModel& annoyModel, const Acts::SpacePointContainer2& spacePoints,
     const std::size_t bucketSize, const std::size_t zBins,
     const std::size_t phiBins, const double layerRMin, const double layerRMax,
     const double layerZMin, const double layerZMax) {
-  std::vector<std::set<SpacePointIndex2>> resultSets;
+  std::vector<std::set<Acts::SpacePointIndex2>> resultSets;
 
   std::size_t nBins = 0;
   if (zBins > 0) {
@@ -70,11 +70,11 @@ std::vector<std::vector<SpacePointIndex2>> computeSpacePointsBuckets(
   };
 
   for (const auto spacePoint : spacePoints) {
-    const float x = spacePoint.x() / UnitConstants::mm;
-    const float y = spacePoint.y() / UnitConstants::mm;
-    const float z = spacePoint.z() / UnitConstants::mm;
+    const float x = spacePoint.x() / Acts::UnitConstants::mm;
+    const float y = spacePoint.y() / Acts::UnitConstants::mm;
+    const float z = spacePoint.z() / Acts::UnitConstants::mm;
 
-    if (const float r2 = hypotSquare(x, y); !layerSelection(r2, z)) {
+    if (const float r2 = Acts::hypotSquare(x, y); !layerSelection(r2, z)) {
       continue;
     }
 
@@ -94,7 +94,7 @@ std::vector<std::vector<SpacePointIndex2>> computeSpacePointsBuckets(
     }
   }
 
-  std::vector<std::vector<SpacePointIndex2>> result;
+  std::vector<std::vector<Acts::SpacePointIndex2>> result;
   result.reserve(resultSets.size());
   for (const auto& spSet : resultSets) {
     result.emplace_back(spSet.begin(), spSet.end());
@@ -110,13 +110,14 @@ HashingAlgorithm::HashingAlgorithm(const Config& cfg) : m_cfg(cfg) {
   }
 }
 
-std::vector<std::vector<SpacePointIndex2>> HashingAlgorithm::execute(
+std::vector<std::vector<Acts::SpacePointIndex2>> HashingAlgorithm::execute(
     const AnnoyModel& annoyModel,
-    const SpacePointContainer2& spacePoints) const {
+    const Acts::SpacePointContainer2& spacePoints) const {
   // Compute the buckets of spacepoints using the Annoy model
-  std::vector<std::vector<SpacePointIndex2>> result = computeSpacePointsBuckets(
-      annoyModel, spacePoints, m_cfg.bucketSize, m_cfg.zBins, m_cfg.phiBins,
-      m_cfg.layerRMin, m_cfg.layerRMax, m_cfg.layerZMin, m_cfg.layerZMax);
+  std::vector<std::vector<Acts::SpacePointIndex2>> result =
+      computeSpacePointsBuckets(
+          annoyModel, spacePoints, m_cfg.bucketSize, m_cfg.zBins, m_cfg.phiBins,
+          m_cfg.layerRMin, m_cfg.layerRMax, m_cfg.layerZMin, m_cfg.layerZMax);
 
   const std::size_t nBuckets = result.size();
   const std::size_t nSpacePoints = spacePoints.size();
@@ -129,4 +130,4 @@ std::vector<std::vector<SpacePointIndex2>> HashingAlgorithm::execute(
   return result;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

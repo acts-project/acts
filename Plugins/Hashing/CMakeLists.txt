@@ -3,7 +3,7 @@ acts_add_library(
     SHARED
     src/HashingAlgorithm.cpp
     src/HashingTraining.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 target_include_directories(

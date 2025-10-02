@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
+#include "ActsPlugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 
 #include <memory>
 #include <numbers>
@@ -26,6 +26,9 @@
 #include "G4ThreeVector.hh"
 #include "G4Transform3D.hh"
 #include "G4Tubs.hh"
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 class G4VPhysicalVolume;
 
@@ -44,16 +47,16 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_box) {
   G4Transform3D nominal;
 
   // Get the box
-  auto nameSelector =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          std::vector<std::string>{"ox"}, false);
+  auto nameSelector = std::make_shared<
+      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
+      std::vector<std::string>{"ox"}, false);
 
-  Acts::Geant4DetectorSurfaceFactory::Cache cache;
-  Acts::Geant4DetectorSurfaceFactory::Options options;
+  ActsPlugins::Geant4DetectorSurfaceFactory::Cache cache;
+  ActsPlugins::Geant4DetectorSurfaceFactory::Options options;
   options.sensitiveSurfaceSelector = nameSelector;
 
-  Acts::Geant4DetectorSurfaceFactory::Config factoryConfig;
-  Acts::Geant4DetectorSurfaceFactory factory(factoryConfig);
+  ActsPlugins::Geant4DetectorSurfaceFactory::Config factoryConfig;
+  ActsPlugins::Geant4DetectorSurfaceFactory factory(factoryConfig);
 
   factory.construct(cache, nominal, *boxPV, options);
 
@@ -61,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_box) {
   BOOST_CHECK_EQUAL(cache.passiveSurfaces.size(), 0u);
 
   auto [element, surface] = cache.sensitiveSurfaces.front();
-  BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(surface->type(), Surface::SurfaceType::Plane);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Cylinder) {
@@ -82,27 +85,27 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Cylinder) {
   G4Transform3D nominal;
 
   // Get the box
-  auto nameSelector =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          std::vector<std::string>{"yl"}, false);
+  auto nameSelector = std::make_shared<
+      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
+      std::vector<std::string>{"yl"}, false);
 
-  Acts::Geant4DetectorSurfaceFactory::Cache cache;
-  Acts::Geant4DetectorSurfaceFactory::Options options;
+  ActsPlugins::Geant4DetectorSurfaceFactory::Cache cache;
+  ActsPlugins::Geant4DetectorSurfaceFactory::Options options;
   options.sensitiveSurfaceSelector = nameSelector;
 
-  Acts::Geant4DetectorSurfaceFactory::Config factoryConfig;
-  Acts::Geant4DetectorSurfaceFactory factory(factoryConfig);
+  ActsPlugins::Geant4DetectorSurfaceFactory::Config factoryConfig;
+  ActsPlugins::Geant4DetectorSurfaceFactory factory(factoryConfig);
   factory.construct(cache, nominal, *cylinderPV, options);
 
   BOOST_CHECK_EQUAL(cache.sensitiveSurfaces.size(), 1u);
   BOOST_CHECK_EQUAL(cache.passiveSurfaces.size(), 0u);
 
   auto [element, surface] = cache.sensitiveSurfaces.front();
-  BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(surface->type(), Surface::SurfaceType::Cylinder);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
-  Acts::GeometryContext gctx;
+  GeometryContext gctx;
 
   G4Box* worldS = new G4Box("world", 1000, 1000, 1000);
   G4LogicalVolume* worldLV = new G4LogicalVolume(worldS, nullptr, "World");
@@ -137,25 +140,25 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
       transformVol3, vol3L, "Volume3", vol2L, false, 0, false);
 
   // Get the lowest volume
-  auto nameSelector =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          std::vector<std::string>{"olume"}, false);
+  auto nameSelector = std::make_shared<
+      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
+      std::vector<std::string>{"olume"}, false);
 
-  Acts::Geant4DetectorSurfaceFactory::Cache cache;
-  Acts::Geant4DetectorSurfaceFactory::Options options;
+  ActsPlugins::Geant4DetectorSurfaceFactory::Cache cache;
+  ActsPlugins::Geant4DetectorSurfaceFactory::Options options;
   options.sensitiveSurfaceSelector = nameSelector;
 
   G4Transform3D nominal;
 
-  Acts::Geant4DetectorSurfaceFactory::Config factoryConfig;
-  Acts::Geant4DetectorSurfaceFactory factory(factoryConfig);
+  ActsPlugins::Geant4DetectorSurfaceFactory::Config factoryConfig;
+  ActsPlugins::Geant4DetectorSurfaceFactory factory(factoryConfig);
   factory.construct(cache, nominal, *worldPV, options);
 
   auto [element, surface] = cache.sensitiveSurfaces.front();
-  BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(surface->type(), Surface::SurfaceType::Plane);
 
   auto center = surface->center(gctx);
-  auto normal = surface->normal(gctx, center, Acts::Vector3(1, 0, 0));
+  auto normal = surface->normal(gctx, center, Vector3(1, 0, 0));
 
   // The following numbers represent the transforms above:
   //
@@ -172,21 +175,21 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
   CHECK_CLOSE_ABS(normal.y(), -0.612372, 1e-3);
   CHECK_CLOSE_ABS(normal.z(), 0.612372, 1e-3);
 
-  Acts::ObjVisualization3D obj;
-  Acts::Vector3 origin(0, 0, 0);
-  Acts::GeometryView3D::drawArrowForward(obj, origin, Acts::Vector3(100, 0, 0),
-                                         1000, 10, {.color = {255, 0, 0}});
-  Acts::GeometryView3D::drawArrowForward(obj, origin, Acts::Vector3(0, 100, 0),
-                                         1000, 10, {.color = {0, 255, 0}});
-  Acts::GeometryView3D::drawArrowForward(obj, origin, Acts::Vector3(0, 0, 100),
-                                         1000, 10, {.color = {0, 0, 255}});
-  Acts::GeometryView3D::drawArrowForward(obj, surface->center(gctx),
-                                         surface->center(gctx) + 100 * normal,
-                                         1000, 10, {.color = {0, 255, 0}});
+  ObjVisualization3D obj;
+  Vector3 origin(0, 0, 0);
+  GeometryView3D::drawArrowForward(obj, origin, Vector3(100, 0, 0), 1000, 10,
+                                   {.color = {255, 0, 0}});
+  GeometryView3D::drawArrowForward(obj, origin, Vector3(0, 100, 0), 1000, 10,
+                                   {.color = {0, 255, 0}});
+  GeometryView3D::drawArrowForward(obj, origin, Vector3(0, 0, 100), 1000, 10,
+                                   {.color = {0, 0, 255}});
+  GeometryView3D::drawArrowForward(obj, surface->center(gctx),
+                                   surface->center(gctx) + 100 * normal, 1000,
+                                   10, {.color = {0, 255, 0}});
   auto surfaces = cache.sensitiveSurfaces;
-  for (const auto& [k, val] : Acts::enumerate(cache.sensitiveSurfaces)) {
+  for (const auto& [k, val] : enumerate(cache.sensitiveSurfaces)) {
     const auto& [el, surf] = val;
-    Acts::ViewConfig vCfg;
+    ViewConfig vCfg;
     if (k == 0) {
       vCfg.color = {0, 255, 0};
     } else if (k == 1) {
@@ -194,8 +197,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
     } else if (k == 2) {
       vCfg.color = {0, 255, 255};
     }
-    Acts::GeometryView3D::drawSurface(obj, *surf, gctx,
-                                      Acts::Transform3::Identity(), vCfg);
+    GeometryView3D::drawSurface(obj, *surf, gctx, Transform3::Identity(), vCfg);
   }
 
   obj.write("RotatedSurface.obj");
@@ -206,9 +208,10 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
   // for a speicif alignment behavior and overwrite the transform() method.
   //
   // Here we demonstrate it with an override of the thickness() method
-  class ExtendedGeant4DetectorElement : public Acts::Geant4DetectorElement {
+  class ExtendedGeant4DetectorElement
+      : public ActsPlugins::Geant4DetectorElement {
    public:
-    using Acts::Geant4DetectorElement::Geant4DetectorElement;
+    using ActsPlugins::Geant4DetectorElement::Geant4DetectorElement;
 
     double thickness() const final {
       // Overwrite the thickness to be 42
@@ -217,10 +220,10 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
   };
 
   // A factory method for the extended element
-  auto extendedElementFactory =
-      [](std::shared_ptr<Acts::Surface> surface,
-         const G4VPhysicalVolume& g4physVol, const Acts::Transform3& toGlobal,
-         double thickness) -> std::shared_ptr<Acts::Geant4DetectorElement> {
+  auto extendedElementFactory = [](std::shared_ptr<Surface> surface,
+                                   const G4VPhysicalVolume& g4physVol,
+                                   const Transform3& toGlobal, double thickness)
+      -> std::shared_ptr<ActsPlugins::Geant4DetectorElement> {
     return std::make_shared<ExtendedGeant4DetectorElement>(
         std::move(surface), g4physVol, toGlobal, thickness);
   };
@@ -236,24 +239,24 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
   G4Transform3D nominal;
 
   // Get the box
-  auto nameSelector =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          std::vector<std::string>{"ox"}, false);
+  auto nameSelector = std::make_shared<
+      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
+      std::vector<std::string>{"ox"}, false);
 
-  Acts::Geant4DetectorSurfaceFactory::Cache cache;
-  Acts::Geant4DetectorSurfaceFactory::Options options;
+  ActsPlugins::Geant4DetectorSurfaceFactory::Cache cache;
+  ActsPlugins::Geant4DetectorSurfaceFactory::Options options;
   options.sensitiveSurfaceSelector = nameSelector;
 
-  Acts::Geant4DetectorSurfaceFactory::Config config;
+  ActsPlugins::Geant4DetectorSurfaceFactory::Config config;
   config.detectorElementFactory = extendedElementFactory;
-  Acts::Geant4DetectorSurfaceFactory factory(config);
+  ActsPlugins::Geant4DetectorSurfaceFactory factory(config);
   factory.construct(cache, nominal, *boxPV, options);
 
   BOOST_CHECK_EQUAL(cache.sensitiveSurfaces.size(), 1u);
   BOOST_CHECK_EQUAL(cache.passiveSurfaces.size(), 0u);
 
   auto [element, surface] = cache.sensitiveSurfaces.front();
-  BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(surface->type(), Surface::SurfaceType::Plane);
 
   // Check that the thickness is 42
   CHECK_CLOSE_ABS(element->thickness(), 42.0, 1e-6);

@@ -15,8 +15,9 @@
 
 namespace py = pybind11;
 
-using namespace ActsExamples;
 using namespace Acts;
+using namespace ActsPlugins;
+using namespace ActsExamples;
 
 namespace ActsPython {
 

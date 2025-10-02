@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Hashing/HashingTraining.hpp"
+#include "ActsPlugins/Hashing/HashingTraining.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
@@ -18,7 +18,7 @@
 #include <annoy/annoylib.h>
 #include <annoy/kissrandom.h>
 
-namespace Acts {
+namespace ActsPlugins {
 
 HashingTraining::HashingTraining(const Config& cfg) : m_cfg(cfg) {
   if (m_cfg.f <= 0) {
@@ -31,7 +31,7 @@ HashingTraining::HashingTraining(const Config& cfg) : m_cfg(cfg) {
 }
 
 AnnoyModel HashingTraining::execute(
-    const SpacePointContainer2& spacePoints) const {
+    const Acts::SpacePointContainer2& spacePoints) const {
   const unsigned int annoySeed = m_cfg.annoySeed;
   const std::int32_t f = m_cfg.f;
 
@@ -51,10 +51,10 @@ AnnoyModel HashingTraining::execute(
     }
     if (f >= 2) {
       const float z = spacePoint.z() / Acts::UnitConstants::mm;
-      const float r2 = hypotSquare(x, y);
+      const float r2 = Acts::hypotSquare(x, y);
       const float rho = std::sqrt(r2 + z * z);
       const float theta = std::acos(z / rho);
-      const float eta = AngleHelpers::etaFromTheta(theta);
+      const float eta = Acts::AngleHelpers::etaFromTheta(theta);
       vec[1] = eta;
     }
 
@@ -67,4 +67,4 @@ AnnoyModel HashingTraining::execute(
   return annoyModel;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins
