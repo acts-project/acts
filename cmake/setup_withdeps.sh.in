@@ -85,3 +85,6 @@ if [[ -d "@EDM4HEP_DIR@" ]]; then
   export DYLD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${DYLD_LIBRARY_PATH}"
   export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
 fi
+
+# Acts project source directory
+export ACTSDIR="@PROJECT_SOURCE_DIR@"
