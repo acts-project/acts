@@ -40,10 +40,14 @@ class Surface;
 class TrackingGeometry;
 class TrackingVolume;
 
+/// A tuple containing a surface, its associated material, and geometry context.
+/// @note Used for material mapping and JSON conversion.
 using SurfaceAndMaterialWithContext =
     std::tuple<std::shared_ptr<const Acts::Surface>,
                std::shared_ptr<const Acts::ISurfaceMaterial>,
                Acts::GeometryContext>;
+/// A pair containing a tracking volume and its associated material.
+/// @note Used for material mapping and JSON conversion.
 using TrackingVolumeAndMaterial =
     std::pair<const Acts::TrackingVolume*,
               std::shared_ptr<const Acts::IVolumeMaterial>>;
@@ -98,6 +102,7 @@ class MaterialMapJsonConverter {
   /// Convert a json material map to a TrackingGeometryMaterial
   ///
   /// @param materialmaps The json material
+  /// @return Converted tracking geometry material from JSON
   TrackingGeometryMaterial jsonToMaterialMaps(
       const nlohmann::json& materialmaps);
 
@@ -105,6 +110,7 @@ class MaterialMapJsonConverter {
   ///
   /// @param maps The material map collection
   /// @param decorator nullptr or a decorator to add extra attributes
+  /// @return JSON representation of the material maps
   nlohmann::json materialMapsToJson(
       const TrackingGeometryMaterial& maps,
       const IVolumeMaterialJsonDecorator* decorator = nullptr);
@@ -114,6 +120,7 @@ class MaterialMapJsonConverter {
   ///
   /// @param tGeometry is the tracking geometry
   /// @param decorator nullptr or a decorator to add extra attributes
+  /// @return JSON representation of the tracking geometry
   nlohmann::json trackingGeometryToJson(
       const TrackingGeometry& tGeometry,
       const ITrackingGeometryJsonDecorator* decorator = nullptr);
