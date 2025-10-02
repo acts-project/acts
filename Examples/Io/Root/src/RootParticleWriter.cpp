@@ -202,8 +202,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       ACTS_WARNING(
           "Particle has zero charge, linearly extrapolating to perigee");
       // Initialize the truth particle info
-      auto d0 = NaNfloat;
-      auto z0 = NaNfloat;
+      auto perigee_d0 = NaNfloat;
+      auto perigee_z0 = NaNfloat;
 
       const auto position = intersection.position();
 
@@ -211,8 +211,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       auto lpResult =
           pSurface->globalToLocal(ctx.geoContext, position, startDir);
       if (lpResult.ok()) {
-        d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
-        z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
+        perigee_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
+        perigee_z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
       } else {
         ACTS_ERROR("Global to local transformation did not succeed.");
       }
@@ -236,9 +236,9 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
       // Push the extrapolated parameters
       m_perigee_d0.push_back(
-          Acts::clampValue<float>(d0 / Acts::UnitConstants::mm));
+          Acts::clampValue<float>(perigee_d0 / Acts::UnitConstants::mm));
       m_perigee_z0.push_back(
-          Acts::clampValue<float>(z0 / Acts::UnitConstants::mm));
+          Acts::clampValue<float>(perigee_z0 / Acts::UnitConstants::mm));
       continue;
     }
 
@@ -284,37 +284,38 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
     // By construction, atPerigee is *bound on the perigee surface*.
     // Its parameter vector is [loc0, loc1, phi, theta, q/p, t]
-    const auto& pars = atPerigee.parameters();
+    const auto& perigee_pars = atPerigee.parameters();
 
-    const auto d0 = pars[Acts::BoundIndices::eBoundLoc0];
-    const auto z0 = pars[Acts::BoundIndices::eBoundLoc1];
+    const auto perigee_d0 = perigee_pars[Acts::BoundIndices::eBoundLoc0];
+    const auto perigee_z0 = perigee_pars[Acts::BoundIndices::eBoundLoc1];
 
     // truth phi;theta;q/p *at the perigee*,
-    const auto phi = pars[Acts::BoundIndices::eBoundPhi];
-    const auto theta = pars[Acts::BoundIndices::eBoundTheta];
-    const auto qop = pars[Acts::BoundIndices::eBoundQOverP];
+    const auto perigee_phi = perigee_pars[Acts::BoundIndices::eBoundPhi];
+    const auto perigee_theta = perigee_pars[Acts::BoundIndices::eBoundTheta];
+    const auto perigee_qop = perigee_pars[Acts::BoundIndices::eBoundQOverP];
 
-    m_perigee_phi.push_back(Acts::clampValue<float>(phi));
-    m_perigee_theta.push_back(Acts::clampValue<float>(theta));
+    m_perigee_phi.push_back(Acts::clampValue<float>(perigee_phi));
+    m_perigee_theta.push_back(Acts::clampValue<float>(perigee_theta));
     m_perigee_qop.push_back(Acts::clampValue<float>(
-        qop * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
+        perigee_qop * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
     // update p, px, py, pz, eta, pt
-    const auto p = atPerigee.absoluteMomentum() / Acts::UnitConstants::GeV;
-    m_perigee_p.push_back(Acts::clampValue<float>(p));
+    const auto perigee_p =
+        atPerigee.absoluteMomentum() / Acts::UnitConstants::GeV;
+    m_perigee_p.push_back(Acts::clampValue<float>(perigee_p));
     const auto dir = atPerigee.direction();
-    m_perigee_px.push_back(Acts::clampValue<float>(p * dir.x()));
-    m_perigee_py.push_back(Acts::clampValue<float>(p * dir.y()));
-    m_perigee_pz.push_back(Acts::clampValue<float>(p * dir.z()));
+    m_perigee_px.push_back(Acts::clampValue<float>(perigee_p * dir.x()));
+    m_perigee_py.push_back(Acts::clampValue<float>(perigee_p * dir.y()));
+    m_perigee_pz.push_back(Acts::clampValue<float>(perigee_p * dir.z()));
     m_perigee_eta.push_back(Acts::clampValue<float>(
         Acts::VectorHelpers::eta(atPerigee.direction())));
     m_perigee_pt.push_back(Acts::clampValue<float>(
-        p * Acts::VectorHelpers::perp(atPerigee.direction())));
+        perigee_p * Acts::VectorHelpers::perp(atPerigee.direction())));
 
     // Push the perigee parameters
     m_perigee_d0.push_back(
-        Acts::clampValue<float>(d0 / Acts::UnitConstants::mm));
+        Acts::clampValue<float>(perigee_d0 / Acts::UnitConstants::mm));
     m_perigee_z0.push_back(
-        Acts::clampValue<float>(z0 / Acts::UnitConstants::mm));
+        Acts::clampValue<float>(perigee_z0 / Acts::UnitConstants::mm));
   }
 
   m_outputTree->Fill();
