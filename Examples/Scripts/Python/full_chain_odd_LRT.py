@@ -153,7 +153,7 @@ ambi_scoring = args.ambi_solver == "scoring"
 ambi_config = args.ambi_config
 seedFilter_ML = args.MLSeedFilter
 geoDir = getOpenDataDetectorDirectory()
-actsDir = os.environ["ACTSDIR"]
+actsDir = os.environ["ACTS_SOURCE_DIR"]
 if actsDir is None:
     # Compute relative to this script
     actsDir = pathlib.Path(__file__).parent.parent.parent.parent
