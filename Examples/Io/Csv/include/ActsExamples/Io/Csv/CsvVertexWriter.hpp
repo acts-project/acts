@@ -72,8 +72,6 @@ struct AlgorithmContext;
  private:
   Config m_cfg;  //!< Nested configuration struct
 
-    //    ReadDataHandle<VertexCollection> m_inpVert{this,"InputVertices"};
-    
 };
 
 }  // namespace ActsExamples

@@ -2414,7 +2414,7 @@ def addVertexFitting(
     field : magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    outputDiCsv : Path|str, path, None
+    outputDirCsv : Path|str, path, None
         the output folder for the CSV output, None triggers no output
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
