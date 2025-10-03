@@ -46,8 +46,7 @@ struct PurePropagatorPlainOptions {
   bool loopProtection = true;
   /// Allowed loop fraction, 1 is a full loop
   double loopFraction = 0.5;
-  // keeps next target if the prestep is on surface
-  bool onSurfaceAccept = false;
+
   /// Required tolerance to reach surface
   double surfaceTolerance = s_onSurfaceTolerance;
 
