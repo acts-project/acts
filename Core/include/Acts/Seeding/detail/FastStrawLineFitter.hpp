@@ -218,7 +218,7 @@ class FastStrawLineFitter {
     ///@brief Expectation value of v * v
     double R_vv{0.};
     ///@brief Expectation value of r * a
-    double R_va{0.};
+    double R_ar{0.};
     ///@brief First derivative of the fitted Y0
     double R_v{0.};
     ///@brief Second derivative of the ftted Y0
