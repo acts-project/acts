@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerProperties) {
   auto pDiscLayer = DiscLayer::create(pTransform, pDisc, nullptr, 1.);
   // auto planeSurface = pDiscLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pDiscLayer->surfaceRepresentation().name(),
-                    std::string("DiscSurface"));
+                    std::string("Acts::DiscSurface"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerProperties) {
       CylinderLayer::create(pTransform, pCylinder, nullptr, 1.);
   // auto planeSurface = pCylinderLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pCylinderLayer->surfaceRepresentation().name(),
-                    std::string("CylinderSurface"));
+                    std::string("Acts::CylinderSurface"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

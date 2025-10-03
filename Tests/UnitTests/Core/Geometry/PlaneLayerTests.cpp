@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerProperties) {
   auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
   // auto planeSurface = pPlaneLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pPlaneLayer->surfaceRepresentation().name(),
-                    std::string("PlaneSurface"));
+                    std::string("Acts::PlaneSurface"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
