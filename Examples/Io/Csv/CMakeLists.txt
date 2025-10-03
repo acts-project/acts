@@ -23,6 +23,7 @@ acts_add_library(
     src/CsvGnnGraphReader.cpp
     src/CsvSpacePointsBucketWriter.cpp
     src/CsvBFieldWriter.cpp
+    src/CsvVertexWriter.cpp
 )
 target_include_directories(
     ActsExamplesIoCsv
