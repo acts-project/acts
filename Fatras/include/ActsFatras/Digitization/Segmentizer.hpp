@@ -56,6 +56,7 @@ struct Segmentizer {
     /// Smaller operator for sorting the ChannelStep objects.
     ///
     /// @param cstep The other ChannelStep to be compared
+    /// @return true if this ChannelStep has smaller path distance than cstep
     ///
     /// The ChannelStep objects can be compared with its path distance
     /// from the start (surface segment origin)

@@ -20,12 +20,24 @@ namespace Acts {
 struct ProtoDetector;
 struct ProtoVolume;
 
+/// Convert ProtoVolume to JSON
+/// @param j Destination JSON object
+/// @param pv Source ProtoVolume to convert
 void to_json(nlohmann::json& j, const ProtoVolume& pv);
 
+/// Convert JSON to ProtoVolume
+/// @param j Source JSON object
+/// @param pv Destination ProtoVolume to populate
 void from_json(const nlohmann::json& j, ProtoVolume& pv);
 
+/// Convert ProtoDetector to JSON
+/// @param j Destination JSON object
+/// @param pd Source ProtoDetector to convert
 void to_json(nlohmann::json& j, const ProtoDetector& pd);
 
+/// Convert JSON to ProtoDetector
+/// @param j Source JSON object
+/// @param pd Destination ProtoDetector to populate
 void from_json(const nlohmann::json& j, ProtoDetector& pd);
 
 }  // namespace Acts
