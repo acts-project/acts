@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/SympyStepper.hpp"  // or EigenStepper / RKStepper
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
