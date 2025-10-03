@@ -245,7 +245,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     // Charged particles: propagate helix to perigee
     // Build a propagator and propagate the *truth parameters* to the
     // perigee Stepper + propagator
-    using Stepper = Acts::SympyStepper;  // or EigenStepper / RKStepper
+    using Stepper = Acts::SympyStepper;
     Stepper stepper(m_cfg.bField);
     using PropagatorT = Acts::Propagator<Stepper>;
     auto propagator = std::make_shared<PropagatorT>(stepper);
