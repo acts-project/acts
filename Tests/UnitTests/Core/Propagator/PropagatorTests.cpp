@@ -13,21 +13,28 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperDenseExtension.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
+#include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -476,5 +483,96 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
     static_assert(!std::is_base_of_v<BasePropagator, decltype(propagator)>,
                   "Propagator unexpectedly inherits from BasePropagator");
   }
+}
+
+BOOST_AUTO_TEST_CASE(PropagationToSamePositionSurfacesGen3) {
+  // this tests the propagation to the plane surfaces in a tracking volume that
+  // have been placed in the same position rotated(e.g case in muon chambers)
+  using ActorList = ActorList<Acts::detail::SteppingLogger, EndOfWorldReached>;
+  using Stepper = Acts::EigenStepper<>;
+  using Navigator = Acts::Navigator;
+  using PropagatorType = Acts::Propagator<Stepper, Navigator>;
+
+  // Setup the two surfaces and rotate them by 90 degrees on the same plane
+  Acts::Transform3 transform2 = Acts::Transform3::Identity();
+  transform2.prerotate(
+      Acts::AngleAxis3(0.5 * std::numbers::pi, Acts::Vector3::UnitZ()));
+
+  auto surface1 = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(),
+      std::make_shared<RectangleBounds>(200_mm, 200_mm));
+  auto surface2 = Surface::makeShared<PlaneSurface>(
+      transform2, std::make_shared<RectangleBounds>(200_mm, 200_mm));
+
+  surface1->assignGeometryId(Acts::GeometryIdentifier{}.withSensitive(1));
+  surface2->assignGeometryId(Acts::GeometryIdentifier{}.withSensitive(2));
+  auto volBounds = std::make_shared<CuboidVolumeBounds>(1_m, 1_m, 1_m);
+
+  auto trkVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
+                                                 volBounds, "TrackingVolume");
+  trkVol->addSurface(surface1);
+  trkVol->addSurface(surface2);
+
+  Acts::Experimental::Blueprint::Config cfg;
+  cfg.envelope = Acts::ExtentEnvelope{{
+      .z = {20_mm, 20_mm},
+      .r = {0_mm, 20_mm},
+  }};
+
+  Acts::Experimental::Blueprint root{cfg};
+
+  auto& cubcontainer =
+      root.addCuboidContainer("CuboidContainer", AxisDirection::AxisZ);
+
+  auto volNode = std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+      std::move(trkVol));
+
+  cubcontainer.addChild(std::move(volNode));
+
+  auto trackingGeometry = root.construct({}, tgContext);
+
+  Navigator::Config navCfg;
+  navCfg.trackingGeometry = std::shared_ptr<const Acts::TrackingGeometry>(
+      std::move(trackingGeometry));
+  navCfg.resolveSensitive = true;
+  navCfg.resolvePassive = false;
+  Navigator navigator(navCfg, getDefaultLogger("Navigator", Logging::VERBOSE));
+
+  BoundTrackParameters startParams = BoundTrackParameters::createCurvilinear(
+      Vector4(0., 0., -100., 0.), Vector3::UnitZ(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 0});
+
+  Stepper stepper(field);
+
+  PropagatorType::Options<ActorList> options(tgContext, mfContext);
+  options.onSurfaceAccept = true;
+  PropagatorType propagator(
+      std::move(stepper), navigator,
+      getDefaultLogger("Propagator_Test", Logging::VERBOSE));
+
+  auto result = propagator.propagate(startParams, options);
+  const Acts::detail::SteppingLogger::result_type state =
+      result.value().get<Acts::detail::SteppingLogger::result_type>();
+  BOOST_CHECK(result.ok());
+
+  // check if it finds both surfaces
+  std::set<unsigned int> geoIds;
+
+  for (const auto& step : state.steps) {
+    if (!step.surface) {
+      continue;
+    }
+    auto sensId = step.surface->geometryId().sensitive();
+    // exclude portals
+    if (sensId) {
+      geoIds.insert(sensId);
+    }
+  }
+
+  BOOST_CHECK_EQUAL(geoIds.size(), 2);
+  BOOST_CHECK(geoIds.count(1));
+  BOOST_CHECK(geoIds.count(2));
 }
 }  // namespace Acts::Test
