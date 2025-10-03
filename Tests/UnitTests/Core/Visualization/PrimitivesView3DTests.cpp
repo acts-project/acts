@@ -9,10 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <cmath>
@@ -24,9 +24,11 @@
 #include "PrimitivesView3DBase.hpp"
 #include "Visualization3DTester.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Visualization)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(VisualizationSuite)
 
 /// The tests in this section are regression tests only in order
 /// to catch any unexpected changes in the output format.
@@ -95,4 +97,4 @@ BOOST_AUTO_TEST_CASE(PrimitivesView3DPly) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

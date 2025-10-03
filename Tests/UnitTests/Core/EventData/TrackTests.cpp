@@ -115,7 +115,9 @@ using const_holder_types =
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(EventDataTrack)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   factory_t factory;
@@ -518,3 +520,5 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

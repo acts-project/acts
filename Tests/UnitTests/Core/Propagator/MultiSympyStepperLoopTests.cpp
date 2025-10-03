@@ -12,7 +12,9 @@
 
 const MultiStepperTester<SympyStepper, MultiStepperLoop<SympyStepper>> tester;
 
-BOOST_AUTO_TEST_SUITE(multi_sympy_stepper_tests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 BOOST_AUTO_TEST_CASE(multi_stepper_config_constructor) {
   tester.test_config_constructor();
@@ -63,3 +65,5 @@ BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

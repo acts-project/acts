@@ -24,10 +24,10 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
 #include <algorithm>
 #include <array>
@@ -42,15 +42,13 @@
 
 #include "SpacePoint.hpp"
 
-namespace {
-
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 
-using ConstantFieldStepper = Acts::EigenStepper<>;
-using ConstantFieldPropagator =
-    Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
+namespace ActsTests {
+
+using ConstantFieldStepper = EigenStepper<>;
+using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 
 const GeometryContext geoCtx;
 const MagneticFieldContext magCtx;
@@ -68,13 +66,13 @@ const MeasurementResolutionMap resolutions = {
 BoundTrackParameters makeParameters(double phi, double theta, double p,
                                     double q) {
   // create covariance matrix from reasonable standard deviations
-  Acts::BoundVector stddev;
-  stddev[Acts::eBoundLoc0] = 100_um;
-  stddev[Acts::eBoundLoc1] = 100_um;
-  stddev[Acts::eBoundTime] = 25_ns;
-  stddev[Acts::eBoundPhi] = 2_degree;
-  stddev[Acts::eBoundTheta] = 2_degree;
-  stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
+  BoundVector stddev;
+  stddev[eBoundLoc0] = 100_um;
+  stddev[eBoundLoc1] = 100_um;
+  stddev[eBoundTime] = 25_ns;
+  stddev[eBoundPhi] = 2_degree;
+  stddev[eBoundTheta] = 2_degree;
+  stddev[eBoundQOverP] = 1 / 100_GeV;
   BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
   Vector4 mPos4(0., 0., 0., 0.);
@@ -84,19 +82,19 @@ BoundTrackParameters makeParameters(double phi, double theta, double p,
 
 std::default_random_engine rng(42);
 
-}  // namespace
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
 BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
   // Construct a propagator with the cylinderal geometry and a constant magnetic
   // field along z
-  Acts::Navigator navigator({
+  Navigator navigator({
       geometry,
       true,  // sensitive
       true,  // material
       false  // passive
   });
   const Vector3 bField(0, 0, 2._T);
-  auto field = std::make_shared<Acts::ConstantBField>(bField);
+  auto field = std::make_shared<ConstantBField>(bField);
   ConstantFieldStepper stepper(std::move(field));
 
   ConstantFieldPropagator propagator(std::move(stepper), std::move(navigator));
@@ -106,8 +104,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
   std::array<double, 3> thetaArray = {80._degree, 90.0_degree, 100._degree};
   std::array<double, 2> qArray = {1, -1};
 
-  auto logger = Acts::getDefaultLogger("estimateTrackParamsFromSeed",
-                                       Acts::Logging::INFO);
+  auto logger = getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO);
 
   for (const auto& p : pArray) {
     for (const auto& phi : phiArray) {
@@ -200,3 +197,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
     }
   }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

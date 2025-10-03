@@ -17,9 +17,11 @@
 #include <memory>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+namespace ActsTests {
+
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
 struct DriftCircle {
   double y{0.};
@@ -31,6 +33,8 @@ struct DriftCircle {
               const double _rUncert)
       : y{_y}, z{_z}, rDrift{_r}, rDriftError{_rUncert} {}
 };
+
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
 BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   Logging::ScopedFailureThreshold ft{Logging::FATAL};
@@ -53,19 +57,19 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   };
 
   // configure the binning of the hough plane
-  Acts::HoughTransformUtils::HoughPlaneConfig planeCfg;
+  HoughTransformUtils::HoughPlaneConfig planeCfg;
   planeCfg.nBinsX = 1000;
   planeCfg.nBinsY = 1000;
 
   // instantiate the peak finder
-  Acts::HoughTransformUtils::PeakFinders::IslandsAroundMaxConfig peakFinderCfg;
+  HoughTransformUtils::PeakFinders::IslandsAroundMaxConfig peakFinderCfg;
   peakFinderCfg.fractionCutoff = 0.7;
   peakFinderCfg.threshold = 3.;
   peakFinderCfg.minSpacingBetweenPeaks = {0., 30.};
 
   // and map the hough plane to parameter ranges.
   // The first coordinate is tan(theta), the second is z0 in mm
-  Acts::HoughTransformUtils::HoughAxisRanges axisRanges{-3., 3., -2000., 2000.};
+  HoughTransformUtils::HoughAxisRanges axisRanges{-3., 3., -2000., 2000.};
 
   // create the functions parametrising the hough space lines for drift circles.
   // Note that there are two solutions for each drift circle and angle
@@ -88,12 +92,11 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   };
 
   // instantiate the hough plane
-  Acts::HoughTransformUtils::HoughPlane<Acts::GeometryIdentifier::Value>
-      houghPlane(planeCfg);
+  HoughTransformUtils::HoughPlane<GeometryIdentifier::Value> houghPlane(
+      planeCfg);
 
   // also instantiate the peak finder
-  Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
-      Acts::GeometryIdentifier::Value>
+  HoughTransformUtils::PeakFinders::IslandsAroundMax<GeometryIdentifier::Value>
       peakFinder(peakFinderCfg);
 
   // loop over the true hits
@@ -119,4 +122,6 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -9,12 +9,14 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-BOOST_AUTO_TEST_SUITE(ProtoAxis)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   using enum Acts::AxisBoundaryType;
@@ -246,3 +248,5 @@ BOOST_AUTO_TEST_CASE(DirectedProtoAxisOfAllSorts) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

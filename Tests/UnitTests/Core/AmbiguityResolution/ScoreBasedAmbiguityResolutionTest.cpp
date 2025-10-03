@@ -22,11 +22,12 @@
 
 #include <map>
 
+using namespace Acts;
 using Acts::MultiTrajectoryTraits::IndexType;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(ScoreBasedAmbiguityResolutionTest)
+BOOST_AUTO_TEST_SUITE(AmbiguitesResolutionSuite)
 
 // Test fixture for ScoreBasedAmbiguityResolution
 struct Fixture {
@@ -163,8 +164,8 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   for (std::size_t iMeasurement = 1; const auto& track : ctc) {
     std::vector<std::size_t> measurementsPerTrack;
     for (auto ts : track.trackStatesReversed()) {
-      if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
-          ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (ts.typeFlags().test(TrackStateFlag::OutlierFlag) ||
+          ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
         measurementsPerTrack.push_back(iMeasurement);
         if (nTracksPerMeasurement.find(iMeasurement) ==
             nTracksPerMeasurement.end()) {
@@ -191,4 +192,4 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

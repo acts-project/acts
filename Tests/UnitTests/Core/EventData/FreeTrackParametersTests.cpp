@@ -16,8 +16,8 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericFreeTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
 #include <optional>
@@ -26,10 +26,10 @@
 
 #include "TrackParametersDatasets.hpp"
 
-namespace {
-
 using namespace Acts;
 using namespace Acts::UnitLiterals;
+
+namespace {
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
 const FreeSquareMatrix cov = FreeSquareMatrix::Identity();
@@ -79,7 +79,9 @@ void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(CurvilinearTrackParameters)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_DATA_TEST_CASE(
     NeutralConstructFromAngles,
@@ -139,3 +141,5 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -23,7 +23,9 @@ using namespace ActsPlugins;
 
 class G4VPhysicalVolume;
 
-BOOST_AUTO_TEST_SUITE(Geant4Plugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(Geant4Suite)
 
 BOOST_AUTO_TEST_CASE(Geant4PhysicalVolumeSelectors_test) {
   G4Box* worldS = new G4Box("world", 100, 100, 100);
@@ -38,19 +40,21 @@ BOOST_AUTO_TEST_CASE(Geant4PhysicalVolumeSelectors_test) {
   G4VPhysicalVolume* boxPV = new G4PVPlacement(nullptr, G4ThreeVector(), boxLV,
                                                "Box", worldLV, false, 0, true);
 
-  auto allSelector = ActsPlugins::Geant4PhysicalVolumeSelectors::AllSelector();
+  auto allSelector = Geant4PhysicalVolumeSelectors::AllSelector();
   BOOST_CHECK(allSelector.select(*worldPV));
   BOOST_CHECK(allSelector.select(*boxPV));
 
   auto nameSelector =
-      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector({"ox"}, false);
+      Geant4PhysicalVolumeSelectors::NameSelector({"ox"}, false);
   BOOST_CHECK(!nameSelector.select(*worldPV));
   BOOST_CHECK(nameSelector.select(*boxPV));
 
   auto nameSelectorE =
-      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector({"ox"}, true);
+      Geant4PhysicalVolumeSelectors::NameSelector({"ox"}, true);
   BOOST_CHECK(!nameSelectorE.select(*worldPV));
   BOOST_CHECK(!nameSelectorE.select(*boxPV));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

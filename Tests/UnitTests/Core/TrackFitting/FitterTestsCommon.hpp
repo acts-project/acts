@@ -25,17 +25,18 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
-#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
 #include <iterator>
 
 using namespace Acts::UnitLiterals;
-using namespace Acts::Test;
+
+namespace ActsTests {
 
 /// Find outliers using plain distance for testing purposes.
 ///
@@ -620,3 +621,5 @@ struct FitterTester {
                       Acts::eBoundSize * (nMeasurements - 1));
   }
 };
+
+}  // namespace ActsTests

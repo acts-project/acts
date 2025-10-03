@@ -15,51 +15,53 @@
 #include <exception>
 #include <fstream>
 
+using namespace Acts;
+
 namespace Acts::Experimental {
 class IInternalStructureBuilder {};
 }  // namespace Acts::Experimental
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   // Create  root node
-  std::vector<Acts::AxisDirection> detectorBinning = {
-      Acts::AxisDirection::AxisR};
+  std::vector<AxisDirection> detectorBinning = {AxisDirection::AxisR};
   std::vector<double> detectorBoundaries = {0., 50., 100.};
-  auto detector = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
+  auto detector = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "detector", Transform3::Identity(), VolumeBounds::eCylinder,
       detectorBoundaries, detectorBinning);
 
   BOOST_CHECK_EQUAL(detector->parent, nullptr);
   BOOST_CHECK(detector->children.empty());
   BOOST_CHECK_EQUAL(detector->name, "detector");
 
-  std::vector<Acts::AxisDirection> pixelsBinning = {Acts::AxisDirection::AxisZ};
+  std::vector<AxisDirection> pixelsBinning = {AxisDirection::AxisZ};
   std::vector<double> pixelsBoundaries = {20., 50., 100.};
 
-  auto pixels = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixels", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
+  auto pixels = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixels", Transform3::Identity(), VolumeBounds::eCylinder,
       pixelsBoundaries, pixelsBinning);
 
   std::vector<double> beamPipeBoundaries = {0., 20., 100.};
-  auto beamPipe = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "beam_pipe", Acts::Transform3::Identity(), Acts::VolumeBounds::eOther,
+  auto beamPipe = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "beam_pipe", Transform3::Identity(), VolumeBounds::eOther,
       beamPipeBoundaries);
 
   std::vector<double> gapBoundaries = {20., 50., 10.};
-  auto gap0 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "gap0", Acts::Transform3::Identity() * Acts::Translation3(0., 0., -90.),
-      Acts::VolumeBounds::eCylinder, gapBoundaries);
+  auto gap0 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "gap0", Transform3::Identity() * Translation3(0., 0., -90.),
+      VolumeBounds::eCylinder, gapBoundaries);
 
   std::vector<double> layerBoundaries = {20., 50., 80.};
-  auto layer = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "layer", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
-      layerBoundaries,
-      std::make_shared<Acts::Experimental::IInternalStructureBuilder>());
+  auto layer = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "layer", Transform3::Identity(), VolumeBounds::eCylinder, layerBoundaries,
+      std::make_shared<Experimental::IInternalStructureBuilder>());
 
-  auto gap1 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "gap1", Acts::Transform3::Identity() * Acts::Translation3(0., 0., 90.),
-      Acts::VolumeBounds::eCylinder, gapBoundaries);
+  auto gap1 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "gap1", Transform3::Identity() * Translation3(0., 0., 90.),
+      VolumeBounds::eCylinder, gapBoundaries);
 
   // Add the nodes in a random fashion
   pixels->add(std::move(gap1));
@@ -70,11 +72,11 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   detector->add(std::move(beamPipe));
 
   std::ofstream fs("detector_unordered.dot");
-  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *detector);
+  Experimental::detail::BlueprintDrawer::dotStream(fs, *detector);
   fs.close();
 
   // Sort the detector
-  Acts::Experimental::detail::BlueprintHelper::sort(*detector);
+  Experimental::detail::BlueprintHelper::sort(*detector);
 
   // Test the recursive sort worked
   BOOST_CHECK_EQUAL(detector->children.front()->name, "beam_pipe");
@@ -84,7 +86,7 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   BOOST_CHECK_EQUAL(detector->children.back()->children.back()->name, "gap1");
 
   std::ofstream fs2("detector_ordered.dot");
-  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs2, *detector);
+  Experimental::detail::BlueprintDrawer::dotStream(fs2, *detector);
   fs2.close();
 }
 
@@ -103,93 +105,82 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   double pixelEcHz = 50;
 
   auto innerBuilder =
-      std::make_shared<Acts::Experimental::IInternalStructureBuilder>();
+      std::make_shared<Experimental::IInternalStructureBuilder>();
 
   // Create  root node
-  std::vector<Acts::AxisDirection> detectorBinning = {
-      Acts::AxisDirection::AxisR};
+  std::vector<AxisDirection> detectorBinning = {AxisDirection::AxisR};
   std::vector<double> detectorBoundaries = {detectorIr, detectorOr, detectorHz};
 
   // The root node - detector
-  auto detector = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
+  auto detector = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "detector", Transform3::Identity(), VolumeBounds::eCylinder,
       detectorBoundaries, detectorBinning);
 
   // The beam pipe
   std::vector<double> beamPipeBoundaries = {detectorIr, beamPipeOr, detectorHz};
-  auto beamPipe = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "beam_pipe", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
+  auto beamPipe = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "beam_pipe", Transform3::Identity(), VolumeBounds::eCylinder,
       beamPipeBoundaries, innerBuilder);
   detector->add(std::move(beamPipe));
 
   // A pixel system
   std::vector<double> pixelBoundaries = {pixelIr, pixelOr, detectorHz};
-  std::vector<Acts::AxisDirection> pixelBinning = {Acts::AxisDirection::AxisZ};
-  auto pixel = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixel", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
-      pixelBoundaries, pixelBinning);
+  std::vector<AxisDirection> pixelBinning = {AxisDirection::AxisZ};
+  auto pixel = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixel", Transform3::Identity(), VolumeBounds::eCylinder, pixelBoundaries,
+      pixelBinning);
 
   // Nec: Small differences to check if the adjustments are made
   std::vector<double> pixelEcBoundaries = {pixelIr, pixelOr - 5., pixelEcHz};
-  std::vector<Acts::AxisDirection> pixelEcBinning = {
-      Acts::AxisDirection::AxisZ};
+  std::vector<AxisDirection> pixelEcBinning = {AxisDirection::AxisZ};
 
-  auto pixelNec = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
+  auto pixelNec = std::make_unique<Experimental::Gen2Blueprint::Node>(
       "pixelNec",
-      Acts::Transform3::Identity() *
-          Acts::Translation3(0., 0., -detectorHz + pixelEcHz),
-      Acts::VolumeBounds::eCylinder, pixelEcBoundaries, pixelEcBinning);
+      Transform3::Identity() * Translation3(0., 0., -detectorHz + pixelEcHz),
+      VolumeBounds::eCylinder, pixelEcBoundaries, pixelEcBinning);
 
   // Add a single encap layer
   std::vector<double> pixelNecBoundaries = {pixelIr + 2, pixelOr - 7., 10.};
-  auto pixelNecLayer =
-      std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-          "pixelNecLayer",
-          Acts::Transform3::Identity() *
-              Acts::Translation3(0., 0., -detectorHz + pixelEcHz),
-          Acts::VolumeBounds::eCylinder, pixelNecBoundaries, innerBuilder);
+  auto pixelNecLayer = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixelNecLayer",
+      Transform3::Identity() * Translation3(0., 0., -detectorHz + pixelEcHz),
+      VolumeBounds::eCylinder, pixelNecBoundaries, innerBuilder);
 
   pixelNec->add(std::move(pixelNecLayer));
 
   // Barrel
   std::vector<double> pixelBarrelBoundaries = {pixelIr + 1, pixelOr - 1.,
                                                detectorHz - 2 * pixelEcHz};
-  std::vector<Acts::AxisDirection> pixelBarrelBinning = {
-      Acts::AxisDirection::AxisR};
+  std::vector<AxisDirection> pixelBarrelBinning = {AxisDirection::AxisR};
 
-  auto pixelBarrel = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixelBarrel", Acts::Transform3::Identity(),
-      Acts::VolumeBounds::eCylinder, pixelBarrelBoundaries, pixelBarrelBinning);
+  auto pixelBarrel = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixelBarrel", Transform3::Identity(), VolumeBounds::eCylinder,
+      pixelBarrelBoundaries, pixelBarrelBinning);
 
   std::vector<double> pixelBarrelL0Boundaries = {60, 65.,
                                                  detectorHz - 2 * pixelEcHz};
-  auto pixelBarrelL0 =
-      std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-          "pixelBarrelL0", Acts::Transform3::Identity(),
-          Acts::VolumeBounds::eCylinder, pixelBarrelL0Boundaries, innerBuilder);
+  auto pixelBarrelL0 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixelBarrelL0", Transform3::Identity(), VolumeBounds::eCylinder,
+      pixelBarrelL0Boundaries, innerBuilder);
 
   std::vector<double> pixelBarrelL1Boundaries = {100, 105.,
                                                  detectorHz - 2 * pixelEcHz};
-  auto pixelBarrelL1 =
-      std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-          "pixelBarrelL1", Acts::Transform3::Identity(),
-          Acts::VolumeBounds::eCylinder, pixelBarrelL1Boundaries, innerBuilder);
+  auto pixelBarrelL1 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixelBarrelL1", Transform3::Identity(), VolumeBounds::eCylinder,
+      pixelBarrelL1Boundaries, innerBuilder);
   pixelBarrel->add(std::move(pixelBarrelL0));
   pixelBarrel->add(std::move(pixelBarrelL1));
 
-  auto pixelPec = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
+  auto pixelPec = std::make_unique<Experimental::Gen2Blueprint::Node>(
       "pixelPec",
-      Acts::Transform3::Identity() *
-          Acts::Translation3(0., 0., +detectorHz - pixelEcHz),
-      Acts::VolumeBounds::eCylinder, pixelEcBoundaries, pixelEcBinning);
+      Transform3::Identity() * Translation3(0., 0., +detectorHz - pixelEcHz),
+      VolumeBounds::eCylinder, pixelEcBoundaries, pixelEcBinning);
 
   std::vector<double> pixelPecBoundaries = {pixelIr + 2, pixelOr - 7., 10.};
-  auto pixelPecLayer =
-      std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-          "pixelPecLayer",
-          Acts::Transform3::Identity() *
-              Acts::Translation3(0., 0., detectorHz - pixelEcHz),
-          Acts::VolumeBounds::eCylinder, pixelPecBoundaries, innerBuilder);
+  auto pixelPecLayer = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixelPecLayer",
+      Transform3::Identity() * Translation3(0., 0., detectorHz - pixelEcHz),
+      VolumeBounds::eCylinder, pixelPecBoundaries, innerBuilder);
 
   pixelPec->add(std::move(pixelPecLayer));
 
@@ -201,7 +192,7 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   detector->add(std::move(pixel));
 
   std::ofstream fs("detector_with_gaps.dot");
-  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *detector);
+  Experimental::detail::BlueprintDrawer::dotStream(fs, *detector);
   fs.close();
 
   // Simple test
@@ -210,7 +201,7 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   BOOST_CHECK_EQUAL(detector->children[1u]->name, "pixel");
 
   // Now fill the gaps
-  Acts::Experimental::detail::BlueprintHelper::fillGaps(*detector);
+  Experimental::detail::BlueprintHelper::fillGaps(*detector);
 
   // Do the tests again
   BOOST_CHECK_EQUAL(detector->children.size(), 4u);
@@ -257,33 +248,33 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
       pixelOr);
 
   std::ofstream fs2("detector_without_gaps.dot");
-  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs2, *detector);
+  Experimental::detail::BlueprintDrawer::dotStream(fs2, *detector);
   fs2.close();
 }
 
 BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapException) {
   auto innerBuilder =
-      std::make_shared<Acts::Experimental::IInternalStructureBuilder>();
+      std::make_shared<Experimental::IInternalStructureBuilder>();
 
   // The root node - detector
   std::vector<double> detectorBoundaries = {0., 50., 100.};
-  std::vector<Acts::AxisDirection> detectorBinning = {
-      Acts::AxisDirection::AxisX};
-  auto detector = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
+  std::vector<AxisDirection> detectorBinning = {AxisDirection::AxisX};
+  auto detector = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "detector", Transform3::Identity(), VolumeBounds::eCylinder,
       detectorBoundaries, detectorBinning);
 
   // Add a volume
   std::vector<double> volTwoBoundaries = {0., 20., 100.};
-  auto vol = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "vol", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
-      volTwoBoundaries, innerBuilder);
+  auto vol = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "vol", Transform3::Identity(), VolumeBounds::eCylinder, volTwoBoundaries,
+      innerBuilder);
   detector->add(std::move(vol));
 
   // Throw because cylinders can not be binned in x
-  BOOST_CHECK_THROW(
-      Acts::Experimental::detail::BlueprintHelper::fillGaps(*detector),
-      std::runtime_error);
+  BOOST_CHECK_THROW(Experimental::detail::BlueprintHelper::fillGaps(*detector),
+                    std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

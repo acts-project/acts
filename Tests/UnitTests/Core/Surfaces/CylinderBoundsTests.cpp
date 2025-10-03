@@ -13,7 +13,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -21,9 +21,11 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 /// Unit test for creating compliant/non-compliant CylinderBounds object
 
 BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
@@ -201,4 +203,4 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsCenter) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

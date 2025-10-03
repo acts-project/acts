@@ -37,7 +37,9 @@ ParamVector makeTrack(RandomEngine& rndEngine) {
   return pars;
 }
 
-BOOST_AUTO_TEST_SUITE(LineWithPartialTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(lineParameterTest) {
   constexpr std::size_t trials = 1000;
@@ -115,3 +117,5 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
   }
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

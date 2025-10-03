@@ -19,22 +19,23 @@
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <string>
 
-namespace Acts::Test {
+using namespace Acts;
+namespace ActsTests {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-BOOST_AUTO_TEST_SUITE(ConeSurfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// Unit test for creating compliant/non-compliant ConeSurface object
 BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
@@ -289,4 +290,4 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+}  // namespace ActsTests

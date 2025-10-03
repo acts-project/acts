@@ -24,122 +24,121 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <memory>
 #include <stdexcept>
 #include <vector>
 
-class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
+using namespace Acts;
+
+namespace ActsTests {
+
+class CompBuilder final : public Experimental::IDetectorComponentBuilder {
  public:
   explicit CompBuilder(
-      const std::vector<std::shared_ptr<Acts::Surface>>& sensitives = {})
+      const std::vector<std::shared_ptr<Surface>>& sensitives = {})
       : m_sensitives(sensitives) {}
 
-  Acts::Experimental::DetectorComponent construct(
-      const Acts::GeometryContext& gctx) const final {
-    auto bounds = std::make_unique<Acts::CuboidVolumeBounds>(10., 10., 10.);
+  Experimental::DetectorComponent construct(
+      const GeometryContext& gctx) const final {
+    auto bounds = std::make_unique<CuboidVolumeBounds>(10., 10., 10.);
     // Construct the DetectorVolume
-    auto dVolume =
-        m_sensitives.empty()
-            ? Acts::Experimental::DetectorVolumeFactory::construct(
-                  Acts::Experimental::defaultPortalGenerator(), gctx,
-                  "TestVolume", Acts::Transform3::Identity(), std::move(bounds),
-                  Acts::Experimental::tryAllPortals())
-            : Acts::Experimental::DetectorVolumeFactory::construct(
-                  Acts::Experimental::defaultPortalGenerator(), gctx,
-                  "TestVolumeWithSurfaces", Acts::Transform3::Identity(),
-                  std::move(bounds), m_sensitives, {},
-                  Acts::Experimental::tryNoVolumes(),
-                  Acts::Experimental::tryAllPortalsAndSurfaces());
+    auto dVolume = m_sensitives.empty()
+                       ? Experimental::DetectorVolumeFactory::construct(
+                             Experimental::defaultPortalGenerator(), gctx,
+                             "TestVolume", Transform3::Identity(),
+                             std::move(bounds), Experimental::tryAllPortals())
+                       : Experimental::DetectorVolumeFactory::construct(
+                             Experimental::defaultPortalGenerator(), gctx,
+                             "TestVolumeWithSurfaces", Transform3::Identity(),
+                             std::move(bounds), m_sensitives, {},
+                             Experimental::tryNoVolumes(),
+                             Experimental::tryAllPortalsAndSurfaces());
 
     // Fill the portal container
-    Acts::Experimental::DetectorComponent::PortalContainer portalContainer;
-    for (auto [ip, p] : Acts::enumerate(dVolume->portalPtrs())) {
+    Experimental::DetectorComponent::PortalContainer portalContainer;
+    for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {
       portalContainer[ip] = p;
     }
 
-    auto geoID = Acts::GeometryIdentifier().withVolume(1);
+    auto geoID = GeometryIdentifier().withVolume(1);
     dVolume->assignGeometryId(geoID);
 
-    return Acts::Experimental::DetectorComponent{
+    return Experimental::DetectorComponent{
         {dVolume},
         portalContainer,
-        {{dVolume}, Acts::Experimental::tryRootVolumes()}};
+        {{dVolume}, Experimental::tryRootVolumes()}};
   }
 
  private:
-  std::vector<std::shared_ptr<Acts::Surface>> m_sensitives;
+  std::vector<std::shared_ptr<Surface>> m_sensitives;
 };
 
-class SurfaceGeoIdGenerator : public Acts::Experimental::IGeometryIdGenerator {
+class SurfaceGeoIdGenerator : public Experimental::IGeometryIdGenerator {
  public:
-  Acts::Experimental::IGeometryIdGenerator::GeoIdCache generateCache()
-      const final {
+  Experimental::IGeometryIdGenerator::GeoIdCache generateCache() const final {
     return std::any();
   }
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::DetectorVolume& dVolume) const final {
-    for (auto [is, s] : Acts::enumerate(dVolume.surfacePtrs())) {
-      auto geoID = Acts::GeometryIdentifier().withSensitive(is + 1);
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Experimental::DetectorVolume& dVolume) const final {
+    for (auto [is, s] : enumerate(dVolume.surfacePtrs())) {
+      auto geoID = GeometryIdentifier().withSensitive(is + 1);
       s->assignGeometryId(geoID);
     }
   }
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::Portal& /*portal*/) const final {}
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Experimental::Portal& /*portal*/) const final {}
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Surface& /*surface*/) const final {}
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Surface& /*surface*/) const final {}
 };
 
-Acts::GeometryContext tContext;
+GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Detector)
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(DetectorBuilder_Misconfigured) {
   // Detector builder
-  Acts::Experimental::DetectorBuilder::Config dCfg;
+  Experimental::DetectorBuilder::Config dCfg;
   dCfg.auxiliary = "*** Test X * Misconfigued ***";
   dCfg.name = "EmptyCylinder";
   dCfg.builder = nullptr;
 
-  BOOST_CHECK_THROW(auto a = Acts::Experimental::DetectorBuilder(dCfg),
+  BOOST_CHECK_THROW(auto a = Experimental::DetectorBuilder(dCfg),
                     std::invalid_argument);
 
   // Detector builder with sensitives but no assigned geometry ids to them
-  Acts::Test::DetectorElementStub detElement0(
-      Acts::Transform3::Identity(),
-      std::make_shared<Acts::RectangleBounds>(5., 5.), 0.1);
-  Acts::Test::DetectorElementStub detElement1(
-      Acts::Transform3::Identity(),
-      std::make_shared<Acts::RectangleBounds>(5., 5.), 0.1);
+  ActsTests::DetectorElementStub detElement0(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(5., 5.), 0.1);
+  ActsTests::DetectorElementStub detElement1(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(5., 5.), 0.1);
 
-  std::vector<std::shared_ptr<Acts::Surface>> sensitives;
+  std::vector<std::shared_ptr<Surface>> sensitives;
   sensitives.push_back(detElement0.surface().getSharedPtr());
   sensitives.push_back(detElement1.surface().getSharedPtr());
   dCfg.builder = std::make_shared<CompBuilder>(sensitives);
 
-  BOOST_CHECK_THROW(
-      Acts::Experimental::DetectorBuilder(dCfg).construct(tContext),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(Experimental::DetectorBuilder(dCfg).construct(tContext),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorBuilder_test) {
   // Detector builder
-  Acts::Experimental::DetectorBuilder::Config dCfg;
+  Experimental::DetectorBuilder::Config dCfg;
   dCfg.auxiliary = "*** Test : Detector ***";
   dCfg.name = "TestDetector";
   dCfg.builder = std::make_shared<CompBuilder>();
 
-  BOOST_CHECK_NO_THROW(auto a = Acts::Experimental::DetectorBuilder(dCfg));
+  BOOST_CHECK_NO_THROW(auto a = Experimental::DetectorBuilder(dCfg));
 
-  auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
+  auto detector = Experimental::DetectorBuilder(dCfg).construct(tContext);
 
   BOOST_CHECK_EQUAL(detector->name(), "TestDetector");
   BOOST_CHECK_EQUAL(detector->rootVolumes().size(), 1);
@@ -147,26 +146,24 @@ BOOST_AUTO_TEST_CASE(DetectorBuilder_test) {
 
 BOOST_AUTO_TEST_CASE(DetectorBuilder_testWithSurfaces) {
   // Detector builder
-  Acts::Experimental::DetectorBuilder::Config dCfg;
+  Experimental::DetectorBuilder::Config dCfg;
   dCfg.auxiliary = "*** Test : Detector ***";
   dCfg.name = "TestDetectorWithSurfaces";
   dCfg.builder = std::make_shared<CompBuilder>();
 
   // Test detector with surfaces
-  Acts::Test::DetectorElementStub detElement0(
-      Acts::Transform3::Identity(),
-      std::make_shared<Acts::RectangleBounds>(5., 5.), 0.1);
-  Acts::Test::DetectorElementStub detElement1(
-      Acts::Transform3::Identity(),
-      std::make_shared<Acts::RectangleBounds>(5., 5.), 0.1);
+  ActsTests::DetectorElementStub detElement0(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(5., 5.), 0.1);
+  ActsTests::DetectorElementStub detElement1(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(5., 5.), 0.1);
 
-  std::vector<std::shared_ptr<Acts::Surface>> sensitives;
+  std::vector<std::shared_ptr<Surface>> sensitives;
   sensitives.push_back(detElement0.surface().getSharedPtr());
   sensitives.push_back(detElement1.surface().getSharedPtr());
   dCfg.builder = std::make_shared<CompBuilder>(sensitives);
   dCfg.geoIdGenerator = std::make_shared<SurfaceGeoIdGenerator>();
 
-  auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
+  auto detector = Experimental::DetectorBuilder(dCfg).construct(tContext);
   BOOST_CHECK_EQUAL(detector->name(), "TestDetectorWithSurfaces");
   BOOST_CHECK_EQUAL(
       detector->volumes()[0]->surfaces()[0]->geometryId().sensitive(), 1);
@@ -175,3 +172,5 @@ BOOST_AUTO_TEST_CASE(DetectorBuilder_testWithSurfaces) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

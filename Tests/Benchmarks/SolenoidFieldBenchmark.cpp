@@ -11,8 +11,8 @@
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -21,7 +21,9 @@
 #include <random>
 #include <string>
 
-using namespace Acts::UnitLiterals;
+using namespace Acts;
+using namespace UnitLiterals;
+using namespace ActsTests;
 
 int main(int argc, char* argv[]) {
   std::size_t iters_map = 5e2;
@@ -49,18 +51,18 @@ int main(int argc, char* argv[]) {
   double zMin = 2 * (-L / 2.);
   double zMax = 2 * (L / 2.);
 
-  Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
+  SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
   std::cout << "Building interpolated field map" << std::endl;
-  auto bFieldMap = Acts::solenoidFieldMap({rMin, rMax}, {zMin, zMax},
-                                          {nBinsR, nBinsZ}, bSolenoidField);
-  Acts::MagneticFieldContext mctx{};
+  auto bFieldMap = solenoidFieldMap({rMin, rMax}, {zMin, zMax},
+                                    {nBinsR, nBinsZ}, bSolenoidField);
+  MagneticFieldContext mctx{};
 
   std::minstd_rand rng;
   std::uniform_real_distribution<double> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
   std::uniform_real_distribution<double> rDist(0, R * 1.5);
   std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
                                                  std::numbers::pi);
-  auto genPos = [&]() -> Acts::Vector3 {
+  auto genPos = [&]() -> Vector3 {
     const double z = zDist(rng), r = rDist(rng), phi = phiDist(rng);
     return {r * std::cos(phi), r * std::sin(phi), z};
   };
@@ -84,9 +86,9 @@ int main(int argc, char* argv[]) {
   // SolenoidBField lookup is so slow that the cost of generating a random field
   // lookup position is negligible in comparison...
   std::cout << "Benchmarking random SolenoidBField lookup: " << std::flush;
-  const auto solenoid_result = Acts::Test::microBenchmark(
-      [&] { return bSolenoidField.getField(genPos()); }, iters_solenoid,
-      runs_solenoid);
+  const auto solenoid_result =
+      microBenchmark([&] { return bSolenoidField.getField(genPos()); },
+                     iters_solenoid, runs_solenoid);
   std::cout << solenoid_result << std::endl;
   csv("solenoid", solenoid_result);
 
@@ -100,8 +102,8 @@ int main(int argc, char* argv[]) {
   //   that sense, it provides a lower bound of field lookup performance.
   std::cout << "Benchmarking interpolated field lookup: " << std::flush;
   const auto fixedPos = genPos();
-  const auto map_fixed_nocache_result = Acts::Test::microBenchmark(
-      [&] { return bFieldMap.getField(fixedPos); }, iters_map);
+  const auto map_fixed_nocache_result =
+      microBenchmark([&] { return bFieldMap.getField(fixedPos); }, iters_map);
   std::cout << map_fixed_nocache_result << std::endl;
   csv("interp_nocache_fixed", map_fixed_nocache_result);
 
@@ -110,8 +112,8 @@ int main(int argc, char* argv[]) {
   // - The second benchmark generates random positions, so it is biased by the
   //   cost of random position generation and has unrealistically bad cache
   //   locality, but provides an upper bound of field lookup performance.
-  const auto map_rand_result = Acts::Test::microBenchmark(
-      [&] { return bFieldMap.getField(genPos()); }, iters_map);
+  const auto map_rand_result =
+      microBenchmark([&] { return bFieldMap.getField(genPos()); }, iters_map);
   std::cout << map_rand_result << std::endl;
   csv("interp_nocache_random", map_rand_result);
 
@@ -123,7 +125,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Benchmarking cached interpolated field lookup: "
               << std::flush;
     auto cache = bFieldMap.makeCache(mctx);
-    const auto map_cached_result_cache = Acts::Test::microBenchmark(
+    const auto map_cached_result_cache = microBenchmark(
         [&] { return bFieldMap.getField(fixedPos, cache).value(); }, iters_map);
     std::cout << map_cached_result_cache << std::endl;
     csv("interp_cache_fixed", map_cached_result_cache);
@@ -137,7 +139,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Benchmarking cached random interpolated field lookup: "
               << std::flush;
     auto cache2 = bFieldMap.makeCache(mctx);
-    const auto map_rand_result_cache = Acts::Test::microBenchmark(
+    const auto map_rand_result_cache = microBenchmark(
         [&] { return bFieldMap.getField(genPos(), cache2).value(); },
         iters_map);
     std::cout << map_rand_result_cache << std::endl;
@@ -152,21 +154,21 @@ int main(int argc, char* argv[]) {
   {
     std::cout << "Benchmarking advancing interpolated field lookup: "
               << std::flush;
-    Acts::Vector3 pos{0, 0, 0};
-    Acts::Vector3 dir{};
+    Vector3 pos{0, 0, 0};
+    Vector3 dir{};
     dir.setRandom();
     double h = 1e-3;
-    std::vector<Acts::Vector3> steps;
+    std::vector<Vector3> steps;
     steps.reserve(iters_map);
     for (std::size_t i = 0; i < iters_map; i++) {
       pos += dir * h;
-      double z = pos[Acts::eFreePos2];
-      if (Acts::VectorHelpers::perp(pos) > rMax || z >= zMax || z < zMin) {
+      double z = pos[eFreePos2];
+      if (VectorHelpers::perp(pos) > rMax || z >= zMax || z < zMin) {
         break;
       }
       steps.push_back(pos);
     }
-    const auto map_adv_result = Acts::Test::microBenchmark(
+    const auto map_adv_result = microBenchmark(
         [&](const auto& s) { return bFieldMap.getField(s); }, steps);
     std::cout << map_adv_result << std::endl;
     csv("interp_nocache_adv", map_adv_result);
@@ -180,7 +182,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Benchmarking cached advancing interpolated field lookup: "
               << std::flush;
     auto cache = bFieldMap.makeCache(mctx);
-    const auto map_adv_result_cache = Acts::Test::microBenchmark(
+    const auto map_adv_result_cache = microBenchmark(
         [&](const auto& s) { return bFieldMap.getField(s, cache).value(); },
         steps);
     std::cout << map_adv_result_cache << std::endl;

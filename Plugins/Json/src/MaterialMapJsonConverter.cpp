@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
+#include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
@@ -24,17 +24,17 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
-#include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
-#include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
-#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
-#include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsPlugins/Json/ITrackingGeometryJsonDecorator.hpp"
+#include "ActsPlugins/Json/IVolumeMaterialJsonDecorator.hpp"
+#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
+#include "ActsPlugins/Json/VolumeJsonConverter.hpp"
 #include <Acts/Surfaces/AnnulusBounds.hpp>
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>

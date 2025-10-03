@@ -85,7 +85,9 @@ struct MockTrack {
   TrackStateRange trackStatesReversed() const { return {}; }
 };
 
-BOOST_AUTO_TEST_SUITE(TrackSelectorTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFindingSuite)
 
 std::vector<double> etaValues{-5.0, -4.5, -4.0, -3.5, -3.0, -2.5, -2.0, -1.5,
                               -1.0, -0.5, 0.0,  0.5,  1.0,  1.5,  2.0,  2.5,
@@ -750,3 +752,5 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

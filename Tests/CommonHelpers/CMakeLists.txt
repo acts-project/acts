@@ -5,6 +5,8 @@ add_library(
     ActsTestsCommonHelpers
     SHARED
     src/DataDirectory.cpp
+    src/DetectorElementStub.cpp
+    src/CubicTrackingGeometry.cpp
     src/CylindricalDetector.cpp
     src/CylindricalTrackingGeometry.cpp
 )
@@ -35,4 +37,4 @@ else()
     )
 endif()
 
-acts_compile_headers(TestsCommonHelpers GLOB "include/Acts/**/*.hpp")
+acts_compile_headers(TestsCommonHelpers GLOB "include/ActsTests/**/*.hpp")

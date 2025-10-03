@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
+#include "ActsPlugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/PortalNavigation.hpp"
-#include "Acts/Plugins/Json/GridJsonConverter.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "ActsPlugins/Json/GridJsonConverter.hpp"
+#include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <array>
 #include <memory>

@@ -23,6 +23,9 @@
 #include "SpacePoint.hpp"
 
 using namespace Acts::UnitLiterals;
+using namespace ActsPlugins;
+
+namespace ActsTests {
 
 // Function to create and initialize the test vector
 std::vector<std::unique_ptr<const SpacePoint>> createTestVector() {
@@ -45,7 +48,7 @@ std::vector<std::unique_ptr<const SpacePoint>> createTestVector() {
   return testVector;
 }
 
-namespace Acts::Test {
+BOOST_AUTO_TEST_SUITE(HashingSuite)
 
 BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   using SpacePointPtrVector = std::vector<const SpacePoint*>;
@@ -79,7 +82,7 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   double layerZMin = -550;
   double layerZMax = 550;
 
-  ActsPlugins::HashingAlgorithmConfig hashingConfig;
+  HashingAlgorithmConfig hashingConfig;
   hashingConfig.bucketSize = bucketSize;
   hashingConfig.zBins = zBins;
   hashingConfig.phiBins = phiBins;
@@ -88,20 +91,17 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   hashingConfig.layerZMin = layerZMin;
   hashingConfig.layerZMax = layerZMax;
 
-  ActsPlugins::HashingTrainingConfig hashingTrainingConfig;
+  HashingTrainingConfig hashingTrainingConfig;
   hashingTrainingConfig.annoySeed = annoySeed;
   hashingTrainingConfig.f = nf;
 
-  ActsPlugins::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector>
-      hashing =
-          ActsPlugins::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector>(
-              hashingConfig);
-  ActsPlugins::HashingTrainingAlgorithm<SpacePointPtrVector> hashingTraining =
-      ActsPlugins::HashingTrainingAlgorithm<SpacePointPtrVector>(
-          hashingTrainingConfig);
+  HashingAlgorithm<const SpacePoint*, SpacePointPtrVector> hashing =
+      HashingAlgorithm<const SpacePoint*, SpacePointPtrVector>(hashingConfig);
+  HashingTrainingAlgorithm<SpacePointPtrVector> hashingTraining =
+      HashingTrainingAlgorithm<SpacePointPtrVector>(hashingTrainingConfig);
 
   // Hashing Training
-  ActsPlugins::AnnoyModel annoyModel = hashingTraining.execute(spVec);
+  AnnoyModel annoyModel = hashingTraining.execute(spVec);
 
   // Hashing
   std::vector<SpacePointPtrVector> bucketsPtrs;
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   double layerZMin = -550;
   double layerZMax = 550;
 
-  ActsPlugins::HashingAlgorithmConfig hashingConfig;
+  HashingAlgorithmConfig hashingConfig;
   hashingConfig.bucketSize = bucketSize;
   hashingConfig.zBins = zBins;
   hashingConfig.phiBins = phiBins;
@@ -153,20 +153,17 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   hashingConfig.layerZMin = layerZMin;
   hashingConfig.layerZMax = layerZMax;
 
-  ActsPlugins::HashingTrainingConfig hashingTrainingConfig;
+  HashingTrainingConfig hashingTrainingConfig;
   hashingTrainingConfig.annoySeed = annoySeed;
   hashingTrainingConfig.f = nf;
 
-  ActsPlugins::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector>
-      hashing =
-          ActsPlugins::HashingAlgorithm<const SpacePoint*, SpacePointPtrVector>(
-              hashingConfig);
-  ActsPlugins::HashingTrainingAlgorithm<SpacePointPtrVector> hashingTraining =
-      ActsPlugins::HashingTrainingAlgorithm<SpacePointPtrVector>(
-          hashingTrainingConfig);
+  HashingAlgorithm<const SpacePoint*, SpacePointPtrVector> hashing =
+      HashingAlgorithm<const SpacePoint*, SpacePointPtrVector>(hashingConfig);
+  HashingTrainingAlgorithm<SpacePointPtrVector> hashingTraining =
+      HashingTrainingAlgorithm<SpacePointPtrVector>(hashingTrainingConfig);
 
   // Hashing Training
-  ActsPlugins::AnnoyModel annoyModel = hashingTraining.execute(spVec);
+  AnnoyModel annoyModel = hashingTraining.execute(spVec);
 
   // Hashing
   std::vector<SpacePointPtrVector> bucketsPtrs;
@@ -182,4 +179,6 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

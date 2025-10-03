@@ -24,7 +24,7 @@ namespace Acts {
 class Surface;
 }  // namespace Acts
 
-namespace DD4hepTestsHelper {
+namespace ActsTests::DD4hepTestsHelper {
 
 /// @brief helper to ensure that an extension is set,
 /// copied from the ODD detector code
@@ -98,4 +98,4 @@ std::string surfaceToXML(const Acts::GeometryContext& gctx,
                          const Acts::Surface& surface,
                          const Acts::Transform3& ref);
 
-}  // namespace DD4hepTestsHelper
+}  // namespace ActsTests::DD4hepTestsHelper

@@ -14,7 +14,11 @@
 
 #include <utility>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace AcsTests {
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(HomogeneousVolumeMaterial_construction_test) {
@@ -54,4 +58,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousVolumeMaterial_access_test) {
   // Test equality of the copy
   BOOST_CHECK_EQUAL(mat, mat3d);
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace AcsTests

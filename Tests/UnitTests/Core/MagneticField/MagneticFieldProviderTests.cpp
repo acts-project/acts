@@ -11,10 +11,14 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActssTests {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
+
+BOOST_AUTO_TEST_SUITE(MagneticFieldSuite)
 
 BOOST_AUTO_TEST_CASE(TypeErasedCacheType) {
   bool constructor_called = false;
@@ -51,4 +55,6 @@ BOOST_AUTO_TEST_CASE(TypeErasedCacheType) {
   BOOST_CHECK(destructor_called);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActssTests

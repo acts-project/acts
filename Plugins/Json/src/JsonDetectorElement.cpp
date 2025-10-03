@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/JsonDetectorElement.hpp"
+#include "ActsPlugins/Json/JsonDetectorElement.hpp"
 
-#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
+#include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
 namespace Acts {
 

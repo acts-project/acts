@@ -6,21 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
+#include "ActsPlugins/Json/DetectorJsonConverter.hpp"
 
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
-#include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
-#include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
-#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
-#include "Acts/Plugins/Json/PortalJsonConverter.hpp"
-#include "Acts/Plugins/Json/VolumeBoundsJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Json/DetectorVolumeFinderJsonConverter.hpp"
+#include "ActsPlugins/Json/DetectorVolumeJsonConverter.hpp"
+#include "ActsPlugins/Json/DetrayJsonHelper.hpp"
+#include "ActsPlugins/Json/IndexedSurfacesJsonConverter.hpp"
+#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/PortalJsonConverter.hpp"
+#include "ActsPlugins/Json/VolumeBoundsJsonConverter.hpp"
 
 #include <algorithm>
 #include <chrono>

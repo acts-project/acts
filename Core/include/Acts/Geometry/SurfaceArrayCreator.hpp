@@ -30,11 +30,11 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace ActsTests {
 struct SurfaceArrayCreatorFixture;
 }
+
+namespace Acts {
 
 /// Function type for comparing two surfaces in a given geometry context and
 /// axis direction.
@@ -71,7 +71,7 @@ using AxisScalar = Vector3::Scalar;
 /// @todo write more documentation on how this is done
 class SurfaceArrayCreator {
  public:
-  friend struct Test::SurfaceArrayCreatorFixture;
+  friend struct ActsTests::SurfaceArrayCreatorFixture;
   friend class SurfaceArray;
 
   struct ProtoAxis {

@@ -9,10 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -28,7 +28,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(UtilitiesJsonConverter)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   BinUtility reference(2, 0., 4., open, AxisDirection::AxisR);
@@ -137,3 +139,5 @@ BOOST_AUTO_TEST_CASE(Range1DRoundTrip) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

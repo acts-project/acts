@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <string>
@@ -20,7 +20,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(DelegateTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 int sumImpl(int a, int b) {
   return a + b;
@@ -457,3 +459,5 @@ BOOST_AUTO_TEST_CASE(NonVoidDelegateTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

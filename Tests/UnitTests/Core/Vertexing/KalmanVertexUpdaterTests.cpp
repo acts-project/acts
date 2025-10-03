@@ -43,9 +43,10 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
@@ -80,6 +81,7 @@ std::uniform_real_distribution<double> resAngDist(0., 0.1);
 std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
 // Number of vertices per test event distribution
 
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 ///
 /// @brief Unit test for KalmanVertexUpdater
 ///
@@ -327,4 +329,6 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
 }  // end test case
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

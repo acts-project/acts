@@ -26,7 +26,9 @@ using namespace Acts::Experimental;
 GeometryContext tContext;
 Logging::Level logLevel = Logging::VERBOSE;
 
-BOOST_AUTO_TEST_SUITE(DetectorTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(IndexedRootVolumeFinderBuilderCylindrical) {
   auto portalGenerator = defaultPortalGenerator();
@@ -69,15 +71,15 @@ BOOST_AUTO_TEST_CASE(IndexedRootVolumeFinderBuilderCylindrical) {
       innerV, middleLV, middleDV, middleUV, middleRV, outerV};
 
   IndexedRootVolumeFinderBuilder builder(
-      {Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisR});
+      {AxisDirection::AxisZ, AxisDirection::AxisR});
 
   // Let's construct a detector
   auto rootVolumeFinder = builder.construct(tContext, rootVolumes);
 
-  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
-  Acts::Experimental::GeometryIdGenerator generator(
+  Experimental::GeometryIdGenerator::Config generatorConfig;
+  Experimental::GeometryIdGenerator generator(
       generatorConfig,
-      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+      getDefaultLogger("SequentialIdGenerator", Logging::VERBOSE));
   auto cache = generator.generateCache();
   for (auto& vol : rootVolumes) {
     generator.assignGeometryId(cache, *vol);
@@ -107,3 +109,5 @@ BOOST_AUTO_TEST_CASE(IndexedRootVolumeFinderBuilderCylindrical) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

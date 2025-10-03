@@ -24,82 +24,82 @@
 #include <memory>
 #include <stdexcept>
 
-auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
-auto tContext = Acts::GeometryContext();
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+auto portalGenerator = Experimental::defaultPortalGenerator();
+auto tContext = GeometryContext();
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(CubicVolumeExceptions) {
   // A perfect box shape
-  auto box = std::make_shared<Acts::CuboidVolumeBounds>(10, 10, 10);
+  auto box = std::make_shared<CuboidVolumeBounds>(10, 10, 10);
 
   // Create volume A
-  auto volumeA = Acts::Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "VolumeA", Acts::Transform3::Identity(), box,
-      Acts::Experimental::tryAllPortals());
+  auto volumeA = Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "VolumeA", Transform3::Identity(), box,
+      Experimental::tryAllPortals());
 
   // Create volume B
-  auto transformB = Acts::Transform3::Identity();
-  transformB.prerotate(Acts::AngleAxis3(0.234, Acts::Vector3::UnitZ()));
+  auto transformB = Transform3::Identity();
+  transformB.prerotate(AngleAxis3(0.234, Vector3::UnitZ()));
 
-  auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto volumeB = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "volumeB", transformB, box,
-      Acts::Experimental::tryAllPortals());
+      Experimental::tryAllPortals());
   // Build the container
-  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
+  std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes = {
       volumeA, volumeB};
 
-  BOOST_CHECK_THROW(Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-                        tContext, volumes, Acts::AxisDirection::AxisX, {},
-                        Acts::Logging::VERBOSE),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      Experimental::detail::CuboidalDetectorHelper::connect(
+          tContext, volumes, AxisDirection::AxisX, {}, Logging::VERBOSE),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(SimpleBoxConnection) {
-  std::array<Acts::AxisDirection, 3> binningValues = {
-      Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY,
-      Acts::AxisDirection::AxisZ};
+  std::array<AxisDirection, 3> binningValues = {
+      AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
   for (auto bVal : binningValues) {
     // A perfect box shape
-    auto box = std::make_shared<Acts::CuboidVolumeBounds>(10, 10, 10);
+    auto box = std::make_shared<CuboidVolumeBounds>(10, 10, 10);
 
     // Create volume A
-    auto volumeA = Acts::Experimental::DetectorVolumeFactory::construct(
-        portalGenerator, tContext, "VolumeA", Acts::Transform3::Identity(), box,
-        Acts::Experimental::tryAllPortals());
+    auto volumeA = Experimental::DetectorVolumeFactory::construct(
+        portalGenerator, tContext, "VolumeA", Transform3::Identity(), box,
+        Experimental::tryAllPortals());
 
     // Move it into the bval direction
-    auto transformB = Acts::Transform3::Identity();
+    auto transformB = Transform3::Identity();
 
-    Acts::Vector3 translation = Acts::Vector3::Zero();
+    Vector3 translation = Vector3::Zero();
     translation[toUnderlying(bVal)] = 20;
     transformB.pretranslate(translation);
     // Create volume B
-    auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
+    auto volumeB = Experimental::DetectorVolumeFactory::construct(
         portalGenerator, tContext, "VolumeB", transformB, box,
-        Acts::Experimental::tryAllPortals());
+        Experimental::tryAllPortals());
     // Build the container
-    std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
+    std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes = {
         volumeA, volumeB};
-    auto container =
-        Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-            tContext, volumes, bVal, {}, Acts::Logging::VERBOSE);
+    auto container = Experimental::detail::CuboidalDetectorHelper::connect(
+        tContext, volumes, bVal, {}, Logging::VERBOSE);
 
     // Check the container is constructed
     BOOST_CHECK(!container.empty());
 
-    Acts::ObjVisualization3D obj;
-    Acts::GeometryView3D::drawDetectorVolume(obj, *volumeA, tContext);
-    Acts::GeometryView3D::drawDetectorVolume(obj, *volumeB, tContext);
-    obj.write("ConnectectBoxesRegular_" + Acts::axisDirectionName(bVal) +
-              ".obj");
+    ObjVisualization3D obj;
+    GeometryView3D::drawDetectorVolume(obj, *volumeA, tContext);
+    GeometryView3D::drawDetectorVolume(obj, *volumeB, tContext);
+    obj.write("ConnectectBoxesRegular_" + axisDirectionName(bVal) + ".obj");
   }
 }
 
 BOOST_AUTO_TEST_CASE(IrregularBoxConnectionInZ) {
-  std::vector<Acts::AxisDirection> binningValues = {Acts::AxisDirection::AxisX,
-                                                    Acts::AxisDirection::AxisY,
-                                                    Acts::AxisDirection::AxisZ};
+  std::vector<AxisDirection> binningValues = {
+      AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
 
   using HlPos = std::array<double, 2u>;
   using VolHlPos = std::array<HlPos, 3u>;
@@ -112,13 +112,13 @@ BOOST_AUTO_TEST_CASE(IrregularBoxConnectionInZ) {
   std::array<VolSetup, 3u> volSetups = {
       {{sP, cPA, cPB}, {cPB, sP, cPA}, {cPA, cPB, sP}}};
 
-  std::array<Acts::Transform3, 2u> transforms = {
-      Acts::Transform3::Identity(),
-      Acts::Transform3{Acts::Transform3::Identity()}.prerotate(
-          Acts::AngleAxis3(0.34, Acts::Vector3(1., 1., 1.).normalized()))};
+  std::array<Transform3, 2u> transforms = {
+      Transform3::Identity(),
+      Transform3{Transform3::Identity()}.prerotate(
+          AngleAxis3(0.34, Vector3(1., 1., 1.).normalized()))};
 
   // Try with arbitrary rotations
-  for (auto [it, t] : Acts::enumerate(transforms)) {
+  for (auto [it, t] : enumerate(transforms)) {
     std::string trstr = it == 0 ? "" : "_rotated";
     auto rotation = t.rotation();
     // Try for all binning values
@@ -126,126 +126,122 @@ BOOST_AUTO_TEST_CASE(IrregularBoxConnectionInZ) {
       auto [vsA, vsB, vsC] = volSetups[toUnderlying(bVal)];
 
       // Three box shares with different length in Z
-      auto boxA = std::make_shared<Acts::CuboidVolumeBounds>(
-          vsA[0][0], vsB[0][0], vsC[0][0]);
-      auto boxB = std::make_shared<Acts::CuboidVolumeBounds>(
-          vsA[1][0], vsB[1][0], vsC[1][0]);
-      auto boxC = std::make_shared<Acts::CuboidVolumeBounds>(
-          vsA[2][0], vsB[2][0], vsC[2][0]);
+      auto boxA =
+          std::make_shared<CuboidVolumeBounds>(vsA[0][0], vsB[0][0], vsC[0][0]);
+      auto boxB =
+          std::make_shared<CuboidVolumeBounds>(vsA[1][0], vsB[1][0], vsC[1][0]);
+      auto boxC =
+          std::make_shared<CuboidVolumeBounds>(vsA[2][0], vsB[2][0], vsC[2][0]);
 
-      auto transformA = Acts::Transform3::Identity();
-      auto transformB = Acts::Transform3::Identity();
-      auto transformC = Acts::Transform3::Identity();
+      auto transformA = Transform3::Identity();
+      auto transformB = Transform3::Identity();
+      auto transformC = Transform3::Identity();
 
-      transformA.pretranslate(Acts::Vector3(vsA[0][1], vsB[0][1], vsC[0][1]));
-      transformB.pretranslate(Acts::Vector3(vsA[1][1], vsB[1][1], vsC[1][1]));
-      transformC.pretranslate(Acts::Vector3(vsA[2][1], vsB[2][1], vsC[2][1]));
+      transformA.pretranslate(Vector3(vsA[0][1], vsB[0][1], vsC[0][1]));
+      transformB.pretranslate(Vector3(vsA[1][1], vsB[1][1], vsC[1][1]));
+      transformC.pretranslate(Vector3(vsA[2][1], vsB[2][1], vsC[2][1]));
 
       transformA.prerotate(rotation);
       transformB.prerotate(rotation);
       transformC.prerotate(rotation);
 
       // Create volume A, B, C
-      auto volumeA = Acts::Experimental::DetectorVolumeFactory::construct(
+      auto volumeA = Experimental::DetectorVolumeFactory::construct(
           portalGenerator, tContext, "VolumeA", transformA, boxA,
-          Acts::Experimental::tryAllPortals());
-      auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
+          Experimental::tryAllPortals());
+      auto volumeB = Experimental::DetectorVolumeFactory::construct(
           portalGenerator, tContext, "VolumeB", transformB, boxB,
-          Acts::Experimental::tryAllPortals());
-      auto volumeC = Acts::Experimental::DetectorVolumeFactory::construct(
+          Experimental::tryAllPortals());
+      auto volumeC = Experimental::DetectorVolumeFactory::construct(
           portalGenerator, tContext, "VolumeC", transformC, boxC,
-          Acts::Experimental::tryAllPortals());
+          Experimental::tryAllPortals());
 
       // Build the container
-      std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes =
-          {volumeA, volumeB, volumeC};
-      auto container =
-          Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-              tContext, volumes, bVal, {}, Acts::Logging::VERBOSE);
+      std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes = {
+          volumeA, volumeB, volumeC};
+      auto container = Experimental::detail::CuboidalDetectorHelper::connect(
+          tContext, volumes, bVal, {}, Logging::VERBOSE);
 
       // Check the container is constructed
       BOOST_CHECK(!container.empty());
 
-      Acts::ObjVisualization3D obj;
-      Acts::GeometryView3D::drawDetectorVolume(obj, *volumeA, tContext);
-      Acts::GeometryView3D::drawDetectorVolume(obj, *volumeB, tContext);
-      Acts::GeometryView3D::drawDetectorVolume(obj, *volumeC, tContext);
-      obj.write("ConnectectBoxesIrregular_" + Acts::axisDirectionName(bVal) +
-                trstr + ".obj");
+      ObjVisualization3D obj;
+      GeometryView3D::drawDetectorVolume(obj, *volumeA, tContext);
+      GeometryView3D::drawDetectorVolume(obj, *volumeB, tContext);
+      GeometryView3D::drawDetectorVolume(obj, *volumeC, tContext);
+      obj.write("ConnectectBoxesIrregular_" + axisDirectionName(bVal) + trstr +
+                ".obj");
     }
   }
 }
 
 BOOST_AUTO_TEST_CASE(ContainerConnection) {
   // A perfect box shape
-  auto box = std::make_shared<Acts::CuboidVolumeBounds>(10, 10, 10);
+  auto box = std::make_shared<CuboidVolumeBounds>(10, 10, 10);
 
   // Create an AB container
 
   // Create volume A
-  auto volumeA = Acts::Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "VolumeA", Acts::Transform3::Identity(), box,
-      Acts::Experimental::tryAllPortals());
+  auto volumeA = Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "VolumeA", Transform3::Identity(), box,
+      Experimental::tryAllPortals());
 
   // Move it into the bval direction
-  auto transformB = Acts::Transform3::Identity();
-  Acts::Vector3 translationB = Acts::Vector3::Zero();
-  translationB[toUnderlying(Acts::AxisDirection::AxisX)] = 20;
+  auto transformB = Transform3::Identity();
+  Vector3 translationB = Vector3::Zero();
+  translationB[toUnderlying(AxisDirection::AxisX)] = 20;
   transformB.pretranslate(translationB);
   // Create volume B
-  auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto volumeB = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "VolumeB", transformB, box,
-      Acts::Experimental::tryAllPortals());
+      Experimental::tryAllPortals());
   // Build the container
-  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
+  std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes = {
       volumeA, volumeB};
-  auto containerAB =
-      Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-          tContext, volumes, Acts::AxisDirection::AxisX, {},
-          Acts::Logging::VERBOSE);
+  auto containerAB = Experimental::detail::CuboidalDetectorHelper::connect(
+      tContext, volumes, AxisDirection::AxisX, {}, Logging::VERBOSE);
 
   // Create a CD container
 
-  auto transformC = Acts::Transform3::Identity();
-  Acts::Vector3 translationC = Acts::Vector3::Zero();
-  translationC[toUnderlying(Acts::AxisDirection::AxisY)] = 20;
+  auto transformC = Transform3::Identity();
+  Vector3 translationC = Vector3::Zero();
+  translationC[toUnderlying(AxisDirection::AxisY)] = 20;
   transformC.pretranslate(translationC);
 
-  auto volumeC = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto volumeC = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "VolumeC", transformC, box,
-      Acts::Experimental::tryAllPortals());
+      Experimental::tryAllPortals());
 
-  auto transformD = Acts::Transform3::Identity();
-  Acts::Vector3 translationD = Acts::Vector3::Zero();
-  translationD[toUnderlying(Acts::AxisDirection::AxisX)] = 20;
-  translationD[toUnderlying(Acts::AxisDirection::AxisY)] = 20;
+  auto transformD = Transform3::Identity();
+  Vector3 translationD = Vector3::Zero();
+  translationD[toUnderlying(AxisDirection::AxisX)] = 20;
+  translationD[toUnderlying(AxisDirection::AxisY)] = 20;
   transformD.pretranslate(translationD);
 
-  auto volumeD = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto volumeD = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "VolumeD", transformD, box,
-      Acts::Experimental::tryAllPortals());
+      Experimental::tryAllPortals());
 
   volumes = {volumeC, volumeD};
-  auto containerCD =
-      Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-          tContext, volumes, Acts::AxisDirection::AxisX, {},
-          Acts::Logging::VERBOSE);
+  auto containerCD = Experimental::detail::CuboidalDetectorHelper::connect(
+      tContext, volumes, AxisDirection::AxisX, {}, Logging::VERBOSE);
 
-  auto containerABCD =
-      Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-          tContext, {containerAB, containerCD}, Acts::AxisDirection::AxisY, {},
-          Acts::Logging::VERBOSE);
+  auto containerABCD = Experimental::detail::CuboidalDetectorHelper::connect(
+      tContext, {containerAB, containerCD}, AxisDirection::AxisY, {},
+      Logging::VERBOSE);
 
   // Check the container is constructed
   BOOST_CHECK(!containerABCD.empty());
 
-  Acts::ObjVisualization3D obj;
-  Acts::GeometryView3D::drawDetectorVolume(obj, *volumeA, tContext);
-  Acts::GeometryView3D::drawDetectorVolume(obj, *volumeB, tContext);
-  Acts::GeometryView3D::drawDetectorVolume(obj, *volumeC, tContext);
-  Acts::GeometryView3D::drawDetectorVolume(obj, *volumeD, tContext);
+  ObjVisualization3D obj;
+  GeometryView3D::drawDetectorVolume(obj, *volumeA, tContext);
+  GeometryView3D::drawDetectorVolume(obj, *volumeB, tContext);
+  GeometryView3D::drawDetectorVolume(obj, *volumeC, tContext);
+  GeometryView3D::drawDetectorVolume(obj, *volumeD, tContext);
 
   obj.write("ConnectContainers_binX.obj");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

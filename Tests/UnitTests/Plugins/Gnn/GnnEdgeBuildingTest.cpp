@@ -112,6 +112,10 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
                          edges_ref_cantor.begin()));
 }
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GnnSuite)
+
 BOOST_AUTO_TEST_CASE(test_cantor_pair_functions) {
   int a = 345;
   int b = 23;
@@ -272,3 +276,7 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
     BOOST_CHECK_EQUAL(found, 1);
   }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

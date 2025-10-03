@@ -19,9 +19,9 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
-#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Json/ActsJson.hpp"
+#include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 

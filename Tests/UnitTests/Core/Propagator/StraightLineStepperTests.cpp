@@ -23,22 +23,25 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
 #include <memory>
 #include <optional>
 #include <string>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 
 static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
@@ -322,4 +325,6 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -31,10 +31,12 @@
 #include <utility>
 #include <vector>
 
-// A test context
-Acts::GeometryContext tContext;
+using namespace Acts;
 
-Acts::Experimental::NavigationState nState;
+// A test context
+GeometryContext tContext;
+
+Experimental::NavigationState nState;
 
 double r0 = 0.;
 double r1 = 10.;
@@ -42,38 +44,40 @@ double r2 = 100.;
 double r3 = 200.;
 double zHalfL = 200.;
 
-Acts::Transform3 nominal = Acts::Transform3::Identity();
+Transform3 nominal = Transform3::Identity();
 
 // Create a bunch of volumes
-auto cyl0Bounds = std::make_unique<Acts::CylinderVolumeBounds>(r0, r1, zHalfL);
+auto cyl0Bounds = std::make_unique<CylinderVolumeBounds>(r0, r1, zHalfL);
 
-auto cyl1Bounds = std::make_unique<Acts::CylinderVolumeBounds>(r1, r2, zHalfL);
+auto cyl1Bounds = std::make_unique<CylinderVolumeBounds>(r1, r2, zHalfL);
 
-auto cyl2Bounds = std::make_unique<Acts::CylinderVolumeBounds>(r2, r3, zHalfL);
+auto cyl2Bounds = std::make_unique<CylinderVolumeBounds>(r2, r3, zHalfL);
 
-auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
+auto portalGenerator = Experimental::defaultPortalGenerator();
 
-auto cyl0 = Acts::Experimental::DetectorVolumeFactory::construct(
+auto cyl0 = Experimental::DetectorVolumeFactory::construct(
     portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0Bounds),
-    Acts::Experimental::tryAllPortals());
+    Experimental::tryAllPortals());
 
-auto cyl1 = Acts::Experimental::DetectorVolumeFactory::construct(
+auto cyl1 = Experimental::DetectorVolumeFactory::construct(
     portalGenerator, tContext, "Cyl1", nominal, std::move(cyl1Bounds),
-    Acts::Experimental::tryAllPortals());
+    Experimental::tryAllPortals());
 
-auto cyl2 = Acts::Experimental::DetectorVolumeFactory::construct(
+auto cyl2 = Experimental::DetectorVolumeFactory::construct(
     portalGenerator, tContext, "Cyl2", nominal, std::move(cyl2Bounds),
-    Acts::Experimental::tryAllPortals());
+    Experimental::tryAllPortals());
 
-std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 = {
+std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes012 = {
     cyl0, cyl1, cyl2};
 
-Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
-Acts::Experimental::GeometryIdGenerator generator(
+Experimental::GeometryIdGenerator::Config generatorConfig;
+Experimental::GeometryIdGenerator generator(
     generatorConfig,
-    Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+    getDefaultLogger("SequentialIdGenerator", Logging::VERBOSE));
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
 // Test finding detectors by trial and error
 BOOST_AUTO_TEST_CASE(RootVolumeFinder) {
@@ -82,21 +86,21 @@ BOOST_AUTO_TEST_CASE(RootVolumeFinder) {
     generator.assignGeometryId(cache, *vol);
   }
 
-  auto det012 = Acts::Experimental::Detector::makeShared(
-      "Det012", volumes012, Acts::Experimental::tryRootVolumes());
+  auto det012 = Experimental::Detector::makeShared(
+      "Det012", volumes012, Experimental::tryRootVolumes());
 
   nState.currentDetector = det012.get();
-  Acts::Experimental::RootVolumeFinder rvf;
+  Experimental::RootVolumeFinder rvf;
   // Cylinder 0
-  nState.position = Acts::Vector3(5., 0., 0.);
+  nState.position = Vector3(5., 0., 0.);
   rvf.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, cyl0.get());
   // Cylinder 1
-  nState.position = Acts::Vector3(50., 0., 0.);
+  nState.position = Vector3(50., 0., 0.);
   rvf.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, cyl1.get());
   // Cylinder 2
-  nState.position = Acts::Vector3(150., 0., 0.);
+  nState.position = Vector3(150., 0., 0.);
   rvf.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, cyl2.get());
 
@@ -111,16 +115,15 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
     generator.assignGeometryId(cache, *vol);
   }
 
-  auto det012 = Acts::Experimental::Detector::makeShared(
-      "Det012", volumes012, Acts::Experimental::tryRootVolumes());
+  auto det012 = Experimental::Detector::makeShared(
+      "Det012", volumes012, Experimental::tryRootVolumes());
 
   nState.currentDetector = det012.get();
 
   using SingleIndex = std::size_t;
 
-  using Axis =
-      Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>;
-  using Grid = Acts::Grid<SingleIndex, Axis>;
+  using Axis = Axis<AxisType::Variable, AxisBoundaryType::Bound>;
+  using Grid = Grid<SingleIndex, Axis>;
 
   std::vector<double> b = {r0, r1, r2, r3};
   Axis a(b);
@@ -130,19 +133,19 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
   g.atPosition(std::array<double, 1u>{50.}) = 1u;
   g.atPosition(std::array<double, 1u>{150.}) = 2u;
 
-  Acts::Experimental::IndexedDetectorVolumesImpl<decltype(g)> idv(
-      std::move(g), {Acts::AxisDirection::AxisR});
+  Experimental::IndexedDetectorVolumesImpl<decltype(g)> idv(
+      std::move(g), {AxisDirection::AxisR});
 
   // Cylinder 0
-  nState.position = Acts::Vector3(5., 0., 0.);
+  nState.position = Vector3(5., 0., 0.);
   idv.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, cyl0.get());
   // Cylinder 1
-  nState.position = Acts::Vector3(50., 0., 0.);
+  nState.position = Vector3(50., 0., 0.);
   idv.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, cyl1.get());
   // Cylinder 2
-  nState.position = Acts::Vector3(150., 0., 0.);
+  nState.position = Vector3(150., 0., 0.);
   idv.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, cyl2.get());
 
@@ -151,3 +154,5 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -11,9 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Volumes)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(VolumeBoundsTest) {
   // Tests if the planes are correctly oriented
@@ -43,4 +45,4 @@ BOOST_AUTO_TEST_CASE(VolumeBoundsTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

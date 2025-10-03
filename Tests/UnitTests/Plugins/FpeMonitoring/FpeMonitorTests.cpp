@@ -45,9 +45,9 @@ __attribute__((noinline)) void invalid2() {
 
 using namespace ActsPlugins;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(FpeMonitorTest)
+BOOST_AUTO_TEST_SUITE(FpeMonitoringSuite)
 
 BOOST_AUTO_TEST_CASE(Invalid) {
   FpeMonitor mon;
@@ -255,4 +255,4 @@ BOOST_AUTO_TEST_CASE(ScopedSuppression) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -25,11 +25,11 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "ActsTests/CommonHelpers/CylindricalDetector.hpp"
 
 #include <any>
 #include <cmath>
@@ -42,10 +42,11 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::Experimental;
 
 GeometryContext tContext;
+
+namespace ActsTests {
 
 class VolumeGeoIdGenerator : public IGeometryIdGenerator {
  public:
@@ -62,19 +63,19 @@ class VolumeGeoIdGenerator : public IGeometryIdGenerator {
     auto& ccache = std::any_cast<Cache&>(cache);
     ccache.volumeCount += 1;
     dVolume.assignGeometryId(
-        Acts::GeometryIdentifier().withVolume(ccache.volumeCount));
+        GeometryIdentifier().withVolume(ccache.volumeCount));
   }
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::Portal& /*portal*/) const final {}
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Experimental::Portal& /*portal*/) const final {}
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Surface& /*surface*/) const final {}
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Surface& /*surface*/) const final {}
 };
 
-BOOST_AUTO_TEST_SUITE(Detector)
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
   // misconfiruation: no builders
@@ -83,19 +84,19 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
                     std::invalid_argument);
   // misconfiguration - 1D binning not in z, r, phi
   misCfg.builders = {nullptr};
-  misCfg.binning = {Acts::AxisDirection::AxisX};
+  misCfg.binning = {AxisDirection::AxisX};
   BOOST_CHECK_THROW(auto b = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
   // misconfiguration - 2D binning not in z, r,
   misCfg.builders = {nullptr, nullptr};
-  misCfg.binning = {Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisPhi};
+  misCfg.binning = {AxisDirection::AxisZ, AxisDirection::AxisPhi};
   BOOST_CHECK_THROW(auto c = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
   // misconfiguration - 2D binning  in z, r, but not exactly 2 builders
   misCfg.builders = {nullptr, nullptr, nullptr};
-  misCfg.binning = {Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisR};
+  misCfg.binning = {AxisDirection::AxisZ, AxisDirection::AxisR};
   BOOST_CHECK_THROW(auto d = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 }
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   // Create a materialBinning
   tripleZCfg.portalMaterialBinning[2u] = {
       DirectedProtoAxis(AxisDirection::AxisZ, AxisBoundaryType::Bound, 50),
-      DirectedProtoAxis(AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed,
+      DirectedProtoAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
                         -std::numbers::pi, std::numbers::pi, 12)};
 
   // Let's test the reverse generation
@@ -206,11 +207,11 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   std::vector<std::shared_ptr<DetectorVolume>> phiVolumes = {};
   for (unsigned int i = 0; i < phiSectors; ++i) {
     // The volume bounds
-    Acts::CylinderVolumeBounds volumeBounds(
+    CylinderVolumeBounds volumeBounds(
         10., 100., 100., phiHalfSector,
         -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
     // The surface bounds
-    Acts::CylinderBounds surfaceBounds(
+    CylinderBounds surfaceBounds(
         50., 90., 0.99 * phiHalfSector,
         -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
 
@@ -301,3 +302,5 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -9,9 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
 #include <string>
@@ -22,7 +22,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(AlgebraJsonConversion)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(TransformRoundTripTests) {
   Transform3 reference = Transform3::Identity();
@@ -153,3 +155,5 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

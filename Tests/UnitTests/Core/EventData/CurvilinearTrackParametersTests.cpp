@@ -15,9 +15,9 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -81,7 +81,9 @@ void checkParameters(const BoundTrackParameters& params, double phi,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(EventDataCurvilinearTrackParameters)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_DATA_TEST_CASE(
     NeutralConstruct,
@@ -151,3 +153,5 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

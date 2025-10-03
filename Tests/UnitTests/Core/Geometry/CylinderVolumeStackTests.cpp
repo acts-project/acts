@@ -21,30 +21,31 @@
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <numbers>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
 struct Fixture {
   Logging::Level m_level;
   Fixture() {
-    m_level = Acts::Logging::getFailureThreshold();
-    Acts::Logging::setFailureThreshold(Acts::Logging::FATAL);
+    m_level = Logging::getFailureThreshold();
+    Logging::setFailureThreshold(Logging::FATAL);
   }
 
-  ~Fixture() { Acts::Logging::setFailureThreshold(m_level); }
+  ~Fixture() { Logging::setFailureThreshold(m_level); }
 };
 
-BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
+BOOST_FIXTURE_TEST_SUITE(GeometrySuite, Fixture)
 
 static const std::vector<VolumeAttachmentStrategy> strategies = {
     VolumeAttachmentStrategy::Gap,
@@ -1763,8 +1764,8 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidDirection,
 
 BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
                      (boost::unit_test::data::make(strategies) *
-                      boost::unit_test::data::make(Acts::AxisDirection::AxisZ,
-                                                   Acts::AxisDirection::AxisR)),
+                      boost::unit_test::data::make(AxisDirection::AxisZ,
+                                                   AxisDirection::AxisR)),
                      strategy, direction) {
   BOOST_TEST_CONTEXT("Empty Volume") {
     std::vector<Volume*> volumes;
@@ -1873,8 +1874,8 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
 }
 
 BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
-                     (boost::unit_test::data::make(Acts::AxisDirection::AxisZ,
-                                                   Acts::AxisDirection::AxisR) *
+                     (boost::unit_test::data::make(AxisDirection::AxisZ,
+                                                   AxisDirection::AxisR) *
                       boost::unit_test::data::make(strategies)),
                      direction, strategy) {
   auto vol = std::make_shared<Volume>(
@@ -2716,4 +2717,4 @@ BOOST_AUTO_TEST_CASE(RStackGapCreationWithUpdatedTransform) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

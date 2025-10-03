@@ -23,9 +23,11 @@ using vec2 = Acts::Vector2;
 template <int N>
 using poly = Acts::ConvexPolygonBounds<N>;
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexity) {
   std::vector<vec2> vertices;
@@ -179,4 +181,4 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsCenterTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

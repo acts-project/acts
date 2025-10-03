@@ -19,9 +19,9 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -34,9 +34,10 @@ class Logger;
 struct EndOfWorldReached;
 }  // namespace Acts
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Jacobian = BoundMatrix;
 using Covariance = BoundSquareMatrix;
@@ -94,6 +95,8 @@ struct StepWiseActor {
     }
   }
 };
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 ///
 /// @brief Unit test for Kalman fitter propagation
@@ -176,4 +179,6 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   CHECK_CLOSE_OR_SMALL(pJacobian, accJacobian, 1e-6, 1e-9);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

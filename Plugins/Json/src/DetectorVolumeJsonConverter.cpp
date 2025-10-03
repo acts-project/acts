@@ -6,20 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
+#include "ActsPlugins/Json/DetectorVolumeJsonConverter.hpp"
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
-#include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
-#include "Acts/Plugins/Json/PortalJsonConverter.hpp"
-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
-#include "Acts/Plugins/Json/VolumeBoundsJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
+#include "ActsPlugins/Json/DetrayJsonHelper.hpp"
+#include "ActsPlugins/Json/IndexedSurfacesJsonConverter.hpp"
+#include "ActsPlugins/Json/PortalJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
+#include "ActsPlugins/Json/VolumeBoundsJsonConverter.hpp"
 
 #include <algorithm>
 #include <ctime>

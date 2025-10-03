@@ -11,25 +11,19 @@
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <limits>
 #include <utility>
 
-namespace {
-
-using Acts::AccumulatedMaterialSlab;
-using Acts::Material;
-using Acts::MaterialSlab;
-using Acts::Test::makeSilicon;
-using Acts::Test::makeUnitSlab;
+using namespace Acts;
 
 constexpr auto eps = std::numeric_limits<float>::epsilon();
 
-}  // namespace
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(MaterialAccumulatedMaterialSlab)
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 BOOST_AUTO_TEST_CASE(Nothing) {
   AccumulatedMaterialSlab a;
@@ -199,3 +193,5 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentTracks) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

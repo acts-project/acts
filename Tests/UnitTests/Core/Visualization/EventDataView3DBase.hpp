@@ -26,14 +26,14 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <cmath>
 #include <optional>
@@ -84,7 +84,7 @@ void createDetector(GeometryContext& tgContext,
       std::make_shared<const RectangleBounds>(RectangleBounds(50_mm, 50_mm));
 
   // Material of the surfaces
-  MaterialSlab matProp(Acts::Test::makeSilicon(), 0.5_mm);
+  MaterialSlab matProp(ActsTests::makeSilicon(), 0.5_mm);
   const auto surfaceMaterial =
       std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
@@ -110,7 +110,7 @@ void createDetector(GeometryContext& tgContext,
         [](const Transform3& trans,
            const std::shared_ptr<const RectangleBounds>& bounds,
            double thickness) {
-          return new Test::DetectorElementStub(trans, bounds, thickness);
+          return new ActsTests::DetectorElementStub(trans, bounds, thickness);
         };
     CuboidVolumeBuilder::LayerConfig lConf;
     lConf.surfaceCfg = {sConf};

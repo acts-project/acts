@@ -27,44 +27,47 @@
 
 #include <fstream>
 
+using namespace Acts;
+
+namespace ActsTests {
+
 template <typename surface_type>
-class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
+class SurfaceBuilder : public Experimental::IInternalStructureBuilder {
  public:
-  SurfaceBuilder(const Acts::Transform3& trf, double p0, double p1)
-      : m_surface(Acts::Surface::makeShared<surface_type>(trf, p0, p1)) {}
+  SurfaceBuilder(const Transform3& trf, double p0, double p1)
+      : m_surface(Surface::makeShared<surface_type>(trf, p0, p1)) {}
   /// Conrstruct and return the internal structure creation
   ///
   /// @param gctx the geometry context at the creation of the internal structure
   ///
   /// @return a consistent set of detector volume internals
-  Acts::Experimental::InternalStructure construct(
-      [[maybe_unused]] const Acts::GeometryContext& gctx) const final {
+  Experimental::InternalStructure construct(
+      [[maybe_unused]] const GeometryContext& gctx) const final {
     // Trivialities first: internal volumes
-    std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
-        internalVolumes = {};
-    Acts::Experimental::ExternalNavigationDelegate internalVolumeUpdater =
-        Acts::Experimental::tryNoVolumes();
+    std::vector<std::shared_ptr<Experimental::DetectorVolume>> internalVolumes =
+        {};
+    Experimental::ExternalNavigationDelegate internalVolumeUpdater =
+        Experimental::tryNoVolumes();
 
     // Retrieve the layer surfaces
-    Acts::Experimental::InternalNavigationDelegate internalCandidatesUpdater =
-        Acts::Experimental::tryAllPortalsAndSurfaces();
+    Experimental::InternalNavigationDelegate internalCandidatesUpdater =
+        Experimental::tryAllPortalsAndSurfaces();
 
     // Return the internal structure
-    return Acts::Experimental::InternalStructure{
-        {m_surface},
-        internalVolumes,
-        std::move(internalCandidatesUpdater),
-        std::move(internalVolumeUpdater)};
+    return Experimental::InternalStructure{{m_surface},
+                                           internalVolumes,
+                                           std::move(internalCandidatesUpdater),
+                                           std::move(internalVolumeUpdater)};
   }
 
  private:
-  std::shared_ptr<Acts::Surface> m_surface;
+  std::shared_ptr<Surface> m_surface;
 };
 
-BOOST_AUTO_TEST_SUITE(Detector)
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
-  Acts::GeometryContext tContext;
+  GeometryContext tContext;
 
   // This tests shows how to careate cylindrical detector from a detector
   // blueprint.
@@ -91,115 +94,100 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   double pixelEcLayerHz = 10;
 
   // Create  root node
-  std::vector<Acts::AxisDirection> detectorBinning = {
-      Acts::AxisDirection::AxisR};
+  std::vector<AxisDirection> detectorBinning = {AxisDirection::AxisR};
   std::vector<double> detectorBoundaries = {detectorIr, detectorOr, detectorHz};
 
   // The root node - detector
-  auto detectorBpr = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
+  auto detectorBpr = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "detector", Transform3::Identity(), VolumeBounds::eCylinder,
       detectorBoundaries, detectorBinning);
 
   // The beam pipe
   std::vector<double> beamPipeBoundaries = {detectorIr, beamPipeOr, detectorHz};
 
-  auto beamPipeStructure =
-      std::make_shared<SurfaceBuilder<Acts::CylinderSurface>>(
-          Acts::Transform3::Identity(), 18, 0.99 * detectorHz);
-  auto beamPipe = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "beam_pipe", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
+  auto beamPipeStructure = std::make_shared<SurfaceBuilder<CylinderSurface>>(
+      Transform3::Identity(), 18, 0.99 * detectorHz);
+  auto beamPipe = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "beam_pipe", Transform3::Identity(), VolumeBounds::eCylinder,
       beamPipeBoundaries, beamPipeStructure);
   detectorBpr->add(std::move(beamPipe));
 
   // A pixel system
   std::vector<double> pixelBoundaries = {pixelIr, pixelOr, detectorHz};
-  std::vector<Acts::AxisDirection> pixelBinning = {Acts::AxisDirection::AxisZ};
-  auto pixel = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixel", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
-      pixelBoundaries, pixelBinning);
+  std::vector<AxisDirection> pixelBinning = {AxisDirection::AxisZ};
+  auto pixel = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixel", Transform3::Identity(), VolumeBounds::eCylinder, pixelBoundaries,
+      pixelBinning);
 
   // Nec: Small differences to check if the adjustments are made
   std::vector<double> pixelEcBoundaries = {pixelIr, pixelOr - 5., pixelEcHz};
-  std::vector<Acts::AxisDirection> pixelEcBinning = {
-      Acts::AxisDirection::AxisZ};
+  std::vector<AxisDirection> pixelEcBinning = {AxisDirection::AxisZ};
 
-  Acts::Transform3 pixelNecTransform =
-      Acts::Transform3::Identity() *
-      Acts::Translation3(0., 0., -detectorHz + pixelEcHz);
+  Transform3 pixelNecTransform =
+      Transform3::Identity() * Translation3(0., 0., -detectorHz + pixelEcHz);
 
-  auto pixelNec = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixel_nec", pixelNecTransform, Acts::VolumeBounds::eCylinder,
+  auto pixelNec = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixel_nec", pixelNecTransform, VolumeBounds::eCylinder,
       pixelEcBoundaries, pixelEcBinning);
 
   // Add a single encap layer
   std::vector<double> pixelNecBoundaries = {pixelIr + 2, pixelOr - 7.,
                                             pixelEcLayerHz};
 
-  auto pixelNecLayerStructure =
-      std::make_shared<SurfaceBuilder<Acts::DiscSurface>>(
-          pixelNecTransform, pixelIr + 10., pixelOr - 10.);
+  auto pixelNecLayerStructure = std::make_shared<SurfaceBuilder<DiscSurface>>(
+      pixelNecTransform, pixelIr + 10., pixelOr - 10.);
 
-  auto pixelNecLayer =
-      std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-          "pixel_nec_layer", pixelNecTransform, Acts::VolumeBounds::eCylinder,
-          pixelNecBoundaries, pixelNecLayerStructure);
+  auto pixelNecLayer = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixel_nec_layer", pixelNecTransform, VolumeBounds::eCylinder,
+      pixelNecBoundaries, pixelNecLayerStructure);
 
   pixelNec->add(std::move(pixelNecLayer));
 
   // Barrel
   std::vector<double> pixelBarrelBoundaries = {pixelIr + 1, pixelOr - 1.,
                                                detectorHz - 2 * pixelEcHz};
-  std::vector<Acts::AxisDirection> pixelBarrelBinning = {
-      Acts::AxisDirection::AxisR};
+  std::vector<AxisDirection> pixelBarrelBinning = {AxisDirection::AxisR};
 
-  auto pixelBarrel = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixel_barrel", Acts::Transform3::Identity(),
-      Acts::VolumeBounds::eCylinder, pixelBarrelBoundaries, pixelBarrelBinning);
+  auto pixelBarrel = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixel_barrel", Transform3::Identity(), VolumeBounds::eCylinder,
+      pixelBarrelBoundaries, pixelBarrelBinning);
 
   auto pixelBarrelL0Structure =
-      std::make_shared<SurfaceBuilder<Acts::CylinderSurface>>(
-          Acts::Transform3::Identity(), 62.5, detectorHz - 2 * pixelEcHz - 10.);
+      std::make_shared<SurfaceBuilder<CylinderSurface>>(
+          Transform3::Identity(), 62.5, detectorHz - 2 * pixelEcHz - 10.);
   std::vector<double> pixelBarrelL0Boundaries = {60, 65.,
                                                  detectorHz - 2 * pixelEcHz};
-  auto pixelBarrelL0 =
-      std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-          "pixel_barrel_l0", Acts::Transform3::Identity(),
-          Acts::VolumeBounds::eCylinder, pixelBarrelL0Boundaries,
-          pixelBarrelL0Structure);
+  auto pixelBarrelL0 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixel_barrel_l0", Transform3::Identity(), VolumeBounds::eCylinder,
+      pixelBarrelL0Boundaries, pixelBarrelL0Structure);
 
   auto pixelBarrelL1Structure =
-      std::make_shared<SurfaceBuilder<Acts::CylinderSurface>>(
-          Acts::Transform3::Identity(), 102.5,
-          detectorHz - 2 * pixelEcHz - 10.);
+      std::make_shared<SurfaceBuilder<CylinderSurface>>(
+          Transform3::Identity(), 102.5, detectorHz - 2 * pixelEcHz - 10.);
 
   std::vector<double> pixelBarrelL1Boundaries = {100, 105.,
                                                  detectorHz - 2 * pixelEcHz};
-  auto pixelBarrelL1 =
-      std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-          "pixel_barrel_l1", Acts::Transform3::Identity(),
-          Acts::VolumeBounds::eCylinder, pixelBarrelL1Boundaries,
-          pixelBarrelL1Structure);
+  auto pixelBarrelL1 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixel_barrel_l1", Transform3::Identity(), VolumeBounds::eCylinder,
+      pixelBarrelL1Boundaries, pixelBarrelL1Structure);
   pixelBarrel->add(std::move(pixelBarrelL0));
   pixelBarrel->add(std::move(pixelBarrelL1));
 
-  Acts::Transform3 pixelPecTransform =
-      Acts::Transform3::Identity() *
-      Acts::Translation3(0., 0., detectorHz - pixelEcHz);
+  Transform3 pixelPecTransform =
+      Transform3::Identity() * Translation3(0., 0., detectorHz - pixelEcHz);
 
-  auto pixelPec = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixel_pec", pixelPecTransform, Acts::VolumeBounds::eCylinder,
+  auto pixelPec = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixel_pec", pixelPecTransform, VolumeBounds::eCylinder,
       pixelEcBoundaries, pixelEcBinning);
 
   std::vector<double> pixelPecBoundaries = {pixelIr + 2, pixelOr - 7., 10.};
 
-  auto pixelPecLayerStructure =
-      std::make_shared<SurfaceBuilder<Acts::DiscSurface>>(
-          pixelPecTransform, pixelIr + 10., pixelOr - 10.);
+  auto pixelPecLayerStructure = std::make_shared<SurfaceBuilder<DiscSurface>>(
+      pixelPecTransform, pixelIr + 10., pixelOr - 10.);
 
-  auto pixelPecLayer =
-      std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-          "pixel_pec_layer", pixelPecTransform, Acts::VolumeBounds::eCylinder,
-          pixelPecBoundaries, pixelPecLayerStructure);
+  auto pixelPecLayer = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixel_pec_layer", pixelPecTransform, VolumeBounds::eCylinder,
+      pixelPecBoundaries, pixelPecLayerStructure);
 
   pixelPec->add(std::move(pixelPecLayer));
 
@@ -211,42 +199,41 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   detectorBpr->add(std::move(pixel));
 
   // An Indexed volume finder will be attached
-  std::vector<Acts::AxisDirection> rootVolumeBinning = {
-      Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisR};
+  std::vector<AxisDirection> rootVolumeBinning = {AxisDirection::AxisZ,
+                                                  AxisDirection::AxisR};
   detectorBpr->rootVolumeFinderBuilder =
-      std::make_shared<Acts::Experimental::IndexedRootVolumeFinderBuilder>(
+      std::make_shared<Experimental::IndexedRootVolumeFinderBuilder>(
           rootVolumeBinning);
 
   // A geo ID generator
   detectorBpr->geoIdGenerator =
-      std::make_shared<Acts::Experimental::GeometryIdGenerator>(
-          Acts::Experimental::GeometryIdGenerator::Config{},
-          Acts::getDefaultLogger("RecursiveIdGenerator",
-                                 Acts::Logging::VERBOSE));
+      std::make_shared<Experimental::GeometryIdGenerator>(
+          Experimental::GeometryIdGenerator::Config{},
+          getDefaultLogger("RecursiveIdGenerator", Logging::VERBOSE));
 
   // Complete and fill gaps
-  Acts::Experimental::detail::BlueprintHelper::fillGaps(*detectorBpr);
+  Experimental::detail::BlueprintHelper::fillGaps(*detectorBpr);
 
   std::fstream fs("cylindrical_detector_blueprint.dot", std::ios::out);
-  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *detectorBpr);
+  Experimental::detail::BlueprintDrawer::dotStream(fs, *detectorBpr);
   fs.close();
 
   // ----------------------------- end of blueprint
 
   // Create a Cylindrical detector builder from this blueprint
   auto detectorBuilder =
-      std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(
-          *detectorBpr, Acts::Logging::VERBOSE);
+      std::make_shared<Experimental::CylindricalContainerBuilder>(
+          *detectorBpr, Logging::VERBOSE);
 
   // Detector builder
-  Acts::Experimental::DetectorBuilder::Config dCfg;
+  Experimental::DetectorBuilder::Config dCfg;
   dCfg.auxiliary =
       "*** Test : auto generated cylindrical detector builder  ***";
   dCfg.name = "Cylindrical detector from blueprint";
   dCfg.builder = detectorBuilder;
   dCfg.geoIdGenerator = detectorBpr->geoIdGenerator;
 
-  auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
+  auto detector = Experimental::DetectorBuilder(dCfg).construct(tContext);
 
   BOOST_REQUIRE_NE(detector, nullptr);
 
@@ -283,3 +270,5 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

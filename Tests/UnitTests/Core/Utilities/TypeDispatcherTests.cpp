@@ -13,7 +13,9 @@
 #include <memory>
 #include <string>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Test hierarchy
 class BaseClass {
@@ -458,4 +460,4 @@ BOOST_AUTO_TEST_CASE(ConstructorWithDifferentSignatures) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

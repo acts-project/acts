@@ -31,7 +31,7 @@ class BenchmarkSourceLink final {
   using Index = std::uint32_t;
 
   /// Construct from geometry identifier and index.
-  constexpr BenchmarkSourceLink(Acts::GeometryIdentifier gid, Index idx)
+  constexpr BenchmarkSourceLink(GeometryIdentifier gid, Index idx)
       : m_geometryId(gid), m_index(idx) {}
 
   BenchmarkSourceLink() = default;
@@ -43,10 +43,10 @@ class BenchmarkSourceLink final {
   /// Access the index.
   constexpr Index index() const { return m_index; }
 
-  Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
+  GeometryIdentifier geometryId() const { return m_geometryId; }
 
  private:
-  Acts::GeometryIdentifier m_geometryId;
+  GeometryIdentifier m_geometryId;
   Index m_index = 0;
 
   friend bool operator==(const BenchmarkSourceLink& lhs,

@@ -62,6 +62,8 @@ void checkMagneticFieldEqual(const MagneticFieldProvider& fieldProvider,
   }
 }
 
+namespace ActsTests {
+
 BOOST_AUTO_TEST_SUITE(CovfieSuite)
 
 BOOST_AUTO_TEST_CASE(InterpolatedMagneticField1) {
@@ -213,3 +215,5 @@ BOOST_AUTO_TEST_CASE(SolenoidBField1) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

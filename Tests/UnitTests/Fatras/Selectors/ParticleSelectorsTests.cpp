@@ -16,7 +16,9 @@
 
 using namespace ActsFatras;
 
-BOOST_AUTO_TEST_SUITE(FatrasParticleSelectors)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SelectorsSuite)
 
 BOOST_AUTO_TEST_CASE(NegativeParticle) {
   const auto& particle = Dataset::centralElectron;
@@ -87,3 +89,5 @@ BOOST_AUTO_TEST_CASE(AbsPdgExcluder) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

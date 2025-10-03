@@ -13,12 +13,12 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayMaterialConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalDetector.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <numbers>
 
@@ -30,7 +30,9 @@ using namespace ActsPlugins;
 
 auto tContext = GeometryContext();
 
-BOOST_AUTO_TEST_SUITE(DetrayConversion)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetraySuite)
 
 // These tests check the conversion to the payload objects, the full test
 auto materialSlab12345 =
@@ -425,3 +427,5 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionInvalid) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

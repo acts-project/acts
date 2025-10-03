@@ -14,11 +14,15 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <utility>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
@@ -170,4 +174,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(mat, matFwdPre);
   BOOST_CHECK_EQUAL(vacuum, matBwdPre);
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -15,19 +15,20 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "ActsPlugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <numbers>
 #include <tuple>
 
 using namespace Acts;
 using namespace ActsPlugins::Svg;
-using namespace Acts::Test;
 using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
+
+namespace ActsTests {
 
 GeometryContext tContext;
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
@@ -67,7 +68,7 @@ IndexedSurfacesConverter::Options generateDrawOptions() {
 
 auto drawOptions = generateDrawOptions();
 
-BOOST_AUTO_TEST_SUITE(ActSvg)
+BOOST_AUTO_TEST_SUITE(ActSvgSuite)
 
 BOOST_AUTO_TEST_CASE(RingDisc1D) {
   // A single ring
@@ -246,3 +247,5 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

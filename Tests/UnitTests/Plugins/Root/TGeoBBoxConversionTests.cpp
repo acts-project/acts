@@ -14,11 +14,11 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <utility>
@@ -34,13 +34,15 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 GeometryContext tgContext = GeometryContext();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
 ViewConfig blue{.color = {0, 0, 200}};
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a Bbox into a Plane
 ///
@@ -214,4 +216,6 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   objVis.write("TGeoConversion_TGeoBBox_PlaneSurface");
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

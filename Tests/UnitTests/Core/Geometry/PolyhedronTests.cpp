@@ -17,16 +17,17 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(Geometry)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// Unit tests for Polyderon construction & operator +=
 BOOST_AUTO_TEST_CASE(PolyhedronTest) {
@@ -127,4 +128,4 @@ BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

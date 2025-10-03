@@ -16,9 +16,9 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -30,9 +30,11 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Geometry)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
   double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{std::numbers::pi / 4.},
@@ -233,14 +235,14 @@ BOOST_DATA_TEST_CASE(
   // positive disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transform.rotation().col(2).dot(boundarySurfaces.at(1).surface->normal(
-          tgContext, Acts::Vector2(0., 0.))),
+      transform.rotation().col(2).dot(
+          boundarySurfaces.at(1).surface->normal(tgContext, Vector2(0., 0.))),
       1., 1e-12);
   // negative disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transform.rotation().col(2).dot(boundarySurfaces.at(0).surface->normal(
-          tgContext, Acts::Vector2(0., 0.))),
+      transform.rotation().col(2).dot(
+          boundarySurfaces.at(0).surface->normal(tgContext, Vector2(0., 0.))),
       1., 1e-12);
   // test in r
   CHECK_CLOSE_REL(boundarySurfaces.at(3).surface->center(tgContext), pos,
@@ -422,4 +424,4 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsSetValues) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

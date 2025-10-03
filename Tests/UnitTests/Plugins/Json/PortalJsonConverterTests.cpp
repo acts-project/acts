@@ -13,11 +13,11 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Json/PortalJsonConverter.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/Json/PortalJsonConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
 
@@ -27,24 +27,26 @@ namespace Acts::Experimental {
 class DetectorVolume {};
 }  // namespace Acts::Experimental
 
-Acts::GeometryContext tContext;
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(PortalJsonConverter)
+GeometryContext tContext;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(PortalUnconnected) {
   std::ofstream out;
 
-  std::shared_ptr<Acts::PlaneSurface> surface =
-      Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
-                               Acts::Vector3(0., 1., 0.))
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3(0., 0., 0.), Vector3(0., 1., 0.))
           .planeSurface();
 
-  auto portal =
-      std::make_shared<Acts::Experimental::Portal>(std::move(surface));
+  auto portal = std::make_shared<Experimental::Portal>(std::move(surface));
 
   BOOST_CHECK_NE(portal, nullptr);
 
-  auto jPortal = Acts::PortalJsonConverter::toJson(tContext, *portal, {});
+  auto jPortal = PortalJsonConverter::toJson(tContext, *portal, {});
 
   out.open("portal.json");
   out << jPortal.dump(4);
@@ -58,7 +60,7 @@ BOOST_AUTO_TEST_CASE(PortalUnconnected) {
   in >> jPortalIn;
   in.close();
 
-  auto portalIn = Acts::PortalJsonConverter::fromJson(tContext, jPortalIn, {});
+  auto portalIn = PortalJsonConverter::fromJson(tContext, jPortalIn, {});
 
   BOOST_CHECK_NE(portalIn, nullptr);
 }
@@ -66,30 +68,28 @@ BOOST_AUTO_TEST_CASE(PortalUnconnected) {
 BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
   std::ofstream out;
 
-  auto forwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
-  auto backwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
+  auto forwardVolume = std::make_shared<Experimental::DetectorVolume>();
+  auto backwardVolume = std::make_shared<Experimental::DetectorVolume>();
 
-  std::shared_ptr<Acts::PlaneSurface> surface =
-      Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
-                               Acts::Vector3(0., 1., 0.))
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3(0., 0., 0.), Vector3(0., 1., 0.))
           .planeSurface();
 
-  auto portal =
-      std::make_shared<Acts::Experimental::Portal>(std::move(surface));
+  auto portal = std::make_shared<Experimental::Portal>(std::move(surface));
   BOOST_CHECK_NE(portal, nullptr);
   // Attaching the portals
-  Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
-      *portal, forwardVolume, Acts::Direction::Forward());
-  Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
-      *portal, backwardVolume, Acts::Direction::Backward());
+  Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
+      *portal, forwardVolume, Direction::Forward());
+  Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
+      *portal, backwardVolume, Direction::Backward());
 
-  std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes = {
+  std::vector<const Experimental::DetectorVolume*> detectorVolumes = {
       forwardVolume.get(), backwardVolume.get()};
   // No volumes provided, must bail
-  BOOST_CHECK_THROW(Acts::PortalJsonConverter::toJson(tContext, *portal, {}),
+  BOOST_CHECK_THROW(PortalJsonConverter::toJson(tContext, *portal, {}),
                     std::runtime_error);
   auto jPortal =
-      Acts::PortalJsonConverter::toJson(tContext, *portal, detectorVolumes);
+      PortalJsonConverter::toJson(tContext, *portal, detectorVolumes);
 
   out.open("portal-single-connected.json");
   out << jPortal.dump(4);
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
   in >> jPortalIn;
   in.close();
 
-  auto portalIn = Acts::PortalJsonConverter::fromJson(
+  auto portalIn = PortalJsonConverter::fromJson(
       tContext, jPortalIn, {forwardVolume, backwardVolume});
   BOOST_CHECK_NE(portalIn, nullptr);
 }
@@ -111,36 +111,33 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
 BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
   std::ofstream out;
 
-  auto forwardVolumeA = std::make_shared<Acts::Experimental::DetectorVolume>();
-  auto forwardVolumeB = std::make_shared<Acts::Experimental::DetectorVolume>();
-  auto forwardVolumeC = std::make_shared<Acts::Experimental::DetectorVolume>();
+  auto forwardVolumeA = std::make_shared<Experimental::DetectorVolume>();
+  auto forwardVolumeB = std::make_shared<Experimental::DetectorVolume>();
+  auto forwardVolumeC = std::make_shared<Experimental::DetectorVolume>();
 
-  auto backwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
+  auto backwardVolume = std::make_shared<Experimental::DetectorVolume>();
 
-  std::shared_ptr<Acts::PlaneSurface> surface =
-      Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
-                               Acts::Vector3(0., 1., 0.))
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3(0., 0., 0.), Vector3(0., 1., 0.))
           .planeSurface();
 
-  auto portal =
-      std::make_shared<Acts::Experimental::Portal>(std::move(surface));
+  auto portal = std::make_shared<Experimental::Portal>(std::move(surface));
   BOOST_CHECK_NE(portal, nullptr);
 
   // Attaching the portals
-  Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
-      *portal, backwardVolume, Acts::Direction::Backward());
+  Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
+      *portal, backwardVolume, Direction::Backward());
 
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
+  Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
       tContext, *portal, {forwardVolumeA, forwardVolumeB, forwardVolumeC},
-      Acts::Direction::Forward(), {-100, 10, 20, 200},
-      Acts::AxisDirection::AxisX);
+      Direction::Forward(), {-100, 10, 20, 200}, AxisDirection::AxisX);
 
-  std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes = {
+  std::vector<const Experimental::DetectorVolume*> detectorVolumes = {
       forwardVolumeA.get(), forwardVolumeB.get(), forwardVolumeC.get(),
       backwardVolume.get()};
 
   auto jPortal =
-      Acts::PortalJsonConverter::toJson(tContext, *portal, detectorVolumes);
+      PortalJsonConverter::toJson(tContext, *portal, detectorVolumes);
 
   out.open("portal-multi-connected.json");
   out << jPortal.dump(4);
@@ -148,3 +145,5 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -12,13 +12,17 @@
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialMapUtils.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <cstddef>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(materialmap_creation) {
   // Create grid values
@@ -121,4 +125,7 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
   CHECK_CLOSE_ABS(value1_xyz.parameters(), mat1_xyz.parameters(), 1e-9);
   CHECK_CLOSE_ABS(value2_xyz.parameters(), mat2_xyz.parameters(), 1e-9);
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

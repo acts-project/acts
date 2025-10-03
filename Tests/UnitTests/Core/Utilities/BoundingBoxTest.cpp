@@ -11,12 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/Volume.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -33,11 +33,13 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 struct Object {};
 
-using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, double, 3>;
+using ObjectBBox = AxisAlignedBoundingBox<Object, double, 3>;
 
 using Vector2F = Eigen::Matrix<double, 2, 1>;
 using Vector3F = Eigen::Matrix<double, 3, 1>;
@@ -54,10 +56,12 @@ std::ofstream tmp(const std::string& path) {
   return std::ofstream{(tmp_path / path).string()};
 }
 
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
+
 BOOST_AUTO_TEST_CASE(box_construction) {
   BOOST_TEST_CONTEXT("2D") {
     Object o;
-    using Box = Acts::AxisAlignedBoundingBox<Object, double, 2>;
+    using Box = AxisAlignedBoundingBox<Object, double, 2>;
     Box bb(&o, {-1, -1}, {2, 2});
 
     typename Box::transform_type rot;
@@ -70,7 +74,7 @@ BOOST_AUTO_TEST_CASE(box_construction) {
 
   BOOST_TEST_CONTEXT("3D") {
     Object o;
-    using Box = Acts::AxisAlignedBoundingBox<Object, double, 3>;
+    using Box = AxisAlignedBoundingBox<Object, double, 3>;
     Box bb(&o, {-1, -1, -1}, {2, 2, 2});
 
     typename Box::transform_type rot;
@@ -1135,7 +1139,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 5 Sides") {
     using Frustum = Frustum<double, 3, 5>;
     using Box = AxisAlignedBoundingBox<Object, double, 3>;
-    Box::Size size(Acts::Vector3(2, 2, 2));
+    Box::Size size(Vector3(2, 2, 2));
 
     Object o;
 
@@ -1157,14 +1161,14 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 10 Sides") {
     using Frustum = Frustum<double, 3, 10>;
     using Box = AxisAlignedBoundingBox<Object, double, 3>;
-    Box::Size size(Acts::Vector3(2, 2, 2));
+    Box::Size size(Vector3(2, 2, 2));
 
     Object o;
 
     PlyVisualization3D<double> ply;
 
-    Acts::Vector3 pos = {-12.4205, 29.3578, 44.6207};
-    Acts::Vector3 dir = {-0.656862, 0.48138, 0.58035};
+    Vector3 pos = {-12.4205, 29.3578, 44.6207};
+    Vector3 dir = {-0.656862, 0.48138, 0.58035};
     Frustum fr(pos, dir, 0.972419);
     fr.draw(ply, 10);
 
@@ -1186,12 +1190,12 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     PlyVisualization3D<double> ply;
 
-    Acts::Vector3 pos = {0, 0, 0};
-    Acts::Vector3 dir = {0, 0, 1};
+    Vector3 pos = {0, 0, 0};
+    Vector3 dir = {0, 0, 1};
     Frustum fr(pos, dir, 0.972419);
     fr.draw(ply, 10);
 
-    Box::Size size(Acts::Vector3(100, 100, 2));
+    Box::Size size(Vector3(100, 100, 2));
     Box bb(&o, pos + dir * 7, size);
     bb.draw(ply);
 
@@ -1205,7 +1209,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
 BOOST_AUTO_TEST_CASE(ostream_operator) {
   Object o;
-  using Box = Acts::AxisAlignedBoundingBox<Object, double, 2>;
+  using Box = AxisAlignedBoundingBox<Object, double, 2>;
   Box bb(&o, {-1, -1}, {2, 2});
 
   std::stringstream ss;
@@ -1214,4 +1218,6 @@ BOOST_AUTO_TEST_CASE(ostream_operator) {
   BOOST_CHECK(ss.str() == "AABB(ctr=(0.5, 0.5) vmin=(-1, -1) vmax=(2, 2))");
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

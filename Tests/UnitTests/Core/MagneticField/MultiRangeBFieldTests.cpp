@@ -13,9 +13,13 @@
 #include "Acts/MagneticField/MultiRangeBField.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 MagneticFieldContext mfContext = MagneticFieldContext();
+
+BOOST_AUTO_TEST_SUITE(MagneticFieldSuite)
 
 BOOST_AUTO_TEST_CASE(TestMultiRangeBField) {
   std::vector<std::pair<RangeXD<3, double>, Vector3>> inputs;
@@ -71,4 +75,7 @@ BOOST_AUTO_TEST_CASE(TestMultiRangeBField) {
     BOOST_CHECK(!r.ok());
   }
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

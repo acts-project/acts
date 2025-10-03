@@ -11,10 +11,10 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -24,7 +24,7 @@
 
 #include "Dataset.hpp"
 
-namespace {
+namespace ActsTests {
 
 constexpr auto eps = std::numeric_limits<double>::epsilon();
 
@@ -44,7 +44,7 @@ void test(const Scattering& scattering, std::uint32_t seed,
   std::ranlux48 gen(seed);
   ActsFatras::Particle after = before;
 
-  const auto outgoing = scattering(gen, Acts::Test::makePercentSlab(), after);
+  const auto outgoing = scattering(gen, makePercentSlab(), after);
   // scattering leaves absolute energy/momentum unchanged
   CHECK_CLOSE_REL(after.absoluteMomentum(), before.absoluteMomentum(), eps);
   CHECK_CLOSE_REL(after.energy(), before.energy(), eps);
@@ -53,9 +53,8 @@ void test(const Scattering& scattering, std::uint32_t seed,
   // scattering creates no new particles
   BOOST_CHECK(outgoing.empty());
 }
-}  // namespace
 
-BOOST_AUTO_TEST_SUITE(FatrasScattering)
+BOOST_AUTO_TEST_SUITE(PhysicsSuite)
 
 BOOST_DATA_TEST_CASE(GeneralMixture, Dataset::parameters, pdg, phi, theta, p,
                      seed) {
@@ -77,7 +76,7 @@ BOOST_DATA_TEST_CASE(Highland, Dataset::parameters, pdg, phi, theta, p, seed) {
 BOOST_AUTO_TEST_CASE(HighlandRms) {
   auto scattering = ActsFatras::HighlandScattering();
   auto particle = Dataset::makeParticle(Acts::PdgParticle::eMuon, 0, 0, 1);
-  auto materialSlab = Acts::Test::makePercentSlab();
+  auto materialSlab = makePercentSlab();
 
   auto theta0 = Acts::computeMultipleScatteringTheta0(
       materialSlab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
@@ -109,3 +108,5 @@ BOOST_AUTO_TEST_CASE(HighlandRms) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

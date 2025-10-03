@@ -14,9 +14,11 @@
 #include <stdexcept>
 #include <string>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(TableBasicUsage) {
   Table table;
@@ -254,4 +256,4 @@ BOOST_AUTO_TEST_CASE(TableOstreamOperator) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

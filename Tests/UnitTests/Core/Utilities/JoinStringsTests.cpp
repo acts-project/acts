@@ -19,7 +19,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(JoinStrings)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(EmptyRange) {
   std::vector<std::string> empty;
@@ -196,3 +198,5 @@ BOOST_AUTO_TEST_CASE(ViewsTransform) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

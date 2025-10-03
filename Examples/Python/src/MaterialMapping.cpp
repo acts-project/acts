@@ -9,13 +9,13 @@
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
-#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MaterialMapping/CoreMaterialMapping.hpp"
 #include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MaterialValidation.hpp"
+#include "ActsPlugins/Json/ActsJson.hpp"
+#include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 

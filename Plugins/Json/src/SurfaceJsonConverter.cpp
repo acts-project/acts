@@ -6,12 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
-#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -29,6 +27,8 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsPlugins/Json/DetrayJsonHelper.hpp"
+#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 
 void Acts::to_json(nlohmann::json& j,
                    const Acts::SurfaceAndMaterialWithContext& surface) {

@@ -22,7 +22,9 @@
 #include <iostream>
 #include <limits>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 GeometryContext gctx;
 
@@ -209,7 +211,7 @@ boost::test_tools::predicate_result checkMatrices(const TestMatrix& val,
   return res;
 }
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_AUTO_TEST_CASE(Rectangle) {
   auto bounds = std::make_shared<RectangleBounds>(10, 20);
@@ -1847,4 +1849,4 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

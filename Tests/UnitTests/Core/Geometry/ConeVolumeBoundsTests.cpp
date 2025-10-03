@@ -20,11 +20,12 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(VolumeBounds)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
   // Single solid Cone
@@ -105,4 +106,4 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

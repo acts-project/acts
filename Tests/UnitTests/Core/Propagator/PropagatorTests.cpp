@@ -29,9 +29,9 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -44,11 +44,13 @@
 #include <utility>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 using Acts::VectorHelpers::perp;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -142,6 +144,8 @@ auto cSurface =
     Surface::makeShared<CylinderSurface>(Transform3::Identity(), cCylinder);
 
 const int ntests = 5;
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 // This tests the Options
 BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
@@ -477,4 +481,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                   "Propagator unexpectedly inherits from BasePropagator");
   }
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

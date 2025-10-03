@@ -19,11 +19,11 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/Json/DetectorVolumeJsonConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
 #include <memory>
@@ -32,13 +32,15 @@
 
 #include <nlohmann/json.hpp>
 
+using namespace Acts;
+
 namespace {
 /// Helper method that allows to use the already existing testing
 /// infrastructure with the new const-correct detector design
 ///
-std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
-    const std::vector<Acts::Surface*>& surfaces) {
-  std::vector<std::shared_ptr<Acts::Surface>> uSurfaces;
+std::vector<std::shared_ptr<Surface>> unpackSurfaces(
+    const std::vector<Surface*>& surfaces) {
+  std::vector<std::shared_ptr<Surface>> uSurfaces;
   uSurfaces.reserve(surfaces.size());
   for (auto* s : surfaces) {
     uSurfaces.push_back(s->getSharedPtr());
@@ -48,26 +50,28 @@ std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
 
 }  // namespace
 
-Acts::GeometryContext tContext;
-auto cGeometry = Acts::Test::CylindricalTrackingGeometry(tContext);
+namespace ActsTests {
 
-auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
+GeometryContext tContext;
+auto cGeometry = CylindricalTrackingGeometry(tContext);
 
-BOOST_AUTO_TEST_SUITE(DetectorVolumeJsonConverter)
+auto portalGenerator = Experimental::defaultPortalGenerator();
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(SingleEmptyVolume) {
   // Create a single cylindrical volume
-  Acts::Transform3 nominal = Acts::Transform3::Identity();
-  auto bounds = std::make_unique<Acts::CylinderVolumeBounds>(0., 50., 100.);
+  Transform3 nominal = Transform3::Identity();
+  auto bounds = std::make_unique<CylinderVolumeBounds>(0., 50., 100.);
 
-  auto volume = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto volume = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "EmptyVolume", nominal, std::move(bounds),
-      Acts::Experimental::tryAllPortals());
+      Experimental::tryAllPortals());
 
   std::ofstream out;
 
-  auto jVolume = Acts::DetectorVolumeJsonConverter::toJson(tContext, *volume,
-                                                           {volume.get()});
+  auto jVolume =
+      DetectorVolumeJsonConverter::toJson(tContext, *volume, {volume.get()});
 
   out.open("single-empty-volume.json");
   out << jVolume.dump(4);
@@ -81,8 +85,7 @@ BOOST_AUTO_TEST_CASE(SingleEmptyVolume) {
   in >> jVolumeIn;
   in.close();
 
-  auto volumeIn =
-      Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
+  auto volumeIn = DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
   BOOST_CHECK_EQUAL(volumeIn->name(), volume->name());
   BOOST_CHECK(
@@ -93,24 +96,22 @@ BOOST_AUTO_TEST_CASE(SingleEmptyVolume) {
 
 BOOST_AUTO_TEST_CASE(SingleSurfaceVolume) {
   // Create a single cylindrical volume
-  Acts::Transform3 nominal = Acts::Transform3::Identity();
-  auto volumeBounds =
-      std::make_unique<Acts::CylinderVolumeBounds>(0., 50., 100.);
-  auto surfaceBounds = std::make_unique<Acts::CylinderBounds>(25., 100.);
+  Transform3 nominal = Transform3::Identity();
+  auto volumeBounds = std::make_unique<CylinderVolumeBounds>(0., 50., 100.);
+  auto surfaceBounds = std::make_unique<CylinderBounds>(25., 100.);
 
-  auto cylinderSurface = Acts::Surface::makeShared<Acts::CylinderSurface>(
-      nominal, std::move(surfaceBounds));
+  auto cylinderSurface =
+      Surface::makeShared<CylinderSurface>(nominal, std::move(surfaceBounds));
 
-  auto volume = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto volume = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "CylinderVolume", nominal,
       std::move(volumeBounds), {cylinderSurface}, {},
-      Acts::Experimental::tryRootVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+      Experimental::tryRootVolumes(), Experimental::tryAllPortalsAndSurfaces());
 
   std::ofstream out;
 
-  auto jVolume = Acts::DetectorVolumeJsonConverter::toJson(tContext, *volume,
-                                                           {volume.get()});
+  auto jVolume =
+      DetectorVolumeJsonConverter::toJson(tContext, *volume, {volume.get()});
 
   out.open("single-surface-volume.json");
   out << jVolume.dump(4);
@@ -124,8 +125,7 @@ BOOST_AUTO_TEST_CASE(SingleSurfaceVolume) {
   in >> jVolumeIn;
   in.close();
 
-  auto volumeIn =
-      Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
+  auto volumeIn = DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
   BOOST_CHECK_EQUAL(volumeIn->name(), volume->name());
   BOOST_CHECK(
@@ -135,55 +135,49 @@ BOOST_AUTO_TEST_CASE(SingleSurfaceVolume) {
 }
 
 BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
-  Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  CylindricalTrackingGeometry::DetectorStore dStore;
 
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., -800, 2., 22u);
 
-  auto endcapSurfaces = std::make_shared<
-      Acts::Experimental::LayerStructureBuilder::SurfacesHolder>(
-      unpackSurfaces(rSurfaces));
+  auto endcapSurfaces =
+      std::make_shared<Experimental::LayerStructureBuilder::SurfacesHolder>(
+          unpackSurfaces(rSurfaces));
   // Configure the layer structure builder
-  Acts::Experimental::LayerStructureBuilder::Config lsConfig;
+  Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
   lsConfig.binnings = {
-      {Acts::DirectedProtoAxis(Acts::AxisDirection::AxisPhi,
-                               Acts::AxisBoundaryType::Closed,
-                               -std::numbers::pi, std::numbers::pi, 22u),
+      {DirectedProtoAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                         -std::numbers::pi, std::numbers::pi, 22u),
        1u}};
 
-  auto layerBuilder =
-      std::make_shared<Acts::Experimental::LayerStructureBuilder>(
-          lsConfig, Acts::getDefaultLogger("EndcapInteralsBuilder",
-                                           Acts::Logging::VERBOSE));
+  auto layerBuilder = std::make_shared<Experimental::LayerStructureBuilder>(
+      lsConfig, getDefaultLogger("EndcapInteralsBuilder", Logging::VERBOSE));
 
-  Acts::Experimental::VolumeStructureBuilder::Config shapeConfig;
+  Experimental::VolumeStructureBuilder::Config shapeConfig;
   shapeConfig.boundValues = {10, 100, 10., std::numbers::pi, 0.};
   shapeConfig.transform =
-      Acts::Transform3{Acts::Transform3::Identity()}.pretranslate(
-          Acts::Vector3(0., 0., -800.));
-  shapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
+      Transform3{Transform3::Identity()}.pretranslate(Vector3(0., 0., -800.));
+  shapeConfig.boundsType = VolumeBounds::BoundsType::eCylinder;
 
-  auto shapeBuilder =
-      std::make_shared<Acts::Experimental::VolumeStructureBuilder>(
-          shapeConfig,
-          Acts::getDefaultLogger("EndcapShapeBuilder", Acts::Logging::VERBOSE));
+  auto shapeBuilder = std::make_shared<Experimental::VolumeStructureBuilder>(
+      shapeConfig, getDefaultLogger("EndcapShapeBuilder", Logging::VERBOSE));
 
-  Acts::Experimental::DetectorVolumeBuilder::Config dvCfg;
+  Experimental::DetectorVolumeBuilder::Config dvCfg;
   dvCfg.auxiliary = "*** Test 1 - Cylinder with internal Surface ***";
   dvCfg.name = "CylinderWithSurface";
   dvCfg.externalsBuilder = shapeBuilder;
   dvCfg.internalsBuilder = layerBuilder;
 
-  auto dvBuilder = std::make_shared<Acts::Experimental::DetectorVolumeBuilder>(
-      dvCfg, Acts::getDefaultLogger("EndcapBuilder", Acts::Logging::VERBOSE));
+  auto dvBuilder = std::make_shared<Experimental::DetectorVolumeBuilder>(
+      dvCfg, getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
   auto volume = volumes.front();
 
-  auto jVolume = Acts::DetectorVolumeJsonConverter::toJson(tContext, *volume,
-                                                           {volume.get()});
+  auto jVolume =
+      DetectorVolumeJsonConverter::toJson(tContext, *volume, {volume.get()});
 
   std::ofstream out;
   out.open("endcap-volume-with-surfaces.json");
@@ -198,8 +192,7 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
   in >> jVolumeIn;
   in.close();
 
-  auto volumeIn =
-      Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
+  auto volumeIn = DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
   BOOST_CHECK_EQUAL(volumeIn->name(), volume->name());
   BOOST_CHECK(
@@ -208,64 +201,59 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
   BOOST_CHECK_EQUAL(volumeIn->volumes().size(), volume->volumes().size());
 
   // Cross-check writing
-  jVolume = Acts::DetectorVolumeJsonConverter::toJson(tContext, *volumeIn,
-                                                      {volumeIn.get()});
+  jVolume = DetectorVolumeJsonConverter::toJson(tContext, *volumeIn,
+                                                {volumeIn.get()});
   out.open("endcap-volume-with-surfaces-closure.json");
   out << jVolume.dump(4);
   out.close();
 }
 
 BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
-  Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  CylindricalTrackingGeometry::DetectorStore dStore;
   auto cSurfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145, 72,
                                               3., 2., {32u, 14u});
 
-  auto barrelSurfaces = std::make_shared<
-      Acts::Experimental::LayerStructureBuilder::SurfacesHolder>(
-      unpackSurfaces(cSurfaces));
+  auto barrelSurfaces =
+      std::make_shared<Experimental::LayerStructureBuilder::SurfacesHolder>(
+          unpackSurfaces(cSurfaces));
 
   // Configure the layer structure builder
-  Acts::Experimental::LayerStructureBuilder::Config lsConfig;
+  Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {
-      {Acts::DirectedProtoAxis(Acts::AxisDirection::AxisZ,
-                               Acts::AxisBoundaryType::Bound, -480., 480., 14u),
+      {DirectedProtoAxis(AxisDirection::AxisZ, AxisBoundaryType::Bound, -480.,
+                         480., 14u),
        1u},
-      {Acts::DirectedProtoAxis(Acts::AxisDirection::AxisPhi,
-                               Acts::AxisBoundaryType::Closed,
-                               -std::numbers::pi, std::numbers::pi, 32u),
+      {DirectedProtoAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                         -std::numbers::pi, std::numbers::pi, 32u),
        1u}};
 
-  auto barrelBuilder =
-      std::make_shared<Acts::Experimental::LayerStructureBuilder>(
-          lsConfig, Acts::getDefaultLogger("BarrelInternalsBuilder",
-                                           Acts::Logging::VERBOSE));
+  auto barrelBuilder = std::make_shared<Experimental::LayerStructureBuilder>(
+      lsConfig, getDefaultLogger("BarrelInternalsBuilder", Logging::VERBOSE));
 
-  Acts::Experimental::VolumeStructureBuilder::Config shapeConfig;
+  Experimental::VolumeStructureBuilder::Config shapeConfig;
   shapeConfig.boundValues = {60., 80., 800., std::numbers::pi, 0.};
-  shapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
+  shapeConfig.boundsType = VolumeBounds::BoundsType::eCylinder;
 
-  auto shapeBuilder =
-      std::make_shared<Acts::Experimental::VolumeStructureBuilder>(
-          shapeConfig,
-          Acts::getDefaultLogger("BarrelShapeBuilder", Acts::Logging::VERBOSE));
+  auto shapeBuilder = std::make_shared<Experimental::VolumeStructureBuilder>(
+      shapeConfig, getDefaultLogger("BarrelShapeBuilder", Logging::VERBOSE));
 
-  Acts::Experimental::DetectorVolumeBuilder::Config dvCfg;
+  Experimental::DetectorVolumeBuilder::Config dvCfg;
   dvCfg.auxiliary = "*** Test 1 - Cylinder with internal Surface ***";
   dvCfg.name = "BarrelWithSurfaces";
   dvCfg.externalsBuilder = shapeBuilder;
   dvCfg.internalsBuilder = barrelBuilder;
 
-  auto dvBuilder = std::make_shared<Acts::Experimental::DetectorVolumeBuilder>(
-      dvCfg, Acts::getDefaultLogger("EndcapBuilder", Acts::Logging::VERBOSE));
+  auto dvBuilder = std::make_shared<Experimental::DetectorVolumeBuilder>(
+      dvCfg, getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
   auto volume = volumes.front();
 
-  auto jVolume = Acts::DetectorVolumeJsonConverter::toJson(tContext, *volume,
-                                                           {volume.get()});
+  auto jVolume =
+      DetectorVolumeJsonConverter::toJson(tContext, *volume, {volume.get()});
 
   std::ofstream out;
   out.open("barrel-volume-with-surfaces.json");
@@ -280,8 +268,7 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
   in >> jVolumeIn;
   in.close();
 
-  auto volumeIn =
-      Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
+  auto volumeIn = DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
   BOOST_CHECK_EQUAL(volumeIn->name(), volume->name());
   BOOST_CHECK(
@@ -290,11 +277,13 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
   BOOST_CHECK_EQUAL(volumeIn->volumes().size(), volume->volumes().size());
 
   // Cross-check writing
-  jVolume = Acts::DetectorVolumeJsonConverter::toJson(tContext, *volumeIn,
-                                                      {volumeIn.get()});
+  jVolume = DetectorVolumeJsonConverter::toJson(tContext, *volumeIn,
+                                                {volumeIn.get()});
   out.open("barrel-volume-with-surfaces-closure.json");
   out << jVolume.dump(4);
   out.close();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

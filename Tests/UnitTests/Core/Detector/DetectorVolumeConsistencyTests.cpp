@@ -16,65 +16,71 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 
-auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
-auto tContext = Acts::GeometryContext();
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Detector)
+auto portalGenerator = Experimental::defaultPortalGenerator();
+auto tContext = GeometryContext();
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyFail) {
   // A perfect box shape
-  auto box = std::make_shared<Acts::CuboidVolumeBounds>(10, 10, 10);
+  auto box = std::make_shared<CuboidVolumeBounds>(10, 10, 10);
 
   // Create volume A
-  auto volumeA = Acts::Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "VolumeA", Acts::Transform3::Identity(), box,
-      Acts::Experimental::tryAllPortals());
+  auto volumeA = Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "VolumeA", Transform3::Identity(), box,
+      Experimental::tryAllPortals());
 
   // Move it into the bval direction
-  auto transformB = Acts::Transform3::Identity();
-  Acts::Vector3 translationB = Acts::Vector3::Zero();
-  translationB[toUnderlying(Acts::AxisDirection::AxisX)] = 20;
-  translationB[toUnderlying(Acts::AxisDirection::AxisY)] = 5;
+  auto transformB = Transform3::Identity();
+  Vector3 translationB = Vector3::Zero();
+  translationB[toUnderlying(AxisDirection::AxisX)] = 20;
+  translationB[toUnderlying(AxisDirection::AxisY)] = 5;
   transformB.pretranslate(translationB);
   // Create volume B
-  auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto volumeB = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "VolumeB", transformB, box,
-      Acts::Experimental::tryAllPortals());
+      Experimental::tryAllPortals());
   // Build the container
-  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
+  std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes = {
       volumeA, volumeB};
 
-  BOOST_CHECK_THROW(Acts::Experimental::detail::DetectorVolumeConsistency::
-                        checkCenterAlignment(tContext, {volumeA, volumeB},
-                                             Acts::AxisDirection::AxisX),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      Experimental::detail::DetectorVolumeConsistency::checkCenterAlignment(
+          tContext, {volumeA, volumeB}, AxisDirection::AxisX),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyPass) {
   // A perfect box shape
-  auto box = std::make_shared<Acts::CuboidVolumeBounds>(10, 10, 10);
+  auto box = std::make_shared<CuboidVolumeBounds>(10, 10, 10);
 
   // Create volume A
-  auto volumeA = Acts::Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "VolumeA", Acts::Transform3::Identity(), box,
-      Acts::Experimental::tryAllPortals());
+  auto volumeA = Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "VolumeA", Transform3::Identity(), box,
+      Experimental::tryAllPortals());
 
   // Move it into the bval direction
-  auto transformB = Acts::Transform3::Identity();
-  Acts::Vector3 translationB = Acts::Vector3::Zero();
-  translationB[toUnderlying(Acts::AxisDirection::AxisX)] = 20;
+  auto transformB = Transform3::Identity();
+  Vector3 translationB = Vector3::Zero();
+  translationB[toUnderlying(AxisDirection::AxisX)] = 20;
   transformB.pretranslate(translationB);
   // Create volume B
-  auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto volumeB = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "VolumeB", transformB, box,
-      Acts::Experimental::tryAllPortals());
+      Experimental::tryAllPortals());
   // Build the container
-  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
+  std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes = {
       volumeA, volumeB};
 
-  BOOST_CHECK_NO_THROW(Acts::Experimental::detail::DetectorVolumeConsistency::
-                           checkCenterAlignment(tContext, {volumeA, volumeB},
-                                                Acts::AxisDirection::AxisX));
+  BOOST_CHECK_NO_THROW(
+      Experimental::detail::DetectorVolumeConsistency::checkCenterAlignment(
+          tContext, {volumeA, volumeB}, AxisDirection::AxisX));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

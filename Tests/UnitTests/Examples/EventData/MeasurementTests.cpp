@@ -13,8 +13,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -35,7 +35,7 @@ namespace {
 constexpr BoundIndices boundIndices[] = {
     eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta, eBoundQOverP,
 };
-constexpr Acts::GeometryIdentifier geoId{1};
+constexpr GeometryIdentifier geoId{1};
 // fix seed for reproducible tests
 std::default_random_engine rng(123);
 }  // namespace
@@ -44,7 +44,9 @@ std::default_random_engine rng(123);
 // separate unit test. here we only test concrete extreme cases and
 // measurement-specific functionality.
 
-BOOST_AUTO_TEST_SUITE(EventDataMeasurement)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
   MeasurementContainer container;
@@ -162,3 +164,5 @@ BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

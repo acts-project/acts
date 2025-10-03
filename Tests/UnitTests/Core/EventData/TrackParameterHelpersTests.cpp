@@ -10,44 +10,49 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-BOOST_AUTO_TEST_SUITE(TrackParameterHelpers)
+using namespace Acts;
 
-BOOST_AUTO_TEST_CASE(isBoundVectorValid) {
-  BOOST_CHECK(!Acts::isBoundVectorValid({1, 2, 3, 4, 5, 6}, true));
-  BOOST_CHECK(Acts::isBoundVectorValid({1, 2, 1, 1, 5, 6}, true));
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
+BOOST_AUTO_TEST_CASE(isBoundVectorValiTest) {
+  BOOST_CHECK(!isBoundVectorValid({1, 2, 3, 4, 5, 6}, true));
+  BOOST_CHECK(isBoundVectorValid({1, 2, 1, 1, 5, 6}, true));
 }
 
-BOOST_AUTO_TEST_CASE(isFreeVectorValid) {
-  BOOST_CHECK(!Acts::isFreeVectorValid({1, 2, 3, 4, 5, 6, 7, 8}));
-  BOOST_CHECK(Acts::isFreeVectorValid({1, 2, 3, 4, 1, 0, 0, 8}));
+BOOST_AUTO_TEST_CASE(isFreeVectorValidTest) {
+  BOOST_CHECK(!isFreeVectorValid({1, 2, 3, 4, 5, 6, 7, 8}));
+  BOOST_CHECK(isFreeVectorValid({1, 2, 3, 4, 1, 0, 0, 8}));
 }
 
-BOOST_AUTO_TEST_CASE(normalizeBoundParameters) {
-  CHECK_CLOSE_OR_SMALL(Acts::normalizeBoundParameters({1, 2, 3, 4, 5, 6}),
-                       Acts::BoundVector(1, 2, -0.141593, 2.28319, 5, 6), 1e-3,
-                       1e-3);
+BOOST_AUTO_TEST_CASE(normalizeBoundParametersTest) {
+  CHECK_CLOSE_OR_SMALL(normalizeBoundParameters({1, 2, 3, 4, 5, 6}),
+                       BoundVector(1, 2, -0.141593, 2.28319, 5, 6), 1e-3, 1e-3);
 }
 
-BOOST_AUTO_TEST_CASE(addBoundParameters) {
+BOOST_AUTO_TEST_CASE(addBoundParametersTest) {
   CHECK_CLOSE_OR_SMALL(
-      Acts::addBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 0, 0, 0, 0}),
-      Acts::normalizeBoundParameters({1, 2, 3, 4, 5, 6}), 1e-3, 1e-3);
+      addBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 0, 0, 0, 0}),
+      normalizeBoundParameters({1, 2, 3, 4, 5, 6}), 1e-3, 1e-3);
   CHECK_CLOSE_OR_SMALL(
-      Acts::addBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 1, 1, 0, 0}),
-      Acts::normalizeBoundParameters({1, 2, 4, 5, 5, 6}), 1e-3, 1e-3);
+      addBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 1, 1, 0, 0}),
+      normalizeBoundParameters({1, 2, 4, 5, 5, 6}), 1e-3, 1e-3);
 }
 
-BOOST_AUTO_TEST_CASE(subtractBoundParameters) {
+BOOST_AUTO_TEST_CASE(subtractBoundParametersTest) {
   CHECK_CLOSE_OR_SMALL(
-      Acts::subtractBoundParameters({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}),
-      Acts::BoundVector(0, 0, 0, 0, 0, 0), 1e-3, 1e-3);
+      subtractBoundParameters({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}),
+      BoundVector(0, 0, 0, 0, 0, 0), 1e-3, 1e-3);
   CHECK_CLOSE_OR_SMALL(
-      Acts::addBoundParameters(
-          Acts::subtractBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 1, 1, 0, 0}),
+      addBoundParameters(
+          subtractBoundParameters({1, 2, 3, 4, 5, 6}, {0, 0, 1, 1, 0, 0}),
           {0, 0, 1, 1, 0, 0}),
-      Acts::normalizeBoundParameters({1, 2, 3, 4, 5, 6}), 1e-3, 1e-3);
+      normalizeBoundParameters({1, 2, 3, 4, 5, 6}), 1e-3, 1e-3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

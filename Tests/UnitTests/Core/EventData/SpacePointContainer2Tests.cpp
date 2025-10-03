@@ -16,7 +16,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(EventDataSpacePointContainer2)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Empty) {
   SpacePointContainer2 container;
@@ -203,3 +205,5 @@ BOOST_AUTO_TEST_CASE(ZipIterate) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

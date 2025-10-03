@@ -31,6 +31,10 @@ using namespace Acts;
 
 static const auto particleHypothesis = ParticleHypothesis::pion();
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
 BOOST_AUTO_TEST_CASE(test_constructors) {
   std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> a;
   a.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
@@ -102,3 +106,6 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     }
   }
 }
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

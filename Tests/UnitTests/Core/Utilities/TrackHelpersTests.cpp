@@ -13,10 +13,12 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 namespace {
 
@@ -63,7 +65,7 @@ auto createTestTrackState(TrackContainer& tc) {
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(CalculateQuantities) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -182,4 +184,4 @@ BOOST_AUTO_TEST_CASE(CalculateUnbiasedParametersCovariance) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

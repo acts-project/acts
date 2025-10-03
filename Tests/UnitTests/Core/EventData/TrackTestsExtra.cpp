@@ -83,7 +83,9 @@ using const_holder_types =
     holder_types_t<ConstVectorTrackContainer, ConstVectorMultiTrajectory,
                    detail::ValueHolder, detail::RefHolder, std::shared_ptr>;
 
-BOOST_AUTO_TEST_SUITE(EventDataTrack)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(BuildDefaultHolder) {
   VectorMultiTrajectory mtj{};
@@ -220,7 +222,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   BOOST_CHECK_EQUAL(t.covariance(), cov);
 
   std::shared_ptr<PlaneSurface> surface =
-      CurvilinearSurface(Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0})
+      CurvilinearSurface(Vector3{-3_m, 0., 0.}, Vector3{1., 0., 0})
           .planeSurface();
 
   t.setReferenceSurface(surface);
@@ -388,7 +390,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
 
   for (std::size_t i = 0; i < 4; i++) {
     auto ts = t.appendTrackState();
-    ts.jacobian() = Acts::BoundMatrix::Identity() * i;
+    ts.jacobian() = BoundMatrix::Identity() * i;
   }
 
   std::vector<IndexType> exp;
@@ -401,7 +403,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
 
   // jacobians count up
   for (const auto [e, ts] : zip(exp, t.trackStatesReversed())) {
-    BOOST_CHECK_EQUAL(ts.jacobian(), Acts::BoundMatrix::Identity() * e);
+    BOOST_CHECK_EQUAL(ts.jacobian(), BoundMatrix::Identity() * e);
   }
 
   BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
@@ -418,7 +420,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
 
   // jacobians stay with their track states
   for (const auto [e, ts] : zip(exp, t.trackStatesReversed())) {
-    BOOST_CHECK_EQUAL(ts.jacobian(), Acts::BoundMatrix::Identity() * e);
+    BOOST_CHECK_EQUAL(ts.jacobian(), BoundMatrix::Identity() * e);
   }
 
   // back to original!
@@ -426,7 +428,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
 
   // jacobians stay with their track states
   for (const auto [e, ts] : zip(exp, t.trackStates())) {
-    BOOST_CHECK_EQUAL(ts.jacobian(), Acts::BoundMatrix::Identity() * e);
+    BOOST_CHECK_EQUAL(ts.jacobian(), BoundMatrix::Identity() * e);
   }
 
   // reverse with jacobians
@@ -438,9 +440,9 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
   for (const auto [e, ts] : zip(exp, t.trackStates())) {
     Acts::BoundMatrix expJac;
     if (e == 0) {
-      expJac = Acts::BoundMatrix::Zero();
+      expJac = BoundMatrix::Zero();
     } else {
-      expJac = (Acts::BoundMatrix::Identity() * e).inverse();
+      expJac = (BoundMatrix::Identity() * e).inverse();
     }
 
     BOOST_CHECK_EQUAL(ts.jacobian(), expJac);
@@ -453,7 +455,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
   std::iota(exp.begin(), exp.end(), 0);
 
   for (const auto [e, ts] : zip(exp, t.trackStates())) {
-    BOOST_CHECK_EQUAL(ts.jacobian(), Acts::BoundMatrix::Identity() * e);
+    BOOST_CHECK_EQUAL(ts.jacobian(), BoundMatrix::Identity() * e);
   }
 }
 
@@ -798,3 +800,5 @@ BOOST_AUTO_TEST_CASE(DeprecatedCopyFromWithBooleanStillWorks) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

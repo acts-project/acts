@@ -30,9 +30,10 @@
 #include <stdexcept>
 #include <utility>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 GeometryContext gctx;
 
 std::size_t getVolumeIndex() {
@@ -48,9 +49,9 @@ auto makeVolume(auto&&... pars) {
   return vol;
 };
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-BOOST_AUTO_TEST_SUITE(PortalShellTests)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   auto cube = makeVolume(30_mm, 40_mm, 50_mm);
@@ -193,27 +194,27 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 
 BOOST_AUTO_TEST_SUITE(CuboidStack)
 BOOST_DATA_TEST_CASE(XYZDirection,
-                     boost::unit_test::data::make(Acts::AxisDirection::AxisX,
-                                                  Acts::AxisDirection::AxisY,
-                                                  Acts::AxisDirection::AxisZ),
+                     boost::unit_test::data::make(AxisDirection::AxisX,
+                                                  AxisDirection::AxisY,
+                                                  AxisDirection::AxisZ),
                      dir) {
   AxisDirection dirOrth1{};
   AxisDirection dirOrth2{};
   std::size_t dirIdx = 0;
   switch (dir) {
-    case Acts::AxisDirection::AxisX:
-      dirOrth1 = Acts::AxisDirection::AxisY;
-      dirOrth2 = Acts::AxisDirection::AxisZ;
+    case AxisDirection::AxisX:
+      dirOrth1 = AxisDirection::AxisY;
+      dirOrth2 = AxisDirection::AxisZ;
       dirIdx = 0;
       break;
-    case Acts::AxisDirection::AxisY:
-      dirOrth1 = Acts::AxisDirection::AxisX;
-      dirOrth2 = Acts::AxisDirection::AxisZ;
+    case AxisDirection::AxisY:
+      dirOrth1 = AxisDirection::AxisX;
+      dirOrth2 = AxisDirection::AxisZ;
       dirIdx = 1;
       break;
-    case Acts::AxisDirection::AxisZ:
-      dirOrth1 = Acts::AxisDirection::AxisX;
-      dirOrth2 = Acts::AxisDirection::AxisY;
+    case AxisDirection::AxisZ:
+      dirOrth1 = AxisDirection::AxisX;
+      dirOrth2 = AxisDirection::AxisY;
       dirIdx = 2;
       break;
     default:
@@ -782,4 +783,4 @@ BOOST_AUTO_TEST_CASE(RegisterInto) {
 BOOST_AUTO_TEST_SUITE_END()  // CuboidStack
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

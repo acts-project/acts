@@ -9,11 +9,11 @@
 #include "ActsPlugins/Detray/DetraySurfaceGridsConverter.hpp"
 
 #include "Acts/Detector/Detector.hpp"
-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Json/DetrayJsonHelper.hpp"
 
 #include <stdexcept>
 

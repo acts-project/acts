@@ -19,7 +19,7 @@
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <memory>
 #include <numbers>
@@ -29,7 +29,6 @@
 using namespace Acts;
 using namespace Acts::Experimental;
 using namespace Acts::detail;
-using namespace Acts::Test;
 
 GeometryContext tContext;
 constexpr std::size_t nSurfacesX = 15;
@@ -37,7 +36,9 @@ constexpr std::size_t nSurfacesY = 4;
 constexpr double radius = 15.0;
 constexpr double halfZ = 250.0;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
 auto logger = getDefaultLogger("MultiWireNavigationTests", Logging::VERBOSE);
 
 // a function that constructs and returns detector elements for straw surfaces
@@ -192,3 +193,5 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

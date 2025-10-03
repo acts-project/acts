@@ -8,14 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+using namespace Acts;
 using Acts::detail::RealQuadraticEquation;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
+
 /// Unit test for creating RealQuadraticEquation object
 BOOST_AUTO_TEST_CASE(RealQuadraticEquationConstruction) {
   double a(1.0), b(-3.), c(2.);
@@ -60,4 +62,4 @@ BOOST_AUTO_TEST_CASE(RealQuadraticEquationAssignment) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Json/GridJsonConverter.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "ActsPlugins/Json/GridJsonConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <fstream>
@@ -21,11 +21,15 @@
 
 #include <nlohmann/json.hpp>
 
-BOOST_AUTO_TEST_SUITE(GridJsonConversion)
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   // Bound equidistant
-  using EqBound = Acts::GridAxisGenerators::EqBound;
+  using EqBound = GridAxisGenerators::EqBound;
 
   EqBound eqBound{{0., 5.}, 5};
   // Create the grid with the provided axis generator
@@ -49,11 +53,10 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   auto p5 = typename GridTypeEQB::point_t{4.5};
   BOOST_CHECK_EQUAL(eqBoundGrid.atPosition(p5), 5u);
 
-  nlohmann::json eqBoundJson = Acts::GridJsonConverter::toJson(eqBoundGrid);
+  nlohmann::json eqBoundJson = GridJsonConverter::toJson(eqBoundGrid);
 
   auto eqBoundGridRead =
-      Acts::GridJsonConverter::fromJson<EqBound, std::size_t>(eqBoundJson,
-                                                              eqBound);
+      GridJsonConverter::fromJson<EqBound, std::size_t>(eqBoundJson, eqBound);
 
   BOOST_CHECK_EQUAL(eqBoundGridRead.at(1u), 1u);
   BOOST_CHECK_EQUAL(eqBoundGridRead.at(2u), 2u);
@@ -62,7 +65,7 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   BOOST_CHECK_EQUAL(eqBoundGridRead.at(5u), 5u);
 
   // Bound variable
-  using VarBound = Acts::GridAxisGenerators::VarBound;
+  using VarBound = GridAxisGenerators::VarBound;
 
   VarBound varBound{{10., 11., 22., 333., 4444., 55555.}};
   // Create the grid with the provided axis generator
@@ -75,11 +78,10 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   varBoundGrid.at(4u) = 4u;
   varBoundGrid.at(5u) = 5u;
 
-  nlohmann::json varBoundJson = Acts::GridJsonConverter::toJson(varBoundGrid);
+  nlohmann::json varBoundJson = GridJsonConverter::toJson(varBoundGrid);
 
-  auto varBoundGridRead =
-      Acts::GridJsonConverter::fromJson<VarBound, std::size_t>(varBoundJson,
-                                                               varBound);
+  auto varBoundGridRead = GridJsonConverter::fromJson<VarBound, std::size_t>(
+      varBoundJson, varBound);
 
   BOOST_CHECK_EQUAL(varBoundGridRead.at(1u), 1u);
   BOOST_CHECK_EQUAL(varBoundGridRead.at(2u), 2u);
@@ -88,7 +90,7 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   BOOST_CHECK_EQUAL(varBoundGridRead.at(5u), 5u);
 
   // Closed equidistant
-  using EqClosed = Acts::GridAxisGenerators::EqClosed;
+  using EqClosed = GridAxisGenerators::EqClosed;
 
   EqClosed eqClosed{{0., 5.}, 5};
   // Create the grid with the provided axis generator
@@ -101,11 +103,10 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   eqClosedGrid.at(4u) = 4u;
   eqClosedGrid.at(5u) = 5u;
 
-  nlohmann::json eqClosedJson = Acts::GridJsonConverter::toJson(eqClosedGrid);
+  nlohmann::json eqClosedJson = GridJsonConverter::toJson(eqClosedGrid);
 
-  auto eqClosedGridRead =
-      Acts::GridJsonConverter::fromJson<EqClosed, std::size_t>(eqClosedJson,
-                                                               eqClosed);
+  auto eqClosedGridRead = GridJsonConverter::fromJson<EqClosed, std::size_t>(
+      eqClosedJson, eqClosed);
 
   BOOST_CHECK_EQUAL(eqClosedGridRead.at(1u), 1u);
   BOOST_CHECK_EQUAL(eqClosedGridRead.at(2u), 2u);
@@ -116,7 +117,7 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
 
 BOOST_AUTO_TEST_CASE(Grid1DArrayEntry) {
   // Bound equidistant
-  using EqBound = Acts::GridAxisGenerators::EqBound;
+  using EqBound = GridAxisGenerators::EqBound;
 
   EqBound eqBound{{0., 5.}, 5};
   // Create the grid with the provided axis generator
@@ -130,10 +131,10 @@ BOOST_AUTO_TEST_CASE(Grid1DArrayEntry) {
   eqBoundGrid.at(4u) = {4u, 4u};
   eqBoundGrid.at(5u) = {5u, 5u};
 
-  nlohmann::json eqBoundJson = Acts::GridJsonConverter::toJson(eqBoundGrid);
+  nlohmann::json eqBoundJson = GridJsonConverter::toJson(eqBoundGrid);
 
   auto eqBoundGridRead =
-      Acts::GridJsonConverter::fromJson<EqBound, std::array<std::size_t, 2u>>(
+      GridJsonConverter::fromJson<EqBound, std::array<std::size_t, 2u>>(
           eqBoundJson, eqBound);
 
   BOOST_CHECK((eqBoundGridRead.at(1u) == std::array<std::size_t, 2u>{1u, 1u}));
@@ -144,7 +145,7 @@ BOOST_AUTO_TEST_CASE(Grid1DArrayEntry) {
 }
 
 BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBound) {
-  using EqBoundEqBound = Acts::GridAxisGenerators::EqBoundEqBound;
+  using EqBoundEqBound = GridAxisGenerators::EqBoundEqBound;
 
   EqBoundEqBound eqBound2{{0., 5.}, 5, {0., 2.}, 2};
   // Create the grid with the provided axis generator
@@ -178,11 +179,11 @@ BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBound) {
   eqBound2Grid.atPosition(p24) = 24u;
   eqBound2Grid.atPosition(p25) = 25u;
 
-  nlohmann::json eqBound2Json = Acts::GridJsonConverter::toJson(eqBound2Grid);
+  nlohmann::json eqBound2Json = GridJsonConverter::toJson(eqBound2Grid);
 
   auto eqBound2JsonRead =
-      Acts::GridJsonConverter::fromJson<EqBoundEqBound, std::size_t>(
-          eqBound2Json, eqBound2);
+      GridJsonConverter::fromJson<EqBoundEqBound, std::size_t>(eqBound2Json,
+                                                               eqBound2);
 
   BOOST_CHECK_EQUAL(eqBound2JsonRead.atPosition(p11), 11u);
   BOOST_CHECK_EQUAL(eqBound2JsonRead.atPosition(p12), 12u);
@@ -197,7 +198,7 @@ BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBound) {
 }
 
 BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBoundClosed) {
-  using EqBoundEqClosed = Acts::GridAxisGenerators::EqBoundEqClosed;
+  using EqBoundEqClosed = GridAxisGenerators::EqBoundEqClosed;
 
   EqBoundEqClosed eqBoundEqClosed{
       {-6., 6.}, 3, {-std::numbers::pi, std::numbers::pi}, 3};
@@ -234,10 +235,10 @@ BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBoundClosed) {
   eqBoundEqClosedGrid.atPosition(p33) = 33u;
 
   nlohmann::json eqBoundEqClosedJson =
-      Acts::GridJsonConverter::toJson(eqBoundEqClosedGrid);
+      GridJsonConverter::toJson(eqBoundEqClosedGrid);
 
   auto eqBoundEqClosedJsonRead =
-      Acts::GridJsonConverter::fromJson<EqBoundEqClosed, std::size_t>(
+      GridJsonConverter::fromJson<EqBoundEqClosed, std::size_t>(
           eqBoundEqClosedJson, eqBoundEqClosed);
 
   BOOST_CHECK_EQUAL(eqBoundEqClosedJsonRead.atPosition(p11), 11u);
@@ -266,7 +267,7 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
   std::vector<nlohmann::json> jsspace;
   std::apply(
       [&](auto&&... vals) {
-        (jsspace.push_back(Acts::GridAccessJsonConverter::toJson(vals)), ...);
+        (jsspace.push_back(GridAccessJsonConverter::toJson(vals)), ...);
       },
       sstuple);
 
@@ -276,20 +277,17 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
   }
 
   // Read back in
-  std::vector<std::unique_ptr<const Acts::GridAccess::IGlobalToGridLocal>>
-      sspaceRead;
+  std::vector<std::unique_ptr<const GridAccess::IGlobalToGridLocal>> sspaceRead;
   for (auto& jss : jsspace) {
     sspaceRead.push_back(
-        Acts::GridAccessJsonConverter::globalToGridLocalFromJson(jss));
+        GridAccessJsonConverter::globalToGridLocalFromJson(jss));
     if (jss["accessors"].size() == 1u) {
       auto delegate =
-          Acts::GridAccessJsonConverter::globalToGridLocal1DimDelegateFromJson(
-              jss);
+          GridAccessJsonConverter::globalToGridLocal1DimDelegateFromJson(jss);
       BOOST_CHECK(delegate.connected());
     } else if (jss["accessors"].size() == 2u) {
       auto delegate =
-          Acts::GridAccessJsonConverter::globalToGridLocal2DimDelegateFromJson(
-              jss);
+          GridAccessJsonConverter::globalToGridLocal2DimDelegateFromJson(jss);
       BOOST_CHECK(delegate.connected());
     } else {
       BOOST_CHECK(false);
@@ -311,16 +309,15 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
       sstuple);
   BOOST_CHECK(good);
 
-  Acts::Transform3 tTransform;
-  tTransform.pretranslate(Acts::Vector3{0., 0., 100.});
+  Transform3 tTransform;
+  tTransform.pretranslate(Vector3{0., 0., 100.});
 
   // Test with transform
   std::vector<nlohmann::json> jsspaceTransform;
   std::apply(
       [&](auto... vals) {
-        (jsspaceTransform.push_back(Acts::GridAccessJsonConverter::toJson(
-             Acts::GridAccess::Affine3Transformed<decltype(vals)>(vals,
-                                                                  tTransform))),
+        (jsspaceTransform.push_back(GridAccessJsonConverter::toJson(
+             GridAccess::Affine3Transformed<decltype(vals)>(vals, tTransform))),
          ...);
       },
       sstuple);
@@ -332,11 +329,11 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
   }
 
   // Read back in
-  std::vector<std::unique_ptr<const Acts::GridAccess::IGlobalToGridLocal>>
+  std::vector<std::unique_ptr<const GridAccess::IGlobalToGridLocal>>
       sspaceTransformRead;
   for (auto& jss : jsspaceTransform) {
     sspaceTransformRead.push_back(
-        Acts::GridAccessJsonConverter::globalToGridLocalFromJson(jss));
+        GridAccessJsonConverter::globalToGridLocalFromJson(jss));
   }
 
   // Test that none of them are empty
@@ -349,10 +346,10 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
   good = true;
   std::apply(
       [&](auto... vals) {
-        ((good = good &&
-                 checkType(Acts::GridAccess::Affine3Transformed<decltype(vals)>(
-                               vals, tTransform),
-                           sspaceTransformRead[irn++])),
+        ((good =
+              good && checkType(GridAccess::Affine3Transformed<decltype(vals)>(
+                                    vals, tTransform),
+                                sspaceTransformRead[irn++])),
          ...);
       },
       sstuple);
@@ -363,13 +360,12 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
 
 BOOST_AUTO_TEST_CASE(GlobalSubSpaceTests1D) {
   // One dimensional sub spaces
-  const std::tuple<
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisX>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisY>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisZ>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisR>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisPhi>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisEta>>
+  const std::tuple<GridAccess::GlobalSubspace<AxisDirection::AxisX>,
+                   GridAccess::GlobalSubspace<AxisDirection::AxisY>,
+                   GridAccess::GlobalSubspace<AxisDirection::AxisZ>,
+                   GridAccess::GlobalSubspace<AxisDirection::AxisR>,
+                   GridAccess::GlobalSubspace<AxisDirection::AxisPhi>,
+                   GridAccess::GlobalSubspace<AxisDirection::AxisEta>>
       sspace1D;
 
   // Check the tuple for 1D
@@ -379,26 +375,16 @@ BOOST_AUTO_TEST_CASE(GlobalSubSpaceTests1D) {
 BOOST_AUTO_TEST_CASE(GlobalSubSpaceTests2D) {
   // Two dimensional sub spaces
   const std::tuple<
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisX,
-                                       Acts::AxisDirection::AxisY>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisY,
-                                       Acts::AxisDirection::AxisX>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisX,
-                                       Acts::AxisDirection::AxisZ>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisZ,
-                                       Acts::AxisDirection::AxisX>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisY,
-                                       Acts::AxisDirection::AxisZ>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisZ,
-                                       Acts::AxisDirection::AxisY>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisR,
-                                       Acts::AxisDirection::AxisPhi>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisPhi,
-                                       Acts::AxisDirection::AxisR>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisZ,
-                                       Acts::AxisDirection::AxisPhi>,
-      Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisPhi,
-                                       Acts::AxisDirection::AxisZ>>
+      GridAccess::GlobalSubspace<AxisDirection::AxisX, AxisDirection::AxisY>,
+      GridAccess::GlobalSubspace<AxisDirection::AxisY, AxisDirection::AxisX>,
+      GridAccess::GlobalSubspace<AxisDirection::AxisX, AxisDirection::AxisZ>,
+      GridAccess::GlobalSubspace<AxisDirection::AxisZ, AxisDirection::AxisX>,
+      GridAccess::GlobalSubspace<AxisDirection::AxisY, AxisDirection::AxisZ>,
+      GridAccess::GlobalSubspace<AxisDirection::AxisZ, AxisDirection::AxisY>,
+      GridAccess::GlobalSubspace<AxisDirection::AxisR, AxisDirection::AxisPhi>,
+      GridAccess::GlobalSubspace<AxisDirection::AxisPhi, AxisDirection::AxisR>,
+      GridAccess::GlobalSubspace<AxisDirection::AxisZ, AxisDirection::AxisPhi>,
+      GridAccess::GlobalSubspace<AxisDirection::AxisPhi, AxisDirection::AxisZ>>
       sspace2D = {};
 
   // Check the tuple for 2D
@@ -406,17 +392,16 @@ BOOST_AUTO_TEST_CASE(GlobalSubSpaceTests2D) {
 }
 
 BOOST_AUTO_TEST_CASE(LocalSubspaceTests) {
-  const std::tuple<Acts::GridAccess::LocalSubspace<0u>,
-                   Acts::GridAccess::LocalSubspace<1u>,
-                   Acts::GridAccess::LocalSubspace<0u, 1u>,
-                   Acts::GridAccess::LocalSubspace<1u, 0u>>
+  const std::tuple<GridAccess::LocalSubspace<0u>, GridAccess::LocalSubspace<1u>,
+                   GridAccess::LocalSubspace<0u, 1u>,
+                   GridAccess::LocalSubspace<1u, 0u>>
       lspace1D;
 
   // Write them to json
   std::vector<nlohmann::json> jlspace;
   std::apply(
       [&](auto&&... vals) {
-        (jlspace.push_back(Acts::GridAccessJsonConverter::toJson(vals)), ...);
+        (jlspace.push_back(GridAccessJsonConverter::toJson(vals)), ...);
       },
       lspace1D);
 
@@ -425,20 +410,17 @@ BOOST_AUTO_TEST_CASE(LocalSubspaceTests) {
     BOOST_CHECK(!jls.empty());
   }
 
-  std::vector<std::unique_ptr<const Acts::GridAccess::IBoundToGridLocal>>
-      lspaceRead;
+  std::vector<std::unique_ptr<const GridAccess::IBoundToGridLocal>> lspaceRead;
   for (auto& jls : jlspace) {
     lspaceRead.push_back(
-        Acts::GridAccessJsonConverter::boundToGridLocalFromJson(jls));
+        GridAccessJsonConverter::boundToGridLocalFromJson(jls));
     if (jls["accessors"].size() == 1u) {
       auto delegate =
-          Acts::GridAccessJsonConverter::boundToGridLocal1DimDelegateFromJson(
-              jls);
+          GridAccessJsonConverter::boundToGridLocal1DimDelegateFromJson(jls);
       BOOST_CHECK(delegate.connected());
     } else if (jls["accessors"].size() == 2u) {
       auto delegate =
-          Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
-              jls);
+          GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(jls);
       BOOST_CHECK(delegate.connected());
     } else {
       BOOST_CHECK(false);
@@ -462,28 +444,26 @@ BOOST_AUTO_TEST_CASE(LocalSubspaceTests) {
 }
 
 BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTest) {
-  Acts::GridAccess::BoundCylinderToZPhi boundCylinderToZPhi(100., 10.);
+  GridAccess::BoundCylinderToZPhi boundCylinderToZPhi(100., 10.);
 
   nlohmann::json jboundCylinderToZPhi =
-      Acts::GridAccessJsonConverter::toJson(boundCylinderToZPhi);
+      GridAccessJsonConverter::toJson(boundCylinderToZPhi);
 
   // Check it is not empty
   BOOST_CHECK(!jboundCylinderToZPhi.empty());
 
   auto boundCylinderToZPhiRead =
-      Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
-          jboundCylinderToZPhi);
+      GridAccessJsonConverter::boundToGridLocalFromJson(jboundCylinderToZPhi);
 
   // Check that it is not empty
   BOOST_REQUIRE(boundCylinderToZPhiRead != nullptr);
 
-  const Acts::GridAccess::BoundCylinderToZPhi* bct =
-      dynamic_cast<const Acts::GridAccess::BoundCylinderToZPhi*>(
+  const GridAccess::BoundCylinderToZPhi* bct =
+      dynamic_cast<const GridAccess::BoundCylinderToZPhi*>(
           boundCylinderToZPhiRead.get());
 
-  auto delegate =
-      Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
-          jboundCylinderToZPhi);
+  auto delegate = GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
+      jboundCylinderToZPhi);
   BOOST_CHECK(delegate.connected());
 
   BOOST_REQUIRE(bct != nullptr);
@@ -492,3 +472,5 @@ BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

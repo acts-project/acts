@@ -18,7 +18,9 @@
 
 using ActsFatras::Barcode;
 
-BOOST_AUTO_TEST_SUITE(FatrasBarcode)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(BarcodeMakeDescendant) {
   // initial barcode with primary particle
@@ -213,3 +215,5 @@ BOOST_AUTO_TEST_CASE(BarcodeStreamOutput) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

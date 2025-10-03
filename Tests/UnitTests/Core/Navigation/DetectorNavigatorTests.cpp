@@ -29,60 +29,61 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
-using namespace Acts::UnitLiterals;
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 namespace Acts {
 class Surface;
 }  // namespace Acts
 
-Acts::GeometryContext geoContext;
-Acts::MagneticFieldContext mfContext;
+using namespace Acts;
+using namespace Acts::UnitLiterals;
+
+GeometryContext geoContext;
+MagneticFieldContext mfContext;
 
 /// A simple action to record the navigation state
 struct StateRecorder {
-  using result_type = std::vector<Acts::Experimental::DetectorNavigator::State>;
+  using result_type = std::vector<Experimental::DetectorNavigator::State>;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void act(propagator_state_t& state, const stepper_t& /*stepper*/,
            const navigator_t& /*navigator*/, result_type& result,
-           const Acts::Logger& /*logger*/) const {
+           const Logger& /*logger*/) const {
     result.push_back(state.navigation);
   }
 };
 
-BOOST_AUTO_TEST_SUITE(DetectorNavigator)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
 // Initialization tests
 BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
-  auto bounds = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
-  auto volume = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume", Acts::Transform3::Identity(), std::move(bounds), {}, {},
-      Acts::Experimental::tryNoVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
-  volume->assignGeometryId(Acts::GeometryIdentifier(1));
-  auto detector = Acts::Experimental::Detector::makeShared(
-      "detector", {volume}, Acts::Experimental::tryRootVolumes());
+  auto bounds = std::make_unique<CuboidVolumeBounds>(3, 3, 3);
+  auto volume = Experimental::DetectorVolumeFactory::construct(
+      Experimental::defaultPortalAndSubPortalGenerator(), geoContext, "volume",
+      Transform3::Identity(), std::move(bounds), {}, {},
+      Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
+  volume->assignGeometryId(GeometryIdentifier(1));
+  auto detector = Experimental::Detector::makeShared(
+      "detector", {volume}, Experimental::tryRootVolumes());
 
-  using Stepper = Acts::StraightLineStepper;
-  using Navigator = Acts::Experimental::DetectorNavigator;
-  using Propagator = Acts::Propagator<Stepper, Navigator>;
-  using ActorList = Acts::ActorList<>;
+  using Stepper = StraightLineStepper;
+  using Navigator = Experimental::DetectorNavigator;
+  using Propagator = Propagator<Stepper, Navigator>;
+  using ActorList = ActorList<>;
   using PropagatorOptions = Propagator::Options<ActorList>;
 
   PropagatorOptions options(geoContext, mfContext);
 
   Stepper stepper;
 
-  Acts::Vector4 pos(-2, 0, 0, 0);
-  Acts::BoundTrackParameters start =
-      Acts::BoundTrackParameters::createCurvilinear(
-          pos, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-          Acts::ParticleHypothesis::electron());
+  Vector4 pos(-2, 0, 0, 0);
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      pos, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
+      ParticleHypothesis::electron());
 
   //
   // (1) Test for inactivity
@@ -106,16 +107,15 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
   // Run with geometry but without resolving
   {
-    Acts::Experimental::DetectorNavigator::Config navCfg;
+    Experimental::DetectorNavigator::Config navCfg;
     navCfg.resolveSensitive = false;
     navCfg.resolveMaterial = false;
     navCfg.resolvePassive = false;
     navCfg.detector = detector.get();
 
-    Acts::Experimental::DetectorNavigator navigator(navCfg);
+    Experimental::DetectorNavigator navigator(navCfg);
 
-    Acts::Propagator<Acts::StraightLineStepper,
-                     Acts::Experimental::DetectorNavigator>
+    Acts::Propagator<StraightLineStepper, Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
     auto state = propagator.makeState(options);
@@ -141,19 +141,17 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
   //
   // Run from endOfWorld
   {
-    Acts::Vector4 posEoW(-20, 0, 0, 0);
-    Acts::BoundTrackParameters startEoW =
-        Acts::BoundTrackParameters::createCurvilinear(
-            posEoW, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-            Acts::ParticleHypothesis::electron());
+    Vector4 posEoW(-20, 0, 0, 0);
+    BoundTrackParameters startEoW = BoundTrackParameters::createCurvilinear(
+        posEoW, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
+        ParticleHypothesis::electron());
 
-    Acts::Experimental::DetectorNavigator::Config navCfg;
+    Experimental::DetectorNavigator::Config navCfg;
     navCfg.detector = detector.get();
 
-    Acts::Experimental::DetectorNavigator navigator(navCfg);
+    Experimental::DetectorNavigator navigator(navCfg);
 
-    Acts::Propagator<Acts::StraightLineStepper,
-                     Acts::Experimental::DetectorNavigator>
+    Acts::Propagator<StraightLineStepper, Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
     auto state = propagator.makeState(options);
@@ -164,13 +162,12 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
   // Initialize properly
   {
-    Acts::Experimental::DetectorNavigator::Config navCfg;
+    Experimental::DetectorNavigator::Config navCfg;
     navCfg.detector = detector.get();
 
-    Acts::Experimental::DetectorNavigator navigator(navCfg);
+    Experimental::DetectorNavigator navigator(navCfg);
 
-    Acts::Propagator<Acts::StraightLineStepper,
-                     Acts::Experimental::DetectorNavigator>
+    Acts::Propagator<StraightLineStepper, Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
     auto state = propagator.makeState(options);
@@ -200,57 +197,50 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 // and no surprises
 BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   // Construct a cubic detector with 3 volumes
-  Acts::RotationMatrix3 rotation;
+  RotationMatrix3 rotation;
   double angle = 90_degree;
-  Acts::Vector3 xPos(cos(angle), 0., sin(angle));
-  Acts::Vector3 yPos(0., 1., 0.);
-  Acts::Vector3 zPos(-sin(angle), 0., cos(angle));
+  Vector3 xPos(cos(angle), 0., sin(angle));
+  Vector3 yPos(0., 1., 0.);
+  Vector3 zPos(-sin(angle), 0., cos(angle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;
 
-  auto bounds1 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
-  auto transform1 = Acts::Transform3::Identity();
-  auto surface1 = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      transform1 * Acts::Transform3(rotation),
-      std::make_shared<Acts::RectangleBounds>(2, 2));
-  auto volume1 = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume1", transform1, std::move(bounds1), {surface1}, {},
-      Acts::Experimental::tryNoVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+  auto bounds1 = std::make_unique<CuboidVolumeBounds>(3, 3, 3);
+  auto transform1 = Transform3::Identity();
+  auto surface1 = Surface::makeShared<PlaneSurface>(
+      transform1 * Transform3(rotation),
+      std::make_shared<RectangleBounds>(2, 2));
+  auto volume1 = Experimental::DetectorVolumeFactory::construct(
+      Experimental::defaultPortalAndSubPortalGenerator(), geoContext, "volume1",
+      transform1, std::move(bounds1), {surface1}, {},
+      Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
 
-  auto bounds2 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
-  auto transform2 =
-      Acts::Transform3::Identity() * Acts::Translation3(Acts::Vector3(6, 0, 0));
-  auto surface2 = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      transform2 * Acts::Transform3(rotation),
-      std::make_shared<Acts::RectangleBounds>(2, 2));
-  auto volume2 = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume2", transform2, std::move(bounds2), {surface2}, {},
-      Acts::Experimental::tryNoVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+  auto bounds2 = std::make_unique<CuboidVolumeBounds>(3, 3, 3);
+  auto transform2 = Transform3::Identity() * Translation3(Vector3(6, 0, 0));
+  auto surface2 = Surface::makeShared<PlaneSurface>(
+      transform2 * Transform3(rotation),
+      std::make_shared<RectangleBounds>(2, 2));
+  auto volume2 = Experimental::DetectorVolumeFactory::construct(
+      Experimental::defaultPortalAndSubPortalGenerator(), geoContext, "volume2",
+      transform2, std::move(bounds2), {surface2}, {},
+      Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
 
-  auto bounds3 = std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3);
-  auto transform3 = Acts::Transform3::Identity() *
-                    Acts::Translation3(Acts::Vector3(12, 0, 0));
-  auto surface3 = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      transform3 * Acts::Transform3(rotation),
-      std::make_shared<Acts::RectangleBounds>(2, 2));
-  auto volume3 = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume3", transform3, std::move(bounds3), {surface3}, {},
-      Acts::Experimental::tryNoVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+  auto bounds3 = std::make_unique<CuboidVolumeBounds>(3, 3, 3);
+  auto transform3 = Transform3::Identity() * Translation3(Vector3(12, 0, 0));
+  auto surface3 = Surface::makeShared<PlaneSurface>(
+      transform3 * Transform3(rotation),
+      std::make_shared<RectangleBounds>(2, 2));
+  auto volume3 = Experimental::DetectorVolumeFactory::construct(
+      Experimental::defaultPortalAndSubPortalGenerator(), geoContext, "volume3",
+      transform3, std::move(bounds3), {surface3}, {},
+      Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
 
-  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
-      detectorVolumes = {volume1, volume2, volume3};
+  std::vector<std::shared_ptr<Experimental::DetectorVolume>> detectorVolumes = {
+      volume1, volume2, volume3};
 
-  auto portalContainer =
-      Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-          geoContext, detectorVolumes, Acts::AxisDirection::AxisX, {},
-          Acts::Logging::VERBOSE);
+  auto portalContainer = Experimental::detail::CuboidalDetectorHelper::connect(
+      geoContext, detectorVolumes, AxisDirection::AxisX, {}, Logging::VERBOSE);
 
   // Make sure that the geometry ids are
   // independent of the potential Id generation
@@ -259,31 +249,31 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Volume ids: 1-3
   for (auto& volume : detectorVolumes) {
-    volume->assignGeometryId(Acts::GeometryIdentifier(id));
+    volume->assignGeometryId(GeometryIdentifier(id));
     id++;
   }
   // Intervolume portal ids: 6,7,10,11
   for (auto& volume : detectorVolumes) {
     for (auto& port : volume->portalPtrs()) {
-      if (port->surface().geometryId() == Acts::GeometryIdentifier(0)) {
-        port->surface().assignGeometryId(Acts::GeometryIdentifier(id));
+      if (port->surface().geometryId() == GeometryIdentifier(0)) {
+        port->surface().assignGeometryId(GeometryIdentifier(id));
         id++;
       }
     }
   }
   // Surface ids: 12-14
   for (auto& surf : {surface1, surface2, surface3}) {
-    surf->assignGeometryId(Acts::GeometryIdentifier(id));
+    surf->assignGeometryId(GeometryIdentifier(id));
     id++;
   }
 
-  auto detector = Acts::Experimental::Detector::makeShared(
-      "cubicDetector", detectorVolumes, Acts::Experimental::tryRootVolumes());
+  auto detector = Experimental::Detector::makeShared(
+      "cubicDetector", detectorVolumes, Experimental::tryRootVolumes());
 
-  using Stepper = Acts::StraightLineStepper;
-  using Navigator = Acts::Experimental::DetectorNavigator;
-  using Propagator = Acts::Propagator<Stepper, Navigator>;
-  using ActorList = Acts::ActorList<StateRecorder, Acts::EndOfWorldReached>;
+  using Stepper = StraightLineStepper;
+  using Navigator = Experimental::DetectorNavigator;
+  using Propagator = Propagator<Stepper, Navigator>;
+  using ActorList = ActorList<StateRecorder, EndOfWorldReached>;
   using PropagatorOptions = Propagator::Options<ActorList>;
 
   Navigator::Config navCfg;
@@ -291,35 +281,32 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   Stepper stepper;
 
-  Navigator navigator(navCfg,
-                      Acts::getDefaultLogger("DetectorNavigator",
-                                             Acts::Logging::Level::VERBOSE));
+  Navigator navigator(
+      navCfg, getDefaultLogger("DetectorNavigator", Logging::Level::VERBOSE));
 
   PropagatorOptions options(geoContext, mfContext);
-  options.direction = Acts::Direction::Forward();
+  options.direction = Direction::Forward();
 
   Propagator propagator(
       stepper, navigator,
-      Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
+      getDefaultLogger("Propagator", Logging::Level::VERBOSE));
 
   // Forward and backward propagation
   // should be consistent between each other
-  Acts::Vector4 posFwd(-2, 0, 0, 0);
-  Acts::BoundTrackParameters startFwd =
-      Acts::BoundTrackParameters::createCurvilinear(
-          posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-          Acts::ParticleHypothesis::electron());
+  Vector4 posFwd(-2, 0, 0, 0);
+  BoundTrackParameters startFwd = BoundTrackParameters::createCurvilinear(
+      posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
+      ParticleHypothesis::electron());
 
   auto resultFwd = propagator.propagate(startFwd, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
 
-  options.direction = Acts::Direction::Backward();
+  options.direction = Direction::Backward();
 
-  Acts::Vector4 posBwd(14, 0, 0, 0);
-  Acts::BoundTrackParameters startBwd =
-      Acts::BoundTrackParameters::createCurvilinear(
-          posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-          Acts::ParticleHypothesis::electron());
+  Vector4 posBwd(14, 0, 0, 0);
+  BoundTrackParameters startBwd = BoundTrackParameters::createCurvilinear(
+      posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
+      ParticleHypothesis::electron());
 
   auto resultBwd = propagator.propagate(startBwd, options).value();
   auto statesBwd = resultBwd.get<StateRecorder::result_type>();
@@ -335,45 +322,45 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   // Action list call before the first step
   // Starting in the volume1
   BOOST_CHECK_EQUAL(statesFwd[0].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[0].currentPortal, nullptr);
 
   // Step to the surface inside volume1
   BOOST_CHECK_EQUAL(statesFwd[1].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(12));
+                    GeometryIdentifier(12));
   BOOST_CHECK_EQUAL(statesFwd[1].currentPortal, nullptr);
 
   // Step to the volume1|volume2 boundary (portal has witched volume id)
   BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesFwd[2].currentSurface,
                     &(statesFwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(7));
+                    GeometryIdentifier(7));
 
   // Step to the surface inside volume2
   BOOST_CHECK_EQUAL(statesFwd[3].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesFwd[3].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(13));
+                    GeometryIdentifier(13));
   BOOST_CHECK_EQUAL(statesFwd[3].currentPortal, nullptr);
 
   // Step to the volume2|volume3 boundary - volume has switched
   BOOST_CHECK_EQUAL(statesFwd[4].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(3));
+                    GeometryIdentifier(3));
   BOOST_CHECK_EQUAL(statesFwd[4].currentSurface,
                     &(statesFwd[4].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[4].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(10));
+                    GeometryIdentifier(10));
 
   // Step to the surface inside volume3
   BOOST_CHECK_EQUAL(statesFwd[5].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(3));
+                    GeometryIdentifier(3));
   BOOST_CHECK_EQUAL(statesFwd[5].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(14));
+                    GeometryIdentifier(14));
   BOOST_CHECK_EQUAL(statesFwd[5].currentPortal, nullptr);
 
   // Step to the volume3|endOfWorld boundary
@@ -381,7 +368,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesFwd[6].currentSurface,
                     &(statesFwd[6].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[6].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(11));
+                    GeometryIdentifier(11));
 
   // Step to the end of world
   BOOST_CHECK(navigator.endOfWorldReached(statesFwd[7]));
@@ -393,49 +380,49 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesBwd[6].currentSurface,
                     &(statesBwd[6].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[6].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(6));
+                    GeometryIdentifier(6));
 
   // Step to the surface inside volume1
   BOOST_CHECK_EQUAL(statesBwd[5].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[5].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(12));
+                    GeometryIdentifier(12));
   BOOST_CHECK_EQUAL(statesBwd[5].currentPortal, nullptr);
 
   // Step to the volume1|volume2 boundary / preStep not yet set
   BOOST_CHECK_EQUAL(statesBwd[4].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[4].currentSurface,
                     &(statesBwd[4].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[4].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(7));
+                    GeometryIdentifier(7));
 
   // Step to the surface inside volume2
   BOOST_CHECK_EQUAL(statesBwd[3].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesBwd[3].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(13));
+                    GeometryIdentifier(13));
   BOOST_CHECK_EQUAL(statesBwd[3].currentPortal, nullptr);
 
   // Step to the volume2|volume3 boundary / pre-step not yet set
   BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesBwd[2].currentSurface,
                     &(statesBwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(10));
+                    GeometryIdentifier(10));
   BOOST_CHECK_EQUAL(statesBwd[2].surfaceCandidates.size(), 2u);
 
   // Step to the surface inside volume3
   BOOST_CHECK_EQUAL(statesBwd[1].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(3));
+                    GeometryIdentifier(3));
   BOOST_CHECK_EQUAL(statesBwd[1].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(14));
+                    GeometryIdentifier(14));
   BOOST_CHECK_EQUAL(statesBwd[1].currentPortal, nullptr);
 
   // Step to the volume3|endOfWorld boundary
   BOOST_CHECK_EQUAL(statesBwd[0].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(3));
+                    GeometryIdentifier(3));
   BOOST_CHECK_EQUAL(statesBwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[0].currentPortal, nullptr);
 }
@@ -445,31 +432,29 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 // in multiple points
 BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   // Construct a cubic detector with a cylindrical surface
-  auto bounds = std::make_unique<Acts::CuboidVolumeBounds>(10, 10, 10);
-  auto surface = Acts::Surface::makeShared<Acts::CylinderSurface>(
-      Acts::Transform3::Identity(),
-      std::make_shared<Acts::CylinderBounds>(4, 9));
-  auto volume = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume", Acts::Transform3::Identity(), std::move(bounds), {surface}, {},
-      Acts::Experimental::tryNoVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+  auto bounds = std::make_unique<CuboidVolumeBounds>(10, 10, 10);
+  auto surface = Surface::makeShared<CylinderSurface>(
+      Transform3::Identity(), std::make_shared<CylinderBounds>(4, 9));
+  auto volume = Experimental::DetectorVolumeFactory::construct(
+      Experimental::defaultPortalAndSubPortalGenerator(), geoContext, "volume",
+      Transform3::Identity(), std::move(bounds), {surface}, {},
+      Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
 
-  volume->assignGeometryId(Acts::GeometryIdentifier(1));
-  surface->assignGeometryId(Acts::GeometryIdentifier(2));
+  volume->assignGeometryId(GeometryIdentifier(1));
+  surface->assignGeometryId(GeometryIdentifier(2));
   int id = 3;
   for (auto& port : volume->portalPtrs()) {
-    port->surface().assignGeometryId(Acts::GeometryIdentifier(id));
+    port->surface().assignGeometryId(GeometryIdentifier(id));
     id++;
   }
 
-  auto detector = Acts::Experimental::Detector::makeShared(
-      "detector", {volume}, Acts::Experimental::tryRootVolumes());
+  auto detector = Experimental::Detector::makeShared(
+      "detector", {volume}, Experimental::tryRootVolumes());
 
-  using Stepper = Acts::StraightLineStepper;
-  using Navigator = Acts::Experimental::DetectorNavigator;
-  using Propagator = Acts::Propagator<Stepper, Navigator>;
-  using ActorList = Acts::ActorList<StateRecorder, Acts::EndOfWorldReached>;
+  using Stepper = StraightLineStepper;
+  using Navigator = Experimental::DetectorNavigator;
+  using Propagator = Propagator<Stepper, Navigator>;
+  using ActorList = ActorList<StateRecorder, EndOfWorldReached>;
   using PropagatorOptions = Propagator::Options<ActorList>;
 
   Navigator::Config navCfg;
@@ -477,31 +462,29 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
 
   Stepper stepper;
 
-  Navigator navigator(navCfg,
-                      Acts::getDefaultLogger("DetectorNavigator",
-                                             Acts::Logging::Level::VERBOSE));
+  Navigator navigator(
+      navCfg, getDefaultLogger("DetectorNavigator", Logging::Level::VERBOSE));
 
   PropagatorOptions options(geoContext, mfContext);
-  options.direction = Acts::Direction::Forward();
+  options.direction = Direction::Forward();
 
   Propagator propagator(
       stepper, navigator,
-      Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
+      getDefaultLogger("Propagator", Logging::Level::VERBOSE));
 
   // Depending on the direction, the same surface
   // may be reached in different points
-  Acts::Vector4 pos(0, 0, 0, 0);
-  Acts::BoundTrackParameters start =
-      Acts::BoundTrackParameters::createCurvilinear(
-          pos, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-          Acts::ParticleHypothesis::electron());
+  Vector4 pos(0, 0, 0, 0);
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      pos, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
+      ParticleHypothesis::electron());
 
   // Has to properly handle propagation in the
   // forward and backward direction
   auto resultFwd = propagator.propagate(start, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
 
-  options.direction = Acts::Direction::Backward();
+  options.direction = Direction::Backward();
 
   auto resultBwd = propagator.propagate(start, options).value();
   auto statesBwd = resultBwd.get<StateRecorder::result_type>();
@@ -517,15 +500,15 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   // Action list call before the first step
   // Starting in the volume
   BOOST_CHECK_EQUAL(statesFwd[0].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[0].currentPortal, nullptr);
 
   // Step to the cylindrical surface
   BOOST_CHECK_EQUAL(statesFwd[1].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesFwd[1].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesFwd[1].position.x(), 4, 1e-6);
 
@@ -534,7 +517,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   BOOST_CHECK_EQUAL(statesFwd[2].currentSurface,
                     &(statesFwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(6));
+                    GeometryIdentifier(6));
 
   // Step to the end of world
   BOOST_CHECK(navigator.endOfWorldReached(statesFwd[3]));
@@ -545,20 +528,20 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   BOOST_CHECK_EQUAL(statesBwd[2].currentSurface,
                     &(statesBwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(5));
+                    GeometryIdentifier(5));
 
   // Step to the cylindrical surface
   BOOST_CHECK_EQUAL(statesBwd[1].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[1].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesBwd[1].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesBwd[1].position.x(), -4, 1e-6);
 
   // Action list call before the first step
   // Starting in the volume
   BOOST_CHECK_EQUAL(statesBwd[0].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[0].currentPortal, nullptr);
 }
@@ -568,31 +551,29 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
 // intersections
 BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   // Construct a cubic detector with a cylindrical surface
-  auto bounds = std::make_unique<Acts::CuboidVolumeBounds>(10, 10, 10);
-  auto surface = Acts::Surface::makeShared<Acts::CylinderSurface>(
-      Acts::Transform3::Identity(),
-      std::make_shared<Acts::CylinderBounds>(4, 9));
-  auto volume = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), geoContext,
-      "volume", Acts::Transform3::Identity(), std::move(bounds), {surface}, {},
-      Acts::Experimental::tryNoVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+  auto bounds = std::make_unique<CuboidVolumeBounds>(10, 10, 10);
+  auto surface = Surface::makeShared<CylinderSurface>(
+      Transform3::Identity(), std::make_shared<CylinderBounds>(4, 9));
+  auto volume = Experimental::DetectorVolumeFactory::construct(
+      Experimental::defaultPortalAndSubPortalGenerator(), geoContext, "volume",
+      Transform3::Identity(), std::move(bounds), {surface}, {},
+      Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
 
-  volume->assignGeometryId(Acts::GeometryIdentifier(1));
-  surface->assignGeometryId(Acts::GeometryIdentifier(2));
+  volume->assignGeometryId(GeometryIdentifier(1));
+  surface->assignGeometryId(GeometryIdentifier(2));
   int id = 3;
   for (auto& port : volume->portalPtrs()) {
-    port->surface().assignGeometryId(Acts::GeometryIdentifier(id));
+    port->surface().assignGeometryId(GeometryIdentifier(id));
     id++;
   }
 
-  auto detector = Acts::Experimental::Detector::makeShared(
-      "detector", {volume}, Acts::Experimental::tryRootVolumes());
+  auto detector = Experimental::Detector::makeShared(
+      "detector", {volume}, Experimental::tryRootVolumes());
 
-  using Stepper = Acts::StraightLineStepper;
-  using Navigator = Acts::Experimental::DetectorNavigator;
-  using Propagator = Acts::Propagator<Stepper, Navigator>;
-  using ActorList = Acts::ActorList<StateRecorder, Acts::EndOfWorldReached>;
+  using Stepper = StraightLineStepper;
+  using Navigator = Experimental::DetectorNavigator;
+  using Propagator = Propagator<Stepper, Navigator>;
+  using ActorList = ActorList<StateRecorder, EndOfWorldReached>;
   using PropagatorOptions = Propagator::Options<ActorList>;
 
   Navigator::Config navCfg;
@@ -600,36 +581,33 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
 
   Stepper stepper;
 
-  Navigator navigator(navCfg,
-                      Acts::getDefaultLogger("DetectorNavigator",
-                                             Acts::Logging::Level::VERBOSE));
+  Navigator navigator(
+      navCfg, getDefaultLogger("DetectorNavigator", Logging::Level::VERBOSE));
 
   PropagatorOptions options(geoContext, mfContext);
-  options.direction = Acts::Direction::Forward();
+  options.direction = Direction::Forward();
 
   Propagator propagator(
       stepper, navigator,
-      Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
+      getDefaultLogger("Propagator", Logging::Level::VERBOSE));
 
   // Forward and backward propagation
   // should be consistent between each other
   // and the cylindrical surface should be
   // reached in two points during navigation
-  Acts::Vector4 posFwd(-5, 0, 0, 0);
-  Acts::BoundTrackParameters startFwd =
-      Acts::BoundTrackParameters::createCurvilinear(
-          posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-          Acts::ParticleHypothesis::electron());
+  Vector4 posFwd(-5, 0, 0, 0);
+  BoundTrackParameters startFwd = BoundTrackParameters::createCurvilinear(
+      posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
+      ParticleHypothesis::electron());
 
   auto resultFwd = propagator.propagate(startFwd, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
 
-  options.direction = Acts::Direction::Backward();
-  Acts::Vector4 posBwd(5, 0, 0, 0);
-  Acts::BoundTrackParameters startBwd =
-      Acts::BoundTrackParameters::createCurvilinear(
-          posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-          Acts::ParticleHypothesis::electron());
+  options.direction = Direction::Backward();
+  Vector4 posBwd(5, 0, 0, 0);
+  BoundTrackParameters startBwd = BoundTrackParameters::createCurvilinear(
+      posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
+      ParticleHypothesis::electron());
 
   auto resultBwd = propagator.propagate(startBwd, options).value();
   auto statesBwd = resultBwd.get<StateRecorder::result_type>();
@@ -645,23 +623,23 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   // Action list call before the first step
   // Starting in the volume
   BOOST_CHECK_EQUAL(statesFwd[0].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[0].currentPortal, nullptr);
 
   // First intersection of the cylindrical surface
   BOOST_CHECK_EQUAL(statesFwd[1].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesFwd[1].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesFwd[1].position.x(), -4, 1e-6);
 
   // Second intersection of the cylindrical surface
   BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[2].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesFwd[2].position.x(), 4, 1e-6);
 
@@ -670,7 +648,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   BOOST_CHECK_EQUAL(statesFwd[3].currentSurface,
                     &(statesFwd[3].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[3].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(6));
+                    GeometryIdentifier(6));
 
   // Step to the end of world
   BOOST_CHECK(navigator.endOfWorldReached(statesFwd[4]));
@@ -681,30 +659,32 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   BOOST_CHECK_EQUAL(statesBwd[3].currentSurface,
                     &(statesBwd[3].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[3].currentPortal->surface().geometryId(),
-                    Acts::GeometryIdentifier(5));
+                    GeometryIdentifier(5));
 
   // Step to the cylindrical surface
   BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[2].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesBwd[2].position.x(), -4, 1e-6);
 
   // First intersection of the cylindrical surface
   BOOST_CHECK_EQUAL(statesBwd[1].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[1].currentSurface->geometryId(),
-                    Acts::GeometryIdentifier(2));
+                    GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesBwd[1].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesBwd[1].position.x(), 4, 1e-6);
 
   // Action list call before the first step
   // Starting in the volume
   BOOST_CHECK_EQUAL(statesBwd[0].currentVolume->geometryId(),
-                    Acts::GeometryIdentifier(1));
+                    GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[0].currentPortal, nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

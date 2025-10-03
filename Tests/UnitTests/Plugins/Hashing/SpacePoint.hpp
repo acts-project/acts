@@ -11,6 +11,8 @@
 #include <cmath>
 #include <optional>
 
+namespace ActsTests {
+
 struct SpacePoint {
   // Member variables
   float m_x{};
@@ -52,3 +54,5 @@ struct SpacePoint {
            std::abs(a.m_z - b.m_z) < 1e-6;
   }
 };
+
+}  // namespace ActsTests

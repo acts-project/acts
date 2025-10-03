@@ -15,7 +15,9 @@
 #include <iostream>
 #include <memory>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 template <typename T>
 bool testPointer(const T /*ptr*/) {
@@ -31,7 +33,7 @@ bool testPointer(const T /*ptr*/) {
   return true;
 }
 
-BOOST_AUTO_TEST_SUITE(PointerConceptTests)
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(testConceptPass) {
   int* raw_ptr{nullptr};
@@ -64,4 +66,4 @@ BOOST_AUTO_TEST_CASE(testConceptPass) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

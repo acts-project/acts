@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/SurfaceBoundsJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
 
-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "ActsPlugins/Json/DetrayJsonHelper.hpp"
 
 void Acts::to_json(nlohmann::json& j, const Acts::SurfaceBounds& bounds) {
   j["type"] = bounds.type();

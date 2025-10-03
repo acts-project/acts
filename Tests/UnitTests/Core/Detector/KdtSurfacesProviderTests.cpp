@@ -14,10 +14,10 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -27,8 +27,8 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::Experimental;
+using namespace ActsTests;
 
 GeometryContext tContext;
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
@@ -37,9 +37,9 @@ namespace {
 /// Helper method that allows to use the already existing testing
 /// infrastructure with the new const-correct detector design
 ///
-std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
-    const std::vector<Acts::Surface*>& surfaces) {
-  std::vector<std::shared_ptr<Acts::Surface>> uSurfaces;
+std::vector<std::shared_ptr<Surface>> unpackSurfaces(
+    const std::vector<Surface*>& surfaces) {
+  std::vector<std::shared_ptr<Surface>> uSurfaces;
   uSurfaces.reserve(surfaces.size());
   for (auto* s : surfaces) {
     uSurfaces.push_back(s->getSharedPtr());
@@ -47,10 +47,10 @@ std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
   return uSurfaces;
 }
 
-std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
+std::vector<std::shared_ptr<Surface>> pixelSurfaces(
     CylindricalTrackingGeometry::DetectorStore& dStore) {
   // The surfaces for the KDTree structure
-  std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces;
+  std::vector<std::shared_ptr<Surface>> pixelSurfaces;
   // Fill Discs
   std::vector<double> pixelDiscs = {-800., -700., -600., 600., 700., 800.};
   for (const auto& z : pixelDiscs) {
@@ -77,14 +77,15 @@ std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(Detector)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 // Test only the KDT infrastructure
 BOOST_AUTO_TEST_CASE(KdtSurfacesProvider_misconfigured) {
-  Acts::Extent region;
-  BOOST_CHECK_THROW(
-      Acts::Experimental::KdtSurfacesProvider<> end3(nullptr, region),
-      std::invalid_argument);
+  Extent region;
+  BOOST_CHECK_THROW(Experimental::KdtSurfacesProvider<> end3(nullptr, region),
+                    std::invalid_argument);
 }
 
 // Test only the KDT infrastructure
@@ -96,25 +97,25 @@ BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
   std::size_t refNumber = 6u * 22u + 14u * (16u + 32u + 52u + 78u);
   BOOST_CHECK_EQUAL(pSurfaces.size(), refNumber);
 
-  using KDTS = Acts::Experimental::KdtSurfaces<>;
+  using KDTS = Experimental::KdtSurfaces<>;
   auto skdt = std::make_shared<KDTS>(
       KDTS(tContext, pSurfaces, {AxisDirection::AxisZ, AxisDirection::AxisR}));
 
   // query: Negative disc 3, it should yield 22 surfaces
-  Acts::Extent regionND3;
+  Extent regionND3;
   regionND3.set(AxisDirection::AxisZ, -820, -780);
   regionND3.set(AxisDirection::AxisR, 0., 200.);
-  Acts::Experimental::KdtSurfacesProvider<> end3(skdt, regionND3);
+  Experimental::KdtSurfacesProvider<> end3(skdt, regionND3);
 
   auto nd3 = end3.surfaces(tContext);
   BOOST_CHECK_EQUAL(nd3.size(), 22u);
 
   // query: 2nd Pixel barrel
-  Acts::Extent regionB1;
+  Extent regionB1;
   regionB1.set(AxisDirection::AxisZ, -580, 580);
   regionB1.set(AxisDirection::AxisR, 60., 80.);
 
-  Acts::Experimental::KdtSurfacesProvider<> ba1(skdt, regionB1);
+  Experimental::KdtSurfacesProvider<> ba1(skdt, regionB1);
 
   auto b1 = ba1.surfaces(tContext);
   refNumber = 32u * 14u;
@@ -122,3 +123,5 @@ BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

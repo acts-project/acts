@@ -26,7 +26,9 @@ class G4VPhysicalVolume {};
 
 GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Geant4Plugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(Geant4Suite)
 
 BOOST_AUTO_TEST_CASE(Geant4DetectorElement_construction) {
   // G4 phys volume
@@ -39,8 +41,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetectorElement_construction) {
   auto rSurface =
       Surface::makeShared<PlaneSurface>(rTransform, std::move(rBounds));
   // A detector element
-  ActsPlugins::Geant4DetectorElement g4DetElement(rSurface, *g4physVol,
-                                                  rTransform, 0.1);
+  Geant4DetectorElement g4DetElement(rSurface, *g4physVol, rTransform, 0.1);
 
   BOOST_CHECK_EQUAL(g4DetElement.thickness(), 0.1);
   BOOST_CHECK_EQUAL(&g4DetElement.surface(), rSurface.get());
@@ -50,3 +51,5 @@ BOOST_AUTO_TEST_CASE(Geant4DetectorElement_construction) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

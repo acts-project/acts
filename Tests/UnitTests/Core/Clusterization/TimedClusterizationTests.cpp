@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-namespace Acts::Test {
+using namespace Acts;
 
 // Define objects
 using Identifier = std::size_t;
@@ -31,8 +31,8 @@ struct Cluster {
   std::vector<Identifier> ids{};
 };
 
-using CellCollection = std::vector<Acts::Test::Cell>;
-using ClusterCollection = std::vector<Acts::Test::Cluster>;
+using CellCollection = std::vector<Cell>;
+using ClusterCollection = std::vector<Cluster>;
 
 // Define functions
 static inline int getCellRow(const Cell& cell) {
@@ -50,6 +50,8 @@ static inline double getCellTime(const Cell& cell) {
 static void clusterAddCell(Cluster& cl, const Cell& cell) {
   cl.ids.push_back(cell.id);
 }
+
+BOOST_AUTO_TEST_SUITE(ClusterizationSuite)
 
 BOOST_AUTO_TEST_CASE(TimedGrid_1D_withtime) {
   // 1x10 matrix
@@ -260,4 +262,4 @@ BOOST_AUTO_TEST_CASE(TimedGrid_2D_noTollerance) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()

@@ -27,13 +27,15 @@
 
 #include <numbers>
 
-BOOST_AUTO_TEST_SUITE(PathSeeder)
-
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-using Axis = Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
-using Grid = Acts::Grid<std::vector<SourceLink>, Axis, Axis>;
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
+
+using Axis = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+using Grid = Grid<std::vector<SourceLink>, Axis, Axis>;
 
 GeometryContext gctx;
 
@@ -124,8 +126,8 @@ class TrackEstimator {
 
     Vector4 ip = {m_ip.x(), m_ip.y(), m_ip.z(), 0};
     double qOverP = 1_e / 1._GeV;
-    double phi = Acts::VectorHelpers::phi(direction);
-    double theta = Acts::VectorHelpers::theta(direction);
+    double phi = VectorHelpers::phi(direction);
+    double theta = VectorHelpers::theta(direction);
     ParticleHypothesis particle = ParticleHypothesis::electron();
 
     BoundTrackParameters ipParams = BoundTrackParameters::createCurvilinear(
@@ -259,14 +261,14 @@ std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
 
   // Volume ids: 1-3
   for (auto& volume : volumes) {
-    volume->assignGeometryId(Acts::GeometryIdentifier(id));
+    volume->assignGeometryId(GeometryIdentifier(id));
     id++;
   }
   // Intervolume portal ids: 6,7,10,11
   for (auto& volume : volumes) {
     for (auto& port : volume->portalPtrs()) {
-      if (port->surface().geometryId() == Acts::GeometryIdentifier(0)) {
-        port->surface().assignGeometryId(Acts::GeometryIdentifier(id));
+      if (port->surface().geometryId() == GeometryIdentifier(0)) {
+        port->surface().assignGeometryId(GeometryIdentifier(id));
         id++;
       }
     }
@@ -328,7 +330,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   auto sourceLinks = createSourceLinks(gctx, *detector);
 
   // Prepare the PathSeeder
-  auto pathSeederCfg = Acts::PathSeeder::Config();
+  auto pathSeederCfg = PathSeeder::Config();
 
   // Grid to bin the source links
   SurfaceAccessor surfaceAccessor{*detector};
@@ -369,12 +371,12 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   pathSeederCfg.refLayerIds.push_back(geoId);
 
   // Create the PathSeeder
-  Acts::PathSeeder pathSeeder(pathSeederCfg);
+  PathSeeder pathSeeder(pathSeederCfg);
 
   // Get the seeds
   pathWidthProvider.width = {1e-3, 1e-3};
 
-  std::vector<Acts::PathSeeder::PathSeed> seeds;
+  std::vector<PathSeeder::PathSeed> seeds;
 
   // SeedTreeContainer seeds;
   pathSeeder.findSeeds(gctx, sourceLinkGrid, seeds);
@@ -392,3 +394,5 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

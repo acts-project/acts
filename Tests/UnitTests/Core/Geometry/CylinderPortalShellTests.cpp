@@ -24,9 +24,10 @@
 
 #include <stdexcept>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 GeometryContext gctx;
 
 std::size_t getVolumeIndex() {
@@ -42,9 +43,9 @@ auto makeVolume(auto&&... pars) {
   return vol;
 };
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-BOOST_AUTO_TEST_SUITE(PortalShellTests)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   // - Cylinder
@@ -769,4 +770,4 @@ BOOST_AUTO_TEST_CASE(RegisterInto) {
 BOOST_AUTO_TEST_SUITE_END()  // CylinderStack
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -24,25 +24,26 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <utility>
 
 inline std::shared_ptr<const Acts::TrackingGeometry> createDenseBlock(
     const Acts::GeometryContext& geoCtx) {
   using namespace Acts;
+  using namespace ActsTests;
   using namespace UnitLiterals;
 
   CuboidVolumeBuilder::VolumeConfig vConf;
   vConf.position = {0., 0., 0.};
   vConf.length = {4_m, 4_m, 4_m};
   vConf.volumeMaterial =
-      std::make_shared<const HomogeneousVolumeMaterial>(Test::makeBeryllium());
+      std::make_shared<const HomogeneousVolumeMaterial>(makeBeryllium());
   CuboidVolumeBuilder::Config conf;
   conf.volumeCfg.push_back(vConf);
   conf.position = {0., 0., 0.};

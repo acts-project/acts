@@ -16,9 +16,9 @@
 #include <utility>
 #include <vector>
 
-namespace {
+using namespace Acts;
 
-using Acts::GeometryIdentifier;
+namespace {
 
 // helper function to create geometry ids
 GeometryIdentifier makeId(int volume = 0, int layer = 0, int sensitive = 0) {
@@ -31,7 +31,7 @@ struct Thing {
   double value = 1.0;
 };
 
-using Container = Acts::GeometryHierarchyMap<Thing>;
+using Container = GeometryHierarchyMap<Thing>;
 
 }  // namespace
 
@@ -49,7 +49,7 @@ using Container = Acts::GeometryHierarchyMap<Thing>;
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Container::Iterator)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Thing)
 
-BOOST_AUTO_TEST_SUITE(GeometryHierarchyMap)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(ConstructDefault) {
   Container c;

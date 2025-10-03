@@ -9,8 +9,8 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -58,6 +58,11 @@ constexpr std::tuple<double, double, double, double>
          2 * std::numbers::pi, -0.5},
 };
 }  // namespace
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
+
 BOOST_DATA_TEST_CASE(DifferencePeriodic, bd::make(kDifferencePeriodicDataset),
                      lhs, rhs, range, diff) {
   CHECK_CLOSE_ABS(difference_periodic(lhs, rhs, range), diff, tol);
@@ -142,3 +147,7 @@ BOOST_DATA_TEST_CASE(NormalizePhiThetaOutOfBoundsTheta,
     CHECK_CLOSE_ABS(theta, deltaTheta, tol);
   }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

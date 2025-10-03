@@ -20,8 +20,9 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts::Test {
-//
+using namespace Acts;
+
+namespace ActsTests {
 
 /// Unit test for testing the wraps() function of the CylinderVolumeBuilder
 BOOST_DATA_TEST_CASE(
@@ -372,4 +373,4 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK(Config0.overlapsInZ(Config7));
 }
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

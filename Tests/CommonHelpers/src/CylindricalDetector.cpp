@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
+#include "ActsTests/CommonHelpers/CylindricalDetector.hpp"
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
@@ -28,14 +28,13 @@
 
 #include <memory>
 
-auto materialSlab =
-    Acts::MaterialSlab(Acts::Material::fromMolarDensity(1, 2, 3, 4, 5), 1.);
-
 using namespace Acts;
-using namespace Acts::Experimental;
+using namespace Experimental;
 
-std::shared_ptr<const Detector> Acts::Test::buildCylindricalDetector(
-    const Acts::GeometryContext& tContext) {
+auto materialSlab = MaterialSlab(Material::fromMolarDensity(1, 2, 3, 4, 5), 1.);
+
+std::shared_ptr<const Detector> ActsTests::buildCylindricalDetector(
+    const GeometryContext& tContext) {
   auto material =
       std::make_shared<const HomogeneousSurfaceMaterial>(materialSlab);
 
@@ -105,7 +104,7 @@ std::shared_ptr<const Detector> Acts::Test::buildCylindricalDetector(
   auto gigConfig = GeometryIdGenerator::Config();
   auto gig = std::make_shared<GeometryIdGenerator>(gigConfig);
 
-  Acts::Experimental::DetectorBuilder::Config dCfg;
+  DetectorBuilder::Config dCfg;
   dCfg.auxiliary = "*** Test : Cylindrical Detector ***";
   dCfg.name = "CylindricalDetector";
   dCfg.builder = containerBuilder;

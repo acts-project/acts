@@ -10,10 +10,10 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <fstream>
 #include <string>
@@ -29,9 +29,10 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
+namespace ActsTests {
+
 GeometryContext tContext;
-Test::CylindricalTrackingGeometry cGeometry =
-    Test::CylindricalTrackingGeometry(tContext);
+CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 const char* disc_layer_head_xml =
     R""""(
@@ -50,13 +51,13 @@ const char* tail_xml =
 
 const std::string indent_12_xml(12, ' ');
 
-BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
+BOOST_AUTO_TEST_SUITE(DD4hepSuite)
 
 BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
   double rZ = 400.;
 
   // First create some test surfaces
-  Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  CylindricalTrackingGeometry::DetectorStore dStore;
   auto rSurfacesR0 = cGeometry.surfacesRing(dStore, 6.4, 12.4, 18., 0.125, 0.,
                                             42., rZ, 2., 22u);
 
@@ -183,3 +184,5 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

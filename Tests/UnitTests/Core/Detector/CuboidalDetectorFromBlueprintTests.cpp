@@ -29,10 +29,13 @@
 #include <algorithm>
 #include <fstream>
 
-class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
+using namespace Acts;
+
+namespace ActsTests {
+
+class SurfaceBuilder : public Experimental::IInternalStructureBuilder {
  public:
-  SurfaceBuilder(const Acts::Transform3& transform,
-                 const Acts::RectangleBounds& sBounds)
+  SurfaceBuilder(const Transform3& transform, const RectangleBounds& sBounds)
       : m_transform(transform), m_surfaceBounds(sBounds) {};
 
   /// Conrstruct and return the internal structure creation
@@ -40,39 +43,37 @@ class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
   /// @param gctx the geometry context at the creation of the internal structure
   ///
   /// @return a consistent set of detector volume internals
-  Acts::Experimental::InternalStructure construct(
-      [[maybe_unused]] const Acts::GeometryContext& gctx) const final {
-    auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        (m_transform),
-        std::make_shared<Acts::RectangleBounds>(m_surfaceBounds));
+  Experimental::InternalStructure construct(
+      [[maybe_unused]] const GeometryContext& gctx) const final {
+    auto surface = Surface::makeShared<PlaneSurface>(
+        (m_transform), std::make_shared<RectangleBounds>(m_surfaceBounds));
 
     // Trivialities first: internal volumes
-    std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
-        internalVolumes = {};
-    Acts::Experimental::ExternalNavigationDelegate internalVolumeUpdater =
-        Acts::Experimental::tryNoVolumes();
+    std::vector<std::shared_ptr<Experimental::DetectorVolume>> internalVolumes =
+        {};
+    Experimental::ExternalNavigationDelegate internalVolumeUpdater =
+        Experimental::tryNoVolumes();
 
     // Retrieve the layer surfaces
-    Acts::Experimental::InternalNavigationDelegate internalCandidatesUpdater =
-        Acts::Experimental::tryAllPortalsAndSurfaces();
+    Experimental::InternalNavigationDelegate internalCandidatesUpdater =
+        Experimental::tryAllPortalsAndSurfaces();
 
     // Return the internal structure
-    return Acts::Experimental::InternalStructure{
-        {surface},
-        internalVolumes,
-        std::move(internalCandidatesUpdater),
-        std::move(internalVolumeUpdater)};
+    return Experimental::InternalStructure{{surface},
+                                           internalVolumes,
+                                           std::move(internalCandidatesUpdater),
+                                           std::move(internalVolumeUpdater)};
   }
 
  private:
-  Acts::Transform3 m_transform;
-  Acts::RectangleBounds m_surfaceBounds;
+  Transform3 m_transform;
+  RectangleBounds m_surfaceBounds;
 };
 
-BOOST_AUTO_TEST_SUITE(Detector)
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
-  Acts::GeometryContext tContext;
+  GeometryContext tContext;
 
   // This tests shows how to careate cuboidal detector from a detector
   // blueprint.
@@ -95,54 +96,53 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   double pixelZ = 10;
 
   // Create  root node
-  std::vector<Acts::AxisDirection> detectorBins = {Acts::AxisDirection::AxisX};
+  std::vector<AxisDirection> detectorBins = {AxisDirection::AxisX};
   std::vector<double> detectorBounds = {detectorX, detectorY, detectorZ};
 
   // The root node - detector
-  auto detectorBpr = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eCuboid,
-      detectorBounds, detectorBins);
+  auto detectorBpr = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "detector", Transform3::Identity(), VolumeBounds::eCuboid, detectorBounds,
+      detectorBins);
 
   // Left arm
   std::vector<double> leftArmBounds = {detectorX * 0.5, detectorY, detectorZ};
 
-  std::vector<Acts::AxisDirection> leftArmBins = {Acts::AxisDirection::AxisZ};
+  std::vector<AxisDirection> leftArmBins = {AxisDirection::AxisZ};
 
-  Acts::Transform3 leftArmTransform =
-      Acts::Transform3::Identity() *
-      Acts::Translation3(-detectorX * 0.5, 0., 0);
+  Transform3 leftArmTransform =
+      Transform3::Identity() * Translation3(-detectorX * 0.5, 0., 0);
 
-  auto leftArm = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "leftArm", leftArmTransform, Acts::VolumeBounds::eCuboid, leftArmBounds,
+  auto leftArm = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "leftArm", leftArmTransform, VolumeBounds::eCuboid, leftArmBounds,
       leftArmBins);
 
   // Pixel layer L1
   std::vector<double> pixelL1Boundaries = {pixelX, pixelY, pixelZ};
 
-  Acts::Transform3 pixelL1Transform =
-      Acts::Transform3::Identity() *
-      Acts::Translation3(-pixelX - 5, 0., -detectorZ + pixelZ + 5);
+  Transform3 pixelL1Transform =
+      Transform3::Identity() *
+      Translation3(-pixelX - 5, 0., -detectorZ + pixelZ + 5);
 
   auto pixelL1Structure = std::make_shared<SurfaceBuilder>(
-      pixelL1Transform, Acts::RectangleBounds(pixelX * 0.8, pixelY * 0.8));
+      pixelL1Transform, RectangleBounds(pixelX * 0.8, pixelY * 0.8));
 
-  auto pixelL1 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixelL1", pixelL1Transform, Acts::VolumeBounds::eCuboid,
-      pixelL1Boundaries, pixelL1Structure);
+  auto pixelL1 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixelL1", pixelL1Transform, VolumeBounds::eCuboid, pixelL1Boundaries,
+      pixelL1Structure);
 
   // Pixel layer L2
   std::vector<double> pixelL2Boundaries = {pixelX, pixelY, pixelZ};
 
-  Acts::Transform3 pixelL2Transform =
-      Acts::Transform3::Identity() *
-      Acts::Translation3(-pixelX - 5, 0., -detectorZ + 2 * pixelZ + 5 * 5);
+  Transform3 pixelL2Transform =
+      Transform3::Identity() *
+      Translation3(-pixelX - 5, 0., -detectorZ + 2 * pixelZ + 5 * 5);
 
   auto pixelL2Structure = std::make_shared<SurfaceBuilder>(
-      pixelL2Transform, Acts::RectangleBounds(pixelX * 0.8, pixelY * 0.8));
+      pixelL2Transform, RectangleBounds(pixelX * 0.8, pixelY * 0.8));
 
-  auto pixelL2 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixelL2", pixelL2Transform, Acts::VolumeBounds::eCuboid,
-      pixelL2Boundaries, pixelL2Structure);
+  auto pixelL2 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixelL2", pixelL2Transform, VolumeBounds::eCuboid, pixelL2Boundaries,
+      pixelL2Structure);
 
   // Add pixel layers to left arm
   // and left arm to detector
@@ -153,42 +153,42 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   // Right arm
   std::vector<double> rightArmBounds = {detectorX * 0.5, detectorY, detectorZ};
 
-  std::vector<Acts::AxisDirection> rightArmBins = {Acts::AxisDirection::AxisZ};
+  std::vector<AxisDirection> rightArmBins = {AxisDirection::AxisZ};
 
-  Acts::Transform3 rightArmTransform =
-      Acts::Transform3::Identity() * Acts::Translation3(detectorX * 0.5, 0., 0);
+  Transform3 rightArmTransform =
+      Transform3::Identity() * Translation3(detectorX * 0.5, 0., 0);
 
-  auto rightArm = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "rightArm", rightArmTransform, Acts::VolumeBounds::eCuboid,
-      rightArmBounds, rightArmBins);
+  auto rightArm = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "rightArm", rightArmTransform, VolumeBounds::eCuboid, rightArmBounds,
+      rightArmBins);
 
   // Pixel layer R1
   std::vector<double> pixelR1Boundaries = {pixelX, pixelY, pixelZ};
 
-  Acts::Transform3 pixelR1Transform =
-      Acts::Transform3::Identity() *
-      Acts::Translation3(pixelX + 5, 0., -detectorZ + pixelZ + 5);
+  Transform3 pixelR1Transform =
+      Transform3::Identity() *
+      Translation3(pixelX + 5, 0., -detectorZ + pixelZ + 5);
 
   auto pixelR1Structure = std::make_shared<SurfaceBuilder>(
-      pixelR1Transform, Acts::RectangleBounds(pixelX * 0.8, pixelY * 0.8));
+      pixelR1Transform, RectangleBounds(pixelX * 0.8, pixelY * 0.8));
 
-  auto pixelR1 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixelR1", pixelR1Transform, Acts::VolumeBounds::eCuboid,
-      pixelR1Boundaries, pixelR1Structure);
+  auto pixelR1 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixelR1", pixelR1Transform, VolumeBounds::eCuboid, pixelR1Boundaries,
+      pixelR1Structure);
 
   // Pixel layer R2
   std::vector<double> pixelR2Boundaries = {pixelX, pixelY, pixelZ};
 
-  Acts::Transform3 pixelR2Transform =
-      Acts::Transform3::Identity() *
-      Acts::Translation3(pixelX + 5, 0., -detectorZ + 2 * pixelZ + 5 * 5);
+  Transform3 pixelR2Transform =
+      Transform3::Identity() *
+      Translation3(pixelX + 5, 0., -detectorZ + 2 * pixelZ + 5 * 5);
 
   auto pixelR2Structure = std::make_shared<SurfaceBuilder>(
-      pixelR2Transform, Acts::RectangleBounds(pixelX * 0.8, pixelY * 0.8));
+      pixelR2Transform, RectangleBounds(pixelX * 0.8, pixelY * 0.8));
 
-  auto pixelR2 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "pixelR2", pixelR2Transform, Acts::VolumeBounds::eCuboid,
-      pixelR2Boundaries, pixelR2Structure);
+  auto pixelR2 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "pixelR2", pixelR2Transform, VolumeBounds::eCuboid, pixelR2Boundaries,
+      pixelR2Structure);
 
   // Add pixel layers to right arm
   // and right arm to detector
@@ -198,35 +198,34 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
 
   // A geo ID generator
   detectorBpr->geoIdGenerator =
-      std::make_shared<Acts::Experimental::GeometryIdGenerator>(
-          Acts::Experimental::GeometryIdGenerator::Config{},
-          Acts::getDefaultLogger("RecursiveIdGenerator",
-                                 Acts::Logging::VERBOSE));
+      std::make_shared<Experimental::GeometryIdGenerator>(
+          Experimental::GeometryIdGenerator::Config{},
+          getDefaultLogger("RecursiveIdGenerator", Logging::VERBOSE));
 
   std::cout << "Fill gaps ..." << std::endl;
   // Complete and fill gaps
-  Acts::Experimental::detail::BlueprintHelper::fillGaps(*detectorBpr);
+  Experimental::detail::BlueprintHelper::fillGaps(*detectorBpr);
   std::cout << "Filled gaps ..." << std::endl;
 
   std::fstream fs("cylindrical_detector_blueprint.dot", std::ios::out);
-  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *detectorBpr);
+  Experimental::detail::BlueprintDrawer::dotStream(fs, *detectorBpr);
   fs.close();
 
   // ----------------------------- end of blueprint
 
   // Create a Cuboidal detector builder from this blueprint
   auto detectorBuilder =
-      std::make_shared<Acts::Experimental::CuboidalContainerBuilder>(
-          *detectorBpr, Acts::Logging::VERBOSE);
+      std::make_shared<Experimental::CuboidalContainerBuilder>(
+          *detectorBpr, Logging::VERBOSE);
 
   // Detector builder
-  Acts::Experimental::DetectorBuilder::Config dCfg;
+  Experimental::DetectorBuilder::Config dCfg;
   dCfg.auxiliary = "*** Test : auto generated cuboidal detector builder  ***";
   dCfg.name = "Cuboidal detector from blueprint";
   dCfg.builder = detectorBuilder;
   dCfg.geoIdGenerator = detectorBpr->geoIdGenerator;
 
-  auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
+  auto detector = Experimental::DetectorBuilder(dCfg).construct(tContext);
 
   BOOST_REQUIRE_NE(detector, nullptr);
 
@@ -258,76 +257,71 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   double internalStretchLeftZ =
       detector->volumes()[0]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
+          .values()[toUnderlying(AxisDirection::AxisZ)] +
       detector->volumes()[1]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
+          .values()[toUnderlying(AxisDirection::AxisZ)] +
       detector->volumes()[2]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
+          .values()[toUnderlying(AxisDirection::AxisZ)] +
       detector->volumes()[3]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
+          .values()[toUnderlying(AxisDirection::AxisZ)] +
       detector->volumes()[4]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)];
+          .values()[toUnderlying(AxisDirection::AxisZ)];
 
   double internalStretchRightZ =
       detector->volumes()[5]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
+          .values()[toUnderlying(AxisDirection::AxisZ)] +
       detector->volumes()[6]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
+          .values()[toUnderlying(AxisDirection::AxisZ)] +
       detector->volumes()[7]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
+          .values()[toUnderlying(AxisDirection::AxisZ)] +
       detector->volumes()[8]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
+          .values()[toUnderlying(AxisDirection::AxisZ)] +
       detector->volumes()[9]
           ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisZ)];
+          .values()[toUnderlying(AxisDirection::AxisZ)];
 
-  double internalStretchX1 =
-      detector->volumes()[0]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)] +
-      detector->volumes()[5]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)];
+  double internalStretchX1 = detector->volumes()[0]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)] +
+                             detector->volumes()[5]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)];
 
-  double internalStretchX2 =
-      detector->volumes()[1]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)] +
-      detector->volumes()[6]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)];
+  double internalStretchX2 = detector->volumes()[1]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)] +
+                             detector->volumes()[6]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)];
 
-  double internalStretchX3 =
-      detector->volumes()[2]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)] +
-      detector->volumes()[7]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)];
+  double internalStretchX3 = detector->volumes()[2]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)] +
+                             detector->volumes()[7]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)];
 
-  double internalStretchX4 =
-      detector->volumes()[3]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)] +
-      detector->volumes()[8]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)];
+  double internalStretchX4 = detector->volumes()[3]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)] +
+                             detector->volumes()[8]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)];
 
-  double internalStretchX5 =
-      detector->volumes()[4]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)] +
-      detector->volumes()[9]
-          ->volumeBounds()
-          .values()[toUnderlying(Acts::AxisDirection::AxisX)];
+  double internalStretchX5 = detector->volumes()[4]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)] +
+                             detector->volumes()[9]
+                                 ->volumeBounds()
+                                 .values()[toUnderlying(AxisDirection::AxisX)];
 
   BOOST_CHECK_EQUAL(internalStretchLeftZ, detectorZ);
   BOOST_CHECK_EQUAL(internalStretchRightZ, detectorZ);
@@ -338,9 +332,9 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   BOOST_CHECK_EQUAL(internalStretchX5, detectorX);
 
   for (auto& volume : detector->volumes()) {
-    BOOST_CHECK_EQUAL(volume->volumeBounds()
-                          .values()[toUnderlying(Acts::AxisDirection::AxisY)],
-                      detectorY);
+    BOOST_CHECK_EQUAL(
+        volume->volumeBounds().values()[toUnderlying(AxisDirection::AxisY)],
+        detectorY);
   }
 
   // There should be surfaces inside the pixel
@@ -356,7 +350,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   // 2+2 Y-portals that were replaced when connecting
   // in Z, but didn't get renewed when connecting in X
   // 8+4+3+2+2 = 19 in total
-  std::vector<const Acts::Experimental::Portal*> portals;
+  std::vector<const Experimental::Portal*> portals;
   for (auto& volume : detector->volumes()) {
     portals.insert(portals.end(), volume->portals().begin(),
                    volume->portals().end());
@@ -412,3 +406,5 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

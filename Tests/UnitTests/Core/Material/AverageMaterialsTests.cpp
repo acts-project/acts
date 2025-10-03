@@ -11,13 +11,11 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/detail/AverageMaterials.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <cmath>
 #include <limits>
-
-namespace {
 
 using Acts::detail::combineSlabs;
 
@@ -27,13 +25,15 @@ constexpr auto eps = std::numeric_limits<float>::epsilon();
 const Acts::MaterialSlab zeroVacuum = Acts::MaterialSlab::Vacuum(0.0f);
 const Acts::MaterialSlab unitVacuum = Acts::MaterialSlab::Vacuum(1.0f);
 // same material corresponding to 0%, 1% and 100% radiation/interaction length
-const Acts::MaterialSlab zero(Acts::Test::makeSilicon(), 0.0f);
-const Acts::MaterialSlab percent = Acts::Test::makePercentSlab();
-const Acts::MaterialSlab unit = Acts::Test::makeUnitSlab();
+const Acts::MaterialSlab zero(ActsTests::makeSilicon(), 0.0f);
+const Acts::MaterialSlab percent = ActsTests::makePercentSlab();
+const Acts::MaterialSlab unit = ActsTests::makeUnitSlab();
 
-}  // namespace
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(AverageMaterials)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MaterialSutie)
 
 // average two identical slabs
 
@@ -185,9 +185,9 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZero) {
 // average a non-vacuum and a vacuum slab w/ equal thickness
 
 BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
-  const auto mat = Acts::Test::makeSilicon();
-  const auto slabMat = Acts::MaterialSlab(mat, 1.0f);
-  const auto slabVac = Acts::MaterialSlab(Acts::Material::Vacuum(), 1.0f);
+  const auto mat = makeSilicon();
+  const auto slabMat = MaterialSlab(mat, 1.0f);
+  const auto slabVac = MaterialSlab(Material::Vacuum(), 1.0f);
   {
     auto slab = combineSlabs(slabMat, slabVac);
     BOOST_CHECK(!slab.isVacuum());
@@ -230,10 +230,10 @@ BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
 // average two non-vacuum slabs w/ different material and different thickness
 
 BOOST_AUTO_TEST_CASE(CombineSlabs) {
-  const auto mat0 = Acts::Material::fromMolarDensity(1, 1, 8, 12, 2);
-  const auto mat1 = Acts::Material::fromMolarDensity(2, 2, 2, 6, 5);
-  const auto slabMat0 = Acts::MaterialSlab(mat0, 0.5f);
-  const auto slabMat1 = Acts::MaterialSlab(mat1, 1.0f);
+  const auto mat0 = Material::fromMolarDensity(1, 1, 8, 12, 2);
+  const auto mat1 = Material::fromMolarDensity(2, 2, 2, 6, 5);
+  const auto slabMat0 = MaterialSlab(mat0, 0.5f);
+  const auto slabMat1 = MaterialSlab(mat1, 1.0f);
   // verify derived quantities for the input slabs. these tests are not really
   // needed, but to show the input values for the tests below.
   BOOST_CHECK(!slabMat0.isVacuum());
@@ -281,3 +281,5 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

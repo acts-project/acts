@@ -53,7 +53,9 @@ using namespace Acts::UnitLiterals;
 using namespace Acts::HashedStringLiteral;
 using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(PodioTrackContainerTest)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(PodioSuite)
 
 class NullHelper : public PodioUtil::ConversionHelper {
  public:
@@ -391,3 +393,5 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

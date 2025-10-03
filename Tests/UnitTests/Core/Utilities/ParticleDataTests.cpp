@@ -11,7 +11,7 @@
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <string_view>
@@ -24,7 +24,9 @@ namespace {
 static constexpr float eps = 0.001f;
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(FatrasParticleData)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(InvalidInput) {
   BOOST_CHECK(!findCharge(PdgParticle::eInvalid));
@@ -63,3 +65,5 @@ BOOST_AUTO_TEST_CASE(Pion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

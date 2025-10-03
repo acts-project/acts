@@ -31,11 +31,13 @@ using namespace Acts::Experimental;
 
 GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Detector)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   // Create the surfaces of the multiwire structure-straw surfaces
-  std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
+  std::vector<std::shared_ptr<Surface>> strawSurfaces = {};
 
   // Set the number of surfaces along each dimension of the multi wire structure
   // aligned along z axis
@@ -48,7 +50,7 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   // The transform of the 1st surface
   Vector3 ipos = {-0.5 * nSurfacesX * 2 * radius + radius,
                   -0.5 * nSurfacesY * 2 * radius + radius, 0.};
-  AngleAxis3 rotation(std::numbers::pi / 2., Acts::Vector3(0., 1., 0.));
+  AngleAxis3 rotation(std::numbers::pi / 2., Vector3(0., 1., 0.));
 
   Vector3 pos = ipos;
 
@@ -90,3 +92,5 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
