@@ -6,18 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/DetectorSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/DetectorSvgConverter.hpp"
 
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsPlugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 
 #include <map>
 
-Acts::Svg::ProtoDetector Acts::Svg::DetectorConverter::convert(
+using namespace Acts;
+
+ActsPlugins::Svg::ProtoDetector ActsPlugins::Svg::DetectorConverter::convert(
     const GeometryContext& gctx, const Experimental::Detector& detector,
     const DetectorConverter::Options& detectorOptions) {
   ProtoDetector pDetector;

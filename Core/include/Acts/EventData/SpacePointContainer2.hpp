@@ -30,7 +30,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 static constexpr float NoTime = std::numeric_limits<float>::quiet_NaN();
 
@@ -78,10 +78,15 @@ ACTS_DEFINE_ENUM_BITWISE_OPERATORS(SpacePointColumns);
 /// simplifies the handling.
 class SpacePointContainer2 {
  public:
+  /// Type alias for space point index in container
   using Index = SpacePointIndex2;
+  /// Type alias for range of space point indices
   using IndexRange = SpacePointIndexRange2;
+  /// Type alias for subset of space point indices
   using IndexSubset = SpacePointIndexSubset2;
+  /// Type alias for mutable space point proxy
   using MutableProxy = MutableSpacePointProxy2;
+  /// Type alias for const space point proxy
   using ConstProxy = ConstSpacePointProxy2;
 
   /// Constructs and empty space point container.
@@ -832,6 +837,7 @@ class SpacePointContainer2 {
     return index;
   }
 
+  /// Type alias for template iterator over space points in container
   template <bool read_only>
   using Iterator = Acts::detail::ContainerIterator<
       SpacePointContainer2,
@@ -839,13 +845,23 @@ class SpacePointContainer2 {
                          MutableSpacePointProxy2>,
       Index, read_only>;
 
+  /// Type alias for mutable iterator over space points
   using iterator = Iterator<false>;
+  /// Type alias for const iterator over space points
   using const_iterator = Iterator<true>;
 
+  /// @brief Returns mutable iterator to the beginning of the container
+  /// @return Mutable iterator pointing to the first space point
   iterator begin() noexcept { return iterator(*this, 0); }
+  /// @brief Returns mutable iterator to the end of the container
+  /// @return Mutable iterator pointing past the last space point
   iterator end() noexcept { return iterator(*this, size()); }
 
+  /// @brief Returns const iterator to the beginning of the container
+  /// @return Const iterator pointing to the first space point
   const_iterator begin() const noexcept { return const_iterator(*this, 0); }
+  /// @brief Returns const iterator to the end of the container
+  /// @return Const iterator pointing past the last space point
   const_iterator end() const noexcept { return const_iterator(*this, size()); }
 
   template <bool read_only>
@@ -865,7 +881,9 @@ class SpacePointContainer2 {
       return Base::container().zip(Base::range(), columns...);
     }
   };
+  /// Type alias for mutable range of space points
   using MutableRange = Range<false>;
+  /// Type alias for const range of space points
   using ConstRange = Range<true>;
 
   /// Creates a range of space points from the given index range.
@@ -883,13 +901,13 @@ class SpacePointContainer2 {
 
   template <bool read_only>
   class Subset : public Acts::detail::ContainerSubset<
-                     Subset<read_only>, SpacePointContainer2,
+                     Subset<read_only>, Subset<true>, SpacePointContainer2,
                      std::conditional_t<read_only, ConstSpacePointProxy2,
                                         MutableSpacePointProxy2>,
                      SpacePointIndex2, read_only> {
    public:
     using Base = Acts::detail::ContainerSubset<
-        Subset<read_only>, SpacePointContainer2,
+        Subset<read_only>, Subset<true>, SpacePointContainer2,
         std::conditional_t<read_only, ConstSpacePointProxy2,
                            MutableSpacePointProxy2>,
         SpacePointIndex2, read_only>;
@@ -901,7 +919,9 @@ class SpacePointContainer2 {
       return Base::container().zip(Base::subset(), columns...);
     }
   };
+  /// Type alias for mutable subset of space points
   using MutableSubset = Subset<false>;
+  /// Type alias for const subset of space points
   using ConstSubset = Subset<true>;
 
   /// Creates a mutable subset of space points from the given index subset.
@@ -957,11 +977,22 @@ class SpacePointContainer2 {
         columns.data().subspan(range.first, range.second - range.first)...);
   }
 
+  /// @brief Create a zipped range over subset indices and mutable column data
+  /// @tparam Ts Column data types to zip with indices
+  /// @param subset Index subset to iterate over
+  /// @param columns Mutable column proxies to zip with indices
+  /// @return Zipped range for iteration over indices and column data
   template <typename... Ts>
   auto zip(const IndexSubset &subset,
            const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(subset, columns.subset(subset)...);
   }
+
+  /// @brief Create a zipped range over subset indices and const column data
+  /// @tparam Ts Column data types to zip with indices
+  /// @param subset Index subset to iterate over
+  /// @param columns Const column proxies to zip with indices
+  /// @return Const zipped range for iteration over indices and column data
   template <typename... Ts>
   auto zip(const IndexSubset &subset,
            const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
@@ -1103,6 +1134,6 @@ class SpacePointContainer2 {
   }
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
 
 #include "Acts/EventData/SpacePointContainer2.ipp"

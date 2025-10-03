@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithmConfig.hpp"
+#include "ActsPlugins/Hashing/HashingTrainingConfig.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -19,8 +19,9 @@
 
 namespace py = pybind11;
 
-using namespace ActsExamples;
 using namespace Acts;
+using namespace ActsPlugins;
+using namespace ActsExamples;
 
 namespace ActsPython {
 
@@ -51,7 +52,7 @@ void addHashing(Context& ctx) {
       inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,
       seedFinderConfig, seedFinderOptions, gridConfig, gridOptions,
       allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors,
-      hashingConfig, hashingTrainingConfig, useExtraCuts);
+      hashingConfig, hashingTrainingConfig);
 }
 
 }  // namespace ActsPython

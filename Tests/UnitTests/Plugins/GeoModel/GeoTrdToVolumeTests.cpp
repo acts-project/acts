@@ -11,20 +11,23 @@
 // switching format off to avoid conflicting declaration in GeoModel
 // needed until Acts GeoModel bumps to 6.5
 //clang-format off
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 //clang-format on
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoMaterial.h>
 #include <GeoModelKernel/GeoTrd.h>
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
@@ -43,14 +46,14 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
   auto errPhysTrd = make_intrusive<GeoFullPhysVol>(errLogTrd);
 
   // create pars for conversion
-  Acts::GeoModelDetectorObjectFactory::Config gmConfig;
+  ActsPlugins::GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"Trd"};
-  Acts::GeometryContext gContext;
-  Acts::GeoModelDetectorObjectFactory::Cache gmCache;
-  Acts::GeoModelDetectorObjectFactory::Cache errCache;
+  GeometryContext gContext;
+  ActsPlugins::GeoModelDetectorObjectFactory::Cache gmCache;
+  ActsPlugins::GeoModelDetectorObjectFactory::Cache errCache;
 
   // create factory instance
-  Acts::GeoModelDetectorObjectFactory factory(gmConfig);
+  ActsPlugins::GeoModelDetectorObjectFactory factory(gmConfig);
 
   // test error case
   BOOST_CHECK_THROW(factory.convertFpv("Trd", errPhysTrd, errCache, gContext),
@@ -59,8 +62,8 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
 
   BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
   const auto& volumeTrd = gmCache.volumeBoxFPVs[0].volume;
-  const auto* bounds = dynamic_cast<const Acts::TrapezoidVolumeBounds*>(
-      &volumeTrd->volumeBounds());
+  const auto* bounds =
+      dynamic_cast<const TrapezoidVolumeBounds*>(&volumeTrd->volumeBounds());
   std::vector<double> convHls = bounds->values();
   // note: GeoTrd and Acts use different coordinates
   BOOST_CHECK(geoHlX1 == convHls[3]);

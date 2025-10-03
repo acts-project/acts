@@ -6,18 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
+#include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
-#include "Acts/Plugins/Root/ITGeoDetectorElementSplitter.hpp"
-#include "Acts/Plugins/Root/ITGeoIdentifierProvider.hpp"
-#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
-#include "Acts/Plugins/Root/TGeoParser.hpp"
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Root/ITGeoDetectorElementSplitter.hpp"
+#include "ActsPlugins/Root/ITGeoIdentifierProvider.hpp"
+#include "ActsPlugins/Root/TGeoDetectorElement.hpp"
+#include "ActsPlugins/Root/TGeoParser.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include <ostream>
 #include <stdexcept>
@@ -29,26 +29,28 @@ namespace Acts {
 class ISurfaceMaterial;
 }  // namespace Acts
 
-Acts::TGeoLayerBuilder::TGeoLayerBuilder(
-    const Acts::TGeoLayerBuilder::Config& config,
+using namespace Acts;
+
+ActsPlugins::TGeoLayerBuilder::TGeoLayerBuilder(
+    const ActsPlugins::TGeoLayerBuilder::Config& config,
     std::unique_ptr<const Logger> logger)
     : m_logger(std::move(logger)) {
   setConfiguration(config);
 }
 
-Acts::TGeoLayerBuilder::~TGeoLayerBuilder() = default;
+ActsPlugins::TGeoLayerBuilder::~TGeoLayerBuilder() = default;
 
-void Acts::TGeoLayerBuilder::setConfiguration(
-    const Acts::TGeoLayerBuilder::Config& config) {
+void ActsPlugins::TGeoLayerBuilder::setConfiguration(
+    const ActsPlugins::TGeoLayerBuilder::Config& config) {
   m_cfg = config;
 }
 
-void Acts::TGeoLayerBuilder::setLogger(
+void ActsPlugins::TGeoLayerBuilder::setLogger(
     std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
 
-const Acts::LayerVector Acts::TGeoLayerBuilder::negativeLayers(
+const LayerVector ActsPlugins::TGeoLayerBuilder::negativeLayers(
     const GeometryContext& gctx) const {
   // @todo Remove this hack once the m_elementStore mess is sorted out
   auto mutableThis = const_cast<TGeoLayerBuilder*>(this);
@@ -57,7 +59,7 @@ const Acts::LayerVector Acts::TGeoLayerBuilder::negativeLayers(
   return nVector;
 }
 
-const Acts::LayerVector Acts::TGeoLayerBuilder::centralLayers(
+const LayerVector ActsPlugins::TGeoLayerBuilder::centralLayers(
     const GeometryContext& gctx) const {
   // @todo Remove this hack once the m_elementStore mess is sorted out
   auto mutableThis = const_cast<TGeoLayerBuilder*>(this);
@@ -66,7 +68,7 @@ const Acts::LayerVector Acts::TGeoLayerBuilder::centralLayers(
   return cVector;
 }
 
-const Acts::LayerVector Acts::TGeoLayerBuilder::positiveLayers(
+const LayerVector ActsPlugins::TGeoLayerBuilder::positiveLayers(
     const GeometryContext& gctx) const {
   // @todo Remove this hack once the m_elementStore mess is sorted out
   auto mutableThis = const_cast<TGeoLayerBuilder*>(this);
@@ -75,8 +77,8 @@ const Acts::LayerVector Acts::TGeoLayerBuilder::positiveLayers(
   return pVector;
 }
 
-void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
-                                         LayerVector& layers, int type) {
+void ActsPlugins::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
+                                                LayerVector& layers, int type) {
   // Bail out if you have no gGeoManager
   if (gGeoManager == nullptr) {
     ACTS_WARNING("No gGeoManager found - bailing out.");
@@ -153,10 +155,10 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                  << lSurfaces.size()
                  << " surfaces at r = " << pl.medium(AxisDirection::AxisR));
 
-      pl.envelope[Acts::AxisDirection::AxisR] = {lCfg.envelope.first,
-                                                 lCfg.envelope.second};
-      pl.envelope[Acts::AxisDirection::AxisZ] = {lCfg.envelope.second,
-                                                 lCfg.envelope.second};
+      pl.envelope[AxisDirection::AxisR] = {lCfg.envelope.first,
+                                           lCfg.envelope.second};
+      pl.envelope[AxisDirection::AxisZ] = {lCfg.envelope.second,
+                                           lCfg.envelope.second};
       if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
@@ -170,10 +172,10 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                  << lSurfaces.size()
                  << " surfaces at z = " << pl.medium(AxisDirection::AxisZ));
 
-      pl.envelope[Acts::AxisDirection::AxisR] = {lCfg.envelope.first,
-                                                 lCfg.envelope.second};
-      pl.envelope[Acts::AxisDirection::AxisZ] = {lCfg.envelope.second,
-                                                 lCfg.envelope.second};
+      pl.envelope[AxisDirection::AxisR] = {lCfg.envelope.first,
+                                           lCfg.envelope.second};
+      pl.envelope[AxisDirection::AxisZ] = {lCfg.envelope.second,
+                                           lCfg.envelope.second};
       if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->discLayer(gctx, lSurfaces, nb0, nb1, pl));
@@ -260,12 +262,11 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
             identifier, *snode.node, *snode.transform, layerCfg.localAxes,
             m_cfg.unit, nullptr);
 
-        std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
-            tgElements =
-                (m_cfg.detectorElementSplitter == nullptr)
-                    ? std::vector<std::shared_ptr<
-                          const Acts::TGeoDetectorElement>>{tgElement}
-                    : m_cfg.detectorElementSplitter->split(gctx, tgElement);
+        std::vector<std::shared_ptr<const TGeoDetectorElement>> tgElements =
+            (m_cfg.detectorElementSplitter == nullptr)
+                ? std::vector<
+                      std::shared_ptr<const TGeoDetectorElement>>{tgElement}
+                : m_cfg.detectorElementSplitter->split(gctx, tgElement);
 
         for (const auto& tge : tgElements) {
           m_elementStore.push_back(tge);
@@ -317,11 +318,11 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
   return;
 }
 
-std::shared_ptr<Acts::TGeoDetectorElement>
-Acts::TGeoLayerBuilder::defaultElementFactory(
+std::shared_ptr<ActsPlugins::TGeoDetectorElement>
+ActsPlugins::TGeoLayerBuilder::defaultElementFactory(
     const TGeoDetectorElement::Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
-    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
+    std::shared_ptr<const ISurfaceMaterial> material) {
   return std::make_shared<TGeoDetectorElement>(
       identifier, tGeoNode, tGeoMatrix, axes, scalor, std::move(material));
 }

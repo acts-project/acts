@@ -83,16 +83,21 @@ struct NavigationOptions {
 ///
 class Navigator {
  public:
+  /// Type alias for navigation surface candidates container
   using NavigationSurfaces =
       boost::container::small_vector<NavigationTarget, 10>;
 
+  /// Type alias for navigation layer candidates container
   using NavigationLayers = boost::container::small_vector<NavigationTarget, 10>;
 
+  /// Type alias for navigation boundary candidates container
   using NavigationBoundaries =
       boost::container::small_vector<NavigationTarget, 4>;
 
+  /// Type alias for external surfaces map indexed by layer ID
   using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
 
+  /// Type alias for geometry version enumeration
   using GeometryVersion = TrackingGeometry::GeometryVersion;
 
   /// The navigation stage
@@ -118,6 +123,8 @@ class Navigator {
 
   /// The navigator options
   struct Options : public NavigatorPlainOptions {
+    /// Constructor with geometry context
+    /// @param gctx The geometry context for the navigation
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
 
@@ -133,11 +140,15 @@ class Navigator {
     /// Externally provided surfaces - these are tried to be hit
     ExternalSurfaces externalSurfaces = {};
 
+    /// Insert an external surface to be considered during navigation
+    /// @param geoid Geometry identifier of the surface to insert
     void insertExternalSurface(GeometryIdentifier geoid) {
       externalSurfaces.insert(
           std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
     }
 
+    /// Set the plain navigation options
+    /// @param options The plain navigator options to set
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
@@ -148,8 +159,11 @@ class Navigator {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
+    /// Constructor with navigation options
+    /// @param options_ The navigation options for this state
     explicit State(const Options& options_) : options(options_) {}
 
+    /// Navigation options configuration
     Options options;
 
     // Navigation on surface level
@@ -170,34 +184,55 @@ class Navigator {
     /// the current boundary index of the navigation state
     std::optional<std::size_t> navBoundaryIndex;
 
+    /// Get reference to current navigation surface
+    /// @return Reference to current surface target
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
+
+    /// Get reference to current navigation layer
+    /// @return Reference to current layer intersection
     NavigationTarget& navLayer() { return navLayers.at(navLayerIndex.value()); }
+
+    /// Get reference to current navigation boundary
+    /// @return Reference to current boundary intersection
     NavigationTarget& navBoundary() {
       return navBoundaries.at(navBoundaryIndex.value());
     }
 
+    /// Volume where the navigation started
     const TrackingVolume* startVolume = nullptr;
+    /// Layer where the navigation started
     const Layer* startLayer = nullptr;
+    /// Surface where the navigation started
     const Surface* startSurface = nullptr;
+    /// Current volume during navigation
     const TrackingVolume* currentVolume = nullptr;
+    /// Current layer during navigation
     const Layer* currentLayer = nullptr;
+    /// Current surface during navigation
     const Surface* currentSurface = nullptr;
+    /// Target surface for navigation
     const Surface* targetSurface = nullptr;
 
+    /// Flag to break navigation loop
     bool navigationBreak = false;
+    /// Current navigation stage in the state machine
     Stage navigationStage = Stage::initial;
 
+    /// Statistics collection for navigation performance
     NavigatorStatistics statistics;
 
+    /// Gen3 surface stream
     NavigationStream stream;
 
+    /// Reset navigation state after switching layers
     void resetAfterLayerSwitch() {
       navSurfaces.clear();
       navSurfaceIndex.reset();
     }
 
+    /// Reset navigation state after switching volumes
     void resetAfterVolumeSwitch() {
       resetAfterLayerSwitch();
 
@@ -209,6 +244,7 @@ class Navigator {
       currentLayer = nullptr;
     }
 
+    /// Completely reset navigation state to initial conditions
     void reset() {
       resetAfterVolumeSwitch();
 
@@ -217,6 +253,8 @@ class Navigator {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
+
+      stream.reset();
     }
   };
 
@@ -234,19 +272,31 @@ class Navigator {
     m_geometryVersion = m_cfg.trackingGeometry->geometryVersion();
   }
 
+  /// Create a navigation state from options
+  /// @param options The navigation options
+  /// @return A new navigation state
   State makeState(const Options& options) const {
     State state(options);
     return state;
   }
 
+  /// Get the current surface from navigation state
+  /// @param state The navigation state
+  /// @return Pointer to current surface, or nullptr if none
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
 
+  /// Get the current volume from navigation state
+  /// @param state The navigation state
+  /// @return Pointer to current volume, or nullptr if none
   const TrackingVolume* currentVolume(const State& state) const {
     return state.currentVolume;
   }
 
+  /// Get material properties of the current volume
+  /// @param state The navigation state
+  /// @return Pointer to volume material, or nullptr if no volume or material
   const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
     if (state.currentVolume == nullptr) {
       return nullptr;
@@ -254,18 +304,30 @@ class Navigator {
     return state.currentVolume->volumeMaterial();
   }
 
+  /// Get the starting surface from navigation state
+  /// @param state The navigation state
+  /// @return Pointer to start surface, or nullptr if none
   const Surface* startSurface(const State& state) const {
     return state.startSurface;
   }
 
+  /// Get the target surface from navigation state
+  /// @param state The navigation state
+  /// @return Pointer to target surface, or nullptr if none
   const Surface* targetSurface(const State& state) const {
     return state.targetSurface;
   }
 
+  /// Check if navigation has reached the end of the world (no current volume)
+  /// @param state The navigation state
+  /// @return True if end of world is reached
   bool endOfWorldReached(const State& state) const {
     return state.currentVolume == nullptr;
   }
 
+  /// Check if navigation should be interrupted
+  /// @param state The navigation state
+  /// @return True if navigation break flag is set
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
   }
@@ -303,9 +365,12 @@ class Navigator {
 
     state.reset();
 
-    // Empirical pre-allocation of candidates for the next navigation iteration.
-    // @TODO: Make this user configurable through the configuration
-    state.stream.candidates().reserve(50);
+    if (m_geometryVersion == GeometryVersion::Gen3) {
+      // Empirical pre-allocation of candidates for the next navigation
+      // iteration.
+      // @TODO: Make this user configurable through the configuration
+      state.stream.candidates().reserve(50);
+    }
 
     state.startSurface = state.options.startSurface;
     state.targetSurface = state.options.targetSurface;
@@ -918,7 +983,7 @@ class Navigator {
   Config m_cfg;
 
   // Cached so we don't have to query the TrackingGeometry constantly.
-  TrackingGeometry::GeometryVersion m_geometryVersion;
+  TrackingGeometry::GeometryVersion m_geometryVersion{};
 
   std::shared_ptr<const Logger> m_logger;
 };

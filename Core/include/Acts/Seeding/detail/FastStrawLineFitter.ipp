@@ -87,7 +87,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     // Skip straw measurements that are not twins &
     // don't measure non-bending coordinate
     if (strip->isStraw()) {
-      return strip->measuresLoc0() && projection == ResidualIdx::bending;
+      return strip->measuresLoc0() && projection == ResidualIdx::nonBending;
     }
     // Check that the strip is actually measuring the projection
     return (strip->measuresLoc0() && projection == ResidualIdx::nonBending) ||
@@ -97,6 +97,9 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   auxVars.invCovs.resize(measurements.size());
   for (const auto& [sIdx, strip] : enumerate(measurements)) {
     if (!select(strip)) {
+      ACTS_VERBOSE(__func__ << "() - " << __LINE__
+                            << ": Skip strip measurement @"
+                            << toString(strip->localPosition()));
       continue;
     }
     const auto& invCov =
@@ -173,8 +176,8 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
   // Calculate first the center of gravity
   for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
     if (!strawMeas->isStraw()) {
-      ACTS_WARNING(__func__ << "() - " << __LINE__
-                            << ": The measurement is not a straw");
+      ACTS_DEBUG(__func__ << "() - " << __LINE__
+                          << ": The measurement is not a straw");
       continue;
     }
     const double cov = strawMeas->covariance()[s_covIdx];

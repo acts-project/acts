@@ -13,12 +13,16 @@
 
 namespace Acts {
 
+/// Error codes for navigator operations
 enum class NavigatorError {
   // ensure all values are non-zero
   NotInsideExpectedVolume = 1,
   NotOnExpectedSurface = 2,
 };
 
+/// Create error code from NavigatorError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::NavigatorError e);
 
 }  // namespace Acts

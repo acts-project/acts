@@ -55,6 +55,10 @@ enum BoundarySurfaceFace {
 
 };
 
+/// Stream operator for BoundarySurfaceFace
+/// @param os Output stream
+/// @param face BoundarySurfaceFace to output
+/// @return Reference to output stream
 inline std::ostream& operator<<(std::ostream& os, BoundarySurfaceFace& face) {
   os << "BoundarySurfaceFace::";
 
