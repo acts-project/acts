@@ -184,8 +184,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     }
 
     // Perigee surface at configured reference point
-    auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-        m_cfg.referencePoint);
+    auto pSurface =
+        Acts::Surface::makeShared<Acts::PerigeeSurface>(m_cfg.referencePoint);
 
     // Start from truth curvilinear parameters (direction, q/p)
     const Acts::Vector3 startDir = particle.direction();  // unit vector
