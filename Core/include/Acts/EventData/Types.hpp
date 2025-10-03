@@ -25,9 +25,11 @@ static constexpr TrackIndexType kTrackIndexInvalid =
 /// @details Used to store parameter projection information in a compact bit format
 using ProjectorBitset = std::uint64_t;
 
+/// Type alias for subspace index
+using SubspaceIndex = std::uint8_t;
 /// Template alias for subspace indices array
 template <std::size_t measdim>
-using SubspaceIndices = std::array<std::uint8_t, measdim>;
+using SubspaceIndices = std::array<SubspaceIndex, measdim>;
 /// Type alias for bound parameter subspace indices
 using BoundSubspaceIndices = SubspaceIndices<eBoundSize>;
 
