@@ -12,11 +12,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include "edm4hep/TrackState.h"
 
@@ -70,7 +70,7 @@ void EDM4hepUtil::writeParticle(const SimParticle& from,
 ActsFatras::Hit EDM4hepUtil::readSimHit(
     const edm4hep::SimTrackerHit& from, const MapParticleIdFrom& particleMapper,
     const MapGeometryIdFrom& geometryMapper) {
-  auto particle = Acts::EDM4hepUtil::getParticle(from);
+  auto particle = ActsPlugins::EDM4hepUtil::getParticle(from);
   ActsFatras::Barcode particleId = particleMapper(particle);
 
   const auto mass = particle.getMass() * 1_GeV;
@@ -117,7 +117,8 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   const auto delta4 = from.momentum4After() - momentum4Before;
 
   if (particleMapper) {
-    Acts::EDM4hepUtil::setParticle(to, particleMapper(from.particleId()));
+    ActsPlugins::EDM4hepUtil::setParticle(to,
+                                          particleMapper(from.particleId()));
   }
 
   if (geometryMapper) {
@@ -194,7 +195,7 @@ void EDM4hepUtil::writeMeasurement(
 
   to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
 
-  to.setType(Acts::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
+  to.setType(ActsPlugins::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
   // TODO set uv (which are in global spherical coordinates with r=1)
   to.setPosition({parameters[Acts::eBoundLoc0], parameters[Acts::eBoundLoc1],
                   parameters[Acts::eBoundTime]});
@@ -247,9 +248,9 @@ void EDM4hepUtil::writeTrajectory(
     // Convert to LCIO track parametrization expected by EDM4hep
     // This will create an ad-hoc perigee surface if the input parameters are
     // not bound on a perigee surface already
-    Acts::EDM4hepUtil::detail::Parameters converted =
-        Acts::EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz,
-                                                                   parObj);
+    ActsPlugins::EDM4hepUtil::detail::Parameters converted =
+        ActsPlugins::EDM4hepUtil::detail::convertTrackParametersToEdm4hep(
+            gctx, Bz, parObj);
 
     trackState.D0 = converted.values[0];
     trackState.Z0 = converted.values[1];

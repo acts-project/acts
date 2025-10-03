@@ -342,9 +342,9 @@ def addSeeding(
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     hashingTrainingConfigArg : HashingTrainingConfigArg(annoySeed, f)
-                                Defaults specified in Plugins/Hashing/include/Acts/Plugins/Hashing/HashingTrainingConfig.hpp
+                                Defaults specified in Plugins/Hashing/include/ActsPlugins/Hashing/HashingTrainingConfig.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
-                                Defaults specified in Plugins/Hashing/include/Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp
+                                Defaults specified in Plugins/Hashing/include/ActsPlugins/Hashing/HashingAlgorithmConfig.hpp
     truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
         Currently only deltaR=(min,max) range specified here.
     particleHypothesis : Optional[acts.ParticleHypothesis]
@@ -2398,6 +2398,7 @@ def addVertexFitting(
     ] = acts.examples.VertexSeedFinder.GaussianSeeder,
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
+    simultaneousSeeds: Optional[int] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     writeTrackInfo: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -2505,6 +2506,7 @@ def addVertexFitting(
                 useTime=useTime,
                 spatialBinExtent=spatialBinExtent,
                 temporalBinExtent=temporalBinExtent,
+                simultaneousSeeds=simultaneousSeeds,
             ),
         )
         s.addAlgorithm(findVertices)

@@ -14,13 +14,13 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsPlugins/ActSVG/LayerSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 
 #include <fstream>
 #include <memory>
@@ -119,7 +119,7 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
 
 BOOST_AUTO_TEST_CASE(DiscLayerRadialSvg) {
   // Planar style
-  Acts::Svg::Style discLayerStyle;
+  ActsPlugins::Svg::Style discLayerStyle;
   discLayerStyle.fillColor = {51, 153, 255};
   discLayerStyle.fillOpacity = 0.75;
   discLayerStyle.highlightColor = {255, 153, 51};
@@ -133,23 +133,23 @@ BOOST_AUTO_TEST_CASE(DiscLayerRadialSvg) {
   // Get the layer
   auto discLayer = generateDiscLayer(100, 250, 32u, 4u);
 
-  Acts::Svg::LayerConverter::Options lOptions;
+  ActsPlugins::Svg::LayerConverter::Options lOptions;
   lOptions.name = "disc_layer_sectors";
-  lOptions.surfaceStyles =
-      Acts::GeometryHierarchyMap<Acts::Svg::Style>({{geoID, discLayerStyle}});
+  lOptions.surfaceStyles = Acts::GeometryHierarchyMap<ActsPlugins::Svg::Style>(
+      {{geoID, discLayerStyle}});
 
   // Get the layer sheets
-  auto discLayerSheets =
-      Acts::Svg::LayerConverter::convert(tgContext, *discLayer, lOptions);
+  auto discLayerSheets = ActsPlugins::Svg::LayerConverter::convert(
+      tgContext, *discLayer, lOptions);
 
   for (const auto& s : discLayerSheets) {
-    Acts::Svg::toFile({s}, s._id + ".svg");
+    ActsPlugins::Svg::toFile({s}, s._id + ".svg");
   }
 }
 
 BOOST_AUTO_TEST_CASE(DiscLayerTrapezoidSvg) {
   // Planar style
-  Acts::Svg::Style discLayerStyle;
+  ActsPlugins::Svg::Style discLayerStyle;
   discLayerStyle.fillColor = {51, 153, 255};
   discLayerStyle.fillOpacity = 0.75;
   discLayerStyle.highlightColor = {255, 153, 51};
@@ -163,23 +163,23 @@ BOOST_AUTO_TEST_CASE(DiscLayerTrapezoidSvg) {
   // Get the layer
   auto discLayer = generateDiscLayer(100, 250, 32u, 4u, true);
 
-  Acts::Svg::LayerConverter::Options lOptions;
+  ActsPlugins::Svg::LayerConverter::Options lOptions;
   lOptions.name = "disc_layer_trapezoid";
-  lOptions.surfaceStyles =
-      Acts::GeometryHierarchyMap<Acts::Svg::Style>({{geoID, discLayerStyle}});
+  lOptions.surfaceStyles = Acts::GeometryHierarchyMap<ActsPlugins::Svg::Style>(
+      {{geoID, discLayerStyle}});
 
   // Get the layer sheets
-  auto discLayerSheets =
-      Acts::Svg::LayerConverter::convert(tgContext, *discLayer, lOptions);
+  auto discLayerSheets = ActsPlugins::Svg::LayerConverter::convert(
+      tgContext, *discLayer, lOptions);
 
   for (const auto& s : discLayerSheets) {
-    Acts::Svg::toFile({s}, s._id + ".svg");
+    ActsPlugins::Svg::toFile({s}, s._id + ".svg");
   }
 }
 
 BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
   // Planar style
-  Acts::Svg::Style cylinderLayerStyle;
+  ActsPlugins::Svg::Style cylinderLayerStyle;
   cylinderLayerStyle.fillColor = {51, 153, 255};
   cylinderLayerStyle.fillOpacity = 0.75;
   cylinderLayerStyle.highlightColor = {255, 153, 51};
@@ -202,16 +202,17 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
         continue;
       }
 
-      Acts::Svg::LayerConverter::Options lOptions;
+      ActsPlugins::Svg::LayerConverter::Options lOptions;
       lOptions.name = "cylinder_layer_" + std::to_string(il++);
-      lOptions.surfaceStyles = Acts::GeometryHierarchyMap<Acts::Svg::Style>(
-          {{geoID, cylinderLayerStyle}});
+      lOptions.surfaceStyles =
+          Acts::GeometryHierarchyMap<ActsPlugins::Svg::Style>(
+              {{geoID, cylinderLayerStyle}});
 
       // Get the layer sheets
-      auto layerSheets =
-          Acts::Svg::LayerConverter::convert(tgContext, *layer, lOptions);
+      auto layerSheets = ActsPlugins::Svg::LayerConverter::convert(
+          tgContext, *layer, lOptions);
       for (const auto& s : layerSheets) {
-        Acts::Svg::toFile({s}, s._id + ".svg");
+        ActsPlugins::Svg::toFile({s}, s._id + ".svg");
       }
     }
   }

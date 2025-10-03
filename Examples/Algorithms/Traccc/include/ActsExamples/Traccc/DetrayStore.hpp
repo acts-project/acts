@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
-#include "Acts/Plugins/Detray/DetrayConverter.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayConverter.hpp"
 
 #include <memory>
 
@@ -24,13 +24,13 @@ template <typename memory_source_t>
 struct DetrayStore {
   // Constructor from arguments
   DetrayStore(std::shared_ptr<memory_source_t> mSource,
-              Acts::DetrayHostDetector&& det)
+              ActsPlugins::DetrayHostDetector&& det)
       : memoryResource(std::move(mSource)), detector(std::move(det)) {}
 
   // The memory resource
   std::shared_ptr<memory_source_t> memoryResource = nullptr;
   // The detray detector instance
-  Acts::DetrayHostDetector detector;
+  ActsPlugins::DetrayHostDetector detector;
 
   // Create a Detray detector and store it with its memory Source in
   ///
@@ -40,9 +40,9 @@ struct DetrayStore {
   static inline std::shared_ptr<const DetrayStore<memory_source_t>> create(
       const Acts::GeometryContext& gctx,
       const Acts::Experimental::Detector& detector,
-      const Acts::DetrayConverter::Options& options) {
+      const ActsPlugins::DetrayConverter::Options& options) {
     auto memoryResource = std::make_shared<memory_source_t>();
-    auto DetrayHostDetector = Acts::DetrayConverter().convert<>(
+    auto DetrayHostDetector = ActsPlugins::DetrayConverter().convert<>(
         gctx, detector, *memoryResource, options);
 
     return std::make_shared<DetrayStore<memory_source_t>>(
