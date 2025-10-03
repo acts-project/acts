@@ -15,6 +15,7 @@
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
 
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <string>
 
@@ -25,20 +26,26 @@ class Reader;
 
 namespace ActsExamples {
 
+struct MultiplicityGenerator;
+
 /// HepMC3 event reader.
 class HepMC3Reader final : public IReader {
  public:
   struct Config {
-    /// The input file path for reading HepMC3 events.
-    /// This is a helper to simplify the most basic configuration, which is
-    /// reading single events from a single input file
-    std::filesystem::path inputPath;
+    /// Input specification per file
+    struct Input {
+      /// Path to the HepMC3 file
+      std::filesystem::path path;
+      /// Fixed number of events to read per logical event (used if multiplicityGenerator is null)
+      std::size_t numEvents = 1;
+      /// Optional multiplicity generator for variable event sampling
+      std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator = nullptr;
+    };
 
-    /// This configuration option is used to read multiple files in a single
-    /// run. For each file, a specific number of events is read per requested
-    /// event. This can be used to read e.g. hard-scatter events from one file
-    /// and pileup events from another.
-    std::vector<std::pair<std::filesystem::path, std::size_t>> inputPaths;
+    /// Input files to read. For each file, a specific number of events is
+    /// read per logical event. This can be used to read e.g. hard-scatter
+    /// events from one file and pileup events from another.
+    std::vector<Input> inputs;
 
     /// The output collection
     std::string outputEvent;
@@ -62,7 +69,7 @@ class HepMC3Reader final : public IReader {
     /// used. If this number is exceeded the reader will error out.
     std::size_t maxEventBufferSize = 128;
 
-    /// The random number service. Required if vertexGenerator is set.
+    /// The random number service. Required if vertexGenerator or any multiplicityGenerator is set.
     std::shared_ptr<const RandomNumbers> randomNumbers;
     /// Position generator that will be used to shift read events
     std::shared_ptr<PrimaryVertexPositionGenerator> vertexGenerator;

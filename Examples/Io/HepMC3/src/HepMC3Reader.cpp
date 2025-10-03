@@ -15,6 +15,7 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
+#include "ActsExamples/Utilities/MultiplicityGenerators.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -39,23 +40,14 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
 
   m_outputEvent.initialize(m_cfg.outputEvent);
 
-  if (!m_cfg.inputPaths.empty() && !m_cfg.inputPath.empty()) {
-    throw std::invalid_argument(
-        "inputPath and inputPaths are mutually exclusive");
-  }
-
-  if (!m_cfg.inputPath.empty()) {
-    m_cfg.inputPaths.emplace_back(m_cfg.inputPath, 1);
-  }
-
-  if (m_cfg.inputPaths.empty()) {
+  if (m_cfg.inputs.empty()) {
     throw std::invalid_argument(
         "HepMC3 reader was not configured with any input files");
   }
 
-  for (const auto& [path, numEvents] : m_cfg.inputPaths) {
-    auto reader = HepMC3::deduce_reader(path);
-    m_inputs.emplace_back(reader, numEvents, path);
+  for (const auto& input : m_cfg.inputs) {
+    auto reader = HepMC3::deduce_reader(input.path);
+    m_inputs.emplace_back(reader, input.numEvents, input.path);
   }
 
   if (m_cfg.numEvents.has_value()) {
@@ -70,9 +62,20 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
     m_eventsRange = {0, determineNumEvents(*reader)};
   }
 
-  if (m_cfg.vertexGenerator != nullptr && m_cfg.randomNumbers == nullptr) {
+  // Check if randomNumbers is required
+  bool needsRng = (m_cfg.vertexGenerator != nullptr);
+  if (!needsRng && !m_cfg.inputs.empty()) {
+    for (const auto& input : m_cfg.inputs) {
+      if (input.multiplicityGenerator != nullptr) {
+        needsRng = true;
+        break;
+      }
+    }
+  }
+
+  if (needsRng && m_cfg.randomNumbers == nullptr) {
     throw std::invalid_argument(
-        "randomNumbers must be set if vertexGenerator is set");
+        "randomNumbers must be set if vertexGenerator or any multiplicityGenerator is set");
   }
 
   ACTS_DEBUG("HepMC3Reader: " << m_eventsRange.first << " - "
@@ -335,9 +338,31 @@ ProcessCode HepMC3Reader::readLogicalEvent(
 
   // @TODO: Add the index as an attribute to the event and it's content
 
-  for (const auto& [reader, numEvents, path] : m_inputs) {
-    ACTS_VERBOSE("Reading " << numEvents << " events from " << path);
-    for (std::size_t i = 0; i < numEvents; ++i) {
+  // Spawn RNG if needed by any multiplicityGenerator
+  std::optional<RandomEngine> rng;
+  if (!m_cfg.inputs.empty()) {
+    for (const auto& input : m_cfg.inputs) {
+      if (input.multiplicityGenerator != nullptr) {
+        rng = m_cfg.randomNumbers->spawnGenerator(ctx);
+        break;
+      }
+    }
+  }
+
+  for (std::size_t inputIndex = 0; inputIndex < m_inputs.size(); ++inputIndex) {
+    auto& reader = m_inputs[inputIndex].reader;
+    auto& path = m_inputs[inputIndex].path;
+    std::size_t fixedCount = m_inputs[inputIndex].numEvents;
+
+    // Use generator if present in new inputs config, otherwise fixed count
+    std::size_t count = fixedCount;
+    if (!m_cfg.inputs.empty() && inputIndex < m_cfg.inputs.size() &&
+        m_cfg.inputs[inputIndex].multiplicityGenerator != nullptr) {
+      count = (*m_cfg.inputs[inputIndex].multiplicityGenerator)(*rng);
+    }
+
+    ACTS_VERBOSE("Reading " << count << " events from " << path);
+    for (std::size_t i = 0; i < count; ++i) {
       auto event = makeEvent();
 
       reader->read_event(*event);

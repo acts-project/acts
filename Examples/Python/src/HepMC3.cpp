@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
+#include "ActsExamples/Utilities/MultiplicityGenerators.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -34,8 +35,27 @@ void addHepMC3(Context& ctx) {
                              perEvent, inputEvent, compression,
                              maxEventsPending, writeEventsInOrder);
 
-  ACTS_PYTHON_DECLARE_READER(HepMC3Reader, hepmc3, "HepMC3Reader", inputPath,
-                             inputPaths, outputEvent, printListing, numEvents,
+  // Expose nested Input struct
+  py::class_<HepMC3Reader::Config::Input>(hepmc3, "Input")
+      .def(py::init<>())
+      .def(py::init([](const std::filesystem::path& path, std::size_t numEvents,
+                       std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator) {
+             HepMC3Reader::Config::Input inp;
+             inp.path = path;
+             inp.numEvents = numEvents;
+             inp.multiplicityGenerator = multiplicityGenerator;
+             return inp;
+           }),
+           py::arg("path"),
+           py::arg("numEvents") = 1,
+           py::arg("multiplicityGenerator") = nullptr)
+      .def_readwrite("path", &HepMC3Reader::Config::Input::path)
+      .def_readwrite("numEvents", &HepMC3Reader::Config::Input::numEvents)
+      .def_readwrite("multiplicityGenerator",
+                     &HepMC3Reader::Config::Input::multiplicityGenerator);
+
+  ACTS_PYTHON_DECLARE_READER(HepMC3Reader, hepmc3, "HepMC3Reader", inputs,
+                             outputEvent, printListing, numEvents,
                              checkEventNumber, maxEventBufferSize,
                              vertexGenerator, randomNumbers);
 
