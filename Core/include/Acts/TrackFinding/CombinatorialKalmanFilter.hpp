@@ -213,6 +213,21 @@ class CombinatorialKalmanFilter {
     /// Calibration context for the finding run
     const CalibrationContext* calibrationContextPtr{nullptr};
 
+    CombinatorialKalmanFilterExtensions<track_container_t> extensions;
+
+    /// End of world aborter
+    EndOfWorldReached endOfWorldReached;
+
+    /// Volume constraint aborter
+    VolumeConstraintAborter volumeConstraintAborter;
+
+    /// Actor logger instance
+    const Logger* actorLogger{nullptr};
+    /// Updater logger instance
+    const Logger* updaterLogger{nullptr};
+
+    const Logger& logger() const { return *actorLogger; }
+
     /// @brief CombinatorialKalmanFilter actor operation
     ///
     /// @tparam propagator_state_t Type of the Propagator state
@@ -458,14 +473,13 @@ class CombinatorialKalmanFilter {
       auto currentBranch = result.activeBranches.back();
       TrackIndexType prevTip = currentBranch.tipIndex();
 
-      using TrackStatesResult =
-          Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
+      using TrackStatesResult = Result<CkfTypes::BranchVector<TrackIndexType>>;
       TrackStatesResult tsRes = TrackStatesResult::success({});
       if (isSensitive) {
         // extend trajectory with measurements associated to the current surface
         // which may create extra trajectory branches if more than one
         // measurement is selected.
-        tsRes = m_extensions.createTrackStates(
+        tsRes = extensions.createTrackStates(
             state.geoContext, *calibrationContextPtr, *surface, boundState,
             prevTip, result.trackStateCandidates, *result.trackStates,
             logger());
@@ -527,7 +541,7 @@ class CombinatorialKalmanFilter {
         }
 
         BranchStopperResult branchStopperResult =
-            m_extensions.branchStopper(currentBranch, currentState);
+            extensions.branchStopper(currentBranch, currentState);
 
         // Check the branch
         if (branchStopperResult == BranchStopperResult::Continue) {
@@ -590,7 +604,7 @@ class CombinatorialKalmanFilter {
     /// @param result which contains among others the new states, and the list of active branches
     /// @return the number of newly added branches or an error
     Result<unsigned int> processNewTrackStates(
-        const Acts::GeometryContext& gctx,
+        const GeometryContext& gctx,
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList,
         result_type& result) const {
       using PM = TrackStatePropMask;
@@ -634,8 +648,7 @@ class CombinatorialKalmanFilter {
           newBranch.nOutliers()++;
         } else if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
           // Kalman update
-          auto updateRes =
-              m_extensions.updater(gctx, trackState, *updaterLogger);
+          auto updateRes = extensions.updater(gctx, trackState, *updaterLogger);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -656,7 +669,7 @@ class CombinatorialKalmanFilter {
         result.activeBranches.push_back(newBranch);
 
         BranchStopperResult branchStopperResult =
-            m_extensions.branchStopper(newBranch, trackState);
+            extensions.branchStopper(newBranch, trackState);
 
         // Check if need to stop this branch
         if (branchStopperResult == BranchStopperResult::Continue) {
@@ -804,21 +817,6 @@ class CombinatorialKalmanFilter {
 
       result.collectedTracks.push_back(currentBranch);
     }
-
-    CombinatorialKalmanFilterExtensions<track_container_t> m_extensions;
-
-    /// End of world aborter
-    EndOfWorldReached endOfWorldReached;
-
-    /// Volume constraint aborter
-    VolumeConstraintAborter volumeConstraintAborter;
-
-    /// Actor logger instance
-    const Logger* actorLogger{nullptr};
-    /// Updater logger instance
-    const Logger* updaterLogger{nullptr};
-
-    const Logger& logger() const { return *actorLogger; }
   };
 
   /// Void path limit reached aborter to replace the default since the path
@@ -886,7 +884,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();
 
     // copy delegates to calibrator, updater, branch stopper
-    combKalmanActor.m_extensions = tfOptions.extensions;
+    combKalmanActor.extensions = tfOptions.extensions;
 
     auto propState =
         m_propagator

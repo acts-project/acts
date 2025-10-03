@@ -35,7 +35,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -59,12 +58,10 @@ using ConstantFieldPropagator =
     Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
 
 using KalmanUpdater = Acts::GainMatrixUpdater;
-using KalmanSmoother = Acts::GainMatrixSmoother;
 using KalmanFitterType =
     Acts::KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
 
 KalmanUpdater kfUpdater;
-KalmanSmoother kfSmoother;
 
 // Create a test context
 const GeometryContext geoCtx;
@@ -80,8 +77,6 @@ KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.smoother
-      .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
   return extensions;
 }
 
@@ -326,7 +321,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Test the method to evaluate alignment state for a single track
   const auto& inputTraj = trajectories.front();
-  kfOptions.referenceSurface = &(*inputTraj.startParameters).referenceSurface();
 
   auto evaluateRes = alignZero.evaluateTrackAlignmentState(
       kfOptions.geoContext, inputTraj.sourceLinks, *inputTraj.startParameters,
