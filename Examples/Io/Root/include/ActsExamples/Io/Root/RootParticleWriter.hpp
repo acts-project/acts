@@ -122,19 +122,19 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
 
   /// Add perigee prefix to the above parameters
   /// if m_cfg.writeHelixParameters is true.
-  std::vector<float> m_perigee_phi;
-  std::vector<float> m_perigee_theta;
-  std::vector<float> m_perigee_qop;
-  std::vector<float> m_perigee_p;
-  std::vector<float> m_perigee_px;
-  std::vector<float> m_perigee_py;
-  std::vector<float> m_perigee_pz;
-  std::vector<float> m_perigee_eta;
-  std::vector<float> m_perigee_pt;
+  std::vector<float> m_perigeePhi;
+  std::vector<float> m_perigeeTheta;
+  std::vector<float> m_perigeeQop;
+  std::vector<float> m_perigeeP;
+  std::vector<float> m_perigeePx;
+  std::vector<float> m_perigeePy;
+  std::vector<float> m_perigeePz;
+  std::vector<float> m_perigeeEta;
+  std::vector<float> m_perigeePt;
   /// Transverse impact parameter in mm.
-  std::vector<float> m_perigee_d0;
+  std::vector<float> m_perigeeD0;
   /// Longitudinal impact parameter in mm.
-  std::vector<float> m_perigee_z0;
+  std::vector<float> m_perigeeZ0;
 
   // Decoded particle identifier; see Barcode definition for details.
   std::vector<std::uint32_t> m_vertexPrimary;
