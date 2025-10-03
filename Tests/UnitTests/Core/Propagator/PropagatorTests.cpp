@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(PropagationToSamePositionSurfacesGen3) {
     }
     auto sensId = step.surface->geometryId().sensitive();
     // exclude portals
-    if (sensId) {
+    if (sensId != 0u) {
       geoIds.insert(sensId);
     }
   }
