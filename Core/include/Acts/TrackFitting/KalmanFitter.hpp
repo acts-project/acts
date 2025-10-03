@@ -20,6 +20,7 @@
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
@@ -205,14 +206,14 @@ struct KalmanFitterResult {
   /// This is the index of the 'tip' of the track stored in multitrajectory.
   /// This corresponds to the last measurement state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
-  /// Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
-  std::size_t lastMeasurementIndex = Acts::MultiTrajectoryTraits::kInvalid;
+  /// MultiTrajectoryTraits::kInvalid is the start of a trajectory.
+  std::size_t lastMeasurementIndex = MultiTrajectoryTraits::kInvalid;
 
   /// This is the index of the 'tip' of the states stored in multitrajectory.
   /// This corresponds to the last state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
-  /// Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
-  std::size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
+  /// MultiTrajectoryTraits::kInvalid is the start of a trajectory.
+  std::size_t lastTrackIndex = MultiTrajectoryTraits::kInvalid;
 
   /// The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
@@ -244,7 +245,11 @@ struct KalmanFitterResult {
   /// Measurement surfaces handled in both forward and backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
+  /// Last encountered error
   Result<void> result{Result<void>::success()};
+
+  /// Path limit aborter
+  PathLimitReached pathLimitReached;
 };
 
 /// Kalman fitter implementation.
@@ -340,16 +345,22 @@ class KalmanFitter {
     /// Input MultiTrajectory
     std::shared_ptr<traj_t> outputStates;
 
+    KalmanFitterExtensions<traj_t> extensions;
+
+    /// Calibration context for the fit
+    const CalibrationContext* calibrationContext{nullptr};
+
+    /// End of world aborter
+    EndOfWorldReached endOfWorldReached;
+
+    /// Volume constraint aborter
+    VolumeConstraintAborter volumeConstraintAborter;
+
     /// The logger instance
     const Logger* actorLogger{nullptr};
 
     /// Logger helper
     const Logger& logger() const { return *actorLogger; }
-
-    KalmanFitterExtensions<traj_t> extensions;
-
-    /// Calibration context for the fit
-    const CalibrationContext* calibrationContext{nullptr};
 
     /// @brief Kalman actor operation
     ///
@@ -378,10 +389,16 @@ class KalmanFitter {
                    << " momentum: "
                    << stepper.absoluteMomentum(state.stepping));
 
+      // Initialize path limit reached aborter
+      if (result.pathLimitReached.internalLimit ==
+          std::numeric_limits<double>::max()) {
+        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
+                                    true, logger());
+      }
+
       // Update:
       // - Waiting for a current surface
-      auto surface = navigator.currentSurface(state.navigation);
-      std::string direction = state.options.direction.toString();
+      const Surface* surface = navigator.currentSurface(state.navigation);
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
@@ -391,18 +408,20 @@ class KalmanFitter {
         // -> Fill track state information & update stepper information
 
         if (!result.smoothed && !result.reversed) {
-          ACTS_VERBOSE("Perform " << direction << " filter step");
+          ACTS_VERBOSE("Perform " << state.options.direction << " filter step");
           auto res = filter(surface, state, stepper, navigator, result);
           if (!res.ok()) {
-            ACTS_ERROR("Error in " << direction << " filter: " << res.error());
+            ACTS_ERROR("Error in " << state.options.direction
+                                   << " filter: " << res.error());
             result.result = res.error();
           }
         }
         if (result.reversed) {
-          ACTS_VERBOSE("Perform " << direction << " filter step");
+          ACTS_VERBOSE("Perform " << state.options.direction << " filter step");
           auto res = reversedFilter(surface, state, stepper, navigator, result);
           if (!res.ok()) {
-            ACTS_ERROR("Error in " << direction << " filter: " << res.error());
+            ACTS_ERROR("Error in " << state.options.direction
+                                   << " filter: " << res.error());
             result.result = res.error();
           }
         }
@@ -413,16 +432,34 @@ class KalmanFitter {
       // reset navigation&stepping before run reversed filtering or
       // proceed to run smoothing
       if (!result.smoothed && !result.reversed) {
-        if (result.measurementStates == inputMeasurements->size() ||
-            (result.measurementStates > 0 &&
-             navigator.navigationBreak(state.navigation))) {
+        const bool isTrackComplete =
+            result.measurementStates == inputMeasurements->size();
+        const bool isEndOfWorldReached =
+            endOfWorldReached.checkAbort(state, stepper, navigator, logger());
+        const bool isVolumeConstraintReached =
+            volumeConstraintAborter.checkAbort(state, stepper, navigator,
+                                               logger());
+        const bool isPathLimitReached = result.pathLimitReached.checkAbort(
+            state, stepper, navigator, logger());
+        if (isTrackComplete || isEndOfWorldReached ||
+            isVolumeConstraintReached || isPathLimitReached) {
+          if (result.lastMeasurementIndex == MultiTrajectoryTraits::kInvalid) {
+            ACTS_INFO(
+                "No measurements were found on the track, cannot proceed "
+                "to smoothing or reversed filtering.");
+            result.finished = true;
+            return;
+          }
+
           // Remove the missing surfaces that occur after the last measurement
           result.missedActiveSurfaces.resize(result.measurementHoles);
-          // now get track state proxy for the smoothing logic
+          // now get track state proxy for the outlier logic
           typename traj_t::ConstTrackStateProxy trackStateProxy{
               result.fittedStates->getTrackState(result.lastMeasurementIndex)};
-          if (reversedFiltering ||
-              extensions.reverseFilteringLogic(trackStateProxy)) {
+          const bool doReverseFiltering =
+              reversedFiltering ||
+              extensions.reverseFilteringLogic(trackStateProxy);
+          if (doReverseFiltering) {
             // Start to run reversed filtering:
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement
@@ -435,8 +472,7 @@ class KalmanFitter {
           } else {
             // --> Search the starting state to run the smoothing
             // --> Call the smoothing
-            // --> Set a stop condition when all track states have been
-            // handled
+            // --> Set a stop condition when all track states have been handled
             ACTS_VERBOSE("Finalize/run smoothing");
             auto res = finalize(state, stepper, navigator, result);
             if (!res.ok()) {
@@ -483,7 +519,8 @@ class KalmanFitter {
           auto res = stepper.boundState(state.stepping, *targetReached.surface,
                                         true, freeToBoundCorrection);
           if (!res.ok()) {
-            ACTS_ERROR("Error in " << direction << " filter: " << res.error());
+            ACTS_ERROR("Error in " << state.options.direction
+                                   << " filter: " << res.error());
             result.result = res.error();
             return;
           }
@@ -538,8 +575,7 @@ class KalmanFitter {
                          const navigator_t& navigator,
                          result_type& result) const {
       // Check if there is a measurement on track
-      if (result.lastMeasurementIndex ==
-          Acts::MultiTrajectoryTraits::kInvalid) {
+      if (result.lastMeasurementIndex == MultiTrajectoryTraits::kInvalid) {
         ACTS_ERROR("No point to reverse for a track without measurements.");
         return KalmanFitterError::ReversePropagationFailed;
       }
@@ -586,6 +622,13 @@ class KalmanFitter {
       // direction
       materialInteractor(navigator.currentSurface(state.navigation), state,
                          stepper, navigator, MaterialUpdateStage::FullUpdate);
+
+      // Set path limit based on loop protection
+      detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
+                                  logger());
+
+      // Set path limit based on target surface
+      targetReached.checkAbort(state, stepper, navigator, logger());
 
       return Result<void>::success();
     }
@@ -640,8 +683,7 @@ class KalmanFitter {
         result.lastTrackIndex = trackStateProxy.index();
 
         // Update the stepper if it is not an outlier
-        if (trackStateProxy.typeFlags().test(
-                Acts::TrackStateFlag::MeasurementFlag)) {
+        if (trackStateProxy.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
           // Update the stepping state with filtered parameters
           ACTS_VERBOSE("Filtering step successful, updated parameters are:\n"
                        << trackStateProxy.filtered().transpose());
@@ -749,8 +791,8 @@ class KalmanFitter {
             TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
             TrackStatePropMask::Smoothed | TrackStatePropMask::Jacobian |
             TrackStatePropMask::Calibrated;
-        const std::size_t currentTrackIndex = fittedStates.addTrackState(
-            mask, Acts::MultiTrajectoryTraits::kInvalid);
+        const std::size_t currentTrackIndex =
+            fittedStates.addTrackState(mask, MultiTrajectoryTraits::kInvalid);
 
         // now get track state proxy back
         typename traj_t::TrackStateProxy trackStateProxy =
