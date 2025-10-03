@@ -534,6 +534,7 @@ def addSimWriters(
     simHits: str = "simhits",
     particlesSimulated: str = "particles_simulated",
     field: acts.MagneticFieldProvider = None,
+    writeHelixParameters: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirObj: Optional[Union[Path, str]] = None,
@@ -571,6 +572,7 @@ def addSimWriters(
                 level=customLogLevel(),
                 inputParticles=particlesSimulated,
                 bField=field,
+                writeHelixParameters=writeHelixParameters,
                 filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
