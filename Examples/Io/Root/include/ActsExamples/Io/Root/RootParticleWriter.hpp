@@ -47,7 +47,7 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
     /// Reference point for the perigee surface.
     /// Usually the beamspot position.
     /// Default is (0, 0, 0).
-    std::array<double, 3> referencePoint{0., 0., 0.};
+    Acts::Vector3 referencePoint{0., 0., 0.};
     /// Magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
     /// Flag to enable writing of helix parameters.
