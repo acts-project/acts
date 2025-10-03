@@ -51,7 +51,9 @@ struct Channel {
 /// @tparam kSize Number of cluster coordinates
 template <typename signal_t, std::size_t kSize>
 struct Cluster {
+  /// Type alias for parameter vector of dimension kSize
   using ParametersVector = Acts::ActsVector<kSize>;
+  /// Type alias for covariance matrix of dimension kSize x kSize
   using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
 
   /// Measured parameters.
