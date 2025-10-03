@@ -39,18 +39,6 @@
 
 namespace Acts {
 
-/// Strategy for selecting track states when reaching target surface in Kalman
-/// filter
-enum class KalmanFitterTargetSurfaceStrategy {
-  /// Use the first trackstate to reach target surface
-  first,
-  /// Use the last trackstate to reach target surface
-  last,
-  /// Use the first or last trackstate to reach target surface depending on the
-  /// distance
-  firstOrLast,
-};
-
 /// Extension struct which holds delegates to customise the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
@@ -109,7 +97,7 @@ struct KalmanFitterOptions {
   /// @param cctx The calibration context for this fit
   /// @param extensions_ The KF extensions
   /// @param pOptions The plain propagator options
-  /// @param rSurface The reference surface for the fit to be expressed at
+  /// @param tSurface The target surface for the fit
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
@@ -118,7 +106,7 @@ struct KalmanFitterOptions {
                       std::reference_wrapper<const CalibrationContext> cctx,
                       KalmanFitterExtensions<traj_t> extensions_,
                       const PropagatorPlainOptions& pOptions,
-                      const Surface* rSurface = nullptr,
+                      const Surface* tSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       const FreeToBoundCorrection& freeToBoundCorrection_ =
                           FreeToBoundCorrection(false))
@@ -127,7 +115,7 @@ struct KalmanFitterOptions {
         calibrationContext(cctx),
         extensions(extensions_),
         propagatorPlainOptions(pOptions),
-        referenceSurface(rSurface),
+        targetSurface(tSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
         freeToBoundCorrection(freeToBoundCorrection_) {}
@@ -147,12 +135,8 @@ struct KalmanFitterOptions {
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
 
-  /// The reference Surface
-  const Surface* referenceSurface = nullptr;
-
-  /// Strategy to propagate to reference surface
-  KalmanFitterTargetSurfaceStrategy referenceSurfaceStrategy =
-      KalmanFitterTargetSurfaceStrategy::firstOrLast;
+  /// The target Surface
+  const Surface* targetSurface = nullptr;
 
   /// Whether to consider multiple scattering
   bool multipleScattering = true;
@@ -276,10 +260,6 @@ class KalmanFitter {
 
     /// The target surface aboter
     SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
-
-    /// Strategy to propagate to target surface
-    KalmanFitterTargetSurfaceStrategy targetSurfaceStrategy =
-        KalmanFitterTargetSurfaceStrategy::firstOrLast;
 
     /// Allows retrieving measurements for a surface
     const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
@@ -626,8 +606,7 @@ class KalmanFitter {
     // Catch the actor and set the measurements
     auto& kalmanActor = propagatorOptions.actorList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
-    kalmanActor.targetReached.surface = kfOptions.referenceSurface;
-    kalmanActor.targetSurfaceStrategy = kfOptions.referenceSurfaceStrategy;
+    kalmanActor.targetReached.surface = kfOptions.targetSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
@@ -701,8 +680,7 @@ class KalmanFitter {
     // Catch the actor and set the measurements
     auto& kalmanActor = propagatorOptions.actorList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
-    kalmanActor.targetReached.surface = kfOptions.referenceSurface;
-    kalmanActor.targetSurfaceStrategy = kfOptions.referenceSurfaceStrategy;
+    kalmanActor.targetReached.surface = kfOptions.targetSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;

@@ -88,8 +88,6 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   for (unsigned int iTraj = 0; iTraj < trajectoryCollection.size(); iTraj++) {
     const auto& sourceLinks = trajectoryCollection.at(iTraj);
     const auto& sParameters = startParametersCollection.at(iTraj);
-    // Set the target surface
-    fitOptionsWithRefSurface.referenceSurface = &sParameters.referenceSurface();
     // The result for one single track
     auto evaluateRes = evaluateTrackAlignmentState(
         fitOptions.geoContext, sourceLinks, sParameters,

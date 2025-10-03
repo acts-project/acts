@@ -321,7 +321,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Test the method to evaluate alignment state for a single track
   const auto& inputTraj = trajectories.front();
-  kfOptions.referenceSurface = &(*inputTraj.startParameters).referenceSurface();
 
   auto evaluateRes = alignZero.evaluateTrackAlignmentState(
       kfOptions.geoContext, inputTraj.sourceLinks, *inputTraj.startParameters,
