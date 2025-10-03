@@ -18,9 +18,9 @@
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <memory>
 #include <vector>
@@ -30,10 +30,11 @@ using namespace Acts::Experimental;
 
 GeometryContext tContext;
 
-namespace {
+namespace ActsTests {
 
 std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
-    std::vector<std::shared_ptr<Test::DetectorElementStub>>& detectorStore) {
+    std::vector<std::shared_ptr<ActsTests::DetectorElementStub>>&
+        detectorStore) {
   auto portalGenerator = defaultPortalGenerator();
 
   auto gap0VoumeBounds = std::make_unique<CylinderVolumeBounds>(0, 80, 200);
@@ -49,7 +50,7 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
   for (const auto [ir, r] : enumerate(layer0Radii)) {
     // First 4 surfaces are active
     if (ir < 4u) {
-      auto detElement = std::make_shared<Test::DetectorElementStub>(
+      auto detElement = std::make_shared<ActsTests::DetectorElementStub>(
           Transform3::Identity(), std::make_shared<CylinderBounds>(r, 190),
           0.1);
       detectorStore.push_back(detElement);
@@ -74,7 +75,6 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
 
   return {gap0Volume, layer0Volume, gap1Volume};
 }
-}  // namespace
 
 /// @brief  Test struct to increment the layer id by one
 struct GeoIdIncrementer : public IGeometryIdGenerator {
@@ -124,10 +124,10 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   }
 };
 
-BOOST_AUTO_TEST_SUITE(Detector)
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorReset) {
-  std::vector<std::shared_ptr<Test::DetectorElementStub>> detectorStore;
+  std::vector<std::shared_ptr<ActsTests::DetectorElementStub>> detectorStore;
 
   auto volumes = createVolumes(detectorStore);
 
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorReset) {
 }
 
 BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorNoReset) {
-  std::vector<std::shared_ptr<Test::DetectorElementStub>> detectorStore;
+  std::vector<std::shared_ptr<ActsTests::DetectorElementStub>> detectorStore;
 
   auto volumes = createVolumes(detectorStore);
 
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorNoReset) {
 }
 
 BOOST_AUTO_TEST_CASE(ContainerGeoIdGenerator) {
-  std::vector<std::shared_ptr<Test::DetectorElementStub>> detectorStore;
+  std::vector<std::shared_ptr<ActsTests::DetectorElementStub>> detectorStore;
 
   auto volumes = createVolumes(detectorStore);
 
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(ContainerGeoIdGenerator) {
 }
 
 BOOST_AUTO_TEST_CASE(ChainedGeoIdGenerator) {
-  std::vector<std::shared_ptr<Test::DetectorElementStub>> detectorStore;
+  std::vector<std::shared_ptr<ActsTests::DetectorElementStub>> detectorStore;
 
   auto volumes = createVolumes(detectorStore);
 
@@ -257,3 +257,5 @@ BOOST_AUTO_TEST_CASE(ChainedGeoIdGenerator) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -25,14 +25,13 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
-// Create a test context
+using namespace Acts;
+
 GeometryContext tgContext = GeometryContext();
-}  // namespace Acts::Test
 
-namespace Acts::Test::Layers {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(Layers)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// Unit test for creating compliant/non-compliant PlaneLayer object
 BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
@@ -89,9 +88,9 @@ BOOST_AUTO_TEST_CASE(PlaneLayerProperties) {
   auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
   // auto planeSurface = pPlaneLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pPlaneLayer->surfaceRepresentation().name(),
-                    std::string("Acts::PlaneSurface"));
+                    std::string("PlaneSurface"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

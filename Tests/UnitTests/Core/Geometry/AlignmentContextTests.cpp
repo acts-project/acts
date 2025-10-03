@@ -24,9 +24,10 @@ namespace Acts {
 class PlanarBounds;
 }  // namespace Acts
 
-using namespace Acts::UnitLiterals;
+using namespace Acts;
+using namespace UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 /// @class AlignmentContext
 struct AlignmentContext {
@@ -119,6 +120,11 @@ inline Surface& AlignableDetectorElement::surface() {
 inline double AlignableDetectorElement::thickness() const {
   return m_elementThickness;
 }
+}  // namespace ActsTests
+
+using namespace ActsTests;
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite);
 
 /// Unit test for creating compliant/non-compliant Surface object
 BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
@@ -210,4 +216,4 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END();

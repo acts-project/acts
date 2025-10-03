@@ -16,12 +16,16 @@
 #include "Acts/Utilities/Result.hpp"
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
+
+BOOST_AUTO_TEST_SUITE(MagneticFieldSuite)
 
 /// @brief unit test for construction of constant magnetic field
 ///
@@ -117,4 +121,6 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache).value());
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

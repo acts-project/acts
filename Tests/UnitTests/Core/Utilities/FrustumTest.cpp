@@ -9,9 +9,9 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -20,9 +20,12 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
+
 BOOST_AUTO_TEST_CASE(frustum_construction) {
   boost::test_tools::output_test_stream output;
 
@@ -68,4 +71,4 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

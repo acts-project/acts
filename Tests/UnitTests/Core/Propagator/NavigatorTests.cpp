@@ -25,20 +25,22 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <string>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -113,6 +115,8 @@ const double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
 Logging::Level logLevel = Logging::INFO;
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
@@ -651,4 +655,6 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

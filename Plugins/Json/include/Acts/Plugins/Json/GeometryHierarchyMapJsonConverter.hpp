@@ -8,6 +8,7 @@
 
 #pragma once
 
+<<<<<<< HEAD
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryIdentifierJsonConverter.hpp"
@@ -169,3 +170,6 @@ auto GeometryHierarchyMapJsonConverter<value_t, decorator_t>::fromJson(
 }
 
 }  // namespace Acts
+=======
+#include "ActsPlugins/Json/GeometryHierarchyMapJsonConverter.hpp"
+>>>>>>> 596a76bc5 (ActsTests namespace)

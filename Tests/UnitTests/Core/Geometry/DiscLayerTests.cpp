@@ -25,9 +25,11 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test::Layers {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Layers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// Unit test for creating compliant/non-compliant DiscLayer object
 BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
@@ -78,9 +80,9 @@ BOOST_AUTO_TEST_CASE(DiscLayerProperties) {
   auto pDiscLayer = DiscLayer::create(pTransform, pDisc, nullptr, 1.);
   // auto planeSurface = pDiscLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pDiscLayer->surfaceRepresentation().name(),
-                    std::string("Acts::DiscSurface"));
+                    std::string("DiscSurface"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -89,7 +89,9 @@ const char* trapezoid_xml =
     </detectors>
 )"""";
 
-BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DD4hepSuite)
 
 BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementCylinder) {
   std::ofstream cxml;
@@ -313,3 +315,5 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

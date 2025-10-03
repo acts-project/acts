@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -18,16 +18,17 @@
 #include <numbers>
 
 using Acts::Vector3;
+using namespace Acts;
 
 namespace {
 constexpr auto eps = std::numeric_limits<double>::epsilon();
 }
 
-BOOST_AUTO_TEST_SUITE(UnitVectors)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(DirectionPhiEta) {
-  using Acts::makeDirectionFromPhiEta;
-
   // along positive x
   const auto xPos1 = makeDirectionFromPhiEta(0.0, 0.0);
   CHECK_CLOSE_REL(xPos1.norm(), 1, eps);
@@ -95,8 +96,6 @@ BOOST_AUTO_TEST_CASE(DirectionPhiEta) {
 }
 
 BOOST_AUTO_TEST_CASE(DirectionPhiTheta) {
-  using Acts::makeDirectionFromPhiTheta;
-
   // along positive x
   const auto xPos1 = makeDirectionFromPhiTheta(0., std::numbers::pi / 2.);
   CHECK_CLOSE_REL(xPos1.norm(), 1, eps);
@@ -172,8 +171,8 @@ template <typename Direction, typename RefUnitU, typename RefUnitV>
 void testCurvilinear(const Eigen::MatrixBase<Direction>& direction,
                      const Eigen::MatrixBase<RefUnitU>& refU,
                      const Eigen::MatrixBase<RefUnitV>& refV) {
-  const auto u = Acts::createCurvilinearUnitU(direction);
-  const auto uv = Acts::createCurvilinearUnitVectors(direction);
+  const auto u = createCurvilinearUnitU(direction);
+  const auto uv = createCurvilinearUnitVectors(direction);
   // verify normalization
   CHECK_CLOSE_ABS(u.norm(), 1, eps);
   CHECK_CLOSE_ABS(uv.first.norm(), 1, eps);
@@ -217,3 +216,5 @@ BOOST_AUTO_TEST_CASE(CurvilinearCloseToZ) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
