@@ -98,12 +98,6 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &kfUpdater);
-    extensions.smoother
-        .connect<&Acts::MbfSmoother::operator()<Acts::VectorMultiTrajectory>>(
-            &kfSmoother);
-    extensions.reverseFilteringLogic
-        .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
-            &reverseFilteringLogic);
     extensions.outlierFinder.connect<&SimpleOutlierFinder::isOutlier>(
         &outlierFinder);
 
@@ -118,8 +112,6 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    kfOptions.reversedFilteringCovarianceScaling =
-        reverseFilteringCovarianceScaling;
 
     if (options.doRefit) {
       kfOptions.extensions.surfaceAccessor
