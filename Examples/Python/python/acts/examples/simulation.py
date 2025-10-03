@@ -516,14 +516,14 @@ def addFatras(
     s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
     addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        outputParticles,
-        field,
-        outputDirCsv,
-        outputDirRoot,
-        outputDirObj,
-        logLevel,
+        s=s,
+        simHits=alg.config.outputSimHits,
+        particlesSimulated=outputParticles,
+        field=field,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        outputDirObj=outputDirObj,
+        logLevel=logLevel,
     )
 
     return s
@@ -691,13 +691,13 @@ def addGeant4(
     s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
     addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        outputParticles,
-        field,
-        outputDirCsv,
-        outputDirRoot,
-        outputDirObj,
+        s=s,
+        simHits=alg.config.outputSimHits,
+        particlesSimulated=outputParticles,
+        field=field,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        outputDirObj=outputDirObj,
         logLevel=logLevel,
     )
 
