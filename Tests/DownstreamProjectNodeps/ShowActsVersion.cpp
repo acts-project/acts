@@ -8,18 +8,25 @@
 
 #include <Acts/ActsVersion.hpp>
 
-#include <cstdio>
-#include <cstdlib>
+#include <format>
+#include <iostream>
 
 #include <Eigen/Core>
 #include <boost/version.hpp>
 
 int main(void) {
-  printf("Using Acts version %u.%u.%u commit %s\n", Acts::VersionMajor,
-         Acts::VersionMinor, Acts::VersionPatch, Acts::CommitHash);
-  printf("Using Boost version %u.%u.%u\n", BOOST_VERSION / 100000,
-         BOOST_VERSION / 100 % 1000, BOOST_VERSION % 100);
-  printf("Using Eigen version %u.%u.%u\n", EIGEN_WORLD_VERSION,
-         EIGEN_MAJOR_VERSION, EIGEN_MINOR_VERSION);
+  std::cout << std::format("Using Acts version {}.{}.{} commit {}\n",
+                           Acts::VersionMajor, Acts::VersionMinor,
+                           Acts::VersionPatch,
+                           Acts::CommitHash.value_or("UNKNOWN"))
+            << std::endl;
+  std::cout << std::format("Using Boost version {}.{}.{}\n",
+                           BOOST_VERSION / 100000, BOOST_VERSION / 100 % 1000,
+                           BOOST_VERSION % 100)
+            << std::endl;
+  std::cout << std::format("Using Eigen version {}.{}.{}\n",
+                           EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION,
+                           EIGEN_MINOR_VERSION)
+            << std::endl;
   return EXIT_SUCCESS;
 }
