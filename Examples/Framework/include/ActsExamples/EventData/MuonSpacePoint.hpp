@@ -65,6 +65,11 @@ class MuonSpacePoint {
     static std::string toString(const TechField tech);
     /// @brief Print the Identifier's detector side to a string
     static std::string toString(const DetSide side);
+
+    /// @brief Constructor taking the encoded 32 bit integer
+    explicit MuonId(std::uint32_t rawRep);
+    /// @brief Returns the integer representation of the Identifier
+    std::uint32_t toInt() const;
     /// @brief Empty default Identifier constructor
     explicit MuonId() = default;
     /// @brief Default copy constructor
@@ -80,7 +85,7 @@ class MuonSpacePoint {
     /// @brief Returns the MS station in which the measurement was recorded
     StationName msStation() const { return m_stName; }
     /// @brief Returns the sector in which the measurement was recorded
-    std::uint8_t sector() const { return m_sector; }
+    std::uint16_t sector() const { return m_sector; }
     /// @brief Returns the detector side
     DetSide side() const { return m_side; }
     /// @brief Returns the layer
@@ -91,6 +96,8 @@ class MuonSpacePoint {
     bool measuresEta() const { return m_measEta; }
     /// @brief Returns whether the id corresponds to a non-precision coordinate (phi) measurement
     bool measuresPhi() const { return m_measPhi; }
+    /// @brief Returns whether the id corresponds to a channel carrying time information
+    bool measuresTime() const { return m_measTime; }
     /// @brief Returns whether two Identifiers belong to the same station, which
     ///        is characterized that both share the same msStation, sector &
     ///        side field.
@@ -118,11 +125,12 @@ class MuonSpacePoint {
     TechField m_tech{TechField::UnDef};
     StationName m_stName{StationName::UnDef};
     DetSide m_side{DetSide::UnDef};
-    std::uint8_t m_sector{0};
+    std::uint16_t m_sector{0};
     std::uint8_t m_layer{0};
     std::uint16_t m_channel{0};
     bool m_measEta{false};
     bool m_measPhi{false};
+    bool m_measTime{false};
   };
   /// @brief Empty default constructor
   MuonSpacePoint() = default;

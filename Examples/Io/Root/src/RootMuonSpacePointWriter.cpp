@@ -16,6 +16,8 @@
 
 #include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
 
+#include "Acts/Utilities/Enumerate.hpp"
+
 #include "TFile.h"
 #include "TTree.h"
 namespace ActsExamples {
@@ -52,6 +54,49 @@ ProcessCode RootMuonSpacePointWriter::finalize() {
 }
 ProcessCode RootMuonSpacePointWriter::writeT(
     const AlgorithmContext& ctx, const MuonSpacePointContainer& hits) {
+  m_eventId = ctx.eventNumber;
+  for (const auto& [counter, bucket] : Acts::enumerate(hits)) {
+    for (const MuonSpacePoint& writeMe : bucket) {
+      m_bucketId.push_back(counter);
+
+      m_geometryId.push_back(writeMe.geometryId().value());
+      m_muonId.push_back(writeMe.id().toInt());
+      m_localPositionX.push_back(writeMe.localPosition().x());
+      m_localPositionY.push_back(writeMe.localPosition().y());
+      m_localPositionZ.push_back(writeMe.localPosition().z());
+      m_sensorDirectionX.push_back(writeMe.sensorDirection().x());
+      m_sensorDirectionY.push_back(writeMe.sensorDirection().y());
+      m_sensorDirectionZ.push_back(writeMe.sensorDirection().z());
+      m_toNextSensorX.push_back(writeMe.toNextSensor().x());
+      m_toNextSensorY.push_back(writeMe.toNextSensor().y());
+      m_toNextSensorZ.push_back(writeMe.toNextSensor().z());
+      m_covLoc0.push_back(writeMe.covariance()[0]);
+      m_covLoc1.push_back(writeMe.covariance()[0]);
+      m_covLocT.push_back(writeMe.covariance()[0]);
+      m_driftR.push_back(writeMe.driftRadius());
+      m_time.push_back(writeMe.time());
+    }
+  }
+  m_tree->Fill();
+
+  m_geometryId.clear();
+  m_bucketId.clear();
+  m_muonId.clear();
+  m_localPositionX.clear();
+  m_localPositionY.clear();
+  m_localPositionZ.clear();
+  m_sensorDirectionX.clear();
+  m_sensorDirectionY.clear();
+  m_sensorDirectionZ.clear();
+  m_toNextSensorX.clear();
+  m_toNextSensorY.clear();
+  m_toNextSensorZ.clear();
+  m_covLoc0.clear();
+  m_covLoc1.clear();
+  m_covLocT.clear();
+  m_driftR.clear();
+  m_time.clear();
+
   return ProcessCode::SUCCESS;
 }
 

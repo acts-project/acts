@@ -62,8 +62,13 @@ class RootMuonSpacePointWriter : public WriterT<MuonSpacePointContainer> {
 
   /// @brief Event identifier.
   std::uint32_t m_eventId{0};
+
   /// @brief Geometry identifier of the associated surface
   std::vector<Acts::GeometryIdentifier::Value> m_geometryId{};
+  /// @brief Identifier of the associated bucket
+  std::vector<std::uint16_t> m_bucketId{};
+  /// @brief Muon identifier
+  std::vector<std::uint32_t> m_muonId{};
   /// @brief Position of the measurement
   std::vector<float> m_localPositionX{};
   std::vector<float> m_localPositionY{};
