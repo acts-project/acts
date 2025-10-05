@@ -9,7 +9,9 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <cstdint>
@@ -20,9 +22,6 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TTreeReader.h"
-
-
-
 
 namespace ActsExamples {
 
@@ -46,7 +45,7 @@ class RootMuonSpacePointReader : public IReader {
   /// Ensure underlying file is closed.
   ~RootMuonSpacePointReader() override;
 
-   /// Get readonly access to the config parameters
+  /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
   /// Framework name() method
@@ -58,30 +57,35 @@ class RootMuonSpacePointReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext &context) override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
 
  protected:
-  const Logger& logger() const { return *m_logger;}
+  const Acts::Logger& logger() const { return *m_logger; }
 
   mutable std::mutex m_mutex{};
 
-   /// @brief Configuration object
+  /// @brief Configuration object
   Config m_cfg{};
 
-    WriteDataHandle<MuonSpacePointContainer> m_outputContainer{this, "OutputSpacePoints"};
+  WriteDataHandle<MuonSpacePointContainer> m_outputContainer{
+      this, "OutputSpacePoints"};
   std::unique_ptr<const Acts::Logger> m_logger{};
 
   /// @brief Input file directly read at construction stage
   std::unique_ptr<TFile> m_file{TFile::Open(m_cfg.filePath.c_str(), "READ")};
-  
-  /// @brief TTree reader 
+
+  /// @brief TTree reader
   TTreeReader m_reader{m_cfg.treeName.c_str(), m_file.get()};
 
-  using template <typename T> VecReader_t = TTreeReaderValue<std::vector<T>>;
+  std::vector<std::uint32_t> m_eventRanges{};
+
+  template <typename T>
+  using VecReader_t = TTreeReaderValue<std::vector<T>>;
   /// @brief Event identifier.
   VecReader_t<std::uint32_t> m_eventId{m_reader, "event_id"};
   /// @brief Geometry identifier of the associated surface
-  VecReader_t<Acts::GeometryIdentifier::Value> m_geometryId{m_reader, "spacePoint_geometryId"};
+  VecReader_t<Acts::GeometryIdentifier::Value> m_geometryId{
+      m_reader, "spacePoint_geometryId"};
   /// @brief Identifier of the associated bucket
   VecReader_t<std::uint16_t> m_bucketId{m_reader, "spacePoint_bucketId"};
   /// @brief Muon identifier
@@ -103,12 +107,11 @@ class RootMuonSpacePointReader : public IReader {
   /// @brief Covaraiance value along the bending direction
   VecReader_t<float> m_covLoc1{m_reader, "spacePoint_covLoc1"};
   /// @brief Time covariance value
-  VecReader_t<float> m_covLocT{m_reader, "spacePoint_covLocT"};
+  VecReader_t<float> m_covT{m_reader, "spacePoint_covT"};
   /// @brief Drift radius of the straw measurements
   VecReader_t<float> m_driftR{m_reader, "spacePoint_driftRadius"};
   /// @brief Recorded measurement time.
   VecReader_t<float> m_time{m_reader, "spacePoint_time"};
- 
 };
 
 }  // namespace ActsExamples

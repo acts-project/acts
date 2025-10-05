@@ -46,7 +46,7 @@ target_link_libraries(
         Acts::ExamplesTruthTracking
         Acts::ExamplesMaterialMapping
         Threads::Threads
-    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree
+    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer
 )
 
 root_generate_dictionary(

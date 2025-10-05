@@ -72,7 +72,7 @@ RootMuonSpacePointWriter::RootMuonSpacePointWriter(const Config& config,
 
   m_tree->Branch("spacePoint_covLoc0", &m_covLoc0);
   m_tree->Branch("spacePoint_covLoc1", &m_covLoc1);
-  m_tree->Branch("spacePoint_covLocT", &m_covLocT);
+  m_tree->Branch("spacePoint_covT", &m_covLocT);
 
   m_tree->Branch("spacePoint_driftRadius", &m_driftR);
   m_tree->Branch("spacePoint_time", &m_time);
