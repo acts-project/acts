@@ -13,6 +13,9 @@
 #include "ActsPlugins/Detray/DetrayConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 
+#include <detray/core/detector.hpp>
+#include <detray/io/frontend/detector_reader.hpp>
+#include <detray/navigation/volume_graph.hpp>
 #include <detray/propagator/line_stepper.hpp>
 #include <pybind11/pybind11.h>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -46,6 +49,30 @@ void addTraccc(Context& ctx) {
                                          const Experimental::Detector& detector,
                                          DetrayConverter::Options options) {
       return DetrayHostStore::create(gctx, detector, options);
+    });
+
+    /// Read the detray detector from files
+    /// @param geometry the geometry file name
+    /// @param materials the material file name
+    /// @param grids the surface grids file name
+    traccc.def("readDetectorHost", [](const std::string& geometry,
+                                      const std::string& materials,
+                                      const std::string& grids) {
+      auto mr = std::make_shared<vecmem::host_memory_resource>();
+
+      auto reader_cfg = detray::io::detector_reader_config{};
+      reader_cfg.add_file(geometry);
+      if (materials.empty() == false) {
+        reader_cfg.add_file(materials);
+      }
+      if (grids.empty() == false) {
+        reader_cfg.add_file(grids);
+      }
+
+      // Read the json files
+      auto [det, names] =
+          detray::io::read_detector<DetrayHostDetector>(*mr, reader_cfg);
+      return DetrayHostStore{std::move(mr), std::move(det)};
     });
   }
 
