@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
@@ -22,6 +23,7 @@ class TTree;
 namespace ActsExamples {
 
 class RootMuonSpacePointWriter : public WriterT<MuonSpacePointContainer> {
+ public:
   struct Config {
     /// Input sim hit collection to write.
     std::string inputSpacePoints{};
@@ -31,6 +33,10 @@ class RootMuonSpacePointWriter : public WriterT<MuonSpacePointContainer> {
     std::string fileMode{"RECREATE"};
     /// Name of the tree within the output file.
     std::string treeName{"muonSpacePoints"};
+    /// @brief Pointer to the tracking geometry
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry{};
+    /// @brief Switch to toggle whether the global coordinates are written
+    bool writeGlobal{false};
   };
 
   /// Construct the particle writer.
@@ -60,9 +66,9 @@ class RootMuonSpacePointWriter : public WriterT<MuonSpacePointContainer> {
   std::unique_ptr<TFile> m_file{};
   TTree* m_tree{};
 
+  mutable std::mutex m_mutex{};
   /// @brief Event identifier.
   std::uint32_t m_eventId{0};
-
   /// @brief Geometry identifier of the associated surface
   std::vector<Acts::GeometryIdentifier::Value> m_geometryId{};
   /// @brief Identifier of the associated bucket
@@ -91,6 +97,20 @@ class RootMuonSpacePointWriter : public WriterT<MuonSpacePointContainer> {
   std::vector<float> m_driftR{};
   /// @brief Recorded measurement time.
   std::vector<float> m_time{};
+
+  /// @brief Global position (written optionally)
+  std::vector<float> m_globalPosX{};
+  std::vector<float> m_globalPosY{};
+  std::vector<float> m_globalPosZ{};
+  /// @brief Global position of the lower end of the sensor (written optionally)
+
+  std::vector<float> m_lowEdgeX{};
+  std::vector<float> m_lowEdgeY{};
+  std::vector<float> m_lowEdgeZ{};
+  /// @brief Global position of the upper end of the sensor (written optionally)
+  std::vector<float> m_highEdgeX{};
+  std::vector<float> m_highEdgeY{};
+  std::vector<float> m_highEdgeZ{};
 };
 
 }  // namespace ActsExamples
