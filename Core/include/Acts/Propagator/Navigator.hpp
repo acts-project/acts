@@ -747,7 +747,7 @@ class Navigator {
     }
   }
 
-  ///@brief NextTarget helper function
+  /// @brief NextTarget helper function
   /// This function is called for returning the next target
   /// and checks gen1/gen3 case in order to sub-call the proper functions
   ///
