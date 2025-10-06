@@ -189,9 +189,9 @@ def main():
     )
     algSequence.addAlgorithm(digiAlg)
 
-    from acts.examples import MuonSpacePointWriter
+    from acts.examples import RootSpacepointWriter
     algSequence.addWriter(
-            MuonSpacePointWriter(
+            RootSpacepointWriter(
                 level=logLevel,
                 inputSpacePoints="MuonSpacePoints",
                 filePath=outputDir / "MS_SpacePoints.root",
