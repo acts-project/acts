@@ -377,9 +377,12 @@ class Navigator {
 
     state.reset();
 
-    // Empirical pre-allocation of candidates for the next navigation iteration.
-    // @TODO: Make this user configurable through the configuration
-    state.stream.candidates().reserve(50);
+    if (m_geometryVersion == GeometryVersion::Gen3) {
+      // Empirical pre-allocation of candidates for the next navigation
+      // iteration.
+      // @TODO: Make this user configurable through the configuration
+      state.stream.candidates().reserve(50);
+    }
 
     state.startSurface = state.options.startSurface;
     state.targetSurface = state.options.targetSurface;
