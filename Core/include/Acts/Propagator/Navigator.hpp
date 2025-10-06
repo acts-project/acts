@@ -723,7 +723,7 @@ class Navigator {
     return NavigationTarget::None();
   }
 
-  ///@brief NextTarget helper function for gen3 geometry configuration
+  /// @brief NextTarget helper function for Gen3 geometry configuration
   ///
   /// @param state The navigation state
   /// @param position The current position
