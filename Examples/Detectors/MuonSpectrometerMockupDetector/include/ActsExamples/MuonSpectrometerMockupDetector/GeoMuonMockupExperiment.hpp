@@ -88,7 +88,9 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     /// @brief Switch toggling whether the endcaps should be built
     bool buildEndcaps{true};
     /// @brief Number of the gas gaps in the inner wheel
-    unsigned nInnerLayers{16};
+    unsigned nInnerMultiplets{4};
+    /// @brief Number of gas gaps per multiplet
+    unsigned nInnerGasGapsPerMl{4};
   };
 
   /// @brief Standard constructor taking a configuration to steer the MS geometry building
@@ -157,6 +159,21 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
       2. * m_multiLayerHeight + m_cfg.multiLayerSeparation +
       3. * m_tgcChamberHeight + s_tgcChamberSeparation +
       2. * s_tgcMdtSeparation};
+  /// @brief Height of the inner endcap muon station
+  static constexpr double s_swlGasGapHeight{1. * GeoModelKernelUnits::mm};
+  /// @brief Distance between two gas gaps in a multiplet
+  static constexpr double s_swGasGapSeparation{1. * GeoModelKernelUnits::cm};
+  /// @brief Distance between two multiplets
+  static constexpr double s_swMultipletSeparation{10. *
+                                                  GeoModelKernelUnits::cm};
+  /// @brief Height of a small wheel wedge
+  double m_innerWheelWedgeH{(s_swlGasGapHeight + s_swGasGapSeparation) *
+                            m_cfg.nInnerGasGapsPerMl};
+  /// @brief Total height of the inner small wheel
+  double m_innerWheelHeight{s_swMultipletSeparation *
+                                (m_cfg.nInnerMultiplets - 1) +
+                            m_innerWheelWedgeH * m_cfg.nInnerMultiplets};
+
   /// @brief Angular coverage of each sector
   double m_sectorSize{360. * GeoModelKernelUnits::deg / m_cfg.nSectors};
   /// @brief Setup the Material database with all materials used during construction
@@ -193,6 +210,9 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   /// @param wheelZ: Z position of the wheel centre point
   void assembleSmallWheel(const PVLink& envelope, const double outerR,
                           const double wheelZ);
+  /// @brief Assembles
+  PVLink assembleSmallWheelWedge(const double wedgeL, const int etaIdx,
+                                 const int sector);
   ///  @brief Construct some absorber volume to add some material to the
   ///         barrel MS station
   ///  @param thickness: Total thickness of the absorber
