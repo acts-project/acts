@@ -1057,7 +1057,7 @@ class Navigator {
   Config m_cfg;
 
   // Cached so we don't have to query the TrackingGeometry constantly.
-  TrackingGeometry::GeometryVersion m_geometryVersion;
+  TrackingGeometry::GeometryVersion m_geometryVersion{};
 
   std::shared_ptr<const Logger> m_logger;
 };
