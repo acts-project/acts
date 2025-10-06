@@ -80,12 +80,11 @@ class RootMuonSpacePointWriter : public WriterT<MuonSpacePointContainer> {
   std::vector<float> m_localPositionY{};
   std::vector<float> m_localPositionZ{};
   /// @brief Direction of the sensor / wire
-  std::vector<float> m_sensorDirectionX{};
-  std::vector<float> m_sensorDirectionY{};
-  std::vector<float> m_sensorDirectionZ{};
+  std::vector<float> m_sensorDirectionTheta{};
+  std::vector<float> m_sensorDirectionPhi{};
   /// @brief Vector pointing to the next channel in the same measurement plane
-  std::vector<float> m_toNextSensorX{};
-  std::vector<float> m_toNextSensorY{};
+  std::vector<float> m_toNextSensorTheta{};
+  std::vector<float> m_toNextSensorPhi{};
   std::vector<float> m_toNextSensorZ{};
   /// @brief Covariance value along the non-bending direction
   std::vector<float> m_covLoc0{};

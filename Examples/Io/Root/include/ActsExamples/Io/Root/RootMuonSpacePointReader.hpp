@@ -95,13 +95,12 @@ class RootMuonSpacePointReader : public IReader {
   VecReader_t<float> m_localPositionY{m_reader, "spacePoint_localPosY"};
   VecReader_t<float> m_localPositionZ{m_reader, "spacePoint_localPosZ"};
   /// @brief Direction of the sensor / wire
-  VecReader_t<float> m_sensorDirectionX{m_reader, "spacePoint_sensorDirX"};
-  VecReader_t<float> m_sensorDirectionY{m_reader, "spacePoint_sensorDirY"};
-  VecReader_t<float> m_sensorDirectionZ{m_reader, "spacePoint_sensorDirZ"};
+  VecReader_t<float> m_sensorDirectionTheta{m_reader,
+                                            "spacePoint_sensorDirTheta"};
+  VecReader_t<float> m_sensorDirectionPhi{m_reader, "spacePoint_sensorDirPhi"};
   /// @brief Vector pointing to the next channel in the same measurement plane
-  VecReader_t<float> m_toNextSensorX{m_reader, "spacePoint_toNextDirX"};
-  VecReader_t<float> m_toNextSensorY{m_reader, "spacePoint_toNextDirY"};
-  VecReader_t<float> m_toNextSensorZ{m_reader, "spacePoint_toNextDirZ"};
+  VecReader_t<float> m_toNextSensorTheta{m_reader, "spacePoint_toNextDirTheta"};
+  VecReader_t<float> m_toNextSensorPhi{m_reader, "spacePoint_toNextDirPhi"};
   /// @brief Covariance value along the non-bending direction
   VecReader_t<float> m_covLoc0{m_reader, "spacePoint_covLoc0"};
   /// @brief Covaraiance value along the bending direction

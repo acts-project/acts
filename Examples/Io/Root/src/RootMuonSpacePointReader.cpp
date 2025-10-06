@@ -16,8 +16,8 @@
 
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
-
 using namespace Acts;
 namespace ActsExamples {
 
@@ -77,10 +77,10 @@ ProcessCode RootMuonSpacePointReader::read(
 
     Vector3 position{m_localPositionX->at(spIdx), m_localPositionY->at(spIdx),
                      m_localPositionZ->at(spIdx)};
-    Vector3 sensorDir{m_localPositionX->at(spIdx), m_localPositionY->at(spIdx),
-                      m_localPositionZ->at(spIdx)};
-    Vector3 toNext{m_sensorDirectionX->at(spIdx), m_sensorDirectionY->at(spIdx),
-                   m_sensorDirectionZ->at(spIdx)};
+    Vector3 sensorDir{makeDirectionUnitFromPhiTheta(
+        m_localPositionPhi->at(spIdx), m_localPositionTheta->at(spIdx))};
+    Vector3 toNext{makeDirectionUnitFromPhiTheta(
+        m_sensorDirectionPhi->at(spIdx), m_sensorDirectionTheta->at(spIdx))};
 
     newSp.defineCoordinates(std::move(position), std::move(sensorDir),
                             std::move(toNext));

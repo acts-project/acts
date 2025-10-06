@@ -23,18 +23,29 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include "TFile.h"
 #include "TTree.h"
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
+using namespace Acts::VectorHelpers;
 /// @brief Converts a surface Identifier to the one of the surrounding volume
 /// @param id: Surface identifier to convert
 constexpr GeometryIdentifier toChamberId(const GeometryIdentifier& id) {
   return GeometryIdentifier{}.withVolume(id.volume()).withLayer(id.layer());
 }
-
+/// @brief Pushes value back to a vector and applies a static cast at the same
+/// @param vec: Vector into which the value is pushed back
+/// @param val: Value to push
+template <typename T, typename T1>
+void castPush(std::vector<T>& vec, const T1& val) {
+  // MARK: fpeMaskBegin(FLTUND, 1, #-1)
+  const T castedVal = static_cast<T>(val);
+  vec.push_back(castedVal);
+  // MARK: fpeMaskEnd(FLTUND)
+}
 namespace ActsExamples {
 RootMuonSpacePointWriter::RootMuonSpacePointWriter(const Config& config,
                                                    Logging::Level level)
@@ -63,12 +74,12 @@ RootMuonSpacePointWriter::RootMuonSpacePointWriter(const Config& config,
   m_tree->Branch("spacePoint_localPosX", &m_localPositionX);
   m_tree->Branch("spacePoint_localPosY", &m_localPositionY);
   m_tree->Branch("spacePoint_localPosZ", &m_localPositionZ);
-  m_tree->Branch("spacePoint_sensorDirX", &m_sensorDirectionX);
-  m_tree->Branch("spacePoint_sensorDirY", &m_sensorDirectionY);
-  m_tree->Branch("spacePoint_sensorDirZ", &m_sensorDirectionZ);
-  m_tree->Branch("spacePoint_toNextDirX", &m_toNextSensorX);
-  m_tree->Branch("spacePoint_toNextDirY", &m_toNextSensorY);
-  m_tree->Branch("spacePoint_toNextDirZ", &m_toNextSensorZ);
+
+  m_tree->Branch("spacePoint_sensorDirTheta", &m_sensorDirectionTheta);
+  m_tree->Branch("spacePoint_sensorDirPhi", &m_sensorDirectionPhi);
+
+  m_tree->Branch("spacePoint_toNextDirTheta", &m_toNextSensorTheta);
+  m_tree->Branch("spacePoint_toNextDirPhi", &m_toNextSensorPhi);
 
   m_tree->Branch("spacePoint_covLoc0", &m_covLoc0);
   m_tree->Branch("spacePoint_covLoc1", &m_covLoc1);
@@ -102,8 +113,8 @@ ProcessCode RootMuonSpacePointWriter::finalize() {
   m_file->cd();
   m_file->Write();
   m_file.reset();
-  ACTS_INFO("Wrote particles to tree '" << m_cfg.treeName << "' in '"
-                                        << m_cfg.filePath << "'");
+  ACTS_INFO("Wrote muon spacepoints to tree '" << m_cfg.treeName << "' in '"
+                                               << m_cfg.filePath << "'");
 
   return ProcessCode::SUCCESS;
 }
@@ -114,28 +125,31 @@ ProcessCode RootMuonSpacePointWriter::writeT(
   const Acts::GeometryContext gctx{};
   for (const auto& [counter, bucket] : enumerate(hits)) {
     for (const MuonSpacePoint& writeMe : bucket) {
-      m_bucketId.push_back(counter);
-      m_geometryId.push_back(writeMe.geometryId().value());
-      m_muonId.push_back(writeMe.id().toInt());
-      m_localPositionX.push_back(writeMe.localPosition().x());
-      m_localPositionY.push_back(writeMe.localPosition().y());
-      m_localPositionZ.push_back(writeMe.localPosition().z());
-      m_sensorDirectionX.push_back(writeMe.sensorDirection().x());
-      m_sensorDirectionY.push_back(writeMe.sensorDirection().y());
-      m_sensorDirectionZ.push_back(writeMe.sensorDirection().z());
-      m_toNextSensorX.push_back(writeMe.toNextSensor().x());
-      m_toNextSensorY.push_back(writeMe.toNextSensor().y());
-      m_toNextSensorZ.push_back(writeMe.toNextSensor().z());
+      ACTS_VERBOSE("Dump space point " << writeMe);
+
+      castPush(m_bucketId, counter);
+      castPush(m_geometryId, writeMe.geometryId().value());
+      castPush(m_muonId, writeMe.id().toInt());
+      castPush(m_localPositionX, writeMe.localPosition().x());
+      castPush(m_localPositionY, writeMe.localPosition().y());
+      castPush(m_localPositionZ, writeMe.localPosition().z());
+
+      castPush(m_sensorDirectionTheta, theta(writeMe.sensorDirection()));
+      castPush(m_sensorDirectionPhi, phi(writeMe.sensorDirection()));
+
+      castPush(m_toNextSensorTheta, theta(writeMe.toNextSensor()));
+      castPush(m_toNextSensorPhi, phi(writeMe.toNextSensor()));
+
       const auto& cov = writeMe.covariance();
       {
         using namespace Experimental::detail;
         using enum CompSpacePointAuxiliaries::ResidualIdx;
-        m_covLoc0.push_back(cov[toUnderlying(nonBending)]);
-        m_covLoc1.push_back(cov[toUnderlying(bending)]);
-        m_covLocT.push_back(cov[toUnderlying(time)]);
+        castPush(m_covLoc0, cov[toUnderlying(nonBending)]);
+        castPush(m_covLoc1, cov[toUnderlying(bending)]);
+        castPush(m_covLocT, cov[toUnderlying(time)]);
       }
-      m_driftR.push_back(writeMe.driftRadius());
-      m_time.push_back(writeMe.time());
+      castPush(m_driftR, writeMe.driftRadius());
+      castPush(m_time, writeMe.time());
       if (!m_cfg.writeGlobal || writeMe.geometryId() == GeometryIdentifier{}) {
         continue;
       }
@@ -149,9 +163,9 @@ ProcessCode RootMuonSpacePointWriter::writeT(
       const Vector3 globPos = chambVol->transform() *
                               AngleAxis3{-90._degree, Vector3::UnitZ()} *
                               writeMe.localPosition();
-      m_globalPosX.push_back(globPos.x());
-      m_globalPosY.push_back(globPos.y());
-      m_globalPosZ.push_back(globPos.z());
+      castPush(m_globalPosX, globPos.x());
+      castPush(m_globalPosY, globPos.y());
+      castPush(m_globalPosZ, globPos.z());
 
       const auto& bounds{surface->bounds()};
       const auto& trf{surface->transform(gctx)};
@@ -184,12 +198,12 @@ ProcessCode RootMuonSpacePointWriter::writeT(
           ACTS_ERROR("Unsupported bounds " << surface->toString(gctx));
           return ProcessCode::ABORT;
       }
-      m_lowEdgeX.push_back(lowEdge.x());
-      m_lowEdgeY.push_back(lowEdge.y());
-      m_lowEdgeZ.push_back(lowEdge.z());
-      m_highEdgeX.push_back(highEdge.x());
-      m_highEdgeY.push_back(highEdge.y());
-      m_highEdgeZ.push_back(highEdge.z());
+      castPush(m_lowEdgeX, lowEdge.x());
+      castPush(m_lowEdgeY, lowEdge.y());
+      castPush(m_lowEdgeZ, lowEdge.z());
+      castPush(m_highEdgeX, highEdge.x());
+      castPush(m_highEdgeY, highEdge.y());
+      castPush(m_highEdgeZ, highEdge.z());
     }
   }
   m_tree->Fill();
@@ -200,12 +214,10 @@ ProcessCode RootMuonSpacePointWriter::writeT(
   m_localPositionX.clear();
   m_localPositionY.clear();
   m_localPositionZ.clear();
-  m_sensorDirectionX.clear();
-  m_sensorDirectionY.clear();
-  m_sensorDirectionZ.clear();
-  m_toNextSensorX.clear();
-  m_toNextSensorY.clear();
-  m_toNextSensorZ.clear();
+  m_sensorDirectionTheta.clear();
+  m_sensorDirectionPhi.clear();
+  m_toNextSensorTheta.clear();
+  m_toNextSensorPhi.clear();
   m_covLoc0.clear();
   m_covLoc1.clear();
   m_covLocT.clear();
