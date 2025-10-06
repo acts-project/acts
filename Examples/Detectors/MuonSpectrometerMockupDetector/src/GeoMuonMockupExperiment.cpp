@@ -643,9 +643,9 @@ FpvLink GeoMuonMockupExperiment::assembleMultilayerBarrel(
   }
   return envelopeVol;
 }
-PVLink GeoMuonMockupExperiment::assembleSmallWheelWedge(const double wedgeL,
-                                                        const int etaIdx,
-                                                        const int sector) {
+PVLink GeoMuonMockupExperiment::assembleSmallWheelSector(const double wedgeL,
+                                                         const int etaIdx,
+                                                         const int sector) {
   const double angularScale = 2. * std::sin(0.5 * m_sectorSize);
 
   auto envelopeTrd = make_intrusive<GeoTrd>(
@@ -726,7 +726,7 @@ void GeoMuonMockupExperiment::assembleSmallWheel(const PVLink& envelope,
                       GeoTrf::RotateY3D(90. * GeoModelKernelUnits::deg)));
 
     envelopeWheel->add(
-        assembleSmallWheelWedge(wedgeL, wheelZ > 0 ? 1 : -1, sector));
+        assembleSmallWheelSector(wedgeL, wheelZ > 0 ? 1 : -1, sector));
   }
   envelope->add(makeTransform(GeoTrf::TranslateZ3D(wheelZ)));
   envelope->add(envelopeWheel);

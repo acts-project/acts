@@ -210,9 +210,13 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   /// @param wheelZ: Z position of the wheel centre point
   void assembleSmallWheel(const PVLink& envelope, const double outerR,
                           const double wheelZ);
-  /// @brief Assembles
-  PVLink assembleSmallWheelWedge(const double wedgeL, const int etaIdx,
-                                 const int sector);
+  /// @brief Assembles a full small wheel edge with the <n> multilayers
+  ///        and places the active gas gaps into each multilayer wedge
+  /// @param wedgeL: Radial length of the small wheel sector
+  /// @param etaIdx: Eta station index used in the volume publishing
+  /// @param sector: Sector number used in the volume publishing
+  PVLink assembleSmallWheelSector(const double wedgeL, const int etaIdx,
+                                  const int sector);
   ///  @brief Construct some absorber volume to add some material to the
   ///         barrel MS station
   ///  @param thickness: Total thickness of the absorber
@@ -264,7 +268,6 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   /// @brief Assemble a new Tgc chamber
   /// @param bottomWidth: Width of the bottom edge of the chamber
   /// @param topWidth: Width of the top edge of the chamber
-  /// @param height: Height of the chamber
   FpvLink assembleTgcChamber(const double bottomWidth, const double topWidth);
   /// @brief Assemble a new Rpc chamber volume.
   /// @param chamberWidth: Length of the chamber along the direction given
