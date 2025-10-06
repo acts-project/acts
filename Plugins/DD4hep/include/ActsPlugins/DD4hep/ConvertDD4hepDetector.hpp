@@ -177,10 +177,10 @@ std::shared_ptr<const Acts::CylinderVolumeBuilder> volumeBuilder_dd4hep(
 
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder
-std::shared_ptr<const Acts::CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
-    const Acts::Logger& logger);
 /// @param logger Logging instance
 /// @return Shared pointer to CylinderVolumeHelper
+std::shared_ptr<const Acts::CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
+    const Acts::Logger& logger);
 
 /// Method internally used by convertDD4hepDetector to collect all sub detectors
 /// Sub detector means each 'compound' DetElement or DetElements which are
