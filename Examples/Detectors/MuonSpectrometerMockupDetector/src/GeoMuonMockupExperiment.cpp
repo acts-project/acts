@@ -8,6 +8,7 @@
 
 #include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 
+#include <format>
 #include <iostream>
 
 #include "GeoGenericFunctions/Variable.h"
@@ -186,33 +187,80 @@ PVLink GeoMuonMockupExperiment::assembleEndcapStation(const double lowR,
 
   const double lowTubeLength = angularScale * lowR;
   const double upperTubeLength = angularScale * (lowR + m_chamberLength);
-  /// std::cout<<"Lol : lowTubeLength: "<<lowTubeLength<<", upperTubeLength:
-  /// "<<upperTubeLength<<std::endl;
 
   auto envelopeTrd = make_intrusive<GeoTrd>(
       0.5 * m_stationHeightEndcap, 0.5 * m_stationHeightEndcap,
       0.5 * lowTubeLength, 0.5 * upperTubeLength, 0.5 * m_chamberLength);
   auto logVol = make_intrusive<GeoLogVol>(
-      "MuonBarrelLogVol", cacheShape(envelopeTrd),
+      "MuonEndcapStation", cacheShape(envelopeTrd),
       MaterialManager::getManager()->getMaterial("std::air"));
   auto envelopeVol = make_intrusive<GeoPhysVol>(cacheVolume(logVol));
-  double currentX = -envelopeTrd->getXHalfLength1() + 0.5 * m_multiLayerHeight;
+  double currentX = -envelopeTrd->getXHalfLength1() + 0.5 * m_tgcChamberHeight;
+  if (layer == MuonLayer::Middle) {
+    envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
+    publishFPV(envelopeVol, assembleTgcChamber(lowTubeLength, upperTubeLength),
+               std::format("TGC_T1E_{:}_{:}", etaIdx, sector));
+  }
+  currentX +=
+      0.5 * m_tgcChamberHeight + s_tgcMdtSeparation + 0.5 * m_multiLayerHeight;
+
   envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
   publishFPV(envelopeVol,
              assembleMultilayerEndcap(1, lowTubeLength, upperTubeLength),
-             to_string(layer) + "_EMDT_" + std::to_string(etaIdx) + "_" +
-                 std::to_string(sector) + "_1");
+             std::format("{}_EMDT_{}_{}_1", to_string(layer), etaIdx, sector));
 
   currentX += 0.5 * m_multiLayerHeight + m_cfg.multiLayerSeparation +
               0.5 * m_multiLayerHeight;
   envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
   publishFPV(envelopeVol,
              assembleMultilayerEndcap(2, lowTubeLength, upperTubeLength),
-             to_string(layer) + "_EMDT_" + std::to_string(etaIdx) + "_" +
-                 std::to_string(sector) + "_2");
-
+             std::format("{}_EMDT_{}_{}_2", to_string(layer), etaIdx, sector));
+  currentX += s_tgcMdtSeparation + 0.5 * m_tgcChamberHeight;
+  if (layer == MuonLayer::Middle) {
+    envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
+    publishFPV(envelopeVol, assembleTgcChamber(lowTubeLength, upperTubeLength),
+               std::format("TGC_T2E_{:}_{:}", etaIdx, sector));
+    currentX += 0.5 * m_tgcChamberHeight + s_tgcChamberSeparation +
+                0.5 * m_tgcChamberHeight;
+    envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
+    publishFPV(envelopeVol, assembleTgcChamber(lowTubeLength, upperTubeLength),
+               std::format("TGC_T3E_{:}_{:}", etaIdx, sector));
+  }
   return envelopeVol;
 }
+FpvLink GeoMuonMockupExperiment::assembleTgcChamber(const double bottomWidth,
+                                                    const double topWidth) {
+  auto envelopeTrd = make_intrusive<GeoTrd>(
+      0.5 * m_tgcChamberHeight, 0.5 * m_tgcChamberHeight, 0.5 * bottomWidth,
+      0.5 * topWidth, 0.48 * m_chamberLength);
+  auto logVol = make_intrusive<GeoLogVol>(
+      "TgcEnvelope", cacheShape(envelopeTrd),
+      MaterialManager::getManager()->getMaterial("std::G10"));
+  auto tgcPhysVol = make_intrusive<GeoFullPhysVol>(cacheVolume(logVol));
+  double currentX =
+      -envelopeTrd->getXHalfLength1() + 0.5 * s_tgcGasSingletSeparation;
+  for (unsigned gap = 1; gap <= m_cfg.nTgcGasGaps; ++gap) {
+    currentX += 0.5 * s_tgcGasHeight;
+
+    auto gasTrd =
+        make_intrusive<GeoTrd>(0.5 * s_tgcGasHeight, 0.5 * s_tgcGasHeight,
+                               0.95 * envelopeTrd->getYHalfLength1(),
+                               0.95 * envelopeTrd->getYHalfLength2(),
+                               0.95 * envelopeTrd->getZHalfLength());
+    auto gasLogVol = cacheVolume(make_intrusive<GeoLogVol>(
+        "TgcGasGap", cacheShape(gasTrd),
+        MaterialManager::getManager()->getMaterial("std::ArCO2")));
+
+    tgcPhysVol->add(geoId(gap));
+    tgcPhysVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
+    tgcPhysVol->add(cacheVolume(make_intrusive<GeoPhysVol>(gasLogVol)));
+
+    currentX += 0.5 * s_tgcGasHeight + s_tgcGasSingletSeparation;
+  }
+
+  return tgcPhysVol;
+}
+
 void GeoMuonMockupExperiment::assembleBigWheel(const PVLink& envelopeVol,
                                                const MuonLayer layer,
                                                const double wheelZ) {
@@ -271,8 +319,8 @@ void GeoMuonMockupExperiment::setupMaterials() {
   matMan->addElement("Oxygen", "O", 8.0, 15.9949);
   matMan->addElement("Argon", "Ar", 18.0, 39.9624);
   matMan->addElement("Hydrogen", "H", 1.0, 1.00782503081372);
-  matMan->addElement("Chlorine", "Cl", 18.0, 35.453);
-
+  matMan->addElement("Chlorine", "Cl", 17.0, 35.453);
+  matMan->addElement("Fluorine", "F", 9., 18.9984);
   using MatComposition_t = std::vector<std::pair<std::string, double>>;
 
   auto appendMaterial = [matMan, this](const std::string& matName,
@@ -306,6 +354,8 @@ void GeoMuonMockupExperiment::setupMaterials() {
                   {"Hydrogen", 0.0483830941493594},
                   {"Chlorine", 0.5672542624870579}},
                  0.7);
+  appendMaterial("G10", {{"Carbon", 2}, {"Hydrogen", 2}, {"Fluorine", 4}}, 2);
+
   if (logger().level() == Acts::Logging::Level::DEBUG) {
     matMan->printAll();
   }
@@ -315,6 +365,7 @@ void GeoMuonMockupExperiment::publishFPV(const PVLink& envelopeVol,
                                          const std::string& pubName) {
   m_publisher->publishNode(static_cast<GeoVFullPhysVol*>(publishMe.get()),
                            pubName);
+  ACTS_INFO("Publish new volume " << pubName);
   envelopeVol->add(nameTag(pubName));
   envelopeVol->add(publishMe);
 }
@@ -344,11 +395,9 @@ PVLink GeoMuonMockupExperiment::assembleBarrelStation(const MuonLayer layer,
         envelopeVol->add(makeTransform(GeoTrf::Translate3D(
             currentX, -0.5 * envelopeWidth + stepdY * (dY + 0.5),
             -0.5 * m_chamberLength + stepdZ * (dZ + 0.5))));
-        std::string publishName =
-            to_string(layer) + "_RPC_" + std::to_string(etaIdx) + "_" +
-            std::to_string(sector) + "_" + std::to_string(dRIdx) + "_" +
-            std::to_string(dY) + "_" + std::to_string(dZ);
-        publishFPV(envelopeVol, assembleRpcChamber(envelopeWidth), publishName);
+        publishFPV(envelopeVol, assembleRpcChamber(envelopeWidth),
+                   std::format("{:}_RPC_{:}_{:}_{:}_{:}_{:}", to_string(layer),
+                               etaIdx, sector, dRIdx, dY, dZ));
       }
     }
   };
@@ -360,14 +409,12 @@ PVLink GeoMuonMockupExperiment::assembleBarrelStation(const MuonLayer layer,
   currentX += 0.5 * m_multiLayerHeight;
   envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
   publishFPV(envelopeVol, assembleMultilayerBarrel(1, envelopeWidth),
-             to_string(layer) + "_BMDT_" + std::to_string(etaIdx) + "_" +
-                 std::to_string(sector) + "_1");
+             std::format("{}_BMDT_{}_{}_1", to_string(layer), etaIdx, sector));
   currentX += 0.5 * m_multiLayerHeight + m_cfg.multiLayerSeparation +
               0.5 * m_multiLayerHeight;
   envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
   publishFPV(envelopeVol, assembleMultilayerBarrel(2, envelopeWidth),
-             to_string(layer) + "_BMDT_" + std::to_string(etaIdx) + "_" +
-                 std::to_string(sector) + "_2");
+             std::format("{}_BMDT_{}_{}_2", to_string(layer), etaIdx, sector));
   currentX += m_rpcChamberHeight + s_rpcMdtDistance;
   currentX += 0.5 * m_multiLayerHeight;
   placeRpc(currentX, 2);
@@ -588,4 +635,7 @@ FpvLink GeoMuonMockupExperiment::assembleMultilayerBarrel(
   }
   return envelopeVol;
 }
+void GeoMuonMockupExperiment::assembleSmallWheel(const PVLink& envelope,
+                                                 const double outerR,
+                                                 const double wheelZ) {}
 }  // namespace ActsExamples
