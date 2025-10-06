@@ -157,25 +157,25 @@ class TGeoLayerBuilder : public Acts::ILayerBuilder {
   ///
   /// @param gctx the geometry context for this build call
   ///
+  /// @return Vector of negative-side layers
   const Acts::LayerVector negativeLayers(
       const Acts::GeometryContext& gctx) const final;
-  /// @return Vector of negative-side layers
 
   /// LayerBuilder interface method - returning the central layers
   ///
   /// @param gctx the geometry context for this build call
   ///
+  /// @return Vector of central layers
   const Acts::LayerVector centralLayers(
       const Acts::GeometryContext& gctx) const final;
-  /// @return Vector of central layers
 
   /// LayerBuilder interface method - returning the layers at positive side
   ///
   /// @param gctx the geometry context for this build call
   ///
+  /// @return Vector of positive-side layers
   const Acts::LayerVector positiveLayers(
       const Acts::GeometryContext& gctx) const final;
-  /// @return Vector of positive-side layers
 
   /// Name identification
   /// @return Reference to the configuration name string
@@ -190,8 +190,8 @@ class TGeoLayerBuilder : public Acts::ILayerBuilder {
   Config getConfiguration() const;
 
   /// Set logging instance
-  void setLogger(std::unique_ptr<const Acts::Logger> newLogger);
   /// @param newLogger Logger instance to use for debug output
+  void setLogger(std::unique_ptr<const Acts::Logger> newLogger);
 
   /// Return the created detector elements
   /// @return Reference to vector of detector elements
