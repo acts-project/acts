@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(CommitHash) {
   // This test just checks that the variables are accessible
   auto hash = Acts::CommitHash;
   auto hashShort = Acts::CommitHashShort;
-  (void)hash; // suppress unused warning
-  (void)hashShort; // suppress unused warning
+  (void)hash;       // suppress unused warning
+  (void)hashShort;  // suppress unused warning
 }
 
 BOOST_AUTO_TEST_CASE(VersionInfo) {
@@ -42,14 +42,14 @@ BOOST_AUTO_TEST_CASE(VersionInfo) {
   BOOST_CHECK_EQUAL(headerInfo.versionMajor, Acts::VersionMajor);
   BOOST_CHECK_EQUAL(headerInfo.versionMinor, Acts::VersionMinor);
   BOOST_CHECK_EQUAL(headerInfo.versionPatch, Acts::VersionPatch);
-  
+
   // Test VersionInfo creation from library (should have no hash)
   auto libraryInfo = Acts::VersionInfo::fromLibrary();
   BOOST_CHECK_EQUAL(libraryInfo.versionMajor, Acts::VersionMajor);
   BOOST_CHECK_EQUAL(libraryInfo.versionMinor, Acts::VersionMinor);
   BOOST_CHECK_EQUAL(libraryInfo.versionPatch, Acts::VersionPatch);
   BOOST_CHECK(!libraryInfo.commitHash.has_value());
-  
+
   // Test equality comparison
   BOOST_CHECK(libraryInfo == libraryInfo);
 }

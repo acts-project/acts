@@ -88,8 +88,8 @@ install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 if(_acts_is_git_repo)
     # For git repositories, generate header with hash at install time
     install(
-    CODE
-        "
+        CODE
+            "
         # Get git hash at install time
         execute_process(
             COMMAND git rev-parse HEAD
@@ -111,12 +111,12 @@ if(_acts_is_git_repo)
             RESULT_VARIABLE _git_is_dirty
             ERROR_QUIET
         )
-        
+
         if(NOT _git_is_dirty EQUAL 0)
             set(_install_git_hash \"\${_install_git_hash}-dirty\")
             set(_install_git_hash_short \"\${_install_git_hash_short}-dirty\")
         endif()
-        
+
         # Configure the version file with hash and version numbers
         set(_acts_commit_hash \"\\\"\${_install_git_hash}\\\"\")
         set(_acts_commit_hash_short \"\\\"\${_install_git_hash_short}\\\"\")
