@@ -33,6 +33,12 @@ bool VersionInfo::operator==(const VersionInfo& other) const {
          versionPatch == other.versionPatch && commitHash == other.commitHash;
 }
 
+VersionInfo VersionInfo::withoutCommit() const {
+  auto copy = *this;
+  copy.commitHash = std::nullopt;
+  return copy;
+}
+
 std::ostream& operator<<(std::ostream& os, const VersionInfo& vi) {
   os << vi.versionMajor << "." << vi.versionMinor << "." << vi.versionPatch;
   constexpr static std::string_view s_unknown = "UNKNOWN";

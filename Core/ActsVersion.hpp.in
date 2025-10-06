@@ -44,6 +44,8 @@ struct VersionInfo {
 
   static VersionInfo fromLibrary();
 
+  VersionInfo withoutCommit() const;
+
   bool operator==(const VersionInfo& other) const;
 
   friend std::ostream& operator<<(std::ostream& os, const VersionInfo& vi);
