@@ -654,7 +654,7 @@ class Navigator {
   }
 
  private:
-  ///@brief NextTarget helper function for gen1 geometry configuration
+  /// @brief NextTarget helper function for Gen1 geometry configuration
   ///
   /// @param state The navigation state
   /// @param position The current position
