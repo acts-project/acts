@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "ActsPlugins/Geant4/Geant4DetectorElement.hpp"
 #include "ActsPlugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 
@@ -37,7 +38,7 @@ class Geant4DetectorSurfaceFactory {
  public:
   /// Type alias for detector element factory function
   using ElementFactory = std::function<std::shared_ptr<Geant4DetectorElement>(
-      std::shared_ptr<Acts::Surface>, const G4VPhysicalVolume&,
+      Acts::SurfaceHandle<Acts::Surface>, const G4VPhysicalVolume&,
       const Acts::Transform3&, double)>;
 
   /// Nested configuration struct that holds
@@ -46,7 +47,7 @@ class Geant4DetectorSurfaceFactory {
     /// @cond
     /// The detector element factory with default implementation
     ElementFactory detectorElementFactory =
-        [](std::shared_ptr<Acts::Surface> surface,
+        [](Acts::SurfaceHandle<Acts::Surface> surface,
            const G4VPhysicalVolume& g4physVol, const Acts::Transform3& toGlobal,
            double thickness) {
           return std::make_shared<Geant4DetectorElement>(
@@ -58,10 +59,11 @@ class Geant4DetectorSurfaceFactory {
   /// Type alias for sensitive surface with detector element
   using Geant4SensitiveSurface =
       std::tuple<std::shared_ptr<Geant4DetectorElement>,
-                 std::shared_ptr<Acts::Surface>>;
+                 Acts::SurfaceHandle<Acts::Surface>>;
 
-  using Geant4PassiveSurface = std::shared_ptr<Acts::Surface>;
+  // Collect the passive surfaces
   /// Type alias for passive surface
+  using Geant4PassiveSurface = Acts::SurfaceHandle<Acts::Surface>;
 
   /// Nested cache that records the conversion status
   struct Cache {

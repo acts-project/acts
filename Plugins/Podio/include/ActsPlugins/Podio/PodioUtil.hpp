@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "ActsPlugins/Podio/PodioDynamicColumns.hpp"
 
 #include <limits>
@@ -88,7 +89,7 @@ class ConversionHelper {
       Identifier identifier) const = 0;
 };
 
-std::shared_ptr<const Acts::Surface> convertSurfaceFromPodio(
+Acts::SurfaceHandle<const Acts::Surface> convertSurfaceFromPodio(
     const ConversionHelper& helper, const ActsPodioEdm::Surface& surface);
 
 ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,

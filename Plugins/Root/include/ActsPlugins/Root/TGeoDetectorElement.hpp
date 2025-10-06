@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <iostream>
 #include <memory>
@@ -151,7 +152,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   ///  Thickness of this detector element
   double m_thickness{0.};
   /// Corresponding Surface
-  std::shared_ptr<Acts::Surface> m_surface{nullptr};
+  Acts::SurfaceHandle<Acts::Surface> m_surface{nullptr};
 };
 
 inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {

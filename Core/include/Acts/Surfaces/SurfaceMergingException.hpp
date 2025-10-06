@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <exception>
-#include <memory>
-#include <string>
-
 #include "Acts/Surfaces/SurfaceHandle.hpp"
+
+#include <exception>
+#include <string>
+#include <utility>
 
 namespace Acts {
 class Surface;
@@ -27,8 +27,8 @@ class SurfaceMergingException : public std::exception {
   SurfaceMergingException(SurfaceHandle<const Surface> surfaceA,
                           SurfaceHandle<const Surface> surfaceB,
                           const std::string& reason)
-      : m_surfaceA(surfaceA.weak_ptr()),
-        m_surfaceB(surfaceB.weak_ptr()),
+      : m_surfaceA(std::move(surfaceA)),
+        m_surfaceB(std::move(surfaceB)),
         m_message(std::string{"Failure to merge surfaces: "} + reason) {}
 
   /// Get exception description
@@ -36,8 +36,8 @@ class SurfaceMergingException : public std::exception {
   const char* what() const throw() override { return m_message.c_str(); }
 
  private:
-  std::weak_ptr<const Surface> m_surfaceA;
-  std::weak_ptr<const Surface> m_surfaceB;
+  SurfaceHandle<const Surface> m_surfaceA;
+  SurfaceHandle<const Surface> m_surfaceB;
   std::string m_message;
 };
 

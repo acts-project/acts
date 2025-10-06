@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
@@ -43,6 +44,6 @@ std::shared_ptr<Acts::Volume> convertVolume(
 std::shared_ptr<Acts::Experimental::DetectorVolume> convertDetectorVolume(
     const Acts::GeometryContext& context, Acts::Volume& vol,
     const std::string& name,
-    const std::vector<std::shared_ptr<Acts::Surface>>& sensitives);
+    const std::vector<Acts::SurfaceHandle<Acts::Surface>>& sensitives);
 
 }  // namespace ActsPlugins::GeoModel

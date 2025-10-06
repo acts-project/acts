@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <array>
 #include <memory>
@@ -174,10 +175,10 @@ struct Geant4PhysicalVolumeConverter {
   /// @param compressed the compressed thickness of the converted material
   ///
   /// @return a shared surface object
-  std::shared_ptr<Acts::Surface> surface(const G4VPhysicalVolume& g4PhysVol,
-                                         const Acts::Transform3& toGlobal,
-                                         bool convertMaterial = false,
-                                         double compressed = 0.);
+  Acts::SurfaceHandle<Acts::Surface> surface(const G4VPhysicalVolume& g4PhysVol,
+                                             const Acts::Transform3& toGlobal,
+                                             bool convertMaterial = false,
+                                             double compressed = 0.);
 };
 
 struct Geant4MaterialConverter {

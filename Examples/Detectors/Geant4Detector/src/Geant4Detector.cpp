@@ -85,7 +85,7 @@ Geant4Detector::Geant4Detector(const Config& cfg)
 }
 
 std::tuple<std::vector<Acts::SurfaceHandle<Acts::Surface>>,
-           std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>>
+           std::vector<std::shared_ptr<ActsPlugins::Geant4DetectorElement>>>
 Geant4Detector::buildGeant4Volumes(const Config& cfg,
                                    const Acts::Logger& logger) {
   // Generate the surface cache
@@ -106,7 +106,7 @@ Geant4Detector::buildGeant4Volumes(const Config& cfg,
                      << " converted Geant4 Material slabs.");
 
   std::vector<Acts::SurfaceHandle<Acts::Surface>> surfaces;
-  std::vector<std::shared_ptr<Acts::Geant4DetectorElement>> elements;
+  std::vector<std::shared_ptr<ActsPlugins::Geant4DetectorElement>> elements;
 
   // Reserve the right amount of surfaces
   surfaces.reserve(g4SurfaceCache.sensitiveSurfaces.size() +

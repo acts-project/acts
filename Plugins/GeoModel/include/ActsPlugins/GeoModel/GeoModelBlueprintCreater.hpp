@@ -14,6 +14,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -37,7 +38,7 @@ class GeoModelBlueprintCreater {
   struct Config {
     /// The detector surfaces - leave empty if filling is not done
     /// with a kdtree sorting structure
-    std::vector<std::shared_ptr<Acts::Surface>> detectorSurfaces = {};
+    std::vector<Acts::SurfaceHandle<Acts::Surface>> detectorSurfaces = {};
     /// The binning values for the KDTree sorting
     std::vector<Acts::AxisDirection> kdtBinning = {};
     /// Polyhedron approximation: number of segments per circlequarter

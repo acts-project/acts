@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
   auto extendedElementFactory =
       [](Acts::SurfaceHandle<Acts::Surface> surface,
          const G4VPhysicalVolume& g4physVol, const Acts::Transform3& toGlobal,
-         double thickness) -> std::shared_ptr<Acts::Geant4DetectorElement> {
+         double thickness) -> std::shared_ptr<ActsPlugins::Geant4DetectorElement> {
     return std::make_shared<ExtendedGeant4DetectorElement>(
         std::move(surface), g4physVol, toGlobal, thickness);
   };

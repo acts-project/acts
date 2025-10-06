@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
   const int hardware = 0, barrelEndcap = -2, layerWheel = 100, phiModule = 200,
             etaModule = 300, side = 1;
 
-  auto [itkElement, _] = Acts::GeoModelDetectorElementITk::convertFromGeomodel(
+  auto [itkElement, _] = ActsPlugins::GeoModelDetectorElementITk::convertFromGeomodel(
       element, element->surface().getHandle(), gctx, hardware, barrelEndcap,
       layerWheel, etaModule, phiModule, side);
 

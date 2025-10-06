@@ -12,6 +12,7 @@
 #include "Acts/Detector/ProtoSupport.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
@@ -49,11 +50,11 @@ class DD4hepDetectorSurfaceFactory {
   /// Collect the sensitive surface & detector element
   using DD4hepSensitiveSurface =
       std::tuple<std::shared_ptr<DD4hepDetectorElement>,
-                 std::shared_ptr<Acts::Surface>>;
+                 Acts::SurfaceHandle<Acts::Surface>>;
 
   /// Collect the passive surfaces, bool whether it should be
   /// added as an "always try, i.e. assignToAll=true" surface
-  using DD4hepPassiveSurface = std::tuple<std::shared_ptr<Acts::Surface>, bool>;
+  using DD4hepPassiveSurface = std::tuple<Acts::SurfaceHandle<Acts::Surface>, bool>;
 
   /// Configuration struct
   struct Config {

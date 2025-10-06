@@ -350,14 +350,36 @@ std::vector<const Surface*> makeConstPtrVector(
   return constPtrs;
 }
 
+// Helper function to convert shared_ptr vector to SurfaceHandle vector
+std::vector<SurfaceHandle<Surface>> toSurfaceHandles(
+    const std::vector<std::shared_ptr<Surface>>& surfs) {
+  std::vector<SurfaceHandle<Surface>> handles;
+  handles.reserve(surfs.size());
+  for (const auto& surf : surfs) {
+    handles.push_back(SurfaceHandle<Surface>(surf));
+  }
+  return handles;
+}
+
+// Helper function to convert SurfaceHandle vector to const ptr vector
+std::vector<const Surface*> makeConstPtrVectorFromHandles(
+    const std::vector<SurfaceHandle<Surface>>& handles) {
+  std::vector<const Surface*> constPtrs;
+  constPtrs.reserve(handles.size());
+  for (const auto& handle : handles) {
+    constPtrs.push_back(handle.get());
+  }
+  return constPtrs;
+}
+
 // Helper struct to keep ProtoLayer and its associated surfaces together
 struct LayerData {
   ProtoLayer protoLayer;
-  std::vector<std::shared_ptr<Surface>> surfaces;
+  std::vector<SurfaceHandle<Surface>> surfaces;
 
   LayerData(const GeometryContext& gctx,
-            std::vector<std::shared_ptr<Surface>> surfs)
-      : protoLayer(gctx, makeConstPtrVector(surfs)),
+            std::vector<SurfaceHandle<Surface>> surfs)
+      : protoLayer(gctx, makeConstPtrVectorFromHandles(surfs)),
         surfaces(std::move(surfs)) {}
 };
 
@@ -384,7 +406,7 @@ std::vector<LayerData> mergeLayers(const GeometryContext& gctx,
 
     if (overlap) {
       // Merge surfaces
-      std::vector<std::shared_ptr<Surface>> mergedSurfaces;
+      std::vector<SurfaceHandle<Surface>> mergedSurfaces;
       mergedSurfaces.reserve(current.surfaces.size() + prev.surfaces.size());
       mergedSurfaces.insert(mergedSurfaces.end(), current.surfaces.begin(),
                             current.surfaces.end());
@@ -499,7 +521,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
     barrel.setAttachmentStrategy(AttachmentStrategy::Gap);
     barrel.setResizeStrategy(ResizeStrategy::Gap);
 
-    std::map<int, std::vector<std::shared_ptr<Surface>>> layers{};
+    std::map<int, std::vector<SurfaceHandle<Surface>>> layers{};
     int layerId{0};
     for (const auto& [nameLayer, layer] : pixelBarrelElement->children()) {
       for (const auto& [nameModule, module] : layer.children()) {
@@ -508,7 +530,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
         auto dd4hepDetEl = std::make_shared<DD4hepDetectorElement>(
             module, detAxis, 1_cm, false, nullptr);
         detectorElements.push_back(dd4hepDetEl);
-        layers[layerId].push_back(dd4hepDetEl->surface().getSharedPtr());
+        layers[layerId].push_back(dd4hepDetEl->surface().getHandle());
       }
       layerId++;
     }
@@ -583,7 +605,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       ec.setAttachmentStrategy(AttachmentStrategy::Gap);
       ec.setResizeStrategy(ResizeStrategy::Expand);
 
-      std::map<int, std::vector<std::shared_ptr<Surface>>> initialLayers{};
+      std::map<int, std::vector<SurfaceHandle<Surface>>> initialLayers{};
       const DetElement* pixelEndcapElement =
           ecid == 1 ? find_element(*pixelElement, "PixelPositiveEndcap")
                     : find_element(*pixelElement, "PixelNegativeEndcap");
@@ -596,7 +618,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
               module, detAxis, 1_cm, false, nullptr);
           detectorElements.push_back(dd4hepDetEl);
           initialLayers[layerId].push_back(
-              dd4hepDetEl->surface().getSharedPtr());
+              dd4hepDetEl->surface().getHandle());
         }
         layerId++;
       }

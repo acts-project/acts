@@ -151,7 +151,7 @@ class PodioTrackContainerBase {
   static void populateSurfaceBuffer(
       const PodioUtil::ConversionHelper& helper,
       const ActsPodioEdm::TrackCollection& collection,
-      std::vector<std::shared_ptr<const Acts::Surface>>& surfaces) noexcept {
+      std::vector<Acts::SurfaceHandle<const Acts::Surface>>& surfaces) noexcept {
     surfaces.reserve(collection.size());
     for (ActsPodioEdm::Track track : collection) {
       surfaces.push_back(PodioUtil::convertSurfaceFromPodio(
@@ -160,7 +160,7 @@ class PodioTrackContainerBase {
   }
 
   std::reference_wrapper<const PodioUtil::ConversionHelper> m_helper;
-  std::vector<std::shared_ptr<const Acts::Surface>> m_surfaces;
+  std::vector<Acts::SurfaceHandle<const Acts::Surface>> m_surfaces;
 };
 
 class MutablePodioTrackContainer : public PodioTrackContainerBase {
@@ -179,14 +179,14 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   // BEGIN INTERFACE HELPER
 
  private:
-  std::shared_ptr<const Acts::Surface> getOrCreateSurface(IndexType itrack) {
-    std::shared_ptr<const Acts::Surface>& ptr = m_surfaces.at(itrack);
-    if (!ptr) {
+  Acts::SurfaceHandle<const Acts::Surface> getOrCreateSurface(IndexType itrack) {
+    Acts::SurfaceHandle<const Acts::Surface>& handle = m_surfaces.at(itrack);
+    if (!handle) {
       ActsPodioEdm::Track track = m_collection->at(itrack);
-      ptr = PodioUtil::convertSurfaceFromPodio(m_helper,
-                                               track.getReferenceSurface());
+      handle = PodioUtil::convertSurfaceFromPodio(m_helper,
+                                                   track.getReferenceSurface());
     }
-    return ptr;
+    return handle;
   }
 
  public:
@@ -217,16 +217,16 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
   void setReferenceSurface_impl(IndexType itrack,
-                                std::shared_ptr<const Acts::Surface> surface) {
+                                Acts::SurfaceHandle<const Acts::Surface> surface) {
     auto track = m_collection->at(itrack);
-    if (surface == nullptr) {
+    if (!surface) {
       track.setReferenceSurface({.surfaceType = PodioUtil::kNoSurface,
                                  .identifier = PodioUtil::kNoIdentifier});
-      m_surfaces.at(itrack) = nullptr;
+      m_surfaces.at(itrack) = Acts::SurfaceHandle<const Acts::Surface>{};
     } else {
       track.setReferenceSurface(
           PodioUtil::convertSurfaceToPodio(m_helper, *surface));
-      m_surfaces.at(itrack) = std::move(surface);
+      m_surfaces.at(itrack) = surface;
     }
   }
 
