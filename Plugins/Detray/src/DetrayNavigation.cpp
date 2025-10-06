@@ -6,13 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 //
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -24,7 +25,9 @@
 #include <detray/definitions/grid_axis.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 using DetraySurfaceMaterial = DetrayPayloadConverter::DetraySurfaceMaterial;
 using DetraySurfaceGrid = DetrayPayloadConverter::DetraySurfaceGrid;
@@ -99,7 +102,7 @@ detray::io::accel_id getDetrayAccelId(Surface::SurfaceType surfaceType) {
 }  // namespace
 
 std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
-    const SurfaceArrayNavigationPolicy& policy,
+    const SurfaceArrayNavigationPolicy& policy, const GeometryContext& gctx,
     const SurfaceLookupFunction& surfaceLookup, const Logger& logger) {
   const auto* gridLookup =
       dynamic_cast<const SurfaceArray::ISurfaceGridLookup*>(
@@ -122,7 +125,9 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     return r.value();
   }();
 
-  const auto& transform = gridLookup->getTransform();
+  const Surface& surface = *gridLookup->surfaceRepresentation();
+
+  const auto& transform = surface.transform(gctx);
 
   constexpr auto tolerance = s_onSurfaceTolerance;
 
@@ -150,7 +155,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
   std::vector binValues = gridLookup->binningValues();
   if (binValues.empty()) {
     // Fall back to default based on surface type
-    switch (gridLookup->surfaceType()) {
+    switch (surface.type()) {
       using enum Surface::SurfaceType;
       case Cylinder:
         binValues = {AxisDirection::AxisPhi, AxisDirection::AxisZ};
@@ -171,7 +176,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
   DetraySurfaceGrid gridPayload;
 
   // Set up the grid link with appropriate acceleration structure type
-  detray::io::accel_id accelId = getDetrayAccelId(gridLookup->surfaceType());
+  detray::io::accel_id accelId = getDetrayAccelId(surface.type());
   gridPayload.grid_link =
       detray::io::typed_link_payload<detray::io::accel_id>{accelId, 0u};
 
@@ -279,8 +284,8 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
 
 #define NOOP_CONVERTER_IMPL_FULL(type, name)                                  \
   std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convert##name(     \
-      const type& /*policy*/, const SurfaceLookupFunction& /*surfaceLookup*/, \
-      const Logger& logger) {                                                 \
+      const type& /*policy*/, const GeometryContext& /*gctx*/,                \
+      const SurfaceLookupFunction& /*surfaceLookup*/, const Logger& logger) { \
     ACTS_DEBUG(#name << " does not implement explicit detray conversion");    \
     return std::nullopt;                                                      \
   }
@@ -293,4 +298,4 @@ NOOP_CONVERTER_IMPL(CylinderNavigationPolicy)
 NOOP_CONVERTER_IMPL_FULL(Experimental::MultiLayerNavigationPolicy,
                          MultiLayerNavigationPolicy)
 
-}  // namespace Acts
+}  // namespace ActsPlugins

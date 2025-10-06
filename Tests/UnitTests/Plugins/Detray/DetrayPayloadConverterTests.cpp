@@ -20,8 +20,6 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
-#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -29,11 +27,13 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
+#include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <numbers>
@@ -59,7 +59,9 @@
 auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO);
 
 using namespace Acts;
-using namespace Acts::Test;
+using namespace ActsPlugins;
+
+namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(DetrayConversion)
 
@@ -341,8 +343,8 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
     // Test sensitive surface with detector element
     {
       // Create detector element first
-      auto detElement = std::make_shared<Acts::Test::DetectorElementStub>(
-          transform, bounds, 1.0);
+      auto detElement =
+          std::make_shared<DetectorElementStub>(transform, bounds, 1.0);
 
       // Create surface using the detector element
       auto sensitiveSurface =
@@ -767,3 +769,4 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+}  // namespace ActsTests

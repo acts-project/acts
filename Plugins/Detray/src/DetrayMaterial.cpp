@@ -6,17 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 //
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <numbers>
 #include <stdexcept>
+
+#include <detray/io/frontend/payloads.hpp>
 
 using namespace Acts;
 

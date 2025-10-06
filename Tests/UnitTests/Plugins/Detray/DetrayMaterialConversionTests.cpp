@@ -12,18 +12,21 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <detray/io/frontend/payloads.hpp>
 
 auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO);
 
 using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(DetrayMaterialConversion)
 
@@ -135,8 +138,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousMaterialTest) {
 
 detray::io::grid_payload<detray::io::material_slab_payload,
                          detray::io::material_id>
-unpackGrid(
-    const Acts::DetrayPayloadConverter::DetraySurfaceMaterial& material) {
+unpackGrid(const DetrayPayloadConverter::DetraySurfaceMaterial& material) {
   if (auto* grid = std::get_if<detray::io::grid_payload<
           detray::io::material_slab_payload, detray::io::material_id>>(
           &material)) {
@@ -508,3 +510,5 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionInvalid) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

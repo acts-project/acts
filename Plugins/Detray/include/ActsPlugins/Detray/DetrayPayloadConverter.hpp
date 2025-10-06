@@ -52,8 +52,7 @@ enum class accel_id : unsigned int;
 }  // namespace io
 }  // namespace detray
 
-namespace ActsPlugins {
-
+namespace Acts {
 class GeometryContext;
 class TrackingGeometry;
 class SurfaceBounds;
@@ -63,6 +62,9 @@ class TrackingVolume;
 class PortalLinkBase;
 class MaterialSlab;
 class ISurfaceMaterial;
+}  // namespace Acts
+
+namespace ActsPlugins {
 
 class DetrayPayloadConverter {
  public:
@@ -75,7 +77,8 @@ class DetrayPayloadConverter {
       detray::io::grid_payload<std::size_t, detray::io::accel_id>;
 
   /// Function type for looking up surface indices in detray conversion
-  using SurfaceLookupFunction = std::function<std::size_t(const Surface*)>;
+  using SurfaceLookupFunction =
+      std::function<std::size_t(const Acts::Surface*)>;
 
   static std::optional<DetraySurfaceMaterial> convertHomogeneousSurfaceMaterial(
       const Acts::HomogeneousSurfaceMaterial& material);
@@ -92,32 +95,43 @@ class DetrayPayloadConverter {
 
   static std::optional<DetraySurfaceMaterial>
   convertProtoSurfaceMaterialProtoAxes(
-      const ProtoSurfaceMaterialT<std::vector<Acts::DirectedProtoAxis>>&
+      const Acts::ProtoSurfaceMaterialT<std::vector<Acts::DirectedProtoAxis>>&
           material);
 
   static std::optional<DetraySurfaceGrid> convertSurfaceArray(
       const Acts::SurfaceArrayNavigationPolicy& policy,
+      const Acts::GeometryContext& gctx,
       const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
 
   static std::optional<DetraySurfaceGrid> convertTryAllNavigationPolicy(
       const Acts::TryAllNavigationPolicy& policy,
+      const Acts::GeometryContext& gctx,
       const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
 
   static std::optional<DetraySurfaceGrid> convertCylinderNavigationPolicy(
       const Acts::CylinderNavigationPolicy& policy,
+      const Acts::GeometryContext& gctx,
       const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
 
   static std::optional<DetraySurfaceGrid> convertMultiLayerNavigationPolicy(
       const Acts::Experimental::MultiLayerNavigationPolicy& policy,
+      const Acts::GeometryContext& gctx,
       const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
 
   // This is a noop, the payload converter will actually traverse the children
   // via `visit`.
   static std::optional<DetraySurfaceGrid> convertMultiNavigationPolicy(
       const Acts::MultiNavigationPolicy& policy,
-      const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& clogger);
+      const Acts::GeometryContext& gctx,
+      const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
 
   struct Config {
+    Config() = default;
+
+    Config(const Config&) = default;
+    Config(Config&&) = default;
+    Config& operator=(const Config&) = default;
+    Config& operator=(Config&&) = default;
     enum class SensitiveStrategy {
       /// Checks if the sensitive component of the surface is set to check if
       /// it's a sensitive surface
@@ -129,10 +143,11 @@ class DetrayPayloadConverter {
     SensitiveStrategy sensitiveStrategy = SensitiveStrategy::Identifier;
 
     /// Detray MUST have beampipe volume at index 0
-    const TrackingVolume* beampipeVolume = nullptr;
+    const Acts::TrackingVolume* beampipeVolume = nullptr;
 
     Acts::TypeDispatcher<Acts::INavigationPolicy,
                          std::optional<DetraySurfaceGrid>(
+                             const Acts::GeometryContext& gctx,
                              const SurfaceLookupFunction& surfaceLookup,
                              const Acts::Logger& logger)>
         convertNavigationPolicy{
@@ -140,7 +155,7 @@ class DetrayPayloadConverter {
             convertCylinderNavigationPolicy, convertMultiLayerNavigationPolicy,
             convertMultiNavigationPolicy};
 
-    Acts::TypeDispatcher<ISurfaceMaterial,
+    Acts::TypeDispatcher<Acts::ISurfaceMaterial,
                          std::optional<DetraySurfaceMaterial>()>
         convertSurfaceMaterial{
             convertHomogeneousSurfaceMaterial, convertBinnedSurfaceMaterial,
@@ -149,17 +164,18 @@ class DetrayPayloadConverter {
   };
 
   static detray::io::transform_payload convertTransform(
-      const Transform3& transform);
+      const Acts::Transform3& transform);
 
   /// @param forPortal detray special cases the local parametrization for portals for performance reasons
   static detray::io::mask_payload convertMask(const Acts::SurfaceBounds& bounds,
                                               bool forPortal);
 
-  detray::io::surface_payload convertSurface(const GeometryContext& gctx,
-                                             const Surface& surface,
+  detray::io::surface_payload convertSurface(const Acts::GeometryContext& gctx,
+                                             const Acts::Surface& surface,
                                              bool portal = false) const;
 
-  detray::io::volume_payload convertVolume(const TrackingVolume& volume) const;
+  detray::io::volume_payload convertVolume(
+      const Acts::TrackingVolume& volume) const;
 
   struct Payloads {
     // Unique pointers used to be able to forward declare the type
@@ -179,42 +195,45 @@ class DetrayPayloadConverter {
     std::map<detray::dindex, std::string> names;
   };
 
-  Payloads convertTrackingGeometry(const GeometryContext& gctx,
-                                   const TrackingGeometry& geometry) const;
+  Payloads convertTrackingGeometry(
+      const Acts::GeometryContext& gctx,
+      const Acts::TrackingGeometry& geometry) const;
 
   explicit DetrayPayloadConverter(
       const Config& config,
-      std::unique_ptr<const Logger> logger = Acts::getDefaultLogger(
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "DetrayPayloadConverter", Acts::Logging::INFO));
 
   std::pair<std::vector<detray::io::grid_payload<
                 detray::io::material_slab_payload, detray::io::material_id>>,
             detray::io::material_volume_payload>
-  convertMaterial(
-      const TrackingVolume& volume,
+  convertMaterial(const Acts::TrackingVolume& volume,
 
-      const std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
-      detray::io::volume_payload& volPayload) const;
+                  const std::unordered_map<const Acts::Surface*, std::size_t>&
+                      surfaceIndices,
+                  detray::io::volume_payload& volPayload) const;
 
  private:
   void handlePortalLink(
-      const GeometryContext& gctx, const TrackingVolume& volume,
+      const Acts::GeometryContext& gctx, const Acts::TrackingVolume& volume,
       detray::io::volume_payload& volPayload,
-      const std ::function<std::size_t(const TrackingVolume*)>& volumeLookup,
-      std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
-      const PortalLinkBase& link) const;
+      const std ::function<std::size_t(const Acts::TrackingVolume*)>&
+          volumeLookup,
+      std::unordered_map<const Acts::Surface*, std::size_t>& surfaceIndices,
+      const Acts::PortalLinkBase& link) const;
 
   void makeEndOfWorld(
-      const GeometryContext& gctx, detray::io::volume_payload& volPayload,
-      std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
-      const Surface& surface) const;
+      const Acts::GeometryContext& gctx, detray::io::volume_payload& volPayload,
+      std::unordered_map<const Acts::Surface*, std::size_t>& surfaceIndices,
+      const Acts::Surface& surface) const;
 
   void handlePortal(
-      const GeometryContext& gctx, const TrackingVolume& volume,
+      const Acts::GeometryContext& gctx, const Acts::TrackingVolume& volume,
       detray::io::volume_payload& volPayload,
-      const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
-      std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
-      const Portal& portal) const;
+      const std::function<std::size_t(const Acts::TrackingVolume*)>&
+          volumeLookup,
+      std::unordered_map<const Acts::Surface*, std::size_t>& surfaceIndices,
+      const Acts::Portal& portal) const;
 
   Config m_cfg;
 

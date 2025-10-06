@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
@@ -25,6 +25,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <optional>
@@ -38,7 +39,9 @@
 #include <detray/io/frontend/definitions.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 DetrayPayloadConverter::DetrayPayloadConverter(
     const Config& config, std::unique_ptr<const Logger> logger)
@@ -524,7 +527,8 @@ DetrayPayloadConverter::convertMaterial(
                    << surface.geometryId() << " (index " << srfIdx << "): "
                    << "Surface type " << surface.type()
                    << " is incompatible with material_id '"
-                   << grid.grid_link.type << "'. Expected '" << expectedId
+                   << toUnderlying(grid.grid_link.type) << "'. Expected '"
+                   << toUnderlying(expectedId)
                    << "'. This indicates the BinUtility axis definition "
                    << "does not match the surface geometry.");
         throw std::runtime_error(
@@ -807,8 +811,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
               "Multiple detray-compatible navigation policies"};
         }
 
-        detrayGrid =
-            m_cfg.convertNavigationPolicy(policy, surfaceLookupFn, logger());
+        detrayGrid = m_cfg.convertNavigationPolicy(policy, gctx,
+                                                   surfaceLookupFn, logger());
       });
 
       if (detrayGrid.has_value()) {
@@ -943,4 +947,4 @@ DetrayPayloadConverter::convertTrackingGeometry(
   return payloads;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins
