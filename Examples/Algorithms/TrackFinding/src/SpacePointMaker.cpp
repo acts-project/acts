@@ -107,9 +107,10 @@ Acts::Result<SimSpacePoint> createStripSpacePoint(
   const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
       getStripEnds(gctx, surface2, measurement2);
 
+  const Acts::StripSpacePointBuilder::ConstrainedOptions options{};
   const Acts::Result<Acts::Vector3> spacePoint =
       Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
-          stripEnds1, stripEnds2, Acts::Vector3::Zero(), 0.01, 0.01);
+          stripEnds1, stripEnds2, options);
   if (!spacePoint.ok()) {
     return spacePoint.error();
   }

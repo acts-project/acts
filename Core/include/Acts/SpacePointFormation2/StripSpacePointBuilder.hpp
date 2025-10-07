@@ -19,7 +19,8 @@ class Surface;
 
 namespace StripSpacePointBuilder {
 
-struct ClusterPairingOptions {
+/// @brief Collection of cluster pairing options
+struct ClusterPairingOptions final {
   /// vertex position
   Vector3 vertex = Vector3::Zero();
   /// Accepted distance between two clusters
@@ -30,13 +31,27 @@ struct ClusterPairingOptions {
   double maxAnglePhi = 1 * UnitConstants::rad;
 };
 
-struct CosmicOptions {
+/// @brief Collection of cosmic space point options
+struct CosmicOptions final {
   /// Numerical tolerance for the calculation
   double tolerance = 1e-6;
 };
 
-struct StripEnds {
+/// @brief Collection of constrained space point options
+struct ConstrainedOptions final {
+  /// Position of the vertex
+  Vector3 vertex = Vector3::Zero();
+  /// Tolerance scaling factor on the strip detector element length
+  double stripLengthTolerance = 0.01;
+  /// Tolerance scaling factor of the gap between strip detector elements
+  double stripLengthGapTolerance = 0.01;
+};
+
+/// @brief Strip cluster details
+struct StripEnds final {
+  /// Top end of the strip cluster
   Vector3 top = Vector3::Zero();
+  /// Bottom end of the strip cluster
   Vector3 bottom = Vector3::Zero();
 };
 
@@ -62,16 +77,12 @@ Result<Vector3> computeCosmicSpacePoint(const StripEnds& stripEnds1,
 
 /// @param stripEnds1 The ends of first strip
 /// @param stripEnds2 The ends of second strip
-/// @param vertex Position of the vertex
-/// @param stripLengthTolerance Tolerance scaling factor on the strip detector element length
-/// @param stripLengthGapTolerance Tolerance scaling factor of the gap between strip detector elements
+/// @param options The constrained options
 ///
 /// @return If available, the calculated space point
 Result<Vector3> computeConstrainedSpacePoint(const StripEnds& stripEnds1,
                                              const StripEnds& stripEnds2,
-                                             const Vector3& vertex,
-                                             double stripLengthTolerance,
-                                             double stripLengthGapTolerance);
+                                             const ConstrainedOptions& options);
 
 /// @brief Calculate the z and r covariance from the front and back SourceLink in the strip SP formation
 ///

@@ -267,15 +267,16 @@ Result<void> recoverConstrainedFormationState(
 
 Result<Vector3> StripSpacePointBuilder::computeConstrainedSpacePoint(
     const StripEnds& stripEnds1, const StripEnds& stripEnds2,
-    const Vector3& vertex, double stripLengthTolerance,
-    double stripLengthGapTolerance) {
+    const ConstrainedOptions& options) {
   FormationState state;
 
-  Result<void> result = computeConstrainedFormationState(
-      stripEnds1, stripEnds2, vertex, state, stripLengthTolerance);
+  Result<void> result =
+      computeConstrainedFormationState(stripEnds1, stripEnds2, options.vertex,
+                                       state, options.stripLengthTolerance);
 
   if (!result.ok()) {
-    result = recoverConstrainedFormationState(state, stripLengthGapTolerance);
+    result = recoverConstrainedFormationState(state,
+                                              options.stripLengthGapTolerance);
   }
 
   if (!result.ok()) {
