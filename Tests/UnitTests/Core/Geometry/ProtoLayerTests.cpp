@@ -56,7 +56,8 @@ void testProtoLayer() {
       AngleAxis3(-std::numbers::pi / 2., Vector3::UnitZ()) *
       Transform3::Identity();
 
-  std::vector<SurfaceHandle<std::conditional_t<IsConst, const Surface, Surface>>>
+  std::vector<
+      SurfaceHandle<std::conditional_t<IsConst, const Surface, Surface>>>
       surfaceStore;
   surfaceStore.reserve(100);
 
@@ -78,7 +79,8 @@ void testProtoLayer() {
         Transform3(trf * Translation3(Vector3(0., 3., 0.)) * planeZX),
         recBounds);
 
-    std::vector<SurfaceHandle<std::conditional_t<IsConst, const Surface, Surface>>>
+    std::vector<
+        SurfaceHandle<std::conditional_t<IsConst, const Surface, Surface>>>
         sharedSurfaces = {atNegX, atNegY, atPosX, atPosY};
     surfaceStore.insert(surfaceStore.begin(), sharedSurfaces.begin(),
                         sharedSurfaces.end());

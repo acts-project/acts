@@ -264,9 +264,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.emplace_back(BoundTrackParameters(SurfaceHandle<const Surface>(perigeeSurface), paramVec,
-                                               std::move(covMat),
-                                               ParticleHypothesis::pion()));
+      tracks.emplace_back(BoundTrackParameters(
+          SurfaceHandle<const Surface>(perigeeSurface), paramVec,
+          std::move(covMat), ParticleHypothesis::pion()));
     }
 
     std::vector<InputTrack> inputTracks;

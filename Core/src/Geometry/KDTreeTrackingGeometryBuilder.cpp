@@ -9,7 +9,6 @@
 #include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
 
 #include "Acts/Geometry/CylinderLayer.hpp"
-#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
@@ -25,6 +24,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 

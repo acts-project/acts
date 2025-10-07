@@ -22,11 +22,11 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -307,7 +307,8 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 
   auto surface = std::make_shared<LineSurfaceStub>(Transform3::Identity());
 
-  BoundTrackParameters initialParams{SurfaceHandle<const Surface>(surface), boundVector, std::nullopt,
+  BoundTrackParameters initialParams{SurfaceHandle<const Surface>(surface),
+                                     boundVector, std::nullopt,
                                      ParticleHypothesis::pion()};
 
   using Propagator = Propagator<StraightLineStepper>;

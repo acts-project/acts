@@ -12,8 +12,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Surfaces/SurfaceHandle.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <memory>
 #include <type_traits>

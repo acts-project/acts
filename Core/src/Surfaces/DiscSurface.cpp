@@ -534,8 +534,7 @@ std::pair<SurfaceHandle<DiscSurface>, bool> DiscSurface::mergedWith(
       return {Surface::makeShared<DiscSurface>(newTransform, newBounds),
               reversed};
     } catch (const std::invalid_argument& e) {
-      throw SurfaceMergingException(getHandle(), other.getHandle(),
-                                    e.what());
+      throw SurfaceMergingException(getHandle(), other.getHandle(), e.what());
     }
 
   } else {

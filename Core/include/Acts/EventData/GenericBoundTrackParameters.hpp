@@ -93,7 +93,8 @@ class GenericBoundTrackParameters {
       std::optional<CovarianceMatrix> cov,
       ParticleHypothesis particleHypothesis) {
     return GenericBoundTrackParameters(
-        SurfaceHandle<const Surface>(CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface()),
+        SurfaceHandle<const Surface>(
+            CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface()),
         transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
         std::move(cov), std::move(particleHypothesis));
   }

@@ -235,9 +235,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
             0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
-        auto params =
-            BoundTrackParameters(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
-                                 ParticleHypothesis::pion());
+        auto params = BoundTrackParameters(
+            SurfaceHandle<const Surface>(perigeeSurface), paramVec,
+            std::move(covMat), ParticleHypothesis::pion());
 
         tracks.push_back(std::make_unique<BoundTrackParameters>(params));
 
@@ -456,9 +456,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
             0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
-        auto params =
-            BoundTrackParameters(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
-                                 ParticleHypothesis::pion());
+        auto params = BoundTrackParameters(
+            SurfaceHandle<const Surface>(perigeeSurface), paramVec,
+            std::move(covMat), ParticleHypothesis::pion());
 
         tracks.push_back(std::make_unique<InputTrackStub>(params));
 

@@ -82,8 +82,8 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                        params.parameters(), eps, eps);
 }
 
-void runTest(const SurfaceHandle<const Surface>& surface, double l0,
-             double l1, double time, double phi, double theta, double p) {
+void runTest(const SurfaceHandle<const Surface>& surface, double l0, double l1,
+             double time, double phi, double theta, double p) {
   // phi is ill-defined in forward/backward tracks
   phi = ((0 < theta) && (theta < std::numbers::pi)) ? phi : 0.;
 

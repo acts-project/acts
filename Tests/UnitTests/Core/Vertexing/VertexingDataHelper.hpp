@@ -115,8 +115,8 @@ readTracksAndVertexCSV(const std::string& toolString,
         std::stod(row[25]) * 1. / (1_MeV), std::stod(row[26]);
 
     // TODO we do not have a hypothesis at hand here. defaulting to pion
-    tracks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), params, std::move(covMat),
-                        ParticleHypothesis::pion());
+    tracks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), params,
+                        std::move(covMat), ParticleHypothesis::pion());
   }
 
   // Read in reference vertex data

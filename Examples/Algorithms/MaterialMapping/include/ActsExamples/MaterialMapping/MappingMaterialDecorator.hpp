@@ -13,7 +13,6 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -21,6 +20,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <algorithm>
@@ -65,8 +65,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
     auto bins = m_binningMap.find(surface.geometryId().value());
     if (bins != m_binningMap.end()) {
       ACTS_VERBOSE("-> Found material for surface, assigning");
-      surface.assignSurfaceMaterial(
-          binnedSurfaceMaterial(surface.getHandle()));
+      surface.assignSurfaceMaterial(binnedSurfaceMaterial(surface.getHandle()));
     }
   }
 

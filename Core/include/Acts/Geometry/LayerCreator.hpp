@@ -110,9 +110,8 @@ class LayerCreator {
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
       const GeometryContext& gctx,
-      std::vector<SurfaceHandle<const Surface>> surfaces,
-      BinningType bTypePhi, BinningType bTypeZ,
-      std::optional<ProtoLayer> _protoLayer = std::nullopt,
+      std::vector<SurfaceHandle<const Surface>> surfaces, BinningType bTypePhi,
+      BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 

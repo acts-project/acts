@@ -38,8 +38,9 @@ ActsExamples::StructureSelector::StructureSelector(
   }
   SensitiveGetter getter;
   m_trackingGeometry->visitSurfaces(getter);
-  m_surfaceMultiSet = GeometryIdMultiset<Acts::SurfaceHandle<const Acts::Surface>>(
-      getter.selected.begin(), getter.selected.end());
+  m_surfaceMultiSet =
+      GeometryIdMultiset<Acts::SurfaceHandle<const Acts::Surface>>(
+          getter.selected.begin(), getter.selected.end());
 }
 
 std::vector<Acts::SurfaceHandle<const Acts::Surface>>

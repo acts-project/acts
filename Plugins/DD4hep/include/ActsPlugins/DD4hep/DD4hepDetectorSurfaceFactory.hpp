@@ -54,7 +54,8 @@ class DD4hepDetectorSurfaceFactory {
 
   /// Collect the passive surfaces, bool whether it should be
   /// added as an "always try, i.e. assignToAll=true" surface
-  using DD4hepPassiveSurface = std::tuple<Acts::SurfaceHandle<Acts::Surface>, bool>;
+  using DD4hepPassiveSurface =
+      std::tuple<Acts::SurfaceHandle<Acts::Surface>, bool>;
 
   /// Configuration struct
   struct Config {

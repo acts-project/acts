@@ -150,8 +150,7 @@ struct SurfaceArrayFixture {
 
     std::size_t nVtx = 0;
     for (const auto& srfx : surfaces) {
-      auto srf =
-          dynamic_handle_cast<const PlaneSurface>(srfx);
+      auto srf = dynamic_handle_cast<const PlaneSurface>(srfx);
       const PlanarBounds* bounds =
           dynamic_cast<const PlanarBounds*>(&srf->bounds());
 

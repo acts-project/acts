@@ -341,8 +341,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, 0.);
 
   /// Repeat with surface related methods
-  auto plane =
-      CurvilinearSurface(pos, dir.normalized()).planeSurface();
+  auto plane = CurvilinearSurface(pos, dir.normalized()).planeSurface();
   auto bp = BoundTrackParameters::create(
                 tgContext, plane, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())

@@ -342,8 +342,8 @@ class Particle {
     }
     Acts::BoundVector params;
     params << localResult.value(), phi(), theta(), qOverP(), time();
-    return Acts::BoundTrackParameters(referenceSurface()->getHandle(),
-                                      params, std::nullopt, hypothesis());
+    return Acts::BoundTrackParameters(referenceSurface()->getHandle(), params,
+                                      std::nullopt, hypothesis());
   }
 
   /// @return Curvilinear track parameters representation

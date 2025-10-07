@@ -12,7 +12,6 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -21,6 +20,7 @@
 #include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -84,8 +84,8 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       // Approach surfaces
       if (writeApproach && layer->approachDescriptor() != nullptr) {
         for (auto sf : layer->approachDescriptor()->containedSurfaces()) {
-          cSurfaces.push_back(SurfaceContainer::InputElement{
-              sf->geometryId(), sf->getHandle()});
+          cSurfaces.push_back(SurfaceContainer::InputElement{sf->geometryId(),
+                                                             sf->getHandle()});
         }
       }
       // Check for sensitive surfaces
@@ -102,8 +102,8 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
     if (writeBoundary) {
       for (const auto& bsurface : volume.boundarySurfaces()) {
         const auto& bsRep = bsurface->surfaceRepresentation();
-        cSurfaces.push_back(SurfaceContainer::InputElement{
-            bsRep.geometryId(), bsRep.getHandle()});
+        cSurfaces.push_back(SurfaceContainer::InputElement{bsRep.geometryId(),
+                                                           bsRep.getHandle()});
       }
     }
   }

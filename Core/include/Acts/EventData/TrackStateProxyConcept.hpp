@@ -58,86 +58,83 @@ using EffectiveProjector =
 }  // namespace detail
 
 template <typename T>
-concept TrackStateProxyConcept =
-    requires(const T& cv, T v, HashedString key,
-             SurfaceHandle<const Surface> surface) {
-      { cv.index() } -> std::same_as<TrackIndexType>;
+concept TrackStateProxyConcept = requires(
+    const T& cv, T v, HashedString key, SurfaceHandle<const Surface> surface) {
+  { cv.index() } -> std::same_as<TrackIndexType>;
 
-      { cv.previous() } -> std::same_as<TrackIndexType>;
+  { cv.previous() } -> std::same_as<TrackIndexType>;
 
-      { cv.hasPrevious() } -> std::same_as<bool>;
+  { cv.hasPrevious() } -> std::same_as<bool>;
 
-      { cv.getMask() } -> std::same_as<TrackStatePropMask>;
+  { cv.getMask() } -> std::same_as<TrackStatePropMask>;
 
-      { cv.referenceSurface() } -> std::same_as<const Surface&>;
+  { cv.referenceSurface() } -> std::same_as<const Surface&>;
 
-      { cv.hasReferenceSurface() } -> std::same_as<bool>;
+  { cv.hasReferenceSurface() } -> std::same_as<bool>;
 
-      { cv.template has<hashString("blubb")>() } -> std::same_as<bool>;
+  { cv.template has<hashString("blubb")>() } -> std::same_as<bool>;
 
-      { cv.has(key) } -> std::same_as<bool>;
+  { cv.has(key) } -> std::same_as<bool>;
 
-      { cv.has("blubb") } -> std::same_as<bool>;
+  { cv.has("blubb") } -> std::same_as<bool>;
 
-      // Cannot verify for all types, so just check int
-      {
-        cv.template component<int, hashString("blubb")>()
-      } -> std::same_as<const int&>;
+  // Cannot verify for all types, so just check int
+  {
+    cv.template component<int, hashString("blubb")>()
+  } -> std::same_as<const int&>;
 
-      { cv.template component<int>(key) } -> std::same_as<const int&>;
+  { cv.template component<int>(key) } -> std::same_as<const int&>;
 
-      { cv.parameters() } -> std::same_as<detail::ConstParameters>;
-      { cv.covariance() } -> std::same_as<detail::ConstCovariance>;
+  { cv.parameters() } -> std::same_as<detail::ConstParameters>;
+  { cv.covariance() } -> std::same_as<detail::ConstCovariance>;
 
-      { cv.predicted() } -> std::same_as<detail::ConstParameters>;
-      { cv.predictedCovariance() } -> std::same_as<detail::ConstCovariance>;
-      { cv.hasPredicted() } -> std::same_as<bool>;
-      { v.hasPredicted() } -> std::same_as<bool>;
+  { cv.predicted() } -> std::same_as<detail::ConstParameters>;
+  { cv.predictedCovariance() } -> std::same_as<detail::ConstCovariance>;
+  { cv.hasPredicted() } -> std::same_as<bool>;
+  { v.hasPredicted() } -> std::same_as<bool>;
 
-      { cv.filtered() } -> std::same_as<detail::ConstParameters>;
-      { cv.filteredCovariance() } -> std::same_as<detail::ConstCovariance>;
-      { cv.hasFiltered() } -> std::same_as<bool>;
-      { v.hasFiltered() } -> std::same_as<bool>;
+  { cv.filtered() } -> std::same_as<detail::ConstParameters>;
+  { cv.filteredCovariance() } -> std::same_as<detail::ConstCovariance>;
+  { cv.hasFiltered() } -> std::same_as<bool>;
+  { v.hasFiltered() } -> std::same_as<bool>;
 
-      { cv.smoothed() } -> std::same_as<detail::ConstParameters>;
-      { cv.smoothedCovariance() } -> std::same_as<detail::ConstCovariance>;
-      { cv.hasSmoothed() } -> std::same_as<bool>;
-      { v.hasSmoothed() } -> std::same_as<bool>;
+  { cv.smoothed() } -> std::same_as<detail::ConstParameters>;
+  { cv.smoothedCovariance() } -> std::same_as<detail::ConstCovariance>;
+  { cv.hasSmoothed() } -> std::same_as<bool>;
+  { v.hasSmoothed() } -> std::same_as<bool>;
 
-      { cv.jacobian() } -> std::same_as<detail::ConstCovariance>;
-      { cv.hasJacobian() } -> std::same_as<bool>;
-      { v.hasJacobian() } -> std::same_as<bool>;
+  { cv.jacobian() } -> std::same_as<detail::ConstCovariance>;
+  { cv.hasJacobian() } -> std::same_as<bool>;
+  { v.hasJacobian() } -> std::same_as<bool>;
 
-      { cv.hasProjector() } -> std::same_as<bool>;
-      { v.hasProjector() } -> std::same_as<bool>;
+  { cv.hasProjector() } -> std::same_as<bool>;
+  { v.hasProjector() } -> std::same_as<bool>;
 
-      { cv.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
-      { v.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
+  { cv.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
+  { v.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
 
-      { cv.hasCalibrated() } -> std::same_as<bool>;
-      { v.hasCalibrated() } -> std::same_as<bool>;
+  { cv.hasCalibrated() } -> std::same_as<bool>;
+  { v.hasCalibrated() } -> std::same_as<bool>;
 
-      { cv.template calibrated<2>() } -> std::same_as<detail::ConstMeasurement>;
-      {
-        cv.template calibratedCovariance<2>()
-      } -> std::same_as<detail::ConstMeasurementCovariance>;
+  { cv.template calibrated<2>() } -> std::same_as<detail::ConstMeasurement>;
+  {
+    cv.template calibratedCovariance<2>()
+  } -> std::same_as<detail::ConstMeasurementCovariance>;
 
-      {
-        cv.effectiveCalibrated()
-      } -> std::same_as<detail::ConstDynamicMeasurement>;
-      {
-        cv.effectiveCalibratedCovariance()
-      } -> std::same_as<detail::ConstDynamicMeasurementCovariance>;
+  { cv.effectiveCalibrated() } -> std::same_as<detail::ConstDynamicMeasurement>;
+  {
+    cv.effectiveCalibratedCovariance()
+  } -> std::same_as<detail::ConstDynamicMeasurementCovariance>;
 
-      { cv.calibratedSize() } -> std::same_as<TrackIndexType>;
-      { v.calibratedSize() } -> std::same_as<TrackIndexType>;
+  { cv.calibratedSize() } -> std::same_as<TrackIndexType>;
+  { v.calibratedSize() } -> std::same_as<TrackIndexType>;
 
-      { cv.chi2() } -> std::same_as<float>;
+  { cv.chi2() } -> std::same_as<float>;
 
-      { cv.pathLength() } -> std::same_as<double>;
+  { cv.pathLength() } -> std::same_as<double>;
 
-      { cv.typeFlags() } -> std::same_as<ConstTrackStateType>;
-    };
+  { cv.typeFlags() } -> std::same_as<ConstTrackStateType>;
+};
 
 template <typename T>
 concept ConstTrackStateProxyConcept =

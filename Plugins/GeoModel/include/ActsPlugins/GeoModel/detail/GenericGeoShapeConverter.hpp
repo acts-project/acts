@@ -58,7 +58,8 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
 
         const auto& [el, surface] = res.value();
 
-        return Acts::Result<Acts::SurfaceHandle<Acts::Surface>>::success(surface);
+        return Acts::Result<Acts::SurfaceHandle<Acts::Surface>>::success(
+            surface);
       }
       return Acts::Result<Acts::SurfaceHandle<Acts::Surface>>::failure(
           GeoModelConversionError::WrongShapeForConverter);

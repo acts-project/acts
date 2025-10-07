@@ -103,9 +103,7 @@ class PortalLinkBase {
 
   /// Getter for the underlying surface handle
   /// @return The surface handle to the surface
-  const SurfaceHandle<RegularSurface>& surfacePtr() const {
-    return m_surface;
-  }
+  const SurfaceHandle<RegularSurface>& surfacePtr() const { return m_surface; }
 
  protected:
   /// Helper function to check a number of preconditions before merging is

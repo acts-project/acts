@@ -121,7 +121,8 @@ class Surface : public virtual GeometryObject,
   /// @return Shared pointer to the created surface instance
   template <class T, typename... Args>
   static SurfaceHandle<T> makeShared(Args&&... args) {
-    return SurfaceHandle<T>(std::shared_ptr<T>(new T(std::forward<Args>(args)...)));
+    return SurfaceHandle<T>(
+        std::shared_ptr<T>(new T(std::forward<Args>(args)...)));
   }
 
   /// Retrieve a @c SurfaceHandle for this surface (non-const version)

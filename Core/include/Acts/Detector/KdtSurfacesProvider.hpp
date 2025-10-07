@@ -34,8 +34,7 @@ template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
 class KdtSurfaces {
  public:
   /// Broadcast the surface KDT type
-  using KDTS =
-      KDTree<kDIM, SurfaceHandle<Surface>, double, std::array, bSize>;
+  using KDTS = KDTree<kDIM, SurfaceHandle<Surface>, double, std::array, bSize>;
 
   /// Broadcast the query definition
   using Query = std::array<double, kDIM>;

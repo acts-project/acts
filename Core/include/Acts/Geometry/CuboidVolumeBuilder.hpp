@@ -154,7 +154,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   ///
   /// @return Pointer to the created surface
   SurfaceHandle<const Surface> buildSurface(const GeometryContext& gctx,
-                                              const SurfaceConfig& cfg) const;
+                                            const SurfaceConfig& cfg) const;
 
   /// @brief This function creates a layer with a surface encapsulated with a
   /// given configuration. The surface gets a detector element attached if the

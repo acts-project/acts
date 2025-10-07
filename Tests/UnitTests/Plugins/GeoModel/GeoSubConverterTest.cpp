@@ -62,7 +62,8 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
   // convert GeoFullPhysVol (to surfaces)
   factory.convertFpv("Sub", fphysSub, subCache, gContext);
 
-  ActsPlugins::GeoModelSensitiveSurface subSensSurface = subCache.sensitiveSurfaces[0];
+  ActsPlugins::GeoModelSensitiveSurface subSensSurface =
+      subCache.sensitiveSurfaces[0];
   Acts::SurfaceHandle<Acts::Surface> subSurface = std::get<1>(subSensSurface);
   const auto* subBounds =
       dynamic_cast<const RectangleBounds*>(&subSurface->bounds());

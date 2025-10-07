@@ -546,8 +546,7 @@ std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
       return {Surface::makeShared<CylinderSurface>(newTransform, newBounds),
               reversed};
     } catch (const std::invalid_argument& e) {
-      throw SurfaceMergingException(getHandle(), other.getHandle(),
-                                    e.what());
+      throw SurfaceMergingException(getHandle(), other.getHandle(), e.what());
     }
   } else {
     throw SurfaceMergingException(getHandle(), other.getHandle(),

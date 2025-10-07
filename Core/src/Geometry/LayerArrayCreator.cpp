@@ -108,9 +108,8 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
         }
 
         // create the navigation layer surface from the layer
-        SurfaceHandle<const Surface> navLayerSurface =
-            createNavigationSurface(gctx, *layIter, aDir,
-                                    -std::abs(layerValue - navigationValue));
+        SurfaceHandle<const Surface> navLayerSurface = createNavigationSurface(
+            gctx, *layIter, aDir, -std::abs(layerValue - navigationValue));
         ACTS_VERBOSE(
             "arbitrary : creating a  NavigationLayer at "
             << (navLayerSurface->referencePosition(gctx, aDir)).x() << ", "
@@ -138,9 +137,8 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
       // create navigation layer only when necessary
       if (navigationValue != max && lastLayer != nullptr) {
         // create the navigation layer surface from the layer
-        SurfaceHandle<const Surface> navLayerSurface =
-            createNavigationSurface(gctx, *lastLayer, aDir,
-                                    navigationValue - layerValue);
+        SurfaceHandle<const Surface> navLayerSurface = createNavigationSurface(
+            gctx, *lastLayer, aDir, navigationValue - layerValue);
         ACTS_VERBOSE(
             "arbitrary : creating a  NavigationLayer at "
             << (navLayerSurface->referencePosition(gctx, aDir)).x() << ", "

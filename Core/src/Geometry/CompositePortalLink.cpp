@@ -9,7 +9,6 @@
 #include "Acts/Geometry/CompositePortalLink.hpp"
 
 #include "Acts/Geometry/GridPortalLink.hpp"
-#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Geometry/PortalError.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -33,9 +33,8 @@
 namespace Acts {
 
 namespace {
-SurfaceHandle<RegularSurface> mergedSurface(const Surface& a,
-                                              const Surface& b,
-                                              AxisDirection direction) {
+SurfaceHandle<RegularSurface> mergedSurface(const Surface& a, const Surface& b,
+                                            AxisDirection direction) {
   if (a.type() != b.type()) {
     throw std::invalid_argument{"Cannot merge surfaces of different types"};
   }

@@ -609,9 +609,8 @@ struct MultiStepperTester {
 
     MultiStepper multi_stepper(defaultBField);
 
-    auto surface =
-        CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
-            .planeSurface();
+    auto surface = CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
+                       .planeSurface();
 
     // Use Ones() here, so that the angles are in correct range
     const auto pars = BoundVector::Ones().eval();
@@ -652,9 +651,8 @@ struct MultiStepperTester {
 
     MultiStepper multi_stepper(defaultBField);
 
-    auto surface =
-        CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
-            .planeSurface();
+    auto surface = CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
+                       .planeSurface();
 
     // Use Ones() here, so that the angles are in correct range
     const auto pars = BoundVector::Ones().eval();
@@ -765,9 +763,8 @@ struct MultiStepperTester {
 
     Propagator propagator(std::move(multi_stepper), VoidNavigator{});
 
-    auto surface =
-        CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
-            .planeSurface();
+    auto surface = CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
+                       .planeSurface();
     using PropagatorOptions =
         typename Propagator<multi_stepper_t, Navigator>::template Options<>;
     PropagatorOptions options(geoCtx, magCtx);

@@ -617,8 +617,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
           auto dd4hepDetEl = std::make_shared<DD4hepDetectorElement>(
               module, detAxis, 1_cm, false, nullptr);
           detectorElements.push_back(dd4hepDetEl);
-          initialLayers[layerId].push_back(
-              dd4hepDetEl->surface().getHandle());
+          initialLayers[layerId].push_back(dd4hepDetEl->surface().getHandle());
         }
         layerId++;
       }

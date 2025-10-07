@@ -177,15 +177,14 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
     SurfaceHandle<Surface> surface;
     switch (test_data.surface_type) {
       case TestData::kPlane: {
-        surface = dynamic_handle_cast<Surface>(
-            Surface::makeShared<PlaneSurface>(Translation3(surface_center) *
-                                              surface_transform0));
+        surface =
+            dynamic_handle_cast<Surface>(Surface::makeShared<PlaneSurface>(
+                Translation3(surface_center) * surface_transform0));
         break;
       }
       case TestData::kPolarDisk: {
-        surface =
-            dynamic_handle_cast<Surface>(Surface::makeShared<DiscSurface>(
-                Translation3(surface_center) * surface_transform0));
+        surface = dynamic_handle_cast<Surface>(Surface::makeShared<DiscSurface>(
+            Translation3(surface_center) * surface_transform0));
         break;
       }
       default: {

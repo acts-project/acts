@@ -85,9 +85,9 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// @param aDir is the axis direction for the binning
   /// @param offset is the sift for the navigation layer
   SurfaceHandle<Surface> createNavigationSurface(const GeometryContext& gctx,
-                                                   const Layer& layer,
-                                                   AxisDirection aDir,
-                                                   double offset) const;
+                                                 const Layer& layer,
+                                                 AxisDirection aDir,
+                                                 double offset) const;
 };
 
 }  // namespace Acts

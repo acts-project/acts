@@ -49,6 +49,7 @@ class StructureSelector {
 
  private:
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
-  GeometryIdMultiset<Acts::SurfaceHandle<const Acts::Surface>> m_surfaceMultiSet;
+  GeometryIdMultiset<Acts::SurfaceHandle<const Acts::Surface>>
+      m_surfaceMultiSet;
 };
 }  // namespace ActsExamples

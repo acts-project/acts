@@ -103,8 +103,8 @@ struct SurfaceArrayCreatorFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
 
-      SurfaceHandle<Surface> srf =
-          SurfaceHandle<Surface>(Surface::makeShared<PlaneSurface>(trans, bounds));
+      SurfaceHandle<Surface> srf = SurfaceHandle<Surface>(
+          Surface::makeShared<PlaneSurface>(trans, bounds));
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -134,8 +134,8 @@ struct SurfaceArrayCreatorFixture {
       trans.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
-      SurfaceHandle<Surface> srf =
-          SurfaceHandle<Surface>(Surface::makeShared<PlaneSurface>(trans, bounds));
+      SurfaceHandle<Surface> srf = SurfaceHandle<Surface>(
+          Surface::makeShared<PlaneSurface>(trans, bounds));
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -160,8 +160,8 @@ struct SurfaceArrayCreatorFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
 
-      SurfaceHandle<Surface> srf =
-          SurfaceHandle<Surface>(Surface::makeShared<PlaneSurface>(trans, bounds));
+      SurfaceHandle<Surface> srf = SurfaceHandle<Surface>(
+          Surface::makeShared<PlaneSurface>(trans, bounds));
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -209,14 +209,14 @@ struct SurfaceArrayCreatorFixture {
             Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
-        SurfaceHandle<PlaneSurface> srfA =
-            SurfaceHandle<PlaneSurface>(Surface::makeShared<PlaneSurface>(trans, bounds));
+        SurfaceHandle<PlaneSurface> srfA = SurfaceHandle<PlaneSurface>(
+            Surface::makeShared<PlaneSurface>(trans, bounds));
 
         Vector3 nrm = srfA->normal(tgContext);
         Transform3 transB = trans;
         transB.pretranslate(nrm * 0.1);
-        SurfaceHandle<Surface> srfB =
-            SurfaceHandle<Surface>(Surface::makeShared<PlaneSurface>(transB, bounds));
+        SurfaceHandle<Surface> srfB = SurfaceHandle<Surface>(
+            Surface::makeShared<PlaneSurface>(transB, bounds));
 
         pairs.push_back(std::make_pair(srfA.get(), srfB.get()));
 
@@ -571,8 +571,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
   double R = 10.;
 
-  auto cylinder =
-      SurfaceHandle<CylinderSurface>(Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100));
+  auto cylinder = SurfaceHandle<CylinderSurface>(
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100));
   auto sl = std::make_unique<
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
       cylinder, 1., std::make_tuple(std::move(phiAxis), std::move(zAxis)));
@@ -614,8 +614,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   double R = 10.;
   Transform3 itr = tr.inverse();
 
-  auto cylinder =
-      SurfaceHandle<CylinderSurface>(Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100));
+  auto cylinder = SurfaceHandle<CylinderSurface>(
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100));
   auto sl = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                                     AxisBoundaryType::Bound>(cylinder, 1.,
                                                              pAxisPhi, pAxisZ);

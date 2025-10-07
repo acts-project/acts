@@ -118,8 +118,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
       std::make_shared<StraightPropagator>(straightStepper);
 
   // Create perigee surface, initial track parameters will be relative to it
-  auto perigeeSurface{
-      Surface::makeShared<PerigeeSurface>(Vector3{0., 0., 0.})};
+  auto perigeeSurface{Surface::makeShared<PerigeeSurface>(Vector3{0., 0., 0.})};
 
   // Vertex position and corresponding d0 and z0
   Vector4 vtxPos;
@@ -164,8 +163,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., resT * resT;
-    tracks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
-                        ParticleHypothesis::pion());
+    tracks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), paramVec,
+                        std::move(covMat), ParticleHypothesis::pion());
   }
 
   // Linearizer for constant field and corresponding state

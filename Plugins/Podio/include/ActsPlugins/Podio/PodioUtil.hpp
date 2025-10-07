@@ -11,8 +11,8 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Surfaces/SurfaceHandle.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "ActsPlugins/Podio/PodioDynamicColumns.hpp"
 
 #include <limits>

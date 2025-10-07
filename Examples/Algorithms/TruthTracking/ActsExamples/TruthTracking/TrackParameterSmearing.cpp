@@ -152,8 +152,8 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
 
     const auto& outputTrackParameters =
         outputTrackParametersContainer.emplace_back(
-            inputTrackParameters.referenceSurface().getHandle(), params,
-            cov, particleHypothesis);
+            inputTrackParameters.referenceSurface().getHandle(), params, cov,
+            particleHypothesis);
 
     ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
     ACTS_VERBOSE(

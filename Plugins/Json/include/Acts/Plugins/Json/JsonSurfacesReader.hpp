@@ -46,7 +46,8 @@ Acts::GeometryHierarchyMap<Acts::SurfaceHandle<Acts::Surface>> readHierarchyMap(
 /// @param options options for surface reading
 ///
 /// @return  a vector of surfaces
-std::vector<Acts::SurfaceHandle<Acts::Surface>> readVector(const Options& options);
+std::vector<Acts::SurfaceHandle<Acts::Surface>> readVector(
+    const Options& options);
 
 /// @brief Read the surfaces from the input file and create
 /// detector elements

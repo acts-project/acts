@@ -99,8 +99,8 @@ struct MultiCmpsParsInterface : public BoundTrackParameters {
   MultiComponentBoundTrackParameters multi_pars;
 
   explicit MultiCmpsParsInterface(const MultiComponentBoundTrackParameters &p)
-      : BoundTrackParameters(p.referenceSurface().getHandle(),
-                             p.parameters(), p.covariance(), electron),
+      : BoundTrackParameters(p.referenceSurface().getHandle(), p.parameters(),
+                             p.covariance(), electron),
         multi_pars(p) {}
 
   explicit operator MultiComponentBoundTrackParameters() const {
@@ -228,8 +228,7 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   // create a boundless target surface near the tracker exit
   Acts::Vector3 center(-3._m, 0., 0.);
   Acts::Vector3 normal(1., 0., 0.);
-  auto targetSurface =
-      Acts::CurvilinearSurface(center, normal).planeSurface();
+  auto targetSurface = Acts::CurvilinearSurface(center, normal).planeSurface();
 
   options.referenceSurface = targetSurface.get();
 

@@ -291,8 +291,8 @@ MockupSectorBuilder::buildSector(
             Acts::Experimental::defaultPortalAndSubPortalGenerator(), gctx,
             "cylinder_volume_" + std::to_string(i), transform,
             std::move(cylinderVolumesBounds[i]),
-            std::vector<Acts::SurfaceHandle<Acts::Surface>>{}, chambersOfSectors[i],
-            Acts::Experimental::tryAllSubVolumes(),
+            std::vector<Acts::SurfaceHandle<Acts::Surface>>{},
+            chambersOfSectors[i], Acts::Experimental::tryAllSubVolumes(),
             Acts::Experimental::tryAllPortalsAndSurfaces()));
 
   }  // end of cylinder volumes

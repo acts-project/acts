@@ -177,7 +177,8 @@ class PodioTrackStateContainerBase {
   static void populateSurfaceBuffer(
       const PodioUtil::ConversionHelper& helper,
       const ActsPodioEdm::TrackStateCollection& collection,
-      std::vector<Acts::SurfaceHandle<const Acts::Surface>>& surfaces) noexcept {
+      std::vector<Acts::SurfaceHandle<const Acts::Surface>>&
+          surfaces) noexcept {
     surfaces.reserve(collection.size());
     for (ActsPodioEdm::TrackState trackState : collection) {
       surfaces.push_back(PodioUtil::convertSurfaceFromPodio(
@@ -675,8 +676,8 @@ class MutablePodioTrackStateContainer final
     data.uncalibratedIdentifier = id;
   }
 
-  void setReferenceSurface_impl(IndexType istate,
-                                Acts::SurfaceHandle<const Acts::Surface> surface) {
+  void setReferenceSurface_impl(
+      IndexType istate, Acts::SurfaceHandle<const Acts::Surface> surface) {
     auto trackState = m_collection->at(istate);
     trackState.setReferenceSurface(
         PodioUtil::convertSurfaceToPodio(m_helper, *surface));

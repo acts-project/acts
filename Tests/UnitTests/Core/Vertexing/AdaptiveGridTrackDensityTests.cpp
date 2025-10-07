@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec, covMat,
-                               ParticleHypothesis::pion());
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec, covMat, ParticleHypothesis::pion());
 
   AdaptiveGridTrackDensity::Config cfg;
   // force track to have exactly spatialTrkGridSize spatial bins for testing
@@ -148,8 +148,8 @@ BOOST_AUTO_TEST_CASE(
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params(SurfaceHandle<const Surface>(perigeeSurface), paramVec, covMat,
-                              ParticleHypothesis::pion());
+  BoundTrackParameters params(SurfaceHandle<const Surface>(perigeeSurface),
+                              paramVec, covMat, ParticleHypothesis::pion());
 
   ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
 
@@ -297,14 +297,14 @@ BOOST_AUTO_TEST_CASE(track_adding) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params0(SurfaceHandle<const Surface>(perigeeSurface), paramVec0, covMat,
-                               ParticleHypothesis::pion());
-  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec1, covMat,
-                               ParticleHypothesis::pion());
-  BoundTrackParameters params2(SurfaceHandle<const Surface>(perigeeSurface), paramVec2, covMat,
-                               ParticleHypothesis::pion());
-  BoundTrackParameters params3(SurfaceHandle<const Surface>(perigeeSurface), paramVec3, covMat,
-                               ParticleHypothesis::pion());
+  BoundTrackParameters params0(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec0, covMat, ParticleHypothesis::pion());
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec1, covMat, ParticleHypothesis::pion());
+  BoundTrackParameters params2(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec2, covMat, ParticleHypothesis::pion());
+  BoundTrackParameters params3(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec3, covMat, ParticleHypothesis::pion());
 
   // Empty map
   AdaptiveGridTrackDensity::DensityMap mainDensityMap;
@@ -368,10 +368,10 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec1, covMat,
-                               ParticleHypothesis::pion());
-  BoundTrackParameters params2(SurfaceHandle<const Surface>(perigeeSurface), paramVec2, covMat,
-                               ParticleHypothesis::pion());
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec1, covMat, ParticleHypothesis::pion());
+  BoundTrackParameters params2(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec2, covMat, ParticleHypothesis::pion());
 
   // Empty maps
   AdaptiveGridTrackDensity::DensityMap mainDensityMap1D;
@@ -448,10 +448,10 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec1, covMat,
-                               ParticleHypothesis::pion());
-  BoundTrackParameters params2(SurfaceHandle<const Surface>(perigeeSurface), paramVec2, covMat,
-                               ParticleHypothesis::pion());
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec1, covMat, ParticleHypothesis::pion());
+  BoundTrackParameters params2(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec2, covMat, ParticleHypothesis::pion());
 
   // Empty map
   AdaptiveGridTrackDensity::DensityMap mainDensityMap;
@@ -526,10 +526,10 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params0(SurfaceHandle<const Surface>(perigeeSurface), paramVec0, covMat,
-                               ParticleHypothesis::pion());
-  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface), paramVec1, covMat,
-                               ParticleHypothesis::pion());
+  BoundTrackParameters params0(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec0, covMat, ParticleHypothesis::pion());
+  BoundTrackParameters params1(SurfaceHandle<const Surface>(perigeeSurface),
+                               paramVec1, covMat, ParticleHypothesis::pion());
 
   // Empty maps
   AdaptiveGridTrackDensity::DensityMap mainDensityMap1D;
