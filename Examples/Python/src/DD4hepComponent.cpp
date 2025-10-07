@@ -7,13 +7,13 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepIdentifierMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepFieldAdapter.hpp"
+#include "ActsPlugins/DD4hep/DD4hepIdentifierMapper.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -28,6 +28,7 @@
 
 namespace py = pybind11;
 using namespace Acts;
+using namespace ActsPlugins;
 using namespace ActsExamples;
 using namespace ActsPython;
 
@@ -104,7 +105,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    using Options = Experimental::DD4hepDetectorStructure::Options;
+    using Options = DD4hepDetectorStructure::Options;
     auto o = py::class_<Options>(m, "DD4hepDetectorOptions").def(py::init<>());
     ACTS_PYTHON_STRUCT(o, logLevel, emulateToGraph, geoIdGenerator,
                        materialDecorator);
@@ -112,7 +113,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     patchKwargsConstructor(o);
 
     m.def("attachDD4hepGeoIdMapper",
-          [](Experimental::DD4hepDetectorStructure::Options& options,
+          [](DD4hepDetectorStructure::Options& options,
              const std::map<DD4hepDetectorElement::DD4hepVolumeID,
                             GeometryIdentifier>& dd4hepIdGeoIdMap) {
             // The Geo mapper

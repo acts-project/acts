@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Io/Podio/PodioWriter.hpp"
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsPlugins/Podio/PodioUtil.hpp"
 
 #include <algorithm>
 #include <list>
@@ -38,7 +38,7 @@ class PodioWriterImpl {
   std::vector<std::unique_ptr<CollectionHandle>> m_collections;
 
   std::mutex m_writeMutex;
-  Acts::PodioUtil::ROOTWriter m_writer;
+  ActsPlugins::PodioUtil::ROOTWriter m_writer;
 };
 }  // namespace detail
 

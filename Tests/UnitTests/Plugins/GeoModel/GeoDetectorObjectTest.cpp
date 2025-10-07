@@ -8,8 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
@@ -19,6 +17,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelReader.hpp"
 
 #include <typeinfo>
 
@@ -28,6 +28,9 @@
 #include <GeoModelKernel/GeoMaterial.h>
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoTube.h>
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 BOOST_AUTO_TEST_SUITE(GeoModelDetObj)
 
@@ -39,26 +42,26 @@ struct GeoDims {
   std::vector<double> trapHls;
   std::vector<std::vector<double>> polyVerts;
 };
-void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
+
+void test(const GeoModelDetectorObjectFactory::Cache& cache,
           GeoModelDetObj::GeoDims geoDims) {
   for (const auto& convertedObj : cache.volumeBoxFPVs) {
     const auto& box = convertedObj.volume;
-    const Acts::VolumeBounds& bounds = box->volumeBounds();
+    const VolumeBounds& bounds = box->volumeBounds();
     for (std::size_t i = 0; i < geoDims.boxO.size(); i++) {
       BOOST_CHECK(geoDims.boxO[i] == bounds.values()[i]);
     }
     for (const auto& surface : convertedObj.surfaces) {
-      const Acts::SurfaceBounds& sbounds = surface->bounds();
+      const SurfaceBounds& sbounds = surface->bounds();
       // check straws
-      if (surface->type() == Acts::Surface::SurfaceType::Straw) {
-        const auto* lineBounds =
-            dynamic_cast<const Acts::LineBounds*>(&sbounds);
-        BOOST_CHECK(geoDims.tube[1] == lineBounds->get(Acts::LineBounds::eR));
+      if (surface->type() == Surface::SurfaceType::Straw) {
+        const auto* lineBounds = dynamic_cast<const LineBounds*>(&sbounds);
+        BOOST_CHECK(geoDims.tube[1] == lineBounds->get(LineBounds::eR));
         BOOST_CHECK(geoDims.tube[2] ==
-                    lineBounds->get(Acts::LineBounds::eHalfLengthZ));
+                    lineBounds->get(LineBounds::eHalfLengthZ));
       }
       // rectangle Surface check corner position without trf
-      if (sbounds.type() == Acts::SurfaceBounds::eRectangle) {
+      if (sbounds.type() == SurfaceBounds::eRectangle) {
         double csxmin = sbounds.values()[0];
         double csymin = sbounds.values()[1];
         double csxmax = sbounds.values()[2];
@@ -69,10 +72,9 @@ void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
         BOOST_CHECK(geoDims.boxI[1] == csymax);
       }
       // trap Surface without trf
-      if (sbounds.type() == Acts::SurfaceBounds::eTrapezoid) {
-        const auto* trapBounds =
-            dynamic_cast<const Acts::TrapezoidBounds*>(&sbounds);
-        std::vector<Acts::Vector2> trapVerts = trapBounds->vertices();
+      if (sbounds.type() == SurfaceBounds::eTrapezoid) {
+        const auto* trapBounds = dynamic_cast<const TrapezoidBounds*>(&sbounds);
+        std::vector<Vector2> trapVerts = trapBounds->vertices();
 
         for (std::size_t i = 0; i < trapVerts.size(); i++) {
           BOOST_CHECK(trapVerts[i][0] == geoDims.trapVerts[i][0]);
@@ -146,13 +148,13 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   }
 
   // create pars for conversion
-  Acts::GeoModelDetectorObjectFactory::Config gmConfig;
+  ActsPlugins::GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"LogVolumeXY"};
-  Acts::GeometryContext gContext;
-  Acts::GeoModelDetectorObjectFactory::Cache gmCache;
+  GeometryContext gContext;
+  ActsPlugins::GeoModelDetectorObjectFactory::Cache gmCache;
 
   // create factory instance
-  Acts::GeoModelDetectorObjectFactory factory(gmConfig);
+  ActsPlugins::GeoModelDetectorObjectFactory factory(gmConfig);
   // convert GeoFullPhysVol
   factory.convertFpv("LogVolumeXY", parentVol, gmCache, gContext);
 

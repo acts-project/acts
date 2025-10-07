@@ -9,12 +9,12 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
+#include "ActsPlugins/Podio/PodioUtil.hpp"
 
 #include <stdexcept>
 

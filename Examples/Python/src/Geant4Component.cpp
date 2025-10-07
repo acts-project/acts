@@ -10,9 +10,6 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
-#include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
@@ -24,6 +21,9 @@
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
+#include "ActsPlugins/Geant4/Geant4DetectorElement.hpp"
+#include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
+#include "ActsPlugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -48,6 +48,7 @@ using namespace pybind11::literals;
 
 using namespace ActsExamples;
 using namespace Acts;
+using namespace ActsPlugins;
 using namespace ActsPython;
 
 struct ExperimentalSensitiveCandidates

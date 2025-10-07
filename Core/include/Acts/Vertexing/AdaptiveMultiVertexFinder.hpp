@@ -10,19 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
-
-#include <functional>
-#include <type_traits>
 
 namespace Acts {
 
@@ -190,9 +184,6 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     }
   }
 
-  /// Move constructor
-  AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
-
   /// @brief Function that performs the adaptive
   /// multi-vertex finding
   ///
@@ -239,7 +230,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// from seed track collection in last iteration
   ///
   /// @return The seed vertex
-  Result<std::optional<Vertex>> doSeeding(
+  Result<std::vector<Vertex>> doSeeding(
       const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
       const VertexingOptions& vertexingOptions,
       IVertexFinder::State& seedFinderState,
@@ -348,11 +339,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param[in] geoCtx The geometry context to access global positions
   ///
   /// @return Incompatible track was removed
-  bool removeTrackIfIncompatible(Vertex& vtx,
-                                 std::vector<InputTrack>& seedTracks,
-                                 VertexFitterState& fitterState,
-                                 std::vector<InputTrack>& removedSeedTracks,
-                                 const GeometryContext& geoCtx) const;
+  Result<void> removeTrackIfIncompatible(
+      Vertex& vtx, std::vector<InputTrack>& seedTracks,
+      VertexFitterState& fitterState,
+      std::vector<InputTrack>& removedSeedTracks,
+      const GeometryContext& geoCtx) const;
 
   /// @brief Method that evaluates if the new vertex candidate should
   /// be kept, i.e. saved, or not

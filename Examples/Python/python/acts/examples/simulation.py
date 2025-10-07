@@ -516,13 +516,14 @@ def addFatras(
     s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
     addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        outputParticles,
-        outputDirCsv,
-        outputDirRoot,
-        outputDirObj,
-        logLevel,
+        s=s,
+        simHits=alg.config.outputSimHits,
+        particlesSimulated=outputParticles,
+        field=field,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        outputDirObj=outputDirObj,
+        logLevel=logLevel,
     )
 
     return s
@@ -532,6 +533,8 @@ def addSimWriters(
     s: acts.examples.Sequencer,
     simHits: str = "simhits",
     particlesSimulated: str = "particles_simulated",
+    field: acts.MagneticFieldProvider = None,
+    writeHelixParameters: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirObj: Optional[Union[Path, str]] = None,
@@ -568,6 +571,8 @@ def addSimWriters(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=particlesSimulated,
+                bField=field,
+                writeHelixParameters=writeHelixParameters,
                 filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
@@ -686,12 +691,13 @@ def addGeant4(
     s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
     addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        outputParticles,
-        outputDirCsv,
-        outputDirRoot,
-        outputDirObj,
+        s=s,
+        simHits=alg.config.outputSimHits,
+        particlesSimulated=outputParticles,
+        field=field,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        outputDirObj=outputDirObj,
         logLevel=logLevel,
     )
 

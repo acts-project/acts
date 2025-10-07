@@ -106,9 +106,10 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
   std::size_t stationNum = 1;
   double maxZ = std::numeric_limits<double>::lowest();
   for (const auto& [parentPhysVol, childrenTrkVols] : commonStations) {
-    std::shared_ptr<Acts::Volume> parentVolume = Acts::GeoModel::convertVolume(
-        Acts::GeoModel::volumePosInSpace(parentPhysVol),
-        parentPhysVol->getLogVol()->getShape(), boundFactory);
+    std::shared_ptr<Acts::Volume> parentVolume =
+        ActsPlugins::GeoModel::convertVolume(
+            ActsPlugins::GeoModel::volumePosInSpace(parentPhysVol),
+            parentPhysVol->getLogVol()->getShape(), boundFactory);
 
     auto chamberVolume = std::make_unique<Acts::TrackingVolume>(
         *parentVolume, std::format("{:}_Chamber_{:d}", name, stationNum));
