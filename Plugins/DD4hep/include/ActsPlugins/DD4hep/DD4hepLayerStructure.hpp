@@ -61,8 +61,8 @@ class DD4hepLayerStructure {
     std::string name = "";
     /// An out put log level
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
-    // The extent structure - optionally
     std::optional<Acts::Extent> extent = std::nullopt;
+    /// The extent structure - optionally
     /// The extent constraints - optionally
     std::vector<Acts::AxisDirection> extentConstraints = {};
     /// Approximation for the polyhedron binning
