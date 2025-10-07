@@ -48,14 +48,18 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   const Acts::Transform3& transform(
       const Acts::GeometryContext& gctx) const override;
+  /// @return Reference to the local-to-global transformation matrix
 
   /// Return surface associated with this detector element
   const Acts::Surface& surface() const override;
+  /// @return Const reference to the associated surface
 
   /// Non-const access to surface associated with this detector element
   Acts::Surface& surface() override;
+  /// @return Mutable reference to the associated surface
 
   /// Return the thickness of this detector element
+  /// @return The thickness value in length units
   double thickness() const override;
 
   /// @return to the Geant4 physical volume

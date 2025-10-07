@@ -40,7 +40,9 @@ struct AllSelector : public IGeant4PhysicalVolumeSelector {
 /// @brief Struct that selects G4VPhysicalVolume objects
 /// that match one of the provided names, exact or partially
 struct NameSelector : public IGeant4PhysicalVolumeSelector {
+  /// List of volume names for selection criteria
   std::vector<std::string> names = {};
+  /// Flag indicating exact name matching vs partial matching
   bool exact = false;
 
   /// Constructor with arguments
@@ -66,6 +68,7 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
 /// @note Careful with axis conventions as
 /// Geant4 uses a different one than Acts
 struct PositionSelector : public IGeant4PhysicalVolumeSelector {
+  /// Map of axis indices to position ranges for volume selection
   std::map<unsigned int, std::tuple<double, double>> m_ranges;
 
   /// Constructor with arguments
