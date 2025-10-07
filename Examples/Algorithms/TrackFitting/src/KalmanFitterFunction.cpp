@@ -98,28 +98,17 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &kfUpdater);
-    extensions.smoother
-        .connect<&Acts::MbfSmoother::operator()<Acts::VectorMultiTrajectory>>(
-            &kfSmoother);
-    extensions.reverseFilteringLogic
-        .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
-            &reverseFilteringLogic);
     extensions.outlierFinder.connect<&SimpleOutlierFinder::isOutlier>(
         &outlierFinder);
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
-        extensions, options.propOptions, &(*options.referenceSurface));
-
-    kfOptions.referenceSurfaceStrategy =
-        Acts::KalmanFitterTargetSurfaceStrategy::first;
+        extensions, options.propOptions);
     kfOptions.multipleScattering = multipleScattering;
     kfOptions.energyLoss = energyLoss;
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    kfOptions.reversedFilteringCovarianceScaling =
-        reverseFilteringCovarianceScaling;
 
     if (options.doRefit) {
       kfOptions.extensions.surfaceAccessor
