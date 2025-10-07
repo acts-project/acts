@@ -31,6 +31,7 @@ namespace ActsPlugins {
 /// It also buils up the global transform for the conversion
 /// into an ACTS Surface
 struct TGeoParser {
+  /// Type alias for parsing range as min/max bounds pair
   using ParseRange = std::pair<double, double>;
 
   struct SelectedNode {
@@ -46,13 +47,13 @@ struct TGeoParser {
   /// geometry, it collects the information during the parsing process
   /// and keeps track of the built up transform
   struct State {
-    // The current volume
+    /// The current ROOT geometry volume being parsed
     TGeoVolume* volume = nullptr;
-    // The current node
+    /// The current ROOT geometry node being parsed
     TGeoNode* node = nullptr;
-    // Bool on branch
+    /// Flag indicating if parsing is on the selected geometry branch
     bool onBranch = false;
-    // The currently collected nodes
+    /// Collection of nodes selected during parsing
     std::vector<SelectedNode> selectedNodes = {};
   };
 
