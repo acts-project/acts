@@ -35,6 +35,7 @@ class DD4hepBlueprintFactory {
   /// @brief Nested config object
   struct Config {
     std::shared_ptr<ActsPlugins::DD4hepLayerStructure> layerStructure = nullptr;
+    /// Configuration for DD4hep layer structure extraction
 
     /// The maximum number of portals to be checked for protal material
     unsigned int maxPortals = 8u;
@@ -42,6 +43,7 @@ class DD4hepBlueprintFactory {
 
   /// @brief Nested cache object for the detector store
   struct Cache {
+    /// Storage for DD4hep detector elements
     DD4hepDetectorElement::Store dd4hepStore;
   };
 
