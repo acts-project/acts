@@ -109,7 +109,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
     edm4hep::TrackState& trackState = outTrackStates.emplace_back();
     trackState.location = edm4hep::TrackState::AtOther;
 
-    Acts::BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
+    Acts::BoundTrackParameters params{state.referenceSurface().getHandle(),
                                       state.parameters(), state.covariance(),
                                       track.particleHypothesis()};
 
@@ -141,7 +141,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 
   // Convert the track parameters at the IP
   Acts::BoundTrackParameters trackParams{
-      track.referenceSurface().getSharedPtr(), track.parameters(),
+      track.referenceSurface().getHandle(), track.parameters(),
       track.covariance(), track.particleHypothesis()};
 
   // Convert to LCIO track parametrization expected by EDM4hep

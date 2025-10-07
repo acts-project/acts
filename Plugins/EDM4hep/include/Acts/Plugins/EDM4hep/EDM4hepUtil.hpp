@@ -107,7 +107,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
     edm4hep::TrackState& trackState = outTrackStates.emplace_back();
     trackState.location = edm4hep::TrackState::AtOther;
 
-    BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
+    BoundTrackParameters params{state.referenceSurface().getHandle(),
                                 state.parameters(), state.covariance(),
                                 track.particleHypothesis()};
 
@@ -138,7 +138,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   auto& ipState = outTrackStates.emplace_back();
 
   // Convert the track parameters at the IP
-  BoundTrackParameters trackParams{track.referenceSurface().getSharedPtr(),
+  BoundTrackParameters trackParams{track.referenceSurface().getHandle(),
                                    track.parameters(), track.covariance(),
                                    track.particleHypothesis()};
 
