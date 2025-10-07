@@ -55,8 +55,9 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
     mv.attr("minor") = Acts::VersionMinor;
     mv.attr("patch") = Acts::VersionPatch;
 
-    mv.attr("commit_hash") = Acts::CommitHash;
-    mv.attr("commit_hash_short") = Acts::CommitHashShort;
+    mv.attr("commit_hash") = std::string{Acts::CommitHash.value_or("UNKNOWN")};
+    mv.attr("commit_hash_short") =
+        std::string{Acts::CommitHashShort.value_or("UNKNOWN")};
   }
 
   addDefinitions(m);
