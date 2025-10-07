@@ -35,7 +35,7 @@ RootMuonSpacePointReader::RootMuonSpacePointReader(const Config& config,
         "RootMuonSpacePointReader() - Failed to open '" + m_cfg.filePath + "'");
   }
   if (!m_reader.GetTree()) {
-    throw std::invalid_argument("Stonjek");
+    throw std::invalid_argument("Failed to fetch TTree '"+ m_cfg.treeName +"'");
   }
 
   // Sort the entry numbers of the events

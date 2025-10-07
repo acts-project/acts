@@ -185,8 +185,9 @@ ProcessCode RootMuonSpacePointWriter::writeT(
           const double l =
               rBounds.get(writeMe.measuresLoc1() ? RectangleBounds::eMaxX
                                                  : RectangleBounds::eMaxY);
-          lowEdge = trf * (-l * Vector3::Unit(!writeMe.measuresLoc1()));
-          highEdge = trf * (l * Vector3::Unit(!writeMe.measuresLoc1()));
+          const auto dimIdx = static_cast<std::uint32_t>(writeMe.measuresLoc1() == false);
+          lowEdge = trf * (-l * Vector3::Unit(dimIdx));
+          highEdge = trf * (l * Vector3::Unit(dimIdx));
           break;
         }
         case eTrapezoid: {
