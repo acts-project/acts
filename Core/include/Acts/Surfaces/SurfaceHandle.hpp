@@ -99,81 +99,76 @@ class SurfaceHandle {
   /// @brief Reset the handle to empty state
   void reset() { m_ptr.reset(); }
 
-  /// @brief Reset with new pointer
-  /// @param ptr New pointer to manage
-  void reset(std::shared_ptr<T> ptr) { m_ptr = std::move(ptr); }
+  /// @brief Swap with another handle (hidden friend)
+  /// @param lhs First handle
+  /// @param rhs Second handle
+  friend void swap(SurfaceHandle& lhs, SurfaceHandle& rhs) noexcept {
+    lhs.m_ptr.swap(rhs.m_ptr);
+  }
 
-  /// @brief Get weak_ptr to the managed object
-  /// @return std::weak_ptr to the managed object
-  std::weak_ptr<T> weak_ptr() const { return m_ptr; }
-
-  /// @brief Swap with another handle
-  /// @param other Handle to swap with
-  void swap(SurfaceHandle& other) noexcept { m_ptr.swap(other.m_ptr); }
-
-  /// @brief Get use count
-  /// @return Number of shared owners
-  long use_count() const noexcept { return m_ptr.use_count(); }
-
-  /// @brief Check if this is the only owner
-  /// @return true if use_count() == 1
-  bool unique() const noexcept { return m_ptr.unique(); }
-
-  /// @brief Equality comparison
-  /// @param other Handle to compare with
+  /// @brief Equality comparison (hidden friend for symmetry)
+  /// @param lhs Left-hand side handle
+  /// @param rhs Right-hand side handle
   /// @return true if both handles point to the same object
-  bool operator==(const SurfaceHandle& other) const noexcept {
-    return m_ptr == other.m_ptr;
+  friend bool operator==(const SurfaceHandle& lhs,
+                         const SurfaceHandle& rhs) noexcept {
+    return lhs.m_ptr == rhs.m_ptr;
   }
 
-  /// @brief Inequality comparison
-  /// @param other Handle to compare with
+  /// @brief Inequality comparison (hidden friend for symmetry)
+  /// @param lhs Left-hand side handle
+  /// @param rhs Right-hand side handle
   /// @return true if handles point to different objects
-  bool operator!=(const SurfaceHandle& other) const noexcept {
-    return m_ptr != other.m_ptr;
+  friend bool operator!=(const SurfaceHandle& lhs,
+                         const SurfaceHandle& rhs) noexcept {
+    return lhs.m_ptr != rhs.m_ptr;
   }
 
-  /// @brief Less-than comparison for container usage
-  /// @param other Handle to compare with
-  /// @return true if this handle's pointer is less than other's
-  bool operator<(const SurfaceHandle& other) const noexcept {
-    return m_ptr < other.m_ptr;
+  /// @brief Less-than comparison for container usage (hidden friend)
+  /// @param lhs Left-hand side handle
+  /// @param rhs Right-hand side handle
+  /// @return true if lhs pointer is less than rhs pointer
+  friend bool operator<(const SurfaceHandle& lhs,
+                        const SurfaceHandle& rhs) noexcept {
+    return lhs.m_ptr < rhs.m_ptr;
   }
 
-  /// @brief Compare with nullptr
-  /// @param ptr nullptr
+  /// @brief Compare with nullptr (hidden friend for symmetry)
+  /// @param lhs Handle to compare
+  /// @param rhs nullptr
   /// @return true if handle is empty
-  bool operator==(std::nullptr_t) const noexcept { return !m_ptr; }
+  friend bool operator==(const SurfaceHandle& lhs, std::nullptr_t) noexcept {
+    return !lhs.m_ptr;
+  }
 
-  /// @brief Compare with nullptr
-  /// @param ptr nullptr
+  /// @brief Compare with nullptr (hidden friend for symmetry)
+  /// @param lhs nullptr
+  /// @param rhs Handle to compare
+  /// @return true if handle is empty
+  friend bool operator==(std::nullptr_t, const SurfaceHandle& rhs) noexcept {
+    return !rhs.m_ptr;
+  }
+
+  /// @brief Compare with nullptr (hidden friend for symmetry)
+  /// @param lhs Handle to compare
+  /// @param rhs nullptr
   /// @return true if handle is not empty
-  bool operator!=(std::nullptr_t) const noexcept {
-    return static_cast<bool>(m_ptr);
+  friend bool operator!=(const SurfaceHandle& lhs, std::nullptr_t) noexcept {
+    return static_cast<bool>(lhs.m_ptr);
+  }
+
+  /// @brief Compare with nullptr (hidden friend for symmetry)
+  /// @param lhs nullptr
+  /// @param rhs Handle to compare
+  /// @return true if handle is not empty
+  friend bool operator!=(std::nullptr_t, const SurfaceHandle& rhs) noexcept {
+    return static_cast<bool>(rhs.m_ptr);
   }
 
  private:
   /// Internal shared pointer
   std::shared_ptr<T> m_ptr;
 };
-
-/// @brief Compare nullptr with handle
-template <class T>
-bool operator==(std::nullptr_t, const SurfaceHandle<T>& handle) noexcept {
-  return handle == nullptr;
-}
-
-/// @brief Compare nullptr with handle
-template <class T>
-bool operator!=(std::nullptr_t, const SurfaceHandle<T>& handle) noexcept {
-  return handle != nullptr;
-}
-
-/// @brief Swap two handles
-template <class T>
-void swap(SurfaceHandle<T>& lhs, SurfaceHandle<T>& rhs) noexcept {
-  lhs.swap(rhs);
-}
 
 /// @brief Static cast between SurfaceHandle types
 /// @tparam U Target type
