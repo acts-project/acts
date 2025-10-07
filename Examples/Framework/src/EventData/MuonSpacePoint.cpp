@@ -133,7 +133,7 @@ MuonSpacePoint::MuonId::MuonId(std::uint32_t rawRep) : MuonId{} {
   m_measPhi = ((rawRep >> 15) & oneBit) == 1u;
   m_measTime = ((rawRep >> 16) & oneBit) == 1u;
   m_layer = ((rawRep >> 17) & fourBit) + 1u;
-  m_channel = ((rawRep >> 21)) + 1u;
+  m_channel = (rawRep >> 21) + 1u;
 }
 
 std::uint32_t MuonSpacePoint::MuonId::toInt() const {
