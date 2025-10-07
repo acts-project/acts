@@ -124,8 +124,8 @@ def main():
         mockUpCfg = gm.GeoMuonMockupExperiment.Config()
         mockUpCfg.dumpTree = True
         mockUpCfg.dbName = "ActsGeoMS.db"
-        mockUpCfg.nSectors = 6
-        mockUpCfg.nEtaStations = 1
+        mockUpCfg.nSectors = 12
+        mockUpCfg.nEtaStations = 8
         mockUpCfg.buildEndcaps = False
         mockUpBuilder = gm.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
         gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
