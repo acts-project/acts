@@ -125,7 +125,7 @@ def getOpenDataDetector(
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
             geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
-            materialDecorator=mdecorator,
+            materialDecorator=materialDecorator,
         )
 
         if misaligned:
