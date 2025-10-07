@@ -223,7 +223,7 @@ class Navigator {
     /// Statistics collection for navigation performance
     NavigatorStatistics statistics;
 
-    /// Stream for navigation debugging and monitoring
+    /// Gen3 surface stream
     NavigationStream stream;
 
     /// Reset navigation state after switching layers
@@ -253,6 +253,8 @@ class Navigator {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
+
+      stream.reset();
     }
   };
 
@@ -363,9 +365,12 @@ class Navigator {
 
     state.reset();
 
-    // Empirical pre-allocation of candidates for the next navigation iteration.
-    // @TODO: Make this user configurable through the configuration
-    state.stream.candidates().reserve(50);
+    if (m_geometryVersion == GeometryVersion::Gen3) {
+      // Empirical pre-allocation of candidates for the next navigation
+      // iteration.
+      // @TODO: Make this user configurable through the configuration
+      state.stream.candidates().reserve(50);
+    }
 
     state.startSurface = state.options.startSurface;
     state.targetSurface = state.options.targetSurface;
@@ -978,7 +983,7 @@ class Navigator {
   Config m_cfg;
 
   // Cached so we don't have to query the TrackingGeometry constantly.
-  TrackingGeometry::GeometryVersion m_geometryVersion;
+  TrackingGeometry::GeometryVersion m_geometryVersion{};
 
   std::shared_ptr<const Logger> m_logger;
 };
