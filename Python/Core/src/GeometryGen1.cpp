@@ -32,7 +32,8 @@ namespace ActsPython {
 /// This adds the geometry building bindings for the Gen1 geometry
 /// @param m the module to add the bindings to
 void addGeometryGen1(py::module_ &m) {
-  using SurfacePtrVector = std::vector<SurfaceHandle<const Surface>>;
+  using SurfacePtrVector = std::vector<SurfaceHandle<Surface>>;
+  using SurfacePtrConstVector = std::vector<SurfaceHandle<const Surface>>;
 
   py::class_<Layer, std::shared_ptr<Layer>>(m, "Layer");
 
@@ -48,8 +49,11 @@ void addGeometryGen1(py::module_ &m) {
                 [](const LayerCreator &self, const GeometryContext &gctx,
                    SurfacePtrVector surfaces, std::size_t binsPhi,
                    std::size_t binsZ) {
-                  return self.cylinderLayer(gctx, std::move(surfaces), binsPhi,
-                                            binsZ);
+                  SurfacePtrConstVector constSurfaces;
+                  std::ranges::copy(surfaces,
+                                    std::back_inserter(constSurfaces));
+                  return self.cylinderLayer(gctx, std::move(constSurfaces),
+                                            binsPhi, binsZ);
                 },
                 "gctx"_a, "surfaces"_a, "binsPhi"_a, "binsZ"_a)
             .def(
@@ -57,7 +61,10 @@ void addGeometryGen1(py::module_ &m) {
                 [](const LayerCreator &self, const GeometryContext &gctx,
                    SurfacePtrVector surfaces, std::size_t binsR,
                    std::size_t binsPhi) {
-                  return self.discLayer(gctx, std::move(surfaces), binsR,
+                  SurfacePtrConstVector constSurfaces;
+                  std::ranges::copy(surfaces,
+                                    std::back_inserter(constSurfaces));
+                  return self.discLayer(gctx, std::move(constSurfaces), binsR,
                                         binsPhi);
                 },
                 "gctx"_a, "surfaces"_a, "binsR"_a, "binsPhi"_a);

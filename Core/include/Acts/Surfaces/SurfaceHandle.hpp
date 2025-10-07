@@ -47,7 +47,17 @@ class SurfaceHandle {
 
   /// @brief Construct from shared_ptr
   /// @param ptr Shared pointer to wrap
-  explicit SurfaceHandle(std::shared_ptr<T> ptr) : m_ptr(std::move(ptr)) {}
+  explicit SurfaceHandle(std::shared_ptr<T> ptr)
+    requires std::convertible_to<std::remove_cv_t<T>*, Surface*>
+      : m_ptr(std::move(ptr)) {}
+
+  /// @brief Construct from raw pointer (for pybind11 holder support)
+  /// @param ptr Raw pointer - must be managed by a shared_ptr already
+  /// @note This uses shared_from_this(), so T must inherit from enable_shared_from_this
+  explicit SurfaceHandle(T* ptr)
+    requires std::convertible_to<std::remove_cv_t<T>*, Surface*>
+      : m_ptr(ptr ? std::shared_ptr<T>(ptr->shared_from_this(), ptr)
+                  : nullptr) {}
 
   /// NOLINTBEGIN(google-explicit-constructor)
   SurfaceHandle(std::nullptr_t /*null*/) : m_ptr(nullptr) {}

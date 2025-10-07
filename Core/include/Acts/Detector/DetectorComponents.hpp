@@ -22,9 +22,6 @@ namespace Acts {
 class VolumeBounds;
 class Surface;
 
-template <class T>
-class SurfaceHandle;
-
 namespace Experimental {
 
 class DetectorVolume;
