@@ -19,6 +19,13 @@
 
 #include <format>
 
+namespace {
+constexpr std::uint32_t oneBit = 1;
+constexpr std::uint32_t threeBit = 0x7;
+constexpr std::uint32_t fourBit = 0xF;
+constexpr std::uint32_t sixBit = 0x3F;
+}  // namespace
+
 namespace ActsExamples {
 
 std::ostream& operator<<(std::ostream& ostr,
@@ -113,40 +120,35 @@ std::string MuonSpacePoint::MuonId::toString(const DetSide side) {
 /// Layer 1-16 -> 4 bits
 /// measuresLoc0 -> 1 bit
 /// measuresLoc1 -> 1 bit
-
 MuonSpacePoint::MuonId::MuonId(std::uint32_t rawRep) : MuonId{} {
-  constexpr std::uint32_t oneBit = 1;
-  constexpr std::uint32_t threeBit = 0x7;
-  constexpr std::uint32_t fourBit = 0xF;
-  constexpr std::uint32_t sixBit = 0x3F;
-  m_stName = static_cast<StationName>(fourBit & rawRep);
-  if ((oneBit & (rawRep >> 4)) != 0u) {
+  m_stName = static_cast<StationName>(rawRep & fourBit);
+  if (((rawRep >> 4) & oneBit) != 0u) {
     m_side = DetSide::A;
   } else {
     m_side = DetSide::C;
   }
-  m_tech = static_cast<TechField>(threeBit & (rawRep >> 5));
-  m_sector = static_cast<std::uint16_t>(sixBit & (rawRep >> 8)) + 1u;
-  m_measEta = (oneBit & (rawRep >> 9)) != 0u;
-  m_measPhi = (oneBit & (rawRep >> 10)) != 0u;
-  m_measTime = (oneBit & (rawRep >> 11)) != 0u;
-  m_layer = static_cast<std::uint16_t>(fourBit & (rawRep >> 12)) + 1u;
-  m_channel = static_cast<std::uint16_t>(rawRep >> 16) + 1u;
-
-  assert(rawRep == toInt());
+  m_tech = static_cast<TechField>((rawRep >> 5) & threeBit);
+  m_sector = ((rawRep >> 8) & sixBit) + 1u;
+  m_measEta = ((rawRep >> 14) & oneBit) == 1u;
+  m_measPhi = ((rawRep >> 15) & oneBit) == 1u;
+  m_measTime = ((rawRep >> 16) & oneBit) == 1u;
+  m_layer = ((rawRep >> 17) & fourBit) + 1u;
+  m_channel = ((rawRep >> 21)) + 1u;
 }
+
 std::uint32_t MuonSpacePoint::MuonId::toInt() const {
-  std::uint32_t rawRep{static_cast<std::uint32_t>(m_stName)};
+  std::uint32_t rawRep{0};
+  rawRep |= (static_cast<std::uint32_t>(m_stName) & fourBit);
   if (m_side == DetSide::A) {
-    rawRep |= 1u << 4;
+    rawRep |= (1u << 4);
   }
-  rawRep |= static_cast<std::uint32_t>(m_tech) << 5;
-  rawRep |= static_cast<std::uint32_t>(m_sector - 1u) << 8;
-  rawRep |= static_cast<std::uint32_t>(m_measEta) << 9;
-  rawRep |= static_cast<std::uint32_t>(m_measPhi) << 10;
-  rawRep |= static_cast<std::uint32_t>(m_measTime) << 11;
-  rawRep |= static_cast<std::uint32_t>(m_layer - 1u) << 12;
-  rawRep |= static_cast<std::uint32_t>(m_channel - 1u) << 16;
+  rawRep |= ((static_cast<std::uint32_t>(m_tech) & threeBit) << 5);
+  rawRep |= ((static_cast<std::uint32_t>(m_sector - 1u) & sixBit) << 8);
+  rawRep |= (static_cast<std::uint32_t>(m_measEta) << 14);
+  rawRep |= (static_cast<std::uint32_t>(m_measPhi) << 15);
+  rawRep |= (static_cast<std::uint32_t>(m_measTime) << 16);
+  rawRep |= ((static_cast<std::uint32_t>(m_layer - 1u) & fourBit) << 17);
+  rawRep |= (static_cast<std::uint32_t>(m_channel - 1u) << 21);
   return rawRep;
 }
 
@@ -155,19 +157,24 @@ std::string MuonSpacePoint::MuonId::toString() const {
                      toString(side()));
 }
 void MuonSpacePoint::MuonId::setChamber(StationName stName, DetSide side,
-                                        int sector, TechField tech) {
+                                        std::uint16_t sector, TechField tech) {
   m_stName = stName;
   m_side = side;
   m_sector = sector;
   m_tech = tech;
+  assert(sector > 0);
 }
 void MuonSpacePoint::MuonId::setLayAndCh(std::uint8_t layer, std::uint16_t ch) {
   m_layer = layer;
   m_channel = ch;
+  assert(layer > 0);
+  assert(ch > 0);
 }
-void MuonSpacePoint::MuonId::setCoordFlags(bool measEta, bool measPhi) {
+void MuonSpacePoint::MuonId::setCoordFlags(bool measEta, bool measPhi,
+                                           bool measTime) {
   m_measEta = measEta;
   m_measPhi = measPhi;
+  m_measTime = measTime;
 }
 void MuonSpacePoint::defineCoordinates(Acts::Vector3&& pos,
                                        Acts::Vector3&& sensorDir,

@@ -34,6 +34,9 @@ RootMuonSpacePointReader::RootMuonSpacePointReader(const Config& config,
     throw std::invalid_argument(
         "RootMuonSpacePointReader() - Failed to open '" + m_cfg.filePath + "'");
   }
+  if (!m_reader.GetTree()) {
+    throw std::invalid_argument("Stonjek");
+  }
 
   // Sort the entry numbers of the events
   {
@@ -63,8 +66,7 @@ ProcessCode RootMuonSpacePointReader::read(
   MuonSpacePointContainer outSpacePoints{};
 
   auto entry = m_eventRanges.at(context.eventNumber);
-  m_reader.SetEntry(entry);
-
+  m_reader.SetEntry(context.eventNumber);
   for (std::size_t spIdx = 0; spIdx < m_bucketId->size(); ++spIdx) {
     auto bucketIdx = static_cast<std::size_t>(m_bucketId->at(spIdx));
     // The space point buckets are ordered sequentially
@@ -77,10 +79,10 @@ ProcessCode RootMuonSpacePointReader::read(
 
     Vector3 position{m_localPositionX->at(spIdx), m_localPositionY->at(spIdx),
                      m_localPositionZ->at(spIdx)};
-    Vector3 sensorDir{makeDirectionUnitFromPhiTheta(
-        m_localPositionPhi->at(spIdx), m_localPositionTheta->at(spIdx))};
-    Vector3 toNext{makeDirectionUnitFromPhiTheta(
+    Vector3 sensorDir{makeDirectionFromPhiTheta<double>(
         m_sensorDirectionPhi->at(spIdx), m_sensorDirectionTheta->at(spIdx))};
+    Vector3 toNext{makeDirectionFromPhiTheta<double>(
+        m_toNextSensorPhi->at(spIdx), m_toNextSensorTheta->at(spIdx))};
 
     newSp.defineCoordinates(std::move(position), std::move(sensorDir),
                             std::move(toNext));
@@ -89,9 +91,11 @@ ProcessCode RootMuonSpacePointReader::read(
     newSp.setTime(m_time->at(spIdx));
     newSp.setCovariance(m_covLoc0->at(spIdx), m_covLoc1->at(spIdx),
                         m_covT->at(spIdx));
+    ACTS_VERBOSE("Loaded new space point " << newSp);
   }
 
   m_outputContainer(context, std::move(outSpacePoints));
+
   return ProcessCode::SUCCESS;
 }
 

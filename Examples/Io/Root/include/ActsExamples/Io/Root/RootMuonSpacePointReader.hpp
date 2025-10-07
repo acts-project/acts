@@ -82,7 +82,8 @@ class RootMuonSpacePointReader : public IReader {
   template <typename T>
   using VecReader_t = TTreeReaderValue<std::vector<T>>;
   /// @brief Event identifier.
-  VecReader_t<std::uint32_t> m_eventId{m_reader, "event_id"};
+  TTreeReaderValue<std::uint32_t> m_eventId{m_reader, "event_id"};
+
   /// @brief Geometry identifier of the associated surface
   VecReader_t<Acts::GeometryIdentifier::Value> m_geometryId{
       m_reader, "spacePoint_geometryId"};

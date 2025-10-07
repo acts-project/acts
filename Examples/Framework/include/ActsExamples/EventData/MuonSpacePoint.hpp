@@ -55,7 +55,8 @@ class MuonSpacePoint {
       EOS,
       EOL,
       EES,
-      EEL
+      EEL,
+      MaxVal
     };
     /// @brief Detector side encoding
     enum class DetSide : std::int8_t { UnDef = 0, A = 1, C = -1 };
@@ -110,14 +111,15 @@ class MuonSpacePoint {
     /// @param side: Positive or negative side
     /// @param sector: Phi sector in which the chamber is installed
     /// @param tech: Technology of the chamber within the chamber
-    void setChamber(StationName stName, DetSide side, int sector,
+    void setChamber(StationName stName, DetSide side, std::uint16_t sector,
                     TechField tech);
     /// @brief Set the measurement layer & channel */
     void setLayAndCh(std::uint8_t layer, std::uint16_t ch);
     /// @brief Define the measurement type of the space point
     /// @param measEta: Flag stating whether the space point measures the precision (eta) coordinate
     /// @param measPhi: Flag stating whether the space point measures the non-precsion (phi) coordinate
-    void setCoordFlags(bool measEta, bool measPhi);
+    /// @param measTime: Flag stating whether the space point carries time information
+    void setCoordFlags(bool measEta, bool measPhi, bool measTime = false);
     /// @brief prints the Muon identifier to string
     std::string toString() const;
 
@@ -125,9 +127,9 @@ class MuonSpacePoint {
     TechField m_tech{TechField::UnDef};
     StationName m_stName{StationName::UnDef};
     DetSide m_side{DetSide::UnDef};
-    std::uint16_t m_sector{0};
-    std::uint8_t m_layer{0};
-    std::uint16_t m_channel{0};
+    std::uint16_t m_sector{1};
+    std::uint8_t m_layer{1};
+    std::uint16_t m_channel{1};
     bool m_measEta{false};
     bool m_measPhi{false};
     bool m_measTime{false};
@@ -159,11 +161,11 @@ class MuonSpacePoint {
   /// @brief Returns the drift radius
   double driftRadius() const { return m_radius; }
   /// @brief Returns the measurement time *
-  double time() const { return m_time.value_or(0.); }
+  double time() const { return m_time; }
   /// @brief Returns whether the measurement is a straw measurement
   bool isStraw() const { return id().technology() == MuonId::TechField::Mdt; }
   /// @brief Returns whether the measurement provides time information
-  bool hasTime() const { return m_time.has_value(); }
+  bool hasTime() const { return id().measuresTime(); }
   /// @brief Returns whether the measurement constrains the bending plane
   bool measuresLoc1() const { return id().measuresEta(); }
   /// @brief Returns whether the measurement constrains the non-bending plane
@@ -194,7 +196,7 @@ class MuonSpacePoint {
 
   std::array<double, 3> m_cov{Acts::filledArray<double, 3>(0.)};
   double m_radius{0.};
-  std::optional<double> m_time{std::nullopt};
+  double m_time{0.};
   Acts::GeometryIdentifier m_geoId{};
 };
 
