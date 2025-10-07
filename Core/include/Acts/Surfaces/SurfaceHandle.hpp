@@ -144,32 +144,24 @@ class SurfaceHandle {
   }
 
   /// @brief Compare with nullptr (hidden friend for symmetry)
-  /// @param lhs Handle to compare
-  /// @param rhs nullptr
   /// @return true if handle is empty
   friend bool operator==(const SurfaceHandle& lhs, std::nullptr_t) noexcept {
     return !lhs.m_ptr;
   }
 
   /// @brief Compare with nullptr (hidden friend for symmetry)
-  /// @param lhs nullptr
-  /// @param rhs Handle to compare
   /// @return true if handle is empty
   friend bool operator==(std::nullptr_t, const SurfaceHandle& rhs) noexcept {
     return !rhs.m_ptr;
   }
 
   /// @brief Compare with nullptr (hidden friend for symmetry)
-  /// @param lhs Handle to compare
-  /// @param rhs nullptr
   /// @return true if handle is not empty
   friend bool operator!=(const SurfaceHandle& lhs, std::nullptr_t) noexcept {
     return static_cast<bool>(lhs.m_ptr);
   }
 
   /// @brief Compare with nullptr (hidden friend for symmetry)
-  /// @param lhs nullptr
-  /// @param rhs Handle to compare
   /// @return true if handle is not empty
   friend bool operator!=(std::nullptr_t, const SurfaceHandle& rhs) noexcept {
     return static_cast<bool>(rhs.m_ptr);
