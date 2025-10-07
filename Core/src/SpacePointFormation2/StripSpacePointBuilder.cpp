@@ -10,17 +10,19 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/SpacePointFormation2/PixelSpacePointBuilder.hpp"
+#include "Acts/SpacePointFormation2/SpacePointFormationError.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts {
 
-std::optional<double> StripSpacePointBuilder::computeClusterPairDistance(
+Result<double> StripSpacePointBuilder::computeClusterPairDistance(
     const Vector3& globalCluster1, const Vector3& globalCluster2,
     const ClusterPairingOptions& options) {
   // Check if measurements are close enough to each other
   if ((globalCluster1 - globalCluster2).norm() > options.maxDistance) {
-    return std::nullopt;
+    return Result<double>::failure(
+        SpacePointFormationError::ClusterPairDistanceExceeded);
   }
 
   const Vector3 vertexToCluster1 = globalCluster1 - options.vertex;
@@ -33,24 +35,27 @@ std::optional<double> StripSpacePointBuilder::computeClusterPairDistance(
   const double theta2 = VectorHelpers::theta(vertexToCluster2);
 
   // Calculate the squared difference between the theta angles
-  const double diffTheta2 = square(theta1 - theta2);
-  if (diffTheta2 > options.maxAngleTheta2) {
-    return std::nullopt;
+  const double diffTheta = std::abs(theta1 - theta2);
+  if (diffTheta > options.maxAngleTheta) {
+    return Result<double>::failure(
+        SpacePointFormationError::ClusterPairThetaDistanceExceeded);
   }
 
   // Calculate the squared difference between the phi angles
-  const double diffPhi2 = square(phi1 - phi2);
-  if (diffPhi2 > options.maxAnglePhi2) {
-    return std::nullopt;
+  const double diffPhi = std::abs(phi1 - phi2);
+  if (diffPhi > options.maxAnglePhi) {
+    return Result<double>::failure(
+        SpacePointFormationError::ClusterPairPhiDistanceExceeded);
   }
 
   // Return the squared distance between both vector
-  return diffTheta2 + diffPhi2;
+  const double distance2 = square(diffTheta) + square(diffPhi);
+  return Result<double>::success(distance2);
 }
 
-bool StripSpacePointBuilder::computeCosmicSpacePoint(
+Result<Vector3> StripSpacePointBuilder::computeCosmicSpacePoint(
     const StripEnds& stripEnds1, const StripEnds& stripEnds2,
-    Vector3& spacePoint) {
+    const CosmicOptions& options) {
   // This approach assumes that no vertex is available. This option aims to
   // approximate the space points from cosmic data.
   // The underlying assumption is that the best point is given by the closest
@@ -68,16 +73,17 @@ bool StripSpacePointBuilder::computeCosmicSpacePoint(
   const double qr = firstBtmToTop.dot(secondBtmToTop);
   const double denom = firstBtmToTop.dot(firstBtmToTop) - qr * qr;
   // Check for numerical stability
-  if (std::abs(denom) < 1e-6) {
-    return false;
+  if (std::abs(denom) < options.tolerance) {
+    return Result<Vector3>::failure(
+        SpacePointFormationError::CosmicToleranceNotMet);
   }
 
   const double lambda0 =
       (ac.dot(secondBtmToTop) * qr -
        ac.dot(firstBtmToTop) * secondBtmToTop.dot(secondBtmToTop)) /
       denom;
-  spacePoint = stripEnds1.top + lambda0 * firstBtmToTop;
-  return true;
+  const Vector3 spacePoint = stripEnds1.top + lambda0 * firstBtmToTop;
+  return Result<Vector3>::success(spacePoint);
 }
 
 namespace {
@@ -111,11 +117,10 @@ struct FormationState {
 /// @param stripEnds2 Top and bottom end of the second strip
 /// @param vertex Position of the vertex
 /// @param spParams Data container of the calculations
-/// @param stripLengthTolerance Tolerance scaling factor on the strip
-/// detector element length
+/// @param stripLengthTolerance Tolerance scaling factor on the strip detector element length
 ///
 /// @return whether the space point calculation was successful
-bool computeConstrainedFormationState(
+Result<void> computeConstrainedFormationState(
     const StripSpacePointBuilder::StripEnds& stripEnds1,
     const StripSpacePointBuilder::StripEnds& stripEnds2, const Vector3& vertex,
     FormationState& state, const double stripLengthTolerance) {
@@ -157,24 +162,22 @@ bool computeConstrainedFormationState(
   state.limit = 1 + stripLengthTolerance;
 
   // Check if m and n can be resolved in the interval (-1, 1)
-  if (std::abs(state.m) <= state.limit && std::abs(state.n) <= state.limit) {
-    return true;
+  if (std::abs(state.m) > state.limit || std::abs(state.n) > state.limit) {
+    return Result<void>::failure(SpacePointFormationError::OutsideLimits);
   }
-  return false;
+  return Result<void>::success();
 }
 
 /// @brief This function tests if a space point can be estimated by a more
 /// tolerant treatment of construction. In fact, this function indirectly
 /// allows shifts of the vertex.
 ///
-/// @param state container that stores geometric parameters and rules of
-/// the space point formation
-/// @param stripLengthGapTolerance Tolerance scaling factor of the gap
-/// between strip detector elements
+/// @param state container that stores geometric parameters and rules of the space point formation
+/// @param stripLengthGapTolerance Tolerance scaling factor of the gap between strip detector elements
 ///
 /// @return whether the space point calculation was successful
-bool recoverConstrainedFormationState(FormationState& state,
-                                      const double stripLengthGapTolerance) {
+Result<void> recoverConstrainedFormationState(
+    FormationState& state, const double stripLengthGapTolerance) {
   const double magFirstBtmToTop = state.firstBtmToTop.norm();
   // Increase the limits. This allows a check if the point is just slightly
   // outside the SDE
@@ -183,7 +186,8 @@ bool recoverConstrainedFormationState(FormationState& state,
 
   // Check if m is just slightly outside
   if (std::abs(state.m) > relaxedLimit) {
-    return false;
+    return Result<void>::failure(
+        SpacePointFormationError::OutsideRelaxedLimits);
   }
   // Calculate n if not performed previously
   if (state.n == 0) {
@@ -192,7 +196,8 @@ bool recoverConstrainedFormationState(FormationState& state,
   }
   // Check if n is just slightly outside
   if (std::abs(state.n) > relaxedLimit) {
-    return false;
+    return Result<void>::failure(
+        SpacePointFormationError::OutsideRelaxedLimits);
   }
 
   /// The following code considers an overshoot of m and n in the same direction
@@ -230,10 +235,10 @@ bool recoverConstrainedFormationState(FormationState& state,
     state.m -= biggerOvershoot;
     state.n -= (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
-    if (std::abs(state.m) < state.limit && std::abs(state.n) < state.limit) {
-      return true;
+    if (std::abs(state.m) > state.limit || std::abs(state.n) > state.limit) {
+      return Result<void>::failure(SpacePointFormationError::OutsideLimits);
     }
-    return false;
+    return Result<void>::success();
   }
 
   // Check if both overshoots are in the same direction
@@ -248,38 +253,38 @@ bool recoverConstrainedFormationState(FormationState& state,
     state.m += biggerOvershoot;
     state.n += (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
-    if (std::abs(state.m) < state.limit && std::abs(state.n) < state.limit) {
-      return true;
+    if (std::abs(state.m) > state.limit || std::abs(state.n) > state.limit) {
+      return Result<void>::failure(SpacePointFormationError::OutsideLimits);
     }
-    return false;
+    return Result<void>::success();
   }
 
   // No solution could be found
-  return false;
+  return Result<void>::failure(SpacePointFormationError::NoSolutionFound);
 }
 
 }  // namespace
 
-bool StripSpacePointBuilder::computeConstrainedSpacePoint(
+Result<Vector3> StripSpacePointBuilder::computeConstrainedSpacePoint(
     const StripEnds& stripEnds1, const StripEnds& stripEnds2,
     const Vector3& vertex, double stripLengthTolerance,
-    double stripLengthGapTolerance, Vector3& spacePoint) {
+    double stripLengthGapTolerance) {
   FormationState state;
 
-  bool success = computeConstrainedFormationState(
+  Result<void> result = computeConstrainedFormationState(
       stripEnds1, stripEnds2, vertex, state, stripLengthTolerance);
 
-  if (!success) {
-    success = recoverConstrainedFormationState(state, stripLengthGapTolerance);
+  if (!result.ok()) {
+    result = recoverConstrainedFormationState(state, stripLengthGapTolerance);
   }
 
-  if (!success) {
-    return false;
+  if (!result.ok()) {
+    return Result<Vector3>::failure(result.error());
   }
 
-  spacePoint = 0.5 * (stripEnds1.top + stripEnds1.bottom +
-                      state.m * state.firstBtmToTop);
-  return true;
+  const Vector3 spacePoint = 0.5 * (stripEnds1.top + stripEnds1.bottom +
+                                    state.m * state.firstBtmToTop);
+  return Result<Vector3>::success(spacePoint);
 }
 
 Vector2 StripSpacePointBuilder::computeVarianceZR(const GeometryContext& gctx,

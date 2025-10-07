@@ -63,20 +63,22 @@ SimSpacePoint createPixelSpacePoint(
   return result;
 }
 
-std::optional<Acts::StripSpacePointBuilder::StripEnds> getStripEnds(
+Acts::StripSpacePointBuilder::StripEnds getStripEnds(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface,
     const ConstVariableBoundMeasurementProxy& measurement) {
   const auto* bounds =
       dynamic_cast<const Acts::PlanarBounds*>(&surface.bounds());
   if (bounds == nullptr) {
-    return std::nullopt;
+    throw std::invalid_argument(
+        "SpacePointMaker: Encountered non-planar surface");
   }
   const Acts::RectangleBounds& boundingBox = bounds->boundingBox();
 
   const Acts::VariableBoundSubspaceHelper subspace =
       measurement.subspaceHelper();
   if (subspace.size() != 1) {
-    return std::nullopt;
+    throw std::invalid_argument(
+        "SpacePointMaker: Encountered non-strip measurement");
   }
 
   const double negEnd = boundingBox.get(Acts::RectangleBounds::eMinY);
@@ -94,27 +96,22 @@ std::optional<Acts::StripSpacePointBuilder::StripEnds> getStripEnds(
   return Acts::StripSpacePointBuilder::StripEnds{globalTop, globalBottom};
 }
 
-std::optional<SimSpacePoint> createStripSpacePoint(
+Acts::Result<SimSpacePoint> createStripSpacePoint(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface1,
     const Acts::Surface& surface2,
     const ConstVariableBoundMeasurementProxy& measurement1,
     const ConstVariableBoundMeasurementProxy& measurement2,
     const IndexSourceLink& sourceLink1, const IndexSourceLink& sourceLink2) {
-  const std::optional<Acts::StripSpacePointBuilder::StripEnds> stripEnds1 =
+  const Acts::StripSpacePointBuilder::StripEnds stripEnds1 =
       getStripEnds(gctx, surface1, measurement1);
-  const std::optional<Acts::StripSpacePointBuilder::StripEnds> stripEnds2 =
+  const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
       getStripEnds(gctx, surface2, measurement2);
 
-  if (!stripEnds1 || !stripEnds2) {
-    return std::nullopt;
-  }
-
-  Acts::Vector3 global = Acts::Vector3::Zero();
-  const bool success =
+  const Acts::Result<Acts::Vector3> spacePoint =
       Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
-          *stripEnds1, *stripEnds2, Acts::Vector3::Zero(), 0.01, 0.01, global);
-  if (!success) {
-    return std::nullopt;
+          stripEnds1, stripEnds2, Acts::Vector3::Zero(), 0.01, 0.01);
+  if (!spacePoint.ok()) {
+    return spacePoint.error();
   }
 
   const double var1 =
@@ -122,30 +119,30 @@ std::optional<SimSpacePoint> createStripSpacePoint(
   const double var2 =
       measurement2.fullCovariance()(Acts::eBoundLoc0, Acts::eBoundLoc0);
 
-  const Acts::Vector3 btmToTop1 = stripEnds1->top - stripEnds1->bottom;
-  const Acts::Vector3 btmToTop2 = stripEnds2->top - stripEnds2->bottom;
+  const Acts::Vector3 btmToTop1 = stripEnds1.top - stripEnds1.bottom;
+  const Acts::Vector3 btmToTop2 = stripEnds2.top - stripEnds2.bottom;
   const double theta = std::acos(btmToTop1.dot(btmToTop2) /
                                  (btmToTop1.norm() * btmToTop2.norm()));
 
   const Acts::Vector2 varZR = Acts::StripSpacePointBuilder::computeVarianceZR(
-      gctx, surface1, global, var1, var2, theta);
+      gctx, surface1, *spacePoint, var1, var2, theta);
 
   const double topHalfStripLength =
-      0.5 * (stripEnds1->top - stripEnds1->bottom).norm();
+      0.5 * (stripEnds1.top - stripEnds1.bottom).norm();
   const double bottomHalfStripLength =
-      0.5 * (stripEnds2->top - stripEnds2->bottom).norm();
+      0.5 * (stripEnds2.top - stripEnds2.bottom).norm();
   const Acts::Vector3 topStripDirection =
-      (stripEnds1->top - stripEnds1->bottom).normalized();
+      (stripEnds1.top - stripEnds1.bottom).normalized();
   const Acts::Vector3 bottomStripDirection =
-      (stripEnds2->top - stripEnds2->bottom).normalized();
+      (stripEnds2.top - stripEnds2.bottom).normalized();
   const Acts::Vector3 stripCenterDistance =
-      (0.5 * (stripEnds1->top + stripEnds1->bottom) -
-       0.5 * (stripEnds2->top + stripEnds2->bottom));
+      (0.5 * (stripEnds1.top + stripEnds1.bottom) -
+       0.5 * (stripEnds2.top + stripEnds2.bottom));
   const Acts::Vector3 topStripCenterPosition =
-      0.5 * (stripEnds1->top + stripEnds1->bottom);
+      0.5 * (stripEnds1.top + stripEnds1.bottom);
 
   SimSpacePoint result(
-      global, std::nullopt, varZR[1], varZR[0], std::nullopt,
+      *spacePoint, std::nullopt, varZR[1], varZR[0], std::nullopt,
       {Acts::SourceLink(sourceLink1), Acts::SourceLink(sourceLink2)},
       topHalfStripLength, bottomHalfStripLength, topStripDirection,
       bottomStripDirection, stripCenterDistance, topStripCenterPosition);
@@ -447,13 +444,12 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           const Acts::Vector3 global2 = surface1.localToGlobal(
               ctx.geoContext, local2, Acts::Vector3::Zero());
 
-          const std::optional<double> distance =
+          const Acts::Result<double> distance =
               Acts::StripSpacePointBuilder::computeClusterPairDistance(
                   global1, global2, pairingOptions);
-          if (distance.has_value() &&
-              (!minDistance.has_value() ||
-               distance.value() < minDistance.value())) {
-            minDistance = distance;
+          if (distance.ok() && (!minDistance.has_value() ||
+                                distance.value() < minDistance.value())) {
+            minDistance = *distance;
             bestSourceLink2 = sourceLink2;
           }
         }
@@ -493,10 +489,10 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       const ConstVariableBoundMeasurementProxy measurement2 =
           measurements.getMeasurement(sourceLink2.index());
 
-      const std::optional<SimSpacePoint> spacePoint = createStripSpacePoint(
+      const Acts::Result<SimSpacePoint> spacePoint = createStripSpacePoint(
           ctx.geoContext, surface1, surface2, measurement1, measurement2,
           sourceLink1, sourceLink2);
-      if (spacePoint) {
+      if (spacePoint.ok()) {
         spacePoints.push_back(*spacePoint);
       }
     }

@@ -10,8 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-
-#include <optional>
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -25,10 +24,15 @@ struct ClusterPairingOptions {
   Vector3 vertex = Vector3::Zero();
   /// Accepted distance between two clusters
   double maxDistance = 100 * UnitConstants::mm;
-  /// Accepted squared difference in theta for two clusters
-  double maxAngleTheta2 = 1;
-  /// Accepted squared difference in phi for two clusters
-  double maxAnglePhi2 = 1;
+  /// Accepted absolute difference in theta for two clusters
+  double maxAngleTheta = 1 * UnitConstants::rad;
+  /// Accepted absolute difference in phi for two clusters
+  double maxAnglePhi = 1 * UnitConstants::rad;
+};
+
+struct CosmicOptions {
+  /// Numerical tolerance for the calculation
+  double tolerance = 1e-6;
 };
 
 struct StripEnds {
@@ -43,40 +47,41 @@ struct StripEnds {
 /// @param options Pairing options
 ///
 /// @return If available, squared sum within configuration parameters
-std::optional<double> computeClusterPairDistance(
-    const Vector3& globalCluster1, const Vector3& globalCluster2,
-    const ClusterPairingOptions& options);
+Result<double> computeClusterPairDistance(const Vector3& globalCluster1,
+                                          const Vector3& globalCluster2,
+                                          const ClusterPairingOptions& options);
 
 /// @param stripEnds1 The ends of first strip
 /// @param stripEnds2 The ends of second strip
-/// @param spacePoint The calculated space point
-/// @return whether the space point calculation was successful
-bool computeCosmicSpacePoint(const StripEnds& stripEnds1,
-                             const StripEnds& stripEnds2, Vector3& spacePoint);
+/// @param options The cosmic options
+///
+/// @return If available, the calculated space point
+Result<Vector3> computeCosmicSpacePoint(const StripEnds& stripEnds1,
+                                        const StripEnds& stripEnds2,
+                                        const CosmicOptions& options);
 
 /// @param stripEnds1 The ends of first strip
 /// @param stripEnds2 The ends of second strip
 /// @param vertex Position of the vertex
-/// @param stripLengthTolerance Tolerance scaling factor on the
-/// strip detector element length
-/// @param stripLengthGapTolerance Tolerance scaling factor of
-/// the gap between strip detector elements
-/// @param spacePoint The calculated space point
-/// @return whether the space point calculation was successful
-bool computeConstrainedSpacePoint(const StripEnds& stripEnds1,
-                                  const StripEnds& stripEnds2,
-                                  const Vector3& vertex,
-                                  double stripLengthTolerance,
-                                  double stripLengthGapTolerance,
-                                  Vector3& spacePoint);
+/// @param stripLengthTolerance Tolerance scaling factor on the strip detector element length
+/// @param stripLengthGapTolerance Tolerance scaling factor of the gap between strip detector elements
+///
+/// @return If available, the calculated space point
+Result<Vector3> computeConstrainedSpacePoint(const StripEnds& stripEnds1,
+                                             const StripEnds& stripEnds2,
+                                             const Vector3& vertex,
+                                             double stripLengthTolerance,
+                                             double stripLengthGapTolerance);
 
 /// @brief Calculate the z and r covariance from the front and back SourceLink in the strip SP formation
+///
 /// @param gctx The current geometry context object, e.g. alignment
 /// @param surface1 The surface of the first strip
 /// @param spacePoint The space point
 /// @param localCov1 Local covariance of the first strip
 /// @param localCov2 Local covariance of the second strip
 /// @param theta The angle between the two strips
+///
 /// @return (z, r) components of the global covariance
 Vector2 computeVarianceZR(const GeometryContext& gctx, const Surface& surface1,
                           const Vector3& spacePoint, double localCov1,

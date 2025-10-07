@@ -1,4 +1,7 @@
 target_sources(
     ActsCore
-    PRIVATE PixelSpacePointBuilder.cpp StripSpacePointBuilder.cpp
+    PRIVATE
+        PixelSpacePointBuilder.cpp
+        SpacePointFormationError.cpp
+        StripSpacePointBuilder.cpp
 )
