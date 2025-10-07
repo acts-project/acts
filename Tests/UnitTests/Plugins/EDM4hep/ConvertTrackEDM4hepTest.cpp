@@ -16,7 +16,6 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
@@ -27,6 +26,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -37,6 +37,8 @@
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
+using namespace ActsPlugins;
+
 BOOST_AUTO_TEST_SUITE(EDM4hepParameterConversion)
 
 BOOST_AUTO_TEST_CASE(JacobianRoundtrip) {

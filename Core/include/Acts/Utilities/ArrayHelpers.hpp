@@ -15,6 +15,7 @@ namespace Acts {
 ///         default value def_val. This basically allows for inline construction
 ///         and initialization of class-member arrays
 ///  @param defVal: Default value to assign
+///  @return Array filled with the default value
 template <typename T, std::size_t N>
 constexpr std::array<T, N> filledArray(const T& defVal) {
   std::array<T, N> arr{};

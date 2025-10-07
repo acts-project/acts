@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/Tensor.hpp"
-#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/Tensor.hpp"
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -36,7 +36,7 @@ __global__ void applyCut(std::size_t size, float cutoff, const float *array,
 
 }  // namespace
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream) {
   dim3 blockDim = 1024;
@@ -83,4 +83,4 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
   return {std::move(outputScores), std::move(outputEdgeIndex)};
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

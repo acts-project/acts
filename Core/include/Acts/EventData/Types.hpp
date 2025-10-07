@@ -44,14 +44,10 @@ static constexpr BoundSubspaceIndices kBoundSubspaceIndicesInvalid = {
 /// @details Compact representation of subspace indices as a 64-bit unsigned integer
 using SerializedSubspaceIndices = std::uint64_t;
 
-}  // namespace Acts
-
-namespace Acts::Experimental {
-
 using SpacePointIndex2 = std::uint32_t;
 using SpacePointIndexRange2 = std::pair<SpacePointIndex2, SpacePointIndex2>;
 using SpacePointIndexSubset2 = std::span<const SpacePointIndex2>;
 
 using SeedIndex2 = std::uint32_t;
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

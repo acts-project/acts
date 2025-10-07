@@ -6,9 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
 
-namespace Acts::Experimental {
+using namespace Acts;
+using namespace Acts::Experimental;
+
+namespace ActsPlugins {
 
 DD4hepLayerStructure::DD4hepLayerStructure(
     std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
@@ -139,4 +142,4 @@ DD4hepLayerStructure::builder(DD4hepDetectorElement::Store& dd4hepStore,
           fCache.sExtent};
 }
 
-}  // namespace Acts::Experimental
+}  // namespace ActsPlugins

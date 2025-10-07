@@ -32,6 +32,7 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
  public:
   /// Output Method for std::ostream
   /// @param sl is the ostream to be written into
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Return the bounds type of this bounds object.
@@ -53,9 +54,8 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   const RectangleBounds& boundingBox() const final;
 
  protected:
-  /// Return a rectangle bounds instance that encloses a set of vertices.
+  /// Creates a rectangle bounds instance that encloses a set of vertices.
   /// @param vertices A collection of vertices to enclose.
-  /// @return Enclosing rectangle.
   void makeBoundingBox(std::span<const Vector2> vertices);
 
   /// Calculates whether a set of vertices forms a convex polygon. This is
@@ -67,10 +67,13 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
     requires std::same_as<typename coll_t::value_type, Acts::Vector2>
   static void convex_impl(const coll_t& vertices) noexcept(false);
 
+  /// Calculate and cache the center point from vertices
+  /// @param vertices The vertices to calculate center from
   void calculateCenter(std::span<const Vector2> vertices);
 
   /// Return whether this bounds class is in fact convex
   /// thorws a logic error if not
+  /// @param vertices The vertices to check for consistency
   static void checkConsistency(std::span<const Vector2> vertices) noexcept(
       false);
 
