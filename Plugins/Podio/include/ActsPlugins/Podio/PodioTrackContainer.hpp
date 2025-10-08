@@ -219,7 +219,8 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
   void setReferenceSurface_impl(
-      IndexType itrack, Acts::SurfaceHandle<const Acts::Surface> surface) {
+      IndexType itrack,
+      const Acts::SurfaceHandle<const Acts::Surface>& surface) {
     auto track = m_collection->at(itrack);
     if (!surface) {
       track.setReferenceSurface({.surfaceType = PodioUtil::kNoSurface,

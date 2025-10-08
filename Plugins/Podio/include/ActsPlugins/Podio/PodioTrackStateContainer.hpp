@@ -677,7 +677,8 @@ class MutablePodioTrackStateContainer final
   }
 
   void setReferenceSurface_impl(
-      IndexType istate, Acts::SurfaceHandle<const Acts::Surface> surface) {
+      IndexType istate,
+      const Acts::SurfaceHandle<const Acts::Surface>& surface) {
     auto trackState = m_collection->at(istate);
     trackState.setReferenceSurface(
         PodioUtil::convertSurfaceToPodio(m_helper, *surface));
