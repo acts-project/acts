@@ -6,17 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceArraySvgConverter.hpp"
 
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 
 #include <algorithm>
 #include <numbers>
 
-Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
+using namespace Acts;
+
+ActsPlugins::Svg::ProtoIndexedSurfaceGrid
+ActsPlugins::Svg::SurfaceArrayConverter::convert(
     const GeometryContext& gctx, const SurfaceArray& surfaceArray,
     const SurfaceArrayConverter::Options& cOptions) {
   // Prepare the return objects
@@ -96,7 +99,7 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
   for (const auto& sf : surfaces) {
     // Get bounds and check them
     const SurfaceBounds& sBounds = sf->bounds();
-    radius += Acts::VectorHelpers::perp(sf->center(gctx));
+    radius += VectorHelpers::perp(sf->center(gctx));
 
     // Helper to find bounds
     auto sameBounds = [&](const SurfaceBounds* test) {
@@ -141,7 +144,8 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
       sOptions.style = *sfStyle;
     }
     // Convert the surface from ACTS to actsvg
-    auto cSurface = Acts::Svg::SurfaceConverter::convert(gctx, *sf, sOptions);
+    auto cSurface =
+        ActsPlugins::Svg::SurfaceConverter::convert(gctx, *sf, sOptions);
     cSurface._name = "Module_n_" + std::to_string(pSurfaces.size());
 
     cSurface._aux_info["grid_info"] = {

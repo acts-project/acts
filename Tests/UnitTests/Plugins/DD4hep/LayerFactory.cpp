@@ -7,9 +7,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBinningHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
 #include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Objects.h>
@@ -19,6 +19,7 @@
 #include "DD4hepTestsHelper.hpp"
 
 using namespace dd4hep;
+using namespace ActsPlugins;
 
 /// @brief  Helper method to add a layer to the detector
 ///
@@ -37,25 +38,22 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
   DetElement layerElement(layerName, layerID);
   // Layer parameters
   auto &layerParams =
-      DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
-          layerElement);
+      DD4hepTestsHelper::ensureExtension<rec::VariantParameters>(layerElement);
 
   // This should have a volume definition attached
   if (x_layer.hasChild(_Unicode(acts_volume))) {
     xml_comp_t actsVolume = x_layer.child(_Unicode(acts_volume));
     layerParams.set<bool>("acts_volume", true);
     layerParams.set<double>("acts_volume_z",
-                            Acts::getAttrValueOr<double>(actsVolume, "cz", 0.));
+                            getAttrValueOr<double>(actsVolume, "cz", 0.));
     layerParams.set<int>("acts_volume_type", 3);
     layerParams.set<int>("acts_volume_bvalues_n", 3);
-    layerParams.set<double>(
-        "acts_volume_bvalues_0",
-        Acts::getAttrValueOr<double>(actsVolume, "rmin", 0.));
-    layerParams.set<double>(
-        "acts_volume_bvalues_1",
-        Acts::getAttrValueOr<double>(actsVolume, "rmax", 0.));
+    layerParams.set<double>("acts_volume_bvalues_0",
+                            getAttrValueOr<double>(actsVolume, "rmin", 0.));
+    layerParams.set<double>("acts_volume_bvalues_1",
+                            getAttrValueOr<double>(actsVolume, "rmax", 0.));
     layerParams.set<double>("acts_volume_bvalues_2",
-                            Acts::getAttrValueOr<double>(actsVolume, "dz", 0.));
+                            getAttrValueOr<double>(actsVolume, "dz", 0.));
 
     layerParams.set<bool>("acts_volume_internals", true);
     layerParams.set<std::string>("acts_volume_internals_type", "layer");
@@ -120,9 +118,8 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
       PlacedVolume placedPassive = layerAssembly.placeVolume(
           passiveVolume, DD4hepTestsHelper::createTransform(x_passive_xml));
       // Transport the passive surface knowledge
-      auto &params =
-          DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
-              passiveElement);
+      auto &params = DD4hepTestsHelper::ensureExtension<rec::VariantParameters>(
+          passiveElement);
       params.set<bool>("acts_passive_surface", true);
       // Set the placement and add
       passiveElement.setPlacement(placedPassive);
@@ -155,25 +152,22 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
   DetElement layerElement(layerName, layerID);
   // Layer parameters
   auto &layerParams =
-      DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
-          layerElement);
+      DD4hepTestsHelper::ensureExtension<rec::VariantParameters>(layerElement);
 
   // This should have a volume definition attached
   if (x_layer.hasChild(_Unicode(acts_volume))) {
     xml_comp_t actsVolume = x_layer.child(_Unicode(acts_volume));
     layerParams.set<bool>("acts_volume", true);
     layerParams.set<double>("acts_volume_z",
-                            Acts::getAttrValueOr<double>(actsVolume, "cz", 0.));
+                            getAttrValueOr<double>(actsVolume, "cz", 0.));
     layerParams.set<int>("acts_volume_type", 3);
     layerParams.set<int>("acts_volume_bvalues_n", 3);
-    layerParams.set<double>(
-        "acts_volume_bvalues_0",
-        Acts::getAttrValueOr<double>(actsVolume, "rmin", 0.));
-    layerParams.set<double>(
-        "acts_volume_bvalues_1",
-        Acts::getAttrValueOr<double>(actsVolume, "rmax", 0.));
+    layerParams.set<double>("acts_volume_bvalues_0",
+                            getAttrValueOr<double>(actsVolume, "rmin", 0.));
+    layerParams.set<double>("acts_volume_bvalues_1",
+                            getAttrValueOr<double>(actsVolume, "rmax", 0.));
     layerParams.set<double>("acts_volume_bvalues_2",
-                            Acts::getAttrValueOr<double>(actsVolume, "dz", 0.));
+                            getAttrValueOr<double>(actsVolume, "dz", 0.));
 
     layerParams.set<bool>("acts_volume_internals", true);
     layerParams.set<std::string>("acts_volume_internals_type", "layer");
@@ -207,9 +201,8 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
       // Set an orientation
       DetElement trapElement(layerName + "_module" + std::to_string(sensorID),
                              sensorID);
-      auto &params =
-          DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
-              trapElement);
+      auto &params = DD4hepTestsHelper::ensureExtension<rec::VariantParameters>(
+          trapElement);
       params.set<std::string>("axis_definitions", "YZ");
 
       Volume trapVolume(layerName + "_vol", trapShape,
@@ -245,7 +238,7 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
             passiveVolume, DD4hepTestsHelper::createTransform(x_passive_xml));
         // Transport the passive surface knowledge
         auto &params =
-            DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
+            DD4hepTestsHelper::ensureExtension<rec::VariantParameters>(
                 passiveElement);
         params.set<bool>("acts_passive_surface", true);
         // Set the placement and add
@@ -277,7 +270,7 @@ static Ref_t create_barrel_detector(Detector &dd, xml_h xml,
 
   // create the master detector element
   DetElement detectorElement(detName, x_det.id());
-  dd4hep::xml::setDetectorTypeFlag(xml, detectorElement);
+  xml::setDetectorTypeFlag(xml, detectorElement);
 
   // The Shape and Volume
   Assembly detectorAssembly(detName);
@@ -325,7 +318,7 @@ static Ref_t create_endcap_detector(Detector &dd, xml_h xml,
 
   // create the master detector element
   DetElement detectorElement(detName, x_det.id());
-  dd4hep::xml::setDetectorTypeFlag(xml, detectorElement);
+  xml::setDetectorTypeFlag(xml, detectorElement);
 
   // The Shape and Volume
   Assembly detectorAssembly(detName);
