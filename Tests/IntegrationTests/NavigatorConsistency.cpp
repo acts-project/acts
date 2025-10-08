@@ -34,6 +34,8 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
+namespace ActsTests {
+
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -465,3 +467,5 @@ BOOST_DATA_TEST_CASE(NavigatorRef2EigenConsistency,
   ACTS_DEBUG(">>> Test reference 2 consistency epropagator");
   runConsistencyTest(epropagator, refepropagator2, start, logger());
 }
+
+}  // namespace ActsTests
