@@ -30,6 +30,7 @@ def runGeant4(
     volumeMappings=[],
     s: acts.examples.Sequencer = None,
     events=100,
+    seed=1602,
     nMuonPerEvt=1,
 ):
     from acts.examples.simulation import (
@@ -44,7 +45,7 @@ def runGeant4(
 
     s = s or acts.examples.Sequencer(events=events, numThreads=1)
     s.config.logLevel = acts.logging.INFO
-    rnd = acts.examples.RandomNumbers()
+    rnd = acts.examples.RandomNumbers(acts.examples.RandomNumbers.Config(seed=seed))
     u = acts.UnitConstants
     outputDir = Path(outputDir)
     addParticleGun(
@@ -100,6 +101,15 @@ def main():
     )
     parser.add_argument("--outDir", default="./", help="Output")
     parser.add_argument("--nEvents", default=100, type=int, help="Number of events")
+    parser.add_argument(
+        "--randomSeed", default=1602, type=int, help="Random seed for event generation"
+    )
+    parser.add_argument(
+        "--geoSvgDump",
+        default=False,
+        action="store_true",
+        help="Dump the tracking geometry in an obj format",
+    )
 
     args = parser.parse_args()
 
@@ -170,30 +180,45 @@ def main():
         outputDir=args.outDir,
         volumeMappings=gmFactoryConfig.nameList,
         events=args.nEvents,
+        seed=args.randomSeed,
     )
 
     from acts.examples import MuonSpacePointDigitizer
 
     digiAlg = MuonSpacePointDigitizer(
-        randomNumbers=acts.examples.RandomNumbers(),
+        randomNumbers=acts.examples.RandomNumbers(
+            acts.examples.RandomNumbers.Config(seed=2 * args.randomSeed)
+        ),
         trackingGeometry=trackingGeometry,
-        dumpVisualization=True,
+        dumpVisualization=False,
         digitizeTime=True,
+        outputSpacePoints="MuonSpacePoints",
         level=logLevel,
     )
     algSequence.addAlgorithm(digiAlg)
 
+    from acts.examples import RootMuonSpacePointWriter
+
+    algSequence.addWriter(
+        RootMuonSpacePointWriter(
+            level=logLevel,
+            inputSpacePoints="MuonSpacePoints",
+            filePath=f"{args.outDir}/MS_SpacePoints.root",
+        )
+    )
+
+    if args.geoSvgDump:
+        wb = WhiteBoard(acts.logging.INFO)
+        context = AlgorithmContext(0, 0, wb, 10)
+        obj_dir = Path(args.outDir) / "obj"
+        obj_dir.mkdir(exist_ok=True)
+        writer = ObjTrackingGeometryWriter(
+            level=acts.logging.INFO, outputDir=str(obj_dir)
+        )
+
+        writer.write(context, trackingGeometry)
+
     algSequence.run()
-
-    wb = WhiteBoard(acts.logging.INFO)
-
-    context = AlgorithmContext(0, 0, wb, 10)
-    obj_dir = Path(args.outDir) / "obj"
-    obj_dir.mkdir(exist_ok=True)
-
-    writer = ObjTrackingGeometryWriter(level=acts.logging.INFO, outputDir=str(obj_dir))
-
-    writer.write(context, trackingGeometry)
 
 
 if __name__ == "__main__":
