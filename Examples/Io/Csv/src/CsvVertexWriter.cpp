@@ -13,22 +13,19 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include <Acts/Definitions/Units.hpp>
-#include "CsvOutputData.hpp"
 
 #include <stdexcept>
 
+#include "CsvOutputData.hpp"
 
 ActsExamples::CsvVertexWriter::CsvVertexWriter(
-    const ActsExamples::CsvVertexWriter::Config& cfg,
-    Acts::Logging::Level lvl)
+    const ActsExamples::CsvVertexWriter::Config& cfg, Acts::Logging::Level lvl)
     : WriterT(cfg.inputVertices, "CsvVertexWriter", lvl), m_cfg(cfg) {
   // inputVertices is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
     throw std::invalid_argument("Missing output filename stem");
   }
-  
 }
-
 
 ActsExamples::ProcessCode ActsExamples::CsvVertexWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
@@ -41,11 +38,10 @@ ActsExamples::ProcessCode ActsExamples::CsvVertexWriter::writeT(
   // Iterate over the vertices, and write out the 4 positions
   VertexData data;
   for (const auto& vertex : vertices) {
-
-    data.x =  vertex.fullPosition()[Acts::CoordinateIndices::eX]; 
-    data.y =  vertex.fullPosition()[Acts::CoordinateIndices::eY];
-    data.z =  vertex.fullPosition()[Acts::CoordinateIndices::eZ];
-    data.T =  vertex.fullPosition()[Acts::CoordinateIndices::eTime];
+    data.x = vertex.fullPosition()[Acts::CoordinateIndices::eX];
+    data.y = vertex.fullPosition()[Acts::CoordinateIndices::eY];
+    data.z = vertex.fullPosition()[Acts::CoordinateIndices::eZ];
+    data.T = vertex.fullPosition()[Acts::CoordinateIndices::eTime];
 
     writer.append(data);
   }

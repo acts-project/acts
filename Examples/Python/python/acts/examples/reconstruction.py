@@ -2527,8 +2527,7 @@ def addVertexFitting(
                 outputStem="vertices",
             )
         )
-            
-            
+
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():

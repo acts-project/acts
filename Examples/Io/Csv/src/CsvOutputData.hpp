@@ -44,12 +44,10 @@ struct ParticleData {
 
 struct VertexData {
   /// Position
-  float x = 0,  y = 0, z = 0, T = 0;
+  float x = 0, y = 0, z = 0, T = 0;
 
   DFE_NAMEDTUPLE(VertexData, x, y, z, T);
-
 };
-  
 
 // Write out simhits before digitization (no hi_id associated)
 struct SimHitData {
