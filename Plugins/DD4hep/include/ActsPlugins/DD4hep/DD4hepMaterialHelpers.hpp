@@ -73,6 +73,8 @@ void addLayerProtoMaterial(
 /// @param valueTag the xml tag for to ActsExtension to be parsed
 /// @param binning the Binning prescription for the ActsExtension
 /// @param logger a @c Logger for output
+///
+/// @return Shared pointer to ProtoSurfaceMaterial created from DD4hep parameters
 std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
