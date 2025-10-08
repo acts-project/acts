@@ -151,7 +151,7 @@ struct Fixture {
   using TestSourceLinkContainer =
       std::unordered_multimap<GeometryIdentifier, TestSourceLink>;
   using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
-  using CombinatorialKalmanFilterOptions =
+  using TestCombinatorialKalmanFilterOptions =
       CombinatorialKalmanFilterOptions<TrackContainer>;
 
   KalmanUpdater kfUpdater;
@@ -267,7 +267,7 @@ struct Fixture {
     return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
   }
 
-  CombinatorialKalmanFilterOptions makeCkfOptions() const {
+  TestCombinatorialKalmanFilterOptions makeCkfOptions() const {
     // leave the accessor empty, this will have to be set before running the CKF
     return CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx, getExtensions(),
