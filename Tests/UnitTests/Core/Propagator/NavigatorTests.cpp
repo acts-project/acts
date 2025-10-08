@@ -27,6 +27,7 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -661,15 +662,15 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
 }
 
 BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
-  auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+  auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-  Acts::Experimental::Blueprint::Config cfg;
-  cfg.envelope = Acts::ExtentEnvelope{{
+  Experimental::Blueprint::Config cfg;
+  cfg.envelope = ExtentEnvelope{{
       .z = {20_mm, 20_mm},
       .r = {0_mm, 20_mm},
   }};
 
-  Acts::Experimental::Blueprint root{cfg};
+  Experimental::Blueprint root{cfg};
 
   auto& cubcontainer =
       root.addCuboidContainer("CuboidContainer", AxisDirection::AxisZ);
@@ -679,21 +680,21 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   auto parentVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
                                                     parentBounds, "parent");
 
-  std::shared_ptr<const Acts::PlanarBounds> planarBounds =
+  std::shared_ptr<const PlanarBounds> planarBounds =
       std::make_shared<const RectangleBounds>(5., 10.);
 
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Transform3::Identity(), std::move(planarBounds));
+  auto surface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
+                                                   std::move(planarBounds));
 
   auto detElement =
       std::make_unique<DetectorElementStub>(Transform3::Identity());
 
   surface->assignDetectorElement(*detElement);
 
-  parentVol->assignGeometryId(Acts::GeometryIdentifier{}.withVolume(1));
+  parentVol->assignGeometryId(GeometryIdentifier{}.withVolume(1));
   parentVol->addSurface(surface);
-  auto parentNode = std::make_shared<Acts::Experimental::StaticBlueprintNode>(
-      std::move(parentVol));
+  auto parentNode =
+      std::make_shared<Experimental::StaticBlueprintNode>(std::move(parentVol));
 
   // put two tracking volumes in the sides of the parent as children and a plane
   // surface in the middle of the parent volume
@@ -705,17 +706,17 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   auto childBounds = std::make_shared<CuboidVolumeBounds>(1_m, 1_m, 10_cm);
   auto childVol1 =
       std::make_unique<TrackingVolume>(trf1, childBounds, "child1");
-  childVol1->assignGeometryId(Acts::GeometryIdentifier{}.withVolume(2));
+  childVol1->assignGeometryId(GeometryIdentifier{}.withVolume(2));
 
-  auto childNode1 = std::make_shared<Acts::Experimental::StaticBlueprintNode>(
-      std::move(childVol1));
+  auto childNode1 =
+      std::make_shared<Experimental::StaticBlueprintNode>(std::move(childVol1));
 
   auto childVol2 =
       std::make_unique<TrackingVolume>(trf2, childBounds, "child2");
-  childVol2->assignGeometryId(Acts::GeometryIdentifier{}.withVolume(3));
+  childVol2->assignGeometryId(GeometryIdentifier{}.withVolume(3));
 
-  auto childNode2 = std::make_shared<Acts::Experimental::StaticBlueprintNode>(
-      std::move(childVol2));
+  auto childNode2 =
+      std::make_shared<Experimental::StaticBlueprintNode>(std::move(childVol2));
 
   parentNode->addChild(childNode1);
   parentNode->addChild(childNode2);
@@ -725,8 +726,8 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   auto trackingGeometry = root.construct({}, tgContext, *logger);
 
   Navigator::Config navCfg;
-  navCfg.trackingGeometry = std::shared_ptr<const Acts::TrackingGeometry>(
-      std::move(trackingGeometry));
+  navCfg.trackingGeometry =
+      std::shared_ptr<const TrackingGeometry>(std::move(trackingGeometry));
   navCfg.resolveSensitive = true;
   navCfg.resolveMaterial = true;
   navCfg.resolvePassive = false;
