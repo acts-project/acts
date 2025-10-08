@@ -34,8 +34,8 @@ RootMuonSpacePointReader::RootMuonSpacePointReader(const Config& config,
     throw std::invalid_argument(
         "RootMuonSpacePointReader() - Failed to open '" + m_cfg.filePath + "'");
   }
-  if (!m_reader.GetTree()) {
-    throw std::invalid_argument("Failed to fetch TTree '" + m_cfg.treeName +
+  if (m_reader.GetTree() == nullptr) {
+    throw std::invalid_argument("Failed to load TTree '" + m_cfg.treeName +
                                 "'");
   }
 
