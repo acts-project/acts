@@ -10,6 +10,7 @@
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
+#include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
@@ -44,6 +45,9 @@ void addRootInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(RootTrackSummaryReader, mex,
                              "RootTrackSummaryReader", outputTracks,
                              outputParticles, treeName, filePath);
+  ACTS_PYTHON_DECLARE_READER(RootMuonSpacePointReader, mex,
+                             "RootMuonSpacePointReader", outputSpacePoints,
+                             filePath, treeName);
 
   ACTS_PYTHON_DECLARE_READER(
       RootAthenaNTupleReader, mex, "RootAthenaNTupleReader", inputTreeName,
