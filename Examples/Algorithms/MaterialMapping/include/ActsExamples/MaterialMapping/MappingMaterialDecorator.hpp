@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <algorithm>
@@ -64,8 +65,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
     auto bins = m_binningMap.find(surface.geometryId().value());
     if (bins != m_binningMap.end()) {
       ACTS_VERBOSE("-> Found material for surface, assigning");
-      surface.assignSurfaceMaterial(
-          binnedSurfaceMaterial(surface.getSharedPtr()));
+      surface.assignSurfaceMaterial(binnedSurfaceMaterial(surface.getHandle()));
     }
   }
 
@@ -167,7 +167,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   ///
   /// @param surface protomaterial will be added to
   std::shared_ptr<const Acts::ISurfaceMaterial> binnedSurfaceMaterial(
-      const std::shared_ptr<const Acts::Surface>& surface) const {
+      const Acts::SurfaceHandle<const Acts::Surface>& surface) const {
     auto bin = m_binningMap.find(surface->geometryId().value());
     Acts::BinUtility bUtility;
     if (bin == m_binningMap.end()) {

@@ -381,9 +381,9 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   EigenStepper<> eigenStepper{field};
   VoidNavigator navigator{};
 
-  std::shared_ptr<PlaneSurface> startSurface =
+  auto startSurface =
       CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
-  std::shared_ptr<PlaneSurface> targetSurface =
+  auto targetSurface =
       CurvilinearSurface(Vector3::UnitX() * 20_mm, Vector3::UnitX())
           .planeSurface();
 

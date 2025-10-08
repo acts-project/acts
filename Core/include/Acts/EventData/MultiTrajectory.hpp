@@ -742,7 +742,7 @@ class MultiTrajectory {
   /// @param istate State index
   /// @param surface Shared pointer to the reference surface
   void setReferenceSurface(IndexType istate,
-                           std::shared_ptr<const Surface> surface)
+                           SurfaceHandle<const Surface> surface)
     requires(!ReadOnly)
   {
     self().setReferenceSurface_impl(istate, std::move(surface));

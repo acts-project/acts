@@ -23,6 +23,7 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -340,11 +341,10 @@ class TrackingVolume : public Volume {
   /// Type alias for mutable range of surfaces in tracking volume
   using MutableSurfaceRange =
       detail::TransformRange<detail::Dereference,
-                             std::vector<std::shared_ptr<Surface>>>;
-  /// Type alias for const range of surfaces in tracking volume
+                             std::vector<SurfaceHandle<Surface>>>;
   using SurfaceRange =
       detail::TransformRange<detail::ConstDereference,
-                             const std::vector<std::shared_ptr<Surface>>>;
+                             const std::vector<SurfaceHandle<Surface>>>;
 
   /// Return all surfaces registered under this tracking volume
   /// @return the range of surfaces
@@ -356,7 +356,7 @@ class TrackingVolume : public Volume {
 
   /// Add a surface to this tracking volume
   /// @param surface The surface to add
-  void addSurface(std::shared_ptr<Surface> surface);
+  void addSurface(SurfaceHandle<Surface> surface);
 
   /// Add a child volume to this tracking volume
   /// @param volume The volume to add
@@ -577,7 +577,7 @@ class TrackingVolume : public Volume {
 
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
-  std::vector<std::shared_ptr<Surface>> m_surfaces;
+  std::vector<SurfaceHandle<Surface>> m_surfaces;
 
   std::unique_ptr<INavigationPolicy> m_navigationPolicy;
 

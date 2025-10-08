@@ -909,7 +909,7 @@ class Gx2Fitter {
         // Set the trackStateProxy components with the state from the ongoing
         // propagation
         {
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+          trackStateProxy.setReferenceSurface(surface->getHandle());
           // Bind the transported state to the current surface
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
@@ -1012,7 +1012,7 @@ class Gx2Fitter {
         // Set the trackStateProxy components with the state from the ongoing
         // propagation
         {
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+          trackStateProxy.setReferenceSurface(surface->getHandle());
           // Bind the transported state to the current surface
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
@@ -1113,7 +1113,7 @@ class Gx2Fitter {
         // Set the trackStateProxy components with the state from the
         // ongoing propagation
         {
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+          trackStateProxy.setReferenceSurface(surface->getHandle());
           // Bind the transported state to the current surface
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
@@ -1665,7 +1665,7 @@ class Gx2Fitter {
     track.tipIndex() = tipIndex;
     track.parameters() = params.parameters();
     track.covariance() = fullCovariancePredicted;
-    track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+    track.setReferenceSurface(params.referenceSurface().getHandle());
 
     if (trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {

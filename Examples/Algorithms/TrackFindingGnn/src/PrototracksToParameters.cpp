@@ -183,8 +183,8 @@ ProcessCode PrototracksToParameters::execute(
 
     seededTracks.push_back(track);
     seeds.emplace_back(std::move(seed));
-    parameters.push_back(BoundTrackParameters(
-        surface.getSharedPtr(), pars, m_covariance, m_cfg.particleHypothesis));
+    parameters.push_back(Acts::BoundTrackParameters(
+        surface.getHandle(), pars, m_covariance, m_cfg.particleHypothesis));
   }
 
   if (skippedTracks > 0) {

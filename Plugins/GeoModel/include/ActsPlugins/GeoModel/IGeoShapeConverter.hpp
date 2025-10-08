@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
@@ -48,7 +49,7 @@ class IGeoShapeConverter {
   /// @param boundFactory: Reference to the bound factory to share equivalent bounds
   ///                      across multiple surfaces
   /// @return The detector element and surface
-  virtual Acts::Result<std::shared_ptr<Acts::Surface>> toPassiveSurface(
+  virtual Acts::Result<Acts::SurfaceHandle<Acts::Surface>> toPassiveSurface(
       PVConstLink geoPV, const Acts::Transform3& transform,
       Acts::SurfaceBoundFactory& boundFactory) const = 0;
 };

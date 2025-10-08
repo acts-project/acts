@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -48,7 +49,7 @@ void LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger) {
 
 MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
+    std::vector<SurfaceHandle<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -125,7 +126,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
 
 MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
+    std::vector<SurfaceHandle<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -203,7 +204,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
 
 MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
+    std::vector<SurfaceHandle<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -273,7 +274,7 @@ MutableLayerPtr LayerCreator::discLayer(
 
 MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
+    std::vector<SurfaceHandle<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -340,7 +341,7 @@ MutableLayerPtr LayerCreator::discLayer(
 
 MutableLayerPtr LayerCreator::planeLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
+    std::vector<SurfaceHandle<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
     std::optional<ProtoLayer> _protoLayer, const Transform3& transform,
     std::unique_ptr<ApproachDescriptor> ad) const {

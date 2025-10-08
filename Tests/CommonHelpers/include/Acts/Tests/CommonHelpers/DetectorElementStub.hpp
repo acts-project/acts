@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 
 namespace Acts {
@@ -116,7 +117,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// the transform for positioning in 3D space
   Transform3 m_elementTransform;
   /// the surface represented by it
-  std::shared_ptr<Surface> m_elementSurface{nullptr};
+  SurfaceHandle<Surface> m_elementSurface{};
   /// the element thickness
   double m_elementThickness{0.};
 };

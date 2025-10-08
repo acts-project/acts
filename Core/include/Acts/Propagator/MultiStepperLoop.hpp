@@ -278,7 +278,7 @@ class MultiStepperLoop : public single_stepper_t {
 
     state.particleHypothesis = par.particleHypothesis();
 
-    const auto surface = par.referenceSurface().getSharedPtr();
+    const auto surface = par.referenceSurface().getHandle();
 
     for (auto i = 0ul; i < par.components().size(); ++i) {
       const auto& [weight, singlePars] = par[i];

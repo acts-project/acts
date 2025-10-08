@@ -9,6 +9,7 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 Acts::IterativeVertexFinder::IterativeVertexFinder(
@@ -308,7 +309,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
   // m_cfg.cutOffTrackWeight threshold and are hence outliers
   ACTS_DEBUG("Number of outliers: " << tracksToFit.size());
 
-  const std::shared_ptr<PerigeeSurface> vertexPerigeeSurface =
+  const SurfaceHandle<PerigeeSurface> vertexPerigeeSurface =
       Surface::makeShared<PerigeeSurface>(
           VectorHelpers::position(vertex.fullPosition()));
 
@@ -431,7 +432,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
     const VertexingOptions& vertexingOptions, State& state) const {
   int numberOfAddedTracks = 0;
 
-  const std::shared_ptr<PerigeeSurface> currentVertexPerigeeSurface =
+  const SurfaceHandle<PerigeeSurface> currentVertexPerigeeSurface =
       Surface::makeShared<PerigeeSurface>(
           VectorHelpers::position(currentVertex.fullPosition()));
 
@@ -443,7 +444,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
     auto tracksBegin = tracksAtVertex.begin();
     auto tracksEnd = tracksAtVertex.end();
 
-    const std::shared_ptr<PerigeeSurface> vertexItPerigeeSurface =
+    const SurfaceHandle<PerigeeSurface> vertexItPerigeeSurface =
         Surface::makeShared<PerigeeSurface>(
             VectorHelpers::position(vertexIt.fullPosition()));
 

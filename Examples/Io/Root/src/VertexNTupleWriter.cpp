@@ -16,6 +16,7 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -876,7 +877,7 @@ void VertexNTupleWriter::writeTrackInfo(
   auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
 
   // Perigee at the true vertex position
-  std::shared_ptr<Acts::PerigeeSurface> perigeeSurface;
+  Acts::SurfaceHandle<Acts::PerigeeSurface> perigeeSurface;
   if (truthPos.has_value()) {
     perigeeSurface =
         Acts::Surface::makeShared<Acts::PerigeeSurface>(truthPos->head<3>());

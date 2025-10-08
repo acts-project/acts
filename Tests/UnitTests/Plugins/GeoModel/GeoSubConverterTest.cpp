@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
 
   ActsPlugins::GeoModelSensitiveSurface subSensSurface =
       subCache.sensitiveSurfaces[0];
-  std::shared_ptr<Surface> subSurface = std::get<1>(subSensSurface);
+  Acts::SurfaceHandle<Acts::Surface> subSurface = std::get<1>(subSensSurface);
   const auto* subBounds =
       dynamic_cast<const RectangleBounds*>(&subSurface->bounds());
   BOOST_CHECK(subBounds->halfLengthX() == hlX);

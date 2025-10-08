@@ -123,7 +123,7 @@ struct MultiStepperTester {
           {1. / n, params, cov ? Opt{make_random_sym_matrix()} : Opt{}});
     }
 
-    std::shared_ptr<PlaneSurface> surface =
+    auto surface =
         CurvilinearSurface(Vector3::Zero(), Vector3{1., 0., 0.}).planeSurface();
 
     return MultiComponentBoundTrackParameters(surface, cmps,
@@ -280,7 +280,7 @@ struct MultiStepperTester {
         std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
         cmps(4, {0.25, pars, cov});
 
-    std::shared_ptr<PlaneSurface> surface =
+    auto surface =
         CurvilinearSurface(Vector3::Zero(), Vector3::Ones().normalized())
             .planeSurface();
 
@@ -424,11 +424,11 @@ struct MultiStepperTester {
     MultiStepper multi_stepper(defaultNullBField);
     SingleStepper single_stepper(defaultNullBField);
 
-    std::shared_ptr<PlaneSurface> start_surface =
+    auto start_surface =
         CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
-    std::shared_ptr<PlaneSurface> right_surface =
+    auto right_surface =
         CurvilinearSurface(Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
@@ -533,11 +533,11 @@ struct MultiStepperTester {
     MultiStepper multi_stepper(defaultNullBField);
     SingleStepper single_stepper(defaultNullBField);
 
-    std::shared_ptr<PlaneSurface> start_surface =
+    auto start_surface =
         CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
-    std::shared_ptr<PlaneSurface> right_surface =
+    auto right_surface =
         CurvilinearSurface(Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
@@ -609,9 +609,8 @@ struct MultiStepperTester {
 
     MultiStepper multi_stepper(defaultBField);
 
-    std::shared_ptr<PlaneSurface> surface =
-        CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
-            .planeSurface();
+    auto surface = CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
+                       .planeSurface();
 
     // Use Ones() here, so that the angles are in correct range
     const auto pars = BoundVector::Ones().eval();
@@ -652,9 +651,8 @@ struct MultiStepperTester {
 
     MultiStepper multi_stepper(defaultBField);
 
-    std::shared_ptr<PlaneSurface> surface =
-        CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
-            .planeSurface();
+    auto surface = CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
+                       .planeSurface();
 
     // Use Ones() here, so that the angles are in correct range
     const auto pars = BoundVector::Ones().eval();
@@ -741,7 +739,7 @@ struct MultiStepperTester {
     multi_stepper.initialize(multi_state, multi_pars);
 
     {
-      BoundTrackParameters pars(multi_pars.referenceSurface().getSharedPtr(),
+      BoundTrackParameters pars(multi_pars.referenceSurface().getHandle(),
                                 BoundVector::Ones(), std::nullopt,
                                 particleHypothesis);
       multi_stepper.addComponent(multi_state, pars, 0.0);
@@ -765,9 +763,8 @@ struct MultiStepperTester {
 
     Propagator propagator(std::move(multi_stepper), VoidNavigator{});
 
-    std::shared_ptr<PlaneSurface> surface =
-        CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
-            .planeSurface();
+    auto surface = CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
+                       .planeSurface();
     using PropagatorOptions =
         typename Propagator<multi_stepper_t, Navigator>::template Options<>;
     PropagatorOptions options(geoCtx, magCtx);

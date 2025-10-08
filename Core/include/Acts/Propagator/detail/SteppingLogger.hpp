@@ -36,7 +36,7 @@ struct Step {
   Direction navDir = Direction::Forward();
   Vector3 position = Vector3(0., 0., 0.);
   Vector3 momentum = Vector3(0., 0., 0.);
-  std::shared_ptr<const Surface> surface = nullptr;
+  SurfaceHandle<const Surface> surface = nullptr;
   GeometryIdentifier geoID;
   /// Note that this is the total number of trials including the previous steps
   std::size_t nTotalTrials = 0;
@@ -86,7 +86,7 @@ struct SteppingLogger {
 
     // Record the information about the surface
     if (navigator.currentSurface(state.navigation) != nullptr) {
-      step.surface = navigator.currentSurface(state.navigation)->getSharedPtr();
+      step.surface = navigator.currentSurface(state.navigation)->getHandle();
       step.geoID = step.surface->geometryId();
     } else if (navigator.currentVolume(state.navigation) != nullptr) {
       // If there's no surface but a volume, this sets the geoID

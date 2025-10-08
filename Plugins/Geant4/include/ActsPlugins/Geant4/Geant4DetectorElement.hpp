@@ -12,6 +12,7 @@
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <memory>
 
@@ -39,7 +40,7 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
   /// @param g4physVol the physical volume representing this detector element
   /// @param toGlobal the global transformation before the volume
   /// @param thickness the thickness of this detector element
-  Geant4DetectorElement(std::shared_ptr<Acts::Surface> surface,
+  Geant4DetectorElement(Acts::SurfaceHandle<Acts::Surface> surface,
                         const G4VPhysicalVolume& g4physVol,
                         const Acts::Transform3& toGlobal, double thickness);
 
@@ -67,7 +68,7 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
 
  private:
   /// Corresponding Surface
-  std::shared_ptr<Acts::Surface> m_surface;
+  Acts::SurfaceHandle<Acts::Surface> m_surface;
   /// The GEant4 physical volume
   const G4VPhysicalVolume* m_g4physVol{nullptr};
   /// The global transformation before the volume

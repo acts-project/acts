@@ -14,6 +14,7 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <memory>
@@ -36,7 +37,7 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   ///
   /// @param aSurfaces are the approach surfaces
   explicit GenericApproachDescriptor(
-      std::vector<std::shared_ptr<const Surface>> aSurfaces)
+      std::vector<SurfaceHandle<const Surface>> aSurfaces)
       : ApproachDescriptor(),
         m_surfaces(std::move(aSurfaces)),
         m_surfaceCache() {
@@ -75,7 +76,7 @@ class GenericApproachDescriptor : public ApproachDescriptor {
 
  private:
   /// approach surfaces with ownership control
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 
   /// the surface container cache
   ///

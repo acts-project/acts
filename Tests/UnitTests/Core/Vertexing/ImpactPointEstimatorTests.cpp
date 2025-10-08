@@ -29,6 +29,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -352,8 +353,7 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos.head<3>();
 
   // Dummy plane surface
-  std::shared_ptr<PlaneSurface> planeSurface =
-      Surface::makeShared<PlaneSurface>(coordinateSystem);
+  auto planeSurface = Surface::makeShared<PlaneSurface>(coordinateSystem);
 
   // Create two track parameter vectors that are alike except that one is closer
   // to the vertex in time. Note that momenta don't play a role in the
@@ -379,20 +379,20 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   paramVecFar[eBoundTime] = vt0 + sgnFar * timeDiffFar;
 
   // Track whose time is similar to the vertex time
-  BoundTrackParameters paramsClose(planeSurface, paramVecClose,
-                                   makeBoundParametersCovariance(30_ns),
-                                   ParticleHypothesis::pion());
+  BoundTrackParameters paramsClose(
+      SurfaceHandle<const Surface>(planeSurface), paramVecClose,
+      makeBoundParametersCovariance(30_ns), ParticleHypothesis::pion());
 
   // Track whose time is similar to the vertex time but with a larger time
   // variance
   BoundTrackParameters paramsCloseLargerCov(
-      planeSurface, paramVecClose, makeBoundParametersCovariance(31_ns),
-      ParticleHypothesis::pion());
+      SurfaceHandle<const Surface>(planeSurface), paramVecClose,
+      makeBoundParametersCovariance(31_ns), ParticleHypothesis::pion());
 
   // Track whose time differs slightly more from the vertex time
-  BoundTrackParameters paramsFar(planeSurface, paramVecFar,
-                                 makeBoundParametersCovariance(30_ns),
-                                 ParticleHypothesis::pion());
+  BoundTrackParameters paramsFar(
+      SurfaceHandle<const Surface>(planeSurface), paramVecFar,
+      makeBoundParametersCovariance(30_ns), ParticleHypothesis::pion());
 
   // Calculate the 4D vertex compatibilities of the three tracks
   double compatibilityClose =

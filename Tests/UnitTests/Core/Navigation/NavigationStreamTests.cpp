@@ -18,7 +18,7 @@
 namespace {
 
 // This creates a set of plane surfaces along the z axis
-std::vector<std::shared_ptr<Acts::Surface>> createPlaneSurfaces() {
+std::vector<Acts::SurfaceHandle<Acts::Surface>> createPlaneSurfaces() {
   auto rectangle = std::make_shared<Acts::RectangleBounds>(10., 10.);
   // Surface A:
   // This surface should not be reachable from (0.,0.,0.) position along z
@@ -49,7 +49,7 @@ std::vector<std::shared_ptr<Acts::Surface>> createPlaneSurfaces() {
 }
 
 // This creates a set of cylinder surfaces
-std::vector<std::shared_ptr<Acts::Surface>> createCylinders() {
+std::vector<Acts::SurfaceHandle<Acts::Surface>> createCylinders() {
   // Surface A:
   // A concentric cylinder with a radius of 10 and a half length of 20
   Acts::Transform3 aTransform = Acts::Transform3::Identity();

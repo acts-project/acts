@@ -139,7 +139,7 @@ std::shared_ptr<Volume> convertVolume(const Transform3& trf,
 
 std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
     const GeometryContext& context, Volume& vol, const std::string& name,
-    const std::vector<std::shared_ptr<Surface>>& sensitives) {
+    const std::vector<SurfaceHandle<Surface>>& sensitives) {
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   return Experimental::DetectorVolumeFactory::construct(
       portalGenerator, context, name, vol.transform(), vol.volumeBoundsPtr(),

@@ -362,7 +362,7 @@ class VectorMultiTrajectoryBase {
   // This might be problematic when appending a large number of surfaces
   // trackstates, because vector has to reallocated and thus copy. This might
   // be handled in a smart way by moving but not sure.
-  std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
+  std::vector<SurfaceHandle<const Surface>> m_referenceSurfaces;
 
   std::vector<HashedString> m_dynamicKeys;
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
@@ -536,7 +536,7 @@ class VectorMultiTrajectory final
   }
 
   void setReferenceSurface_impl(IndexType istate,
-                                std::shared_ptr<const Surface> surface) {
+                                SurfaceHandle<const Surface> surface) {
     m_referenceSurfaces[istate] = std::move(surface);
   }
 

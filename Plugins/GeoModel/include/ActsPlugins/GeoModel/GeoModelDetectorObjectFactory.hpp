@@ -11,6 +11,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
@@ -59,7 +60,7 @@ class GeoModelDetectorObjectFactory {
     /// @brief Name of the converted volume
     std::string name{};
     /// @brief List of surfaces belonging to this volume
-    std::vector<std::shared_ptr<Acts::Surface>> surfaces{};
+    std::vector<Acts::SurfaceHandle<Acts::Surface>> surfaces{};
   };
   using ConvertedVolList_t = std::vector<ConvertedGeoVol>;
 

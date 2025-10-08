@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include <Acts/EventData/Charge.hpp>
 #include <Acts/EventData/MultiComponentTrackParameters.hpp>
 #include <Acts/Surfaces/PlaneSurface.hpp>
@@ -39,7 +40,7 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
       b;
   b.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
-  std::shared_ptr<PlaneSurface> surface =
+  Acts::SurfaceHandle<PlaneSurface> surface =
       CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
           .planeSurface();
 
@@ -64,7 +65,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
   using cov_t = std::optional<BoundSquareMatrix>;
   for (const auto &cov : {cov_t{}, cov_t{BoundSquareMatrix::Identity()},
                           cov_t{BoundSquareMatrix::Identity()}}) {
-    std::shared_ptr<PlaneSurface> surface =
+    Acts::SurfaceHandle<PlaneSurface> surface =
         CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
             .planeSurface();
 

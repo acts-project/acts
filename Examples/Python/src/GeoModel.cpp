@@ -69,7 +69,7 @@ void addGeoModel(Context& ctx) {
       .def("logVolName", &GeoModelDetectorElement::logVolName)
       .def("databaseEntryName", &GeoModelDetectorElement::databaseEntryName)
       .def("surface", [](GeoModelDetectorElement self) {
-        return self.surface().getSharedPtr();
+        return self.surface().getHandle();
       });
 
   {
@@ -311,7 +311,7 @@ void addGeoModel(Context& ctx) {
              std::shared_ptr<GeoModelDetectorElementITk>>(
       gm, "GeoModelDetectorElementITk")
       .def("surface", [](GeoModelDetectorElementITk& self) {
-        return self.surface().getSharedPtr();
+        return self.surface().getHandle();
       });
   gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
 }

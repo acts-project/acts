@@ -338,7 +338,7 @@ Transform3 axesOriented(const Transform3& toGlobalOriginal,
 }
 }  // namespace
 
-std::shared_ptr<Surface> ActsPlugins::Geant4PhysicalVolumeConverter::surface(
+SurfaceHandle<Surface> ActsPlugins::Geant4PhysicalVolumeConverter::surface(
     const G4VPhysicalVolume& g4PhysVol, const Transform3& toGlobal,
     bool convertMaterial, double compressed) {
   // Get the logical volume
@@ -359,7 +359,7 @@ std::shared_ptr<Surface> ActsPlugins::Geant4PhysicalVolumeConverter::surface(
   };
 
   // Dynamic cast chain & conversion
-  std::shared_ptr<Surface> surface = nullptr;
+  SurfaceHandle<Surface> surface = nullptr;
 
   // Into a rectangle
   auto g4Box = dynamic_cast<const G4Box*>(g4Solid);

@@ -302,7 +302,7 @@ struct GaussianSumFitter {
       // parameters
       if constexpr (!IsMultiParameters::value) {
         params = MultiComponentBoundTrackParameters(
-            sParameters.referenceSurface().getSharedPtr(),
+            sParameters.referenceSurface().getHandle(),
             sParameters.parameters(), *sParameters.covariance(),
             sParameters.particleHypothesis());
       } else {
@@ -390,7 +390,7 @@ struct GaussianSumFitter {
       }
 
       MultiComponentBoundTrackParameters inflatedParams(
-          fwdGsfResult.lastMeasurementSurface->getSharedPtr(),
+          fwdGsfResult.lastMeasurementSurface->getHandle(),
           std::move(inflatedParamVector), sParameters.particleHypothesis());
 
       auto state = m_propagator.template makeState<decltype(bwdPropOptions),
@@ -523,7 +523,7 @@ struct GaussianSumFitter {
       track.parameters() = finalPars;
       track.covariance() = finalCov;
 
-      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+      track.setReferenceSurface(params.referenceSurface().getHandle());
 
       if (trackContainer.hasColumn(
               hashString(GsfConstants::kFinalMultiComponentStateColumn))) {

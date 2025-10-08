@@ -566,7 +566,7 @@ class AtlasStepper {
 
     // Fill the end parameters
     auto parameters = BoundTrackParameters::create(
-        state.options.geoContext, surface.getSharedPtr(), pos4, dir, qOverP,
+        state.options.geoContext, surface.getHandle(), pos4, dir, qOverP,
         std::move(covOpt), state.particleHypothesis);
     if (!parameters.ok()) {
       return parameters.error();

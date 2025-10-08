@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -58,7 +59,7 @@ class Portal {
   /// @param surface The surface from which to create the portal link
   /// @param volume The volume this portal connects to in the @p direction
   ///               relative to the normal of @p surface.
-  Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
+  Portal(Direction direction, SurfaceHandle<RegularSurface> surface,
          TrackingVolume& volume);
 
   /// Constructor for a portal from two links. One of the links can be
@@ -80,11 +81,11 @@ class Portal {
       /// Constructor from a surface and a volume
       /// @param surfaceIn Surface to associate with this link
       /// @param volumeIn Volume to associate with this link
-      Link(std::shared_ptr<RegularSurface> surfaceIn, TrackingVolume& volumeIn)
+      Link(SurfaceHandle<RegularSurface> surfaceIn, TrackingVolume& volumeIn)
           : surface(std::move(surfaceIn)), volume(&volumeIn) {}
 
       /// The associated surface
-      std::shared_ptr<RegularSurface> surface = nullptr;
+      SurfaceHandle<RegularSurface> surface;
       /// The associated volume
       TrackingVolume* volume = nullptr;
     };
@@ -199,7 +200,7 @@ class Portal {
   ///       to the one of the link that's already set on the portal.
   /// @param volume The target volume
   void setLink(const GeometryContext& gctx, Direction direction,
-               std::shared_ptr<RegularSurface> surface, TrackingVolume& volume);
+               SurfaceHandle<RegularSurface> surface, TrackingVolume& volume);
 
   /// Get the link associated with the @p direction. Can be null if the associated link is unset.
   /// @param direction The direction
@@ -237,7 +238,7 @@ class Portal {
   static bool isSameSurface(const GeometryContext& gctx, const Surface& a,
                             const Surface& b);
 
-  std::shared_ptr<RegularSurface> m_surface;
+  SurfaceHandle<RegularSurface> m_surface;
 
   std::unique_ptr<PortalLinkBase> m_alongNormal;
   std::unique_ptr<PortalLinkBase> m_oppositeNormal;

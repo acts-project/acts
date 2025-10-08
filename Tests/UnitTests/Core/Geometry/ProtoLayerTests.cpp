@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -56,7 +57,7 @@ void testProtoLayer() {
       Transform3::Identity();
 
   std::vector<
-      std::shared_ptr<std::conditional_t<IsConst, const Surface, Surface>>>
+      SurfaceHandle<std::conditional_t<IsConst, const Surface, Surface>>>
       surfaceStore;
   surfaceStore.reserve(100);
 
@@ -79,7 +80,7 @@ void testProtoLayer() {
         recBounds);
 
     std::vector<
-        std::shared_ptr<std::conditional_t<IsConst, const Surface, Surface>>>
+        SurfaceHandle<std::conditional_t<IsConst, const Surface, Surface>>>
         sharedSurfaces = {atNegX, atNegY, atPosX, atPosY};
     surfaceStore.insert(surfaceStore.begin(), sharedSurfaces.begin(),
                         sharedSurfaces.end());
@@ -189,7 +190,7 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
     std::size_t nSensors = 8;
     double deltaPhi = 2 * std::numbers::pi / nSensors;
     double r = 20_mm;
-    std::vector<std::shared_ptr<const Surface>> surfaces;
+    std::vector<SurfaceHandle<const Surface>> surfaces;
     for (std::size_t i = 0; i < nSensors; i++) {
       // Create a fan of sensors
 
@@ -200,12 +201,12 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
       auto& element = detectorElements.emplace_back(
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
 
-      surfaces.push_back(element->surface().getSharedPtr());
+      surfaces.push_back(element->surface().getHandle());
     }
     return surfaces;
   };
 
-  std::vector<std::shared_ptr<const Surface>> surfaces = makeFan(0_degree);
+  std::vector<SurfaceHandle<const Surface>> surfaces = makeFan(0_degree);
 
   ProtoLayer protoLayer(tgContext, surfaces);
 

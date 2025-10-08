@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
@@ -32,6 +33,8 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 using namespace Acts;
+
+PYBIND11_DECLARE_HOLDER_TYPE(T, SurfaceHandle<T>, false)
 
 namespace ActsPython {
 // This adds the definitions from Core/Surfaces to the python module
@@ -158,71 +161,75 @@ void addSurfaces(py::module_& m) {
   }
 
   {
-    py::class_<Surface, std::shared_ptr<Surface>>(m, "Surface")
-        // Can't bind directly because GeometryObject is virtual base of Surface
-        .def_property_readonly(
-            "geometryId", [](const Surface& self) { return self.geometryId(); })
-        .def("assignGeometryId",
-             [](Surface& self, const GeometryIdentifier& id) {
-               self.assignGeometryId(id);
-             })
-        .def("center", &Surface::center)
-        .def_property_readonly("type", &Surface::type)
-        .def("visualize", &Surface::visualize)
-        .def_property_readonly("surfaceMaterial",
-                               &Surface::surfaceMaterialSharedPtr)
-        .def("createCylinder",
-             [](const Transform3& transform,
-                std::shared_ptr<const CylinderBounds> bounds) {
-               return Surface::makeShared<CylinderSurface>(transform, bounds);
-             })
-        .def("createDisc",
-             [](const Transform3& transform,
-                std::shared_ptr<const DiscBounds> bounds) {
-               return Surface::makeShared<DiscSurface>(transform, bounds);
-             })
-        .def("createDisc",
-             [](std::shared_ptr<const DiscBounds> bounds,
-                const DetectorElementBase& detelement) {
-               return Surface::makeShared<DiscSurface>(bounds, detelement);
-             })
-        .def("createStraw",
-             [](const Transform3& transform,
-                std::shared_ptr<const LineBounds> bounds) {
-               return Surface::makeShared<StrawSurface>(transform, bounds);
-             })
-        .def("createStraw",
-             [](std::shared_ptr<const LineBounds> bounds,
-                const DetectorElementBase& detelement) {
-               return Surface::makeShared<StrawSurface>(bounds, detelement);
-             })
-        .def("createPerigee",
-             [](const Vector3& vertex) {
-               return Surface::makeShared<PerigeeSurface>(vertex);
-             })
-        .def("createPlane",
-             [](const Transform3& transform,
-                std::shared_ptr<const PlanarBounds> bounds) {
-               return Surface::makeShared<PlaneSurface>(transform, bounds);
-             })
-        .def("createPlane", [](std::shared_ptr<const PlanarBounds> pbounds,
-                               const DetectorElementBase& detelement) {
-          return Surface::makeShared<PlaneSurface>(pbounds, detelement);
-        });
+    auto s =
+        py::class_<Surface, SurfaceHandle<Surface>>(m, "Surface")
+            // Can't bind directly because GeometryObject is virtual base of
+            // Surface
+            .def_property_readonly(
+                "geometryId",
+                [](const Surface& self) { return self.geometryId(); })
+            .def("assignGeometryId",
+                 [](Surface& self, const GeometryIdentifier& id) {
+                   self.assignGeometryId(id);
+                 })
+            .def("center", &Surface::center)
+            .def_property_readonly("type", &Surface::type)
+            .def("visualize", &Surface::visualize)
+            .def_property_readonly("surfaceMaterial",
+                                   &Surface::surfaceMaterialSharedPtr)
+            .def("createCylinder",
+                 [](const Transform3& transform,
+                    std::shared_ptr<const CylinderBounds> bounds) {
+                   return Surface::makeShared<CylinderSurface>(transform,
+                                                               bounds);
+                 })
+            .def("createDisc",
+                 [](const Transform3& transform,
+                    std::shared_ptr<const DiscBounds> bounds) {
+                   return Surface::makeShared<DiscSurface>(transform, bounds);
+                 })
+            .def("createDisc",
+                 [](std::shared_ptr<const DiscBounds> bounds,
+                    const DetectorElementBase& detelement) {
+                   return Surface::makeShared<DiscSurface>(bounds, detelement);
+                 })
+            .def("createStraw",
+                 [](const Transform3& transform,
+                    std::shared_ptr<const LineBounds> bounds) {
+                   return Surface::makeShared<StrawSurface>(transform, bounds);
+                 })
+            .def("createStraw",
+                 [](std::shared_ptr<const LineBounds> bounds,
+                    const DetectorElementBase& detelement) {
+                   return Surface::makeShared<StrawSurface>(bounds, detelement);
+                 })
+            .def("createPerigee",
+                 [](const Vector3& vertex) {
+                   return Surface::makeShared<PerigeeSurface>(vertex);
+                 })
+            .def("createPlane",
+                 [](const Transform3& transform,
+                    std::shared_ptr<const PlanarBounds> bounds) {
+                   return Surface::makeShared<PlaneSurface>(transform, bounds);
+                 })
+            .def("createPlane", [](std::shared_ptr<const PlanarBounds> pbounds,
+                                   const DetectorElementBase& detelement) {
+              return Surface::makeShared<PlaneSurface>(pbounds, detelement);
+            });
 
-    py::class_<CylinderSurface, Surface, std::shared_ptr<CylinderSurface>>(
+    py::class_<CylinderSurface, Surface, SurfaceHandle<CylinderSurface>>(
         m, "CylinderSurface");
 
-    py::class_<DiscSurface, Surface, std::shared_ptr<DiscSurface>>(
-        m, "DiscSurface");
+    py::class_<DiscSurface, Surface, SurfaceHandle<DiscSurface>>(m,
+                                                                 "DiscSurface");
 
-    py::class_<PlaneSurface, Surface, std::shared_ptr<PlaneSurface>>(
+    py::class_<PlaneSurface, Surface, SurfaceHandle<PlaneSurface>>(
         m, "PlaneSurface");
 
-    py::class_<PerigeeSurface, Surface, std::shared_ptr<PerigeeSurface>>(
+    py::class_<PerigeeSurface, Surface, SurfaceHandle<PerigeeSurface>>(
         m, "PerigeeSurface");
 
-    py::class_<StrawSurface, Surface, std::shared_ptr<StrawSurface>>(
+    py::class_<StrawSurface, Surface, SurfaceHandle<StrawSurface>>(
         m, "StrawSurface");
   }
 

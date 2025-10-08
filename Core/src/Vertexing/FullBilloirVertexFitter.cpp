@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
@@ -103,7 +104,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     Vector3 linPointPos = VectorHelpers::position(linPoint);
     // Make Perigee surface at linPointPos, transverse plane of Perigee
     // corresponds the global x-y plane
-    const std::shared_ptr<PerigeeSurface> perigeeSurface =
+    const SurfaceHandle<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(linPointPos);
 
     // iterate over all tracks
@@ -308,7 +309,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
 
       std::vector<TrackAtVertex> tracksAtVertex;
 
-      std::shared_ptr<PerigeeSurface> perigee =
+      SurfaceHandle<PerigeeSurface> perigee =
           Surface::makeShared<PerigeeSurface>(
               VectorHelpers::position(linPoint));
 

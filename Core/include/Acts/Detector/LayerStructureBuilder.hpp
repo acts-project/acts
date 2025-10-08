@@ -57,19 +57,19 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
    public:
     /// Constructor with predefined surfaces
     /// @param isurfaces is the vector of surfaces
-    explicit SurfacesHolder(std::vector<std::shared_ptr<Surface>> isurfaces)
+    explicit SurfacesHolder(std::vector<SurfaceHandle<Surface>> isurfaces)
         : m_surfaces(std::move(isurfaces)) {}
 
     /// Return the surfaces from the holder
     /// @param gctx is the geometry context
     /// @return Vector of surfaces held by this holder
-    std::vector<std::shared_ptr<Surface>> surfaces(
+    std::vector<SurfaceHandle<Surface>> surfaces(
         [[maybe_unused]] const GeometryContext& gctx) const final {
       return m_surfaces;
     }
 
    private:
-    std::vector<std::shared_ptr<Surface>> m_surfaces = {};
+    std::vector<SurfaceHandle<Surface>> m_surfaces = {};
   };
 
   /// @brief Configuration struct for the LayerStructureBuilder

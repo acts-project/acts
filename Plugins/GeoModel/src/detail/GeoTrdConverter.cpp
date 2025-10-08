@@ -98,6 +98,6 @@ ActsPlugins::detail::GeoTrdConverter::operator()(
   auto detectorElement =
       GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
           geoPV, trapezoidBounds, transform, thickness);
-  auto surface = detectorElement->surface().getSharedPtr();
+  auto surface = detectorElement->surface().getHandle();
   return std::make_tuple(detectorElement, surface);
 }

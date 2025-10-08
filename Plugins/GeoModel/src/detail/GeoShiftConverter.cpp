@@ -62,7 +62,7 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
 
   auto newEl = GeoModelDetectorElement::createDetectorElement<Surface>(
       el->physicalVolume(), sharedBounds, el->transform({}), el->thickness());
-  auto newSurface = newEl->surface().getSharedPtr();
+  auto newSurface = newEl->surface().getHandle();
   return std::make_tuple(newEl, newSurface);
 }
 

@@ -453,7 +453,7 @@ ActsPlugins::TGeoSurfaceConverter::planeComponents(
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<Surface>, double>
+std::tuple<SurfaceHandle<Surface>, double>
 ActsPlugins::TGeoSurfaceConverter::toSurface(const TGeoShape& tgShape,
                                              const TGeoMatrix& tgMatrix,
                                              const std::string& axes,

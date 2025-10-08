@@ -241,7 +241,7 @@ void EDM4hepUtil::writeTrajectory(
 
     edm4hep::TrackState trackState;
 
-    Acts::BoundTrackParameters parObj{state.referenceSurface().getSharedPtr(),
+    Acts::BoundTrackParameters parObj{state.referenceSurface().getHandle(),
                                       state.parameters(), state.covariance(),
                                       particleHypothesis};
 

@@ -19,6 +19,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -44,7 +45,7 @@ struct Parameters {
   Acts::ParticleHypothesis particleHypothesis =
       Acts::ParticleHypothesis::pion();
   std::optional<Acts::BoundSquareMatrix> covariance;
-  std::shared_ptr<const Acts::Surface> surface;
+  Acts::SurfaceHandle<const Acts::Surface> surface;
 };
 
 Acts::ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP,
@@ -108,7 +109,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
     edm4hep::TrackState& trackState = outTrackStates.emplace_back();
     trackState.location = edm4hep::TrackState::AtOther;
 
-    Acts::BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
+    Acts::BoundTrackParameters params{state.referenceSurface().getHandle(),
                                       state.parameters(), state.covariance(),
                                       track.particleHypothesis()};
 
@@ -139,9 +140,9 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   auto& ipState = outTrackStates.emplace_back();
 
   // Convert the track parameters at the IP
-  Acts::BoundTrackParameters trackParams{
-      track.referenceSurface().getSharedPtr(), track.parameters(),
-      track.covariance(), track.particleHypothesis()};
+  Acts::BoundTrackParameters trackParams{track.referenceSurface().getHandle(),
+                                         track.parameters(), track.covariance(),
+                                         track.particleHypothesis()};
 
   // Convert to LCIO track parametrization expected by EDM4hep
   auto converted =

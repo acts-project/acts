@@ -14,6 +14,7 @@
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 namespace Acts::Experimental {
@@ -48,7 +49,7 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
 
   // Add the surfaces to the tracking volume
   for (auto& surface : m_config.mlSurfaces) {
-    trackingVolume->addSurface(surface);
+    trackingVolume->addSurface(SurfaceHandle<Surface>(surface));
   }
 
   return trackingVolume;

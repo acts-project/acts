@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -32,9 +33,8 @@
 namespace Acts {
 
 namespace {
-std::shared_ptr<RegularSurface> mergedSurface(const Surface& a,
-                                              const Surface& b,
-                                              AxisDirection direction) {
+SurfaceHandle<RegularSurface> mergedSurface(const Surface& a, const Surface& b,
+                                            AxisDirection direction) {
   if (a.type() != b.type()) {
     throw std::invalid_argument{"Cannot merge surfaces of different types"};
   }
@@ -44,30 +44,30 @@ std::shared_ptr<RegularSurface> mergedSurface(const Surface& a,
     const auto& cylinderB = dynamic_cast<const CylinderSurface&>(b);
 
     auto [merged, reversed] = cylinderA->mergedWith(cylinderB, direction, true);
-    return merged;
+    return SurfaceHandle<RegularSurface>(merged);
   } else if (const auto* discA = dynamic_cast<const DiscSurface*>(&a);
              discA != nullptr) {
     const auto& discB = dynamic_cast<const DiscSurface&>(b);
     auto [merged, reversed] = discA->mergedWith(discB, direction, true);
-    return merged;
+    return SurfaceHandle<RegularSurface>(merged);
   } else if (const auto* planeA = dynamic_cast<const PlaneSurface*>(&a);
              planeA != nullptr) {
     const auto& planeB = dynamic_cast<const PlaneSurface&>(b);
     auto [merged, reversed] = planeA->mergedWith(planeB, direction);
-    return merged;
+    return SurfaceHandle<RegularSurface>(merged);
   } else {
     throw std::invalid_argument{"Unsupported surface type"};
   }
 }
 
-std::shared_ptr<RegularSurface> mergePortalLinks(
+SurfaceHandle<RegularSurface> mergePortalLinks(
     const std::vector<std::unique_ptr<PortalLinkBase>>& links,
     AxisDirection direction) {
   assert(std::ranges::all_of(links,
                              [](const auto& link) { return link != nullptr; }));
   assert(!links.empty());
 
-  std::shared_ptr<RegularSurface> result = links.front()->surfacePtr();
+  SurfaceHandle<RegularSurface> result = links.front()->surfacePtr();
   for (auto it = std::next(links.begin()); it != links.end(); ++it) {
     assert(result != nullptr);
     result = mergedSurface(*result, it->get()->surface(), direction);

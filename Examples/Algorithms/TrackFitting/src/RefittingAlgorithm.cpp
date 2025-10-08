@@ -81,7 +81,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
     options.doRefit = true;
 
     Acts::BoundTrackParameters initialParams(
-        track.referenceSurface().getSharedPtr(), track.parameters(),
+        track.referenceSurface().getHandle(), track.parameters(),
         track.covariance(), track.particleHypothesis());
 
     if (initialParams.covariance()) {

@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <cmath>
 #include <numbers>
@@ -31,7 +32,7 @@ using namespace Acts;
 // this includes only those surfaces that can take unbounded local positions as
 // inputs, i.e. no angles or strictly positive radii.
 const auto surfaces =
-    bdata::make(std::vector<std::shared_ptr<const RegularSurface>>{
+    bdata::make(std::vector<SurfaceHandle<const RegularSurface>>{
         Surface::makeShared<CylinderSurface>(
             Transform3::Identity(), 10 /* radius */, 100 /* half-length z */),
         // TODO perigee roundtrip local->global->local does not seem to work
