@@ -31,7 +31,6 @@ def format_one(path: pathlib.Path, indent: int, sort_keys: bool) -> int:
             indent=indent,
             ensure_ascii=False,
             sort_keys=sort_keys,
-            separators=(", ", ": "),
         )
         + "\n"
     )  # ensure single trailing newline
