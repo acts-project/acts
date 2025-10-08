@@ -146,7 +146,7 @@ struct Fixture {
 
   using KalmanUpdater = GainMatrixUpdater;
   using KalmanSmoother = GainMatrixSmoother;
-  using CombinatorialKalmanFilter =
+  using TestCombinatorialKalmanFilter =
       CombinatorialKalmanFilter<ConstantFieldPropagator, TrackContainer>;
   using TestSourceLinkContainer =
       std::unordered_multimap<GeometryIdentifier, TestSourceLink>;
@@ -171,7 +171,7 @@ struct Fixture {
   TestSourceLinkContainer sourceLinks;
 
   // CKF implementation to be tested
-  CombinatorialKalmanFilter ckf;
+  TestCombinatorialKalmanFilter ckf;
   // configuration for the measurement selector
   MeasurementSelector::Config measurementSelectorCfg = {
       // global default: no chi2 cut, only one measurement per surface

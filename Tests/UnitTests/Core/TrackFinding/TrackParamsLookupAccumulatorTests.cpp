@@ -31,9 +31,10 @@
 #include <vector>
 
 using namespace Acts;
-GeometryContext gctx;
 
 namespace ActsTests {
+
+GeometryContext gctx;
 
 BOOST_AUTO_TEST_SUITE(TrackFindingSuite)
 
