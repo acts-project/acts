@@ -114,6 +114,8 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
 
   ~TGeoDetectorElement() override;
 
+  /// Get the detector element identifier
+  /// @return The unique identifier for this detector element
   Identifier identifier() const;
 
   /// Return local to global transform associated with this identifier
@@ -121,22 +123,28 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   const Acts::Transform3& transform(
       const Acts::GeometryContext& gctx) const override;
+  /// @return Reference to the transformation matrix from local to global coordinates
 
   /// Return the nominal - non-contextual transform
   const Acts::Transform3& nominalTransform() const;
+  /// @return Reference to the nominal transformation matrix
 
   /// Return surface associated with this detector element
   const Acts::Surface& surface() const override;
+  /// @return Const reference to the surface
 
   /// Return surface associated with this detector element
   ///
   /// @note this is the non-const access
   Acts::Surface& surface() override;
+  /// @return Mutable reference to the surface
 
   /// Returns the thickness of the module
+  /// @return Thickness of the detector element in units of length
   double thickness() const override;
 
   /// Return the TGeoNode for back navigation
+  /// @return Reference to the underlying TGeoNode
   const TGeoNode& tgeoNode() const { return *m_detElement; }
 
  private:

@@ -144,6 +144,8 @@ def main():
     gmFactoryConfig.nameList = [
         "RpcGasGap",
         "MDTDriftGas",
+        "TgcGasGap",
+        "SmallWheelGasGap",
     ]
     gmFactoryConfig.convertSubVolumes = True
     gmFactoryConfig.convertBox = ["MDT", "RPC"]

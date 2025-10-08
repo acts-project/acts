@@ -49,6 +49,12 @@ class DD4hepLayerBuilder : public Acts::ILayerBuilder {
       const dd4hep::DetElement&, const std::string&, double, bool,
       std::shared_ptr<const Acts::ISurfaceMaterial>)>;
   /// Default factory for DD4hepDetectorElement
+  /// @param detElement The DD4hep detector element
+  /// @param detAxis The detector axis string
+  /// @param thickness The thickness of the element
+  /// @param isDisc Whether this is a disc element
+  /// @param surfaceMaterial The surface material
+  /// @return Shared pointer to the created DD4hepDetectorElement
   static std::shared_ptr<DD4hepDetectorElement> defaultDetectorElementFactory(
       const dd4hep::DetElement& detElement, const std::string& detAxis,
       double thickness, bool isDisc,
@@ -140,10 +146,12 @@ class DD4hepLayerBuilder : public Acts::ILayerBuilder {
   void setConfiguration(const Config& config);
 
   /// get the configuration object
+  /// @return Copy of the current configuration
   Config getConfiguration() const;
 
   /// set logging instance
   void setLogger(std::unique_ptr<const Acts::Logger> logger);
+  /// @param logger The logger instance to set
 
  private:
   /// configuration object

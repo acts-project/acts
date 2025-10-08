@@ -142,6 +142,7 @@ class RootMaterialMapIo {
   /// @param rFile the file to read from
   /// @param options the options for reading
   Acts::TrackingGeometryMaterial read(TFile& rFile, const Options& options);
+  /// @return TrackingGeometryMaterial with material read from file
 
  private:
   /// @brief Connect the homogeneous material tree for writing
