@@ -10,6 +10,7 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
+#include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
@@ -90,6 +91,11 @@ void addRootOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(RootVertexWriter, mex, "RootVertexWriter",
                              inputVertices, filePath, fileMode, treeName);
+
+  ACTS_PYTHON_DECLARE_WRITER(RootMuonSpacePointWriter, mex,
+                             "RootMuonSpacePointWriter", inputSpacePoints,
+                             filePath, fileMode, treeName, trackingGeometry,
+                             writeGlobal);
 
   ACTS_PYTHON_DECLARE_WRITER(
       TrackFinderNTupleWriter, mex, "TrackFinderNTupleWriter", inputTracks,
