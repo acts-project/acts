@@ -16,9 +16,12 @@
 
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
 using namespace Acts;
+using namespace Acts::UnitLiterals;
+
 namespace ActsExamples {
 
 RootMuonSpacePointReader::RootMuonSpacePointReader(const Config& config,
@@ -81,9 +84,11 @@ ProcessCode RootMuonSpacePointReader::read(
     Vector3 position{m_localPositionX->at(spIdx), m_localPositionY->at(spIdx),
                      m_localPositionZ->at(spIdx)};
     Vector3 sensorDir{makeDirectionFromPhiTheta<double>(
-        m_sensorDirectionPhi->at(spIdx), m_sensorDirectionTheta->at(spIdx))};
+        m_sensorDirectionPhi->at(spIdx) * 1._degree,
+        m_sensorDirectionTheta->at(spIdx) * 1._degree)};
     Vector3 toNext{makeDirectionFromPhiTheta<double>(
-        m_toNextSensorPhi->at(spIdx), m_toNextSensorTheta->at(spIdx))};
+        m_toNextSensorPhi->at(spIdx) * 1._degree,
+        m_toNextSensorTheta->at(spIdx) * 1._degree)};
 
     newSp.defineCoordinates(std::move(position), std::move(sensorDir),
                             std::move(toNext));

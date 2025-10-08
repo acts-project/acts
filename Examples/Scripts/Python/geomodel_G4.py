@@ -104,6 +104,12 @@ def main():
     parser.add_argument(
         "--randomSeed", default=1602, type=int, help="Random seed for event generation"
     )
+    parser.add_argument(
+        "--geoSvgDump",
+        default=False,
+        action="store_true",
+        help="Dump the tracking geometry in an obj format",
+    )
 
     args = parser.parse_args()
 
@@ -199,17 +205,18 @@ def main():
         )
     )
 
+    if args.geoSvgDump:
+        wb = WhiteBoard(acts.logging.INFO)
+        context = AlgorithmContext(0, 0, wb, 10)
+        obj_dir = Path(args.outDir) / "obj"
+        obj_dir.mkdir(exist_ok=True)
+        writer = ObjTrackingGeometryWriter(
+            level=acts.logging.INFO, outputDir=str(obj_dir)
+        )
+
+        writer.write(context, trackingGeometry)
+
     algSequence.run()
-
-    wb = WhiteBoard(acts.logging.INFO)
-
-    context = AlgorithmContext(0, 0, wb, 10)
-    obj_dir = Path(args.outDir) / "obj"
-    obj_dir.mkdir(exist_ok=True)
-
-    writer = ObjTrackingGeometryWriter(level=acts.logging.INFO, outputDir=str(obj_dir))
-
-    writer.write(context, trackingGeometry)
 
 
 if __name__ == "__main__":

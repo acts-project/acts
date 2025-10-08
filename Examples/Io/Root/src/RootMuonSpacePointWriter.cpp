@@ -46,6 +46,14 @@ void castPush(std::vector<T>& vec, const T1& val) {
   vec.push_back(castedVal);
   // MARK: fpeMaskEnd(FLTUND)
 }
+/// @brief Converts an angle in radians into an angle in degree
+constexpr double inDeg(const double radians) {
+  if (Acts::abs(radians) < std::numeric_limits<float>::epsilon()) {
+    return 0.;
+  }
+  using namespace Acts::UnitLiterals;
+  return radians / 1._degree;
+}
 namespace ActsExamples {
 RootMuonSpacePointWriter::RootMuonSpacePointWriter(const Config& config,
                                                    Logging::Level level)
@@ -134,11 +142,11 @@ ProcessCode RootMuonSpacePointWriter::writeT(
       castPush(m_localPositionY, writeMe.localPosition().y());
       castPush(m_localPositionZ, writeMe.localPosition().z());
 
-      castPush(m_sensorDirectionTheta, theta(writeMe.sensorDirection()));
-      castPush(m_sensorDirectionPhi, phi(writeMe.sensorDirection()));
+      castPush(m_sensorDirectionTheta, inDeg(theta(writeMe.sensorDirection())));
+      castPush(m_sensorDirectionPhi, inDeg(phi(writeMe.sensorDirection())));
 
-      castPush(m_toNextSensorTheta, theta(writeMe.toNextSensor()));
-      castPush(m_toNextSensorPhi, phi(writeMe.toNextSensor()));
+      castPush(m_toNextSensorTheta, inDeg(theta(writeMe.toNextSensor())));
+      castPush(m_toNextSensorPhi, inDeg(phi(writeMe.toNextSensor())));
 
       const auto& cov = writeMe.covariance();
       {
