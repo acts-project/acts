@@ -19,8 +19,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
@@ -33,7 +33,9 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
@@ -67,3 +69,5 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

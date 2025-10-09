@@ -9,13 +9,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/MaterialComposition.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(material_composition)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 constexpr float eps = 1.0f / 255u;
 
@@ -79,4 +81,4 @@ BOOST_AUTO_TEST_CASE(construct_with_weights) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

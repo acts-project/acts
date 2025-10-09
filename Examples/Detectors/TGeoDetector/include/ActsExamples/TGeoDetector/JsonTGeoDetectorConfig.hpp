@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsPlugins/Json/ActsJson.hpp"
 #include "ActsPlugins/Root/TGeoCylinderDiscSplitter.hpp"
 
 #include <map>

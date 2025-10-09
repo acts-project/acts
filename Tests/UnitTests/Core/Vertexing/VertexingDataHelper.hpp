@@ -10,14 +10,16 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 #include <fstream>
 #include <iterator>
 #include <regex>
 
-namespace Acts::Test {
+namespace ActsTests {
+
+using namespace Acts;
 
 using namespace Acts::UnitLiterals;
 using Covariance = BoundSquareMatrix;
@@ -45,10 +47,10 @@ inline std::tuple<Vertex, std::vector<VertexInfo>,
 readTracksAndVertexCSV(const std::string& toolString,
                        const std::string& fileBase = "vertexing_event_mu20") {
   const auto beamspotDataPath =
-      Acts::Test::getDataPath(fileBase + "_beamspot.csv");
-  const auto tracksDataPath = Acts::Test::getDataPath(fileBase + "_tracks.csv");
+      ActsTests::getDataPath(fileBase + "_beamspot.csv");
+  const auto tracksDataPath = ActsTests::getDataPath(fileBase + "_tracks.csv");
   const auto verticesDataPath =
-      Acts::Test::getDataPath(fileBase + "_vertices_" + toolString + ".csv");
+      ActsTests::getDataPath(fileBase + "_vertices_" + toolString + ".csv");
 
   const std::regex comma(",");
 
@@ -146,4 +148,4 @@ readTracksAndVertexCSV(const std::string& toolString,
   return {beamspotConstraint, vertices, tracks};
 }
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

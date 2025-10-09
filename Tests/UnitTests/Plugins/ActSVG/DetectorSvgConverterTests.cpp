@@ -26,24 +26,25 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/ActSVG/DetectorSvgConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalDetector.hpp"
 
 #include <fstream>
 #include <memory>
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::Experimental;
 using namespace ActsPlugins;
 
 GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(ActSvg)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(ActSVGSuite)
 
 BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   auto detector = buildCylindricalDetector(tContext);
@@ -74,3 +75,5 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

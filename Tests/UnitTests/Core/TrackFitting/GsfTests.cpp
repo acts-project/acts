@@ -26,7 +26,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
@@ -34,6 +33,7 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
 #include <memory>
 #include <optional>
@@ -45,12 +45,11 @@
 
 #include "FitterTestsCommon.hpp"
 
-namespace {
-
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
 
 static const auto electron = ParticleHypothesis::electron();
 
@@ -145,9 +144,7 @@ auto makeParameters() {
       cp.referenceSurface().getSharedPtr(), cmps, electron));
 }
 
-}  // namespace
-
-BOOST_AUTO_TEST_SUITE(TrackFittingGsf)
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto multi_pars = makeParameters();
@@ -243,3 +240,5 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

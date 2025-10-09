@@ -181,7 +181,7 @@ void addGeoModel(Context& ctx) {
                        /// Station properties
                        barrelRadii, nSectors, nEtaStations, stationDistInZ,
                        stationDistInR, endCapWheelLowR, bigWheelDistZ,
-                       buildEndcaps);
+                       buildEndcaps, nInnerMultiplets, nInnerGasGapsPerMl);
   }
   // Volume factory
   {
