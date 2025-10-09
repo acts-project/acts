@@ -8,9 +8,5 @@
 
 #pragma once
 
-// This header is used to disable GCC errors that could be occurring in
-// nlohmann/json.hpp
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#include <nlohmann/json.hpp>
-#pragma GCC diagnostic pop
+/// Deprecated header, pointing to new location of Json plugin
+#include "ActsPlugins/Json/ActsJson.hpp"

@@ -18,9 +18,11 @@
 #include "SurfaceView3DBase.hpp"
 #include "Visualization3DTester.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Visualization)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(VisualizationSuite)
 
 /// This tests if the corresponding obj output is well formatted
 BOOST_AUTO_TEST_CASE(SurfaceView3DObj) {
@@ -78,4 +80,4 @@ BOOST_AUTO_TEST_CASE(SurfaceView3DPly) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

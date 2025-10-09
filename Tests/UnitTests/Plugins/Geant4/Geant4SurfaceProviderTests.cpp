@@ -10,10 +10,10 @@
 
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsPlugins/Geant4/Geant4SurfaceProvider.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -66,7 +66,9 @@ const double armOffset = 10 * cm;
 
 const std::filesystem::path gdmlPath = "two-arms-telescope.gdml";
 
-BOOST_AUTO_TEST_SUITE(Geant4SurfaceProviderSuite)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(Geant4Suite)
 
 std::tuple<G4VPhysicalVolume*, std::vector<std::string>>
 ConstructGeant4World() {
@@ -145,8 +147,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
   // when using names as identifiers
   auto spFullCfg = Geant4SurfaceProvider<>::Config();
   spFullCfg.g4World = world;
-  spFullCfg.surfacePreselector = std::make_shared<
-      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(names, true);
+  spFullCfg.surfacePreselector =
+      std::make_shared<Geant4PhysicalVolumeSelectors::NameSelector>(names,
+                                                                    true);
 
   auto spFull = std::make_shared<Geant4SurfaceProvider<>>(
       spFullCfg, Geant4SurfaceProvider<>::kdtOptions());
@@ -183,9 +186,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
 
   auto spLeftArmCfg = Geant4SurfaceProvider<>::Config();
   spLeftArmCfg.g4World = world;
-  spLeftArmCfg.surfacePreselector = std::make_shared<
-      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(leftArmNames,
-                                                                true);
+  spLeftArmCfg.surfacePreselector =
+      std::make_shared<Geant4PhysicalVolumeSelectors::NameSelector>(
+          leftArmNames, true);
 
   auto spLeftArm = std::make_shared<Geant4SurfaceProvider<>>(
       spLeftArmCfg, Geant4SurfaceProvider<>::kdtOptions());
@@ -293,8 +296,8 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   ranges[g4Axes[1]] = std::make_tuple(-100, 100);
   ranges[g4Axes[2]] = std::make_tuple(-100, 100);
 
-  sp2DPosCfg.surfacePreselector = std::make_shared<
-      ActsPlugins::Geant4PhysicalVolumeSelectors::PositionSelector>(ranges);
+  sp2DPosCfg.surfacePreselector =
+      std::make_shared<Geant4PhysicalVolumeSelectors::PositionSelector>(ranges);
 
   auto sp2DPos =
       std::make_shared<Geant4SurfaceProvider<1>>(sp2DPosCfg, kdt1DOpt);
@@ -375,9 +378,9 @@ BOOST_AUTO_TEST_CASE(Geant4RectangleFromGDML) {
   // 1D selection -- select only the second row
   auto planeFromGDMLCfg = Geant4SurfaceProvider<1>::Config();
   planeFromGDMLCfg.g4World = world;
-  planeFromGDMLCfg.surfacePreselector = std::make_shared<
-      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
-      std::vector<std::string>{"b_pv"}, true);
+  planeFromGDMLCfg.surfacePreselector =
+      std::make_shared<Geant4PhysicalVolumeSelectors::NameSelector>(
+          std::vector<std::string>{"b_pv"}, true);
 
   auto kdt1DOpt = Geant4SurfaceProvider<1>::kdtOptions();
   kdt1DOpt.range = RangeXD<1, double>();
@@ -395,3 +398,5 @@ BOOST_AUTO_TEST_CASE(Geant4RectangleFromGDML) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

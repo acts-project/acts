@@ -14,8 +14,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -32,7 +32,9 @@ namespace {
 constexpr auto eps = std::numeric_limits<double>::epsilon();
 }
 
-BOOST_AUTO_TEST_SUITE(TransformBoundToFree)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_DATA_TEST_CASE(
     Parameters,
@@ -189,3 +191,5 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

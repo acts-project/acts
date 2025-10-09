@@ -16,7 +16,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Plugins/Json/VolumeBoundsJsonConverter.hpp"
+#include "ActsPlugins/Json/VolumeBoundsJsonConverter.hpp"
 
 #include <algorithm>
 #include <array>
@@ -31,7 +31,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(VolumeBoundsJsonConversion)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(Cuboid) {
   std::ofstream out("CuboidVolumeBounds.json");
@@ -175,3 +177,5 @@ BOOST_AUTO_TEST_CASE(Trapezoid) {
   BOOST_CHECK(trapezoidRef->values() == trapezoidTest->values());
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

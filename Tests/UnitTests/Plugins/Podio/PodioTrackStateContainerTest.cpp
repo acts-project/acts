@@ -108,7 +108,9 @@ using CommonTests = MultiTrajectoryTestsCommon<Factory>;
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(PodioTrackStateContainerTest)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(PodioSuite)
 
 BOOST_AUTO_TEST_CASE(Build) {
   CommonTests ct;
@@ -342,3 +344,5 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

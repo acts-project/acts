@@ -16,14 +16,18 @@
 
 #include "SpacePoint.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
 BOOST_AUTO_TEST_CASE(TripletCandidateObject) {
   using UnitTestSpacePoint = ::SpacePoint;
   std::vector<UnitTestSpacePoint> spacePoints(3);
 
   // Default Constructor
-  Acts::TripletCandidate<UnitTestSpacePoint> defaultCandidate;
+  TripletCandidate<UnitTestSpacePoint> defaultCandidate;
   BOOST_CHECK_EQUAL(defaultCandidate.bottom, nullptr);
   BOOST_CHECK_EQUAL(defaultCandidate.middle, nullptr);
   BOOST_CHECK_EQUAL(defaultCandidate.top, nullptr);
@@ -32,7 +36,7 @@ BOOST_AUTO_TEST_CASE(TripletCandidateObject) {
   BOOST_CHECK_EQUAL(defaultCandidate.isQuality, false);
 
   // Constructor
-  Acts::TripletCandidate<UnitTestSpacePoint> constructedCandidate(
+  TripletCandidate<UnitTestSpacePoint> constructedCandidate(
       spacePoints[0], spacePoints[1], spacePoints[2], 2.4f, 1.1f, true);
   BOOST_CHECK_EQUAL(constructedCandidate.bottom, &spacePoints[0]);
   BOOST_CHECK_EQUAL(constructedCandidate.middle, &spacePoints[1]);
@@ -42,7 +46,7 @@ BOOST_AUTO_TEST_CASE(TripletCandidateObject) {
   BOOST_CHECK_EQUAL(constructedCandidate.isQuality, true);
 
   // Copy Constructor
-  Acts::TripletCandidate<UnitTestSpacePoint> copiedConstructedCandidate(
+  TripletCandidate<UnitTestSpacePoint> copiedConstructedCandidate(
       constructedCandidate);
   BOOST_CHECK_EQUAL(copiedConstructedCandidate.bottom, &spacePoints[0]);
   BOOST_CHECK_EQUAL(copiedConstructedCandidate.middle, &spacePoints[1]);
@@ -52,7 +56,7 @@ BOOST_AUTO_TEST_CASE(TripletCandidateObject) {
   BOOST_CHECK_EQUAL(copiedConstructedCandidate.isQuality, true);
 
   // Copy Assign
-  Acts::TripletCandidate<UnitTestSpacePoint> copiedAssignCandidate =
+  TripletCandidate<UnitTestSpacePoint> copiedAssignCandidate =
       constructedCandidate;
   BOOST_CHECK_EQUAL(copiedAssignCandidate.bottom, &spacePoints[0]);
   BOOST_CHECK_EQUAL(copiedAssignCandidate.middle, &spacePoints[1]);
@@ -65,10 +69,10 @@ BOOST_AUTO_TEST_CASE(TripletCandidateObject) {
 BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
   using UnitTestSpacePoint = ::SpacePoint;
   using value_t =
-      typename Acts::CandidatesForMiddleSp<UnitTestSpacePoint>::value_type;
+      typename CandidatesForMiddleSp<UnitTestSpacePoint>::value_type;
   UnitTestSpacePoint spacePoint;
 
-  Acts::CandidatesForMiddleSp<UnitTestSpacePoint> container;
+  CandidatesForMiddleSp<UnitTestSpacePoint> container;
   container.setMaxElements(std::numeric_limits<std::size_t>::max(),
                            std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 0);
@@ -122,7 +126,7 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
 
   std::ranges::sort(
       storagedValues,
-      Acts::CandidatesForMiddleSp<UnitTestSpacePoint>::ascendingByQuality);
+      CandidatesForMiddleSp<UnitTestSpacePoint>::ascendingByQuality);
   // check values are sorted properly
   for (std::size_t i(0); i < storagedValues.size() - 1; ++i) {
     BOOST_CHECK(storagedValues[i].weight <= storagedValues[i + 1].weight);
@@ -130,7 +134,7 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
 
   std::ranges::sort(
       storagedValues,
-      Acts::CandidatesForMiddleSp<UnitTestSpacePoint>::descendingByQuality);
+      CandidatesForMiddleSp<UnitTestSpacePoint>::descendingByQuality);
   // check values are sorted properly
   for (std::size_t i(0); i < storagedValues.size() - 1; ++i) {
     BOOST_CHECK(storagedValues[i].weight >= storagedValues[i + 1].weight);
@@ -149,4 +153,6 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
   BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

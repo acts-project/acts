@@ -8,14 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/Interpolation3D.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <numbers>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Visualization)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(VisualizationSuite)
 
 BOOST_AUTO_TEST_CASE(SplineInterpolationEigen) {
   /// Define the input vector
@@ -89,4 +91,4 @@ BOOST_AUTO_TEST_CASE(SplineInterpolationErrors) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -15,8 +15,11 @@
 #include <cstddef>
 #include <vector>
 
-namespace Acts::Test {
-BOOST_AUTO_TEST_SUITE(Axes)
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(equidistant_axis) {
   Axis a(0.0, 10.0, 10u);
@@ -687,4 +690,4 @@ BOOST_AUTO_TEST_CASE(Equality) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

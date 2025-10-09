@@ -11,15 +11,19 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/TextMagneticFieldIo.hpp"
-#include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <fstream>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MagneticFieldSuite)
 
 BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_text) {
   TemporaryDirectory tmp{};
@@ -157,4 +161,6 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_text) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
