@@ -20,7 +20,7 @@ else
 fi
 
 # detect if we are installed as there is no lib subdirectory
-if [ ! -d "$script_dir/lib" ]; then
+if [ ! -d "$script_dir/lib" ] && [ ! -d "$script_dir/lib64" ]; then
     script_dir=$( cd -- "$script_dir" &> /dev/null && cd .. &> /dev/null && pwd )
 fi
 

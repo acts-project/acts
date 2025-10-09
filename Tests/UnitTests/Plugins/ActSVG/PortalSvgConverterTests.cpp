@@ -14,9 +14,9 @@
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsPlugins/ActSVG/PortalSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -24,13 +24,18 @@
 #include <ranges>
 #include <vector>
 
-Acts::GeometryContext tContext;
+using namespace Acts;
+using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(ActSvg)
+GeometryContext tContext;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(ActSvgSuite)
 
 BOOST_AUTO_TEST_CASE(CylinderPortalsSvg) {
   //  Some style parameteers
-  Acts::Svg::Style portalStyle;
+  Svg::Style portalStyle;
   portalStyle.fillColor = {255, 255, 255};
   portalStyle.fillOpacity = 0.;
   portalStyle.highlightColor = {255, 255, 255};
@@ -43,52 +48,50 @@ BOOST_AUTO_TEST_CASE(CylinderPortalsSvg) {
   double rOuter = 100.;
   double zHalfL = 200.;
 
-  Acts::Transform3 nominal = Acts::Transform3::Identity();
+  Transform3 nominal = Transform3::Identity();
 
   auto cylinderBounds =
-      std::make_unique<Acts::CylinderVolumeBounds>(rInner, rOuter, zHalfL);
+      std::make_unique<CylinderVolumeBounds>(rInner, rOuter, zHalfL);
 
-  auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
+  auto portalGenerator = Experimental::defaultPortalGenerator();
 
-  auto cylinderVolume = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto cylinderVolume = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "CylinderVolume", nominal,
-      std::move(cylinderBounds), Acts::Experimental::tryAllPortals());
+      std::move(cylinderBounds), Experimental::tryAllPortals());
 
-  Acts::Svg::PortalConverter::Options portalOptions;
+  Svg::PortalConverter::Options portalOptions;
   portalOptions.volumeIndices[cylinderVolume.get()] = 0;
-  Acts::Svg::SurfaceConverter::Options surfaceOptions;
+  Svg::SurfaceConverter::Options surfaceOptions;
   surfaceOptions.style = portalStyle;
   portalOptions.surfaceOptions = surfaceOptions;
 
-  std::vector<Acts::Svg::ProtoPortal> protoPortals;
+  std::vector<Svg::ProtoPortal> protoPortals;
 
   std::ranges::for_each(cylinderVolume->portals(), [&](const auto& p) {
     protoPortals.push_back(
-        Acts::Svg::PortalConverter::convert(tContext, *p, portalOptions));
+        Svg::PortalConverter::convert(tContext, *p, portalOptions));
   });
 
   // rz view
   std::vector<actsvg::svg::object> zrPortals;
   std::size_t ip = 0;
   std::ranges::for_each(protoPortals, [&](const auto& p) {
-    zrPortals.push_back(
-        Acts::Svg::View::zr(p, "Portal_zr" + std::to_string(ip++)));
+    zrPortals.push_back(Svg::View::zr(p, "Portal_zr" + std::to_string(ip++)));
   });
-  Acts::Svg::toFile(zrPortals, "SimpleCylinderPortals_ZR.svg");
+  Svg::toFile(zrPortals, "SimpleCylinderPortals_ZR.svg");
 
   // xy view
   std::vector<actsvg::svg::object> xyPortals;
   ip = 0;
   std::ranges::for_each(protoPortals, [&](const auto& p) {
-    xyPortals.push_back(
-        Acts::Svg::View::xy(p, "Portal_xy" + std::to_string(ip++)));
+    xyPortals.push_back(Svg::View::xy(p, "Portal_xy" + std::to_string(ip++)));
   });
-  Acts::Svg::toFile(xyPortals, "SimpleCylinderPortals_XY.svg");
+  Svg::toFile(xyPortals, "SimpleCylinderPortals_XY.svg");
 }
 
 BOOST_AUTO_TEST_CASE(CylinderContainerPortalsSvg) {
   //  Some style parameteers
-  Acts::Svg::Style portalStyle;
+  Svg::Style portalStyle;
   portalStyle.fillColor = {255, 255, 255};
   portalStyle.fillOpacity = 0.;
   portalStyle.highlightColor = {255, 255, 255};
@@ -102,58 +105,59 @@ BOOST_AUTO_TEST_CASE(CylinderContainerPortalsSvg) {
   double rOuter = 300.;
   double zHalfL = 200.;
 
-  Acts::Transform3 nominal = Acts::Transform3::Identity();
+  Transform3 nominal = Transform3::Identity();
 
-  auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
+  auto portalGenerator = Experimental::defaultPortalGenerator();
 
   auto cylinderBoundsI =
-      std::make_unique<Acts::CylinderVolumeBounds>(rInner, rMiddle, zHalfL);
+      std::make_unique<CylinderVolumeBounds>(rInner, rMiddle, zHalfL);
 
   auto cylinderBoundsO =
-      std::make_unique<Acts::CylinderVolumeBounds>(rMiddle, rOuter, zHalfL);
+      std::make_unique<CylinderVolumeBounds>(rMiddle, rOuter, zHalfL);
 
-  auto cylinderVolumeI = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto cylinderVolumeI = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "CylinderVolumeI", nominal,
-      std::move(cylinderBoundsI), Acts::Experimental::tryAllPortals());
+      std::move(cylinderBoundsI), Experimental::tryAllPortals());
 
-  auto cylinderVolumeO = Acts::Experimental::DetectorVolumeFactory::construct(
+  auto cylinderVolumeO = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "CylinderVolumeO", nominal,
-      std::move(cylinderBoundsO), Acts::Experimental::tryAllPortals());
+      std::move(cylinderBoundsO), Experimental::tryAllPortals());
 
-  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> rVolumes = {
+  std::vector<std::shared_ptr<Experimental::DetectorVolume>> rVolumes = {
       cylinderVolumeI, cylinderVolumeO};
 
-  Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
-      tContext, rVolumes, {});
+  Experimental::detail::CylindricalDetectorHelper::connectInR(tContext,
+                                                              rVolumes, {});
 
-  std::set<const Acts::Experimental::Portal*> portals;
+  std::set<const Experimental::Portal*> portals;
   for (auto& v : rVolumes) {
     for (auto& p : v->portals()) {
       portals.insert(p);
     }
   }
-  std::vector<Acts::Svg::ProtoPortal> protoPortals;
+  std::vector<Svg::ProtoPortal> protoPortals;
 
-  Acts::Svg::PortalConverter::Options portalOptions;
+  Svg::PortalConverter::Options portalOptions;
   portalOptions.volumeIndices[cylinderVolumeI.get()] = 0;
   portalOptions.volumeIndices[cylinderVolumeO.get()] = 1;
 
-  Acts::Svg::SurfaceConverter::Options surfaceOptions;
+  Svg::SurfaceConverter::Options surfaceOptions;
   surfaceOptions.style = portalStyle;
   portalOptions.surfaceOptions = surfaceOptions;
 
   for (const auto& portal : portals) {
     protoPortals.push_back(
-        Acts::Svg::PortalConverter::convert(tContext, *portal, portalOptions));
+        Svg::PortalConverter::convert(tContext, *portal, portalOptions));
   }
   // rz view
   std::vector<actsvg::svg::object> zrPortals;
   std::size_t ip = 0;
   std::ranges::for_each(protoPortals, [&](const auto& p) {
-    zrPortals.push_back(
-        Acts::Svg::View::zr(p, "Portal_zr" + std::to_string(ip++)));
+    zrPortals.push_back(Svg::View::zr(p, "Portal_zr" + std::to_string(ip++)));
   });
-  Acts::Svg::toFile(zrPortals, "CylinderContainerPortals_ZR.svg");
+  Svg::toFile(zrPortals, "CylinderContainerPortals_ZR.svg");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

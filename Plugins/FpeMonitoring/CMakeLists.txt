@@ -2,7 +2,7 @@ acts_add_library(
     PluginFpeMonitoring
     SHARED
     src/FpeMonitor.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 target_include_directories(
     ActsPluginFpeMonitoring
@@ -33,6 +33,7 @@ else()
             boost_stacktrace_include
             NAMES "boost/stacktrace.hpp"
             REQUIRED
+            PATHS ${Boost_INCLUDE_DIRS}
         )
         if(Backtrace_FOUND)
             # check if we need to link against bracktrace or not

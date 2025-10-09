@@ -1,8 +1,8 @@
 acts_add_library(
     PluginFastJet
     SHARED
-    src/TrackJets.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    src/Jets.cpp
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 target_include_directories(

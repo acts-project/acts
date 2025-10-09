@@ -17,7 +17,7 @@ using namespace Acts;
 using namespace ActsFatras;
 using namespace ActsExamples;
 
-namespace {
+namespace ActsTests {
 
 DigitizedParameters makeDigitizationParameters(const Vector2 &position,
                                                const Vector2 &variance,
@@ -66,9 +66,7 @@ auto testDigitizedParametersWithTwoClusters(bool merge, const Vector2 &firstHit,
   return moduleClusters.digitizedParameters();
 }
 
-}  // namespace
-
-BOOST_AUTO_TEST_SUITE(DigitizationModuleClustersTests)
+BOOST_AUTO_TEST_SUITE(DigitizationSuite)
 
 BOOST_AUTO_TEST_CASE(digitizedParameters_merging) {
   // overlapping hits are expected to be merged if turned on
@@ -91,3 +89,5 @@ BOOST_AUTO_TEST_CASE(digitizedParameters_merging) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -24,10 +24,7 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
 #include <array>
-#include <cmath>
-#include <iterator>
 #include <map>
 #include <memory>
 #include <numbers>
@@ -42,9 +39,9 @@ class Portal;
 }  // namespace Acts::Experimental
 
 using namespace Acts;
-using namespace Experimental;
-using namespace Experimental::detail;
-using namespace Experimental::detail::CylindricalDetectorHelper;
+using namespace Acts::Experimental;
+using namespace Acts::Experimental::detail;
+using namespace Acts::Experimental::detail::CylindricalDetectorHelper;
 
 Logging::Level logLevel = Logging::VERBOSE;
 
@@ -53,7 +50,9 @@ std::vector<std::shared_ptr<DetectorVolume>> eVolumes = {};
 
 auto portalGenerator = defaultPortalGenerator();
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(ConnectVolumeExceptions) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Faulty setups", logLevel));
@@ -150,10 +149,10 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
     BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[1u], protoContainer[1u]);
 
     // Assign geometry ids to the volumes
-    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+    GeometryIdGenerator::Config generatorConfig;
     GeometryIdGenerator generator(
-        generatorConfig, Acts::getDefaultLogger("SequentialIdGenerator",
-                                                Acts::Logging::VERBOSE));
+        generatorConfig,
+        getDefaultLogger("SequentialIdGenerator", Logging::VERBOSE));
     auto cache = generator.generateCache();
     for (auto& vol : rVolumes) {
       generator.assignGeometryId(cache, *vol);
@@ -285,10 +284,10 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
       }
 
       // Assign geometry ids to the volumes
-      Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+      GeometryIdGenerator::Config generatorConfig;
       GeometryIdGenerator generator(
-          generatorConfig, Acts::getDefaultLogger("SequentialIdGenerator",
-                                                  Acts::Logging::VERBOSE));
+          generatorConfig,
+          getDefaultLogger("SequentialIdGenerator", Logging::VERBOSE));
       auto cache = generator.generateCache();
       for (auto& vol : zVolumes) {
         generator.assignGeometryId(cache, *vol);
@@ -378,10 +377,10 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
     }
 
     // Assign geometry ids to the volumes
-    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+    GeometryIdGenerator::Config generatorConfig;
     GeometryIdGenerator generator(
-        generatorConfig, Acts::getDefaultLogger("SequentialIdGenerator",
-                                                Acts::Logging::VERBOSE));
+        generatorConfig,
+        getDefaultLogger("SequentialIdGenerator", Logging::VERBOSE));
     auto cache = generator.generateCache();
     for (auto& vol : phiVolumes) {
       generator.assignGeometryId(cache, *vol);
@@ -473,7 +472,7 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
         tryAllPortals());
 
     // Make a container representation out of it
-    std::map<unsigned int, std::shared_ptr<Portal>> ipContainer;
+    std::map<unsigned int, std::shared_ptr<Experimental::Portal>> ipContainer;
     for (auto [ip, p] : enumerate(innerPipe->portalPtrs())) {
       ipContainer[ip] = p;
     }
@@ -527,7 +526,7 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
         portalGenerator, tContext, "Nec", necTransform, std::move(necBounds),
         tryAllPortals());
 
-    std::map<unsigned int, std::shared_ptr<Portal>> necContainer;
+    std::map<unsigned int, std::shared_ptr<Experimental::Portal>> necContainer;
     for (auto [ip, p] : enumerate(necVolume->portalPtrs())) {
       necContainer[ip] = p;
     }
@@ -565,10 +564,10 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
     dVolumes.push_back(pecOuter);
 
     // Assign geometry ids to the volumes
-    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+    GeometryIdGenerator::Config generatorConfig;
     GeometryIdGenerator generator(
-        generatorConfig, Acts::getDefaultLogger("SequentialIdGenerator",
-                                                Acts::Logging::VERBOSE));
+        generatorConfig,
+        getDefaultLogger("SequentialIdGenerator", Logging::VERBOSE));
     auto cache = generator.generateCache();
     for (auto& vol : dVolumes) {
       generator.assignGeometryId(cache, *vol);
@@ -686,8 +685,7 @@ BOOST_AUTO_TEST_CASE(RZPhiBoundaries) {
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {
       innerV, middleLV, middleDV, middleUV, middleRV, outerV};
 
-  auto boundaries =
-      rzphiBoundaries(tContext, volumes, 0., Acts::Logging::VERBOSE);
+  auto boundaries = rzphiBoundaries(tContext, volumes, 0., Logging::VERBOSE);
   BOOST_CHECK_EQUAL(boundaries.size(), 3u);
   // Check the r boundaries
   std::vector<double> rBoundaries = {0., 20., 40., 60., 120.};
@@ -712,12 +710,14 @@ BOOST_AUTO_TEST_CASE(RZPhiBoundariesWithTolerance) {
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {innerV, outerV};
 
   auto boundariesWoTol =
-      rzphiBoundaries(tContext, volumes, 0., Acts::Logging::VERBOSE);
+      rzphiBoundaries(tContext, volumes, 0., Logging::VERBOSE);
   BOOST_CHECK_EQUAL(boundariesWoTol[0u].size(), 4u);
 
   auto boundariesWTol =
-      rzphiBoundaries(tContext, volumes, 0.01, Acts::Logging::VERBOSE);
+      rzphiBoundaries(tContext, volumes, 0.01, Logging::VERBOSE);
   BOOST_CHECK_EQUAL(boundariesWTol[0u].size(), 3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -21,34 +21,34 @@
 #include "Acts/Geometry/CuboidVolumeStack.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cassert>
 #include <initializer_list>
 #include <stdexcept>
-#include <utility>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
 struct Fixture {
   Logging::Level m_level;
   Fixture() {
-    m_level = Acts::Logging::getFailureThreshold();
-    Acts::Logging::setFailureThreshold(Acts::Logging::FATAL);
+    m_level = Logging::getFailureThreshold();
+    Logging::setFailureThreshold(Logging::FATAL);
   }
 
-  ~Fixture() { Acts::Logging::setFailureThreshold(m_level); }
+  ~Fixture() { Logging::setFailureThreshold(m_level); }
 };
 
-BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
+BOOST_FIXTURE_TEST_SUITE(GeometrySuite, Fixture)
 
 static const std::vector<VolumeAttachmentStrategy> strategies = {
     VolumeAttachmentStrategy::Gap,
@@ -74,9 +74,9 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
                                                    Vector3{20_mm, 20_mm, 0_mm},
                                                    Vector3{0_mm, 0_mm, 20_mm}) *
                       boost::unit_test::data::make(strategies) *
-                      boost::unit_test::data::make(Acts::AxisDirection::AxisX,
-                                                   Acts::AxisDirection::AxisY,
-                                                   Acts::AxisDirection::AxisZ)),
+                      boost::unit_test::data::make(AxisDirection::AxisX,
+                                                   AxisDirection::AxisY,
+                                                   AxisDirection::AxisZ)),
                      angle, rotate, shift, offset, strategy, dir) {
   double halfDir = 400_mm;
 
@@ -340,9 +340,9 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
 }
 
 BOOST_DATA_TEST_CASE(Asymmetric,
-                     boost::unit_test::data::make(Acts::AxisDirection::AxisX,
-                                                  Acts::AxisDirection::AxisY,
-                                                  Acts::AxisDirection::AxisZ),
+                     boost::unit_test::data::make(AxisDirection::AxisX,
+                                                  AxisDirection::AxisY,
+                                                  AxisDirection::AxisZ),
                      dir) {
   double halfDir1 = 200_mm;
   double pDir1 = -1100_mm;
@@ -421,9 +421,9 @@ BOOST_DATA_TEST_CASE(UpdateStack,
                                                    Vector3{0_mm, 0_mm, 20_mm}) *
                       boost::unit_test::data::make(-100_mm, 0_mm, 100_mm) *
                       boost::unit_test::data::make(resizeStrategies) *
-                      boost::unit_test::data::make(Acts::AxisDirection::AxisX,
-                                                   Acts::AxisDirection::AxisY,
-                                                   Acts::AxisDirection::AxisZ)),
+                      boost::unit_test::data::make(AxisDirection::AxisX,
+                                                   AxisDirection::AxisY,
+                                                   AxisDirection::AxisZ)),
                      angle, offset, zshift, strategy, dir) {
   double halfDir = 400_mm;
 
@@ -683,9 +683,8 @@ BOOST_DATA_TEST_CASE(
     ((boost::unit_test::data::make(-1.0, 1.0) ^
       boost::unit_test::data::make(VolumeResizeStrategy::Gap,
                                    VolumeResizeStrategy::Expand)) *
-     boost::unit_test::data::make(Acts::AxisDirection::AxisX,
-                                  Acts::AxisDirection::AxisY,
-                                  Acts::AxisDirection::AxisZ)),
+     boost::unit_test::data::make(AxisDirection::AxisX, AxisDirection::AxisY,
+                                  AxisDirection::AxisZ)),
     f, strategy, dir) {
   auto [dirOrth1, dirOrth2] = CuboidVolumeStack::getOrthogonalAxes(dir);
 
@@ -850,9 +849,9 @@ BOOST_DATA_TEST_CASE(
 // +---------------+-------------------+
 //
 BOOST_DATA_TEST_CASE(ResizeGapMultiple,
-                     boost::unit_test::data::make(Acts::AxisDirection::AxisX,
-                                                  Acts::AxisDirection::AxisY,
-                                                  Acts::AxisDirection::AxisZ),
+                     boost::unit_test::data::make(AxisDirection::AxisX,
+                                                  AxisDirection::AxisY,
+                                                  AxisDirection::AxisZ),
                      dir) {
   auto [dirOrth1, dirOrth2] = CuboidVolumeStack::getOrthogonalAxes(dir);
 
@@ -974,9 +973,9 @@ BOOST_DATA_TEST_CASE(InvalidDirection, boost::unit_test::data::make(strategies),
 
 BOOST_DATA_TEST_CASE(InvalidInput,
                      (boost::unit_test::data::make(strategies) *
-                      boost::unit_test::data::make(Acts::AxisDirection::AxisX,
-                                                   Acts::AxisDirection::AxisY,
-                                                   Acts::AxisDirection::AxisZ)),
+                      boost::unit_test::data::make(AxisDirection::AxisX,
+                                                   AxisDirection::AxisY,
+                                                   AxisDirection::AxisZ)),
                      strategy, direction) {
   BOOST_TEST_CONTEXT("Empty Volume") {
     std::vector<Volume*> volumes;
@@ -1030,9 +1029,9 @@ BOOST_DATA_TEST_CASE(InvalidInput,
 }
 
 BOOST_DATA_TEST_CASE(JoinCuboidVolumeSingle,
-                     (boost::unit_test::data::make(Acts::AxisDirection::AxisX,
-                                                   Acts::AxisDirection::AxisY,
-                                                   Acts::AxisDirection::AxisZ) *
+                     (boost::unit_test::data::make(AxisDirection::AxisX,
+                                                   AxisDirection::AxisY,
+                                                   AxisDirection::AxisZ) *
                       boost::unit_test::data::make(strategies)),
                      direction, strategy) {
   auto vol = std::make_shared<Volume>(
@@ -1056,4 +1055,4 @@ BOOST_DATA_TEST_CASE(JoinCuboidVolumeSingle,
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

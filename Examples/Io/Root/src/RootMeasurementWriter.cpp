@@ -9,12 +9,12 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Plugins/Root/RootMeasurementIo.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsPlugins/Root/RootMeasurementIo.hpp"
 
 #include <ios>
 #include <limits>
@@ -90,9 +90,9 @@ RootMeasurementWriter::RootMeasurementWriter(
   m_outputTree = new TTree(m_cfg.treeName.c_str(), "Measurements");
   m_outputTree->Branch("particles", &m_particles);
 
-  Acts::RootMeasurementIo::Config treeCfg{m_cfg.boundIndices,
-                                          m_cfg.clusterIndices};
-  m_measurementIo = std::make_unique<Acts::RootMeasurementIo>(treeCfg);
+  ActsPlugins::RootMeasurementIo::Config treeCfg{m_cfg.boundIndices,
+                                                 m_cfg.clusterIndices};
+  m_measurementIo = std::make_unique<ActsPlugins::RootMeasurementIo>(treeCfg);
   m_measurementIo->connectForWrite(*m_outputTree);
 }
 
@@ -152,7 +152,7 @@ ProcessCode RootMeasurementWriter::writeT(
     std::pair<double, double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);
     for (auto [_, i] : indices) {
-      m_particles.push_back(simHits.nth(i)->particleId().value());
+      m_particles.push_back(simHits.nth(i)->particleId().asVector());
     }
     m_measurementIo->fillTruthParameters(local, pos4, dir, angles);
 

@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Root/TGeoMaterialConverter.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/Root/TGeoMaterialConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <string>
 #include <vector>
@@ -18,9 +18,13 @@
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
 
+using namespace Acts;
+using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   new TGeoManager("gm", "garbage collector");
@@ -34,7 +38,7 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   CHECK_CLOSE_ABS(mat->GetRadLen(), 8.85, 0.1_mm);
   CHECK_CLOSE_ABS(mat->GetIntLen(), 38.8, 0.1_mm);
 
-  Acts::TGeoMaterialConverter::Options options;
+  TGeoMaterialConverter::Options options;
   options.unitLengthScalor = 1_cm;
   options.unitMassScalor = 1.;
 
@@ -43,8 +47,8 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   double tInL0 = 10_mm / (mat->GetIntLen() * options.unitLengthScalor);
   double rho = 2.7 * options.unitMassScalor / pow(options.unitLengthScalor, 3);
 
-  Acts::MaterialSlab slab_10_10 =
-      Acts::TGeoMaterialConverter::materialSlab(*mat, 10_mm, 10_mm, options);
+  MaterialSlab slab_10_10 =
+      TGeoMaterialConverter::materialSlab(*mat, 10_mm, 10_mm, options);
   CHECK_CLOSE_ABS(88.7_mm, slab_10_10.material().X0(), 0.1_mm);
   CHECK_CLOSE_ABS(388_mm, slab_10_10.material().L0(), 1_mm);
   CHECK_CLOSE_ABS(A, slab_10_10.material().Ar(), 1e-5);
@@ -54,8 +58,8 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   CHECK_CLOSE_ABS(rho, slab_10_10.material().massDensity(), 1e-5);
 
   // Assume we describe a 10 mm thick box as a 1 mm thick slab
-  Acts::MaterialSlab slab_10_1 =
-      Acts::TGeoMaterialConverter::materialSlab(*mat, 10_mm, 1_mm, options);
+  MaterialSlab slab_10_1 =
+      TGeoMaterialConverter::materialSlab(*mat, 10_mm, 1_mm, options);
   // Radiation/interaction lengths are divided by 10
   CHECK_CLOSE_ABS(8.87_mm, slab_10_1.material().X0(), 0.1_mm);
   CHECK_CLOSE_ABS(38.8_mm, slab_10_1.material().L0(), 1_mm);
@@ -74,4 +78,6 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
                   1e-5);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

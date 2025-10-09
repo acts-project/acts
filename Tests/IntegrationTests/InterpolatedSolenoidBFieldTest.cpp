@@ -13,9 +13,9 @@
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -24,11 +24,10 @@
 #include <random>
 #include <type_traits>
 
-using namespace Acts::UnitLiterals;
-
 namespace bdata = boost::unit_test::data;
 
-namespace Acts::IntegrationTest {
+using namespace Acts;
+using namespace Acts::UnitLiterals;
 
 const double L = 5.8_m;
 const double R = (2.56 + 2.46) * 0.5 * 0.5_m;
@@ -77,9 +76,9 @@ auto makeFieldMap(const SolenoidBField& field) {
   return map;
 }
 
-Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
+SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
 auto bFieldMap = makeFieldMap(bSolenoidField);
-auto bCache = bFieldMap.makeCache(Acts::MagneticFieldContext{});
+auto bCache = bFieldMap.makeCache(MagneticFieldContext{});
 
 struct StreamWrapper {
   explicit StreamWrapper(std::ofstream ofstr) : m_ofstr(std::move(ofstr)) {
@@ -112,8 +111,8 @@ BOOST_DATA_TEST_CASE(
   }
 
   Vector3 pos(r * std::cos(phi), r * std::sin(phi), z);
-  Vector3 B = bSolenoidField.getField(pos) / Acts::UnitConstants::T;
-  Vector3 Bm = bFieldMap.getField(pos, bCache).value() / Acts::UnitConstants::T;
+  Vector3 B = bSolenoidField.getField(pos) / UnitConstants::T;
+  Vector3 Bm = bFieldMap.getField(pos, bCache).value() / UnitConstants::T;
 
   // test less than 5% deviation
   if (std::abs(r - R) > 10 && (std::abs(z) < L / 3. || r > 20)) {
@@ -127,5 +126,3 @@ BOOST_DATA_TEST_CASE(
   ofstr << B.x() << ";" << B.y() << ";" << B.z() << ";";
   ofstr << Bm.x() << ";" << Bm.y() << ";" << Bm.z() << std::endl;
 }
-
-}  // namespace Acts::IntegrationTest

@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
@@ -22,6 +20,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -78,8 +78,9 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
-    const auto* detElement = dynamic_cast<const Acts::DD4hepDetectorElement*>(
-        surface->associatedDetectorElement());
+    const auto* detElement =
+        dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(
+            surface->associatedDetectorElement());
 
     if (detElement == nullptr) {
       ACTS_ERROR("Surface has no associated detector element");
@@ -252,7 +253,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   // container
   std::unordered_map<int, detail::ParticleInfo> edm4hepParticleMap;
 
-  std::vector<std::uint8_t> numSimHits;
+  std::vector<std::uint16_t> numSimHits;
   numSimHits.resize(mcParticleCollection.size());
 
   std::size_t nGeneratorParticles = 0;
@@ -267,7 +268,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
 
     for (const auto& hit : inputHits) {
-      auto particle = Acts::EDM4hepUtil::getParticle(hit);
+      auto particle = ActsPlugins::EDM4hepUtil::getParticle(hit);
 
       std::size_t index = particle.getObjectID().index;
 
@@ -285,7 +286,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     }
   }
 
-  std::function<std::uint8_t(const edm4hep::MCParticle&)> getNumHits =
+  std::function<std::uint16_t(const edm4hep::MCParticle&)> getNumHits =
       [&numSimHits](const edm4hep::MCParticle& p) {
         return numSimHits.at(p.getObjectID().index);
       };
@@ -339,9 +340,9 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
       for (const auto& genParticle : generatorStableParticles) {
         SimParticle particle =
             EDM4hepUtil::readParticle(genParticle)
-                .withParticleId(SimBarcode{}
-                                    .setParticle(nParticles)
-                                    .setVertexPrimary(nPrimaryVertices));
+                .withParticleId(SimBarcode()
+                                    .withParticle(nParticles)
+                                    .withVertexPrimary(nPrimaryVertices));
         particlesGeneratorUnordered->push_back(particle);
         ACTS_VERBOSE("+ add GEN particle " << particle);
         ACTS_VERBOSE("  - at " << particle.position().transpose());
@@ -557,8 +558,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
             });
 
         ACTS_VERBOSE("Converted sim hit for truth particle: "
-                     << simHit.particleId() << " ("
-                     << simHit.particleId().value() << ") at "
+                     << simHit.particleId() << " at "
                      << simHit.fourPosition().transpose() << " with time "
                      << simHit.time());
 
@@ -574,7 +574,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
           itGen->finalState().setNumberOfHits(
               itGen->finalState().numberOfHits() + 1);
         } else {
-          const auto& ptcl = Acts::EDM4hepUtil::getParticle(hit);
+          const auto& ptcl = ActsPlugins::EDM4hepUtil::getParticle(hit);
           ACTS_ERROR("SimHit (r="
                      << Acts::VectorHelpers::perp(simHit.position())
                      << ", z=" << simHit.position()[Acts::eFreePos2]
@@ -806,13 +806,13 @@ void EDM4hepSimInputConverter::processChildren(
       // incoming particle survived, interaction via descendant
     } else {
       // incoming particle decayed
-      pid = pid.setVertexSecondary(secondaryVertex);
+      pid = pid.withVertexSecondary(secondaryVertex);
     }
     particle.setParticleId(pid);
 
     ACTS_VERBOSE(indent(particle.particleId().generation())
                  << "+ add particle " << particle << " ("
-                 << particle.particleId().value() << ") from #"
+                 << particle.particleId() << ") from #"
                  << daughter.getObjectID());
     ACTS_VERBOSE(indent(particle.particleId().generation())
                  << "  - generation: " << particle.particleId().generation());
@@ -853,7 +853,7 @@ void EDM4hepSimInputConverter::setSubParticleIds(
     unsigned long nextSubParticle = numByGeneration[particle.generation()];
     numByGeneration[particle.generation()] += 1;
 
-    particle.setSubParticle(nextSubParticle);
+    particle = particle.withSubParticle(nextSubParticle);
   }
 }
 

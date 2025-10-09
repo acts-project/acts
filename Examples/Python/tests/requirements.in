@@ -7,3 +7,4 @@ awkward
 pytest-xdist
 pyyaml
 pyhepmc
+numpy

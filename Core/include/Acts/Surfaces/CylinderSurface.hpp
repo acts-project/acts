@@ -90,6 +90,7 @@ class CylinderSurface : public RegularSurface {
   /// Assignment operator
   ///
   /// @param other is the source cylinder for the copy
+  /// @return Reference to this CylinderSurface after assignment
   CylinderSurface& operator=(const CylinderSurface& other);
 
   /// The binning position method - is overloaded for r-type binning
@@ -114,6 +115,7 @@ class CylinderSurface : public RegularSurface {
                                  const Vector3& direction) const final;
 
   /// Return the surface type
+  /// @return Surface type identifier
   SurfaceType type() const override;
 
   /// Return method for surface normal information
@@ -153,6 +155,7 @@ class CylinderSurface : public RegularSurface {
   virtual Vector3 rotSymmetryAxis(const GeometryContext& gctx) const;
 
   /// This method returns the CylinderBounds by reference
+  /// @return Reference to the cylinder bounds
   const CylinderBounds& bounds() const final;
 
   /// Local to global transformation
@@ -187,7 +190,7 @@ class CylinderSurface : public RegularSurface {
   /// If possible returns both solutions for the cylinder
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceMultiIntersection intersect(
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
@@ -205,6 +208,7 @@ class CylinderSurface : public RegularSurface {
                         const Vector3& direction) const final;
 
   /// Return method for properly formatted output string
+  /// @return String representation of the class name
   std::string name() const override;
 
   /// Return a Polyhedron for a cylinder

@@ -20,6 +20,7 @@ class Material;
 class AccumulatedVolumeMaterial {
  public:
   /// Add one entry with the given material properties.
+  /// @param mat The material slab to accumulate
   void accumulate(const MaterialSlab& mat);
 
   /// Compute the average material collected so far.

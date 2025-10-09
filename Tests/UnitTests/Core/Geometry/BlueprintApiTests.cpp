@@ -16,7 +16,6 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
@@ -24,29 +23,29 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
-#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <fstream>
 #include <random>
 #include <vector>
 
-using namespace Acts::UnitLiterals;
+using namespace Acts;
+using namespace UnitLiterals;
 
-using Acts::Experimental::Blueprint;
-using Acts::Experimental::LayerBlueprintNode;
-using Acts::Experimental::MaterialDesignatorBlueprintNode;
+using Experimental::Blueprint;
+using Experimental::LayerBlueprintNode;
+using Experimental::MaterialDesignatorBlueprintNode;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::DEBUG);
+auto logger = getDefaultLogger("UnitTests", Logging::DEBUG);
 
 GeometryContext gctx;
 
@@ -109,9 +108,11 @@ inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
   return surfaces;
 }
 
-BOOST_AUTO_TEST_SUITE(Geometry);
+}  // namespace ActsTests
 
-BOOST_AUTO_TEST_SUITE(BlueprintApiTest);
+using namespace ActsTests;
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite);
 
 void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       Vector3 position, const Vector3& direction,
@@ -192,14 +193,13 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     while (main.remainingCandidates() > 0) {
       const auto& candidate = main.currentCandidate();
 
-      ACTS_VERBOSE(candidate.portal);
-      ACTS_VERBOSE(candidate.intersection.position().transpose());
+      ACTS_VERBOSE(candidate.position().transpose());
 
       ACTS_VERBOSE("moving to position: " << position.transpose() << " (r="
                                           << VectorHelpers::perp(position)
                                           << ")");
 
-      Vector3 delta = candidate.intersection.position() - position;
+      Vector3 delta = candidate.position() - position;
 
       std::size_t substeps =
           std::max(1l, std::lround(delta.norm() / 10_cm * substepsPerCm));
@@ -213,18 +213,17 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
         csv << std::endl;
       }
 
-      position = candidate.intersection.position();
+      position = candidate.position();
       ACTS_VERBOSE("                 -> "
                    << position.transpose()
                    << " (r=" << VectorHelpers::perp(position) << ")");
 
       writeIntersection(position, candidate.surface());
 
-      if (candidate.portal != nullptr) {
-        ACTS_VERBOSE(
-            "On portal: " << candidate.portal->surface().toStream(gctx));
+      if (candidate.isPortalTarget()) {
+        ACTS_VERBOSE("On portal: " << candidate.surface().toStream(gctx));
         currentVolume =
-            candidate.portal->resolveVolume(gctx, position, direction).value();
+            candidate.portal().resolveVolume(gctx, position, direction).value();
 
         if (currentVolume == nullptr) {
           ACTS_VERBOSE("switched to nullptr -> we're done");
@@ -395,7 +394,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   double thetaMax = 2 * std::atan(std::exp(etaWidth));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
 
   for (std::size_t i = 0; i < 5000; i++) {
     double theta = thetaDist(rnd);
@@ -445,7 +444,3 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
 }
 
 BOOST_AUTO_TEST_SUITE_END();
-
-BOOST_AUTO_TEST_SUITE_END();
-
-}  // namespace Acts::Test

@@ -64,6 +64,7 @@ class LayerArrayCreator : public ILayerArrayCreator {
       AxisDirection aDir = AxisDirection::AxisX) const override;
 
   /// set logging instance
+  /// @param logger Logger instance to use
   void setLogger(std::unique_ptr<const Logger> logger) {
     m_logger = std::move(logger);
   }

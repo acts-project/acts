@@ -43,15 +43,16 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
   constexpr auto bendIdx = toUnderlying(ResidualIdx::bending);
   constexpr auto nonBendIdx = toUnderlying(ResidualIdx::nonBending);
   if (hit.isStraw()) {
-    if (hit.covariance()[nonBendIdx] > std::numeric_limits<double>::epsilon()) {
+    const double dist = Acts::abs(
+        signedDistance(pos, dir, hit.localPosition(), hit.sensorDirection()));
+    chiSq = Acts::square(dist - hit.driftRadius()) / hit.covariance()[bendIdx];
+    if (hit.measuresLoc0()) {
       auto closePointOnStraw =
           lineIntersect(pos, dir, hit.localPosition(), hit.sensorDirection());
       chiSq += Acts::square(closePointOnStraw.pathLength()) /
                hit.covariance()[nonBendIdx];
     }
-    const double dist = Acts::abs(
-        signedDistance(pos, dir, hit.localPosition(), hit.sensorDirection()));
-    chiSq += Acts::square(dist - hit.driftRadius()) / hit.covariance()[bendIdx];
+
   } else {
     const Vector distOnPlane =
         (extrapolateToPlane(pos, dir, hit) - hit.localPosition());

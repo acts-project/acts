@@ -30,7 +30,9 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 namespace bdata = boost::unit_test::data;
 
-BOOST_AUTO_TEST_SUITE(NavigationPolicyTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
 GeometryContext gctx;
 auto logger = getDefaultLogger("NavigationPolicyTests", Logging::VERBOSE);
@@ -280,18 +282,18 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   main.initialize(gctx, {gpos, gdir}, BoundaryTolerance::None());
   std::vector<const Portal*> portals;
   for (auto& candidate : main.candidates()) {
-    if (!candidate.intersection.isValid()) {
+    if (!candidate.intersection().isValid()) {
       continue;
     }
 
     if (main.candidates().size() > 1 && posOnly &&
-        !detail::checkPathLength(candidate.intersection.pathLength(),
+        !detail::checkPathLength(candidate.intersection().pathLength(),
                                  s_onSurfaceTolerance,
                                  std::numeric_limits<double>::max(), logger)) {
       continue;
     }
 
-    portals.push_back(candidate.portal);
+    portals.push_back(&candidate.portal());
   }
 
   // Find portal types
@@ -364,7 +366,7 @@ std::vector<const Portal*> getSmart(const Vector3& position,
   // We don't filter here, because we want to test the candidates as they come
   // out of the policy
   for (auto& candidate : main.candidates()) {
-    portals.push_back(candidate.portal);
+    portals.push_back(&candidate.portal());
   }
   return portals;
 }
@@ -788,3 +790,5 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyZeroInnerRadiusTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

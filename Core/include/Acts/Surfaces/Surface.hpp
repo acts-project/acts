@@ -114,6 +114,8 @@ class Surface : public virtual GeometryObject,
   /// Factory for producing memory managed instances of Surface.
   /// Will forward all parameters and will attempt to find a suitable
   /// constructor.
+  /// @param args Constructor arguments to forward to surface creation
+  /// @return Shared pointer to the created surface instance
   template <class T, typename... Args>
   static std::shared_ptr<T> makeShared(Args&&... args) {
     return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
@@ -146,6 +148,7 @@ class Surface : public virtual GeometryObject,
   /// to detector element and layer
   ///
   /// @param other Source surface for the assignment
+  /// @return Reference to this surface after assignment
   Surface& operator=(const Surface& other);
 
   /// Comparison (equality) operator
@@ -156,10 +159,12 @@ class Surface : public virtual GeometryObject,
   /// (d) then transform comparison
   ///
   /// @param other source surface for the comparison
+  /// @return True if surfaces are equal, false otherwise
   bool operator==(const Surface& other) const;
 
  public:
   /// Return method for the Surface type to avoid dynamic casts
+  /// @return The surface type enumeration value
   virtual SurfaceType type() const = 0;
 
   /// Return method for the surface Transform3 by reference
@@ -400,8 +405,8 @@ class Surface : public virtual GeometryObject,
   /// @param boundaryTolerance the BoundaryTolerance
   /// @param tolerance the tolerance used for the intersection
   ///
-  /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
-  virtual SurfaceMultiIntersection intersect(
+  /// @return @c MultiIntersection3D intersection object
+  virtual MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
@@ -420,9 +425,11 @@ class Surface : public virtual GeometryObject,
   /// Output into a std::string
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return String representation of the surface
   std::string toString(const GeometryContext& gctx) const;
 
   /// Return properly formatted class name
+  /// @return The surface class name as a string
   virtual std::string name() const = 0;
 
   /// Return a Polyhedron for surface objects
@@ -488,6 +495,10 @@ class Surface : public virtual GeometryObject,
   virtual ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
+  /// Visualize the surface for debugging and inspection
+  /// @param helper Visualization helper for 3D rendering
+  /// @param gctx Geometry context for coordinate transformations
+  /// @param viewConfig Visual configuration (color, style, etc.)
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
                  const ViewConfig& viewConfig = s_viewSurface) const;
 
@@ -496,6 +507,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param sl is the ostream to be dumped into
+  /// @return Reference to the output stream for chaining
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
 

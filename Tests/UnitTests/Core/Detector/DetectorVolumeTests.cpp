@@ -28,8 +28,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -49,78 +48,74 @@ std::shared_ptr<referenced_type> unpackToShared(referenced_type& rt) {
   return rt.getSharedPtr();
 }
 
+using namespace Acts;
 using namespace Acts::Experimental;
 
-Acts::GeometryContext tContext;
+GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Detector)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
   // Create a surface that is placed way off
-  auto surfaceOutOfBounds = Acts::Surface::makeShared<Acts::CylinderSurface>(
-      Acts::Transform3::Identity() * Acts::Translation3(-1000, 0., 0.),
-      std::make_shared<Acts::CylinderBounds>(1, 1));
+  auto surfaceOutOfBounds = Surface::makeShared<CylinderSurface>(
+      Transform3::Identity() * Translation3(-1000, 0., 0.),
+      std::make_shared<CylinderBounds>(1, 1));
 
-  auto vBounds = Acts::CuboidVolumeBounds(10.0, 10.0, 10.0);
-  auto portalGenerator =
-      Acts::Experimental::defaultPortalAndSubPortalGenerator();
+  auto vBounds = CuboidVolumeBounds(10.0, 10.0, 10.0);
+  auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   BOOST_CHECK_THROW(
-      Acts::Experimental::DetectorVolumeFactory::construct(
-          portalGenerator, Acts::GeometryContext(),
-          "CubeWithOutofBoundsSurface", Acts::Transform3::Identity(),
-          std::make_shared<Acts::CuboidVolumeBounds>(vBounds),
-          {surfaceOutOfBounds}, {}, Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
+      Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, GeometryContext(), "CubeWithOutofBoundsSurface",
+          Transform3::Identity(), std::make_shared<CuboidVolumeBounds>(vBounds),
+          {surfaceOutOfBounds}, {}, Experimental::tryAllSubVolumes(),
+          Experimental::tryAllPortalsAndSurfaces(), 1000),
       std::invalid_argument);
 
   // Create a surface that is too big
-  auto surfaceTooBig = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Transform3::Identity() * Acts::Translation3(0, 0., 0.),
-      std::make_shared<Acts::RectangleBounds>(1, 100));
+  auto surfaceTooBig = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity() * Translation3(0, 0., 0.),
+      std::make_shared<RectangleBounds>(1, 100));
 
   BOOST_CHECK_THROW(
-      Acts::Experimental::DetectorVolumeFactory::construct(
-          portalGenerator, Acts::GeometryContext(), "CubeWithSurfaceTooBig",
-          Acts::Transform3::Identity(),
-          std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {surfaceTooBig},
-          {}, Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
+      Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, GeometryContext(), "CubeWithSurfaceTooBig",
+          Transform3::Identity(), std::make_shared<CuboidVolumeBounds>(vBounds),
+          {surfaceTooBig}, {}, Experimental::tryAllSubVolumes(),
+          Experimental::tryAllPortalsAndSurfaces(), 1000),
       std::invalid_argument);
 
   // Envelope a bigger volume into a smaller one
-  auto bigVolume = Acts::Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, Acts::GeometryContext(), "BigCube",
-      Acts::Transform3::Identity(),
-      std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {}, {},
-      Acts::Experimental::tryAllSubVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces(), 1000);
+  auto bigVolume = Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, GeometryContext(), "BigCube", Transform3::Identity(),
+      std::make_shared<CuboidVolumeBounds>(vBounds), {}, {},
+      Experimental::tryAllSubVolumes(),
+      Experimental::tryAllPortalsAndSurfaces(), 1000);
 
-  auto smallBounds = Acts::CuboidVolumeBounds(1.0, 1.0, 1.0);
-  BOOST_CHECK_THROW(
-      Acts::Experimental::DetectorVolumeFactory::construct(
-          portalGenerator, Acts::GeometryContext(),
-          "SmallCubeWithBigCubeInside", Acts::Transform3::Identity(),
-          std::make_shared<Acts::CuboidVolumeBounds>(smallBounds), {},
-          {bigVolume}, Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
-      std::invalid_argument);
+  auto smallBounds = CuboidVolumeBounds(1.0, 1.0, 1.0);
+  BOOST_CHECK_THROW(Experimental::DetectorVolumeFactory::construct(
+                        portalGenerator, GeometryContext(),
+                        "SmallCubeWithBigCubeInside", Transform3::Identity(),
+                        std::make_shared<CuboidVolumeBounds>(smallBounds), {},
+                        {bigVolume}, Experimental::tryAllSubVolumes(),
+                        Experimental::tryAllPortalsAndSurfaces(), 1000),
+                    std::invalid_argument);
 
   // Envelope a misaligned subvolume
-  auto smallVolumeMisaligned =
-      Acts::Experimental::DetectorVolumeFactory::construct(
-          portalGenerator, Acts::GeometryContext(), "SmallCubeMisaligned",
-          Acts::Transform3::Identity() * Acts::Translation3(9.5, 0., 0.),
-          std::make_shared<Acts::CuboidVolumeBounds>(smallBounds), {}, {},
-          Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000);
+  auto smallVolumeMisaligned = Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, GeometryContext(), "SmallCubeMisaligned",
+      Transform3::Identity() * Translation3(9.5, 0., 0.),
+      std::make_shared<CuboidVolumeBounds>(smallBounds), {}, {},
+      Experimental::tryAllSubVolumes(),
+      Experimental::tryAllPortalsAndSurfaces(), 1000);
 
   BOOST_CHECK_THROW(
-      Acts::Experimental::DetectorVolumeFactory::construct(
-          portalGenerator, Acts::GeometryContext(), "CubeWithMisalignedVolume",
-          Acts::Transform3::Identity(),
-          std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {},
-          {smallVolumeMisaligned}, Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
+      Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, GeometryContext(), "CubeWithMisalignedVolume",
+          Transform3::Identity(), std::make_shared<CuboidVolumeBounds>(vBounds),
+          {}, {smallVolumeMisaligned}, Experimental::tryAllSubVolumes(),
+          Experimental::tryAllPortalsAndSurfaces(), 1000),
       std::invalid_argument);
 }
 
@@ -129,10 +124,10 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   double rOuter = 100.;
   double zHalfL = 200.;
 
-  Acts::Transform3 nominal = Acts::Transform3::Identity();
+  Transform3 nominal = Transform3::Identity();
 
   auto fullCylinderBounds =
-      std::make_unique<Acts::CylinderVolumeBounds>(0., rOuter, zHalfL);
+      std::make_unique<CylinderVolumeBounds>(0., rOuter, zHalfL);
 
   auto portalGenerator = defaultPortalGenerator();
 
@@ -167,7 +162,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   // A tube cylinder
   auto tubeCylinderBounds =
-      std::make_unique<Acts::CylinderVolumeBounds>(rInner, rOuter, zHalfL);
+      std::make_unique<CylinderVolumeBounds>(rInner, rOuter, zHalfL);
 
   auto tubeCylinderVolume = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "TubeCylinderVolume", nominal,
@@ -178,24 +173,23 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   BOOST_CHECK_EQUAL(tubeCylinderVolume->portals().size(), 4u);
 
   // Let's test the resizing, first inside test: OK
-  BOOST_CHECK(tubeCylinderVolume->inside(tContext, Acts::Vector3(50., 0., 0.)));
+  BOOST_CHECK(tubeCylinderVolume->inside(tContext, Vector3(50., 0., 0.)));
   // Outside
-  BOOST_CHECK(
-      !tubeCylinderVolume->inside(tContext, Acts::Vector3(150., 0., 0.)));
+  BOOST_CHECK(!tubeCylinderVolume->inside(tContext, Vector3(150., 0., 0.)));
 
   // Check the extent
   auto volumeExtent = tubeCylinderVolume->extent(tContext, 1);
-  CHECK_CLOSE_ABS(volumeExtent.min(Acts::AxisDirection::AxisR), 10., 10e-5);
-  CHECK_CLOSE_ABS(volumeExtent.max(Acts::AxisDirection::AxisR), 100., 10e-5);
-  CHECK_CLOSE_ABS(volumeExtent.min(Acts::AxisDirection::AxisZ), -200., 10e-5);
-  CHECK_CLOSE_ABS(volumeExtent.max(Acts::AxisDirection::AxisZ), 200., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.min(AxisDirection::AxisR), 10., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.max(AxisDirection::AxisR), 100., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.min(AxisDirection::AxisZ), -200., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.max(AxisDirection::AxisZ), 200., 10e-5);
 }
 
 BOOST_AUTO_TEST_CASE(UpdatePortal) {
-  Acts::Transform3 nominal = Acts::Transform3::Identity();
+  Transform3 nominal = Transform3::Identity();
 
   auto fullCylinderBounds =
-      std::make_unique<Acts::CylinderVolumeBounds>(0., 10., 100.);
+      std::make_unique<CylinderVolumeBounds>(0., 10., 100.);
 
   auto portalGenerator = defaultPortalGenerator();
 
@@ -204,10 +198,9 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
       std::move(fullCylinderBounds), tryAllPortals());
 
   auto cylinderSurface =
-      Acts::Surface::makeShared<Acts::CylinderSurface>(nominal, 10., 100.);
+      Surface::makeShared<CylinderSurface>(nominal, 10., 100.);
 
-  auto cylinderPortal =
-      std::make_shared<Acts::Experimental::Portal>(cylinderSurface);
+  auto cylinderPortal = std::make_shared<Experimental::Portal>(cylinderSurface);
 
   fullCylinderVolume->updatePortal(cylinderPortal, 2u);
 
@@ -218,13 +211,13 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   double bigBox = 100.;
   double smallBox = 10.;
 
-  Acts::Transform3 nominal = Acts::Transform3::Identity();
+  Transform3 nominal = Transform3::Identity();
 
   auto bigBoxBounds =
-      std::make_unique<Acts::CuboidVolumeBounds>(bigBox, bigBox, bigBox);
+      std::make_unique<CuboidVolumeBounds>(bigBox, bigBox, bigBox);
 
   auto smallBoxBounds =
-      std::make_unique<Acts::CuboidVolumeBounds>(smallBox, smallBox, smallBox);
+      std::make_unique<CuboidVolumeBounds>(smallBox, smallBox, smallBox);
 
   auto portals = defaultPortalGenerator();
   auto generatePortalsUpdateInternals = defaultPortalAndSubPortalGenerator();
@@ -234,8 +227,8 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
       portals, tContext, "InnerBox", nominal, std::move(smallBoxBounds),
       tryAllPortals());
 
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
-  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
+  std::vector<std::shared_ptr<Surface>> surfaces = {};
+  std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes = {
       innerBox};
 
   // Create the outer box and insert the inner box, use a portal generator
@@ -246,9 +239,9 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
       tryAllPortals());
 
   // Check that we are within the outer box
-  Acts::Experimental::NavigationState nState;
-  nState.position = Acts::Vector3(-50., 5., 0.);
-  nState.direction = Acts::Vector3(1., 0., 0.);
+  Experimental::NavigationState nState;
+  nState.position = Vector3(-50., 5., 0.);
+  nState.direction = Vector3(1., 0., 0.);
 
   BOOST_CHECK(outerBox->inside(tContext, nState.position));
   nState.currentVolume = outerBox.get();
@@ -283,16 +276,16 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   // Test visitor pattern - non-const access
   struct SetMaterial {
     /// The material to set
-    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> surfaceMaterial =
-        std::make_shared<Acts::HomogeneousSurfaceMaterial>(Acts::MaterialSlab(
-            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.));
+    std::shared_ptr<const HomogeneousSurfaceMaterial> surfaceMaterial =
+        std::make_shared<HomogeneousSurfaceMaterial>(
+            MaterialSlab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.));
 
-    std::shared_ptr<Acts::HomogeneousVolumeMaterial> volumeMaterial =
-        std::make_shared<Acts::HomogeneousVolumeMaterial>(
-            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.));
+    std::shared_ptr<HomogeneousVolumeMaterial> volumeMaterial =
+        std::make_shared<HomogeneousVolumeMaterial>(
+            Material::fromMolarDensity(1., 2., 3., 4., 5.));
 
     /// The visitor call: set surface material
-    void operator()(Acts::Surface* s) {
+    void operator()(Surface* s) {
       if (s != nullptr) {
         s->assignSurfaceMaterial(surfaceMaterial);
       }
@@ -334,17 +327,16 @@ BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
 
   std::vector<double> radii = {100, 102, 104, 106, 108, 110};
   auto cylinderVoumeBounds =
-      std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
+      std::make_unique<CylinderVolumeBounds>(80, 130, 200);
+  std::vector<std::shared_ptr<Surface>> surfaces = {};
   for (const auto& r : radii) {
-    surfaces.push_back(Acts::Surface::makeShared<Acts::CylinderSurface>(
-        Acts::Transform3::Identity(),
-        std::make_shared<Acts::CylinderBounds>(r, 190)));
+    surfaces.push_back(Surface::makeShared<CylinderSurface>(
+        Transform3::Identity(), std::make_shared<CylinderBounds>(r, 190)));
   }
 
   // A full cylinder
   auto cylinderVolume = DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "CylinderVolume", Acts::Transform3::Identity(),
+      portalGenerator, tContext, "CylinderVolume", Transform3::Identity(),
       std::move(cylinderVoumeBounds), surfaces, {}, tryNoVolumes(),
       tryAllPortalsAndSurfaces());
 
@@ -379,7 +371,7 @@ BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
   struct CountSurfaces {
     unsigned int counter = 0;
 
-    void operator()(const Acts::Surface* s) {
+    void operator()(const Surface* s) {
       if (s != nullptr) {
         counter++;
       }
@@ -394,3 +386,5 @@ BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
