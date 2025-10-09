@@ -217,15 +217,15 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
 
     std::vector<std::size_t> surfaceIndices;
 
-    for (const auto* surface : surfaces) {
+    for (const auto* srf : surfaces) {
       try {
-        std::size_t surfaceIndex = surfaceLookup(surface);
+        std::size_t surfaceIndex = surfaceLookup(srf);
         surfaceIndices.push_back(surfaceIndex);
-        seenSurfaces.insert(surface);
+        seenSurfaces.insert(srf);
       } catch (const std::exception& e) {
         std::stringstream ss;
         ss << "Warning: Could not find surface index for surface "
-           << surface->geometryId() << ": " << e.what();
+           << srf->geometryId() << ": " << e.what();
         throw std::runtime_error{ss.str()};
       }
     }

@@ -466,10 +466,10 @@ DetrayPayloadConverter::convertMaterial(
           // Given the pseudo slabs from before, we need to either update an
           // existing slab or create a new one.
 
-          auto it = std::ranges::find_if(homogeneous.mat_slabs,
-                                         [srfIdx](const auto& slab) {
-                                           return slab.surface.link == srfIdx;
-                                         });
+          auto it = std::ranges::find_if(
+              homogeneous.mat_slabs, [srfIdx](const auto& matslab) {
+                return matslab.surface.link == srfIdx;
+              });
 
           if (it != homogeneous.mat_slabs.end()) {
             ACTS_VERBOSE("Adding slab to homogeneous material for surface "

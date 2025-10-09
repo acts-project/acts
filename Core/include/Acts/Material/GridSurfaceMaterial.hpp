@@ -163,7 +163,7 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
 };
 
 namespace detail {
-// This exists so I can push the definition into a cpp file
+/// This exists so I can push the definition into a cpp file
 class IGridSurfaceMaterialBase : public ISurfaceMaterial {};
 }  // namespace detail
 
