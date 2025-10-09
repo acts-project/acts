@@ -61,7 +61,9 @@ std::size_t countBins(const indexed_surface_grid& isGrid) {
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(Detector)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(BinSequence) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("*** Pre-Test", logLevel));
@@ -337,3 +339,5 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

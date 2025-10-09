@@ -24,6 +24,10 @@ using Index32 = Acts::MultiIndex<std::uint32_t, 16, 8, 8>;
 using Index64 = Acts::MultiIndex<std::uint64_t, 13, 17, 21, 13>;
 using Indices = boost::mpl::list<Index32, Index64>;
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(triviality, T, Indices) {
   // verify that the MultiIndex is a trivial type
   // this seems to be compiler-dependent; disable for now
@@ -222,3 +226,7 @@ BOOST_AUTO_TEST_CASE(index64_as_key) {
   BOOST_CHECK(!set.count(Index64(std::numeric_limits<std::uint64_t>::max())));
   BOOST_CHECK_EQUAL(set.size(), 3);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootMagneticFieldIo.hpp"
+#include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
@@ -17,10 +17,11 @@
 #include <TFile.h>
 #include <TTree.h>
 
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
-Acts::makeMagneticFieldMapRzFromRoot(
+using namespace Acts;
+
+InterpolatedBFieldMap<
+    Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
+ActsPlugins::makeMagneticFieldMapRzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
@@ -68,11 +69,10 @@ Acts::makeMagneticFieldMapRzFromRoot(
                     BFieldUnit, firstQuadrant);
 }
 
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
-Acts::makeMagneticFieldMapXyzFromRoot(
+InterpolatedBFieldMap<
+    Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
+         Axis<AxisType::Equidistant>>>
+ActsPlugins::makeMagneticFieldMapXyzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,

@@ -12,12 +12,12 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsPlugins/DD4hep/DD4hepFieldAdapter.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerBuilder.hpp"
 
 #include <functional>
 #include <memory>
@@ -84,8 +84,8 @@ class DD4hepDetector : public Detector {
         std::make_shared<const Acts::GeometryIdentifierHook>();
 
     /// Detector element factory
-    Acts::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
-        Acts::DD4hepLayerBuilder::defaultDetectorElementFactory;
+    ActsPlugins::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
+        ActsPlugins::DD4hepLayerBuilder::defaultDetectorElementFactory;
   };
 
   explicit DD4hepDetector(const Config& cfg);
@@ -95,7 +95,7 @@ class DD4hepDetector : public Detector {
 
   /// @brief Access to the DD4hep field
   /// @return a shared pointer to the DD4hep field
-  std::shared_ptr<Acts::DD4hepFieldAdapter> field() const;
+  std::shared_ptr<ActsPlugins::DD4hepFieldAdapter> field() const;
 
   /// Interface method to Access the TGeo geometry
   /// @return The world TGeoNode (physical volume)

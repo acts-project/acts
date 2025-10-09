@@ -10,11 +10,11 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
 
 #include <cstddef>
 #include <map>
@@ -46,8 +46,8 @@ class TGeoDetector : public Detector {
 
     double unitScalor = 1.0;
 
-    Acts::TGeoLayerBuilder::ElementFactory detectorElementFactory =
-        Acts::TGeoLayerBuilder::defaultElementFactory;
+    ActsPlugins::TGeoLayerBuilder::ElementFactory detectorElementFactory =
+        ActsPlugins::TGeoLayerBuilder::defaultElementFactory;
 
     /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/BoostTrackBuilding.hpp"
+#include "ActsPlugins/Gnn/BoostTrackBuilding.hpp"
 
 #include "Acts/Utilities/Zip.hpp"
 
@@ -15,6 +15,8 @@
 #include <boost/beast/core/span.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
+
+using namespace Acts;
 
 namespace {
 template <typename vertex_t, typename weight_t>
@@ -34,7 +36,7 @@ auto weaklyConnectedComponents(vertex_t numNodes,
   Graph g(numNodes);
 
   for (const auto [row, col, weight] :
-       Acts::zip(rowIndices, colIndices, edgeWeights)) {
+       zip(rowIndices, colIndices, edgeWeights)) {
     boost::add_edge(row, col, weight, g);
   }
 
@@ -42,7 +44,7 @@ auto weaklyConnectedComponents(vertex_t numNodes,
 }
 }  // namespace
 
-namespace Acts {
+namespace ActsPlugins {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     PipelineTensors tensors, std::vector<int>& spacepointIDs,
@@ -50,19 +52,17 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   ACTS_DEBUG("Start track building");
 
   using RTI = const Tensor<std::int64_t>&;
-  const auto& edgeTensor =
-      tensors.edgeIndex.device().isCpu()
-          ? static_cast<RTI>(tensors.edgeIndex)
-          : static_cast<RTI>(tensors.edgeIndex.clone(
-                {Acts::Device::Cpu(), execContext.stream}));
+  const auto& edgeTensor = tensors.edgeIndex.device().isCpu()
+                               ? static_cast<RTI>(tensors.edgeIndex)
+                               : static_cast<RTI>(tensors.edgeIndex.clone(
+                                     {Device::Cpu(), execContext.stream}));
 
   assert(tensors.edgeScores.has_value());
   using RTF = const Tensor<float>&;
-  const auto& scoreTensor =
-      tensors.edgeScores->device().isCpu()
-          ? static_cast<RTF>(*tensors.edgeScores)
-          : static_cast<RTF>(tensors.edgeScores->clone(
-                {Acts::Device::Cpu(), execContext.stream}));
+  const auto& scoreTensor = tensors.edgeScores->device().isCpu()
+                                ? static_cast<RTF>(*tensors.edgeScores)
+                                : static_cast<RTF>(tensors.edgeScores->clone(
+                                      {Device::Cpu(), execContext.stream}));
 
   assert(edgeTensor.shape().at(0) == 2);
   assert(edgeTensor.shape().at(1) == scoreTensor.shape().at(0));
@@ -102,11 +102,11 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
 
   std::vector<std::vector<int>> trackCandidates(numberLabels);
 
-  for (const auto [label, id] : Acts::zip(trackLabels, spacepointIDs)) {
+  for (const auto [label, id] : zip(trackLabels, spacepointIDs)) {
     trackCandidates[label].push_back(id);
   }
 
   return trackCandidates;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

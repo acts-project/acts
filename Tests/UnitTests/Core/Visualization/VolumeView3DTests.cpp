@@ -18,9 +18,11 @@
 #include "Visualization3DTester.hpp"
 #include "VolumeView3DBase.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Visualization)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(VisualizationSuite)
 
 // Tests if the written obj output is well formatted
 BOOST_AUTO_TEST_CASE(VolumeView3DObj) {
@@ -82,4 +84,4 @@ BOOST_AUTO_TEST_CASE(VolumeView3DPly) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -9,11 +9,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <fstream>
 #include <string>
@@ -26,9 +26,13 @@
 
 #include "DD4hepTestsHelper.hpp"
 
-Acts::GeometryContext tContext;
-Acts::Test::CylindricalTrackingGeometry cGeometry =
-    Acts::Test::CylindricalTrackingGeometry(tContext);
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
+
+GeometryContext tContext;
+CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 const char* disc_layer_head_xml =
     R""""(
@@ -47,21 +51,20 @@ const char* tail_xml =
 
 const std::string indent_12_xml(12, ' ');
 
-BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
+BOOST_AUTO_TEST_SUITE(DD4hepSuite)
 
 BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
   double rZ = 400.;
 
   // First create some test surfaces
-  Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  CylindricalTrackingGeometry::DetectorStore dStore;
   auto rSurfacesR0 = cGeometry.surfacesRing(dStore, 6.4, 12.4, 18., 0.125, 0.,
                                             42., rZ, 2., 22u);
 
   auto rSurfacesR1 = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125, 0.,
                                             80., rZ, 2., 22u);
 
-  std::vector<std::vector<Acts::Surface*>> rSurfaces = {rSurfacesR0,
-                                                        rSurfacesR1};
+  std::vector<std::vector<Surface*>> rSurfaces = {rSurfacesR0, rSurfacesR1};
 
   // Running three tests with
   // - no binning / no support
@@ -101,7 +104,7 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
       for (const auto& s : ring) {
         cxml << indent_12_xml
              << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                                Acts::Transform3::Identity())
+                                                Transform3::Identity())
              << "\n";
       }
     }
@@ -141,20 +144,20 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
     auto world = lcdd->world();
 
     // Now the test starts ...
-    Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
-    auto sFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
-        sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                                               Acts::Logging::VERBOSE));
+    DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
+    auto sFactory = std::make_shared<DD4hepDetectorSurfaceFactory>(
+        sFactoryConfig,
+        getDefaultLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
 
-    Acts::Experimental::DD4hepLayerStructure discStructure(
+    DD4hepLayerStructure discStructure(
         std::move(sFactory),
-        Acts::getDefaultLogger("DD4hepLayerStructure", Acts::Logging::VERBOSE));
+        getDefaultLogger("DD4hepLayerStructure", Logging::VERBOSE));
 
-    Acts::DD4hepDetectorElement::Store dd4hepStore;
+    ActsPlugins::DD4hepDetectorElement::Store dd4hepStore;
 
-    Acts::Experimental::DD4hepLayerStructure::Options lsOptions;
+    DD4hepLayerStructure::Options lsOptions;
     lsOptions.name = "DiscLayer";
-    lsOptions.logLevel = Acts::Logging::VERBOSE;
+    lsOptions.logLevel = Logging::VERBOSE;
 
     auto [discInternalsBuilder, discExt] =
         discStructure.builder(dd4hepStore, tContext, world, lsOptions);
@@ -181,3 +184,5 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

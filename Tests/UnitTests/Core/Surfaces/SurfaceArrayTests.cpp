@@ -36,7 +36,9 @@
 
 using Acts::VectorHelpers::phi;
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -174,7 +176,7 @@ struct SurfaceArrayFixture {
   }
 };
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   GeometryContext tgContext = GeometryContext();
@@ -253,4 +255,4 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

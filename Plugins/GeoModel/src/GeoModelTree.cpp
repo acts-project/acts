@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+#include "ActsPlugins/GeoModel/GeoModelTree.hpp"
 
-namespace Acts {
+namespace ActsPlugins {
 GeoModelTree::VolumePublisher::VolumePublisher(
     const std::shared_ptr<GeoModelIO::ReadGeoModel>& geoReader) noexcept
     : m_reader{geoReader} {}
@@ -51,4 +51,4 @@ GeoModelTree::GeoModelTree(const std::shared_ptr<GMDBManager>& db)
           std::make_shared<GeoModelIO::ReadGeoModel>(db.get()))},
       worldVolume{publisher->reader()->buildGeoModel()} {}
 
-}  // namespace Acts
+}  // namespace ActsPlugins

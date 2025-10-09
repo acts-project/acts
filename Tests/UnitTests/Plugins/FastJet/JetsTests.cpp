@@ -8,14 +8,17 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Plugins/FastJet/Jets.hpp>
+#include "ActsPlugins/FastJet/Jets.hpp"
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 class Track {
  public:
-  static constexpr float mass = 139.57061 * Acts::UnitConstants::MeV;
+  static constexpr float mass = 139.57061 * UnitConstants::MeV;
 
   Track(float pt, float eta, float phi) {
-    Acts::Vector3 p3 = Acts::Vector3::Zero();
+    Vector3 p3 = Vector3::Zero();
     p3[0] = pt * std::cos(phi);
     p3[1] = pt * std::sin(phi);
     p3[2] = pt * std::sinh(eta);
@@ -26,10 +29,10 @@ class Track {
     m_fourMom[3] = e;
   }
 
-  Acts::Vector4 fourMomentum() const { return m_fourMom; }
+  Vector4 fourMomentum() const { return m_fourMom; }
 
  private:
-  Acts::Vector4 m_fourMom{};
+  Vector4 m_fourMom{};
 };
 
 bool operator==(Track const& lhs, Track const& rhs) {
@@ -56,14 +59,18 @@ class TrackContainer {
   std::vector<Track> m_vec{};
 };
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(FastJetSuite)
+
 BOOST_AUTO_TEST_CASE(SingleTrack) {
   TrackContainer tracks;
   tracks.insert(Track(100, 0, 0));
 
-  Acts::FastJet::InputTracks inputTracks(tracks);
+  FastJet::InputTracks inputTracks(tracks);
 
-  Acts::FastJet::TrackJetBuilder jetSeq =
-      Acts::FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
+  FastJet::TrackJetBuilder jetSeq =
+      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
   std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
 
   BOOST_CHECK_EQUAL(jets.size(), 1);
@@ -80,10 +87,10 @@ BOOST_AUTO_TEST_CASE(TwoTracksTwoJets) {
   tracks.insert(Track(100, 0, 0.0));
   tracks.insert(Track(100, 0, std::numbers::pi));
 
-  Acts::FastJet::InputTracks inputTracks(tracks);
+  FastJet::InputTracks inputTracks(tracks);
 
-  Acts::FastJet::TrackJetBuilder jetSeq =
-      Acts::FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
+  FastJet::TrackJetBuilder jetSeq =
+      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
   std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
 
   BOOST_CHECK_EQUAL(jets.size(), 2);
@@ -105,10 +112,10 @@ BOOST_AUTO_TEST_CASE(TwoTracksOneJet) {
   tracks.insert(Track(100, 0, 0.0));
   tracks.insert(Track(100, 0, 0.2));
 
-  Acts::FastJet::InputTracks inputTracks(tracks);
+  FastJet::InputTracks inputTracks(tracks);
 
-  Acts::FastJet::TrackJetBuilder jetSeq =
-      Acts::FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
+  FastJet::TrackJetBuilder jetSeq =
+      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
   std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
 
   BOOST_CHECK_EQUAL(jets.size(), 1);
@@ -130,10 +137,10 @@ BOOST_AUTO_TEST_CASE(TracksInJetCore) {
   tracks.insert(Track(10, 0.2, 0));
   tracks.insert(Track(10, -0.2, 0));
 
-  Acts::FastJet::InputTracks inputTracks(tracks);
+  FastJet::InputTracks inputTracks(tracks);
 
-  Acts::FastJet::TrackJetBuilder jetSeq =
-      Acts::FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
+  FastJet::TrackJetBuilder jetSeq =
+      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
   std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
 
   BOOST_REQUIRE_EQUAL(jets.size(), 1);
@@ -154,17 +161,21 @@ BOOST_AUTO_TEST_CASE(TracksInJetCore) {
 }
 
 BOOST_AUTO_TEST_CASE(EmptyTrackContainer) {
-  Acts::FastJet::TrackJetBuilder jetSeq =
-      Acts::FastJet::TrackJetBuilder::create(std::vector<fastjet::PseudoJet>());
+  FastJet::TrackJetBuilder jetSeq =
+      FastJet::TrackJetBuilder::create(std::vector<fastjet::PseudoJet>());
   BOOST_CHECK_EQUAL(jetSeq.jets().size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(InvalidCoreRadius) {
   TrackContainer tracks;
   tracks.insert(Track(100, 0, 0));
-  Acts::FastJet::InputTracks inputTracks(tracks);
-  Acts::FastJet::TrackJetBuilder jetSeq =
-      Acts::FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
+  FastJet::InputTracks inputTracks(tracks);
+  FastJet::TrackJetBuilder jetSeq =
+      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
   BOOST_CHECK_THROW(inputTracks.tracksInJet(jetSeq.jets()[0], -1.0),
                     std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

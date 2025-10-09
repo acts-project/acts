@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -43,6 +44,14 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
     std::string fileMode = "RECREATE";
     /// Name of the tree within the output file.
     std::string treeName = "particles";
+    /// Reference point for the perigee surface.
+    /// Usually the beamspot position.
+    /// Default is (0, 0, 0).
+    Acts::Vector3 referencePoint{0., 0., 0.};
+    /// Magnetic field
+    std::shared_ptr<Acts::MagneticFieldProvider> bField;
+    /// Flag to enable writing of helix parameters.
+    bool writeHelixParameters = false;
   };
 
   /// Construct the particle writer.
@@ -106,6 +115,27 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<float> m_phi;
   /// Transverse momentum in GeV.
   std::vector<float> m_pt;
+  /// Polar angle.
+  std::vector<float> m_theta;
+  /// Charge over momentum in e.GeV^-1.
+  std::vector<float> m_qop;
+
+  /// Add perigee prefix to the above parameters
+  /// if m_cfg.writeHelixParameters is true.
+  std::vector<float> m_perigeePhi;
+  std::vector<float> m_perigeeTheta;
+  std::vector<float> m_perigeeQop;
+  std::vector<float> m_perigeeP;
+  std::vector<float> m_perigeePx;
+  std::vector<float> m_perigeePy;
+  std::vector<float> m_perigeePz;
+  std::vector<float> m_perigeeEta;
+  std::vector<float> m_perigeePt;
+  /// Transverse impact parameter in mm.
+  std::vector<float> m_perigeeD0;
+  /// Longitudinal impact parameter in mm.
+  std::vector<float> m_perigeeZ0;
+
   // Decoded particle identifier; see Barcode definition for details.
   std::vector<std::uint32_t> m_vertexPrimary;
   std::vector<std::uint32_t> m_vertexSecondary;
