@@ -33,7 +33,9 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(GeoModelPoyVol)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto al = make_intrusive<GeoMaterial>("Aluminium", 1.0);
@@ -105,3 +107,5 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   }
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

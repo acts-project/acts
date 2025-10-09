@@ -44,7 +44,8 @@ constexpr double tolerance = 1.e-3;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
 
-namespace Acts::Test {
+namespace ActsTests {
+
 class TestSpacePoint {
  public:
   /// @brief Mask to express which track directions are measured
@@ -209,7 +210,7 @@ double angle(const Vector& v1, const Vector& v2) {
                 v2[toUnderlying(ResidualIdx::time)], tol);       \
   }
 
-BOOST_AUTO_TEST_SUITE(StrawLineSeederTest)
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
 void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   Config_t resCfg{};
@@ -913,5 +914,5 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   }
 }
 
-}  // namespace Acts::Test
+}  // namespace ActsTests
 BOOST_AUTO_TEST_SUITE_END()

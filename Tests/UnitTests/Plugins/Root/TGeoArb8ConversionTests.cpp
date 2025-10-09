@@ -35,13 +35,15 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 GeometryContext tgContext = GeometryContext();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
 ViewConfig blue{.color = {0, 0, 200}};
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a TGeoTrd2 into a Plane
 ///
@@ -115,4 +117,6 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

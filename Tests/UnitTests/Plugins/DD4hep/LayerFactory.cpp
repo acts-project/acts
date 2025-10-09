@@ -20,6 +20,7 @@
 
 using namespace dd4hep;
 using namespace ActsPlugins;
+using namespace ActsTests;
 
 /// @brief  Helper method to add a layer to the detector
 ///

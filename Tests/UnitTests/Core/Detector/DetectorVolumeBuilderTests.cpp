@@ -39,6 +39,8 @@ using namespace Acts::Experimental;
 
 GeometryContext tContext;
 
+namespace ActsTests {
+
 /// @brief Mockup external structure builder
 /// @tparam bounds_type the volume bounds type that is constructed
 template <typename bounds_type>
@@ -83,28 +85,27 @@ class InternalSurfaceBuilder : public IInternalStructureBuilder {
   bounds_type m_bounds;
 };
 
-class SurfaceGeoIdGenerator : public Acts::Experimental::IGeometryIdGenerator {
+class SurfaceGeoIdGenerator : public Experimental::IGeometryIdGenerator {
  public:
-  Acts::Experimental::IGeometryIdGenerator::GeoIdCache generateCache()
-      const final {
+  Experimental::IGeometryIdGenerator::GeoIdCache generateCache() const final {
     return std::any();
   }
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::DetectorVolume& dVolume) const final {
-    for (auto [is, s] : Acts::enumerate(dVolume.surfacePtrs())) {
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Experimental::DetectorVolume& dVolume) const final {
+    for (auto [is, s] : enumerate(dVolume.surfacePtrs())) {
       s->assignGeometryId(GeometryIdentifier().withPassive(is + 1));
     }
   }
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::Portal& /*portal*/) const final {}
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Experimental::Portal& /*portal*/) const final {}
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Surface& /*surface*/) const final {}
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Surface& /*surface*/) const final {}
 };
 
 /// @brief  Mockup internal surface builder
@@ -133,7 +134,7 @@ class InternalVolumeBuilder : public IInternalStructureBuilder {
   bounds_type m_bounds;
 };
 
-BOOST_AUTO_TEST_SUITE(Detector)
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_Misconfigured) {
   // Internal and external structure builder is empty
@@ -280,3 +281,5 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

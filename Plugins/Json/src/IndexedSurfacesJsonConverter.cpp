@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
+#include "ActsPlugins/Json/IndexedSurfacesJsonConverter.hpp"
 
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
-#include "Acts/Plugins/Json/GridJsonConverter.hpp"
-#include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "ActsPlugins/Json/GridJsonConverter.hpp"
+#include "ActsPlugins/Json/IndexedGridJsonHelper.hpp"
+#include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <array>
 #include <memory>

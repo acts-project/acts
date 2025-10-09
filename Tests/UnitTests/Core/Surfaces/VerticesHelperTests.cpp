@@ -17,9 +17,12 @@
 
 #include <Eigen/Geometry>
 
-namespace Acts::detail::Test {
+using namespace Acts;
+using namespace Acts::detail;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
   {
@@ -221,4 +224,4 @@ BOOST_AUTO_TEST_CASE(GenerateCircleEllipseVertices) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::detail::Test
+}  // namespace ActsTests

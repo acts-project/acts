@@ -17,6 +17,7 @@
 using namespace dd4hep;
 using namespace Acts;
 using namespace ActsPlugins;
+using namespace ActsTests;
 
 /// Standard create_cylinder(...) create a simple cylinder
 ///

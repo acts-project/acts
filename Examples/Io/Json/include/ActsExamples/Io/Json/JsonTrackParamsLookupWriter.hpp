@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
+#include "ActsPlugins/Json/GridJsonConverter.hpp"
 
 #include <fstream>
 

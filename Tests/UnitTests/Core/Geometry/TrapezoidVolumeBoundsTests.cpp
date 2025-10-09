@@ -15,8 +15,8 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <memory>
@@ -24,9 +24,11 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Volumes)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   float tol = 1e-4;
@@ -62,8 +64,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 
   for (auto& os : tvbOrientedSurfaces) {
     auto osCenter = os.surface->center(geoCtx);
-    const auto* pSurface =
-        dynamic_cast<const Acts::PlaneSurface*>(os.surface.get());
+    const auto* pSurface = dynamic_cast<const PlaneSurface*>(os.surface.get());
     BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
                           "The surface is not a plane surface");
     auto osNormal = pSurface->normal(geoCtx);
@@ -106,4 +107,4 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

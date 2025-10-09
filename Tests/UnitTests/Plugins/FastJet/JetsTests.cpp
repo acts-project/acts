@@ -59,6 +59,10 @@ class TrackContainer {
   std::vector<Track> m_vec{};
 };
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(FastJetSuite)
+
 BOOST_AUTO_TEST_CASE(SingleTrack) {
   TrackContainer tracks;
   tracks.insert(Track(100, 0, 0));
@@ -171,3 +175,7 @@ BOOST_AUTO_TEST_CASE(InvalidCoreRadius) {
   BOOST_CHECK_THROW(inputTracks.tracksInJet(jetSeq.jets()[0], -1.0),
                     std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
