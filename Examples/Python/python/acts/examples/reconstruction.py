@@ -2402,6 +2402,7 @@ def addVertexFitting(
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     writeTrackInfo: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
@@ -2414,6 +2415,8 @@ def addVertexFitting(
     field : magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    outputDirCsv : Path|str, path, None
+        the output folder for the CSV output, None triggers no output
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
     seeder : enum member
@@ -2436,6 +2439,7 @@ def addVertexFitting(
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
         VertexNTupleWriter,
+        CsvVertexWriter,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2512,6 +2516,19 @@ def addVertexFitting(
         s.addAlgorithm(findVertices)
     else:
         raise RuntimeError("Invalid finder argument")
+
+    if outputDirCsv is not None:
+        outputDirCsv = Path(outputDirCsv)
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
+        s.addWriter(
+            CsvVertexWriter(
+                level=customLogLevel(),
+                inputVertices=outputVertices,
+                outputDir=str(outputDirCsv),
+                outputStem="vertices",
+            )
+        )
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
