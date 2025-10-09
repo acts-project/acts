@@ -99,7 +99,7 @@ void addTraccc(Context& ctx) {
         });
   }
 
-  /// Define the DetrayPropagator with constant b field
+  /// Define the DetrayPropagator with a covfie constant b field
   {
     traccc.def(
         "createConstBFieldPropagatorHost",
@@ -122,7 +122,7 @@ void addTraccc(Context& ctx) {
         });
   }
 
-  /// Define the DetrayPropagator with interpolated b field
+  /// Define the DetrayPropagator with a covfie interpolated b field
   {
     traccc.def(
         "createInterpolatedBFieldPropagatorHost",
