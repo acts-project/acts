@@ -446,10 +446,10 @@ DetrayPayloadConverter::convertMaterial(
   homogeneous.volume_link.link = volPayload.index.link;
 
   // @HACK: Detray does not like homoegeneous material only on SOME surfaces.
-  ACTS_WARNING("Adding dummy material slabs to homogeneous collection for "
-               << volPayload.surfaces.size()
-               << " surfaces (detray "
-                  "hack)");
+  ACTS_INFO("Adding dummy material slabs to homogeneous collection for "
+            << volPayload.surfaces.size()
+            << " surfaces (detray "
+               "hack)");
   for (const auto& surface : volPayload.surfaces) {
     auto& slabPayload = homogeneous.mat_slabs.emplace_back(s_dummyMaterialSlab);
     slabPayload.index_in_coll = surface.index_in_coll.value();

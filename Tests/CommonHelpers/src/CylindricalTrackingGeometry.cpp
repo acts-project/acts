@@ -311,9 +311,7 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3(
   }};
   Blueprint root{cfg};
 
-  auto& barrelMat = root.addMaterial("BarrelMaterial");
-
-  barrelMat.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
+  root.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
     auto beampipeBounds =
         std::make_unique<CylinderVolumeBounds>(0_mm, kBeamPipeRadius, 100_mm);
     auto beampipe = std::make_unique<TrackingVolume>(
