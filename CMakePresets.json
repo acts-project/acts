@@ -103,7 +103,7 @@
                 "ACTS_BUILD_EXAMPLES_PYTHIA8": "OFF",
                 "ACTS_BUILD_EXAMPLES_HASHING": "OFF"
             }
-          },
+        },
         {
             "name": "github-ci-no-root",
             "displayName": "GitHub-CI (without ROOT)",
