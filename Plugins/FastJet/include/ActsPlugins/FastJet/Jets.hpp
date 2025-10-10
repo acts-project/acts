@@ -11,78 +11,210 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 
+#include "ActsExamples/EventData/SimParticle.hpp"
+
 #include <optional>
 #include <vector>
 
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
 
-namespace ActsPlugins::FastJet {
 
-/// Default jet definition: Anti-kt with a radius of 0.4
-const fastjet::JetDefinition DefaultJetDefinition =
-    fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
+namespace Acts::FastJet {
 
-template <typename TrackContainer>
-class InputTracks {
- public:
-  /// Constructor; saves a reference to the container
-  /// @param tracks the TrackContainer
-  explicit InputTracks(TrackContainer& tracks) : m_tracks{tracks} {}
+  /// Common class for jets
+  class Jet {
+    public:
+      explicit Jet(const Acts::Vector4& fourMom) { m_fourMomentum = fourMom; }
 
-  /// Get vector for 4-momenta from the track collection
-  /// @return vector of fastjet::PseudoJet, one per track
-  std::vector<fastjet::PseudoJet> fourMomenta() const;
+      /// @brief Set the jet constituents
+      /// @param constituents the indices of the constituent tracks or constituent truth particles
+      void setConstituents(const std::vector<int>& constituents) {
+        m_constituents = constituents;
+      }
+      /// @brief Get the jet constituents
+      /// @return the indices of the constituent tracks or constituent truth particles
+      const std::vector<int>& getConstituents() const { return m_constituents; }
 
-  /// Get the tracks making up a track-jet
-  ///
-  /// @param jet the jet from which to get the constituent tracks
-  /// @param coreR optional radius inside which to get the tracks
-  ///
-  /// @return a vector of TrackProxy
-  std::vector<typename TrackContainer::TrackProxy> tracksInJet(
-      const fastjet::PseudoJet& jet, std::optional<float> coreR = {});
+      /// @brief Get the jet 4-momentum
+      /// @return the jet 4-momentum as an Acts::Vector4
+      Acts::Vector4 getFourMomentum() const { return m_fourMomentum; }
 
- private:
-  TrackContainer& m_tracks;
-};
+      /// @brief Print the jet information
+      friend std::ostream& operator<<(std::ostream& os, const Jet& jet) {
+        os << "Jet 4-momentum: " << jet.getFourMomentum().transpose()
+           << std::endl;
+        os << "Constituents: ";
+        for (const auto& constituent : jet.getConstituents()) {
+          os << constituent << " ";
+        }
+        os << std::endl;
+        return os;
+      }
 
-class TrackJetBuilder {
- public:
-  /// Factory function to create a sequence of track jets
-  ///
-  /// @param tracks the input tracks
-  /// @jetDef the jet definition to use, defaults to "DefaultJetDefinition"
-  static TrackJetBuilder create(
-      std::vector<fastjet::PseudoJet>& tracks,
-      const fastjet::JetDefinition& jetDef = DefaultJetDefinition);
+    private:
+      Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
+      /// @brief The constituents of the jet are the indices of the truth particles or tracks
+      std::vector<int> m_constituents{};
+      /// @brief The indices of the tracks associated to this jet
+      std::vector<int> m_trackIndices{};
 
-  static TrackJetBuilder create(
-      std::vector<fastjet::PseudoJet>&& tracks,
-      const fastjet::JetDefinition& jetDef = DefaultJetDefinition) {
-    return create(tracks, jetDef);
-  }
+  };
 
-  /// Get all the track jets passing the pT & eta cuts
-  ///
-  /// @param ptMin the minimum jet pT in GeV
-  /// @param etaMax the maximum jet absolute eta
-  ///
-  /// @return a vector of fastjet::PseudoJet objects
-  std::vector<fastjet::PseudoJet> jets(float ptMin = 20 *
-                                                     Acts::UnitConstants::GeV,
-                                       float etaMax = 2.5);
+  template <typename TrackContainer>
+  class TruthJet : public Jet {
+    public:
+      explicit TruthJet(const Acts::Vector4&fourMom) : Jet(fourMom) {}
+    private:
+      /// @brief  The constituents of the truth jet are the truth particles
+      std::vector<ActsExamples::SimParticle> m_constituents{};
+      /// @brief The tracks associated to this truth jet
+      std::vector<typename TrackContainer::TrackProxy> m_associatedTracks{};
+  };
+  template <typename TrackContainer>
+  class TrackJet : public Jet {
+    public:
+      explicit TrackJet(const Acts::Vector4& fourMom) : Jet(fourMom) {}
+    private:
+      /// @brief The constituents of the track jet are the tracks
+      std::vector<typename TrackContainer::TrackProxy> m_constituents{};
+  };
 
- private:
-  /// Main constructor. Users should call "TrackJetBuilder::create" instead
-  ///
-  /// @param clusterSeq the fastjet::ClusterSequence object
-  explicit TrackJetBuilder(const fastjet::ClusterSequence& clusterSeq)
-      : m_clusterSeq{clusterSeq} {}
 
-  fastjet::ClusterSequence m_clusterSeq{};
-};
+// /// Default jet definition: Anti-kt with a radius of 0.4
+// const fastjet::JetDefinition DefaultJetDefinition =
+//     fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
 
-}  // namespace ActsPlugins::FastJet
+// template <typename TrackContainer>
+// class InputTracks {
+//  public:
+//   /// Constructor; saves a reference to the container
+//   /// @param tracks the TrackContainer
+//   explicit InputTracks(TrackContainer& tracks) : m_tracks{tracks} {}
+
+//   /// Get vector for 4-momenta from the track collection
+//   /// @return vector of fastjet::PseudoJet, one per track
+//   std::vector<fastjet::PseudoJet> fourMomenta() const;
+
+//   /// Get the tracks making up a track-jet
+//   ///
+//   /// @param jet the jet from which to get the constituent tracks
+//   /// @param coreR optional radius inside which to get the tracks
+//   ///
+//   /// @return a vector of TrackProxy
+//   std::vector<typename TrackContainer::TrackProxy> tracksInJet(
+//       const fastjet::PseudoJet& jet, std::optional<float> coreR = {});
+
+//  private:
+//   TrackContainer& m_tracks;
+// };
+
+// class TrackJetBuilder {
+//  public:
+//   /// Factory function to create a sequence of track jets
+//   ///
+//   /// @param tracks the input tracks
+//   /// @jetDef the jet definition to use, defaults to "DefaultJetDefinition"
+//   static TrackJetBuilder create(
+//       std::vector<fastjet::PseudoJet>& tracks,
+//       const fastjet::JetDefinition& jetDef = DefaultJetDefinition);
+
+//   static TrackJetBuilder create(
+//       std::vector<fastjet::PseudoJet>&& tracks,
+//       const fastjet::JetDefinition& jetDef = DefaultJetDefinition) {
+//     return create(tracks, jetDef);
+//   }
+
+//   /// Get all the track jets passing the pT & eta cuts
+//   ///
+//   /// @param ptMin the minimum jet pT in GeV
+//   /// @param etaMax the maximum jet absolute eta
+//   ///
+//   /// @return a vector of fastjet::PseudoJet objects
+//   std::vector<fastjet::PseudoJet> jets(float ptMin = 20 *
+//                                                      Acts::UnitConstants::GeV,
+//                                        float etaMax = 2.5);
+
+//  private:
+//   /// Main constructor. Users should call "TrackJetBuilder::create" instead
+//   ///
+//   /// @param clusterSeq the fastjet::ClusterSequence object
+//   explicit TrackJetBuilder(const fastjet::ClusterSequence& clusterSeq)
+//       : m_clusterSeq{clusterSeq} {}
+
+//   fastjet::ClusterSequence m_clusterSeq{};
+// };
+
+// class TruthJetBuilder {
+//  public:
+//   explicit TruthJetBuilder(const Acts::Vector4& fm) { m_fourMomentum = fm; }
+//   const Acts::Vector4 getTruthJetFourMomentum() const { return m_fourMomentum; }
+
+//  private:
+//   Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
+// };
+
+// class JetProperties {
+//  public:
+//   /// Constructor; saves a reference to the jet
+//   /// @param jet the jet
+//   explicit JetProperties(const TruthJetBuilder& truthJet)
+//       : m_truthJet{truthJet} {}
+
+//   /// @brief Set the jet constituents
+//   /// @param constituents the indices of the constituent tracks
+//   void setConstituents(const std::vector<int>& constituents) {
+//     m_constituents = constituents;
+//   }
+//   /// @brief Get the jet constituents
+//   /// @return the indices of the constituent tracks
+//   const std::vector<int>& getConstituents() const { return m_constituents; }
+
+//   /// @brief Get the jet 4-momentum
+//   /// @return the jet 4-momentum as an Acts::Vector4
+//   Acts::Vector4 getFourMomentum() const { return m_fourMomentum; }
+
+//   /// @brief Add a track to the jet
+//   /// @param trk_idx the index of the track to add
+//   void addTrack(const int trackIndex) { m_trackIndices.push_back(trackIndex); }
+
+//   /// @brief Get the tracks associated to this jet
+//   /// @return the indices of the associated tracks
+//   const std::vector<int>& getTracks() const { return m_trackIndices; }
+
+//   /// @brief Print the jet information
+//   friend std::ostream& operator<<(std::ostream& os,
+//                                   const JetProperties& jetProps) {
+//     os << "Jet 4-momentum: " << jetProps.getFourMomentum().transpose()
+//        << std::endl;
+//     os << "Constituents: ";
+//     for (const auto& constituent : jetProps.getConstituents()) {
+//       os << constituent << " ";
+//     }
+//     os << std::endl;
+//     if (!jetProps.getTracks().empty()) {
+//       os << "Associated tracks: ";
+//       for (const auto& trkidx : jetProps.getTracks()) {
+//         os << trkidx << " ";
+//       }
+//       os << std::endl;
+//     } else {
+//       os << "No associated tracks." << std::endl;
+//     }
+//     return os;
+//   }
+
+//  private:
+//   const TruthJetBuilder& m_truthJet;
+//   Acts::Vector4 m_fourMomentum{m_truthJet.getTruthJetFourMomentum()};
+//   // The indices of the constituents wrt the global container
+//   std::vector<int> m_constituents{};
+//   // The indices of the tracks associated to this jet
+//   std::vector<int> m_trackIndices{};
+// };
+
+//using TrackJetContainer = std::vector<TruthJetBuilder>;
+
+}  // namespace Acts::FastJet
 
 #include "Jets.ipp"
