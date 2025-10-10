@@ -185,7 +185,22 @@ endif()
 
 target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesIoHepMC3)
 target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
-list(APPEND py_files examples/hepmc3.py)
+list(APPEND py_files examples/hepmc3/__init__.py)
+list(APPEND py_files examples/hepmc3/__main__.py)
+list(APPEND py_files examples/hepmc3_normalize.py)
+
+# Symlink hepmc3_normalize.py to build/bin for development
+file(
+    CREATE_LINK
+        ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/examples/hepmc_normalize.py
+        ${CMAKE_BINARY_DIR}/bin/hepmc_normalize.py
+    SYMBOLIC
+)
+install(
+    PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/examples/hepmc_normalize.py
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RENAME hepmc_normalize.py
+)
 
 if(ACTS_BUILD_EXAMPLES_GNN)
     target_link_libraries(

@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Normalizer.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3OutputConverter.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
@@ -59,11 +60,53 @@ void addHepMC3(Context& ctx) {
         .value("zstd", zstd);
   }
 
+  {
+    using enum HepMC3Util::Format;
+    py::enum_<HepMC3Util::Format>(hepmc3, "Format")
+        .value("ascii", ascii)
+        .value("root", root);
+  }
+
   hepmc3.def("availableCompressionModes", []() {
     auto modes = HepMC3Util::availableCompressionModes();
     return std::vector(modes.begin(), modes.end());
   });
 
+  hepmc3.def("availableFormats", []() {
+    auto formats = HepMC3Util::availableFormats();
+    return std::vector(formats.begin(), formats.end());
+  });
+
   hepmc3.def("compressionExtension", &HepMC3Util::compressionExtension);
+  hepmc3.def("formatFromFilename", &HepMC3Util::formatFromFilename);
+
+  // HepMC3Normalizer bindings
+  {
+    auto normalizer =
+        py::class_<HepMC3Normalizer>(hepmc3, "HepMC3Normalizer")
+            .def(py::init<HepMC3Normalizer::Config>(), py::arg("config"))
+            .def("normalize", &HepMC3Normalizer::normalize)
+            .def_property_readonly("config", &HepMC3Normalizer::config);
+
+    auto config = py::class_<HepMC3Normalizer::Config>(normalizer, "Config")
+                      .def(py::init<>());
+    ACTS_PYTHON_STRUCT(config, inputFiles, singleOutputPath, outputDir,
+                       outputPrefix, eventsPerFile, maxEvents, format,
+                       compression, compressionLevel, verbose);
+
+    auto result =
+        py::class_<HepMC3Normalizer::Result>(normalizer, "Result")
+            .def(py::init<>())
+            .def_readonly("numEvents", &HepMC3Normalizer::Result::numEvents)
+            .def_readonly("outputFiles", &HepMC3Normalizer::Result::outputFiles)
+            .def_readonly("totalInputSize",
+                          &HepMC3Normalizer::Result::totalInputSize)
+            .def_readonly("totalOutputSize",
+                          &HepMC3Normalizer::Result::totalOutputSize)
+            .def_readonly("totalReadTime",
+                          &HepMC3Normalizer::Result::totalReadTime)
+            .def_readonly("totalWriteTime",
+                          &HepMC3Normalizer::Result::totalWriteTime);
+  }
 }
 }  // namespace ActsPython

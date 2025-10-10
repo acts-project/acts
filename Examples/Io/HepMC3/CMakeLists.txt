@@ -6,6 +6,9 @@ acts_add_library(
     src/HepMC3InputConverter.cpp
     src/HepMC3OutputConverter.cpp
     src/HepMC3Util.cpp
+    src/HepMC3Metadata.cpp
+    src/HepMC3FileChain.cpp
+    src/HepMC3Normalizer.cpp
 )
 target_include_directories(
     ActsExamplesIoHepMC3
@@ -19,7 +22,7 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesIoHepMC3
     PUBLIC Acts::ExamplesFramework ${HEPMC3_LIBRARIES}
-    PRIVATE Acts::Fatras
+    PRIVATE Acts::Fatras nlohmann_json::nlohmann_json
 )
 
 # Standalone HepMC3 normalizer executable
@@ -30,12 +33,10 @@ add_executable(hepmc_normalize HepMC3Normalize.cpp)
 target_link_libraries(
     hepmc_normalize
     PRIVATE
-        ${HEPMC3_LIBRARIES}
+        Acts::ExamplesIoHepMC3
         Boost::program_options
         nlohmann_json::nlohmann_json
 )
-
-target_include_directories(hepmc_normalize SYSTEM PRIVATE ${HEPMC3_INCLUDE_DIR})
 
 # HepMC3 version < 3.3.0 had non-inline pseudo static members that give linker errors:
 # https://gitlab.cern.ch/hepmc/HepMC3/-/merge_requests/284

@@ -1,9 +1,12 @@
-from acts._adapter import _patch_config
-from acts import ActsPythonBindings
+"""
+Backward compatibility shim for acts.examples.hepmc3.
 
-if not hasattr(ActsPythonBindings._examples, "_hepmc3"):
-    raise ImportError("ActsPythonBindings._examples._hepmc3 not found")
+This module maintains backward compatibility by re-exporting everything
+from the hepmc3 package. Users can still do:
+    from acts.examples import hepmc3
+    hepmc3.normalize(...)
+    hepmc3.Compression.zstd
+    etc.
+"""
 
-_patch_config(ActsPythonBindings._examples._hepmc3)
-
-from acts.ActsPythonBindings._examples._hepmc3 import *
+from .hepmc3 import *  # noqa: F401, F403
