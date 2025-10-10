@@ -41,7 +41,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
-
   using namespace Acts;
   using namespace ActsPython;
   using namespace ActsPlugins;

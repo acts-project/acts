@@ -369,13 +369,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsSvg, svg) {
   }
 
   // How a detector is drawn: Svg Detector options & drawning
-  {
-    svg.def("drawDetector", &drawDetector);
-  }
+  { svg.def("drawDetector", &drawDetector); }
 
-  {
-    svg.def("drawSurfaceArrays", &Svg::drawSurfaceArrays);
-  }
+  { svg.def("drawSurfaceArrays", &Svg::drawSurfaceArrays); }
 
   // Legacy geometry drawing
   {
@@ -409,23 +405,23 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsSvg, svg) {
 
   // Tracking geometry drawing
   {
-  svg.def(
-      "drawTrackingGeometry",
-      [](const GeometryContext& gctx, const TrackingGeometry& tGeometry,
-         const std::string& view, bool drawSurfaces, bool highlightMaterial) {
-        std::variant<actsvg::views::x_y, actsvg::views::z_r> v;
-        if (view == "xy") {
-          v = actsvg::views::x_y();
-        } else if (view == "zr") {
-          v = actsvg::views::z_r();
-        } else {
-          throw std::invalid_argument("Unknown view type");
-        }
+    svg.def(
+        "drawTrackingGeometry",
+        [](const GeometryContext& gctx, const TrackingGeometry& tGeometry,
+           const std::string& view, bool drawSurfaces, bool highlightMaterial) {
+          std::variant<actsvg::views::x_y, actsvg::views::z_r> v;
+          if (view == "xy") {
+            v = actsvg::views::x_y();
+          } else if (view == "zr") {
+            v = actsvg::views::z_r();
+          } else {
+            throw std::invalid_argument("Unknown view type");
+          }
 
-        return Svg::drawTrackingGeometry(gctx, tGeometry, v, drawSurfaces,
-                                         highlightMaterial);
-      },
-      py::arg("gctx"), py::arg("tGeometry"), py::arg("view"),
-      py::arg("drawSurfaces") = true, py::arg("highlightMaterial") = false);
-    }
+          return Svg::drawTrackingGeometry(gctx, tGeometry, v, drawSurfaces,
+                                           highlightMaterial);
+        },
+        py::arg("gctx"), py::arg("tGeometry"), py::arg("view"),
+        py::arg("drawSurfaces") = true, py::arg("highlightMaterial") = false);
+  }
 }

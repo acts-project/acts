@@ -1,8 +1,7 @@
-# This macro adds the plugin binding as a separate libary if configured to be built.
+# This macro adds the plugin binding as a separate library if configured to be built.
 # The plugin is then added to the _plugins_built list which is propagated to the parent scope
 # and used to populate the __init__.py file automatically.
 macro(add_plugin_binding_if _name _dependency _flag)
-
     string(TOLOWER ${_name} _name_lower)
 
     if(${_flag})
@@ -12,9 +11,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
         set(_target "ActsPluginsPythonBindings${_name}")
         pybind11_add_module(${_target} src/${_name}.cpp)
 
-        install(
-            TARGETS ${_target} DESTINATION ${_python_install_dir}
-        )
+        install(TARGETS ${_target} DESTINATION ${_python_install_dir})
 
         set_target_properties(
             ${_target}
@@ -46,7 +43,6 @@ macro(add_plugin_binding_if _name _dependency _flag)
     )
 endmacro()
 
-
 #add_plugin_binding_if(Obj ActsCore TRUE)
 #add_plugin_binding_if(Json ActsPluginJson ACTS_BUILD_PLUGIN_JSON)
 #add_plugin_binding_if(Geant4 ActsPluginGeant4 ACTS_BUILD_PLUGIN_GEANT4)
@@ -63,7 +59,6 @@ add_plugin_binding_if(Svg ActsPluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 
 # Propagate the list of built plugins to the parent scope
 set(_plugins_built "${_plugins_built}" PARENT_SCOPE)
-
 
 #string(REPLACE ";" "," _python_modules_built "${_python_modules_built}")
 #configure_file(
