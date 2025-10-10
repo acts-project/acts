@@ -42,6 +42,13 @@ struct ParticleData {
                  vx, vy, vz, vt, px, py, pz, m, q);
 };
 
+struct VertexData {
+  /// Position
+  float x = 0, y = 0, z = 0, T = 0;
+
+  DFE_NAMEDTUPLE(VertexData, x, y, z, T);
+};
+
 // Write out simhits before digitization (no hi_id associated)
 struct SimHitData {
   /// Hit surface identifier. Not available in the TrackML datasets.
