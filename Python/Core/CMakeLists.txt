@@ -1,11 +1,4 @@
-# Configure setup and install python files
-set(_python_dir "${CMAKE_BINARY_DIR}/python")
-file(MAKE_DIRECTORY ${_python_dir})
-file(MAKE_DIRECTORY ${_python_dir}/acts)
-set(_python_install_dir "python/acts")
-
-set(py_files __init__.py _adapter.py)
-
+# Make the core python binding library available
 pybind11_add_module(ActsPythonBindings src/CoreModuleEntry.cpp)
 
 target_sources(
@@ -26,6 +19,9 @@ target_sources(
         src/TrackFinding.cpp
         src/Visualization.cpp
 )
+
+# Dedicated python files to be installed are added here
+set(py_files _adapter.py)
 
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 

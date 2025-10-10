@@ -21,11 +21,6 @@
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Io/Svg/SvgPointWriter.hpp"
-#include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
 #include "ActsPlugins/ActSVG/DetectorSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
@@ -205,33 +200,32 @@ std::vector<actsvg::svg::object> drawDetector(
 
 }  // namespace
 
-namespace ActsPython {
-void addSvg(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+PYBIND11_MODULE(ActsPluginsPythonBindingsSvg, svg) {
+  using namespace Acts;
+  using namespace ActsPlugins;
 
-  auto svg = m.def_submodule("svg");
+  // Primitives, should be dropped in favour of actsvg pybind11 bindings
+  {
+    py::class_<actsvg::svg::object>(svg, "object")
+        .def_readwrite("id", &actsvg::svg::object::_id);
 
-  { svg.def("toFile", &Svg::toFile, py::arg("objects"), py::arg("filename")); }
+    py::class_<actsvg::svg::file>(svg, "file")
+        .def(py::init<>())
+        .def("add_object", &actsvg::svg::file::add_object)
+        .def("add_objects", &actsvg::svg::file::add_objects)
+        .def("clip",
+             [](actsvg::svg::file& self, std::array<actsvg::scalar, 4> box) {
+               self.set_view_box(box);
+             })
+        .def("write",
+             [](const actsvg::svg::file& self, const std::string& filename) {
+               std::ofstream file(filename);
+               file << self;
+               file.close();
+             });
 
-  py::class_<actsvg::svg::object>(svg, "object")
-      .def_readwrite("id", &actsvg::svg::object::_id);
-
-  py::class_<actsvg::svg::file>(svg, "file")
-      .def(py::init<>())
-      .def("add_object", &actsvg::svg::file::add_object)
-      .def("add_objects", &actsvg::svg::file::add_objects)
-      .def("clip",
-           [](actsvg::svg::file& self, std::array<actsvg::scalar, 4> box) {
-             self.set_view_box(box);
-           })
-      .def("write",
-           [](const actsvg::svg::file& self, const std::string& filename) {
-             std::ofstream file(filename);
-             file << self;
-             file.close();
-           });
-
-  { svg.def("toFile", &Svg::toFile, py::arg("objects"), py::arg("filename")); }
+    svg.def("toFile", &Svg::toFile, py::arg("objects"), py::arg("filename"));
+  }
 
   // Core components, added as an acts.svg submodule
   {
@@ -375,9 +369,13 @@ void addSvg(Context& ctx) {
   }
 
   // How a detector is drawn: Svg Detector options & drawning
-  { svg.def("drawDetector", &drawDetector); }
+  {
+    svg.def("drawDetector", &drawDetector);
+  }
 
-  { svg.def("drawSurfaceArrays", &Svg::drawSurfaceArrays); }
+  {
+    svg.def("drawSurfaceArrays", &Svg::drawSurfaceArrays);
+  }
 
   // Legacy geometry drawing
   {
@@ -409,52 +407,8 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_STRUCT(c, prefix, layerOptions);
   }
 
-  // Components from the ActsExamples - part of acts.examples
-
+  // Tracking geometry drawing
   {
-    using Writer = SvgTrackingGeometryWriter;
-    auto w =
-        py::class_<Writer, std::shared_ptr<Writer>>(mex,
-                                                    "SvgTrackingGeometryWriter")
-            .def(py::init<const Writer::Config&, Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def("write",
-                 py::overload_cast<const AlgorithmContext&,
-                                   const TrackingGeometry&>(&Writer::write));
-
-    auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, outputDir, converterOptions);
-  }
-  {
-    using Writer = SvgPointWriter<SimSpacePoint>;
-    auto w =
-        py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-            mex, "SvgSimSpacePointWriter")
-            .def(py::init<const Writer::Config&, Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def("write",
-                 py::overload_cast<const AlgorithmContext&>(&Writer::write));
-
-    auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, writerName, trackingGeometry, inputCollection,
-                       infoBoxTitle, outputDir);
-  }
-
-  {
-    using Writer = SvgPointWriter<SimHit, AccessorPositionXYZ>;
-    auto w =
-        py::class_<Writer, IWriter, std::shared_ptr<Writer>>(mex,
-                                                             "SvgSimHitWriter")
-            .def(py::init<const Writer::Config&, Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def("write",
-                 py::overload_cast<const AlgorithmContext&>(&Writer::write));
-
-    auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, writerName, trackingGeometry, inputCollection,
-                       infoBoxTitle, outputDir);
-  }
-
   svg.def(
       "drawTrackingGeometry",
       [](const GeometryContext& gctx, const TrackingGeometry& tGeometry,
@@ -473,5 +427,5 @@ void addSvg(Context& ctx) {
       },
       py::arg("gctx"), py::arg("tGeometry"), py::arg("view"),
       py::arg("drawSurfaces") = true, py::arg("highlightMaterial") = false);
+    }
 }
-}  // namespace ActsPython

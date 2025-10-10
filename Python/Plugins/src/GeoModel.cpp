@@ -19,10 +19,6 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
-#include "ActsExamples/GeoModelDetector/GeoModelMuonMockupBuilder.hpp"
-#include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
-#include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 #include "ActsPlugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
@@ -44,70 +40,39 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace Acts;
-using namespace ActsPlugins;
-using namespace ActsExamples;
+PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
 
-namespace ActsPython {
+  using namespace Acts;
+  using namespace ActsPython;
+  using namespace ActsPlugins;
 
-void addGeoModel(Context& ctx) {
-  auto m = ctx.get("main");
-
-  auto gm = m.def_submodule("geomodel");
-
-  py::class_<GeoModelTree::FpvConstLink>(gm, "GeoModelTree::FpvConstLink")
-      .def(py::init<>())
-      .def("get", &GeoModelTree::FpvConstLink::get,
-           py::return_value_policy::reference);
-
-  py::class_<GeoModelTree>(gm, "GeoModelTree").def(py::init<>());
-
-  gm.def("readFromDb", &GeoModelReader::readFromDb);
-
-  py::class_<GeoModelDetectorElement, std::shared_ptr<GeoModelDetectorElement>>(
-      gm, "GeoModelDetectorElement")
-      .def("logVolName", &GeoModelDetectorElement::logVolName)
-      .def("databaseEntryName", &GeoModelDetectorElement::databaseEntryName)
-      .def("surface", [](GeoModelDetectorElement self) {
-        return self.surface().getSharedPtr();
-      });
-
+  // Basic bindings
   {
-    auto f =
-        py::class_<GeoModelDetector, Detector,
-                   std::shared_ptr<GeoModelDetector>>(gm, "GeoModelDetector")
-            .def(py::init<const GeoModelDetector::Config&>())
-            .def("buildTrackingGeometry",
-                 &GeoModelDetector::buildTrackingGeometry);
+    py::class_<GeoModelTree::FpvConstLink>(gm, "GeoModelTree::FpvConstLink")
+        .def(py::init<>())
+        .def("get", &GeoModelTree::FpvConstLink::get,
+             py::return_value_policy::reference);
 
-    auto c =
-        py::class_<GeoModelDetector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, geoModelTree, logLevel, path);
+    py::class_<GeoModelTree>(gm, "GeoModelTree").def(py::init<>());
 
-    // patch the constructor
-    patchKwargsConstructor(c);
-  }
-  {
-    // GeomodelMuonMockupBuilder
-    py::class_<ITrackingGeometryBuilder,
-               std::shared_ptr<ITrackingGeometryBuilder>>(
-        gm, "ITrackingGeometryBuilder");
-    auto gmMuonBuilder =
-        py::class_<GeoModelMuonMockupBuilder, ITrackingGeometryBuilder,
-                   std::shared_ptr<GeoModelMuonMockupBuilder>>(
-            gm, "GeoModelMuonMockupBuilder")
-            .def(py::init([](const GeoModelMuonMockupBuilder::Config& config,
-                             const std::string& name, Logging::Level level) {
-              return std::make_shared<GeoModelMuonMockupBuilder>(
-                  config, getDefaultLogger(name, level));
-            }))
-            .def("trackingGeometry",
-                 &GeoModelMuonMockupBuilder::trackingGeometry);
-    auto gmMuonConfig =
-        py::class_<GeoModelMuonMockupBuilder::Config>(gmMuonBuilder, "Config")
-            .def(py::init<>());
-    ACTS_PYTHON_STRUCT(gmMuonConfig, volumeBoxFPVs, stationNames,
-                       volumeBoundFactory);
+    gm.def("readFromDb", &GeoModelReader::readFromDb);
+
+    py::class_<GeoModelDetectorElement,
+               std::shared_ptr<GeoModelDetectorElement>>(
+        gm, "GeoModelDetectorElement")
+        .def("logVolName", &GeoModelDetectorElement::logVolName)
+        .def("databaseEntryName", &GeoModelDetectorElement::databaseEntryName)
+        .def("surface", [](GeoModelDetectorElement self) {
+          return self.surface().getSharedPtr();
+        });
+
+    py::class_<GeoModelDetectorElementITk,
+               std::shared_ptr<GeoModelDetectorElementITk>>(
+        gm, "GeoModelDetectorElementITk")
+        .def("surface", [](GeoModelDetectorElementITk& self) {
+          return self.surface().getSharedPtr();
+        });
+    gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
   }
 
   // Shape converters
@@ -156,33 +121,7 @@ void addGeoModel(Context& ctx) {
         .def("toSensitiveSurface", &GeoShiftConverter::toSensitiveSurface)
         .def("toPassiveSurface", &GeoShiftConverter::toPassiveSurface);
   }
-  {
-    // GeoMuonMockupExperiment
-    auto f =
-        py::class_<GeoMuonMockupExperiment,
-                   std::shared_ptr<GeoMuonMockupExperiment>>(
-            gm, "GeoMuonMockupExperiment")
-            .def(py::init([](const GeoMuonMockupExperiment::Config& config,
-                             const std::string& name, Logging::Level level) {
-              return std::make_shared<GeoMuonMockupExperiment>(
-                  config, getDefaultLogger(name, level));
-            }))
-            .def("constructMS", &GeoMuonMockupExperiment::constructMS);
-    auto c = py::class_<GeoMuonMockupExperiment::Config>(f, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c,
-                       /// General properties
-                       dumpTree, dbName,
-                       /// Mdt properties
-                       innerTubeRadius, tubeWallThickness, nTubeLayers, nTubes,
-                       mdtFoamThickness, multiLayerSeparation,
-                       /// Rpc properties
-                       nRpcGasGaps, nRpcAlongZ, nRpcAlongPhi,
-                       /// Station properties
-                       barrelRadii, nSectors, nEtaStations, stationDistInZ,
-                       stationDistInR, endCapWheelLowR, bigWheelDistZ,
-                       buildEndcaps, nInnerMultiplets, nInnerGasGapsPerMl);
-  }
+
   // Volume factory
   {
     auto a =
@@ -265,55 +204,4 @@ void addGeoModel(Context& ctx) {
         .def_readwrite("dotGraph",
                        &GeoModelBlueprintCreater::Options::dotGraph);
   }
-
-  gm.def(
-      "splitBarrelModule",
-      [](const GeometryContext& gctx,
-         std::shared_ptr<const GeoModelDetectorElement> detElement,
-         unsigned nSegments, Logging::Level logLevel) {
-        auto logger = getDefaultLogger("ITkSlitBarrel", logLevel);
-        auto name = detElement->databaseEntryName();
-
-        auto factory = [&](const auto& trafo, const auto& bounds) {
-          return GeoModelDetectorElement::createDetectorElement<
-              PlaneSurface, RectangleBounds>(detElement->physicalVolume(),
-                                             bounds, trafo,
-                                             detElement->thickness());
-        };
-
-        return ITk::splitBarrelModule(gctx, detElement, nSegments, factory,
-                                      name, *logger);
-      },
-      "gxtx"_a, "detElement"_a, "nSegments"_a, "logLevel"_a = Logging::INFO);
-
-  gm.def(
-      "splitDiscModule",
-      [](const GeometryContext& gctx,
-         std::shared_ptr<const GeoModelDetectorElement> detElement,
-         const std::vector<std::pair<double, double>>& patterns,
-         Logging::Level logLevel) {
-        auto logger = getDefaultLogger("ITkSlitBarrel", logLevel);
-        auto name = detElement->databaseEntryName();
-
-        auto factory = [&](const auto& trafo, const auto& bounds) {
-          return GeoModelDetectorElement::createDetectorElement<DiscSurface,
-                                                                AnnulusBounds>(
-              detElement->physicalVolume(), bounds, trafo,
-              detElement->thickness());
-        };
-
-        return ITk::splitDiscModule(gctx, detElement, patterns, factory, name,
-                                    *logger);
-      },
-      "gxtx"_a, "detElement"_a, "splitRanges"_a, "logLevel"_a = Logging::INFO);
-
-  py::class_<GeoModelDetectorElementITk,
-             std::shared_ptr<GeoModelDetectorElementITk>>(
-      gm, "GeoModelDetectorElementITk")
-      .def("surface", [](GeoModelDetectorElementITk& self) {
-        return self.surface().getSharedPtr();
-      });
-  gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
 }
-
-}  // namespace ActsPython

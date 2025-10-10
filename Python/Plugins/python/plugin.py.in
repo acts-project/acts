@@ -1,0 +1,5 @@
+try :
+    from .ActsPluginsPythonBindings@PLUGIN_NAME@ import *
+except ImportError:
+    print("@PLUGIN_NAME@ plugin not available. Try building with @PLUGIN_BUILD_FLAG@=ON.")
+    raise
