@@ -259,7 +259,8 @@ void writeMetadata(const std::filesystem::path& dataFile,
 }
 
 // Helper function to generate output filename
-std::string generateOutputFilename(const std::string& prefix, std::size_t fileNum,
+std::string generateOutputFilename(const std::string& prefix,
+                                   std::size_t fileNum,
                                    HepMC3Util::Format format,
                                    HepMC3Util::Compression compression) {
   std::ostringstream filename;
@@ -325,9 +326,8 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
     const std::vector<std::filesystem::path>& inputFiles,
     std::optional<std::filesystem::path> singleOutputPath,
     std::filesystem::path outputDir, std::string outputPrefix,
-    std::size_t eventsPerFile, std::size_t maxEvents,
-    Format format, Compression compression,
-    int compressionLevel, bool verbose) {
+    std::size_t eventsPerFile, std::size_t maxEvents, Format format,
+    Compression compression, int compressionLevel, bool verbose) {
   // Validate configuration
   if (inputFiles.empty()) {
     throw std::invalid_argument("No input files specified");
@@ -342,8 +342,7 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
     throw std::invalid_argument("compression-level must be 0-19");
   }
 
-  if (format == Format::root &&
-      compression != Compression::none) {
+  if (format == Format::root && compression != Compression::none) {
     throw std::invalid_argument(
         "ROOT format does not support compression parameter");
   }
@@ -455,8 +454,7 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
             result.totalOutputSize += fileSize;
 
             writeMetadata(currentOutputPath,
-                          singleOutputPath ? globalEventIndex
-                                                 : eventsPerFile);
+                          singleOutputPath ? globalEventIndex : eventsPerFile);
             result.outputFiles.push_back(currentOutputPath);
 
             if (verbose) {
@@ -503,8 +501,7 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
       eventsReadFromFile++;
 
       // Close file if chunk is complete (only in multi-file mode)
-      if (!singleOutputPath &&
-          eventsInCurrentFile >= eventsPerFile) {
+      if (!singleOutputPath && eventsInCurrentFile >= eventsPerFile) {
         currentWriter->close();
 
         // Get file size
@@ -544,8 +541,7 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
     // Check if we've reached the maximum number of events
     if (maxEvents > 0 && globalEventIndex >= maxEvents) {
       if (verbose) {
-        std::cerr << "Reached maximum event limit (" << maxEvents
-                  << ")\n";
+        std::cerr << "Reached maximum event limit (" << maxEvents << ")\n";
       }
       break;
     }
@@ -568,8 +564,8 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
                               static_cast<double>(eventsInCurrentFile);
 
         std::cerr << "  Wrote " << currentOutputPath << " ("
-                  << eventsInCurrentFile << " events, "
-                  << formatSize(fileSize) << ", "
+                  << eventsInCurrentFile << " events, " << formatSize(fileSize)
+                  << ", "
                   << formatSize(static_cast<std::uintmax_t>(sizePerEvent))
                   << "/event)\n";
       }
@@ -597,7 +593,8 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
       std::cerr << "  Total input size:  " << formatSize(result.totalInputSize)
                 << "\n";
       std::cerr << "  Total output size: " << formatSize(result.totalOutputSize)
-                << " (" << formatSize(static_cast<std::uintmax_t>(bytesPerEvent))
+                << " ("
+                << formatSize(static_cast<std::uintmax_t>(bytesPerEvent))
                 << "/event)\n";
 
       if (result.totalInputSize > 0) {

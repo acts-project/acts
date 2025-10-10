@@ -81,20 +81,20 @@ void addHepMC3(Context& ctx) {
 
   // HepMC3 normalize function and result
   {
-    auto result = py::class_<HepMC3Util::NormalizeResult>(hepmc3, "NormalizeResult")
-                      .def(py::init<>())
-                      .def_readonly("numEvents",
-                                    &HepMC3Util::NormalizeResult::numEvents)
-                      .def_readonly("outputFiles",
-                                    &HepMC3Util::NormalizeResult::outputFiles)
-                      .def_readonly("totalInputSize",
-                                    &HepMC3Util::NormalizeResult::totalInputSize)
-                      .def_readonly("totalOutputSize",
-                                    &HepMC3Util::NormalizeResult::totalOutputSize)
-                      .def_readonly("totalReadTime",
-                                    &HepMC3Util::NormalizeResult::totalReadTime)
-                      .def_readonly("totalWriteTime",
-                                    &HepMC3Util::NormalizeResult::totalWriteTime);
+    auto result =
+        py::class_<HepMC3Util::NormalizeResult>(hepmc3, "NormalizeResult")
+            .def(py::init<>())
+            .def_readonly("numEvents", &HepMC3Util::NormalizeResult::numEvents)
+            .def_readonly("outputFiles",
+                          &HepMC3Util::NormalizeResult::outputFiles)
+            .def_readonly("totalInputSize",
+                          &HepMC3Util::NormalizeResult::totalInputSize)
+            .def_readonly("totalOutputSize",
+                          &HepMC3Util::NormalizeResult::totalOutputSize)
+            .def_readonly("totalReadTime",
+                          &HepMC3Util::NormalizeResult::totalReadTime)
+            .def_readonly("totalWriteTime",
+                          &HepMC3Util::NormalizeResult::totalWriteTime);
   }
 
   hepmc3.def("normalize", &HepMC3Util::normalizeFiles, py::arg("inputFiles"),
