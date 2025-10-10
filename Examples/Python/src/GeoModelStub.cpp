@@ -8,5 +8,5 @@
 
 namespace ActsPython {
 struct Context;
-void addGeoModel(Context& /*ctx*/) {}
+void addGeoModelExample(Context& /*ctx*/) {}
 }  // namespace ActsPython

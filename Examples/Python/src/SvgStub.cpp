@@ -11,5 +11,5 @@ struct Context;
 }  // namespace ActsPython
 
 namespace ActsPython {
-void addSvg(Context& /*ctx*/) {}
+void addSvgExample(Context& /*ctx*/) {}
 }  // namespace ActsPython
