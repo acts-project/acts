@@ -11,7 +11,6 @@ import sys
 from pathlib import Path
 
 from . import (
-    HepMC3Normalizer,
     Compression,
     Format,
     availableCompressionModes,
@@ -164,17 +163,21 @@ Examples:
     }
 
     try:
+        # Convert inputs to Path objects
+        input_files = [Path(f) for f in args.input]
+        single_output = Path(args.single_output) if args.single_output else None
+
         # Run normalization
         result = normalize(
-            input_files=args.input,
-            output_path=args.single_output,
-            output_dir=args.output_dir,
-            output_prefix=args.output_prefix,
-            events_per_file=args.events_per_file,
-            max_events=args.max_events,
+            inputFiles=input_files,
+            singleOutputPath=single_output,
+            outputDir=Path(args.output_dir),
+            outputPrefix=args.output_prefix,
+            eventsPerFile=args.events_per_file,
+            maxEvents=args.max_events,
             format=format_map.get(args.format),
             compression=compression_map.get(args.compression),
-            compression_level=args.compression_level,
+            compressionLevel=args.compression_level,
             verbose=args.verbose,
         )
 

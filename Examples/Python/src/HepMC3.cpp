@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
-#include "ActsExamples/Io/HepMC3/HepMC3Normalizer.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3OutputConverter.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
@@ -80,33 +79,30 @@ void addHepMC3(Context& ctx) {
   hepmc3.def("compressionExtension", &HepMC3Util::compressionExtension);
   hepmc3.def("formatFromFilename", &HepMC3Util::formatFromFilename);
 
-  // HepMC3Normalizer bindings
+  // HepMC3 normalize function and result
   {
-    auto normalizer =
-        py::class_<HepMC3Normalizer>(hepmc3, "HepMC3Normalizer")
-            .def(py::init<HepMC3Normalizer::Config>(), py::arg("config"))
-            .def("normalize", &HepMC3Normalizer::normalize)
-            .def_property_readonly("config", &HepMC3Normalizer::config);
-
-    auto config = py::class_<HepMC3Normalizer::Config>(normalizer, "Config")
-                      .def(py::init<>());
-    ACTS_PYTHON_STRUCT(config, inputFiles, singleOutputPath, outputDir,
-                       outputPrefix, eventsPerFile, maxEvents, format,
-                       compression, compressionLevel, verbose);
-
-    auto result =
-        py::class_<HepMC3Normalizer::Result>(normalizer, "Result")
-            .def(py::init<>())
-            .def_readonly("numEvents", &HepMC3Normalizer::Result::numEvents)
-            .def_readonly("outputFiles", &HepMC3Normalizer::Result::outputFiles)
-            .def_readonly("totalInputSize",
-                          &HepMC3Normalizer::Result::totalInputSize)
-            .def_readonly("totalOutputSize",
-                          &HepMC3Normalizer::Result::totalOutputSize)
-            .def_readonly("totalReadTime",
-                          &HepMC3Normalizer::Result::totalReadTime)
-            .def_readonly("totalWriteTime",
-                          &HepMC3Normalizer::Result::totalWriteTime);
+    auto result = py::class_<HepMC3Util::NormalizeResult>(hepmc3, "NormalizeResult")
+                      .def(py::init<>())
+                      .def_readonly("numEvents",
+                                    &HepMC3Util::NormalizeResult::numEvents)
+                      .def_readonly("outputFiles",
+                                    &HepMC3Util::NormalizeResult::outputFiles)
+                      .def_readonly("totalInputSize",
+                                    &HepMC3Util::NormalizeResult::totalInputSize)
+                      .def_readonly("totalOutputSize",
+                                    &HepMC3Util::NormalizeResult::totalOutputSize)
+                      .def_readonly("totalReadTime",
+                                    &HepMC3Util::NormalizeResult::totalReadTime)
+                      .def_readonly("totalWriteTime",
+                                    &HepMC3Util::NormalizeResult::totalWriteTime);
   }
+
+  hepmc3.def("normalize", &HepMC3Util::normalizeFiles, py::arg("inputFiles"),
+             py::arg("singleOutputPath") = std::nullopt,
+             py::arg("outputDir") = ".", py::arg("outputPrefix") = "events",
+             py::arg("eventsPerFile") = 10000, py::arg("maxEvents") = 0,
+             py::arg("format") = HepMC3Util::Format::ascii,
+             py::arg("compression") = HepMC3Util::Compression::none,
+             py::arg("compressionLevel") = 6, py::arg("verbose") = false);
 }
 }  // namespace ActsPython

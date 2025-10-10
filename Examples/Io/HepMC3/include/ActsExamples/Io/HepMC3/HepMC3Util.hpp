@@ -8,9 +8,14 @@
 
 #pragma once
 
+#include <cstdint>
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <span>
+#include <string>
+#include <vector>
 
 namespace HepMC3 {
 class GenEvent;
@@ -45,5 +50,54 @@ std::ostream& operator<<(std::ostream& os, Format format);
 std::span<const Format> availableFormats();
 
 Format formatFromFilename(std::string_view filename);
+
+/// Result of HepMC3 file normalization
+struct NormalizeResult {
+  /// Number of events processed
+  std::size_t numEvents = 0;
+
+  /// Output files created
+  std::vector<std::filesystem::path> outputFiles;
+
+  /// Total input size in bytes
+  std::uintmax_t totalInputSize = 0;
+
+  /// Total output size in bytes
+  std::uintmax_t totalOutputSize = 0;
+
+  /// Total time spent reading (seconds)
+  double totalReadTime = 0.0;
+
+  /// Total time spent writing (seconds)
+  double totalWriteTime = 0.0;
+};
+
+/// Normalize and optionally chunk HepMC3 files.
+///
+/// Reads one or more HepMC3 files, normalizes event numbers, and writes them
+/// to output files. Can write to a single output file or chunk events into
+/// multiple files.
+///
+/// @param inputFiles Input HepMC files to normalize
+/// @param singleOutputPath Single output file path (optional). If specified,
+///        all events are written to this file. Format and compression are
+///        auto-detected from filename. Mutually exclusive with chunking.
+/// @param outputDir Output directory for multi-file mode
+/// @param outputPrefix Output file prefix for multi-file mode
+/// @param eventsPerFile Number of events per output file in multi-file mode
+/// @param maxEvents Maximum number of events to process (0 = all events)
+/// @param format Output format (ascii or root)
+/// @param compression Compression type
+/// @param compressionLevel Compression level (0-19, higher = more compression)
+/// @param verbose Enable verbose output
+/// @return Result with statistics and list of created files
+NormalizeResult normalizeFiles(
+    const std::vector<std::filesystem::path>& inputFiles,
+    std::optional<std::filesystem::path> singleOutputPath = std::nullopt,
+    std::filesystem::path outputDir = ".",
+    std::string outputPrefix = "events", std::size_t eventsPerFile = 10000,
+    std::size_t maxEvents = 0, Format format = Format::ascii,
+    Compression compression = Compression::none, int compressionLevel = 6,
+    bool verbose = false);
 
 }  // namespace ActsExamples::HepMC3Util

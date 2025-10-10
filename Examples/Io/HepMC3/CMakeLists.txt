@@ -6,9 +6,6 @@ acts_add_library(
     src/HepMC3InputConverter.cpp
     src/HepMC3OutputConverter.cpp
     src/HepMC3Util.cpp
-    src/HepMC3Metadata.cpp
-    src/HepMC3FileChain.cpp
-    src/HepMC3Normalizer.cpp
 )
 target_include_directories(
     ActsExamplesIoHepMC3
