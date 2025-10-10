@@ -9,6 +9,5 @@
 #include "ActsPlugins/FastJet/Jets.hpp"
 
 namespace Acts::FastJet {
-// template <typename TrackContainer>
 
-}  // namespace ActsPlugins::FastJet
+}  // namespace Acts::FastJet
