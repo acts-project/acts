@@ -190,12 +190,18 @@ list(APPEND py_files examples/hepmc3/__main__.py)
 list(APPEND py_files examples/hepmc3_normalize.py)
 
 # Symlink hepmc3_normalize.py to build/bin for development
-file(
-    CREATE_LINK
+add_custom_target(
+    hepmc_normalize_symlink
+    ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin
+    COMMAND
+        ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/examples/hepmc_normalize.py
         ${CMAKE_BINARY_DIR}/bin/hepmc_normalize.py
-    SYMBOLIC
+    COMMENT "Creating symlink for hepmc_normalize.py"
+    VERBATIM
 )
+add_dependencies(hepmc_normalize_symlink ActsExamplesIoHepMC3)
 install(
     PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/examples/hepmc_normalize.py
     DESTINATION ${CMAKE_INSTALL_BINDIR}
