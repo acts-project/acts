@@ -44,19 +44,32 @@ class TruthJet : public Jet {
  public:
   explicit TruthJet(const Acts::Vector4& fourMom) : Jet(fourMom) {}
 
-  /// @brief Set the truth jet constituents
+  /// @brief Set the truth particles as constituents of this truth jet
   void setConstituents(
       const std::vector<ActsExamples::SimParticle>& constituents) {
     m_constituents = constituents;
   }
 
-  /// @brief Get the truth jet constituents
+  /// @brief Get the truth particles that are truth jet constituents
   const std::vector<ActsExamples::SimParticle>& getConstituents() const {
     return m_constituents;
   }
 
+  /// @brief Set the tracks associated to this truth jet
+  void setAssociatedTracks(
+      const std::vector<typename TrackContainer::TrackProxy>&
+          associatedTracks) {
+    m_associatedTracks = associatedTracks;
+  }
+
+  /// @brief Get the tracks associated to this truth jet
+  const std::vector<typename TrackContainer::TrackProxy>& getAssociatedTracks()
+      const {
+    return m_associatedTracks;
+  }
+
  private:
-  /// @brief  The constituents of the truth jet are the truth particles
+  /// @brief  Truth particles as the constituents of the truth jet
   std::vector<ActsExamples::SimParticle> m_constituents{};
   /// @brief The tracks associated to this truth jet
   std::vector<typename TrackContainer::TrackProxy> m_associatedTracks{};
@@ -66,21 +79,21 @@ class TrackJet : public Jet {
  public:
   explicit TrackJet(const Acts::Vector4& fourMom) : Jet(fourMom) {}
 
-  /// @brief Set the track jet constituents
+  /// @brief Set the tracks as constituents of this track jet
   void setConstituents(
       const std::vector<typename TrackContainer::TrackProxy>& constituents) {
     m_constituents = constituents;
   }
 
-  /// @brief Get the track jet constituents
+  /// @brief Get the track jet constituents that are tracks
   const std::vector<typename TrackContainer::TrackProxy>& getConstituents()
       const {
     return m_constituents;
   }
 
  private:
-  /// @brief The constituents of the track jet are the tracks
+  /// @brief Tracks as the constituents of the track jet
   std::vector<typename TrackContainer::TrackProxy> m_constituents{};
 };
 
-}  // namespace Acts::FastJet
+}  // namespace ActsPlugins::FastJet
