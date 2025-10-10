@@ -8,4 +8,4 @@
 
 #include "ActsPlugins/FastJet/Jets.hpp"
 
-namespace Acts::FastJet {}  // namespace Acts::FastJet
+namespace ActsPlugins::FastJet {}  // namespace Acts::FastJet

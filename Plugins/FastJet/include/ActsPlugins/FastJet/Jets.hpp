@@ -18,7 +18,7 @@
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
 
-namespace Acts::FastJet {
+namespace ActsPlugins::FastJet {
 
 /// Common class for jets
 class Jet {
