@@ -24,7 +24,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
 
         target_link_libraries(
             ${_target}
-            PUBLIC ActsCore ActsPythonUtilities ${_dependency}
+            PUBLIC Acts::Core Acts::PythonUtilities ${_dependency}
         )
         add_dependencies(ActsPythonBindings ${_target})
     endif()
@@ -34,11 +34,11 @@ macro(add_plugin_binding_if _name _dependency _flag)
 
     configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/python/plugin.py.in
-        ${CMAKE_CURRENT_BINARY_DIR}/acts/${_name_lower}.py
+        ${CMAKE_CURRENT_BINARY_DIR}/../acts/${_name_lower}.py
         @ONLY
     )
     install(
-        FILES ${CMAKE_CURRENT_BINARY_DIR}/acts/${_name_lower}.py
+        FILES ${CMAKE_CURRENT_BINARY_DIR}/../acts/${_name_lower}.py
         DESTINATION ${_python_install_dir}
     )
 endmacro()
@@ -48,11 +48,10 @@ endmacro()
 #add_plugin_binding_if(Geant4 ActsPluginGeant4 ACTS_BUILD_PLUGIN_GEANT4)
 #add_plugin_binding_if(DD4hep ActsPluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)
 #add_plugin_binding_if(Root ActsPluginRoot ACTS_BUILD_PLUGIN_ROOT)
-add_plugin_binding_if(Covfie ActsPluginCovfie ACTS_BUILD_PLUGIN_TRACCC)
-add_plugin_binding_if(Detray ActsPluginDetray ACTS_BUILD_PLUGIN_TRACCC)
-add_plugin_binding_if(GeoModel ActsPluginGeoModel ACTS_BUILD_PLUGIN_GEOMODEL)
-
-add_plugin_binding_if(Svg ActsPluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
+add_plugin_binding_if(Covfie Acts::PluginCovfie ACTS_BUILD_PLUGIN_TRACCC)
+add_plugin_binding_if(Detray Acts::PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
+add_plugin_binding_if(GeoModel Acts::PluginGeoModel ACTS_BUILD_PLUGIN_GEOMODEL)
+add_plugin_binding_if(Svg Acts::PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 
 #add_plugin_binding_if(Hashing ActsPluginHashing ACTS_BUILD_PLUGIN_HASHING)
 #add_plugin_binding_if(FpeMonitor ActsPluginFpeMonitor ACTS_BUILD_PLUGIN_FPEMONITOR)

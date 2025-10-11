@@ -7,7 +7,6 @@ import re
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
 import acts
-from acts import logging
 from acts._adapter import _patch_config, _patchKwargsConstructor
 
 _propagators = []
