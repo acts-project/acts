@@ -182,8 +182,8 @@ class CompositeSpacePointLineFitter {
   static std::vector<FitParIndex> extractFitablePars(
       const std::array<std::size_t, 3>& hitCounts);
   /// @brief Fit a line to a set of Composite space point measurements.
-  /// @param FitOptions: Auxiliary object carrying all necessary input
-  ///                    needed to execute the fit
+  /// @param fitOpts: Auxiliary object carrying all necessary input
+  ///                 needed to execute the fit
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
   FitResult<Cont_t> fit(FitOptions<Cont_t, Calibrator_t>&& fitOpts) const;
