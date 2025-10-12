@@ -22,18 +22,9 @@
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
-#include <HepMC3/ReaderFactory.h>
+#include <HepMC3/Reader.h>
 #include <HepMC3/Writer.h>
-#include <HepMC3/WriterAscii.h>
 #include <nlohmann/json.hpp>
-
-#ifdef HEPMC3_USE_COMPRESSION
-#include <HepMC3/WriterGZ.h>
-#endif
-
-#ifdef HEPMC3_ROOT_SUPPORT
-#include <HepMC3/WriterRoot.h>
-#endif
 
 namespace ActsExamples {
 
@@ -277,49 +268,6 @@ std::string generateOutputFilename(const std::string& prefix,
   return filename.str();
 }
 
-// Helper function to create a writer
-std::unique_ptr<HepMC3::Writer> createWriter(
-    const std::filesystem::path& path, HepMC3Util::Format format,
-    HepMC3Util::Compression compression) {
-  if (format == HepMC3Util::Format::root) {
-#ifdef HEPMC3_ROOT_SUPPORT
-    if (compression != HepMC3Util::Compression::none) {
-      throw std::invalid_argument("Compression not supported for ROOT format");
-    }
-    return std::make_unique<HepMC3::WriterRoot>(path.string());
-#else
-    throw std::runtime_error("ROOT support not enabled in HepMC3");
-#endif
-  } else {
-    // ASCII format
-    switch (compression) {
-      using enum HepMC3Util::Compression;
-      case none:
-        return std::make_unique<HepMC3::WriterAscii>(path.string());
-#ifdef HEPMC3_USE_COMPRESSION
-      case zlib:
-        return std::make_unique<
-            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::z>>(
-            path.string());
-      case lzma:
-        return std::make_unique<
-            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::lzma>>(
-            path.string());
-      case bzip2:
-        return std::make_unique<
-            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::bz2>>(
-            path.string());
-      case zstd:
-        return std::make_unique<
-            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::zstd>>(
-            path.string());
-#endif
-      default:
-        throw std::invalid_argument("Unknown or unsupported compression type");
-    }
-  }
-}
-
 }  // namespace
 
 HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
@@ -407,7 +355,7 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
     // Track input file size
     result.totalInputSize += std::filesystem::file_size(inputFile);
 
-    auto reader = HepMC3::deduce_reader(inputFile.string());
+    auto reader = HepMC3Util::deduceReader(inputFile.string());
     if (!reader) {
       std::cerr << "ERROR: Failed to open " << inputFile << "\n";
       continue;
@@ -479,7 +427,8 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
               outputPrefix, currentFileIndex, format, compression);
           currentOutputPath = actualOutputDir / filename;
         }
-        currentWriter = createWriter(currentOutputPath, format, compression);
+        currentWriter =
+            HepMC3Util::createWriter(currentOutputPath, format, compression);
       }
 
       // Set event number

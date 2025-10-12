@@ -19,7 +19,9 @@
 
 namespace HepMC3 {
 class GenEvent;
-}
+class Reader;
+class Writer;
+}  // namespace HepMC3
 
 namespace Acts {
 class Logger;
@@ -98,5 +100,23 @@ NormalizeResult normalizeFiles(
     std::size_t eventsPerFile = 10000, std::size_t maxEvents = 0,
     Format format = Format::ascii, Compression compression = Compression::none,
     int compressionLevel = 6, bool verbose = false);
+
+/// Wrapper around HepMC3::deduce_reader to isolate problematic HepMC3 headers
+/// that have multiple definition issues in versions < 3.3.0
+///
+/// @param filename Path to the HepMC3 file
+/// @return Shared pointer to the appropriate HepMC3 reader
+std::shared_ptr<HepMC3::Reader> deduceReader(const std::string& filename);
+
+/// Wrapper around HepMC3 writer creation to isolate problematic HepMC3 headers
+/// that have multiple definition issues in versions < 3.3.0
+///
+/// @param path Path to the output file
+/// @param format Output format (ascii or root)
+/// @param compression Compression type
+/// @return Unique pointer to the appropriate HepMC3 writer
+std::unique_ptr<HepMC3::Writer> createWriter(const std::filesystem::path& path,
+                                             Format format,
+                                             Compression compression);
 
 }  // namespace ActsExamples::HepMC3Util
