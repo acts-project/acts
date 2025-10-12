@@ -100,9 +100,9 @@ CompositeSpacePointLineFitter::fastPrecFit(
         precResult->nIter += swappedPrecResult->nIter;
         ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit did not improve "
                             << (*swappedPrecResult));
-        return precResult;
       }
     }
+    return precResult;
   }
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
   return m_fastFitter.fit(measurements, ResidualIdx::bending);
