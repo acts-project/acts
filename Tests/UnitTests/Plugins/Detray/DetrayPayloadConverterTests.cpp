@@ -140,7 +140,6 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversion) {
     // Test portal case
     auto portalPayload = DetrayPayloadConverter::convertMask(cylinder, true);
     BOOST_CHECK(portalPayload.shape == detray::io::shape_id::portal_cylinder2);
-    using enum detray::concentric_cylinder2D::boundaries;
     CHECK_CLOSE_ABS(portalPayload.boundaries[e_r], 50., 1e-10);  // r
     CHECK_CLOSE_ABS(portalPayload.boundaries[e_lower_z], -100.,
                     1e-10);  // lower_z
