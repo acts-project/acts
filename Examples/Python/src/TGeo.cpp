@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
-#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
-#include "Acts/Plugins/Root/TGeoParser.hpp"
+#include "ActsPlugins/Root/TGeoDetectorElement.hpp"
+#include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
+#include "ActsPlugins/Root/TGeoParser.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 
 #include <vector>
@@ -23,6 +23,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
+using namespace ActsPlugins;
 
 namespace ActsPython {
 void addTGeo(Context& ctx) {

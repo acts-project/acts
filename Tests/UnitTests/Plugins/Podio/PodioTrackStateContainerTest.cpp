@@ -16,10 +16,10 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Podio/PodioTrackStateContainer.hpp"
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "ActsPlugins/Podio/PodioTrackStateContainer.hpp"
+#include "ActsPlugins/Podio/PodioUtil.hpp"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
@@ -33,6 +33,8 @@ namespace {
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::detail::Test;
+using namespace ActsPlugins;
+
 namespace bd = boost::unit_test::data;
 
 std::default_random_engine rng(31415);
@@ -106,7 +108,9 @@ using CommonTests = MultiTrajectoryTestsCommon<Factory>;
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(PodioTrackStateContainerTest)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(PodioSuite)
 
 BOOST_AUTO_TEST_CASE(Build) {
   CommonTests ct;
@@ -234,8 +238,8 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   auto rBounds = std::make_shared<RectangleBounds>(15, 20);
   auto trf = Transform3::Identity();
   trf.translation().setRandom();
-  auto free = Acts::Surface::makeShared<PlaneSurface>(trf, rBounds);
-  auto reg = Acts::Surface::makeShared<PlaneSurface>(trf, rBounds);
+  auto free = Surface::makeShared<PlaneSurface>(trf, rBounds);
+  auto reg = Surface::makeShared<PlaneSurface>(trf, rBounds);
 
   helper.surfaces[666] = reg.get();
 
@@ -340,3 +344,5 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

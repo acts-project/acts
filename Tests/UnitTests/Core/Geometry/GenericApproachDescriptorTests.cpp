@@ -17,7 +17,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cstddef>
 #include <limits>
@@ -27,12 +27,14 @@
 #include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
 
-namespace Acts::Test::Layers {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Build a default context for testing
 GeometryContext tgContext = GeometryContext();
 
-BOOST_AUTO_TEST_SUITE(Layers)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// Unit test for creating compliant/non-compliant GenericApproachDescriptor
 /// object
@@ -113,4 +115,4 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

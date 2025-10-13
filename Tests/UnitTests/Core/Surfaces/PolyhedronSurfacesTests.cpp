@@ -25,17 +25,18 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <tuple>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
+Logging::Level logLevel = Logging::VERBOSE;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
 const GeometryContext tgContext = GeometryContext();
@@ -46,7 +47,7 @@ const std::vector<std::tuple<std::string, unsigned int>> testModes = {
 const Transform3 transform = Transform3::Identity();
 const double epsAbs = 1e-12;
 
-BOOST_AUTO_TEST_SUITE(PolyhedronSurfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// Unit tests for Cone Surfaces
 BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
@@ -605,4 +606,4 @@ BOOST_AUTO_TEST_CASE(ShiftedSurfacePolyhedrons) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

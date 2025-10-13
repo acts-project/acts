@@ -31,12 +31,11 @@
 
 #include "FitterTestsCommon.hpp"
 
-namespace {
-
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
 
 using StraightPropagator =
     Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
@@ -99,9 +98,7 @@ auto makeDefaultKalmanFitterOptions() {
       PropagatorPlainOptions(tester.geoCtx, tester.magCtx));
 }
 
-}  // namespace
-
-BOOST_AUTO_TEST_SUITE(TrackFittingKalmanFitter)
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto start = makeParameters();
@@ -249,3 +246,5 @@ BOOST_AUTO_TEST_CASE(GlobalCovariance) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
@@ -24,10 +24,12 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 std::vector<Surface*> CylindricalTrackingGeometry::surfacesRing(
     DetectorStore& detStore, double moduleHalfXminY, double moduleHalfXmaxY,
@@ -41,7 +43,7 @@ std::vector<Surface*> CylindricalTrackingGeometry::surfacesRing(
   // Create a new surface material
   std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
       std::shared_ptr<const ISurfaceMaterial>(
-          new Acts::HomogeneousSurfaceMaterial(moduleMaterial));
+          new HomogeneousSurfaceMaterial(moduleMaterial));
 
   // The rectangle/trapezoid bounds for all modules
   std::shared_ptr<PlanarBounds> mBounds = nullptr;
@@ -87,7 +89,7 @@ std::vector<Surface*> CylindricalTrackingGeometry::surfacesCylinder(
   // Create a new surface material
   std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
       std::shared_ptr<const ISurfaceMaterial>(
-          new Acts::HomogeneousSurfaceMaterial(moduleMaterial));
+          new HomogeneousSurfaceMaterial(moduleMaterial));
 
   // The rectangle bounds for all modules
   auto mBounds = std::make_shared<RectangleBounds>(moduleHalfX, moduleHalfY);
@@ -158,7 +160,7 @@ std::vector<Vector3> CylindricalTrackingGeometry::modulePositionsCylinder(
 }
 
 std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1() {
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
 
   Logging::Level surfaceLLevel = Logging::INFO;
   Logging::Level layerLLevel = Logging::INFO;
@@ -251,8 +253,7 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1() {
         geoContext, std::move(layerSurfacePtrs), kLayerBinning[ilp].first,
         kLayerBinning[ilp].second, protoLayer);
     auto approachSurfaces = pLayer->approachDescriptor()->containedSurfaces();
-    auto mutableOuterSurface =
-        const_cast<Acts::Surface*>(approachSurfaces.at(1));
+    auto mutableOuterSurface = const_cast<Surface*>(approachSurfaces.at(1));
     mutableOuterSurface->assignSurfaceMaterial(layerMaterialPtr);
     /// now push back the layer
     pLayers.push_back(pLayer);
@@ -277,10 +278,10 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1() {
 }
 
 std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
-  using namespace Acts::Experimental;
-  using namespace Acts::UnitLiterals;
-  using enum Acts::CylinderVolumeBounds::Face;
-  using enum Acts::AxisDirection;
+  using namespace Experimental;
+  using namespace UnitLiterals;
+  using enum CylinderVolumeBounds::Face;
+  using enum AxisDirection;
   using LayerType = LayerBlueprintNode::LayerType;
 
   const MaterialSlab lProperties(makeSilicon(), 1.5_mm);
@@ -290,19 +291,19 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
       0., 5.,
       179.48552,  // empirical maximum radius
   };
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open, AxisR);
-  binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
-                                 Acts::BinningOption::closed, AxisPhi);
+  BinUtility binUtility(binEdges, BinningOption::open, AxisR);
+  binUtility += BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                           BinningOption::closed, AxisPhi);
 
-  std::vector<Acts::MaterialSlab> materialSlabs0 = {lProperties, lProperties};
-  std::vector<Acts::MaterialSlab> materialSlabs1 = {lProperties, lProperties};
+  std::vector<MaterialSlab> materialSlabs0 = {lProperties, lProperties};
+  std::vector<MaterialSlab> materialSlabs1 = {lProperties, lProperties};
 
-  auto binnedMaterial = std::make_shared<Acts::BinnedSurfaceMaterial>(
+  auto binnedMaterial = std::make_shared<BinnedSurfaceMaterial>(
       binUtility, std::vector{materialSlabs0, materialSlabs1}, 0.,
-      Acts::MappingType::Default);
+      MappingType::Default);
 
   Blueprint::Config cfg;
-  cfg.envelope = Acts::ExtentEnvelope{{
+  cfg.envelope = ExtentEnvelope{{
       .z = {20_mm, 20_mm},
       .r = {0_mm, 20_mm},
   }};
@@ -313,10 +314,10 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
   barrelMat.configureFace(NegativeDisc, binnedMaterial);
 
   barrelMat.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
-    auto beampipeBounds = std::make_unique<Acts::CylinderVolumeBounds>(
-        0_mm, kBeamPipeRadius, 100_mm);
-    auto beampipe = std::make_unique<Acts::TrackingVolume>(
-        Acts::Transform3::Identity(), std::move(beampipeBounds), "Beampipe");
+    auto beampipeBounds =
+        std::make_unique<CylinderVolumeBounds>(0_mm, kBeamPipeRadius, 100_mm);
+    auto beampipe = std::make_unique<TrackingVolume>(
+        Transform3::Identity(), std::move(beampipeBounds), "Beampipe");
 
     detector.addMaterial("BeampipeMaterial", [&](auto& bpMat) {
       MaterialSlab beamPipeMaterial(makeBeryllium(), kBeamPipeThickness);
@@ -353,14 +354,14 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
           layer.setProtoLayer(protoLayer);
           layer.setLayerType(LayerType::Cylinder);
           layer.setEnvelope(
-              Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
+              ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
 
-          using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
+          using SrfArrayNavPol = SurfaceArrayNavigationPolicy;
 
           layer.setNavigationPolicyFactory(
-              Acts::NavigationPolicyFactory{}
-                  .add<Acts::TryAllNavigationPolicy>(
-                      Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+              NavigationPolicyFactory{}
+                  .add<TryAllNavigationPolicy>(
+                      TryAllNavigationPolicy::Config{.sensitives = false})
                   .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
                       .layerType = SrfArrayNavPol::LayerType::Cylinder,
                       .bins = kLayerBinning[ilp]})
@@ -382,4 +383,4 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::operator()() {
     return buildGen1();
   }
 }
-}  // namespace Acts::Test
+}  // namespace ActsTests
