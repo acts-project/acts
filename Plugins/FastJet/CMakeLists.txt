@@ -14,5 +14,5 @@ target_include_directories(
 
 target_link_libraries(
     ActsPluginFastJet
-    PUBLIC Acts::Core FastJet::FastJet Acts::ExamplesFramework
-)
+    PUBLIC Acts::Core FastJet::FastJet Acts::Fatras)
+
