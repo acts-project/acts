@@ -74,6 +74,7 @@ class TruthJet : public Jet {
   /// @brief The tracks associated to this truth jet
   std::vector<typename TrackContainer::TrackProxy> m_associatedTracks{};
 };
+
 template <typename TrackContainer>
 class TrackJet : public Jet {
  public:
