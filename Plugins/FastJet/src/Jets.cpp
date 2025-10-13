@@ -8,4 +8,15 @@
 
 #include "ActsPlugins/FastJet/Jets.hpp"
 
-namespace ActsPlugins::FastJet {}  // namespace ActsPlugins::FastJet
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+
+using TrackContainer =
+    Acts::TrackContainer<Acts::VectorTrackContainer,
+                         Acts::VectorMultiTrajectory, std::shared_ptr>;
+
+namespace ActsPlugins::FastJet {
+// Initiate a truth jet with 4-momentum
+Acts::Vector4 testVec4(10.0, 0.0, 10.0, 14.1421);
+TruthJet<TrackContainer> testJet(testVec4);
+}  // namespace ActsPlugins::FastJet
