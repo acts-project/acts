@@ -20,14 +20,6 @@ from . import (
 
 
 def main(prog: str):
-    # Auto-detect program name based on how we're invoked
-    # if prog is None:
-    #     if __name__ == "__main__":
-    #         # Called via python -m acts.examples.hepmc3
-    #         prog = "python -m acts.examples.hepmc3"
-    #     else:
-    #         # Called from standalone script
-    #         prog = "hepmc3_normalize.py"
 
     parser = argparse.ArgumentParser(
         prog=prog,
