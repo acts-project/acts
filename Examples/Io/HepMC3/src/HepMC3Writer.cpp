@@ -67,7 +67,7 @@ HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
   }
 
   if (m_cfg.perEvent &&
-      HepMC3Util::formatFromFilename(m_cfg.outputPath.string()) ==
+      HepMC3Util::formatFromFilename(m_cfg.outputPath) ==
           HepMC3Util::Format::root) {
     ACTS_WARNING(
         "Per-event output is enabled and the output format is ROOT. This is "
@@ -79,7 +79,7 @@ std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
     const std::filesystem::path& target) {
   ACTS_DEBUG("Creating writer for: " << target);
 
-  auto format = HepMC3Util::formatFromFilename(target.string());
+  auto format = HepMC3Util::formatFromFilename(target);
 
   if (format == HepMC3Util::Format::root) {
     ACTS_DEBUG("~> Root");

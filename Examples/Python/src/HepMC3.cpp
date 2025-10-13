@@ -127,7 +127,21 @@ void addHepMC3(Context& ctx) {
   });
 
   hepmc3.def("compressionExtension", &HepMC3Util::compressionExtension);
-  hepmc3.def("formatFromFilename", &HepMC3Util::formatFromFilename);
+  hepmc3.def("compressionFromFilename",
+             py::overload_cast<std::string_view>(
+                 &HepMC3Util::compressionFromFilename),
+             py::arg("filename"));
+  hepmc3.def("compressionFromFilename",
+             py::overload_cast<const std::filesystem::path&>(
+                 &HepMC3Util::compressionFromFilename),
+             py::arg("filename"));
+  hepmc3.def("formatFromFilename",
+             py::overload_cast<std::string_view>(&HepMC3Util::formatFromFilename),
+             py::arg("filename"));
+  hepmc3.def("formatFromFilename",
+             py::overload_cast<const std::filesystem::path&>(
+                 &HepMC3Util::formatFromFilename),
+             py::arg("filename"));
 
   // HepMC3 normalize function and result
   {

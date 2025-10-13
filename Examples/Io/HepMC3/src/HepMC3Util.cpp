@@ -131,6 +131,33 @@ std::string_view HepMC3Util::compressionExtension(Compression compression) {
   }
 }
 
+HepMC3Util::Compression HepMC3Util::compressionFromFilename(
+    std::string_view filename) {
+  using enum Compression;
+
+  // Check for compression extensions in order
+  if (filename.ends_with(".gz")) {
+    return zlib;
+  }
+  if (filename.ends_with(".xz")) {
+    return lzma;
+  }
+  if (filename.ends_with(".bz2")) {
+    return bzip2;
+  }
+  if (filename.ends_with(".zst")) {
+    return zstd;
+  }
+
+  // No compression extension found
+  return none;
+}
+
+HepMC3Util::Compression HepMC3Util::compressionFromFilename(
+    const std::filesystem::path& filename) {
+  return compressionFromFilename(std::string_view{filename.string()});
+}
+
 std::span<const HepMC3Util::Compression>
 HepMC3Util::availableCompressionModes() {
   using enum Compression;
@@ -216,6 +243,11 @@ HepMC3Util::Format HepMC3Util::formatFromFilename(std::string_view filename) {
 
   throw std::invalid_argument{"Unknown format extension: " +
                               std::string{filename}};
+}
+
+HepMC3Util::Format HepMC3Util::formatFromFilename(
+    const std::filesystem::path& filename) {
+  return formatFromFilename(std::string_view{filename.string()});
 }
 
 namespace {
