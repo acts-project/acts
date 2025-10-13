@@ -11,7 +11,6 @@
 #include "Acts/Utilities/ScopedTimer.hpp"
 
 #include <chrono>
-#include <format>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -23,6 +22,7 @@
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 #include <HepMC3/Reader.h>
+#include <HepMC3/Version.h>
 #include <HepMC3/Writer.h>
 #include <nlohmann/json.hpp>
 
