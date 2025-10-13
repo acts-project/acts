@@ -100,7 +100,8 @@ void addHepMC3(Context& ctx) {
   hepmc3.def("normalizeFiles", &HepMC3Util::normalizeFiles,
              py::arg("inputFiles"), py::arg("singleOutputPath") = std::nullopt,
              py::arg("outputDir") = ".", py::arg("outputPrefix") = "events",
-             py::arg("eventsPerFile") = 10000, py::arg("maxEvents") = 0,
+             py::arg("eventsPerFile") = 10000,
+             py::arg("maxEvents") = std::nullopt,
              py::arg("format") = HepMC3Util::Format::ascii,
              py::arg("compression") = HepMC3Util::Compression::none,
              py::arg("compressionLevel") = 6, py::arg("verbose") = false);

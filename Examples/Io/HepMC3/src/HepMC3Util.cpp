@@ -240,10 +240,10 @@ std::string formatSize(std::uintmax_t bytes) {
 void writeMetadata(const std::filesystem::path& dataFile,
                    std::size_t numEvents) {
   std::filesystem::path metadataFile = dataFile;
-  metadataFile += ".metadata.json";
+  metadataFile += ".json";
 
   nlohmann::json metadata;
-  metadata["events"] = numEvents;
+  metadata["num_events"] = numEvents;
 
   std::ofstream metadataStream(metadataFile);
   metadataStream << metadata.dump(2);
@@ -274,14 +274,15 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
     const std::vector<std::filesystem::path>& inputFiles,
     std::optional<std::filesystem::path> singleOutputPath,
     const std::filesystem::path& outputDir, const std::string& outputPrefix,
-    std::size_t eventsPerFile, std::size_t maxEvents, Format format,
+    std::optional<std::size_t> eventsPerFile,
+    std::optional<std::size_t> maxEvents, Format format,
     Compression compression, int compressionLevel, bool verbose) {
   // Validate configuration
   if (inputFiles.empty()) {
     throw std::invalid_argument("No input files specified");
   }
 
-  if (!singleOutputPath && eventsPerFile == 0) {
+  if (!singleOutputPath && !eventsPerFile.has_value()) {
     throw std::invalid_argument(
         "events-per-file must be > 0 in multi-file mode");
   }
@@ -323,13 +324,17 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
     } else {
       std::cerr << "  Output dir: " << actualOutputDir << "\n";
       std::cerr << "  Output prefix: " << outputPrefix << "\n";
-      std::cerr << "  Events per file: " << eventsPerFile << "\n";
+      std::cerr << "  Events per file: "
+                << (eventsPerFile.has_value()
+                        ? std::to_string(eventsPerFile.value())
+                        : "unset")
+                << "\n";
       std::cerr << "  Format: " << format << "\n";
       std::cerr << "  Compression: " << compression << " (level "
                 << compressionLevel << ")\n";
     }
-    if (maxEvents > 0) {
-      std::cerr << "  Max events to read: " << maxEvents << "\n";
+    if (maxEvents.has_value()) {
+      std::cerr << "  Max events to read: " << maxEvents.value() << "\n";
     }
     std::cerr << "\n";
   }
@@ -401,13 +406,12 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
             auto fileSize = std::filesystem::file_size(currentOutputPath);
             result.totalOutputSize += fileSize;
 
-            writeMetadata(currentOutputPath,
-                          singleOutputPath ? globalEventIndex : eventsPerFile);
+            std::size_t events =
+                singleOutputPath ? globalEventIndex : eventsPerFile.value();
+            writeMetadata(currentOutputPath, events);
             result.outputFiles.push_back(currentOutputPath);
 
             if (verbose) {
-              std::size_t events =
-                  singleOutputPath ? globalEventIndex : eventsPerFile;
               double sizePerEvent =
                   static_cast<double>(fileSize) / static_cast<double>(events);
 
@@ -488,9 +492,10 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
     }
 
     // Check if we've reached the maximum number of events
-    if (maxEvents > 0 && globalEventIndex >= maxEvents) {
+    if (maxEvents.has_value() && globalEventIndex >= maxEvents.value()) {
       if (verbose) {
-        std::cerr << "Reached maximum event limit (" << maxEvents << ")\n";
+        std::cerr << "Reached maximum event limit (" << maxEvents.value()
+                  << ")\n";
       }
       break;
     }
@@ -530,8 +535,8 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
       std::cerr << "  Processed " << globalEventIndex
                 << " events into single file\n";
     } else {
-      std::size_t totalFiles =
-          (globalEventIndex + eventsPerFile - 1) / eventsPerFile;
+      std::size_t totalFiles = (globalEventIndex + eventsPerFile.value() - 1) /
+                               eventsPerFile.value();
       std::cerr << "  Processed " << globalEventIndex << " events into "
                 << totalFiles << " file(s)\n";
     }

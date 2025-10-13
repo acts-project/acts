@@ -87,7 +87,7 @@ struct NormalizeResult {
 /// @param outputDir Output directory for multi-file mode
 /// @param outputPrefix Output file prefix for multi-file mode
 /// @param eventsPerFile Number of events per output file in multi-file mode
-/// @param maxEvents Maximum number of events to process (0 = all events)
+/// @param maxEvents Maximum number of events to process (`std::nullopt` = all events)
 /// @param format Output format (ascii or root)
 /// @param compression Compression type
 /// @param compressionLevel Compression level (0-19, higher = more compression)
@@ -98,7 +98,8 @@ NormalizeResult normalizeFiles(
     std::optional<std::filesystem::path> singleOutputPath = std::nullopt,
     const std::filesystem::path& outputDir = ".",
     const std::string& outputPrefix = "events",
-    std::size_t eventsPerFile = 10000, std::size_t maxEvents = 0,
+    std::optional<std::size_t> eventsPerFile = 10000,
+    std::optional<std::size_t> maxEvents = std::nullopt,
     Format format = Format::ascii, Compression compression = Compression::none,
     int compressionLevel = 6, bool verbose = false);
 
