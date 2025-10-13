@@ -10,8 +10,7 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Definitions/Algebra.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <optional>
 #include <vector>
@@ -45,14 +44,14 @@ class TruthJet : public Jet {
  public:
   explicit TruthJet(const Acts::Vector4& fourMom) : Jet(fourMom) {}
 
-  /// @brief Set the truth particles as constituents of this truth jet from its barcode
+  /// @brief Set the truth particles as constituents of this truth jet
   void setConstituents(
-      const std::vector<ActsFatras::Barcode>& constituents) {
+      const std::vector<ActsExamples::SimParticle>& constituents) {
     m_constituents = constituents;
   }
 
-  /// @brief Get the truth particles that are truth jet constituents from their barcode
-  const std::vector<ActsFatras::Barcode>& getConstituents() const {
+  /// @brief Get the truth particles that are truth jet constituents
+  const std::vector<ActsExamples::SimParticle>& getConstituents() const {
     return m_constituents;
   }
 
@@ -71,7 +70,7 @@ class TruthJet : public Jet {
 
  private:
   /// @brief  Truth particles as the constituents of the truth jet
-  std::vector<ActsFatras::Barcode> m_constituents{};
+  std::vector<ActsExamples::SimParticle> m_constituents{};
   /// @brief The tracks associated to this truth jet
   std::vector<typename TrackContainer::TrackProxy> m_associatedTracks{};
 };

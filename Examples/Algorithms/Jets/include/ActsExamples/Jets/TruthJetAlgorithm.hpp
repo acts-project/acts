@@ -8,10 +8,8 @@
 
 #pragma once
 
-#include "ActsPlugins/FastJet/Jets.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -47,8 +45,8 @@ class TruthJetAlgorithm final : public IAlgorithm {
   Config m_cfg;
   ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
       this, "inputTruthParticles"};
-  WriteDataHandle<std::vector<ActsPlugins::FastJet::TruthJet<TrackContainer>>> m_outputJets{this,
-                                                                 "outputJets"};
+  WriteDataHandle<std::vector<fastjet::PseudoJet>> m_outputJets{this,
+                                                                "outputJets"};
 };
 
 }  // namespace ActsExamples
