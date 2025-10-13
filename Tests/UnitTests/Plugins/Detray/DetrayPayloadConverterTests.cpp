@@ -697,7 +697,9 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
     header_data.sub_header->n_slabs = 0;
 
     for (const auto& hVol : homogeneousMaterial.volumes) {
-      header_data.sub_header->n_rods += hVol.mat_rods->size();
+      if (hVol.mat_rods.has_value()) {
+        header_data.sub_header->n_rods += hVol.mat_rods->size();
+      }
       header_data.sub_header->n_slabs += hVol.mat_slabs.size();
     }
 
