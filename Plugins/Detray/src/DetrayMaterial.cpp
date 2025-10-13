@@ -210,7 +210,7 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
 
 std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertGridSurfaceMaterial(
-    const detail::IGridSurfaceMaterialBase& /*material*/) {
+    const IGridSurfaceMaterialBase& /*material*/) {
   throw DetrayUnsupportedMaterialException("detail::IGridSurfaceMaterialBase");
 }
 

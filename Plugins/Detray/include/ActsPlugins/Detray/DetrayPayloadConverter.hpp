@@ -84,7 +84,7 @@ class DetrayPayloadConverter {
       const Acts::HomogeneousSurfaceMaterial& material);
 
   static std::optional<DetraySurfaceMaterial> convertGridSurfaceMaterial(
-      const Acts::detail::IGridSurfaceMaterialBase& material);
+      const Acts::IGridSurfaceMaterialBase& material);
 
   static std::optional<DetraySurfaceMaterial> convertBinnedSurfaceMaterial(
       const Acts::BinnedSurfaceMaterial& material);

@@ -162,15 +162,14 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   }
 };
 
-namespace detail {
-/// This exists so I can push the definition into a cpp file
+/// Base class for the concrete templated grid surface material types.
+/// This allows referning to all template instances as the same base class type.
 class IGridSurfaceMaterialBase : public ISurfaceMaterial {};
-}  // namespace detail
 
 /// Intermediate interface to the grid surface material given access to the grid
 /// and the material accessor.
 template <typename grid_value_t>
-class IGridSurfaceMaterial : public detail::IGridSurfaceMaterialBase {
+class IGridSurfaceMaterial : public IGridSurfaceMaterialBase {
  public:
   /// @brief Accessor to the grid interface
   /// @return Reference to the grid interface
