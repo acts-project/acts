@@ -273,7 +273,7 @@ std::string generateOutputFilename(const std::string& prefix,
 HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
     const std::vector<std::filesystem::path>& inputFiles,
     std::optional<std::filesystem::path> singleOutputPath,
-    std::filesystem::path outputDir, std::string outputPrefix,
+    const std::filesystem::path& outputDir, const std::string& outputPrefix,
     std::size_t eventsPerFile, std::size_t maxEvents, Format format,
     Compression compression, int compressionLevel, bool verbose) {
   // Validate configuration

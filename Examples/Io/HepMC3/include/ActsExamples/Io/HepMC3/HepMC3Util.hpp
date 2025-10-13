@@ -96,7 +96,8 @@ struct NormalizeResult {
 NormalizeResult normalizeFiles(
     const std::vector<std::filesystem::path>& inputFiles,
     std::optional<std::filesystem::path> singleOutputPath = std::nullopt,
-    std::filesystem::path outputDir = ".", std::string outputPrefix = "events",
+    const std::filesystem::path& outputDir = ".",
+    const std::string& outputPrefix = "events",
     std::size_t eventsPerFile = 10000, std::size_t maxEvents = 0,
     Format format = Format::ascii, Compression compression = Compression::none,
     int compressionLevel = 6, bool verbose = false);
