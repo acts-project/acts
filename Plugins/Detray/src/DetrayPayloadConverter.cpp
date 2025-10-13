@@ -27,6 +27,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <optional>
 
@@ -46,19 +47,6 @@ namespace ActsPlugins {
 DetrayPayloadConverter::DetrayPayloadConverter(
     const Config& config, std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_logger(std::move(logger)) {}
-
-detray::io::transform_payload DetrayPayloadConverter::convertTransform(
-    const Transform3& transform) {
-  detray::io::transform_payload tfPayload;
-
-  Eigen::Map<Vector3> tr{tfPayload.tr.data()};
-  tr = transform.translation();
-
-  Eigen::Map<SquareMatrix3> rot{tfPayload.rot.data()};
-  rot = transform.linear();
-
-  return tfPayload;
-}
 
 namespace {
 using enum detray::io::shape_id;
@@ -213,7 +201,7 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
   detray::io::surface_payload payload;
 
   payload.transform =
-      DetrayPayloadConverter::convertTransform(surface.transform(gctx));
+      DetrayConversionUtils::convertTransform(surface.transform(gctx));
   payload.source = surface.geometryId().value();
   payload.barcode = std::nullopt;
 
@@ -239,7 +227,7 @@ detray::io::volume_payload DetrayPayloadConverter::convertVolume(
     const TrackingVolume& volume) const {
   detray::io::volume_payload payload;
   payload.transform =
-      DetrayPayloadConverter::convertTransform(volume.transform());
+      DetrayConversionUtils::convertTransform(volume.transform());
   payload.name = volume.volumeName();
   switch (volume.volumeBounds().type()) {
     using enum VolumeBounds::BoundsType;

@@ -17,6 +17,7 @@
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <ranges>
 #include <sstream>
@@ -33,54 +34,6 @@ using DetraySurfaceMaterial = DetrayPayloadConverter::DetraySurfaceMaterial;
 using DetraySurfaceGrid = DetrayPayloadConverter::DetraySurfaceGrid;
 
 namespace {
-
-detray::io::axis_payload convertAxis(const IAxis& axis) {
-  using enum detray::axis::binning;
-  detray::io::axis_payload payload;
-  payload.bins = axis.getNBins();
-  if (axis.isEquidistant()) {
-    payload.binning = e_regular;
-    payload.edges = {axis.getMin(), axis.getMax()};
-  } else {
-    payload.binning = e_irregular;
-    payload.edges = axis.getBinEdges();
-  }
-
-  switch (axis.getBoundaryType()) {
-    using enum Acts::AxisBoundaryType;
-    case Open:
-      payload.bounds = detray::axis::bounds::e_open;
-      break;
-    case Closed:
-      payload.bounds = detray::axis::bounds::e_circular;
-      break;
-    case Bound:
-      payload.bounds = detray::axis::bounds::e_closed;
-      break;
-  }
-
-  return payload;
-}
-
-detray::axis::label convertAxisDirection(AxisDirection direction) {
-  switch (direction) {
-    case AxisDirection::AxisX:
-      return detray::axis::label::e_x;
-    case AxisDirection::AxisY:
-      return detray::axis::label::e_y;
-    case AxisDirection::AxisZ:
-      return detray::axis::label::e_z;
-    case AxisDirection::AxisR:
-      return detray::axis::label::e_r;
-    case AxisDirection::AxisPhi:
-      return detray::axis::label::e_phi;
-    case AxisDirection::AxisRPhi:
-      return detray::axis::label::e_rphi;
-    default:
-      throw std::invalid_argument(
-          "SurfaceArrayNavigationPolicy: Unknown axis direction detected.");
-  }
-}
 
 detray::io::accel_id getDetrayAccelId(Surface::SurfaceType surfaceType) {
   using enum Surface::SurfaceType;
@@ -188,11 +141,11 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     ACTS_DEBUG("- Converting axis " << i << " (" << binValues[i]
                                     << "): " << *axis);
 
-    auto axisPayload = convertAxis(*axis);
+    auto axisPayload = DetrayConversionUtils::convertAxis(*axis);
 
     // Set axis label based on binning values
     if (i < binValues.size()) {
-      axisPayload.label = convertAxisDirection(binValues[i]);
+      axisPayload.label = DetrayConversionUtils::convertAxisDirection(binValues[i]);
     } else {
       // Default labels if binValues is insufficient
       axisPayload.label =
