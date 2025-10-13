@@ -29,6 +29,56 @@ namespace ActsExamples {
 struct MultiplicityGenerator;
 
 /// HepMC3 event reader.
+///
+/// This reader supports reading events from one or more HepMC3 files, with
+/// flexible control over how many physical events are merged into each logical
+/// event.
+///
+/// ## Multiplicity Generators
+///
+/// Each input file must have an associated multiplicity generator that determines
+/// how many physical events to read from that file for each logical event:
+/// - FixedMultiplicityGenerator: Always reads a fixed number of events (deterministic)
+/// - PoissonMultiplicityGenerator: Reads a Poisson-distributed number of events (stochastic)
+///
+/// ## Usage Patterns
+///
+/// 1. Single file with default multiplicity:
+///    ```
+///    HepMC3Reader reader({.inputPath = "events.hepmc3", ...});
+///    ```
+///    Automatically uses FixedMultiplicityGenerator(n=1).
+///
+/// 2. Multiple files with fixed multiplicities (e.g., hard-scatter + pileup):
+///    ```
+///    HepMC3Reader reader({
+///      .inputs = {
+///        Input{path="signal.hepmc3", multiplicityGenerator=make_shared<FixedMultiplicityGenerator>(1)},
+///        Input{path="pileup.hepmc3", multiplicityGenerator=make_shared<FixedMultiplicityGenerator>(50)}
+///      },
+///      ...
+///    });
+///    ```
+///
+/// 3. With stochastic pileup multiplicity:
+///    ```
+///    HepMC3Reader reader({
+///      .inputs = {
+///        Input{path="signal.hepmc3", multiplicityGenerator=make_shared<FixedMultiplicityGenerator>(1)},
+///        Input{path="pileup.hepmc3", multiplicityGenerator=make_shared<PoissonMultiplicityGenerator>(50)}
+///      },
+///      .randomNumbers = rng, // Required for stochastic generators
+///      ...
+///    });
+///    ```
+///
+/// ## Event Skipping
+///
+/// Event skipping (via Sequencer's skip parameter) is only supported when ALL
+/// multiplicity generators are Fixed. This is because skipping requires knowing
+/// exactly how many physical events to skip, which is only deterministic with
+/// FixedMultiplicityGenerator.
+///
 class HepMC3Reader final : public IReader {
  public:
   struct Config {
@@ -36,16 +86,21 @@ class HepMC3Reader final : public IReader {
     struct Input {
       /// Path to the HepMC3 file
       std::filesystem::path path;
-      /// Fixed number of events to read per logical event (used if multiplicityGenerator is null)
-      std::size_t numEvents = 1;
-      /// Optional multiplicity generator for variable event sampling
-      std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator = nullptr;
+      /// Multiplicity generator determining how many events to read per logical event.
+      /// Must always be set. Use FixedMultiplicityGenerator for deterministic behavior,
+      /// or PoissonMultiplicityGenerator for stochastic pileup simulation.
+      std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator;
     };
 
-    /// Input files to read. For each file, a specific number of events is
-    /// read per logical event. This can be used to read e.g. hard-scatter
-    /// events from one file and pileup events from another.
+    /// Input files to read. For each file, the multiplicity generator determines
+    /// how many events are read per logical event. This can be used to read e.g.
+    /// hard-scatter events from one file and pileup events from another.
+    /// Mutually exclusive with inputPath.
     std::vector<Input> inputs;
+
+    /// Convenience parameter for single-file reading. Mutually exclusive with inputs.
+    /// If set, creates a single input with FixedMultiplicityGenerator(n=1).
+    std::optional<std::filesystem::path> inputPath;
 
     /// The output collection
     std::string outputEvent;
@@ -69,7 +124,10 @@ class HepMC3Reader final : public IReader {
     /// used. If this number is exceeded the reader will error out.
     std::size_t maxEventBufferSize = 128;
 
-    /// The random number service. Required if vertexGenerator or any multiplicityGenerator is set.
+    /// The random number service. Required if:
+    /// - vertexGenerator is set, OR
+    /// - any non-Fixed multiplicityGenerator is used (e.g., PoissonMultiplicityGenerator)
+    /// Not required when using only FixedMultiplicityGenerator with no vertexGenerator.
     std::shared_ptr<const RandomNumbers> randomNumbers;
     /// Position generator that will be used to shift read events
     std::shared_ptr<PrimaryVertexPositionGenerator> vertexGenerator;
@@ -141,10 +199,16 @@ class HepMC3Reader final : public IReader {
 
   std::mutex m_queueMutex;
 
+  /// Precomputed flag: true if RNG is needed (vertex generator or non-Fixed multiplicity)
+  bool m_needsRng = false;
+
+  /// Precomputed flag: true if any input uses a non-Fixed multiplicity generator
+  bool m_hasNonFixedMultiplicity = false;
+
   struct InputConfig {
     std::shared_ptr<HepMC3::Reader> reader;
-    std::size_t numEvents;
     std::filesystem::path path;
+    std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator;
   };
 
   std::vector<InputConfig> m_inputs;

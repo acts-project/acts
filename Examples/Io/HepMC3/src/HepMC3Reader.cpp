@@ -40,14 +40,41 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
 
   m_outputEvent.initialize(m_cfg.outputEvent);
 
-  if (m_cfg.inputs.empty()) {
+  // Validate: exactly one of inputPath or inputs must be set
+  bool hasInputPath = m_cfg.inputPath.has_value();
+  bool hasInputs = !m_cfg.inputs.empty();
+
+  if (!hasInputPath && !hasInputs) {
     throw std::invalid_argument(
-        "HepMC3 reader was not configured with any input files");
+        "HepMC3 reader requires either 'inputPath' or 'inputs' to be set");
   }
 
-  for (const auto& input : m_cfg.inputs) {
+  if (hasInputPath && hasInputs) {
+    throw std::invalid_argument(
+        "HepMC3 reader: 'inputPath' and 'inputs' are mutually exclusive. "
+        "Use 'inputPath' for single file or 'inputs' for multiple files.");
+  }
+
+  // If inputPath is set, create a single input with default multiplicity
+  // generator
+  if (hasInputPath) {
+    Config::Input input;
+    input.path = m_cfg.inputPath.value();
+    input.multiplicityGenerator =
+        std::make_shared<FixedMultiplicityGenerator>(1);
+
     auto reader = HepMC3::deduce_reader(input.path);
-    m_inputs.emplace_back(reader, input.numEvents, input.path);
+    m_inputs.emplace_back(reader, input.path, input.multiplicityGenerator);
+  } else {
+    // Use the provided inputs
+    for (const auto& input : m_cfg.inputs) {
+      if (!input.multiplicityGenerator) {
+        throw std::invalid_argument(
+            "All Input objects must have a multiplicityGenerator set");
+      }
+      auto reader = HepMC3::deduce_reader(input.path);
+      m_inputs.emplace_back(reader, input.path, input.multiplicityGenerator);
+    }
   }
 
   if (m_cfg.numEvents.has_value()) {
@@ -62,20 +89,23 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
     m_eventsRange = {0, determineNumEvents(*reader)};
   }
 
-  // Check if randomNumbers is required
-  bool needsRng = (m_cfg.vertexGenerator != nullptr);
-  if (!needsRng && !m_cfg.inputs.empty()) {
-    for (const auto& input : m_cfg.inputs) {
-      if (input.multiplicityGenerator != nullptr) {
-        needsRng = true;
-        break;
-      }
-    }
-  }
+  // Check if any input uses a non-Fixed multiplicity generator
+  m_hasNonFixedMultiplicity = std::ranges::any_of(m_inputs, [](const auto& input) {
+    const auto& [reader, path, multiplicityGenerator] = input;
+    // Check if this is NOT a FixedMultiplicityGenerator
+    return dynamic_cast<const FixedMultiplicityGenerator*>(
+               multiplicityGenerator.get()) == nullptr;
+  });
 
-  if (needsRng && m_cfg.randomNumbers == nullptr) {
+  // Check if randomNumbers is required
+  // RNG is needed if we have a vertex generator or any non-Fixed multiplicity
+  // generator
+  m_needsRng = (m_cfg.vertexGenerator != nullptr) || m_hasNonFixedMultiplicity;
+
+  if (m_needsRng && m_cfg.randomNumbers == nullptr) {
     throw std::invalid_argument(
-        "randomNumbers must be set if vertexGenerator or any multiplicityGenerator is set");
+        "randomNumbers must be set if vertexGenerator or any non-Fixed "
+        "multiplicityGenerator is used");
   }
 
   ACTS_DEBUG("HepMC3Reader: " << m_eventsRange.first << " - "
@@ -120,18 +150,38 @@ ProcessCode HepMC3Reader::skip(std::size_t events) {
     return SUCCESS;
   }
 
-  ACTS_DEBUG("Skipping " << events << " events");
+  ACTS_DEBUG("Skipping " << events << " logical events");
 
-  for (const auto& [reader, numEvents, path] : m_inputs) {
-    ACTS_VERBOSE("Skipping " << events << "*" << numEvents << "="
-                             << events * numEvents << " events from " << path);
-    if (!reader->skip(static_cast<int>(events * numEvents))) {
-      ACTS_ERROR("Error skipping events " << events << " " << path);
-      return ABORT;
+  // Check if all multiplicity generators are Fixed (deterministic)
+  // Use the precomputed flag
+  if (m_hasNonFixedMultiplicity) {
+    ACTS_ERROR(
+        "Cannot skip events with non-Fixed multiplicityGenerator (e.g., "
+        "PoissonMultiplicityGenerator). Skipping requires knowing the exact "
+        "number of physical events to skip from each input file, which is only "
+        "possible with deterministic (Fixed) multiplicity generators.");
+    return ABORT;
+  }
+
+  // For each logical event to skip, evaluate the Fixed multiplicity generators
+  // to determine how many physical events to skip from each input file
+  for (std::size_t logicalEvent = 0; logicalEvent < events; ++logicalEvent) {
+    for (const auto& [reader, path, multiplicityGenerator] : m_inputs) {
+      // Must be FixedMultiplicityGenerator (checked above), so downcast is safe
+      const auto* fixedGen = static_cast<const FixedMultiplicityGenerator*>(
+          multiplicityGenerator.get());
+      std::size_t count = fixedGen->n;
+
+      ACTS_VERBOSE("Skipping " << count << " events from " << path
+                               << " for logical event " << (m_nextEvent + logicalEvent));
+      if (!reader->skip(static_cast<int>(count))) {
+        ACTS_ERROR("Error skipping " << count << " events from " << path);
+        return ABORT;
+      }
     }
   }
 
-  m_nextEvent = events;
+  m_nextEvent += events;
 
   return SUCCESS;
 }
@@ -338,27 +388,25 @@ ProcessCode HepMC3Reader::readLogicalEvent(
 
   // @TODO: Add the index as an attribute to the event and it's content
 
-  // Spawn RNG if needed by any multiplicityGenerator
+  // Spawn RNG for multiplicity generators if needed
   std::optional<RandomEngine> rng;
-  if (!m_cfg.inputs.empty()) {
-    for (const auto& input : m_cfg.inputs) {
-      if (input.multiplicityGenerator != nullptr) {
-        rng = m_cfg.randomNumbers->spawnGenerator(ctx);
-        break;
-      }
-    }
+  if (m_needsRng) {
+    rng = m_cfg.randomNumbers->spawnGenerator(ctx);
   }
 
   for (std::size_t inputIndex = 0; inputIndex < m_inputs.size(); ++inputIndex) {
     auto& reader = m_inputs[inputIndex].reader;
     auto& path = m_inputs[inputIndex].path;
-    std::size_t fixedCount = m_inputs[inputIndex].numEvents;
+    auto& multiplicityGenerator = m_inputs[inputIndex].multiplicityGenerator;
 
-    // Use generator if present in new inputs config, otherwise fixed count
-    std::size_t count = fixedCount;
-    if (!m_cfg.inputs.empty() && inputIndex < m_cfg.inputs.size() &&
-        m_cfg.inputs[inputIndex].multiplicityGenerator != nullptr) {
-      count = (*m_cfg.inputs[inputIndex].multiplicityGenerator)(*rng);
+    // Use multiplicityGenerator to determine count
+    std::size_t count;
+    if (rng.has_value()) {
+      count = (*multiplicityGenerator)(*rng);
+    } else {
+      // Must be FixedMultiplicityGenerator if no RNG
+      RandomEngine dummyRng;
+      count = (*multiplicityGenerator)(dummyRng);
     }
 
     ACTS_VERBOSE("Reading " << count << " events from " << path);
@@ -381,7 +429,7 @@ ProcessCode HepMC3Reader::readLogicalEvent(
 
 ProcessCode HepMC3Reader::finalize() {
   ACTS_VERBOSE("Closing " << m_inputs.size() << " input files");
-  for (const auto& [reader, numEvents, path] : m_inputs) {
+  for (const auto& [reader, path, multiplicityGenerator] : m_inputs) {
     reader->close();
   }
 

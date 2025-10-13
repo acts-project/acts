@@ -38,24 +38,40 @@ void addHepMC3(Context& ctx) {
   // Expose nested Input struct
   py::class_<HepMC3Reader::Config::Input>(hepmc3, "Input")
       .def(py::init<>())
-      .def(py::init([](const std::filesystem::path& path, std::size_t numEvents,
+      .def(py::init([](const std::filesystem::path& path,
                        std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator) {
              HepMC3Reader::Config::Input inp;
              inp.path = path;
-             inp.numEvents = numEvents;
              inp.multiplicityGenerator = multiplicityGenerator;
              return inp;
            }),
            py::arg("path"),
-           py::arg("numEvents") = 1,
-           py::arg("multiplicityGenerator") = nullptr)
+           py::arg("multiplicityGenerator"))
       .def_readwrite("path", &HepMC3Reader::Config::Input::path)
-      .def_readwrite("numEvents", &HepMC3Reader::Config::Input::numEvents)
       .def_readwrite("multiplicityGenerator",
-                     &HepMC3Reader::Config::Input::multiplicityGenerator);
+                     &HepMC3Reader::Config::Input::multiplicityGenerator)
+      // Factory methods for convenience
+      .def_static("Fixed",
+                  [](const std::filesystem::path& path, std::size_t n) {
+                    HepMC3Reader::Config::Input inp;
+                    inp.path = path;
+                    inp.multiplicityGenerator = std::make_shared<FixedMultiplicityGenerator>(n);
+                    return inp;
+                  },
+                  py::arg("path"), py::arg("n") = 1,
+                  "Create Input with FixedMultiplicityGenerator")
+      .def_static("Poisson",
+                  [](const std::filesystem::path& path, double mean) {
+                    HepMC3Reader::Config::Input inp;
+                    inp.path = path;
+                    inp.multiplicityGenerator = std::make_shared<PoissonMultiplicityGenerator>(mean);
+                    return inp;
+                  },
+                  py::arg("path"), py::arg("mean"),
+                  "Create Input with PoissonMultiplicityGenerator");
 
   ACTS_PYTHON_DECLARE_READER(HepMC3Reader, hepmc3, "HepMC3Reader", inputs,
-                             outputEvent, printListing, numEvents,
+                             inputPath, outputEvent, printListing, numEvents,
                              checkEventNumber, maxEventBufferSize,
                              vertexGenerator, randomNumbers);
 

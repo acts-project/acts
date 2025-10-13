@@ -99,9 +99,9 @@ def main():
     rng = acts.examples.RandomNumbers(seed=42)
     s.addReader(
         acts.examples.hepmc3.HepMC3Reader(
-            inputPaths=[
-                (args.hard_scatter, 1),
-                (args.pileup, args.pileup_multiplicity),
+            inputs=[
+                acts.examples.hepmc3.Input.Fixed(args.hard_scatter, 1),
+                acts.examples.hepmc3.Input.Fixed(args.pileup, args.pileup_multiplicity),
             ],
             level=acts.logging.INFO,
             outputEvent="hepmc3_event",

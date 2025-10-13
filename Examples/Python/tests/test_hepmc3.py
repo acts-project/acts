@@ -790,7 +790,10 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
     s = Sequencer(numThreads=10, logLevel=acts.logging.INFO)
 
     reader = HepMC3Reader(
-        inputPaths=[(act_hs, 1), (act_pu, 10)],
+        inputs=[
+            acts.examples.hepmc3.Input.Fixed(act_hs, 1),
+            acts.examples.hepmc3.Input.Fixed(act_pu, 10),
+        ],
         level=acts.logging.VERBOSE,
         outputEvent="hepmc3_event",
         vertexGenerator=vtxGen,
