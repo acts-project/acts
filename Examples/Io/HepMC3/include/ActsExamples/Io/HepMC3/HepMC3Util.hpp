@@ -62,10 +62,10 @@ struct NormalizeResult {
   std::vector<std::filesystem::path> outputFiles;
 
   /// Total input size in bytes
-  std::uintmax_t totalInputSize = 0;
+  std::size_t totalInputSize = 0;
 
   /// Total output size in bytes
-  std::uintmax_t totalOutputSize = 0;
+  std::size_t totalOutputSize = 0;
 
   /// Total time spent reading (seconds)
   double totalReadTime = 0.0;
