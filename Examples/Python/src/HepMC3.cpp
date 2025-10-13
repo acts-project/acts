@@ -97,8 +97,8 @@ void addHepMC3(Context& ctx) {
                           &HepMC3Util::NormalizeResult::totalWriteTime);
   }
 
-  hepmc3.def("normalize", &HepMC3Util::normalizeFiles, py::arg("inputFiles"),
-             py::arg("singleOutputPath") = std::nullopt,
+  hepmc3.def("normalizeFiles", &HepMC3Util::normalizeFiles,
+             py::arg("inputFiles"), py::arg("singleOutputPath") = std::nullopt,
              py::arg("outputDir") = ".", py::arg("outputPrefix") = "events",
              py::arg("eventsPerFile") = 10000, py::arg("maxEvents") = 0,
              py::arg("format") = HepMC3Util::Format::ascii,

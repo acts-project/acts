@@ -15,7 +15,7 @@ from . import (
     Format,
     availableCompressionModes,
     availableFormats,
-    normalize,
+    normalizeFiles,
 )
 
 
@@ -168,7 +168,7 @@ Examples:
         single_output = Path(args.single_output) if args.single_output else None
 
         # Run normalization
-        result = normalize(
+        result = normalizeFiles(
             inputFiles=input_files,
             singleOutputPath=single_output,
             outputDir=Path(args.output_dir),
