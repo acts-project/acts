@@ -34,8 +34,8 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
   // Get the bin utility and convert to 2D if needed
   // Detray expects 2-dimensional grid, currently supported are
   // x-y, r-phi, phi-z
-  auto [bUtility, swapped] = DetrayConversionUtils::convertBinUtilityTo2D(
-      material.binUtility());
+  auto [bUtility, swapped] =
+      DetrayConversionUtils::convertBinUtilityTo2D(material.binUtility());
 
   AxisDirection bVal0 = bUtility.binningData()[0u].binvalue;
   AxisDirection bVal1 = bUtility.binningData()[1u].binvalue;

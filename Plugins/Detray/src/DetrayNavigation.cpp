@@ -145,7 +145,8 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
 
     // Set axis label based on binning values
     if (i < binValues.size()) {
-      axisPayload.label = DetrayConversionUtils::convertAxisDirection(binValues[i]);
+      axisPayload.label =
+          DetrayConversionUtils::convertAxisDirection(binValues[i]);
     } else {
       // Default labels if binValues is insufficient
       axisPayload.label =

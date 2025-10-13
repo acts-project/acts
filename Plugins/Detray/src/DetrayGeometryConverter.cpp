@@ -45,7 +45,8 @@ ActsPlugins::DetrayGeometryConverter::convertSurface(
     const GeometryContext& gctx, const Surface& surface, bool portal) {
   detray::io::surface_payload surfacePayload;
 
-  surfacePayload.transform = DetrayConversionUtils::convertTransform(surface.transform(gctx));
+  surfacePayload.transform =
+      DetrayConversionUtils::convertTransform(surface.transform(gctx));
   surfacePayload.source = surface.geometryId().value();
   surfacePayload.barcode = std::nullopt;
   surfacePayload.type = static_cast<detray::surface_id>(
@@ -259,7 +260,8 @@ detray::io::volume_payload ActsPlugins::DetrayGeometryConverter::convertVolume(
   std::size_t volumeIndex = cCache.volumeIndex(&volume);
   volumePayload.name = volume.name();
   volumePayload.index.link = volumeIndex;
-  volumePayload.transform = DetrayConversionUtils::convertTransform(volume.transform(gctx));
+  volumePayload.transform =
+      DetrayConversionUtils::convertTransform(volume.transform(gctx));
 
   // Remember the link
   cCache.volumeLinks[volume.geometryId()] = volumePayload.index.link;

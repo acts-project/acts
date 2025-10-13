@@ -38,7 +38,8 @@ DetraySurfaceGridsConverter::convertGrid(const grid_type& grid, bool swapAxis) {
 
   // Fill the axes in the order they are
   for (unsigned int ia = 0u; ia < grid_type::DIM; ++ia) {
-    detray::io::axis_payload axis_pd = DetrayConversionUtils::convertAxis(*axes[ia]);
+    detray::io::axis_payload axis_pd =
+        DetrayConversionUtils::convertAxis(*axes[ia]);
     axis_pd.label = static_cast<detray::axis::label>(ia);
     grid_pd.axes.push_back(axis_pd);  // push axis to axes
   }

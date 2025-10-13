@@ -170,20 +170,22 @@ ActsPlugins::DetrayConversionUtils::convertBinUtilityTo2D(
     if (bUtility.binningData()[0u].binvalue == AxisX) {
       // Turn to X-Y
       result += BinUtility(1u, std::numeric_limits<float>::lowest(),
-                          std::numeric_limits<float>::max(), closed, AxisY);
+                           std::numeric_limits<float>::max(), closed, AxisY);
     } else if (bUtility.binningData()[0u].binvalue == AxisY) {
       // Turn to X-Y (swap needed)
       BinUtility nbUtility(1u, std::numeric_limits<float>::lowest(),
-                          std::numeric_limits<float>::max(), closed, AxisX);
+                           std::numeric_limits<float>::max(), closed, AxisX);
       nbUtility += bUtility;
       result = std::move(nbUtility);
       swapped = true;
     } else if (bUtility.binningData()[0u].binvalue == AxisR) {
       // Turn to R-Phi
-      result += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed, AxisPhi);
+      result +=
+          BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed, AxisPhi);
     } else if (bUtility.binningData()[0u].binvalue == AxisZ) {
       // Turn to Phi-Z (swap needed)
-      BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed, AxisPhi);
+      BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                           AxisPhi);
       nbUtility += bUtility;
       result = std::move(nbUtility);
       swapped = true;

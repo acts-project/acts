@@ -162,7 +162,8 @@ ActsPlugins::DetrayMaterialConverter::convertGridSurfaceMaterial(
         std::size_t lb0 = swapped ? ib1 : ib0;
         std::size_t lb1 = swapped ? ib0 : ib1;
         detray::io::material_slab_payload slab =
-            DetrayConversionUtils::convertMaterialSlab(materialMatrix[ib1][ib0]);
+            DetrayConversionUtils::convertMaterialSlab(
+                materialMatrix[ib1][ib0]);
         detray::io::grid_bin_payload<detray::io::material_slab_payload> slabBin{
             {static_cast<unsigned int>(lb0), static_cast<unsigned int>(lb1)},
             {slab}};
