@@ -87,9 +87,11 @@ class SurfaceBoundsStub : public SurfaceBounds {
 
 }  // namespace Acts
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// Unit test for creating compliant/non-compliant SurfaceBounds object
 BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
@@ -128,4 +130,4 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

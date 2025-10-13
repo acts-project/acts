@@ -30,7 +30,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 static constexpr float NoTime = std::numeric_limits<float>::quiet_NaN();
 
@@ -901,13 +901,13 @@ class SpacePointContainer2 {
 
   template <bool read_only>
   class Subset : public Acts::detail::ContainerSubset<
-                     Subset<read_only>, SpacePointContainer2,
+                     Subset<read_only>, Subset<true>, SpacePointContainer2,
                      std::conditional_t<read_only, ConstSpacePointProxy2,
                                         MutableSpacePointProxy2>,
                      SpacePointIndex2, read_only> {
    public:
     using Base = Acts::detail::ContainerSubset<
-        Subset<read_only>, SpacePointContainer2,
+        Subset<read_only>, Subset<true>, SpacePointContainer2,
         std::conditional_t<read_only, ConstSpacePointProxy2,
                            MutableSpacePointProxy2>,
         SpacePointIndex2, read_only>;
@@ -1134,6 +1134,6 @@ class SpacePointContainer2 {
   }
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
 
 #include "Acts/EventData/SpacePointContainer2.ipp"

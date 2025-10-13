@@ -9,10 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -23,7 +21,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -34,28 +31,25 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
-#include <array>
-#include <cmath>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <numbers>
 #include <random>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Acts::VectorHelpers::makeVector4;
 
 // Set up logger
-ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AMVFitterTests", Acts::Logging::INFO))
+ACTS_LOCAL_LOGGER(getDefaultLogger("AMVFitterTests", Logging::INFO))
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
@@ -94,6 +88,8 @@ std::uniform_real_distribution<double> resQoPDist(-0.1, 0.1);
 // Track time resolution distribution. Values are unrealistic and only used for
 // testing purposes.
 std::uniform_real_distribution<double> resTDist(0_ps, 8_ps);
+
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
 /// @brief Unit test for AdaptiveMultiVertexFitter
 ///
@@ -250,7 +246,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // list in order to be able to compare later
   std::vector<Vertex> seedListCopy = vtxList;
 
-  auto res1 = fitter.addVtxToFit(state, vtxList.at(0), vertexingOptions);
+  std::vector<Vertex*> vtxFitPtr = {&vtxList.at(0)};
+  auto res1 = fitter.addVtxToFit(state, vtxFitPtr, vertexingOptions);
   ACTS_DEBUG("Tracks linked to each vertex AFTER fit:");
   int c = 0;
   for (auto& vtx : vtxPtrList) {
@@ -294,7 +291,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   CHECK_CLOSE_ABS(vtxList.at(1).fullPosition(),
                   seedListCopy.at(1).fullPosition(), 1_mm);
 
-  auto res2 = fitter.addVtxToFit(state, vtxList.at(2), vertexingOptions);
+  vtxFitPtr = {&vtxList.at(2)};
+  auto res2 = fitter.addVtxToFit(state, vtxFitPtr, vertexingOptions);
   BOOST_CHECK(res2.ok());
 
   // Now also the third vertex should have been modified and fitted
@@ -425,7 +423,8 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
 
   state.addVertexToMultiMap(vtx);
 
-  auto res = fitter.addVtxToFit(state, vtx, vertexingOptions);
+  std::vector<Vertex*> vtxFitPtr = {&vtx};
+  auto res = fitter.addVtxToFit(state, vtxFitPtr, vertexingOptions);
 
   BOOST_CHECK(res.ok());
 
@@ -733,4 +732,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   CHECK_CLOSE_ABS(vtx2FQ.second, expVtx2ndf, 0.001);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

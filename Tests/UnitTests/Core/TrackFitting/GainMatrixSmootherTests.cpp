@@ -14,9 +14,9 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -25,7 +25,6 @@
 namespace {
 
 using namespace Acts;
-using namespace Acts::Test;
 
 using ParametersVector = Acts::BoundVector;
 using CovarianceMatrix = Acts::BoundSquareMatrix;
@@ -35,7 +34,9 @@ const Acts::GeometryContext tgContext;
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixSmoother)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(Smooth) {
   VectorMultiTrajectory traj;
@@ -125,3 +126,5 @@ BOOST_AUTO_TEST_CASE(Smooth) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

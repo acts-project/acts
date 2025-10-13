@@ -32,18 +32,21 @@
 #include <memory>
 #include <stdexcept>
 
+using namespace Acts;
 using namespace Acts::Experimental;
 
-auto tContext = Acts::GeometryContext();
+auto tContext = GeometryContext();
+
+namespace ActsTests {
 
 /// @brief A mockup volume builder, it generates volumes with
 /// a single surface filled in in order to use the CuboidalContainerBuilder
 /// infrastructure.
 class CuboidalVolumeBuilder : public IDetectorComponentBuilder {
  public:
-  CuboidalVolumeBuilder(const Acts::Transform3& transform,
-                        const Acts::CuboidVolumeBounds& vBounds,
-                        const Acts::RectangleBounds& sBounds,
+  CuboidalVolumeBuilder(const Transform3& transform,
+                        const CuboidVolumeBounds& vBounds,
+                        const RectangleBounds& sBounds,
                         const std::string& vName)
       : IDetectorComponentBuilder(),
         m_transform(transform),
@@ -52,16 +55,15 @@ class CuboidalVolumeBuilder : public IDetectorComponentBuilder {
         m_name(vName) {}
 
   DetectorComponent construct(
-      [[maybe_unused]] const Acts::GeometryContext& gctx) const final {
+      [[maybe_unused]] const GeometryContext& gctx) const final {
     // The outgoing root volumes
     std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
 
     // Ingredients
-    auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        (m_transform),
-        std::make_shared<Acts::RectangleBounds>(m_surfaceBounds));
+    auto surface = Surface::makeShared<PlaneSurface>(
+        (m_transform), std::make_shared<RectangleBounds>(m_surfaceBounds));
 
-    auto bounds = std::make_unique<Acts::CuboidVolumeBounds>(m_volumeBounds);
+    auto bounds = std::make_unique<CuboidVolumeBounds>(m_volumeBounds);
     auto portalGenerator = defaultPortalAndSubPortalGenerator();
     auto volume = DetectorVolumeFactory::construct(
         portalGenerator, tContext, m_name, m_transform, std::move(bounds),
@@ -71,7 +73,7 @@ class CuboidalVolumeBuilder : public IDetectorComponentBuilder {
     rootVolumes.push_back(volume);
 
     DetectorComponent::PortalContainer dContainer;
-    for (auto [ip, p] : Acts::enumerate(volume->portalPtrs())) {
+    for (auto [ip, p] : enumerate(volume->portalPtrs())) {
       dContainer[ip] = p;
     }
 
@@ -82,9 +84,9 @@ class CuboidalVolumeBuilder : public IDetectorComponentBuilder {
   }
 
  private:
-  Acts::Transform3 m_transform;
-  Acts::CuboidVolumeBounds m_volumeBounds;
-  Acts::RectangleBounds m_surfaceBounds;
+  Transform3 m_transform;
+  CuboidVolumeBounds m_volumeBounds;
+  RectangleBounds m_surfaceBounds;
   std::string m_name;
 };
 
@@ -102,20 +104,20 @@ class VolumeGeoIdGenerator : public IGeometryIdGenerator {
                         DetectorVolume& dVolume) const final {
     auto& ccache = std::any_cast<Cache&>(cache);
     ccache.volumeCount += 1;
-    auto geoID = Acts::GeometryIdentifier().withVolume(ccache.volumeCount);
+    auto geoID = GeometryIdentifier().withVolume(ccache.volumeCount);
     dVolume.assignGeometryId(geoID);
   }
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::Portal& /*portal*/) const final {}
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Experimental::Portal& /*portal*/) const final {}
 
   void assignGeometryId(
-      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Surface& /*surface*/) const final {}
+      Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Surface& /*surface*/) const final {}
 };
 
-BOOST_AUTO_TEST_SUITE(Detector)
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(CuboidalContainerBuilder_Misconfiguration) {
   // misconfiruation: no builders
@@ -124,32 +126,30 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuilder_Misconfiguration) {
                     std::invalid_argument);
   // misconfiguration - 1D binning not in x, y, z
   misCfg.builders = {nullptr};
-  misCfg.binning = Acts::AxisDirection::AxisR;
+  misCfg.binning = AxisDirection::AxisR;
   BOOST_CHECK_THROW(auto b = CuboidalContainerBuilder(misCfg),
                     std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
-  std::array<Acts::AxisDirection, 3> binningValues = {
-      Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY,
-      Acts::AxisDirection::AxisZ};
+  std::array<AxisDirection, 3> binningValues = {
+      AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
   for (auto bVal : binningValues) {
     // A perfect box shape
-    auto box = Acts::CuboidVolumeBounds(10, 10, 10);
+    auto box = CuboidVolumeBounds(10, 10, 10);
 
     // Transform the second volume away from the first one
-    auto transformB = Acts::Transform3::Identity();
+    auto transformB = Transform3::Identity();
 
-    Acts::Vector3 translation = Acts::Vector3::Zero();
+    Vector3 translation = Vector3::Zero();
     translation[toUnderlying(bVal)] = 20;
     transformB.pretranslate(translation);
 
     auto builderA = std::make_shared<CuboidalVolumeBuilder>(
-        Acts::Transform3::Identity(), box, Acts::RectangleBounds(2, 2),
-        "VolumeA");
+        Transform3::Identity(), box, RectangleBounds(2, 2), "VolumeA");
 
     auto builderB = std::make_shared<CuboidalVolumeBuilder>(
-        transformB, box, Acts::RectangleBounds(2, 2), "VolumeB");
+        transformB, box, RectangleBounds(2, 2), "VolumeB");
 
     CuboidalContainerBuilder::Config ccbCfg;
     ccbCfg.auxiliary = "*** Build simple connection ***";
@@ -158,8 +158,7 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
     ccbCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
 
     auto ccBuilder = std::make_shared<CuboidalContainerBuilder>(
-        ccbCfg, Acts::getDefaultLogger("CuboidalContainerBuilder",
-                                       Acts::Logging::VERBOSE));
+        ccbCfg, getDefaultLogger("CuboidalContainerBuilder", Logging::VERBOSE));
 
     auto [volumes, portals, roots] = ccBuilder->construct(tContext);
 
@@ -189,3 +188,5 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

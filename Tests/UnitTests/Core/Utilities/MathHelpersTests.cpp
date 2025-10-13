@@ -9,8 +9,8 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 
@@ -20,7 +20,9 @@ const auto expDist = bdata::random(
     (bdata::engine = std::mt19937{}, bdata::seed = 0,
      bdata::distribution = std::uniform_real_distribution<double>(-4, 4)));
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+namespace ActsTetsts {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
                      yExp, i) {
@@ -42,3 +44,5 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTetsts

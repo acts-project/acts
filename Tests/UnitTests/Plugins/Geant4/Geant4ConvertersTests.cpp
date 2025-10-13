@@ -12,14 +12,14 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/Geant4/Geant4Converters.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <cmath>
@@ -40,22 +40,26 @@
 #include "G4Tubs.hh"
 #include "G4VPhysicalVolume.hh"
 
+using namespace Acts;
+using namespace ActsPlugins;
+
 double rho = 1.2345;
 G4Material* g4Material = new G4Material("Material", 6., 12., rho);
 
-BOOST_AUTO_TEST_SUITE(Geant4Plugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(Geant4Suite)
 
 BOOST_AUTO_TEST_CASE(Geant4AlgebraConversion) {
   G4ThreeVector g4Translation(10., 20., 30.);
 
-  auto translated = Acts::Geant4AlgebraConverter{}.transform(g4Translation);
+  auto translated = Geant4AlgebraConverter{}.transform(g4Translation);
   auto actsTranslation = translated.translation();
   BOOST_CHECK_EQUAL(actsTranslation[0], 10.);
   BOOST_CHECK_EQUAL(actsTranslation[1], 20.);
   BOOST_CHECK_EQUAL(actsTranslation[2], 30.);
 
-  auto translatedScaled =
-      Acts::Geant4AlgebraConverter{10.}.transform(g4Translation);
+  auto translatedScaled = Geant4AlgebraConverter{10.}.transform(g4Translation);
   auto actsTranslationScaled = translatedScaled.translation();
   BOOST_CHECK_EQUAL(actsTranslationScaled[0], 100.);
   BOOST_CHECK_EQUAL(actsTranslationScaled[1], 200.);
@@ -66,48 +70,43 @@ BOOST_AUTO_TEST_CASE(Geant4CylinderConversion) {
   G4Tubs cylinder("Cylinder", 399., 401., 800.,
                   -std::numbers::pi * CLHEP::radian,
                   2 * std::numbers::pi * CLHEP::radian);
-  auto [bounds, thickness] =
-      Acts::Geant4ShapeConverter{}.cylinderBounds(cylinder);
-  CHECK_CLOSE_ABS(bounds->get(Acts::CylinderBounds::BoundValues::eR), 400.,
+  auto [bounds, thickness] = Geant4ShapeConverter{}.cylinderBounds(cylinder);
+  CHECK_CLOSE_ABS(bounds->get(CylinderBounds::BoundValues::eR), 400., 10e-10);
+  CHECK_CLOSE_ABS(bounds->get(CylinderBounds::BoundValues::eHalfLengthZ), 800.,
                   10e-10);
-  CHECK_CLOSE_ABS(bounds->get(Acts::CylinderBounds::BoundValues::eHalfLengthZ),
-                  800., 10e-10);
-  CHECK_CLOSE_ABS(
-      bounds->get(Acts::CylinderBounds::BoundValues::eHalfPhiSector),
-      std::numbers::pi, 10e-10);
-  CHECK_CLOSE_ABS(bounds->get(Acts::CylinderBounds::BoundValues::eAveragePhi),
-                  0., 10e-10);
+  CHECK_CLOSE_ABS(bounds->get(CylinderBounds::BoundValues::eHalfPhiSector),
+                  std::numbers::pi, 10e-10);
+  CHECK_CLOSE_ABS(bounds->get(CylinderBounds::BoundValues::eAveragePhi), 0.,
+                  10e-10);
   CHECK_CLOSE_ABS(thickness, 2., 10e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4RadialConversion) {
   G4Tubs disc("disc", 40., 400., 2., -std::numbers::pi * CLHEP::radian,
               2 * std::numbers::pi * CLHEP::radian);
-  auto [bounds, thickness] = Acts::Geant4ShapeConverter{}.radialBounds(disc);
-  CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eMinR), 40.,
-                  10e-10);
-  CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eMaxR), 400.,
-                  10e-10);
-  CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eHalfPhiSector),
+  auto [bounds, thickness] = Geant4ShapeConverter{}.radialBounds(disc);
+  CHECK_CLOSE_ABS(bounds->get(RadialBounds::BoundValues::eMinR), 40., 10e-10);
+  CHECK_CLOSE_ABS(bounds->get(RadialBounds::BoundValues::eMaxR), 400., 10e-10);
+  CHECK_CLOSE_ABS(bounds->get(RadialBounds::BoundValues::eHalfPhiSector),
                   std::numbers::pi, 10e-10);
-  CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eAveragePhi), 0.,
+  CHECK_CLOSE_ABS(bounds->get(RadialBounds::BoundValues::eAveragePhi), 0.,
                   10e-10);
   CHECK_CLOSE_ABS(thickness, 4., 10e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4LineConversion) {
   G4Tubs line("line", 0., 20., 400., 0., 2 * std::numbers::pi);
-  auto bounds = Acts::Geant4ShapeConverter{}.lineBounds(line);
-  CHECK_CLOSE_ABS(bounds->get(Acts::LineBounds::BoundValues::eR), 20., 10e-10);
-  CHECK_CLOSE_ABS(bounds->get(Acts::LineBounds::BoundValues::eHalfLengthZ),
-                  400., 10e-10);
+  auto bounds = Geant4ShapeConverter{}.lineBounds(line);
+  CHECK_CLOSE_ABS(bounds->get(LineBounds::BoundValues::eR), 20., 10e-10);
+  CHECK_CLOSE_ABS(bounds->get(LineBounds::BoundValues::eHalfLengthZ), 400.,
+                  10e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4BoxConversion) {
   // Test the standard orientations
   G4Box sensorXY("SensorXY", 23., 34., 1.);
   auto [boundsXY, axesXY, thicknessZ] =
-      Acts::Geant4ShapeConverter{}.rectangleBounds(sensorXY);
+      Geant4ShapeConverter{}.rectangleBounds(sensorXY);
   CHECK_CLOSE_ABS(boundsXY->halfLengthX(), 23., 10e-10);
   CHECK_CLOSE_ABS(boundsXY->halfLengthY(), 34., 10e-10);
   auto refXY = std::array<int, 2u>{0, 1};
@@ -116,7 +115,7 @@ BOOST_AUTO_TEST_CASE(Geant4BoxConversion) {
 
   G4Box sensorYZ("SensorYZ", 2., 45., 56.);
   auto [boundsYZ, axesYZ, thicknessX] =
-      Acts::Geant4ShapeConverter{}.rectangleBounds(sensorYZ);
+      Geant4ShapeConverter{}.rectangleBounds(sensorYZ);
   CHECK_CLOSE_ABS(boundsYZ->halfLengthX(), 45., 10e-10);
   CHECK_CLOSE_ABS(boundsYZ->halfLengthY(), 56., 10e-10);
   auto refYZ = std::array<int, 2u>{1, 2};
@@ -125,7 +124,7 @@ BOOST_AUTO_TEST_CASE(Geant4BoxConversion) {
 
   G4Box sensorZX("SensorZX", 78., 2., 67.);
   auto [boundsZX, axesZX, thicknessY] =
-      Acts::Geant4ShapeConverter{}.rectangleBounds(sensorZX);
+      Geant4ShapeConverter{}.rectangleBounds(sensorZX);
   CHECK_CLOSE_ABS(boundsZX->halfLengthX(), 67., 10e-10);
   CHECK_CLOSE_ABS(boundsZX->halfLengthY(), 78., 10e-10);
   auto refZX = std::array<int, 2u>{2, 0};
@@ -135,7 +134,7 @@ BOOST_AUTO_TEST_CASE(Geant4BoxConversion) {
   // Test the flipped axis
   G4Box sensorXz("SensorXz", 78., 2., 67.);
   auto [boundsXz, axesXz, thicknessY2] =
-      Acts::Geant4ShapeConverter{1, true}.rectangleBounds(sensorXz);
+      Geant4ShapeConverter{1, true}.rectangleBounds(sensorXz);
   CHECK_CLOSE_ABS(boundsXz->halfLengthX(), 78., 10e-10);
   CHECK_CLOSE_ABS(boundsXz->halfLengthY(), 67., 10e-10);
   auto refXz = std::array<int, 2u>{0, -2};
@@ -147,16 +146,13 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrd) {
   // Standard TRD: XY are already well defined
   G4Trd trdXY("trdXY", 100, 150, 200, 200, 2);
   auto [boundsXY, axesXY, thicknessZ] =
-      Acts::Geant4ShapeConverter{}.trapezoidBounds(trdXY);
-  CHECK_CLOSE_ABS(
-      boundsXY->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXnegY), 100,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsXY->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXposY), 150,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsXY->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthY), 200,
-      10e-10);
+      Geant4ShapeConverter{}.trapezoidBounds(trdXY);
+  CHECK_CLOSE_ABS(boundsXY->get(TrapezoidBounds::BoundValues::eHalfLengthXnegY),
+                  100, 10e-10);
+  CHECK_CLOSE_ABS(boundsXY->get(TrapezoidBounds::BoundValues::eHalfLengthXposY),
+                  150, 10e-10);
+  CHECK_CLOSE_ABS(boundsXY->get(TrapezoidBounds::BoundValues::eHalfLengthY),
+                  200, 10e-10);
   auto refXY = std::array<int, 2u>{0, 1};
   BOOST_CHECK(axesXY == refXY);
   CHECK_CLOSE_ABS(thicknessZ, 4., 10e-10);
@@ -164,16 +160,13 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrd) {
   // Flipped, yX are the coordinates
   G4Trd trdyX("trdyX", 200, 200, 100, 150, 2);
   auto [boundsyX, axesyX, thicknessZ2] =
-      Acts::Geant4ShapeConverter{}.trapezoidBounds(trdyX);
-  CHECK_CLOSE_ABS(
-      boundsyX->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXnegY), 100,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsyX->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXposY), 150,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsyX->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthY), 200,
-      10e-10);
+      Geant4ShapeConverter{}.trapezoidBounds(trdyX);
+  CHECK_CLOSE_ABS(boundsyX->get(TrapezoidBounds::BoundValues::eHalfLengthXnegY),
+                  100, 10e-10);
+  CHECK_CLOSE_ABS(boundsyX->get(TrapezoidBounds::BoundValues::eHalfLengthXposY),
+                  150, 10e-10);
+  CHECK_CLOSE_ABS(boundsyX->get(TrapezoidBounds::BoundValues::eHalfLengthY),
+                  200, 10e-10);
   auto refyX = std::array<int, 2u>{-1, 0};
   BOOST_CHECK(axesyX == refyX);
   CHECK_CLOSE_ABS(thicknessZ2, 4., 10e-10);
@@ -181,16 +174,13 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrd) {
   // YZ span the trapezoid
   G4Trd trdYZ("trdYZ", 2, 2, 120, 140, 200);
   auto [boundsYZ, axesYZ, thicknessX] =
-      Acts::Geant4ShapeConverter{}.trapezoidBounds(trdYZ);
-  CHECK_CLOSE_ABS(
-      boundsYZ->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXnegY), 120.,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsYZ->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXposY), 140.,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsYZ->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthY), 200.,
-      10e-10);
+      Geant4ShapeConverter{}.trapezoidBounds(trdYZ);
+  CHECK_CLOSE_ABS(boundsYZ->get(TrapezoidBounds::BoundValues::eHalfLengthXnegY),
+                  120., 10e-10);
+  CHECK_CLOSE_ABS(boundsYZ->get(TrapezoidBounds::BoundValues::eHalfLengthXposY),
+                  140., 10e-10);
+  CHECK_CLOSE_ABS(boundsYZ->get(TrapezoidBounds::BoundValues::eHalfLengthY),
+                  200., 10e-10);
   auto refYZ = std::array<int, 2u>{1, 2};
   BOOST_CHECK(axesYZ == refYZ);
   CHECK_CLOSE_ABS(thicknessX, 4., 10e-10);
@@ -198,16 +188,13 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrd) {
   // Xz span the trapezoid
   G4Trd trdXz("trdXz", 50, 75, 1, 1, 200);
   auto [boundsXz, axesXz, thicknessY] =
-      Acts::Geant4ShapeConverter{}.trapezoidBounds(trdXz);
-  CHECK_CLOSE_ABS(
-      boundsXz->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXnegY), 50.,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsXz->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXposY), 75.,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsXz->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthY), 200.,
-      10e-10);
+      Geant4ShapeConverter{}.trapezoidBounds(trdXz);
+  CHECK_CLOSE_ABS(boundsXz->get(TrapezoidBounds::BoundValues::eHalfLengthXnegY),
+                  50., 10e-10);
+  CHECK_CLOSE_ABS(boundsXz->get(TrapezoidBounds::BoundValues::eHalfLengthXposY),
+                  75., 10e-10);
+  CHECK_CLOSE_ABS(boundsXz->get(TrapezoidBounds::BoundValues::eHalfLengthY),
+                  200., 10e-10);
   auto refXz = std::array<int, 2u>{0, -2};
   BOOST_CHECK(axesXz == refXz);
   CHECK_CLOSE_ABS(thicknessY, 2., 10e-10);
@@ -217,16 +204,13 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrap) {
   // x value changes, y is the symmetric side, z is the thickness
   G4Trap trapXY("trapXY", 10., 15., 20., 20., 0.125);
   auto [boundsXY, axesXY, thicknessZ] =
-      Acts::Geant4ShapeConverter{}.trapezoidBounds(trapXY);
-  CHECK_CLOSE_ABS(
-      boundsXY->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXnegY), 10,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsXY->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXposY), 15,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsXY->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthY), 20,
-      10e-10);
+      Geant4ShapeConverter{}.trapezoidBounds(trapXY);
+  CHECK_CLOSE_ABS(boundsXY->get(TrapezoidBounds::BoundValues::eHalfLengthXnegY),
+                  10, 10e-10);
+  CHECK_CLOSE_ABS(boundsXY->get(TrapezoidBounds::BoundValues::eHalfLengthXposY),
+                  15, 10e-10);
+  CHECK_CLOSE_ABS(boundsXY->get(TrapezoidBounds::BoundValues::eHalfLengthY), 20,
+                  10e-10);
   auto refXY = std::array<int, 2u>{0, 1};
   BOOST_CHECK(axesXY == refXY);
   CHECK_CLOSE_ABS(thicknessZ, 0.25, 10e-10);
@@ -234,16 +218,13 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrap) {
   // y value changes, x is the symmetric side, z is the thickness
   G4Trap trapYx("trapYx", 22., 22., 11., 16., 0.250);
   auto [boundsYx, axesYx, thicknessYx] =
-      Acts::Geant4ShapeConverter{}.trapezoidBounds(trapYx);
-  CHECK_CLOSE_ABS(
-      boundsYx->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXnegY), 11,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsYx->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXposY), 16,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsYx->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthY), 22,
-      10e-10);
+      Geant4ShapeConverter{}.trapezoidBounds(trapYx);
+  CHECK_CLOSE_ABS(boundsYx->get(TrapezoidBounds::BoundValues::eHalfLengthXnegY),
+                  11, 10e-10);
+  CHECK_CLOSE_ABS(boundsYx->get(TrapezoidBounds::BoundValues::eHalfLengthXposY),
+                  16, 10e-10);
+  CHECK_CLOSE_ABS(boundsYx->get(TrapezoidBounds::BoundValues::eHalfLengthY), 22,
+                  10e-10);
   auto refYx = std::array<int, 2u>{-1, 0};
   BOOST_CHECK(axesYx == refYx);
   CHECK_CLOSE_ABS(thicknessYx, 0.5, 10e-10);
@@ -251,16 +232,13 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrap) {
   // x is the thickness, y changes, z is symmetric
   G4Trap trapXz("trapXz", 0.5, 0.5, 8., 16., 10.);
   auto [boundsYZ, axesYZ, thicknessXZ] =
-      Acts::Geant4ShapeConverter{}.trapezoidBounds(trapXz);
-  CHECK_CLOSE_ABS(
-      boundsYZ->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXnegY), 8,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsYZ->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXposY), 16,
-      10e-10);
-  CHECK_CLOSE_ABS(
-      boundsYZ->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthY), 10.,
-      10e-10);
+      Geant4ShapeConverter{}.trapezoidBounds(trapXz);
+  CHECK_CLOSE_ABS(boundsYZ->get(TrapezoidBounds::BoundValues::eHalfLengthXnegY),
+                  8, 10e-10);
+  CHECK_CLOSE_ABS(boundsYZ->get(TrapezoidBounds::BoundValues::eHalfLengthXposY),
+                  16, 10e-10);
+  CHECK_CLOSE_ABS(boundsYZ->get(TrapezoidBounds::BoundValues::eHalfLengthY),
+                  10., 10e-10);
   auto refYZ = std::array<int, 2u>{1, 2};
   BOOST_CHECK(axesYZ == refYZ);
   CHECK_CLOSE_ABS(thicknessXZ, 1., 10e-10);
@@ -268,15 +246,13 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrap) {
 
 BOOST_AUTO_TEST_CASE(Geant4PlanarConversion) {
   G4Box boxXY("boxXY", 23., 34., 1.);
-  auto pBoundsBox =
-      std::get<0u>(Acts::Geant4ShapeConverter{}.planarBounds(boxXY));
-  auto rBounds = dynamic_cast<const Acts::RectangleBounds*>(pBoundsBox.get());
+  auto pBoundsBox = std::get<0u>(Geant4ShapeConverter{}.planarBounds(boxXY));
+  auto rBounds = dynamic_cast<const RectangleBounds*>(pBoundsBox.get());
   BOOST_CHECK_NE(rBounds, nullptr);
 
   G4Trd trdXY("trdXY", 100, 150, 200, 200, 2);
-  auto pBoundsTrd =
-      std::get<0u>(Acts::Geant4ShapeConverter{}.planarBounds(trdXY));
-  auto tBounds = dynamic_cast<const Acts::TrapezoidBounds*>(pBoundsTrd.get());
+  auto pBoundsTrd = std::get<0u>(Geant4ShapeConverter{}.planarBounds(trdXY));
+  auto tBounds = dynamic_cast<const TrapezoidBounds*>(pBoundsTrd.get());
   BOOST_CHECK_NE(tBounds, nullptr);
 }
 
@@ -291,15 +267,15 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
   G4PVPlacement g4BoxPhys(g4Rot, g4Trans, g4BoxLog, "BoxPhys", nullptr, false,
                           1);
 
-  auto planeSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
-      g4BoxPhys, Acts::Transform3::Identity(), true, thickness);
+  auto planeSurface = Geant4PhysicalVolumeConverter{}.surface(
+      g4BoxPhys, Transform3::Identity(), true, thickness);
   BOOST_REQUIRE_NE(planeSurface, nullptr);
-  BOOST_CHECK_EQUAL(planeSurface->type(), Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(planeSurface->type(), Surface::SurfaceType::Plane);
 
   auto material = planeSurface->surfaceMaterial();
   BOOST_REQUIRE_NE(material, nullptr);
 
-  auto materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
+  auto materialSlab = material->materialSlab(Vector3{0., 0., 0.});
   // Here it should be uncompressed material
   CHECK_CLOSE_ABS(materialSlab.material().massDensity(), rho, 0.001);
   CHECK_CLOSE_REL(thickness / g4Material->GetRadlen(),
@@ -307,14 +283,14 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
 
   // Convert with compression
   double compression = 4.;
-  planeSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
-      g4BoxPhys, Acts::Transform3::Identity(), true, thickness / compression);
+  planeSurface = Geant4PhysicalVolumeConverter{}.surface(
+      g4BoxPhys, Transform3::Identity(), true, thickness / compression);
   BOOST_REQUIRE_NE(planeSurface, nullptr);
-  BOOST_CHECK_EQUAL(planeSurface->type(), Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(planeSurface->type(), Surface::SurfaceType::Plane);
 
   material = planeSurface->surfaceMaterial();
   BOOST_REQUIRE_NE(material, nullptr);
-  materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
+  materialSlab = material->materialSlab(Vector3{0., 0., 0.});
 
   // Here it should be uncompressed material
   CHECK_CLOSE_ABS(materialSlab.material().massDensity(), compression * rho,
@@ -347,16 +323,15 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
   G4PVPlacement g4CylinderPhys(g4Rot, g4Trans, g4TubeLog, "TubePhys", nullptr,
                                false, 1);
 
-  auto cylinderSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
-      g4CylinderPhys, Acts::Transform3::Identity(), true, thickness);
+  auto cylinderSurface = Geant4PhysicalVolumeConverter{}.surface(
+      g4CylinderPhys, Transform3::Identity(), true, thickness);
   BOOST_REQUIRE_NE(cylinderSurface, nullptr);
-  BOOST_CHECK_EQUAL(cylinderSurface->type(),
-                    Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(cylinderSurface->type(), Surface::SurfaceType::Cylinder);
 
   auto material = cylinderSurface->surfaceMaterial();
   BOOST_REQUIRE_NE(material, nullptr);
 
-  auto materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
+  auto materialSlab = material->materialSlab(Vector3{0., 0., 0.});
   CHECK_CLOSE_REL(thickness / g4Material->GetRadlen(),
                   materialSlab.thicknessInX0(), 0.1);
 
@@ -365,9 +340,8 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
 
   /// CHECK exception throwing
   BOOST_CHECK_THROW(
-      Acts::Geant4PhysicalVolumeConverter{Acts::Surface::SurfaceType::Plane}
-          .surface(g4CylinderPhys, Acts::Transform3::Identity(), true,
-                   thickness),
+      Geant4PhysicalVolumeConverter{Surface::SurfaceType::Plane}.surface(
+          g4CylinderPhys, Transform3::Identity(), true, thickness),
       std::runtime_error);
 
   delete g4Tube;
@@ -391,15 +365,15 @@ BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
   G4PVPlacement g4discPhys(g4Rot, g4Trans, g4TubeLog, "TubePhys", nullptr,
                            false, 1);
 
-  auto discSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
-      g4discPhys, Acts::Transform3::Identity(), true, thickness);
+  auto discSurface = Geant4PhysicalVolumeConverter{}.surface(
+      g4discPhys, Transform3::Identity(), true, thickness);
   BOOST_REQUIRE_NE(discSurface, nullptr);
-  BOOST_CHECK_EQUAL(discSurface->type(), Acts::Surface::SurfaceType::Disc);
+  BOOST_CHECK_EQUAL(discSurface->type(), Surface::SurfaceType::Disc);
 
   auto material = discSurface->surfaceMaterial();
   BOOST_REQUIRE_NE(material, nullptr);
 
-  auto materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
+  auto materialSlab = material->materialSlab(Vector3{0., 0., 0.});
   // Here it should be uncompressed material
   CHECK_CLOSE_ABS(materialSlab.material().massDensity(), rho, 0.001);
 
@@ -425,10 +399,10 @@ BOOST_AUTO_TEST_CASE(Geant4LineVPhysConversion) {
                            false, 1);
 
   auto lineSurface =
-      Acts::Geant4PhysicalVolumeConverter{Acts::Surface::SurfaceType::Straw}
-          .surface(g4linePhys, Acts::Transform3::Identity(), true, thickness);
+      Geant4PhysicalVolumeConverter{Surface::SurfaceType::Straw}.surface(
+          g4linePhys, Transform3::Identity(), true, thickness);
   BOOST_REQUIRE_NE(lineSurface, nullptr);
-  BOOST_CHECK_EQUAL(lineSurface->type(), Acts::Surface::SurfaceType::Straw);
+  BOOST_CHECK_EQUAL(lineSurface->type(), Surface::SurfaceType::Straw);
 
   delete g4Tube;
   delete g4Rot;
@@ -436,3 +410,5 @@ BOOST_AUTO_TEST_CASE(Geant4LineVPhysConversion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
