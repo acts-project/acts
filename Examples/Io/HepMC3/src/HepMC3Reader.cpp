@@ -23,7 +23,6 @@
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/Print.h>
 #include <HepMC3/Reader.h>
-#include <HepMC3/ReaderFactory.h>
 #include <HepMC3/Units.h>
 #include <boost/algorithm/string/join.hpp>
 
@@ -63,7 +62,7 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
     input.multiplicityGenerator =
         std::make_shared<FixedMultiplicityGenerator>(1);
 
-    auto reader = HepMC3::deduce_reader(input.path);
+    auto reader = HepMC3Util::deduceReader(input.path);
     m_inputs.emplace_back(reader, input.path, input.multiplicityGenerator);
   } else {
     // Use the provided inputs
@@ -72,7 +71,7 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
         throw std::invalid_argument(
             "All Input objects must have a multiplicityGenerator set");
       }
-      auto reader = HepMC3::deduce_reader(input.path);
+      auto reader = HepMC3Util::deduceReader(input.path);
       m_inputs.emplace_back(reader, input.path, input.multiplicityGenerator);
     }
   }
@@ -85,7 +84,7 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
                             Acts::Logging::DEBUG);
     // This uses the first reader that's configured, with the assumption that
     // this is the hard-scatter event
-    auto reader = HepMC3::deduce_reader(m_inputs.front().path);
+    auto reader = HepMC3Util::deduceReader(m_inputs.front().path);
     m_eventsRange = {0, determineNumEvents(*reader)};
   }
 

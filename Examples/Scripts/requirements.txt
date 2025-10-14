@@ -38,7 +38,7 @@ kiwisolver==1.4.9
     # via matplotlib
 markdown-it-py==4.0.0
     # via rich
-matplotlib==3.10.6
+matplotlib==3.10.7
     # via
     #   -r Examples/Scripts/requirements.in
     #   mplhep
@@ -72,9 +72,9 @@ pandas==2.3.3
     # via -r Examples/Scripts/requirements.in
 pillow==11.3.0
     # via matplotlib
-pydantic==2.11.10
+pydantic==2.12.0
     # via -r Examples/Scripts/requirements.in
-pydantic-core==2.33.2
+pydantic-core==2.41.1
     # via pydantic
 pygments==2.19.2
     # via rich
@@ -88,7 +88,7 @@ pytz==2025.2
     # via pandas
 pyyaml==6.0.3
     # via -r Examples/Scripts/requirements.in
-rich==14.1.0
+rich==14.2.0
     # via
     #   -r Examples/Scripts/requirements.in
     #   typer
