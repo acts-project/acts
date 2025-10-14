@@ -401,13 +401,14 @@ ProcessCode HepMC3Reader::readLogicalEvent(
     auto& multiplicityGenerator = m_inputs[inputIndex].multiplicityGenerator;
 
     // Use multiplicityGenerator to determine count
-    std::size_t count;
+    std::size_t count = 0;
     if (rng.has_value()) {
       count = (*multiplicityGenerator)(*rng);
     } else {
-      // Must be FixedMultiplicityGenerator if no RNG
-      RandomEngine dummyRng;
-      count = (*multiplicityGenerator)(dummyRng);
+      // Must be FixedMultiplicityGenerator if no RNG, so downcast is safe
+      const auto& fixedGen = static_cast<const FixedMultiplicityGenerator&>(
+          *multiplicityGenerator);
+      count = fixedGen.n;
     }
 
     ACTS_VERBOSE("Reading " << count << " events from " << path);
@@ -416,7 +417,15 @@ ProcessCode HepMC3Reader::readLogicalEvent(
 
       reader->read_event(*event);
       if (reader->failed()) {
-        ACTS_ERROR("Error reading event " << i << " from " << path);
+        ACTS_ERROR("Error reading event " << i << " (input index = "
+                                          << inputIndex << ") from " << path);
+        if (inputIndex > 0) {
+          ACTS_ERROR("-> since this is input file index "
+                     << inputIndex
+                     << ", this probably means that the "
+                        "input file has "
+                        "fewer events than expected.");
+        }
         return ABORT;
       }
       events.push_back(std::move(event));
