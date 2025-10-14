@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.15
+aiohttp==3.13.0
     # via -r docs/requirements.in
 aiosignal==1.4.0
     # via aiohttp
@@ -14,13 +14,13 @@ alabaster==0.7.16
     # via sphinx
 annotated-types==0.7.0
     # via pydantic
-attrs==25.3.0
+attrs==25.4.0
     # via aiohttp
 babel==2.17.0
     # via sphinx
 breathe==4.36.0
     # via -r docs/requirements.in
-certifi==2025.8.3
+certifi==2025.10.5
     # via requests
 cffi==2.0.0
     # via cryptography
@@ -36,7 +36,7 @@ docutils==0.21.2
     #   myst-parser
     #   sphinx
     #   sphinx-rtd-theme
-frozenlist==1.7.0
+frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
@@ -66,7 +66,7 @@ mdit-py-plugins==0.5.0
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.6.4
+multidict==6.7.0
     # via
     #   aiohttp
     #   yarl
@@ -74,15 +74,15 @@ myst-parser==4.0.1
     # via -r docs/requirements.in
 packaging==25.0
     # via sphinx
-propcache==0.4.0
+propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
 pycparser==2.23
     # via cffi
-pydantic==2.11.10
+pydantic==2.12.0
     # via -r docs/requirements.in
-pydantic-core==2.33.2
+pydantic-core==2.41.1
     # via pydantic
 pygments==2.19.2
     # via
@@ -98,7 +98,7 @@ pyyaml==6.0.3
     # via myst-parser
 requests==2.32.5
     # via sphinx
-rich==14.1.0
+rich==14.2.0
     # via
     #   -r docs/requirements.in
     #   typer
@@ -146,5 +146,5 @@ uritemplate==4.2.0
     # via gidgethub
 urllib3==2.5.0
     # via requests
-yarl==1.20.1
+yarl==1.22.0
     # via aiohttp

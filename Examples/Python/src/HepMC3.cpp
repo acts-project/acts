@@ -59,11 +59,51 @@ void addHepMC3(Context& ctx) {
         .value("zstd", zstd);
   }
 
+  {
+    using enum HepMC3Util::Format;
+    py::enum_<HepMC3Util::Format>(hepmc3, "Format")
+        .value("ascii", ascii)
+        .value("root", root);
+  }
+
   hepmc3.def("availableCompressionModes", []() {
     auto modes = HepMC3Util::availableCompressionModes();
     return std::vector(modes.begin(), modes.end());
   });
 
+  hepmc3.def("availableFormats", []() {
+    auto formats = HepMC3Util::availableFormats();
+    return std::vector(formats.begin(), formats.end());
+  });
+
   hepmc3.def("compressionExtension", &HepMC3Util::compressionExtension);
+  hepmc3.def("formatFromFilename", &HepMC3Util::formatFromFilename);
+
+  // HepMC3 normalize function and result
+  {
+    auto result =
+        py::class_<HepMC3Util::NormalizeResult>(hepmc3, "NormalizeResult")
+            .def(py::init<>())
+            .def_readonly("numEvents", &HepMC3Util::NormalizeResult::numEvents)
+            .def_readonly("outputFiles",
+                          &HepMC3Util::NormalizeResult::outputFiles)
+            .def_readonly("totalInputSize",
+                          &HepMC3Util::NormalizeResult::totalInputSize)
+            .def_readonly("totalOutputSize",
+                          &HepMC3Util::NormalizeResult::totalOutputSize)
+            .def_readonly("totalReadTime",
+                          &HepMC3Util::NormalizeResult::totalReadTime)
+            .def_readonly("totalWriteTime",
+                          &HepMC3Util::NormalizeResult::totalWriteTime);
+  }
+
+  hepmc3.def("normalizeFiles", &HepMC3Util::normalizeFiles,
+             py::arg("inputFiles"), py::arg("singleOutputPath") = std::nullopt,
+             py::arg("outputDir") = ".", py::arg("outputPrefix") = "events",
+             py::arg("eventsPerFile") = 10000,
+             py::arg("maxEvents") = std::nullopt,
+             py::arg("format") = HepMC3Util::Format::ascii,
+             py::arg("compression") = HepMC3Util::Compression::none,
+             py::arg("compressionLevel") = 6, py::arg("verbose") = false);
 }
 }  // namespace ActsPython
