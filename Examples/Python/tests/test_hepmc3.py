@@ -80,6 +80,22 @@ def handle_path(out, compression):
     return actual_path
 
 
+def check_sidecar(actual_path, expected_events):
+    """Check that a sidecar metadata file exists and contains the expected event count"""
+    sidecar_path = Path(str(actual_path) + ".json")
+    assert sidecar_path.exists(), f"Sidecar file {sidecar_path} does not exist"
+
+    import json
+
+    with sidecar_path.open("r") as f:
+        metadata = json.load(f)
+
+    assert "num_events" in metadata, "Sidecar file missing 'num_events' field"
+    assert (
+        metadata["num_events"] == expected_events
+    ), f"Expected {expected_events} events, but sidecar says {metadata['num_events']}"
+
+
 all_formats = []
 all_format_ids = []
 
@@ -180,6 +196,9 @@ def test_hemc3_writer(tmp_path, rng, compression, format):
     s.run()
 
     actual_path = handle_path(out, compression)
+
+    # Check sidecar metadata file
+    check_sidecar(actual_path, s.config.events)
 
     # pyhepmc does not support zstd
     if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib) and format != "root":
@@ -308,6 +327,9 @@ def test_hepmc3_writer_stall(common_evgen, tmp_path, bufsize):
 
     s.run()
 
+    # Check sidecar metadata file
+    check_sidecar(out, s.config.events)
+
     @with_pyhepmc
     def check(pyhepmc):
         nevts = 0
@@ -349,6 +371,9 @@ def test_hepmc3_writer_not_in_order(common_evgen, tmp_path):
     )
 
     s.run()
+
+    # Check sidecar metadata file
+    check_sidecar(out, s.config.events)
 
     @with_pyhepmc
     def check(pyhepmc):
@@ -419,6 +444,9 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression, format):
     actual_path = handle_path(out, compression)
 
     assert actual_path.exists(), f"File {actual_path} does not exist"
+
+    # Check sidecar metadata file
+    check_sidecar(actual_path, s.config.events)
 
     if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib) and format != "root":
 
@@ -628,8 +656,6 @@ def test_hepmc3_compression_modes():
     assert cm.none in acts.examples.hepmc3.availableCompressionModes()
 
 
-
-
 def test_hepmc3_writer_root_compression_error(tmp_path):
     """Test that an error is raised when trying to use compression with ROOT format"""
     from acts.examples.hepmc3 import HepMC3Writer
@@ -647,7 +673,7 @@ def test_hepmc3_writer_root_compression_error(tmp_path):
             compression=acts.examples.hepmc3.Compression.zlib,
         )
 
-    assert "Compression not supported for Root" in str(excinfo.value)
+    assert "Compression not supported for ROOT format" in str(excinfo.value)
 
 
 def test_hepmc3_reader_multiple_files(tmp_path, rng):
@@ -742,6 +768,10 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
     act_hs = handle_path(out_hs, compression)
     act_pu = handle_path(out_pu, compression)
 
+    # Check sidecar metadata files
+    check_sidecar(act_hs, events)
+    check_sidecar(act_pu, events * n_pileup)
+
     # do reading including merging and write combined file
 
     s = Sequencer(numThreads=10, logLevel=acts.logging.INFO)
@@ -773,6 +803,9 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
     s.run()
 
     act_combined = handle_path(out_combined, compression)
+
+    # Check sidecar metadata file for combined output
+    check_sidecar(act_combined, events)
 
     @with_pyhepmc
     def check(pyhepmc):
