@@ -14,6 +14,7 @@
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Metadata.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsExamples/Utilities/MultiplicityGenerators.hpp"
 
@@ -84,8 +85,7 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
                             Acts::Logging::DEBUG);
     // This uses the first reader that's configured, with the assumption that
     // this is the hard-scatter event
-    auto reader = HepMC3Util::deduceReader(m_inputs.front().path);
-    m_eventsRange = {0, determineNumEvents(*reader)};
+    m_eventsRange = {0, determineNumEvents(m_inputs.front().path)};
   }
 
   // Check if any input uses a non-Fixed multiplicity generator
@@ -122,7 +122,17 @@ std::pair<std::size_t, std::size_t> HepMC3Reader::availableEvents() const {
   return m_eventsRange;
 }
 
-std::size_t HepMC3Reader::determineNumEvents(HepMC3::Reader& reader) const {
+std::size_t HepMC3Reader::determineNumEvents(
+    const std::filesystem::path& path) const {
+  std::optional<std::size_t> eventCount = HepMC3Metadata::readSidecar(path);
+
+  if (eventCount.has_value()) {
+    ACTS_INFO("HepMC3Reader: Found sidecar metadata file for "
+              << path << " with " << eventCount.value() << " events");
+    return eventCount.value();
+  }
+
+  auto reader = HepMC3Util::deduceReader(m_inputs.front().path);
   ACTS_INFO(
       "HepMC3Reader: Number of events not specified, will read the "
       "whole file to determine the number of events. This might take a while "
@@ -130,9 +140,9 @@ std::size_t HepMC3Reader::determineNumEvents(HepMC3::Reader& reader) const {
   std::size_t numEvents = 0;
   auto event =
       std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
-  while (!reader.failed()) {
-    reader.read_event(*event);
-    if (!reader.failed()) {
+  while (!reader->failed()) {
+    reader->read_event(*event);
+    if (!reader->failed()) {
       ++numEvents;
     }
   }

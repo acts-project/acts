@@ -9,12 +9,14 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Metadata.hpp"
 
 #include <fstream>
+
 #include <nlohmann/json.hpp>
 
 namespace ActsExamples::HepMC3Metadata {
 
-std::filesystem::path getSidecarPath(
-    const std::filesystem::path& hepmc3File) {
+constexpr std::string_view kEventCountKey = "num_events";
+
+std::filesystem::path getSidecarPath(const std::filesystem::path& hepmc3File) {
   return hepmc3File.string() + ".meta";
 }
 
@@ -35,11 +37,12 @@ std::optional<std::size_t> readSidecar(
     nlohmann::json j;
     file >> j;
 
-    if (!j.contains("eventCount") || !j["eventCount"].is_number_unsigned()) {
+    if (!j.contains(kEventCountKey) ||
+        !j[kEventCountKey].is_number_unsigned()) {
       return std::nullopt;
     }
 
-    return j["eventCount"].get<std::size_t>();
+    return j[kEventCountKey].get<std::size_t>();
   } catch (...) {
     // Any error reading or parsing the file
     return std::nullopt;
