@@ -16,7 +16,9 @@
 
 #include <ostream>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 class SurfaceMaterialStub : public ISurfaceMaterial {
   using ISurfaceMaterial::ISurfaceMaterial;
@@ -38,6 +40,8 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
 
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
 };
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ISurfaceMaterial_factor_test) {
@@ -67,4 +71,6 @@ BOOST_AUTO_TEST_CASE(ISurfaceMaterial_factor_test) {
       1 - splitFactor);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

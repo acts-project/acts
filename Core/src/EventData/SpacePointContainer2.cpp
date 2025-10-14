@@ -21,7 +21,7 @@ using tuple_indices =
 
 }
 
-namespace Acts::Experimental {
+namespace Acts {
 
 static_assert(std::random_access_iterator<SpacePointContainer2::iterator>);
 static_assert(
@@ -228,4 +228,4 @@ bool SpacePointContainer2::reservedColumn(const std::string &name) noexcept {
   return reservedColumns.contains(name);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

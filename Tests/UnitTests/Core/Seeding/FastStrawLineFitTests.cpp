@@ -30,7 +30,8 @@ using gauss_t = std::normal_distribution<double>;
 
 constexpr std::size_t nTrials = 1;
 constexpr auto logLvl = Logging::Level::INFO;
-namespace Acts::Test {
+
+namespace ActsTests {
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("FastStrawLineFitTests", logLvl));
 
@@ -61,13 +62,13 @@ class StrawTestPoint {
  public:
   StrawTestPoint(const Vector3& pos, const double driftR,
                  const double driftRUncert)
-      : m_pos{pos}, m_driftR{Acts::abs(driftR)} {
-    m_cov[toUnderlying(ResidualIdx::bending)] = Acts::square(driftRUncert);
+      : m_pos{pos}, m_driftR{abs(driftR)} {
+    m_cov[toUnderlying(ResidualIdx::bending)] = square(driftRUncert);
   }
 
   StrawTestPoint(const Vector3& pos, const double uncert)
       : m_pos{pos}, m_isStraw{false} {
-    m_cov[toUnderlying(ResidualIdx::bending)] = Acts::square(uncert);
+    m_cov[toUnderlying(ResidualIdx::bending)] = square(uncert);
   }
   /// @brief Straw tube's direction
   const Vector3& localPosition() const { return m_pos; }
@@ -96,8 +97,8 @@ class StrawTestPoint {
   /// @brief Dummy return not used in test
   bool measuresLoc1() const { return true; }
   void setRadius(const double r, const double uncertR) {
-    m_driftR = Acts::abs(r);
-    m_cov[toUnderlying(ResidualIdx::bending)] = Acts::square(uncertR);
+    m_driftR = abs(r);
+    m_cov[toUnderlying(ResidualIdx::bending)] = square(uncertR);
   }
   void setTimeRecord(const double t) { m_drifT = t; }
 
@@ -107,7 +108,7 @@ class StrawTestPoint {
   Vector3 m_toNext{Vector3::UnitY()};
   Vector3 m_planeNorm{Vector3::UnitZ()};
   double m_driftR{0.};
-  std::array<double, 3> m_cov{Acts::filledArray<double, 3>(0.)};
+  std::array<double, 3> m_cov{filledArray<double, 3>(0.)};
   double m_drifT{0.};
   bool m_isStraw{true};
 };
@@ -117,29 +118,31 @@ class StrawTestCalibrator {
  public:
   /// @brief Choose the coefficient to arrive at a drift time of 750 ns
   ///        for 15 mm
-  static constexpr double CoeffRtoT = 750._ns * Acts::pow(15._mm, -2);
-  static constexpr double CoeffTtoR = 1. / CoeffRtoT;
+  inline static const double CoeffRtoT = 750._ns / std::pow(15._mm, 1. / 3.);
+  inline static const double CoeffTtoR = 1 / std::pow(CoeffRtoT, 3);
 
   static double calcDriftUncert(const double driftR) {
-    return 0.1_mm + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
+    return 0.1_mm + 0.15_mm * std::pow(1._mm + std::abs(driftR), -2.);
   }
-  static double driftTime(const double r) { return CoeffRtoT * r; }
+  static double driftTime(const double r) {
+    return CoeffRtoT * std::pow(r, 1. / 3.);
+  }
   static double driftRadius(const double t) {
-    return CoeffTtoR * Acts::pow(t, 1);
+    return CoeffTtoR * std::pow(t, 3);
   }
 
-  static double driftRadius(const Acts::CalibrationContext& /*ctx*/,
+  static double driftRadius(const CalibrationContext& /*ctx*/,
                             const StrawTestPoint& straw, const double t0) {
     return driftRadius(straw.time() - t0);
   }
-  static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
+  static double driftVelocity(const CalibrationContext& /*ctx*/,
                               const StrawTestPoint& straw, const double t0) {
-    return CoeffTtoR * Acts::pow(straw.time() - t0, 0);
+    return 3 * CoeffTtoR * std::pow(straw.time() - t0, 2);
   }
   static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
-                                  const StrawTestPoint& /*straw*/,
-                                  const double /*t0*/) {
-    return 0.;
+                                  const StrawTestPoint& straw,
+                                  const double t0) {
+    return 6 * CoeffTtoR * (straw.time() - t0);
   }
 };
 static_assert(
@@ -157,8 +160,7 @@ Line_t generateLine(RandomEngine& engine) {
   linePars[toUnderlying(ParIndex::y0)] = uniform_t{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
       uniform_t{0.1_degree, 179.9_degree}(engine);
-  if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
-      0.2_degree) {
+  if (abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) < 0.2_degree) {
     return generateLine(engine);
   }
   Line_t line{linePars};
@@ -215,12 +217,12 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
   /// Extrapolate the track to the z-planes of the tubes and determine which
   /// tubes were actually hit
   for (const auto& stag : tubePositions) {
-    auto planeExtpLow = Acts::PlanarHelper::intersectPlane(
-        trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
-        stag.z() - tubeRadius);
-    auto planeExtpHigh = Acts::PlanarHelper::intersectPlane(
-        trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
-        stag.z() + tubeRadius);
+    auto planeExtpLow =
+        PlanarHelper::intersectPlane(trajLine.position(), trajLine.direction(),
+                                     Vector3::UnitZ(), stag.z() - tubeRadius);
+    auto planeExtpHigh =
+        PlanarHelper::intersectPlane(trajLine.position(), trajLine.direction(),
+                                     Vector3::UnitZ(), stag.z() + tubeRadius);
 
     ACTS_DEBUG("Extrapolated to plane " << toString(planeExtpLow.position())
                                         << " "
@@ -230,6 +232,12 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
         (planeExtpLow.position().y() - stag.y()) / (2. * tubeRadius)));
     const auto dToFirstHigh = static_cast<int>(std::ceil(
         (planeExtpHigh.position().y() - stag.y()) / (2. * tubeRadius)));
+
+    ACTS_DEBUG("Extrapolated to plane "
+               << toString(planeExtpLow.position()) << " "
+               << toString(planeExtpHigh.position())
+               << " Hit tubes: " << dToFirstLow << " " << dToFirstHigh);
+
     /// Does the track go from left to right or right to left?
     const int dT = dToFirstHigh > dToFirstLow ? 1 : -1;
     /// Loop over the candidate tubes and check each one whether the track
@@ -239,7 +247,6 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
       const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
       const double rad = Acts::detail::LineHelper::signedDistance(
           tube, Vector3::UnitX(), trajLine.position(), trajLine.direction());
-      ACTS_DEBUG("Tube position: " << toString(tube) << ", radius: " << rad);
 
       if (std::abs(rad) > tubeRadius) {
         continue;
@@ -251,6 +258,10 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
       }
       circles.emplace_back(std::make_unique<StrawTestPoint>(
           tube, smearedR, StrawTestCalibrator::calcDriftUncert(smearedR)));
+      ACTS_DEBUG("Tube position: "
+                 << toString(tube) << ", signedRadius: " << rad
+                 << ", smearedRadius: " << smearedR << ", uncer: "
+                 << StrawTestCalibrator::calcDriftUncert(smearedR));
     }
   }
   ACTS_DEBUG("Track hit in total " << circles.size() << " tubes ");
@@ -265,7 +276,7 @@ TestStrawCont_t generateStrips(const Line_t& trajLine, RandomEngine& engine) {
                                           435._mm,  440_mm,  445_mm,  400._mm};
   constexpr double stripPitch = 1._cm;
   for (const auto z : stripZ) {
-    auto planeExtp = Acts::PlanarHelper::intersectPlane(
+    auto planeExtp = PlanarHelper::intersectPlane(
         trajLine.position(), trajLine.direction(), Vector3::UnitZ(), z);
     Vector3 stripPos = planeExtp.position();
     stripPos[eY] = gauss_t{stripPos[eY], stripPitch}(engine);
@@ -284,10 +295,9 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
         track.direction());
     ACTS_DEBUG("Distance straw: " << toString(meas->localPosition())
                                   << ",  r: " << meas->driftRadius()
-                                  << " - to track: " << Acts::abs(dist));
+                                  << " - to track: " << abs(dist));
 
-    chi2 += Acts::square((Acts::abs(dist) - meas->driftRadius()) /
-                         meas->driftUncert());
+    chi2 += square((abs(dist) - meas->driftRadius()) / meas->driftUncert());
   }
   return chi2;
 }
@@ -296,7 +306,7 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
   dTYPE NAME{};                     \
   outTree->Branch(#NAME, &NAME);
 
-BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
 void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
   auto outTree = std::make_unique<TTree>("StrawFitTree", "FastFitTree");
@@ -356,7 +366,7 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
     const double testChi2 = calcChi2(strawPoints, track);
     ACTS_DEBUG("testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2);
 
-    BOOST_CHECK_LE(Acts::abs(testChi2 - (*fitResult).chi2), 1.e-9);
+    BOOST_CHECK_LE(abs(testChi2 - (*fitResult).chi2), 1.e-9);
     recoTheta = (*fitResult).theta;
     recoY0 = (*fitResult).y0;
     uncertTheta = (*fitResult).dTheta;
@@ -390,7 +400,7 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
   cfg.maxIter = 500;
   FastStrawLineFitter fastFitter{cfg, getDefaultLogger("FitterWithT0", logLvl)};
   StrawTestCalibrator calibrator{};
-  Acts::CalibrationContext cctx{};
+  CalibrationContext cctx{};
   ACTS_INFO("Start straw fit with t0 test.");
   for (std::size_t n = 0; n < nTrials; ++n) {
     if ((n + 1) % 1000 == 0) {
@@ -422,11 +432,11 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
       const double dTime = StrawTestCalibrator::driftTime(meas->driftRadius());
       BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
                         meas->driftRadius(), 1.e-12);
+      meas->setTimeRecord(dTime + timeOffSet);
 
       const double updatedR =
           StrawTestCalibrator::driftRadius(dTime + timeOffSet);
 
-      meas->setTimeRecord(dTime + timeOffSet);
       BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
                         calibrator.driftRadius(cctx, *meas, timeOffSet), 1.e-3);
 
@@ -435,6 +445,7 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
                  << meas->driftRadius() << " to " << updatedR
                  << ", dTime: " << inNanoS(dTime));
       meas->setRadius(updatedR, StrawTestCalibrator::calcDriftUncert(updatedR));
+
       /// Calculate the numerical derivatives
       constexpr double h = 1.e-8_ns;
       const double numV =
@@ -442,7 +453,7 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
             calibrator.driftRadius(cctx, *meas, timeOffSet - h)) /
           (2. * h);
       BOOST_CHECK_LE(
-          Acts::abs(numV - calibrator.driftVelocity(cctx, *meas, timeOffSet)) /
+          abs(numV - calibrator.driftVelocity(cctx, *meas, timeOffSet)) /
               std::max(numV, 1.),
           1.e-3);
     }
@@ -543,4 +554,4 @@ BOOST_AUTO_TEST_CASE(FitterTests) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+}  // namespace ActsTests

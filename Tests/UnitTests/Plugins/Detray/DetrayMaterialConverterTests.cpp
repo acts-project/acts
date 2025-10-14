@@ -13,42 +13,46 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
-#include "Acts/Plugins/Detray/DetrayMaterialConverter.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayMaterialConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalDetector.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <numbers>
 
 #include <detray/definitions/grid_axis.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
-auto tContext = Acts::GeometryContext();
+using namespace Acts;
+using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(DetrayConversion)
+auto tContext = GeometryContext();
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetraySuite)
 
 // These tests check the conversion to the payload objects, the full test
 auto materialSlab12345 =
-    Acts::MaterialSlab(Acts::Material::fromMolarDensity(1, 2, 3, 4, 5), 1.);
+    MaterialSlab(Material::fromMolarDensity(1, 2, 3, 4, 5), 1.);
 
 auto materialSlab678910 =
-    Acts::MaterialSlab(Acts::Material::fromMolarDensity(6, 7, 8, 9, 10), 2.);
+    MaterialSlab(Material::fromMolarDensity(6, 7, 8, 9, 10), 2.);
 
 auto materialSlab54321 =
-    Acts::MaterialSlab(Acts::Material::fromMolarDensity(5, 4, 3, 2, 1), 3.);
+    MaterialSlab(Material::fromMolarDensity(5, 4, 3, 2, 1), 3.);
 
 auto materialSlab109876 =
-    Acts::MaterialSlab(Acts::Material::fromMolarDensity(10, 9, 8, 7, 6), 4.);
+    MaterialSlab(Material::fromMolarDensity(10, 9, 8, 7, 6), 4.);
 
-auto logger =
-    Acts::getDefaultLogger("DetrayMaterialConverterTests", Acts::Logging::INFO);
+auto logger = getDefaultLogger("DetrayMaterialConverterTests", Logging::INFO);
 
 BOOST_AUTO_TEST_CASE(DetrayMaterialSlabConversion) {
   // Convert the material slab
   detray::io::material_slab_payload payload =
-      Acts::DetrayMaterialConverter::convertMaterialSlab(materialSlab12345);
+      DetrayMaterialConverter::convertMaterialSlab(materialSlab12345);
 
   // Material type should be set to slab
   BOOST_CHECK(payload.type ==
@@ -77,12 +81,12 @@ BOOST_AUTO_TEST_CASE(DetrayMaterialSlabConversion) {
 
 BOOST_AUTO_TEST_CASE(DetrayHomogeneousMaterialConversion) {
   // Convert homogeneous material
-  Acts::HomogeneousSurfaceMaterial homMaterial(materialSlab12345);
+  HomogeneousSurfaceMaterial homMaterial(materialSlab12345);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
-          homMaterial, *logger);
+      payload = DetrayMaterialConverter::convertGridSurfaceMaterial(homMaterial,
+                                                                    *logger);
 
   // Check the payload - empty, this should run through another converter
   BOOST_CHECK(payload.axes.empty());
@@ -91,19 +95,18 @@ BOOST_AUTO_TEST_CASE(DetrayHomogeneousMaterialConversion) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
   // Create a binned material in 4 bins in x direction
-  Acts::BinUtility binUtility(4u, -2., 2., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisX);
+  BinUtility binUtility(4u, -2., 2., BinningOption::open, AxisDirection::AxisX);
 
-  std::vector<Acts::MaterialSlab> materialSlabs = {
+  std::vector<MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
       materialSlab109876};
 
-  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
-      binUtility, {materialSlabs}, 0., Acts::MappingType::Default);
+  auto binnedMaterial = BinnedSurfaceMaterial(binUtility, {materialSlabs}, 0.,
+                                              MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+      payload = DetrayMaterialConverter::convertGridSurfaceMaterial(
           binnedMaterial, *logger);
   // Check the payload
   // - we fake 2D always for detray to minimize the number of containers
@@ -151,19 +154,18 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
   // Create a binned material in 4 bins in y direction
-  Acts::BinUtility binUtility(4u, -2., 2., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisY);
+  BinUtility binUtility(4u, -2., 2., BinningOption::open, AxisDirection::AxisY);
 
-  std::vector<Acts::MaterialSlab> materialSlabs = {
+  std::vector<MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
       materialSlab109876};
 
-  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
-      binUtility, {materialSlabs}, 0., Acts::MappingType::Default);
+  auto binnedMaterial = BinnedSurfaceMaterial(binUtility, {materialSlabs}, 0.,
+                                              MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+      payload = DetrayMaterialConverter::convertGridSurfaceMaterial(
           binnedMaterial, *logger);
   // Check the payload
   // - we fake 2D always for detray to minimize the number of containers
@@ -211,23 +213,21 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
   // Create a binned material in 2 x2  bins in x-y direction
-  Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisX);
-  binUtility += Acts::BinUtility(2u, -2., 2., Acts::BinningOption::open,
-                                 Acts::AxisDirection::AxisY);
+  BinUtility binUtility(2u, -1., 1., BinningOption::open, AxisDirection::AxisX);
+  binUtility +=
+      BinUtility(2u, -2., 2., BinningOption::open, AxisDirection::AxisY);
 
-  std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
-                                                    materialSlab678910};
-  std::vector<Acts::MaterialSlab> materialSlabs1 = {materialSlab54321,
-                                                    materialSlab109876};
+  std::vector<MaterialSlab> materialSlabs0 = {materialSlab12345,
+                                              materialSlab678910};
+  std::vector<MaterialSlab> materialSlabs1 = {materialSlab54321,
+                                              materialSlab109876};
 
-  auto binnedMaterial =
-      Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
-                                  0., Acts::MappingType::Default);
+  auto binnedMaterial = BinnedSurfaceMaterial(
+      binUtility, {materialSlabs0, materialSlabs1}, 0., MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+      payload = DetrayMaterialConverter::convertGridSurfaceMaterial(
           binnedMaterial, *logger);
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -268,19 +268,18 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
   // Create a binned material in 4 bins (irregularly) in r direction
   std::vector<float> binEdges = {0., 5., 10., 15., 20.};
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisR);
+  BinUtility binUtility(binEdges, BinningOption::open, AxisDirection::AxisR);
 
-  std::vector<Acts::MaterialSlab> materialSlabs = {
+  std::vector<MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
       materialSlab109876};
 
-  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
-      binUtility, {materialSlabs}, 0., Acts::MappingType::Default);
+  auto binnedMaterial = BinnedSurfaceMaterial(binUtility, {materialSlabs}, 0.,
+                                              MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+      payload = DetrayMaterialConverter::convertGridSurfaceMaterial(
           binnedMaterial, *logger);
   // Check the payload
   // - we fake 2D always for detray to minimize the number of containers
@@ -307,24 +306,21 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
   // Create a binned material in 2 bins - irregularly in r, 2 bins in phi
   std::vector<float> binEdges = {0., 5., 20.};
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisR);
-  binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
-                                 Acts::BinningOption::closed,
-                                 Acts::AxisDirection::AxisPhi);
+  BinUtility binUtility(binEdges, BinningOption::open, AxisDirection::AxisR);
+  binUtility += BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                           BinningOption::closed, AxisDirection::AxisPhi);
 
-  std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
-                                                    materialSlab678910};
-  std::vector<Acts::MaterialSlab> materialSlabs1 = {materialSlab54321,
-                                                    materialSlab109876};
+  std::vector<MaterialSlab> materialSlabs0 = {materialSlab12345,
+                                              materialSlab678910};
+  std::vector<MaterialSlab> materialSlabs1 = {materialSlab54321,
+                                              materialSlab109876};
 
-  auto binnedMaterial =
-      Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
-                                  0., Acts::MappingType::Default);
+  auto binnedMaterial = BinnedSurfaceMaterial(
+      binUtility, {materialSlabs0, materialSlabs1}, 0., MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+      payload = DetrayMaterialConverter::convertGridSurfaceMaterial(
           binnedMaterial, *logger);
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -346,19 +342,18 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
   // Create a binned material in 4 bins in x direction
   std::vector<float> binEdges = {-20, 0, 25, 50, 100};
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisZ);
+  BinUtility binUtility(binEdges, BinningOption::open, AxisDirection::AxisZ);
 
-  std::vector<Acts::MaterialSlab> materialSlabs = {
+  std::vector<MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
       materialSlab109876};
 
-  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
-      binUtility, {materialSlabs}, 0., Acts::MappingType::Default);
+  auto binnedMaterial = BinnedSurfaceMaterial(binUtility, {materialSlabs}, 0.,
+                                              MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+      payload = DetrayMaterialConverter::convertGridSurfaceMaterial(
           binnedMaterial, *logger);
 
   // Check the payload
@@ -385,24 +380,21 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
   // Create a binned material in 2 x2  bins in x-y direction
-  Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisZ);
-  binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
-                                 Acts::BinningOption::closed,
-                                 Acts::AxisDirection::AxisPhi);
+  BinUtility binUtility(2u, -1., 1., BinningOption::open, AxisDirection::AxisZ);
+  binUtility += BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                           BinningOption::closed, AxisDirection::AxisPhi);
 
-  std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
-                                                    materialSlab678910};
-  std::vector<Acts::MaterialSlab> materialSlabs1 = {materialSlab54321,
-                                                    materialSlab109876};
+  std::vector<MaterialSlab> materialSlabs0 = {materialSlab12345,
+                                              materialSlab678910};
+  std::vector<MaterialSlab> materialSlabs1 = {materialSlab54321,
+                                              materialSlab109876};
 
-  auto binnedMaterial =
-      Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
-                                  0., Acts::MappingType::Default);
+  auto binnedMaterial = BinnedSurfaceMaterial(
+      binUtility, {materialSlabs0, materialSlabs1}, 0., MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+      payload = DetrayMaterialConverter::convertGridSurfaceMaterial(
           binnedMaterial, *logger);
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -417,23 +409,23 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionInvalid) {
   // Create a binned material in 4 bins in x direction
-  Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisR);
-  binUtility += Acts::BinUtility(2u, -2., 2., Acts::BinningOption::open,
-                                 Acts::AxisDirection::AxisEta);
+  BinUtility binUtility(2u, -1., 1., BinningOption::open, AxisDirection::AxisR);
+  binUtility +=
+      BinUtility(2u, -2., 2., BinningOption::open, AxisDirection::AxisEta);
 
-  std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
-                                                    materialSlab678910};
-  std::vector<Acts::MaterialSlab> materialSlabs1 = {materialSlab54321,
-                                                    materialSlab109876};
+  std::vector<MaterialSlab> materialSlabs0 = {materialSlab12345,
+                                              materialSlab678910};
+  std::vector<MaterialSlab> materialSlabs1 = {materialSlab54321,
+                                              materialSlab109876};
 
-  auto binnedMaterial =
-      Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
-                                  0., Acts::MappingType::Default);
+  auto binnedMaterial = BinnedSurfaceMaterial(
+      binUtility, {materialSlabs0, materialSlabs1}, 0., MappingType::Default);
 
-  BOOST_CHECK_THROW(Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+  BOOST_CHECK_THROW(DetrayMaterialConverter::convertGridSurfaceMaterial(
                         binnedMaterial, *logger),
                     std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

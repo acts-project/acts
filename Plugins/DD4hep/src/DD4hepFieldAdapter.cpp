@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
+#include "ActsPlugins/DD4hep/DD4hepFieldAdapter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
@@ -17,7 +17,9 @@
 #include <DD4hep/Handle.h>
 #include <DD4hep/Objects.h>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 DD4hepFieldAdapter::DD4hepFieldAdapter(dd4hep::OverlayedField field)
     : m_field{std::make_unique<dd4hep::OverlayedField>(field)} {
@@ -47,4 +49,4 @@ Result<Vector3> DD4hepFieldAdapter::getField(
   return Result<Vector3>::success(result);
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

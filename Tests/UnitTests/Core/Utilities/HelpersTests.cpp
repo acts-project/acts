@@ -11,11 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <bitset>
@@ -30,11 +30,12 @@
 #include <variant>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::VectorHelpers;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(bitset_to_matrix_to_bitset) {
   Eigen::Matrix<int, 4, 3> mat;
@@ -327,4 +328,4 @@ BOOST_AUTO_TEST_CASE(Overloaded) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

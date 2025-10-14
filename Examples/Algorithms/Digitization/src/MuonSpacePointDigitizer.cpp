@@ -100,7 +100,23 @@ namespace ActsExamples {
 
 MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
                                                  Logging::Level lvl)
-    : IAlgorithm("MuonSpacePointDigitizer", lvl), m_cfg{cfg} {}
+    : IAlgorithm("MuonSpacePointDigitizer", lvl), m_cfg{cfg} {
+  if (m_cfg.inputSimHits.empty()) {
+    throw std::invalid_argument("No sim hits have been parsed ");
+  }
+  if (m_cfg.inputParticles.empty()) {
+    throw std::invalid_argument("No simulated particles were parsed");
+  }
+  if (m_cfg.outputSpacePoints.empty()) {
+    throw std::invalid_argument("No output space points were defined");
+  }
+  ACTS_DEBUG("Retrieve sim hits and particles from "
+             << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
+  ACTS_DEBUG("Write produced space points to " << m_cfg.outputSpacePoints);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
+}
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
   using enum ActsExamples::ProcessCode;
@@ -116,24 +132,6 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
   m_cfg.calibrator =
       std::make_unique<MuonSpacePointCalibrator>(calibCfg, logger().clone());
 
-  if (m_cfg.inputSimHits.empty()) {
-    ACTS_ERROR("No sim hits have been parsed ");
-    return ABORT;
-  }
-  if (m_cfg.inputParticles.empty()) {
-    ACTS_ERROR("No simulated particles were parsed");
-    return ABORT;
-  }
-  if (m_cfg.outputSpacePoints.empty()) {
-    ACTS_ERROR("No output space points were defined");
-    return ABORT;
-  }
-  ACTS_DEBUG("Retrieve sim hits and particles from "
-             << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
-  ACTS_DEBUG("Write produced space points to " << m_cfg.outputSpacePoints);
-  m_inputSimHits.initialize(m_cfg.inputSimHits);
-  m_inputParticles.initialize(m_cfg.inputParticles);
-  m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   gROOT->SetStyle("ATLAS");
   return SUCCESS;
 }

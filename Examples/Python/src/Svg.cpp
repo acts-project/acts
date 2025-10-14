@@ -17,15 +17,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
-#include "Acts/Plugins/ActSVG/DetectorSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -35,6 +26,15 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Io/Svg/SvgPointWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
+#include "ActsPlugins/ActSVG/DetectorSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/DetectorVolumeSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/LayerSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/PortalSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceArraySvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include <actsvg/core/draw.hpp>
@@ -56,6 +56,7 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace Acts::Experimental;
 using namespace ActsExamples;
+using namespace ActsPlugins;
 
 namespace {
 

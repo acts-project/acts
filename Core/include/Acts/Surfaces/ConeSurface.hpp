@@ -85,6 +85,7 @@ class ConeSurface : public RegularSurface {
   /// Assignment operator
   ///
   /// @param other is the source surface for the assignment
+  /// @return Reference to this ConeSurface after assignment
   ConeSurface& operator=(const ConeSurface& other);
 
   /// The binning position method - is overloaded for r-type binning
@@ -97,6 +98,7 @@ class ConeSurface : public RegularSurface {
                             AxisDirection aDir) const final;
 
   /// Return the surface type
+  /// @return Surface type identifier
   SurfaceType type() const override;
 
   /// Return the measurement frame - this is needed for alignment, in particular
@@ -133,10 +135,11 @@ class ConeSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   ///
-  // @return This returns the local z axis
+  /// @return The local z axis vector
   virtual Vector3 rotSymmetryAxis(const GeometryContext& gctx) const;
 
   /// This method returns the ConeBounds by reference
+  /// @return Reference to the cone bounds
   const ConeBounds& bounds() const final;
 
   /// Local to global transformation
@@ -207,6 +210,7 @@ class ConeSurface : public RegularSurface {
       unsigned int quarterSegments = 2u) const override;
 
   /// Return properly formatted class name for screen output
+  /// @return String representation of the class name
   std::string name() const override;
 
   /// Calculate the derivative of path length at the geometry constraint or

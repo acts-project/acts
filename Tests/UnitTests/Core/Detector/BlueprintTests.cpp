@@ -17,39 +17,40 @@ namespace Acts::Experimental {
 class IInternalStructureBuilder {};
 }  // namespace Acts::Experimental
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(BlueprintTest) {
   std::vector<double> bValues = {0., 10., 100.};
 
   // Create  root node
-  std::vector<Acts::AxisDirection> binning = {Acts::AxisDirection::AxisR};
-  auto root = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eOther,
-      bValues, binning);
+  std::vector<AxisDirection> binning = {AxisDirection::AxisR};
+  auto root = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "detector", Transform3::Identity(), VolumeBounds::eOther, bValues,
+      binning);
   // Check the root node
   BOOST_CHECK(root->isRoot());
   BOOST_CHECK_EQUAL(root->parent, nullptr);
   BOOST_CHECK(root->children.empty());
   BOOST_CHECK_EQUAL(root->name, "detector");
 
-  auto leaf0 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "volume_0", Acts::Transform3::Identity(), Acts::VolumeBounds::eOther,
-      bValues);
+  auto leaf0 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "volume_0", Transform3::Identity(), VolumeBounds::eOther, bValues);
   BOOST_CHECK(leaf0->isLeaf());
 
-  auto branch = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "container_0", Acts::Transform3::Identity(), Acts::VolumeBounds::eOther,
-      bValues, binning);
+  auto branch = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "container_0", Transform3::Identity(), VolumeBounds::eOther, bValues,
+      binning);
 
-  auto leaf1 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "volume_1", Acts::Transform3::Identity(), Acts::VolumeBounds::eOther,
-      bValues);
+  auto leaf1 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "volume_1", Transform3::Identity(), VolumeBounds::eOther, bValues);
 
-  auto leaf2 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      "volume_2", Acts::Transform3::Identity(), Acts::VolumeBounds::eOther,
-      bValues,
-      std::make_shared<Acts::Experimental::IInternalStructureBuilder>());
+  auto leaf2 = std::make_unique<Experimental::Gen2Blueprint::Node>(
+      "volume_2", Transform3::Identity(), VolumeBounds::eOther, bValues,
+      std::make_shared<Experimental::IInternalStructureBuilder>());
 
   // Keep around the pointers of the branch & leaves
   auto* leaf0Ptr = leaf0.get();
@@ -80,8 +81,10 @@ BOOST_AUTO_TEST_CASE(BlueprintTest) {
   BOOST_CHECK_EQUAL(leaf0Ptr->parent, root.get());
 
   std::ofstream fs("blueprint.dot");
-  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *root);
+  Experimental::detail::BlueprintDrawer::dotStream(fs, *root);
   fs.close();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -10,9 +10,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Root/RootMagneticFieldIo.hpp"
-#include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
+#include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <fstream>
 
@@ -20,9 +20,14 @@
 #include <TTree.h>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
+using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_root) {
   TemporaryDirectory tmp{};
@@ -146,4 +151,6 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_root) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

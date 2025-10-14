@@ -14,18 +14,19 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <numbers>
 #include <optional>
 #include <utility>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 
@@ -39,6 +40,8 @@ Covariance makeRandomCovariance(int seed = 31415) {
 
   return covMat;
 }
+
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
 BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   // Using a large track grid so we can choose a small bin size
@@ -646,4 +649,6 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   CHECK_CLOSE_ABS(0., sixthDensitySum2D, 1e-4);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
