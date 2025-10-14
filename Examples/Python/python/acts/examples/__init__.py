@@ -4,9 +4,9 @@ from typing import Optional, Protocol, Union, List, Dict, Tuple
 import os
 import re
 
-import acts
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
+import acts
 from acts._adapter import _patch_config, _patchKwargsConstructor
 
 _propagators = []
