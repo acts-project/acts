@@ -791,8 +791,8 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
 
     reader = HepMC3Reader(
         inputs=[
-            acts.examples.hepmc3.Input.Fixed(act_hs, 1),
-            acts.examples.hepmc3.Input.Fixed(act_pu, 10),
+            HepMC3Reader.Input.Fixed(act_hs, 1),
+            HepMC3Reader.Input.Fixed(act_pu, 10),
         ],
         level=acts.logging.VERBOSE,
         outputEvent="hepmc3_event",

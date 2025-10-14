@@ -97,11 +97,12 @@ def main():
     s = acts.examples.Sequencer(numThreads=args.jobs, logLevel=acts.logging.WARNING)
 
     rng = acts.examples.RandomNumbers(seed=42)
+    HepMC3Reader = acts.examples.hepmc3.HepMC3Reader
     s.addReader(
-        acts.examples.hepmc3.HepMC3Reader(
+        HepMC3Reader(
             inputs=[
-                acts.examples.hepmc3.Input.Fixed(args.hard_scatter, 1),
-                acts.examples.hepmc3.Input.Fixed(args.pileup, args.pileup_multiplicity),
+                HepMC3Reader.Input.Fixed(args.hard_scatter, 1),
+                HepMC3Reader.Input.Fixed(args.pileup, args.pileup_multiplicity),
             ],
             level=acts.logging.INFO,
             outputEvent="hepmc3_event",

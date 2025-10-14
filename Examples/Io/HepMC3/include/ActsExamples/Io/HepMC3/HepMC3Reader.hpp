@@ -81,16 +81,17 @@ struct MultiplicityGenerator;
 ///
 class HepMC3Reader final : public IReader {
  public:
+  /// Input specification per file
+  struct Input {
+    /// Path to the HepMC3 file
+    std::filesystem::path path;
+    /// Multiplicity generator determining how many events to read per logical event.
+    /// Must always be set. Use FixedMultiplicityGenerator for deterministic behavior,
+    /// or PoissonMultiplicityGenerator for stochastic pileup simulation.
+    std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator;
+  };
+
   struct Config {
-    /// Input specification per file
-    struct Input {
-      /// Path to the HepMC3 file
-      std::filesystem::path path;
-      /// Multiplicity generator determining how many events to read per logical event.
-      /// Must always be set. Use FixedMultiplicityGenerator for deterministic behavior,
-      /// or PoissonMultiplicityGenerator for stochastic pileup simulation.
-      std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator;
-    };
 
     /// Input files to read. For each file, the multiplicity generator determines
     /// how many events are read per logical event. This can be used to read e.g.
