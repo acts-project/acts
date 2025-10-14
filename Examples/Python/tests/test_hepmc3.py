@@ -656,6 +656,145 @@ def test_hepmc3_compression_modes():
     assert cm.none in acts.examples.hepmc3.availableCompressionModes()
 
 
+@compression_modes
+def test_hepmc3_writer_compression_auto_detection(tmp_path, rng, compression):
+    """Test that compression is automatically detected from the output path"""
+    from acts.examples.hepmc3 import HepMC3Writer
+
+    s = Sequencer(numThreads=1, events=10)
+
+    evGen = acts.examples.EventGenerator(
+        level=acts.logging.INFO,
+        generators=[
+            acts.examples.EventGenerator.Generator(
+                multiplicity=acts.examples.FixedMultiplicityGenerator(n=1),
+                vertex=acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
+                particles=acts.examples.ParametricParticleGenerator(
+                    p=(100 * u.GeV, 100 * u.GeV),
+                    eta=(-2, 2),
+                    phi=(0, 360 * u.degree),
+                    randomizeCharge=True,
+                    numParticles=2,
+                ),
+            )
+        ],
+        outputEvent="hepmc3_event",
+        randomNumbers=rng,
+    )
+    s.addReader(evGen)
+
+    # Create output path WITH compression extension but WITHOUT specifying compression in config
+    ext = acts.examples.hepmc3.compressionExtension(compression)
+    out = tmp_path / f"events.hepmc3{ext}"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    # Don't specify compression - it should be auto-detected from the path
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent="hepmc3_event",
+            outputPath=out,
+            # compression=None (default)
+        )
+    )
+
+    s.run()
+
+    # File should exist with the correct extension
+    assert out.exists(), f"Output file {out} does not exist"
+
+    # Check sidecar
+    check_sidecar(out, s.config.events)
+
+    # Verify we can read it back
+    if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib):
+        @with_pyhepmc
+        def check(pyhepmc):
+            nevts = 0
+            with pyhepmc.open(out) as f:
+                for evt in f:
+                    nevts += 1
+            assert nevts == s.config.events
+
+
+def test_hepmc3_writer_compression_consistency(tmp_path):
+    """Test that specifying both path extension and config compression must be consistent"""
+    from acts.examples.hepmc3 import HepMC3Writer
+
+    out = tmp_path / "out" / "events.hepmc3.gz"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    # Path says .gz (zlib) but config says bzip2 - should fail
+    with acts.logging.ScopedFailureThreshold(acts.logging.MAX), pytest.raises(
+        ValueError
+    ) as excinfo:
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent="hepmc3_event",
+            outputPath=out,
+            compression=acts.examples.hepmc3.Compression.bzip2,
+        )
+
+    assert "Compression mismatch" in str(excinfo.value)
+    assert "zlib" in str(excinfo.value)
+    assert "bzip2" in str(excinfo.value)
+
+
+def test_hepmc3_writer_compression_explicit_with_path(tmp_path, rng):
+    """Test that you can specify compression in config and omit it from path"""
+    from acts.examples.hepmc3 import HepMC3Writer
+
+    s = Sequencer(numThreads=1, events=10)
+
+    evGen = acts.examples.EventGenerator(
+        level=acts.logging.INFO,
+        generators=[
+            acts.examples.EventGenerator.Generator(
+                multiplicity=acts.examples.FixedMultiplicityGenerator(n=1),
+                vertex=acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
+                particles=acts.examples.ParametricParticleGenerator(
+                    p=(100 * u.GeV, 100 * u.GeV),
+                    eta=(-2, 2),
+                    phi=(0, 360 * u.degree),
+                    randomizeCharge=True,
+                    numParticles=2,
+                ),
+            )
+        ],
+        outputEvent="hepmc3_event",
+        randomNumbers=rng,
+    )
+    s.addReader(evGen)
+
+    # Specify path WITHOUT extension, but WITH compression in config
+    out = tmp_path / "events.hepmc3"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent="hepmc3_event",
+            outputPath=out,
+            compression=acts.examples.hepmc3.Compression.zlib,
+        )
+    )
+
+    s.run()
+
+    # File should exist with compression extension added
+    actual_path = tmp_path / "events.hepmc3.gz"
+    assert actual_path.exists(), f"Output file {actual_path} does not exist"
+
+    # Check sidecar
+    check_sidecar(actual_path, s.config.events)
+
+
 def test_hepmc3_writer_root_compression_error(tmp_path):
     """Test that an error is raised when trying to use compression with ROOT format"""
     from acts.examples.hepmc3 import HepMC3Writer
