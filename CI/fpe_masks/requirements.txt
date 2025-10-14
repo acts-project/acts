@@ -6,11 +6,11 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.15
+aiohttp==3.13.0
     # via -r CI/fpe_masks/requirements.in
 aiosignal==1.4.0
     # via aiohttp
-attrs==25.3.0
+attrs==25.4.0
     # via aiohttp
 cffi==2.0.0
     # via cryptography
@@ -18,7 +18,7 @@ click==8.3.0
     # via typer
 cryptography==46.0.2
     # via pyjwt
-frozenlist==1.7.0
+frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
@@ -30,11 +30,11 @@ markdown-it-py==4.0.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.6.4
+multidict==6.7.0
     # via
     #   aiohttp
     #   yarl
-propcache==0.4.0
+propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
@@ -46,7 +46,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   gidgethub
     #   pyjwt
-rich==14.1.0
+rich==14.2.0
     # via
     #   -r CI/fpe_masks/requirements.in
     #   typer
@@ -60,5 +60,5 @@ typing-extensions==4.15.0
     #   typer
 uritemplate==4.2.0
     # via gidgethub
-yarl==1.20.1
+yarl==1.22.0
     # via aiohttp

@@ -1,3 +1,5 @@
+"""HepMC3 utilities and normalization tools."""
+
 from acts._adapter import _patch_config
 from acts import ActsPythonBindings
 
