@@ -378,7 +378,9 @@ def defaultLogging(
         maxLevel: ActsPythonBindings.logging.Level = ActsPythonBindings.logging.FATAL,
     ) -> ActsPythonBindings.logging.Level:
         l = logLevel if logLevel is not None else s.config.logLevel
-        return ActsPythonBindings.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
+        return ActsPythonBindings.logging.Level(
+            min(maxLevel.value, max(minLevel.value, l.value))
+        )
 
     return customLogLevel
 
