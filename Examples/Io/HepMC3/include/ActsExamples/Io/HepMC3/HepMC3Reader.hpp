@@ -47,36 +47,43 @@ struct MultiplicityGenerator;
 /// ## Usage Patterns
 ///
 /// 1. Single file with default multiplicity:
-///    ```
-///    HepMC3Reader reader({.inputPath = "events.hepmc3", ...});
+///    ```cpp
+///    HepMC3Reader::Config cfg;
+///    cfg.inputPath = "events.hepmc3";
+///    cfg.outputEvent = "hepmc3_event";
+///    HepMC3Reader reader(cfg, Acts::Logging::INFO);
 ///    ```
 ///    Automatically uses FixedMultiplicityGenerator(n=1).
 ///
 /// 2. Multiple files with fixed multiplicities (e.g., hard-scatter + pileup):
-///    ```
-///    HepMC3Reader reader({
-///      .inputs = {
-///        Input{path="signal.hepmc3",
-///        multiplicityGenerator=make_shared<FixedMultiplicityGenerator>(1)},
-///        Input{path="pileup.hepmc3",
-///        multiplicityGenerator=make_shared<FixedMultiplicityGenerator>(50)}
-///      },
-///      ...
-///    });
+///    ```cpp
+///    HepMC3Reader::Config cfg;
+///    cfg.inputs = {
+///      {.path = "signal.hepmc3",
+///       .multiplicityGenerator =
+///       std::make_shared<FixedMultiplicityGenerator>(1)},
+///      {.path = "pileup.hepmc3",
+///       .multiplicityGenerator =
+///       std::make_shared<FixedMultiplicityGenerator>(50)}
+///    };
+///    cfg.outputEvent = "hepmc3_event";
+///    HepMC3Reader reader(cfg, Acts::Logging::INFO);
 ///    ```
 ///
 /// 3. With stochastic pileup multiplicity:
-///    ```
-///    HepMC3Reader reader({
-///      .inputs = {
-///        Input{path="signal.hepmc3",
-///        multiplicityGenerator=make_shared<FixedMultiplicityGenerator>(1)},
-///        Input{path="pileup.hepmc3",
-///        multiplicityGenerator=make_shared<PoissonMultiplicityGenerator>(50)}
-///      },
-///      .randomNumbers = rng, // Required for stochastic generators
-///      ...
-///    });
+///    ```cpp
+///    HepMC3Reader::Config cfg;
+///    cfg.inputs = {
+///      {.path = "signal.hepmc3",
+///       .multiplicityGenerator =
+///       std::make_shared<FixedMultiplicityGenerator>(1)},
+///      {.path = "pileup.hepmc3",
+///       .multiplicityGenerator =
+///       std::make_shared<PoissonMultiplicityGenerator>(50.0)}
+///    };
+///    cfg.outputEvent = "hepmc3_event";
+///    cfg.randomNumbers = rng; // Required for stochastic generators
+///    HepMC3Reader reader(cfg, Acts::Logging::INFO);
 ///    ```
 ///
 /// ## Event Skipping
