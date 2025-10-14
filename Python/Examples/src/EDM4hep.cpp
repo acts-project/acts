@@ -41,7 +41,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
                              inputPath, outputFrame, category);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::PodioWriter, m, "PodioWriter",
-                             inputFrame, outputPath, category, collections);
+                             inputFrame, outputPath, category, collections,
+                             separateFilesPerThread);
 
   py::class_<PodioOutputConverter, IAlgorithm,
              std::shared_ptr<PodioOutputConverter>>(m, "PodioOutputConverter")
