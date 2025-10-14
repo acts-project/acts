@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Metadata.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <filesystem>
@@ -66,9 +67,8 @@ HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
     m_writer = createWriter(m_cfg.outputPath);
   }
 
-  if (m_cfg.perEvent &&
-      HepMC3Util::formatFromFilename(m_cfg.outputPath) ==
-          HepMC3Util::Format::root) {
+  if (m_cfg.perEvent && HepMC3Util::formatFromFilename(m_cfg.outputPath) ==
+                            HepMC3Util::Format::root) {
     ACTS_WARNING(
         "Per-event output is enabled and the output format is ROOT. This is "
         "likely not what you want");
@@ -133,6 +133,20 @@ std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
 
 HepMC3Writer::~HepMC3Writer() = default;
 
+std::filesystem::path HepMC3Writer::getActualOutputPath(
+    const std::filesystem::path& target) const {
+  auto format = HepMC3Util::formatFromFilename(target);
+
+  if (format == HepMC3Util::Format::root) {
+    // ROOT files don't have compression suffix
+    return target;
+  } else {
+    // ASCII files may have compression suffix
+    return target.string() +
+           std::string{HepMC3Util::compressionExtension(m_cfg.compression)};
+  }
+}
+
 ProcessCode HepMC3Writer::beginEvent(std::size_t threadId) {
   ACTS_VERBOSE("Begin event, next_event=" << m_nextEvent);
   if (!m_cfg.writeEventsInOrder) {
@@ -176,6 +190,9 @@ ProcessCode HepMC3Writer::writeT(
     if (writer->failed()) {
       ACTS_ERROR("Failed to write event number: " << ctx.eventNumber);
       result = ProcessCode::ABORT;
+    } else {
+      std::scoped_lock lock{m_mutex};
+      m_eventsWritten++;
     }
     writer->close();
     return result;
@@ -189,6 +206,7 @@ ProcessCode HepMC3Writer::writeT(
       ACTS_ERROR("Failed to write event number: " << ctx.eventNumber);
       return ProcessCode::ABORT;
     }
+    m_eventsWritten++;
     return ProcessCode::SUCCESS;
   }
 
@@ -237,6 +255,8 @@ ProcessCode HepMC3Writer::writeT(
       nWritten++;
     }
 
+    m_eventsWritten += nWritten;
+
     ACTS_VERBOSE("Wrote " << nWritten << " events, next_event=" << m_nextEvent
                           << ", thread=" << ctx.threadId);
     m_queueSemaphore.release(nWritten);
@@ -275,6 +295,31 @@ ProcessCode HepMC3Writer::finalize() {
   }
   ACTS_DEBUG("max_queue_size=" << m_maxEventQueueSize
                                << " limit=" << m_cfg.maxEventsPending);
+
+  // Write sidecar metadata file with event count
+  if (!m_cfg.perEvent) {
+    // Single file mode: write one sidecar
+    auto actualPath = getActualOutputPath(m_cfg.outputPath);
+    ACTS_DEBUG("Writing sidecar metadata for " << actualPath << " with "
+                                               << m_eventsWritten << " events");
+    if (!HepMC3Metadata::writeSidecar(actualPath, m_eventsWritten, logger())) {
+      ACTS_WARNING("Failed to write sidecar metadata file for " << actualPath);
+    }
+  } else {
+    // Per-event mode: write sidecar for each file (each has 1 event)
+    ACTS_DEBUG("Per-event mode: wrote " << m_eventsWritten << " event files");
+    for (std::size_t i = 0; i < m_eventsWritten; ++i) {
+      std::filesystem::path perEventFile =
+          perEventFilepath(m_cfg.outputPath.parent_path(),
+                           m_cfg.outputPath.filename().string(), i);
+      auto actualPath = getActualOutputPath(perEventFile);
+      if (!HepMC3Metadata::writeSidecar(actualPath, 1, logger())) {
+        ACTS_WARNING("Failed to write sidecar metadata file for "
+                     << actualPath);
+      }
+    }
+  }
+
   return ProcessCode::SUCCESS;
 }
 

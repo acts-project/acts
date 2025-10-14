@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Metadata.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
+
 #include <fstream>
 
 #include <nlohmann/json.hpp>
@@ -50,21 +52,24 @@ std::optional<std::size_t> readSidecar(
 }
 
 bool writeSidecar(const std::filesystem::path& hepmc3File,
-                  std::size_t eventCount) {
+                  std::size_t eventCount, const Acts::Logger& logger) {
   auto sidecarPath = getSidecarPath(hepmc3File);
+  ACTS_DEBUG("Writing HepMC3 sidecar metadata to " << sidecarPath);
 
   try {
     nlohmann::json j;
-    j["eventCount"] = eventCount;
+    j[kEventCountKey] = eventCount;
 
     std::ofstream file(sidecarPath);
     if (!file.is_open()) {
+      ACTS_DEBUG("Failed to open sidecar file for writing: " << sidecarPath);
       return false;
     }
 
     file << j.dump(2);  // Pretty print with 2-space indent
     return file.good();
   } catch (...) {
+    ACTS_DEBUG("Failed to write sidecar metadata file: " << sidecarPath);
     // Silent failure - directory might not be writable
     return false;
   }

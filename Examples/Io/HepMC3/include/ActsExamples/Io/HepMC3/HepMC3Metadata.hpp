@@ -12,6 +12,10 @@
 #include <filesystem>
 #include <optional>
 
+namespace Acts {
+class Logger;
+}
+
 namespace ActsExamples::HepMC3Metadata {
 
 /// Get the path to the sidecar metadata file for a given HepMC3 file.
@@ -20,13 +24,14 @@ namespace ActsExamples::HepMC3Metadata {
 std::filesystem::path getSidecarPath(const std::filesystem::path& hepmc3File);
 
 /// Read the event count from a sidecar metadata file.
-/// Returns std::nullopt if the file doesn't exist, is invalid, or can't be read.
+/// Returns std::nullopt if the file doesn't exist, is invalid, or can't be
+/// read.
 std::optional<std::size_t> readSidecar(const std::filesystem::path& hepmc3File);
 
 /// Write the event count to a sidecar metadata file.
-/// Returns true if successful, false if the write failed (e.g., directory not writable).
-/// Failures are silent and do not throw exceptions.
+/// Returns true if successful, false if the write failed (e.g., directory not
+/// writable). Failures are silent and do not throw exceptions.
 bool writeSidecar(const std::filesystem::path& hepmc3File,
-                  std::size_t eventCount);
+                  std::size_t eventCount, const Acts::Logger& logger);
 
 }  // namespace ActsExamples::HepMC3Metadata

@@ -92,6 +92,10 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   std::unique_ptr<HepMC3::Writer> createWriter(
       const std::filesystem::path& target);
 
+  /// Get the actual output path including compression suffix
+  std::filesystem::path getActualOutputPath(
+      const std::filesystem::path& target) const;
+
   /// The configuration of this writer
   Config m_cfg;
 
@@ -108,6 +112,9 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   std::atomic<unsigned int> m_waiting = 0;
 
   std::unique_ptr<HepMC3::Writer> m_writer;
+
+  // Track the number of events written for metadata
+  std::size_t m_eventsWritten = 0;
 };
 
 }  // namespace ActsExamples
