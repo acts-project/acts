@@ -184,20 +184,6 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    // Sort the space points time
-    std::ranges::sort(spacePointsOnTrack, [&](const auto* a, const auto* b) {
-      auto ta = a->t();
-      auto tb = b->t();
-      if (!ta.has_value()) {
-        return false;
-      }
-      if (!tb.has_value()) {
-        return true;
-      }
-
-      return *ta < *tb;
-    });
-
     // Loop over the found space points to find the seed with maximum deltaR
     // between the bottom and top space point
     // @todo add the check of deltaZ
