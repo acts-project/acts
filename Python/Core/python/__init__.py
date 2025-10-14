@@ -48,6 +48,7 @@ def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
 
 _patch_config(ActsPythonBindings)
 
+
 # The lines below are to be removed
 @staticmethod
 def _decoratorFromFile(file: Union[str, Path], **kwargs):
