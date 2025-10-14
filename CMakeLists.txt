@@ -377,23 +377,9 @@ if(ACTS_BUILD_PLUGIN_JSON)
         add_subdirectory(thirdparty/nlohmann_json)
     endif()
 endif()
-if(ACTS_BUILD_PLUGIN_FASTJET AND NOT ACTS_BUILD_FATRAS)
-    message(
-        STATUS
-        "Enabling Fatras automatically because PluginFastJet requires it."
-    )
-    set(ACTS_BUILD_FATRAS
-        ON
-        CACHE BOOL
-        "Build Fatras (required by PluginFastJet)"
-        FORCE
-    )
-endif()
-
 if(ACTS_BUILD_PLUGIN_FASTJET)
     find_package(FastJet ${_acts_fastjet_version} REQUIRED)
 endif()
-
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     find_package(GeoModelCore CONFIG)
     if(NOT GeoModelCore_FOUND)
