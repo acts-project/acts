@@ -84,23 +84,16 @@ all_formats = []
 all_format_ids = []
 
 for compression in acts.examples.hepmc3.availableCompressionModes():
-    for value, id in [(True, "per_event"), (False, "combined")]:
-        all_formats.append(
-            (
-                value,
-                "hepmc3",
-                compression,
-            )
-        )
-        all_format_ids.append(
-            f"{id}-hepmc3-{compression.name if compression != cm.none else 'uncompressed'}"
-        )
+    all_formats.append(("hepmc3", compression))
+    all_format_ids.append(
+        f"hepmc3-{compression.name if compression != cm.none else 'uncompressed'}"
+    )
 
-all_formats.append((False, "root", cm.none))
+all_formats.append(("root", cm.none))
 all_format_ids.append("root")
 
 all_formats = pytest.mark.parametrize(
-    "per_event,format,compression", all_formats, ids=all_format_ids
+    "format,compression", all_formats, ids=all_format_ids
 )
 
 main_formats = []
@@ -122,7 +115,7 @@ main_formats = pytest.mark.parametrize(
 
 
 @all_formats
-def test_hemc3_writer(tmp_path, rng, per_event, compression, format):
+def test_hemc3_writer(tmp_path, rng, compression, format):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
     )
@@ -179,7 +172,6 @@ def test_hemc3_writer(tmp_path, rng, per_event, compression, format):
             acts.logging.DEBUG,
             inputEvent="hepmc3_event",
             outputPath=out,
-            perEvent=per_event,
             compression=compression,
             # writeEventsInOrder=False,
         )
@@ -187,38 +179,24 @@ def test_hemc3_writer(tmp_path, rng, per_event, compression, format):
 
     s.run()
 
-    if per_event:
-        files = list(out.parent.iterdir())
-        assert len(files) == s.config.events
-        assert all(f.stem.startswith("event") for f in files)
-        if compression == cm.none:
-            assert all(f.suffix == ".hepmc3" for f in files)
-            for f in files:
-                with f.open("r") as f:
-                    assert len(f.readlines()) == 25
-        else:
-            ext = acts.examples.hepmc3.compressionExtension(compression)
-            assert all(f.name.endswith(f".hepmc3{ext}") for f in files)
+    actual_path = handle_path(out, compression)
 
-    else:
-        actual_path = handle_path(out, compression)
+    # pyhepmc does not support zstd
+    if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib) and format != "root":
 
-        # pyhepmc does not support zstd
-        if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib) and format != "root":
-
-            @with_pyhepmc
-            def check(pyhepmc):
-                nevts = 0
-                event_numbers = []
-                with pyhepmc.open(actual_path) as f:
-                    for evt in f:
-                        nevts += 1
-                        event_numbers.append(evt.event_number)
-                        assert len(evt.particles) == 4 + 2  # muons + beam particles
-                assert nevts == s.config.events
-                assert event_numbers == list(
-                    range(s.config.events)
-                ), "Events are out of order"
+        @with_pyhepmc
+        def check(pyhepmc):
+            nevts = 0
+            event_numbers = []
+            with pyhepmc.open(actual_path) as f:
+                for evt in f:
+                    nevts += 1
+                    event_numbers.append(evt.event_number)
+                    assert len(evt.particles) == 4 + 2  # muons + beam particles
+            assert nevts == s.config.events
+            assert event_numbers == list(
+                range(s.config.events)
+            ), "Events are out of order"
 
 
 class StallAlgorithm(acts.examples.IAlgorithm):
@@ -283,7 +261,6 @@ def common_writer(tmp_path, common_evgen):
                 acts.logging.INFO,
                 inputEvent=evGen.config.outputEvent,
                 outputPath=out,
-                perEvent=False,
                 compression=compression,
             )
         )
@@ -421,7 +398,6 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression, format):
             acts.logging.VERBOSE,
             inputEvent="pythia8-event",
             outputPath=out,
-            perEvent=False,
             compression=compression,
         )
     )
@@ -652,23 +628,6 @@ def test_hepmc3_compression_modes():
     assert cm.none in acts.examples.hepmc3.availableCompressionModes()
 
 
-def test_hepmc3_writer_per_event_root_warning(tmp_path, capfd):
-    """Test that a warning is emitted when using per-event output with ROOT format"""
-    from acts.examples.hepmc3 import HepMC3Writer
-
-    out = tmp_path / "out" / "events.root"
-    out.parent.mkdir(parents=True, exist_ok=True)
-
-    with acts.logging.ScopedFailureThreshold(acts.logging.MAX):
-        HepMC3Writer(
-            acts.logging.INFO,
-            inputEvent="hepmc3_event",
-            outputPath=out,
-            perEvent=True,
-        )
-
-    out, err = capfd.readouterr()
-    assert "Per-event output is enabled and the output format is ROOT" in out
 
 
 def test_hepmc3_writer_root_compression_error(tmp_path):
@@ -738,7 +697,6 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
             acts.logging.INFO,
             inputEvent=hard_scatter.config.outputEvent,
             outputPath=out_hs,
-            perEvent=False,
             compression=compression,
         )
     )
@@ -775,7 +733,6 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
             acts.logging.INFO,
             inputEvent=pileup.config.outputEvent,
             outputPath=out_pu,
-            perEvent=False,
             compression=compression,
         )
     )
@@ -809,7 +766,6 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
             acts.logging.INFO,
             inputEvent=reader.config.outputEvent,
             outputPath=out_combined,
-            perEvent=False,
             compression=compression,
         )
     )

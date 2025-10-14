@@ -94,7 +94,7 @@ if(TARGET HepMC3::rootIO)
     target_link_libraries(ActsExamplesIoHepMC3 PRIVATE HepMC3::rootIO)
     target_compile_definitions(
         ActsExamplesIoHepMC3
-        PRIVATE ACTS_HEPMC3_ROOT_SUPPORT=1
+        PRIVATE HEPMC3_ROOT_SUPPORT=1
     )
 else()
     message(CHECK_PASS "not found")
