@@ -4,9 +4,9 @@ from typing import Optional, Protocol, Union, List, Dict, Tuple
 import os
 import re
 
+import acts
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
-import acts
 from acts._adapter import _patch_config, _patchKwargsConstructor
 
 _propagators = []
@@ -347,14 +347,14 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
 class CustomLogLevel(Protocol):
     def __call__(
         self,
-        minLevel: acts.logging.Level = acts.logging.VERBOSE,
-        maxLevel: acts.logging.Level = acts.logging.FATAL,
-    ) -> acts.logging.Level: ...
+        minLevel: ActsPythonBindings.logging.Level = ActsPythonBindings.logging.VERBOSE,
+        maxLevel: ActsPythonBindings.logging.Level = ActsPythonBindings.logging.FATAL,
+    ) -> ActsPythonBindings.logging.Level: ...
 
 
 def defaultLogging(
     s=None,
-    logLevel: Optional[acts.logging.Level] = None,
+    logLevel: Optional[ActsPythonBindings.logging.Level] = None,
 ) -> CustomLogLevel:
     """
     Establishes a default logging strategy for the python examples interface.
@@ -374,11 +374,11 @@ def defaultLogging(
     """
 
     def customLogLevel(
-        minLevel: acts.logging.Level = acts.logging.VERBOSE,
-        maxLevel: acts.logging.Level = acts.logging.FATAL,
-    ) -> acts.logging.Level:
+        minLevel: ActsPythonBindings.logging.Level = ActsPythonBindings.logging.VERBOSE,
+        maxLevel: ActsPythonBindings.logging.Level = ActsPythonBindings.logging.FATAL,
+    ) -> ActsPythonBindings.logging.Level:
         l = logLevel if logLevel is not None else s.config.logLevel
-        return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
+        return ActsPythonBindings.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
 
     return customLogLevel
 
@@ -400,7 +400,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
         kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
 
-        if self.config.logLevel >= acts.logging.DEBUG:
+        if self.config.logLevel >= ActsPythonBindings.logging.DEBUG:
             self._printFpeSummary(kwargs["fpeMasks"])
 
         cfg = self.Config()
@@ -443,7 +443,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
             return cls.fromDict(d)
 
-        _fpe_types_to_enum = {v.name: v for v in acts.FpeType.values}
+        _fpe_types_to_enum = {v.name: v for v in ActsPythonBindings.FpeType.values}
 
         @staticmethod
         def toDict(
