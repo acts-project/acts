@@ -602,7 +602,7 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
 
   MeasurementVector residual = measurement - filtered;
   MeasurementMatrix residualCovariance =
-      measurementCovariance + filteredCovariance;
+      measurementCovariance - filteredCovariance;
 
   return {residual, residualCovariance};
 }
@@ -639,7 +639,7 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
 
   MeasurementVector residual = measurement - smoothed;
   MeasurementMatrix residualCovariance =
-      measurementCovariance + smoothedCovariance;
+      measurementCovariance - smoothedCovariance;
 
   return {residual, residualCovariance};
 }
