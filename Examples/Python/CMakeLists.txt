@@ -18,7 +18,6 @@ target_sources(
         src/Input.cpp
         src/Propagation.cpp
         src/Generators.cpp
-        src/Obj.cpp
         src/TruthTracking.cpp
         src/TrackFitting.cpp
         src/TrackFinding.cpp

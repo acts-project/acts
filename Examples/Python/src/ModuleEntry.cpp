@@ -55,7 +55,6 @@ void addJson(Context& ctx);
 void addHepMC3(Context& ctx);
 void addGnnTrackFinding(Context& ctx);
 void addSvgExample(Context& ctx);
-void addObj(Context& ctx);
 void addOnnx(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
 void addTraccc(Context& ctx);
@@ -86,7 +85,6 @@ void addModuleEntry(Context& ctx) {
   addGeoModelExample(ctx);
   addHepMC3(ctx);
   addGnnTrackFinding(ctx);
-  addObj(ctx);
   addSvgExample(ctx);
   addOnnx(ctx);
   addOnnxNeuralCalibrator(ctx);
