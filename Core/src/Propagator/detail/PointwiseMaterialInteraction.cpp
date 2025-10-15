@@ -38,9 +38,11 @@ void PointwiseMaterialInteraction::covarianceContributions(
   }
   // TODO just ionisation loss or full energy loss?
   if (energyLoss) {
-    const float sigmaQoverP =
+    // Squaring float sigmaQoverP was observed to lead to underflow.
+    // Square in double precision and then cast back to float.
+    const double sigmaQoverP =
         computeEnergyLossLandauSigmaQOverP(slab, mass, qOverP, absQ);
-    varianceQoverP = sigmaQoverP * sigmaQoverP;
+    varianceQoverP = static_cast<float>(sigmaQoverP * sigmaQoverP);
   }
 }
 
