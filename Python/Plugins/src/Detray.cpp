@@ -23,13 +23,10 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace Acts;
-using namespace Acts::Experimental;
-using namespace ActsPlugins;
-
-namespace py = pybind11;
-
 PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
+  using namespace Acts;
+  using namespace Acts::Experimental;
+  using namespace ActsPlugins;
   using namespace ActsPython;
 
   {

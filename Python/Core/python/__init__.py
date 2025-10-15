@@ -3,15 +3,10 @@ from typing import Union
 import os
 import warnings
 
-
 from .ActsPythonBindings import *
 from .ActsPythonBindings import __version__
 from . import ActsPythonBindings
 from ._adapter import _patch_config
-
-# Automatically populate the __init__.py file with the names of built plugins
-# This will make them available through import * from plugins
-# __all__ = [ 'logging', @_plugins_built@ ]
 
 if (
     "ACTS_LOG_FAILURE_THRESHOLD" in os.environ

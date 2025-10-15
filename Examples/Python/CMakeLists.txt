@@ -102,13 +102,6 @@ else()
     target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_ROOT)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginRoot)
-    target_sources(ActsPythonBindings PRIVATE src/TGeo.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/TGeoStub.cpp)
-endif()
-
 if(ACTS_BUILD_PLUGIN_TRACCC)
     target_link_libraries(
         ActsPythonBindings
@@ -157,24 +150,29 @@ else()
 endif()
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
-    pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
+    pybind11_add_module(ActsExamplesPythonBindingsGeant4 src/Geant4Component.cpp)
     target_link_libraries(
-        ActsPythonBindingsGeant4
+        ActsExamplesPythonBindingsGeant4
         PUBLIC
             Acts::ExamplesGeant4
             Acts::ExamplesDetectorGeant4
             Acts::PythonUtilities
             Acts::ExamplesMuonSpectrometerMockupDetector
     )
-    add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
+    add_dependencies(ActsPythonBindings ActsExamplesPythonBindingsGeant4)
 
-    install(TARGETS ActsPythonBindingsGeant4 DESTINATION ${_python_install_dir})
+    install(
+        TARGETS
+            ActsExamplesPythonBindingsGeant4
+            DESTINATION
+            ${_python_install_dir}
+    )
     set_target_properties(
-        ActsPythonBindingsGeant4
+        ActsExamplesPythonBindingsGeant4
         PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
     )
     set_target_properties(
-        ActsPythonBindingsGeant4
+        ActsExamplesPythonBindingsGeant4
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
     )
     list(APPEND py_files examples/geant4/__init__.py)
