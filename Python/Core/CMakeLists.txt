@@ -1,5 +1,5 @@
 # Dedicated python files to be installed are added here
-set(py_files _adapter.py)
+set(py_files __init__.py _adapter.py)
 
 # Make the core python binding library available
 pybind11_add_module(ActsPythonBindings src/CoreModuleEntry.cpp)
