@@ -119,20 +119,29 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
-    pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
+    pybind11_add_module(ActsExamplesPythonBindingsDD4hep src/DD4hepComponent.cpp)
     target_link_libraries(
-        ActsPythonBindingsDD4hep
+        ActsExamplesPythonBindingsDD4hep
         PUBLIC Acts::PythonUtilities Acts::ExamplesDetectorDD4hep
     )
-    add_dependencies(ActsPythonBindings ActsPythonBindingsDD4hep)
+    add_dependencies(ActsPythonBindings ActsExamplesPythonBindingsDD4hep)
+    add_dependencies(
+        ActsPluginsPythonBindingsDD4hep
+        ActsExamplesPythonBindingsDD4hep
+    )
 
-    install(TARGETS ActsPythonBindingsDD4hep DESTINATION ${_python_install_dir})
+    install(
+        TARGETS
+            ActsExamplesPythonBindingsDD4hep
+            DESTINATION
+            ${_python_install_dir}
+    )
     set_target_properties(
-        ActsPythonBindingsDD4hep
+        ActsExamplesPythonBindingsDD4hep
         PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
     )
     set_target_properties(
-        ActsPythonBindingsDD4hep
+        ActsExamplesPythonBindingsDD4hep
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
     )
     list(APPEND py_files examples/dd4hep.py)
@@ -159,6 +168,10 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
             Acts::ExamplesMuonSpectrometerMockupDetector
     )
     add_dependencies(ActsPythonBindings ActsExamplesPythonBindingsGeant4)
+    add_dependencies(
+        ActsPluginsPythonBindingsGeant4
+        ActsExamplesPythonBindingsGeant4
+    )
 
     install(
         TARGETS
