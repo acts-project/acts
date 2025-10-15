@@ -10,7 +10,6 @@
 #include "ActsExamples/Traccc/DetrayPropagator.hpp"
 #include "ActsExamples/Traccc/DetrayStore.hpp"
 #include "ActsPlugins/Covfie/FieldConversion.hpp"
-#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 
