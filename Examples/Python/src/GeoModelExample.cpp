@@ -42,9 +42,9 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addGeoModelExample(Context& ctx) {
-  auto m = ctx.get("main");
+  auto& mex = ctx.get("examples");
 
-  auto gm = m.def_submodule("geomodel");
+  auto gm = mex.def_submodule("geomodel");
 
   {
     auto f =
