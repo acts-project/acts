@@ -31,6 +31,10 @@ std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
   std::size_t nValid{0};
   for (const auto& sp : measurements) {
     if (selector.connected() && !selector(*sp)) {
+      ACTS_VERBOSE(__func__ << "() " << __LINE__
+                            << " -  Skip invalid measurement @"
+                            << toString(sp->localPosition()));
+
       continue;
     }
     ++nValid;
@@ -96,9 +100,9 @@ CompositeSpacePointLineFitter::fastPrecFit(
         precResult->nIter += swappedPrecResult->nIter;
         ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit did not improve "
                             << (*swappedPrecResult));
-        return precResult;
       }
     }
+    return precResult;
   }
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
   return m_fastFitter.fit(measurements, ResidualIdx::bending);
@@ -300,7 +304,7 @@ CompositeSpacePointLineFitter::fit(
       double driftV{0.};
       double driftA{0.};
       // Calculate the residual & derivatives
-      if (resCfg.parsToUse.back() == FitParIndex::t0) {
+      if (pullCalculator.config().parsToUse.back() == FitParIndex::t0) {
         pullCalculator.updateFullResidual(line, t0, *spacePoint, driftV,
                                           driftA);
       } else {
@@ -313,36 +317,50 @@ CompositeSpacePointLineFitter::fit(
     result.chi2 = cache.chi2;
     // Now update the parameters
     UpdateStep update{UpdateStep::goodStep};
-    switch (resCfg.parsToUse.size()) {
+    switch (pullCalculator.config().parsToUse.size()) {
       // 2D fit (intercept + inclination angle)
       case 2: {
-        update = updateParameters<2>(resCfg.parsToUse.front(), cache,
-                                     result.parameters);
+        update = updateParameters<2>(pullCalculator.config().parsToUse.front(),
+                                     cache, result.parameters);
         break;
       }
       // 2D fit + time
       case 3: {
-        update = updateParameters<3>(resCfg.parsToUse.front(), cache,
-                                     result.parameters);
+        update = updateParameters<3>(pullCalculator.config().parsToUse.front(),
+                                     cache, result.parameters);
         break;
       }
       // 3D spatial fit (x0, y0, theta, phi)
       case 4: {
-        update = updateParameters<4>(resCfg.parsToUse.front(), cache,
-                                     result.parameters);
+        update = updateParameters<4>(pullCalculator.config().parsToUse.front(),
+                                     cache, result.parameters);
         break;
       }
       // full fit
       case 5: {
-        update = updateParameters<5>(resCfg.parsToUse.front(), cache,
-                                     result.parameters);
+        update = updateParameters<5>(pullCalculator.config().parsToUse.front(),
+                                     cache, result.parameters);
         break;
       }
       default:
         ACTS_WARNING(__func__ << "() " << __LINE__
                               << ": Invalid parameter size "
-                              << resCfg.parsToUse.size());
+                              << pullCalculator.config().parsToUse.size());
         return result;
+    }
+    /// Check whether the fit parameters are within range
+    for (const FitParIndex par : pullCalculator.config().parsToUse) {
+      const auto p = toUnderlying(par);
+      if (m_cfg.ranges[p][0] < m_cfg.ranges[p][1] &&
+          (result.parameters[p] < m_cfg.ranges[p][0] ||
+           result.parameters[p] > m_cfg.ranges[p][1])) {
+        ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": The parameter "
+                              << pullCalculator.parName(par) << " "
+                              << result.parameters[p] << " is out range ["
+                              << m_cfg.ranges[p][0] << ";" << m_cfg.ranges[p][1]
+                              << "]");
+        update = UpdateStep::outOfBounds;
+      }
     }
     switch (update) {
       using enum UpdateStep;
@@ -361,7 +379,8 @@ CompositeSpacePointLineFitter::fit(
   // Parameters converged
   if (result.converged) {
     const auto doF = countDoF(result.measurements, fitOpts.selector);
-    result.nDoF = (doF[0] + doF[1] + doF[2]) - resCfg.parsToUse.size();
+    result.nDoF =
+        (doF[0] + doF[1] + doF[2]) - pullCalculator.config().parsToUse.size();
     line.updateParameters(result.parameters);
     const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
     // Recalibrate the measurements before returning
@@ -370,29 +389,29 @@ CompositeSpacePointLineFitter::fit(
         result.measurements);
 
     // Assign the Hessian
-    switch (resCfg.parsToUse.size()) {
+    switch (pullCalculator.config().parsToUse.size()) {
       // 2D fit (intercept + inclination angle)
       case 2: {
-        fillCovariance<2>(resCfg.parsToUse.front(), cache.hessian,
-                          result.covariance);
+        fillCovariance<2>(pullCalculator.config().parsToUse.front(),
+                          cache.hessian, result.covariance);
         break;
       }
       // 2D fit + time
       case 3: {
-        fillCovariance<3>(resCfg.parsToUse.front(), cache.hessian,
-                          result.covariance);
+        fillCovariance<3>(pullCalculator.config().parsToUse.front(),
+                          cache.hessian, result.covariance);
         break;
       }
       // 3D spatial fit (x0, y0, theta, phi)
       case 4: {
-        fillCovariance<4>(resCfg.parsToUse.front(), cache.hessian,
-                          result.covariance);
+        fillCovariance<4>(pullCalculator.config().parsToUse.front(),
+                          cache.hessian, result.covariance);
         break;
       }
       // full fit
       case 5: {
-        fillCovariance<5>(resCfg.parsToUse.front(), cache.hessian,
-                          result.covariance);
+        fillCovariance<5>(pullCalculator.config().parsToUse.front(),
+                          cache.hessian, result.covariance);
         break;
       }
       // No need to warn here -> captured by the fit iterations
