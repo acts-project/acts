@@ -49,7 +49,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     std::string inputProtoTracks;
     /// Input particle hypothesis (optional). If not given, the static particle
     /// hypothesis from the config is used.
-    std::string inputParticleHypotheses;
+    std::optional<std::string> inputParticleHypotheses;
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
     /// Output seed collection - only seeds with successful parameter estimation

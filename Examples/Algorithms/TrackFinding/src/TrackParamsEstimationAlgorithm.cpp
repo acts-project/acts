@@ -150,10 +150,9 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
         config, params, bottomSP->t().has_value());
 
-    Acts::ParticleHypothesis hypothesis = m_cfg.particleHypothesis;
-    if (inputParticleHypotheses != nullptr) {
-      hypothesis = inputParticleHypotheses->at(seed);
-    }
+    Acts::ParticleHypothesis hypothesis =
+        inputParticleHypotheses != nullptr ? inputParticleHypotheses->at(iseed)
+                                           : m_cfg.particleHypothesis;
 
     trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
                                  hypothesis);
