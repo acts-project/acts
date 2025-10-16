@@ -232,9 +232,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       seed.setVertexZ(
           static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z()));
 
-      Acts::ParticleHypothesis hypothesis = m_cfg.particleHypothesis.has_value()
-                                                ? *m_cfg.particleHypothesis
-                                                : particle.hypothesis();
+      Acts::ParticleHypothesis hypothesis = m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
       seededParticles.insert(particle);
       tracks.emplace_back(std::move(track));
