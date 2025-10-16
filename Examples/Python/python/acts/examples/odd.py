@@ -4,7 +4,7 @@ import math
 from pathlib import Path
 from typing import Optional
 import acts
-import acts.root
+from acts import root
 import acts.examples
 import warnings
 
