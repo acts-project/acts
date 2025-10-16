@@ -577,8 +577,8 @@ endif()
 
 # core library, core plugins, and other components
 add_component(Core Core)
-add_subdirectory(Plugins)
 add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
+add_subdirectory(Plugins)
 add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
 if(ACTS_BUILD_ODD)
