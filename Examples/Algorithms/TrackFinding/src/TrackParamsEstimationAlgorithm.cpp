@@ -152,7 +152,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
     Acts::ParticleHypothesis hypothesis = m_cfg.particleHypothesis;
     if (inputParticleHypotheses != nullptr) {
-      hypothesis = (*inputParticleHypotheses)[iseed];
+      hypothesis = inputParticleHypotheses->at(seed);
     }
 
     trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
