@@ -19,6 +19,7 @@ def runRefittingKf(
     energyLoss: bool = True,
     reverseFilteringMomThreshold=0 * u.GeV,
     reverseFilteringCovarianceScaling=1.0,
+    seed: int = 42,
     s: acts.examples.Sequencer = None,
 ):
     s = runTruthTrackingKalman(
@@ -28,6 +29,7 @@ def runRefittingKf(
         outputDir=outputDir,
         reverseFilteringMomThreshold=reverseFilteringMomThreshold,
         reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
+        seed=seed,
         s=s,
     )
 

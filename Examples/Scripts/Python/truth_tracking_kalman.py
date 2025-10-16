@@ -19,6 +19,7 @@ def runTruthTrackingKalman(
     decorators=[],
     reverseFilteringMomThreshold=0 * u.GeV,
     reverseFilteringCovarianceScaling=1,
+    seed: int = 42,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
@@ -45,7 +46,7 @@ def runTruthTrackingKalman(
     for d in decorators:
         s.addContextDecorator(d)
 
-    rnd = acts.examples.RandomNumbers(seed=42)
+    rnd = acts.examples.RandomNumbers(seed=seed)
     outputDir = Path(outputDir)
 
     logger = acts.logging.getLogger("Truth tracking example")
