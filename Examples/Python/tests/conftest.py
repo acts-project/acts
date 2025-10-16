@@ -23,6 +23,7 @@ import pytest
 
 import acts
 import acts.examples
+import acts.root
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
