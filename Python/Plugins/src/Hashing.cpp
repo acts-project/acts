@@ -25,16 +25,16 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsHashing, hashing) {
 
   {
     using Config = HashingAlgorithmConfig;
-    auto c = py::class_<Config>(hashing, "HashingAlgorithmConfig")
-                 .def(py::init<>());
+    auto c =
+        py::class_<Config>(hashing, "HashingAlgorithmConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, bucketSize, zBins, phiBins);
     patchKwargsConstructor(c);
   }
 
   {
     using Config = HashingTrainingConfig;
-    auto c = py::class_<Config>(hashing, "HashingTrainingConfig")
-                 .def(py::init<>());
+    auto c =
+        py::class_<Config>(hashing, "HashingTrainingConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, annoySeed, f);
     patchKwargsConstructor(c);
   }

@@ -9,19 +9,19 @@
 #include "ActsPlugins/Root/RootMaterialDecorator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Material/InterpolatedMaterialMap.hpp"
-#include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialGridHelper.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialGridHelper.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -179,11 +179,10 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
                   Material::fromMassDensity(dx0, dl0, da, dz, drho);
               mGrid.at(p - 1) = material.parameters();
             }
-            MaterialMapper<MaterialGrid2D> matMap(
-                transfoGlobalToLocal, mGrid);
-            vMaterial = std::make_shared<InterpolatedMaterialMap<
-                MaterialMapper<MaterialGrid2D>>>(std::move(matMap),
-                                                             bUtility);
+            MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, mGrid);
+            vMaterial = std::make_shared<
+                InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>>(
+                std::move(matMap), bUtility);
           } else if (dim == 3) {
             // 3D Grid material
             std::function<Vector3(Vector3)> transfoGlobalToLocal;
@@ -211,11 +210,10 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
                   Material::fromMassDensity(dx0, dl0, da, dz, drho);
               mGrid.at(p - 1) = material.parameters();
             }
-            MaterialMapper<MaterialGrid3D> matMap(
-                transfoGlobalToLocal, mGrid);
-            vMaterial = std::make_shared<InterpolatedMaterialMap<
-                MaterialMapper<MaterialGrid3D>>>(std::move(matMap),
-                                                             bUtility);
+            MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
+            vMaterial = std::make_shared<
+                InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
+                std::move(matMap), bUtility);
           }
         } else {
           // Homogeneous material
@@ -227,8 +225,7 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
           // Create material properties
           const auto material =
               Material::fromMassDensity(dx0, dl0, da, dz, drho);
-          vMaterial =
-              std::make_shared<HomogeneousVolumeMaterial>(material);
+          vMaterial = std::make_shared<HomogeneousVolumeMaterial>(material);
         }
       }
       ACTS_VERBOSE("Successfully read Material for : " << geoID);
