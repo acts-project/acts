@@ -183,20 +183,6 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    // Sort the space points time
-    std::ranges::sort(spacePointsOnTrack, [&](const auto* a, const auto* b) {
-      auto ta = a->t();
-      auto tb = b->t();
-      if (!ta.has_value()) {
-        return false;
-      }
-      if (!tb.has_value()) {
-        return true;
-      }
-
-      return *ta < *tb;
-    });
-
     // Loop over the found space points to find the seed with maximum deltaR
     // between the bottom and top space point
     bool seedFound = false;
@@ -209,7 +195,9 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
         const double bmAbsDeltaZ =
             std::abs(spacePointsOnTrack[im]->z() - spacePointsOnTrack[ib]->z());
         if (bmDeltaR < 0) {
-          ACTS_WARNING("Space points are not sorted in r");
+          ACTS_WARNING(
+              "Space points are not sorted in r. Difference middle-bottom: "
+              << bmDeltaR);
           continue;
         }
         if (bmDeltaR < m_cfg.deltaRMin || bmDeltaR > m_cfg.deltaRMax) {
@@ -226,7 +214,9 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
           const double mtAbsDeltaZ = std::abs(spacePointsOnTrack[it]->z() -
                                               spacePointsOnTrack[im]->z());
           if (mtDeltaR < 0) {
-            ACTS_WARNING("Space points are not sorted in r");
+            ACTS_WARNING(
+                "Space points are not sorted in r. Difference top-middle: "
+                << mtDeltaR);
             continue;
           }
           if (mtDeltaR < m_cfg.deltaRMin || mtDeltaR > m_cfg.deltaRMax) {
