@@ -223,7 +223,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
         for (std::size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
           const double mtDeltaR =
               spacePointsOnTrack[it]->r() - spacePointsOnTrack[im]->r();
-          const double mtDeltaAbsZ = std::abs(spacePointsOnTrack[it]->z() -
+          const double mtAbsDeltaZ = std::abs(spacePointsOnTrack[it]->z() -
                                               spacePointsOnTrack[im]->z());
           if (mtDeltaR < 0) {
             ACTS_WARNING("Space points are not sorted in r");
@@ -232,8 +232,8 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
           if (mtDeltaR < m_cfg.deltaRMin || mtDeltaR > m_cfg.deltaRMax) {
             continue;
           }
-          if (mtDeltaAbsZ < m_cfg.absDeltaZMin ||
-              mtDeltaAbsZ > m_cfg.absDeltaZMax) {
+          if (mtAbsDeltaZ < m_cfg.absDeltaZMin ||
+              mtAbsDeltaZ > m_cfg.absDeltaZMax) {
             continue;
           }
 
