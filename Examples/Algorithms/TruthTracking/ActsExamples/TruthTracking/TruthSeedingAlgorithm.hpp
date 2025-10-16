@@ -51,10 +51,15 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     std::string outputSeeds;
     /// Output proto track collection.
     std::string outputProtoTracks;
+
     /// Minimum deltaR between space points in a seed
     float deltaRMin = 1. * Acts::UnitConstants::mm;
     /// Maximum deltaR between space points in a seed
     float deltaRMax = 100. * Acts::UnitConstants::mm;
+    /// Minimum deltaAbsZ between space points in a seed
+    float deltaAbsZMin = 1. * Acts::UnitConstants::mm;
+    /// Maximum deltaAbsZ between space points in a seed
+    float deltaAbsZMax = 100. * Acts::UnitConstants::mm;
   };
 
   /// Construct the truth seeding algorithm.
