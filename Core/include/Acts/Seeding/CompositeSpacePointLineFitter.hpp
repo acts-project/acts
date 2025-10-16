@@ -86,15 +86,6 @@ class CompositeSpacePointLineFitter {
     using RangeArray = std::array<std::array<double, 2>, s_nPars>;
     RangeArray ranges{};
   };
-
-  /// @brief Class constructor
-  /// @param cfg Reference to the fitter configuration object
-  /// @param logger
-  explicit CompositeSpacePointLineFitter(
-      const Config& cfg,
-      std::unique_ptr<const Logger> logger = getDefaultLogger(
-          "CompositeSpacePointLineFitter", Logging::Level::INFO));
-
   /// @brief Auxiliary object to store the fitted parameters, covariance,
   ///        the chi2 / nDoF & the number of required iterations
   struct FitParameters {
@@ -162,6 +153,16 @@ class CompositeSpacePointLineFitter {
     /// @brief Standard constructor
     FitOptions() = default;
   };
+
+  /// @brief Class constructor
+  /// @param cfg Reference to the fitter configuration object
+  /// @param logger Logger object used for debug print out
+  explicit CompositeSpacePointLineFitter(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger = getDefaultLogger(
+          "CompositeSpacePointLineFitter", Logging::Level::INFO));
+  /// @brief Returns the instantiated configuration object
+  const Config& config() const { return m_cfg; }
   /// @brief Counts how many measurements measure loc0, loc1 & time
   /// @param measurements: Collection of composite space points of interest
   template <CompositeSpacePointContainer Cont_t>
@@ -180,7 +181,9 @@ class CompositeSpacePointLineFitter {
   ///                    nonBending, bending & time
   static std::vector<FitParIndex> extractFitablePars(
       const std::array<std::size_t, 3>& hitCounts);
-
+  /// @brief Fit a line to a set of Composite space point measurements.
+  /// @param fitOpts: Auxiliary object carrying all necessary input
+  ///                 needed to execute the fit
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
   FitResult<Cont_t> fit(FitOptions<Cont_t, Calibrator_t>&& fitOpts) const;
@@ -206,7 +209,7 @@ class CompositeSpacePointLineFitter {
   template <CompositeSpacePointContainer Cont_t>
   FitParameters fastFit(const Cont_t& measurements, const Line_t& initialGuess,
                         const std::vector<FitParIndex>& parsToUse) const;
-
+  /// @brief Abrivation of the fit result returned by the FastStrawLineFitter
   using FastFitResult = std::optional<detail::FastStrawLineFitter::FitResult>;
 
   /// @brief Executes the fast line fit in the bending direction. Returns
