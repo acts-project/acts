@@ -133,6 +133,6 @@ jobs:
           EIC_EPIC_MATTERMOST_HOOK_URL: ${{secrets.EIC_EPIC_MATTERMOST_HOOK_URL}}
         run: |
           if [ -f comment-50-external-failure.md ] ; then
-            echo "{\"text\":\"$(<comment-50-external-failure.md)\"}" | tee data.json
+            echo "{\"text\":\"External pipeline failure in $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/${GITHUB_RUN_ID}.\"}" | tee data.json
             curl -X POST -H 'Content-type: application/json' --data "@data.json" ${EIC_EPIC_MATTERMOST_HOOK_URL}
           fi
