@@ -43,18 +43,16 @@ macro(add_plugin_binding_if _name _dependency _flag)
     )
 endmacro()
 
-#add_plugin_binding_if(Json ActsPluginJson ACTS_BUILD_PLUGIN_JSON)
-add_plugin_binding_if(Geant4 ActsPluginGeant4 ACTS_BUILD_PLUGIN_GEANT4)
-add_plugin_binding_if(DD4hep ActsPluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)
-#add_plugin_binding_if(Root ActsPluginRoot ACTS_BUILD_PLUGIN_ROOT)
 add_plugin_binding_if(Covfie Acts::PluginCovfie ACTS_BUILD_PLUGIN_TRACCC)
 add_plugin_binding_if(Detray Acts::PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
+add_plugin_binding_if(DD4hep ActsPluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)
+add_plugin_binding_if(Geant4 ActsPluginGeant4 ACTS_BUILD_PLUGIN_GEANT4)
 add_plugin_binding_if(GeoModel Acts::PluginGeoModel ACTS_BUILD_PLUGIN_GEOMODEL)
+add_plugin_binding_if(Hashing Acts::PluginHashing ACTS_BUILD_PLUGIN_HASHING)
+add_plugin_binding_if(Json Acts::PluginJson ACTS_BUILD_PLUGIN_JSON)
 add_plugin_binding_if(Svg Acts::PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 add_plugin_binding_if(TGeo Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
-
-#add_plugin_binding_if(Hashing ActsPluginHashing ACTS_BUILD_PLUGIN_HASHING)
-#add_plugin_binding_if(FpeMonitor ActsPluginFpeMonitor ACTS_BUILD_PLUGIN_FPEMONITOR)
+add_plugin_binding_if(Root Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
 
 # Propagate the list of built plugins to the parent scope
 set(_plugins_built "${_plugins_built}" PARENT_SCOPE)

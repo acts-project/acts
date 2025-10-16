@@ -59,7 +59,7 @@ using namespace py::literals;
 namespace ActsPython {
 
 void addGnnTrackFinding(Context &ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto &mex = ctx.get("examples");
 
   {
     using C = GraphConstructionBase;

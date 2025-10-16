@@ -9,6 +9,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -26,15 +27,12 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsDD4hep, m) {
-  /*
-   {
+  {
+    py::class_<AlignedDD4hepDetectorElement, DD4hepDetectorElement,
+               std::shared_ptr<AlignedDD4hepDetectorElement>>(
+        m, "AlignedDD4hepDetectorElement");
+  }
 
-     py::class_<AlignedDD4hepDetectorElement, DD4hepDetectorElement,
-                std::shared_ptr<AlignedDD4hepDetectorElement>>(
-         m, "AlignedDD4hepDetectorElement");
-   }
-
-   */
   {
     auto f =
         py::class_<DD4hepDetector, Detector, std::shared_ptr<DD4hepDetector>>(

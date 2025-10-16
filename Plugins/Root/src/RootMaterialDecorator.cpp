@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
+#include "ActsPlugins/Root/RootMaterialDecorator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
@@ -15,17 +15,14 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Material/BinnedSurfaceMaterial.hpp>
-#include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
-#include <Acts/Material/HomogeneousVolumeMaterial.hpp>
-#include <Acts/Utilities/AxisDefinitions.hpp>
-#include <Acts/Utilities/BinUtility.hpp>
-#include <Acts/Utilities/BinningType.hpp>
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <algorithm>
-#include <cstdio>
-#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -48,11 +45,13 @@ class ISurfaceMaterial;
 class IVolumeMaterial;
 }  // namespace Acts
 
-ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
-    const ActsExamples::RootMaterialDecorator::Config& config,
-    Acts::Logging::Level level)
+using namespace Acts;
+
+ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
+    const ActsPlugins::RootMaterialDecorator::Config& config,
+    Logging::Level level)
     : m_cfg(config),
-      m_logger{Acts::getDefaultLogger("RootMaterialDecorator", level)} {
+      m_logger{getDefaultLogger("RootMaterialDecorator", level)} {
   // Validate the configuration
   if (m_cfg.accessorOptions.folderSurfaceNameBase.empty()) {
     throw std::invalid_argument("Missing surface folder name base");
@@ -93,13 +92,13 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     ACTS_VERBOSE("Processing directory: " << tdName);
     if (splitNames[0] == m_cfg.accessorOptions.folderVolumeNameBase) {
       // The volume material to be read in for this
-      std::shared_ptr<const Acts::IVolumeMaterial> vMaterial = nullptr;
+      std::shared_ptr<const IVolumeMaterial> vMaterial = nullptr;
       // Volume key
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
-      Acts::GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
+      GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
 
       // Reconstruct the geometry ID
-      auto geoID = Acts::GeometryIdentifier().withVolume(volID);
+      auto geoID = GeometryIdentifier().withVolume(volID);
       ACTS_VERBOSE("GeometryIdentifier re-constructed as " << geoID);
 
       // Construct the names
@@ -141,33 +140,33 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           // Dimension of the grid
           int dim = n->GetNbinsX();
           // Now reconstruct the bin utilities
-          Acts::BinUtility bUtility;
+          BinUtility bUtility;
           for (int ib = 1; ib < dim + 1; ++ib) {
             std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
-            Acts::AxisDirection val =
-                static_cast<Acts::AxisDirection>(v->GetBinContent(ib));
-            Acts::BinningOption opt =
-                static_cast<Acts::BinningOption>(o->GetBinContent(ib));
+            AxisDirection val =
+                static_cast<AxisDirection>(v->GetBinContent(ib));
+            BinningOption opt =
+                static_cast<BinningOption>(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);
             float rmax = max->GetBinContent(ib);
-            bUtility += Acts::BinUtility(nbins, rmin, rmax, opt, val);
+            bUtility += BinUtility(nbins, rmin, rmax, opt, val);
           }
           ACTS_VERBOSE("Created " << bUtility);
 
           if (dim == 2) {
             // 2D Grid material
-            std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
-            Acts::Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
+            std::function<Vector2(Vector3)> transfoGlobalToLocal;
+            Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
 
-            Acts::Grid2D::point_t gMin = grid.minPosition();
-            Acts::Grid2D::point_t gMax = grid.maxPosition();
-            Acts::Grid2D::index_t gNBins = grid.numLocalBins();
+            Grid2D::point_t gMin = grid.minPosition();
+            Grid2D::point_t gMax = grid.maxPosition();
+            Grid2D::index_t gNBins = grid.numLocalBins();
 
-            Acts::EAxis axis1(gMin[0], gMax[0], gNBins[0]);
-            Acts::EAxis axis2(gMin[1], gMax[1], gNBins[1]);
+            EAxis axis1(gMin[0], gMax[0], gNBins[0]);
+            EAxis axis2(gMin[1], gMax[1], gNBins[1]);
 
             // Build the grid and fill it with data
-            Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
+            MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
 
             for (int p = 1; p <= points; p++) {
               double dx0 = x0->GetBinContent(p);
@@ -177,29 +176,29 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
               double drho = rho->GetBinContent(p);
               // Create material properties
               const auto material =
-                  Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
+                  Material::fromMassDensity(dx0, dl0, da, dz, drho);
               mGrid.at(p - 1) = material.parameters();
             }
-            Acts::MaterialMapper<Acts::MaterialGrid2D> matMap(
+            MaterialMapper<MaterialGrid2D> matMap(
                 transfoGlobalToLocal, mGrid);
-            vMaterial = std::make_shared<Acts::InterpolatedMaterialMap<
-                Acts::MaterialMapper<Acts::MaterialGrid2D>>>(std::move(matMap),
+            vMaterial = std::make_shared<InterpolatedMaterialMap<
+                MaterialMapper<MaterialGrid2D>>>(std::move(matMap),
                                                              bUtility);
           } else if (dim == 3) {
             // 3D Grid material
-            std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
-            Acts::Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
+            std::function<Vector3(Vector3)> transfoGlobalToLocal;
+            Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
 
-            Acts::Grid3D::point_t gMin = grid.minPosition();
-            Acts::Grid3D::point_t gMax = grid.maxPosition();
-            Acts::Grid3D::index_t gNBins = grid.numLocalBins();
+            Grid3D::point_t gMin = grid.minPosition();
+            Grid3D::point_t gMax = grid.maxPosition();
+            Grid3D::index_t gNBins = grid.numLocalBins();
 
-            Acts::EAxis axis1(gMin[0], gMax[0], gNBins[0]);
-            Acts::EAxis axis2(gMin[1], gMax[1], gNBins[1]);
-            Acts::EAxis axis3(gMin[2], gMax[2], gNBins[2]);
+            EAxis axis1(gMin[0], gMax[0], gNBins[0]);
+            EAxis axis2(gMin[1], gMax[1], gNBins[1]);
+            EAxis axis3(gMin[2], gMax[2], gNBins[2]);
 
             // Build the grid and fill it with data
-            Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
+            MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
 
             for (int p = 1; p <= points; p++) {
               double dx0 = x0->GetBinContent(p);
@@ -209,13 +208,13 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
               double drho = rho->GetBinContent(p);
               // Create material properties
               const auto material =
-                  Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
+                  Material::fromMassDensity(dx0, dl0, da, dz, drho);
               mGrid.at(p - 1) = material.parameters();
             }
-            Acts::MaterialMapper<Acts::MaterialGrid3D> matMap(
+            MaterialMapper<MaterialGrid3D> matMap(
                 transfoGlobalToLocal, mGrid);
-            vMaterial = std::make_shared<Acts::InterpolatedMaterialMap<
-                Acts::MaterialMapper<Acts::MaterialGrid3D>>>(std::move(matMap),
+            vMaterial = std::make_shared<InterpolatedMaterialMap<
+                MaterialMapper<MaterialGrid3D>>>(std::move(matMap),
                                                              bUtility);
           }
         } else {
@@ -227,9 +226,9 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           double drho = rho->GetBinContent(1);
           // Create material properties
           const auto material =
-              Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
+              Material::fromMassDensity(dx0, dl0, da, dz, drho);
           vMaterial =
-              std::make_shared<Acts::HomogeneousVolumeMaterial>(material);
+              std::make_shared<HomogeneousVolumeMaterial>(material);
         }
       }
       ACTS_VERBOSE("Successfully read Material for : " << geoID);
@@ -240,7 +239,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
   }
 }
 
-ActsExamples::RootMaterialDecorator::~RootMaterialDecorator() {
+ActsPlugins::RootMaterialDecorator::~RootMaterialDecorator() {
   if (m_inputFile != nullptr) {
     m_inputFile->Close();
   }

@@ -20,7 +20,7 @@ using namespace Acts;
 namespace ActsPython {
 
 void addOnnxNeuralCalibrator(Context &ctx) {
-  auto [m, mex, onnx] = ctx.get("main", "examples", "onnx");
+  auto &onnx = ctx.get("onnx");
 
   onnx.def(
       "makeNeuralCalibrator",

@@ -22,7 +22,7 @@ using namespace Acts;
 namespace ActsPython {
 
 void addOnnx(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
   auto onnx = mex.def_submodule("_onnx");
   ctx.modules["onnx"] = onnx;
 

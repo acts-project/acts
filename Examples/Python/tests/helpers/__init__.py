@@ -20,6 +20,11 @@ try:
     import ROOT
 
     rootEnabled = True
+    try:
+        from acts import root
+    except ImportError:
+        rootEnabled = False
+
 except ImportError:
     rootEnabled = False
 
@@ -71,6 +76,14 @@ try:
     covfieEnabled = True
 except ImportError:
     covfieEnabled = False
+
+try:
+    from acts import json
+
+    jsonEnabled = True
+
+except ImportError:
+    jsonEnabled = False
 
 
 try:

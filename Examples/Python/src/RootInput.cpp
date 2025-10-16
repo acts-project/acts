@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
-#include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
@@ -71,20 +70,6 @@ void addRootInput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(RootSimHitReader, mex, "RootSimHitReader",
                              treeName, filePath, outputSimHits);
-
-  {
-    auto rmd =
-        py::class_<RootMaterialDecorator, IMaterialDecorator,
-                   std::shared_ptr<RootMaterialDecorator>>(
-            mex, "RootMaterialDecorator")
-            .def(py::init<RootMaterialDecorator::Config, Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
-
-    using Config = RootMaterialDecorator::Config;
-    auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, accessorConfig, accessorOptions, fileName);
-  }
 }
 
 }  // namespace ActsPython

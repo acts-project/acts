@@ -3,17 +3,19 @@ from pathlib import Path
 
 import acts
 
-from acts import MaterialMapJsonConverter, JsonMaterialDecorator
+from helpers import jsonEnabled
 
 
 @pytest.mark.root
 def test_material_root(conf_const):
+    import acts.root
+
     with pytest.raises(TypeError):
-        acts.examples.RootMaterialDecorator()
+        acts.root.RootMaterialDecorator()
     fileName = "blubb.root"
     try:
         conf_const(
-            acts.examples.RootMaterialDecorator,
+            acts.root.RootMaterialDecorator,
             level=acts.logging.INFO,
             fileName=fileName,
         )
@@ -21,9 +23,12 @@ def test_material_root(conf_const):
         assert fileName in str(e)
 
 
+@pytest.mark.skipif(not jsonEnabled, reason="JSON not set up")
 def test_json_material_decorator():
-    config = MaterialMapJsonConverter.Config()
-    deco = JsonMaterialDecorator(
+    import acts.json
+
+    config = acts.json.MaterialMapJsonConverter.Config()
+    deco = acts.json.JsonMaterialDecorator(
         rConfig=config,
         jFileName=str(
             Path(__file__).parent.parent.parent.parent

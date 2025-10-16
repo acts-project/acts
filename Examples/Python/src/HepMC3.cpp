@@ -26,7 +26,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 void addHepMC3(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
   auto hepmc3 = mex.def_submodule("_hepmc3");
 
