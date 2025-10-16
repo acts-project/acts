@@ -199,7 +199,6 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     // Loop over the found space points to find the seed with maximum deltaR
     // between the bottom and top space point
-    // @todo add the check of deltaZ
     bool seedFound = false;
     std::array<std::size_t, 3> bestSPIndices{};
     double maxScore = std::numeric_limits<double>::min();
@@ -207,7 +206,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       for (std::size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
         const double bmDeltaR =
             spacePointsOnTrack[im]->r() - spacePointsOnTrack[ib]->r();
-        const double bmDeltaAbsZ =
+        const double bmAbsDeltaZ =
             std::abs(spacePointsOnTrack[im]->z() - spacePointsOnTrack[ib]->z());
         if (bmDeltaR < 0) {
           ACTS_WARNING("Space points are not sorted in r");
@@ -216,8 +215,8 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
         if (bmDeltaR < m_cfg.deltaRMin || bmDeltaR > m_cfg.deltaRMax) {
           continue;
         }
-        if (bmDeltaAbsZ < m_cfg.deltaAbsZMin ||
-            bmDeltaAbsZ > m_cfg.deltaAbsZMax) {
+        if (bmAbsDeltaZ < m_cfg.absDeltaZMin ||
+            bmAbsDeltaZ > m_cfg.absDeltaZMax) {
           continue;
         }
 
@@ -233,8 +232,8 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
           if (mtDeltaR < m_cfg.deltaRMin || mtDeltaR > m_cfg.deltaRMax) {
             continue;
           }
-          if (mtDeltaAbsZ < m_cfg.deltaAbsZMin ||
-              mtDeltaAbsZ > m_cfg.deltaAbsZMax) {
+          if (mtDeltaAbsZ < m_cfg.absDeltaZMin ||
+              mtDeltaAbsZ > m_cfg.absDeltaZMax) {
             continue;
           }
 
