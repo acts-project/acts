@@ -389,8 +389,6 @@ def addSeeding(
             stripGeoSelectionConfigFile,
             logLevel,
         )
-        seeds = ""
-        perSeedParticleHypothesis = ""
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")

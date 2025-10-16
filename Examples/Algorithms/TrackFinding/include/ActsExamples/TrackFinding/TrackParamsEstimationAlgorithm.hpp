@@ -46,7 +46,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Input seeds collection.
     std::string inputSeeds;
     /// Input prototracks (optional).
-    std::string inputProtoTracks;
+    std::optional<std::string> inputProtoTracks;
     /// Input particle hypothesis (optional). If not given, the static particle
     /// hypothesis from the config is used.
     std::optional<std::string> inputParticleHypotheses;
@@ -54,10 +54,10 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     std::string outputTrackParameters;
     /// Output seed collection - only seeds with successful parameter estimation
     /// are propagated (optional)
-    std::string outputSeeds;
+    std::optional<std::string> outputSeeds;
     /// Output prototrack collection - only tracks with successful parameter
     /// estimation are propagated (optional)
-    std::string outputProtoTracks;
+    std::optional<std::string> outputProtoTracks;
 
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
