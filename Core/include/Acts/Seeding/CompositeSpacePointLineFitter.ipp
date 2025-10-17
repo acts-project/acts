@@ -108,6 +108,69 @@ CompositeSpacePointLineFitter::fastPrecFit(
   return m_fastFitter.fit(measurements, ResidualIdx::bending);
 }
 
+template <CompositeSpacePointContainer Cont_t,
+		  CompositeSpacePointFastCalibrator<CompositeSpacePointLineFitter::SpacePoint_t<Cont_t>> Calibrator_t>
+CompositeSpacePointLineFitter::FastFitResultT0 
+CompositeSpacePointLineFitter::fastPrecFitT0(
+		const Acts::CalibrationContext& ctx,
+		const Calibrator_t& calibrator, const Cont_t& measurements,
+		const Line_t& initialGuess, const double startT0,
+		const std::vector<FitParIndex>& parsToUse) const{
+	if (parsToUse.back() != FitParIndex::t0){
+		ACTS_DEBUG(__func__ << "() " << __LINE__
+												<< " - Time is not a fitable parameter");
+		return std::nullopt;
+	}
+	if (std::ranges::none_of(parsToUse, [](const FitParIndex idx) {
+        using enum FitParIndex;
+        return idx == theta || idx == y0;
+      })) {
+    return std::nullopt;
+  }
+
+  std::size_t nStraw = std::ranges::count_if(
+      measurements, [](const auto& sp) { return sp->isStraw(); });
+  ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fetched " << nStraw
+                      << " measurements for fast fit with time.");
+  if (nStraw > 2) {
+    std::vector<int> signs = detail::CompSpacePointAuxiliaries::strawSigns(
+        initialGuess, measurements);
+		
+		FastFitResultT0 precResult = m_fastFitter.fit(ctx, calibrator, measurements, signs, startT0);
+    // Fast fit gave a bad chi2 -> Maybe L/R solution is swapped?
+    if (precResult && precResult->chi2 / static_cast<double>(precResult->nDoF) >
+                          m_cfg.badFastChi2SignSwap) {
+      // Swap signs
+      ACTS_DEBUG(__func__ << "() " << __LINE__
+                          << " - The fit result is of poor quality "
+                          << (*precResult) << " attempt with L<->R swapping");
+      for (auto& s : signs) {
+        s = -s;
+      }
+      // Retry & check whether the chi2 is better
+      FastFitResultT0 swappedPrecResult = m_fastFitter.fit(ctx, calibrator, measurements, signs, startT0);
+      if (swappedPrecResult && swappedPrecResult->chi2 < precResult->chi2) {
+        ACTS_DEBUG(__func__ << "() " << __LINE__
+                            << " - Swapped fit is of better quality "
+                            << (*swappedPrecResult));
+        swappedPrecResult->nIter += precResult->nIter;
+        return swappedPrecResult;
+      } else {
+        precResult->nIter += swappedPrecResult->nIter;
+        ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit did not improve "
+                            << (*swappedPrecResult));
+        return precResult;
+      }
+    }
+  }
+  using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
+  FastFitResult result = m_fastFitter.fit(measurements, ResidualIdx::bending);
+  if (!result) return std::nullopt;
+  
+  FastFitResultT0 resultT0 {};
+  static_cast<FastFitResult::value_type&>(*resultT0) = *result;
+  return resultT0;
+}
 template <CompositeSpacePointContainer Cont_t>
 CompositeSpacePointLineFitter::FitParameters
 CompositeSpacePointLineFitter::fastFit(
@@ -183,6 +246,85 @@ CompositeSpacePointLineFitter::fastFit(
   return result;
 }
 template <CompositeSpacePointContainer Cont_t,
+          CompositeSpacePointFastCalibrator<CompositeSpacePointLineFitter::SpacePoint_t<Cont_t>> Calibrator_t>
+CompositeSpacePointLineFitter::FitParameters 
+CompositeSpacePointLineFitter::fastFitT0(const Acts::CalibrationContext& ctx,
+										 const Calibrator_t& calibrator, const Cont_t& measurements, 
+										 const Line_t& initialGuess, const double startT0,
+										 const std::vector<FitParIndex>& parsToUse) const {
+  using namespace Acts::UnitLiterals;
+  using enum FitParIndex;
+
+  FitParameters result{};
+
+  const FastFitResultT0 precResult{
+      fastPrecFitT0(ctx, calibrator, measurements, initialGuess, startT0, parsToUse)};
+  if (!precResult) {
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit with time failed.");
+    return result;
+  }
+
+  // Copy the parameters & covariance
+  result.parameters[toUnderlying(y0)] = precResult->y0;
+  result.parameters[toUnderlying(theta)] = precResult->theta;
+  result.parameters[toUnderlying(t0)] = precResult->t0;
+  result.covariance(toUnderlying(y0), toUnderlying(y0)) =
+      Acts::square(precResult->dY0);
+  result.covariance(toUnderlying(theta), toUnderlying(theta)) =
+      Acts::square(precResult->dTheta);
+	result.covariance(toUnderlying(t0), toUnderlying(t0)) =
+			Acts::square(precResult->dT0);
+  result.nDoF = static_cast<unsigned>(precResult->nDoF);
+  result.nIter = static_cast<unsigned>(precResult->nIter);
+  result.chi2 = precResult->chi2;
+  result.converged = true;
+
+  // Check whether a non-bending fit is required
+  if (std::ranges::none_of(parsToUse, [](const FitParIndex idx) {
+        return idx == phi || idx == x0;
+      })) {
+    result.parameters[toUnderlying(phi)] = 90._degree;
+    ACTS_DEBUG(
+        __func__ << "() " << __LINE__
+                 << " - No measurements in non precision direction parsed.");
+    return result;
+  }
+
+  ACTS_DEBUG(__func__ << "() " << __LINE__
+                      << " - Start fast non-precision fit.");
+  using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
+  const FastFitResult nonPrecResult =
+      m_fastFitter.fit(measurements, ResidualIdx::nonBending);
+  if (!nonPrecResult) {
+    result.parameters[toUnderlying(phi)] = 90._degree;
+    ACTS_DEBUG(__func__ << "() " << __LINE__
+                        << " - Fast non-precision fit failed.");
+    return result;
+  }
+  result.parameters[toUnderlying(x0)] = nonPrecResult->y0;
+  result.covariance(toUnderlying(x0), toUnderlying(x0)) =
+      Acts::square(nonPrecResult->dY0);
+  result.nDoF += nonPrecResult->nDoF;
+  result.nIter += nonPrecResult->nIter;
+  // Combine the two results into a single direction
+
+  double tanTheta = std::tan(precResult->theta);
+  double tanPhi = std::tan(nonPrecResult->theta);
+  auto dir = makeDirectionFromAxisTangents(tanPhi, tanTheta);
+  result.parameters[toUnderlying(phi)] = VectorHelpers::phi(dir);
+  result.parameters[toUnderlying(theta)] = VectorHelpers::theta(dir);
+
+  Line_t recoLine{result.parameters};
+  result.chi2 = 0.;
+  std::ranges::for_each(measurements, [&recoLine, &result](const auto& m) {
+    result.chi2 += detail::CompSpacePointAuxiliaries::chi2Term(recoLine, result.parameters[toUnderlying(t0)], *m);
+  });
+
+  ACTS_DEBUG(__func__ << "() " << __LINE__ << ": Fast fit with time done. Obtained result"
+                      << result);
+  return result;
+}
+template <CompositeSpacePointContainer Cont_t,
           CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
 CompositeSpacePointLineFitter::FitResult<Cont_t>
 CompositeSpacePointLineFitter::fit(
@@ -221,33 +363,38 @@ CompositeSpacePointLineFitter::fit(
   // Fast fitter shall be used
   if (m_cfg.useFastFitter) {
     line.updateParameters(result.parameters);
+		ACTS_DEBUG(__func__ << "() " << __LINE__
+                        << " - Attempt a fast fit, first.");
+	  FitParameters fastResult{};
     if (resCfg.parsToUse.back() == FitParIndex::t0) {
-      ACTS_WARNING(__func__ << "() " << __LINE__
-                            << " - Fit with t0 to be implemented");
+			fastResult =
+					fastFitT0(fitOpts.calibContext, *(fitOpts.calibrator), result.measurements, line, 0, resCfg.parsToUse);
+			fastResult.parameters[toUnderlying(FitParIndex::t0)] -= (fitOpts.localToGlobal * line.position()).norm() /
+               PhysicalConstants::c;
     } else {
-      ACTS_DEBUG(__func__ << "() " << __LINE__
-                          << " - Attempt a fast fit, first.");
-      FitParameters fastResult =
+      fastResult =
           fastFit(result.measurements, line, resCfg.parsToUse);
-      if (fastResult.converged) {
-        static_cast<FitParameters&>(result) = std::move(fastResult);
-        ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit converged.");
-        // Use the result from the fast fitter as final answer
-        if (!m_cfg.fastPreFitter) {
-          line.updateParameters(result.parameters);
-          // Recalibrate the measurements before returning
-          result.measurements = fitOpts.calibrator->calibrate(
-              fitOpts.calibContext, line.position(), line.direction(), 0.,
-              result.measurements);
-          return result;
-        }
-        // Set convergence flag to false because the full fit comes later.
-        result.converged = false;
-      } else {
-        ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed.");
-        return result;
-      }
-    }
+		}
+		if (fastResult.converged) {
+			static_cast<FitParameters&>(result) = std::move(fastResult);
+			ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit converged.");
+			// Use the result from the fast fitter as final answer
+			if (!m_cfg.fastPreFitter) {
+				line.updateParameters(result.parameters);
+				// Recalibrate the measurements before returning
+				result.measurements = fitOpts.calibrator->calibrate(
+						fitOpts.calibContext, line.position(), line.direction(), 
+            (resCfg.parsToUse.back() == FitParIndex::t0) ? result.parameters[toUnderlying(FitParIndex::t0)] : 0.,
+						result.measurements);
+				return result;
+			}
+			// Set convergence flag to false because the full fit comes later.
+			result.converged = false;
+		} else {
+			ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed.");
+			return result;
+		}
+    
   }
   // Update the drift signs if no re-calibration per iteration is scheduled
   if (!m_cfg.recalibrate) {
@@ -301,12 +448,11 @@ CompositeSpacePointLineFitter::fit(
       if (fitOpts.selector.connected() && !fitOpts.selector(*spacePoint)) {
         continue;
       }
-      double driftV{0.};
-      double driftA{0.};
       // Calculate the residual & derivatives
       if (pullCalculator.config().parsToUse.back() == FitParIndex::t0) {
-        pullCalculator.updateFullResidual(line, t0, *spacePoint, driftV,
-                                          driftA);
+        pullCalculator.updateFullResidual(line, t0, *spacePoint, 
+                fitOpts.calibrator->driftVelocity(fitOpts.calibContext, *spacePoint),
+                fitOpts.calibrator->driftAcceleration(fitOpts.calibContext, *spacePoint));
       } else {
         pullCalculator.updateSpatialResidual(line, *spacePoint);
       }
@@ -430,32 +576,70 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   requires(N >= 2 && N <= s_nPars)
 {
   auto firstIdx = toUnderlying(firstPar);
-  assert(firstIdx + N < s_nPars);
-  // Current parameters mapped to an Eigen interface
-  Eigen::Map<ActsVector<N>> miniPars{currentPars.data() + firstIdx};
-  ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+  assert(firstIdx + N <= s_nPars);
+
+  if constexpr (N != 3) {
+    // Current parameters mapped to an Eigen interface
+    Eigen::Map<ActsVector<N>> miniPars{currentPars.data() + firstIdx};
+    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                         << ": Current parameters " << toString(miniPars)
                         << " with chi2: " << cache.chi2 << ",  gradient: "
                         << toString(cache.gradient) << ", hessian: \n"
                         << cache.hessian);
-
-  // Take out the filled block from the gradient
-  Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
-                                               firstIdx};
-  // The gradient is already small enough
-  if (miniGradient.norm() < m_cfg.precCutOff) {
-    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                        << ": Gradient is small enough");
-    return UpdateStep::converged;
+    // Take out the filled block from the gradient
+    Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
+                                                firstIdx};
+    // The gradient is already small enough
+    if (miniGradient.norm() < m_cfg.precCutOff) {
+      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Gradient is small enough");
+      return UpdateStep::converged;
+    }
+    // Take out the filled block from the hessian
+    const ActsSquareMatrix<N> miniHessian{
+        cache.hessian.block<N, N>(firstIdx, firstIdx)};
+    return doUpdateStep<static_cast<int>(N)>(miniPars, miniGradient, miniHessian);
   }
-  // Take out the filled block from the hessian
-  Acts::ActsSquareMatrix<N> miniHessian{
-      cache.hessian.block<N, N>(firstIdx, firstIdx)};
+  else{
+    constexpr std::array<int, 3> idx = {0, 1, s_nPars - 1};
+
+    ActsVector<N> miniPars, miniGradient;
+    Acts::ActsSquareMatrix<N> miniHessian;
+
+    for (unsigned i = 0; i < N; ++i) {
+      miniPars[i]     = currentPars[idx[i]];
+      miniGradient[i] = cache.gradient[idx[i]];
+      for (unsigned j = 0; j < N; ++j){
+        miniHessian(i, j) = cache.hessian(idx[i], idx[j]);
+      }
+    }
+    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                        << ": Current parameters " << toString(miniPars)
+                        << " with chi2: " << cache.chi2 << ",  gradient: "
+                        << toString(cache.gradient) << ", hessian: \n"
+                        << cache.hessian);
+    Eigen::Map<ActsVector<N>> miniParsRef{miniPars.data()};
+    Eigen::Map<const ActsVector<N>> miniGradientRef{miniGradient.data()};
+    auto result = doUpdateStep<static_cast<int>(N)>(miniParsRef, miniGradientRef, miniHessian);
+
+    // Copy results back
+    for (unsigned i = 0; i < N; ++i)
+      currentPars[idx[i]] = miniPars[i];
+
+    return result;
+  }
+}
+
+template <unsigned N>
+CompositeSpacePointLineFitter::UpdateStep
+CompositeSpacePointLineFitter::doUpdateStep(Eigen::Map<ActsVector<N>> miniPars,
+                                            Eigen::Map<const ActsVector<N>> miniGradient,
+                                            const ActsSquareMatrix<N>& miniHessian) const
+{
   ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                         << ": Projected parameters: " << toString(miniPars)
                         << " gradient: " << toString(miniGradient)
-                        << ", hessian: \n"
-                        << miniHessian
+                        << ", hessian: \n" << miniHessian
                         << ", determinant: " << miniHessian.determinant());
 
   auto inverseH = safeInverse(miniHessian);
