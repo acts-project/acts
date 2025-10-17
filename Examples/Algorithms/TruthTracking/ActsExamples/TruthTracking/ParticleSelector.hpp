@@ -20,7 +20,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Select particles by applying some selection cuts.
 class ParticleSelector final : public IAlgorithm {
