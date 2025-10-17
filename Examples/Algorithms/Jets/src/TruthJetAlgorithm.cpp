@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
@@ -37,6 +36,10 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   const auto& truthParticles = m_inputTruthParticles(ctx);
 
+  // Initialize the output container
+  std::vector<ActsPlugins::FastJet::TruthJet<TrackContainer>>
+      outputJetContainer{};
+
   ACTS_DEBUG("Number of truth particles: " << truthParticles.size());
 
   const fastjet::JetDefinition defaultJetDefinition =
@@ -62,9 +65,18 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   // Get the jets above a certain pt threshold
   std::vector<fastjet::PseudoJet> jets =
       sorted_by_pt(clusterSeq.inclusive_jets(m_cfg.jetPtMin));
+
   ACTS_DEBUG("Number of clustered jets: " << jets.size());
-  // Store the jets in the output data handle
-  m_outputJets(ctx, std::move(jets));
+
+  // Convert the fastjet::PseudoJet objects back to
+  // ActsPlugins::FastJet::TruthJet objects
+  for (const auto& jet : jets) {
+    Acts::Vector4 jetFourMom(jet.px(), jet.py(), jet.pz(), jet.e());
+    ActsPlugins::FastJet::TruthJet<TrackContainer> truthJet(jetFourMom);
+    outputJetContainer.push_back(truthJet);
+  }
+
+  m_outputJets(ctx, std::move(outputJetContainer));
 
   return ProcessCode::SUCCESS;
 }
