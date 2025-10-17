@@ -65,7 +65,7 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     /// Minimum absDeltaZMin between space points in a seed
     float absDeltaZMin = 0 * Acts::UnitConstants::mm;
     /// Maximum absDeltaZMax between space points in a seed
-    float absDeltaZMax = 500 * Acts::UnitConstants::mm;
+    float absDeltaZMax = 300 * Acts::UnitConstants::mm;
   };
 
   /// Construct the truth seeding algorithm.
