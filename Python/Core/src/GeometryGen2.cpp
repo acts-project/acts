@@ -115,7 +115,7 @@ void addGeometryGen2(py::module_& m) {
 
   // Portal definition
   py::class_<Experimental::Portal, std::shared_ptr<Experimental::Portal>>(
-      m, "Portal");
+      m, "PortalGen2");
 
   {
     // The surface hierarchy map
