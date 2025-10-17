@@ -15,7 +15,6 @@ sys.path = [
     str(Path(__file__).parent),
 ] + sys.path
 
-
 import helpers
 import helpers.hash_root
 
