@@ -37,8 +37,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
   if (!torch::cuda::is_available()) {
     ACTS_DEBUG("Running on CPU...");
   } else {
-    if (cfg.deviceID >= 0 &&
-        static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
+    if (cfg.deviceID >= 0 && cfg.deviceID < torch::cuda::device_count()) {
       ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
       device = torch::Device(torch::kCUDA, cfg.deviceID);
     } else {
