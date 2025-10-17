@@ -73,9 +73,16 @@ if(NOT ACTS_USE_SYSTEM_LIBS)
 else()
     message(
         STATUS
-        "Configuring codegen in offline mode: preparing virtual environment"
+        "Configuring codegen in offline mode: preparing virtual environment directory"
     )
 
+    find_package(Python REQUIRED COMPONENTS Interpreter)
+
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/python_venvs)
+endif()
+
+function(acts_code_generation_create_venv)
+    cmake_parse_arguments(PARSE_ARGV 0 ARGS "" "PATH" "")
     find_package(Python REQUIRED COMPONENTS Interpreter)
 
     # The idea of the following code is to create a "nested" Python
@@ -94,14 +101,12 @@ else()
 
     # Then we create a new virtual env using the venv package which is built
     # into Python these days.
-    execute_process(
-        COMMAND ${Python_EXECUTABLE} -m venv ${CMAKE_BINARY_DIR}/codegen_venv
-    )
+    execute_process(COMMAND ${Python_EXECUTABLE} -m venv ${ARGS_PATH})
     # Now, we get the package directory for the newly created virtual
     # environment.
     execute_process(
         COMMAND
-            ${CMAKE_BINARY_DIR}/codegen_venv/bin/python -c
+            ${ARGS_PATH}/bin/python -c
             "import sysconfig; print(sysconfig.get_paths()['purelib'])"
         OUTPUT_VARIABLE _python_nested_package_dir
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -114,12 +119,7 @@ else()
         "${_python_nested_package_dir}/_base_packages.pth"
         ${_python_package_dir}
     )
-
-    message(
-        STATUS
-        "Virtual environment based on ${_python_package_dir} created in ${CMAKE_BINARY_DIR}/codegen_venv/"
-    )
-endif()
+endfunction()
 
 function(acts_code_generation)
     set(options ISOLATED)
@@ -141,6 +141,13 @@ function(acts_code_generation)
     if(NOT DEFINED ARGS_PYTHON)
         message(SEND_ERROR "No python script specified")
         return()
+    endif()
+
+    string(RANDOM LENGTH 16 _venv_identifier)
+    set(_venv_path ${CMAKE_BINARY_DIR}/python_venvs/${_venv_identifier})
+
+    if(ACTS_USE_SYSTEM_LIBS)
+        acts_code_generation_create_venv(PATH ${_venv_path})
     endif()
 
     if(NOT EXISTS ${ARGS_PYTHON})
@@ -180,8 +187,8 @@ function(acts_code_generation)
                 # are already in the environment.
                 execute_process(
                     COMMAND
-                        ${CMAKE_BINARY_DIR}/codegen_venv/bin/python -m pip
-                        install --no-build-isolation --no-index --no-deps
+                        ${_venv_path}/bin/python -m pip install
+                        --no-build-isolation --no-index --no-deps
                         ${_requirement}
                     OUTPUT_QUIET
                 )
@@ -215,9 +222,7 @@ function(acts_code_generation)
         # we created above.
         add_custom_command(
             OUTPUT ${_output_file}
-            COMMAND
-                ${CMAKE_BINARY_DIR}/codegen_venv/bin/python ${ARGS_PYTHON}
-                ${_output_file}
+            COMMAND ${_venv_path}/bin/python ${ARGS_PYTHON} ${_output_file}
             DEPENDS ${_depends}
             COMMENT "Generating ${ARGS_OUTPUT}"
             VERBATIM
