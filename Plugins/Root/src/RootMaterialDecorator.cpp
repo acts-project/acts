@@ -143,10 +143,8 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
           BinUtility bUtility;
           for (int ib = 1; ib < dim + 1; ++ib) {
             auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
-            auto val =
-                static_cast<AxisDirection>(v->GetBinContent(ib));
-            auto opt =
-                static_cast<BinningOption>(o->GetBinContent(ib));
+            auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
+            auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);
             float rmax = max->GetBinContent(ib);
             bUtility += BinUtility(nbins, rmin, rmax, opt, val);
