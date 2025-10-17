@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #include <iosfwd>
 #include <optional>
@@ -25,13 +26,13 @@ struct ParticleData {
 /// Find the charge for a given PDG particle number.
 /// @param pdg PDG particle number
 /// @return Charge in native units.
-std::optional<float> findCharge(PdgParticle pdg);
+std::optional<float> findCharge(std::int32_t pdg);
 
 /// Find the charge for a given PDG particle number of a nucleus.
 /// Try its ground state first, and ultimately get the proton number from PDG
 /// @param pdg PDG particle number for the nucleus
 /// @return Charge in native units.
-float findChargeOfNucleus(PdgParticle pdg);
+float findChargeOfNucleus(std::int32_t pdg);
 
 /// Find the mass for a given PDG particle number.
 /// @param pdg PDG particle number
@@ -55,13 +56,13 @@ float calculateNucleusMass(PdgParticle pdg);
 /// Find a descriptive particle name for a given PDG particle number.
 /// @param pdg PDG particle number
 /// @return Particle name.
-std::optional<std::string_view> findName(PdgParticle pdg);
+std::optional<std::string_view> findName(std::int32_t pdg);
 
 /// Find a descriptive particle name for a given PDG particle number of a
 /// nucleus. Try to get the name from its ground state.
 /// @param pdg PDG particle number for the nucleus
 /// @return Particle name.
-std::optional<std::string_view> findNameOfNucleus(PdgParticle pdg);
+std::optional<std::string_view> findNameOfNucleus(std::int32_t pdg);
 
 /// Find all known particle data for a given PDG particle number.
 /// @param pdg PDG particle number
@@ -78,5 +79,21 @@ std::ostream& operator<<(std::ostream& os, PdgParticle pdg);
 /// @param pdg PDG particle number
 /// @return Optional string view of particle name
 std::optional<std::string_view> pdgToShortAbsString(PdgParticle pdg);
+
+/// @brief Particle identification based on PDG number
+namespace ParticleId {
+
+bool isHadron(int pdg);
+bool isLepton(int pdg);
+bool isMuon(int pdg);
+bool isElectron(int pdg);
+bool isPhoton(int pdg);
+bool isTau(int pdg);
+bool isQuark(int pdg);
+bool isInteracting(int pdg);
+
+HadronType hadronType(int pdg);
+
+} // namespace ParticleId
 
 }  // namespace Acts
