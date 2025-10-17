@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 
 import acts
-from acts import MaterialMapJsonConverter
+import acts.json
+from acts.json import MaterialMapJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
     WhiteBoard,

@@ -26,6 +26,7 @@
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -356,6 +357,9 @@ void addGeometry(py::module_& m) {
         .value("Gap", VolumeResizeStrategy::Gap)
         .value("Expand", VolumeResizeStrategy::Expand);
   }
+
+  py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
+      m, "DetectorElementBase");
 
   py::class_<PortalShellBase>(m, "PortalShellBase");
 

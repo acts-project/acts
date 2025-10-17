@@ -23,18 +23,12 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace Acts;
-using namespace Acts::Experimental;
-using namespace detray;
-using namespace detray::io::detail;
-using namespace ActsPlugins;
+PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
+  using namespace Acts;
+  using namespace Acts::Experimental;
+  using namespace ActsPlugins;
+  using namespace ActsPython;
 
-namespace ActsPython {
-
-void addDetray(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-
-  auto detray = m.def_submodule("detray");
   {
     py::class_<DetrayHostDetector, std::shared_ptr<DetrayHostDetector>>(
         detray, "detray_detector");
@@ -68,4 +62,3 @@ void addDetray(Context& ctx) {
                        writeToJson);
   }
 }
-}  // namespace ActsPython

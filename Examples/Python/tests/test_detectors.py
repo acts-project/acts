@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 
-from helpers import dd4hepEnabled
+from helpers import dd4hepEnabled, rootEnabled
 
 import acts.examples
 from acts.examples.odd import getOpenDataDetector
@@ -57,7 +57,7 @@ def test_telescope_geometry():
     assert count_surfaces(trackingGeometry) == n_surfaces
 
 
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
+@pytest.mark.skipif(not dd4hepEnabled or not rootEnabled, reason="DD4hep is not set up")
 def test_odd():
     with getOpenDataDetector() as detector:
         trackingGeometry = detector.trackingGeometry()
