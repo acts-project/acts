@@ -7,8 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
@@ -31,7 +29,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -170,10 +167,11 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",
-      inputSeeds, inputProtoTracks, outputTrackParameters, outputSeeds,
-      outputProtoTracks, trackingGeometry, magneticField, bFieldMin,
-      initialSigmas, initialSigmaQoverPt, initialSigmaPtRel,
-      initialVarInflation, noTimeVarInflation, particleHypothesis);
+      inputSeeds, inputProtoTracks, inputParticleHypotheses,
+      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
+      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
+      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
+      particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",
