@@ -24,11 +24,14 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   explicit MultiNavigationPolicy(std::unique_ptr<Policies>... policies)
       : MultiNavigationPolicy{[](auto... args) {
           std::vector<std::unique_ptr<INavigationPolicy>> policyPtrs;
-          auto fill = [&policyPtrs](auto& policy) {
-            policyPtrs.push_back(std::move(policy));
-          };
 
-          (fill(args), ...);
+          if constexpr (sizeof...(args) > 0) {
+            auto fill = [&policyPtrs](auto& policy) {
+              policyPtrs.push_back(std::move(policy));
+            };
+
+            (fill(args), ...);
+          }
 
           return policyPtrs;
         }(std::move(policies)...)} {}

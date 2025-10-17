@@ -162,10 +162,14 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   }
 };
 
+/// Base class for the concrete templated grid surface material types.
+/// This allows referning to all template instances as the same base class type.
+class IGridSurfaceMaterialBase : public ISurfaceMaterial {};
+
 /// Intermediate interface to the grid surface material given access to the grid
 /// and the material accessor.
 template <typename grid_value_t>
-class IGridSurfaceMaterial : public ISurfaceMaterial {
+class IGridSurfaceMaterial : public IGridSurfaceMaterialBase {
  public:
   /// @brief Accessor to the grid interface
   /// @return Reference to the grid interface

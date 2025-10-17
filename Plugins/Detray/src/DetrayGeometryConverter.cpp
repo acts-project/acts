@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Json/DetrayJsonHelper.hpp"
 
 #include <algorithm>
@@ -27,18 +28,6 @@
 
 using namespace Acts;
 using namespace detray;
-
-detray::io::transform_payload
-ActsPlugins::DetrayGeometryConverter::convertTransform(const Transform3& t) {
-  detray::io::transform_payload tfPayload;
-  Vector3 translation = t.translation();
-  tfPayload.tr = {translation.x(), translation.y(), translation.z()};
-  RotationMatrix3 rotation = t.rotation().transpose();
-  tfPayload.rot = {rotation(0, 0), rotation(0, 1), rotation(0, 2),
-                   rotation(1, 0), rotation(1, 1), rotation(1, 2),
-                   rotation(2, 0), rotation(2, 1), rotation(2, 2)};
-  return tfPayload;
-}
 
 detray::io::mask_payload ActsPlugins::DetrayGeometryConverter::convertMask(
     const SurfaceBounds& bounds, bool portal) {
@@ -56,7 +45,8 @@ ActsPlugins::DetrayGeometryConverter::convertSurface(
     const GeometryContext& gctx, const Surface& surface, bool portal) {
   detray::io::surface_payload surfacePayload;
 
-  surfacePayload.transform = convertTransform(surface.transform(gctx));
+  surfacePayload.transform =
+      DetrayConversionUtils::convertTransform(surface.transform(gctx));
   surfacePayload.source = surface.geometryId().value();
   surfacePayload.barcode = std::nullopt;
   surfacePayload.type = static_cast<detray::surface_id>(
@@ -270,7 +260,8 @@ detray::io::volume_payload ActsPlugins::DetrayGeometryConverter::convertVolume(
   std::size_t volumeIndex = cCache.volumeIndex(&volume);
   volumePayload.name = volume.name();
   volumePayload.index.link = volumeIndex;
-  volumePayload.transform = convertTransform(volume.transform(gctx));
+  volumePayload.transform =
+      DetrayConversionUtils::convertTransform(volume.transform(gctx));
 
   // Remember the link
   cCache.volumeLinks[volume.geometryId()] = volumePayload.index.link;

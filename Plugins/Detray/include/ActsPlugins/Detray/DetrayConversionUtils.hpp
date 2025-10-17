@@ -8,11 +8,16 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <map>
+#include <tuple>
 
 #include <detray/core/detector.hpp>
 #include <detray/definitions/grid_axis.hpp>
@@ -96,6 +101,43 @@ detray::axis::binning convertBinningType(Acts::BinningType bType);
 ///
 /// @return a detray axis payload
 detray::io::axis_payload convertBinningData(const Acts::BinningData& bData);
+
+/// Convert an IAxis to a detray axis payload
+///
+/// @param axis the axis to be converted
+///
+/// @return a detray axis payload
+detray::io::axis_payload convertAxis(const Acts::IAxis& axis);
+
+/// Convert a MaterialSlab to a detray material slab payload
+///
+/// @param slab the material slab to be converted
+///
+/// @return a detray material slab payload
+detray::io::material_slab_payload convertMaterialSlab(
+    const Acts::MaterialSlab& slab);
+
+/// Convert a Transform3 to a detray transform payload
+///
+/// @param transform the transform to be converted
+///
+/// @return a detray transform payload
+detray::io::transform_payload convertTransform(
+    const Acts::Transform3& transform);
+
+/// Convert a 1D BinUtility to a 2D BinUtility for Detray
+///
+/// Detray expects 2-dimensional grids. This function converts 1D grids
+/// to 2D by adding a dummy second dimension. Currently supported 2D grids
+/// are: x-y, r-phi, phi-z
+///
+/// @param bUtility the bin utility to be converted (may be 1D or 2D)
+///
+/// @return a tuple containing:
+///   - the converted 2D BinUtility
+///   - a boolean indicating if axes were swapped
+std::tuple<Acts::BinUtility, bool> convertBinUtilityTo2D(
+    const Acts::BinUtility& bUtility);
 
 }  // namespace DetrayConversionUtils
 }  // namespace ActsPlugins

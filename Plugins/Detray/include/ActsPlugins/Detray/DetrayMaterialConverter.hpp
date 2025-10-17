@@ -23,14 +23,6 @@ class Detector;
 
 namespace ActsPlugins::DetrayMaterialConverter {
 
-/// Conversion method for material slab
-///
-/// @param materialSlab the material slab object
-///
-/// @return a material slab payload
-detray::io::material_slab_payload convertMaterialSlab(
-    const Acts::MaterialSlab& materialSlab);
-
 /// Conversion method for homogeneous material
 ///
 /// @param cCache object to have the link association from the geometry building

@@ -18,6 +18,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsTests/CommonHelpers/CylindricalDetector.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
   transform.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3::UnitZ()));
 
   detray::io::transform_payload payload =
-      DetrayGeometryConverter::convertTransform(transform);
+      DetrayConversionUtils::convertTransform(transform);
   // Transform is correctly translated
   CHECK_CLOSE_ABS(payload.tr[0u], 1., std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.tr[1u], 2., std::numeric_limits<double>::epsilon());

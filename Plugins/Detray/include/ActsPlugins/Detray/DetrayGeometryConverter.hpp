@@ -37,13 +37,6 @@ class Portal;
 
 namespace ActsPlugins::DetrayGeometryConverter {
 
-/// Conversion method for transform objects to detray::transform payloads
-///
-/// @param t the transform to be converted
-///
-/// @return the transform_payload(translation, rotation)
-detray::io::transform_payload convertTransform(const Acts::Transform3& t);
-
 /// Conversion method for surface bounds to detray::mask payloads
 ///
 /// @param bounds the bounds object to be converted

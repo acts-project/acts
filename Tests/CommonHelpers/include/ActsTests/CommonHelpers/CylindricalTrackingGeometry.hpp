@@ -15,6 +15,7 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <vector>
@@ -45,8 +46,7 @@ struct CylindricalTrackingGeometry {
                                        bool gen3_ = false)
       : geoContext(gctx), gen3(gen3_) {}
 
-  using DetectorStore =
-      std::vector<std::unique_ptr<const ActsTests::DetectorElementStub>>;
+  using DetectorStore = std::vector<std::unique_ptr<const DetectorElementStub>>;
 
   /// The detector store for memory management
   DetectorStore detectorStore = {};
@@ -96,11 +96,12 @@ struct CylindricalTrackingGeometry {
       const std::pair<int, int>& binningSchema);
 
   // @brief Call operator for the creation method of the tracking geometry
-  std::shared_ptr<Acts::TrackingGeometry> operator()();
+  std::shared_ptr<Acts::TrackingGeometry> operator()(
+      const Acts::Logger& logger = Acts::getDummyLogger());
 
  private:
-  std::shared_ptr<Acts::TrackingGeometry> buildGen1();
-  std::shared_ptr<Acts::TrackingGeometry> buildGen3();
+  std::shared_ptr<Acts::TrackingGeometry> buildGen1(const Acts::Logger& logger);
+  std::shared_ptr<Acts::TrackingGeometry> buildGen3(const Acts::Logger& logger);
 };
 
 }  // namespace ActsTests
