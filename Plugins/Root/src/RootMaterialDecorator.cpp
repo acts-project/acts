@@ -142,10 +142,10 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
           // Now reconstruct the bin utilities
           BinUtility bUtility;
           for (int ib = 1; ib < dim + 1; ++ib) {
-            std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
-            AxisDirection val =
+            auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
+            auto val =
                 static_cast<AxisDirection>(v->GetBinContent(ib));
-            BinningOption opt =
+            auto opt =
                 static_cast<BinningOption>(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);
             float rmax = max->GetBinContent(ib);
@@ -169,11 +169,11 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
             MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
 
             for (int p = 1; p <= points; p++) {
-              double dx0 = x0->GetBinContent(p);
-              double dl0 = l0->GetBinContent(p);
-              double da = A->GetBinContent(p);
-              double dz = Z->GetBinContent(p);
-              double drho = rho->GetBinContent(p);
+              float dx0 = x0->GetBinContent(p);
+              float dl0 = l0->GetBinContent(p);
+              float da = A->GetBinContent(p);
+              float dz = Z->GetBinContent(p);
+              float drho = rho->GetBinContent(p);
               // Create material properties
               const auto material =
                   Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -200,11 +200,11 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
             MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
 
             for (int p = 1; p <= points; p++) {
-              double dx0 = x0->GetBinContent(p);
-              double dl0 = l0->GetBinContent(p);
-              double da = A->GetBinContent(p);
-              double dz = Z->GetBinContent(p);
-              double drho = rho->GetBinContent(p);
+              float dx0 = x0->GetBinContent(p);
+              float dl0 = l0->GetBinContent(p);
+              float da = A->GetBinContent(p);
+              float dz = Z->GetBinContent(p);
+              float drho = rho->GetBinContent(p);
               // Create material properties
               const auto material =
                   Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -231,7 +231,7 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
       ACTS_VERBOSE("Successfully read Material for : " << geoID);
 
       // Insert into the new collection
-      m_volumeMaterialMap.insert({geoID, std::move(vMaterial)});
+      m_volumeMaterialMap.try_emplace(geoID, std::move(vMaterial));
     }
   }
 }

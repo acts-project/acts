@@ -541,7 +541,7 @@ linux_ubuntu_2404_clang19:
     - source build/this_acts_withdeps.sh
     - python3 -m pip install -r src/Examples/Python/tests/requirements.txt
     - cd src
-    - pytest -rfExw -k "not gnn" -v -n1
+    - pytest --import-mode=importlib -rfExw -k "not gnn" -v -n1
 
 lcg_106a:
   extends: .lcg_base_job
