@@ -297,7 +297,7 @@ class TrackProxy {
   /// Get the charge of the tack
   /// @note this depends on the charge hypothesis
   /// @return The absolute track momentum
-  double charge() const { return particleHypothesis().qFromQOP(qOverP()); }
+  double charge() const { return particleHypothesis().extractCharge(qOverP()); }
 
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
