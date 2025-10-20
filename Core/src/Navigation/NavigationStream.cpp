@@ -63,6 +63,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   for (auto& candidate : m_candidates) {
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
+    std::cout<<"test intersection with surface "<<surface.geometryId()<<std::endl;
     // Intersect the surface
     auto multiIntersection = surface.intersect(gctx, position, direction,
                                                cTolerance, onSurfaceTolerance);
@@ -71,12 +72,14 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     bool secondValid = multiIntersection.at(1).isValid();
     if (firstValid && !secondValid) {
       if (multiIntersection.at(0).pathLength() < -onSurfaceTolerance) {
+	      std::cout<<"skip surface, first valid, second invalid, path "<<multiIntersection[0].pathLength()<<", -onSurfaceTolerance: "<<-onSurfaceTolerance<<std::endl;
         continue;
       }
       candidate.intersection() = multiIntersection.at(0);
       candidate.intersectionIndex() = 0;
     } else if (!firstValid && secondValid) {
       if (multiIntersection.at(1).pathLength() < -onSurfaceTolerance) {
+	      std::cout<<"skip surface, first invalid, second valid, path "<<multiIntersection[1].pathLength()<<", -onSurfaceTolerance: "<<-onSurfaceTolerance<<std::endl;
         continue;
       }
       candidate.intersection() = multiIntersection.at(1);
@@ -85,10 +88,12 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
       // Split them into valid intersections, keep track of potentially
       // additional candidates
       bool originalCandidateUpdated = false;
+      std::cout<<"find valid intersections"<<std::endl;
       for (auto [intersectionIndex, intersection] :
            enumerate(multiIntersection)) {
         // Skip negative solutions, respecting the on surface tolerance
         if (intersection.pathLength() < -onSurfaceTolerance) {
+		std::cout<<"skip negative solution"<<std::endl;
           continue;
         }
         // Valid solution is either on surface or updates the distance
@@ -97,6 +102,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
             candidate.intersection() = intersection;
             candidate.intersectionIndex() = intersectionIndex;
             originalCandidateUpdated = true;
+	    std::cout<<"original candidate not updated"<<std::endl;
           } else {
             NavigationTarget additionalCandidate = candidate;
             additionalCandidate.intersection() = intersection;
@@ -112,6 +118,8 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   m_candidates.insert(m_candidates.end(), additionalCandidates.begin(),
                       additionalCandidates.end());
 
+  std::cout<<"after adding the multi-intersection candidates, have "<<m_candidates.size()<<" candidates"<<std::endl;
+
   // Sort the candidates by path length
   std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
 
@@ -126,12 +134,17 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
       });
   m_candidates.erase(nonUniqueRange.begin(), nonUniqueRange.end());
 
+  std::cout<<"after removing duplicates, have "<<m_candidates.size()<<" candidates"<<std::endl;
+
   // The we find the first invalid candidate
   auto firstInvalid = std::ranges::find_if(
       m_candidates,
       [](const NavigationTarget& a) { return !a.intersection().isValid(); });
 
+  for(auto& candidate : m_candidates) std::cout<<"candidate at surface "<<candidate.surface().geometryId()<<" has intersection "<<candidate.intersection().isValid()<<std::endl;
+
   // Set the range and initialize
+  std::cout<<"resize to "<<std::distance(m_candidates.begin(), firstInvalid)<<std::endl;
   m_candidates.resize(std::distance(m_candidates.begin(), firstInvalid),
                       NavigationTarget::None());
 

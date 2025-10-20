@@ -169,20 +169,25 @@ MultiIntersection3D PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
+	std::cout<<"PlaneSurface::intersect"<<std::endl;
   // Get the contextual transform
   const auto& gctxTransform = localToGlobalTransform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
+  std::cout<<"intersection has status "<<status<<std::endl;
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status() != IntersectionStatus::unreachable) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
+    std::cout<<"local vector: "<<tMatrix.block<3, 2>(0, 0).transpose() * vecLocal<<std::endl;
+    std::cout<<"bounds: "<<*m_bounds<<std::endl;
     if (!insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
                       boundaryTolerance)) {
+	    std::cout<<"intersection not inside bounds"<<std::endl;
       status = IntersectionStatus::unreachable;
     }
   }
