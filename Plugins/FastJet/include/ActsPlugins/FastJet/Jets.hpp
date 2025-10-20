@@ -94,7 +94,7 @@ class TrackJet : public Jet {
 
  private:
   /// @brief Tracks as the constituents of the track jet
-  std::vector<typename TrackContainer::TrackProxy> m_constituents{};
+  std::vector<typename TrackContainer::TrackProxy> m_constituents;
 };
 
 }  // namespace ActsPlugins::FastJet
