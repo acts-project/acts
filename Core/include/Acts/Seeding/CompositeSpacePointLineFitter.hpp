@@ -49,6 +49,13 @@ class CompositeSpacePointLineFitter {
   using ParamVec_t = std::array<double, s_nPars>;
   /// @brief Covariance estimation matrix on the segment line parameters
   using CovMat_t = Acts::ActsSquareMatrix<s_nPars>;
+  /// @brief Assignment of the types of degrees of freedom.
+  enum class DegFreedomIdx : std::uint8_t {
+    nonBending = 0,
+    bending = 1,
+    time = 2,
+    straw = 3
+  };
   /// @brief Fitter configuration object
   struct Config {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
@@ -164,24 +171,26 @@ class CompositeSpacePointLineFitter {
           "CompositeSpacePointLineFitter", Logging::Level::INFO));
   /// @brief Returns the instantiated configuration object
   const Config& config() const { return m_cfg; }
-  /// @brief Counts how many measurements measure loc0, loc1 & time
+  /// @brief Classify measurements according to whether they measure 
+  ///        loc0, loc1, time or are straw measurements
   /// @param measurements: Collection of composite space points of interest
   template <CompositeSpacePointContainer Cont_t>
-  std::array<std::size_t, 3> countDoF(const Cont_t& measurements) const;
-  /// @brief Counts how many measurements measure loc0, loc1 & time
+  std::array<std::size_t, 4> countDoF(const Cont_t& measurements) const;
+  /// @brief Classify measurements according to whether they measure 
+  ///        loc0, loc1, time or are straw measurements
   /// @param measurements: Collection of composite space points of interest
   /// @param selector: Delegate to sort out the invalid measurements
   template <CompositeSpacePointContainer Cont_t>
-  std::array<std::size_t, 3> countDoF(
+  std::array<std::size_t, 4> countDoF(
       const Cont_t& measurements,
       const Selector_t<SpacePoint_t<Cont_t>>& selector) const;
 
   /// @brief Helper function to extract which parameters shall be
   ///        extracted from the hit counts.
   /// @param hitCounts: Filled array representing the degrees of freedom for
-  ///                    nonBending, bending & time
+  ///                   nonBending, bending, timeStrip, and straw measurement
   static std::vector<FitParIndex> extractFitablePars(
-      const std::array<std::size_t, 3>& hitCounts);
+      const std::array<std::size_t, 4>& hitCounts, const bool fitT0);
   /// @brief Fit a line to a set of Composite space point measurements.
   /// @param fitOpts: Auxiliary object carrying all necessary input
   ///                 needed to execute the fit

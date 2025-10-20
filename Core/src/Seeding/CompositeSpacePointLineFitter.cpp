@@ -24,10 +24,10 @@ CompositeSpacePointLineFitter::fastFitterCfg() const {
 
 std::vector<CompositeSpacePointLineFitter::FitParIndex>
 CompositeSpacePointLineFitter::extractFitablePars(
-    const std::array<std::size_t, 3>& hitCounts) {
+    const std::array<std::size_t, 4>& hitCounts, const bool fitT0) {
   std::vector<FitParIndex> pars{};
   using enum FitParIndex;
-  const auto& [nLoc0, nLoc1, nTime] = hitCounts;
+  const auto& [nLoc0, nLoc1, nTime, nStraw] = hitCounts;
   if (nLoc0 > 1) {
     pars.insert(pars.end(), {x0, phi});
   }
@@ -36,7 +36,7 @@ CompositeSpacePointLineFitter::extractFitablePars(
     pars.insert(pars.end(), {y0, theta});
   }
   // Time measurements
-  if (nTime > 1) {
+  if (fitT0 && (nTime + nStraw) > 1) {
     pars.push_back(t0);
   }
   std::ranges::sort(pars);

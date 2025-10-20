@@ -17,17 +17,17 @@
 namespace Acts::Experimental {
 
 template <CompositeSpacePointContainer Cont_t>
-std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
+std::array<std::size_t, 4> CompositeSpacePointLineFitter::countDoF(
     const Cont_t& measurements) const {
   return countDoF(measurements, Selector_t<SpacePoint_t<Cont_t>>{});
 }
 
 template <CompositeSpacePointContainer Cont_t>
-std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
+std::array<std::size_t, 4> CompositeSpacePointLineFitter::countDoF(
     const Cont_t& measurements,
     const Selector_t<SpacePoint_t<Cont_t>>& selector) const {
-  using enum detail::CompSpacePointAuxiliaries::ResidualIdx;
-  auto counts = filledArray<std::size_t, 3>(0u);
+  using enum DegFreedomIdx;
+  auto counts = filledArray<std::size_t, 4>(0u);
   std::size_t nValid{0};
   for (const auto& sp : measurements) {
     if (selector.connected() && !selector(*sp)) {
@@ -44,17 +44,21 @@ std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
     if (sp->measuresLoc1()) {
       ++counts[toUnderlying(bending)];
     }
-    /// Count the straws as implicit time measurements
-    if (m_cfg.fitT0 && (sp->hasTime() || sp->isStraw())) {
+    if (sp->isStraw()){
+      ++counts[toUnderlying(straw)];
+    }
+    else if (sp->hasTime()) {
       ++counts[toUnderlying(time)];
     }
+    
   }
   ACTS_DEBUG(
       __func__ << "() " << __LINE__ << " - " << nValid << "/"
                << measurements.size() << " valid measurements passed. Found "
                << counts[toUnderlying(nonBending)] << "/"
                << counts[toUnderlying(bending)] << "/"
-               << counts[toUnderlying(time)] << " measuring loc0/loc1/time.");
+               << counts[toUnderlying(time)] << " measuring loc0/loc1/time with "
+               << counts[3] << " straw measurements.");
   return counts;
 }
 
@@ -131,12 +135,12 @@ CompositeSpacePointLineFitter::fastPrecFitT0(
   std::size_t nStraw = std::ranges::count_if(
       measurements, [](const auto& sp) { return sp->isStraw(); });
   ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fetched " << nStraw
-                      << " measurements for fast fit with time.");
+                      << " straw measurements for fast fit with time.");
   if (nStraw > 2) {
     std::vector<int> signs = detail::CompSpacePointAuxiliaries::strawSigns(
         initialGuess, measurements);
 		
-		FastFitResultT0 precResult = m_fastFitter.fit(ctx, calibrator, measurements, signs, startT0);
+	  FastFitResultT0 precResult = m_fastFitter.fit(ctx, calibrator, measurements, signs, startT0);
     // Fast fit gave a bad chi2 -> Maybe L/R solution is swapped?
     if (precResult && precResult->chi2 / static_cast<double>(precResult->nDoF) >
                           m_cfg.badFastChi2SignSwap) {
@@ -159,9 +163,9 @@ CompositeSpacePointLineFitter::fastPrecFitT0(
         precResult->nIter += swappedPrecResult->nIter;
         ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit did not improve "
                             << (*swappedPrecResult));
-        return precResult;
       }
     }
+    return precResult;
   }
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
   FastFitResult result = m_fastFitter.fit(measurements, ResidualIdx::bending);
@@ -350,7 +354,7 @@ CompositeSpacePointLineFitter::fit(
   resCfg.includeToF = m_cfg.includeToF;
 
   resCfg.parsToUse =
-      extractFitablePars(countDoF(result.measurements, fitOpts.selector));
+      extractFitablePars(countDoF(result.measurements, fitOpts.selector), m_cfg.fitT0);
   if (resCfg.parsToUse.empty()) {
     ACTS_WARNING(__func__ << "() " << __LINE__
                           << ": No valid degrees of freedom parsed. Please "
@@ -422,13 +426,13 @@ CompositeSpacePointLineFitter::fit(
       // Check whether the measurements are still valid
       auto parsBkp = std::move(resCfg.parsToUse);
       resCfg.parsToUse =
-          extractFitablePars(countDoF(result.measurements, fitOpts.selector));
+          extractFitablePars(countDoF(result.measurements, fitOpts.selector), m_cfg.fitT0);
 
       // No valid measurement is left
       if (resCfg.parsToUse.empty()) {
         ACTS_WARNING(__func__ << "() " << __LINE__ << ":  Line parameters "
                               << toString(line.position()) << " + "
-                              << toString(line.direction()) << ", t0: " << t0
+                              << toString(line.direction()) << ", t0: " << t0 / 1._ns
                               << " invalidated all measurements");
         return result;
       }
@@ -526,7 +530,8 @@ CompositeSpacePointLineFitter::fit(
   if (result.converged) {
     const auto doF = countDoF(result.measurements, fitOpts.selector);
     result.nDoF =
-        (doF[0] + doF[1] + doF[2]) - pullCalculator.config().parsToUse.size();
+        doF[toUnderlying(DegFreedomIdx::nonBending)] + doF[toUnderlying(DegFreedomIdx::bending)] 
+        + doF[toUnderlying(DegFreedomIdx::time)] - pullCalculator.config().parsToUse.size();
     line.updateParameters(result.parameters);
     const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
     // Recalibrate the measurements before returning
