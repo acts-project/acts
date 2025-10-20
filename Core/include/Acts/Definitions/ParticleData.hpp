@@ -94,6 +94,6 @@ bool isInteracting(int pdg);
 
 HadronType hadronType(int pdg);
 
-} // namespace ParticleId
+}  // namespace ParticleId
 
 }  // namespace Acts
