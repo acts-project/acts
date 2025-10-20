@@ -35,9 +35,7 @@ concept CompositeSpacePointFastCalibrator =
       ///        which is defined as the second derivative of the relation
       /// @param ctx: Calibration context to access the calibration constants (Experiment specific)
       /// @param spacePoint: Reference to the calibrated space point
-      {
-        calibrator.driftAcceleration(ctx, spacePoint, t0)
-      } -> std::same_as<double>;
+      { calibrator.driftAcceleration(ctx, spacePoint, t0)} -> std::same_as<double>;
 
       { calibrator.driftRadius(ctx, spacePoint, t0) } -> std::same_as<double>;
     };
@@ -80,9 +78,7 @@ concept CompositeSpacePointCalibrator =
       ///        which is defined as the second derivative of the relation
       ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
       ///  @param measurement: Reference to the calibrated space point
-      {
-        calibrator.driftAcceleration(ctx, measurement)
-      } -> std::same_as<double>;
+      { calibrator.driftAcceleration(ctx, measurement) } -> std::same_as<double>;
     };
 
 }  // namespace Acts::Experimental

@@ -131,7 +131,6 @@ class CompositeSpacePointLineFitter {
   /// @tparam Cont_t Space point container type
   template <CompositeSpacePointContainer Cont_t>
   struct FitResult : public FitParameters {
-    using FitParameters::FitParameters;
     /// @param List of measurements post-fit
     Cont_t measurements{};
   };
@@ -189,8 +188,8 @@ class CompositeSpacePointLineFitter {
   ///        extracted from the hit counts.
   /// @param hitCounts: Filled array representing the degrees of freedom for
   ///                   nonBending, bending, timeStrip, and straw measurement
-  static std::vector<FitParIndex> extractFitablePars(
-      const std::array<std::size_t, 4>& hitCounts, const bool fitT0);
+  std::vector<FitParIndex> extractFitablePars(
+      const std::array<std::size_t, 4>& hitCounts) const;
   /// @brief Fit a line to a set of Composite space point measurements.
   /// @param fitOpts: Auxiliary object carrying all necessary input
   ///                 needed to execute the fit
@@ -221,7 +220,7 @@ class CompositeSpacePointLineFitter {
                         const std::vector<FitParIndex>& parsToUse) const;
 
   /// @brief Executes a fast (pre)fit using the FastStrawLineFitter. First the parameters
-  ///        (theta, y0) are fitted using the straw measurements only, if
+  ///        (theta, y0 and t0) are fitted using the straw measurements only, if
   ///        present. Otherwise, strips measuring the bending direction are
   ///        used. If non-bending information (x0, phi) is also available, a
   ///        second strip fit is executed and the directional parameters are
@@ -229,13 +228,21 @@ class CompositeSpacePointLineFitter {
   /// @param measurements: List of measurements to fit
   /// @param initialGuess: Line representing the start parameters parsed by the user. Needed to determine
   ///                      the L<->R ambiguity of the straws
-  /// @param parsToUse: List of parameters to fit (y0, theta), (x0, phi) or (y0, theta, x0, phi).
+  /// @param parsToUse: List of parameters to fit (y0, theta, t0), (x0, phi) or (y0, theta, x0, phi, t0).
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointFastCalibrator<SpacePoint_t<Cont_t>> Calibrator_t>
   FitParameters fastFitT0(const Acts::CalibrationContext& ctx,
                           const Calibrator_t& calibrator, const Cont_t& measurements, 
                           const Line_t& initialGuess, const double startT0,
                           const std::vector<FitParIndex>& parsToUse) const;
+  /// @brief Helper function with the implementation of the fast (pre)fit 
+  /// @param precFitFunc callable to run either fastPrecFit or fastPrecFitT0
+  template <CompositeSpacePointContainer Cont_t,
+            typename PrecResult_t, typename PrecFitFunc>
+  FitParameters fastFitImpl(const Cont_t& measurements,
+                            const std::vector<FitParIndex>& parsToUse,
+                            PrecFitFunc&& precFitFunc) const; 
+
   /// @brief Abrivation of the fit result returned by the FastStrawLineFitter
   using FastFitResult = std::optional<detail::FastStrawLineFitter::FitResult>;
   using FastFitResultT0 = std::optional<detail::FastStrawLineFitter::FitResultT0>;
@@ -267,6 +274,12 @@ class CompositeSpacePointLineFitter {
                                 const Calibrator_t& calibrator, const Cont_t& measurements,
                                 const Line_t& initialGuess, const double startT0,
                                 const std::vector<FitParIndex>& parsToUse) const;
+  /// @brief Helper function with the implementation of the precision fit                          
+  template <CompositeSpacePointContainer Cont_t,
+            typename PrecResult_t, typename FitterFunc>
+  PrecResult_t fastPrecFitImpl(const Cont_t& measurements, const Line_t& initialGuess,
+                               const std::vector<FitParIndex>& parsToUse,
+                               FitterFunc&& fitterFunc) const;
 
   /// @brief Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was
