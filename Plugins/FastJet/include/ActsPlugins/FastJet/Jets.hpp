@@ -28,7 +28,7 @@ class Jet {
 
   /// @brief Get the jet 4-momentum
   /// @return the jet 4-momentum as an Acts::Vector4
-  Acts::Vector4 getFourMomentum() const { return m_fourMomentum; }
+  Acts::Vector4 fourMomentum() const { return m_fourMomentum; }
 
   /// @brief Print the jet information
   friend std::ostream& operator<<(std::ostream& os, const Jet& jet) {
