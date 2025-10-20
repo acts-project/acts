@@ -51,7 +51,7 @@ class TruthJet : public Jet {
   }
 
   /// @brief Get the truth particles that are truth jet constituents
-  const std::vector<ActsFatras::Barcode>& getConstituents() const {
+  const std::vector<ActsFatras::Barcode>& constituents() const {
     return m_constituents;
   }
 
