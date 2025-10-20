@@ -24,20 +24,19 @@ namespace ActsPlugins::FastJet {
 /// Common class for jets
 class Jet {
  public:
-  explicit Jet(const Acts::Vector4& fourMom) { m_fourMomentum = fourMom; }
+  explicit Jet(const Acts::Vector4& fourMom) : m_fourMomentum{fourMom} {}
 
   /// @brief Get the jet 4-momentum
   /// @return the jet 4-momentum as an Acts::Vector4
-  Acts::Vector4 getFourMomentum() const { return m_fourMomentum; }
-
-  /// @brief Print the jet information
-  friend std::ostream& operator<<(std::ostream& os, const Jet& jet) {
-    os << "Jet 4-momentum: " << jet.getFourMomentum().transpose() << std::endl;
-    return os;
-  }
+  Acts::Vector4 fourMomentum() const { return m_fourMomentum; }
 
  private:
-  Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
+  Acts::Vector4 m_fourMomentum{Acts::Vector4::Zero()};
+  /// @brief Print the jet information
+  friend std::ostream& operator<<(std::ostream& os, const Jet& jet) {
+    os << "Jet 4-momentum: " << jet.fourMomentum().transpose() << std::endl;
+    return os;
+  }
 };
 
 template <typename TrackContainer>
@@ -51,7 +50,7 @@ class TruthJet : public Jet {
   }
 
   /// @brief Get the truth particles that are truth jet constituents
-  const std::vector<ActsFatras::Barcode>& getConstituents() const {
+  const std::vector<ActsFatras::Barcode>& constituents() const {
     return m_constituents;
   }
 
@@ -63,16 +62,16 @@ class TruthJet : public Jet {
   }
 
   /// @brief Get the tracks associated to this truth jet
-  const std::vector<typename TrackContainer::TrackProxy>& getAssociatedTracks()
+  const std::vector<typename TrackContainer::TrackProxy>& associatedTracks()
       const {
     return m_associatedTracks;
   }
 
  private:
   /// @brief  Truth particles as the constituents of the truth jet
-  std::vector<ActsFatras::Barcode> m_constituents{};
+  std::vector<ActsFatras::Barcode> m_constituents;
   /// @brief The tracks associated to this truth jet
-  std::vector<typename TrackContainer::TrackProxy> m_associatedTracks{};
+  std::vector<typename TrackContainer::TrackProxy> m_associatedTracks;
 };
 
 template <typename TrackContainer>
@@ -87,14 +86,13 @@ class TrackJet : public Jet {
   }
 
   /// @brief Get the track jet constituents that are tracks
-  const std::vector<typename TrackContainer::TrackProxy>& getConstituents()
-      const {
+  const std::vector<typename TrackContainer::TrackProxy>& constituents() const {
     return m_constituents;
   }
 
  private:
   /// @brief Tracks as the constituents of the track jet
-  std::vector<typename TrackContainer::TrackProxy> m_constituents{};
+  std::vector<typename TrackContainer::TrackProxy> m_constituents;
 };
 
 }  // namespace ActsPlugins::FastJet
