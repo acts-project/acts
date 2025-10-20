@@ -24,7 +24,7 @@ namespace ActsPlugins::FastJet {
 /// Common class for jets
 class Jet {
  public:
-  explicit Jet(const Acts::Vector4& fourMom) { m_fourMomentum = fourMom; }
+  explicit Jet(const Acts::Vector4& fourMom) : m_fourMomentum{fourMom} {}
 
   /// @brief Get the jet 4-momentum
   /// @return the jet 4-momentum as an Acts::Vector4
