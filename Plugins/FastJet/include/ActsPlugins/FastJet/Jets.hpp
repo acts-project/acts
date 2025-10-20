@@ -37,7 +37,7 @@ class Jet {
   }
 
  private:
-  Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
+  Acts::Vector4 m_fourMomentum{Acts::Vector4::Zero()};
 };
 
 template <typename TrackContainer>
