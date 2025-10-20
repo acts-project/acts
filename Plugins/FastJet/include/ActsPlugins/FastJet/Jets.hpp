@@ -87,7 +87,7 @@ class TrackJet : public Jet {
   }
 
   /// @brief Get the track jet constituents that are tracks
-  const std::vector<typename TrackContainer::TrackProxy>& getConstituents()
+  const std::vector<typename TrackContainer::TrackProxy>& constituents()
       const {
     return m_constituents;
   }
