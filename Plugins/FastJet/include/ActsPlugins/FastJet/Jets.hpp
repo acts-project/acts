@@ -30,14 +30,13 @@ class Jet {
   /// @return the jet 4-momentum as an Acts::Vector4
   Acts::Vector4 fourMomentum() const { return m_fourMomentum; }
 
-  /// @brief Print the jet information
-  friend std::ostream& operator<<(std::ostream& os, const Jet& jet) {
-    os << "Jet 4-momentum: " << jet.getFourMomentum().transpose() << std::endl;
-    return os;
-  }
-
  private:
   Acts::Vector4 m_fourMomentum{Acts::Vector4::Zero()};
+  /// @brief Print the jet information
+  friend std::ostream& operator<<(std::ostream& os, const Jet& jet) {
+    os << "Jet 4-momentum: " << jet.fourMomentum().transpose() << std::endl;
+    return os;
+  }
 };
 
 template <typename TrackContainer>
@@ -87,8 +86,7 @@ class TrackJet : public Jet {
   }
 
   /// @brief Get the track jet constituents that are tracks
-  const std::vector<typename TrackContainer::TrackProxy>& constituents()
-      const {
+  const std::vector<typename TrackContainer::TrackProxy>& constituents() const {
     return m_constituents;
   }
 
