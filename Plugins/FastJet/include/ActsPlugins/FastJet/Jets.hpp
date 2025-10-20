@@ -70,9 +70,9 @@ class TruthJet : public Jet {
 
  private:
   /// @brief  Truth particles as the constituents of the truth jet
-  std::vector<ActsFatras::Barcode> m_constituents{};
+  std::vector<ActsFatras::Barcode> m_constituents;
   /// @brief The tracks associated to this truth jet
-  std::vector<typename TrackContainer::TrackProxy> m_associatedTracks{};
+  std::vector<typename TrackContainer::TrackProxy> m_associatedTracks;
 };
 
 template <typename TrackContainer>
