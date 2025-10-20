@@ -432,8 +432,8 @@ PVLink GeoMuonMockupExperiment::assembleBarrelStation(const MuonLayer layer,
 PVLink GeoMuonMockupExperiment::assembleTube(const double tubeLength) {
   auto* matMan = MaterialManager::getManager();
 
-  auto outerTube =
-      make_intrusive<GeoTube>(0., m_outerTubeRadius, 0.5 * tubeLength);
+  auto outerTube = make_intrusive<GeoTube>(m_cfg.innerTubeRadius,
+                                           m_outerTubeRadius, 0.5 * tubeLength);
   auto outerTubeLogVol = make_intrusive<GeoLogVol>(
       "MdtDriftWall", outerTube, matMan->getMaterial("std::Aluminium"));
   auto outerTubeVol = make_intrusive<GeoPhysVol>(cacheVolume(outerTubeLogVol));
@@ -485,7 +485,7 @@ PVLink GeoMuonMockupExperiment::buildTubes(const double lowerTubeLength,
   const double dTube = (upperTubeLength - lowerTubeLength) / (m_cfg.nTubes - 1);
 
   GeoGenfun::Variable K;
-  GeoGenfun::GENFUNCTION F = K * m_tubePitch;
+  GeoGenfun::GENFUNCTION F = K * m_tubePitch + 0.5 * m_tubePitch;
   GeoXF::TRANSFUNCTION T = GeoXF::Pow(GeoTrf::TranslateY3D(1.0), F);
 
   auto barrelTubeLayer = make_intrusive<GeoSerialTransformer>(
