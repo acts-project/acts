@@ -63,7 +63,7 @@ class TruthJet : public Jet {
   }
 
   /// @brief Get the tracks associated to this truth jet
-  const std::vector<typename TrackContainer::TrackProxy>& getAssociatedTracks()
+  const std::vector<typename TrackContainer::TrackProxy>& associatedTracks()
       const {
     return m_associatedTracks;
   }
