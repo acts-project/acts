@@ -44,8 +44,8 @@ using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
-constexpr auto logLvl = Acts::Logging::Level::VERBOSE;
-constexpr std::size_t nEvents = 10;
+constexpr auto logLvl = Acts::Logging::Level::INFO;
+constexpr std::size_t nEvents = 10000;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
@@ -784,7 +784,7 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
   auto calibrator = std::make_unique<SpCalibrator>();
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     ACTS_INFO("Processing event: " << evt);
-    if (evt != 2) {
+    if (evt != 3 and false) {
         engine();
         engine();
         engine();
@@ -856,23 +856,29 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
 
 BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   auto outFile =
-      std::make_unique<TFile>("StrawLineFitterTestChanged.root", "RECREATE");
+      std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
 
   Fitter_t::Config fitCfg{};
   fitCfg.useHessian = true;
   fitCfg.calcAlongStraw = true;
-  fitCfg.fitT0 = true;
   fitCfg.recalibrate = true;
-  fitCfg.useFastFitter = true;
-  fitCfg.fastPreFitter = true;
-
+  
   GenCfg_t genCfg{};
   genCfg.twinStraw = false;
   genCfg.createStrips = false;
   // 2D straw only test
   {
     RandomEngine engine{1602};
-    runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
+    //runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
+  }
+  // 2D straw only test with time
+  {
+    fitCfg.fitT0 = true;
+    fitCfg.useFastFitter = true;
+    fitCfg.fastPreFitter = true;
+    fitCfg.precCutOff = 1e-4;
+    RandomEngine engine{1602};
+    runFitTest(fitCfg, genCfg, "StrawOnlyTestT0", engine, *outFile);
   }
   // fast straw only test
   {
