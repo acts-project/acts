@@ -41,7 +41,8 @@ void addDigitization(py::module& mex) {
         outputMeasurementSimHitsMap, outputParticleMeasurementsMap,
         outputSimHitMeasurementsMap, surfaceByIdentifier, randomNumbers,
         doOutputCells, doClusterization, doMerge, mergeCommonCorner,
-        minEnergyDeposit, digitizationConfigs, minMaxRetries);
+        minEnergyDeposit, digitizationConfigs, minMaxRetries,
+        useInPlaceClusterization);
 
     c.def_readonly("mergeNsigma", &DigitizationAlgorithm::Config::mergeNsigma);
 
