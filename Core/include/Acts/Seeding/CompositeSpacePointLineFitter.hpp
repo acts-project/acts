@@ -230,9 +230,11 @@ class CompositeSpacePointLineFitter {
   ///        used. If non-bending information (x0, phi) is also available, a
   ///        second strip fit is executed and the directional parameters are
   ///        combined, but the covariance ignores a correlation between them.
+  /// @param ctx: Experiment specific calibration context
+  /// @param calibrator: Calibrator
   /// @param measurements: List of measurements to fit
-  /// @param initialGuess: Line representing the start parameters parsed by the user. Needed to determine
-  ///                      the L<->R ambiguity of the straws
+  /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
+  /// @param startT0: Initial guess for t0
   /// @param parsToUse: List of parameters to fit (y0, theta, t0), (x0, phi) or (y0, theta, x0, phi, t0).
   template <
       CompositeSpacePointContainer Cont_t,
@@ -251,11 +253,19 @@ class CompositeSpacePointLineFitter {
   /// @brief Executes the fast line fit in the bending direction. Returns
   ///        the result containing the chi2 and the parameters from the fast
   ///        fitter if succeeds otherwise a nullopt
+  /// @tparam Result_t: Result object produced by the fast precision fit function. Either FastFitResult
+  ///         or FastFitResultT0 according to whether t0 is a fitted or not
+  /// @tparam FitterFunc: Fast precision fit function. It must take as input the signs of measurements,
+  ///         indicating whether the fit-line lies to the left or right of a
+  ///         particular measurement, and return a FastFitResult or
+  ///         FastFitResultT0 object
   /// @param measurements: List of measurements to be fitted. Only the ones with measuresLoc1() are
   ///                       considered by the fast fitter
   /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
   /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
   ///                   at least enough measurements parsed for the fit.
+  /// @param FitterFunc: Fast precision fit function for straw measurements. It depends on whether the
+  ///                    fit involves t0.
   template <CompositeSpacePointContainer Cont_t, typename Result_t,
             typename FitterFunc>
   Result_t fastPrecFit(const Cont_t& measurements, const Line_t& initialGuess,
@@ -269,17 +279,22 @@ class CompositeSpacePointLineFitter {
                } -> std::same_as<Result_t>;
              });
 
-  /// @brief Executes the fast line fit in the non-bending direction. Returns
-  ///        the result containing the chi2 and the parameters from the fast
-  ///        fitter if succeeds otherwise a nullopt
+  /// @brief Executes the fast line fit in the non-bending direction, when required. Returns a boolean
+  ///        indicating whether the fit was successful.
+  /// @param result: Partial fastFit result obtained from the fast fit in the precision direction. The
+  ///                outcome of the fast fit in the non-bending direction will
+  ///                be stored here.
   /// @param measurements: List of measurements to be fitted. Only the ones with measuresLoc0() are
-  ///                       considered by the fast fitter
+  ///                      considered by the fast fitter
   /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
   ///                   at least enough measurements parsed for the fit.
   template <CompositeSpacePointContainer Cont_t>
   bool fastNonPrecFit(FitParameters& result, const Cont_t& measurements,
                       const std::vector<FitParIndex>& parsToUse) const;
 
+  /// @brief Helper function that copies the precision fit result into a FitParameters object
+  /// @param result: FitParameter obj that will contain the full result of the fastFit
+  /// @param precResult: Result of the fast fit in the bending coordinate
   void copyFastPrecResult(FitParameters& result,
                           const FastFitResult& precResult) const;
 
