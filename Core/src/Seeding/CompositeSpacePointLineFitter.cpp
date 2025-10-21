@@ -24,23 +24,44 @@ CompositeSpacePointLineFitter::fastFitterCfg() const {
 
 std::vector<CompositeSpacePointLineFitter::FitParIndex>
 CompositeSpacePointLineFitter::extractFitablePars(
-    const std::array<std::size_t, 4>& hitCounts) const {
+    const DoFcounts& hitCounts) const {
   std::vector<FitParIndex> pars{};
   using enum FitParIndex;
-  const auto& [nLoc0, nLoc1, nTime, nStraw] = hitCounts;
-  if (nLoc0 > 1) {
+  if (hitCounts.nonBending > 1) {
     pars.insert(pars.end(), {x0, phi});
   }
   // Measurements in the bending direction
-  if (nLoc1 > 1) {
+  if (hitCounts.bending > 1) {
     pars.insert(pars.end(), {y0, theta});
   }
   // Time measurements
-  if (m_cfg.fitT0 && (nTime + nStraw) > 1) {
+  if (m_cfg.fitT0 && (hitCounts.time + hitCounts.straw) > 1) {
     pars.push_back(t0);
   }
   std::ranges::sort(pars);
   return pars;
+}
+
+void CompositeSpacePointLineFitter::copyFastPrecResult(
+    FitParameters& result, 
+    const FastFitResult& precResult) const {
+  using enum FitParIndex;
+  result.parameters[toUnderlying(y0)] = precResult->y0;
+  result.parameters[toUnderlying(theta)] = precResult->theta;
+  result.covariance(toUnderlying(y0), toUnderlying(y0)) =
+      Acts::square(precResult->dY0);
+  result.covariance(toUnderlying(theta), toUnderlying(theta)) =
+      Acts::square(precResult->dTheta);
+  result.nDoF = static_cast<unsigned>(precResult->nDoF);
+  result.nIter = static_cast<unsigned>(precResult->nIter);
+  result.chi2 = precResult->chi2;
+  result.converged = true;
+
+  if (auto precResultT0 = dynamic_cast<const FastFitResultT0::value_type*>(&*precResult)) {
+    result.parameters[toUnderlying(t0)] = precResultT0->t0;
+    result.covariance(toUnderlying(t0), toUnderlying(t0)) =
+        Acts::square(precResultT0->dT0);
+  }
 }
 
 void CompositeSpacePointLineFitter::FitParameters::print(
