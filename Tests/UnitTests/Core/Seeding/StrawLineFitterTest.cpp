@@ -11,10 +11,10 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 
 #include <chrono>
 #include <format>
@@ -45,7 +45,7 @@ using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 10000;
+constexpr std::size_t nEvents = 1;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
@@ -137,9 +137,9 @@ static_assert(CompositeSpacePointContainer<Container_t>);
 class SpCalibrator {
  public:
   SpCalibrator() = default;
-  
+
   explicit SpCalibrator(const Acts::Transform3& localToGlobal)
-    : m_localToGlobal{localToGlobal} {}
+      : m_localToGlobal{localToGlobal} {}
 
   static constexpr double s_tolerance = 1.e-12;
   inline static const double s_CoeffRtoT = 750._ns / std::pow(15._mm, 1. / 3.);
@@ -148,15 +148,15 @@ class SpCalibrator {
   static double driftTime(const double r) {
     return s_CoeffRtoT * std::pow(r, 1. / 3.);
   }
-  /// @brief r(t) relation, defined as the inverted t(r) relation 
+  /// @brief r(t) relation, defined as the inverted t(r) relation
   static double driftRadius(const double t) {
     return s_CoeffTtoR * std::pow(t, 3);
   }
-  /// @brief First derivative of r(t) relation 
+  /// @brief First derivative of r(t) relation
   static double driftVelocity(const double t) {
     return 3 * s_CoeffTtoR * std::pow(t, 2);
   }
-  /// @brief Second derivative of r(t) relation 
+  /// @brief Second derivative of r(t) relation
   static double driftAcceleration(const double t) {
     return 6 * s_CoeffTtoR * t;
   }
@@ -172,7 +172,8 @@ class SpCalibrator {
   static double driftRadius(const Acts::CalibrationContext& /*ctx*/,
                             const FitTestSpacePoint& measurement,
                             const double timeOffSet) {
-    if (!measurement.isStraw() or !measurement.isGood()) return 0.;
+    if (!measurement.isStraw() or !measurement.isGood())
+      return 0.;
     return driftRadius(Acts::abs(measurement.time() - timeOffSet));
   }
   /// @brief Provide the drift velocity given the straw measurent and time offset
@@ -183,7 +184,8 @@ class SpCalibrator {
   static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
                               const FitTestSpacePoint& measurement,
                               const double timeOffSet) {
-    if (!measurement.isStraw() or !measurement.isGood()) return 0.;
+    if (!measurement.isStraw() or !measurement.isGood())
+      return 0.;
     return driftVelocity(Acts::abs(measurement.time() - timeOffSet));
   }
   /// @brief Provide the drift acceleration given the straw measurent and time offset
@@ -194,7 +196,8 @@ class SpCalibrator {
   static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
                                   const FitTestSpacePoint& measurement,
                                   const double timeOffSet) {
-    if (!measurement.isStraw() or !measurement.isGood()) return 0.;
+    if (!measurement.isStraw() or !measurement.isGood())
+      return 0.;
     return driftAcceleration(Acts::abs(measurement.time() - timeOffSet));
   }
   /// @brief Compute the distance of the point of closest approach of a straw measurement
@@ -206,7 +209,9 @@ class SpCalibrator {
                              const Vector3& trackPos, const Vector3& trackDir,
                              const FitTestSpacePoint& measurement) const {
     const Vector3 closePointOnLine =
-          lineIntersect(measurement.localPosition(), measurement.sensorDirection(), trackPos, trackDir).position();
+        lineIntersect(measurement.localPosition(),
+                      measurement.sensorDirection(), trackPos, trackDir)
+            .position();
     return (m_localToGlobal * closePointOnLine).norm();
   }
   /// @brief Calibrate a set of straw measurements using the best known estimate on a straight line track
@@ -217,7 +222,8 @@ class SpCalibrator {
   /// @param uncalibCont: Uncalibrated composite space point container
   Container_t calibrate(const Acts::CalibrationContext& ctx,
                         const Vector3& trackPos, const Vector3& trackDir,
-                        const double timeOffSet, const Container_t& uncalibCont) const {
+                        const double timeOffSet,
+                        const Container_t& uncalibCont) const {
     Container_t calibMeas{};
     for (const auto& sp : uncalibCont) {
       if (!sp->measuresLoc0() || !sp->measuresLoc1()) {
@@ -227,13 +233,14 @@ class SpCalibrator {
         sp->updatePosition(bestPos.position());
       }
       if (sp->isStraw()) {
-        const double driftTime {sp->time() - timeOffSet
-            - closestApproachDist(ctx, trackPos, trackDir, *sp)/PhysicalConstants::c};
+        const double driftTime{
+            sp->time() - timeOffSet -
+            closestApproachDist(ctx, trackPos, trackDir, *sp) /
+                PhysicalConstants::c};
         if (driftTime < 0) {
           sp->updateStatus(false);
           sp->updateDriftR(0.);
-        }
-        else {
+        } else {
           sp->updateDriftR(Acts::abs(driftRadius(driftTime)));
         }
       }
@@ -260,7 +267,8 @@ class SpCalibrator {
   /// @param measurement: measurement
   static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
                               const FitTestSpacePoint& measurement) {
-    if (!measurement.isStraw() or !measurement.isGood()) return 0.;
+    if (!measurement.isStraw() or !measurement.isGood())
+      return 0.;
     return driftVelocity(driftTime(Acts::abs(measurement.driftRadius())));
   }
   /// @brief Provide the drift acceleration given the straw measurent after being calibrated
@@ -268,9 +276,11 @@ class SpCalibrator {
   /// @param measurement: measurement
   static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
                                   const FitTestSpacePoint& measurement) {
-    if (!measurement.isStraw() or !measurement.isGood()) return 0.;
+    if (!measurement.isStraw() or !measurement.isGood())
+      return 0.;
     return driftAcceleration(driftTime(Acts::abs(measurement.driftRadius())));
   }
+
  private:
   const Acts::Transform3 m_localToGlobal{Acts::Transform3::Identity()};
 };
@@ -408,7 +418,7 @@ class MeasurementGenerator {
     /// Extrapolate the track to the z-planes of the tubes and determine which
     /// tubes were actually hit
     if (genCfg.createStraws) {
-      const SpCalibrator calibrator {genCfg.localToGlobal};
+      const SpCalibrator calibrator{genCfg.localToGlobal};
       for (const auto& stag : tubePositions) {
         auto planeExtpLow =
             intersectPlane(line.position(), line.direction(), Vector3::UnitZ(),
@@ -455,13 +465,17 @@ class MeasurementGenerator {
           ACTS_DEBUG("spawn() - Tube position: " << toString(tube)
                                                  << ", radius: " << rad);
 
-          auto& sp = measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                              tube, smearedR, SpCalibrator::driftUncert(smearedR),
-                              genCfg.twinStraw
-                                  ? std::make_optional<double>(genCfg.twinStrawReso)
-                                  : std::nullopt));
+          auto& sp =
+              measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
+                  tube, smearedR, SpCalibrator::driftUncert(smearedR),
+                  genCfg.twinStraw
+                      ? std::make_optional<double>(genCfg.twinStrawReso)
+                      : std::nullopt));
           sp->updateTime(SpCalibrator::driftTime(sp->driftRadius()) + t0 +
-                calibrator.closestApproachDist(genCfg.calibContext, line.position(), line.direction(), *sp)/PhysicalConstants::c);
+                         calibrator.closestApproachDist(genCfg.calibContext,
+                                                        line.position(),
+                                                        line.direction(), *sp) /
+                             PhysicalConstants::c);
         }
       }
     }
@@ -625,7 +639,7 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
 }
 
 BOOST_AUTO_TEST_SUITE(SeedingSuite)
-/*
+
 BOOST_AUTO_TEST_CASE(SeedTangents) {
   RandomEngine engine{1602};
   constexpr double tolerance = 1.e-3;
@@ -715,7 +729,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
     }
   }
 }
-*/
+
 #define DECLARE_BRANCH(dType, bName) \
   dType bName{};                     \
   outTree->Branch(#bName, &bName);
@@ -785,10 +799,10 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     ACTS_INFO("Processing event: " << evt);
     if (evt != 3 and false) {
-        engine();
-        engine();
-        engine();
-        continue;
+      engine();
+      engine();
+      engine();
+      continue;
     }
     const auto line = generateLine(engine);
     fillPars(line.parameters(), trueY0, trueX0, trueTheta, truePhi);
@@ -801,9 +815,9 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
     FitOpts_t fitOpts{};
     fitOpts.calibrator = calibrator.get();
     fitOpts.selector = Delegate<bool(const FitTestSpacePoint&)>(
-          [](const void*, const FitTestSpacePoint& sp) {
-              return !sp.isStraw() || sp.isGood(); 
-          });
+        [](const void*, const FitTestSpacePoint& sp) {
+          return !sp.isStraw() || sp.isGood();
+        });
 
     fitOpts.measurements =
         MeasurementGenerator::spawn(line, t0, engine, genCfg);
@@ -862,7 +876,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   fitCfg.useHessian = true;
   fitCfg.calcAlongStraw = true;
   fitCfg.recalibrate = true;
-  
+
   GenCfg_t genCfg{};
   genCfg.twinStraw = false;
   genCfg.createStrips = false;
@@ -871,9 +885,20 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     RandomEngine engine{1602};
     runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
   }
+  // 2D straw only test with time
+  {
+    fitCfg.fitT0 = true;
+    fitCfg.useFastFitter = true;
+    fitCfg.fastPreFitter = true;
+    fitCfg.precCutOff = 1e-4;
+    RandomEngine engine{1602};
+    runFitTest(fitCfg, genCfg, "StrawOnlyTestT0", engine, *outFile);
+  }
+  fitCfg.fitT0 = false;
   // fast straw only test
   {
     fitCfg.useFastFitter = true;
+    fitCfg.fastPreFitter = false;
     RandomEngine engine{1503};
     runFitTest(fitCfg, genCfg, "FastStrawOnlyTest", engine, *outFile);
   }
@@ -905,15 +930,6 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.stripDirLoc1 = makeDirectionFromPhiTheta(60._degree, 90._degree);
     RandomEngine engine{2225};
     runFitTest(fitCfg, genCfg, "StereoStripTest", engine, *outFile);
-  }
-  // 2D straw only test with time
-  {
-    fitCfg.fitT0 = true;
-    fitCfg.useFastFitter = true;
-    fitCfg.fastPreFitter = true;
-    fitCfg.precCutOff = 1e-4;
-    RandomEngine engine{1602};
-    runFitTest(fitCfg, genCfg, "StrawOnlyTestT0", engine, *outFile);
   }
 }
 

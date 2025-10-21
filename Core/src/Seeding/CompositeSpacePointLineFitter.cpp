@@ -43,8 +43,7 @@ CompositeSpacePointLineFitter::extractFitablePars(
 }
 
 void CompositeSpacePointLineFitter::copyFastPrecResult(
-    FitParameters& result, 
-    const FastFitResult& precResult) const {
+    FitParameters& result, const FastFitResult& precResult) const {
   using enum FitParIndex;
   result.parameters[toUnderlying(y0)] = precResult->y0;
   result.parameters[toUnderlying(theta)] = precResult->theta;
@@ -57,7 +56,8 @@ void CompositeSpacePointLineFitter::copyFastPrecResult(
   result.chi2 = precResult->chi2;
   result.converged = true;
 
-  if (auto precResultT0 = dynamic_cast<const FastFitResultT0::value_type*>(&*precResult)) {
+  if (auto precResultT0 =
+          dynamic_cast<const FastFitResultT0::value_type*>(&*precResult)) {
     result.parameters[toUnderlying(t0)] = precResultT0->t0;
     result.covariance(toUnderlying(t0), toUnderlying(t0)) =
         Acts::square(precResultT0->dT0);

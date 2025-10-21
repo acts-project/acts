@@ -14,23 +14,22 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <format>
-#include <type_traits>
 #include <numeric>
+#include <type_traits>
 namespace Acts::Experimental {
 
 template <CompositeSpacePointContainer Cont_t>
-CompositeSpacePointLineFitter::DoFcounts 
-CompositeSpacePointLineFitter::countDoF(
-    const Cont_t& measurements) const {
+CompositeSpacePointLineFitter::DoFcounts
+CompositeSpacePointLineFitter::countDoF(const Cont_t& measurements) const {
   return countDoF(measurements, Selector_t<SpacePoint_t<Cont_t>>{});
 }
 
 template <CompositeSpacePointContainer Cont_t>
-CompositeSpacePointLineFitter::DoFcounts 
+CompositeSpacePointLineFitter::DoFcounts
 CompositeSpacePointLineFitter::countDoF(
     const Cont_t& measurements,
     const Selector_t<SpacePoint_t<Cont_t>>& selector) const {
-  DoFcounts counts {};
+  DoFcounts counts{};
   std::size_t nValid{0};
   for (const auto& sp : measurements) {
     if (selector.connected() && !selector(*sp)) {
@@ -46,33 +45,33 @@ CompositeSpacePointLineFitter::countDoF(
     if (sp->measuresLoc1()) {
       ++counts.bending;
     }
-    if (sp->isStraw()){
+    if (sp->isStraw()) {
       ++counts.straw;
-    }
-    else if (sp->hasTime()) {
+    } else if (sp->hasTime()) {
       ++counts.time;
     }
   }
-  ACTS_DEBUG(
-      __func__ << "() " << __LINE__ << " - " << nValid << "/"
-               << measurements.size() << " valid measurements passed. Found "
-               << counts.nonBending << "/"
-               << counts.bending << "/"
-               << counts.time << " measuring loc0/loc1/time with "
-               << counts.straw << " straw measurements.");
+  ACTS_DEBUG(__func__ << "() " << __LINE__ << " - " << nValid << "/"
+                      << measurements.size()
+                      << " valid measurements passed. Found "
+                      << counts.nonBending << "/" << counts.bending << "/"
+                      << counts.time << " measuring loc0/loc1/time with "
+                      << counts.straw << " straw measurements.");
   return counts;
 }
 
-template <CompositeSpacePointContainer Cont_t,
-          typename Result_t, typename FitterFunc>
+template <CompositeSpacePointContainer Cont_t, typename Result_t,
+          typename FitterFunc>
 Result_t CompositeSpacePointLineFitter::fastPrecFit(
     const Cont_t& measurements, const Line_t& initialGuess,
-    const std::vector<FitParIndex>& parsToUse,
-    FitterFunc&& precFitFunc) const 
-  requires((std::same_as<Result_t, FastFitResult> || std::same_as<Result_t, FastFitResultT0>) &&
-              requires(FitterFunc f) {
-                { f(std::declval<const std::vector<int>&>()) } -> std::same_as<Result_t>;
-              })
+    const std::vector<FitParIndex>& parsToUse, FitterFunc&& precFitFunc) const
+  requires((std::same_as<Result_t, FastFitResult> ||
+            std::same_as<Result_t, FastFitResultT0>) &&
+           requires(FitterFunc f) {
+             {
+               f(std::declval<const std::vector<int>&>())
+             } -> std::same_as<Result_t>;
+           })
 {
   if (std::ranges::none_of(parsToUse, [](const FitParIndex idx) {
         using enum FitParIndex;
@@ -89,7 +88,7 @@ Result_t CompositeSpacePointLineFitter::fastPrecFit(
   if (nStraw > 2) {
     std::vector<int> signs = detail::CompSpacePointAuxiliaries::strawSigns(
         initialGuess, measurements);
-    Result_t precResult {precFitFunc(signs)};
+    Result_t precResult{precFitFunc(signs)};
 
     // Fast fit gave a bad chi2 -> Maybe L/R solution is swapped?
     if (precResult && precResult->chi2 / static_cast<double>(precResult->nDoF) >
@@ -121,14 +120,14 @@ Result_t CompositeSpacePointLineFitter::fastPrecFit(
   // Not enough straw measurements, proceeding with strip fast fit
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
   FastFitResult result = m_fastFitter.fit(measurements, ResidualIdx::bending);
-  if (!result) return std::nullopt;
+  if (!result)
+    return std::nullopt;
 
   if constexpr (std::is_same_v<Result_t, FastFitResultT0>) {
-    FastFitResultT0 resultT0 {};
+    FastFitResultT0 resultT0{};
     static_cast<FastFitResult::value_type&>(*resultT0) = *result;
     return resultT0;
-  }
-  else{
+  } else {
     return result;
   }
 }
@@ -141,9 +140,10 @@ CompositeSpacePointLineFitter::fastFit(
   using enum FitParIndex;
 
   FitParameters result{};
-  const FastFitResult precResult {
-    fastPrecFit<Cont_t, FastFitResult>(measurements, initialGuess, parsToUse, 
-      [&](const auto& signs) { return m_fastFitter.fit(measurements, signs); })};
+  const FastFitResult precResult{fastPrecFit<Cont_t, FastFitResult>(
+      measurements, initialGuess, parsToUse, [&](const auto& signs) {
+        return m_fastFitter.fit(measurements, signs);
+      })};
   if (!precResult) {
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit failed.");
     return result;
@@ -152,7 +152,7 @@ CompositeSpacePointLineFitter::fastFit(
   copyFastPrecResult(result, precResult);
 
   // Perform non-bending fit (if required)
-  if (!fastNonPrecFit(result, measurements, parsToUse)){
+  if (!fastNonPrecFit(result, measurements, parsToUse)) {
     return result;
   }
 
@@ -168,19 +168,20 @@ CompositeSpacePointLineFitter::fastFit(
 
 template <CompositeSpacePointContainer Cont_t,
           CompositeSpacePointFastCalibrator<
-              CompositeSpacePointLineFitter::SpacePoint_t<Cont_t>> Calibrator_t>
-CompositeSpacePointLineFitter::FitParameters 
+              CompositeSpacePointLineFitter::SpacePoint_t<Cont_t>>
+              Calibrator_t>
+CompositeSpacePointLineFitter::FitParameters
 CompositeSpacePointLineFitter::fastFit(
-    const Acts::CalibrationContext& ctx,
-    const Calibrator_t& calibrator, const Cont_t& measurements, 
-    const Line_t& initialGuess, const double startT0,
-    const std::vector<FitParIndex>& parsToUse) const {
+    const Acts::CalibrationContext& ctx, const Calibrator_t& calibrator,
+    const Cont_t& measurements, const Line_t& initialGuess,
+    const double startT0, const std::vector<FitParIndex>& parsToUse) const {
   using enum FitParIndex;
 
   FitParameters result{};
-  const FastFitResultT0 precResult{
-      fastPrecFit<Cont_t, FastFitResultT0>(measurements, initialGuess, parsToUse, 
-        [&](const auto& signs) { return m_fastFitter.fit(ctx, calibrator, measurements, signs, startT0);})};
+  const FastFitResultT0 precResult{fastPrecFit<Cont_t, FastFitResultT0>(
+      measurements, initialGuess, parsToUse, [&](const auto& signs) {
+        return m_fastFitter.fit(ctx, calibrator, measurements, signs, startT0);
+      })};
   if (!precResult) {
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit failed.");
     return result;
@@ -189,14 +190,15 @@ CompositeSpacePointLineFitter::fastFit(
   copyFastPrecResult(result, precResult);
 
   // Perform non-bending fit (if required)
-  if (!fastNonPrecFit(result, measurements, parsToUse)){
+  if (!fastNonPrecFit(result, measurements, parsToUse)) {
     return result;
   }
 
   Line_t recoLine{result.parameters};
   result.chi2 = 0.;
   std::ranges::for_each(measurements, [&recoLine, &result](const auto& m) {
-    result.chi2 += detail::CompSpacePointAuxiliaries::chi2Term(recoLine, result.parameters[toUnderlying(t0)], *m);
+    result.chi2 += detail::CompSpacePointAuxiliaries::chi2Term(
+        recoLine, result.parameters[toUnderlying(t0)], *m);
   });
   ACTS_DEBUG(__func__ << "() " << __LINE__ << ": Fast fit done. Obtained result"
                       << result);
@@ -205,9 +207,8 @@ CompositeSpacePointLineFitter::fastFit(
 
 template <CompositeSpacePointContainer Cont_t>
 bool CompositeSpacePointLineFitter::fastNonPrecFit(
-    FitParameters& result,
-    const Cont_t& measurements,
-    const std::vector<FitParIndex>& parsToUse) const{
+    FitParameters& result, const Cont_t& measurements,
+    const std::vector<FitParIndex>& parsToUse) const {
   using enum FitParIndex;
   using namespace Acts::UnitLiterals;
   // Check whether a non-bending fit is required
@@ -286,38 +287,39 @@ CompositeSpacePointLineFitter::fit(
   // Fast fitter shall be used
   if (m_cfg.useFastFitter) {
     line.updateParameters(result.parameters);
-		ACTS_DEBUG(__func__ << "() " << __LINE__
+    ACTS_DEBUG(__func__ << "() " << __LINE__
                         << " - Attempt a fast fit, first.");
-	  FitParameters fastResult{};
+    FitParameters fastResult{};
     if (resCfg.parsToUse.back() == FitParIndex::t0) {
-			fastResult =
-					fastFit(fitOpts.calibContext, *(fitOpts.calibrator), result.measurements, line, 0, resCfg.parsToUse);
-			fastResult.parameters[toUnderlying(FitParIndex::t0)] -= (fitOpts.localToGlobal * line.position()).norm() /
-               PhysicalConstants::c;
+      fastResult = fastFit(fitOpts.calibContext, *(fitOpts.calibrator),
+                           result.measurements, line, 0, resCfg.parsToUse);
+      fastResult.parameters[toUnderlying(FitParIndex::t0)] -=
+          (fitOpts.localToGlobal * line.position()).norm() /
+          PhysicalConstants::c;
     } else {
-      fastResult =
-          fastFit(result.measurements, line, resCfg.parsToUse);
-		}
-		if (fastResult.converged) {
-			static_cast<FitParameters&>(result) = std::move(fastResult);
-			ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit converged.");
-			// Use the result from the fast fitter as final answer
-			if (!m_cfg.fastPreFitter) {
-				line.updateParameters(result.parameters);
-				// Recalibrate the measurements before returning
-				result.measurements = fitOpts.calibrator->calibrate(
-						fitOpts.calibContext, line.position(), line.direction(), 
-            (resCfg.parsToUse.back() == FitParIndex::t0) ? result.parameters[toUnderlying(FitParIndex::t0)] : 0.,
-						result.measurements);
-				return result;
-			}
-			// Set convergence flag to false because the full fit comes later.
-			result.converged = false;
-		} else {
-			ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed.");
-			return result;
-		}
-    
+      fastResult = fastFit(result.measurements, line, resCfg.parsToUse);
+    }
+    if (fastResult.converged) {
+      static_cast<FitParameters&>(result) = std::move(fastResult);
+      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit converged.");
+      // Use the result from the fast fitter as final answer
+      if (!m_cfg.fastPreFitter) {
+        line.updateParameters(result.parameters);
+        // Recalibrate the measurements before returning
+        result.measurements = fitOpts.calibrator->calibrate(
+            fitOpts.calibContext, line.position(), line.direction(),
+            (resCfg.parsToUse.back() == FitParIndex::t0)
+                ? result.parameters[toUnderlying(FitParIndex::t0)]
+                : 0.,
+            result.measurements);
+        return result;
+      }
+      // Set convergence flag to false because the full fit comes later.
+      result.converged = false;
+    } else {
+      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed.");
+      return result;
+    }
   }
   // Update the drift signs if no re-calibration per iteration is scheduled
   if (!m_cfg.recalibrate) {
@@ -351,8 +353,8 @@ CompositeSpacePointLineFitter::fit(
       if (resCfg.parsToUse.empty()) {
         ACTS_WARNING(__func__ << "() " << __LINE__ << ":  Line parameters "
                               << toString(line.position()) << " + "
-                              << toString(line.direction()) << ", t0: " << t0 / 1._ns
-                              << " invalidated all measurements");
+                              << toString(line.direction()) << ", t0: "
+                              << t0 / 1._ns << " invalidated all measurements");
         return result;
       }
 
@@ -373,9 +375,12 @@ CompositeSpacePointLineFitter::fit(
       }
       // Calculate the residual & derivatives
       if (pullCalculator.config().parsToUse.back() == FitParIndex::t0) {
-        pullCalculator.updateFullResidual(line, t0, *spacePoint, 
-                fitOpts.calibrator->driftVelocity(fitOpts.calibContext, *spacePoint),
-                fitOpts.calibrator->driftAcceleration(fitOpts.calibContext, *spacePoint));
+        pullCalculator.updateFullResidual(
+            line, t0, *spacePoint,
+            fitOpts.calibrator->driftVelocity(fitOpts.calibContext,
+                                              *spacePoint),
+            fitOpts.calibrator->driftAcceleration(fitOpts.calibContext,
+                                                  *spacePoint));
       } else {
         pullCalculator.updateSpatialResidual(line, *spacePoint);
       }
@@ -448,8 +453,8 @@ CompositeSpacePointLineFitter::fit(
   // Parameters converged
   if (result.converged) {
     const DoFcounts doF = countDoF(result.measurements, fitOpts.selector);
-    result.nDoF =
-        doF.nonBending + doF.bending + doF.time - pullCalculator.config().parsToUse.size();
+    result.nDoF = doF.nonBending + doF.bending + doF.time -
+                  pullCalculator.config().parsToUse.size();
     line.updateParameters(result.parameters);
     const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
     // Recalibrate the measurements before returning
@@ -508,14 +513,15 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   if constexpr (N == 3) {
     idx << firstIdx, firstIdx + 1u, toUnderlying(FitParIndex::t0);
   } else {
-    idx = Eigen::Array<unsigned, N, 1>::LinSpaced(N, firstIdx, firstIdx + N - 1);
+    idx =
+        Eigen::Array<unsigned, N, 1>::LinSpaced(N, firstIdx, firstIdx + N - 1);
   }
 
   for (unsigned i = 0; i < N; ++i) {
-    miniPars[i]     = currentPars[idx[i]];
+    miniPars[i] = currentPars[idx[i]];
     miniGradient[i] = cache.gradient[idx[i]];
     for (unsigned j = 0; j < N; ++j) {
-        miniHessian(i,j) = cache.hessian(idx[i], idx[j]);
+      miniHessian(i, j) = cache.hessian(idx[i], idx[j]);
     }
   }
 
@@ -524,7 +530,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << " with chi2: " << cache.chi2 << ",  gradient: "
                         << toString(cache.gradient) << ", hessian: \n"
                         << cache.hessian);
-  
+
   // The gradient is already small enough
   if (miniGradient.norm() < m_cfg.precCutOff) {
     ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
@@ -535,7 +541,8 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                         << ": Projected parameters: " << toString(miniPars)
                         << " gradient: " << toString(miniGradient)
-                        << ", hessian: \n" << miniHessian
+                        << ", hessian: \n"
+                        << miniHessian
                         << ", determinant: " << miniHessian.determinant());
 
   auto inverseH = safeInverse(miniHessian);
@@ -580,10 +587,11 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
 {
   auto firstIdx = toUnderlying(firstPar);
   assert(firstIdx + N <= s_nPars);
-  
+
   Acts::ActsSquareMatrix<N> miniHessian{};
   if constexpr (N == 3) {
-    Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u, toUnderlying(FitParIndex::t0)};
+    Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u,
+                                     toUnderlying(FitParIndex::t0)};
     miniHessian = hessian(idx, idx);
   } else {
     miniHessian = hessian.block<N, N>(firstIdx, firstIdx);
@@ -593,7 +601,8 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
   // The Hessian can safely be inverted
   if (inverseH) {
     if constexpr (N == 3) {
-      Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u, toUnderlying(FitParIndex::t0)};
+      Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u,
+                                       toUnderlying(FitParIndex::t0)};
       covariance(idx, idx) = *inverseH;
     } else {
       covariance.block<N, N>(firstIdx, firstIdx) = *inverseH;
