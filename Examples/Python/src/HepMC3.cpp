@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
+#include "ActsExamples/Utilities/MultiplicityGenerators.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -34,10 +35,59 @@ void addHepMC3(Context& ctx) {
                              perEvent, inputEvent, compression,
                              maxEventsPending, writeEventsInOrder);
 
-  ACTS_PYTHON_DECLARE_READER(HepMC3Reader, hepmc3, "HepMC3Reader", inputPath,
-                             inputPaths, outputEvent, printListing, numEvents,
-                             checkEventNumber, maxEventBufferSize,
-                             vertexGenerator, randomNumbers);
+  // Declare the HepMC3Reader class first
+  auto reader =
+      py::class_<HepMC3Reader, IReader, std::shared_ptr<HepMC3Reader>>(
+          hepmc3, "HepMC3Reader")
+          .def(py::init<const HepMC3Reader::Config&, Acts::Logging::Level>(),
+               py::arg("config"), py::arg("level"))
+          .def_property_readonly("config", &HepMC3Reader::config);
+
+  // Expose Input struct as a nested class of HepMC3Reader
+  py::class_<HepMC3Reader::Input>(reader, "Input")
+      .def(py::init<>())
+      .def(py::init([](const std::filesystem::path& path,
+                       std::shared_ptr<const MultiplicityGenerator>
+                           multiplicityGenerator) {
+             HepMC3Reader::Input inp;
+             inp.path = path;
+             inp.multiplicityGenerator = multiplicityGenerator;
+             return inp;
+           }),
+           py::arg("path"), py::arg("multiplicityGenerator"))
+      .def_readwrite("path", &HepMC3Reader::Input::path)
+      .def_readwrite("multiplicityGenerator",
+                     &HepMC3Reader::Input::multiplicityGenerator)
+      // Factory methods for convenience
+      .def_static(
+          "Fixed",
+          [](const std::filesystem::path& path, std::size_t n) {
+            HepMC3Reader::Input inp;
+            inp.path = path;
+            inp.multiplicityGenerator =
+                std::make_shared<FixedMultiplicityGenerator>(n);
+            return inp;
+          },
+          py::arg("path"), py::arg("n") = 1,
+          "Create Input with FixedMultiplicityGenerator")
+      .def_static(
+          "Poisson",
+          [](const std::filesystem::path& path, double mean) {
+            HepMC3Reader::Input inp;
+            inp.path = path;
+            inp.multiplicityGenerator =
+                std::make_shared<PoissonMultiplicityGenerator>(mean);
+            return inp;
+          },
+          py::arg("path"), py::arg("mean"),
+          "Create Input with PoissonMultiplicityGenerator");
+
+  auto config = py::class_<HepMC3Reader::Config>(reader, "Config")
+                    .def(py::init<>(), "Default constructor");
+  // Now configure the HepMC3Reader itself
+  ACTS_PYTHON_STRUCT(config, inputs, inputPath, outputEvent, printListing,
+                     numEvents, checkEventNumber, maxEventBufferSize,
+                     vertexGenerator, randomNumbers);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HepMC3OutputConverter, hepmc3,
                                 "HepMC3OutputConverter", inputParticles,
