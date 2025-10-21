@@ -61,11 +61,17 @@ class ModuleClusters {
 
   std::vector<ModuleValue> createCellCollection();
   void merge();
-  ModuleValue squash(std::vector<ModuleValue>& values);
+  void mergeAlt();
+  template <typename T_Index, unsigned int AXIS>
+  void mergeAltImpl();
+
+  template <class T_CellList>
+  ModuleValue squash(T_CellList& values) const;
   std::vector<std::size_t> nonGeoEntries(
-      std::vector<Acts::BoundIndices>& indices);
+      const std::vector<Acts::BoundIndices>& indices) const;
+  template <class T_CellList>
   std::vector<std::vector<ModuleValue>> mergeParameters(
-      std::vector<ModuleValue> values);
+      T_CellList& values) const;
 };
 
 }  // namespace ActsExamples
