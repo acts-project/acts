@@ -218,6 +218,28 @@ def main():
 
         writer.write(context, trackingGeometry)
 
+    algSequence.addAlgorithm(
+        acts.examples.TruthTrackFinder(
+            level=logLevel,
+            inputParticles="particles_generated",
+            inputMeasurements="measurements",
+            inputParticleMeasurementsMap="particle_measurements_map",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            outputProtoTracks="truth_particle_tracks",
+        )
+    )
+
+    from acts.examples.reconstruction import addGx2fTracks
+    addGx2fTracks(
+        algSequence,
+        trackingGeometry,
+        field,
+        nUpdateMax=17,
+        relChi2changeCutOff=1e-7,
+        multipleScattering=True,
+    )
+
     algSequence.run()
 
 
