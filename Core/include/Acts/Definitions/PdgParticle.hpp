@@ -49,8 +49,7 @@ static constexpr PdgParticle makeAbsolutePdgParticle(PdgParticle pdg) {
 /// See PDG section "Monte Carlo Particle Numbering Scheme", point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
 static constexpr bool isNucleus(std::int32_t pdg) {
-  const auto pdgNum = static_cast<std::int32_t>(pdg);
-  return std::abs(pdgNum) > 1e9;
+  return std::abs(pdg) > 1e9;
 }
 
 /// Convert an excited nucleus to its ground state. PDG number of a nucleus has
@@ -61,9 +60,8 @@ static constexpr PdgParticle makeNucleusGroundState(std::int32_t pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
-  const auto pdgNum = static_cast<std::int32_t>(pdg);
   // set isomer level to zero
-  return static_cast<PdgParticle>((pdgNum / 10) * 10);
+  return static_cast<PdgParticle>((pdg / 10) * 10);
 }
 
 /// Extract Z and A for a given nucleus. PDG number of a nucleus has a form
@@ -76,11 +74,10 @@ static constexpr std::pair<std::int32_t, std::int32_t> extractNucleusZandA(
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
-  const auto pdgNum = static_cast<std::int32_t>(pdg);
   // proton number respects the charge
-  int Z = (pdgNum / 10000) % 1000;
+  int Z = (pdg / 10000) % 1000;
   // atomic number is always positive
-  int A = std::abs((pdgNum / 10) % 1000);
+  int A = std::abs((pdg / 10) % 1000);
   return std::make_pair(Z, A);
 }
 
