@@ -771,8 +771,8 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
       } else if (isDirectionParam(partial1) || isDirectionParam(partial2)) {
         // clang-format off
         const auto angParam = isDirectionParam(partial1) ? idx1 : idx2;
-        const Vector& posPartial = line.gradient(static_cast<LineIndex>(isDirectionParam(partial1) ? idx2 : idx1));
-        const Vector& angPartial = line.gradient(static_cast<LineIndex>(isDirectionParam(partial1) ? idx1 : idx2));
+        const Vector& posPartial = line.gradient(static_cast<LineIndex>(isDirectionParam(partial1) ? partial2 : partial1));
+        const Vector& angPartial = line.gradient(static_cast<LineIndex>(angParam));
         const double gradProjDist = - posPartial.dot(m_projDir) * m_invProjDirLen;
         hessCmp = - posPartial.dot(m_gradProjDir[angParam]) * m_invProjDirLen * line.direction()
                 + gradProjDist * angPartial

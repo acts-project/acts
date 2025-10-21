@@ -14,8 +14,7 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <format>
-#include <numeric>
-#include <type_traits>
+
 namespace Acts::Experimental {
 
 template <CompositeSpacePointContainer Cont_t>
