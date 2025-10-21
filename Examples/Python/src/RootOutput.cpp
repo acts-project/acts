@@ -26,7 +26,6 @@
 #include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
-#include "ActsPlugins/Root/RootMaterialMapIo.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -161,25 +160,6 @@ void addRootOutput(Context& ctx) {
                  py::arg("config"), py::arg("level"))
             .def("write",
                  py::overload_cast<const TrackingGeometry&>(&Writer::write));
-
-    auto ac =
-        py::class_<ActsPlugins::RootMaterialMapIo::Config>(w, "AccessorConfig")
-            .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(ac, volumePrefix, portalPrefix, layerPrefix,
-                       passivePrefix, sensitivePrefix, nBinsHistName,
-                       axisDirHistName, axisBoundaryTypeHistName, indexHistName,
-                       minRangeHistName, maxRangeHistName, thicknessHistName,
-                       x0HistName, l0HistName, aHistName, zHistName,
-                       rhoHistName);
-
-    auto ao = py::class_<ActsPlugins::RootMaterialMapIo::Options>(
-                  w, "AccessorOptions")
-                  .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(ao, homogeneousMaterialTreeName, indexedMaterialTreeName,
-                       folderSurfaceNameBase, folderVolumeNameBase,
-                       indexedMaterial);
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 

@@ -20,6 +20,8 @@ from helpers import (
     pythia8Enabled,
     gnnEnabled,
     onnxEnabled,
+    jsonEnabled,
+    rootEnabled,
     hashingSeedingEnabled,
     AssertCollectionExistsAlg,
     failure_threshold,
@@ -696,7 +698,7 @@ def test_particle_gun(tmp_path, assert_root_hash):
 
 @pytest.mark.slow
 @pytest.mark.odd
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.skipif(not dd4hepEnabled or not jsonEnabled, reason="DD4hep not set up")
 def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     from material_mapping import runMaterialMapping
     from material_validation import runMaterialValidation
@@ -705,8 +707,8 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     assert not map_file.exists()
 
     odd_dir = getOpenDataDetectorDirectory()
-    config = acts.MaterialMapJsonConverter.Config()
-    materialDecorator = acts.JsonMaterialDecorator(
+    config = acts.json.MaterialMapJsonConverter.Config()
+    materialDecorator = acts.json.JsonMaterialDecorator(
         level=acts.logging.INFO,
         rConfig=config,
         jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),

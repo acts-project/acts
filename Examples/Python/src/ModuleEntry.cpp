@@ -50,17 +50,13 @@ void addRootOutput(Context& ctx);
 // Plugins
 void addDigitization(Context& ctx);
 void addPythia8(Context& ctx);
-void addGeoModel(Context& ctx);
-void addTGeo(Context& ctx);
+void addGeoModelExample(Context& ctx);
 void addJson(Context& ctx);
-void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
 void addGnnTrackFinding(Context& ctx);
-void addSvg(Context& ctx);
-void addObj(Context& ctx);
+void addSvgExample(Context& ctx);
 void addOnnx(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
-void addCovfie(Context& ctx);
 void addTraccc(Context& ctx);
 void addHashing(Context& ctx);
 
@@ -86,16 +82,12 @@ void addModuleEntry(Context& ctx) {
   addDigitization(ctx);
   addPythia8(ctx);
   addJson(ctx);
-  addGeoModel(ctx);
-  addTGeo(ctx);
-  addDetray(ctx);
+  addGeoModelExample(ctx);
   addHepMC3(ctx);
   addGnnTrackFinding(ctx);
-  addObj(ctx);
-  addSvg(ctx);
+  addSvgExample(ctx);
   addOnnx(ctx);
   addOnnxNeuralCalibrator(ctx);
-  addCovfie(ctx);
   addTraccc(ctx);
   addHashing(ctx);
 

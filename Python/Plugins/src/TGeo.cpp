@@ -22,15 +22,11 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace Acts;
-using namespace ActsPlugins;
+PYBIND11_MODULE(ActsPluginsPythonBindingsTGeo, tgeo) {
+  using namespace Acts;
+  using namespace ActsPlugins;
 
-namespace ActsPython {
-void addTGeo(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-
-  auto tgeo = mex.def_submodule("tgeo");
-
+  // Basic bindings: detector element
   {
     py::class_<TGeoDetectorElement, std::shared_ptr<TGeoDetectorElement>>(
         tgeo, "TGeoDetectorElement")
@@ -47,7 +43,7 @@ void addTGeo(Context& ctx) {
     /// @param localAxes is the TGeo->ACTS axis conversion convention
     /// @param scaleConversion is a unit scalor conversion factor
     tgeo.def(
-        "_convertToElements",
+        "convertToElements",
         [](const std::string& rootFileName,
            const std::vector<std::string>& sensitiveMatches,
            const std::string& localAxes, double scaleConversion) {
@@ -85,5 +81,3 @@ void addTGeo(Context& ctx) {
         });
   }
 }
-
-}  // namespace ActsPython

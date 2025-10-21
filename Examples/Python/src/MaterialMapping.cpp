@@ -14,8 +14,6 @@
 #include "ActsExamples/MaterialMapping/CoreMaterialMapping.hpp"
 #include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MaterialValidation.hpp"
-#include "ActsPlugins/Json/ActsJson.hpp"
-#include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 

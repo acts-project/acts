@@ -97,6 +97,7 @@ void addDetector(Context& ctx) {
                        surfaceType, binValue, materialDecorator, logLevel);
   }
 
+  // TGeo related example parts
   {
     auto d = py::class_<TGeoDetector, Detector, std::shared_ptr<TGeoDetector>>(
                  mex, "TGeoDetector")
@@ -164,11 +165,6 @@ void addDetector(Context& ctx) {
                        materialDecorator, volumes);
 
     patchKwargsConstructor(c);
-  }
-
-  {
-    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
-        mex, "DetectorElementBase");
   }
 }
 
