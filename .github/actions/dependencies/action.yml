@@ -21,7 +21,7 @@ inputs:
   DEPENDENCY_TAG:
     description: 'Dependency tag to pull from'
     required: false
-    default: 'v13.0.0'
+    default: 'v15.0.0'
 
 
 runs:
