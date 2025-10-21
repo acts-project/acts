@@ -15,6 +15,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
 #include <cstddef>
 
 namespace Acts::Experimental {
@@ -158,13 +159,13 @@ class CompositeSpacePointLineFitter {
   /// @brief Struct counting the different types of degrees of freedom.
   struct DoFcounts {
     /// @brief Measurement in the non-bending coordinate
-    std::size_t nonBending {};
+    std::size_t nonBending{};
     /// @brief Measurement in the bending coordinate
-    std::size_t bending {};
+    std::size_t bending{};
     /// @brief Time measurement
-    std::size_t time {};
+    std::size_t time{};
     /// @brief Straw measurement
-    std::size_t straw {};
+    std::size_t straw{};
   };
 
   /// @brief Class constructor
@@ -176,26 +177,24 @@ class CompositeSpacePointLineFitter {
           "CompositeSpacePointLineFitter", Logging::Level::INFO));
   /// @brief Returns the instantiated configuration object
   const Config& config() const { return m_cfg; }
-  /// @brief Classify measurements according to whether they measure 
+  /// @brief Classify measurements according to whether they measure
   ///        loc0, loc1, time or are straw measurements
   /// @param measurements: Collection of composite space points of interest
   template <CompositeSpacePointContainer Cont_t>
   DoFcounts countDoF(const Cont_t& measurements) const;
-  /// @brief Classify measurements according to whether they measure 
+  /// @brief Classify measurements according to whether they measure
   ///        loc0, loc1, time or are straw measurements
   /// @param measurements: Collection of composite space points of interest
   /// @param selector: Delegate to sort out the invalid measurements
   template <CompositeSpacePointContainer Cont_t>
-  DoFcounts countDoF(
-      const Cont_t& measurements,
-      const Selector_t<SpacePoint_t<Cont_t>>& selector) const;
+  DoFcounts countDoF(const Cont_t& measurements,
+                     const Selector_t<SpacePoint_t<Cont_t>>& selector) const;
 
   /// @brief Helper function to extract which parameters shall be
   ///        extracted from the hit counts.
   /// @param hitCounts: Filled array representing the degrees of freedom for
   ///                   nonBending, bending, timeStrip, and straw measurement
-  std::vector<FitParIndex> extractFitablePars(
-      const DoFcounts& hitCounts) const;
+  std::vector<FitParIndex> extractFitablePars(const DoFcounts& hitCounts) const;
   /// @brief Fit a line to a set of Composite space point measurements.
   /// @param fitOpts: Auxiliary object carrying all necessary input
   ///                 needed to execute the fit
@@ -235,16 +234,19 @@ class CompositeSpacePointLineFitter {
   /// @param initialGuess: Line representing the start parameters parsed by the user. Needed to determine
   ///                      the L<->R ambiguity of the straws
   /// @param parsToUse: List of parameters to fit (y0, theta, t0), (x0, phi) or (y0, theta, x0, phi, t0).
-  template <CompositeSpacePointContainer Cont_t,
-            CompositeSpacePointFastCalibrator<SpacePoint_t<Cont_t>> Calibrator_t>
+  template <
+      CompositeSpacePointContainer Cont_t,
+      CompositeSpacePointFastCalibrator<SpacePoint_t<Cont_t>> Calibrator_t>
   FitParameters fastFit(const Acts::CalibrationContext& ctx,
-                        const Calibrator_t& calibrator, const Cont_t& measurements, 
-                        const Line_t& initialGuess, const double startT0,
+                        const Calibrator_t& calibrator,
+                        const Cont_t& measurements, const Line_t& initialGuess,
+                        const double startT0,
                         const std::vector<FitParIndex>& parsToUse) const;
 
   /// @brief Abrivation of the fit result returned by the FastStrawLineFitter
   using FastFitResult = std::optional<detail::FastStrawLineFitter::FitResult>;
-  using FastFitResultT0 = std::optional<detail::FastStrawLineFitter::FitResultT0>;
+  using FastFitResultT0 =
+      std::optional<detail::FastStrawLineFitter::FitResultT0>;
 
   /// @brief Executes the fast line fit in the bending direction. Returns
   ///        the result containing the chi2 and the parameters from the fast
@@ -254,16 +256,19 @@ class CompositeSpacePointLineFitter {
   /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
   /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
   ///                   at least enough measurements parsed for the fit.
-  template <CompositeSpacePointContainer Cont_t,
-            typename Result_t, typename FitterFunc>
+  template <CompositeSpacePointContainer Cont_t, typename Result_t,
+            typename FitterFunc>
   Result_t fastPrecFit(const Cont_t& measurements, const Line_t& initialGuess,
                        const std::vector<FitParIndex>& parsToUse,
                        FitterFunc&& fitterFunc) const
-    requires((std::same_as<Result_t, FastFitResult> || std::same_as<Result_t, FastFitResultT0>) &&
-              requires(FitterFunc f) {
-                { f(std::declval<const std::vector<int>&>()) } -> std::same_as<Result_t>;
-              });
-  
+    requires((std::same_as<Result_t, FastFitResult> ||
+              std::same_as<Result_t, FastFitResultT0>) &&
+             requires(FitterFunc f) {
+               {
+                 f(std::declval<const std::vector<int>&>())
+               } -> std::same_as<Result_t>;
+             });
+
   /// @brief Executes the fast line fit in the non-bending direction. Returns
   ///        the result containing the chi2 and the parameters from the fast
   ///        fitter if succeeds otherwise a nullopt
@@ -272,11 +277,10 @@ class CompositeSpacePointLineFitter {
   /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
   ///                   at least enough measurements parsed for the fit.
   template <CompositeSpacePointContainer Cont_t>
-  bool fastNonPrecFit(FitParameters& result,
-                      const Cont_t& measurements,
+  bool fastNonPrecFit(FitParameters& result, const Cont_t& measurements,
                       const std::vector<FitParIndex>& parsToUse) const;
-  
-  void copyFastPrecResult(FitParameters& result, 
+
+  void copyFastPrecResult(FitParameters& result,
                           const FastFitResult& precResult) const;
 
   /// @brief Update the straight line parameters based on the current chi2 and its

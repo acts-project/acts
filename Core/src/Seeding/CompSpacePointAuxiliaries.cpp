@@ -610,7 +610,7 @@ void CompSpacePointAuxiliaries::updateTimeStripRes(
   constexpr auto timeIdx = toUnderlying(FitParIndex::t0);
 
   const double invDist = m_cfg.includeToF && globDist > s_tolerance
-                             ? 1./(PhysicalConstants::c * globDist)
+                             ? 1. / (PhysicalConstants::c * globDist)
                              : 0.;
   for (const auto partial1 : m_cfg.parsToUse) {
     if (partial1 == FitParIndex::t0) {
@@ -714,7 +714,8 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
                  << " dCoA: " << m_partialApproachDist[idx] * driftV << " -> "
                  << (m_gradient[idx][bendingComp] +
                      dSign * m_partialApproachDist[idx] * driftV));
-    m_gradient[idx][bendingComp] -= - dSign * m_partialApproachDist[idx] * driftV;
+    m_gradient[idx][bendingComp] -=
+        -dSign * m_partialApproachDist[idx] * driftV;
   }
 
   if (!m_cfg.useHessian) {
@@ -787,8 +788,10 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
       // clang-format on
       ACTS_VERBOSE(
           "updateTimeStrawRes() - Correct the second partial derivative w.r.t "
-          << parName(partial1) << ", " << parName(partial2) << " " << m_hessian[hessIdx][bendingComp]
-          << " by hessianR: " << hessianR << ", partialCoA: " << partialCoA << " -> " << m_hessian[hessIdx][bendingComp] - dSign * hessianR);
+          << parName(partial1) << ", " << parName(partial2) << " "
+          << m_hessian[hessIdx][bendingComp] << " by hessianR: " << hessianR
+          << ", partialCoA: " << partialCoA << " -> "
+          << m_hessian[hessIdx][bendingComp] - dSign * hessianR);
 
       m_hessian[hessIdx][bendingComp] -= dSign * hessianR;
     }

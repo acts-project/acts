@@ -35,7 +35,9 @@ concept CompositeSpacePointFastCalibrator =
       ///        which is defined as the second derivative of the relation
       /// @param ctx: Calibration context to access the calibration constants (Experiment specific)
       /// @param spacePoint: Reference to the calibrated space point
-      { calibrator.driftAcceleration(ctx, spacePoint, t0)} -> std::same_as<double>;
+      {
+        calibrator.driftAcceleration(ctx, spacePoint, t0)
+      } -> std::same_as<double>;
 
       { calibrator.driftRadius(ctx, spacePoint, t0) } -> std::same_as<double>;
     };
@@ -51,7 +53,9 @@ concept CompositeSpacePointCalibrator =
     requires(const Calibrator_t calibrator, const UnCalibCont_t& uncalibCont,
              CalibCont_t& calibCont, const Vector3& trackPos,
              const Vector3& trackDir, const double trackT0,
-             const CalibrationContext& ctx, const Acts::RemovePointer_t<typename CalibCont_t::value_type>& measurement) {
+             const CalibrationContext& ctx,
+             const Acts::RemovePointer_t<typename CalibCont_t::value_type>&
+                 measurement) {
       ///  @brief Calibrate the entire input space point container using the external track parameters
       ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
       ///  @param trackPos: Position of the track / segment
@@ -78,7 +82,9 @@ concept CompositeSpacePointCalibrator =
       ///        which is defined as the second derivative of the relation
       ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
       ///  @param measurement: Reference to the calibrated space point
-      { calibrator.driftAcceleration(ctx, measurement) } -> std::same_as<double>;
+      {
+        calibrator.driftAcceleration(ctx, measurement)
+      } -> std::same_as<double>;
     };
 
 }  // namespace Acts::Experimental
