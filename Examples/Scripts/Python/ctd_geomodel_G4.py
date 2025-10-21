@@ -197,26 +197,54 @@ def main():
     )
     algSequence.addAlgorithm(digiAlg)
 
-    from acts.examples import RootMuonSpacePointWriter
-
-    algSequence.addWriter(
-        RootMuonSpacePointWriter(
-            level=logLevel,
-            inputSpacePoints="MuonSpacePoints",
-            filePath=f"{args.outDir}/MS_SpacePoints.root",
-        )
+    addDigitization(
+        s,
+        trackingGeometry,
+        field,
+        digiConfigFile=digiConfigFile,
+        rnd=rnd,
     )
 
-    if args.geoSvgDump:
-        wb = WhiteBoard(acts.logging.INFO)
-        context = AlgorithmContext(0, 0, wb, 10)
-        obj_dir = Path(args.outDir) / "obj"
-        obj_dir.mkdir(exist_ok=True)
-        writer = ObjTrackingGeometryWriter(
-            level=acts.logging.INFO, outputDir=str(obj_dir)
-        )
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            measurements=(7, None),
+            removeNeutral=True,
+            removeSecondaries=True,
+        ),
+    )
 
-        writer.write(context, trackingGeometry)
+    addSeeding(
+        s,
+        trackingGeometry,
+        field,
+        rnd=rnd,
+        inputParticles="particles_generated",
+        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        particleHypothesis=acts.ParticleHypothesis.muon,
+    )
+
+    # from acts.examples import RootMuonSpacePointWriter
+    #
+    # algSequence.addWriter(
+    #     RootMuonSpacePointWriter(
+    #         level=logLevel,
+    #         inputSpacePoints="MuonSpacePoints",
+    #         filePath=f"{args.outDir}/MS_SpacePoints.root",
+    #     )
+    # )
+    #
+    # if args.geoSvgDump:
+    #     wb = WhiteBoard(acts.logging.INFO)
+    #     context = AlgorithmContext(0, 0, wb, 10)
+    #     obj_dir = Path(args.outDir) / "obj"
+    #     obj_dir.mkdir(exist_ok=True)
+    #     writer = ObjTrackingGeometryWriter(
+    #         level=acts.logging.INFO, outputDir=str(obj_dir)
+    #     )
+    #
+    # writer.write(context, trackingGeometry)
 
     algSequence.addAlgorithm(
         acts.examples.TruthTrackFinder(
@@ -231,6 +259,7 @@ def main():
     )
 
     from acts.examples.reconstruction import addGx2fTracks
+
     addGx2fTracks(
         algSequence,
         trackingGeometry,
