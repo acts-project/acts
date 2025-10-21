@@ -13,9 +13,9 @@
 #include <array>
 #include <cmath>
 #include <ostream>
+#include <ranges>
 #include <utility>
 #include <vector>
-#include <ranges>
 
 // This file is based on the following files, with modifications:
 //
