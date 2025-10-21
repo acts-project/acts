@@ -196,11 +196,13 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     // Run the digitizer. Iterate over the hits for this surface inside the
     // visitor so we do not need to lookup the variant object per-hit.
+
     std::visit(
         [&](const auto& digitizer) {
           ModuleClusters moduleClusters(
               digitizer.geometric.segmentation, digitizer.geometric.indices,
-              m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner);
+              m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner,
+              m_cfg.useInPlaceClusterization);
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
