@@ -159,13 +159,13 @@ class CompositeSpacePointLineFitter {
   /// @brief Struct counting the different types of degrees of freedom.
   struct DoFcounts {
     /// @brief Measurement in the non-bending coordinate
-    std::size_t nonBending{};
+    std::size_t nonBending{0u};
     /// @brief Measurement in the bending coordinate
-    std::size_t bending{};
+    std::size_t bending{0u};
     /// @brief Time measurement
-    std::size_t time{};
+    std::size_t time{0u};
     /// @brief Straw measurement
-    std::size_t straw{};
+    std::size_t straw{0u};
   };
 
   /// @brief Class constructor
@@ -235,7 +235,7 @@ class CompositeSpacePointLineFitter {
   /// @param measurements: List of measurements to fit
   /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
   /// @param startT0: Initial guess for t0
-  /// @param parsToUse: List of parameters to fit (y0, theta, t0), (x0, phi) or (y0, theta, x0, phi, t0).
+  /// @param parsToUse: List of parameters to fit (y0, theta, t0) or (y0, theta, x0, phi, t0).
   template <
       CompositeSpacePointContainer Cont_t,
       CompositeSpacePointFastCalibrator<SpacePoint_t<Cont_t>> Calibrator_t>
