@@ -264,7 +264,7 @@ class CompositeSpacePointLineFitter {
   /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
   /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
   ///                   at least enough measurements parsed for the fit.
-  /// @param FitterFunc: Fast precision fit function for straw measurements. It depends on whether the
+  /// @param fitterFunc: Fast precision fit function for straw measurements. It depends on whether the
   ///                    fit involves t0.
   template <CompositeSpacePointContainer Cont_t, typename Result_t,
             typename FitterFunc>
