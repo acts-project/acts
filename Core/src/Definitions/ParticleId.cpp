@@ -15,6 +15,7 @@
 #include <ostream>
 #include <utility>
 #include <vector>
+#include <ranges>
 
 // This file is based on the following files, with modifications:
 //
@@ -34,7 +35,7 @@ class DecodedPID : public std::pair<int, std::vector<int>> {
     for (; ap != 0; ap /= 10) {
       this->second.push_back(ap % 10);
     }
-    std::reverse(this->second.begin(), this->second.end());
+    std::ranges::reverse(this->second);
   }
   inline DecodedPID shift(const std::size_t n) const {
     return DecodedPID(this->first %
@@ -54,8 +55,8 @@ class DecodedPID : public std::pair<int, std::vector<int>> {
   inline std::size_t ndigits() const { return this->second.size(); }
 };
 
-static const int TABLESIZE = 100;
-static const std::array<int, TABLESIZE> triple_charge = {
+const int TABLESIZE = 100;
+const std::array<int, TABLESIZE> triple_charge = {
     +0, -1, +2, -1, +2, -1, +2, -1, +2, +0, +0, -3, +0, -3, +0, -3, +0,
     -3, +0, +0, +0, +0, +0, +0, +3, +0, +0, +0, +0, +0, +0, +0, +0, +0,
     +3, +0, +0, +3, +6, +0, +0, +0, -1, +0, +0, +0, +0, +0, +0, +0, +0,
@@ -63,38 +64,38 @@ static const std::array<int, TABLESIZE> triple_charge = {
     +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0,
     +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0, +0};
 
-static const int DQUARK = 1;
-static const int UQUARK = 2;
-static const int SQUARK = 3;
-static const int CQUARK = 4;
-static const int BQUARK = 5;
-static const int TQUARK = 6;
+const int DQUARK = 1;
+const int UQUARK = 2;
+const int SQUARK = 3;
+const int CQUARK = 4;
+const int BQUARK = 5;
+const int TQUARK = 6;
 
-static const int ELECTRON = 11;
-static const int MUON = 13;
-static const int TAU = 15;
+const int ELECTRON = 11;
+const int MUON = 13;
+const int TAU = 15;
 
-static const int GLUON = 21;
+const int GLUON = 21;
 // APID: 9 rather than 21 is used to denote a gluon/gluino in composite states.
 // (From PDG 11g)
-static const int COMPOSITEGLUON = 9;
-static const int PHOTON = 22;
-static const int Z0BOSON = 23;
-static const int ZPRIME = 32;     // Z′/Z^0_2
-static const int ZDBLPRIME = 33;  // Z′′/Z^0_3
-static const int LEPTOQUARK = 42;
+const int COMPOSITEGLUON = 9;
+const int PHOTON = 22;
+const int Z0BOSON = 23;
+const int ZPRIME = 32;     // Z′/Z^0_2
+const int ZDBLPRIME = 33;  // Z′′/Z^0_3
+const int LEPTOQUARK = 42;
 
 /// PDG Ids for Mavtop madgraph UFO model found under DarkX. The
 /// mavtop is a vector-like top partner with coupling to a dark photon.
 /// Theory paper: https://arxiv.org/abs/1904.05893
 /// Pheno paper: https://arxiv.org/pdf/2112.08425
-static const int MAVTOP = 60001;
+const int MAVTOP = 60001;
 
-static const int K0L = 130;
+const int K0L = 130;
 
-static const int K0S = 310;
-static const int K0 = 311;
-static const int PROTON = 2212;
+const int K0S = 310;
+const int K0 = 311;
+const int PROTON = 2212;
 
 /// PDG rule 10:
 /// Codes 81–100 are reserved for generator-specific pseudoparticles and
@@ -102,8 +103,8 @@ static const int PROTON = 2212;
 /// additional components of Standard Modelparton distribution functions, where
 /// the latter three ranges are intended to distinguish left/right/ longitudinal
 /// components. Codes 998 and 999 are reserved for GEANT tracking pur-poses.
-static const int GEANTINOPLUS = 998;
-static const int GEANTINO0 = 999;
+const int GEANTINOPLUS = 998;
+const int GEANTINO0 = 999;
 
 /// PDG rule 2:
 /// Quarks and leptons are numbered consecutively starting from 1 and 11
