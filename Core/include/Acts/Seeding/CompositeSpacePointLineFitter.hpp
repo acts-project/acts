@@ -219,15 +219,16 @@ class CompositeSpacePointLineFitter {
   /// @param measurements: List of measurements to fit
   /// @param initialGuess: Line representing the start parameters parsed by the user. Needed to determine
   ///                      the L<->R ambiguity of the straws
+  /// @param nStraws: number of straw measurements
   /// @param parsToUse: List of parameters to fit (y0, theta), (x0, phi) or (y0, theta, x0, phi).
   template <CompositeSpacePointContainer Cont_t>
   FitParameters fastFit(const Cont_t& measurements, const Line_t& initialGuess,
+                        const std::size_t nStraws,
                         const std::vector<FitParIndex>& parsToUse) const;
 
   /// @brief Executes a fast (pre)fit using the FastStrawLineFitter. First the parameters
-  ///        (theta, y0 and t0) are fitted using the straw measurements only, if
-  ///        present. Otherwise, strips measuring the bending direction are
-  ///        used. If non-bending information (x0, phi) is also available, a
+  ///        (theta, y0 and t0) are fitted using the straw measurements only.
+  ///        If non-bending information (x0, phi) is also available, a
   ///        second strip fit is executed and the directional parameters are
   ///        combined, but the covariance ignores a correlation between them.
   /// @param ctx: Experiment specific calibration context
@@ -250,53 +251,64 @@ class CompositeSpacePointLineFitter {
   using FastFitResultT0 =
       std::optional<detail::FastStrawLineFitter::FitResultT0>;
 
-  /// @brief Executes the fast line fit in the bending direction. Returns
-  ///        the result containing the chi2 and the parameters from the fast
-  ///        fitter if succeeds otherwise a nullopt
-  /// @tparam Result_t: Result object produced by the fast precision fit function. Either FastFitResult
-  ///         or FastFitResultT0 according to whether t0 is a fitted or not
-  /// @tparam FitterFunc: Fast precision fit function. It must take as input the signs of measurements,
-  ///         indicating whether the fit-line lies to the left or right of a
-  ///         particular measurement, and return a FastFitResult or
-  ///         FastFitResultT0 object
+  /// @brief Executes the fast line fit in the bending direction without time. The fit is performed
+  ///        using straw measurements if at least 3 are provided, otherwise
+  ///        strip measurements are used. Returns the result containing the chi2
+  ///        and the parameters from the fast fitter if succeeds otherwise a
+  ///        nullopt
   /// @param measurements: List of measurements to be fitted. Only the ones with measuresLoc1() are
-  ///                       considered by the fast fitter
-  /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
-  /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
-  ///                   at least enough measurements parsed for the fit.
-  /// @param fitterFunc: Fast precision fit function for straw measurements. It depends on whether the
-  ///                    fit involves t0.
-  template <CompositeSpacePointContainer Cont_t, typename Result_t,
-            typename FitterFunc>
-  Result_t fastPrecFit(const Cont_t& measurements, const Line_t& initialGuess,
-                       const std::vector<FitParIndex>& parsToUse,
-                       FitterFunc&& fitterFunc) const
-    requires((std::same_as<Result_t, FastFitResult> ||
-              std::same_as<Result_t, FastFitResultT0>) &&
-             requires(FitterFunc f) {
-               {
-                 f(std::declval<const std::vector<int>&>())
-               } -> std::same_as<Result_t>;
-             });
-
-  /// @brief Executes the fast line fit in the non-bending direction, when required. Returns a boolean
-  ///        indicating whether the fit was successful.
-  /// @param result: Partial fastFit result obtained from the fast fit in the precision direction. The
-  ///                outcome of the fast fit in the non-bending direction will
-  ///                be stored here.
-  /// @param measurements: List of measurements to be fitted. Only the ones with measuresLoc0() are
   ///                      considered by the fast fitter
+  /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
+  /// @param nStraws: number of straw measurements
   /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
   ///                   at least enough measurements parsed for the fit.
   template <CompositeSpacePointContainer Cont_t>
-  bool fastNonPrecFit(FitParameters& result, const Cont_t& measurements,
-                      const std::vector<FitParIndex>& parsToUse) const;
+  FastFitResult fastPrecFit(const Cont_t& measurements,
+                            const Line_t& initialGuess,
+                            const std::size_t nStraws,
+                            const std::vector<FitParIndex>& parsToUse) const;
 
-  /// @brief Helper function that copies the precision fit result into a FitParameters object
+  /// @brief Executes the fast line fit in the bending direction with time. The fit is possible only
+  ///        when at least 3 straw measurements are provided. Returns the result
+  ///        containing the chi2 and the parameters from the fast fitter if
+  ///        succeeds otherwise a nullopt
+  /// @param ctx: Experiment specific calibration context
+  /// @param calibrator: Calibrator
+  /// @param measurements: List of measurements to be fitted. Only the ones with measuresLoc1() are
+  ///                      considered by the fast fitter
+  /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
+  /// @param initialT0: Initial guess for t0
+  /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
+  ///                   at least enough measurements parsed for the fit.
+  template <
+      CompositeSpacePointContainer Cont_t,
+      CompositeSpacePointFastCalibrator<SpacePoint_t<Cont_t>> Calibrator_t>
+  FastFitResultT0 fastPrecFit(const Acts::CalibrationContext& ctx,
+                              const Calibrator_t& calibrator,
+                              const Cont_t& measurements,
+                              const Line_t& initialGuess,
+                              const double initialT0,
+                              const std::vector<FitParIndex>& parsToUse) const;
+
+  /// @brief Helper function that copies the precision fit result into the FitParameters fastFit
+  ///        final result and combines it with a fast line fit in the
+  ///        non-bending direction, when required.
   /// @param result: FitParameter obj that will contain the full result of the fastFit
   /// @param precResult: Result of the fast fit in the bending coordinate
-  void copyFastPrecResult(FitParameters& result,
-                          const FastFitResult& precResult) const;
+  /// @param measurements: List of measurements to be fitted in the non-bending direction. Only the ones
+  ///                      with measuresLoc0() are considered.
+  /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
+  ///                   at least enough measurements parsed for the fast fit in
+  ///                   the non-bending direction.
+  /// @param fitT0: Flag that is true when the fast fit includes t0. Needed to toggle the chi2 computation
+  ///               after the combination of bending and non-bending fit
+  ///               results.
+  template <CompositeSpacePointContainer Cont_t>
+  void mergePrecAndNonPrec(FitParameters& result,
+                           const FastFitResult& precResult,
+                           const Cont_t& measurements,
+                           const std::vector<FitParIndex>& parsToUse,
+                           const bool fitT0 = false) const;
 
   /// @brief Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was

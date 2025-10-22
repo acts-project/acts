@@ -42,28 +42,6 @@ CompositeSpacePointLineFitter::extractFitablePars(
   return pars;
 }
 
-void CompositeSpacePointLineFitter::copyFastPrecResult(
-    FitParameters& result, const FastFitResult& precResult) const {
-  using enum FitParIndex;
-  result.parameters[toUnderlying(y0)] = precResult->y0;
-  result.parameters[toUnderlying(theta)] = precResult->theta;
-  result.covariance(toUnderlying(y0), toUnderlying(y0)) =
-      Acts::square(precResult->dY0);
-  result.covariance(toUnderlying(theta), toUnderlying(theta)) =
-      Acts::square(precResult->dTheta);
-  result.nDoF = static_cast<unsigned>(precResult->nDoF);
-  result.nIter = static_cast<unsigned>(precResult->nIter);
-  result.chi2 = precResult->chi2;
-  result.converged = true;
-
-  if (auto precResultT0 =
-          dynamic_cast<const FastFitResultT0::value_type*>(&*precResult)) {
-    result.parameters[toUnderlying(t0)] = precResultT0->t0;
-    result.covariance(toUnderlying(t0), toUnderlying(t0)) =
-        Acts::square(precResultT0->dT0);
-  }
-}
-
 void CompositeSpacePointLineFitter::FitParameters::print(
     std::ostream& ostr) const {
   using namespace Acts::UnitLiterals;
