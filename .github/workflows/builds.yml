@@ -158,7 +158,7 @@ jobs:
           source build/this_acts_withdeps.sh
           python3 -m pip install -r Examples/Python/tests/requirements.txt
           python3 -m pip install pytest-md-report
-          pytest -rfExw -k "not gnn" -v
+          python3 -m pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:

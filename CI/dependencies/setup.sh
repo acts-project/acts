@@ -170,6 +170,7 @@ arch=$(spack arch --family)
 
 env_dir="${destination}/env"
 view_dir="${destination}/view"
+venv_dir="${destination}/venv"
 mkdir -p ${env_dir}
 
 lock_file_path="${destination}/spack.lock"
@@ -208,15 +209,9 @@ mkdir -p "${geant4_dir}/share/Geant4"
 ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
 end_section
 
-
 start_section "Prepare python environment"
-venv_dir="${view_dir}/venv"
-"${view_dir}"/bin/python3 -m venv \
-  --system-site-packages \
-  "$venv_dir"
-
+"${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
 "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
-
 end_section
 
 start_section "Set environment variables"
@@ -229,9 +224,4 @@ set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
 set_env LD_LIBRARY_PATH "${view_dir}/lib"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
-end_section
-
-start_section "Check Python path and version"
-which python3
-python3 --version
 end_section

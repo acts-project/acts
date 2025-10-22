@@ -356,7 +356,7 @@ linux_test_examples:
     - source build/this_acts_withdeps.sh
     - cd src
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - pytest -rfExw -k "not gnn" -v
+    - python3 -m pytest -rfExw -k "not gnn" -v
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -392,12 +392,11 @@ linux_physmon:
     - python3 -m pip install histcmp==0.8.1 matplotlib
     - python3 -m pip install -r src/Examples/Scripts/requirements.txt
     - geant4-config --install-datasets
-    - venv_python=$(which python3)
-    - echo $venv_python
     - source build/this_acts_withdeps.sh
-    - export PATH=$(dirname $venv_python):$PATH
-    - echo $PATH
-    - which python3
+    - |
+      echo "PATH=$PATH"
+      echo "which python3: $(which python3)"
+      echo "python3 version: $(python3 --version)"
     - cd src
     - CI/physmon/phys_perf_mon.sh all physmon
 
