@@ -207,7 +207,7 @@ end_section
 
 start_section "Patch up Geant4 data directory"
 if [ "${full_install:-false}" == "true" ]; then
-  "${SCRIPT_DIR}/with_spack_env.sh" "${env_dir}" geant4-config --install-datasets
+  "${env_dir}/bin/geant4-config" --install-datasets
 fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
 # Prepare the folder for G4 data, and symlink it to where G4 will look for it
@@ -219,9 +219,9 @@ start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
 "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
-  "${view_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Examples/Python/tests/requirements.txt"
-  "${view_dir}/bin/python3" -m pip install histcmp==0.8.1 matplotlib
-  "${view_dir}/bin/python3" -m pip install pytest-md-report
+  "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Examples/Python/tests/requirements.txt"
+  "${venv_dir}/bin/python3" -m pip install histcmp==0.8.1 matplotlib
+  "${venv_dir}/bin/python3" -m pip install pytest-md-report
 fi
 end_section
 
