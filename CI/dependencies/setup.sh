@@ -210,10 +210,6 @@ end_section
 
 
 start_section "Prepare python environment"
-echo ""${view_dir}"/bin/python3"
-which python3
-python3 --version
-"${view_dir}"/bin/python3 --version
 venv_dir="${view_dir}/venv"
 "${view_dir}"/bin/python3 -m venv \
   --system-site-packages \

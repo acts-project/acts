@@ -196,14 +196,10 @@ jobs:
           python3 -m pip install histcmp==0.8.1 matplotlib
           python3 -m pip install -r Examples/Scripts/requirements.txt
           geant4-config --install-datasets
-          venv_python=$(which python3)
-          echo $venv_python
-          echo "Pre-setup"
           source build/this_acts_withdeps.sh
-          echo "Post-setup"
-          export PATH=$(dirname $venv_python):$PATH
-          which python3
-          echo $PATH
+          echo "PATH=$PATH"
+          echo "which python3: $(which python3)"
+          echo "python3 version: $(python3 --version)"
           echo "::endgroup::"
           CI/physmon/phys_perf_mon.sh all physmon
 
