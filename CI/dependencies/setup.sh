@@ -229,7 +229,7 @@ start_section "Set environment variables"
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   touch "$GITHUB_PATH"
   tmp="$(mktemp)"
-  { echo "${venv_dir}/bin"; echo "${view_dir}/bin"; cat "$GITHUB_PATH"; } > "$tmp"\
+  { echo "${venv_dir}/bin"; echo "${view_dir}/bin"; cat "$GITHUB_PATH"; } > "$tmp"
   mv "$tmp" "$GITHUB_PATH"
   # TODO remove
   echo "GITHUB_PATH"
