@@ -38,6 +38,9 @@ runs:
       run: |
         brew install ninja ccache
 
+    # TODO caching is commented out for now with https://github.com/acts-project/acts/pull/4723
+    # since it stopped working for macOS runners with the newest spack version due to symlink copying issues.
+
     # - name: Restore cache
     #   id: cache-restore
     #   uses: actions/cache/restore@v4
