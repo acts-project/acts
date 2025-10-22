@@ -16,6 +16,7 @@ function run() {
 export run
 
 run which python3
+run python3 --version
 shopt -s extglob
 
 

@@ -220,8 +220,13 @@ if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "${venv_dir}/bin" >> "$GITHUB_PATH"
 fi
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
-set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
+set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib"
 set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
-set_env LD_LIBRARY_PATH "${view_dir}/lib"
+set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
+set_env pythonLocation "${venv_dir}"
+set_env PKG_CONFIG_PATH "${view_dir}/lib/pkgconfig"
+set_env Python_ROOT_DIR "${venv_dir}"
+set_env Python2_ROOT_DIR "${venv_dir}"
+set_env Python3_ROOT_DIR "${venv_dir}"
 end_section
