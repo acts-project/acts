@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 set -u
+set -x
 
 _spack_version=${SPACK_VERSION:-develop}
 
