@@ -21,7 +21,7 @@ inputs:
   DEPENDENCY_TAG:
     description: 'Dependency tag to pull from'
     required: false
-    default: 'v15.0.0'
+    default: 'v16.0.0'
 
 
 runs:
@@ -43,7 +43,7 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: spack_cache
-        key: spack-r2-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-r3-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Extract cached Spack
       if: steps.cache-restore.outputs.cache-hit == 'true'
