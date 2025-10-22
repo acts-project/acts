@@ -192,6 +192,10 @@ jobs:
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
           source build/this_acts_withdeps.sh
+          # TODO remove
+          echo "PATH=$PATH"
+          echo "which python3: $(which python3)"
+          echo "python3 version: $(python3 --version)"
           CI/physmon/phys_perf_mon.sh all physmon
 
       - name: Post step summary
