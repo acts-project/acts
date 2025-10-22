@@ -231,3 +231,8 @@ set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
 set_env LD_LIBRARY_PATH "${view_dir}/lib"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
 end_section
+
+start_section "Check Python path and version"
+which python3
+python3 --version
+end_section
