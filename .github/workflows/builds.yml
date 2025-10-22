@@ -191,6 +191,10 @@ jobs:
         shell: bash
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
+          # TODO remove
+          echo "PATH=$PATH"
+          echo "which python3: $(which python3)"
+          echo "python3 version: $(python3 --version)"
           source build/this_acts_withdeps.sh
           # TODO remove
           echo "PATH=$PATH"
