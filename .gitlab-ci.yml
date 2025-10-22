@@ -354,7 +354,7 @@ linux_test_examples:
 
     - source build/this_acts_withdeps.sh
     - cd src
-    - python3 -m pytest -rfExw -k "not gnn" -v
+    - pytest -rfExw -k "not gnn" -v
 
   after_script:
    - !reference [.spack_cleanup, after_script]
