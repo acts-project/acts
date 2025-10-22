@@ -325,8 +325,7 @@ BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
             << ", nMeasurements: " << t.nMeasurements()
             << ", nHoles: " << t.nHoles() << ", nOutlier: " << t.nOutliers()
             << ", nShared: " << t.nSharedHits() << ", chi2: " << t.chi2()
-            << ", nDoF: " << t.nDoF()
-            << std::endl;
+            << ", nDoF: " << t.nDoF() << std::endl;
 
   BOOST_CHECK_EQUAL(mutTc.size(), 2);
   BOOST_CHECK_EQUAL(mutMtj.size(), 4);
