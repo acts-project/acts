@@ -37,14 +37,18 @@ while getopts "c:t:d:e:h" opt; do
     e )
       env_file=$OPTARG
       ;;
+    f )
+      full_install=true
+      ;;
     h )
-      echo "Usage: $0 [-c compiler] [-t tag] [-d destination]"
+      echo "Usage: $0 [-c compiler] [-t tag] [-d destination] [-e env_file] [-h]"
       echo "Options:"
       echo "  -c <compiler>    Specify compiler (defaults to CXX env var)"
       echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var)"
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
-      echo "  -h              Show this help message"
+      echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
+      echo "  -h               Show this help message"
       exit 0
       ;;
     \? )
@@ -202,7 +206,9 @@ time spack -e "${env_dir}" install --fail-fast --use-buildcache only --concurren
 end_section
 
 start_section "Patch up Geant4 data directory"
-# ${SCRIPT_DIR}/with_spack_env.sh ${env_dir} geant4-config --install-datasets
+if [ "${full_install:-false}" == "true" ]; then
+  "${SCRIPT_DIR}/with_spack_env.sh" "${env_dir}" geant4-config --install-datasets
+fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
 # Prepare the folder for G4 data, and symlink it to where G4 will look for it
 mkdir -p "${geant4_dir}/share/Geant4"
@@ -212,6 +218,11 @@ end_section
 start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
 "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
+if [ "${full_install:-false}" == "true" ]; then
+  "${view_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Examples/Python/tests/requirements.txt"
+  "${view_dir}/bin/python3" -m pip install histcmp==0.8.1 matplotlib
+  "${view_dir}/bin/python3" -m pip install pytest-md-report
+fi
 end_section
 
 start_section "Set environment variables"

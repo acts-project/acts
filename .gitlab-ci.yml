@@ -348,14 +348,12 @@ linux_test_examples:
     - git submodule init
     - git submodule update
     - |
-      CI/dependencies/setup.sh -c g++ -e .env
+      CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
     - cd ..
 
-    - geant4-config --install-datasets
     - source build/this_acts_withdeps.sh
     - cd src
-    - python3 -m pip install -r Examples/Python/tests/requirements.txt
     - python3 -m pytest -rfExw -k "not gnn" -v
 
   after_script:
@@ -384,14 +382,11 @@ linux_physmon:
     - git submodule init
     - git submodule update
     - |
-      CI/dependencies/setup.sh -c g++ -e .env
+      CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - python3 -m pip install histcmp==0.8.1 matplotlib
-    - python3 -m pip install -r src/Examples/Scripts/requirements.txt
-    - geant4-config --install-datasets
     - source build/this_acts_withdeps.sh
     - |
       echo "PATH=$PATH"
