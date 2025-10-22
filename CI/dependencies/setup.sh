@@ -23,7 +23,7 @@ function end_section() {
 }
 
 # Parse command line arguments
-while getopts "c:t:d:e:h" opt; do
+while getopts "c:t:d:e:f:h" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
