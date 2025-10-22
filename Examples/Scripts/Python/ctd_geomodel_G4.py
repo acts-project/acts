@@ -197,34 +197,6 @@ def main():
     )
     algSequence.addAlgorithm(digiAlg)
 
-    addDigitization(
-        s,
-        trackingGeometry,
-        field,
-        digiConfigFile=digiConfigFile,
-        rnd=rnd,
-    )
-
-    addDigiParticleSelection(
-        s,
-        ParticleSelectorConfig(
-            pt=(0.9 * u.GeV, None),
-            measurements=(7, None),
-            removeNeutral=True,
-            removeSecondaries=True,
-        ),
-    )
-
-    addSeeding(
-        s,
-        trackingGeometry,
-        field,
-        rnd=rnd,
-        inputParticles="particles_generated",
-        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
-        particleHypothesis=acts.ParticleHypothesis.muon,
-    )
-
     # from acts.examples import RootMuonSpacePointWriter
     #
     # algSequence.addWriter(

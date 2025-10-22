@@ -21,8 +21,10 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
 
 #include <algorithm>
 #include <format>
@@ -182,6 +184,21 @@ ProcessCode MuonSpacePointDigitizer::execute(
     Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
     const auto& moduleSimHits = simHitsGroup.second;
 
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+        surfaceByIdentifier = m_cfg.trackingGeometry->geoIdSurfaceMap();
+    auto surfaceItr = surfaceByIdentifier.find(moduleGeoId);
+
+    if (surfaceItr == surfaceByIdentifier.end()) {
+      // this is either an invalid geometry id or a misconfigured smearer
+      // setup; both cases can not be handled and should be fatal.
+      ACTS_ERROR("Could not find surface " << moduleGeoId
+                                           << " for configured smearer");
+      return ProcessCode::ABORT;
+    }
+
+    /// Geometric digitizer
+    ActsFatras::Channelizer channelizer;
+
     const Surface* hitSurf = trackingGeometry().findSurface(moduleGeoId);
     assert(hitSurf != nullptr);
 
@@ -237,6 +254,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                 convertSp = false;
                 break;
               }
+
               auto ranges = stripTimes.equal_range(moduleGeoId);
               for (auto digitHitItr = ranges.first;
                    digitHitItr != ranges.second; ++digitHitItr) {
@@ -254,6 +272,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   break;
                 }
               }
+
               /// Mark that a new hit has been recorded at this position & time
               /// Subsequent hits are rejected if they remain within the dead
               /// time
@@ -400,8 +419,20 @@ ProcessCode MuonSpacePointDigitizer::execute(
               gotSimHits.nth(simHitIdx)->particleId());
           measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                              measurement.index(), simHitIdx);
+// from main ?
+//      if (m_cfg.dumpVisualization && m_cfg.visualizationFunction) {
+//        const TrackingVolume* chambVolume =
+//            trackingGeometry().findVolume(volId);
+//        assert(chambVolume != nullptr);
+//        const std::string outputPath = std::format(
+//            "Event_{}_{}.pdf", ctx.eventNumber, chambVolume->volumeName());
+//        m_cfg.visualizationFunction(outputPath, gctx, bucket,
+//                                    m_inputSimHits(ctx), m_inputParticles(ctx),
+//                                    trackingGeometry(), logger());
+      }
           break;
         }
+
         default:
           ACTS_DEBUG(
               "Unsupported detector case in muon space point digitizer.");
@@ -428,16 +459,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                              << volId << "\n"
                              << sstr.str());
       }
-      if (m_cfg.dumpVisualization && m_cfg.visualizationFunction) {
-        const TrackingVolume* chambVolume =
-            trackingGeometry().findVolume(volId);
-        assert(chambVolume != nullptr);
-        const std::string outputPath = std::format(
-            "Event_{}_{}.pdf", ctx.eventNumber, chambVolume->volumeName());
-        m_cfg.visualizationFunction(outputPath, gctx, bucket,
-                                    m_inputSimHits(ctx), m_inputParticles(ctx),
-                                    trackingGeometry(), logger());
-      }
+    visualizeBucket(ctx, gctx, bucket);
       outSpacePoints.push_back(std::move(bucket));
     }
   }
@@ -445,6 +467,20 @@ ProcessCode MuonSpacePointDigitizer::execute(
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
   m_outputMeasurements(ctx, std::move(measurements));
 
+  m_outputParticleMeasurementsMap(ctx,
+                                  invertIndexMultimap(measurementParticlesMap));
+  m_outputSimHitMeasurementsMap(ctx,
+                                invertIndexMultimap(measurementSimHitsMap));
+
+  m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
+  m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
+
+  ACTS_DEBUG("Created " << measurements.size() << " measurements from "
+                        << gotSimHits.size() << " sim hits.");
+
+  m_outputMeasurements(ctx, std::move(measurements));
+
+  // invert them before they are moved
   m_outputParticleMeasurementsMap(ctx,
                                   invertIndexMultimap(measurementParticlesMap));
   m_outputSimHitMeasurementsMap(ctx,
