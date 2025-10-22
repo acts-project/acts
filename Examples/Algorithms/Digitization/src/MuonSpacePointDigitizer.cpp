@@ -383,9 +383,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
           const double smearedZ =
               (*Digitization::Gauss{sigmaZ}(nominalPos.z(), rndEngine)).first;
 
-          newSp.setRadius(smearedDriftR);
-          newSp.setCovariance(square(uncert), square(sigmaZ), 0.);
-
           newSp.defineCoordinates(
               Vector3{parentTrf.translation()},
               Vector3{parentTrf.linear() * Vector3::UnitZ()},
@@ -436,6 +433,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
         default:
           ACTS_DEBUG(
               "Unsupported detector case in muon space point digitizer.");
+
           convertSp = false;
       }
 
@@ -459,7 +457,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
                              << volId << "\n"
                              << sstr.str());
       }
-    visualizeBucket(ctx, gctx, bucket);
+
+      visualizeBucket(ctx, gctx, bucket);
       outSpacePoints.push_back(std::move(bucket));
     }
   }
