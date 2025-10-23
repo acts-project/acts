@@ -53,7 +53,7 @@ fi
 # first check if python bindings are enabled then check if the setup.sh file exists
 if [ "@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@" = "ON" ]; then
     if [[ -f "$script_dir/python/setup.sh" ]]; then
-      . "$script_dir/python/setup.sh"
+      source "$script_dir/python/setup.sh"
     else
       echo "ERROR:   setup.sh for python and ODD is missing."
       exit 1

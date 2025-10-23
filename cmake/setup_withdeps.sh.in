@@ -29,7 +29,7 @@ python_path=$(which python3)
 python_path=$(dirname "$python_path")
 
 # source the basic ACTS environment
-. "$script_dir/this_acts.sh"
+source "$script_dir/this_acts.sh"
 
 # activate dependencies if present
 if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
@@ -38,11 +38,11 @@ if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
 else
   # Try to recover the build-time configuration
   if [[ -d "@ROOT_DIR@" ]]; then
-    . @ROOT_BINDIR@/thisroot.sh
+    source @ROOT_BINDIR@/thisroot.sh
   fi
 fi
 if [[ -d "@Geant4_DIR@" ]]; then
-  . @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
+  source @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
 fi
 if [[ -d "@DD4hep_DIR@" ]]; then
   prevstate=$-
