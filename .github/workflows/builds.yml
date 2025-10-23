@@ -51,11 +51,10 @@ jobs:
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Configure
-        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
-        # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions
-        # Need to set git user & email for patching to work (GeoModel plugin)
         run: >
+          echo "PATH=$PATH" &&
+          echo "which python3: $(which python3)" &&
+          echo "python3 version: $(python3 --version)" &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci
@@ -109,6 +108,9 @@ jobs:
       # We configure and build without ROOT in the same job to garantuee that we can use the ccache cache
       - name: Configure (without ROOT)
         run: >
+          echo "PATH=$PATH" &&
+          echo "which python3: $(which python3)" &&
+          echo "python3 version: $(python3 --version)" &&
           ccache -z &&
           rm -rf build &&
           cmake -B build -S .
