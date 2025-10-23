@@ -9,9 +9,9 @@ import warnings
 
 
 def getOpenDataDetectorDirectory():
-    odd_dir = os.environ.get("ODD_SOURCE_PATH")
+    odd_dir = os.environ.get("ODD_PATH")
     if odd_dir is None:
-        raise RuntimeError("ODD_SOURCE_PATH environment variable not set")
+        raise RuntimeError("ODD_PATH environment variable not set")
     odd_dir = Path(odd_dir)
     return odd_dir
 
@@ -26,7 +26,7 @@ def getOpenDataDetector(
     Parameters
     ----------
     materialDecorator: Material Decorator, take RootMaterialDecorator if non is given
-    odd_dir: if not given, try to get via ODD_SOURCE_PATH environment variable
+    odd_dir: if not given, try to get via ODD_PATH environment variable
     logLevel: logging level
     """
     import acts.examples.dd4hep
