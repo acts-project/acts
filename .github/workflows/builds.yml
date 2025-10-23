@@ -71,14 +71,14 @@ jobs:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
-      # - name: Unit tests
-      #   run: ctest --test-dir build -j$(nproc)
+      - name: Unit tests
+        run: ctest --test-dir build -j$(nproc)
 
-      # - name: Integration tests
-      #   run: cmake --build build --target integrationtests
+      - name: Integration tests
+        run: cmake --build build --target integrationtests
 
-      # - name: Install
-      #   run: cmake --build build --target install
+      - name: Install
+        run: cmake --build build --target install
 
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
@@ -88,34 +88,34 @@ jobs:
           name: acts-linux-ubuntu
           path: build.tar.gz
 
-      # - name: Downstream configure
-      #   run: >
-      #     cmake -B build-downstream -S Tests/DownstreamProject
-      #     -GNinja
-      #     -DCMAKE_BUILD_TYPE=Release
-      #     -DCMAKE_CXX_FLAGS=-Werror
-      #     -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+      - name: Downstream configure
+        run: >
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
-      # - name: Downstream build
-      #   run: cmake --build build-downstream
+      - name: Downstream build
+        run: cmake --build build-downstream
 
-      # - name: Downstream run
-      #   run: ./build-downstream/bin/ShowActsVersion
+      - name: Downstream run
+        run: ./build-downstream/bin/ShowActsVersion
 
-      # # We configure and build without ROOT in the same job to garantuee that we can use the ccache cache
-      # - name: Configure (without ROOT)
-      #   run: >
-      #     ccache -z &&
-      #     rm -rf build &&
-      #     cmake -B build -S .
-      #     --preset=github-ci-no-root
-      #     -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+      # We configure and build without ROOT in the same job to garantuee that we can use the ccache cache
+      - name: Configure (without ROOT)
+        run: >
+          ccache -z &&
+          rm -rf build &&
+          cmake -B build -S .
+          --preset=github-ci-no-root
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
-      # - name: Build (without ROOT)
-      #   run: cmake --build build
+      - name: Build (without ROOT)
+        run: cmake --build build
 
-      # - name: ccache stats (without ROOT)
-      #   run: ccache -s
+      - name: ccache stats (without ROOT)
+        run: ccache -s
 
   linux_examples_test:
     runs-on: ubuntu-latest
@@ -150,15 +150,7 @@ jobs:
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
         run: |
-          # TODO remove
-          echo "PATH: $PATH"
-          echo "which python3: $(which python3)"
-          echo "python3 version: $(python3 --version)"
           source build/this_acts_withdeps.sh
-          # TODO remove
-          echo "PATH: $PATH"
-          echo "which python3: $(which python3)"
-          echo "python3 version: $(python3 --version)"
           pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
@@ -194,17 +186,7 @@ jobs:
         shell: bash
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
-          # TODO remove
-          echo "PATH: $PATH"
-          echo "which python3: $(which python3)"
-          echo "python3 version: $(python3 --version)"
-          echo "python3 -m pip list: $(python3 -m pip list)"
           source build/this_acts_withdeps.sh
-          # TODO remove
-          echo "PATH: $PATH"
-          echo "which python3: $(which python3)"
-          echo "python3 version: $(python3 --version)"
-          echo "python3 -m pip list: $(python3 -m pip list)"
           CI/physmon/phys_perf_mon.sh all physmon
 
       - name: Post step summary
