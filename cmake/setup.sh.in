@@ -14,6 +14,8 @@ CMAKE_INSTALL_BINDIR="@CMAKE_INSTALL_BINDIR@"
 CMAKE_INSTALL_LIBDIR="@CMAKE_INSTALL_LIBDIR@"
 PROJECT_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
 ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS="@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@"
+ODD_PATH="@ODD_SOURCE_DIR@"
+ODD_FACTORY_DIR="@ODD_FACTORY_DIR@"
 
 if [ -n "${ZSH_VERSION:-}" ]; then
     script_dir=${0:a:h}
@@ -34,30 +36,35 @@ if [[ "${IS_INSTALLED_VERSION}" == "ON" ]]; then
     export PATH="${script_dir}/bin:${PATH}"
     export LD_LIBRARY_PATH="${script_dir}/lib:${LD_LIBRARY_PATH}"
     export DYLD_LIBRARY_PATH="${script_dir}/lib:${DYLD_LIBRARY_PATH}"
+
 else
     # the ${VAR:+:} part adds a double colon only if VAR is not empty
     export PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}${PATH:+:}${PATH}"
     export LD_LIBRARY_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
     export DYLD_LIBRARY_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
+
+
+    # Make ODD available if possible
+    # This seems to be only reliable on Linux for now, not on MacOS
+    # We only do this in build-mode because in install mode ODD should be installed 
+    # in the install tree
+    echo "${ODD_PATH}"
+    if [ -d "${ODD_PATH}" ]; then
+        echo "INFO:    Found OpenDataDetector and set it up"
+        export ODD_PATH
+        if [ -d "${ODD_FACTORY_DIR}" ]; then
+            export LD_LIBRARY_PATH="${ODD_FACTORY_DIR}:${LD_LIBRARY_PATH}"
+            export DYLD_LIBRARY_PATH="${ODD_FACTORY_DIR}:${DYLD_LIBRARY_PATH}"
+            export DD4HEP_LIBRARY_PATH="${ODD_FACTORY_DIR}:${DD4HEP_LIBRARY_PATH}"
+        fi
+    else
+        echo "INFO:    OpenDataDetector directory not found, ODD not set up"
+    fi
 fi
 
 # ACTS project source directory
 export ACTS_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
 
-# Make ODD available if possible
-# This seems to be only reliable on Linux for now, not on MacOS
-odd_source_dir="${PROJECT_SOURCE_DIR}/thirdparty/OpenDataDetector"
-if [ -d "${odd_source_dir}" ]; then
-    echo "INFO:    Found OpenDataDetector and set it up"
-    export ODD_PATH="${odd_source_dir}"
-    odd_binary_dir="${script_dir}/thirdparty/OpenDataDetector/factory"
-    if [ -d "${odd_binary_dir}" ]; then
-        export LD_LIBRARY_PATH="${odd_binary_dir}:${LD_LIBRARY_PATH}"
-        export DYLD_LIBRARY_PATH="${odd_binary_dir}:${DYLD_LIBRARY_PATH}"
-    fi
-else
-    echo "INFO:    OpenDataDetector directory not found, ODD not set up"
-fi
 
 # Make Python bindings available if possible
 # first check if python bindings are enabled then check if the setup.sh file exists
