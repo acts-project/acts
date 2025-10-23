@@ -13,6 +13,7 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
+#include <cstddef>
 #include <format>
 
 namespace Acts::Experimental {
@@ -556,77 +557,97 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   auto firstIdx = toUnderlying(firstPar);
   assert(firstIdx + N <= s_nPars);
 
-  ActsVector<N> miniPars, miniGradient;
-  Acts::ActsSquareMatrix<N> miniHessian;
-
-  Eigen::Array<unsigned, N, 1> idx{};
-  if constexpr (N == 3) {
-    idx << firstIdx, firstIdx + 1u, toUnderlying(FitParIndex::t0);
-  } else {
-    idx =
-        Eigen::Array<unsigned, N, 1>::LinSpaced(N, firstIdx, firstIdx + N - 1);
+  // Current parameters mapped to an Eigen interface
+  if constexpr (N == 3){
+    std::swap(currentPars[firstIdx+N-1], currentPars[toUnderlying(FitParIndex::t0)]);
   }
-
-  for (unsigned i = 0; i < N; ++i) {
-    miniPars[i] = currentPars[idx[i]];
-    miniGradient[i] = cache.gradient[idx[i]];
-    for (unsigned j = 0; j < N; ++j) {
-      miniHessian(i, j) = cache.hessian(idx[i], idx[j]);
-    }
-  }
-
+  Eigen::Map<ActsVector<N>> miniPars{currentPars.data() + firstIdx};
   ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
-                        << ": Current parameters " << toString(miniPars)
-                        << " with chi2: " << cache.chi2 << ",  gradient: "
-                        << toString(cache.gradient) << ", hessian: \n"
-                        << cache.hessian);
+                      << ": Current parameters " << toString(miniPars)
+                      << " with chi2: " << cache.chi2 << ",  gradient: "
+                      << toString(cache.gradient) << ", hessian: \n"
+                      << cache.hessian);
 
-  // The gradient is already small enough
-  if (miniGradient.norm() < m_cfg.precCutOff) {
-    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                        << ": Gradient is small enough");
-    return UpdateStep::converged;
-  }
-
-  ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+  // Define a lambda for the common update logic
+  auto doUpdate = [this, &miniPars]
+        (const Eigen::Map<const ActsVector<N>>& miniGradient,
+         const ActsSquareMatrix<N>& miniHessian) -> UpdateStep {
+    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                         << ": Projected parameters: " << toString(miniPars)
                         << " gradient: " << toString(miniGradient)
-                        << ", hessian: \n"
-                        << miniHessian
+                        << ", hessian: \n" << miniHessian
                         << ", determinant: " << miniHessian.determinant());
 
-  auto inverseH = safeInverse(miniHessian);
-  // The Hessian can safely be inverted
-  if (inverseH) {
-    const ActsVector<N> update{(*inverseH) * miniGradient};
+    auto inverseH = safeInverse(miniHessian);
+    // The Hessian can safely be inverted
+    if (inverseH) {
+      const ActsVector<N> update{(*inverseH) * miniGradient};
 
-    if (update.norm() < m_cfg.precCutOff) {
-      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__ << ": Update "
-                          << toString(update) << " is negligible small.");
+      if (update.norm() < m_cfg.precCutOff) {
+        ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__ << ": Update "
+                            << toString(update) << " is negligible small.");
+        return UpdateStep::converged;
+      }
+      ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                            << ": Inverted Hessian \n"
+                            << (*inverseH) << "\n-> Update parameters by "
+                            << toString(update));
+      miniPars -= update;
+
+    } else {
+      // Fall back to gradient decent with a fixed damping factor
+      const ActsVector<N> update{
+          std::min(m_cfg.gradientStep, miniGradient.norm()) *
+          miniGradient.normalized()};
+
+      ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                            << ": Update parameters by " << toString(update));
+      miniPars -= update;
+    }
+    return UpdateStep::goodStep;
+  };
+
+  // Handle the case N=3 separately
+  if constexpr (N != 3) {
+    // Take out the filled block from the gradient
+    Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
+                                                firstIdx};
+    // The gradient is already small enough
+    if (miniGradient.norm() < m_cfg.precCutOff) {
+      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Gradient is small enough");
       return UpdateStep::converged;
     }
-    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
-                          << ": Inverted Hessian \n"
-                          << (*inverseH) << "\n-> Update parameters by "
-                          << toString(update));
-    miniPars -= update;
+    // Take out the filled block from the hessian
+    const ActsSquareMatrix<N> miniHessian{
+      cache.hessian.block<N, N>(firstIdx, firstIdx)};
+    
+    return doUpdate(miniGradient, miniHessian);
 
   } else {
-    // Fall back to gradient decent with a fixed damping factor
-    const ActsVector<N> update{
-        std::min(m_cfg.gradientStep, miniGradient.norm()) *
-        miniGradient.normalized()};
+    // Take out the filled block from the gradient
+    Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u,
+                                     toUnderlying(FitParIndex::t0)};
+    const ActsVector<N> miniGrad {cache.gradient(idx)};
+    Eigen::Map<const ActsVector<N>> miniGradient{miniGrad.data()};
 
-    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
-                          << ": Update parameters by " << toString(update));
-    miniPars -= update;
-  }
-  for (unsigned i = 0; i < N; ++i) {
-    currentPars[idx[i]] = miniPars[i];
-  }
-  // Check parameter ranges
+    // The gradient is already small enough
+    if (miniGradient.norm() < m_cfg.precCutOff) {
+      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Gradient is small enough");
+      return UpdateStep::converged;
+    }
 
-  return UpdateStep::goodStep;
+    // Take out the filled block from the hessian
+    const Acts::ActsSquareMatrix<N> miniHessian {cache.hessian(idx,idx)};
+
+    auto result {doUpdate(miniGradient, miniHessian)};
+
+    // Swap back the updated parameters
+    std::swap(currentPars[firstIdx+N-1], currentPars[toUnderlying(FitParIndex::t0)]);
+
+    return result;
+  }
 }
 
 template <unsigned N>
@@ -638,29 +659,30 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
   auto firstIdx = toUnderlying(firstPar);
   assert(firstIdx + N <= s_nPars);
 
-  Acts::ActsSquareMatrix<N> miniHessian{};
   if constexpr (N == 3) {
     Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u,
                                      toUnderlying(FitParIndex::t0)};
-    miniHessian = hessian(idx, idx);
-  } else {
-    miniHessian = hessian.block<N, N>(firstIdx, firstIdx);
-  }
-
-  auto inverseH = safeInverse(miniHessian);
-  // The Hessian can safely be inverted
-  if (inverseH) {
-    if constexpr (N == 3) {
-      Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u,
-                                       toUnderlying(FitParIndex::t0)};
+    Acts::ActsSquareMatrix<N> miniHessian = hessian(idx, idx);
+    
+    auto inverseH = safeInverse(miniHessian);
+    // The Hessian can safely be inverted
+    if (inverseH) {
       covariance(idx, idx) = *inverseH;
-    } else {
+    }
+
+  } else {
+    Acts::ActsSquareMatrix<N> miniHessian = 
+        hessian.block<N, N>(firstIdx, firstIdx).eval();
+    
+    auto inverseH = safeInverse(miniHessian);
+    // The Hessian can safely be inverted
+    if (inverseH) {
       covariance.block<N, N>(firstIdx, firstIdx) = *inverseH;
     }
-    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                        << ": Evaluated covariance: \n"
-                        << covariance);
   }
+  ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                      << ": Evaluated covariance: \n"
+                      << covariance);
 }
 
 }  // namespace Acts::Experimental
