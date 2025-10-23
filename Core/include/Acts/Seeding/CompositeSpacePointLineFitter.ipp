@@ -558,25 +558,27 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   assert(firstIdx + N <= s_nPars);
 
   // Current parameters mapped to an Eigen interface
-  if constexpr (N == 3){
-    std::swap(currentPars[firstIdx+N-1], currentPars[toUnderlying(FitParIndex::t0)]);
+  if constexpr (N == 3) {
+    std::swap(currentPars[firstIdx + N - 1],
+              currentPars[toUnderlying(FitParIndex::t0)]);
   }
   Eigen::Map<ActsVector<N>> miniPars{currentPars.data() + firstIdx};
   ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
-                      << ": Current parameters " << toString(miniPars)
-                      << " with chi2: " << cache.chi2 << ",  gradient: "
-                      << toString(cache.gradient) << ", hessian: \n"
-                      << cache.hessian);
+                        << ": Current parameters " << toString(miniPars)
+                        << " with chi2: " << cache.chi2 << ",  gradient: "
+                        << toString(cache.gradient) << ", hessian: \n"
+                        << cache.hessian);
 
   // Define a lambda for the common update logic
-  auto doUpdate = [this, &miniPars]
-        (const Eigen::Map<const ActsVector<N>>& miniGradient,
-         const ActsSquareMatrix<N>& miniHessian) -> UpdateStep {
+  auto doUpdate = [this, &miniPars](
+                      const Eigen::Map<const ActsVector<N>>& miniGradient,
+                      const ActsSquareMatrix<N>& miniHessian) -> UpdateStep {
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
-                        << ": Projected parameters: " << toString(miniPars)
-                        << " gradient: " << toString(miniGradient)
-                        << ", hessian: \n" << miniHessian
-                        << ", determinant: " << miniHessian.determinant());
+                          << ": Projected parameters: " << toString(miniPars)
+                          << " gradient: " << toString(miniGradient)
+                          << ", hessian: \n"
+                          << miniHessian
+                          << ", determinant: " << miniHessian.determinant());
 
     auto inverseH = safeInverse(miniHessian);
     // The Hessian can safely be inverted
@@ -611,7 +613,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   if constexpr (N != 3) {
     // Take out the filled block from the gradient
     Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
-                                                firstIdx};
+                                                 firstIdx};
     // The gradient is already small enough
     if (miniGradient.norm() < m_cfg.precCutOff) {
       ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
@@ -620,15 +622,15 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     }
     // Take out the filled block from the hessian
     const ActsSquareMatrix<N> miniHessian{
-      cache.hessian.block<N, N>(firstIdx, firstIdx)};
-    
+        cache.hessian.block<N, N>(firstIdx, firstIdx)};
+
     return doUpdate(miniGradient, miniHessian);
 
   } else {
     // Take out the filled block from the gradient
     Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u,
                                      toUnderlying(FitParIndex::t0)};
-    const ActsVector<N> miniGrad {cache.gradient(idx)};
+    const ActsVector<N> miniGrad{cache.gradient(idx)};
     Eigen::Map<const ActsVector<N>> miniGradient{miniGrad.data()};
 
     // The gradient is already small enough
@@ -639,12 +641,13 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     }
 
     // Take out the filled block from the hessian
-    const Acts::ActsSquareMatrix<N> miniHessian {cache.hessian(idx,idx)};
+    const Acts::ActsSquareMatrix<N> miniHessian{cache.hessian(idx, idx)};
 
-    auto result {doUpdate(miniGradient, miniHessian)};
+    auto result{doUpdate(miniGradient, miniHessian)};
 
     // Swap back the updated parameters
-    std::swap(currentPars[firstIdx+N-1], currentPars[toUnderlying(FitParIndex::t0)]);
+    std::swap(currentPars[firstIdx + N - 1],
+              currentPars[toUnderlying(FitParIndex::t0)]);
 
     return result;
   }
@@ -663,7 +666,7 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
     Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u,
                                      toUnderlying(FitParIndex::t0)};
     Acts::ActsSquareMatrix<N> miniHessian = hessian(idx, idx);
-    
+
     auto inverseH = safeInverse(miniHessian);
     // The Hessian can safely be inverted
     if (inverseH) {
@@ -671,9 +674,9 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
     }
 
   } else {
-    Acts::ActsSquareMatrix<N> miniHessian = 
+    Acts::ActsSquareMatrix<N> miniHessian =
         hessian.block<N, N>(firstIdx, firstIdx).eval();
-    
+
     auto inverseH = safeInverse(miniHessian);
     // The Hessian can safely be inverted
     if (inverseH) {
