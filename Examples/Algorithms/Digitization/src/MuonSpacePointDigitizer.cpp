@@ -180,7 +180,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
   std::unordered_map<GeometryIdentifier, double> strawTimes{};
   std::multimap<GeometryIdentifier, std::array<double, 3>> stripTimes{};
 
-  // vector of global positons of the simhit
+  // vector of global positions of the simhit
   std::vector<std::tuple<Acts::Vector3, double, double,
                          std::shared_ptr<const Acts::Surface>>>
       globalPositions;
@@ -399,7 +399,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
           //              hitSurf->getSharedPtr()));
 
           globalPositions.push_back(std::make_tuple(
-              simHit.position(), locPos[0], driftR, hitSurf->getSharedPtr()));
+              simHit.position(), driftR, smearedZ, hitSurf->getSharedPtr()));
 
           std::cout << "positionSimhitGlobal " << simHit.position().transpose()
                     << std::endl;
@@ -517,7 +517,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     //    Acts::FreeVector freeParams = Acts::estimateTrackParamsFromSeed(
     //        std::get<0>(globalPositions[0]), std::get<0>(globalPositions[1]),
-    //        std::get<0>(globalPositions[3]), bField); // use 3 isntead of 2
+    //        std::get<0>(globalPositions[3]), bField); // use 3 instead of 2
     //        for debugging because 1 and 2 have same surface
 
     //    freeParams[Acts::eFreeTime] = 0;
