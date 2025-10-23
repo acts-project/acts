@@ -224,7 +224,7 @@ test_gnn_python:
     - |
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
-    - source ../build/this_acts_withdeps.sh
+    - source ../build/this_acts.sh
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
     - echo $PYTHONPATH
     - which python3
@@ -352,7 +352,7 @@ linux_test_examples:
       source .env
     - cd ..
 
-    - source build/this_acts_withdeps.sh
+    - source build/this_acts.sh
     - cd src
     - pytest -rfExw -k "not gnn" -v
 
@@ -387,7 +387,7 @@ linux_physmon:
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - source build/this_acts_withdeps.sh
+    - source build/this_acts.sh
     - |
       echo "PATH=$PATH"
       echo "which python3: $(which python3)"

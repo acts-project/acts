@@ -226,6 +226,10 @@ fi
 end_section
 
 start_section "Set environment variables"
+if [ -n "${GITHUB_ACTIONS:-}" ]; then
+  echo "${venv_dir}/bin" >> "$GITHUB_PATH"
+  echo "${view_dir}/bin" >> "$GITHUB_PATH"
+fi
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
 set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib"
 set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
