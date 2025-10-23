@@ -24,6 +24,10 @@ if [ ! -d "$script_dir/lib" ] && [ ! -d "$script_dir/lib64" ]; then
     script_dir=$( cd -- "$script_dir" &> /dev/null && cd .. &> /dev/null && pwd )
 fi
 
+# remember which path we used for python
+python_path=$(which python3)
+python_path=$(dirname "$python_path")
+
 # source the basic ACTS environment
 . "$script_dir/this_acts.sh"
 
@@ -65,3 +69,7 @@ if [[ -d "@EDM4HEP_DIR@" ]]; then
   export DYLD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${DYLD_LIBRARY_PATH}"
   export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
 fi
+
+# ensure that we end up with the same python as before sourcing this script
+# this was observed to be a problem as other activation scripts like ROOT modify PATH
+export PATH="$python_path:${PATH}"

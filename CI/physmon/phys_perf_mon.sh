@@ -240,6 +240,10 @@ function trackfinding() {
         $path/performance_fitting_ckf_plots \
         --config $default_config
 
+    # TODO remove
+    echo "which python3: $(which python3)"
+    echo "python3 version: $(python3 --version)"
+    echo "python3 -m pip list: $(python3 -m pip list)"
     run python3 Examples/Scripts/generic_plotter.py \
         $outdir/data/$path/tracksummary_ckf.root \
         tracksummary \
