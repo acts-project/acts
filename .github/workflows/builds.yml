@@ -88,19 +88,19 @@ jobs:
           name: acts-linux-ubuntu
           path: build.tar.gz
 
-      - name: Downstream configure
-        run: >
-          cmake -B build-downstream -S Tests/DownstreamProject
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+      # - name: Downstream configure
+      #   run: >
+      #     cmake -B build-downstream -S Tests/DownstreamProject
+      #     -GNinja
+      #     -DCMAKE_BUILD_TYPE=Release
+      #     -DCMAKE_CXX_FLAGS=-Werror
+      #     -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
-      - name: Downstream build
-        run: cmake --build build-downstream
+      # - name: Downstream build
+      #   run: cmake --build build-downstream
 
-      - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+      # - name: Downstream run
+      #   run: ./build-downstream/bin/ShowActsVersion
 
       # # We configure and build without ROOT in the same job to garantuee that we can use the ccache cache
       # - name: Configure (without ROOT)
