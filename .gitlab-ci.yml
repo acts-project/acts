@@ -113,7 +113,6 @@ build_gnn_cpu:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -159,7 +158,6 @@ build_gnn:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -226,11 +224,8 @@ test_gnn_python:
       source .env
     - source ../build/this_acts.sh
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - echo $PYTHONPATH
-    - which python3
-    - python3 --version
-    - python3 -c "import acts"
-    - python3 -c "from acts.examples import ModuleMapCuda" # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
+    # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
+    - python3 -c "from acts.examples import ModuleMapCuda"
     - pytest -rfExw -k torch -v --collect-only
     - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
 
@@ -284,7 +279,6 @@ build_linux_ubuntu:
     expire_in: 1 day
 
   script:
-    - echo $PATH
     - git clone $CLONE_URL src
 
     - cd src
@@ -352,7 +346,7 @@ linux_test_examples:
       source .env
     - cd ..
 
-    - source build/this_acts.sh
+    - source build/this_acts_withdeps.sh
     - cd src
     - pytest -rfExw -k "not gnn" -v
 
@@ -387,11 +381,7 @@ linux_physmon:
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - source build/this_acts.sh
-    - |
-      echo "PATH=$PATH"
-      echo "which python3: $(which python3)"
-      echo "python3 version: $(python3 --version)"
+    - source build/this_acts_withdeps.sh
     - cd src
     - CI/physmon/phys_perf_mon.sh all physmon
 
