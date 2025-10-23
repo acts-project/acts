@@ -19,7 +19,7 @@ else
     exit 1
 fi
 
-# make ACTS binaries available
+# Make ACTS binaries available
 # detect if we are installed as there is no lib subdirectory
 if [ ! -d "$script_dir/lib" ] && [ ! -d "$script_dir/lib64" ]; then
     script_dir=$( cd -- "$script_dir" &> /dev/null && cd .. &> /dev/null && pwd )
@@ -36,4 +36,26 @@ fi
 
 # ACTS project source directory
 export ACTS_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
+
+# Make ODD available if possible
+# This seems to be only reliable on Linux for now, not on MacOS
 export ODD_SOURCE_DIR="@PROJECT_SOURCE_DIR@/thirdparty/OpenDataDetector"
+ODD_BIN_DIR=$python_dir/../thirdparty/OpenDataDetector/factory
+if [ -d "$ODD_BIN_DIR" ]; then
+    echo "INFO:    Found OpenDataDetector and set it up"
+    export LD_LIBRARY_PATH=$ODD_BIN_DIR:$LD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$ODD_BIN_DIR:$DYLD_LIBRARY_PATH
+fi
+
+# Make Python bindings available if possible
+# first check if python bindings are enabled then check if the setup.sh file exists
+if [ "@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@" = "ON" ]; then
+    if [[ -f "$script_dir/python/setup.sh" ]]; then
+      . "$script_dir/python/setup.sh"
+    else
+      echo "ERROR:   setup.sh for python and ODD is missing."
+      exit 1
+    fi
+else
+  echo "INFO:    Python bindings are disabled."
+fi

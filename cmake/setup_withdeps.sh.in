@@ -27,20 +27,6 @@ fi
 # source the basic ACTS environment
 . "$script_dir/this_acts.sh"
 
-# source the python and ODD environment
-# first check if python bindings are enabled
-# then check if the setup.sh file exists
-if [ "@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@" = "ON" ]; then
-    if [[ -f "$script_dir/python/setup.sh" ]]; then
-      . "$script_dir/python/setup.sh"
-    else
-      echo "ERROR:   setup.sh for python and ODD is missing."
-      exit 1
-    fi
-else
-  echo "INFO:    Python bindings are disabled."
-fi
-
 # activate dependencies if present
 if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
   # Dependency setup script has already given us this location!
