@@ -39,10 +39,10 @@ export ACTS_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
 
 # Make ODD available if possible
 # This seems to be only reliable on Linux for now, not on MacOS
-export ODD_SOURCE_DIR="@PROJECT_SOURCE_DIR@/thirdparty/OpenDataDetector"
 ODD_BINARY_DIR="$script_dir/thirdparty/OpenDataDetector/factory"
 if [ -d "$ODD_BINARY_DIR" ]; then
     echo "INFO:    Found OpenDataDetector and set it up"
+    export ODD_SOURCE_DIR="@PROJECT_SOURCE_DIR@/thirdparty/OpenDataDetector"
     export LD_LIBRARY_PATH=$ODD_BINARY_DIR:$LD_LIBRARY_PATH
     export DYLD_LIBRARY_PATH=$ODD_BINARY_DIR:$DYLD_LIBRARY_PATH
 else
