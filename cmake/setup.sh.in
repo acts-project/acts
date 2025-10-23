@@ -40,11 +40,13 @@ export ACTS_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
 # Make ODD available if possible
 # This seems to be only reliable on Linux for now, not on MacOS
 export ODD_SOURCE_DIR="@PROJECT_SOURCE_DIR@/thirdparty/OpenDataDetector"
-ODD_BIN_DIR=$python_dir/../thirdparty/OpenDataDetector/factory
-if [ -d "$ODD_BIN_DIR" ]; then
+ODD_BINARY_DIR="$script_dir/thirdparty/OpenDataDetector/factory"
+if [ -d "$ODD_BINARY_DIR" ]; then
     echo "INFO:    Found OpenDataDetector and set it up"
-    export LD_LIBRARY_PATH=$ODD_BIN_DIR:$LD_LIBRARY_PATH
-    export DYLD_LIBRARY_PATH=$ODD_BIN_DIR:$DYLD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$ODD_BINARY_DIR:$LD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$ODD_BINARY_DIR:$DYLD_LIBRARY_PATH
+else
+    echo "INFO:    OpenDataDetector binary directory not found, ODD not set up"
 fi
 
 # Make Python bindings available if possible
