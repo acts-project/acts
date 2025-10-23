@@ -222,7 +222,7 @@ test_gnn_python:
     - |
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
-    - source ../build/this_acts.sh
+    - source ../build/this_acts_withdeps.sh
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
     # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
     - python3 -c "from acts.examples import ModuleMapCuda"
