@@ -224,7 +224,8 @@ if [ "${full_install:-false}" == "true" ]; then
   "${venv_dir}/bin/python3" -m pip install pytest-md-report
 fi
 # TODO remove
-echo "python3 -m pip list: $(python3 -m pip list)"
+echo "${venv_dir}/bin/python3 -m pip list:
+"${venv_dir}/bin/python3" -m pip list
 end_section
 
 start_section "Set environment variables"
