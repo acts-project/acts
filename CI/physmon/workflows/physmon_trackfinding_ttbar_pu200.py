@@ -30,10 +30,12 @@ from acts.examples.reconstruction import (
 )
 
 from physmon_common import makeSetup
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
 setup = makeSetup()
+odd_dir = getOpenDataDetectorDirectory()
 
 
 with tempfile.TemporaryDirectory() as temp:
@@ -155,8 +157,7 @@ with tempfile.TemporaryDirectory() as temp:
         ),
         tracks="ckf_tracks",
         outputDirRoot=tp,
-        onnxModelFile=Path(__file__).resolve().parent.parent.parent.parent
-        / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
+        onnxModelFile=odd_dir / "data/duplicateClassifier.onnx",
     )
 
     addAmbiguityResolution(

@@ -583,20 +583,7 @@ add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 add_subdirectory(Plugins)
 add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
-if(ACTS_BUILD_ODD)
-    if(
-        EXISTS
-            "${CMAKE_CURRENT_LIST_DIR}/thirdparty/OpenDataDetector/CMakeLists.txt"
-    )
-        add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
-    else()
-        message(
-            FATAL_ERROR
-            "ODD build was requested, but the ODD directory seems not to be present. "
-            "Did you init and update the submodule?"
-        )
-    endif()
-endif()
+add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 
 # Python bindings infrastructure
 add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)

@@ -118,7 +118,7 @@ The first thing you can do, is to visualise your geometry with:
 
 .. code-block:: console
 
-   $ python3 <source>/Examples/Scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py --geometry <source>/thirdparty/OpenDataDetector/config/odd-material-mapping-config.json
+   $ python3 <source>/Examples/Scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py --geometry $ODD_PATH/config/odd-material-mapping-config.json
 
 This command produces a series of plots in the output folder ``plot``, or set a different name using ``--output_folder``.
 
