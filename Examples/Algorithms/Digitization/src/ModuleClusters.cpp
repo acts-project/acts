@@ -251,7 +251,7 @@ void ModuleClusters::mergeAltImpl() {
 }
 
 void ModuleClusters::merge() {
-  if (!m_moduleValues.empty() &&
+  if (m_alt && !m_moduleValues.empty() &&
       std::holds_alternative<Cluster::Cell>(m_moduleValues.front().value)) {
     return mergeAlt();
   }

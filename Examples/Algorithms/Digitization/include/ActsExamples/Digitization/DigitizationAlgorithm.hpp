@@ -82,6 +82,8 @@ class DigitizationAlgorithm final : public IAlgorithm {
     /// Minimum number of attempts to derive a valid dgitized measurement when
     /// random numbers are involved.
     std::size_t minMaxRetries = 10;
+    /// use alternative clusterization
+    bool alt = false;
   };
 
   /// Construct the smearing algorithm.
