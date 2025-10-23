@@ -20,16 +20,16 @@ else
 fi
 
 # detect if we are installed as there is no lib subdirectory
-if [ ! -d "$script_dir/lib" ] && [ ! -d "$script_dir/lib64" ]; then
-    script_dir=$( cd -- "$script_dir" &> /dev/null && cd .. &> /dev/null && pwd )
+if [ ! -d "${script_dir}/lib" ] && [ ! -d "${script_dir}/lib64" ]; then
+    script_dir=$( cd -- "${script_dir}" &> /dev/null && cd .. &> /dev/null && pwd )
 fi
 
 # remember which path we used for python
 python_path=$(which python3)
-python_path=$(dirname "$python_path")
+python_path=$(dirname "${python_path}")
 
 # source the basic ACTS environment
-source "$script_dir/this_acts.sh"
+source "${script_dir}/this_acts.sh"
 
 # activate dependencies if present
 if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
@@ -38,17 +38,17 @@ if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
 else
   # Try to recover the build-time configuration
   if [[ -d "@ROOT_DIR@" ]]; then
-    source @ROOT_BINDIR@/thisroot.sh
+    source "@ROOT_BINDIR@/thisroot.sh"
   fi
 fi
 if [[ -d "@Geant4_DIR@" ]]; then
-  source @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
+  source "@Geant4_INCLUDE_DIR@/../../bin/geant4.sh"
 fi
 if [[ -d "@DD4hep_DIR@" ]]; then
   prevstate=$-
 
   set +e
-  . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
+  . "@DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh"
   # Without this, DD4hep's Xerces-C XML parsing fails with:
   # > Could not load a transcoding service
   export LC_ALL=C
@@ -72,4 +72,4 @@ fi
 
 # ensure that we end up with the same python as before sourcing this script
 # this was observed to be a problem as other activation scripts like ROOT modify PATH
-export PATH="$python_path:${PATH}"
+export PATH="${python_path}:${PATH}"

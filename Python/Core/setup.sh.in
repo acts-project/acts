@@ -21,7 +21,7 @@ else
 fi
 
 # Make python package available
-export PYTHONPATH=$python_dir:$PYTHONPATH
+export PYTHONPATH="${python_dir}:${PYTHONPATH}"
 
 # This message might seem excessive, but the Acts bindings are only installed
 # for one Python version, and it is not trivial for the user to find out which.
