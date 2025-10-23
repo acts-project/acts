@@ -18,6 +18,7 @@
 #include "ActsExamples/EventData/MuonSpacePointCalibrator.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -46,6 +47,8 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     std::string outputParticleMeasurementsMap = "particle_measurements_map";
     /// @brief Output collection to map particles to simulated hits.
     std::string outputSimHitMeasurementsMap = "simhit_measurements_map";
+    /// Output smeared track parameters collection.
+    std::string outputTrackParameters = "estimatedparameters";
 
     /// @brief Random number generator service
     std::shared_ptr<const RandomNumbers> randomNumbers{};
@@ -114,5 +117,7 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
       this, "OutputParticleMeasurementsMap"};
   WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
       this, "OutputSimHitMeasurementsMap"};
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 };
 }  // namespace ActsExamples
