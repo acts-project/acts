@@ -14,22 +14,25 @@
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <utility>
 
 namespace data = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
+namespace ActsTests {
+
 // fixed material
-static const Acts::Material material = Acts::Test::makeSilicon();
+static const Material material = makeSilicon();
 // variable values for other parameters
 // thickness
 static const double valuesThickness[] = {200_um, 1_mm};
 static auto thickness = data::make(valuesThickness);
 // particle type, mass, and charge
-static const Acts::PdgParticle pdg[] = {Acts::eElectron, Acts::eMuon,
-                                        Acts::ePionPlus, Acts::eProton};
+static const PdgParticle pdg[] = {eElectron, eMuon, ePionPlus, eProton};
 static const double mass[] = {511_keV, 105.7_MeV, 139.6_MeV, 938.3_MeV};
 static const double charge[] = {-1_e, -1_e, 1_e, 1_e};
 static const auto particle =
@@ -45,10 +48,10 @@ BOOST_AUTO_TEST_SUITE(interactions)
 // consistency checks for the energy loss values
 BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
                      i, m, q, p) {
-  const auto slab = Acts::MaterialSlab(material, x);
+  const auto slab = MaterialSlab(material, x);
   const auto qOverP = q / p;
   const auto absQ = std::abs(q);
-  const auto absPdg = Acts::makeAbsolutePdgParticle(i);
+  const auto absPdg = makeAbsolutePdgParticle(i);
 
   auto dEBethe = computeEnergyLossBethe(slab, m, qOverP, absQ);
   auto dELandau = computeEnergyLossLandau(slab, m, qOverP, absQ);
@@ -76,12 +79,12 @@ BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
 // consistency checks for multiple scattering
 BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
                      thickness* particle* momentum, x, i, m, q, p) {
-  const auto slab = Acts::MaterialSlab(material, x);
-  const auto slabDoubled = Acts::MaterialSlab(material, 2 * x);
+  const auto slab = MaterialSlab(material, x);
+  const auto slabDoubled = MaterialSlab(material, 2 * x);
   const auto qOverP = q / p;
   const auto qOver2P = q / (2 * p);
   const auto absQ = std::abs(q);
-  const auto absPdg = Acts::makeAbsolutePdgParticle(i);
+  const auto absPdg = makeAbsolutePdgParticle(i);
 
   auto t0 = computeMultipleScatteringTheta0(slab, absPdg, m, qOverP, absQ);
   BOOST_CHECK_LT(0, t0);
@@ -102,10 +105,10 @@ BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
 
 // no material -> no interactions
 BOOST_DATA_TEST_CASE(vacuum, thickness* particle* momentum, x, i, m, q, p) {
-  const auto vacuum = Acts::MaterialSlab::Vacuum(x);
+  const auto vacuum = MaterialSlab::Vacuum(x);
   const auto qOverP = q / p;
   const auto absQ = std::abs(q);
-  const auto absPdg = Acts::makeAbsolutePdgParticle(i);
+  const auto absPdg = makeAbsolutePdgParticle(i);
 
   BOOST_CHECK_EQUAL(computeEnergyLossBethe(vacuum, m, qOverP, absQ), 0);
   BOOST_CHECK_EQUAL(computeEnergyLossLandau(vacuum, m, qOverP, absQ), 0);
@@ -127,9 +130,9 @@ static const double energy_loss[] = {2.608, 1.803, 2.177, 2.451};
 
 BOOST_DATA_TEST_CASE(silicon_energy_loss,
                      data::make(momentum) ^ data::make(energy_loss), p, loss) {
-  const Acts::Material silicon = Acts::Test::makeSilicon();
+  const Material silicon = makeSilicon();
   const auto thickness = 1_cm;
-  const auto slab = Acts::MaterialSlab(silicon, thickness);
+  const auto slab = MaterialSlab(silicon, thickness);
   const auto m = 105.7_MeV;
   const auto q = -1_e;
   const auto qOverP = q / p;
@@ -143,9 +146,9 @@ BOOST_DATA_TEST_CASE(silicon_energy_loss,
 
 // Silicon Landau Energy Loss Validation
 BOOST_AUTO_TEST_CASE(silicon_landau) {
-  const Acts::Material silicon = Acts::Test::makeSilicon();
+  const Material silicon = makeSilicon();
   const auto thickness = 0.17_cm;
-  const auto slab = Acts::MaterialSlab(silicon, thickness);
+  const auto slab = MaterialSlab(silicon, thickness);
   const float m = 105.7_MeV;
   const float q = -1_e;
   const float qOverP = q / 10_GeV;
@@ -156,9 +159,10 @@ BOOST_AUTO_TEST_CASE(silicon_landau) {
   BOOST_CHECK_CLOSE(dE, 0.525, 5.);
 
   // Difference is within 10% from PDG value
-  const auto fwhm =
-      Acts::computeEnergyLossLandauFwhm(slab, m, qOverP, absQ) / 1_MeV;
+  const auto fwhm = computeEnergyLossLandauFwhm(slab, m, qOverP, absQ) / 1_MeV;
   BOOST_CHECK_CLOSE(fwhm, 0.13, 10.);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

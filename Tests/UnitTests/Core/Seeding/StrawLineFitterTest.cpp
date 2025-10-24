@@ -48,7 +48,7 @@ constexpr std::size_t nEvents = 1;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
-namespace Acts::Test {
+namespace ActsTests {
 
 class FitTestSpacePoint {
  public:
@@ -512,7 +512,7 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
   return pars;
 }
 
-BOOST_AUTO_TEST_SUITE(StrawLineFitterTests)
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
 BOOST_AUTO_TEST_CASE(SeedTangents) {
   RandomEngine engine{1602};
@@ -782,4 +782,4 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+}  // namespace ActsTests

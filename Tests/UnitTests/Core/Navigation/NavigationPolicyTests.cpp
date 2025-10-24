@@ -30,7 +30,9 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 namespace bdata = boost::unit_test::data;
 
-BOOST_AUTO_TEST_SUITE(NavigationPolicyTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
 GeometryContext gctx;
 auto logger = getDefaultLogger("NavigationPolicyTests", Logging::VERBOSE);
@@ -788,3 +790,5 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyZeroInnerRadiusTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -1,5 +1,6 @@
 add_unittest(Version VersionTests.cpp)
 
+add_subdirectory(AmbiguityResolution)
 add_subdirectory(Clusterization)
 add_subdirectory(Definitions)
 add_subdirectory(Detector)
@@ -17,4 +18,3 @@ add_subdirectory(TrackFitting)
 add_subdirectory(Utilities)
 add_subdirectory(Vertexing)
 add_subdirectory(Visualization)
-add_subdirectory(AmbiguityResolution)

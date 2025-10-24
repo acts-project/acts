@@ -23,12 +23,14 @@
 
 #include <limits>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 auto tContext = GeometryContext();
 auto mContext = MagneticFieldContext();
 
-BOOST_AUTO_TEST_SUITE(IntersectionMaterialAssignerTestSuite)
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 BOOST_AUTO_TEST_CASE(FindSurfaceIntersections) {
   // Create a vector of surfaces
@@ -93,4 +95,4 @@ BOOST_AUTO_TEST_CASE(FindDetectorVolumeIntersections) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

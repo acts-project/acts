@@ -26,8 +26,11 @@ acts_add_library(
     src/JsonSurfacesReader.cpp
     src/DefinitionsJsonConverter.cpp
     src/Seeding2ConfigJsonConverter.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
+
+# temporarily until clients updated
+install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 target_include_directories(
     ActsPluginJson

@@ -9,6 +9,7 @@
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Traccc/DetrayPropagator.hpp"
 #include "ActsExamples/Traccc/DetrayStore.hpp"
+#include "ActsPlugins/Covfie/FieldConversion.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
@@ -17,6 +18,8 @@
 #include <detray/io/frontend/detector_reader.hpp>
 #include <detray/navigation/volume_graph.hpp>
 #include <detray/propagator/line_stepper.hpp>
+#include <detray/propagator/propagator.hpp>
+#include <detray/propagator/rk_stepper.hpp>
 #include <pybind11/pybind11.h>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -76,13 +79,13 @@ void addTraccc(Context& ctx) {
     });
   }
 
-  /// Define the DetrayPropagator
+  /// Define the DetrayPropagator straight line propagator
   {
     traccc.def(
         "createSlPropagatorHost",
         [](std::shared_ptr<const DetrayHostStore> detrayStore,
            bool sterile = false) {
-          std::shared_ptr<PropagatorInterface> detrayProagator = nullptr;
+          std::shared_ptr<PropagatorInterface> detrayPropagator = nullptr;
 
           using DetrayLineStepper =
               detray::line_stepper<typename DetrayHostDetector::algebra_type>;
@@ -91,9 +94,57 @@ void addTraccc(Context& ctx) {
               DetrayPropagator<DetrayLineStepper, DetrayHostStore>;
 
           DetrayPropagator::Config cfg{detrayStore, sterile};
-          detrayProagator = std::make_shared<DetrayPropagator>(cfg);
-          return detrayProagator;
+          detrayPropagator = std::make_shared<DetrayPropagator>(cfg);
+          return detrayPropagator;
         });
   }
+
+  /// Define the DetrayPropagator with a covfie constant b field
+  {
+    traccc.def(
+        "createConstBFieldPropagatorHost",
+        [](std::shared_ptr<const DetrayHostStore> detrayStore,
+           Covfie::ConstantField cfield, bool sterile = false) {
+          std::shared_ptr<PropagatorInterface> detrayPropagator = nullptr;
+
+          // Runge-Kutta-Nystrom stepper (field integration)
+          using DetrayRknStepper =
+              detray::rk_stepper<Covfie::ConstantField::view_t,
+                                 typename DetrayHostDetector::algebra_type>;
+
+          using DetrayPropagator =
+              DetrayPropagator<DetrayRknStepper, DetrayHostStore,
+                               Covfie::ConstantField>;
+
+          DetrayPropagator::Config cfg{detrayStore, sterile, cfield};
+          detrayPropagator = std::make_shared<DetrayPropagator>(cfg);
+          return detrayPropagator;
+        });
+  }
+
+  /// Define the DetrayPropagator with a covfie interpolated b field
+  {
+    traccc.def(
+        "createInterpolatedBFieldPropagatorHost",
+        [](std::shared_ptr<const DetrayHostStore> detrayStore,
+           Covfie::InterpolatedField ifield, bool sterile = false) {
+          std::shared_ptr<PropagatorInterface> detrayPropagator = nullptr;
+
+          // Runge-Kutta-Nystrom stepper (field integration)
+          using DetrayRknStepper =
+              detray::rk_stepper<Covfie::InterpolatedField::view_t,
+                                 typename DetrayHostDetector::algebra_type>;
+
+          using DetrayPropagator =
+              DetrayPropagator<DetrayRknStepper, DetrayHostStore,
+                               Covfie::InterpolatedField>;
+
+          DetrayPropagator::Config cfg{detrayStore, sterile, ifield};
+          detrayPropagator = std::make_shared<DetrayPropagator>(cfg);
+
+          return detrayPropagator;
+        });
+  }
+  /// Define the DetrayPropagator with interpolated b field
 }
 }  // namespace ActsPython

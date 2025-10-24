@@ -16,13 +16,13 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepBlueprintFactory.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <fstream>
 #include <string>
@@ -38,9 +38,10 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
+namespace ActsTests {
+
 GeometryContext tContext;
-Test::CylindricalTrackingGeometry cGeometry =
-    Test::CylindricalTrackingGeometry(tContext);
+CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 const char* beampipe_head_xml =
     R""""(
@@ -143,10 +144,8 @@ const std::string indent_4_xml(4, ' ');
 const std::string indent_8_xml(8, ' ');
 const std::string indent_12_xml(12, ' ');
 
-namespace {
-
-Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
-  Test::CylindricalTrackingGeometry::DetectorStore dStore;
+CylindricalTrackingGeometry::DetectorStore generateXML() {
+  CylindricalTrackingGeometry::DetectorStore dStore;
 
   // Nec surfaces
   double necZ = -800.;
@@ -289,11 +288,9 @@ Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   return dStore;
 }
 
-}  // namespace
-
 auto store = generateXML();
 
-BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
+BOOST_AUTO_TEST_SUITE(DD4hepSuite)
 
 BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   auto lcdd = &(dd4hep::Detector::getInstance());
@@ -433,3 +430,5 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

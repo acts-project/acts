@@ -29,20 +29,21 @@
 
 #include <stdexcept>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
 struct Fixture {
   Logging::Level m_level;
   Fixture() {
-    m_level = Acts::Logging::getFailureThreshold();
-    Acts::Logging::setFailureThreshold(Acts::Logging::FATAL);
+    m_level = Logging::getFailureThreshold();
+    Logging::setFailureThreshold(Logging::FATAL);
   }
 
-  ~Fixture() { Acts::Logging::setFailureThreshold(m_level); }
+  ~Fixture() { Logging::setFailureThreshold(m_level); }
 };
 
 std::shared_ptr<TrackingVolume> makeDummyVolume() {
@@ -53,7 +54,7 @@ std::shared_ptr<TrackingVolume> makeDummyVolume() {
 
 GeometryContext gctx;
 
-BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
+BOOST_FIXTURE_TEST_SUITE(GeometrySuite, Fixture)
 
 BOOST_AUTO_TEST_SUITE(Portals)
 BOOST_AUTO_TEST_SUITE(Merging)
@@ -660,4 +661,4 @@ BOOST_AUTO_TEST_SUITE_END()  // Portals
 
 BOOST_AUTO_TEST_SUITE_END()  // Geometry
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

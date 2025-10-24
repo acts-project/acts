@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -25,6 +24,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
 #include <fstream>
 #include <memory>
@@ -37,10 +37,12 @@ using namespace Acts;
 namespace {
 std::ofstream out;
 
-Acts::GeometryContext gctx;
+GeometryContext gctx;
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(SurfaceJsonConversion)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceRoundTripTests) {
   Transform3 trf(Transform3::Identity() * Translation3(0., 0., -7.));
@@ -218,3 +220,5 @@ BOOST_AUTO_TEST_CASE(SurfacesDetrayTests) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

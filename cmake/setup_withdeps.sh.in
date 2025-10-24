@@ -6,7 +6,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# This script sets up the ACTS Examples environment in a somewhat robust way.
+# This script sets up the ACTS environment with dependencies in a somewhat robust way.
 
 if [ -n "${ZSH_VERSION:-}" ]; then
     script_dir=${0:a:h}
@@ -20,32 +20,16 @@ else
 fi
 
 # detect if we are installed as there is no lib subdirectory
-if [ ! -d "$script_dir/lib" ] && [ ! -d "$script_dir/lib64" ]; then
-    script_dir=$( cd -- "$script_dir" &> /dev/null && cd .. &> /dev/null && pwd )
+if [ ! -d "${script_dir}/lib" ] && [ ! -d "${script_dir}/lib64" ]; then
+    script_dir=$( cd -- "${script_dir}" &> /dev/null && cd .. &> /dev/null && pwd )
 fi
 
-# source the python and ODD environment
-# first check if python bindings are enabled
-# then check if the setup.sh file exists
-if [ "@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@" = "ON" ]; then
-    if [[ -f "$script_dir/python/setup.sh" ]]; then
-      . "$script_dir/python/setup.sh"
-    else
-      echo "ERROR:   setup.sh for python and ODD is missing."
-      exit 1
-    fi
-else
-  echo "INFO:    Python bindings are disabled."
-fi
+# remember which path we used for python
+python_path=$(which python3)
+python_path=$(dirname "${python_path}")
 
-# set ACTS and ODD environment variables
-export ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
-export ODD_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@/thirdparty/OpenDataDetector
-
-# make ACTS binaries available
-export PATH="$script_dir/bin:${PATH}"
-export LD_LIBRARY_PATH="$script_dir/lib:${LD_LIBRARY_PATH}"
-export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
+# source the basic ACTS environment
+source "${script_dir}/this_acts.sh"
 
 # activate dependencies if present
 if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
@@ -54,17 +38,17 @@ if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
 else
   # Try to recover the build-time configuration
   if [[ -d "@ROOT_DIR@" ]]; then
-    . @ROOT_BINDIR@/thisroot.sh
+    source "@ROOT_BINDIR@/thisroot.sh"
   fi
 fi
 if [[ -d "@Geant4_DIR@" ]]; then
-  . @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
+  source "@Geant4_INCLUDE_DIR@/../../bin/geant4.sh"
 fi
 if [[ -d "@DD4hep_DIR@" ]]; then
   prevstate=$-
 
   set +e
-  . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
+  . "@DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh"
   # Without this, DD4hep's Xerces-C XML parsing fails with:
   # > Could not load a transcoding service
   export LC_ALL=C
@@ -85,3 +69,7 @@ if [[ -d "@EDM4HEP_DIR@" ]]; then
   export DYLD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${DYLD_LIBRARY_PATH}"
   export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
 fi
+
+# ensure that we end up with the same python as before sourcing this script
+# this was observed to be a problem as other activation scripts like ROOT modify PATH
+export PATH="${python_path}:${PATH}"

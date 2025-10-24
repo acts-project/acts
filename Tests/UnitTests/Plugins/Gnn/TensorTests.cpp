@@ -137,6 +137,10 @@ void testEdgeLimit(ExecutionContext execContext) {
   }
 }
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GnnSuite)
+
 BOOST_AUTO_TEST_CASE(tensor_create_move_cpu) {
   testConstructionAndMove(execContextCpu);
 }
@@ -221,3 +225,7 @@ BOOST_AUTO_TEST_CASE(tensor_edge_limit_cuda) {
 }
 
 #endif
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

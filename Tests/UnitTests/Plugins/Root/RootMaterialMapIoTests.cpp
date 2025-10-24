@@ -14,9 +14,9 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsPlugins/Root/RootMaterialMapIo.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <tuple>
@@ -79,7 +79,9 @@ std::vector<IdentifiedMaterial> createBinnedSurfaceMaterial() {
   return binnedMaterials;
 }
 
-BOOST_AUTO_TEST_SUITE(RootMaterialMapIoTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 BOOST_AUTO_TEST_CASE(RootMaterialMapIoHomogeneousReadWrite) {
   auto surfaceMaterials = createHomogeneousSurfaceMaterial();
@@ -261,3 +263,5 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
