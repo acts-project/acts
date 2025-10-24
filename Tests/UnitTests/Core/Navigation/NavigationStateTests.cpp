@@ -24,49 +24,50 @@ namespace Acts::Experimental {
 class DetectorVolume {};
 }  // namespace Acts::Experimental
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
 BOOST_AUTO_TEST_CASE(NavigationState) {
   // A navigation state struct
-  Acts::Experimental::NavigationState nState;
-  auto dTransform = Acts::Transform3::Identity();
+  Experimental::NavigationState nState;
+  auto dTransform = Transform3::Identity();
 
   // A rectangle bound surface
-  auto rectangle = std::make_shared<Acts::RectangleBounds>(10., 100.);
-  auto surfaceA =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(dTransform, rectangle);
-  auto surfaceB =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(dTransform, rectangle);
-  auto surfaceC =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(dTransform, rectangle);
+  auto rectangle = std::make_shared<RectangleBounds>(10., 100.);
+  auto surfaceA = Surface::makeShared<PlaneSurface>(dTransform, rectangle);
+  auto surfaceB = Surface::makeShared<PlaneSurface>(dTransform, rectangle);
+  auto surfaceC = Surface::makeShared<PlaneSurface>(dTransform, rectangle);
 
   // portal surfaces
-  auto pSurfaceA =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(dTransform, rectangle);
-  auto pSurfaceB =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(dTransform, rectangle);
+  auto pSurfaceA = Surface::makeShared<PlaneSurface>(dTransform, rectangle);
+  auto pSurfaceB = Surface::makeShared<PlaneSurface>(dTransform, rectangle);
 
   // Create a few fake portals out of it
-  auto portalA = std::make_shared<Acts::Experimental::Portal>(pSurfaceA);
-  auto portalB = std::make_shared<Acts::Experimental::Portal>(pSurfaceB);
+  auto portalA = std::make_shared<Experimental::Portal>(pSurfaceA);
+  auto portalB = std::make_shared<Experimental::Portal>(pSurfaceB);
 
-  std::vector<const Acts::Surface*> surfaces = {surfaceA.get(), surfaceB.get(),
-                                                surfaceC.get()};
-  std::vector<const Acts::Experimental::Portal*> portals = {portalA.get(),
-                                                            portalB.get()};
+  std::vector<const Surface*> surfaces = {surfaceA.get(), surfaceB.get(),
+                                          surfaceC.get()};
+  std::vector<const Experimental::Portal*> portals = {portalA.get(),
+                                                      portalB.get()};
 
-  auto dVolume = std::make_unique<Acts::Experimental::DetectorVolume>();
+  auto dVolume = std::make_unique<Experimental::DetectorVolume>();
   const auto volume = dVolume.get();
 
-  Acts::Experimental::DetectorVolumeFiller::fill(nState, volume);
+  Experimental::DetectorVolumeFiller::fill(nState, volume);
   BOOST_CHECK_EQUAL(nState.currentVolume, volume);
 
-  Acts::Experimental::PortalsFiller::fill(nState, portals);
+  Experimental::PortalsFiller::fill(nState, portals);
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), portals.size());
 
-  Acts::Experimental::SurfacesFiller::fill(nState, surfaces);
+  Experimental::SurfacesFiller::fill(nState, surfaces);
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(),
                     portals.size() + surfaces.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

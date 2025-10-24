@@ -394,7 +394,7 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression, format):
         HepMC3Writer,
     )
 
-    from pythia8 import addPythia8
+    from acts.examples.simulation import addPythia8
 
     s = Sequencer(numThreads=1, events=3)
 
@@ -451,8 +451,8 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression, format):
             nevts = 0
             with pyhepmc.open(actual_path) as f:
                 for evt in f:
-                    if evt.event_number == 0:
-                        assert len(evt.particles) == 8897
+                    # we expect the event to be populated but the exact number is random
+                    assert len(evt.particles) > 2000
                     nevts += 1
             assert nevts == s.config.events
 
@@ -790,7 +790,10 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
     s = Sequencer(numThreads=10, logLevel=acts.logging.INFO)
 
     reader = HepMC3Reader(
-        inputPaths=[(act_hs, 1), (act_pu, 10)],
+        inputs=[
+            HepMC3Reader.Input.Fixed(act_hs, 1),
+            HepMC3Reader.Input.Fixed(act_pu, 10),
+        ],
         level=acts.logging.VERBOSE,
         outputEvent="hepmc3_event",
         vertexGenerator=vtxGen,
@@ -829,7 +832,7 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
 
         # NO smearing in hs and pu
         for arr in (hs, pu):
-            vx, vy, vz = numpy.unstack(arr)
+            vx, vy, vz = arr
             std = numpy.std(vx)
             assert std < 1 * u.um
             std = numpy.std(vy)
@@ -839,7 +842,7 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
 
         # Configured smearing in combined
         # Checked values are a bit lower than configured smearing due to limited stats
-        vx, vy, vz = numpy.unstack(combined)
+        vx, vy, vz = combined
         std = numpy.std(vx)
         assert std > 40 * u.um
         std = numpy.std(vy)

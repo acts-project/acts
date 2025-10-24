@@ -65,7 +65,7 @@
                 "ACTS_BUILD_PLUGIN_GNN": "OFF",
                 "ACTS_BUILD_PLUGIN_JSON": "ON",
                 "ACTS_BUILD_PLUGIN_ONNX": "OFF",
-                "ACTS_BUILD_PLUGIN_TGEO": "ON",
+                "ACTS_BUILD_PLUGIN_ROOT": "ON",
                 "ACTS_BUILD_PLUGIN_FASTJET": "ON",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PODIO": "ON",
@@ -82,6 +82,26 @@
             "inherits": "ci-common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "github-ci-coverage",
+            "displayName": "GitHub-CI Coverage",
+            "inherits": "github-ci",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": "-Werror --coverage -g -gz -g1",
+                "ACTS_BUILD_ODD": "OFF",
+                "ACTS_BUILD_EXAMPLES_DD4HEP": "OFF",
+                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "OFF",
+                "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
+                "ACTS_BUILD_EXAMPLES_UNITTESTS": "OFF",
+                "ACTS_BUILD_EXAMPLES_EDM4HEP": "OFF",
+                "ACTS_BUILD_EXAMPLES_PODIO": "OFF",
+                "ACTS_BUILD_EXAMPLES_GNN": "OFF",
+                "ACTS_BUILD_EXAMPLES_GEANT4": "OFF",
+                "ACTS_BUILD_EXAMPLES_PYTHIA8": "OFF",
+                "ACTS_BUILD_EXAMPLES_HASHING": "OFF"
             }
         },
         {

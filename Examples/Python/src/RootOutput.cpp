@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootMaterialMapIo.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
+#include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
@@ -26,6 +26,7 @@
 #include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
+#include "ActsPlugins/Root/RootMaterialMapIo.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -85,10 +86,16 @@ void addRootOutput(Context& ctx) {
                              inputSummaryCollection, filePath, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(RootParticleWriter, mex, "RootParticleWriter",
-                             inputParticles, filePath, fileMode, treeName);
+                             inputParticles, filePath, fileMode, treeName,
+                             referencePoint, bField, writeHelixParameters);
 
   ACTS_PYTHON_DECLARE_WRITER(RootVertexWriter, mex, "RootVertexWriter",
                              inputVertices, filePath, fileMode, treeName);
+
+  ACTS_PYTHON_DECLARE_WRITER(RootMuonSpacePointWriter, mex,
+                             "RootMuonSpacePointWriter", inputSpacePoints,
+                             filePath, fileMode, treeName, trackingGeometry,
+                             writeGlobal);
 
   ACTS_PYTHON_DECLARE_WRITER(
       TrackFinderNTupleWriter, mex, "TrackFinderNTupleWriter", inputTracks,
@@ -155,8 +162,9 @@ void addRootOutput(Context& ctx) {
             .def("write",
                  py::overload_cast<const TrackingGeometry&>(&Writer::write));
 
-    auto ac = py::class_<RootMaterialMapIo::Config>(w, "AccessorConfig")
-                  .def(py::init<>());
+    auto ac =
+        py::class_<ActsPlugins::RootMaterialMapIo::Config>(w, "AccessorConfig")
+            .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(ac, volumePrefix, portalPrefix, layerPrefix,
                        passivePrefix, sensitivePrefix, nBinsHistName,
@@ -165,7 +173,8 @@ void addRootOutput(Context& ctx) {
                        x0HistName, l0HistName, aHistName, zHistName,
                        rhoHistName);
 
-    auto ao = py::class_<RootMaterialMapIo::Options>(w, "AccessorOptions")
+    auto ao = py::class_<ActsPlugins::RootMaterialMapIo::Options>(
+                  w, "AccessorOptions")
                   .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(ao, homogeneousMaterialTreeName, indexedMaterialTreeName,

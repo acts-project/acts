@@ -605,7 +605,7 @@ is using `uint8_t` and making boolean expressions explicit.
 PODIO cannot directly store `Surface`s and `SourceLink`s. The PODIO backends rely on a helper class
 that implements the following interface:
 
-:::{doxygenclass} Acts::PodioUtil::ConversionHelper
+:::{doxygenclass} ActsPlugins::PodioUtil::ConversionHelper
 :::
 
 Specifically, the PODIO backends will, before persisting and after reading,

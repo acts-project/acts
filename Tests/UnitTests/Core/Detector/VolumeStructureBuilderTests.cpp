@@ -20,7 +20,9 @@ using namespace Acts::Experimental;
 
 GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Detector)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 // Test misconfiguration exception
 BOOST_AUTO_TEST_CASE(VolumeStructureBuilderMisconfigured) {
@@ -357,3 +359,5 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderTrapezoid) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -7,8 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
@@ -19,6 +17,7 @@
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
+#include "ActsExamples/TrackFinding/OrthogonalTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -30,7 +29,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -123,6 +121,22 @@ void addTrackFinding(Context& ctx) {
       forwardSeedConfirmationRange, maxSeedsPerSpMConf,
       maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts);
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      OrthogonalTripletSeedingAlgorithm, mex,
+      "OrthogonalTripletSeedingAlgorithm", inputSpacePoints, outputSeeds,
+      bFieldInZ, minPt, cotThetaMax, impactMax, deltaRMin, deltaRMax,
+      deltaRMinTop, deltaRMaxTop, deltaRMinBottom, deltaRMaxBottom, rMin, rMax,
+      zMin, zMax, phiMin, phiMax, rMinMiddle, rMaxMiddle,
+      useVariableMiddleSPRange, rRangeMiddleSP, deltaRMiddleMinSPRange,
+      deltaRMiddleMaxSPRange, deltaZMin, deltaZMax, interactionPointCut,
+      collisionRegionMin, collisionRegionMax, helixCutTolerance,
+      sigmaScattering, radLengthPerSeed, toleranceParam, deltaInvHelixDiameter,
+      compatSeedWeight, impactWeightFactor, zOriginWeightFactor, maxSeedsPerSpM,
+      compatSeedLimit, seedWeightIncrement, numSeedIncrement, seedConfirmation,
+      centralSeedConfirmationRange, forwardSeedConfirmationRange,
+      maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf,
+      useDeltaRinsteadOfTopRadius, useExtraCuts);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
                                 outputSeeds, seedFilterConfig, seedFinderConfig,
@@ -153,10 +167,11 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",
-      inputSeeds, inputProtoTracks, outputTrackParameters, outputSeeds,
-      outputProtoTracks, trackingGeometry, magneticField, bFieldMin,
-      initialSigmas, initialSigmaQoverPt, initialSigmaPtRel,
-      initialVarInflation, noTimeVarInflation, particleHypothesis);
+      inputSeeds, inputProtoTracks, inputParticleHypotheses,
+      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
+      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
+      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
+      particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",

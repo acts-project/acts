@@ -9,11 +9,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <fstream>
 #include <string>
@@ -26,9 +26,13 @@
 
 #include "DD4hepTestsHelper.hpp"
 
-Acts::GeometryContext tContext;
-Acts::Test::CylindricalTrackingGeometry cGeometry =
-    Acts::Test::CylindricalTrackingGeometry(tContext);
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
+
+GeometryContext tContext;
+CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 const char* beampipe_head_xml =
     R""""(
@@ -58,7 +62,7 @@ const char* tail_xml =
 
 const std::string indent_12_xml(12, ' ');
 
-BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
+BOOST_AUTO_TEST_SUITE(DD4hepSuite)
 
 // This tests creates a beampipe as a passive cylinder surface
 BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
@@ -89,20 +93,20 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
   auto world = lcdd->world();
 
   // Now the test starts ...
-  Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
-  auto sFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
-      sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                                             Acts::Logging::DEBUG));
+  DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
+  auto sFactory = std::make_shared<DD4hepDetectorSurfaceFactory>(
+      sFactoryConfig,
+      getDefaultLogger("DD4hepDetectorSurfaceFactory", Logging::DEBUG));
 
-  Acts::Experimental::DD4hepLayerStructure beamPipeStructure(
-      std::move(sFactory), Acts::getDefaultLogger("DD4hepBeamPipeStructure",
-                                                  Acts::Logging::VERBOSE));
+  DD4hepLayerStructure beamPipeStructure(
+      std::move(sFactory),
+      getDefaultLogger("DD4hepBeamPipeStructure", Logging::VERBOSE));
 
-  Acts::DD4hepDetectorElement::Store dd4hepStore;
+  DD4hepDetectorElement::Store dd4hepStore;
 
-  Acts::Experimental::DD4hepLayerStructure::Options lsOptions;
+  DD4hepLayerStructure::Options lsOptions;
   lsOptions.name = "BeamPipe";
-  lsOptions.logLevel = Acts::Logging::VERBOSE;
+  lsOptions.logLevel = Logging::VERBOSE;
 
   auto [beamPipeInternalsBuilder, beamPipeExt] =
       beamPipeStructure.builder(dd4hepStore, tContext, world, lsOptions);
@@ -139,7 +143,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
 //
 BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
   // First create some test surfaces
-  Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  CylindricalTrackingGeometry::DetectorStore dStore;
   auto cSurfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145,
                                               116., 3., 2., {52, 14});
 
@@ -180,7 +184,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     for (const auto& s : cSurfaces) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
 
@@ -211,20 +215,20 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     auto world = lcdd->world();
 
     // Now the test starts ...
-    Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
-    auto sFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
-        sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                                               Acts::Logging::VERBOSE));
+    DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
+    auto sFactory = std::make_shared<DD4hepDetectorSurfaceFactory>(
+        sFactoryConfig,
+        getDefaultLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
 
-    Acts::Experimental::DD4hepLayerStructure barrelStructure(
+    DD4hepLayerStructure barrelStructure(
         std::move(sFactory),
-        Acts::getDefaultLogger("DD4hepLayerStructure", Acts::Logging::VERBOSE));
+        getDefaultLogger("DD4hepLayerStructure", Logging::VERBOSE));
 
-    Acts::DD4hepDetectorElement::Store dd4hepStore;
+    DD4hepDetectorElement::Store dd4hepStore;
 
-    Acts::Experimental::DD4hepLayerStructure::Options lsOptions;
+    DD4hepLayerStructure::Options lsOptions;
     lsOptions.name = "BarrelLayer";
-    lsOptions.logLevel = Acts::Logging::VERBOSE;
+    lsOptions.logLevel = Logging::VERBOSE;
 
     auto [barrelInternalsBuilder, barrelExt] =
         barrelStructure.builder(dd4hepStore, tContext, world, lsOptions);
@@ -250,7 +254,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
 // Test the auto-range determination
 BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructureAutoRange) {
   // First create some test surfaces
-  Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  CylindricalTrackingGeometry::DetectorStore dStore;
   auto cSurfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145,
                                               116., 3., 2., {52, 14});
 
@@ -267,7 +271,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructureAutoRange) {
   for (const auto& s : cSurfaces) {
     cxml << indent_12_xml
          << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                            Acts::Transform3::Identity())
+                                            Transform3::Identity())
          << "\n";
   }
   cxml << "</modules>" << '\n';
@@ -283,31 +287,32 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructureAutoRange) {
   auto world = lcdd->world();
 
   // Now the test starts ...
-  Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
-  auto sFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
-      sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                                             Acts::Logging::VERBOSE));
+  DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
+  auto sFactory = std::make_shared<DD4hepDetectorSurfaceFactory>(
+      sFactoryConfig,
+      getDefaultLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
 
-  Acts::Experimental::DD4hepLayerStructure barrelStructure(
+  DD4hepLayerStructure barrelStructure(
       std::move(sFactory),
-      Acts::getDefaultLogger("DD4hepLayerStructure", Acts::Logging::VERBOSE));
+      getDefaultLogger("DD4hepLayerStructure", Logging::VERBOSE));
 
-  Acts::DD4hepDetectorElement::Store dd4hepStore;
+  DD4hepDetectorElement::Store dd4hepStore;
 
-  Acts::Experimental::DD4hepLayerStructure::Options lsOptions;
+  DD4hepLayerStructure::Options lsOptions;
   lsOptions.name = "AutoRangeLayer";
-  auto extent = Acts::Extent();
+  auto extent = Extent();
   lsOptions.extent = extent;
-  lsOptions.extentConstraints = {Acts::AxisDirection::AxisZ,
-                                 Acts::AxisDirection::AxisR};
-  lsOptions.logLevel = Acts::Logging::VERBOSE;
+  lsOptions.extentConstraints = {AxisDirection::AxisZ, AxisDirection::AxisR};
+  lsOptions.logLevel = Logging::VERBOSE;
 
   auto [barrelInternalsBuilder, barrelExt] =
       barrelStructure.builder(dd4hepStore, tContext, world, lsOptions);
 
   BOOST_CHECK(barrelExt != std::nullopt);
-  BOOST_CHECK(barrelExt.value().constrains(Acts::AxisDirection::AxisZ));
-  BOOST_CHECK(barrelExt.value().constrains(Acts::AxisDirection::AxisR));
+  BOOST_CHECK(barrelExt.value().constrains(AxisDirection::AxisZ));
+  BOOST_CHECK(barrelExt.value().constrains(AxisDirection::AxisR));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -8,22 +8,23 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Detray/DetrayConverter.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
+#include "ActsPlugins/Detray/DetrayConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalDetector.hpp"
 
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
 using namespace Acts;
-using namespace Acts::Experimental;
-using namespace Acts::Test;
+using namespace Experimental;
+using namespace ActsPlugins;
 
 GeometryContext tContext;
 
-auto logger =
-    Acts::getDefaultLogger("DetrayConverterTests", Acts::Logging::INFO);
+auto logger = getDefaultLogger("DetrayConverterTests", Logging::INFO);
 
-BOOST_AUTO_TEST_SUITE(DetrayConversion)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetraySuite)
 
 BOOST_AUTO_TEST_CASE(DetrayConversion) {
   // Load the detector from the Test utilities
@@ -49,3 +50,5 @@ BOOST_AUTO_TEST_CASE(DetrayConversion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

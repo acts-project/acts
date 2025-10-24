@@ -7,13 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepIdentifierMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/DD4hepDetector/OpenDataDetector.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepFieldAdapter.hpp"
+#include "ActsPlugins/DD4hep/DD4hepIdentifierMapper.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -28,6 +29,8 @@
 
 namespace py = pybind11;
 using namespace Acts;
+using namespace ActsPlugins;
+using namespace pybind11::literals;
 using namespace ActsExamples;
 using namespace ActsPython;
 
@@ -48,21 +51,47 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    auto f =
-        py::class_<DD4hepDetector, Detector, std::shared_ptr<DD4hepDetector>>(
-            m, "DD4hepDetector")
-            .def(py::init<const DD4hepDetector::Config&>())
-            .def_property_readonly("field", &DD4hepDetector::field);
+    auto base =
+        py::class_<DD4hepDetectorBase, Detector,
+                   std::shared_ptr<DD4hepDetectorBase>>(m, "DD4hepDetectorBase")
+            .def_property_readonly("field", &DD4hepDetectorBase::field);
+    auto c = py::class_<DD4hepDetectorBase::Config>(base, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, logLevel, dd4hepLogLevel, xmlFileNames, name);
+    patchKwargsConstructor(c);
+  }
 
-    auto c = py::class_<DD4hepDetector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, logLevel, dd4hepLogLevel, xmlFileNames, name,
-                       bTypePhi, bTypeR, bTypeZ, envelopeR, envelopeZ,
+  {
+    auto f = py::class_<DD4hepDetector, DD4hepDetectorBase,
+                        std::shared_ptr<DD4hepDetector>>(m, "DD4hepDetector")
+                 .def(py::init<const DD4hepDetector::Config&>());
+
+    auto c = py::class_<DD4hepDetector::Config, DD4hepDetectorBase::Config>(
+                 f, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, bTypePhi, bTypeR, bTypeZ, envelopeR, envelopeZ,
                        defaultLayerThickness, materialDecorator,
                        geometryIdentifierHook, detectorElementFactory);
     patchKwargsConstructor(c);
 
     m.def("alignedDD4hepDetectorElementFactory",
           &alignedDD4hepDetectorElementFactory);
+  }
+
+  {
+    auto odd =
+        py::class_<OpenDataDetector, DD4hepDetectorBase,
+                   std::shared_ptr<OpenDataDetector>>(m, "OpenDataDetector")
+            .def(py::init<const OpenDataDetector::Config&,
+                          const Acts::GeometryContext&>(),
+                 "config"_a, "gctx"_a);
+
+    auto c = py::class_<OpenDataDetector::Config, DD4hepDetectorBase::Config>(
+                 odd, "Config")
+                 .def(py::init<>());
+    // ACTS_PYTHON_STRUCT(c, );
+
+    patchKwargsConstructor(c);
   }
 
   {
@@ -104,7 +133,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    using Options = Experimental::DD4hepDetectorStructure::Options;
+    using Options = DD4hepDetectorStructure::Options;
     auto o = py::class_<Options>(m, "DD4hepDetectorOptions").def(py::init<>());
     ACTS_PYTHON_STRUCT(o, logLevel, emulateToGraph, geoIdGenerator,
                        materialDecorator);
@@ -112,7 +141,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     patchKwargsConstructor(o);
 
     m.def("attachDD4hepGeoIdMapper",
-          [](Experimental::DD4hepDetectorStructure::Options& options,
+          [](DD4hepDetectorStructure::Options& options,
              const std::map<DD4hepDetectorElement::DD4hepVolumeID,
                             GeometryIdentifier>& dd4hepIdGeoIdMap) {
             // The Geo mapper

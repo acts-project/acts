@@ -28,6 +28,7 @@ namespace Acts {
 template <typename spacepoint_t>
 class SpacePointBuilder {
  public:
+  /// Type alias for space point builder function
   using BuilderFunction = std::function<spacepoint_t(
       Acts::Vector3, std::optional<double>, Acts::Vector2,
       std::optional<double>, boost::container::static_vector<SourceLink, 2>)>;
@@ -71,7 +72,7 @@ class SpacePointBuilder {
       const StripPairOptions& pairOpt) const;
 
  protected:
-  // configuration of the single hit space point builder
+  /// Configuration of the single hit space point builder
   SpacePointBuilderConfig m_config;
 
   /// @brief Function to create external space point
@@ -82,8 +83,11 @@ class SpacePointBuilder {
   /// the logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
+  /// Utility for space point calculations
   std::shared_ptr<const SpacePointUtility> m_spUtility;
 
+  /// Get the logger instance
+  /// @return Reference to the logger
   const Logger& logger() const { return *m_logger; }
 };
 

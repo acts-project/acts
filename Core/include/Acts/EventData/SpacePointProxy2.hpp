@@ -15,7 +15,7 @@
 #include <cassert>
 #include <span>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class SpacePointContainer2;
 template <typename T, bool read_only>
@@ -33,8 +33,10 @@ class SpacePointProxy2 {
   /// modified
   static constexpr bool ReadOnly = read_only;
 
+  /// Type alias for space point index type
   using Index = SpacePointIndex2;
 
+  /// Type alias for container type (const if read-only)
   using Container = const_if_t<ReadOnly, SpacePointContainer2>;
 
   /// Constructs a space point proxy for the given container and index.
@@ -186,21 +188,29 @@ class SpacePointProxy2 {
   {
     return m_container->copyFromIndex(m_index);
   }
+  /// @brief Get mutable reference to XY coordinates of the space point
+  /// @return Mutable reference to array containing [x, y] coordinates
   std::array<float, 2> &xy() const noexcept
     requires(!ReadOnly)
   {
     return m_container->xy(m_index);
   }
+  /// @brief Get mutable reference to ZR coordinates of the space point
+  /// @return Mutable reference to array containing [z, r] coordinates
   std::array<float, 2> &zr() const noexcept
     requires(!ReadOnly)
   {
     return m_container->zr(m_index);
   }
+  /// @brief Get mutable reference to XYZR coordinates of the space point
+  /// @return Mutable reference to array containing [x, y, z, r] coordinates
   std::array<float, 4> &xyzr() const noexcept
     requires(!ReadOnly)
   {
     return m_container->xyzr(m_index);
   }
+  /// @brief Get mutable reference to ZR coordinate variances
+  /// @return Mutable reference to array containing [var_z, var_r] variances
   std::array<float, 2> &varianceZR() const noexcept
     requires(!ReadOnly)
   {
@@ -269,15 +279,23 @@ class SpacePointProxy2 {
   SpacePointIndex2 copyFromIndex() const noexcept {
     return m_container->copyFromIndex(m_index);
   }
+  /// @brief Get const reference to XY coordinates of the space point
+  /// @return Const reference to array containing [x, y] coordinates
   const std::array<float, 2> &xy() const noexcept {
     return m_container->xy(m_index);
   }
+  /// @brief Get const reference to ZR coordinates of the space point
+  /// @return Const reference to array containing [z, r] coordinates
   const std::array<float, 2> &zr() const noexcept {
     return m_container->zr(m_index);
   }
+  /// @brief Get const reference to XYZR coordinates of the space point
+  /// @return Const reference to array containing [x, y, z, r] coordinates
   const std::array<float, 4> &xyzr() const noexcept {
     return m_container->xyzr(m_index);
   }
+  /// @brief Get const reference to ZR coordinate variances
+  /// @return Const reference to array containing [var_z, var_r] variances
   const std::array<float, 2> &varianceZR() const noexcept {
     return m_container->varianceZR(m_index);
   }
@@ -302,4 +320,4 @@ class SpacePointProxy2 {
   Index m_index{};
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

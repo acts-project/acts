@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     const Config& config, std::unique_ptr<const Logger> _logger)
@@ -167,8 +167,8 @@ void CylindricalSpacePointGrid2::clear() {
 }
 
 std::optional<std::size_t> CylindricalSpacePointGrid2::insert(
-    SpacePointIndex index, float phi, float r, float z) {
-  const std::optional<std::size_t> gridIndex = binIndex(phi, r, z);
+    SpacePointIndex index, float phi, float z, float r) {
+  const std::optional<std::size_t> gridIndex = binIndex(phi, z, r);
   if (gridIndex.has_value()) {
     BinType& bin = grid().at(*gridIndex);
     bin.push_back(index);
@@ -218,4 +218,4 @@ Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(
   return {minRange, maxRange};
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

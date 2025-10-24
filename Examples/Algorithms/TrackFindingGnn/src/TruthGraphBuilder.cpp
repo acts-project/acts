@@ -6,16 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <Acts/Definitions/Units.hpp>
-#include <ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp>
+#include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
+
+#include "Acts/Definitions/Units.hpp"
 
 #include <algorithm>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-TruthGraphBuilder::TruthGraphBuilder(Config config, Acts::Logging::Level level)
+TruthGraphBuilder::TruthGraphBuilder(Config config, Logging::Level level)
     : ActsExamples::IAlgorithm("TruthGraphBuilder", level),
       m_cfg(std::move(config)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
@@ -77,7 +79,7 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
       continue;
     }
 
-    const Acts::Vector3 vtx = found->fourPosition().segment<3>(0);
+    const Vector3 vtx = found->fourPosition().segment<3>(0);
     auto radiusForOrdering = [&](std::size_t i) {
       const auto& sp = spacepoints[i];
       return std::hypot(sp.x() - vtx[0], sp.y() - vtx[1], sp.z() - vtx[2]);

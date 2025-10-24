@@ -29,6 +29,8 @@ acts_add_library(
     src/TrackFinderNTupleWriter.cpp
     src/TrackFitterPerformanceWriter.cpp
     src/VertexNTupleWriter.cpp
+    src/RootMuonSpacePointWriter.cpp
+    src/RootMuonSpacePointReader.cpp
 )
 target_include_directories(
     ActsExamplesIoRoot
@@ -44,7 +46,7 @@ target_link_libraries(
         Acts::ExamplesTruthTracking
         Acts::ExamplesMaterialMapping
         Threads::Threads
-    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree
+    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer
 )
 
 root_generate_dictionary(
