@@ -1314,8 +1314,7 @@ def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
     assert_root_hash(root_file, rfp)
 
 
-# TODO fix overlap - G4 panics
-@pytest.disable()
+@pytest.mark.skip(reason="Overlaps in muon geometry cause G4 exception")
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
 def test_geomodel_G4(tmp_path):
