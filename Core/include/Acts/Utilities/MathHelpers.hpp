@@ -47,7 +47,7 @@ constexpr T pow(T x, P p) {
     using unsigned_p = std::make_unsigned_t<P>;
     return p == 0 ? one : x * pow(x, static_cast<unsigned_p>(p) - 1);
   } else {
-    return std::pow(x, static_cast<T>(p));
+    return static_cast<T>(std::pow(x, static_cast<T>(p)));
   }
 }
 
