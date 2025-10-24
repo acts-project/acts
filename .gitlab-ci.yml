@@ -4,12 +4,12 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: v1.0.0
+  SPACK_VERSION: v1.0.2
   SPACK_REPO_VERSION: v2025.07.0
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v13.0.0
+  DEPENDENCY_TAG: v16.0.0
 
 .ccache_base:
   cache:
@@ -113,7 +113,6 @@ build_gnn_cpu:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -159,7 +158,6 @@ build_gnn:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -226,11 +224,8 @@ test_gnn_python:
       source .env
     - source ../build/this_acts_withdeps.sh
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - echo $PYTHONPATH
-    - which python3
-    - python3 --version
-    - python3 -c "import acts"
-    - python3 -c "from acts.examples import ModuleMapCuda" # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
+    # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
+    - python3 -c "from acts.examples import ModuleMapCuda"
     - pytest -rfExw -k torch -v --collect-only
     - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
 
@@ -284,7 +279,6 @@ build_linux_ubuntu:
     expire_in: 1 day
 
   script:
-    - echo $PATH
     - git clone $CLONE_URL src
 
     - cd src
@@ -348,14 +342,12 @@ linux_test_examples:
     - git submodule init
     - git submodule update
     - |
-      CI/dependencies/setup.sh -c g++ -e .env
+      CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
     - cd ..
 
-    - geant4-config --install-datasets
     - source build/this_acts_withdeps.sh
     - cd src
-    - python3 -m pip install -r Examples/Python/tests/requirements.txt
     - pytest -rfExw -k "not gnn" -v
 
   after_script:
@@ -384,20 +376,12 @@ linux_physmon:
     - git submodule init
     - git submodule update
     - |
-      CI/dependencies/setup.sh -c g++ -e .env
+      CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - python3 -m pip install histcmp==0.8.1 matplotlib
-    - python3 -m pip install -r src/Examples/Scripts/requirements.txt
-    - geant4-config --install-datasets
-    - venv_python=$(which python3)
-    - echo $venv_python
     - source build/this_acts_withdeps.sh
-    - export PATH=$(dirname $venv_python):$PATH
-    - echo $PATH
-    - which python3
     - cd src
     - CI/physmon/phys_perf_mon.sh all physmon
 
