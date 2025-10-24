@@ -432,7 +432,7 @@ PVLink GeoMuonMockupExperiment::assembleBarrelStation(const MuonLayer layer,
 PVLink GeoMuonMockupExperiment::assembleTube(const double tubeLength) {
   auto* matMan = MaterialManager::getManager();
 
-  auto outerTube = make_intrusive<GeoTube>(m_cfg.innerTubeRadius,
+  auto outerTube = make_intrusive<GeoTube>(0.,
                                            m_outerTubeRadius, 0.5 * tubeLength);
   auto outerTubeLogVol = make_intrusive<GeoLogVol>(
       "MdtDriftWall", outerTube, matMan->getMaterial("std::Aluminium"));
