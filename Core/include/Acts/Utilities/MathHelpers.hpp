@@ -18,7 +18,7 @@ namespace Acts {
 /// @return The absolute value of the input
 template <typename T>
 constexpr T abs(const T n) {
-  if ((std::is_constant_evaluated())) {
+  if (std::is_constant_evaluated()) {
     if constexpr (std::is_signed_v<T>) {
       if (n < 0) {
         return -n;
