@@ -3,6 +3,7 @@ acts_add_library(
     SHARED
     src/DD4hepDetector.cpp
     src/AlignedDD4hepDetectorElement.cpp
+    src/OpenDataDetector.cpp
 )
 
 target_include_directories(
