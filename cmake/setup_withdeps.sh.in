@@ -34,7 +34,7 @@ source "${script_dir}/this_acts.sh"
 # activate dependencies if present
 if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
   # Dependency setup script has already given us this location!
-  . "$ROOT_SETUP_SCRIPT"
+  source "$ROOT_SETUP_SCRIPT"
 else
   # Try to recover the build-time configuration
   if [[ -d "@ROOT_DIR@" ]]; then
@@ -48,7 +48,7 @@ if [[ -d "@DD4hep_DIR@" ]]; then
   prevstate=$-
 
   set +e
-  . "@DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh"
+  source "@DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh"
   # Without this, DD4hep's Xerces-C XML parsing fails with:
   # > Could not load a transcoding service
   export LC_ALL=C
