@@ -51,10 +51,6 @@ jobs:
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Configure
-        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
-        # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions
-        # Need to set git user & email for patching to work (GeoModel plugin)
         run: >
           ccache -z &&
           cmake -B build -S .
@@ -123,6 +119,7 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          full_install: true
 
       - uses: actions/download-artifact@v5
         with:
@@ -138,11 +135,8 @@ jobs:
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
         run: |
-          geant4-config --install-datasets
           source build/this_acts_withdeps.sh
-          python3 -m pip install -r Examples/Python/tests/requirements.txt
-          python3 -m pip install pytest-md-report
-          pytest -rfExw -k "not gnn" -v
+          pytest -rfExw -k "not gnn" -v -s
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
@@ -164,6 +158,7 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          full_install: true
 
       - uses: actions/download-artifact@v5
         with:
@@ -175,20 +170,8 @@ jobs:
       - name: Physics performance checks
         shell: bash
         run: |
-          echo "::group::Dependencies"
           git config --global safe.directory "$GITHUB_WORKSPACE"
-          python3 -m pip install histcmp==0.8.1 matplotlib
-          python3 -m pip install -r Examples/Scripts/requirements.txt
-          geant4-config --install-datasets
-          venv_python=$(which python3)
-          echo $venv_python
-          echo "Pre-setup"
           source build/this_acts_withdeps.sh
-          echo "Post-setup"
-          export PATH=$(dirname $venv_python):$PATH
-          which python3
-          echo $PATH
-          echo "::endgroup::"
           CI/physmon/phys_perf_mon.sh all physmon
 
       - name: Post step summary
@@ -265,7 +248,6 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}-
 
-
       - name: Configure
         run: >
           ccache -z &&
@@ -333,8 +315,8 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           compiler: clang++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
