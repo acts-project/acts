@@ -16,7 +16,8 @@
 #include <filesystem>
 #include <list>
 #include <mutex>
-#include <unordered_map>
+
+#include <tbb/enumerable_thread_specific.h>
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
@@ -45,12 +46,11 @@ class PodioWriterImpl {
   std::vector<std::unique_ptr<CollectionHandle>> m_collections;
 
   std::unique_ptr<ActsPlugins::PodioUtil::ROOTWriter> m_singleWriter;
-  std::unordered_map<std::size_t,
-                     std::unique_ptr<ActsPlugins::PodioUtil::ROOTWriter>>
+  tbb::enumerable_thread_specific<
+      std::unique_ptr<ActsPlugins::PodioUtil::ROOTWriter>>
       m_threadLocalWriters;
 
   std::mutex m_writeMutex;
-  std::mutex m_threadWriterMutex;
   bool m_useThreadLocalWriters;
 
   std::string threadLocalFileName(std::size_t threadId) const {
@@ -67,19 +67,16 @@ class PodioWriterImpl {
     return threadFile.string();
   }
 
-  ActsPlugins::PodioUtil::ROOTWriter& writerForThread(
-      std::size_t threadId) {
+  ActsPlugins::PodioUtil::ROOTWriter& writerForThread(std::size_t threadId) {
     if (!m_useThreadLocalWriters) {
       return *m_singleWriter;
     }
-    std::lock_guard<std::mutex> guard(m_threadWriterMutex);
-    auto it = m_threadLocalWriters.find(threadId);
-    if (it == m_threadLocalWriters.end()) {
-      auto writer = std::make_unique<ActsPlugins::PodioUtil::ROOTWriter>(
+    auto& localWriter = m_threadLocalWriters.local();
+    if (!localWriter) {
+      localWriter = std::make_unique<ActsPlugins::PodioUtil::ROOTWriter>(
           threadLocalFileName(threadId));
-      it = m_threadLocalWriters.emplace(threadId, std::move(writer)).first;
     }
-    return *(it->second);
+    return *localWriter;
   }
 };
 }  // namespace detail
@@ -158,10 +155,10 @@ ProcessCode PodioWriter::write(const AlgorithmContext& ctx) {
 
 ProcessCode PodioWriter::finalize() {
   if (m_impl->m_useThreadLocalWriters) {
-    std::lock_guard<std::mutex> threadGuard(m_impl->m_threadWriterMutex);
-    for (auto& [threadId, writer] : m_impl->m_threadLocalWriters) {
-      (void)threadId;
-      writer->finish();
+    for (auto& tlsWriter : m_impl->m_threadLocalWriters) {
+      if (tlsWriter) {
+        tlsWriter->finish();
+      }
     }
   } else if (m_impl->m_singleWriter) {
     m_impl->m_singleWriter->finish();
