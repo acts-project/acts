@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -24,36 +25,32 @@ bool ParticleSelector::MeasurementCounter::isValidParticle(
     const SimParticle& particle,
     const InverseMultimap<SimBarcode>& particleMeasurementsMap,
     const MeasurementContainer& measurements) const {
-  // No hit cuts, accept everything
-  if (counters.empty()) {
-    return true;
-  }
-
   const auto [measurementsBegin, measurementsEnd] =
       particleMeasurementsMap.equal_range(particle.particleId());
 
-  boost::container::small_vector<unsigned int, 4> counterValues;
-  counterValues.resize(counters.size(), 0);
+  for (const auto& [counterMap, threshold, perLayerCap] : counters) {
+    std::uint32_t counter = 0;
+    std::unordered_map<Acts::GeometryIdentifier, std::uint32_t> layerCounts;
 
-  for (auto measurementIt = measurementsBegin; measurementIt != measurementsEnd;
-       ++measurementIt) {
-    const auto measurementIndex = measurementIt->second;
-    const auto measurement = measurements.at(measurementIndex);
-
-    const auto geoId = measurement.geometryId();
-
-    for (std::size_t i = 0; i < counters.size(); i++) {
-      const auto& [counterMap, threshold] = counters[i];
-      if (const auto it = counterMap.find(geoId); it != counterMap.end()) {
-        counterValues[i]++;
+    for (auto measurementIt = measurementsBegin;
+         measurementIt != measurementsEnd; ++measurementIt) {
+      const auto measurementIndex = measurementIt->second;
+      const auto measurement = measurements.at(measurementIndex);
+      const Acts::GeometryIdentifier geoId = measurement.geometryId();
+      if (const auto it = counterMap.find(geoId); it == counterMap.end()) {
+        continue;
       }
+      const Acts::GeometryIdentifier layerId = Acts::GeometryIdentifier()
+                                                   .withVolume(geoId.volume())
+                                                   .withLayer(geoId.layer());
+      if (layerCounts[layerId] >= perLayerCap) {
+        continue;
+      }
+      counter++;
+      layerCounts[layerId]++;
     }
-  }
 
-  for (std::size_t i = 0; i < counters.size(); i++) {
-    const auto& [counterMap, threshold] = counters[i];
-    const unsigned int value = counterValues[i];
-    if (value < threshold) {
+    if (counter < threshold) {
       return false;
     }
   }
