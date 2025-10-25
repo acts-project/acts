@@ -52,7 +52,7 @@ auto logger = getDefaultLogger("DetrayMaterialConverterTests", Logging::INFO);
 BOOST_AUTO_TEST_CASE(DetrayMaterialSlabConversion) {
   // Convert the material slab
   detray::io::material_slab_payload payload =
-      DetrayMaterialConverter::convertMaterialSlab(materialSlab12345);
+      DetrayConversionUtils::convertMaterialSlab(materialSlab12345);
 
   // Material type should be set to slab
   BOOST_CHECK(payload.type ==
