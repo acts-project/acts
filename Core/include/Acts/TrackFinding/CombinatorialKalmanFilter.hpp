@@ -242,6 +242,7 @@ class CombinatorialKalmanFilter {
     void act(propagator_state_t& state, const stepper_t& stepper,
              const navigator_t& navigator, result_type& result,
              const Logger& /*logger*/) const {
+      ACTS_VERBOSE("CKF Actor called");
       assert(result.trackStates && "No MultiTrajectory set");
 
       if (result.finished) {
@@ -254,9 +255,16 @@ class CombinatorialKalmanFilter {
         return;
       }
 
+      if (state.stage == PropagatorStage::postPropagation) {
+        ACTS_VERBOSE("Skip post-propagation action");
+        return;
+      }
+
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
       assert(!result.activeBranches.empty() && "No active branches");
+      assert(!result.finished && "Should never reach this when finished");
+      assert(result.lastError.ok() && "Should never reach this when `lastError` is set");
 
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
@@ -286,11 +294,12 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE("Perform filter step");
         auto res = filter(surface, state, stepper, navigator, result);
         if (!res.ok()) {
-          ACTS_ERROR("Error in filter: " << res.error());
+          ACTS_ERROR("Error in filter: " << res.error().message());
           result.lastError = res.error();
         }
 
-        if (result.finished) {
+        if (!result.lastError.ok() || result.finished) {
+          ACTS_VERBOSE("CKF Actor returns after filter step");
           return;
         }
       }
@@ -492,7 +501,7 @@ class CombinatorialKalmanFilter {
             processNewTrackStates(state.geoContext, newTrackStateList, result);
         if (!procRes.ok()) {
           ACTS_ERROR("Processing of selected track states failed: "
-                     << procRes.error());
+                     << procRes.error().message());
           return procRes.error();
         }
         unsigned int nBranchesOnSurface = *procRes;
@@ -650,7 +659,7 @@ class CombinatorialKalmanFilter {
           // Kalman update
           auto updateRes = extensions.updater(gctx, trackState, *updaterLogger);
           if (!updateRes.ok()) {
-            ACTS_ERROR("Update step failed: " << updateRes.error());
+            ACTS_ERROR("Update step failed: " << updateRes.error().message());
             return updateRes.error();
           }
           ACTS_VERBOSE("Appended measurement track state with tip = "
