@@ -29,13 +29,6 @@ class Detector;
 
 namespace ActsPlugins::DetraySurfaceGridsConverter {
 
-/// Conversion method for axis objects to detray::axis payloads
-///
-/// @param ia the axis to be converted
-///
-/// @return the axis_payload(bounds, binning, bins, edges)
-detray::io::axis_payload convertAxis(const Acts::IAxis& ia);
-
 /// Conversion method for grid objects to detray::grid payloads
 ///
 /// @param grid the grid to be converted
