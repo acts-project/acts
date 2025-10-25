@@ -263,6 +263,8 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
       assert(!result.activeBranches.empty() && "No active branches");
+      assert(!result.finished && "Should never reach this when finished");
+      assert(result.lastError.ok() && "Should never reach this when `lastError` is set");
 
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
