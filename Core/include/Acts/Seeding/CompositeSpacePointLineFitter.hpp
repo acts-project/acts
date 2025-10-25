@@ -16,8 +16,6 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <cstddef>
-
 namespace Acts::Experimental {
 /// @brief Generic Implementation to fit a straight line to set of composite space point measurements.
 ///        The line is parameterized by x_{0}, y_{0}, theta, phi, where the

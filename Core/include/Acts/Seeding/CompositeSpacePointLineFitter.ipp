@@ -426,12 +426,12 @@ CompositeSpacePointLineFitter::fit(
       }
       // Calculate the residual & derivatives
       if (pullCalculator.config().parsToUse.back() == FitParIndex::t0) {
-        pullCalculator.updateFullResidual(
-            line, t0, *spacePoint,
-            fitOpts.calibrator->driftVelocity(fitOpts.calibContext,
-                                              *spacePoint),
-            fitOpts.calibrator->driftAcceleration(fitOpts.calibContext,
-                                                  *spacePoint));
+        double driftV{fitOpts.calibrator->driftVelocity(fitOpts.calibContext,
+                                                        *spacePoint)};
+        double driftA{fitOpts.calibrator->driftAcceleration(
+            fitOpts.calibContext, *spacePoint)};
+        pullCalculator.updateFullResidual(line, t0, *spacePoint, driftV,
+                                          driftA);
       } else {
         pullCalculator.updateSpatialResidual(line, *spacePoint);
       }
@@ -680,7 +680,8 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
     auto inverseH = safeInverse(miniHessian);
     // The Hessian can safely be inverted
     if (inverseH) {
-      covariance.block<N, N>(firstIdx, firstIdx) = *inverseH;
+      auto covBlock = covariance.block<N, N>(firstIdx, firstIdx);
+      covBlock = *inverseH;
     }
   }
   ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
