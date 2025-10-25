@@ -9,14 +9,14 @@
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Seeding/SeedingError.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <numbers>
 
-Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
-                                                   const Vector3& sp1,
-                                                   const Vector3& sp2,
-                                                   const Vector3& bField) {
+Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSeed(
+    const Vector3& sp0, const Vector3& sp1, const Vector3& sp2,
+    const Vector3& bField) {
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
@@ -38,6 +38,11 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   // The coordinate of the middle and top space point in the new frame
   Vector3 local1 = transform.inverse() * sp1;
   Vector3 local2 = transform.inverse() * sp2;
+
+  if (local2(1) == 0) {
+    return Result<FreeVector>::failure(
+        SeedingError::InvalidSpacePointsForEstimate);
+  }
 
   // In the new frame the bottom sp is at the origin, while the middle
   // sp in along the x axis. As such, the x-coordinate of the circle is
@@ -88,7 +93,7 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   // The estimated q/p in [GeV/c]^-1
   params[eFreeQOverP] = qOverPt / fastHypot(1., invTanTheta);
 
-  return params;
+  return Result<FreeVector>::success(params);
 }
 
 Acts::BoundMatrix Acts::estimateTrackParamCovariance(

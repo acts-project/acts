@@ -133,8 +133,8 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     const auto paramsResult = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp(), *surface, field);
     if (!paramsResult.ok()) {
-      ACTS_WARNING("Skip track because param estimation failed "
-                   << paramsResult.error());
+      ACTS_WARNING("Skip track because param estimation failed: "
+                   << paramsResult.error().message());
       continue;
     }
     const auto& params = *paramsResult;
