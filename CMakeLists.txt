@@ -187,6 +187,7 @@ set_option_if(
 )
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES)
+set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_PLUGIN_FASTJET)
 set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
@@ -576,8 +577,8 @@ endif()
 
 # core library, core plugins, and other components
 add_component(Core Core)
-add_subdirectory(Plugins)
 add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
+add_subdirectory(Plugins)
 add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
 if(ACTS_BUILD_ODD)
