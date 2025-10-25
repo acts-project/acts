@@ -745,6 +745,8 @@ def addDigitization(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     doMerge: Optional[bool] = None,
+    mergeCommonCorner: Optional[bool] = None,
+    alt: Optional[bool] = None,
     minEnergyDeposit: Optional[float] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
@@ -784,6 +786,8 @@ def addDigitization(
         outputSimHitMeasurementsMap="simhit_measurements_map",
         **acts.examples.defaultKWArgs(
             doMerge=doMerge,
+            mergeCommonCorner=mergeCommonCorner,
+            alt=alt,
         ),
     )
 
