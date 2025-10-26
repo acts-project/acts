@@ -13,7 +13,6 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-#include <cstddef>
 #include <format>
 
 namespace Acts::Experimental {
