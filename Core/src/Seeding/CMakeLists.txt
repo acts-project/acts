@@ -5,5 +5,4 @@ target_sources(
         CompSpacePointAuxiliaries.cpp
         CompositeSpacePointLineFitter.cpp
         FastStrawLineFitter.cpp
-        SeedingError.cpp
 )
