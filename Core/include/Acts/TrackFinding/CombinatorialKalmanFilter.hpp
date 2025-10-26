@@ -243,18 +243,14 @@ class CombinatorialKalmanFilter {
              const navigator_t& navigator, result_type& result,
              const Logger& /*logger*/) const {
       ACTS_VERBOSE("CKF Actor called");
-      assert(result.trackStates && "No MultiTrajectory set");
 
-      if (result.finished) {
-        return;
-      }
+      assert(result.trackStates && "No MultiTrajectory set");
 
       if (state.stage == PropagatorStage::prePropagation &&
           skipPrePropagationUpdate) {
         ACTS_VERBOSE("Skip pre-propagation update (first surface)");
         return;
       }
-
       if (state.stage == PropagatorStage::postPropagation) {
         ACTS_VERBOSE("Skip post-propagation action");
         return;
@@ -264,7 +260,8 @@ class CombinatorialKalmanFilter {
 
       assert(!result.activeBranches.empty() && "No active branches");
       assert(!result.finished && "Should never reach this when finished");
-      assert(result.lastError.ok() && "Should never reach this when `lastError` is set");
+      assert(result.lastError.ok() &&
+             "Should never reach this when `lastError` is set");
 
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
@@ -275,7 +272,7 @@ class CombinatorialKalmanFilter {
 
       // Update:
       // - Waiting for a current surface
-      if (auto surface = navigator.currentSurface(state.navigation);
+      if (const Surface* surface = navigator.currentSurface(state.navigation);
           surface != nullptr) {
         // There are three scenarios:
         // 1) The surface is in the measurement map
