@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -44,7 +43,7 @@ using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
-constexpr auto logLvl = Acts::Logging::Level::VERBOSE;
+constexpr auto logLvl = Acts::Logging::Level::INFP;
 constexpr std::size_t nEvents = 1;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
@@ -639,7 +638,7 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
 }
 
 BOOST_AUTO_TEST_SUITE(SeedingSuite)
-/*
+
 BOOST_AUTO_TEST_CASE(SeedTangents) {
   RandomEngine engine{1602};
   constexpr double tolerance = 1.e-3;
@@ -729,7 +728,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
     }
   }
 }
-*/
+
 #define DECLARE_BRANCH(dType, bName) \
   dType bName{};                     \
   outTree->Branch(#bName, &bName);
@@ -883,7 +882,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   // 2D straw only test
   {
     RandomEngine engine{1602};
-    // runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
   }
   // 2D straw only test with time
   {
@@ -900,14 +899,14 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     fitCfg.useFastFitter = true;
     fitCfg.fastPreFitter = false;
     RandomEngine engine{1503};
-    // runFitTest(fitCfg, genCfg, "FastStrawOnlyTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "FastStrawOnlyTest", engine, *outFile);
   }
   // 2D straws + twin measurement test
   {
     fitCfg.useFastFitter = true;
     genCfg.twinStraw = true;
     RandomEngine engine{1701};
-    // runFitTest(fitCfg, genCfg, "StrawAndTwinTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StrawAndTwinTest", engine, *outFile);
   }
   genCfg.createStrips = true;
   genCfg.twinStraw = false;
@@ -915,7 +914,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   // 1D straws + single strip measurements
   {
     RandomEngine engine{1404};
-    // runFitTest(fitCfg, genCfg, "StrawAndStripTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StrawAndStripTest", engine, *outFile);
   }
   // Strip only
   {
@@ -923,13 +922,13 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.combineSpacePoints = true;
     genCfg.stripPitchLoc1 = 500._um;
     RandomEngine engine{2070};
-    // runFitTest(fitCfg, genCfg, "StripOnlyTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StripOnlyTest", engine, *outFile);
   }
   // Strip stereo test
   {
     genCfg.stripDirLoc1 = makeDirectionFromPhiTheta(60._degree, 90._degree);
     RandomEngine engine{2225};
-    // runFitTest(fitCfg, genCfg, "StereoStripTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StereoStripTest", engine, *outFile);
   }
 }
 
