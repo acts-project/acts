@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
 
           // Test the free track parameters estimator
           FreeVector estFreeParams =
-              estimateTrackParamsFromSeed(spacePointPtrs, bField);
+              estimateTrackParamsFromSeed(spacePointPtrs, bField).value();
           BOOST_CHECK(!estFreeParams.hasNaN());
 
           // Test the bound track parameters estimator
@@ -196,6 +196,17 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
       }
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(trackparm_estimate_aligined) {
+  Vector3 sp0{-72.775, -0.325, -615.6};
+  Vector3 sp1{-84.325, -0.325, -715.6};
+  Vector3 sp2{-98.175, -0.325, -835.6};
+  Vector3 bField{0, 0, 0.000899377};
+
+  Result<FreeVector> params =
+      estimateTrackParamsFromSeed(sp0, sp1, sp2, bField);
+  BOOST_CHECK(!params.ok());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
