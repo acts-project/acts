@@ -10,6 +10,8 @@ awkward==2.8.9
     #   uproot
 awkward-cpp==50
     # via awkward
+backports-zstd==1.0.0
+    # via pyhepmc
 cramjam==2.11.0
     # via uproot
 execnet==2.1.1
@@ -37,7 +39,7 @@ pluggy==1.6.0
     # via pytest
 pygments==2.19.2
     # via pytest
-pyhepmc==2.14.0
+pyhepmc==2.15.1
     # via -r Examples/Python/tests/requirements.in
 pytest==8.4.2
     # via
