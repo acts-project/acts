@@ -44,10 +44,9 @@ namespace Acts {
 /// @param bField is the magnetic field vector
 ///
 /// @return the free parameters
-Result<FreeVector> estimateTrackParamsFromSeed(const Vector3& sp0,
-                                               const Vector3& sp1,
-                                               const Vector3& sp2,
-                                               const Vector3& bField);
+FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
+                                       const Vector3& sp2,
+                                       const Vector3& bField);
 
 /// Estimate the full track parameters from three space points
 ///
@@ -68,8 +67,8 @@ Result<FreeVector> estimateTrackParamsFromSeed(const Vector3& sp0,
 ///
 /// @return the free parameters
 template <std::ranges::range spacepoint_range_t>
-Result<FreeVector> estimateTrackParamsFromSeed(spacepoint_range_t spRange,
-                                               const Vector3& bField) {
+FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
+                                       const Vector3& bField) {
   // Check the number of provided space points
   if (spRange.size() != 3) {
     throw std::invalid_argument(
@@ -92,12 +91,10 @@ Result<FreeVector> estimateTrackParamsFromSeed(spacepoint_range_t spRange,
     spTime = sp->t();
   }
 
-  return estimateTrackParamsFromSeed(spPositions[0], spPositions[1],
-                                     spPositions[2], bField)
-      .transform([&](FreeVector&& params) {
-        params[eFreeTime] = spTimes[0].value_or(0);
-        return params;
-      });
+  FreeVector params = estimateTrackParamsFromSeed(
+      spPositions[0], spPositions[1], spPositions[2], bField);
+  params[eFreeTime] = spTimes[0].value_or(0);
+  return params;
 }
 
 /// Estimate the full track parameters from three space points
@@ -128,14 +125,7 @@ Result<BoundVector> estimateTrackParamsFromSeed(const GeometryContext& gctx,
                                                 spacepoint_range_t spRange,
                                                 const Surface& surface,
                                                 const Vector3& bField) {
-  Result<FreeVector> freeParamsRes =
-      estimateTrackParamsFromSeed(spRange, bField);
-
-  if (!freeParamsRes.ok()) {
-    return Result<BoundVector>::failure(freeParamsRes.error());
-  }
-
-  FreeVector& freeParams = freeParamsRes.value();
+  FreeVector freeParams = estimateTrackParamsFromSeed(spRange, bField);
 
   const auto* sp0 = *spRange.begin();
   Vector3 origin = Vector3(sp0->x(), sp0->y(), sp0->z());
