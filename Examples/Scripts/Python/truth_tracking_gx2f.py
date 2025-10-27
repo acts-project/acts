@@ -102,6 +102,19 @@ def runTruthTrackingGx2f(
         rnd=rnd,
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        trackSmearingSigmas=acts.examples.TrackSmearingSigmas(
+            # zero eveything so the GX2F has a chance to find the measurements
+            loc0=0,
+            loc0PtA=0,
+            loc0PtB=0,
+            loc1=0,
+            loc1PtA=0,
+            loc1PtB=0,
+            time=0,
+            phi=0,
+            theta=0,
+            ptRel=0,
+        ),
         particleHypothesis=acts.ParticleHypothesis.muon,
         initialSigmas=[
             1 * u.mm,
