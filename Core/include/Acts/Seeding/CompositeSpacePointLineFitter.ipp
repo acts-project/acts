@@ -557,14 +557,11 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   assert(firstIdx + N <= s_nPars);
   // Current parameters mapped to an Eigen interface
   if constexpr (N == 3) {
+    assert(firstIdx + N - 1 == 2);
     std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
     std::swap(cache.gradient[2], cache.gradient[toUnderlying(FitParIndex::t0)]);
-    for (unsigned i = 0; i < N; ++i) {
-      std::swap(cache.hessian(2, i),
-                cache.hessian(toUnderlying(FitParIndex::t0), i));
-      std::swap(cache.hessian(i, 2),
-                cache.hessian(i, toUnderlying(FitParIndex::t0)));
-    }
+    cache.hessian.row(2).swap(cache.hessian.row(toUnderlying(FitParIndex::t0)));
+    cache.hessian.col(2).swap(cache.hessian.col(toUnderlying(FitParIndex::t0)));
   }
   Eigen::Map<ActsVector<N>> miniPars{currentPars.data() + firstIdx};
   ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
@@ -618,7 +615,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                           << ": Update parameters by " << toString(update));
     miniPars -= update;
   }
-  // swap back parameters if needed
+  // swap back t0 component if needed
   if constexpr (N == 3) {
     std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
   }
@@ -636,28 +633,22 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
   auto firstIdx = toUnderlying(firstPar);
   assert(firstIdx + N <= s_nPars);
 
-  if constexpr (N == 3) {
-    Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u,
-                                     toUnderlying(FitParIndex::t0)};
-    Acts::ActsSquareMatrix<N> miniHessian = hessian(idx, idx);
+  Acts::ActsSquareMatrix<N> miniHessian =
+      hessian.block<N, N>(firstIdx, firstIdx).eval();
 
-    auto inverseH = safeInverse(miniHessian);
-    // The Hessian can safely be inverted
-    if (inverseH) {
-      covariance(idx, idx) = *inverseH;
-    }
+  auto inverseH = safeInverse(miniHessian);
+  // The Hessian can safely be inverted
+  if (inverseH) {
+    auto covBlock = covariance.block<N, N>(firstIdx, firstIdx);
+    covBlock = *inverseH;
 
-  } else {
-    Acts::ActsSquareMatrix<N> miniHessian =
-        hessian.block<N, N>(firstIdx, firstIdx).eval();
-
-    auto inverseH = safeInverse(miniHessian);
-    // The Hessian can safely be inverted
-    if (inverseH) {
-      auto covBlock = covariance.block<N, N>(firstIdx, firstIdx);
-      covBlock = *inverseH;
+    // swap back t0 component if needed
+    if constexpr (N == 3) {
+      covariance.col(2).swap(covariance.col(toUnderlying(FitParIndex::t0)));
+      covariance.row(2).swap(covariance.row(toUnderlying(FitParIndex::t0)));
     }
   }
+
   ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                       << ": Evaluated covariance: \n"
                       << covariance);
