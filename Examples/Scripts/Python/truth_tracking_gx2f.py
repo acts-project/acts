@@ -103,6 +103,17 @@ def runTruthTrackingGx2f(
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
+        initialSigmas=[
+            1 * u.mm,
+            1 * u.mm,
+            1 * u.degree,
+            1 * u.degree,
+            0 / u.GeV,
+            1 * u.ns,
+        ],
+        initialSigmaQoverPt=0.1 / u.GeV,
+        initialSigmaPtRel=0.1,
+        initialVarInflation=[1e0, 1e0, 1e0, 1e0, 1e0, 1e0],
     )
 
     addGx2fTracks(

@@ -570,7 +570,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         // track parameters error
         Acts::BoundVector errors;
         for (Eigen::Index i = 0; i < parameters.size(); ++i) {
-          double variance = covariance(i, i);
+          const double variance = covariance(i, i);
           errors[i] = variance >= 0 ? std::sqrt(variance) : nan;
         }
         m_err_eLOC0[ipar].push_back(
@@ -614,8 +614,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         }
 
         // track parameters residual
-        Acts::BoundVector residuals;
-        residuals = parameters - truthParams;
+        Acts::BoundVector residuals = parameters - truthParams;
         residuals[Acts::eBoundPhi] = Acts::detail::difference_periodic(
             parameters[Acts::eBoundPhi], truthParams[Acts::eBoundPhi],
             2 * std::numbers::pi);
@@ -633,7 +632,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
             Acts::clampValue<float>(residuals[Acts::eBoundTime]));
 
         // track parameters pull
-        Acts::BoundVector pulls;
+        Acts::BoundVector pulls = Acts::BoundVector::Constant(nan);
         for (Eigen::Index i = 0; i < parameters.size(); ++i) {
           pulls[i] = (!std::isnan(errors[i]) && errors[i] > 0)
                          ? residuals[i] / errors[i]
@@ -654,13 +653,18 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         if (ipar == ePredicted) {
           // local hit residual info
-          const auto H =
+          const Acts::ActsDynamicMatrix H =
               state.projectorSubspaceHelper().fullProjector().topLeftCorner(
                   state.calibratedSize(), Acts::eBoundSize);
-          const auto V = state.effectiveCalibratedCovariance();
-          const auto resCov = V + H * covariance * H.transpose();
+          const Acts::ActsDynamicMatrix V =
+              state.effectiveCalibratedCovariance();
+          const Acts::ActsDynamicMatrix resCov =
+              V + H * covariance * H.transpose();
           const Acts::ActsDynamicVector res =
               state.effectiveCalibrated() - H * parameters;
+
+          std::cout << "resCov:\n" << resCov << "\n";
+          std::cout << "res:\n" << res << "\n";
 
           const double resX = res[Acts::eBoundLoc0];
           const double errX =
