@@ -644,8 +644,8 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
 
     // swap back t0 component if needed
     if constexpr (N == 3) {
-      covariance.col(2).swap(covariance.col(toUnderlying(FitParIndex::t0)));
       covariance.row(2).swap(covariance.row(toUnderlying(FitParIndex::t0)));
+      covariance.col(2).swap(covariance.col(toUnderlying(FitParIndex::t0)));
     }
   }
 
