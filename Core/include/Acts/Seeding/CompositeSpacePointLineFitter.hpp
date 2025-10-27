@@ -319,8 +319,7 @@ class CompositeSpacePointLineFitter {
   ///               Newton's method
   /// @param currentPars: Mutable referebce to the line parameter values at the current iteration
   template <unsigned N>
-  UpdateStep updateParameters(const FitParIndex firstPar,
-                              const ChiSqCache& cache,
+  UpdateStep updateParameters(const FitParIndex firstPar, ChiSqCache& cache,
                               ParamVec_t& currentPars) const
     requires(N >= 2 && N <= s_nPars);
 

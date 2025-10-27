@@ -549,17 +549,22 @@ CompositeSpacePointLineFitter::fit(
 template <unsigned N>
 CompositeSpacePointLineFitter::UpdateStep
 CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
-                                                const ChiSqCache& cache,
+                                                ChiSqCache& cache,
                                                 ParamVec_t& currentPars) const
   requires(N >= 2 && N <= s_nPars)
 {
   auto firstIdx = toUnderlying(firstPar);
   assert(firstIdx + N <= s_nPars);
-
   // Current parameters mapped to an Eigen interface
   if constexpr (N == 3) {
-    std::swap(currentPars[firstIdx + N - 1],
-              currentPars[toUnderlying(FitParIndex::t0)]);
+    std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
+    std::swap(cache.gradient[2], cache.gradient[toUnderlying(FitParIndex::t0)]);
+    for (unsigned i = 0; i < N; ++i) {
+      std::swap(cache.hessian(2, i),
+                cache.hessian(toUnderlying(FitParIndex::t0), i));
+      std::swap(cache.hessian(i, 2),
+                cache.hessian(i, toUnderlying(FitParIndex::t0)));
+    }
   }
   Eigen::Map<ActsVector<N>> miniPars{currentPars.data() + firstIdx};
   ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
@@ -568,82 +573,58 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << toString(cache.gradient) << ", hessian: \n"
                         << cache.hessian);
 
-  // Define a lambda for the common update logic
-  auto doUpdate = [this, &miniPars](
-                      const Eigen::Map<const ActsVector<N>>& miniGradient,
-                      const ActsSquareMatrix<N>& miniHessian) {
-    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
-                          << ": Projected parameters: " << toString(miniPars)
-                          << " gradient: " << toString(miniGradient)
-                          << ", hessian: \n"
-                          << miniHessian
-                          << ", determinant: " << miniHessian.determinant());
-    // The Hessian can safely be inverted
-    if (auto inverseH = safeInverse(miniHessian); inverseH != std::nullopt) {
-      const ActsVector<N> update{(*inverseH) * miniGradient};
-      if (update.norm() < m_cfg.precCutOff) {
-        ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__ << ": Update "
-                            << toString(update) << " is negligible small.");
-        return UpdateStep::converged;
-      }
-      ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__ << ": Update: "
-                            << toString(update) << " with inverted Hessian \n"
-                            << (*inverseH));
-      miniPars -= update;
-    } else {
-      // Fall back to gradient decent with a fixed damping factor
-      const ActsVector<N> update{
-          std::min(m_cfg.gradientStep, miniGradient.norm()) *
-          miniGradient.normalized()};
-      ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
-                            << ": Update parameters by " << toString(update));
-      miniPars -= update;
-    }
-    return UpdateStep::goodStep;
-  };
+  // Take out the filled block from the gradient
+  Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
+                                               firstIdx};
+  // The gradient is already small enough
+  if (miniGradient.norm() < m_cfg.precCutOff) {
+    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                        << ": Gradient is small enough");
+    return UpdateStep::converged;
+  }
+  // Take out the filled block from the hessian
+  Acts::ActsSquareMatrix<N> miniHessian{
+      cache.hessian.block<N, N>(firstIdx, firstIdx)};
+  ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                        << ": Projected parameters: " << toString(miniPars)
+                        << " gradient: " << toString(miniGradient)
+                        << ", hessian: \n"
+                        << miniHessian
+                        << ", determinant: " << miniHessian.determinant());
 
-  // Handle the case N=3 separately
-  if constexpr (N != 3) {
-    // Take out the filled block from the gradient
-    Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
-                                                 firstIdx};
-    // The gradient is already small enough
-    if (miniGradient.norm() < m_cfg.precCutOff) {
-      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                          << ": Gradient is small enough");
+  auto inverseH = safeInverse(miniHessian);
+  // The Hessian can safely be inverted
+  if (inverseH) {
+    const ActsVector<N> update{(*inverseH) * miniGradient};
+
+    if (update.norm() < m_cfg.precCutOff) {
+      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__ << ": Update "
+                          << toString(update) << " is negligible small.");
       return UpdateStep::converged;
     }
-    // Take out the filled block from the hessian
-    const ActsSquareMatrix<N> miniHessian{
-        cache.hessian.block<N, N>(firstIdx, firstIdx)};
-
-    return doUpdate(miniGradient, miniHessian);
+    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Inverted Hessian \n"
+                          << (*inverseH) << "\n-> Update parameters by "
+                          << toString(update));
+    miniPars -= update;
 
   } else {
-    // Take out the filled block from the gradient
-    Eigen::Array<unsigned, N, 1> idx{firstIdx, firstIdx + 1u,
-                                     toUnderlying(FitParIndex::t0)};
-    const ActsVector<N> miniGrad{cache.gradient(idx)};
-    Eigen::Map<const ActsVector<N>> miniGradient{miniGrad.data()};
+    // Fall back to gradient decent with a fixed damping factor
+    const ActsVector<N> update{
+        std::min(m_cfg.gradientStep, miniGradient.norm()) *
+        miniGradient.normalized()};
 
-    // The gradient is already small enough
-    if (miniGradient.norm() < m_cfg.precCutOff) {
-      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                          << ": Gradient is small enough");
-      return UpdateStep::converged;
-    }
-
-    // Take out the filled block from the hessian
-    const Acts::ActsSquareMatrix<N> miniHessian{cache.hessian(idx, idx)};
-
-    auto result{doUpdate(miniGradient, miniHessian)};
-
-    // Swap back the updated parameters
-    std::swap(currentPars[firstIdx + N - 1],
-              currentPars[toUnderlying(FitParIndex::t0)]);
-
-    return result;
+    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Update parameters by " << toString(update));
+    miniPars -= update;
   }
+  // swap back parameters if needed
+  if constexpr (N == 3) {
+    std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
+  }
+  // Check parameter ranges
+
+  return UpdateStep::goodStep;
 }
 
 template <unsigned N>
