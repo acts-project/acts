@@ -31,6 +31,7 @@ def runTruthTrackingGx2f(
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
+        TrackSmearingSigmas,
         addGx2fTracks,
     )
 
@@ -102,7 +103,7 @@ def runTruthTrackingGx2f(
         rnd=rnd,
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
-        trackSmearingSigmas=acts.examples.TrackSmearingSigmas(
+        trackSmearingSigmas=TrackSmearingSigmas(
             # zero eveything so the GX2F has a chance to find the measurements
             loc0=0,
             loc0PtA=0,

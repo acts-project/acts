@@ -35,6 +35,7 @@ def runTruthTrackingKalman(
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
+        TrackSmearingSigmas,
         addKalmanTracks,
     )
 
@@ -120,7 +121,7 @@ def runTruthTrackingKalman(
         rnd=rnd,
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
-        trackSmearingSigmas=acts.examples.TrackSmearingSigmas(
+        trackSmearingSigmas=TrackSmearingSigmas(
             # zero eveything so the KF has a chance to find the measurements
             loc0=0,
             loc0PtA=0,

@@ -32,6 +32,7 @@ def runTruthTrackingGsf(
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
+        TrackSmearingSigmas,
         addTruthTrackingGsf,
     )
 
@@ -105,7 +106,7 @@ def runTruthTrackingGsf(
         rnd=rnd,
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
-        trackSmearingSigmas=acts.examples.TrackSmearingSigmas(
+        trackSmearingSigmas=TrackSmearingSigmas(
             # zero eveything so the GSF has a chance to find the measurements
             loc0=0,
             loc0PtA=0,
