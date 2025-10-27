@@ -586,10 +586,9 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                             << toString(update) << " is negligible small.");
         return UpdateStep::converged;
       }
-      ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
-                            << ": Inverted Hessian \n"
-                            << (*inverseH) << "\n-> Update parameters by "
-                            << toString(update));
+      ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__ << ": Update: "
+                            << toString(update) << " with inverted Hessian \n"
+                            << (*inverseH));
       miniPars -= update;
     } else {
       // Fall back to gradient decent with a fixed damping factor
