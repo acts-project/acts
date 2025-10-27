@@ -557,11 +557,12 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   assert(firstIdx + N <= s_nPars);
   // Current parameters mapped to an Eigen interface
   if constexpr (N == 3) {
+    auto t0Idx = toUnderlying(FitParIndex::t0);
     assert(firstIdx + N - 1 == 2);
-    std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
-    std::swap(cache.gradient[2], cache.gradient[toUnderlying(FitParIndex::t0)]);
-    cache.hessian.row(2).swap(cache.hessian.row(toUnderlying(FitParIndex::t0)));
-    cache.hessian.col(2).swap(cache.hessian.col(toUnderlying(FitParIndex::t0)));
+    std::swap(currentPars[2], currentPars[t0Idx]);
+    std::swap(cache.gradient[2], cache.gradient[t0Idx]);
+    cache.hessian.row(2).swap(cache.hessian.row(t0Idx));
+    cache.hessian.col(2).swap(cache.hessian.col(t0Idx));
   }
   Eigen::Map<ActsVector<N>> miniPars{currentPars.data() + firstIdx};
   ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
