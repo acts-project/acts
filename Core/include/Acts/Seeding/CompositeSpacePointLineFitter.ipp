@@ -312,7 +312,7 @@ CompositeSpacePointLineFitter::fit(
 
   DoFcounts hitCounts{countDoF(result.measurements, fitOpts.selector)};
   const std::size_t nStraws{hitCounts.straw};
-  resCfg.parsToUse = extractFitablePars(std::move(hitCounts));
+  resCfg.parsToUse = extractFitablePars(hitCounts);
   if (resCfg.parsToUse.empty()) {
     ACTS_WARNING(__func__ << "() " << __LINE__
                           << ": No valid degrees of freedom parsed. Please "
@@ -571,7 +571,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   // Define a lambda for the common update logic
   auto doUpdate = [this, &miniPars](
                       const Eigen::Map<const ActsVector<N>>& miniGradient,
-                      const ActsSquareMatrix<N>& miniHessian) -> UpdateStep {
+                      const ActsSquareMatrix<N>& miniHessian) {
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Projected parameters: " << toString(miniPars)
                           << " gradient: " << toString(miniGradient)
@@ -579,11 +579,9 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                           << miniHessian
                           << ", determinant: " << miniHessian.determinant());
 
-    auto inverseH = safeInverse(miniHessian);
     // The Hessian can safely be inverted
-    if (inverseH) {
+    if (auto inverseH = safeInverse(miniHessian)) {
       const ActsVector<N> update{(*inverseH) * miniGradient};
-
       if (update.norm() < m_cfg.precCutOff) {
         ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__ << ": Update "
                             << toString(update) << " is negligible small.");
@@ -594,13 +592,11 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                             << (*inverseH) << "\n-> Update parameters by "
                             << toString(update));
       miniPars -= update;
-
     } else {
       // Fall back to gradient decent with a fixed damping factor
       const ActsVector<N> update{
           std::min(m_cfg.gradientStep, miniGradient.norm()) *
           miniGradient.normalized()};
-
       ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                             << ": Update parameters by " << toString(update));
       miniPars -= update;
