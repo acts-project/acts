@@ -26,7 +26,6 @@ with tempfile.TemporaryDirectory() as temp:
         outputDir=tp,
         reverseFilteringMomThreshold=float("inf"),
         reverseFilteringCovarianceScaling=100.0,
-        seed=1,
         s=s,
     )
 
