@@ -389,15 +389,18 @@ def addSeeding(
             stripGeoSelectionConfigFile,
             logLevel,
         )
+        seeds = None
+        perSeedParticleHypothesis = None
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
-            seeds = addTruthEstimatedSeeding(
+            seeds, perSeedParticleHypothesis = addTruthEstimatedSeeding(
                 s,
                 spacePoints,
                 selectedParticles,
                 truthEstimatedSeedingAlgorithmConfigArg,
-                logLevel,
+                particleHypothesis=particleHypothesis,
+                logLevel=logLevel,
             )
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
@@ -505,6 +508,7 @@ def addSeeding(
         parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
             level=logLevel,
             inputSeeds=seeds,
+            inputParticleHypotheses=perSeedParticleHypothesis,
             outputTrackParameters="estimatedparameters",
             outputSeeds="estimatedseeds",
             trackingGeometry=trackingGeometry,
@@ -523,7 +527,7 @@ def addSeeding(
         s.addAlgorithm(
             acts.examples.SeedsToPrototracks(
                 level=logLevel,
-                inputSeeds=seeds,
+                inputSeeds="estimatedseeds",
                 outputProtoTracks=prototracks,
             )
         )
@@ -663,6 +667,7 @@ def addTruthEstimatedSeeding(
     spacePoints: str,
     inputParticles: str,
     TruthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg,
+    particleHypothesis: Optional[acts.ParticleHypothesis] = None,
     logLevel: acts.logging.Level = None,
 ):
     """adds truth seeding
@@ -680,14 +685,16 @@ def addTruthEstimatedSeeding(
         outputParticles="truth_seeded_particles",
         outputProtoTracks="truth_particle_tracks",
         outputSeeds="seeds",
+        outputParticleHypotheses="seed_particle_hypotheses",
         **acts.examples.defaultKWArgs(
             deltaRMin=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[0],
             deltaRMax=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[1],
+            particleHypothesis=particleHypothesis,
         ),
     )
     sequence.addAlgorithm(truthSeeding)
 
-    return truthSeeding.config.outputSeeds
+    return truthSeeding.config.outputSeeds, truthSeeding.config.outputParticleHypotheses
 
 
 def addSpacePointsMaking(

@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -72,12 +73,12 @@ TruthSeedingAlgorithm::TruthSeedingAlgorithm(Config cfg,
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputParticleMeasurementsMap.initialize(m_cfg.inputParticleMeasurementsMap);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
   m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
-
-  m_inputSimHits.initialize(m_cfg.inputSimHits);
-  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  m_outputParticleHypotheses.maybeInitialize(m_cfg.outputParticleHypotheses);
 }
 
 ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
@@ -108,10 +109,12 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   SimParticleContainer seededParticles;
   SimSeedContainer seeds;
   ProtoTrackContainer tracks;
+  std::vector<Acts::ParticleHypothesis> particleHypotheses;
 
   seededParticles.reserve(particles.size());
   seeds.reserve(particles.size());
   tracks.reserve(particles.size());
+  particleHypotheses.reserve(particles.size());
 
   std::unordered_map<Index, const SimSpacePoint*> spMap;
 
@@ -215,9 +218,13 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       seed.setVertexZ(
           static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z()));
 
+      Acts::ParticleHypothesis hypothesis =
+          m_cfg.particleHypothesis.value_or(particle.hypothesis());
+
       seededParticles.insert(particle);
-      seeds.emplace_back(seed);
       tracks.emplace_back(std::move(track));
+      seeds.emplace_back(seed);
+      particleHypotheses.emplace_back(hypothesis);
     }
   }
 
@@ -226,6 +233,9 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   m_outputParticles(ctx, std::move(seededParticles));
   m_outputProtoTracks(ctx, std::move(tracks));
   m_outputSeeds(ctx, std::move(seeds));
+  if (m_outputParticleHypotheses.isInitialized()) {
+    m_outputParticleHypotheses(ctx, std::move(particleHypotheses));
+  }
 
   return ProcessCode::SUCCESS;
 }

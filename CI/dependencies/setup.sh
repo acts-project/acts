@@ -23,7 +23,7 @@ function end_section() {
 }
 
 # Parse command line arguments
-while getopts "c:t:d:e:h" opt; do
+while getopts "c:t:d:e:fh" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
@@ -37,14 +37,18 @@ while getopts "c:t:d:e:h" opt; do
     e )
       env_file=$OPTARG
       ;;
+    f )
+      full_install=true
+      ;;
     h )
-      echo "Usage: $0 [-c compiler] [-t tag] [-d destination]"
+      echo "Usage: $0 [-c compiler] [-t tag] [-d destination] [-e env_file] [-h]"
       echo "Options:"
       echo "  -c <compiler>    Specify compiler (defaults to CXX env var)"
       echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var)"
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
-      echo "  -h              Show this help message"
+      echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
+      echo "  -h               Show this help message"
       exit 0
       ;;
     \? )
@@ -170,6 +174,7 @@ arch=$(spack arch --family)
 
 env_dir="${destination}/env"
 view_dir="${destination}/view"
+venv_dir="${destination}/venv"
 mkdir -p ${env_dir}
 
 lock_file_path="${destination}/spack.lock"
@@ -201,23 +206,23 @@ time spack -e "${env_dir}" install --fail-fast --use-buildcache only --concurren
 end_section
 
 start_section "Patch up Geant4 data directory"
-# ${SCRIPT_DIR}/with_spack_env.sh ${env_dir} geant4-config --install-datasets
+if [ "${full_install:-false}" == "true" ]; then
+  "${view_dir}/bin/geant4-config" --install-datasets
+fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
 # Prepare the folder for G4 data, and symlink it to where G4 will look for it
 mkdir -p "${geant4_dir}/share/Geant4"
 ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
 end_section
 
-
 start_section "Prepare python environment"
-ls -al
-venv_dir="${view_dir}/venv"
-"${view_dir}"/bin/python3 -m venv \
-  --system-site-packages \
-  "$venv_dir"
-
+"${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
 "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
-
+if [ "${full_install:-false}" == "true" ]; then
+  "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Examples/Python/tests/requirements.txt"
+  "${venv_dir}/bin/python3" -m pip install histcmp==0.8.1 matplotlib
+  "${venv_dir}/bin/python3" -m pip install pytest-md-report
+fi
 end_section
 
 start_section "Set environment variables"
@@ -226,8 +231,14 @@ if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "${venv_dir}/bin" >> "$GITHUB_PATH"
 fi
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
-set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
+set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib"
 set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
-set_env LD_LIBRARY_PATH "${view_dir}/lib"
+set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
+# cleanup setup-python mess
+set_env PKG_CONFIG_PATH ""
+set_env pythonLocation ""
+set_env Python_ROOT_DIR ""
+set_env Python2_ROOT_DIR ""
+set_env Python3_ROOT_DIR ""
 end_section
