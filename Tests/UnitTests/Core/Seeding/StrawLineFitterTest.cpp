@@ -171,8 +171,9 @@ class SpCalibrator {
   static double driftRadius(const Acts::CalibrationContext& /*ctx*/,
                             const FitTestSpacePoint& measurement,
                             const double timeOffSet) {
-    if (!measurement.isStraw() or !measurement.isGood())
+    if (!measurement.isStraw() || !measurement.isGood()) {
       return 0.;
+    }
     return driftRadius(Acts::abs(measurement.time() - timeOffSet));
   }
   /// @brief Provide the drift velocity given the straw measurent and time offset
@@ -183,8 +184,9 @@ class SpCalibrator {
   static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
                               const FitTestSpacePoint& measurement,
                               const double timeOffSet) {
-    if (!measurement.isStraw() or !measurement.isGood())
+    if (!measurement.isStraw() || !measurement.isGood()) {
       return 0.;
+    }
     return driftVelocity(Acts::abs(measurement.time() - timeOffSet));
   }
   /// @brief Provide the drift acceleration given the straw measurent and time offset
@@ -195,8 +197,9 @@ class SpCalibrator {
   static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
                                   const FitTestSpacePoint& measurement,
                                   const double timeOffSet) {
-    if (!measurement.isStraw() or !measurement.isGood())
+    if (!measurement.isStraw() || !measurement.isGood()) {
       return 0.;
+    }
     return driftAcceleration(Acts::abs(measurement.time() - timeOffSet));
   }
   /// @brief Compute the distance of the point of closest approach of a straw measurement
@@ -266,8 +269,9 @@ class SpCalibrator {
   /// @param measurement: measurement
   static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
                               const FitTestSpacePoint& measurement) {
-    if (!measurement.isStraw() or !measurement.isGood())
+    if (!measurement.isStraw() || !measurement.isGood()) {
       return 0.;
+    }
     return driftVelocity(driftTime(Acts::abs(measurement.driftRadius())));
   }
   /// @brief Provide the drift acceleration given the straw measurent after being calibrated
@@ -275,8 +279,9 @@ class SpCalibrator {
   /// @param measurement: measurement
   static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
                                   const FitTestSpacePoint& measurement) {
-    if (!measurement.isStraw() or !measurement.isGood())
+    if (!measurement.isStraw() || !measurement.isGood()) {
       return 0.;
+    }
     return driftAcceleration(driftTime(Acts::abs(measurement.driftRadius())));
   }
 
@@ -796,13 +801,6 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
   // Pass a localToGlobal transform to the calibrator to proper handling the ToF
   auto calibrator = std::make_unique<SpCalibrator>();
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
-    ACTS_INFO("Processing event: " << evt);
-    if (evt != 3 and false) {
-      engine();
-      engine();
-      engine();
-      continue;
-    }
     const auto line = generateLine(engine);
     fillPars(line.parameters(), trueY0, trueX0, trueTheta, truePhi);
     fillProjected(line.parameters(), trueProjTheta, trueProjPhi);
