@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/PointerTraits.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -166,6 +166,12 @@ auto template_switch_lambda(std::size_t v, Lambda&& func, Args&&... args) {
 /// @return the clamped value
 template <typename T, typename U>
 T clampValue(U value) {
+  if (std::numeric_limits<T>::has_infinity() && std::isinf(value)) {
+    return std::numeric_limits<T>::infinity();
+  }
+  if (std::numeric_limits<T>::has_quiet_NaN() && std::isnan(value)) {
+    return std::numeric_limits<T>::quiet_NaN();
+  }
   return std::clamp(value, static_cast<U>(std::numeric_limits<T>::lowest()),
                     static_cast<U>(std::numeric_limits<T>::max()));
 }
