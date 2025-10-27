@@ -405,8 +405,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         const auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         const auto hitIdx = sl.index();
-        auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
-        auto [truthLocal, truthPos4, truthUnitDir] =
+        const auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
+        const auto [truthLocal, truthPos4, truthUnitDir] =
             averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
@@ -458,11 +458,13 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
             Acts::clampValue<float>(truthParams[Acts::eBoundTime]));
 
         // expand the local measurements into the full bound space
-        Acts::BoundVector meas = state.projectorSubspaceHelper().expandVector(
-            state.effectiveCalibrated());
+        const Acts::BoundVector meas =
+            state.projectorSubspaceHelper().expandVector(
+                state.effectiveCalibrated());
         // extract local and global position
-        Acts::Vector2 local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
-        Acts::Vector3 global =
+        const Acts::Vector2 local(meas[Acts::eBoundLoc0],
+                                  meas[Acts::eBoundLoc1]);
+        const Acts::Vector3 global =
             surface.localToGlobal(ctx.geoContext, local, truthUnitDir);
 
         // fill the measurement info
@@ -495,7 +497,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       // fill the fitted track parameters
       for (unsigned int ipar = 0; ipar < eSize; ++ipar) {
         // get the fitted track parameters
-        auto trackParamsOpt = getTrackParams(ipar);
+        const auto trackParamsOpt = getTrackParams(ipar);
         // fill the track parameters status
         m_hasParams[ipar].push_back(trackParamsOpt.has_value());
 
@@ -585,20 +587,27 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
             Acts::clampValue<float>(errors[Acts::eBoundTime]));
 
         // further track parameter info
-        Acts::FreeVector freeParams =
+        const Acts::FreeVector freeParams =
             Acts::transformBoundToFreeParameters(surface, gctx, parameters);
-        m_x[ipar].push_back(freeParams[Acts::eFreePos0]);
-        m_y[ipar].push_back(freeParams[Acts::eFreePos1]);
-        m_z[ipar].push_back(freeParams[Acts::eFreePos2]);
+        m_x[ipar].push_back(
+            Acts::clampValue<float>(freeParams[Acts::eFreePos0]));
+        m_y[ipar].push_back(
+            Acts::clampValue<float>(freeParams[Acts::eFreePos1]));
+        m_z[ipar].push_back(
+            Acts::clampValue<float>(freeParams[Acts::eFreePos2]));
         // single charge assumption
-        auto p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
-        m_px[ipar].push_back(p * freeParams[Acts::eFreeDir0]);
-        m_py[ipar].push_back(p * freeParams[Acts::eFreeDir1]);
-        m_pz[ipar].push_back(p * freeParams[Acts::eFreeDir2]);
-        m_pT[ipar].push_back(p * std::hypot(freeParams[Acts::eFreeDir0],
-                                            freeParams[Acts::eFreeDir1]));
-        m_eta[ipar].push_back(
-            Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0)));
+        const double p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
+        m_px[ipar].push_back(
+            Acts::clampValue<float>(p * freeParams[Acts::eFreeDir0]));
+        m_py[ipar].push_back(
+            Acts::clampValue<float>(p * freeParams[Acts::eFreeDir1]));
+        m_pz[ipar].push_back(
+            Acts::clampValue<float>(p * freeParams[Acts::eFreeDir2]));
+        m_pT[ipar].push_back(Acts::clampValue<float>(
+            p * std::hypot(freeParams[Acts::eFreeDir0],
+                           freeParams[Acts::eFreeDir1])));
+        m_eta[ipar].push_back(Acts::clampValue<float>(
+            Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0))));
 
         if (!state.hasUncalibratedSourceLink()) {
           continue;
@@ -645,19 +654,20 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         if (ipar == ePredicted) {
           // local hit residual info
-          auto H =
+          const auto H =
               state.projectorSubspaceHelper().fullProjector().topLeftCorner(
                   state.calibratedSize(), Acts::eBoundSize);
-          auto V = state.effectiveCalibratedCovariance();
-          auto resCov = V + H * covariance * H.transpose();
-          Acts::ActsDynamicVector res =
+          const auto V = state.effectiveCalibratedCovariance();
+          const auto resCov = V + H * covariance * H.transpose();
+          const Acts::ActsDynamicVector res =
               state.effectiveCalibrated() - H * parameters;
 
-          double resX = res[Acts::eBoundLoc0];
-          double errX = V(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
-                            ? std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0))
-                            : nan;
-          double pullX =
+          const double resX = res[Acts::eBoundLoc0];
+          const double errX =
+              V(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
+                  ? std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0))
+                  : nan;
+          const double pullX =
               resCov(Acts::eBoundLoc0, Acts::eBoundLoc0) > 0
                   ? resX / std::sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0))
                   : nan;
@@ -667,14 +677,16 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           m_pull_x_hit.push_back(Acts::clampValue<float>(pullX));
 
           if (state.calibratedSize() >= 2) {
-            double resY = res[Acts::eBoundLoc1];
-            double errY = V(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
-                              ? std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1))
-                              : nan;
-            double pullY = resCov(Acts::eBoundLoc1, Acts::eBoundLoc1) > 0
-                               ? resY / std::sqrt(resCov(Acts::eBoundLoc1,
-                                                         Acts::eBoundLoc1))
-                               : nan;
+            const double resY = res[Acts::eBoundLoc1];
+            const double errY =
+                V(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
+                    ? std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1))
+                    : nan;
+            const double pullY =
+                resCov(Acts::eBoundLoc1, Acts::eBoundLoc1) > 0
+                    ? resY /
+                          std::sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1))
+                    : nan;
 
             m_res_y_hit.push_back(Acts::clampValue<float>(resY));
             m_err_y_hit.push_back(Acts::clampValue<float>(errY));
