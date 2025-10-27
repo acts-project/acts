@@ -105,14 +105,6 @@
             }
         },
         {
-            "name": "github-ci-no-root",
-            "displayName": "GitHub-CI (without ROOT)",
-            "inherits": "github-ci",
-            "cacheVariables": {
-                "ACTS_BUILD_EXAMPLES_ROOT": "OFF"
-            }
-        },
-        {
             "name": "gitlab-ci",
             "displayName": "GitLab-CI",
             "inherits": "ci-common",
