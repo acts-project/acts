@@ -578,7 +578,6 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                           << ", hessian: \n"
                           << miniHessian
                           << ", determinant: " << miniHessian.determinant());
-
     // The Hessian can safely be inverted
     if (auto inverseH = safeInverse(miniHessian); inverseH != std::nullopt) {
       const ActsVector<N> update{(*inverseH) * miniGradient};
