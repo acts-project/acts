@@ -411,11 +411,6 @@ PVLink GeoMuonMockupExperiment::assembleBarrelStation(const MuonLayer layer,
         publishFPV(envelopeVol, assembleRpcChamber(envelopeWidth),
                    std::format("{:}_RPC_{:}_{:}_{:}_{:}_{:}", to_string(layer),
                                etaIdx, sector, dRIdx, dY, dZ));
-        std::cout << "y pos of rpc: "
-                  << -0.5 * envelopeWidth + stepdY * (dY + 0.5) << std::endl;
-        std::cout << "z pos of rpc "
-                  << -0.5 * m_chamberLength + stepdZ * (dZ + 0.5) << std::endl;
-        std::cout << "x pos of rpc " << currentX << std::endl;
       }
     }
   };
