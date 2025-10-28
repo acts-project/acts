@@ -132,7 +132,8 @@ void addTruthTracking(Context& ctx) {
       TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm", inputParticles,
       inputParticleMeasurementsMap, inputSimHits, inputMeasurementSimHitsMap,
       inputSpacePoints, outputParticles, outputSeeds, outputProtoTracks,
-      outputParticleHypotheses, deltaRMin, deltaRMax, particleHypothesis);
+      outputParticleHypotheses, particleHypothesis, deltaRMin, deltaRMax,
+      absDeltaZMin, absDeltaZMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HitSelector, mex, "HitSelector", inputHits,
                                 inputParticlesSelected, outputHits, minX, maxX,
