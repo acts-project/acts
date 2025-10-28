@@ -131,7 +131,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 toml==0.10.2
     # via -r docs/requirements.in
-typer==0.19.2
+typer==0.20.0
     # via -r docs/requirements.in
 typing-extensions==4.15.0
     # via
