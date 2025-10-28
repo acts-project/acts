@@ -56,6 +56,7 @@
 #include <memory>
 #include <numbers>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <boost/algorithm/string/join.hpp>
@@ -119,6 +120,12 @@ class PyTrackingGeometryVisitor : public TrackingGeometryMutableVisitor {
   void visitSurface(Surface& surface) override {
     _INVOKE(TrackingGeometryMutableVisitor::visitSurface, "visitSurface",
             surface);
+  }
+
+  void visitBoundarySurface(
+      Acts::BoundarySurfaceT<Acts::TrackingVolume>& boundary) override {
+    _INVOKE(Acts::TrackingGeometryMutableVisitor::visitBoundarySurface,
+            "visitBoundarySurface", boundary);
   }
 };
 
@@ -203,15 +210,17 @@ void addGeometry(py::module_& m) {
     auto trkGeo =
         py::class_<TrackingGeometry, std::shared_ptr<TrackingGeometry>>(
             m, "TrackingGeometry")
-            .def(py::init([](const MutableTrackingVolumePtr& volPtr,
-                             std::shared_ptr<const IMaterialDecorator> matDec,
-                             const GeometryIdentifierHook& hook,
-                             Logging::Level level) {
-              auto logger = getDefaultLogger("TrackingGeometry", level);
-              auto obj = std::make_shared<TrackingGeometry>(
-                  volPtr, matDec.get(), hook, *logger);
-              return obj;
-            }))
+            .def(py::init(
+                [](const MutableTrackingVolumePtr& volPtr,
+                   const std::shared_ptr<const IMaterialDecorator>& matDec,
+                   const GeometryIdentifierHook& hook,
+                   Acts::Logging::Level level) {
+                  auto logger =
+                      Acts::getDefaultLogger("TrackingGeometry", level);
+                  auto obj = std::make_shared<Acts::TrackingGeometry>(
+                      volPtr, matDec.get(), hook, *logger);
+                  return obj;
+                }))
             .def("visitSurfaces",
                  [](TrackingGeometry& self, py::function& func) {
                    self.visitSurfaces(func);
@@ -277,7 +286,7 @@ void addGeometry(py::module_& m) {
         m, "GeometryIdentifierHook")
         .def(py::init([](py::object callable) {
           auto hook = std::make_shared<GeometryIdentifierHookBinding>();
-          hook->callable = callable;
+          hook->callable = std::move(callable);
           return hook;
         }));
   }

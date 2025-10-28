@@ -46,9 +46,9 @@ mdurl==0.1.2
     # via markdown-it-py
 mplhep==0.4.1
     # via -r Examples/Scripts/requirements.in
-mplhep-data==0.0.4
+mplhep-data==0.0.5
     # via mplhep
-numpy==2.3.3
+numpy==2.3.4
     # via
     #   awkward
     #   awkward-cpp
@@ -70,11 +70,11 @@ packaging==25.0
     #   uproot
 pandas==2.3.3
     # via -r Examples/Scripts/requirements.in
-pillow==11.3.0
+pillow==12.0.0
     # via matplotlib
-pydantic==2.12.0
+pydantic==2.12.3
     # via -r Examples/Scripts/requirements.in
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
 pygments==2.19.2
     # via rich
@@ -98,7 +98,7 @@ shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.19.2
+typer==0.20.0
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.15.0
     # via

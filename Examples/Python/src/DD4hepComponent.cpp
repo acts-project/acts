@@ -9,6 +9,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/DD4hepDetector/OpenDataDetector.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -23,6 +24,7 @@
 namespace py = pybind11;
 using namespace Acts;
 using namespace ActsPlugins;
+using namespace pybind11::literals;
 using namespace ActsExamples;
 using namespace ActsPython;
 
