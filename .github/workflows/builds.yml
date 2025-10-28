@@ -102,21 +102,6 @@ jobs:
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
-      # We configure and build without ROOT in the same job to garantuee that we can use the ccache cache
-      - name: Configure (without ROOT)
-        run: >
-          ccache -z &&
-          rm -rf build &&
-          cmake -B build -S .
-          --preset=github-ci-no-root
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-
-      - name: Build (without ROOT)
-        run: cmake --build build
-
-      - name: ccache stats (without ROOT)
-        run: ccache -s
-
   linux_examples_test:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:80
