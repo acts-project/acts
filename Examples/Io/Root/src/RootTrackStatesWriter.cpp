@@ -663,9 +663,6 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           const Acts::ActsDynamicVector res =
               state.effectiveCalibrated() - H * parameters;
 
-          std::cout << "resCov:\n" << resCov << "\n";
-          std::cout << "res:\n" << res << "\n";
-
           const double resX = res[Acts::eBoundLoc0];
           const double errX =
               V(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
