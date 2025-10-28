@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -196,6 +197,16 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
       }
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(trackparm_estimate_aligined) {
+  Vector3 sp0{-72.775, -0.325, -615.6};
+  Vector3 sp1{-84.325, -0.325, -715.6};
+  Vector3 sp2{-98.175, -0.325, -835.6};
+  Vector3 bField{0, 0, 0.000899377};
+
+  FreeVector params = estimateTrackParamsFromSeed(sp0, sp1, sp2, bField);
+  BOOST_CHECK_EQUAL(params[eFreeQOverP], 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
