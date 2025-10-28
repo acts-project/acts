@@ -166,16 +166,16 @@ auto template_switch_lambda(std::size_t v, Lambda&& func, Args&&... args) {
 /// @return the clamped value
 template <typename T, typename U>
 T clampValue(U value) {
-  if (std::numeric_limits<U>::has_infinity() && std::isinf(value)) {
-    if (!std::numeric_limits<T>::has_infinity()) {
+  if (std::numeric_limits<U>::has_infinity && std::isinf(value)) {
+    if (!std::numeric_limits<T>::has_infinity) {
       throw std::logic_error(
           "Cannot convert infinite value to type without infinity support");
     }
     return (value > 0) ? std::numeric_limits<T>::infinity()
                        : -std::numeric_limits<T>::infinity();
   }
-  if (std::numeric_limits<U>::has_quiet_NaN() && std::isnan(value)) {
-    if (!std::numeric_limits<T>::has_quiet_NaN()) {
+  if (std::numeric_limits<U>::has_quiet_NaN && std::isnan(value)) {
+    if (!std::numeric_limits<T>::has_quiet_NaN) {
       throw std::logic_error(
           "Cannot convert NaN value to type without NaN support");
     }
