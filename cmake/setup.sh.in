@@ -28,7 +28,7 @@ fi
 
 # Make ACTS binaries available
 # detect if we are installed as there is no lib subdirectory
-if [[ -n "${IS_INSTALLED_VERSION}" && ! "${IS_INSTALLED_VERSION,,}" == "off" ]]; then
+if [[ "${IS_INSTALLED_VERSION}" == "ON" ]]; then
     script_dir=$( cd -- "${script_dir}" &> /dev/null && cd .. &> /dev/null && pwd )
 
     export PATH="${script_dir}/bin:${PATH}"
