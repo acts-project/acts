@@ -402,9 +402,6 @@ PVLink GeoMuonMockupExperiment::assembleBarrelStation(const MuonLayer layer,
   auto placeRpc = [&](const double currentX, unsigned dRIdx) {
     const double stepdZ = m_chamberLength / m_cfg.nRpcAlongZ;
     const double stepdY = envelopeWidth / m_cfg.nRpcAlongPhi;
-    std::cout << "stepdY = " << stepdY << std::endl;
-    std::cout << "stepdz = " << stepdZ << std::endl;
-    // std::cin.ignore();
 
     for (unsigned dZ = 0; dZ < m_cfg.nRpcAlongZ; ++dZ) {
       for (unsigned dY = 0; dY < m_cfg.nRpcAlongPhi; ++dY) {
