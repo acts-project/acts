@@ -245,7 +245,6 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       SimSeed seed{*spacePointsOnTrack[bestSPIndices[0]],
                    *spacePointsOnTrack[bestSPIndices[1]],
                    *spacePointsOnTrack[bestSPIndices[2]]};
-      seed.setVertexZ(0);
 
       Acts::ParticleHypothesis hypothesis =
           m_cfg.particleHypothesis.value_or(particle.hypothesis());
