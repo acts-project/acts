@@ -186,8 +186,9 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    // Loop over the found space points to find the seed with maximum deltaR
-    // between the bottom and top space point
+    // Loop over the found space points to find the seed with the maximum score.
+    // The score is defined as the product of the deltaR of the bottom-middle
+    // and middle-top space point pairs to favor separation between both pairs.
     bool seedFound = false;
     std::array<std::size_t, 3> bestSPIndices{};
     double maxScore = std::numeric_limits<double>::min();
