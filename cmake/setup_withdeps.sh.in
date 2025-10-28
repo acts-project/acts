@@ -8,6 +8,21 @@
 
 # This script sets up the ACTS environment with dependencies in a somewhat robust way.
 
+IS_INSTALLED_VERSION="@IS_INSTALLED_VERSION@"
+ROOT_DIR="@ROOT_DIR@"
+ROOT_BINDIR="@ROOT_BINDIR@"
+GEANT4_DIR="@GEANT4_DIR@"
+GEANT4_INCLUDE_DIR="@GEANT4_INCLUDE_DIR@"
+DD4hep_DIR="@DD4hep_DIR@"
+DD4hep_INCLUDE_DIRS="@DD4hep_INCLUDE_DIRS@"
+podio_DIR="@podio_DIR@"
+podio_LIBRARY_DIR="@podio_LIBRARY_DIR@"
+podio_INCLUDE_DIR="@podio_INCLUDE_DIR@"
+podio_PYTHON_DIR="@podio_PYTHON_DIR@"
+EDM4HEP_DIR="@EDM4HEP_DIR@"
+EDM4HEP_LIBRARY_DIR="@EDM4HEP_LIBRARY_DIR@"
+EDM4HEP_INCLUDE_DIR="@EDM4HEP_INCLUDE_DIR@"
+
 if [ -n "${ZSH_VERSION:-}" ]; then
     script_dir=${0:a:h}
 elif [ -n "${BASH_VERSION:-}" ]; then
@@ -20,7 +35,7 @@ else
 fi
 
 # detect if we are installed as there is no lib subdirectory
-if [ ! -d "${script_dir}/lib" ] && [ ! -d "${script_dir}/lib64" ]; then
+if [[ -n "${IS_INSTALLED_VERSION}" && ! "${IS_INSTALLED_VERSION,,}" == "off" ]]; then
     script_dir=$( cd -- "${script_dir}" &> /dev/null && cd .. &> /dev/null && pwd )
 fi
 
@@ -34,21 +49,21 @@ source "${script_dir}/this_acts.sh"
 # activate dependencies if present
 if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
   # Dependency setup script has already given us this location!
-  . "$ROOT_SETUP_SCRIPT"
+  source "$ROOT_SETUP_SCRIPT"
 else
   # Try to recover the build-time configuration
-  if [[ -d "@ROOT_DIR@" ]]; then
-    source "@ROOT_BINDIR@/thisroot.sh"
+  if [[ -d "${ROOT_DIR}" ]]; then
+    source "${ROOT_BINDIR}/thisroot.sh"
   fi
 fi
-if [[ -d "@Geant4_DIR@" ]]; then
-  source "@Geant4_INCLUDE_DIR@/../../bin/geant4.sh"
+if [[ -d "${Geant4_DIR}" ]]; then
+  source "${Geant4_INCLUDE_DIR}/../../bin/geant4.sh"
 fi
-if [[ -d "@DD4hep_DIR@" ]]; then
+if [[ -d "${DD4hep_DIR}" ]]; then
   prevstate=$-
 
   set +e
-  . "@DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh"
+  source "${DD4hep_INCLUDE_DIRS}/../bin/thisdd4hep.sh"
   # Without this, DD4hep's Xerces-C XML parsing fails with:
   # > Could not load a transcoding service
   export LC_ALL=C
@@ -58,16 +73,16 @@ if [[ -d "@DD4hep_DIR@" ]]; then
     set -e
   fi
 fi
-if [[ -d "@podio_DIR@" ]]; then
-  export LD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${LD_LIBRARY_PATH}"
-  export DYLD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${DYLD_LIBRARY_PATH}"
-  export ROOT_INCLUDE_PATH="@podio_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
-  export PYTHONPATH="@podio_PYTHON_DIR@:${PYTHONPATH}"
+if [[ -d "${podio_DIR}" ]]; then
+  export LD_LIBRARY_PATH="${podio_LIBRARY_DIR}:${LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="${podio_LIBRARY_DIR}:${DYLD_LIBRARY_PATH}"
+  export ROOT_INCLUDE_PATH="${podio_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}"
+  export PYTHONPATH="${podio_PYTHON_DIR}:${PYTHONPATH}"
 fi
-if [[ -d "@EDM4HEP_DIR@" ]]; then
-  export LD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${LD_LIBRARY_PATH}"
-  export DYLD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${DYLD_LIBRARY_PATH}"
-  export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
+if [[ -d "${EDM4HEP_DIR}" ]]; then
+  export LD_LIBRARY_PATH="${EDM4HEP_LIBRARY_DIR}/lib:${LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="${EDM4HEP_LIBRARY_DIR}/lib:${DYLD_LIBRARY_PATH}"
+  export ROOT_INCLUDE_PATH="${EDM4HEP_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}"
 fi
 
 # ensure that we end up with the same python as before sourcing this script

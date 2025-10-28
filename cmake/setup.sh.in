@@ -8,6 +8,13 @@
 
 # This script sets up the ACTS environment without dependencies in a somewhat robust way.
 
+IS_INSTALLED_VERSION="@IS_INSTALLED_VERSION@"
+CMAKE_INSTALL_PREFIX="@CMAKE_INSTALL_PREFIX@"
+CMAKE_INSTALL_BINDIR="@CMAKE_INSTALL_BINDIR@"
+CMAKE_INSTALL_LIBDIR="@CMAKE_INSTALL_LIBDIR@"
+PROJECT_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
+ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS="@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@"
+
 if [ -n "${ZSH_VERSION:-}" ]; then
     script_dir=${0:a:h}
 elif [ -n "${BASH_VERSION:-}" ]; then
@@ -21,7 +28,7 @@ fi
 
 # Make ACTS binaries available
 # detect if we are installed as there is no lib subdirectory
-if [ ! -d "${script_dir}/lib" ] && [ ! -d "${script_dir}/lib64" ]; then
+if [[ -n "${IS_INSTALLED_VERSION}" && ! "${IS_INSTALLED_VERSION,,}" == "off" ]]; then
     script_dir=$( cd -- "${script_dir}" &> /dev/null && cd .. &> /dev/null && pwd )
 
     export PATH="${script_dir}/bin:${PATH}"
@@ -29,17 +36,17 @@ if [ ! -d "${script_dir}/lib" ] && [ ! -d "${script_dir}/lib64" ]; then
     export DYLD_LIBRARY_PATH="${script_dir}/lib:${DYLD_LIBRARY_PATH}"
 else
     # the ${VAR:+:} part adds a double colon only if VAR is not empty
-    export PATH="@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_BINDIR@${PATH:+:}${PATH}"
-    export LD_LIBRARY_PATH="@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
-    export DYLD_LIBRARY_PATH="@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
+    export PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}${PATH:+:}${PATH}"
+    export LD_LIBRARY_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+    export DYLD_LIBRARY_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
 fi
 
 # ACTS project source directory
-export ACTS_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
+export ACTS_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
 
 # Make ODD available if possible
 # This seems to be only reliable on Linux for now, not on MacOS
-odd_source_dir="@PROJECT_SOURCE_DIR@/thirdparty/OpenDataDetector"
+odd_source_dir="${PROJECT_SOURCE_DIR}/thirdparty/OpenDataDetector"
 if [ -d "${odd_source_dir}" ]; then
     echo "INFO:    Found OpenDataDetector and set it up"
     export ODD_PATH="${odd_source_dir}"
@@ -54,7 +61,7 @@ fi
 
 # Make Python bindings available if possible
 # first check if python bindings are enabled then check if the setup.sh file exists
-if [ "@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@" = "ON" ]; then
+if [ "${ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS}" = "ON" ]; then
     if [[ -f "${script_dir}/python/setup.sh" ]]; then
       source "${script_dir}/python/setup.sh"
     else

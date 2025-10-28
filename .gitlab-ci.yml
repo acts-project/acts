@@ -9,7 +9,7 @@ variables:
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v16.0.0
+  DEPENDENCY_TAG: v17.0.0
 
 .ccache_base:
   cache:
@@ -112,7 +112,6 @@ build_gnn_cpu:
 
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
-    - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
