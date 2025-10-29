@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <memory>
 #include <numeric>
+#include <random>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -29,16 +30,25 @@ using namespace Acts;
 namespace {
 
 std::tuple<BoundVector, double> computeMeanAndSumOfWeights(
-    const std::vector<GsfComponent> &cmps) {
-  const auto mean =
-      std::accumulate(cmps.begin(), cmps.end(), BoundVector::Zero().eval(),
-                      [](auto sum, const auto &cmp) -> BoundVector {
-                        return sum + cmp.weight * cmp.boundPars;
-                      });
+    const std::vector<GsfComponent> &cmps, const Surface &surface) {
+  if (cmps.empty()) {
+    return {BoundVector::Zero(), 0.0};
+  }
 
   const double sumOfWeights =
       std::accumulate(cmps.begin(), cmps.end(), 0.0,
                       [](auto sum, const auto &cmp) { return sum + cmp.weight; });
+
+  BoundVector mean;
+  detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
+    auto [meanTmp, cov] = detail::gaussianMixtureMeanCov(
+        cmps,
+        [](const auto &c) {
+          return std::tie(c.weight, c.boundPars, c.boundCov);
+        },
+        desc);
+    mean = meanTmp;
+  });
 
   return std::make_tuple(mean, sumOfWeights);
 }
@@ -49,6 +59,45 @@ GsfComponent makeDefaultComponent(double weight) {
   cmp.boundCov = BoundSquareMatrix::Identity();
   cmp.weight = weight;
   return cmp;
+}
+
+void testReductionEquivalence(const std::vector<GsfComponent> &cmps,
+                               std::size_t targetSize,
+                               const Surface &surface) {
+  std::vector<GsfComponent> cmpsOptimized = cmps;
+  std::vector<GsfComponent> cmpsNaive = cmps;
+
+  const auto [meanBefore, sumOfWeightsBefore] = computeMeanAndSumOfWeights(cmps, surface);
+
+  reduceMixtureWithKLDistance(cmpsOptimized, targetSize, surface);
+  reduceMixtureWithKLDistanceNaive(cmpsNaive, targetSize, surface);
+
+  BOOST_CHECK_EQUAL(cmpsOptimized.size(), targetSize);
+  BOOST_CHECK_EQUAL(cmpsNaive.size(), targetSize);
+
+  const auto [meanOptimized, sumOfWeightsOptimized] = computeMeanAndSumOfWeights(cmpsOptimized, surface);
+  const auto [meanNaive, sumOfWeightsNaive] = computeMeanAndSumOfWeights(cmpsNaive, surface);
+
+  BOOST_CHECK_CLOSE(sumOfWeightsOptimized, sumOfWeightsNaive, 1.e-8);
+  BOOST_CHECK_CLOSE(sumOfWeightsOptimized, 1.0, 1.e-8);
+
+  BOOST_CHECK_CLOSE(meanOptimized[eBoundLoc0], meanBefore[eBoundLoc0], 1.e-8);
+  BOOST_CHECK_CLOSE(meanNaive[eBoundLoc0], meanBefore[eBoundLoc0], 1.e-8);
+
+  BOOST_CHECK_CLOSE(meanOptimized[eBoundLoc1], meanBefore[eBoundLoc1], 1.e-8);
+  BOOST_CHECK_CLOSE(meanNaive[eBoundLoc1], meanBefore[eBoundLoc1], 1.e-8);
+
+  BOOST_CHECK_CLOSE(meanOptimized[eBoundPhi], meanBefore[eBoundPhi], 1.e-8);
+  BOOST_CHECK_CLOSE(meanNaive[eBoundPhi], meanBefore[eBoundPhi], 1.e-8);
+
+  BOOST_CHECK_CLOSE(meanOptimized[eBoundTheta], meanBefore[eBoundTheta], 1.e-8);
+  BOOST_CHECK_CLOSE(meanNaive[eBoundTheta], meanBefore[eBoundTheta], 1.e-8);
+
+  BOOST_CHECK_CLOSE(meanOptimized[eBoundQOverP], meanBefore[eBoundQOverP], 1.e-8);
+  BOOST_CHECK_CLOSE(meanNaive[eBoundQOverP], meanBefore[eBoundQOverP], 1.e-8);
+
+  BOOST_CHECK_CLOSE(meanOptimized[eBoundTime], meanBefore[eBoundTime], 1.e-8);
+  BOOST_CHECK_CLOSE(meanNaive[eBoundTime], meanBefore[eBoundTime], 1.e-8);
 }
 
 }  // namespace
@@ -145,7 +194,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   cmps[3].boundPars[eBoundQOverP] = 4.5_GeV;
 
   // Check start properties
-  const auto [mean0, sumOfWeights0] = computeMeanAndSumOfWeights(cmps);
+  const auto [mean0, sumOfWeights0] = computeMeanAndSumOfWeights(cmps, *surface);
 
   BOOST_CHECK_CLOSE(mean0[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
@@ -160,7 +209,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 1.0_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(cmps[1].boundPars[eBoundQOverP], 4.0_GeV, 1.e-8);
 
-  const auto [mean1, sumOfWeights1] = computeMeanAndSumOfWeights(cmps);
+  const auto [mean1, sumOfWeights1] = computeMeanAndSumOfWeights(cmps, *surface);
 
   BOOST_CHECK_CLOSE(mean1[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
@@ -195,34 +244,36 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
 BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
-  const std::size_t NComps = 8;
+  const std::size_t NComps = 10;
 
-  std::vector<GsfComponent> cmpsOptimized;
-  std::vector<GsfComponent> cmpsNaive;
+  std::mt19937 rng(42);
+  std::uniform_real_distribution<double> weightDist(0.5, 1.5);
+  std::uniform_real_distribution<double> loc0Dist(-10.0, 10.0);
+  std::uniform_real_distribution<double> loc1Dist(-10.0, 10.0);
+  std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+  std::uniform_real_distribution<double> thetaDist(0.0, M_PI);
+  std::uniform_real_distribution<double> qopDist(0.1, 5.0);
+
+  std::vector<GsfComponent> cmps;
+  double weightSum = 0.0;
 
   for (auto i = 0ul; i < NComps; ++i) {
-    GsfComponent a = makeDefaultComponent(1.0 / NComps);
-    a.boundPars[eBoundQOverP] = static_cast<double>(i) * 1.0_GeV;
-    cmpsOptimized.push_back(a);
-    cmpsNaive.push_back(a);
+    GsfComponent cmp = makeDefaultComponent(weightDist(rng));
+    cmp.boundPars[eBoundLoc0] = loc0Dist(rng);
+    cmp.boundPars[eBoundLoc1] = loc1Dist(rng);
+    cmp.boundPars[eBoundPhi] = phiDist(rng);
+    cmp.boundPars[eBoundTheta] = thetaDist(rng);
+    cmp.boundPars[eBoundQOverP] = qopDist(rng);
+    cmp.boundPars[eBoundTime] = 0.0;
+    weightSum += cmp.weight;
+    cmps.push_back(cmp);
   }
 
-  const auto [meanBefore, sumOfWeightsBefore] = computeMeanAndSumOfWeights(cmpsOptimized);
+  for (auto &cmp : cmps) {
+    cmp.weight /= weightSum;
+  }
 
-  reduceMixtureWithKLDistance(cmpsOptimized, 2, *surface);
-  reduceMixtureWithKLDistanceNaive(cmpsNaive, 2, *surface);
-
-  BOOST_CHECK_EQUAL(cmpsOptimized.size(), 2);
-  BOOST_CHECK_EQUAL(cmpsNaive.size(), 2);
-
-  const auto [meanOptimized, sumOfWeightsOptimized] = computeMeanAndSumOfWeights(cmpsOptimized);
-  const auto [meanNaive, sumOfWeightsNaive] = computeMeanAndSumOfWeights(cmpsNaive);
-
-  BOOST_CHECK_CLOSE(sumOfWeightsOptimized, sumOfWeightsNaive, 1.e-8);
-  BOOST_CHECK_CLOSE(sumOfWeightsOptimized, 1.0, 1.e-8);
-
-  for (auto i = 0ul; i < BoundVector::RowsAtCompileTime; ++i) {
-    BOOST_CHECK_CLOSE(meanOptimized[i], meanBefore[i], 1.e-8);
-    BOOST_CHECK_CLOSE(meanNaive[i], meanBefore[i], 1.e-8);
+  for (std::size_t targetSize = 9; targetSize > 0; --targetSize) {
+    testReductionEquivalence(cmps, targetSize, *surface);
   }
 }

@@ -370,3 +370,38 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
   // Here we expect a very bad approximation
   test_surface(*surface, desc, p, 1.1);
 }
+
+BOOST_AUTO_TEST_CASE(test_phi_angle_wrapping_simple) {
+  // Two components with phi angles spanning the -pi/+pi boundary
+  std::vector<DummyComponent<1>> cmps;
+
+  // Component 1: phi = +2.8 rad (about 160 degrees), weight = 0.5
+  DummyComponent<1> c1;
+  c1.weight = 0.5;
+  c1.boundPars[0] = 2.8;
+  c1.boundCov = ActsSquareMatrix<1>::Identity();
+  cmps.push_back(c1);
+
+  // Component 2: phi = -2.8 rad (about -160 degrees), weight = 0.5
+  DummyComponent<1> c2;
+  c2.weight = 0.5;
+  c2.boundPars[0] = -2.8;
+  c2.boundCov = ActsSquareMatrix<1>::Identity();
+  cmps.push_back(c2);
+
+  // Expected: mean should be +/-pi (going through discontinuity), NOT 0.0
+  // With cyclic angle descriptor
+  const auto desc = std::tuple<detail::CyclicAngle<eBoundLoc0>>{};
+  auto [mean, cov] = detail::gaussianMixtureMeanCov(
+      cmps, std::identity{}, desc);
+
+  // Check mean is close to +/-pi, not 0
+  BOOST_CHECK(std::abs(std::abs(mean[0]) - M_PI) < 0.1);
+
+  // Without cyclic angle descriptor - should give wrong result
+  auto [meanWrong, covWrong] = detail::gaussianMixtureMeanCov(
+      cmps, std::identity{}, std::tuple<>{});
+
+  // This will likely be close to 0.0 (arithmetic mean), which is wrong
+  BOOST_CHECK(std::abs(meanWrong[0]) < 0.5);
+}
