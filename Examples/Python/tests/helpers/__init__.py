@@ -4,6 +4,7 @@ from typing import List, Union
 import contextlib
 
 import acts
+from acts import examples
 from acts.examples import IAlgorithm
 
 geant4Enabled = (

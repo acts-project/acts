@@ -15,13 +15,15 @@ sys.path = [
     str(Path(__file__).parent),
 ] + sys.path
 
+import acts
+import acts.examples
+
 import helpers
 import helpers.hash_root
 
 import pytest
 
-import acts
-import acts.examples
+
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
