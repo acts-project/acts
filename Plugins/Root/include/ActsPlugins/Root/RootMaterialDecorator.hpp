@@ -48,7 +48,8 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
 
   /// Constructor
   ///
-  /// @param cfg configuration struct for the reader
+  /// @param config configuration struct for the reader
+  /// @param level the logging level
   RootMaterialDecorator(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
