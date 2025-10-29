@@ -47,9 +47,9 @@ foreach(f ${py_files})
     get_filename_component(_dir ${_target} DIRECTORY)
     file(MAKE_DIRECTORY ${_dir})
 
-    file(
-        CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/${f} ${_target}
-        SYMBOLIC
+    install(
+        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f} 
+        DESTINATION ${_target}
     )
 
     get_filename_component(_rel ${f} DIRECTORY)
