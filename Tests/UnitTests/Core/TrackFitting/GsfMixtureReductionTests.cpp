@@ -186,3 +186,55 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
   BOOST_CHECK_EQUAL(cmps[0].weight, 3.0);
   BOOST_CHECK_EQUAL(cmps[1].weight, 4.0);
 }
+
+BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
+  auto meanAndSumOfWeights = [](const auto &cmps) {
+    const auto mean =
+        std::accumulate(cmps.begin(), cmps.end(), BoundVector::Zero().eval(),
+                        [](auto sum, const auto &cmp) -> BoundVector {
+                          return sum + cmp.weight * cmp.boundPars;
+                        });
+
+    const double sumOfWeights = std::accumulate(
+        cmps.begin(), cmps.end(), 0.0,
+        [](auto sum, const auto &cmp) { return sum + cmp.weight; });
+
+    return std::make_tuple(mean, sumOfWeights);
+  };
+
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
+  const std::size_t NComps = 8;
+
+  std::vector<GsfComponent> cmpsOptimized;
+  std::vector<GsfComponent> cmpsNaive;
+
+  for (auto i = 0ul; i < NComps; ++i) {
+    GsfComponent a;
+    a.boundPars = BoundVector::Zero();
+    a.boundCov = BoundSquareMatrix::Identity();
+    a.weight = 1.0 / NComps;
+    a.boundPars[eBoundQOverP] = static_cast<double>(i) * 1.0_GeV;
+    cmpsOptimized.push_back(a);
+    cmpsNaive.push_back(a);
+  }
+
+  const auto [meanBefore, sumOfWeightsBefore] = meanAndSumOfWeights(cmpsOptimized);
+
+  reduceMixtureWithKLDistance(cmpsOptimized, 2, *surface);
+  reduceMixtureWithKLDistanceNaive(cmpsNaive, 2, *surface);
+
+  BOOST_CHECK_EQUAL(cmpsOptimized.size(), 2);
+  BOOST_CHECK_EQUAL(cmpsNaive.size(), 2);
+
+  const auto [meanOptimized, sumOfWeightsOptimized] = meanAndSumOfWeights(cmpsOptimized);
+  const auto [meanNaive, sumOfWeightsNaive] = meanAndSumOfWeights(cmpsNaive);
+
+  BOOST_CHECK_CLOSE(sumOfWeightsOptimized, sumOfWeightsNaive, 1.e-8);
+  BOOST_CHECK_CLOSE(sumOfWeightsOptimized, 1.0, 1.e-8);
+
+  for (auto i = 0ul; i < BoundVector::RowsAtCompileTime; ++i) {
+    BOOST_CHECK_CLOSE(meanOptimized[i], meanBefore[i], 1.e-8);
+    BOOST_CHECK_CLOSE(meanNaive[i], meanBefore[i], 1.e-8);
+  }
+}

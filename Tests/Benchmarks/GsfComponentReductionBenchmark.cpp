@@ -50,9 +50,13 @@ int main() {
   std::cout << "reduceMixtureLargestWeights" << std::endl;
   test(data, *surface, reduceMixtureLargestWeights);
   std::cout << std::endl;
-  
-  std::cout << "reduceMixtureWithKLDistance" << std::endl;
+
+  std::cout << "reduceMixtureWithKLDistance (optimized)" << std::endl;
   test(data, *surface, reduceMixtureWithKLDistance);
+  std::cout << std::endl;
+
+  std::cout << "reduceMixtureWithKLDistanceNaive (baseline)" << std::endl;
+  test(data, *surface, reduceMixtureWithKLDistanceNaive);
   std::cout << std::endl;
 }
 

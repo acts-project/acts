@@ -78,4 +78,43 @@ void reduceMixtureWithKLDistance(std::vector<Acts::GsfComponent> &cmpCache,
   });
 }
 
+void reduceMixtureWithKLDistanceNaive(
+    std::vector<Acts::GsfComponent> &cmpCache, std::size_t maxCmpsAfterMerge,
+    const Surface &surface) {
+  if (cmpCache.size() <= maxCmpsAfterMerge) {
+    return;
+  }
+
+  auto proj = [](auto &a) -> decltype(auto) { return a; };
+
+  detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
+    while (cmpCache.size() > maxCmpsAfterMerge) {
+      // Recompute ALL distances every iteration (naive approach)
+      double minDistance = std::numeric_limits<double>::max();
+      std::size_t minI = 0;
+      std::size_t minJ = 0;
+
+      for (std::size_t i = 0; i < cmpCache.size(); ++i) {
+        for (std::size_t j = i + 1; j < cmpCache.size(); ++j) {
+          double distance =
+              detail::computeSymmetricKlDivergence(cmpCache[i], cmpCache[j], proj);
+          if (distance < minDistance) {
+            minDistance = distance;
+            minI = i;
+            minJ = j;
+          }
+        }
+      }
+
+      // Merge the two closest components
+      cmpCache[minI] = detail::mergeComponents(cmpCache[minI], cmpCache[minJ], proj, desc);
+
+      // Remove the merged component immediately
+      cmpCache.erase(cmpCache.begin() + minJ);
+    }
+  });
+
+  assert(cmpCache.size() == maxCmpsAfterMerge && "size mismatch");
+}
+
 }  // namespace Acts
