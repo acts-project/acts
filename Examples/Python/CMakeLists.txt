@@ -297,12 +297,12 @@ foreach(f ${py_files})
     get_filename_component(_dir ${_target} DIRECTORY)
     file(MAKE_DIRECTORY ${_dir})
 
-    file(
-        CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f} ${_target}
-        SYMBOLIC
-    )
-
     get_filename_component(_rel ${f} DIRECTORY)
+
+    install(
+        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f}
+        DESTINATION ${_python_dir}/acts/${_rel}
+    )
 
     install(
         FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f}
