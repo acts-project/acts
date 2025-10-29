@@ -8,7 +8,7 @@ from helpers import jsonEnabled
 
 @pytest.mark.root
 def test_material_root(conf_const):
-    import acts.root
+    from acts import root
 
     with pytest.raises(TypeError):
         acts.root.RootMaterialDecorator()
