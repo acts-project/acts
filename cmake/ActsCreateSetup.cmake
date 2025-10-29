@@ -11,7 +11,7 @@ configure_file(
     @ONLY
 )
 
-set(IS_INSTALLED_VERSION ON FORCE)
+set(IS_INSTALLED_VERSION ON)
 
 configure_file(
     ${CMAKE_CURRENT_LIST_DIR}/setup.sh.in
