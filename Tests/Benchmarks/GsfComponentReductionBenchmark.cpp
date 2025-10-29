@@ -10,6 +10,9 @@
 
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
 using namespace Acts;
 using namespace Acts::Test;
 
@@ -32,7 +35,35 @@ void test(const std::vector<std::vector<GsfComponent>> &inputData, const Acts::S
 
 
 
-int main() {
+int main(int argc, char* argv[]) {
+  bool weight = true;
+  bool kl_optimized = true;
+  bool kl_naive = true;
+
+  try {
+    po::options_description desc("Allowed options");
+    desc.add_options()
+      ("help", "produce help message")
+      ("weight", po::value<bool>(&weight)->default_value(true),
+       "run weight-based reduction (reduceMixtureLargestWeights)")
+      ("kl-optimized", po::value<bool>(&kl_optimized)->default_value(true),
+       "run optimized KL distance reduction (reduceMixtureWithKLDistance)")
+      ("kl-naive", po::value<bool>(&kl_naive)->default_value(true),
+       "run naive KL distance reduction (reduceMixtureWithKLDistanceNaive)");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.contains("help")) {
+      std::cout << desc << std::endl;
+      return 0;
+    }
+  } catch (std::exception& e) {
+    std::cerr << "error: " << e.what() << std::endl;
+    return 1;
+  }
+
   std::vector<std::vector<GsfComponent>> data(100);
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(Acts::Transform3::Identity());
@@ -40,24 +71,30 @@ int main() {
   for(auto &sample : data) {
     sample.reserve(nComponents);
     for(auto i=0ul; i<nComponents; ++i) {
-      double weight = 1.0/nComponents;
+      double weight_val = 1.0/nComponents;
       auto cov = Acts::BoundMatrix::Identity();
       auto pars = Acts::BoundVector::Random();
-      sample.push_back({weight, pars, cov});
+      sample.push_back({weight_val, pars, cov});
     }
   }
 
-  std::cout << "reduceMixtureLargestWeights" << std::endl;
-  test(data, *surface, reduceMixtureLargestWeights);
-  std::cout << std::endl;
+  if (weight) {
+    std::cout << "reduceMixtureLargestWeights" << std::endl;
+    test(data, *surface, reduceMixtureLargestWeights);
+    std::cout << std::endl;
+  }
 
-  std::cout << "reduceMixtureWithKLDistance (optimized)" << std::endl;
-  test(data, *surface, reduceMixtureWithKLDistance);
-  std::cout << std::endl;
+  if (kl_optimized) {
+    std::cout << "reduceMixtureWithKLDistance (optimized)" << std::endl;
+    test(data, *surface, reduceMixtureWithKLDistance);
+    std::cout << std::endl;
+  }
 
-  std::cout << "reduceMixtureWithKLDistanceNaive (baseline)" << std::endl;
-  test(data, *surface, reduceMixtureWithKLDistanceNaive);
-  std::cout << std::endl;
+  if (kl_naive) {
+    std::cout << "reduceMixtureWithKLDistanceNaive (baseline)" << std::endl;
+    test(data, *surface, reduceMixtureWithKLDistanceNaive);
+    std::cout << std::endl;
+  }
 }
 
 

@@ -26,6 +26,33 @@
 
 using namespace Acts;
 
+namespace {
+
+std::tuple<BoundVector, double> computeMeanAndSumOfWeights(
+    const std::vector<GsfComponent> &cmps) {
+  const auto mean =
+      std::accumulate(cmps.begin(), cmps.end(), BoundVector::Zero().eval(),
+                      [](auto sum, const auto &cmp) -> BoundVector {
+                        return sum + cmp.weight * cmp.boundPars;
+                      });
+
+  const double sumOfWeights =
+      std::accumulate(cmps.begin(), cmps.end(), 0.0,
+                      [](auto sum, const auto &cmp) { return sum + cmp.weight; });
+
+  return std::make_tuple(mean, sumOfWeights);
+}
+
+GsfComponent makeDefaultComponent(double weight) {
+  GsfComponent cmp;
+  cmp.boundPars = BoundVector::Zero();
+  cmp.boundCov = BoundSquareMatrix::Identity();
+  cmp.weight = weight;
+  return cmp;
+}
+
+}  // namespace
+
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   std::vector<GsfComponent> cmps = {
       {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
@@ -102,20 +129,6 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
 }
 
 BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
-  auto meanAndSumOfWeights = [](const auto &cmps) {
-    const auto mean =
-        std::accumulate(cmps.begin(), cmps.end(), BoundVector::Zero().eval(),
-                        [](auto sum, const auto &cmp) -> BoundVector {
-                          return sum + cmp.weight * cmp.boundPars;
-                        });
-
-    const double sumOfWeights = std::accumulate(
-        cmps.begin(), cmps.end(), 0.0,
-        [](auto sum, const auto &cmp) { return sum + cmp.weight; });
-
-    return std::make_tuple(mean, sumOfWeights);
-  };
-
   // Assume that the components are on a generic plane surface
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
@@ -123,11 +136,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   std::vector<GsfComponent> cmps;
 
   for (auto i = 0ul; i < NComps; ++i) {
-    GsfComponent a;
-    a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSquareMatrix::Identity();
-    a.weight = 1.0 / NComps;
-    cmps.push_back(a);
+    cmps.push_back(makeDefaultComponent(1.0 / NComps));
   }
 
   cmps[0].boundPars[eBoundQOverP] = 0.5_GeV;
@@ -136,7 +145,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   cmps[3].boundPars[eBoundQOverP] = 4.5_GeV;
 
   // Check start properties
-  const auto [mean0, sumOfWeights0] = meanAndSumOfWeights(cmps);
+  const auto [mean0, sumOfWeights0] = computeMeanAndSumOfWeights(cmps);
 
   BOOST_CHECK_CLOSE(mean0[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
@@ -151,7 +160,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 1.0_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(cmps[1].boundPars[eBoundQOverP], 4.0_GeV, 1.e-8);
 
-  const auto [mean1, sumOfWeights1] = meanAndSumOfWeights(cmps);
+  const auto [mean1, sumOfWeights1] = computeMeanAndSumOfWeights(cmps);
 
   BOOST_CHECK_CLOSE(mean1[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
@@ -171,11 +180,7 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
 
   // weights do not need to be normalized for this test
   for (auto w : {1.0, 2.0, 3.0, 4.0}) {
-    GsfComponent a;
-    a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSquareMatrix::Identity();
-    a.weight = w;
-    cmps.push_back(a);
+    cmps.push_back(makeDefaultComponent(w));
   }
 
   reduceMixtureLargestWeights(cmps, 2, *dummy);
@@ -188,20 +193,6 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
 }
 
 BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
-  auto meanAndSumOfWeights = [](const auto &cmps) {
-    const auto mean =
-        std::accumulate(cmps.begin(), cmps.end(), BoundVector::Zero().eval(),
-                        [](auto sum, const auto &cmp) -> BoundVector {
-                          return sum + cmp.weight * cmp.boundPars;
-                        });
-
-    const double sumOfWeights = std::accumulate(
-        cmps.begin(), cmps.end(), 0.0,
-        [](auto sum, const auto &cmp) { return sum + cmp.weight; });
-
-    return std::make_tuple(mean, sumOfWeights);
-  };
-
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
   const std::size_t NComps = 8;
@@ -210,16 +201,13 @@ BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
   std::vector<GsfComponent> cmpsNaive;
 
   for (auto i = 0ul; i < NComps; ++i) {
-    GsfComponent a;
-    a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSquareMatrix::Identity();
-    a.weight = 1.0 / NComps;
+    GsfComponent a = makeDefaultComponent(1.0 / NComps);
     a.boundPars[eBoundQOverP] = static_cast<double>(i) * 1.0_GeV;
     cmpsOptimized.push_back(a);
     cmpsNaive.push_back(a);
   }
 
-  const auto [meanBefore, sumOfWeightsBefore] = meanAndSumOfWeights(cmpsOptimized);
+  const auto [meanBefore, sumOfWeightsBefore] = computeMeanAndSumOfWeights(cmpsOptimized);
 
   reduceMixtureWithKLDistance(cmpsOptimized, 2, *surface);
   reduceMixtureWithKLDistanceNaive(cmpsNaive, 2, *surface);
@@ -227,8 +215,8 @@ BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
   BOOST_CHECK_EQUAL(cmpsOptimized.size(), 2);
   BOOST_CHECK_EQUAL(cmpsNaive.size(), 2);
 
-  const auto [meanOptimized, sumOfWeightsOptimized] = meanAndSumOfWeights(cmpsOptimized);
-  const auto [meanNaive, sumOfWeightsNaive] = meanAndSumOfWeights(cmpsNaive);
+  const auto [meanOptimized, sumOfWeightsOptimized] = computeMeanAndSumOfWeights(cmpsOptimized);
+  const auto [meanNaive, sumOfWeightsNaive] = computeMeanAndSumOfWeights(cmpsNaive);
 
   BOOST_CHECK_CLOSE(sumOfWeightsOptimized, sumOfWeightsNaive, 1.e-8);
   BOOST_CHECK_CLOSE(sumOfWeightsOptimized, 1.0, 1.e-8);
