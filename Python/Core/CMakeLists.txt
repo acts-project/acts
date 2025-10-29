@@ -48,7 +48,7 @@ foreach(f ${py_files})
     file(MAKE_DIRECTORY ${_dir})
 
     install(
-        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f} 
+        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
         DESTINATION ${_target}
     )
 
