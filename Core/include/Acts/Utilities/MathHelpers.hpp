@@ -18,12 +18,16 @@ namespace Acts {
 /// @return The absolute value of the input
 template <typename T>
 constexpr T abs(const T n) {
-  if constexpr (std::is_signed_v<T>) {
-    if (n < 0) {
-      return -n;
+  if (std::is_constant_evaluated()) {
+    if constexpr (std::is_signed_v<T>) {
+      if (n < 0) {
+        return -n;
+      }
     }
+    return n;
+  } else {
+    return std::abs(n);
   }
-  return n;
 }
 
 /// @brief Calculates the ordinary power of the number x.
@@ -32,15 +36,19 @@ constexpr T abs(const T n) {
 /// @return x raised to the power p
 template <typename T, std::integral P>
 constexpr T pow(T x, P p) {
-  constexpr T one = 1;
-  if constexpr (std::is_signed_v<P>) {
-    if (p < 0 && abs(x) > std::numeric_limits<T>::epsilon()) {
-      x = one / x;
-      p = -p;
+  if (std::is_constant_evaluated()) {
+    constexpr T one = 1;
+    if constexpr (std::is_signed_v<P>) {
+      if (p < 0 && abs(x) > std::numeric_limits<T>::epsilon()) {
+        x = one / x;
+        p = -p;
+      }
     }
+    using unsigned_p = std::make_unsigned_t<P>;
+    return p == 0 ? one : x * pow(x, static_cast<unsigned_p>(p) - 1);
+  } else {
+    return static_cast<T>(std::pow(x, static_cast<T>(p)));
   }
-  using unsigned_p = std::make_unsigned_t<P>;
-  return p == 0 ? one : x * pow(x, static_cast<unsigned_p>(p) - 1);
 }
 
 /// @brief Returns the square of the passed number

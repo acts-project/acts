@@ -18,9 +18,9 @@ fsspec==2025.9.0
     # via
     #   awkward
     #   uproot
-iniconfig==2.1.0
+iniconfig==2.3.0
     # via pytest
-numpy==2.3.3
+numpy==2.3.4
     # via
     #   -r Examples/Python/tests/requirements.in
     #   awkward
