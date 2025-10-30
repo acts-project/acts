@@ -37,39 +37,17 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   const Vector3 local1 = transform.inverse() * sp1;
   const Vector3 local2 = transform.inverse() * sp2;
 
-  // We determine the center of the circle directly given the 3 points and using
-  // Cramer's rule.
-  Vector2 circleCenter = Vector2::Zero();
-  {
-    const double det = 2 * (local1.x() * local2.y() - local2.x() * local1.y());
+  // Use the uv-plane to estimate the circle parameters
+  const Vector2 uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
+  const Vector2 uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
+  const Vector2 deltaUV2 = uv2 - uv1;
+  const double A = deltaUV2.y() / deltaUV2.x();
+  const double bOverS =
+      (uv1.y() * uv2.x() - uv2.y() * uv1.x()) / deltaUV2.norm();
 
-    // Check if points are aligned and return straight line estimate if so
-    if (std::abs(det) < 1e-12) {
-      FreeVector params = FreeVector::Zero();
-      params.segment<3>(eFreePos0) = sp0;
-      params.segment<3>(eFreeDir0) = (sp2 - sp0).normalized();
-      params[eFreeQOverP] = 0;
-      return params;
-    }
+  const double invTanTheta = local2.z() / local2.head<2>().norm();
+  const Vector3 transDirection(1, A, fastHypot(1, A) * invTanTheta);
 
-    const double z1 = local1.head<2>().squaredNorm();
-    const double z2 = local2.head<2>().squaredNorm();
-
-    const double nom1 = local1.y() * z2 - local2.y() * z1;
-    const double nom2 = local2.x() * z1 - local1.x() * z2;
-
-    circleCenter.x() = nom1 / det;
-    circleCenter.y() = nom2 / det;
-  }
-  const int sign = circleCenter.y() >= 0 ? 1 : -1;
-  const double R = circleCenter.norm();
-
-  const double invTanTheta =
-      local2.z() / (2 * R * std::asin(local2.head<2>().norm() / (2 * R)));
-  // The momentum direction in the new frame (the center of the circle has the
-  // coordinate (-1.*A/(2*B), 1./(2*B)))
-  const double A = -circleCenter.x() / circleCenter.y();
-  const Vector3 transDirection(1., A, fastHypot(1, A) * invTanTheta);
   // Transform it back to the original frame
   const Vector3 direction = rotation * transDirection.normalized();
 
@@ -84,9 +62,9 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  const double qOverPt = sign / (bField.norm() * R);
+  const double qOverPt = 2 * bOverS / bField.norm();
   // The estimated q/p in [GeV/c]^-1
-  params[eFreeQOverP] = qOverPt / fastHypot(1., invTanTheta);
+  params[eFreeQOverP] = qOverPt / fastHypot(1, invTanTheta);
 
   return params;
 }
