@@ -81,19 +81,50 @@ std::ostream& operator<<(std::ostream& os, PdgParticle pdg);
 std::optional<std::string_view> pdgToShortAbsString(PdgParticle pdg);
 
 /// @brief Particle identification based on PDG number
-namespace ParticleId {
+namespace ParticleIdHelper {
 
-bool isHadron(int pdg);
-bool isLepton(int pdg);
-bool isMuon(int pdg);
-bool isElectron(int pdg);
-bool isPhoton(int pdg);
-bool isTau(int pdg);
-bool isQuark(int pdg);
-bool isInteracting(int pdg);
+  /// @brief Check if the particle is a hadron
+  /// @param pdg PDG particle number
+  /// @return True if the particle is a hadron, false otherwise
+  bool isHadron(int pdg);
+
+  /// @brief Check if the particle is a lepton
+  /// @param pdg PDG particle number
+  /// @return True if the particle is a lepton, false otherwise
+  bool isLepton(int pdg);
+
+  /// @brief Check if the particle is a muon
+  /// @param pdg PDG particle number
+  /// @return True if the particle is a muon, false otherwise
+  bool isMuon(int pdg);
+
+  /// @brief Check if the particle is an electron
+  /// @param pdg PDG particle number
+  /// @return True if the particle is an electron, false otherwise
+  bool isElectron(int pdg);
+
+  /// @brief Check if the particle is a photon
+  /// @param pdg PDG particle number
+  /// @return True if the particle is a photon, false otherwise
+  bool isPhoton(int pdg);
+
+  /// @brief Check if the particle is a tau
+  /// @param pdg PDG particle number
+  /// @return True if the particle is a tau, false otherwise
+  bool isTau(int pdg);
+
+  /// @brief Check if the particle is a quark
+  /// @param pdg PDG particle number
+  /// @return True if the particle is a quark, false otherwise
+  bool isQuark(int pdg);
+
+  /// @brief Check if the particle is interacting
+  /// @param pdg PDG particle number
+  /// @return True if the particle is interacting, false otherwise
+  bool isInteracting(int pdg);
 
 HadronType hadronType(int pdg);
 
-}  // namespace ParticleId
+}  // namespace ParticleIdHelper
 
 }  // namespace Acts
