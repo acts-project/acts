@@ -59,7 +59,6 @@ void addSvg(Context& ctx);
 void addObj(Context& ctx);
 void addOnnx(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
-void addCovfie(Context& ctx);
 void addTraccc(Context& ctx);
 void addHashing(Context& ctx);
 
@@ -93,7 +92,6 @@ void addModuleEntry(Context& ctx) {
   addSvg(ctx);
   addOnnx(ctx);
   addOnnxNeuralCalibrator(ctx);
-  addCovfie(ctx);
   addTraccc(ctx);
   addHashing(ctx);
 
