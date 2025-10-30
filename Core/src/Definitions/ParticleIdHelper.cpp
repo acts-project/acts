@@ -783,34 +783,34 @@ bool isStrongInteracting(const DecodedPID& p) {
 }  // namespace
 
 // https://gitlab.cern.ch/atlas/athena/-/blob/b0898f93585c4eec97550a9e0a16f5b6e6b6b973/Generators/TruthUtils/TruthUtils/AtlasPID.h#L325
-bool ParticleIdHelper::isHadron(int pdg) {
+bool ParticleIdHelper::isHadron(PdgParticle pdg) {
   DecodedPID p(pdg);
   return isMeson(p) || isBaryon(p) || isTetraquark(p) || isPentaquark(p);
 }
 
 // https://gitlab.cern.ch/atlas/athena/-/blob/b0898f93585c4eec97550a9e0a16f5b6e6b6b973/Generators/TruthUtils/TruthUtils/AtlasPID.h#L180
-bool ParticleIdHelper::isLepton(int pdg) {
+bool ParticleIdHelper::isLepton(PdgParticle pdg) {
   auto sp = std::abs(pdg);
   return sp >= 11 && sp <= 18;
 }
 
-bool ParticleIdHelper::isMuon(int pdg) {
+bool ParticleIdHelper::isMuon(PdgParticle pdg) {
   return std::abs(pdg) == MUON;
 }
 
-bool ParticleIdHelper::isElectron(int pdg) {
+bool ParticleIdHelper::isElectron(PdgParticle pdg) {
   return std::abs(pdg) == ELECTRON;
 }
 
-bool ParticleIdHelper::isPhoton(int pdg) {
+bool ParticleIdHelper::isPhoton(PdgParticle pdg) {
   return std::abs(pdg) == PHOTON;
 }
 
-bool ParticleIdHelper::isTau(int pdg) {
+bool ParticleIdHelper::isTau(PdgParticle pdg) {
   return std::abs(pdg) == TAU;
 }
 
-HadronType ParticleIdHelper::hadronType(int pdg) {
+HadronType ParticleIdHelper::hadronType(PdgParticle pdg) {
   DecodedPID p(pdg);
 
   using enum HadronType;
@@ -850,12 +850,12 @@ HadronType ParticleIdHelper::hadronType(int pdg) {
 }
 
 // https://gitlab.cern.ch/atlas/athena/-/blob/b0898f93585c4eec97550a9e0a16f5b6e6b6b973/Generators/TruthUtils/TruthUtils/AtlasPID.h#L159
-bool ParticleIdHelper::isQuark(int pdg) {
+bool ParticleIdHelper::isQuark(PdgParticle pdg) {
   return pdg != 0 && (std::abs(pdg) <= 8 || std::abs(pdg) == MAVTOP);
 }
 
 // https://gitlab.cern.ch/atlas/athena/-/blob/b0898f93585c4eec97550a9e0a16f5b6e6b6b973/Generators/TruthUtils/TruthUtils/HepMCHelpers.h#L33
-bool ParticleIdHelper::isInteracting(int pdg) {
+bool ParticleIdHelper::isInteracting(PdgParticle pdg) {
   DecodedPID p(pdg);
   return isStrongInteracting(p) || isEMInteracting(p) || isGeantino(pdg);
 }

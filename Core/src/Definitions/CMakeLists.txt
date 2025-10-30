@@ -1,6 +1,6 @@
 target_sources(
     ActsCore
-    PRIVATE Common.cpp Direction.cpp ParticleData.cpp ParticleId.cpp
+    PRIVATE Common.cpp Direction.cpp ParticleData.cpp ParticleIdHelper.cpp
 )
 
 include(ActsCodegen)

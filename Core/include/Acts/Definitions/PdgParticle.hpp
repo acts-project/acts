@@ -36,7 +36,36 @@ enum PdgParticle : std::int32_t {
   eAntiNeutron = -eNeutron,
   eProton = 2212,
   eAntiProton = -eProton,
-  eLead = 1000822080
+  eLead = 1000822080,
+  eUpsilon = 553,        // ϒ
+  eUpsilon1S = 553,     // ϒ(1S)
+  eUpsilon2S = 100553,  // ϒ(2S)
+  eUpsilon3S = 200553,  // ϒ(3S)
+  eChiB = 10551,        // χb0
+  eJPsi = 443,          // J/ψ
+  ePsi2S = 100443,     // ψ(2S)
+  eChiC = 10441,       // χc0
+  eEta_c = 441,        // ηc
+  eB0 = 511,           // B0 meson (bd)
+  eBPlus = 521,       // B+ meson (bu)
+  eD0 = 421,          // D0 meson (cu)
+  eDPlus = 411,      // D+ meson (cd)
+  eAntiB0 = -eB0,
+  eAntiD0 = -eD0,
+  eLambdaB = 5122,  // Λb0 (udb)
+  eSigmaB = 5222,   // Σb+ (uub)
+  eXiB = 5322,   // Ξb0 (usb)
+  eLambdaC = 4122,  // Λc+ (udc)
+  eSigmaC = 4222,   // Σc++ (uuc)
+  eXiC = 4322,      // Ξc0 (usc)
+  eAntiLambdaB = -eLambdaB,
+  eAntiLambdaC = -eLambdaC,
+  eNeutrinoE = 12,    // electron neutrino
+  eNeutrinoMu = 14,   // muon neutrino
+  eNeutrinoTau = 16,  // tau neutrino
+  eAntiNeutrinoE = -eNeutrinoE,
+  eAntiNeutrinoMu = -eNeutrinoMu,
+  eAntiNeutrinoTau = -eNeutrinoTau
 };
 
 /// Convert an anti-particle to its particle and leave particles as-is.
