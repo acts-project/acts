@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <ostream>
@@ -187,39 +186,57 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    // Sort the space points time
-    std::ranges::sort(spacePointsOnTrack, [&](const auto* a, const auto* b) {
-      auto ta = a->t();
-      auto tb = b->t();
-      if (!ta.has_value()) {
-        return false;
-      }
-      if (!tb.has_value()) {
-        return true;
-      }
-
-      return *ta < *tb;
-    });
-
-    // Loop over the found space points to find the seed with maximum deltaR
-    // between the bottom and top space point
-    // @todo add the check of deltaZ
+    // Loop over the found space points to find the seed with the maximum score.
+    // The score is defined as the product of the deltaR of the bottom-middle
+    // and middle-top space point pairs to favor separation between both pairs.
     bool seedFound = false;
     std::array<std::size_t, 3> bestSPIndices{};
-    double maxDeltaR = std::numeric_limits<double>::min();
+    double maxScore = std::numeric_limits<double>::min();
     for (std::size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
       for (std::size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
+        const double bmDeltaR =
+            spacePointsOnTrack[im]->r() - spacePointsOnTrack[ib]->r();
+        const double bmAbsDeltaZ =
+            std::abs(spacePointsOnTrack[im]->z() - spacePointsOnTrack[ib]->z());
+        if (bmDeltaR < 0) {
+          ACTS_WARNING(
+              "Space points are not sorted in r. Difference middle-bottom: "
+              << bmDeltaR);
+          continue;
+        }
+        if (bmDeltaR < m_cfg.deltaRMin || bmDeltaR > m_cfg.deltaRMax) {
+          continue;
+        }
+        if (bmAbsDeltaZ < m_cfg.absDeltaZMin ||
+            bmAbsDeltaZ > m_cfg.absDeltaZMax) {
+          continue;
+        }
+
         for (std::size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
-          double bmDeltaR = std::abs(spacePointsOnTrack[im]->r() -
-                                     spacePointsOnTrack[ib]->r());
-          double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
-                                     spacePointsOnTrack[im]->r());
-          if (bmDeltaR >= m_cfg.deltaRMin && bmDeltaR <= m_cfg.deltaRMax &&
-              mtDeltaR >= m_cfg.deltaRMin && mtDeltaR <= m_cfg.deltaRMax &&
-              (bmDeltaR + mtDeltaR) > maxDeltaR) {
-            maxDeltaR = bmDeltaR + mtDeltaR;
-            bestSPIndices = {ib, im, it};
+          const double mtDeltaR =
+              spacePointsOnTrack[it]->r() - spacePointsOnTrack[im]->r();
+          const double mtAbsDeltaZ = std::abs(spacePointsOnTrack[it]->z() -
+                                              spacePointsOnTrack[im]->z());
+          if (mtDeltaR < 0) {
+            ACTS_WARNING(
+                "Space points are not sorted in r. Difference top-middle: "
+                << mtDeltaR);
+            continue;
+          }
+          if (mtDeltaR < m_cfg.deltaRMin || mtDeltaR > m_cfg.deltaRMax) {
+            continue;
+          }
+          if (mtAbsDeltaZ < m_cfg.absDeltaZMin ||
+              mtAbsDeltaZ > m_cfg.absDeltaZMax) {
+            continue;
+          }
+
+          const double score = bmDeltaR * mtDeltaR;
+
+          if (score > maxScore) {
             seedFound = true;
+            bestSPIndices = {ib, im, it};
+            maxScore = score;
           }
         }
       }
@@ -229,8 +246,6 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       SimSeed seed{*spacePointsOnTrack[bestSPIndices[0]],
                    *spacePointsOnTrack[bestSPIndices[1]],
                    *spacePointsOnTrack[bestSPIndices[2]]};
-      seed.setVertexZ(
-          static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z()));
 
       Acts::ParticleHypothesis hypothesis =
           m_cfg.particleHypothesis.value_or(particle.hypothesis());
