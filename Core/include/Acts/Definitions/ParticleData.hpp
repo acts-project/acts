@@ -26,13 +26,13 @@ struct ParticleData {
 /// Find the charge for a given PDG particle number.
 /// @param pdg PDG particle number
 /// @return Charge in native units.
-std::optional<float> findCharge(std::int32_t pdg);
+std::optional<float> findCharge(PdgParticle pdg);
 
 /// Find the charge for a given PDG particle number of a nucleus.
 /// Try its ground state first, and ultimately get the proton number from PDG
 /// @param pdg PDG particle number for the nucleus
 /// @return Charge in native units.
-float findChargeOfNucleus(std::int32_t pdg);
+float findChargeOfNucleus(PdgParticle pdg);
 
 /// Find the mass for a given PDG particle number.
 /// @param pdg PDG particle number
@@ -56,13 +56,13 @@ float calculateNucleusMass(PdgParticle pdg);
 /// Find a descriptive particle name for a given PDG particle number.
 /// @param pdg PDG particle number
 /// @return Particle name.
-std::optional<std::string_view> findName(std::int32_t pdg);
+std::optional<std::string_view> findName(PdgParticle pdg);
 
 /// Find a descriptive particle name for a given PDG particle number of a
 /// nucleus. Try to get the name from its ground state.
 /// @param pdg PDG particle number for the nucleus
 /// @return Particle name.
-std::optional<std::string_view> findNameOfNucleus(std::int32_t pdg);
+std::optional<std::string_view> findNameOfNucleus(PdgParticle pdg);
 
 /// Find all known particle data for a given PDG particle number.
 /// @param pdg PDG particle number
@@ -81,53 +81,50 @@ std::ostream& operator<<(std::ostream& os, PdgParticle pdg);
 std::optional<std::string_view> pdgToShortAbsString(PdgParticle pdg);
 
 /// @brief Particle identification based on PDG number
-namespace ParticleId {
+namespace ParticleIdHelper {
 
-/// @brief Check if a particle is a hadron
+/// @brief Check if the particle is a hadron
 /// @param pdg PDG particle number
 /// @return True if the particle is a hadron, false otherwise
-bool isHadron(int pdg);
+bool isHadron(PdgParticle pdg);
 
-/// @brief Check if a particle is a lepton
+/// @brief Check if the particle is a lepton
 /// @param pdg PDG particle number
 /// @return True if the particle is a lepton, false otherwise
-bool isLepton(int pdg);
+bool isLepton(PdgParticle pdg);
 
-/// @brief Check if a particle is a muon
+/// @brief Check if the particle is a muon
 /// @param pdg PDG particle number
 /// @return True if the particle is a muon, false otherwise
-bool isMuon(int pdg);
+bool isMuon(PdgParticle pdg);
 
-/// @brief Check if a particle is an electron
+/// @brief Check if the particle is an electron
 /// @param pdg PDG particle number
 /// @return True if the particle is an electron, false otherwise
-bool isElectron(int pdg);
+bool isElectron(PdgParticle pdg);
 
-/// @brief Check if a particle is a photon
+/// @brief Check if the particle is a photon
 /// @param pdg PDG particle number
 /// @return True if the particle is a photon, false otherwise
-bool isPhoton(int pdg);
+bool isPhoton(PdgParticle pdg);
 
-/// @brief Check if a particle is a tau
+/// @brief Check if the particle is a tau
 /// @param pdg PDG particle number
 /// @return True if the particle is a tau, false otherwise
-bool isTau(int pdg);
+bool isTau(PdgParticle pdg);
 
-/// @brief Check if a particle is a quark
+/// @brief Check if the particle is a quark
 /// @param pdg PDG particle number
 /// @return True if the particle is a quark, false otherwise
-bool isQuark(int pdg);
+bool isQuark(PdgParticle pdg);
 
-/// @brief Check if a particle is interacting
+/// @brief Check if the particle is interacting
 /// @param pdg PDG particle number
 /// @return True if the particle is interacting, false otherwise
-bool isInteracting(int pdg);
+bool isInteracting(PdgParticle pdg);
 
-/// @brief Get the hadron type of a particle
-/// @param pdg PDG particle number
-/// @return Hadron type of the particle
-HadronType hadronType(int pdg);
+HadronType hadronType(PdgParticle pdg);
 
-}  // namespace ParticleId
+}  // namespace ParticleIdHelper
 
 }  // namespace Acts
