@@ -11,6 +11,10 @@
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
 #include <algorithm>
+#include <format>
+#include <iostream>
+
+using namespace Acts;
 
 template <typename proj_t, typename angle_desc_t>
 void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
@@ -23,9 +27,21 @@ void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
   while (remainingComponents > maxCmpsAfterMerge) {
     const auto [minI, minJ] = distances.minDistancePair();
 
+    // auto prevCmpI = cmpCache[minI];
+    // auto prevCmpJ = cmpCache[minJ];
+
     // Set one component and compute associated distances
     cmpCache[minI] =
         mergeComponents(cmpCache[minI], cmpCache[minJ], proj, desc);
+
+    /*std::cout << std::format("OPTIM: Merge with phi: {:.3f} + {:.3f} ->
+       {:.3f}, weight: {:.3f} + {:.3f} -> {:.3f}",
+                             prevCmpI.boundPars[eBoundPhi],
+                             prevCmpJ.boundPars[eBoundPhi],
+                             cmpCache[minI].boundPars[eBoundPhi],
+                             prevCmpI.weight, prevCmpJ.weight,
+                             cmpCache[minI].weight) << std::endl;*/
+
     distances.recomputeAssociatedDistances(minI, cmpCache, proj);
 
     // Set weight of the other component to -1 so we can remove it later and
@@ -106,8 +122,22 @@ void reduceMixtureWithKLDistanceNaive(std::vector<Acts::GsfComponent> &cmpCache,
         }
       }
 
+      // auto prevCmpI = cmpCache[minI];
+      // auto prevCmpJ = cmpCache[minJ];
+
       // Merge the two closest components
-      cmpCache[minI] = detail::mergeComponents(cmpCache[minI], cmpCache[minJ], proj, desc);
+      cmpCache[minI] =
+          detail::mergeComponents(cmpCache[minI], cmpCache[minJ], proj, desc);
+
+
+      /*std::cout << std::format("NAIVE: Merge with phi: {:.3f} + {:.3f} ->
+         {:.3f}, weight: {:.3f} + {:.3f} -> {:.3f}",
+                               prevCmpI.boundPars[eBoundPhi],
+                               prevCmpJ.boundPars[eBoundPhi],
+                               cmpCache[minI].boundPars[eBoundPhi],
+                               prevCmpI.weight, prevCmpJ.weight,
+                               cmpCache[minI].weight) << std::endl;*/
+
 
       // Remove the merged component immediately
       cmpCache.erase(cmpCache.begin() + minJ);
