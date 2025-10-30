@@ -3,7 +3,7 @@ from pathlib import Path
 
 import acts
 
-from acts import MaterialMapJsonConverter, JsonMaterialDecorator
+from acts.json import MaterialMapJsonConverter, JsonMaterialDecorator
 
 
 @pytest.mark.root

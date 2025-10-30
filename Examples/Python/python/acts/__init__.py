@@ -9,6 +9,7 @@ from .ActsPythonBindings import __version__
 from . import ActsPythonBindings
 from ._adapter import _patch_config
 
+
 if (
     "ACTS_LOG_FAILURE_THRESHOLD" in os.environ
     and os.environ["ACTS_LOG_FAILURE_THRESHOLD"] != logging.getFailureThreshold().name
@@ -44,6 +45,8 @@ def Propagator(stepper, navigator, loglevel=ActsPythonBindings.logging.INFO):
 
 _patch_config(ActsPythonBindings)
 
+from . import ActsPluginsPythonBindingsJson
+
 
 @staticmethod
 def _decoratorFromFile(file: Union[str, Path], **kwargs):
@@ -53,12 +56,12 @@ def _decoratorFromFile(file: Union[str, Path], **kwargs):
     kwargs.setdefault("level", ActsPythonBindings.logging.INFO)
 
     if file.suffix in (".json", ".cbor"):
-        c = ActsPythonBindings.MaterialMapJsonConverter.Config()
+        c = ActsPluginsPythonBindingsJson.MaterialMapJsonConverter.Config()
         for k in kwargs.keys():
             if hasattr(c, k):
                 setattr(c, k, kwargs.pop(k))
 
-        return ActsPythonBindings.JsonMaterialDecorator(
+        return ActsPluginsPythonBindingsJson.JsonMaterialDecorator(
             jFileName=str(file), rConfig=c, **kwargs
         )
     elif file.suffix == ".root":
