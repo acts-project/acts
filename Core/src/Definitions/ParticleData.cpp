@@ -95,7 +95,7 @@ std::optional<T> findCached(std::int32_t pdg,
 
 }  // namespace
 
-std::optional<float> Acts::findCharge(std::int32_t pdg) {
+std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
   if (auto cached = findCached<float, Type::Charge>(pdg, kParticlesMapCharge);
       cached) {
     return cached;
@@ -112,7 +112,7 @@ std::optional<float> Acts::findCharge(std::int32_t pdg) {
   return it->second;
 }
 
-float Acts::findChargeOfNucleus(std::int32_t pdg) {
+float Acts::findChargeOfNucleus(Acts::PdgParticle pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
@@ -185,7 +185,7 @@ float Acts::calculateNucleusMass(Acts::PdgParticle pdg) {
   return massP * Z + massN * (A - Z) - bindEnergy;
 }
 
-std::optional<std::string_view> Acts::findName(std::int32_t pdg) {
+std::optional<std::string_view> Acts::findName(Acts::PdgParticle pdg) {
   if (auto cached =
           findCached<const char* const, Type::Name>(pdg, kParticlesMapName);
       cached) {
@@ -203,7 +203,7 @@ std::optional<std::string_view> Acts::findName(std::int32_t pdg) {
   return it->second;
 }
 
-std::optional<std::string_view> Acts::findNameOfNucleus(std::int32_t pdg) {
+std::optional<std::string_view> Acts::findNameOfNucleus(Acts::PdgParticle pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }

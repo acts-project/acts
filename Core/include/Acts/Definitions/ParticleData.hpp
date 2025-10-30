@@ -26,13 +26,13 @@ struct ParticleData {
 /// Find the charge for a given PDG particle number.
 /// @param pdg PDG particle number
 /// @return Charge in native units.
-std::optional<float> findCharge(std::int32_t pdg);
+std::optional<float> findCharge(PdgParticle pdg);
 
 /// Find the charge for a given PDG particle number of a nucleus.
 /// Try its ground state first, and ultimately get the proton number from PDG
 /// @param pdg PDG particle number for the nucleus
 /// @return Charge in native units.
-float findChargeOfNucleus(std::int32_t pdg);
+float findChargeOfNucleus(PdgParticle pdg);
 
 /// Find the mass for a given PDG particle number.
 /// @param pdg PDG particle number
@@ -56,13 +56,13 @@ float calculateNucleusMass(PdgParticle pdg);
 /// Find a descriptive particle name for a given PDG particle number.
 /// @param pdg PDG particle number
 /// @return Particle name.
-std::optional<std::string_view> findName(std::int32_t pdg);
+std::optional<std::string_view> findName(PdgParticle pdg);
 
 /// Find a descriptive particle name for a given PDG particle number of a
 /// nucleus. Try to get the name from its ground state.
 /// @param pdg PDG particle number for the nucleus
 /// @return Particle name.
-std::optional<std::string_view> findNameOfNucleus(std::int32_t pdg);
+std::optional<std::string_view> findNameOfNucleus(PdgParticle pdg);
 
 /// Find all known particle data for a given PDG particle number.
 /// @param pdg PDG particle number
