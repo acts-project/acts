@@ -83,7 +83,7 @@ jobs:
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: acts-linux-ubuntu
           path: build.tar.gz
@@ -101,21 +101,6 @@ jobs:
 
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
-
-      # We configure and build without ROOT in the same job to garantuee that we can use the ccache cache
-      - name: Configure (without ROOT)
-        run: >
-          ccache -z &&
-          rm -rf build &&
-          cmake -B build -S .
-          --preset=github-ci-no-root
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-
-      - name: Build (without ROOT)
-        run: cmake --build build
-
-      - name: ccache stats (without ROOT)
-        run: ccache -s
 
   linux_examples_test:
     runs-on: ubuntu-latest
@@ -136,7 +121,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: acts-linux-ubuntu
 
@@ -175,7 +160,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: acts-linux-ubuntu
 
@@ -195,7 +180,7 @@ jobs:
           mkdir -p physmon
           cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: physmon
@@ -209,7 +194,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.2
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: physmon
           path: physmon
@@ -371,7 +356,7 @@ jobs:
       - name: Install
         run: cmake --build build --target install
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: acts-macos
           path: ${{ env.INSTALL_DIR }}
@@ -478,7 +463,7 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: comment-50-external-failure.md
           path: comment-50-external-failure.md
@@ -563,7 +548,7 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: comment-51-key4hep-external-failure.md
           path: comment-51-key4hep-external-failure.md
