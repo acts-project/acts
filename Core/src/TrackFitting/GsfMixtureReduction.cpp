@@ -78,9 +78,9 @@ void reduceMixtureWithKLDistance(std::vector<Acts::GsfComponent> &cmpCache,
   });
 }
 
-void reduceMixtureWithKLDistanceNaive(
-    std::vector<Acts::GsfComponent> &cmpCache, std::size_t maxCmpsAfterMerge,
-    const Surface &surface) {
+void reduceMixtureWithKLDistanceNaive(std::vector<Acts::GsfComponent> &cmpCache,
+                                      std::size_t maxCmpsAfterMerge,
+                                      const Surface &surface) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
@@ -96,8 +96,8 @@ void reduceMixtureWithKLDistanceNaive(
 
       for (std::size_t i = 0; i < cmpCache.size(); ++i) {
         for (std::size_t j = i + 1; j < cmpCache.size(); ++j) {
-          double distance =
-              detail::computeSymmetricKlDivergence(cmpCache[i], cmpCache[j], proj);
+          double distance = detail::computeSymmetricKlDivergence(
+              cmpCache[i], cmpCache[j], proj);
           if (distance < minDistance) {
             minDistance = distance;
             minI = i;
