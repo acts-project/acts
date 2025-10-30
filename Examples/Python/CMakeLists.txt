@@ -110,8 +110,6 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginDetray)
-    target_sources(ActsPythonBindings PRIVATE src/Detray.cpp)
     target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginCovfie)
     target_sources(ActsPythonBindings PRIVATE src/Covfie.cpp)
     target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesTraccc)

@@ -53,7 +53,6 @@ void addPythia8(Context& ctx);
 void addGeoModel(Context& ctx);
 void addTGeo(Context& ctx);
 void addJson(Context& ctx);
-void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
 void addGnnTrackFinding(Context& ctx);
 void addSvg(Context& ctx);
@@ -88,7 +87,6 @@ void addModuleEntry(Context& ctx) {
   addJson(ctx);
   addGeoModel(ctx);
   addTGeo(ctx);
-  addDetray(ctx);
   addHepMC3(ctx);
   addGnnTrackFinding(ctx);
   addObj(ctx);
