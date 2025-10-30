@@ -114,8 +114,6 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
     target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesTraccc)
     target_sources(ActsPythonBindings PRIVATE src/Traccc.cpp)
 else()
-    target_sources(ActsPythonBindings PRIVATE src/DetrayStub.cpp)
-    target_sources(ActsPythonBindings PRIVATE src/CovfieStub.cpp)
     target_sources(ActsPythonBindings PRIVATE src/TracccStub.cpp)
 endif()
 
