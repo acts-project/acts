@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.0
+aiohttp==3.13.1
     # via -r docs/requirements.in
 aiosignal==1.4.0
     # via aiohttp
@@ -24,11 +24,11 @@ certifi==2025.10.5
     # via requests
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 click==8.3.0
     # via typer
-cryptography==46.0.2
+cryptography==46.0.3
     # via pyjwt
 docutils==0.21.2
     # via
@@ -44,7 +44,7 @@ fsspec==2025.9.0
     # via -r docs/requirements.in
 gidgethub==5.4.0
     # via -r docs/requirements.in
-idna==3.10
+idna==3.11
     # via
     #   requests
     #   yarl
@@ -80,9 +80,9 @@ propcache==0.4.1
     #   yarl
 pycparser==2.23
     # via cffi
-pydantic==2.12.0
+pydantic==2.12.3
     # via -r docs/requirements.in
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
 pygments==2.19.2
     # via
@@ -131,7 +131,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 toml==0.10.2
     # via -r docs/requirements.in
-typer==0.19.2
+typer==0.20.0
     # via -r docs/requirements.in
 typing-extensions==4.15.0
     # via
