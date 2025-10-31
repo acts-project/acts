@@ -50,9 +50,9 @@ add_plugin_binding_if(Geant4 ActsPluginGeant4 ACTS_BUILD_PLUGIN_GEANT4)
 add_plugin_binding_if(GeoModel Acts::PluginGeoModel ACTS_BUILD_PLUGIN_GEOMODEL)
 add_plugin_binding_if(Hashing Acts::PluginHashing ACTS_BUILD_PLUGIN_HASHING)
 add_plugin_binding_if(Json Acts::PluginJson ACTS_BUILD_PLUGIN_JSON)
-#add_plugin_binding_if(Svg Acts::PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
-#add_plugin_binding_if(TGeo Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
-#add_plugin_binding_if(Root Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
+add_plugin_binding_if(Svg Acts::PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
+add_plugin_binding_if(TGeo Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
+add_plugin_binding_if(Root Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
 
 # Propagate the list of built plugins to the parent scope
 set(_plugins_built "${_plugins_built}" PARENT_SCOPE)

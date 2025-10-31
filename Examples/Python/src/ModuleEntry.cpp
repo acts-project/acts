@@ -51,7 +51,6 @@ void addRootOutput(Context& ctx);
 void addDigitization(Context& ctx);
 void addPythia8(Context& ctx);
 void addGeoModel(Context& ctx);
-void addTGeo(Context& ctx);
 void addJson(Context& ctx);
 void addHepMC3(Context& ctx);
 void addGnnTrackFinding(Context& ctx);
@@ -85,7 +84,6 @@ void addModuleEntry(Context& ctx) {
   addPythia8(ctx);
   addJson(ctx);
   addGeoModel(ctx);
-  addTGeo(ctx);
   addHepMC3(ctx);
   addGnnTrackFinding(ctx);
   addObj(ctx);

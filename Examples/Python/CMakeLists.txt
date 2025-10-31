@@ -102,13 +102,6 @@ else()
     target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_ROOT)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginRoot)
-    target_sources(ActsPythonBindings PRIVATE src/TGeo.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/TGeoStub.cpp)
-endif()
-
 if(ACTS_BUILD_PLUGIN_TRACCC)
     target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginCovfie)
     target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesTraccc)
