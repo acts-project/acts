@@ -12,6 +12,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <array>
 #include <limits>
@@ -265,12 +267,9 @@ double deltaR(const Eigen::MatrixBase<Derived>& v1,
               const Eigen::MatrixBase<Derived>& v2)
   requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == 3)
 {
-  double dphi = abs(phi(v1) - phi(v2));
-  if (dphi > std::numbers::pi) {
-    dphi = std::numbers::pi * 2 - dphi;
-  }
-  double deta = eta(v1) - eta(v2);
-  return std::sqrt(dphi * dphi + deta * deta);
+  const double dphi = detail::difference_periodic(phi(v1), phi(v2), 2*std::numbers::pi);
+  const double deta = eta(v1) - eta(v2);
+  return fastHypot(dphi, deta);
 }
 
 }  // namespace Acts::VectorHelpers
