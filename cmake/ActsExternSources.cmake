@@ -80,3 +80,5 @@ set(ACTS_ODD_SOURCE
     CACHE STRING
     "Source to take OpenDataDetector from"
 )
+
+mark_as_advanced(ACTS_ODD_SOURCE)
