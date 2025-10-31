@@ -153,7 +153,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
                    << HepMC3Util::kUndecayedParticleStatus << ")");
       }
 
-      if (!Acts::ParticleId::isInteracting(particle->pdg_id())) {
+      if (!Acts::ParticleIdHelper::isInteracting(particle->pdg_id())) {
         continue;
       }
 
