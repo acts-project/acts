@@ -17,6 +17,8 @@ def runTruthTrackingGsf(
     inputParticlePath: Optional[Path] = None,
     decorators=[],
     s: acts.examples.Sequencer = None,
+    useGeant: bool = False,
+    detector=None,
 ):
     from acts.examples.simulation import (
         addParticleGun,
@@ -25,6 +27,7 @@ def runTruthTrackingGsf(
         PhiConfig,
         MomentumConfig,
         addFatras,
+        addGeant4,
         addDigitization,
         ParticleSelectorConfig,
         addDigiParticleSelection,
@@ -44,6 +47,9 @@ def runTruthTrackingGsf(
 
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
+
+    if useGeant and detector is None:
+        raise ValueError("detector parameter is required when useGeant=True")
 
     if inputParticlePath is None:
         addParticleGun(
@@ -72,13 +78,24 @@ def runTruthTrackingGsf(
             )
         )
 
-    addFatras(
-        s,
-        trackingGeometry,
-        field,
-        rnd=rnd,
-        enableInteractions=True,
-    )
+    if useGeant:
+        addGeant4(
+            s,
+            detector,
+            trackingGeometry,
+            field,
+            rnd=rnd,
+            killVolume=trackingGeometry.highestTrackingVolume,
+            killAfterTime=25 * u.ns,
+        )
+    else:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            rnd=rnd,
+            enableInteractions=True,
+        )
 
     addDigitization(
         s,
