@@ -34,10 +34,10 @@ enum class Type {
 
 // Template function depending on the PDG and *type* of data
 // so we can use statically cached values
-template <typename T, std::int32_t pdg, Type type>
+template <typename T, Acts::PdgParticle pdg, Type type>
 std::optional<T> findCachedImpl(const std::map<std::int32_t, T>& map) {
   const static std::optional<T> value = [&map]() -> std::optional<T> {
-    const auto it = map.find(pdg);
+    const auto it = map.find(static_cast<std::int32_t>(pdg));
     if (it == map.end()) {
       return std::nullopt;
     }
@@ -50,7 +50,7 @@ std::optional<T> findCachedImpl(const std::map<std::int32_t, T>& map) {
 // Cache lookup for particle data
 // Uses a switch statement to map the PDG code to the correct cached value
 template <typename T, Type type>
-std::optional<T> findCached(std::int32_t pdg,
+std::optional<T> findCached(Acts::PdgParticle pdg,
                             const std::map<std::int32_t, T>& map) {
   using enum Acts::PdgParticle;
   switch (pdg) {
