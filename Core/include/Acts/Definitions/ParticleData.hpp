@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #include <iosfwd>
 #include <optional>
@@ -78,5 +79,52 @@ std::ostream& operator<<(std::ostream& os, PdgParticle pdg);
 /// @param pdg PDG particle number
 /// @return Optional string view of particle name
 std::optional<std::string_view> pdgToShortAbsString(PdgParticle pdg);
+
+/// @brief Particle identification based on PDG number
+namespace ParticleIdHelper {
+
+/// @brief Check if the particle is a hadron
+/// @param pdg PDG particle number
+/// @return True if the particle is a hadron, false otherwise
+bool isHadron(PdgParticle pdg);
+
+/// @brief Check if the particle is a lepton
+/// @param pdg PDG particle number
+/// @return True if the particle is a lepton, false otherwise
+bool isLepton(PdgParticle pdg);
+
+/// @brief Check if the particle is a muon
+/// @param pdg PDG particle number
+/// @return True if the particle is a muon, false otherwise
+bool isMuon(PdgParticle pdg);
+
+/// @brief Check if the particle is an electron
+/// @param pdg PDG particle number
+/// @return True if the particle is an electron, false otherwise
+bool isElectron(PdgParticle pdg);
+
+/// @brief Check if the particle is a photon
+/// @param pdg PDG particle number
+/// @return True if the particle is a photon, false otherwise
+bool isPhoton(PdgParticle pdg);
+
+/// @brief Check if the particle is a tau
+/// @param pdg PDG particle number
+/// @return True if the particle is a tau, false otherwise
+bool isTau(PdgParticle pdg);
+
+/// @brief Check if the particle is a quark
+/// @param pdg PDG particle number
+/// @return True if the particle is a quark, false otherwise
+bool isQuark(PdgParticle pdg);
+
+/// @brief Check if the particle is interacting
+/// @param pdg PDG particle number
+/// @return True if the particle is interacting, false otherwise
+bool isInteracting(PdgParticle pdg);
+
+HadronType hadronType(PdgParticle pdg);
+
+}  // namespace ParticleIdHelper
 
 }  // namespace Acts
