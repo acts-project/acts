@@ -153,7 +153,8 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
                    << HepMC3Util::kUndecayedParticleStatus << ")");
       }
 
-      if (!Acts::ParticleIdHelper::isInteracting(particle->pdg_id())) {
+      Acts::PdgParticle pdg{particle->pdg_id()};
+      if (!Acts::ParticleIdHelper::isInteracting(pdg)) {
         continue;
       }
 
@@ -165,7 +166,6 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
               .withVertexSecondary(vertex.vertexId().vertexSecondary())
               .withParticle(nParticles);
 
-      Acts::PdgParticle pdg{particle->pdg_id()};
       double mass = 0.0;
       double charge = 0.0;
 
