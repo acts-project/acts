@@ -24,16 +24,11 @@ def test_constant_field_conversion():
 def test_root_field_conversion():
     from acts import covfie
 
-    current_file_path = pathlib.Path(__file__).resolve().parent
-    p = (
-        current_file_path.parent.parent.parent
-        / "thirdparty"
-        / "OpenDataDetector"
-        / "data"
-        / "odd-bfield.root"
-    )
+    u = acts.UnitConstants
 
-    af = acts.MagneticFieldMapXyz(str(p))
+    af = acts.SolenoidBField(
+        radius=10 * u.m, length=40 * u.m, nCoils=1000, bMagCenter=2 * u.T
+    )
     bc = acts.MagneticFieldContext()
     fc = af.makeCache(bc)
 
