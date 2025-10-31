@@ -34,11 +34,11 @@ macro(add_plugin_binding_if _name _dependency _flag)
 
     configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/python/plugin.py.in
-        ${CMAKE_CURRENT_BINARY_DIR}/../acts/${_name_lower}.py
+        ${_python_dir}/acts/${_name_lower}.py
         @ONLY
     )
     install(
-        FILES ${CMAKE_CURRENT_BINARY_DIR}/../acts/${_name_lower}.py
+        FILES ${_python_dir}/acts/${_name_lower}.py
         DESTINATION ${_python_install_dir}
     )
 endmacro()
