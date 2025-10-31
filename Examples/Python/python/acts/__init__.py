@@ -45,8 +45,6 @@ def Propagator(stepper, navigator, loglevel=ActsPythonBindings.logging.INFO):
 
 _patch_config(ActsPythonBindings)
 
-from . import ActsPluginsPythonBindingsJson
-
 
 @staticmethod
 def _decoratorFromFile(file: Union[str, Path], **kwargs):
@@ -55,19 +53,21 @@ def _decoratorFromFile(file: Union[str, Path], **kwargs):
 
     kwargs.setdefault("level", ActsPythonBindings.logging.INFO)
 
+    from .ActsPluginsPythonBindingsJson import (
+        MaterialMapJsonConverter,
+        JsonMaterialDecorator,
+    )
+    from .ActsPluginsPythonBindingsRoot import RootMaterialDecorator
+
     if file.suffix in (".json", ".cbor"):
-        c = ActsPluginsPythonBindingsJson.MaterialMapJsonConverter.Config()
+        c = MaterialMapJsonConverter.Config()
         for k in kwargs.keys():
             if hasattr(c, k):
                 setattr(c, k, kwargs.pop(k))
 
-        return ActsPluginsPythonBindingsJson.JsonMaterialDecorator(
-            jFileName=str(file), rConfig=c, **kwargs
-        )
+        return JsonMaterialDecorator(jFileName=str(file), rConfig=c, **kwargs)
     elif file.suffix == ".root":
-        return ActsPythonBindings._examples.RootMaterialDecorator(
-            fileName=str(file), **kwargs
-        )
+        return RootMaterialDecorator(fileName=str(file), **kwargs)
     else:
         raise ValueError(f"Unknown file type {file.suffix}")
 
