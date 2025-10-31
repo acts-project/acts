@@ -7,7 +7,7 @@ if(NOT TARGET DD4hep::DDCore OR NOT TARGET DD4hep::DDDetectors)
     )
 endif()
 
-FetchContent_Declare(ODD ${ACTS_DETRAY_SOURCE})
+FetchContent_Declare(ODD ${ACTS_ODD_SOURCE})
 
 FetchContent_MakeAvailable(ODD)
 
