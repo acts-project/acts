@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
@@ -31,19 +34,29 @@ class EffPlotTool {
         {"Eta", PlotHelpers::Binning("#eta", 40, -4, 4)},
         {"Phi", PlotHelpers::Binning("#phi", 100, -3.15, 3.15)},
         {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)},
+        {"LowPt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 2)},
+        {"D0", PlotHelpers::Binning("d_0 [mm]", 50, -200, 200)},
         {"Z0", PlotHelpers::Binning("z_0 [mm]", 50, -200, 200)},
         {"DeltaR", PlotHelpers::Binning("#Delta R", 100, 0, 0.3)},
         {"prodR", PlotHelpers::Binning("prod_R [mm]", 100, 0, 200)}};
+
+    /// Beamline to estimate d0 and z0
+    std::shared_ptr<Acts::Surface> beamline =
+        Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3::Zero());
   };
 
   /// @brief Nested Cache struct
   struct Cache {
-    /// Tracking efficiency vs pT
-    TEfficiency* trackEff_vs_pT{nullptr};
     /// Tracking efficiency vs eta
     TEfficiency* trackEff_vs_eta{nullptr};
     /// Tracking efficiency vs phi
     TEfficiency* trackEff_vs_phi{nullptr};
+    /// Tracking efficiency vs pT
+    TEfficiency* trackEff_vs_pT{nullptr};
+    /// Tracking efficiency vs low pT
+    TEfficiency* trackEff_vs_LowPt{nullptr};
+    /// Tracking efficiency vs d0
+    TEfficiency* trackEff_vs_d0{nullptr};
     /// Tracking efficiency vs z0
     TEfficiency* trackEff_vs_z0{nullptr};
     /// Tracking efficiency vs distance to the closest truth particle
@@ -65,11 +78,13 @@ class EffPlotTool {
 
   /// @brief fill efficiency plots
   ///
+  /// @param gctx geometry context
   /// @param cache cache object for efficiency plots
   /// @param truthParticle the truth Particle
   /// @param deltaR the distance to the closest truth particle
   /// @param status the reconstruction status
-  void fill(Cache& cache, const SimParticleState& truthParticle, double deltaR,
+  void fill(const Acts::GeometryContext& gctx, Cache& cache,
+            const SimParticleState& truthParticle, double deltaR,
             bool status) const;
 
   /// @brief write the efficiency plots to file
