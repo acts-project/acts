@@ -77,20 +77,22 @@ static constexpr PdgParticle makeAbsolutePdgParticle(PdgParticle pdg) {
 /// Check if the PDG belongs to a nucleus, i.e. if it has 10 digits.
 /// See PDG section "Monte Carlo Particle Numbering Scheme", point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
-static constexpr bool isNucleus(std::int32_t pdg) {
-  return std::abs(pdg) > 1e9;
+static constexpr bool isNucleus(PdgParticle pdg) {
+  const auto value = static_cast<std::int32_t>(pdg);
+  return std::abs(value) > 1e9;
 }
 
 /// Convert an excited nucleus to its ground state. PDG number of a nucleus has
 /// a form 10LZZZAAAI, where I is isomer level; I=0 is the ground state.
 /// See PDG section "Monte Carlo Particle Numbering Scheme", point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
-static constexpr PdgParticle makeNucleusGroundState(std::int32_t pdg) {
+static constexpr PdgParticle makeNucleusGroundState(PdgParticle pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
   // set isomer level to zero
-  return static_cast<PdgParticle>((pdg / 10) * 10);
+  const auto value = static_cast<std::int32_t>(pdg);
+  return static_cast<PdgParticle>((value / 10) * 10);
 }
 
 /// Extract Z and A for a given nucleus. PDG number of a nucleus has a form
@@ -99,14 +101,15 @@ static constexpr PdgParticle makeNucleusGroundState(std::int32_t pdg) {
 /// Numbering Scheme" , point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
 static constexpr std::pair<std::int32_t, std::int32_t> extractNucleusZandA(
-    std::int32_t pdg) {
+    PdgParticle pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
+  const auto value = static_cast<std::int32_t>(pdg);
   // proton number respects the charge
-  int Z = (pdg / 10000) % 1000;
+  int Z = (value / 10000) % 1000;
   // atomic number is always positive
-  int A = std::abs((pdg / 10) % 1000);
+  int A = std::abs((value / 10) % 1000);
   return std::make_pair(Z, A);
 }
 
