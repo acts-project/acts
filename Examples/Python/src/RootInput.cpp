@@ -8,13 +8,13 @@
 
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
-#include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
+#include "ActsPlugins/Root/RootMaterialDecorator.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -26,6 +26,7 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 using namespace ActsExamples;
+using namespace ActsPlugins;
 
 namespace ActsPython {
 
