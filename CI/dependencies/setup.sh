@@ -207,7 +207,7 @@ end_section
 
 start_section "Patch up Geant4 data directory"
 if [ "${full_install:-false}" == "true" ]; then
-  "${view_dir}/bin/geant4-config" --install-datasets
+  time "${view_dir}/bin/geant4-config" --install-datasets
 fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
 # Prepare the folder for G4 data, and symlink it to where G4 will look for it
