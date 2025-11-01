@@ -31,14 +31,16 @@ class EffPlotTool {
   /// @brief The nested configuration struct
   struct Config {
     std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning("#eta", 40, -4, 4)},
-        {"Phi", PlotHelpers::Binning("#phi", 100, -3.15, 3.15)},
-        {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)},
-        {"LowPt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 2)},
-        {"D0", PlotHelpers::Binning("d_0 [mm]", 50, -200, 200)},
-        {"Z0", PlotHelpers::Binning("z_0 [mm]", 50, -200, 200)},
-        {"DeltaR", PlotHelpers::Binning("#Delta R", 100, 0, 0.3)},
-        {"prodR", PlotHelpers::Binning("prod_R [mm]", 100, 0, 200)}};
+        {"Eta", PlotHelpers::Binning::Uniform("#eta", 40, -4, 4)},
+        {"Phi", PlotHelpers::Binning::Uniform("#phi", 100, -3.15, 3.15)},
+        {"Pt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 100)},
+        {"LowPt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 2)},
+        {"LogPt",
+         PlotHelpers::Binning::Logarithmic("pT [GeV/c]", 40, 0.1, 100)},
+        {"D0", PlotHelpers::Binning::Uniform("d_0 [mm]", 50, -200, 200)},
+        {"Z0", PlotHelpers::Binning::Uniform("z_0 [mm]", 50, -200, 200)},
+        {"DeltaR", PlotHelpers::Binning::Uniform("#Delta R", 100, 0, 0.3)},
+        {"prodR", PlotHelpers::Binning::Uniform("prod_R [mm]", 100, 0, 200)}};
 
     /// Beamline to estimate d0 and z0
     std::shared_ptr<Acts::Surface> beamline =
@@ -55,6 +57,8 @@ class EffPlotTool {
     TEfficiency* trackEff_vs_pT{nullptr};
     /// Tracking efficiency vs low pT
     TEfficiency* trackEff_vs_LowPt{nullptr};
+    /// Tracking efficiency vs log pT
+    TEfficiency* trackEff_vs_LogPt{nullptr};
     /// Tracking efficiency vs d0
     TEfficiency* trackEff_vs_d0{nullptr};
     /// Tracking efficiency vs z0
@@ -63,6 +67,11 @@ class EffPlotTool {
     TEfficiency* trackEff_vs_DeltaR{nullptr};
     /// Tracking efficiency vs production radius
     TEfficiency* trackEff_vs_prodR{nullptr};
+
+    /// Tracking efficiency vs eta and phi
+    TEfficiency* trackEff_vs_eta_phi{nullptr};
+    /// Tracking efficiency vs eta and pT
+    TEfficiency* trackEff_vs_eta_pt{nullptr};
   };
 
   /// Constructor

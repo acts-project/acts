@@ -22,7 +22,7 @@ namespace ActsExamples::PlotHelpers {
 TH1F* bookHisto(const char* histName, const char* histTitle,
                 const Binning& varBinning) {
   TH1F* hist =
-      new TH1F(histName, histTitle, varBinning.nBins(), varBinning.data());
+      new TH1F(histName, histTitle, varBinning.nBins(), varBinning.binEdges());
   hist->GetXaxis()->SetTitle(varBinning.title().c_str());
   hist->GetYaxis()->SetTitle("Entries");
   hist->Sumw2();
@@ -32,8 +32,8 @@ TH1F* bookHisto(const char* histName, const char* histTitle,
 TH2F* bookHisto(const char* histName, const char* histTitle,
                 const Binning& varXBinning, const Binning& varYBinning) {
   TH2F* hist =
-      new TH2F(histName, histTitle, varXBinning.nBins(), varXBinning.data(),
-               varYBinning.nBins(), varYBinning.data());
+      new TH2F(histName, histTitle, varXBinning.nBins(), varXBinning.binEdges(),
+               varYBinning.nBins(), varYBinning.binEdges());
   hist->GetXaxis()->SetTitle(varXBinning.title().c_str());
   hist->GetYaxis()->SetTitle(varYBinning.title().c_str());
   hist->Sumw2();
@@ -68,16 +68,16 @@ void anaHisto(TH1D* inputHist, int j, TH1F* meanHist, TH1F* widthHist) {
 
 TEfficiency* bookEff(const char* effName, const char* effTitle,
                      const Binning& varBinning) {
-  TEfficiency* efficiency =
-      new TEfficiency(effName, effTitle, varBinning.nBins(), varBinning.data());
+  TEfficiency* efficiency = new TEfficiency(
+      effName, effTitle, varBinning.nBins(), varBinning.binEdges());
   return efficiency;
 }
 
 TEfficiency* bookEff(const char* effName, const char* effTitle,
                      const Binning& varXBinning, const Binning& varYBinning) {
   TEfficiency* efficiency = new TEfficiency(
-      effName, effTitle, varXBinning.nBins(), varXBinning.data(),
-      varYBinning.nBins(), varYBinning.data());
+      effName, effTitle, varXBinning.nBins(), varXBinning.binEdges(),
+      varYBinning.nBins(), varYBinning.binEdges());
   return efficiency;
 }
 
@@ -93,9 +93,9 @@ void fillEff(TEfficiency* efficiency, float xValue, float yValue, bool status) {
 
 TProfile* bookProf(const char* profName, const char* profTitle,
                    const Binning& varXBinning, const Binning& varYBinning) {
-  TProfile* prof =
-      new TProfile(profName, profTitle, varXBinning.nBins(), varXBinning.data(),
-                   varYBinning.low(), varYBinning.high());
+  TProfile* prof = new TProfile(profName, profTitle, varXBinning.nBins(),
+                                varXBinning.binEdges(), varYBinning.low(),
+                                varYBinning.high());
   prof->GetXaxis()->SetTitle(varXBinning.title().c_str());
   prof->GetYaxis()->SetTitle(varYBinning.title().c_str());
   return prof;

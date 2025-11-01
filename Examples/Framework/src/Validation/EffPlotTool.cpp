@@ -30,6 +30,7 @@ void EffPlotTool::book(Cache& cache) const {
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bLowPt = m_cfg.varBinning.at("LowPt");
+  PlotHelpers::Binning bLogPt = m_cfg.varBinning.at("LogPt");
   PlotHelpers::Binning bD0 = m_cfg.varBinning.at("D0");
   PlotHelpers::Binning bZ0 = m_cfg.varBinning.at("Z0");
   PlotHelpers::Binning bDeltaR = m_cfg.varBinning.at("DeltaR");
@@ -50,6 +51,10 @@ void EffPlotTool::book(Cache& cache) const {
   cache.trackEff_vs_LowPt = PlotHelpers::bookEff(
       "trackeff_vs_LowPt", "Tracking efficiency;Truth pT [GeV/c];Efficiency",
       bLowPt);
+  // efficiency vs log pT
+  cache.trackEff_vs_LogPt = PlotHelpers::bookEff(
+      "trackeff_vs_LogPt", "Tracking efficiency;Truth pT [GeV/c];Efficiency",
+      bLogPt);
   // efficiency vs d0
   cache.trackEff_vs_d0 = PlotHelpers::bookEff(
       "trackeff_vs_d0", "Tracking efficiency;Truth d_0 [mm];Efficiency", bD0);
@@ -60,9 +65,18 @@ void EffPlotTool::book(Cache& cache) const {
   cache.trackEff_vs_DeltaR = PlotHelpers::bookEff(
       "trackeff_vs_DeltaR",
       "Tracking efficiency;Closest track #Delta R;Efficiency", bDeltaR);
+  // efficiency vs production radius
   cache.trackEff_vs_prodR = PlotHelpers::bookEff(
       "trackeff_vs_prodR",
       "Tracking efficiency;Production radius [mm];Efficiency", bProdR);
+  // efficiency vs eta and phi
+  cache.trackEff_vs_eta_phi = PlotHelpers::bookEff(
+      "trackeff_vs_eta_phi",
+      "Tracking efficiency;Truth #eta;Truth #phi;Efficiency", bEta, bPhi);
+  // efficiency vs eta and pT
+  cache.trackEff_vs_eta_pt = PlotHelpers::bookEff(
+      "trackeff_vs_eta_pt",
+      "Tracking efficiency;Truth #eta;Truth pT [GeV/c];Efficiency", bEta, bPt);
 }
 
 void EffPlotTool::clear(Cache& cache) const {
@@ -70,10 +84,13 @@ void EffPlotTool::clear(Cache& cache) const {
   delete cache.trackEff_vs_phi;
   delete cache.trackEff_vs_pT;
   delete cache.trackEff_vs_LowPt;
+  delete cache.trackEff_vs_LogPt;
   delete cache.trackEff_vs_d0;
   delete cache.trackEff_vs_z0;
   delete cache.trackEff_vs_DeltaR;
   delete cache.trackEff_vs_prodR;
+  delete cache.trackEff_vs_eta_phi;
+  delete cache.trackEff_vs_eta_pt;
 }
 
 void EffPlotTool::write(const Cache& cache) const {
@@ -83,10 +100,13 @@ void EffPlotTool::write(const Cache& cache) const {
   cache.trackEff_vs_phi->Write();
   cache.trackEff_vs_pT->Write();
   cache.trackEff_vs_LowPt->Write();
+  cache.trackEff_vs_LogPt->Write();
   cache.trackEff_vs_d0->Write();
   cache.trackEff_vs_z0->Write();
   cache.trackEff_vs_DeltaR->Write();
   cache.trackEff_vs_prodR->Write();
+  cache.trackEff_vs_eta_phi->Write();
+  cache.trackEff_vs_eta_pt->Write();
 }
 
 void EffPlotTool::fill(const Acts::GeometryContext& gctx, Cache& cache,
@@ -121,10 +141,13 @@ void EffPlotTool::fill(const Acts::GeometryContext& gctx, Cache& cache,
   PlotHelpers::fillEff(cache.trackEff_vs_phi, t_phi, status);
   PlotHelpers::fillEff(cache.trackEff_vs_pT, t_pT, status);
   PlotHelpers::fillEff(cache.trackEff_vs_LowPt, t_pT, status);
+  PlotHelpers::fillEff(cache.trackEff_vs_LogPt, t_pT, status);
   PlotHelpers::fillEff(cache.trackEff_vs_d0, t_d0, status);
   PlotHelpers::fillEff(cache.trackEff_vs_z0, t_z0, status);
   PlotHelpers::fillEff(cache.trackEff_vs_DeltaR, t_deltaR, status);
   PlotHelpers::fillEff(cache.trackEff_vs_prodR, t_prodR, status);
+  PlotHelpers::fillEff(cache.trackEff_vs_eta_phi, t_eta, t_phi, status);
+  PlotHelpers::fillEff(cache.trackEff_vs_eta_pt, t_eta, t_pT, status);
 }
 
 }  // namespace ActsExamples

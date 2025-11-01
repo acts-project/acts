@@ -12,12 +12,7 @@
 #include <utility>
 
 #include "TEfficiency.h"
-#include "TFitResult.h"
-#include "TFitResultPtr.h"
-#include "TH1F.h"
-#include "TH2F.h"
 #include "TProfile.h"
-#include "TROOT.h"
 
 class TEfficiency;
 class TH1D;
@@ -26,34 +21,48 @@ class TH2F;
 class TProfile;
 
 namespace ActsExamples::PlotHelpers {
+
 /// @brief Nested binning struct for booking plots
 class Binning {
  public:
-  Binning() : m_bins({0.0}) {}
-
-  Binning(std::string title, int bins, double bMin, double bMax)
-      : m_title(std::move(title)) {
-    const auto step = (bMax - bMin) / bins;
-    m_bins.resize(bins + 1);
-    std::generate(m_bins.begin(), m_bins.end(), [&, v = bMin]() mutable {
-      auto r = v;
+  static Binning Uniform(std::string title, const std::size_t bins,
+                         const double bMin, const double bMax) {
+    std::vector<double> binEdges(bins + 1);
+    const double step = (bMax - bMin) / bins;
+    std::generate(binEdges.begin(), binEdges.end(), [&, v = bMin]() mutable {
+      const double r = v;
       v += step;
       return r;
     });
+    return Binning(std::move(title), std::move(binEdges));
+  }
+  static Binning Variable(std::string title, std::vector<double> binEdges) {
+    return Binning(std::move(title), std::move(binEdges));
+  }
+  static Binning Logarithmic(std::string title, const std::size_t bins,
+                             const double bMin, const double bMax) {
+    std::vector<double> binEdges(bins + 1);
+    const double logMin = std::log10(bMin);
+    const double logMax = std::log10(bMax);
+    const double step = (logMax - logMin) / bins;
+    for (std::size_t i = 0; i <= bins; ++i) {
+      binEdges[i] = std::pow(10, logMin + i * step);
+    }
+    return Binning(std::move(title), std::move(binEdges));
   }
 
-  Binning(std::string title, std::vector<double> bins)
-      : m_title(std::move(title)), m_bins(std::move(bins)) {}
+  Binning(std::string title, std::vector<double> binEdges)
+      : m_title(std::move(title)), m_binEdges(std::move(binEdges)) {}
 
-  const auto& title() const { return m_title; }
-  auto nBins() const { return m_bins.size() - 1; }
-  const double* data() const { return m_bins.data(); }
-  auto low() const { return m_bins.front(); }
-  auto high() const { return m_bins.back(); }
+  const std::string& title() const { return m_title; }
+  std::size_t nBins() const { return m_binEdges.size() - 1; }
+  const double* binEdges() const { return m_binEdges.data(); }
+  double low() const { return m_binEdges.front(); }
+  double high() const { return m_binEdges.back(); }
 
  private:
   std::string m_title;
-  std::vector<double> m_bins;
+  std::vector<double> m_binEdges;
 };
 
 /// @brief book a 1D histogram
