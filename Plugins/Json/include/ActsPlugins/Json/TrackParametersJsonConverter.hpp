@@ -42,7 +42,11 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::PdgParticle,
 )
 }
 
+#ifdef NLOHMANN_JSON_NAMESPACE_BEGIN
+NLOHMANN_JSON_NAMESPACE_BEGIN
+#else
 namespace nlohmann {
+#endif
 
 /// @brief Serialize a track parameters object to json
 ///
@@ -203,4 +207,8 @@ struct adl_serializer<std::unique_ptr<parameters_t>> {
   }
 };
 
+#ifdef NLOHMANN_JSON_NAMESPACE_END
+NLOHMANN_JSON_NAMESPACE_END
+#else
 }  // namespace nlohmann
+#endif
