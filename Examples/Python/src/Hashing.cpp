@@ -7,8 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
-#include "ActsPlugins/Hashing/HashingAlgorithmConfig.hpp"
-#include "ActsPlugins/Hashing/HashingTrainingConfig.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -26,26 +24,9 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addHashing(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
-  auto hashingModule = m.def_submodule("hashing");
   auto hashingExampleModule = mex.def_submodule("_hashing");
-
-  {
-    using Config = HashingAlgorithmConfig;
-    auto c = py::class_<Config>(hashingModule, "HashingAlgorithmConfig")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, bucketSize, zBins, phiBins);
-    patchKwargsConstructor(c);
-  }
-
-  {
-    using Config = HashingTrainingConfig;
-    auto c = py::class_<Config>(hashingModule, "HashingTrainingConfig")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, annoySeed, f);
-    patchKwargsConstructor(c);
-  }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       SeedingAlgorithmHashing, hashingExampleModule, "SeedingAlgorithmHashing",

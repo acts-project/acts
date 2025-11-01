@@ -3,16 +3,19 @@
 import argparse
 
 import acts
+
+
 from acts import (
     MaterialMapper,
     IntersectionMaterialAssigner,
     BinnedSurfaceMaterialAccumulater,
-    MaterialMapJsonConverter,
     logging,
     GeometryContext,
     DetectorBuilder,
     GeometryIdGenerator,
 )
+
+from acts.json import MaterialMapJsonConverter
 
 from acts.examples import (
     Sequencer,
