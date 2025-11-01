@@ -31,7 +31,8 @@ using DetrayAlgebraType =
 
 /// Type that holds the intersection information
 using DetrayIntersection = detray::intersection2D<
-    typename ActsPlugins::DetrayHostDetector::surface_type, DetrayAlgebraType>;
+    typename ActsPlugins::DetrayHostDetector::surface_type, DetrayAlgebraType,
+    false>;
 
 using DetrayMaterialTracer =
     detray::material_validator::material_tracer<double, vecmem::vector>;
