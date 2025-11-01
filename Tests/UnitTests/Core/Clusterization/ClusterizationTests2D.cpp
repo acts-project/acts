@@ -5,10 +5,10 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "Acts/Clusterization/InPlaceClusterization.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
@@ -23,6 +23,9 @@
 #include <vector>
 
 #include <boost/functional/hash.hpp>
+
+#include "ClusterizationTestData.hpp"
+#include "ClusterizationTestDataCommonCorner.hpp"
 
 using namespace Acts;
 
@@ -248,6 +251,264 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
     }
   }
 }
+
+std::vector<Cluster2D> createClusterTestData(std::int16_t* test_data) {
+  std::vector<Cluster2D> clusters;
+  unsigned int begin_idx = 0;
+
+  static constexpr std::int16_t end_marker = 32767;
+  unsigned int n_end_marker = 0;
+  for (unsigned int idx = 0; n_end_marker < 4; ++idx) {
+    if (test_data[idx] == end_marker) {
+      ++n_end_marker;
+    } else if (n_end_marker == 2) {
+      if (begin_idx + 2 == idx) {
+        break;
+      }
+      clusters.emplace_back();
+      for (unsigned int cluster_idx = begin_idx; cluster_idx < idx - 2;
+           cluster_idx += 2) {
+        clusters.back().cells.emplace_back(test_data[cluster_idx],
+                                           test_data[cluster_idx + 1]);
+      }
+      std::ranges::sort(clusters.back().cells, cellComp);
+      hash(clusters.back());
+      begin_idx = idx;
+      n_end_marker = 0;
+    }
+  }
+  return clusters;
+}
+
+BOOST_AUTO_TEST_CASE(ClusterizeTestData) {
+  // @TODO Currently fails for out-commented test_data_sets
+  std::vector<std::pair<bool, std::int16_t*>> test_data_sets{
+      // std::make_pair(false, cluster_test_data),
+      std::make_pair(true, cluster_test_data_common_corner)
+      // ,std::make_pair(true, cluster_test_data_common_corner_2)
+  };
+  for (auto [common_corner, test_data_input] : test_data_sets) {
+    using Cell = Cell2D;
+    using CellC = std::vector<Cell>;
+    using Cluster = Cluster2D;
+    using ClusterC = std::vector<Cluster>;
+
+    std::vector<Cluster> cls = createClusterTestData(test_data_input);
+    std::vector<Cell> cells;
+    for (const Cluster& a_cluster : cls) {
+      cells.insert(cells.end(), a_cluster.cells.begin(), a_cluster.cells.end());
+    }
+
+    std::size_t startSeed = 71902647;
+    std::mt19937_64 rnd(startSeed++);
+    std::shuffle(cells.begin(), cells.end(), rnd);
+
+    Ccl::ClusteringData data;
+    ClusterC newCls;
+    Ccl::createClusters<CellC, ClusterC>(
+        data, cells, newCls, Acts::Ccl::DefaultConnect<Cell, 2>(common_corner));
+
+    for (Cluster& cl : newCls) {
+      hash(cl);
+    }
+
+    std::ranges::sort(cls, clHashComp);
+    std::ranges::sort(newCls, clHashComp);
+    std::unordered_map<std::uint64_t, unsigned int> cl_map;
+    cl_map.reserve(newCls.size());
+    auto makeKey = [](const Cluster2D& a_cluster) {
+      return (static_cast<std::uint64_t>(a_cluster.cells.front().row) << 32) |
+             a_cluster.cells.front().col;
+    };
+    {
+      unsigned int cluster_idx = 0;
+      for (const Cluster2D& a_cluster : newCls) {
+        cl_map.insert(std::make_pair(makeKey(a_cluster), cluster_idx));
+        ++cluster_idx;
+      }
+    }
+    BOOST_CHECK_EQUAL(cls.size(), newCls.size());
+    for (std::size_t i = 0; i < cls.size(); i++) {
+      std::unordered_map<std::uint64_t, unsigned int>::const_iterator iter =
+          cl_map.find(makeKey(cls.at(i)));
+      BOOST_CHECK_EQUAL(iter != cl_map.end(), true);
+      if (iter != cl_map.end()) {
+        const Cluster2D& new_cl = newCls.at(iter->second);
+
+        BOOST_CHECK_EQUAL(cls.at(i).hash, new_cl.hash);
+      }
+    }
+  }
+}
+
+std::vector<std::size_t> computeClusterHashes(
+    std::vector<InPlaceClusterization::Cell<std::int16_t, 2, std::uint16_t>>&
+        cells) {
+  using cell_t = InPlaceClusterization::Cell<std::int16_t, 2, std::uint16_t>;
+  using cell_collection_t = std::vector<cell_t>;
+  std::vector<std::size_t> cluster_hashes;
+  cluster_hashes.reserve(cells.size());
+  for_each_cluster(
+      cells, [&cluster_hashes](cell_collection_t& all_cells,
+                               unsigned int idx_begin, unsigned int idx_end) {
+        std::span<cell_t> cell_range(all_cells.data() + idx_begin,
+                                     all_cells.data() + idx_end);
+        std::ranges::sort(cell_range, [](const cell_t& a, const cell_t& b) {
+          return a.m_coordinates < b.m_coordinates;
+        });
+        std::size_t hash{};
+        for (const cell_t& a_cell : cell_range) {
+          boost::hash_combine(hash, a_cell.m_coordinates[1]);
+        }
+        // std::cout << "Cluster " << cell_range.size() << " " << hash <<
+        // std::endl;
+        cluster_hashes.push_back(hash);
+      });
+  return cluster_hashes;
+}
+
+//@TODO also add a test for the clusterizing cells on a 1D grid.
+
+// Test for the in-place clusterization algorithm using generated clusters
+BOOST_AUTO_TEST_CASE(InPlaceClusterization_Grid_2D_rand) {
+  static constexpr unsigned int SORT_AXIS = 0;
+  using Cell = InPlaceClusterization::Cell<std::int16_t, 2, std::uint16_t>;
+  using Cluster = Cluster2D;
+
+  std::size_t sizeX = 1000;
+  std::size_t sizeY = 1000;
+  std::size_t startSeed = 71902647;
+  std::size_t ntries = 100;
+
+  std::cout << "InPlaceClusterization_Grid_2D_rand test with parameters: "
+            << std::endl;
+  std::cout << " sizeX = " << sizeX << std::endl;
+  std::cout << " sizeY = " << sizeY << std::endl;
+  std::cout << " startSeed = " << startSeed << std::endl;
+  std::cout << " ntries = " << ntries << std::endl;
+
+  while (ntries-- > 0) {
+    std::mt19937_64 rnd(startSeed++);
+
+    std::vector<Cluster> cls;
+    std::vector<Cell> cells;
+    unsigned int cell_idx = 0;
+    for (Rectangle& rect : segment(0, 0, sizeX, sizeY, rnd)) {
+      auto& [x0, y0, x1, y1] = rect;
+      Cluster cl = gencluster(x0, y0, x1, y1, rnd);
+      hash(cl);
+
+      // grow cell collection with cells of generated cluster
+      for (const Cell2D& a_cell : cl.cells) {
+        // make sure that the coordinates in the range supported by the chosen
+        // coordinate type
+        assert(static_cast<std::int16_t>(getCellRow(a_cell)) ==
+               getCellRow(a_cell));
+        assert(static_cast<std::int16_t>(getCellColumn(a_cell)) ==
+               getCellColumn(a_cell));
+        assert(static_cast<std::uint16_t>(cell_idx) == cell_idx);
+        cells.push_back(Cell(
+            std::array<std::int16_t, 2>{
+                static_cast<std::int16_t>(getCellRow(a_cell)),
+                static_cast<std::int16_t>(getCellColumn(a_cell))},
+            static_cast<std::uint16_t>(cell_idx)));
+        ++cell_idx;
+      }
+      cls.push_back(cl);
+    }
+
+    // randomize cell collection before clusterization
+    std::shuffle(cells.begin(), cells.end(), rnd);
+
+    // clusterize where cells are considered connected if they share an
+    // edge or corner.
+    InPlaceClusterization::clusterize<
+        SORT_AXIS, std::vector<Cell>, unsigned int,
+        InPlaceClusterization::EConnectionType::CommonEdgeOrCorner>(cells);
+
+    // compute cluster hashes using the in-place clustered cell collection
+    std::vector<std::size_t> cluster_hashes = computeClusterHashes(cells);
+
+    // ... and test that input and output hashes agree.
+    std::ranges::sort(cls, clHashComp);
+    std::ranges::sort(cluster_hashes);
+
+    BOOST_CHECK_EQUAL(cls.size(), cluster_hashes.size());
+    for (std::size_t i = 0; i < cls.size(); i++) {
+      BOOST_CHECK_EQUAL(cls.at(i).hash, cluster_hashes.at(i));
+    }
+  }
+}
+
+// Test for the in-place clusterization algorithm using sample cluster data
+BOOST_AUTO_TEST_CASE(InPlaceClusterization_ClusterizeTestData) {
+  // the sample cluster data
+  std::vector<std::pair<bool, std::int16_t*>> test_data_sets{
+      std::make_pair(false, cluster_test_data),
+      std::make_pair(true, cluster_test_data_common_corner),
+      std::make_pair(true, cluster_test_data_common_corner_2)};
+
+  for (auto [common_corner, test_data_input] : test_data_sets) {
+    static constexpr unsigned int SORT_AXIS = 0;
+    using Cell = InPlaceClusterization::Cell<std::int16_t, 2, std::uint16_t>;
+    using Cluster = Cluster2D;
+
+    // create a cluster collection from the sample cluster data
+    std::vector<Cluster> cls = createClusterTestData(test_data_input);
+    std::vector<Cell> cells;
+
+    // create a cell collection
+    unsigned int cell_idx = 0;
+    for (const Cluster& cl : cls) {
+      for (const Cell2D& a_cell : cl.cells) {
+        // this test will not work if the coordinates or the index exceed
+        // 16bit
+        assert(static_cast<std::int16_t>(getCellRow(a_cell)) ==
+               getCellRow(a_cell));
+        assert(static_cast<std::int16_t>(getCellColumn(a_cell)) ==
+               getCellColumn(a_cell));
+        assert(static_cast<std::uint16_t>(cell_idx) == cell_idx);
+        cells.push_back(Cell(
+            std::array<std::int16_t, 2>{
+                static_cast<std::int16_t>(getCellRow(a_cell)),
+                static_cast<std::int16_t>(getCellColumn(a_cell))},
+            static_cast<std::uint16_t>(cell_idx)));
+        ++cell_idx;
+      }
+    }
+
+    // shuffle the cell collection before testing the clusterization
+    std::size_t startSeed = 71902647;
+    std::mt19937_64 rnd(startSeed++);
+    std::shuffle(cells.begin(), cells.end(), rnd);
+
+    // clusterize using the in-place clusterization algorithm
+    if (common_corner) {
+      InPlaceClusterization::clusterize<
+          SORT_AXIS, std::vector<Cell>, unsigned int,
+          InPlaceClusterization::EConnectionType::CommonEdgeOrCorner>(cells);
+    } else {
+      InPlaceClusterization::clusterize<
+          SORT_AXIS, std::vector<Cell>, unsigned int,
+          InPlaceClusterization::EConnectionType::CommonEdge>(cells);
+    }
+
+    // compute the per cluster hashes, using the in-place clustered cell
+    // collection
+    std::vector<std::size_t> cluster_hashes = computeClusterHashes(cells);
+
+    // input cluster collection and the output cluster hashes
+    std::ranges::sort(cls, clHashComp);
+    std::ranges::sort(cluster_hashes);
+
+    // and compare the input and output agree.
+    BOOST_CHECK_EQUAL(cls.size(), cluster_hashes.size());
+    for (std::size_t i = 0; i < cls.size(); i++) {
+      BOOST_CHECK_EQUAL(cls.at(i).hash, cluster_hashes.at(i));
+    }
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
