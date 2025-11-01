@@ -23,7 +23,7 @@ import pytest
 
 import acts
 import acts.examples
-from acts.examples.odd import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
 try:
@@ -277,9 +277,9 @@ def detector_config(request):
         if not helpers.dd4hepEnabled:
             pytest.skip("DD4hep not set up")
 
+        odd_dir = getOpenDataDetectorDirectory()
         matDeco = acts.IMaterialDecorator.fromFile(
-            srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
-            level=acts.logging.INFO,
+            odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
         )
         detector = getOpenDataDetector(matDeco)
         trackingGeometry = detector.trackingGeometry()

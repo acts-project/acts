@@ -56,8 +56,8 @@ else
     source "${ROOT_BINDIR}/thisroot.sh"
   fi
 fi
-if [[ -d "${Geant4_DIR}" ]]; then
-  source "${Geant4_INCLUDE_DIR}/../../bin/geant4.sh"
+if [[ -d "${GEANT4_DIR}" ]]; then
+  source "${GEANT4_INCLUDE_DIR}/../../bin/geant4.sh"
 fi
 if [[ -d "${DD4hep_DIR}" ]]; then
   prevstate=$-

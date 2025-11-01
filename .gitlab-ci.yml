@@ -282,8 +282,6 @@ build_linux_ubuntu:
 
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
 
     - cd ..
 
@@ -338,8 +336,6 @@ linux_test_examples:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - |
       CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
@@ -372,8 +368,6 @@ linux_physmon:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - |
       CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
@@ -406,8 +400,6 @@ linux_physmon:
 
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - |
       CI/dependencies/setup.sh -c ${CXX} -e .env
       source .env
@@ -498,8 +490,6 @@ linux_ubuntu_2404_clang19:
 
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - cd ..
 
     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
