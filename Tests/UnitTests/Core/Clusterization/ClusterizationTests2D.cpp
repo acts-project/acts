@@ -248,6 +248,23 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
     }
   }
 }
+
+BOOST_AUTO_TEST_CASE(Grid_2D_duplicate_cells) {
+  using Cell = Cell2D;
+  using CellC = std::vector<Cell>;
+  using Cluster = Cluster2D;
+  using ClusterC = std::vector<Cluster>;
+
+  CellC cells = {Cell(10, 20), Cell(10, 20)};
+  ClusterC clusters;
+
+  Ccl::ClusteringData data;
+
+  BOOST_CHECK_THROW(
+      (Ccl::createClusters<CellC, ClusterC>(data, cells, clusters)),
+      std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
