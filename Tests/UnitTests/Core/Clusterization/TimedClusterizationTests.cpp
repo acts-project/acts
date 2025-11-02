@@ -122,6 +122,21 @@ BOOST_AUTO_TEST_CASE(TimedGrid_1D_duplicate_cells) {
       std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(TimedGrid_1D_space_and_time) {
+  // Cells with the same position but large time differences are not duplicates.
+  // However, they can still be clustered through a neighboring cell if it is
+  // within the time tolerance for both.
+  CellCollection cells = {Cell(0ul, 0, 0, 0.0), Cell(1ul, 1, 0, 0.4),
+                          Cell(2ul, 0, 0, 0.8)};
+  ClusterCollection clusters;
+  Ccl::ClusteringData data;
+
+  Ccl::createClusters<CellCollection, ClusterCollection, 1>(
+      data, cells, clusters, Ccl::TimedConnect<Cell, 1>(0.5));
+  BOOST_CHECK_EQUAL(1ul, clusters.size());
+  BOOST_CHECK_EQUAL(clusters[0].ids.size(), 3ul);
+}
+
 BOOST_AUTO_TEST_CASE(TimedGrid_2D_notime) {
   // 4x4 matrix
   /*
@@ -306,6 +321,51 @@ BOOST_AUTO_TEST_CASE(TimedGrid_2D_duplicate_cells) {
       (Ccl::createClusters<CellCollection, ClusterCollection, 2>(
           data, cells, clusters, Ccl::TimedConnect<Cell, 2>(0.5))),
       std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(TimedGrid_2D_space_and_time_conn4) {
+  // Cells with the same position but large time differences are not duplicates.
+  // However, they can still be clustered through a neighboring cell if it is
+  // within the time tolerance for both:
+  // 3x3 matrix
+  /*
+    O  X/Z  O
+   X/Z  Y  X/Z
+    O  X/Z  O
+  */
+  CellCollection cells = {
+      Cell(0ul, 1, 0, 0.0), Cell(1ul, 0, 1, 0.0), Cell(2ul, 2, 1, 0.0),
+      Cell(3ul, 1, 2, 0.0), Cell(4ul, 1, 0, 0.8), Cell(5ul, 0, 1, 0.8),
+      Cell(6ul, 2, 1, 0.8), Cell(7ul, 1, 2, 0.8), Cell(8ul, 1, 1, 0.4)};
+  ClusterCollection clusters;
+  Ccl::ClusteringData data;
+
+  Ccl::createClusters<CellCollection, ClusterCollection, 2>(
+      data, cells, clusters, Ccl::TimedConnect<Cell, 2>(0.5, false));
+  BOOST_CHECK_EQUAL(1ul, clusters.size());
+  BOOST_CHECK_EQUAL(clusters[0].ids.size(), 9ul);
+}
+
+BOOST_AUTO_TEST_CASE(TimedGrid_2D_space_and_time_conn8) {
+  // Cells with the same position but large time differences are not duplicates.
+  // However, they can still be clustered through a neighboring cell if it is
+  // within the time tolerance for both:
+  // 3x3 matrix
+  /*
+    Z   X   O
+    X   Y   O
+   X/Z  O   O
+  */
+  CellCollection cells = {Cell(0ul, 0, 0, 0.0), Cell(1ul, 0, 2, 0.0),
+                          Cell(2ul, 1, 0, 0.8), Cell(3ul, 0, 1, 0.8),
+                          Cell(4ul, 0, 2, 0.8), Cell(5ul, 1, 1, 0.4)};
+  ClusterCollection clusters;
+  Ccl::ClusteringData data;
+
+  Ccl::createClusters<CellCollection, ClusterCollection, 2>(
+      data, cells, clusters, Ccl::TimedConnect<Cell, 2>(0.5, true));
+  BOOST_CHECK_EQUAL(1ul, clusters.size());
+  BOOST_CHECK_EQUAL(clusters[0].ids.size(), 6ul);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
