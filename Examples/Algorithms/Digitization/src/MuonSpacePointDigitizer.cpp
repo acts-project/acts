@@ -234,6 +234,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                                  << " recorded in a " << hitSurf->type()
                                  << " surface with id: " << moduleGeoId
                                  << ", bounds: " << bounds);
+
       bool convertSp{true};
 
       MuonSpacePoint newSp{};
@@ -388,7 +389,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
             }
           }
 
-          const double sigmaZ = (0.5 * maxZ) / 1000.;
+          const double sigmaZ =
+              (0.5 * maxZ) /
+              20000.;  // to have it similar to the drift radius sigma
 
           auto smearedZ =
               (*Digitization::Gauss{sigmaZ}(nominalPos.z(), rndEngine)).first;
@@ -405,10 +408,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
                     << std::endl;
           std::cout << "directionSimHitGlobal "
                     << simHit.direction().transpose() << std::endl;
-
+          if (nominalPos.x() > 0) {
+            driftR *= -1;
+            std::cout << "switched sign" << std::endl;
+          }
           newSp.setRadius(driftR);
-          newSp.setCovariance(square(sigmaZ),
-                              calibrator().driftRadiusUncert(driftR), 0.);
+          newSp.setCovariance(square(uncert), square(sigmaZ), 0.);
 
           newSp.defineCoordinates(
               Vector3{parentTrf.translation()},

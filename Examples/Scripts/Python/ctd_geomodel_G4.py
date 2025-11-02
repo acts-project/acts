@@ -75,6 +75,8 @@ def runGeant4(
         rnd=rnd,
         materialMappings=materialMappings,
         volumeMappings=volumeMappings,
+        recordHitsOfSecondaries=False,
+        killSecondaries=True,
     )
     return s
 
@@ -193,10 +195,19 @@ def main():
         dumpVisualization=False,
         digitizeTime=True,
         outputSpacePoints="MuonSpacePoints",
-        level=logLevel,
+        level=acts.logging.VERBOSE,
     )
     algSequence.addAlgorithm(digiAlg)
 
+    rmwConfig = acts.examples.RootMeasurementWriter.Config(
+        inputMeasurements="measurements",
+        # inputClusters=digiAlg.config.outputClusters,
+        inputSimHits="simhits",
+        inputMeasurementSimHitsMap="measurement_simhits_map",
+        filePath=str("measurements.root"),
+        surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
+    )
+    algSequence.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, logLevel))
     # from acts.examples import RootMuonSpacePointWriter
     #
     # algSequence.addWriter(
@@ -238,7 +249,31 @@ def main():
         field,
         nUpdateMax=17,
         relChi2changeCutOff=1e-7,
-        multipleScattering=True,
+        multipleScattering=False,
+        logLevel=logging.VERBOSE,
+    )
+
+    algSequence.addWriter(
+        acts.examples.RootTrackStatesWriter(
+            level=acts.logging.WARNING,
+            inputTracks="tracks",
+            inputParticles="particles_generated",
+            inputTrackParticleMatching="track_particle_matching",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            filePath=str("trackstates_gx2f.root"),
+        )
+    )
+
+    algSequence.addWriter(
+        acts.examples.RootTrackSummaryWriter(
+            level=acts.logging.WARNING,
+            inputTracks="tracks",
+            inputParticles="particles_generated",
+            inputTrackParticleMatching="track_particle_matching",
+            filePath=str("tracksummary_gx2f.root"),
+            writeGx2fSpecific=True,
+        )
     )
 
     algSequence.run()

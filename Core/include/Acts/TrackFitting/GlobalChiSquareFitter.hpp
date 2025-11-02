@@ -896,6 +896,10 @@ class Gx2Fitter {
           sourceLinkIt != inputMeasurements->end()) {
         ACTS_DEBUG("    The surface contains a measurement.");
 
+        std::cout << "CENTER: " << surface->center(state.geoContext)[0] << ","
+                  << surface->center(state.geoContext)[2] << "," << geoId
+                  << std::endl;
+
         // Transport the covariance to the surface
         stepper.transportCovarianceToBound(state.stepping, *surface,
                                            freeToBoundCorrection);

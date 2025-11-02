@@ -107,9 +107,9 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
     indices.resize(hits.size());
     std::iota(indices.begin(), indices.end(), 0);
 
-    std::ranges::sort(indices, [&hits](std::size_t a, std::size_t b) {
-      return hits[a]->time() < hits[b]->time();
-    });
+    //    std::ranges::sort(indices, [&hits](std::size_t a, std::size_t b) {
+    //      return hits[a]->time() < hits[b]->time();
+    //    });
     ProtoTrack sortedTrack;
     for (const auto& idx : indices) {
       sortedTrack.emplace_back(track[idx]);
