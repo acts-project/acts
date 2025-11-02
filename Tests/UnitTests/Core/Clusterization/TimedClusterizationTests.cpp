@@ -99,6 +99,29 @@ BOOST_AUTO_TEST_CASE(TimedGrid_1D_withtime) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(TimedGrid_1D_duplicate_cells) {
+  // Cells with same position but time difference larger than tolerance should
+  // not be considered duplicates
+  CellCollection cells = {Cell(0ul, 0, 0, 0.0), Cell(1ul, 0, 0, 1.0)};
+  ClusterCollection clusters;
+  Ccl::ClusteringData data;
+
+  Ccl::createClusters<CellCollection, ClusterCollection, 1>(
+      data, cells, clusters, Ccl::TimedConnect<Cell, 1>(0.5));
+  BOOST_CHECK_EQUAL(2ul, clusters.size());
+
+  // Cells with same position and time difference within tolerance should be
+  // considered duplicates
+  cells = {Cell(0ul, 0, 0, 0.0), Cell(1ul, 0, 0, 0.4)};
+  clusters.clear();
+  data.clear();
+
+  BOOST_CHECK_THROW(
+      (Ccl::createClusters<CellCollection, ClusterCollection, 1>(
+          data, cells, clusters, Ccl::TimedConnect<Cell, 1>(0.5))),
+      std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_CASE(TimedGrid_2D_notime) {
   // 4x4 matrix
   /*
@@ -260,6 +283,29 @@ BOOST_AUTO_TEST_CASE(TimedGrid_2D_noTollerance) {
     BOOST_CHECK_EQUAL(timedIds.size(), expected.size());
     BOOST_CHECK_EQUAL(timedIds[0], expected[0]);
   }
+}
+
+BOOST_AUTO_TEST_CASE(TimedGrid_2D_duplicate_cells) {
+  // Cells with same position but time difference larger than tolerance should
+  // not be considered duplicates
+  CellCollection cells = {Cell(0ul, 0, 0, 0.0), Cell(1ul, 0, 0, 1.0)};
+  ClusterCollection clusters;
+  Ccl::ClusteringData data;
+
+  Ccl::createClusters<CellCollection, ClusterCollection, 2>(
+      data, cells, clusters, Ccl::TimedConnect<Cell, 2>(0.5));
+  BOOST_CHECK_EQUAL(2ul, clusters.size());
+
+  // Cells with same position and time difference within tolerance should be
+  // considered duplicates
+  cells = {Cell(0ul, 0, 0, 0.0), Cell(1ul, 0, 0, 0.4)};
+  clusters.clear();
+  data.clear();
+
+  BOOST_CHECK_THROW(
+      (Ccl::createClusters<CellCollection, ClusterCollection, 2>(
+          data, cells, clusters, Ccl::TimedConnect<Cell, 2>(0.5))),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
