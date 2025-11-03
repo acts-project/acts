@@ -72,6 +72,7 @@ def run(events=1000):
 
     # Stage 1: Graph construction via module map
     graphConstructor = acts.examples.ModuleMapCuda(
+        level=acts.logging.INFO,
         moduleMapPath="module_map_odd_2k_events",
         rScale=1000.0,
         phiScale=3.141592654,
@@ -85,6 +86,7 @@ def run(events=1000):
     # Stage 2: Single-stage edge classification (ONNX)
     edgeClassifiers = [
         acts.examples.OnnxEdgeClassifier(
+            level=acts.logging.INFO,
             modelPath="gnn_odd.onnx",
             cut=0.5,
         )
@@ -92,6 +94,7 @@ def run(events=1000):
 
     # Stage 3: GPU track building
     trackBuilder = acts.examples.CudaTrackBuilding(
+        level=acts.logging.INFO,
         useOneBlockImplementation=False,
         doJunctionRemoval=True,
     )

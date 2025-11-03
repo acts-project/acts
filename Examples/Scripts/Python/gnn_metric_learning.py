@@ -68,6 +68,7 @@ def runGnnMetricLearning(
 
     # Stage 1: Graph construction via metric learning
     graphConstructor = acts.examples.TorchMetricLearning(
+        level=acts.logging.INFO,
         modelPath=str(Path(modelDir) / "embed.pt"),
         embeddingDim=8,
         rVal=1.6,
@@ -80,6 +81,7 @@ def runGnnMetricLearning(
         edgeClassifiers = [
             # Coarse filter
             acts.examples.TorchEdgeClassifier(
+                level=acts.logging.INFO,
                 modelPath=str(Path(modelDir) / "filter.pt"),
                 cut=0.01,
                 nChunks=5,
@@ -88,6 +90,7 @@ def runGnnMetricLearning(
             ),
             # GNN refinement
             acts.examples.TorchEdgeClassifier(
+                level=acts.logging.INFO,
                 modelPath=str(Path(modelDir) / "gnn.pt"),
                 cut=0.5,
                 nChunks=5,
@@ -98,10 +101,12 @@ def runGnnMetricLearning(
     elif backend == "onnx":
         edgeClassifiers = [
             acts.examples.OnnxEdgeClassifier(
+                level=acts.logging.INFO,
                 modelPath=str(Path(modelDir) / "filtering.onnx"),
                 cut=0.01,
             ),
             acts.examples.OnnxEdgeClassifier(
+                level=acts.logging.INFO,
                 modelPath=str(Path(modelDir) / "gnn.onnx"),
                 cut=0.5,
             ),
@@ -110,7 +115,7 @@ def runGnnMetricLearning(
         raise ValueError(f"Unknown backend: {backend}")
 
     # Stage 3: CPU track building
-    trackBuilder = acts.examples.BoostTrackBuilding()
+    trackBuilder = acts.examples.BoostTrackBuilding(level=acts.logging.INFO)
 
     # Node features: Standard 3 features (R, Phi, Z)
     nodeFeatures = [

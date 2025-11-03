@@ -74,6 +74,7 @@ def runGnnModuleMap(
 
     # Stage 1: Graph construction via module map
     graphConstructor = acts.examples.ModuleMapCuda(
+        level=acts.logging.INFO,
         moduleMapPath=moduleMapPath,
         rScale=1000.0,
         phiScale=3.141592654,
@@ -88,6 +89,7 @@ def runGnnModuleMap(
     if gnnModel.suffix == ".pt":
         edgeClassifiers = [
             acts.examples.TorchEdgeClassifier(
+                level=acts.logging.INFO,
                 modelPath=str(gnnModel),
                 cut=0.5,
                 useEdgeFeatures=True,
@@ -96,6 +98,7 @@ def runGnnModuleMap(
     elif gnnModel.suffix == ".onnx":
         edgeClassifiers = [
             acts.examples.OnnxEdgeClassifier(
+                level=acts.logging.INFO,
                 modelPath=str(gnnModel),
                 cut=0.5,
             )
@@ -103,6 +106,7 @@ def runGnnModuleMap(
     elif gnnModel.suffix == ".engine":
         edgeClassifiers = [
             acts.examples.TensorRTEdgeClassifier(
+                level=acts.logging.INFO,
                 modelPath=str(gnnModel),
                 cut=0.5,
             )
@@ -112,6 +116,7 @@ def runGnnModuleMap(
 
     # Stage 3: GPU track building
     trackBuilder = acts.examples.CudaTrackBuilding(
+        level=acts.logging.INFO,
         useOneBlockImplementation=False,
         doJunctionRemoval=True,
     )
