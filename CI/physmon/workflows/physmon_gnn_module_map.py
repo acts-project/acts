@@ -35,12 +35,16 @@ def run(events=1000):
 
     s = Sequencer(events=events, numThreads=1, outputDir=str(setup.outdir))
 
+    # Random number generator
+    rnd = acts.examples.RandomNumbers(seed=42)
+
     # Particle gun: muons, 1-10 GeV, eta -3 to 3
     addParticleGun(
         s,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
         EtaConfig(-3.0, 3.0, uniform=True),
         ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
+        rnd=rnd,
         logLevel=acts.logging.INFO,
     )
 
@@ -49,6 +53,7 @@ def run(events=1000):
         s,
         setup.trackingGeometry,
         setup.field,
+        rnd=rnd,
         logLevel=acts.logging.INFO,
     )
 
@@ -58,6 +63,7 @@ def run(events=1000):
         setup.trackingGeometry,
         setup.field,
         digiConfigFile=setup.digiConfig,
+        rnd=rnd,
         logLevel=acts.logging.INFO,
     )
 
