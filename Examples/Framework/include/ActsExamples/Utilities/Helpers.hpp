@@ -70,7 +70,7 @@ class Binning {
 /// @param histTitle the title of histogram
 /// @param varBinning the binning info of variable
 /// @return histogram pointer
-TH1F* bookHisto(const char* histName, const char* histTitle,
+TH1F* bookHisto(const std::string& histName, const std::string& histTitle,
                 const Binning& varBinning);
 
 /// @brief book a 2D histogram
@@ -79,7 +79,7 @@ TH1F* bookHisto(const char* histName, const char* histTitle,
 /// @param varXBinning the binning info of variable at x axis
 /// @param varYBinning the binning info of variable at y axis
 /// @return histogram pointer
-TH2F* bookHisto(const char* histName, const char* histTitle,
+TH2F* bookHisto(const std::string& histName, const std::string& histTitle,
                 const Binning& varXBinning, const Binning& varYBinning);
 
 /// @brief fill a 1D histogram
@@ -110,7 +110,7 @@ void anaHisto(TH1D* inputHist, int j, TH1F* meanHist, TH1F* widthHist);
 /// @param effTitle the title of plot
 /// @param varBinning the binning info of variable
 /// @return TEfficiency pointer
-TEfficiency* bookEff(const char* effName, const char* effTitle,
+TEfficiency* bookEff(const std::string& effName, const std::string& effTitle,
                      const Binning& varBinning);
 
 /// @brief book a 2D efficiency plot
@@ -119,7 +119,7 @@ TEfficiency* bookEff(const char* effName, const char* effTitle,
 /// @param varXBinning the binning info of variable at x axis
 /// @param varYBinning the binning info of variable at y axis
 /// @return TEfficiency pointer
-TEfficiency* bookEff(const char* effName, const char* effTitle,
+TEfficiency* bookEff(const std::string& effName, const std::string& effTitle,
                      const Binning& varXBinning, const Binning& varYBinning);
 
 /// @brief fill a 1D efficiency plot
@@ -141,7 +141,7 @@ void fillEff(TEfficiency* efficiency, float xValue, float yValue, bool status);
 /// @param varXBinning the binning info of variable at x axis
 /// @param varYBinning the binning info of variable at y axis
 /// @return TProfile pointer
-TProfile* bookProf(const char* profName, const char* profTitle,
+TProfile* bookProf(const std::string& profName, const std::string& profTitle,
                    const Binning& varXBinning, const Binning& varYBinning);
 
 /// @brief fill a TProfile plot
