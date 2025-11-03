@@ -11,10 +11,15 @@ from physmon_common import makeSetup
 
 setup = makeSetup()
 
+# Paths to pre-generated Geant4 simulation files
+srcdir = Path(__file__).resolve().parent.parent.parent
+preSimParticles = srcdir / "CI/physmon/gsf_simhits/particles_simulation.root"
+preSimHits = srcdir / "CI/physmon/gsf_simhits/hits.root"
+
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
         events=10000,
-        numThreads=1,
+        numThreads=-1,
         logLevel=acts.logging.INFO,
     )
 
@@ -25,8 +30,8 @@ with tempfile.TemporaryDirectory() as temp:
         digiConfigFile=setup.digiConfig,
         outputDir=tp,
         s=s,
-        detector=setup.detector,
-        useGeant=True,
+        inputParticlePath=preSimParticles,
+        inputSimHitsPath=preSimHits,
     )
 
     s.run()

@@ -15,6 +15,7 @@ def runTruthTrackingGsf(
     digiConfigFile: Path,
     outputDir: Path,
     inputParticlePath: Optional[Path] = None,
+    inputSimHitsPath: Optional[Path] = None,
     decorators=[],
     s: acts.examples.Sequencer = None,
     useGeant: bool = False,
@@ -51,7 +52,34 @@ def runTruthTrackingGsf(
     if useGeant and detector is None:
         raise ValueError("detector parameter is required when useGeant=True")
 
-    if inputParticlePath is None:
+    if inputSimHitsPath is not None and inputParticlePath is None:
+        raise ValueError("inputParticlePath is required when inputSimHitsPath is provided")
+
+    if inputSimHitsPath is not None:
+        # Read pre-simulated particles and hits
+        acts.logging.getLogger("GSF Example").info(
+            "Reading simulated particles from %s", inputParticlePath.resolve()
+        )
+        acts.logging.getLogger("GSF Example").info(
+            "Reading simhits from %s", inputSimHitsPath.resolve()
+        )
+        assert inputParticlePath.exists()
+        assert inputSimHitsPath.exists()
+        s.addReader(
+            acts.examples.RootParticleReader(
+                level=acts.logging.INFO,
+                filePath=str(inputParticlePath.resolve()),
+                outputParticles="particles_simulated",
+            )
+        )
+        s.addReader(
+            acts.examples.RootSimHitReader(
+                level=acts.logging.INFO,
+                filePath=str(inputSimHitsPath.resolve()),
+                outputSimHits="simhits",
+            )
+        )
+    elif inputParticlePath is None:
         addParticleGun(
             s,
             ParticleConfig(num=1, pdg=acts.PdgParticle.eElectron, randomizeCharge=True),
@@ -78,24 +106,26 @@ def runTruthTrackingGsf(
             )
         )
 
-    if useGeant:
-        addGeant4(
-            s,
-            detector,
-            trackingGeometry,
-            field,
-            rnd=rnd,
-            killVolume=trackingGeometry.highestTrackingVolume,
-            killAfterTime=25 * u.ns,
-        )
-    else:
-        addFatras(
-            s,
-            trackingGeometry,
-            field,
-            rnd=rnd,
-            enableInteractions=True,
-        )
+    # Only run simulation if not reading pre-simulated hits
+    if inputSimHitsPath is None:
+        if useGeant:
+            addGeant4(
+                s,
+                detector,
+                trackingGeometry,
+                field,
+                rnd=rnd,
+                killVolume=trackingGeometry.highestTrackingVolume,
+                killAfterTime=25 * u.ns,
+            )
+        else:
+            addFatras(
+                s,
+                trackingGeometry,
+                field,
+                rnd=rnd,
+                enableInteractions=True,
+            )
 
     addDigitization(
         s,
@@ -120,7 +150,7 @@ def runTruthTrackingGsf(
         trackingGeometry,
         field,
         rnd=rnd,
-        inputParticles="particles_generated",
+        inputParticles="particles_simulated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.electron,
     )
