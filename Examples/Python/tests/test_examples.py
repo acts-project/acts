@@ -1227,7 +1227,8 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 @pytest.mark.parametrize("backend", ["onnx", "torch"])
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
+def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
+    """Test GNN track finding with metric learning graph construction"""
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
 
@@ -1258,7 +1259,7 @@ def test_gnn(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
         / "Examples"
         / "Scripts"
         / "Python"
-        / "gnn.py"
+        / "gnn_metric_learning.py"
     )
     assert script.exists()
     env = os.environ.copy()
