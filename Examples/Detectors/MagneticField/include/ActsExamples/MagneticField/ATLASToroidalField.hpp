@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 #include <stdexcept>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -105,9 +106,9 @@ class ATLASToroidalField final : public MagneticFieldProvider {
 
     double bx = 0.0, by = 0.0, bz = 0.0;
 
-    constexpr double mu0 = 4e-7 * M_PI; // [T·m/A]
-    const double prefBarrel = (mu0 * static_cast<double>(m_cfg.barrel.Nturns) * static_cast<double>(m_cfg.barrel.I)) / (4.0 * M_PI);
-    const double prefECT    = (mu0 * static_cast<double>(m_cfg.ect.Nturns)    * static_cast<double>(m_cfg.ect.I)   ) / (4.0 * M_PI);
+    constexpr double mu0 = 4e-7 * std::numbers::pi; // [T·m/A]
+    const double prefBarrel = (mu0 * static_cast<double>(m_cfg.barrel.Nturns) * static_cast<double>(m_cfg.barrel.I)) / (4.0 * std::numbers::pi);
+    const double prefECT    = (mu0 * static_cast<double>(m_cfg.ect.Nturns)    * static_cast<double>(m_cfg.ect.I)   ) / (4.0 * std::numbers::pi);
     const float  eps        = m_cfg.layout.eps;
 
     // Barrel
@@ -147,7 +148,7 @@ class ATLASToroidalField final : public MagneticFieldProvider {
   const Config& config() const { return m_cfg; }
 
  private:
-  static float deg2rad(float deg) { return deg * static_cast<float>(M_PI / 180.0); }
+  static float deg2rad(float deg) { return deg * static_cast<float>(std::numbers::pi / 180.0); }
 
   // End-cap racetrack with LONG straights along z:
   //  - straights at ρ = ±(Lrho/2),    z ∈ [-Lz/2, +Lz/2]
@@ -158,31 +159,31 @@ class ATLASToroidalField final : public MagneticFieldProvider {
     const float rr = 0.5f * Lrho; // radial half-span
     const float rz = 0.5f * Lz;   // axial half-length
     std::vector<std::array<float,2>> pts;
-    pts.reserve(static_cast<size_t>(2*nArc + 2*nStraight + (close?1:0)));
+    pts.reserve(static_cast<std::size_t>(2*nArc + 2*nStraight + (close?1:0)));
 
     // Straight at ρ = +rr : z from +rz -> -rz (exclude endpoint)
     for (int i = 0; i < nStraight; ++i) {
-      const float t = float(i)/float(nStraight);
+      const float t = static_cast<float>(i)/static_cast<float>(nStraight);
       const float z = (+rz)*(1.0f - t) + (-rz)*t;
       pts.push_back({+rr, z});
     }
     // Inner arc at z = -rz : θ: +π/2 → -π/2 (exclude endpoint) ; ρ = rr*sin(θ)
     for (int i = 0; i < nArc; ++i) {
-      const float th  = static_cast<float>(M_PI_2) + (float(i)/nArc)*static_cast<float>(-M_PI);
+      const float th  = static_cast<float>(std::numbers::pi / 2) + (static_cast<float>(i)/nArc)*static_cast<float>(-std::numbers::pi);
       const float rho = rr*std::sin(th);
       const float z   = -rz;
       pts.push_back({rho, z});
     }
     // Straight at ρ = -rr : z from -rz -> +rz (exclude endpoint)
     for (int i = 0; i < nStraight; ++i) {
-      const float t = float(i)/float(nStraight);
+      const float t = static_cast<float>(i)/static_cast<float>(nStraight);
       const float z = (-rz)*(1.0f - t) + (+rz)*t;
       pts.push_back({-rr, z});
     }
     // Outer arc at z = +rz : θ: -π/2 → +π/2 (close if requested)
     const int nLast = nArc;
     for (int i = 0; i < nLast; ++i) {
-      const float th  = static_cast<float>(-M_PI_2) + (float(i)/nLast)*static_cast<float>(M_PI);
+      const float th  = static_cast<float>(-std::numbers::pi / 2) + (static_cast<float>(i)/nLast)*static_cast<float>(std::numbers::pi);
       const float rho = rr*std::sin(th);
       const float z   = +rz;
       pts.push_back({rho, z});
@@ -200,24 +201,24 @@ class ATLASToroidalField final : public MagneticFieldProvider {
   racetrackRZ(float a, float b, float Lz, int nArc, int nStraight, bool close) {
     const float r = 0.5f * b;
     std::vector<std::array<float,2>> pts;
-    pts.reserve(static_cast<size_t>(2*nArc + 2*nStraight + (close?1:0)));
+    pts.reserve(static_cast<std::size_t>(2*nArc + 2*nStraight + (close?1:0)));
 
     // Arc at x=+Lz/2 (x≡z, y≡ρ)
     for (int i=0;i<nArc;++i) {
-      const float th = (float)M_PI_2 + (float(i)/nArc)*(float)M_PI;
+      const float th = static_cast<float>(std::numbers::pi) / 2 + (static_cast<float>(i)/nArc)*static_cast<float>(std::numbers::pi);
       const float x = (+Lz*0.5f) + r*std::cos(th);
       const float y = r*std::sin(th);
       pts.push_back({y,x});
     }
     // Straight at y=-r from +Lz/2 -> -Lz/2
     for (int i=0;i<nStraight;++i) {
-      const float t = float(i)/float(nStraight);
+      const float t = static_cast<float>(i)/static_cast<float>(nStraight);
       const float x = (+Lz*0.5f)*(1.0f - t) + (-Lz*0.5f)*t;
       pts.push_back({-r,x});
     }
     // Arc at x=-Lz/2
     for (int i=0;i<nArc;++i) {
-      const float th = static_cast<float>(3.0*M_PI_2) + (float(i)/nArc)*static_cast<float>(-M_PI);
+      const float th = static_cast<float>(3.0*std::numbers::pi / 2) + (static_cast<float>(i)/nArc)*static_cast<float>(-std::numbers::pi);
       const float x = (-Lz*0.5f) + r*std::cos(th);
       const float y = r*std::sin(th);
       pts.push_back({y,x});
@@ -225,7 +226,7 @@ class ATLASToroidalField final : public MagneticFieldProvider {
     // Straight at y=+r from -Lz/2 -> +Lz/2
     const int nStraightLast = close ? nStraight : (nStraight+1);
     for (int i=0;i<nStraightLast;++i) {
-      const float t = float(i)/float(nStraightLast-1);
+      const float t = static_cast<float>(i)/static_cast<float>(nStraightLast-1);
       const float x = (-Lz*0.5f)*(1.0f - t) + (+Lz*0.5f)*t;
       pts.push_back({+r,x});
     }
@@ -252,7 +253,7 @@ class ATLASToroidalField final : public MagneticFieldProvider {
     d_rz.clear(); m_rz.clear();
     d_rz.reserve(rz.size()-1);
     m_rz.reserve(rz.size()-1);
-    for (size_t i=0;i+1<rz.size();++i) {
+    for (std::size_t i=0;i+1<rz.size();++i) {
       const float dr = rz[i+1][0] - rz[i][0];
       const float dz = rz[i+1][1] - rz[i][1];
       d_rz.push_back({dr,dz});
@@ -316,10 +317,10 @@ class ATLASToroidalField final : public MagneticFieldProvider {
     m_mids_barrel.clear(); m_segs_barrel.clear();
     m_mids_ect.clear();    m_segs_ect.clear();
 
-    m_mids_barrel.reserve(static_cast<size_t>(nC) * m_rzB.size());
-    m_segs_barrel.reserve(static_cast<size_t>(nC) * d_rzB.size());
-    m_mids_ect.reserve(static_cast<size_t>(2*nC) * m_rzE.size());
-    m_segs_ect.reserve(static_cast<size_t>(2*nC) * d_rzE.size());
+    m_mids_barrel.reserve(static_cast<std::size_t>(nC) * m_rzB.size());
+    m_segs_barrel.reserve(static_cast<std::size_t>(nC) * d_rzB.size());
+    m_mids_ect.reserve(static_cast<std::size_t>(2*nC) * m_rzE.size());
+    m_segs_ect.reserve(static_cast<std::size_t>(2*nC) * d_rzE.size());
 
     // Barrel rings with alternating signs
     for (int k=0;k<nC;++k) {
