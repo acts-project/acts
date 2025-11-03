@@ -83,12 +83,13 @@ def run(events=1000):
         moreParallel=True,
     )
 
-    # Stage 2: Single-stage edge classification (ONNX)
+    # Stage 2: Single-stage edge classification (Torch)
     edgeClassifiers = [
-        acts.examples.OnnxEdgeClassifier(
+        acts.examples.TorchEdgeClassifier(
             level=acts.logging.INFO,
-            modelPath="gnn_odd.onnx",
+            modelPath="gnn_odd.pt",
             cut=0.5,
+            useEdgeFeatures=True,
         )
     ]
 
