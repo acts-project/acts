@@ -38,19 +38,19 @@ class EffPlotTool {
         {"LogPt",
          PlotHelpers::Binning::Logarithmic("pT [GeV/c]", 11, 0.1, 100)},
         {"LowPt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 2)},
-        {"D0", PlotHelpers::Binning::Uniform("d_0 [mm]", 50, -200, 200)},
+        {"D0", PlotHelpers::Binning::Uniform("d_0 [mm]", 200, -200, 200)},
         {"Z0", PlotHelpers::Binning::Uniform("z_0 [mm]", 50, -200, 200)},
         {"DeltaR", PlotHelpers::Binning::Uniform("#Delta R", 100, 0, 0.3)},
         {"prodR", PlotHelpers::Binning::Uniform("prod_R [mm]", 100, 0, 200)}};
 
     double minTruthPt = 1.0 * Acts::UnitConstants::GeV;
 
-    std::vector<std::pair<double, double>> truthPtRanges = {
+    std::vector<std::pair<double, double>> truthPtRangesForEta = {
         {0.9 * Acts::UnitConstants::GeV, 1.1 * Acts::UnitConstants::GeV},
         {9 * Acts::UnitConstants::GeV, 11 * Acts::UnitConstants::GeV},
         {90 * Acts::UnitConstants::GeV, 110 * Acts::UnitConstants::GeV}};
 
-    std::vector<std::pair<double, double>> truthAbsEtaRanges = {
+    std::vector<std::pair<double, double>> truthAbsEtaRangesForPt = {
         {0, 0.2}, {0, 0.8}, {1, 2}, {2, 3}};
 
     /// Beamline to estimate d0 and z0
