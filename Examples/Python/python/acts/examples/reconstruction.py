@@ -2053,83 +2053,73 @@ GnnBackend = Enum("GnnBackend", "Torch Onnx")
 
 def addGnn(
     s: acts.examples.Sequencer,
-    trackingGeometry: acts.TrackingGeometry,
-    geometrySelection: Union[Path, str],
-    modelDir: Union[Path, str],
+    graphConstructor,
+    edgeClassifiers: list,
+    trackBuilder,
+    nodeFeatures: list,
+    featureScales: list,
+    trackingGeometry: Optional[acts.TrackingGeometry] = None,
+    geometrySelection: Optional[Union[Path, str]] = None,
+    inputSpacePoints: str = "spacepoints",
+    inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
-    backend: Optional[GnnBackend] = GnnBackend.Torch,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
+    """
+    Add GNN track finding with custom stage implementations.
+
+    This is a flexible low-level API that accepts pre-configured GNN stage components.
+    For examples of how to configure stages, see gnn_metric_learning.py and gnn_module_map.py.
+
+    Args:
+        s: Sequencer to add algorithms to
+        graphConstructor: Graph construction stage (TorchMetricLearning, ModuleMapCuda, etc.)
+        edgeClassifiers: List of edge classification stages (run sequentially)
+        trackBuilder: Track building stage (BoostTrackBuilding, CudaTrackBuilding, etc.)
+        nodeFeatures: List of node features to extract from spacepoints/clusters
+        featureScales: Scaling factors for each feature
+        trackingGeometry: Optional tracking geometry for creating spacepoints
+        geometrySelection: Optional geometry selection file for spacepoint creation
+        inputSpacePoints: Name of input spacepoint collection (default: "spacepoints")
+        inputClusters: Name of input cluster collection (default: "")
+        outputDirRoot: Optional output directory for performance ROOT files
+        logLevel: Logging level
+    """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Create space points
-    s.addAlgorithm(
-        acts.examples.SpacePointMaker(
-            level=customLogLevel(),
-            inputMeasurements="measurements",
-            outputSpacePoints="spacepoints",
-            trackingGeometry=trackingGeometry,
-            geometrySelection=acts.examples.readJsonGeometryList(
-                str(geometrySelection)
-            ),
+    # Optionally create space points if tracking geometry is provided
+    if trackingGeometry is not None:
+        if geometrySelection is None:
+            raise ValueError("geometrySelection must be provided if trackingGeometry is set")
+
+        s.addAlgorithm(
+            acts.examples.SpacePointMaker(
+                level=customLogLevel(),
+                inputMeasurements="measurements",
+                outputSpacePoints=inputSpacePoints,
+                trackingGeometry=trackingGeometry,
+                geometrySelection=acts.examples.readJsonGeometryList(
+                    str(geometrySelection)
+                ),
+            )
         )
-    )
 
-    metricLearningConfig = {
-        "level": customLogLevel(),
-        "embeddingDim": 8,
-        "rVal": 1.6,
-        "knnVal": 100,
-        "modelPath": str(modelDir / "embed.pt"),
-        "selectedFeatures": [0, 1, 2],
-    }
-
-    filterConfig = {
-        "level": customLogLevel(),
-        "cut": 0.01,
-    }
-
-    gnnConfig = {
-        "level": customLogLevel(),
-        "cut": 0.5,
-    }
-
-    if backend == GnnBackend.Torch:
-        filterConfig["modelPath"] = str(modelDir / "filter.pt")
-        filterConfig["selectedFeatures"] = [0, 1, 2]
-        gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
-        gnnConfig["undirected"] = True
-        gnnConfig["selectedFeatures"] = [0, 1, 2]
-
-        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
-        edgeClassifiers = [
-            acts.examples.TorchEdgeClassifier(**filterConfig),
-            acts.examples.TorchEdgeClassifier(**gnnConfig),
-        ]
-        trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
-    elif backend == GnnBackend.Onnx:
-        filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
-        gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
-
-        # There is currently no implementation of a Metric learning based fully on ONNX
-        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
-        edgeClassifiers = [
-            acts.examples.OnnxEdgeClassifier(**filterConfig),
-            acts.examples.OnnxEdgeClassifier(**gnnConfig),
-        ]
-        trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
-
+    # GNN track finding algorithm
     findingAlg = acts.examples.TrackFindingAlgorithmGnn(
         level=customLogLevel(),
-        inputSpacePoints="spacepoints",
+        inputSpacePoints=inputSpacePoints,
+        inputClusters=inputClusters,
         outputProtoTracks="gnn_prototracks",
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
         trackBuilder=trackBuilder,
+        nodeFeatures=nodeFeatures,
+        featureScales=featureScales,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
 
+    # Convert prototracks to tracks
     s.addAlgorithm(
         acts.examples.PrototracksToTracks(
             level=customLogLevel(),
@@ -2139,6 +2129,7 @@ def addGnn(
         )
     )
 
+    # Truth matching
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks="tracks",
@@ -2156,6 +2147,7 @@ def addGnn(
         "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
+    # Optional performance writer
     if outputDirRoot is not None:
         s.addWriter(
             acts.examples.RootTrackFinderNTupleWriter(
