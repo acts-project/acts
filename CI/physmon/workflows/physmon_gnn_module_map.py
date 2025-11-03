@@ -19,10 +19,7 @@ import acts
 from acts import UnitConstants as u
 from acts.examples import Sequencer
 from acts.examples.simulation import (
-    addParticleGun,
-    EtaConfig,
-    MomentumConfig,
-    ParticleConfig,
+    addPythia8,
     addFatras,
     addDigitization,
 )
@@ -38,12 +35,17 @@ def run(events=1000):
     # Random number generator
     rnd = acts.examples.RandomNumbers(seed=42)
 
-    # Particle gun: muons, 1-10 GeV, eta -3 to 3
-    addParticleGun(
+    # Pythia8: ttbar events with pile-up 200 (matching full_chain_odd.py)
+    addPythia8(
         s,
-        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
-        EtaConfig(-3.0, 3.0, uniform=True),
-        ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
+        hardProcess=["Top:qqbar2ttbar=on"],
+        npileup=200,
+        vtxGen=acts.examples.GaussianVertexGenerator(
+            mean=acts.Vector4(0, 0, 0, 0),
+            stddev=acts.Vector4(
+                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
+            ),
+        ),
         rnd=rnd,
         logLevel=acts.logging.INFO,
     )
