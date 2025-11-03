@@ -2,7 +2,7 @@
 
 import os
 import acts
-import acts.acts_barrel_field as barrel_field
+import acts.acts_atlas_toroidal_field as atlas_field
 import argparse
 from acts import (
     logging,
@@ -31,22 +31,25 @@ except ImportError:
     print("Warning: ACTS examples not available")
     HAS_EXAMPLES = False
 
-# Create configuration for barrel toroid field
-def create_barrel_field():
-    config = barrel_field.Config()
-    # Customize the configuration
-    config.R_in   =  4900.0      # Inner radius (mm)  
-    config.R_out  = 10000.0     # Outer radius (mm)
-    config.I      = 20500.0        # Current (A)
-    config.nCoils = 8         # Number of coils
+# Create configuration for ATLAS toroidal field
+def create_atlas_field():
+    config = atlas_field.Config()
     
-    print(f"Creating BarrelToroidField with:")
-    print(f"  Inner radius:    {config.R_in} mm")
-    print(f"  Outer radius:    {config.R_out} mm")
-    print(f"  Current:         {config.I} A")
-    print(f"  Number of coils: {config.nCoils}")
+    print(f"Creating ATLASToroidalField with:")
+    print(f"  Barrel:")
+    print(f"    Inner radius:  {config.barrel.R_in} m")
+    print(f"    Outer radius:  {config.barrel.R_out} m")
+    print(f"    Current:       {config.barrel.I} A")
+    print(f"    Turns:         {config.barrel.Nturns}")
+    print(f"  Endcaps:")
+    print(f"    Inner radius:  {config.ect.R_in} m")
+    print(f"    Outer radius:  {config.ect.R_out} m")
+    print(f"    Current:       {config.ect.I} A")
+    print(f"    Turns:         {config.ect.Nturns}")
+    print(f"  Layout:")
+    print(f"    Number of coils: {config.layout.nCoils}")
     
-    return barrel_field.BarrelToroidField(config)
+    return atlas_field.ATLASToroidalField(config)
 
 
 def runGeant4(
@@ -117,7 +120,7 @@ def main():
     if not HAS_GEOMODEL:
         print("❌ GeoModel not available. Testing just the BarrelToroidField...")
         # Just test the barrel field functionality
-        field = create_barrel_field()
+        field = create_atlas_field()
         print("✅ BarrelToroidField created successfully!")
         return
 
@@ -205,7 +208,7 @@ def main():
     detector = gm.GeoModelDetector(gmDetectorCfg)
 
     # Create the barrel toroid field using our function
-    field = create_barrel_field()
+    field = create_atlas_field()
 
     trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
         gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
