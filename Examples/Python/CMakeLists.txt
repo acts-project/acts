@@ -117,8 +117,6 @@ else()
     target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
 endif()
 
-
-
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
     target_link_libraries(
         ActsPythonBindings
@@ -128,7 +126,6 @@ if(ACTS_BUILD_EXAMPLES_PYTHIA8)
 else()
     target_sources(ActsPythonBindings PRIVATE src/Pythia8Stub.cpp)
 endif()
-
 
 target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesIoHepMC3)
 target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
@@ -163,7 +160,6 @@ if(ACTS_BUILD_EXAMPLES_GNN)
 else()
     target_sources(ActsPythonBindings PRIVATE src/GnnTrackFindingStub.cpp)
 endif()
-
 
 if(ACTS_BUILD_PLUGIN_ONNX)
     target_link_libraries(
