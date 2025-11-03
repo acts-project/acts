@@ -7,25 +7,27 @@ Tests the magnetic field functionality without complex dependencies
 
 import sys
 
+
 def test_atlas_toroidal_field_basic():
     """Test basic import and configuration"""
     print("=" * 60)
     print("Testing ATLASToroidalField Python Bindings")
     print("=" * 60)
-    
+
     try:
         import acts.acts_atlas_toroidal_field as atlas_field
+
         print("✅ Successfully imported acts.acts_atlas_toroidal_field")
     except ImportError as e:
         print(f"❌ Failed to import acts.acts_atlas_toroidal_field: {e}")
         return False
-    
+
     # Test Config creation with defaults
     print("\n📋 Testing Config with defaults:")
     try:
         config = atlas_field.Config()
         print(f"   Barrel R_in: {config.barrel.R_in} m")
-        print(f"   Barrel R_out: {config.barrel.R_out} m") 
+        print(f"   Barrel R_out: {config.barrel.R_out} m")
         print(f"   Barrel c: {config.barrel.c} m")
         print(f"   Barrel b: {config.barrel.b} m")
         print(f"   Barrel I: {config.barrel.I} A")
@@ -35,7 +37,7 @@ def test_atlas_toroidal_field_basic():
     except Exception as e:
         print(f"❌ Config creation failed: {e}")
         return False
-    
+
     # Test Config customization
     print("\n🔧 Testing Config customization:")
     try:
@@ -44,7 +46,7 @@ def test_atlas_toroidal_field_basic():
         custom_config.barrel.R_out = 9.8
         custom_config.barrel.I = 18000.0
         custom_config.layout.nCoils = 10
-        
+
         print(f"   Customized Barrel R_in: {custom_config.barrel.R_in} m")
         print(f"   Customized Barrel R_out: {custom_config.barrel.R_out} m")
         print(f"   Customized Barrel I: {custom_config.barrel.I} A")
@@ -53,7 +55,7 @@ def test_atlas_toroidal_field_basic():
     except Exception as e:
         print(f"❌ Config customization failed: {e}")
         return False
-    
+
     # Test ATLASToroidalField creation
     print("\n🧲 Testing ATLASToroidalField creation:")
     try:
@@ -62,7 +64,7 @@ def test_atlas_toroidal_field_basic():
     except Exception as e:
         print(f"❌ ATLASToroidalField creation failed: {e}")
         return False
-    
+
     return True
 
 
@@ -71,45 +73,49 @@ def test_atlas_toroidal_field_calculation():
     print("\n" + "=" * 60)
     print("Testing Magnetic Field Calculation")
     print("=" * 60)
-    
+
     try:
         import acts
         import acts.acts_atlas_toroidal_field as atlas_field
-        
+
         # Create field
         config = atlas_field.Config()
         field = atlas_field.ATLASToroidalField(config)
-        
+
         # Create magnetic field context and cache
         ctx = acts.MagneticFieldContext()
         cache = field.makeCache(ctx)
         print("✅ Magnetic field context and cache created")
-        
+
         # Test field calculation at various points
         test_points = [
             (6000.0, 0.0, 0.0, "Barrel region"),
             (0.0, 7000.0, 1000.0, "Barrel region (rotated)"),
             (2000.0, 0.0, 15000.0, "Endcap region"),
             (0.0, 3000.0, -12000.0, "Negative endcap"),
-            (0.0, 0.0, 0.0, "Origin")
+            (0.0, 0.0, 0.0, "Origin"),
         ]
-        
+
         print(f"\n🎯 Testing field calculation at {len(test_points)} points:")
         for x, y, z, description in test_points:
             position = acts.Vector3(x, y, z)
             field_value = field.getField(position, cache)
-            
+
             # Calculate field magnitude
-            magnitude = (field_value[0]**2 + field_value[1]**2 + field_value[2]**2)**0.5
-            
+            magnitude = (
+                field_value[0] ** 2 + field_value[1] ** 2 + field_value[2] ** 2
+            ) ** 0.5
+
             print(f"   {description}:")
             print(f"     Position: ({x/1000:.1f}, {y/1000:.1f}, {z/1000:.1f}) m")
-            print(f"     Field: ({field_value[0]:.2e}, {field_value[1]:.2e}, {field_value[2]:.2e}) T")
+            print(
+                f"     Field: ({field_value[0]:.2e}, {field_value[1]:.2e}, {field_value[2]:.2e}) T"
+            )
             print(f"     Magnitude: {magnitude:.2e} T")
-        
+
         print("✅ Field calculation successful")
         return True
-        
+
     except Exception as e:
         print(f"❌ Field calculation failed: {e}")
         return False
@@ -120,10 +126,10 @@ def test_atlas_configuration_classes():
     print("\n" + "=" * 60)
     print("Testing Configuration Classes")
     print("=" * 60)
-    
+
     try:
         import acts.acts_atlas_toroidal_field as atlas_field
-        
+
         # Test BarrelConfig
         print("\n🏺 Testing BarrelConfig:")
         barrel_config = atlas_field.BarrelConfig()
@@ -131,7 +137,7 @@ def test_atlas_configuration_classes():
         print(f"   Default R_out: {barrel_config.R_out} m")
         print(f"   Default current: {barrel_config.I} A")
         print(f"   Default turns: {barrel_config.Nturns}")
-        
+
         # Test ECTConfig
         print("\n🔚 Testing ECTConfig:")
         ect_config = atlas_field.ECTConfig()
@@ -139,17 +145,17 @@ def test_atlas_configuration_classes():
         print(f"   Default R_out: {ect_config.R_out} m")
         print(f"   Default current: {ect_config.I} A")
         print(f"   Default turns: {ect_config.Nturns}")
-        
+
         # Test LayoutConfig
         print("\n📐 Testing LayoutConfig:")
         layout_config = atlas_field.LayoutConfig()
         print(f"   Default nCoils: {layout_config.nCoils}")
         print(f"   Default theta0_deg: {layout_config.theta0_deg}")
         print(f"   Default thetaStep_deg: {layout_config.thetaStep_deg}")
-        
+
         print("✅ Configuration classes test successful")
         return True
-        
+
     except Exception as e:
         print(f"❌ Configuration classes test failed: {e}")
         return False
@@ -159,13 +165,13 @@ def main():
     """Run all tests"""
     print("🚀 Starting ATLASToroidalField Python Binding Tests")
     print("=" * 80)
-    
+
     tests = [
         ("Basic functionality", test_atlas_toroidal_field_basic),
-        ("Field calculation", test_atlas_toroidal_field_calculation), 
-        ("Configuration classes", test_atlas_configuration_classes)
+        ("Field calculation", test_atlas_toroidal_field_calculation),
+        ("Configuration classes", test_atlas_configuration_classes),
     ]
-    
+
     results = []
     for test_name, test_func in tests:
         print(f"\n🧪 Running test: {test_name}")
@@ -179,21 +185,21 @@ def main():
         except Exception as e:
             print(f"💥 {test_name}: ERROR - {e}")
             results.append(False)
-    
+
     # Summary
     print("\n" + "=" * 80)
     print("🏁 Test Summary")
     print("=" * 80)
-    
+
     passed = sum(results)
     total = len(results)
-    
+
     for i, (test_name, _) in enumerate(tests):
         status = "✅ PASSED" if results[i] else "❌ FAILED"
         print(f"   {test_name}: {status}")
-    
+
     print(f"\nOverall: {passed}/{total} tests passed")
-    
+
     if passed == total:
         print("🎉 All tests passed! ATLASToroidalField is working correctly.")
         return 0

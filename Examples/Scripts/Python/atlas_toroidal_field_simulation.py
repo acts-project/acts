@@ -13,6 +13,7 @@ from pathlib import Path
 # Import GeoModel if available
 try:
     from acts import geomodel as gm
+
     HAS_GEOMODEL = True
 except ImportError:
     print("Warning: GeoModel not available")
@@ -26,15 +27,17 @@ try:
         WhiteBoard,
         ObjTrackingGeometryWriter,
     )
+
     HAS_EXAMPLES = True
 except ImportError:
     print("Warning: ACTS examples not available")
     HAS_EXAMPLES = False
 
+
 # Create configuration for ATLAS toroidal field
 def create_atlas_field():
     config = atlas_field.Config()
-    
+
     print(f"Creating ATLASToroidalField with:")
     print(f"  Barrel:")
     print(f"    Inner radius:  {config.barrel.R_in} m")
@@ -42,13 +45,13 @@ def create_atlas_field():
     print(f"    Current:       {config.barrel.I} A")
     print(f"    Turns:         {config.barrel.Nturns}")
     print(f"  Endcaps:")
-    print(f"    Inner radius:  {config.ect.R_in} m")
-    print(f"    Outer radius:  {config.ect.R_out} m")
-    print(f"    Current:       {config.ect.I} A")
-    print(f"    Turns:         {config.ect.Nturns}")
+    print(f"    Inner radius:  {config.etc.R_in} m")
+    print(f"    Outer radius:  {config.etc.R_out} m")
+    print(f"    Current:       {config.etc.I} A")
+    print(f"    Turns:         {config.etc.Nturns}")
     print(f"  Layout:")
     print(f"    Number of coils: {config.layout.nCoils}")
-    
+
     return atlas_field.ATLASToroidalField(config)
 
 
@@ -71,10 +74,15 @@ def runGeant4(
         return None
 
     try:
-        from acts.examples.simulation import addGeant4, ParticleConfig, MomentumConfig, ParticleSelectorConfig
+        from acts.examples.simulation import (
+            addGeant4,
+            ParticleConfig,
+            MomentumConfig,
+            ParticleSelectorConfig,
+        )
         from acts.examples.simulation import EtaConfig
         from acts.examples.simulation import addParticleGun
-        
+
         logger = acts.logging.getLogger("Geant4Simulation")
         logger.setLevel(acts.logging.INFO)
 
@@ -88,7 +96,11 @@ def runGeant4(
 
         addParticleGun(
             sequencer,
-            MomentumConfig(1.0 * acts.UnitConstants.GeV, 10.0 * acts.UnitConstants.GeV, transverse=True),
+            MomentumConfig(
+                1.0 * acts.UnitConstants.GeV,
+                10.0 * acts.UnitConstants.GeV,
+                transverse=True,
+            ),
             EtaConfig(-2.6, 2.6),
             ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             rnd=rnd,
@@ -113,6 +125,8 @@ def runGeant4(
     except Exception as e:
         print(f"❌ Error in Geant4 simulation: {e}")
         return None
+
+
 def main():
     from argparse import ArgumentParser
 
