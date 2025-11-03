@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
+#include <format>
 #include <limits>
 
 #include <TEfficiency.h>
