@@ -326,11 +326,8 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       if (closeParticle.particleId() == particleId) {
         continue;
       }
-      double p_phi = phi(particle.direction());
-      double p_eta = eta(particle.direction());
-      double c_phi = phi(closeParticle.direction());
-      double c_eta = eta(closeParticle.direction());
-      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
+      double distance = Acts::VectorHelpers::deltaR(particle.direction(),
+                                                    closeParticle.direction());
       if (minDeltaR == -1 || distance < minDeltaR) {
         minDeltaR = distance;
       }
