@@ -46,7 +46,7 @@ else
 
     # Make ODD available if possible
     # This seems to be only reliable on Linux for now, not on MacOS
-    # We only do this in build-mode because in install mode ODD should be installed 
+    # We only do this in build-mode because in install mode ODD should be installed
     # in the install tree
     echo "${ODD_PATH}"
     if [ -d "${ODD_PATH}" ]; then
