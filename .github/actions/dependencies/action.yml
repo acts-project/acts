@@ -56,7 +56,7 @@ runs:
         mv spack_cache/spack .
 
     - name: Setup Spack from scratch
-      # if: steps.cache-restore.outputs.cache-hit != 'true'
+      if: steps.cache-restore.outputs.cache-hit != 'true'
       shell: bash
       env:
         SPACK_VERSION: ${{ inputs.spack_version }}
