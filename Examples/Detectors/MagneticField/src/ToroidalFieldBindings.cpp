@@ -58,8 +58,7 @@ PYBIND11_MODULE(acts_toroidal_field, m) {
   // LayoutConfig
   py::class_<ToroidalField::LayoutConfig>(m, "LayoutConfig")
       .def(py::init<>())
-      .def_readwrite("theta0_deg",
-                     &ToroidalField::LayoutConfig::theta0_deg)
+      .def_readwrite("theta0_deg", &ToroidalField::LayoutConfig::theta0_deg)
       .def_readwrite("thetaStep_deg",
                      &ToroidalField::LayoutConfig::thetaStep_deg)
       .def_readwrite("nCoils", &ToroidalField::LayoutConfig::nCoils)

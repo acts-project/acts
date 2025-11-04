@@ -40,11 +40,11 @@ class ToroidalField final : public MagneticFieldProvider {
   struct ECTConfig {
     float R_in = 1.65f * 0.5f;   // [m] ≈ 0.825
     float R_out = 10.7f * 0.5f;  // [m] ≈ 5.35
-    float c     = 5.0f;              // [m]
-    float b     = 0.12f;             // [m]
-    float I     = 20500.0f;          // [A]
-    int Nturns  = 116;            // [turns]
-    float gap   = 0.5f;            // [m] small mechanical gap
+    float c = 5.0f;              // [m]
+    float b = 0.12f;             // [m]
+    float I = 20500.0f;          // [A]
+    int Nturns = 116;            // [turns]
+    float gap = 0.5f;            // [m] small mechanical gap
   };
 
   struct LayoutConfig {
@@ -227,16 +227,20 @@ class ToroidalField final : public MagneticFieldProvider {
   // Rounded-rectangle racetrack in local (ρ, z):
   //   • Straights at ρ = ±a/2 running along z
   //   • Corner/end arcs with radius r = b/2
-  //   • Total axial length Lz; useful straight z-range is [-(Lz/2 - r), +(Lz/2 - r)]
-  static std::vector<std::array<float, 2>>
-  racetrackRZ(float a, float b, float Lz, int nArc, int nStraight, bool close) {
-    const float r  = 0.5f * b;     // corner radius
-    const float rz = 0.5f * Lz;    // axial half-length
-    const float zTop =  rz - r;    // top straight z
-    const float zBot = -rz + r;    // bottom straight z
+  //   • Total axial length Lz; useful straight z-range is [-(Lz/2 - r), +(Lz/2
+  //   - r)]
+  static std::vector<std::array<float, 2>> racetrackRZ(float a, float b,
+                                                       float Lz, int nArc,
+                                                       int nStraight,
+                                                       bool close) {
+    const float r = 0.5f * b;    // corner radius
+    const float rz = 0.5f * Lz;  // axial half-length
+    const float zTop = rz - r;   // top straight z
+    const float zBot = -rz + r;  // bottom straight z
 
     std::vector<std::array<float, 2>> pts;
-    pts.reserve(static_cast<std::size_t>(2 * nArc + 2 * nStraight + (close ? 1 : 0)));
+    pts.reserve(
+        static_cast<std::size_t>(2 * nArc + 2 * nStraight + (close ? 1 : 0)));
 
     // +ρ straight (top → bottom), ρ = +a/2
     for (int i = 0; i < nStraight; ++i) {
@@ -247,19 +251,27 @@ class ToroidalField final : public MagneticFieldProvider {
     // bottom-right quarter: θ ∈ [−π/2, −π], center at (ρ=+a/2−r, z=−rz+r)
     for (int i = 0; i < nArc; ++i) {
       const float th = -static_cast<float>(std::numbers::pi) / 2 +
-                       (static_cast<float>(i) / nArc) * (-static_cast<float>(std::numbers::pi) / 1.0f + static_cast<float>(std::numbers::pi) / 2);
+                       (static_cast<float>(i) / nArc) *
+                           (-static_cast<float>(std::numbers::pi) / 1.0f +
+                            static_cast<float>(std::numbers::pi) / 2);
       // Equivalent simpler param:
-      const float theta = -static_cast<float>(std::numbers::pi) / 2 + (static_cast<float>(i) / nArc) * (-static_cast<float>(std::numbers::pi) + static_cast<float>(std::numbers::pi) / 2 + static_cast<float>(std::numbers::pi) / 2);
-      (void)th; (void)theta;
+      const float theta = -static_cast<float>(std::numbers::pi) / 2 +
+                          (static_cast<float>(i) / nArc) *
+                              (-static_cast<float>(std::numbers::pi) +
+                               static_cast<float>(std::numbers::pi) / 2 +
+                               static_cast<float>(std::numbers::pi) / 2);
+      (void)th;
+      (void)theta;
     }
     // Implement the two corners explicitly (clean version)
     for (int i = 0; i < nArc; ++i) {
-      const float t  = static_cast<float>(i) / static_cast<float>(nArc);
-      const float th = -static_cast<float>(std::numbers::pi)/2 + t * (-static_cast<float>(std::numbers::pi)/2);
-      const float cx = +0.5f * a - r; // ρ-center
-      const float cz = -rz + r;       // z-center
+      const float t = static_cast<float>(i) / static_cast<float>(nArc);
+      const float th = -static_cast<float>(std::numbers::pi) / 2 +
+                       t * (-static_cast<float>(std::numbers::pi) / 2);
+      const float cx = +0.5f * a - r;  // ρ-center
+      const float cz = -rz + r;        // z-center
       const float rho = cx + r * std::cos(th);
-      const float  z  = cz + r * std::sin(th);
+      const float z = cz + r * std::sin(th);
       pts.push_back({rho, z});
     }
     // −ρ straight (bottom → top), ρ = −a/2
@@ -270,12 +282,13 @@ class ToroidalField final : public MagneticFieldProvider {
     }
     // top-left quarter: θ ∈ [+π/2, 0], center at (ρ=−a/2+r, z=+rz−r)
     for (int i = 0; i < nArc; ++i) {
-      const float t  = static_cast<float>(i) / static_cast<float>(nArc);
-      const float th = +static_cast<float>(std::numbers::pi)/2 - t * (static_cast<float>(std::numbers::pi)/2);
-      const float cx = -0.5f * a + r; // ρ-center
-      const float cz = +rz - r;       // z-center
+      const float t = static_cast<float>(i) / static_cast<float>(nArc);
+      const float th = +static_cast<float>(std::numbers::pi) / 2 -
+                       t * (static_cast<float>(std::numbers::pi) / 2);
+      const float cx = -0.5f * a + r;  // ρ-center
+      const float cz = +rz - r;        // z-center
       const float rho = cx + r * std::cos(th);
-      const float  z  = cz + r * std::sin(th);
+      const float z = cz + r * std::sin(th);
       pts.push_back({rho, z});
     }
     if (close) {
@@ -338,13 +351,14 @@ class ToroidalField final : public MagneticFieldProvider {
     buildSegsMidsRZ(rz_barrel, d_rzB, m_rzB);
 
     // ---- ECT base curve (use the same rounded-rectangle as barrel) ----
-    // a_ECT = (R_out_ECT - R_in_ECT) - 2*r_end_ECT,  b_ECT = end-arc diameter,  Lz = c_ECT
-    const float lE    = 0.5f * (m_cfg.ect.R_in + m_cfg.ect.R_out);
+    // a_ECT = (R_out_ECT - R_in_ECT) - 2*r_end_ECT,  b_ECT = end-arc diameter,
+    // Lz = c_ECT
+    const float lE = 0.5f * (m_cfg.ect.R_in + m_cfg.ect.R_out);
     const float rEndE = 0.5f * m_cfg.ect.b;
-    const float aE    = (m_cfg.ect.R_out - m_cfg.ect.R_in) - 2.0f * rEndE;
-    const auto  rz_ect = racetrackRZ(/*a=*/aE, /*b=*/m_cfg.ect.b, /*Lz=*/m_cfg.ect.c,
-                                     m_cfg.layout.nArc, m_cfg.layout.nStraight,
-                                     m_cfg.layout.closeLoop);
+    const float aE = (m_cfg.ect.R_out - m_cfg.ect.R_in) - 2.0f * rEndE;
+    const auto rz_ect = racetrackRZ(
+        /*a=*/aE, /*b=*/m_cfg.ect.b, /*Lz=*/m_cfg.ect.c, m_cfg.layout.nArc,
+        m_cfg.layout.nStraight, m_cfg.layout.closeLoop);
     std::vector<std::array<float, 2>> d_rzE, m_rzE;
     buildSegsMidsRZ(rz_ect, d_rzE, m_rzE);
 
@@ -378,21 +392,22 @@ class ToroidalField final : public MagneticFieldProvider {
     // z_inner  = z_bt_end - (c_ECT - gap) + gap = c/2 - c_ECT + 2*gap
     // z_outer  = z_inner + c_ECT = c/2 + 2*gap
     // zECT     = (z_inner + z_outer)/2 = c/2 - c_ECT/2 + 2*gap
-    const float zECT = 0.5f * m_cfg.barrel.c
-                     - 0.5f * m_cfg.ect.c
-                     + 2.0f * m_cfg.ect.gap;
+    const float zECT =
+        0.5f * m_cfg.barrel.c - 0.5f * m_cfg.ect.c + 2.0f * m_cfg.ect.gap;
 
     // +z endcap (indices 0..nC-1 in ectSigns)
     for (int k = 0; k < nC; ++k) {
       const float phi = th0 + k * dth;
       const int sign = m_cfg.ectSigns[k];
-      mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/+zECT, m_mids_ect, m_segs_ect);
+      mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/+zECT, m_mids_ect,
+                   m_segs_ect);
     }
     // -z endcap (indices nC..2*nC-1 in ectSigns)
     for (int k = 0; k < nC; ++k) {
       const float phi = th0 + k * dth;
       const int sign = m_cfg.ectSigns[nC + k];
-      mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/-zECT, m_mids_ect, m_segs_ect);
+      mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/-zECT, m_mids_ect,
+                   m_segs_ect);
     }
   }
 

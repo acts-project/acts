@@ -46,9 +46,7 @@ except ImportError:
 u = acts.UnitConstants
 
 
-@pytest.mark.skipif(
-    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
-)
+@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_basic():
     """Test basic ToroidalField functionality."""
 
@@ -73,9 +71,7 @@ def test_toroidal_field_basic():
     )
 
 
-@pytest.mark.skipif(
-    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
-)
+@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_custom():
     """Test ToroidalField with custom parameters."""
 
@@ -97,15 +93,13 @@ def test_toroidal_field_custom():
     field_value = field.getField(position, cache)
 
     # Verify field is calculated (should be a Vector3 with components)
-    assert hasattr(field_value, '__getitem__')  # Can access components
+    assert hasattr(field_value, "__getitem__")  # Can access components
     assert field_value[0] is not None
-    assert field_value[1] is not None 
+    assert field_value[1] is not None
     assert field_value[2] is not None
 
 
-@pytest.mark.skipif(
-    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
-)
+@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_symmetry():
     """Test that the field has expected symmetries."""
 
@@ -131,9 +125,7 @@ def test_toroidal_field_symmetry():
     assert abs(mag1 - mag2) / max(mag1, mag2, 1e-10) < 0.1  # Within 10%
 
 
-@pytest.mark.skipif(
-    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
-)
+@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_regions():
     """Test field behavior in different regions (barrel vs endcap)."""
 
@@ -161,9 +153,7 @@ def test_toroidal_field_regions():
     assert mag_endcap > 0.0
 
 
-@pytest.mark.skipif(
-    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
-)
+@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_configuration():
     """Test configuration classes."""
 

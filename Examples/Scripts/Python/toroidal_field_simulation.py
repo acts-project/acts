@@ -74,7 +74,12 @@ def runGeant4(
         return None
 
     try:
-        from acts.examples.simulation import addGeant4, ParticleConfig, MomentumConfig, ParticleSelectorConfig
+        from acts.examples.simulation import (
+            addGeant4,
+            ParticleConfig,
+            MomentumConfig,
+            ParticleSelectorConfig,
+        )
         from acts.examples.simulation import EtaConfig
         from acts.examples.simulation import addParticleGun
 
@@ -91,7 +96,11 @@ def runGeant4(
 
         addParticleGun(
             sequencer,
-            MomentumConfig(1.0 * acts.UnitConstants.GeV, 10.0 * acts.UnitConstants.GeV, transverse=True),
+            MomentumConfig(
+                1.0 * acts.UnitConstants.GeV,
+                10.0 * acts.UnitConstants.GeV,
+                transverse=True,
+            ),
             EtaConfig(-2.6, 2.6),
             ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             rnd=rnd,
@@ -139,7 +148,7 @@ def main():
         "-i",
         "--input",
         type=str,
-        default="",  
+        default="",
         help="Input SQL file",
     )
     parser.add_argument(
@@ -177,25 +186,27 @@ def main():
     print(f"\n🎯 Testing toroidal field:")
     ctx = acts.MagneticFieldContext()
     cache = field.makeCache(ctx)
-    
+
     test_positions = [
         (6000.0, 0.0, 0.0, "Barrel region"),
         (2000.0, 0.0, 15000.0, "Endcap region"),
-        (0.0, 0.0, 0.0, "Origin")
+        (0.0, 0.0, 0.0, "Origin"),
     ]
-    
+
     for x, y, z, description in test_positions:
         position = acts.Vector3(x, y, z)
         field_value = field.getField(position, cache)
-        magnitude = (field_value[0]**2 + field_value[1]**2 + field_value[2]**2)**0.5
-        
+        magnitude = (
+            field_value[0] ** 2 + field_value[1] ** 2 + field_value[2] ** 2
+        ) ** 0.5
+
         print(f"  {description}: ({x/1000:.1f}, {y/1000:.1f}, {z/1000:.1f}) m")
         print(f"    Field magnitude: {magnitude:.2e} T")
 
     # Read the geometry model from the database
     gmTree = None
     print("\n🏗️ Setting up GeoModel detector...")
-    
+
     ### Use an external geo model file or use the ActsGeoMS.db
     if len(args.input):
         print(f"Reading geometry from input file: {args.input}")
@@ -213,7 +224,7 @@ def main():
     gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
     gmFactoryConfig.nameList = [
         "RpcGasGap",
-        "MDTDriftGas", 
+        "MDTDriftGas",
         "TgcGasGap",
         "SmallWheelGasGap",
     ]
@@ -223,7 +234,7 @@ def main():
     # Create the detector object factory
     print("Creating GeoModel detector factory...")
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
-    
+
     # The options for factory
     gmFactoryOptions = gm.GeoModelDetectorObjectFactory.Options()
     gmFactoryOptions.queries = ["Muon"]
@@ -236,58 +247,64 @@ def main():
 
     # Create detector and tracking geometry using the actual GeoModel
     print("Creating GeoModel detector...")
-    
+
     # Create GeoModel detector configuration
     try:
         # Access GeoModel classes via acts.examples.geomodel
         GeoModelDetector = acts.examples.geomodel.GeoModelDetector
-        
+
         gmDetectorCfg = GeoModelDetector.Config()
         gmDetectorCfg.geoModelTree = gmTree
         gmDetectorCfg.logLevel = logLevel
-        
+
         detector = GeoModelDetector(gmDetectorCfg)
         print("✅ Created GeoModelDetector from database")
-        
+
         # Create tracking geometry builder for muon system
         GeoModelMuonMockupBuilder = acts.examples.geomodel.GeoModelMuonMockupBuilder
-        
+
         gmBuilderCfg = GeoModelMuonMockupBuilder.Config()
         gmBuilderCfg.volumeBoxFPVs = gmFactoryCache.boundingBoxes
         # Use the station names from ActsGeoMS.db
         gmBuilderCfg.stationNames = ["Inner", "Middle", "Outer"]  # Default for mockup
-        
+
         trackingGeometryBuilder = GeoModelMuonMockupBuilder(
             gmBuilderCfg, "GeoModelMuonMockupBuilder", logLevel
         )
-        
+
         # Build tracking geometry using the GeoModel detector and builder
-        trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)
+        trackingGeometry = detector.buildTrackingGeometry(
+            gContext, trackingGeometryBuilder
+        )
         print("✅ Built muon tracking geometry from GeoModel")
-        
+
     except AttributeError as e:
         print(f"⚠️ GeoModelDetector or GeoModelMuonMockupBuilder not available: {e}")
         print("   Falling back to compatible detector...")
-        
+
         if HAS_EXAMPLES:
             # Use TelescopeDetector as fallback
             detector = acts.examples.TelescopeDetector()
             trackingGeometry = detector.trackingGeometry()
             print("⚠️ Using TelescopeDetector as fallback (GeoModel data still loaded)")
         else:
-            raise RuntimeError("ACTS examples module not available - required for simulation")
-    
+            raise RuntimeError(
+                "ACTS examples module not available - required for simulation"
+            )
+
     except Exception as e:
         print(f"⚠️ Could not create GeoModel detector: {e}")
         print("   Falling back to compatible detector...")
-        
+
         if HAS_EXAMPLES:
             # Use TelescopeDetector as fallback
             detector = acts.examples.TelescopeDetector()
             trackingGeometry = detector.trackingGeometry()
             print("⚠️ Using TelescopeDetector as fallback (GeoModel data still loaded)")
         else:
-            raise RuntimeError("ACTS examples module not available - required for simulation")
+            raise RuntimeError(
+                "ACTS examples module not available - required for simulation"
+            )
 
     # Run Geant4 simulation with our toroidal field
     print(f"\n🚀 Running Geant4 simulation with {args.nEvents} events...")
@@ -310,7 +327,7 @@ def main():
     if HAS_EXAMPLES:
         try:
             from acts.examples import MuonSpacePointDigitizer
-            
+
             # Create muon space point digitizer
             digiAlg = MuonSpacePointDigitizer(
                 randomNumbers=acts.examples.RandomNumbers(
@@ -324,10 +341,10 @@ def main():
             )
             algSequence.addAlgorithm(digiAlg)
             print("✅ MuonSpacePointDigitizer added successfully")
-            
+
             # Add muon space point writer
             from acts.examples import RootMuonSpacePointWriter
-            
+
             spacePointWriter = RootMuonSpacePointWriter(
                 level=logLevel,
                 inputSpacePoints="MuonSpacePoints",
@@ -335,15 +352,15 @@ def main():
             )
             algSequence.addWriter(spacePointWriter)
             print("✅ Muon space point writer added successfully")
-            
+
         except ImportError as e:
             print(f"⚠️ Could not import muon digitization: {e}")
             print("   Trying generic space point creation...")
-            
+
             try:
                 # Fallback: Use generic space point maker
                 from acts.examples import SpacePointMaker
-                
+
                 spacePointMakerCfg = SpacePointMaker.Config()
                 spacePointMakerCfg.inputMeasurements = "measurements"
                 spacePointMakerCfg.outputSpacePoints = "spacepoints"
@@ -351,18 +368,15 @@ def main():
                 spacePointMakerCfg.geometrySelection = [
                     acts.GeometryIdentifier()  # Select all
                 ]
-                
-                spacePointMaker = SpacePointMaker(
-                    spacePointMakerCfg,
-                    acts.logging.INFO
-                )
+
+                spacePointMaker = SpacePointMaker(spacePointMakerCfg, acts.logging.INFO)
                 algSequence.addAlgorithm(spacePointMaker)
                 print("✅ Generic SpacePointMaker added as fallback")
-                
+
             except Exception as e2:
                 print(f"⚠️ Could not add space point creation: {e2}")
                 print("   Continuing with simulation hits only...")
-        
+
         except Exception as e:
             print(f"⚠️ Could not add digitization: {e}")
             print("   Continuing with basic simulation only...")
@@ -373,8 +387,12 @@ def main():
     if args.geoSvgDump and HAS_EXAMPLES:
         print("Adding geometry visualization...")
         try:
-            from acts.examples import WhiteBoard, AlgorithmContext, ObjTrackingGeometryWriter
-            
+            from acts.examples import (
+                WhiteBoard,
+                AlgorithmContext,
+                ObjTrackingGeometryWriter,
+            )
+
             wb = WhiteBoard(acts.logging.INFO)
             context = AlgorithmContext(0, 0, wb, 10)
             obj_dir = Path(args.outDir) / "obj"
@@ -395,7 +413,7 @@ def main():
     print(f"   � Compatible detector geometry for Geant4")
     print(f"   �📊 {args.nEvents} events")
     print(f"   🎯 Output directory: {args.outDir}")
-    
+
     if algSequence:
         algSequence.run()
         print("✅ Simulation completed successfully!")
