@@ -13,6 +13,8 @@
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
+#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
+#include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -46,13 +48,12 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace Acts::Experimental;
 using namespace ActsExamples;
+using namespace ActsPython;
 
-namespace ActsPython {
-void addJson(Context& ctx) {
-  auto& mex = ctx.get("examples");
+PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
 
   {
-    py::enum_<JsonFormat>(mex, "JsonFormat")
+    py::enum_<JsonFormat>(json, "JsonFormat")
         .value("NoOutput", JsonFormat::NoOutput)
         .value("Json", JsonFormat::Json)
         .value("Cbor", JsonFormat::Cbor)
@@ -62,7 +63,7 @@ void addJson(Context& ctx) {
   {
     auto cls =
         py::class_<JsonMaterialWriter, IMaterialWriter,
-                   std::shared_ptr<JsonMaterialWriter>>(mex,
+                   std::shared_ptr<JsonMaterialWriter>>(json,
                                                         "JsonMaterialWriter")
             .def(py::init<const JsonMaterialWriter::Config&, Logging::Level>(),
                  py::arg("config"), py::arg("level"))
@@ -81,7 +82,7 @@ void addJson(Context& ctx) {
     using Config = Writer::Config;
 
     auto cls = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-                   mex, "JsonTrackParamsLookupWriter")
+                   json, "JsonTrackParamsLookupWriter")
                    .def(py::init<const Config&>(), py::arg("config"))
                    .def("writeLookup", &Writer::writeLookup)
                    .def_property_readonly("config", &Writer::config);
@@ -98,7 +99,7 @@ void addJson(Context& ctx) {
     using Config = Reader::Config;
 
     auto cls = py::class_<Reader, IReader, std::shared_ptr<Reader>>(
-                   mex, "JsonTrackParamsLookupReader")
+                   json, "JsonTrackParamsLookupReader")
                    .def(py::init<const Config&>(), py::arg("config"))
                    .def("readLookup", &Reader::readLookup)
                    .def_property_readonly("config", &Reader::config);
@@ -116,7 +117,7 @@ void addJson(Context& ctx) {
   {
     auto cls =
         py::class_<JsonSurfacesWriter, IWriter,
-                   std::shared_ptr<JsonSurfacesWriter>>(mex,
+                   std::shared_ptr<JsonSurfacesWriter>>(json,
                                                         "JsonSurfacesWriter")
             .def(py::init<const JsonSurfacesWriter::Config&, Logging::Level>(),
                  py::arg("config"), py::arg("level"))
@@ -130,5 +131,11 @@ void addJson(Context& ctx) {
                        writeLayer, writeApproach, writeSensitive, writeBoundary,
                        writePerEvent, writeOnlyNames);
   }
+
+      json.def("readJsonGeometryList", readJsonGeometryList);
+
+        {
+    json.def("readDigiConfigFromJson", readDigiConfigFromJson);
+    json.def("writeDigiConfigToJson", writeDigiConfigToJson);
+  }
 }
-}  // namespace ActsPython

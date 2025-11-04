@@ -38,13 +38,9 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace ActsPlugins;
 using namespace ActsExamples;
+using namespace ActsPython;
 
-namespace ActsPython {
-
-void addGeoModel(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
-  auto gm = mex.def_submodule("geomodel");
+PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, gm) {
 
   {
     auto f =
@@ -157,5 +153,3 @@ void addGeoModel(Context& ctx) {
         "logLevel"_a = Logging::INFO);
   }
 }
-
-}  // namespace ActsPython

@@ -24,8 +24,11 @@ from acts.examples import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
     CoreMaterialMapping,
-    JsonMaterialWriter,
     RootMaterialWriter,
+)
+
+from acts.examples.json import (
+    JsonMaterialWriter,
     JsonFormat,
 )
 

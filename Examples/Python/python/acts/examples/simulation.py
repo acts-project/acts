@@ -16,6 +16,7 @@ from acts.examples import (
 )
 
 import acts.examples.hepmc3
+import acts.examples.pythia8
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
@@ -866,10 +867,10 @@ def addTruthJetAlg(
     config: TruthJetConfig,
     loglevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    from acts.examples import TruthJetAlgorithm
+    from acts.examples.truthjet import TruthJetAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, loglevel)
-    truthJetAlg = acts.examples.TruthJetAlgorithm(
+    truthJetAlg = acts.examples.truthjet.TruthJetAlgorithm(
         **acts.examples.defaultKWArgs(**_getTruthJetKWargs(config)),
         level=customLogLevel(),
     )
