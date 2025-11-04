@@ -2053,9 +2053,9 @@ GnnBackend = Enum("GnnBackend", "Torch Onnx")
 
 def addGnn(
     s: acts.examples.Sequencer,
-    graphConstructor,
-    edgeClassifiers: list,
-    trackBuilder,
+    graphConstructor: acts.examples.GraphConstructionBase,
+    edgeClassifiers: list[acts.examples.EdgeClassificationBase],
+    trackBuilder: acts.examples.TrackBuildingBase,
     nodeFeatures: list,
     featureScales: list,
     trackingGeometry: Optional[acts.TrackingGeometry] = None,
@@ -2064,7 +2064,7 @@ def addGnn(
     inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
-) -> None:
+) -> acts.examples.Sequencer:
     """
     Add GNN track finding with custom stage implementations.
 
@@ -2084,8 +2084,22 @@ def addGnn(
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
         logLevel: Logging level
+
+    Note:
+        The trackingGeometry parameter serves two distinct purposes depending on the workflow:
+        1. Spacepoint creation: When provided along with geometrySelection, creates spacepoints
+           from measurements using SpacePointMaker (typical for simulation workflows)
+        2. Module map usage: Some graph constructors (e.g., ModuleMapCuda) require
+           trackingGeometry to map module IDs even when using pre-existing spacepoints
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    # Validate that nodeFeatures and featureScales have matching lengths
+    if len(nodeFeatures) != len(featureScales):
+        raise ValueError(
+            f"nodeFeatures and featureScales must have the same length "
+            f"(got {len(nodeFeatures)} and {len(featureScales)})"
+        )
 
     # Optionally create space points if tracking geometry is provided
     if trackingGeometry is not None:
