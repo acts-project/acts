@@ -3,17 +3,17 @@ from pathlib import Path
 
 import acts
 
-from acts import MaterialMapJsonConverter, JsonMaterialDecorator
+from acts.json import MaterialMapJsonConverter, JsonMaterialDecorator
 
 
 @pytest.mark.root
 def test_material_root(conf_const):
     with pytest.raises(TypeError):
-        acts.examples.RootMaterialDecorator()
+        acts.root.RootMaterialDecorator()
     fileName = "blubb.root"
     try:
         conf_const(
-            acts.examples.RootMaterialDecorator,
+            acts.root.RootMaterialDecorator,
             level=acts.logging.INFO,
             fileName=fileName,
         )
