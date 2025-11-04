@@ -36,6 +36,9 @@ runs:
       with:
         python-version: "3.12"
 
+    - name: Install the latest version of uv
+      uses: astral-sh/setup-uv@v6
+
     - name: Prerequisites
       if: startsWith(runner.os, 'macos')
       shell: bash

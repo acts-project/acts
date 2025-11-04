@@ -207,7 +207,11 @@ end_section
 
 start_section "Patch up Geant4 data directory"
 if [ "${full_install:-false}" == "true" ]; then
-  time "${view_dir}/bin/geant4-config" --install-datasets
+  if ! which uv &> /dev/null ; then
+    echo "uv not found, installing uv"
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  fi
+  time uv run "$SCRIPT_DIR/download_geant4_datasets.py" -j8 --config "${view_dir}/bin/geant4-config"
 fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
 # Prepare the folder for G4 data, and symlink it to where G4 will look for it
