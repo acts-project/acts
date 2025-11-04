@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Example: GNN track finding with module maps.
+Example: GNN track finding with module maps on ATLAS ITk data.
 
 Demonstrates reading pre-simulated ATLAS data and running GNN with module map
 (geometry-based) graph construction. Typical workflow for ATLAS ITk.
@@ -20,17 +20,18 @@ from acts.examples.reconstruction import addGnn
 u = acts.UnitConstants
 
 
-def runGnnModuleMap(
+def runGNN4ITk(
     inputRootDump: Path,
     moduleMapPath: str,
     gnnModel: Path,
-    outputDir: Path,
+    outputDir: Path = Path.cwd(),
     events: int = 1,
+    logLevel=acts.logging.INFO,
 ):
     """
     Run GNN tracking with module maps on ATLAS Athena dumps.
 
-    This example shows reading pre-simulated data and running GNN with
+    This example shows reading pre-simulated ATLAS data and running GNN with
     geometry-based graph construction. All GNN parameters hardcoded.
 
     Args:
@@ -40,6 +41,7 @@ def runGnnModuleMap(
         gnnModel: Path to trained model (.pt, .onnx, or .engine)
         outputDir: Output directory for performance files
         events: Number of events to process
+        logLevel: Logging level
     """
     # Validate inputs
     assert inputRootDump.exists(), f"Input file not found: {inputRootDump}"
@@ -49,12 +51,15 @@ def runGnnModuleMap(
         f"Module map not found: {moduleMapPath}.triplets.root"
     assert gnnModel.exists(), f"Model file not found: {gnnModel}"
 
-    s = acts.examples.Sequencer(events=events, numThreads=1)
+    s = acts.examples.Sequencer(
+        events=events,
+        numThreads=1,
+    )
 
     # Read ATLAS Athena ROOT dump
     s.addReader(
         acts.examples.RootAthenaDumpReader(
-            level=acts.logging.INFO,
+            level=logLevel,
             treename="GNN4ITk",
             inputfiles=[str(inputRootDump)],
             outputSpacePoints="spacepoints",
@@ -74,7 +79,7 @@ def runGnnModuleMap(
 
     # Stage 1: Graph construction via module map
     moduleMapConfig = {
-        "level": acts.logging.INFO,
+        "level": logLevel,
         "moduleMapPath": moduleMapPath,
         "rScale": 1000.0,
         "phiScale": 3.141592654,
@@ -87,9 +92,10 @@ def runGnnModuleMap(
     graphConstructor = acts.examples.ModuleMapCuda(**moduleMapConfig)
 
     # Stage 2: Single-stage edge classification (auto-detect backend)
+    gnnModel = Path(gnnModel)
     if gnnModel.suffix == ".pt":
         edgeClassifierConfig = {
-            "level": acts.logging.INFO,
+            "level": logLevel,
             "modelPath": str(gnnModel),
             "cut": 0.5,
             "useEdgeFeatures": True,
@@ -97,14 +103,14 @@ def runGnnModuleMap(
         edgeClassifiers = [acts.examples.TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
         edgeClassifierConfig = {
-            "level": acts.logging.INFO,
+            "level": logLevel,
             "modelPath": str(gnnModel),
             "cut": 0.5,
         }
         edgeClassifiers = [acts.examples.OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
         edgeClassifierConfig = {
-            "level": acts.logging.INFO,
+            "level": logLevel,
             "modelPath": str(gnnModel),
             "cut": 0.5,
         }
@@ -114,7 +120,7 @@ def runGnnModuleMap(
 
     # Stage 3: GPU track building
     trackBuilderConfig = {
-        "level": acts.logging.INFO,
+        "level": logLevel,
         "useOneBlockImplementation": False,
         "doJunctionRemoval": True,
     }
@@ -140,7 +146,7 @@ def runGnnModuleMap(
         inputSpacePoints="spacepoints",
         inputClusters="clusters",
         outputDirRoot=str(outputDir),
-        logLevel=acts.logging.INFO,
+        logLevel=logLevel,
     )
 
     s.run()
@@ -185,7 +191,7 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
 
-    runGnnModuleMap(
+    runGNN4ITk(
         inputRootDump=args.inputRootDump,
         moduleMapPath=args.moduleMapPath,
         gnnModel=args.gnnModel,
