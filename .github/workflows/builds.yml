@@ -31,9 +31,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: true
-          lfs: true
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -111,9 +108,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: true
-          lfs: true
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -148,9 +142,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: true
-          lfs: true
 
       - run: apt-get update && apt-get install -y time
 
@@ -229,9 +220,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: true
-          lfs: true
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -303,9 +291,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: true
-          lfs: true
 
       - name: Setup Xcode version
         uses: maxim-lobanov/setup-xcode@v1
@@ -381,9 +366,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: true
-          path: acts
 
       - uses: actions/checkout@v5
         with:
@@ -481,9 +463,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: true
-          path: acts
+
       - uses: actions/checkout@v5
         with:
           repository: key4hep/k4ActsTracking
