@@ -52,8 +52,8 @@ def runGeant4(
         s,
         outputDirRoot=outputDir / "PG",
         momentumConfig=MomentumConfig(50.0 * u.GeV, 60.0 * u.GeV, transverse=True),
-        etaConfig=EtaConfig(-1.0, 1.0, uniform=True),
-        phiConfig=PhiConfig(0.0, 360.0 * u.degree),
+        etaConfig=EtaConfig(-1, 1, uniform=True),
+        phiConfig=PhiConfig(0.1, 0.1 * u.degree),
         particleConfig=ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
@@ -102,10 +102,10 @@ def main():
         default="Muon",
     )
     parser.add_argument("--outDir", default="./", help="Output")
-    parser.add_argument("--nEvents", default=100, type=int, help="Number of events")
+    parser.add_argument("--nEvents", default=1, type=int, help="Number of events")
     parser.add_argument(
-        "--randomSeed", default=1602, type=int, help="Random seed for event generation"
-    )
+        "--randomSeed", default=1014, type=int, help="Random seed for event generation"
+    )  # good seed at 16022 or 1602, 1011 also nice for only straw
     parser.add_argument(
         "--geoSvgDump",
         default=False,
@@ -247,7 +247,7 @@ def main():
         algSequence,
         trackingGeometry,
         field,
-        nUpdateMax=17,
+        nUpdateMax=50,
         relChi2changeCutOff=1e-7,
         multipleScattering=False,
         logLevel=logging.VERBOSE,

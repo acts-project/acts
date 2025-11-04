@@ -185,6 +185,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
                          std::shared_ptr<const Acts::Surface>>>
       globalPositions;
 
+  int straw_count = 0;
+  int plane_count = 0;
+
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(gotSimHits)) {
     // Manual pair unpacking instead of using
@@ -224,6 +227,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
       const auto& simHit = *h;
       const auto simHitIdx = gotSimHits.index_of(h);
 
+      if (simHit.position()[0] < 6000 || simHit.position()[0] > 7000) {
+        continue;
+      }
+
       // Convert the hit trajectory into local coordinates
       const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
       const Vector3 locDir =
@@ -245,6 +252,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
         /// Strip measurements
         using enum Surface::SurfaceType;
         case Plane: {
+          //          break;
+          // only keep 2 plane surfaces
+          if (plane_count >= 2) {
+            break;
+          }
+
           ACTS_VERBOSE("Hit is recorded in a strip detector ");
           auto planeCross =
               intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.);
@@ -304,11 +317,14 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   calibCfg.rpcPhiStripPitch, calibCfg.rpcEtaStripPitch,
                   m_cfg.digitizeTime ? calibCfg.rpcTimeResolution : 0.);
 
-              // Set measurement
+              globalPositions.push_back(
+                  std::make_tuple(simHit.position(), smearedHit[ePos0],
+                                  smearedHit[ePos1], hitSurf->getSharedPtr()));
+
+              // Now set measurement and maps
               DigitizedParameters dParameters;
 
               auto cov = newSp.covariance();
-
               dParameters.indices.push_back(Acts::eBoundLoc0);
               dParameters.values.push_back(smearedHit[ePos0]);
               dParameters.variances.push_back(cov[0]);
@@ -324,6 +340,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   gotSimHits.nth(simHitIdx)->particleId());
               measurementSimHitsMap.emplace_hint(
                   measurementSimHitsMap.end(), measurement.index(), simHitIdx);
+
+              std::cout << moduleGeoId << std::endl;
+              plane_count++;
 
               break;
             }
@@ -352,6 +371,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
           break;
         }
         case Straw: {
+          // only keep 8 straw surfaces
+          if (straw_count >= 8) {
+            break;
+          }
           auto closeApproach = lineIntersect<3>(
               Vector3::Zero(), Vector3::UnitZ(), locPos, locDir);
           const auto nominalPos = closeApproach.position();
@@ -401,8 +424,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
           //              simHit.position(), smearedZ, driftR,
           //              hitSurf->getSharedPtr()));
 
-          globalPositions.push_back(std::make_tuple(
-              simHit.position(), driftR, smearedZ, hitSurf->getSharedPtr()));
+          //                    globalPositions.push_back(std::make_tuple(
+          //                        simHit.position(), driftR, smearedZ,
+          //                        hitSurf->getSharedPtr()));
 
           std::cout << "positionSimhitGlobal " << simHit.position().transpose()
                     << std::endl;
@@ -460,7 +484,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
 //                                    trackingGeometry(), logger());
       }
           std::cout << moduleGeoId << std::endl;
-
+          straw_count++;
           break;
         }
 
@@ -530,9 +554,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
     // Acts::Vector3 origin = std::get<0>(globalPositions[0]);
     //    Acts::Vector3 direction = freeParams.segment<3>(Acts::eFreeDir0);
     int sp1 = 0;
-    int sp2 = 10;
+    int sp2 = 1;
     Acts::Vector3 direction =
-        std::get<0>(globalPositions.back()) - std::get<0>(globalPositions[sp1]);
+        std::get<0>(globalPositions[sp2]) - std::get<0>(globalPositions[sp1]);
 
     Acts::BoundVector params = Acts::BoundVector::Zero();
     params[Acts::eBoundPhi] = Acts::VectorHelpers::phi(direction);
