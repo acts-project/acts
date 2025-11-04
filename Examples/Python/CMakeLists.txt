@@ -102,23 +102,11 @@ else()
     target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_ROOT)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginRoot)
-    target_sources(ActsPythonBindings PRIVATE src/TGeo.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/TGeoStub.cpp)
-endif()
-
 if(ACTS_BUILD_PLUGIN_TRACCC)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginDetray)
-    target_sources(ActsPythonBindings PRIVATE src/Detray.cpp)
     target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginCovfie)
-    target_sources(ActsPythonBindings PRIVATE src/Covfie.cpp)
     target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesTraccc)
     target_sources(ActsPythonBindings PRIVATE src/Traccc.cpp)
 else()
-    target_sources(ActsPythonBindings PRIVATE src/DetrayStub.cpp)
-    target_sources(ActsPythonBindings PRIVATE src/CovfieStub.cpp)
     target_sources(ActsPythonBindings PRIVATE src/TracccStub.cpp)
 endif()
 
@@ -130,20 +118,25 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
-    pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
+    pybind11_add_module(ActsExamplesPythonBindingsDD4hep src/DD4hepComponent.cpp)
     target_link_libraries(
-        ActsPythonBindingsDD4hep
+        ActsExamplesPythonBindingsDD4hep
         PUBLIC Acts::PythonUtilities Acts::ExamplesDetectorDD4hep
     )
-    add_dependencies(ActsPythonBindings ActsPythonBindingsDD4hep)
+    add_dependencies(ActsPythonBindings ActsExamplesPythonBindingsDD4hep)
 
-    install(TARGETS ActsPythonBindingsDD4hep DESTINATION ${_python_install_dir})
+    install(
+        TARGETS
+            ActsExamplesPythonBindingsDD4hep
+            DESTINATION
+            ${_python_install_dir}
+    )
     set_target_properties(
-        ActsPythonBindingsDD4hep
+        ActsExamplesPythonBindingsDD4hep
         PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
     )
     set_target_properties(
-        ActsPythonBindingsDD4hep
+        ActsExamplesPythonBindingsDD4hep
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
     )
     list(APPEND py_files examples/dd4hep.py)
@@ -160,24 +153,29 @@ else()
 endif()
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
-    pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
+    pybind11_add_module(ActsExamplesPythonBindingsGeant4 src/Geant4Component.cpp)
     target_link_libraries(
-        ActsPythonBindingsGeant4
+        ActsExamplesPythonBindingsGeant4
         PUBLIC
             Acts::ExamplesGeant4
             Acts::ExamplesDetectorGeant4
             Acts::PythonUtilities
             Acts::ExamplesMuonSpectrometerMockupDetector
     )
-    add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
+    add_dependencies(ActsPythonBindings ActsExamplesPythonBindingsGeant4)
 
-    install(TARGETS ActsPythonBindingsGeant4 DESTINATION ${_python_install_dir})
+    install(
+        TARGETS
+            ActsExamplesPythonBindingsGeant4
+            DESTINATION
+            ${_python_install_dir}
+    )
     set_target_properties(
-        ActsPythonBindingsGeant4
+        ActsExamplesPythonBindingsGeant4
         PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
     )
     set_target_properties(
-        ActsPythonBindingsGeant4
+        ActsExamplesPythonBindingsGeant4
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
     )
     list(APPEND py_files examples/geant4/__init__.py)
