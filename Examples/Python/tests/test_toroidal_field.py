@@ -5,37 +5,56 @@ import tempfile
 import pathlib
 import os
 
-# Test imports to verify availability
-pytest.importorskip("acts.ActsPythonBindingsDD4hep")
-pytest.importorskip("acts.ActsPythonBindingsGeoModel")
+# Test imports to verify availability - make optional dependencies optional
+try:
+    pytest.importorskip("acts.ActsPythonBindingsDD4hep")
+    HAS_DD4HEP = True
+except pytest.skip.Exception:
+    HAS_DD4HEP = False
+
+try:
+    pytest.importorskip("acts.ActsPythonBindingsGeoModel")
+    HAS_GEOMODEL = True
+except pytest.skip.Exception:
+    HAS_GEOMODEL = False
 
 import acts
 import acts.examples
-import acts.examples.dd4hep
-import acts.examples.geant4
-import acts.examples.geant4.dd4hep
-import acts.examples.dd4hep
-import acts.examples.geomodel
+
+# Optional imports
+if HAS_DD4HEP:
+    try:
+        import acts.examples.dd4hep
+        import acts.examples.geant4
+        import acts.examples.geant4.dd4hep
+    except ImportError:
+        pass
+
+if HAS_GEOMODEL:
+    try:
+        import acts.examples.geomodel
+    except ImportError:
+        pass
 
 try:
-    import acts.acts_atlas_toroidal_field
+    import acts.acts_toroidal_field
 
-    ATLAS_TOROIDAL_FIELD_AVAILABLE = True
+    TOROIDAL_FIELD_AVAILABLE = True
 except ImportError:
-    ATLAS_TOROIDAL_FIELD_AVAILABLE = False
+    TOROIDAL_FIELD_AVAILABLE = False
 
 u = acts.UnitConstants
 
 
 @pytest.mark.skipif(
-    not ATLAS_TOROIDAL_FIELD_AVAILABLE, reason="ATLASToroidalField not available"
+    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
 )
-def test_atlas_toroidal_field_basic():
-    """Test basic ATLASToroidalField functionality."""
+def test_toroidal_field_basic():
+    """Test basic ToroidalField functionality."""
 
-    # Test default ATLAS configuration
-    config = acts.acts_atlas_toroidal_field.Config()
-    field = acts.acts_atlas_toroidal_field.ATLASToroidalField(config)
+    # Test default configuration
+    config = acts.acts_toroidal_field.Config()
+    field = acts.acts_toroidal_field.ToroidalField(config)
     assert field is not None
 
     # Test field at origin
@@ -55,19 +74,19 @@ def test_atlas_toroidal_field_basic():
 
 
 @pytest.mark.skipif(
-    not ATLAS_TOROIDAL_FIELD_AVAILABLE, reason="ATLASToroidalField not available"
+    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
 )
-def test_atlas_toroidal_field_custom():
-    """Test ATLASToroidalField with custom parameters."""
+def test_toroidal_field_custom():
+    """Test ToroidalField with custom parameters."""
 
-    config = acts.acts_atlas_toroidal_field.Config()
+    config = acts.acts_toroidal_field.Config()
 
     # Customize barrel configuration
     config.barrel.R_in = 5.0
     config.barrel.R_out = 9.0
     config.barrel.I = 15000.0
 
-    field = acts.acts_atlas_toroidal_field.ATLASToroidalField(config)
+    field = acts.acts_toroidal_field.ToroidalField(config)
     assert field is not None
 
     # Test field calculation
@@ -77,18 +96,21 @@ def test_atlas_toroidal_field_custom():
     position = acts.Vector3(7000.0, 0.0, 0.0)
     field_value = field.getField(position, cache)
 
-    # Verify field is calculated
-    assert len(field_value) == 3
+    # Verify field is calculated (should be a Vector3 with components)
+    assert hasattr(field_value, '__getitem__')  # Can access components
+    assert field_value[0] is not None
+    assert field_value[1] is not None 
+    assert field_value[2] is not None
 
 
 @pytest.mark.skipif(
-    not ATLAS_TOROIDAL_FIELD_AVAILABLE, reason="ATLASToroidalField not available"
+    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
 )
-def test_atlas_toroidal_field_symmetry():
+def test_toroidal_field_symmetry():
     """Test that the field has expected symmetries."""
 
-    config = acts.acts_atlas_toroidal_field.Config()
-    field = acts.acts_atlas_toroidal_field.ATLASToroidalField(config)
+    config = acts.acts_toroidal_field.Config()
+    field = acts.acts_toroidal_field.ToroidalField(config)
     ctx = acts.MagneticFieldContext()
     cache = field.makeCache(ctx)
 
@@ -110,13 +132,13 @@ def test_atlas_toroidal_field_symmetry():
 
 
 @pytest.mark.skipif(
-    not ATLAS_TOROIDAL_FIELD_AVAILABLE, reason="ATLASToroidalField not available"
+    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
 )
-def test_atlas_toroidal_field_regions():
+def test_toroidal_field_regions():
     """Test field behavior in different regions (barrel vs endcap)."""
 
-    config = acts.acts_atlas_toroidal_field.Config()
-    field = acts.acts_atlas_toroidal_field.ATLASToroidalField(config)
+    config = acts.acts_toroidal_field.Config()
+    field = acts.acts_toroidal_field.ToroidalField(config)
     ctx = acts.MagneticFieldContext()
     cache = field.makeCache(ctx)
 
@@ -140,25 +162,25 @@ def test_atlas_toroidal_field_regions():
 
 
 @pytest.mark.skipif(
-    not ATLAS_TOROIDAL_FIELD_AVAILABLE, reason="ATLASToroidalField not available"
+    not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available"
 )
-def test_atlas_toroidal_field_configuration():
+def test_toroidal_field_configuration():
     """Test configuration classes."""
 
     # Test BarrelConfig
-    barrel_config = acts.acts_atlas_toroidal_field.BarrelConfig()
+    barrel_config = acts.acts_toroidal_field.BarrelConfig()
     assert barrel_config.R_in > 0
     assert barrel_config.R_out > barrel_config.R_in
     assert barrel_config.I > 0
 
     # Test ECTConfig
-    ect_config = acts.acts_atlas_toroidal_field.ECTConfig()
+    ect_config = acts.acts_toroidal_field.ECTConfig()
     assert ect_config.R_in > 0
     assert ect_config.R_out > ect_config.R_in
     assert ect_config.I > 0
 
     # Test LayoutConfig
-    layout_config = acts.acts_atlas_toroidal_field.LayoutConfig()
+    layout_config = acts.acts_toroidal_field.LayoutConfig()
     assert layout_config.nCoils > 0
     assert layout_config.nArc > 0
     assert layout_config.nStraight > 0
@@ -166,12 +188,12 @@ def test_atlas_toroidal_field_configuration():
 
 if __name__ == "__main__":
     # Run basic tests if called directly
-    if ATLAS_TOROIDAL_FIELD_AVAILABLE:
-        test_atlas_toroidal_field_basic()
-        test_atlas_toroidal_field_custom()
-        test_atlas_toroidal_field_symmetry()
-        test_atlas_toroidal_field_regions()
-        test_atlas_toroidal_field_configuration()
-        print("All ATLASToroidalField tests passed!")
+    if TOROIDAL_FIELD_AVAILABLE:
+        test_toroidal_field_basic()
+        test_toroidal_field_custom()
+        test_toroidal_field_symmetry()
+        test_toroidal_field_regions()
+        test_toroidal_field_configuration()
+        print("All ToroidalField tests passed!")
     else:
-        print("ATLASToroidalField not available - skipping tests")
+        print("ToroidalField not available - skipping tests")

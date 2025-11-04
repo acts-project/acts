@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 
 """
-Simple test script for ATLASToroidalField Python bindings
+Simple test script for ToroidalField Python bindings
 Tests the magnetic field functionality without complex dependencies
 """
 
 import sys
 
 
-def test_atlas_toroidal_field_basic():
+def test_toroidal_field_basic():
     """Test basic import and configuration"""
     print("=" * 60)
-    print("Testing ATLASToroidalField Python Bindings")
+    print("Testing ToroidalField Python Bindings")
     print("=" * 60)
 
     try:
-        import acts.acts_atlas_toroidal_field as atlas_field
+        import acts.acts_toroidal_field as toroidal_field
 
-        print("✅ Successfully imported acts.acts_atlas_toroidal_field")
+        print("✅ Successfully imported acts.acts_toroidal_field")
     except ImportError as e:
-        print(f"❌ Failed to import acts.acts_atlas_toroidal_field: {e}")
+        print(f"❌ Failed to import acts.acts_toroidal_field: {e}")
         return False
 
     # Test Config creation with defaults
     print("\n📋 Testing Config with defaults:")
     try:
-        config = atlas_field.Config()
+        config = toroidal_field.Config()
         print(f"   Barrel R_in: {config.barrel.R_in} m")
         print(f"   Barrel R_out: {config.barrel.R_out} m")
         print(f"   Barrel c: {config.barrel.c} m")
@@ -41,7 +41,7 @@ def test_atlas_toroidal_field_basic():
     # Test Config customization
     print("\n🔧 Testing Config customization:")
     try:
-        custom_config = atlas_field.Config()
+        custom_config = toroidal_field.Config()
         custom_config.barrel.R_in = 5.2
         custom_config.barrel.R_out = 9.8
         custom_config.barrel.I = 18000.0
@@ -56,19 +56,19 @@ def test_atlas_toroidal_field_basic():
         print(f"❌ Config customization failed: {e}")
         return False
 
-    # Test ATLASToroidalField creation
-    print("\n🧲 Testing ATLASToroidalField creation:")
+    # Test ToroidalField creation
+    print("\n🧲 Testing ToroidalField creation:")
     try:
-        field = atlas_field.ATLASToroidalField(config)
-        print("✅ ATLASToroidalField creation successful")
+        field = toroidal_field.ToroidalField(config)
+        print("✅ ToroidalField creation successful")
     except Exception as e:
-        print(f"❌ ATLASToroidalField creation failed: {e}")
+        print(f"❌ ToroidalField creation failed: {e}")
         return False
 
     return True
 
 
-def test_atlas_toroidal_field_calculation():
+def test_toroidal_field_calculation():
     """Test magnetic field calculation"""
     print("\n" + "=" * 60)
     print("Testing Magnetic Field Calculation")
@@ -76,11 +76,11 @@ def test_atlas_toroidal_field_calculation():
 
     try:
         import acts
-        import acts.acts_atlas_toroidal_field as atlas_field
+        import acts.acts_toroidal_field as toroidal_field
 
         # Create field
-        config = atlas_field.Config()
-        field = atlas_field.ATLASToroidalField(config)
+        config = toroidal_field.Config()
+        field = toroidal_field.ToroidalField(config)
 
         # Create magnetic field context and cache
         ctx = acts.MagneticFieldContext()
@@ -121,18 +121,18 @@ def test_atlas_toroidal_field_calculation():
         return False
 
 
-def test_atlas_configuration_classes():
+def test_configuration_classes():
     """Test individual configuration classes"""
     print("\n" + "=" * 60)
     print("Testing Configuration Classes")
     print("=" * 60)
 
     try:
-        import acts.acts_atlas_toroidal_field as atlas_field
+        import acts.acts_toroidal_field as toroidal_field
 
         # Test BarrelConfig
         print("\n🏺 Testing BarrelConfig:")
-        barrel_config = atlas_field.BarrelConfig()
+        barrel_config = toroidal_field.BarrelConfig()
         print(f"   Default R_in: {barrel_config.R_in} m")
         print(f"   Default R_out: {barrel_config.R_out} m")
         print(f"   Default current: {barrel_config.I} A")
@@ -140,7 +140,7 @@ def test_atlas_configuration_classes():
 
         # Test ECTConfig
         print("\n🔚 Testing ECTConfig:")
-        ect_config = atlas_field.ECTConfig()
+        ect_config = toroidal_field.ECTConfig()
         print(f"   Default R_in: {ect_config.R_in} m")
         print(f"   Default R_out: {ect_config.R_out} m")
         print(f"   Default current: {ect_config.I} A")
@@ -148,7 +148,7 @@ def test_atlas_configuration_classes():
 
         # Test LayoutConfig
         print("\n📐 Testing LayoutConfig:")
-        layout_config = atlas_field.LayoutConfig()
+        layout_config = toroidal_field.LayoutConfig()
         print(f"   Default nCoils: {layout_config.nCoils}")
         print(f"   Default theta0_deg: {layout_config.theta0_deg}")
         print(f"   Default thetaStep_deg: {layout_config.thetaStep_deg}")
@@ -163,13 +163,13 @@ def test_atlas_configuration_classes():
 
 def main():
     """Run all tests"""
-    print("🚀 Starting ATLASToroidalField Python Binding Tests")
+    print("🚀 Starting ToroidalField Python Binding Tests")
     print("=" * 80)
 
     tests = [
-        ("Basic functionality", test_atlas_toroidal_field_basic),
-        ("Field calculation", test_atlas_toroidal_field_calculation),
-        ("Configuration classes", test_atlas_configuration_classes),
+        ("Basic functionality", test_toroidal_field_basic),
+        ("Field calculation", test_toroidal_field_calculation),
+        ("Configuration classes", test_configuration_classes),
     ]
 
     results = []
@@ -201,7 +201,7 @@ def main():
     print(f"\nOverall: {passed}/{total} tests passed")
 
     if passed == total:
-        print("🎉 All tests passed! ATLASToroidalField is working correctly.")
+        print("🎉 All tests passed! ToroidalField is working correctly.")
         return 0
     else:
         print("⚠️  Some tests failed. Check the output above for details.")

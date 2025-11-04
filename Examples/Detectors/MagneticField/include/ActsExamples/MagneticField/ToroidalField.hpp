@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// ATLASToroidalField.hpp  (header-only)
-// Full ATLAS toroidal field (barrel + two endcaps) with per-coil current
+// ToroidalField.hpp  (header-only)
+// Full toroidal field (barrel + two endcaps) with per-coil current
 // senses.
 
 #pragma once
@@ -26,7 +26,7 @@
 
 namespace Acts {
 
-class ATLASToroidalField final : public MagneticFieldProvider {
+class ToroidalField final : public MagneticFieldProvider {
  public:
   struct BarrelConfig {
     float R_in = 4.9f;    // [m]
@@ -40,11 +40,11 @@ class ATLASToroidalField final : public MagneticFieldProvider {
   struct ECTConfig {
     float R_in = 1.65f * 0.5f;   // [m] ≈ 0.825
     float R_out = 10.7f * 0.5f;  // [m] ≈ 5.35
-    float c = 5.0f;              // [m]
-    float b = 0.12f;             // [m]
-    float I = 20500.0f;          // [A]
-    int Nturns = 116;            // [turns]
-    float gap = 0.5f;            // [m] small mechanical gap
+    float c     = 5.0f;              // [m]
+    float b     = 0.12f;             // [m]
+    float I     = 20500.0f;          // [A]
+    int Nturns  = 116;            // [turns]
+    float gap   = 0.5f;            // [m] small mechanical gap
   };
 
   struct LayoutConfig {
@@ -76,34 +76,24 @@ class ATLASToroidalField final : public MagneticFieldProvider {
     explicit Cache(const MagneticFieldContext& /*ctx*/) {}
   };
 
-  ATLASToroidalField() : ATLASToroidalField(Config{}) {}
+  ToroidalField() : ToroidalField(Config{}) {}
 
-  explicit ATLASToroidalField(Config cfg) : m_cfg(std::move(cfg)) {
+  explicit ToroidalField(Config cfg) : m_cfg(std::move(cfg)) {
     // Fill default signs if not provided
     const int nC = m_cfg.layout.nCoils;
     if (m_cfg.barrelSigns.empty()) {
-      m_cfg.barrelSigns.resize(nC);
-      for (int k = 0; k < nC; ++k)
-        m_cfg.barrelSigns[k] = (k % 2 == 0) ? +1 : -1;
+      m_cfg.barrelSigns.assign(nC, +1);
     }
     if (m_cfg.ectSigns.empty()) {
-      // Updated default to match Python:
-      // coil_signs_ect_front = coil_signs_ect_back = [-1, +1, -1, +1, -1, +1,
-      // -1, +1]
-      m_cfg.ectSigns.resize(2 * nC);
-      for (int k = 0; k < nC; ++k) {
-        const int alt = (k % 2 == 0) ? -1 : +1;
-        m_cfg.ectSigns[k] = alt;       // +z endcap
-        m_cfg.ectSigns[nC + k] = alt;  // -z endcap
-      }
+      m_cfg.ectSigns.assign(2 * nC, +1);
     }
     // Sanity on sizes
     if (static_cast<int>(m_cfg.barrelSigns.size()) != nC)
       throw std::invalid_argument(
-          "ATLASToroidalField: barrelSigns size must equal nCoils");
+          "ToroidalField: barrelSigns size must equal nCoils");
     if (static_cast<int>(m_cfg.ectSigns.size()) != 2 * nC)
       throw std::invalid_argument(
-          "ATLASToroidalField: ectSigns size must equal 2*nCoils");
+          "ToroidalField: ectSigns size must equal 2*nCoils");
 
     buildGeometry();
   }
@@ -234,59 +224,64 @@ class ATLASToroidalField final : public MagneticFieldProvider {
     return pts;
   }
 
-  // Build a single racetrack in (ρ,z) as polyline
-  static std::vector<std::array<float, 2>> racetrackRZ(float a, float b,
-                                                       float Lz, int nArc,
-                                                       int nStraight,
-                                                       bool close) {
-    const float r = 0.5f * b;
-    std::vector<std::array<float, 2>> pts;
-    pts.reserve(
-        static_cast<std::size_t>(2 * nArc + 2 * nStraight + (close ? 1 : 0)));
+  // Rounded-rectangle racetrack in local (ρ, z):
+  //   • Straights at ρ = ±a/2 running along z
+  //   • Corner/end arcs with radius r = b/2
+  //   • Total axial length Lz; useful straight z-range is [-(Lz/2 - r), +(Lz/2 - r)]
+  static std::vector<std::array<float, 2>>
+  racetrackRZ(float a, float b, float Lz, int nArc, int nStraight, bool close) {
+    const float r  = 0.5f * b;     // corner radius
+    const float rz = 0.5f * Lz;    // axial half-length
+    const float zTop =  rz - r;    // top straight z
+    const float zBot = -rz + r;    // bottom straight z
 
-    // Arc at x=+Lz/2 (x≡z, y≡ρ)
-    for (int i = 0; i < nArc; ++i) {
-      const float th =
-          static_cast<float>(std::numbers::pi) / 2 +
-          (static_cast<float>(i) / nArc) * static_cast<float>(std::numbers::pi);
-      const float x = (+Lz * 0.5f) + r * std::cos(th);
-      const float y = r * std::sin(th);
-      pts.push_back({y, x});
-    }
-    // Straight at y=-r from +Lz/2 -> -Lz/2
+    std::vector<std::array<float, 2>> pts;
+    pts.reserve(static_cast<std::size_t>(2 * nArc + 2 * nStraight + (close ? 1 : 0)));
+
+    // +ρ straight (top → bottom), ρ = +a/2
     for (int i = 0; i < nStraight; ++i) {
       const float t = static_cast<float>(i) / static_cast<float>(nStraight);
-      const float x = (+Lz * 0.5f) * (1.0f - t) + (-Lz * 0.5f) * t;
-      pts.push_back({-r, x});
+      const float z = zTop * (1.0f - t) + zBot * t;
+      pts.push_back({+0.5f * a, z});
     }
-    // Arc at x=-Lz/2
+    // bottom-right quarter: θ ∈ [−π/2, −π], center at (ρ=+a/2−r, z=−rz+r)
     for (int i = 0; i < nArc; ++i) {
-      const float th = static_cast<float>(3.0 * std::numbers::pi / 2) +
-                       (static_cast<float>(i) / nArc) *
-                           static_cast<float>(-std::numbers::pi);
-      const float x = (-Lz * 0.5f) + r * std::cos(th);
-      const float y = r * std::sin(th);
-      pts.push_back({y, x});
+      const float th = -static_cast<float>(std::numbers::pi) / 2 +
+                       (static_cast<float>(i) / nArc) * (-static_cast<float>(std::numbers::pi) / 1.0f + static_cast<float>(std::numbers::pi) / 2);
+      // Equivalent simpler param:
+      const float theta = -static_cast<float>(std::numbers::pi) / 2 + (static_cast<float>(i) / nArc) * (-static_cast<float>(std::numbers::pi) + static_cast<float>(std::numbers::pi) / 2 + static_cast<float>(std::numbers::pi) / 2);
+      (void)th; (void)theta;
     }
-    // Straight at y=+r from -Lz/2 -> +Lz/2
-    const int nStraightLast = close ? nStraight : (nStraight + 1);
-    for (int i = 0; i < nStraightLast; ++i) {
-      const float t =
-          static_cast<float>(i) / static_cast<float>(nStraightLast - 1);
-      const float x = (-Lz * 0.5f) * (1.0f - t) + (+Lz * 0.5f) * t;
-      pts.push_back({+r, x});
+    // Implement the two corners explicitly (clean version)
+    for (int i = 0; i < nArc; ++i) {
+      const float t  = static_cast<float>(i) / static_cast<float>(nArc);
+      const float th = -static_cast<float>(std::numbers::pi)/2 + t * (-static_cast<float>(std::numbers::pi)/2);
+      const float cx = +0.5f * a - r; // ρ-center
+      const float cz = -rz + r;       // z-center
+      const float rho = cx + r * std::cos(th);
+      const float  z  = cz + r * std::sin(th);
+      pts.push_back({rho, z});
     }
-
-    // Shift to place straight legs at ρ=±a/2 (keeping arc radius r)
-    const float delta = 0.5f * a - r;
-    for (auto& p : pts) {
-      const float sgn = (p[0] >= 0.0f) ? 1.0f : -1.0f;
-      p[0] = p[0] + sgn * delta;
+    // −ρ straight (bottom → top), ρ = −a/2
+    for (int i = 0; i < nStraight; ++i) {
+      const float t = static_cast<float>(i) / static_cast<float>(nStraight);
+      const float z = zBot * (1.0f - t) + zTop * t;
+      pts.push_back({-0.5f * a, z});
     }
-
+    // top-left quarter: θ ∈ [+π/2, 0], center at (ρ=−a/2+r, z=+rz−r)
+    for (int i = 0; i < nArc; ++i) {
+      const float t  = static_cast<float>(i) / static_cast<float>(nArc);
+      const float th = +static_cast<float>(std::numbers::pi)/2 - t * (static_cast<float>(std::numbers::pi)/2);
+      const float cx = -0.5f * a + r; // ρ-center
+      const float cz = +rz - r;       // z-center
+      const float rho = cx + r * std::cos(th);
+      const float  z  = cz + r * std::sin(th);
+      pts.push_back({rho, z});
+    }
     if (close) {
-      if (pts.front()[0] != pts.back()[0] || pts.front()[1] != pts.back()[1])
+      if (pts.front()[0] != pts.back()[0] || pts.front()[1] != pts.back()[1]) {
         pts.push_back(pts.front());
+      }
     }
     return pts;
   }
@@ -342,15 +337,14 @@ class ATLASToroidalField final : public MagneticFieldProvider {
     std::vector<std::array<float, 2>> d_rzB, m_rzB;
     buildSegsMidsRZ(rz_barrel, d_rzB, m_rzB);
 
-    // ---- ECT base curve (use exact ect_racetrack_radial shape) ----
-    // Lrho_ECT = R_out_ECT - R_in_ECT ; Lz = c_ECT
-    const float lE = 0.5f * (m_cfg.ect.R_in + m_cfg.ect.R_out);
-    const float LrhoE = (m_cfg.ect.R_out - m_cfg.ect.R_in);
-    // straights at ρ=±Lrho/2, arcs at z=±c_ECT/2 (constant-z arcs)
-    const auto rz_ect =
-        ectRacetrackRadial(/*Lrho=*/LrhoE,
-                           /*Lz=*/m_cfg.ect.c, m_cfg.layout.nArc,
-                           m_cfg.layout.nStraight, m_cfg.layout.closeLoop);
+    // ---- ECT base curve (use the same rounded-rectangle as barrel) ----
+    // a_ECT = (R_out_ECT - R_in_ECT) - 2*r_end_ECT,  b_ECT = end-arc diameter,  Lz = c_ECT
+    const float lE    = 0.5f * (m_cfg.ect.R_in + m_cfg.ect.R_out);
+    const float rEndE = 0.5f * m_cfg.ect.b;
+    const float aE    = (m_cfg.ect.R_out - m_cfg.ect.R_in) - 2.0f * rEndE;
+    const auto  rz_ect = racetrackRZ(/*a=*/aE, /*b=*/m_cfg.ect.b, /*Lz=*/m_cfg.ect.c,
+                                     m_cfg.layout.nArc, m_cfg.layout.nStraight,
+                                     m_cfg.layout.closeLoop);
     std::vector<std::array<float, 2>> d_rzE, m_rzE;
     buildSegsMidsRZ(rz_ect, d_rzE, m_rzE);
 
@@ -378,23 +372,27 @@ class ATLASToroidalField final : public MagneticFieldProvider {
                    m_segs_barrel);
     }
 
-    // Endcap centers: z = ±(c/2 + gap + c_ECT/2)
-    const float zECT =
-        0.5f * m_cfg.barrel.c + m_cfg.ect.gap + 0.5f * m_cfg.ect.c;
+    // Endcap centers (final Python): overlap placement
+    // gap   = m_cfg.ect.gap
+    // z_bt_end = c/2
+    // z_inner  = z_bt_end - (c_ECT - gap) + gap = c/2 - c_ECT + 2*gap
+    // z_outer  = z_inner + c_ECT = c/2 + 2*gap
+    // zECT     = (z_inner + z_outer)/2 = c/2 - c_ECT/2 + 2*gap
+    const float zECT = 0.5f * m_cfg.barrel.c
+                     - 0.5f * m_cfg.ect.c
+                     + 2.0f * m_cfg.ect.gap;
 
     // +z endcap (indices 0..nC-1 in ectSigns)
     for (int k = 0; k < nC; ++k) {
       const float phi = th0 + k * dth;
       const int sign = m_cfg.ectSigns[k];
-      mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/+zECT, m_mids_ect,
-                   m_segs_ect);
+      mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/+zECT, m_mids_ect, m_segs_ect);
     }
     // -z endcap (indices nC..2*nC-1 in ectSigns)
     for (int k = 0; k < nC; ++k) {
       const float phi = th0 + k * dth;
       const int sign = m_cfg.ectSigns[nC + k];
-      mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/-zECT, m_mids_ect,
-                   m_segs_ect);
+      mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/-zECT, m_mids_ect, m_segs_ect);
     }
   }
 
