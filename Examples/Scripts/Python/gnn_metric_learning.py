@@ -67,55 +67,61 @@ def runGnnMetricLearning(
     # All parameters hardcoded based on standard metric learning configuration
 
     # Stage 1: Graph construction via metric learning
-    graphConstructor = acts.examples.TorchMetricLearning(
-        level=acts.logging.INFO,
-        modelPath=str(Path(modelDir) / "embed.pt"),
-        embeddingDim=8,
-        rVal=1.6,
-        knnVal=100,
-        selectedFeatures=[0, 1, 2],  # R, Phi, Z
-    )
+    graphConstructorConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(Path(modelDir) / "embed.pt"),
+        "embeddingDim": 8,
+        "rVal": 1.6,
+        "knnVal": 100,
+        "selectedFeatures": [0, 1, 2],  # R, Phi, Z
+    }
+    graphConstructor = acts.examples.TorchMetricLearning(**graphConstructorConfig)
 
     # Stage 2: Two-stage edge classification (filter + GNN)
     if backend == "torch":
+        filterConfig = {
+            "level": acts.logging.INFO,
+            "modelPath": str(Path(modelDir) / "filter.pt"),
+            "cut": 0.01,
+            "nChunks": 5,
+            "undirected": False,
+            "selectedFeatures": [0, 1, 2],
+        }
+        gnnConfig = {
+            "level": acts.logging.INFO,
+            "modelPath": str(Path(modelDir) / "gnn.pt"),
+            "cut": 0.5,
+            "nChunks": 5,
+            "undirected": True,
+            "selectedFeatures": [0, 1, 2],
+        }
         edgeClassifiers = [
-            # Coarse filter
-            acts.examples.TorchEdgeClassifier(
-                level=acts.logging.INFO,
-                modelPath=str(Path(modelDir) / "filter.pt"),
-                cut=0.01,
-                nChunks=5,
-                undirected=False,
-                selectedFeatures=[0, 1, 2],
-            ),
-            # GNN refinement
-            acts.examples.TorchEdgeClassifier(
-                level=acts.logging.INFO,
-                modelPath=str(Path(modelDir) / "gnn.pt"),
-                cut=0.5,
-                nChunks=5,
-                undirected=True,
-                selectedFeatures=[0, 1, 2],
-            ),
+            acts.examples.TorchEdgeClassifier(**filterConfig),
+            acts.examples.TorchEdgeClassifier(**gnnConfig),
         ]
     elif backend == "onnx":
+        filterConfig = {
+            "level": acts.logging.INFO,
+            "modelPath": str(Path(modelDir) / "filtering.onnx"),
+            "cut": 0.01,
+        }
+        gnnConfig = {
+            "level": acts.logging.INFO,
+            "modelPath": str(Path(modelDir) / "gnn.onnx"),
+            "cut": 0.5,
+        }
         edgeClassifiers = [
-            acts.examples.OnnxEdgeClassifier(
-                level=acts.logging.INFO,
-                modelPath=str(Path(modelDir) / "filtering.onnx"),
-                cut=0.01,
-            ),
-            acts.examples.OnnxEdgeClassifier(
-                level=acts.logging.INFO,
-                modelPath=str(Path(modelDir) / "gnn.onnx"),
-                cut=0.5,
-            ),
+            acts.examples.OnnxEdgeClassifier(**filterConfig),
+            acts.examples.OnnxEdgeClassifier(**gnnConfig),
         ]
     else:
         raise ValueError(f"Unknown backend: {backend}")
 
     # Stage 3: CPU track building
-    trackBuilder = acts.examples.BoostTrackBuilding(level=acts.logging.INFO)
+    trackBuilderConfig = {
+        "level": acts.logging.INFO,
+    }
+    trackBuilder = acts.examples.BoostTrackBuilding(**trackBuilderConfig)
 
     # Node features: Standard 3 features (R, Phi, Z)
     nodeFeatures = [

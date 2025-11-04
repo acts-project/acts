@@ -1286,6 +1286,59 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, backend
 
 
 @pytest.mark.odd
+@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+def test_gnn_module_map(tmp_path, assert_root_hash):
+    """Test GNN track finding with module map graph construction on ODD"""
+    # Check for required files
+    repo_root = Path(__file__).parent.parent.parent.parent
+    module_map_prefix = repo_root / "module_map_odd_2k_events"
+    gnn_model = repo_root / "gnn_odd.pt"
+
+    if not (module_map_prefix.with_suffix(".doublets.root")).exists():
+        pytest.skip(f"Module map file not found: {module_map_prefix}.doublets.root")
+    if not (module_map_prefix.with_suffix(".triplets.root")).exists():
+        pytest.skip(f"Module map file not found: {module_map_prefix}.triplets.root")
+    if not gnn_model.exists():
+        pytest.skip(f"GNN model not found: {gnn_model}")
+
+    root_file = "performance_track_finding.root"
+    assert not (tmp_path / root_file).exists()
+
+    script = (
+        repo_root
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "gnn_module_map_odd.py"
+    )
+    assert script.exists()
+
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+
+    try:
+        subprocess.check_call(
+            [
+                sys.executable,
+                str(script),
+                "--events", "10",
+                "--output", str(tmp_path),
+            ],
+            cwd=repo_root,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8") if hasattr(e, "output") else "")
+        raise
+
+    rfp = tmp_path / root_file
+    assert rfp.exists()
+
+    assert_root_hash(root_file, rfp)
+
+
+@pytest.mark.odd
 def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
     if detector_config.name == "generic":
         pytest.skip("No strip spacepoint formation for the generic detector currently")
