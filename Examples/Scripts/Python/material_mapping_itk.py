@@ -20,6 +20,9 @@ from acts.examples import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
     MaterialMapping,
+)
+
+from acts.examples.json import (
     JsonMaterialWriter,
     JsonFormat,
 )

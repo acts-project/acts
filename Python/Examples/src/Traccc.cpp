@@ -30,13 +30,9 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace ActsExamples;
 using namespace ActsPlugins;
+using namespace ActsPython;
 
-namespace ActsPython {
-
-void addTraccc(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
-  auto traccc = mex.def_submodule("traccc");
+PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
 
   /// Define host detray store
   {
@@ -147,4 +143,3 @@ void addTraccc(Context& ctx) {
   }
   /// Define the DetrayPropagator with interpolated b field
 }
-}  // namespace ActsPython

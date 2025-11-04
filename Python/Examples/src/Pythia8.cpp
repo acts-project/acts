@@ -21,13 +21,9 @@
 
 namespace py = pybind11;
 using namespace ActsExamples;
+using namespace ActsPython;
 
-namespace ActsPython {
-void addPythia8(Context& ctx) {
-  auto mex = ctx.get("examples");
-
-  auto p8 = mex.def_submodule("pythia8");
-  ctx.modules["pythia8"] = p8;
+PYBIND11_MODULE(ActsExamplesPythonBindingsPythia8, p8) {
 
   using Gen = Pythia8Generator;
   auto gen = py::class_<Gen, ParticlesGenerator, std::shared_ptr<Gen>>(
@@ -53,4 +49,4 @@ void addPythia8(Context& ctx) {
 
   patchClassesWithConfig(p8);
 }
-}  // namespace ActsPython
+

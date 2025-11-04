@@ -26,9 +26,13 @@ from acts.examples import (
     ProcessCode,
     RootMaterialTrackReader,
     MaterialMapping,
+)
+
+from acts.examples.json import (
     JsonMaterialWriter,
     JsonFormat,
 )
+
 from acts.examples.odd import getOpenDataDetector
 
 

@@ -36,11 +36,14 @@ from acts.examples import (
     CsvTrackWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
-    JsonMaterialWriter,
-    JsonFormat,
     Sequencer,
     GenericDetector,
 )
+from acts.examples.json import (
+    JsonMaterialWriter,
+    JsonFormat,
+)
+
 from acts.examples.odd import getOpenDataDetectorDirectory
 
 

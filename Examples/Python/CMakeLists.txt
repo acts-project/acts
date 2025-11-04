@@ -48,7 +48,6 @@ target_link_libraries(
         Acts::ExamplesDetectorTGeo
         Acts::ExamplesIoCsv
         Acts::ExamplesIoObj
-        Acts::ExamplesIoJson
         Acts::ExamplesGenerators
         Acts::ExamplesPrinters
         Acts::ExamplesTrackFinding
@@ -72,65 +71,10 @@ set(py_files
     examples/odd.py
 )
 
-if(ACTS_BUILD_EXAMPLES_ROOT)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesIoRoot)
-    target_sources(
-        ActsPythonBindings
-        PRIVATE src/RootInput.cpp src/RootOutput.cpp
-    )
-else()
-    target_sources(ActsPythonBindings PRIVATE src/RootStub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_JSON)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginJson)
-    target_sources(ActsPythonBindings PRIVATE src/Json.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/JsonStub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    target_link_libraries(
-        ActsPythonBindings
-        PUBLIC
-            Acts::PluginGeoModel
-            Acts::ExamplesDetectorGeoModel
-            Acts::ExamplesMuonSpectrometerMockupDetector
-    )
-    target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_TRACCC)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginCovfie)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesTraccc)
-    target_sources(ActsPythonBindings PRIVATE src/Traccc.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/TracccStub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_ACTSVG)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesIoSvg)
-    target_sources(ActsPythonBindings PRIVATE src/Svg.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
-endif()
-
-if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-    target_link_libraries(
-        ActsPythonBindings
-        PUBLIC Acts::ExamplesGeneratorsPythia8
-    )
-    target_sources(ActsPythonBindings PRIVATE src/Pythia8.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/Pythia8Stub.cpp)
-endif()
-
-target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesIoHepMC3)
-target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
-list(APPEND py_files examples/hepmc3/__init__.py)
-list(APPEND py_files examples/hepmc3/__main__.py)
+#target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesIoHepMC3)
+#target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
+#list(APPEND py_files examples/hepmc3/__init__.py)
+#list(APPEND py_files examples/hepmc3/__main__.py)
 
 # Symlink hepmc3_normalize.py to build/bin for development
 add_custom_target(
@@ -150,44 +94,6 @@ install(
     DESTINATION ${CMAKE_INSTALL_BINDIR}
     RENAME hepmc_normalize.py
 )
-
-if(ACTS_BUILD_EXAMPLES_GNN)
-    target_link_libraries(
-        ActsPythonBindings
-        PUBLIC Acts::ExamplesTrackFindingGnn
-    )
-    target_sources(ActsPythonBindings PRIVATE src/GnnTrackFinding.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/GnnTrackFindingStub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_ONNX)
-    target_link_libraries(
-        ActsPythonBindings
-        PUBLIC Acts::ExamplesFrameworkML Acts::ExamplesTrackFindingML
-    )
-    target_sources(ActsPythonBindings PRIVATE src/Onnx.cpp)
-    target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibrator.cpp)
-    list(APPEND py_files examples/onnx/__init__.py)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
-    target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_FASTJET)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesJets)
-    target_sources(ActsPythonBindings PRIVATE src/TruthJet.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/TruthJetStub.cpp)
-endif()
-
-if(ACTS_BUILD_EXAMPLES_HASHING)
-    target_link_libraries(ActsPythonBindings PUBLIC Acts::PluginHashing)
-    target_sources(ActsPythonBindings PRIVATE src/Hashing.cpp)
-    list(APPEND py_files examples/hashing.py)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/HashingStub.cpp)
-endif()
 
 foreach(f ${py_files})
     set(_target ${_python_dir}/acts/${f})

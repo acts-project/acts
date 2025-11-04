@@ -15,7 +15,6 @@
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-#include <actsvg/core/draw.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -32,20 +31,17 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
-using namespace Acts::Experimental;
 using namespace ActsExamples;
 using namespace ActsPlugins;
+using namespace ActsPython;
 
-namespace ActsPython {
-void addSvg(Context& ctx) {
-  auto& mex = ctx.get("examples");
+PYBIND11_MODULE(ActsExamplesPythonBindingsSvg, svg) {
 
   // Components from the ActsExamples - part of acts.examples
-
   {
     using Writer = SvgTrackingGeometryWriter;
     auto w =
-        py::class_<Writer, std::shared_ptr<Writer>>(mex,
+        py::class_<Writer, std::shared_ptr<Writer>>(svg,
                                                     "SvgTrackingGeometryWriter")
             .def(py::init<const Writer::Config&, Logging::Level>(),
                  py::arg("config"), py::arg("level"))
@@ -60,7 +56,7 @@ void addSvg(Context& ctx) {
     using Writer = SvgPointWriter<SimSpacePoint>;
     auto w =
         py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-            mex, "SvgSimSpacePointWriter")
+            svg, "SvgSimSpacePointWriter")
             .def(py::init<const Writer::Config&, Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def("write",
@@ -74,7 +70,7 @@ void addSvg(Context& ctx) {
   {
     using Writer = SvgPointWriter<SimHit, AccessorPositionXYZ>;
     auto w =
-        py::class_<Writer, IWriter, std::shared_ptr<Writer>>(mex,
+        py::class_<Writer, IWriter, std::shared_ptr<Writer>>(svg,
                                                              "SvgSimHitWriter")
             .def(py::init<const Writer::Config&, Logging::Level>(),
                  py::arg("config"), py::arg("level"))
@@ -86,4 +82,3 @@ void addSvg(Context& ctx) {
                        infoBoxTitle, outputDir);
   }
 }
-}  // namespace ActsPython

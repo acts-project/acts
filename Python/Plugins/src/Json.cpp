@@ -26,10 +26,11 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
-  using namespace Acts;
-  using namespace ActsPython;
+using namespace Acts;
+using namespace ActsPython;
+using namespace ActsExamples;
 
+PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
   {
     py::class_<JsonMaterialDecorator, IMaterialDecorator,
                std::shared_ptr<JsonMaterialDecorator>>(json,
