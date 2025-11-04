@@ -41,7 +41,7 @@ ProcessCode EDM4hepParticleOutputConverter::execute(
   edm4hep::MCParticleCollection mcParticleCollection;
 
   for (const auto& particle : particles) {
-    auto p = mcParticleCollection->create();
+    auto p = mcParticleCollection.create();
     EDM4hepUtil::writeParticle(particle, p);
   }
 
