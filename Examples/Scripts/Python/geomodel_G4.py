@@ -15,6 +15,7 @@ from acts.examples import (
     ObjTrackingGeometryWriter,
 )
 from acts import geomodel as gm
+from acts.examples import geomodel as gmexample
 from acts import examples
 
 from pathlib import Path
@@ -117,7 +118,7 @@ def main():
     logLevel = logging.INFO
 
     # Create the tracking geometry builder for the muon system
-    gmBuilderConfig = gm.GeoModelMuonMockupBuilder.Config()
+    gmBuilderConfig = gmexample.GeoModelMuonMockupBuilder.Config()
 
     # Read the geometry model from the database
     gmTree = None
@@ -127,13 +128,13 @@ def main():
         gmBuilderConfig.stationNames = ["BIL", "BML", "BOL"]
 
     elif args.mockupDetector == "Muon":
-        mockUpCfg = gm.GeoMuonMockupExperiment.Config()
+        mockUpCfg = gmexample.GeoMuonMockupExperiment.Config()
         mockUpCfg.dumpTree = True
         mockUpCfg.dbName = "ActsGeoMS.db"
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
         mockUpCfg.buildEndcaps = False
-        mockUpBuilder = gm.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
+        mockUpBuilder = gmexample.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
         gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
 
         gmTree = mockUpBuilder.constructMS()
@@ -161,13 +162,13 @@ def main():
 
     gmBuilderConfig.volumeBoxFPVs = gmFactoryCache.boundingBoxes
 
-    gmDetectorCfg = gm.GeoModelDetector.Config()
+    gmDetectorCfg = gmexample.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
-    detector = gm.GeoModelDetector(gmDetectorCfg)
+    detector = gmexample.GeoModelDetector(gmDetectorCfg)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
-    trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
+    trackingGeometryBuilder = gmexample.GeoModelMuonMockupBuilder(
         gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
     )
 
