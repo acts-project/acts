@@ -18,7 +18,7 @@ if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
     pybind11_add_module(acts_toroidal_field src/ToroidalFieldBindings.cpp)
     target_link_libraries(
         acts_toroidal_field
-        PUBLIC Acts::ExamplesMagneticField Acts::Core
+        PUBLIC ActsExamplesMagneticField Acts::Core
     )
     target_include_directories(
         acts_toroidal_field

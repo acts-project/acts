@@ -354,8 +354,8 @@ class ToroidalField final : public MagneticFieldProvider {
     // a_ECT = (R_out_ECT - R_in_ECT) - 2*r_end_ECT,  b_ECT = end-arc diameter,
     // Lz = c_ECT
     const float lE = 0.5f * (m_cfg.ect.R_in + m_cfg.ect.R_out);
-    const float rEndE = 0.5f * m_cfg.ect.b;
-    const float aE = (m_cfg.ect.R_out - m_cfg.ect.R_in) - 2.0f * rEndE;
+    const float rEndECT = 0.5f * m_cfg.ect.b;
+    const float aE = (m_cfg.ect.R_out - m_cfg.ect.R_in) - 2.0f * rEndECT;
     const auto rz_ect = racetrackRZ(
         /*a=*/aE, /*b=*/m_cfg.ect.b, /*Lz=*/m_cfg.ect.c, m_cfg.layout.nArc,
         m_cfg.layout.nStraight, m_cfg.layout.closeLoop);
