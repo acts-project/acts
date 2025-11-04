@@ -93,27 +93,18 @@ def runGNN4ITk(
 
     # Stage 2: Single-stage edge classification (auto-detect backend)
     gnnModel = Path(gnnModel)
+    edgeClassifierConfig = {
+        "level": logLevel,
+        "modelPath": str(gnnModel),
+        "cut": 0.5,
+    }
+
     if gnnModel.suffix == ".pt":
-        edgeClassifierConfig = {
-            "level": logLevel,
-            "modelPath": str(gnnModel),
-            "cut": 0.5,
-            "useEdgeFeatures": True,
-        }
+        edgeClassifierConfig["useEdgeFeatures"] = True
         edgeClassifiers = [acts.examples.TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
-        edgeClassifierConfig = {
-            "level": logLevel,
-            "modelPath": str(gnnModel),
-            "cut": 0.5,
-        }
         edgeClassifiers = [acts.examples.OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
-        edgeClassifierConfig = {
-            "level": logLevel,
-            "modelPath": str(gnnModel),
-            "cut": 0.5,
-        }
         edgeClassifiers = [acts.examples.TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:
         raise ValueError(f"Unsupported model format: {gnnModel.suffix}")

@@ -78,38 +78,33 @@ def runGnnMetricLearning(
     graphConstructor = acts.examples.TorchMetricLearning(**graphConstructorConfig)
 
     # Stage 2: Two-stage edge classification (filter + GNN)
+    filterConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(Path(modelDir) / ("filter.pt" if backend == "torch" else "filtering.onnx")),
+        "cut": 0.01,
+    }
+    gnnConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(Path(modelDir) / ("gnn.pt" if backend == "torch" else "gnn.onnx")),
+        "cut": 0.5,
+    }
+
     if backend == "torch":
-        filterConfig = {
-            "level": acts.logging.INFO,
-            "modelPath": str(Path(modelDir) / "filter.pt"),
-            "cut": 0.01,
+        filterConfig.update({
             "nChunks": 5,
             "undirected": False,
             "selectedFeatures": [0, 1, 2],
-        }
-        gnnConfig = {
-            "level": acts.logging.INFO,
-            "modelPath": str(Path(modelDir) / "gnn.pt"),
-            "cut": 0.5,
+        })
+        gnnConfig.update({
             "nChunks": 5,
             "undirected": True,
             "selectedFeatures": [0, 1, 2],
-        }
+        })
         edgeClassifiers = [
             acts.examples.TorchEdgeClassifier(**filterConfig),
             acts.examples.TorchEdgeClassifier(**gnnConfig),
         ]
     elif backend == "onnx":
-        filterConfig = {
-            "level": acts.logging.INFO,
-            "modelPath": str(Path(modelDir) / "filtering.onnx"),
-            "cut": 0.01,
-        }
-        gnnConfig = {
-            "level": acts.logging.INFO,
-            "modelPath": str(Path(modelDir) / "gnn.onnx"),
-            "cut": 0.5,
-        }
         edgeClassifiers = [
             acts.examples.OnnxEdgeClassifier(**filterConfig),
             acts.examples.OnnxEdgeClassifier(**gnnConfig),
