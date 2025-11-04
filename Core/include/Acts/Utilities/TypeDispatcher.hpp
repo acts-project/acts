@@ -60,11 +60,9 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   /// Register a free function with explicit derived type
   /// @tparam derived_t The derived type to associate the function with
   /// @param func The function pointer
-  template <typename derived_t, typename... func_args_t>
-    requires std::is_base_of_v<base_t, derived_t> &&
-             std::invocable<function_pointer_type, func_args_t...>
-  self_type& registerFunction(return_t (*func)(const derived_t&,
-                                               func_args_t...)) {
+  template <typename derived_t>
+    requires std::is_base_of_v<base_t, derived_t>
+  self_type& registerFunction(return_t (*func)(const derived_t&, args_t...)) {
     std::type_index typeIdx(typeid(derived_t));
 
     // Check if this exact type is already registered
@@ -96,13 +94,13 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
     };
 
     // Wrap the function in a lambda that performs the dynamic cast
-    m_functions[typeIdx] = [func](const base_t& base,
-                                  func_args_t&&... args) -> return_t {
+    m_functions[typeIdx] = [func]<typename... Ts>(const base_t& base,
+                                                  Ts&&... args) -> return_t {
       const auto* derived = dynamic_cast<const derived_t*>(&base);
       if (derived == nullptr) {
         throw std::bad_cast();
       }
-      return func(*derived, std::forward<func_args_t>(args)...);
+      return func(*derived, std::forward<Ts>(args)...);
     };
 
     return *this;
