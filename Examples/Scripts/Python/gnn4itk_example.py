@@ -44,15 +44,15 @@ def runGNN4ITk(
         "doJunctionRemoval": True,
     }
 
-    graphConstructor = acts.examples.ModuleMapCuda(**moduleMapConfig)
+    graphConstructor = acts.examples.gnn.ModuleMapCuda(**moduleMapConfig)
     if gnnModel.suffix == ".pt":
         edgeClassifier = acts.examples.TorchEdgeClassifier(**gnnConfig)
     elif gnnModel.suffix == ".onnx":
         del gnnConfig["useEdgeFeatures"]
-        edgeClassifier = acts.examples.OnnxEdgeClassifier(**gnnConfig)
+        edgeClassifier = acts.examples.gnn.OnnxEdgeClassifier(**gnnConfig)
     elif gnnModel.suffix == ".engine":
-        edgeClassifier = acts.examples.TensorRTEdgeClassifier(**gnnConfig)
-    trackBuilder = acts.examples.CudaTrackBuilding(**builderCfg)
+        edgeClassifier = acts.examples.gnn.TensorRTEdgeClassifier(**gnnConfig)
+    trackBuilder = acts.examples.gnn.CudaTrackBuilding(**builderCfg)
 
     s = acts.examples.Sequencer(
         events=events,
