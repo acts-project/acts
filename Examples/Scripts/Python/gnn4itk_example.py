@@ -152,7 +152,7 @@ def runGNN4ITk(
     )
 
     s.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
+        acts.examples.root.TrackFinderPerformanceWriter(
             level=logLevel,
             inputParticles="particles_selected",
             inputParticleMeasurementsMap="particle_measurements_map",

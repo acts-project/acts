@@ -38,11 +38,6 @@ class SequenceElement;
 
 using IterationCallback = void (*)();
 
-/// Custom exception class so FPE failures can be caught
-class FpeFailure : public std::runtime_error {
-  using std::runtime_error::runtime_error;
-};
-
 class SequenceConfigurationException : public std::runtime_error {
  public:
   explicit SequenceConfigurationException(const std::string &message)

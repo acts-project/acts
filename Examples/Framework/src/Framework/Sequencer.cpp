@@ -525,7 +525,7 @@ int Sequencer::run() {
                       ACTS_ERROR(ss.str());
                       local.merge(mon->result());  // merge so we get correct
                                                    // results after throwing
-                      throw FpeFailure{ss.str()};
+                      throw ActsPlugins::FpeFailure{ss.str()};
                     } else if (!local.contains(type, *st)) {
                       ACTS_INFO(ss.str());
                     }
