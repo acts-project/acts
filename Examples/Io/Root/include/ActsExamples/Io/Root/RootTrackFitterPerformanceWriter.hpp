@@ -36,7 +36,7 @@ struct AlgorithmContext;
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class TrackFitterPerformanceWriter final : public WriterT<ConstTrackContainer> {
+class RootTrackFitterPerformanceWriter final : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
     /// Input (fitted) track collection.
@@ -56,9 +56,9 @@ class TrackFitterPerformanceWriter final : public WriterT<ConstTrackContainer> {
   /// Construct from configuration and log level.
   /// @param config The configuration
   /// @param level The logger level
-  TrackFitterPerformanceWriter(Config config, Acts::Logging::Level level);
+  RootTrackFitterPerformanceWriter(Config config, Acts::Logging::Level level);
 
-  ~TrackFitterPerformanceWriter() override;
+  ~RootTrackFitterPerformanceWriter() override;
 
   /// Finalize plots.
   ProcessCode finalize() override;

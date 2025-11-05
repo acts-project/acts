@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -33,10 +33,10 @@
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
 
-ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
-    ActsExamples::TrackFitterPerformanceWriter::Config config,
+ActsExamples::RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
+    ActsExamples::RootTrackFitterPerformanceWriter::Config config,
     Acts::Logging::Level level)
-    : WriterT(config.inputTracks, "TrackFitterPerformanceWriter", level),
+    : WriterT(config.inputTracks, "RootTrackFitterPerformanceWriter", level),
       m_cfg(std::move(config)),
       m_resPlotTool(m_cfg.resPlotToolConfig, level),
       m_effPlotTool(m_cfg.effPlotToolConfig, level),
@@ -70,7 +70,7 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
   m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
 }
 
-ActsExamples::TrackFitterPerformanceWriter::~TrackFitterPerformanceWriter() {
+ActsExamples::RootTrackFitterPerformanceWriter::~RootTrackFitterPerformanceWriter() {
   m_resPlotTool.clear(m_resPlotCache);
   m_effPlotTool.clear(m_effPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
@@ -81,7 +81,7 @@ ActsExamples::TrackFitterPerformanceWriter::~TrackFitterPerformanceWriter() {
 }
 
 ActsExamples::ProcessCode
-ActsExamples::TrackFitterPerformanceWriter::finalize() {
+ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
   // fill residual and pull details into additional hists
   m_resPlotTool.refinement(m_resPlotCache);
 
@@ -96,7 +96,7 @@ ActsExamples::TrackFitterPerformanceWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootTrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);

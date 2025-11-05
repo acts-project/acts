@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/TrackFinderNTupleWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -32,7 +32,7 @@
 
 namespace ActsExamples {
 
-struct TrackFinderNTupleWriter::Impl {
+struct RootTrackFinderNTupleWriter::Impl {
   Config cfg;
 
   ReadDataHandle<SimParticleContainer> inputParticles;
@@ -87,7 +87,7 @@ struct TrackFinderNTupleWriter::Impl {
   // extra logger reference for the logging macros
   const Acts::Logger& _logger;
 
-  Impl(TrackFinderNTupleWriter* parent, Config&& c, const Acts::Logger& l)
+  Impl(RootTrackFinderNTupleWriter* parent, Config&& c, const Acts::Logger& l)
       : cfg(std::move(c)),
         inputParticles{parent, "InputParticles"},
         inputParticleMeasurementsMap{parent, "InputParticleMeasurementsMap"},
@@ -265,14 +265,14 @@ struct TrackFinderNTupleWriter::Impl {
   }
 };
 
-TrackFinderNTupleWriter::TrackFinderNTupleWriter(
-    TrackFinderNTupleWriter::Config config, Acts::Logging::Level level)
-    : WriterT(config.inputTracks, "TrackFinderNTupleWriter", level),
+RootTrackFinderNTupleWriter::RootTrackFinderNTupleWriter(
+    RootTrackFinderNTupleWriter::Config config, Acts::Logging::Level level)
+    : WriterT(config.inputTracks, "RootTrackFinderNTupleWriter", level),
       m_impl(std::make_unique<Impl>(this, std::move(config), logger())) {}
 
-TrackFinderNTupleWriter::~TrackFinderNTupleWriter() = default;
+RootTrackFinderNTupleWriter::~RootTrackFinderNTupleWriter() = default;
 
-ProcessCode TrackFinderNTupleWriter::writeT(const AlgorithmContext& ctx,
+ProcessCode RootTrackFinderNTupleWriter::writeT(const AlgorithmContext& ctx,
                                             const ConstTrackContainer& tracks) {
   const auto& particles = m_impl->inputParticles(ctx);
   const auto& particleMeasurementsMap =
@@ -283,12 +283,12 @@ ProcessCode TrackFinderNTupleWriter::writeT(const AlgorithmContext& ctx,
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode TrackFinderNTupleWriter::finalize() {
+ProcessCode RootTrackFinderNTupleWriter::finalize() {
   m_impl->close();
   return ProcessCode::SUCCESS;
 }
 
-const TrackFinderNTupleWriter::Config& TrackFinderNTupleWriter::config() const {
+const RootTrackFinderNTupleWriter::Config& RootTrackFinderNTupleWriter::config() const {
   return m_impl->cfg;
 }
 
