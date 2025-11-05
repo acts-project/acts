@@ -85,8 +85,8 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   /// Resolve and validate compression settings.
   /// Returns the resolved compression mode and the base path (without
   /// compression extension).
-  std::pair<HepMC3Util::Compression, std::filesystem::path>
-  resolveCompression(const std::filesystem::path& path) const;
+  std::pair<HepMC3Util::Compression, std::filesystem::path> resolveCompression(
+      const std::filesystem::path& path) const;
 
   /// The configuration of this writer
   Config m_cfg;

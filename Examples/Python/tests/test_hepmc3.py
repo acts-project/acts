@@ -711,6 +711,7 @@ def test_hepmc3_writer_compression_auto_detection(tmp_path, rng, compression):
 
     # Verify we can read it back
     if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib):
+
         @with_pyhepmc
         def check(pyhepmc):
             nevts = 0
