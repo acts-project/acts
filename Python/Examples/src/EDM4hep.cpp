@@ -43,7 +43,7 @@ auto declareAlgorithm(py::module_& m, const char* name) {
   return std::tuple{alg, c};
 }
 
-PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
+PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
   {
     auto [alg, config] = declareAlgorithm<EDM4hepSimInputConverter>(
         m, "EDM4hepSimInputConverter");
