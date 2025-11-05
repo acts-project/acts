@@ -148,7 +148,7 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.addWriter(
-        acts.examples.RootTrackFitterPerformanceWriter(
+        acts.examples.root.RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="selected-tracks-kf",
             inputParticles="particles_selected",

@@ -20,7 +20,7 @@ macro(
         #list(APPEND _plugins_built "'${_name_lower}'")
         # automatically prefix the target name
         set(_target "ActsExamplesPythonBindings${_name}")
-        pybind11_add_module(${_target} src/${_name}.cpp)
+        pybind11_add_module(${_target} src/plugins/${_name}.cpp)
 
         install(TARGETS ${_target} DESTINATION ${_python_install_dir})
 
@@ -84,5 +84,6 @@ add_examples_binding_if(Podio Acts::ExamplesIoPodio "" ACTS_BUILD_EXAMPLES_PODIO
 add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 "" ACTS_BUILD_EXAMPLES_PYTHIA8 FALSE)
 add_examples_binding_if(Root Acts::ExamplesIoRoot "" ACTS_BUILD_PLUGIN_ROOT TRUE)
 add_examples_binding_if(Svg Acts::ExamplesIoSvg "" ACTS_BUILD_PLUGIN_ACTSVG TRUE)
+add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo "" ACTS_BUILD_PLUGIN_ROOT TRUE)
 add_examples_binding_if(Traccc "Acts::PluginCovfie;Acts::ExamplesTraccc" "" ACTS_BUILD_PLUGIN_TRACCC FALSE)
 add_examples_binding_if(TruthJet Acts::ExamplesJets "" ACTS_BUILD_PLUGIN_FASTJET FALSE)

@@ -45,7 +45,6 @@ target_link_libraries(
         Acts::ExamplesFramework
         Acts::ExamplesGeometry
         Acts::ExamplesDetectorGeneric
-        Acts::ExamplesDetectorTGeo
         Acts::ExamplesIoCsv
         Acts::ExamplesIoObj
         Acts::ExamplesGenerators

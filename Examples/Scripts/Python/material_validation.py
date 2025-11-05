@@ -4,9 +4,10 @@ import os
 import argparse
 
 import acts
-from acts.examples import Sequencer, RootMaterialTrackWriter
+from acts.examples import Sequencer
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
+from acts.examples.root import RootMaterialTrackWriter
 
 
 def runMaterialValidation(
