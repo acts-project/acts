@@ -43,8 +43,7 @@ using namespace Acts;
 using namespace ActsExamples;
 
 namespace ActsPython {
-void addMaterialMapping(Context& ctx) {
-  auto& mex = ctx.get("examples");
+void addMaterialMapping(py::module_& mex) {
 
   {
     using Alg = MaterialMapping;

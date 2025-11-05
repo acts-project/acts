@@ -10,6 +10,7 @@
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -25,6 +26,23 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
+
+namespace {
+
+template <typename stepper_t, typename navigator_t>
+void addPropagator(py::module_& m, const std::string& prefix) {
+  using propagator_t = Propagator<stepper_t, navigator_t>;
+  py::class_<propagator_t>(m, (prefix + "Propagator").c_str())
+      .def(py::init<>([=](stepper_t stepper, navigator_t navigator,
+                          Logging::Level level = Logging::Level::INFO) {
+             return propagator_t{
+                 std::move(stepper), std::move(navigator),
+                 getDefaultLogger(prefix + "Propagator", level)};
+           }),
+           py::arg("stepper"), py::arg("navigator"),
+           py::arg("level") = Logging::INFO);
+}
+}  // namespace
 
 namespace ActsPython {
 
@@ -80,6 +98,31 @@ void addPropagation(py::module_& m) {
   {
     auto stepper = py::class_<SympyStepper>(m, "SympyStepper");
     stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
+  }
+
+  // Eigen stepper based propagator
+  {
+    addPropagator<EigenStepper<>, Navigator>(m, "Eigen");
+    addPropagator<EigenStepper<>, Experimental::DetectorNavigator>(
+        m, "EigenDetector");
+  }
+  // ATLAS stepper based propagator
+  {
+    addPropagator<AtlasStepper, Navigator>(m, "Atlas");
+    addPropagator<AtlasStepper, Experimental::DetectorNavigator>(
+        m, "AtlasDetector");
+  }
+  // Sympy stepper based propagator
+  {
+    addPropagator<SympyStepper, Navigator>(m, "Sympy");
+    addPropagator<SympyStepper, Experimental::DetectorNavigator>(
+        m, "SympyDetector");
+  }
+  // Straight line stepper
+  {
+    addPropagator<StraightLineStepper, Navigator>(m, "StraightLine");
+    addPropagator<StraightLineStepper, Experimental::DetectorNavigator>(
+        m, "StraightLineDetector");
   }
 }
 

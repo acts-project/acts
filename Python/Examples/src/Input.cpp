@@ -30,8 +30,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addInput(Context& ctx) {
-  auto mex = ctx.get("examples");
+void addInput(py::module_& mex) {
 
   // Buffered reader
   ACTS_PYTHON_DECLARE_READER(BufferedReader, mex, "BufferedReader",

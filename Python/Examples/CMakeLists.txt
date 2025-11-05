@@ -69,6 +69,75 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
     )
 endmacro()
 
+pybind11_add_module(ActsExamplesPythonBindings src/ExamplesModuleEntry.cpp)
+
+# The PythonBindings for the examples
+target_sources(
+    ActsExamplesPythonBindings
+    PRIVATE
+        src/Framework.cpp
+        src/Alignment.cpp
+        src/Detector.cpp
+        src/Digitization.cpp
+        src/MaterialMapping.cpp
+        src/ExampleAlgorithms.cpp
+        src/Output.cpp
+        src/Input.cpp
+        src/ConcretePropagation.cpp
+        src/Generators.cpp
+        src/Obj.cpp
+        src/TruthTracking.cpp
+        src/TrackFitting.cpp
+        src/TrackFinding.cpp
+        src/Vertexing.cpp
+        src/AmbiguityResolution.cpp
+        src/Utilities.cpp
+)
+
+install(TARGETS ActsExamplesPythonBindings DESTINATION ${_python_install_dir})
+
+set_target_properties(
+    ActsExamplesPythonBindings
+    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+)
+set_target_properties(
+    ActsExamplesPythonBindings
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+)
+
+target_link_libraries(
+    ActsExamplesPythonBindings
+    PUBLIC
+        Acts::Core
+        Acts::ExamplesFramework
+        Acts::ExamplesGeometry
+        Acts::ExamplesDetectorGeneric
+        Acts::ExamplesIoCsv
+        Acts::ExamplesIoObj
+        Acts::ExamplesGenerators
+        Acts::ExamplesPrinters
+        Acts::ExamplesTrackFinding
+        Acts::ExamplesTrackFitting
+        Acts::ExamplesVertexing
+        Acts::ExamplesFatras
+        Acts::ExamplesDetectorTelescope
+        Acts::ExamplesUtilities
+        Acts::ExamplesAmbiguityResolution
+        Acts::ExamplesTruthTracking
+        Acts::ExamplesDigitization
+        Acts::ExamplesPropagation
+        Acts::ExamplesMaterialMapping
+        Acts::PythonUtilities
+)
+
+set(py_files
+    __init__.py
+    simulation.py
+    reconstruction.py
+    itk.py
+    odd.py
+)
+
 # Add all plugin related examples bindings conditionally to their build flag
 add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
 add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)

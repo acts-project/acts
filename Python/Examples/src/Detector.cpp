@@ -39,8 +39,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addDetector(Context& ctx) {
-  auto& mex = ctx.get("examples");
+void addDetector(py::module_ & mex) {
 
   {
     py::class_<Detector, std::shared_ptr<Detector>>(mex, "DetectorBase")

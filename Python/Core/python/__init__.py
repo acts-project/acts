@@ -33,10 +33,10 @@ def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
         if isinstance(stepper, _stepper):
             _detectorNavigator = getattr(ActsPythonBindings, "DetectorNavigator")
             if isinstance(navigator, _detectorNavigator):
-                return getattr(
-                    ActsPythonBindings._propagator, f"{prefix}DetectorPropagator"
-                )(stepper, navigator, level)
-            return getattr(ActsPythonBindings._propagator, f"{prefix}Propagator")(
+                return getattr(ActsPythonBindings, f"{prefix}DetectorPropagator")(
+                    stepper, navigator, level
+                )
+            return getattr(ActsPythonBindings, f"{prefix}Propagator")(
                 stepper, navigator, level
             )
     raise TypeError(f"Unknown stepper {type(stepper).__name__}")

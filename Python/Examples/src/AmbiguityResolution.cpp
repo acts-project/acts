@@ -8,7 +8,6 @@
 
 #include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/AmbiguityResolution/ScoreBasedAmbiguityResolutionAlgorithm.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -23,9 +22,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addAmbiguityResolution(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+void addAmbiguityResolution(py::module_& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,
       "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,

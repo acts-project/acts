@@ -18,6 +18,7 @@
 #include <memory>
 #include <mutex>
 #include <stack>
+#include <stdexcept>
 
 #include <boost/container/static_vector.hpp>
 #include <boost/stacktrace/stacktrace_fwd.hpp>
@@ -36,6 +37,11 @@ enum class FpeType : std::uint32_t {
 };
 
 std::ostream &operator<<(std::ostream &os, FpeType type);
+
+/// Custom exception class so FPE failures can be caught
+class FpeFailure : public std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
 
 class FpeMonitor {
  public:

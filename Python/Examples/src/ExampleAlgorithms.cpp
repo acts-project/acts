@@ -27,8 +27,7 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addExampleAlgorithms(Context& ctx) {
-  auto& mex = ctx.get("examples");
+void addExampleAlgorithms(py::module_& mex) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,

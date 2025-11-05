@@ -18,7 +18,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <algorithm>
@@ -45,18 +44,8 @@ using namespace ActsExamples;
 namespace {
 
 template <typename stepper_t, typename navigator_t>
-void addPropagator(py::module_& m, const std::string& prefix) {
-  using propagator_t = Propagator<stepper_t, navigator_t>;
-  py::class_<propagator_t>(m, (prefix + "Propagator").c_str())
-      .def(py::init<>([=](stepper_t stepper, navigator_t navigator,
-                          Logging::Level level = Logging::Level::INFO) {
-             return propagator_t{
-                 std::move(stepper), std::move(navigator),
-                 getDefaultLogger(prefix + "Propagator", level)};
-           }),
-           py::arg("stepper"), py::arg("navigator"),
-           py::arg("level") = Logging::INFO);
-
+void addConcretePropagator(py::module_& m, const std::string& prefix) {
+  using propagator_t = Propagator<stepper_t, navigator_t>; 
   using prop_if_t = ConcretePropagator<propagator_t>;
   py::class_<prop_if_t, PropagatorInterface, std::shared_ptr<prop_if_t>>(
       m, (prefix + "ConcretePropagator").c_str())
@@ -66,8 +55,7 @@ void addPropagator(py::module_& m, const std::string& prefix) {
 }  // namespace
 
 namespace ActsPython {
-void addPropagation(Context& ctx) {
-  auto [prop, mex] = ctx.get("propagation", "examples");
+void addConcretePropagation(py::module_& mex) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       PropagationAlgorithm, mex, "PropagationAlgorithm", propagatorImpl,
@@ -80,30 +68,30 @@ void addPropagation(Context& ctx) {
 
   // Eigen stepper based propagator
   {
-    addPropagator<EigenStepper<>, Navigator>(prop, "Eigen");
-    addPropagator<EigenStepper<>, Experimental::DetectorNavigator>(
-        prop, "EigenDetector");
+    addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen");
+    addConcretePropagator<EigenStepper<>, Experimental::DetectorNavigator>(
+        mex, "EigenDetector");
   }
 
   // ATLAS stepper based propagator
   {
-    addPropagator<AtlasStepper, Navigator>(prop, "Atlas");
-    addPropagator<AtlasStepper, Experimental::DetectorNavigator>(
-        prop, "AtlasDetector");
+    addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas");
+    addConcretePropagator<AtlasStepper, Experimental::DetectorNavigator>(
+        mex, "AtlasDetector");
   }
 
   // Sympy stepper based propagator
   {
-    addPropagator<SympyStepper, Navigator>(prop, "Sympy");
-    addPropagator<SympyStepper, Experimental::DetectorNavigator>(
-        prop, "SympyDetector");
+    addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy");
+    addConcretePropagator<SympyStepper, Experimental::DetectorNavigator>(
+        mex, "SympyDetector");
   }
 
   // Straight line stepper
   {
-    addPropagator<StraightLineStepper, Navigator>(prop, "StraightLine");
-    addPropagator<StraightLineStepper, Experimental::DetectorNavigator>(
-        prop, "StraightLineDetector");
+    addConcretePropagator<StraightLineStepper, Navigator>(mex, "StraightLine");
+    addConcretePropagator<StraightLineStepper, Experimental::DetectorNavigator>(
+        mex, "StraightLineDetector");
   }
 }
 

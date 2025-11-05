@@ -4,9 +4,10 @@ from typing import Optional, Protocol, Union, List, Dict, Tuple
 import os
 import re
 
-from acts.ActsPythonBindings._examples import *
+from .ActsExamplesPythonBindings import *
 from acts import ActsPythonBindings
 import acts
+from acts import fpe
 from acts._adapter import _patch_config, _patchKwargsConstructor
 
 _propagators = []
@@ -14,11 +15,11 @@ _concrete_propagators = []
 for stepper in ("Eigen", "Atlas", "StraightLine"):
     for navigator in ("", "Detector"):
         _propagators.append(
-            getattr(ActsPythonBindings._propagator, f"{stepper}{navigator}Propagator")
+            getattr(ActsPythonBindings, f"{stepper}{navigator}Propagator")
         )
         _concrete_propagators.append(
             getattr(
-                ActsPythonBindings._propagator,
+                ActsExamplesPythonBindings,
                 f"{stepper}{navigator}ConcretePropagator",
             )
         )
@@ -32,7 +33,7 @@ def ConcretePropagator(propagator):
     raise TypeError(f"Unknown propagator {type(propagator).__name__}")
 
 
-_patch_config(ActsPythonBindings._examples)
+_patch_config(ActsExamplesPythonBindings)
 
 # Manually patch Gnn constructors
 # Need to do it this way, since they are not always present
@@ -42,8 +43,8 @@ for module in [
     "TorchEdgeClassifier",
     "OnnxEdgeClassifier",
 ]:
-    if hasattr(ActsPythonBindings._examples, module):
-        _patchKwargsConstructor(getattr(ActsPythonBindings._examples, module))
+    if hasattr(ActsExamplesPythonBindings, module):
+        _patchKwargsConstructor(getattr(ActsExamplesPythonBindings, module))
 
 
 def NamedTypeArgs(**namedTypeArgs):
@@ -286,7 +287,7 @@ def defaultLogging(
     return customLogLevel
 
 
-class Sequencer(ActsPythonBindings._examples._Sequencer):
+class Sequencer(ActsExamplesPythonBindings._Sequencer):
     _autoFpeMasks: Optional[List["FpeMask"]] = None
 
     def __init__(self, *args, **kwargs):
@@ -320,11 +321,11 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
             setattr(cfg, k, v)
 
-        if hasattr(ActsPythonBindings._examples._Sequencer, "__wrapped__"):
+        if hasattr(ActsExamplesPythonBindings._Sequencer, "__wrapped__"):
             dump_func_args(Sequencer, cfg)
         super().__init__(cfg)
 
-    class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):
+    class FpeMask(ActsExamplesPythonBindings._Sequencer._FpeMask):
         @classmethod
         def fromFile(cls, file: Union[str, Path]) -> List["FpeMask"]:
             if isinstance(file, str):
@@ -346,7 +347,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
             return cls.fromDict(d)
 
-        _fpe_types_to_enum = {v.name: v for v in acts.FpeType.values}
+        _fpe_types_to_enum = {v.name: v for v in acts.fpe.FpeType.values}
 
         @staticmethod
         def toDict(

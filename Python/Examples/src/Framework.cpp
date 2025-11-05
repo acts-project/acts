@@ -79,29 +79,12 @@ class PyIAlgorithm : public IAlgorithm {
   std::string_view typeName() const override { return "Algorithm"; }
 };
 
-void trigger_divbyzero() {
-  volatile float j = 0.0;
-  volatile float r = 123 / j;  // MARK: divbyzero
-  (void)r;
-}
 
-void trigger_overflow() {
-  volatile float j = std::numeric_limits<float>::max();
-  volatile float r = j * j;  // MARK: overflow
-  (void)r;
-}
-
-void trigger_invalid() {
-  volatile float j = -1;
-  volatile float r = std::sqrt(j);  // MARK: invalid
-  (void)r;
-}
 
 }  // namespace
 
 namespace ActsPython {
-void addFramework(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+void addFramework(py::module_& mex) {
 
   py::class_<IWriter, std::shared_ptr<IWriter>>(mex, "IWriter");
 
@@ -202,64 +185,6 @@ void addFramework(Context& ctx) {
           });
 
   ACTS_PYTHON_STRUCT(fpem, file, lines, type, count);
-
-  struct FpeMonitorContext {
-    std::optional<FpeMonitor> mon;
-  };
-
-  auto fpe = py::class_<FpeMonitor>(m, "FpeMonitor")
-                 .def_static("_trigger_divbyzero", &trigger_divbyzero)
-                 .def_static("_trigger_overflow", &trigger_overflow)
-                 .def_static("_trigger_invalid", &trigger_invalid)
-                 .def_static("context", []() { return FpeMonitorContext(); });
-
-  fpe.def_property_readonly("result", py::overload_cast<>(&FpeMonitor::result),
-                            py::return_value_policy::reference_internal)
-      .def("rearm", &FpeMonitor::rearm);
-
-  py::class_<FpeMonitor::Result>(fpe, "Result")
-      .def("merged", &FpeMonitor::Result::merged)
-      .def("merge", &FpeMonitor::Result::merge)
-      .def("count", &FpeMonitor::Result::count)
-      .def("__str__", [](const FpeMonitor::Result& result) {
-        std::stringstream os;
-        result.summary(os);
-        return os.str();
-      });
-
-  py::class_<FpeMonitorContext>(m, "_FpeMonitorContext")
-      .def(py::init([]() { return std::make_unique<FpeMonitorContext>(); }))
-      .def(
-          "__enter__",
-          [](FpeMonitorContext& fm) -> FpeMonitor& {
-            fm.mon.emplace();
-            return fm.mon.value();
-          },
-          py::return_value_policy::reference_internal)
-      .def("__exit__", [](FpeMonitorContext& fm, py::object /*exc_type*/,
-                          py::object /*exc_value*/,
-                          py::object /*traceback*/) { fm.mon.reset(); });
-
-  py::enum_<FpeType>(m, "FpeType")
-      .value("INTDIV", FpeType::INTDIV)
-      .value("INTOVF", FpeType::INTOVF)
-      .value("FLTDIV", FpeType::FLTDIV)
-      .value("FLTOVF", FpeType::FLTOVF)
-      .value("FLTUND", FpeType::FLTUND)
-      .value("FLTRES", FpeType::FLTRES)
-      .value("FLTINV", FpeType::FLTINV)
-      .value("FLTSUB", FpeType::FLTSUB)
-
-      .def_property_readonly_static(
-          "values", [](py::object /*self*/) -> const auto& {
-            static const std::vector<FpeType> values = {
-                FpeType::INTDIV, FpeType::INTOVF, FpeType::FLTDIV,
-                FpeType::FLTOVF, FpeType::FLTUND, FpeType::FLTRES,
-                FpeType::FLTINV, FpeType::FLTSUB};
-            return values;
-          });
-
-  py::register_exception<FpeFailure>(m, "FpeFailure", PyExc_RuntimeError);
 
   auto randomNumbers =
       py::class_<RandomNumbers, std::shared_ptr<RandomNumbers>>(mex,

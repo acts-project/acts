@@ -317,7 +317,4 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
     ACTS_PYTHON_STRUCT(c, gammaCut, electronCut, positronCut, protonCut,
                        volumes);
   }
-
-  Context ctx;
-  ctx.modules["geant4"] = mod;
 }

@@ -9,7 +9,6 @@
 #include "ActsExamples/DetectorCommons/AlignmentDecorator.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentGenerator.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/functional.h>
@@ -24,8 +23,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addAlignment(Context& ctx) {
-  auto& mex = ctx.get("examples");
+void addAlignment(py::module_& mex) {
 
   {
     auto ad =

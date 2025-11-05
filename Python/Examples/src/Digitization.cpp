@@ -30,9 +30,7 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addDigitization(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+void addDigitization(py::module_& mex) {
   {
     using Config = DigitizationAlgorithm::Config;
 

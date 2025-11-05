@@ -8,13 +8,13 @@
 
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
-#include <Acts/Definitions/Algebra.hpp>
-#include <Acts/Detector/DetectorVolume.hpp>
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Visualization/GeometryView3D.hpp>
-#include <Acts/Visualization/ObjVisualization3D.hpp>
-#include <Acts/Visualization/ViewConfig.hpp>
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <memory>
 
@@ -28,8 +28,7 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace ActsPython {
-void addObj(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+void addObj(py::module_& mex) {
 
   {
     /// Write a collection of surfaces to an '.obj' file
@@ -88,7 +87,5 @@ void addObj(Context& ctx) {
             });
   }
 
-  py::class_<ObjVisualization3D, IVisualization3D>(m, "ObjVisualization3D")
-      .def(py::init<>());
 }
 }  // namespace ActsPython
