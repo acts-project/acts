@@ -215,7 +215,6 @@ end_section
 
 
 start_section "Create spack environment"
-date
 spack env create -d "${env_dir}" "${lock_file_path}" --with-view "$view_dir"
 checkpoint "Spack environment created"
 spack -e "${env_dir}" spec -l
