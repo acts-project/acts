@@ -74,3 +74,11 @@ set(ACTS_ANNOY_SOURCE
     "Source to take Annoy from"
 )
 mark_as_advanced(ACTS_ANNOY_SOURCE)
+
+set(ACTS_ODD_SOURCE
+    "GIT_REPOSITORY;https://gitlab.cern.ch/acts/OpenDataDetector.git;GIT_TAG;v4.0.4"
+    CACHE STRING
+    "Source to take OpenDataDetector from"
+)
+
+mark_as_advanced(ACTS_ODD_SOURCE)
