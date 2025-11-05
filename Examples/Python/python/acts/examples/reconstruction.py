@@ -354,7 +354,7 @@ def addSeeding(
     selectedParticles : str, "particles_selected"
         selected particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
-        the output folder for theacts.examples.root.Root output, None triggers no output
+        the output folder for ROOT output, None triggers no output
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     rnd : RandomNumbers, None
@@ -1734,7 +1734,7 @@ def addCKFTracks(
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
-        the output folder for theacts.examples.root.Root output, None triggers no output
+        the output folder for ROOT output, None triggers no output
     trackSelectorConfig : TrackSelectorConfig(loc0, loc1, time, eta, absEta, pt, phi, minMeasurements)
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
@@ -2423,7 +2423,7 @@ def addVertexFitting(
         addVertexFitting)
     field : magnetic field
     outputDirRoot : Path|str, path, None
-        the output folder for theacts.examples.root.Root output, None triggers no output
+        the output folder for ROOT output, None triggers no output
     outputDirCsv : Path|str, path, None
         the output folder for the CSV output, None triggers no output
     vertexFinder : VertexFinder, Truth

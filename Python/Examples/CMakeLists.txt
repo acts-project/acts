@@ -3,7 +3,9 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(_python_install_dir "python/acts/examples")
+set(py_files)
 
+# Macro to add example bindings conditionally
 macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
     # Create a lower case name version
     string(TOLOWER ${_name} _name_lower)
@@ -13,6 +15,7 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
         #list(APPEND _plugins_built "'${_name_lower}'")
         # automatically prefix the target name
         set(_target "ActsExamplesPythonBindings${_name}")
+
         pybind11_add_module(${_target} src/plugins/${_name}.cpp)
 
         install(TARGETS ${_target} DESTINATION ${_python_install_dir})
@@ -66,6 +69,7 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
     )
 endmacro()
 
+# Add all plugin related examples bindings conditionally to their build flag
 add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
 add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)
 add_examples_binding_if(Geant4
@@ -79,7 +83,6 @@ add_examples_binding_if(GeoModel
 )
 add_examples_binding_if(Gnn Acts::ExamplesTrackFindingGnn ACTS_BUILD_EXAMPLES_GNN TRUE)
 add_examples_binding_if(Hashing "Acts::PluginHashing;Acts::ExamplesTrackFinding" ACTS_BUILD_EXAMPLES_HASHING TRUE)
-add_examples_binding_if(HepMC3 Acts::ExamplesIoHepMC3 TRUE FALSE)
 add_examples_binding_if(Json Acts::ExamplesIoJson ACTS_BUILD_PLUGIN_JSON TRUE)
 add_examples_binding_if(Onnx "Acts::ExamplesFrameworkML;Acts::ExamplesTrackFindingML" ACTS_BUILD_PLUGIN_ONNX FALSE)
 add_examples_binding_if(Podio Acts::ExamplesIoPodio ACTS_BUILD_EXAMPLES_PODIO FALSE)
@@ -89,3 +92,66 @@ add_examples_binding_if(Svg Acts::ExamplesIoSvg ACTS_BUILD_PLUGIN_ACTSVG TRUE)
 add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_PLUGIN_ROOT TRUE)
 add_examples_binding_if(Traccc "Acts::PluginCovfie;Acts::ExamplesTraccc" ACTS_BUILD_PLUGIN_TRACCC FALSE)
 add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_PLUGIN_FASTJET FALSE)
+
+# Special case for HepMC3 as it a hard dependency
+pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
+install(
+    TARGETS ActsExamplesPythonBindingsHepMC3 DESTINATION ${_python_install_dir}
+)
+set_target_properties(
+    ActsExamplesPythonBindingsHepMC3
+    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+)
+set_target_properties(
+    ActsExamplesPythonBindingsHepMC3
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+)
+target_link_libraries(
+    ActsExamplesPythonBindingsHepMC3
+    PUBLIC Acts::Core Acts::PythonUtilities Acts::ExamplesIoHepMC3
+)
+add_dependencies(ActsPythonBindings ActsExamplesPythonBindingsHepMC3)
+list(APPEND py_files hepmc3/__init__.py)
+list(APPEND py_files hepmc3/__main__.py)
+
+# Symlink hepmc3_normalize.py to build/bin for development
+add_custom_target(
+    hepmc_normalize_symlink
+    ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin
+    COMMAND
+        ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/python/hepmc_normalize.py
+        ${CMAKE_BINARY_DIR}/bin/hepmc_normalize.py
+    COMMENT "Creating symlink for hepmc_normalize.py"
+    VERBATIM
+)
+add_dependencies(hepmc_normalize_symlink ActsExamplesIoHepMC3)
+install(
+    PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/python/hepmc_normalize.py
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RENAME hepmc_normalize.py
+)
+
+# Install the additional python files
+foreach(f ${py_files})
+    set(_target ${_python_dir}/acts/examples/${f})
+    get_filename_component(_dir ${_target} DIRECTORY)
+    file(MAKE_DIRECTORY ${_dir})
+
+    file(
+        CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/${f} ${_target}
+        SYMBOLIC
+    )
+
+    get_filename_component(_rel ${f} DIRECTORY)
+    message(
+        STATUS
+        "Installing example python file: ${f} to ${_python_install_dir}/${_rel}"
+    )
+
+    install(
+        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
+        DESTINATION ${_python_install_dir}/${_rel}
+    )
+endforeach()
