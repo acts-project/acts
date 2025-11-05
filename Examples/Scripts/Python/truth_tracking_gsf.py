@@ -41,7 +41,7 @@ def runTruthTrackingGsf(
         RootTrackSummaryWriter,
         TrackFitterPerformanceWriter,
     )
-        
+
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
     )

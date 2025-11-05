@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
-
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -22,8 +21,7 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsTGeo, tgeo) {
-
-      {
+  {
     auto d = py::class_<TGeoDetector, Detector, std::shared_ptr<TGeoDetector>>(
                  tgeo, "TGeoDetector")
                  .def(py::init<const TGeoDetector::Config&>());
@@ -91,5 +89,4 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTGeo, tgeo) {
 
     patchKwargsConstructor(c);
   }
-
 }

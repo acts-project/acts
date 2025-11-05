@@ -23,7 +23,6 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsHashing, hashing) {
-
   ACTS_PYTHON_DECLARE_ALGORITHM(
       SeedingAlgorithmHashing, hashing, "SeedingAlgorithmHashing",
       inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,

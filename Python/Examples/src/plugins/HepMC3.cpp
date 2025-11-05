@@ -27,7 +27,6 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsHepMC3, hepmc3) {
-
   ACTS_PYTHON_DECLARE_WRITER(HepMC3Writer, hepmc3, "HepMC3Writer", outputPath,
                              perEvent, inputEvent, compression,
                              maxEventsPending, writeEventsInOrder);

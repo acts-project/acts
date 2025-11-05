@@ -41,7 +41,6 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, gm) {
-
   {
     auto f =
         py::class_<GeoModelDetector, Detector,

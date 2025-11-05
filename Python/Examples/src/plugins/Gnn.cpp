@@ -58,7 +58,6 @@ using namespace ActsPython;
 using namespace py::literals;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsGnn, gnn) {
-
   {
     using C = GraphConstructionBase;
     auto c = py::class_<C, std::shared_ptr<C>>(gnn, "GraphConstructionBase");
@@ -219,4 +218,3 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGnn, gnn) {
       inputMeasurements, inputInitialTrackParameters, outputTracks,
       measurementSelectorCfg, trackingGeometry, magneticField, findTracks, tag);
 }
-

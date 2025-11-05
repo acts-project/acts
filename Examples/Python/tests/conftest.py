@@ -360,6 +360,7 @@ def fatras(ptcl_gun, trk_geo, rng):
 
         # Digitization
         from acts.examples import json
+
         digiCfg = acts.examples.DigitizationAlgorithm.Config(
             digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
                 str(

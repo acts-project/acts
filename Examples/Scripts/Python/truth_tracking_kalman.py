@@ -32,14 +32,14 @@ def runTruthTrackingKalman(
         ParticleSelectorConfig,
         addDigiParticleSelection,
     )
-    
+
     from acts.examples.root import (
         RootParticleReader,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
         TrackFitterPerformanceWriter,
     )
-    
+
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,

@@ -9,12 +9,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
+#include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
-#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
-#include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -51,7 +51,6 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
-
   {
     py::enum_<JsonFormat>(json, "JsonFormat")
         .value("NoOutput", JsonFormat::NoOutput)
@@ -132,9 +131,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
                        writePerEvent, writeOnlyNames);
   }
 
-      json.def("readJsonGeometryList", readJsonGeometryList);
+  json.def("readJsonGeometryList", readJsonGeometryList);
 
-        {
+  {
     json.def("readDigiConfigFromJson", readDigiConfigFromJson);
     json.def("writeDigiConfigToJson", writeDigiConfigToJson);
   }

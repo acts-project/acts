@@ -33,7 +33,6 @@ using namespace ActsPlugins;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
-
   /// Define host detray store
   {
     py::class_<DetrayHostStore, std::shared_ptr<DetrayHostStore>>(

@@ -265,7 +265,7 @@ class VertexFinder(Enum):
     hashingTrainingConfigArg=HashingTrainingConfigArg,
     hashingAlgorithmConfigArg=HashingAlgorithmConfigArg,
     truthEstimatedSeedingAlgorithmConfigArg=TruthEstimatedSeedingAlgorithmConfigArg,
-    logLevel= acts.logging.Level,
+    logLevel=acts.logging.Level,
 )
 def addSeeding(
     s: acts.examples.Sequencer,
@@ -713,7 +713,7 @@ def addSpacePointsMaking(
         inputMeasurements="measurements",
         outputSpacePoints="spacepoints",
         trackingGeometry=trackingGeometry,
-        geometrySelection= acts.examples.json.readJsonGeometryList(
+        geometrySelection=acts.examples.json.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
         stripGeometrySelection=(
@@ -1426,7 +1426,7 @@ def addGbtsSeeding(
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile,
-        geometrySelection= acts.examples.json.readJsonGeometryList(
+        geometrySelection=acts.examples.json.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
         trackingGeometry=trackingGeometry,
@@ -1467,7 +1467,7 @@ def addSeedPerformanceWriters(
     )
 
     sequence.addWriter(
-       acts.examples.root.RootTrackParameterWriter(
+        acts.examples.root.RootTrackParameterWriter(
             level=customLogLevel(),
             inputTrackParameters=outputTrackParameters,
             inputProtoTracks=prototracks,
@@ -1616,7 +1616,7 @@ def addKalmanTracks(
         inputClusters=clusters if clusters is not None else "",
         outputTracks="kf_tracks",
         pickTrack=-1,
-        fit= acts.examples.makeKalmanFitterFunction(
+        fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
         calibrator=calibrator,
@@ -1675,8 +1675,8 @@ def addTruthTrackingGsf(
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="gsf_tracks",
         pickTrack=-1,
-        fit= acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
-        calibrator= acts.examples.makePassThroughCalibrator(),
+        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
+        calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
     s.addWhiteboardAlias("tracks", gsfAlg.config.outputTracks)
@@ -1787,7 +1787,7 @@ def addCKFTracks(
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=customLogLevel(),
-        measurementSelectorCfg= acts.MeasurementSelector.Config(
+        measurementSelectorCfg=acts.MeasurementSelector.Config(
             [
                 (
                     acts.GeometryIdentifier(),
@@ -1808,7 +1808,7 @@ def addCKFTracks(
             else ""
         ),
         outputTracks="ckf_tracks",
-        findTracks= acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
+        findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
         ),
         **acts.examples.defaultKWArgs(
@@ -1898,7 +1898,7 @@ def addGx2fTracks(
         inputClusters=clusters if clusters is not None else "",
         outputTracks="gx2f_tracks",
         pickTrack=-1,
-        fit= acts.examples.makeGlobalChiSquareFitterFunction(
+        fit=acts.examples.makeGlobalChiSquareFitterFunction(
             trackingGeometry, field, **gx2fOptions
         ),
         calibrator=calibrator,
@@ -1972,12 +1972,14 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            trackFitterPerformanceWriter = acts.examples.root.TrackFitterPerformanceWriter(
-                level=customLogLevel(),
-                inputTracks=tracks,
-                inputParticles="particles_selected",
-                inputTrackParticleMatching="track_particle_matching",
-                filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
+            trackFitterPerformanceWriter = (
+                acts.examples.root.TrackFitterPerformanceWriter(
+                    level=customLogLevel(),
+                    inputTracks=tracks,
+                    inputParticles="particles_selected",
+                    inputTrackParticleMatching="track_particle_matching",
+                    filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
+                )
             )
             s.addWriter(trackFitterPerformanceWriter)
 
@@ -2067,7 +2069,7 @@ def addGnn(
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
             trackingGeometry=trackingGeometry,
-            geometrySelection= acts.examples.json.readJsonGeometryList(
+            geometrySelection=acts.examples.json.readJsonGeometryList(
                 str(geometrySelection)
             ),
         )
@@ -2445,9 +2447,9 @@ def addVertexFitting(
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
-        VertexNTupleWriter,
         CsvVertexWriter,
     )
+    from acts.examples.root import VertexNTupleWriter
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 

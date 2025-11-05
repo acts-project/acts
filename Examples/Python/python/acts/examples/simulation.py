@@ -777,6 +777,7 @@ def addDigitization(
     rnd = rnd or acts.examples.RandomNumbers()
 
     from acts.examples import json
+
     digiCfg = acts.examples.DigitizationAlgorithm.Config(
         digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
             str(digiConfigFile),
@@ -815,7 +816,9 @@ def addDigitization(
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
-        s.addWriter(acts.examples.root.RootMeasurementWriter(rmwConfig, customLogLevel()))
+        s.addWriter(
+            acts.examples.root.RootMeasurementWriter(rmwConfig, customLogLevel())
+        )
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
