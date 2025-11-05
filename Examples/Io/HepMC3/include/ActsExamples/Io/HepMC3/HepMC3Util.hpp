@@ -45,7 +45,6 @@ std::span<const Compression> availableCompressionModes();
 
 std::string_view compressionExtension(Compression compression);
 
-Compression compressionFromFilename(std::string_view filename);
 Compression compressionFromFilename(const std::filesystem::path& filename);
 
 enum class Format { ascii, root };
@@ -54,7 +53,6 @@ std::ostream& operator<<(std::ostream& os, Format format);
 
 std::span<const Format> availableFormats();
 
-Format formatFromFilename(std::string_view filename);
 Format formatFromFilename(const std::filesystem::path& filename);
 
 /// Result of HepMC3 file normalization
