@@ -28,14 +28,14 @@ def runTruthTrackingGx2f(
         ParticleSelectorConfig,
         addDigiParticleSelection,
     )
-    
+
     from acts.examples.root import (
         RootParticleReader,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
         RootTrackFitterPerformanceWriter,
     )
-    
+
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,

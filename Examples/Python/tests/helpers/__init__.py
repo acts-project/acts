@@ -31,9 +31,9 @@ except ImportError:
         )
 
 try:
-    import acts
+    import acts.geomodel
 
-    geomodelEnabled = hasattr(acts, "geomodel")
+    geomodelEnabled = True
 except ImportError:
     geomodelEnabled = False
 
@@ -59,9 +59,9 @@ except ImportError:
     edm4hepEnabled = False
 
 try:
-    import acts.examples
+    import acts.examples.onnx
 
-    onnxEnabled = hasattr(acts.examples, "onnx")
+    onnxEnabled = True
 except ImportError:
     onnxEnabled = False
 
@@ -74,16 +74,16 @@ except ImportError:
 
 
 try:
-    import acts.examples
+    import acts.examples.pythia8
 
-    pythia8Enabled = hasattr(acts.examples, "pythia8")
+    pythia8Enabled = True
 except ImportError:
     pythia8Enabled = False
 
 try:
-    import acts.examples
+    import acts.examples.hashing
 
-    hashingSeedingEnabled = hasattr(acts.examples, "hashing")
+    hashingSeedingEnabled = True
 except ImportError:
     hashingSeedingEnabled = False
 

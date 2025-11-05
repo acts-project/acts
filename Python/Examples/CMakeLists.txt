@@ -4,14 +4,7 @@ file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(_python_install_dir "python/acts/examples")
 
-macro(
-    add_examples_binding_if
-    _name
-    _link_libraries
-    _add_dependencies
-    _flag
-    _plugin_import
-)
+macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
     # Create a lower case name version
     string(TOLOWER ${_name} _name_lower)
 
@@ -39,9 +32,6 @@ macro(
         )
         # Add the dependencies
         add_dependencies(ActsPythonBindings ${_target})
-        foreach(_dep IN LISTS ${_add_dependencies})
-            add_dependencies(${_dep} ${_target})
-        endforeach()
     endif()
 
     set(EXAMPLE_NAME "${_name}")
@@ -56,34 +46,46 @@ macro(
         ${_python_dir}/acts/examples/${_name_lower}.py
         @ONLY
     )
+    # Augment the file if needed
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in")
+        file(
+            READ
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
+            _extra_content
+        )
+        file(
+            APPEND
+            "${_python_dir}/acts/examples/${_name_lower}.py"
+            "\n${_extra_content}"
+        )
+    endif()
+    # Install the file
     install(
         FILES ${_python_dir}/acts/examples/${_name_lower}.py
         DESTINATION ${_python_install_dir}
     )
 endmacro()
 
-add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep "" ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
-add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep "" ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)
+add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
+add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)
 add_examples_binding_if(Geant4
     "Acts::ExamplesGeant4;Acts::ExamplesDetectorGeant4;Acts::ExamplesMuonSpectrometerMockupDetector"
-    ""
     ACTS_BUILD_EXAMPLES_GEANT4
     TRUE
 )
 add_examples_binding_if(GeoModel
     "Acts::PluginGeoModel;Acts::ExamplesITkModuleSplitting;Acts::ExamplesDetectorGeoModel;Acts::ExamplesMuonSpectrometerMockupDetector"
-    ""
     ACTS_BUILD_PLUGIN_GEOMODEL TRUE
 )
-add_examples_binding_if(Gnn Acts::ExamplesTrackFindingGnn "" ACTS_BUILD_EXAMPLES_GNN TRUE)
-add_examples_binding_if(Hashing "Acts::PluginHashing;Acts::ExamplesTrackFinding" "" ACTS_BUILD_EXAMPLES_HASHING TRUE)
-add_examples_binding_if(HepMC3 Acts::ExamplesIoHepMC3 "" TRUE FALSE)
-add_examples_binding_if(Json Acts::ExamplesIoJson "" ACTS_BUILD_PLUGIN_JSON TRUE)
-add_examples_binding_if(Onnx "Acts::ExamplesFrameworkML;Acts::ExamplesTrackFindingML" "" ACTS_BUILD_PLUGIN_ONNX FALSE)
-add_examples_binding_if(Podio Acts::ExamplesIoPodio "" ACTS_BUILD_EXAMPLES_PODIO FALSE)
-add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 "" ACTS_BUILD_EXAMPLES_PYTHIA8 FALSE)
-add_examples_binding_if(Root Acts::ExamplesIoRoot "" ACTS_BUILD_PLUGIN_ROOT TRUE)
-add_examples_binding_if(Svg Acts::ExamplesIoSvg "" ACTS_BUILD_PLUGIN_ACTSVG TRUE)
-add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo "" ACTS_BUILD_PLUGIN_ROOT TRUE)
-add_examples_binding_if(Traccc "Acts::PluginCovfie;Acts::ExamplesTraccc" "" ACTS_BUILD_PLUGIN_TRACCC FALSE)
-add_examples_binding_if(TruthJet Acts::ExamplesJets "" ACTS_BUILD_PLUGIN_FASTJET FALSE)
+add_examples_binding_if(Gnn Acts::ExamplesTrackFindingGnn ACTS_BUILD_EXAMPLES_GNN TRUE)
+add_examples_binding_if(Hashing "Acts::PluginHashing;Acts::ExamplesTrackFinding" ACTS_BUILD_EXAMPLES_HASHING TRUE)
+add_examples_binding_if(HepMC3 Acts::ExamplesIoHepMC3 TRUE FALSE)
+add_examples_binding_if(Json Acts::ExamplesIoJson ACTS_BUILD_PLUGIN_JSON TRUE)
+add_examples_binding_if(Onnx "Acts::ExamplesFrameworkML;Acts::ExamplesTrackFindingML" ACTS_BUILD_PLUGIN_ONNX FALSE)
+add_examples_binding_if(Podio Acts::ExamplesIoPodio ACTS_BUILD_EXAMPLES_PODIO FALSE)
+add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 ACTS_BUILD_EXAMPLES_PYTHIA8 FALSE)
+add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_PLUGIN_ROOT TRUE)
+add_examples_binding_if(Svg Acts::ExamplesIoSvg ACTS_BUILD_PLUGIN_ACTSVG TRUE)
+add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_PLUGIN_ROOT TRUE)
+add_examples_binding_if(Traccc "Acts::PluginCovfie;Acts::ExamplesTraccc" ACTS_BUILD_PLUGIN_TRACCC FALSE)
+add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_PLUGIN_FASTJET FALSE)

@@ -22,7 +22,7 @@ from acts.examples.root import (
     RootParticleReader,
     RootMaterialTrackReader,
     RootTrackSummaryReader,
-)    
+)
 
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 

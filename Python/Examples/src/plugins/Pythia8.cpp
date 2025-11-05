@@ -24,7 +24,6 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsPythia8, p8) {
-
   using Gen = Pythia8Generator;
   auto gen = py::class_<Gen, ParticlesGenerator, std::shared_ptr<Gen>>(
                  p8, "Pythia8Generator")
@@ -49,4 +48,3 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsPythia8, p8) {
 
   patchClassesWithConfig(p8);
 }
-

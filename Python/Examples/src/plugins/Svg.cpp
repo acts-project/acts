@@ -36,7 +36,6 @@ using namespace ActsPlugins;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsSvg, svg) {
-
   // Components from the ActsExamples - part of acts.examples
   {
     using Writer = SvgTrackingGeometryWriter;

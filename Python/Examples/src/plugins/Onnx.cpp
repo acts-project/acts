@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/EventData/NeuralCalibrator.hpp"
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
 #include "ActsExamples/TrackFindingML/SeedFilterMLAlgorithm.hpp"
-#include "ActsExamples/EventData/NeuralCalibrator.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -22,7 +22,6 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsOnnx, onnx) {
-
   onnx.def(
       "makeNeuralCalibrator",
       [](const char *modelPath, std::size_t nComp,
@@ -32,7 +31,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsOnnx, onnx) {
       },
       py::arg("modelPath"), py::arg("nComp") = 1,
       py::arg("volumeIds") = std::vector<std::size_t>({7, 8, 9}));
-
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       AmbiguityResolutionMLAlgorithm, onnx, "AmbiguityResolutionMLAlgorithm",
