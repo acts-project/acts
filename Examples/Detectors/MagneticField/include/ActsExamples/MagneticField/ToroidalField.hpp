@@ -112,6 +112,15 @@ class ToroidalField final : public MagneticFieldProvider {
 
   std::vector<std::array<float, 3>> m_segs_ect;  // both endcaps combined
   std::vector<std::array<float, 3>> m_mids_ect;
+
+  void accumulateBarrelField(double X, double Y, double Z,
+                             double eps, double pref,
+                             double& bx, double& by, double& bz) const;
+
+  void accumulateEndcapField(double X, double Y, double Z,
+                             double eps, double pref,
+                             double& bx, double& by, double& bz) const;
+                             
 };
 
 }  // namespace Acts

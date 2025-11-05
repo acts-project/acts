@@ -51,9 +51,9 @@ Result<Vector3> ToroidalField::getField(
     const Vector3& position, MagneticFieldProvider::Cache& cache) const {
   (void)cache;
 
-  const float X = static_cast<float>(position.x());
-  const float Y = static_cast<float>(position.y());
-  const float Z = static_cast<float>(position.z());
+  const double X = static_cast<double>(position.x());
+  const double Y = static_cast<double>(position.y());
+  const double Z = static_cast<double>(position.z());
 
   double bx = 0.0, by = 0.0, bz = 0.0;
 
@@ -62,50 +62,15 @@ Result<Vector3> ToroidalField::getField(
       (mu0 * static_cast<double>(m_cfg.barrel.Nturns) *
        static_cast<double>(m_cfg.barrel.I)) /
       (4.0 * std::numbers::pi);
-  const double prefECT = (mu0 * static_cast<double>(m_cfg.ect.Nturns) *
-                          static_cast<double>(m_cfg.ect.I)) /
-                         (4.0 * std::numbers::pi);
-  const float eps = m_cfg.layout.eps;
+  const double prefECT =
+      (mu0 * static_cast<double>(m_cfg.ect.Nturns) *
+       static_cast<double>(m_cfg.ect.I)) /
+      (4.0 * std::numbers::pi);
+  const double eps = static_cast<double>(m_cfg.layout.eps);
 
-  // Barrel
-  for (std::size_t i = 0; i < m_mids_barrel.size(); ++i) {
-    const auto& mid = m_mids_barrel[i];
-    const auto& dl = m_segs_barrel[i];
-    const float rx = X - mid[0], ry = Y - mid[1], rz = Z - mid[2];
-    const double r2 = static_cast<double>(rx) * rx +
-                      static_cast<double>(ry) * ry +
-                      static_cast<double>(rz) * rz + static_cast<double>(eps);
-    const double invr = 1.0 / std::sqrt(r2), invr3 = invr / r2;
-    const double cx =
-        static_cast<double>(dl[1]) * rz - static_cast<double>(dl[2]) * ry;
-    const double cy =
-        static_cast<double>(dl[2]) * rx - static_cast<double>(dl[0]) * rz;
-    const double cz =
-        static_cast<double>(dl[0]) * ry - static_cast<double>(dl[1]) * rx;
-    bx += prefBarrel * cx * invr3;
-    by += prefBarrel * cy * invr3;
-    bz += prefBarrel * cz * invr3;
-  }
-
-  // Endcaps (both)
-  for (std::size_t i = 0; i < m_mids_ect.size(); ++i) {
-    const auto& mid = m_mids_ect[i];
-    const auto& dl = m_segs_ect[i];
-    const float rx = X - mid[0], ry = Y - mid[1], rz = Z - mid[2];
-    const double r2 = static_cast<double>(rx) * rx +
-                      static_cast<double>(ry) * ry +
-                      static_cast<double>(rz) * rz + static_cast<double>(eps);
-    const double invr = 1.0 / std::sqrt(r2), invr3 = invr / r2;
-    const double cx =
-        static_cast<double>(dl[1]) * rz - static_cast<double>(dl[2]) * ry;
-    const double cy =
-        static_cast<double>(dl[2]) * rx - static_cast<double>(dl[0]) * rz;
-    const double cz =
-        static_cast<double>(dl[0]) * ry - static_cast<double>(dl[1]) * rx;
-    bx += prefECT * cx * invr3;
-    by += prefECT * cy * invr3;
-    bz += prefECT * cz * invr3;
-  }
+  // Split computations
+  accumulateBarrelField(X, Y, Z, eps, prefBarrel, bx, by, bz);
+  accumulateEndcapField(X, Y, Z, eps, prefECT,   bx, by, bz);
 
   return Result<Vector3>::success(Vector3(bx, by, bz));
 }
@@ -113,6 +78,62 @@ Result<Vector3> ToroidalField::getField(
 //-------------------------
 // Private helpers
 //-------------------------
+
+void ToroidalField::accumulateBarrelField(double X, double Y, double Z,
+                                          double eps, double pref,
+                                          double& bx, double& by, double& bz) const {
+  for (std::size_t i = 0; i < m_mids_barrel.size(); ++i) {
+    const auto& mid = m_mids_barrel[i];
+    const auto& dl  = m_segs_barrel[i];
+
+    const double rx = X - static_cast<double>(mid[0]);
+    const double ry = Y - static_cast<double>(mid[1]);
+    const double rz = Z - static_cast<double>(mid[2]);
+
+    const double r2   = rx * rx + ry * ry + rz * rz + eps;
+    const double invr = 1.0 / std::sqrt(r2);
+    const double invr3 = invr / r2;
+
+    const double cx =
+        static_cast<double>(dl[1]) * rz - static_cast<double>(dl[2]) * ry;
+    const double cy =
+        static_cast<double>(dl[2]) * rx - static_cast<double>(dl[0]) * rz;
+    const double cz =
+        static_cast<double>(dl[0]) * ry - static_cast<double>(dl[1]) * rx;
+
+    bx += pref * cx * invr3;
+    by += pref * cy * invr3;
+    bz += pref * cz * invr3;
+  }
+}
+
+void ToroidalField::accumulateEndcapField(double X, double Y, double Z,
+                                          double eps, double pref,
+                                          double& bx, double& by, double& bz) const {
+  for (std::size_t i = 0; i < m_mids_ect.size(); ++i) {
+    const auto& mid = m_mids_ect[i];
+    const auto& dl  = m_segs_ect[i];
+
+    const double rx = X - static_cast<double>(mid[0]);
+    const double ry = Y - static_cast<double>(mid[1]);
+    const double rz = Z - static_cast<double>(mid[2]);
+
+    const double r2   = rx * rx + ry * ry + rz * rz + eps;
+    const double invr = 1.0 / std::sqrt(r2);
+    const double invr3 = invr / r2;
+
+    const double cx =
+        static_cast<double>(dl[1]) * rz - static_cast<double>(dl[2]) * ry;
+    const double cy =
+        static_cast<double>(dl[2]) * rx - static_cast<double>(dl[0]) * rz;
+    const double cz =
+        static_cast<double>(dl[0]) * ry - static_cast<double>(dl[1]) * rx;
+
+    bx += pref * cx * invr3;
+    by += pref * cy * invr3;
+    bz += pref * cz * invr3;
+  }
+}
 
 float ToroidalField::deg2rad(float deg) {
   return deg * static_cast<float>(std::numbers::pi / 180.0);
