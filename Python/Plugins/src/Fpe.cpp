@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
 #include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -23,7 +22,7 @@ using namespace ActsPython;
 
 namespace {
 
-    void trigger_divbyzero() {
+void trigger_divbyzero() {
   volatile float j = 0.0;
   volatile float r = 123 / j;  // MARK: divbyzero
   (void)r;
@@ -41,22 +40,23 @@ void trigger_invalid() {
   (void)r;
 }
 
-}
+}  // namespace
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsFpe, fpe) {
-
   struct FpeMonitorContext {
     std::optional<FpeMonitor> mon;
   };
 
-  auto fpeMon = py::class_<FpeMonitor>(fpe, "FpeMonitor")
-                 .def_static("_trigger_divbyzero", &trigger_divbyzero)
-                 .def_static("_trigger_overflow", &trigger_overflow)
-                 .def_static("_trigger_invalid", &trigger_invalid)
-                 .def_static("context", []() { return FpeMonitorContext(); });
+  auto fpeMon =
+      py::class_<FpeMonitor>(fpe, "FpeMonitor")
+          .def_static("_trigger_divbyzero", &trigger_divbyzero)
+          .def_static("_trigger_overflow", &trigger_overflow)
+          .def_static("_trigger_invalid", &trigger_invalid)
+          .def_static("context", []() { return FpeMonitorContext(); });
 
-  fpeMon.def_property_readonly("result", py::overload_cast<>(&FpeMonitor::result),
-                            py::return_value_policy::reference_internal)
+  fpeMon
+      .def_property_readonly("result", py::overload_cast<>(&FpeMonitor::result),
+                             py::return_value_policy::reference_internal)
       .def("rearm", &FpeMonitor::rearm);
 
   py::class_<FpeMonitor::Result>(fpeMon, "Result")
@@ -102,5 +102,4 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsFpe, fpe) {
           });
 
   py::register_exception<FpeFailure>(fpe, "FpeFailure", PyExc_RuntimeError);
-
 }

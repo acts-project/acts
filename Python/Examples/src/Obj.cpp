@@ -6,15 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Visualization/IVisualization3D.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
 
 #include <memory>
 
@@ -29,7 +29,6 @@ using namespace Acts;
 
 namespace ActsPython {
 void addObj(py::module_& mex) {
-
   {
     /// Write a collection of surfaces to an '.obj' file
     ///
@@ -86,6 +85,5 @@ void addObj(py::module_& mex) {
               obj.write(fileName);
             });
   }
-
 }
 }  // namespace ActsPython

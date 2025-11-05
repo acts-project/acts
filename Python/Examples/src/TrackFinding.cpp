@@ -42,7 +42,6 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addTrackFinding(py::module_& mex) {
-
   ACTS_PYTHON_DECLARE_ALGORITHM(SpacePointMaker, mex, "SpacePointMaker",
                                 inputMeasurements, outputSpacePoints,
                                 trackingGeometry, geometrySelection,

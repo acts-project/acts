@@ -42,7 +42,6 @@ void addAmbiguityResolution(py::module_& mex);
 void addUtilities(py::module_& mex);
 void addObj(py::module_& mex);
 
-
 PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
   mex.doc() = "Acts Examples Module";
 

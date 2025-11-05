@@ -30,6 +30,7 @@ Key features:
    Fast Track Simulation (Fatras) <fatras/fatras>
    plugins/plugins
    examples/examples
+   python_bindings/python_bindings
 
    Contribution guide <contribution/contribution>
 

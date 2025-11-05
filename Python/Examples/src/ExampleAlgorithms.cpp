@@ -28,7 +28,6 @@ using namespace Acts;
 namespace ActsPython {
 
 void addExampleAlgorithms(py::module_& mex) {
-
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,
       outputParticles, outputSimHits, randomNumbers, trackingGeometry,

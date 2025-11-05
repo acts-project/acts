@@ -45,7 +45,7 @@ namespace {
 
 template <typename stepper_t, typename navigator_t>
 void addConcretePropagator(py::module_& m, const std::string& prefix) {
-  using propagator_t = Propagator<stepper_t, navigator_t>; 
+  using propagator_t = Propagator<stepper_t, navigator_t>;
   using prop_if_t = ConcretePropagator<propagator_t>;
   py::class_<prop_if_t, PropagatorInterface, std::shared_ptr<prop_if_t>>(
       m, (prefix + "ConcretePropagator").c_str())
@@ -56,7 +56,6 @@ void addConcretePropagator(py::module_& m, const std::string& prefix) {
 
 namespace ActsPython {
 void addConcretePropagation(py::module_& mex) {
-
   ACTS_PYTHON_DECLARE_ALGORITHM(
       PropagationAlgorithm, mex, "PropagationAlgorithm", propagatorImpl,
       sterileLogger, debugOutput, energyLoss, multipleScattering,

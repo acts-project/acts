@@ -6,8 +6,18 @@ Python bindings for the Examples
 The examples part of ACTS ships with python bindings using the ``pybind11``
 library. Building these bindings can be enabled via
 ``-DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON``, and requires a python installation
-including the development files to be installed. You can then build the special
-target `ActsPythonBindings` to build everything that can be accessed in python.
+including the development files to be installed. 
+
+Python bindings follow the build configuration of ACTS, i.e. depending on the build 
+flags, dedicated libraries are built for the various plugin modules. The code for the
+pythong bindings is located in ``Python``.
+
+| *Library component* | *Import command* | *Description* |
+|---------------------|------------------|------------------|----------------|
+| `Core`                | `import acts`      | Python bindings for the ACTS core library.       |
+| `Plugin/<plugin>`     | `import acts.<plugin>` | Python bindings for the ACTS <plugin> plugin.    |   
+| `Examples`            | `import acts.examples` | Python bindings for the examples framework and algorithms. |
+| `Examples` (with plugin dependencies)  | `import acts.examples.<plugin>` | Python bindings for the examples framework and algorithms that depend on the <plugin> plugin. |
 
 The build will create a setup script in ``$BUILD_DIR/python/setup.sh`` which
 modifies ``$PYTHONPATH`` so that you can import the ``acts`` module in python.

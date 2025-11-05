@@ -79,13 +79,10 @@ class PyIAlgorithm : public IAlgorithm {
   std::string_view typeName() const override { return "Algorithm"; }
 };
 
-
-
 }  // namespace
 
 namespace ActsPython {
 void addFramework(py::module_& mex) {
-
   py::class_<IWriter, std::shared_ptr<IWriter>>(mex, "IWriter");
 
   py::class_<IReader, std::shared_ptr<IReader>>(mex, "IReader");

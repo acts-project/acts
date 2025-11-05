@@ -36,7 +36,6 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addGenerators(py::module_& mex) {
-  
   {
     using Config = EventGenerator::Config;
     auto gen =

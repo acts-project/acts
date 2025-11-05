@@ -39,8 +39,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addDetector(py::module_ & mex) {
-
+void addDetector(py::module_& mex) {
   {
     py::class_<Detector, std::shared_ptr<Detector>>(mex, "DetectorBase")
         .def("nominalGeometryContext", &Detector::nominalGeometryContext)
