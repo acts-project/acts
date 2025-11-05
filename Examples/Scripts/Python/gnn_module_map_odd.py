@@ -16,6 +16,7 @@ import argparse
 import acts
 from acts import UnitConstants as u
 from acts.examples import Sequencer
+from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addPythia8,
     addFatras,
@@ -172,7 +173,9 @@ def runGnnModuleMapOdd(
 
 if __name__ == "__main__":
     # Setup detector (ODD)
-    detector, trackingGeometry, decorators = acts.examples.getOpenDataDetector()
+    detector = getOpenDataDetector()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     # Magnetic field
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -190,16 +193,19 @@ if __name__ == "__main__":
         description="Run GNN track finding with module maps on ODD"
     )
 
+    # Default paths point to ci_models/
+    ci_models_odd = srcdir / "ci_models/odd/odd"
+
     argparser.add_argument(
         "--moduleMapPath",
         type=str,
-        default="module_map_odd_2k_events",
+        default=str(ci_models_odd / "module_map_odd_2k_events"),
         help="Path prefix for module map files (without .doublets.root/.triplets.root)",
     )
     argparser.add_argument(
         "--gnnModel",
         type=str,
-        default="gnn_odd.pt",
+        default=str(ci_models_odd / "gnn_odd_module_map.pt"),
         help="Path to the GNN model file (.pt, .onnx, or .engine)",
     )
     argparser.add_argument(

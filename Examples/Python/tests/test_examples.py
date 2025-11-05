@@ -1232,24 +1232,24 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, backend
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
 
-    if backend == "torch":
-        pytest.skip(
-            "Disabled torch support until replacement for torch-scatter is found"
-        )
+    # NOTE: torch-scatter is now optional, many GNN architectures work without it
+    # if backend == "torch":
+    #     pytest.skip(
+    #         "Disabled torch support until replacement for torch-scatter is found"
+    #     )
 
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
-    # Extract both models, since we currently don't have a working implementation
-    # of metric learning with ONNX and we need to use torch here
-    onnx_url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
-    torch_url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
+    # Use pre-downloaded models from ci_models/ directory
+    repo_root = Path(__file__).parent.parent.parent.parent
+    ci_models = repo_root / "ci_models/metric_learning"
 
-    for url in [onnx_url, torch_url]:
-        tarfile_name = tmp_path / "models.tar"
-        urllib.request.urlretrieve(url, tarfile_name)
-        tarfile.open(tarfile_name).extractall(tmp_path)
+    # Copy models to tmp_path for test isolation
+    shutil.copytree(ci_models / "onnx_models", tmp_path / "onnx_models")
+    shutil.copytree(ci_models / "torchscript_models", tmp_path / "torchscript_models")
 
+    # Metric learning uses torch embed.pt even with ONNX backend
     shutil.copyfile(
         tmp_path / "torchscript_models/embed.pt", tmp_path / "onnx_models/embed.pt"
     )
@@ -1289,10 +1289,11 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, backend
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 def test_gnn_module_map(tmp_path, assert_root_hash):
     """Test GNN track finding with module map graph construction on ODD"""
-    # Check for required files
+    # Check for required files in ci_models
     repo_root = Path(__file__).parent.parent.parent.parent
-    module_map_prefix = repo_root / "module_map_odd_2k_events"
-    gnn_model = repo_root / "gnn_odd.pt"
+    ci_models_odd = repo_root / "ci_models/odd/odd"
+    module_map_prefix = ci_models_odd / "module_map_odd_2k_events"
+    gnn_model = ci_models_odd / "gnn_odd_module_map.pt"
 
     if not (module_map_prefix.with_suffix(".doublets.root")).exists():
         pytest.skip(f"Module map file not found: {module_map_prefix}.doublets.root")
@@ -1323,6 +1324,8 @@ def test_gnn_module_map(tmp_path, assert_root_hash):
                 str(script),
                 "--events", "10",
                 "--output", str(tmp_path),
+                "--moduleMapPath", str(module_map_prefix),
+                "--gnnModel", str(gnn_model),
             ],
             cwd=repo_root,
             env=env,

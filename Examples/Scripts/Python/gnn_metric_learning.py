@@ -67,9 +67,18 @@ def runGnnMetricLearning(
     # All parameters hardcoded based on standard metric learning configuration
 
     # Stage 1: Graph construction via metric learning
+    # Note: embed.pt is always from torchscript_models, even for ONNX backend
+    # Check if we're using CWD models (tests) or ci_models (normal run)
+    if (Path(modelDir).parent / "torchscript_models" / "embed.pt").exists():
+        embedModelPath = Path(modelDir).parent / "torchscript_models" / "embed.pt"
+    elif (Path.cwd() / "torchscript_models" / "embed.pt").exists():
+        embedModelPath = Path.cwd() / "torchscript_models" / "embed.pt"
+    else:
+        embedModelPath = Path(modelDir) / "embed.pt"  # fallback to modelDir
+
     graphConstructorConfig = {
         "level": acts.logging.INFO,
-        "modelPath": str(Path(modelDir) / "embed.pt"),
+        "modelPath": str(embedModelPath),
         "embeddingDim": 8,
         "rVal": 1.6,
         "knnVal": 100,
@@ -167,16 +176,23 @@ if __name__ == "__main__":
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists(), f"File not found: {digiConfigFile}"
 
-    # Model directory
+    # Model directory: check CWD first (for tests), then ci_models/ (default)
     if backend == "torch":
-        modelDir = Path.cwd() / "torchscript_models"
+        cwd_models = Path.cwd() / "torchscript_models"
+        ci_models = srcdir / "ci_models/metric_learning/torchscript_models"
+        modelDir = cwd_models if (cwd_models / "embed.pt").exists() else ci_models
         assert (modelDir / "embed.pt").exists(), f"Model not found: {modelDir}/embed.pt"
         assert (modelDir / "filter.pt").exists(), f"Model not found: {modelDir}/filter.pt"
         assert (modelDir / "gnn.pt").exists(), f"Model not found: {modelDir}/gnn.pt"
     else:
-        modelDir = Path.cwd() / "onnx_models"
+        cwd_models = Path.cwd() / "onnx_models"
+        ci_models_onnx = srcdir / "ci_models/metric_learning/onnx_models"
+        ci_models_torch = srcdir / "ci_models/metric_learning/torchscript_models"
+        modelDir = cwd_models if (cwd_models / "filtering.onnx").exists() else ci_models_onnx
         # Note: metric learning still uses embed.pt even with ONNX backend
-        assert (Path.cwd() / "torchscript_models" / "embed.pt").exists()
+        cwd_embed = Path.cwd() / "torchscript_models" / "embed.pt"
+        ci_embed = ci_models_torch / "embed.pt"
+        assert (cwd_embed.exists() or ci_embed.exists()), f"embed.pt not found in CWD or ci_models"
         assert (modelDir / "filtering.onnx").exists()
         assert (modelDir / "gnn.onnx").exists()
 
