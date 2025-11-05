@@ -21,7 +21,7 @@ using namespace pybind11::literals;
 using namespace ActsExamples;
 using namespace ActsPython;
 
-PYBIND11_MODULE(ActsPythonBindingsPodio, m) {
+PYBIND11_MODULE(ActsExamplesPythonBindingsPodio, m) {
   ACTS_PYTHON_DECLARE_READER(PodioReader, m, "PodioReader", inputPath,
                              outputFrame, category);
 
