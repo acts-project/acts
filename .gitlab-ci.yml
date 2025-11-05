@@ -56,6 +56,7 @@ clang_tidy:
    - !reference [.spack_cache, cache]
 
   script:
+    - apt-get update && apt-get install -y bc
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -111,6 +112,7 @@ build_gnn_cpu:
    - !reference [.spack_cache, cache]
 
   script:
+    - apt-get update && apt-get install -y bc
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - git clone $CLONE_URL src
     - cd src
@@ -155,6 +157,7 @@ build_gnn:
     expire_in: 6 hours
 
   script:
+    - apt-get update && apt-get install -y bc
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
     - git clone $CLONE_URL src
@@ -187,8 +190,7 @@ test_gnn_unittests:
   cache:
    - !reference [.spack_cache, cache]
   script:
-
-    - apt-get update -y
+    - apt-get update && apt-get install -y bc
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -213,7 +215,7 @@ test_gnn_python:
    - !reference [.spack_cache, cache]
 
   script:
-    - apt-get update -y
+    - apt-get update && apt-get install -y bc
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -243,6 +245,8 @@ build_gnn_tensorrt:
     - docker-gpu-nvidia
 
   script:
+    - apt-get update && apt-get install -y bc
+
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -278,6 +282,7 @@ build_linux_ubuntu:
     expire_in: 1 day
 
   script:
+    - apt-get update && apt-get install -y bc
     - git clone $CLONE_URL src
 
     - cd src
@@ -333,7 +338,7 @@ linux_test_examples:
    - !reference [.spack_cache, cache]
 
   script:
-    - apt-get update && apt-get install -y git-lfs
+    - apt-get update && apt-get install -y git-lfs bc
 
     - git clone $CLONE_URL src
     - cd src
@@ -367,7 +372,7 @@ linux_physmon:
    - !reference [.spack_cache, cache]
 
   script:
-    - apt-get update && apt-get install -y git-lfs time
+    - apt-get update && apt-get install -y git-lfs time bc
 
     - git clone $CLONE_URL src
     - cd src
@@ -402,6 +407,7 @@ linux_physmon:
    - !reference [.spack_cache, cache]
 
   script:
+    - apt-get update && apt-get install -y bc
     - git clone $CLONE_URL src
 
     - cd src
