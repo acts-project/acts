@@ -33,9 +33,10 @@
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
 
-ActsExamples::RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
-    ActsExamples::RootTrackFitterPerformanceWriter::Config config,
-    Acts::Logging::Level level)
+ActsExamples::RootTrackFitterPerformanceWriter::
+    RootTrackFitterPerformanceWriter(
+        ActsExamples::RootTrackFitterPerformanceWriter::Config config,
+        Acts::Logging::Level level)
     : WriterT(config.inputTracks, "RootTrackFitterPerformanceWriter", level),
       m_cfg(std::move(config)),
       m_resPlotTool(m_cfg.resPlotToolConfig, level),
@@ -70,7 +71,8 @@ ActsExamples::RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter
   m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
 }
 
-ActsExamples::RootTrackFitterPerformanceWriter::~RootTrackFitterPerformanceWriter() {
+ActsExamples::RootTrackFitterPerformanceWriter::
+    ~RootTrackFitterPerformanceWriter() {
   m_resPlotTool.clear(m_resPlotCache);
   m_effPlotTool.clear(m_effPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
@@ -96,7 +98,8 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrackFitterPerformanceWriter::writeT(
+ActsExamples::ProcessCode
+ActsExamples::RootTrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);

@@ -36,7 +36,8 @@ struct AlgorithmContext;
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrackFitterPerformanceWriter final : public WriterT<ConstTrackContainer> {
+class RootTrackFitterPerformanceWriter final
+    : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
     /// Input (fitted) track collection.

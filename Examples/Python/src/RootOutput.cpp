@@ -18,14 +18,14 @@
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
-#include "ActsExamples/Io/Root/RootVertexWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
+#include "ActsExamples/Io/Root/RootVertexWriter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -96,10 +96,11 @@ void addRootOutput(Context& ctx) {
                              filePath, fileMode, treeName, trackingGeometry,
                              writeGlobal);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      RootTrackFinderNTupleWriter, mex, "RootTrackFinderNTupleWriter", inputTracks,
-      inputParticles, inputParticleMeasurementsMap, inputTrackParticleMatching,
-      filePath, fileMode, treeNameTracks, treeNameParticles);
+  ACTS_PYTHON_DECLARE_WRITER(RootTrackFinderNTupleWriter, mex,
+                             "RootTrackFinderNTupleWriter", inputTracks,
+                             inputParticles, inputParticleMeasurementsMap,
+                             inputTrackParticleMatching, filePath, fileMode,
+                             treeNameTracks, treeNameParticles);
 
   ACTS_PYTHON_DECLARE_WRITER(
       RootTrackFitterPerformanceWriter, mex, "RootTrackFitterPerformanceWriter",
@@ -189,8 +190,8 @@ void addRootOutput(Context& ctx) {
       writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      RootVertexNTupleWriter, mex, "RootVertexNTupleWriter", inputVertices, inputTracks,
-      inputTruthVertices, inputParticles, inputSelectedParticles,
+      RootVertexNTupleWriter, mex, "RootVertexNTupleWriter", inputVertices,
+      inputTracks, inputTruthVertices, inputParticles, inputSelectedParticles,
       inputTrackParticleMatching, bField, filePath, treeName, fileMode,
       vertexMatchThreshold, trackMatchThreshold, writeTrackInfo);
 

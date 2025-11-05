@@ -1972,12 +1972,14 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            RootTrackFitterPerformanceWriter = acts.examples.RootTrackFitterPerformanceWriter(
-                level=customLogLevel(),
-                inputTracks=tracks,
-                inputParticles="particles_selected",
-                inputTrackParticleMatching="track_particle_matching",
-                filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
+            RootTrackFitterPerformanceWriter = (
+                acts.examples.RootTrackFitterPerformanceWriter(
+                    level=customLogLevel(),
+                    inputTracks=tracks,
+                    inputParticles="particles_selected",
+                    inputTrackParticleMatching="track_particle_matching",
+                    filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
+                )
             )
             s.addWriter(RootTrackFitterPerformanceWriter)
 

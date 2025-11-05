@@ -201,8 +201,8 @@ std::optional<ConstTrackProxy> findTrack(const ConstTrackContainer& tracks,
 
 }  // namespace
 
-RootVertexNTupleWriter::RootVertexNTupleWriter(const RootVertexNTupleWriter::Config& config,
-                                       Acts::Logging::Level level)
+RootVertexNTupleWriter::RootVertexNTupleWriter(
+    const RootVertexNTupleWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputVertices, "RootVertexNTupleWriter", level),
       m_cfg(config) {
   if (m_cfg.filePath.empty()) {

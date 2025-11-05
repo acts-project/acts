@@ -272,8 +272,8 @@ RootTrackFinderNTupleWriter::RootTrackFinderNTupleWriter(
 
 RootTrackFinderNTupleWriter::~RootTrackFinderNTupleWriter() = default;
 
-ProcessCode RootTrackFinderNTupleWriter::writeT(const AlgorithmContext& ctx,
-                                            const ConstTrackContainer& tracks) {
+ProcessCode RootTrackFinderNTupleWriter::writeT(
+    const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   const auto& particles = m_impl->inputParticles(ctx);
   const auto& particleMeasurementsMap =
       m_impl->inputParticleMeasurementsMap(ctx);
@@ -288,7 +288,8 @@ ProcessCode RootTrackFinderNTupleWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-const RootTrackFinderNTupleWriter::Config& RootTrackFinderNTupleWriter::config() const {
+const RootTrackFinderNTupleWriter::Config& RootTrackFinderNTupleWriter::config()
+    const {
   return m_impl->cfg;
 }
 
