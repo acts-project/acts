@@ -55,7 +55,6 @@ namespace ActsTests {
 
 using GenCfg_t = MeasurementGenerator::Config;
 
-
 BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
 BOOST_AUTO_TEST_CASE(SeedTangents) {

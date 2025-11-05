@@ -557,7 +557,6 @@ class MeasurementGenerator {
   }
 };
 
-
 /// @brief Construct the start parameters from the hit container && the true trajectory
 /// @param line: True trajectory to pick-up the correct left/right ambiguity for the straw seed hits
 /// @param hits: List of measurements to be used for fitting
@@ -623,6 +622,5 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
   pars[toUnderlying(FitParIndex::phi)] = phi(seedDir);
   return pars;
 }
-
 
 }  // namespace Acts::Test
