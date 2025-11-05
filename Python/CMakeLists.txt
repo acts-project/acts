@@ -7,5 +7,6 @@ set(_plugins_built)
 
 # Add the bindings
 add_subdirectory(Core)
+add_subdirectory(Examples)
 add_subdirectory(Plugins)
 add_subdirectory(Utilities)
