@@ -143,7 +143,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             "Please manually check the output files listed below and make sure that their content is correct."
         )
         terminalreporter.line(
-            "If it is, you can update the test reference file Examples/Python/tests/root_file_hashes.txt with the new hashes below."
+            "If it is, you can update the test reference file Python/tests/root_file_hashes.txt with the new hashes below."
         )
         terminalreporter.line(f"See {docs_url} for more details")
         terminalreporter.line("")

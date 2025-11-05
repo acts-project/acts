@@ -34,7 +34,7 @@ jobs:
             CI/clang_tidy
             CI/fpe_masks
             docs
-            Examples/Python/tests
+            Python/tests
             Examples/Scripts
           )
           for folder in "${folder_list[@]}"; do
