@@ -17,10 +17,9 @@
 #include <list>
 #include <mutex>
 
-#include <tbb/enumerable_thread_specific.h>
-
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
+#include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
 namespace detail {
@@ -33,10 +32,11 @@ class PodioWriterImpl {
   PodioWriterImpl(const PodioWriter::Config& config, PodioWriter& parent)
       : m_cfg(config),
         m_inputPodioFrame(&parent, "InputPodioFrame"),
-        m_singleWriter(config.separateFilesPerThread
-                           ? nullptr
-                           : std::make_unique<ActsPlugins::PodioUtil::ROOTWriter>(
-                                 config.outputPath)),
+        m_singleWriter(
+            config.separateFilesPerThread
+                ? nullptr
+                : std::make_unique<ActsPlugins::PodioUtil::ROOTWriter>(
+                      config.outputPath)),
         m_useThreadLocalWriters(config.separateFilesPerThread) {}
 
   PodioWriter::Config m_cfg;
