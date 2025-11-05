@@ -27,6 +27,8 @@ using RandomEngine = std::mt19937;
 using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using normal_t = std::normal_distribution<double>;
+using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
+using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 
 namespace Acts::Test {
 
@@ -554,5 +556,73 @@ class MeasurementGenerator {
     return measurements;
   }
 };
+
+
+/// @brief Construct the start parameters from the hit container && the true trajectory
+/// @param line: True trajectory to pick-up the correct left/right ambiguity for the straw seed hits
+/// @param hits: List of measurements to be used for fitting
+ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
+  ParamVec_t pars{};
+
+  double tanPhi{0.};
+  double tanTheta{0.};
+  /// Setup the seed parameters in x0 && phi
+  auto firstPhi = std::ranges::find_if(
+      hits, [](const auto& sp) { return sp->measuresLoc0(); });
+  auto lastPhi =
+      std::ranges::find_if(std::ranges::reverse_view(hits),
+                           [](const auto& sp) { return sp->measuresLoc0(); });
+
+  if (firstPhi != hits.end() && lastPhi != hits.rend()) {
+    const Vector3 firstToLastPhi =
+        (**lastPhi).localPosition() - (**firstPhi).localPosition();
+    tanPhi = firstToLastPhi.x() / firstToLastPhi.z();
+    /// -> x = tanPhi * z + x_{0} ->
+    pars[toUnderlying(FitParIndex::x0)] =
+        (**lastPhi).localPosition().x() -
+        (**lastPhi).localPosition().z() * tanPhi;
+  }
+  /// Setup the seed parameters in y0 && theta
+  auto firstTube =
+      std::ranges::find_if(hits, [](const auto& sp) { return sp->isStraw(); });
+  auto lastTube =
+      std::ranges::find_if(std::ranges::reverse_view(hits),
+                           [](const auto& sp) { return sp->isStraw(); });
+
+  if (firstTube != hits.end() && lastTube != hits.rend()) {
+    const int signFirst =
+        CompSpacePointAuxiliaries::strawSign(line, **firstTube);
+    const int signLast = CompSpacePointAuxiliaries::strawSign(line, **lastTube);
+
+    auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
+        **lastTube, **firstTube,
+        CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
+    tanTheta = std::tan(seedPars.theta);
+    pars[toUnderlying(FitParIndex::y0)] = seedPars.y0;
+  } else {
+    auto firstEta = std::ranges::find_if(hits, [](const auto& sp) {
+      return !sp->isStraw() && sp->measuresLoc1();
+    });
+    auto lastEta = std::ranges::find_if(
+        std::ranges::reverse_view(hits),
+        [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc1(); });
+
+    if (firstEta != hits.end() && lastEta != hits.rend()) {
+      const Vector3 firstToLastEta =
+          (**lastEta).localPosition() - (**firstEta).localPosition();
+      tanTheta = firstToLastEta.y() / firstToLastEta.z();
+      /// -> y = tanTheta * z + y_{0} ->
+      pars[toUnderlying(FitParIndex::y0)] =
+          (**lastEta).localPosition().y() -
+          (**lastEta).localPosition().z() * tanTheta;
+    }
+  }
+
+  const Vector3 seedDir = makeDirectionFromAxisTangents(tanPhi, tanTheta);
+  pars[toUnderlying(FitParIndex::theta)] = theta(seedDir);
+  pars[toUnderlying(FitParIndex::phi)] = phi(seedDir);
+  return pars;
+}
+
 
 }  // namespace Acts::Test
