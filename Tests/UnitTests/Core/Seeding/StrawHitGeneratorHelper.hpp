@@ -1,9 +1,16 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#pragma once
 #include "Acts/Definitions/Units.hpp"
-
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <random>
 
@@ -21,9 +28,8 @@ using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using normal_t = std::normal_distribution<double>;
 
-namespace Acts::Test
-{
-    
+namespace Acts::Test {
+
 class FitTestSpacePoint {
  public:
   /// @brief Constructor for straw wires
@@ -268,11 +274,10 @@ static_assert(
 static_assert(
     CompositeSpacePointFastCalibrator<SpCalibrator, FitTestSpacePoint>);
 
-
 /// @brief Generates a random straight line
 /// @param engine Random number sequence to draw the parameters from
 /// @return A Line object instantiated with the generated parameters
-Line_t generateLine(RandomEngine& engine, const Logger& logger ) {
+Line_t generateLine(RandomEngine& engine, const Logger& logger) {
   using ParIndex = Line_t::ParIndex;
   Line_t::ParamVector linePars{};
   linePars[toUnderlying(ParIndex::phi)] =
@@ -351,7 +356,8 @@ class MeasurementGenerator {
   /// @param smearRadius: If true, the drift radius is smeared with a Gaussian
   /// @param createStrips: If true the strip measurements are created
   static Container_t spawn(const Line_t& line, const double t0,
-                           RandomEngine& engine, const Config& genCfg, const Logger& logger) {
+                           RandomEngine& engine, const Config& genCfg,
+                           const Logger& logger) {
     /// Direction vector to go a positive step in the tube honeycomb grid
     const Vector3 posStaggering{0., std::cos(60._degree), std::sin(60._degree)};
     /// Direction vector to go a negative step in the tube honeycomb grid
@@ -549,8 +555,4 @@ class MeasurementGenerator {
   }
 };
 
-
-
-
-
-} // namespace Acts::Test
+}  // namespace Acts::Test

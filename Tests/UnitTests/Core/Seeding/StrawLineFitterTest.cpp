@@ -15,9 +15,6 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-
-#include "StrawHitGeneratorHelper.hpp"
-
 #include <chrono>
 #include <format>
 #include <random>
@@ -27,6 +24,8 @@
 
 #include <TFile.h>
 #include <TTree.h>
+
+#include "StrawHitGeneratorHelper.hpp"
 
 using namespace Acts;
 using namespace Acts::Experimental;
@@ -53,7 +52,6 @@ constexpr std::size_t nEvents = 1;
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
 namespace ActsTests {
-
 
 using GenCfg_t = MeasurementGenerator::Config;
 
@@ -139,7 +137,8 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     const auto line = generateLine(engine, logger());
-    auto testTubes = MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
+    auto testTubes =
+        MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
     const double lineTanTheta = line.direction().y() / line.direction().z();
     const double lineY0 = line.position().y();
     for (std::size_t m1 = testTubes.size() - 1; m1 > testTubes.size() / 2;
