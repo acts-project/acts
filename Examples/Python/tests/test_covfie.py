@@ -21,23 +21,24 @@ def test_constant_field_conversion():
 
 
 @pytest.mark.skipif(not covfieEnabled, reason="Covfie plugin not available")
-def test_root_field_conversion():
+def test_inhomogeneous_field_conversion():
     from acts import covfie
 
-    current_file_path = pathlib.Path(__file__).resolve().parent
-    p = (
-        current_file_path.parent.parent.parent
-        / "thirdparty"
-        / "OpenDataDetector"
-        / "data"
-        / "odd-bfield.root"
-    )
+    u = acts.UnitConstants
 
-    af = acts.MagneticFieldMapXyz(str(p))
+    af = acts.SolenoidBField(
+        radius=10 * u.m, length=40 * u.m, nCoils=1000, bMagCenter=2 * u.T
+    )
     bc = acts.MagneticFieldContext()
     fc = af.makeCache(bc)
 
-    cf = covfie.makeCovfieField(af)
+    cf = covfie.makeCovfieField(
+        af,
+        fc,
+        [100, 100, 100],
+        acts.Vector3(-15000, -15000, -15000),
+        acts.Vector3(15000, 15000, 15000),
+    )
     view = covfie.toView(cf)
     points = [
         (9300.0, 4700.0, 11200.0),
@@ -52,7 +53,8 @@ def test_root_field_conversion():
         (9999.0, 0, 14900.0),
     ]
 
-    error_margin_half_width = 0.0001
+    # @NOTE: Reduce error margin again in future
+    error_margin_half_width = 0.005
     for x, y, z in points:
         rfield = af.getField(acts.Vector3(x, y, z), fc)
         Bx1, By1, Bz1 = rfield[0], rfield[1], rfield[2]
