@@ -10,8 +10,8 @@
 
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <string>

@@ -105,7 +105,8 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
       ParentRelationship& parentRelationship,
       std::unordered_map<int, detail::ParticleInfo>& particleMap,
       std::size_t& nSecondaryVertices, std::size_t& maxGen,
-      const std::function<std::uint8_t(const edm4hep::MCParticle&)>& getNumHits) const;
+      const std::function<std::uint8_t(const edm4hep::MCParticle&)>& getNumHits)
+      const;
 
   static void setSubParticleIds(std::span<SimBarcode> particles);
 
@@ -113,7 +114,8 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
 
   bool particleOrDescendantsHaveHits(
       const edm4hep::MCParticle& particle,
-      const std::function<std::uint8_t(const edm4hep::MCParticle&)>& getNumHits) const;
+      const std::function<std::uint8_t(const edm4hep::MCParticle&)>& getNumHits)
+      const;
 
   Config m_cfg;
 

@@ -112,13 +112,12 @@ datatypes:
       - double covarianceValues // the measurement covairance value
 
     # @TODO: Should map back to the simhit(s) that created it
-    
+
     OneToOneRelations:
-      - edm4hep::SimTrackerHit simHit // the associated simulated hit 
+      - edm4hep::SimTrackerHit simHit // the associated simulated hit
 
     ExtraCode:
       declaration: |
         std::size_t size() const {
           return indices_size();
         }
-

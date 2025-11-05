@@ -45,7 +45,7 @@ podio_generate_datamodel(
   IO_BACKEND_HANDLERS ${PODIO_IO_HANDLERS}
 )
 
-podio_add_datamodel_core_lib(ActsPodioEdm "${headers}" "${sources}" 
+podio_add_datamodel_core_lib(ActsPodioEdm "${headers}" "${sources}"
   OUTPUT_FOLDER ${_output_folder}
 )
 target_link_libraries(ActsPodioEdm PUBLIC EDM4HEP::edm4hep)

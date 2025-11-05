@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Io/Podio/PodioWriter.hpp"
 
-#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -176,5 +176,3 @@ const PodioWriter::Config& PodioWriter::config() const {
 }
 
 }  // namespace ActsExamples
-
-  
