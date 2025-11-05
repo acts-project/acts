@@ -14,9 +14,9 @@
 #include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
-#include "Acts/Plugins/EDM4hep/PodioDynamicColumns.hpp"
-#include "Acts/Plugins/EDM4hep/PodioUtil.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/EDM4hep/PodioDynamicColumns.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "ActsPodioEdm/Surface.h"
 
 #pragma GCC diagnostic push
@@ -33,41 +33,53 @@
 
 #include <podio/Frame.h>
 
-namespace Acts {
+namespace ActsPlugins {
 
 class MutablePodioTrackContainer;
 class ConstPodioTrackContainer;
 
-template <>
-struct IsReadOnlyTrackContainer<MutablePodioTrackContainer> : std::false_type {
-};
+}  // namespace ActsPlugins
+
+namespace Acts {
 
 template <>
-struct IsReadOnlyTrackContainer<ConstPodioTrackContainer> : std::true_type {};
+struct IsReadOnlyTrackContainer<ActsPlugins::MutablePodioTrackContainer>
+    : std::false_type {};
+
+template <>
+struct IsReadOnlyTrackContainer<ActsPlugins::ConstPodioTrackContainer>
+    : std::true_type {};
+}  // namespace Acts
+
+namespace ActsPlugins {
 
 class PodioTrackContainerBase {
  public:
-  using IndexType = MultiTrajectoryTraits::IndexType;
-  static constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
+  using IndexType = Acts::MultiTrajectoryTraits::IndexType;
+  static constexpr auto kInvalid = Acts::MultiTrajectoryTraits::kInvalid;
   static constexpr auto MeasurementSizeMax =
-      MultiTrajectoryTraits::MeasurementSizeMax;
+      Acts::MultiTrajectoryTraits::MeasurementSizeMax;
 
   using Parameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
+      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
+                                               false>::CoefficientsMap;
   using Covariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
+      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
+                                               false>::CovarianceMap;
 
   using ConstParameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
+      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
+                                               true>::CoefficientsMap;
   using ConstCovariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
+      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
+                                               true>::CovarianceMap;
 
  protected:
   explicit PodioTrackContainerBase(const PodioUtil::ConversionHelper& helper)
       : m_helper{helper} {}
 
   template <bool EnsureConst, typename T>
-  static std::any component_impl(T& instance, HashedString key,
+  static std::any component_impl(T& instance, Acts::HashedString key,
                                  IndexType itrack) {
     using namespace Acts::HashedStringLiteral;
     if constexpr (EnsureConst) {
@@ -126,23 +138,23 @@ class PodioTrackContainerBase {
   static auto dynamicKeys_impl(T& instance) {
     using column_type =
         typename decltype(instance.m_dynamic)::mapped_type::element_type;
-    return detail::DynamicKeyRange<column_type>{instance.m_dynamic.begin(),
-                                                instance.m_dynamic.end()};
+    return Acts::detail::DynamicKeyRange<column_type>{
+        instance.m_dynamic.begin(), instance.m_dynamic.end()};
   }
 
   template <typename T>
-  static ParticleHypothesis particleHypothesis_impl(T& instance,
-                                                    IndexType itrack) {
+  static Acts::ParticleHypothesis particleHypothesis_impl(T& instance,
+                                                          IndexType itrack) {
     auto track = instance.m_collection->at(itrack);
     const auto& src = track.getParticleHypothesis();
-    return ParticleHypothesis{static_cast<PdgParticle>(src.absPdg), src.mass,
-                              AnyCharge{src.absQ}};
+    return Acts::ParticleHypothesis{static_cast<Acts::PdgParticle>(src.absPdg),
+                                    src.mass, Acts::AnyCharge{src.absQ}};
   }
 
   static void populateSurfaceBuffer(
       const PodioUtil::ConversionHelper& helper,
       const ActsPodioEdm::TrackCollection& collection,
-      std::vector<std::shared_ptr<const Surface>>& surfaces) noexcept {
+      std::vector<std::shared_ptr<const Acts::Surface>>& surfaces) noexcept {
     surfaces.reserve(collection.size());
     for (ActsPodioEdm::Track track : collection) {
       surfaces.push_back(PodioUtil::convertSurfaceFromPodio(
@@ -151,7 +163,7 @@ class PodioTrackContainerBase {
   }
 
   std::reference_wrapper<const PodioUtil::ConversionHelper> m_helper;
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  std::vector<std::shared_ptr<const Acts::Surface>> m_surfaces;
 };
 
 class MutablePodioTrackContainer : public PodioTrackContainerBase {
@@ -170,8 +182,8 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   // BEGIN INTERFACE HELPER
 
  private:
-  std::shared_ptr<const Surface> getOrCreateSurface(IndexType itrack) {
-    std::shared_ptr<const Surface>& ptr = m_surfaces.at(itrack);
+  std::shared_ptr<const Acts::Surface> getOrCreateSurface(IndexType itrack) {
+    std::shared_ptr<const Acts::Surface>& ptr = m_surfaces.at(itrack);
     if (!ptr) {
       ActsPodioEdm::Track track = m_collection->at(itrack);
       ptr = PodioUtil::convertSurfaceFromPodio(m_helper,
@@ -181,15 +193,15 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
  public:
-  std::any component_impl(HashedString key, IndexType itrack) {
+  std::any component_impl(Acts::HashedString key, IndexType itrack) {
     return PodioTrackContainerBase::component_impl<false>(*this, key, itrack);
   }
 
-  std::any component_impl(HashedString key, IndexType itrack) const {
+  std::any component_impl(Acts::HashedString key, IndexType itrack) const {
     return PodioTrackContainerBase::component_impl<true>(*this, key, itrack);
   }
 
-  bool hasColumn_impl(HashedString key) const {
+  bool hasColumn_impl(Acts::HashedString key) const {
     return m_dynamic.contains(key);
   }
 
@@ -199,16 +211,16 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
 
   // END INTERFACE HELPER
 
-  const Surface* referenceSurface_impl(IndexType itrack) const {
+  const Acts::Surface* referenceSurface_impl(IndexType itrack) const {
     return m_surfaces.at(itrack).get();
   }
 
-  ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
+  Acts::ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
     return PodioTrackContainerBase::particleHypothesis_impl(*this, itrack);
   }
 
   void setReferenceSurface_impl(IndexType itrack,
-                                std::shared_ptr<const Surface> surface) {
+                                std::shared_ptr<const Acts::Surface> surface) {
     auto track = m_collection->at(itrack);
     if (surface == nullptr) {
       track.setReferenceSurface({.surfaceType = PodioUtil::kNoSurface,
@@ -239,7 +251,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
 
   template <typename T>
   constexpr void addColumn_impl(std::string_view key) {
-    Acts::HashedString hashedKey = hashStringDynamic(key);
+    Acts::HashedString hashedKey = Acts::hashStringDynamic(key);
     m_dynamic.insert(
         {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
   }
@@ -264,7 +276,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
         m_collection->at(itrack).getData().covariance.data()};
   }
 
-  void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
+  void copyDynamicFrom_impl(IndexType dstIdx, Acts::HashedString key,
                             const std::any& srcPtr) {
     auto it = m_dynamic.find(key);
     if (it == m_dynamic.end()) {
@@ -294,13 +306,13 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     }
   }
 
-  detail::DynamicKeyRange<podio_detail::DynamicColumnBase> dynamicKeys_impl()
-      const {
+  Acts::detail::DynamicKeyRange<podio_detail::DynamicColumnBase>
+  dynamicKeys_impl() const {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
   void setParticleHypothesis_impl(
-      IndexType itrack, const ParticleHypothesis& particleHypothesis) {
+      IndexType itrack, const Acts::ParticleHypothesis& particleHypothesis) {
     ActsPodioEdm::ParticleHypothesis pHypo;
     pHypo.absPdg = particleHypothesis.absolutePdg();
     pHypo.mass = particleHypothesis.mass();
@@ -314,14 +326,14 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   friend PodioTrackContainerBase;
 
   std::unique_ptr<ActsPodioEdm::TrackCollection> m_collection;
-  std::vector<HashedString> m_dynamicKeys;
-  std::unordered_map<HashedString,
+  std::vector<Acts::HashedString> m_dynamicKeys;
+  std::unordered_map<Acts::HashedString,
                      std::unique_ptr<podio_detail::DynamicColumnBase>>
       m_dynamic;
 };
 
 static_assert(
-    TrackContainerBackend<MutablePodioTrackContainer>,
+    Acts::TrackContainerBackend<MutablePodioTrackContainer>,
     "MutablePodioTrackContainer does not fulfill TrackContainerBackend");
 
 class ConstPodioTrackContainer : public PodioTrackContainerBase {
@@ -341,7 +353,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     std::string tracksKey = "tracks" + s;
 
     std::vector<std::string> available = frame.getAvailableCollections();
-    if (!rangeContainsValue(available, tracksKey)) {
+    if (!Acts::rangeContainsValue(available, tracksKey)) {
       throw std::runtime_error{"Track collection '" + tracksKey +
                                "' not found in frame"};
     }
@@ -361,21 +373,21 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     podio_detail::recoverDynamicColumns(frame, tracksKey, m_dynamic);
   }
 
-  std::any component_impl(HashedString key, IndexType itrack) const {
+  std::any component_impl(Acts::HashedString key, IndexType itrack) const {
     return PodioTrackContainerBase::component_impl<true>(*this, key, itrack);
   }
 
-  bool hasColumn_impl(HashedString key) const {
+  bool hasColumn_impl(Acts::HashedString key) const {
     return m_dynamic.contains(key);
   }
 
   std::size_t size_impl() const { return m_collection->size(); }
 
-  const Surface* referenceSurface_impl(IndexType itrack) const {
+  const Acts::Surface* referenceSurface_impl(IndexType itrack) const {
     return m_surfaces.at(itrack).get();
   }
 
-  ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
+  Acts::ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
     return PodioTrackContainerBase::particleHypothesis_impl(*this, itrack);
   }
 
@@ -393,7 +405,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     return *m_collection;
   }
 
-  detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
+  Acts::detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
   dynamicKeys_impl() const {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
@@ -402,14 +414,14 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   friend PodioTrackContainerBase;
 
   const ActsPodioEdm::TrackCollection* m_collection;
-  std::unordered_map<HashedString,
+  std::unordered_map<Acts::HashedString,
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
-  std::vector<HashedString> m_dynamicKeys;
+  std::vector<Acts::HashedString> m_dynamicKeys;
 };
 
 static_assert(
-    ConstTrackContainerBackend<ConstPodioTrackContainer>,
+    Acts::ConstTrackContainerBackend<ConstPodioTrackContainer>,
     "ConstPodioTrackContainer does not fulfill ConstTrackContainerBackend");
 
-}  //  namespace Acts
+}  // namespace ActsPlugins
