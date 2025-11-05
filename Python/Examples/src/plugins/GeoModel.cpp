@@ -40,7 +40,7 @@ using namespace ActsPlugins;
 using namespace ActsExamples;
 using namespace ActsPython;
 
-PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, gm) {
+PYBIND11_MODULE(ActsExamplesPythonBindingsGeoModel, gm) {
   {
     auto f =
         py::class_<GeoModelDetector, Detector,
