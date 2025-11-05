@@ -71,13 +71,15 @@ import itertools
 
 
 def test_tgeo_config_triplet(monkeypatch):
-    from acts.examples import TGeoDetector, Interval
 
+    from acts.examples.tgeo import TGeoDetector, Interval
+    
     # monkeypatch the comparison operator
     def eq(self, other):
         return self.lower == other.lower and self.upper == other.upper
 
     monkeypatch.setattr(Interval, "__eq__", eq)
+
 
     LayerTriplet = TGeoDetector.Config.LayerTriplet
     c = TGeoDetector.Config
@@ -130,7 +132,7 @@ def test_tgeo_config_triplet(monkeypatch):
 
 
 def test_tgeo_config_volume(monkeypatch):
-    from acts.examples import TGeoDetector, Interval
+    from acts.examples.tgeo import TGeoDetector, Interval
 
     # monkeypatch the comparison operator
     def eq(self, other):
@@ -158,8 +160,9 @@ def test_tgeo_config_volume(monkeypatch):
 
 
 def test_coordinate_converter(trk_geo):
+    from acts.examples import json
     digiCfg = acts.examples.DigitizationAlgorithm.Config(
-        digitizationConfigs=acts.examples.readDigiConfigFromJson(
+        digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
             str(
                 Path(__file__).parent.parent.parent.parent
                 / "Examples/Configs/generic-digi-smearing-config.json"

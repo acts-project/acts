@@ -18,10 +18,12 @@ from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
-    RootMaterialTrackWriter,
     MaterialValidation,
 )
 
+from acts.examples.root import (
+    RootMaterialTrackWriter,
+)
 
 def runMaterialValidation(s, ntracks, surfaces, outputFile, seed, loglevel):
     # IO for material tracks reading

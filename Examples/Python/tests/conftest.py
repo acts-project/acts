@@ -359,8 +359,9 @@ def fatras(ptcl_gun, trk_geo, rng):
         s.addAlgorithm(simAlg)
 
         # Digitization
+        from acts.examples import json
         digiCfg = acts.examples.DigitizationAlgorithm.Config(
-            digitizationConfigs=acts.examples.readDigiConfigFromJson(
+            digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent
                     / "Examples/Configs/generic-digi-smearing-config.json"

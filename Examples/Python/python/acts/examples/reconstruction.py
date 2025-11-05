@@ -265,7 +265,7 @@ class VertexFinder(Enum):
     hashingTrainingConfigArg=HashingTrainingConfigArg,
     hashingAlgorithmConfigArg=HashingAlgorithmConfigArg,
     truthEstimatedSeedingAlgorithmConfigArg=TruthEstimatedSeedingAlgorithmConfigArg,
-    logLevel=acts.logging.Level,
+    logLevel= acts.logging.Level,
 )
 def addSeeding(
     s: acts.examples.Sequencer,
@@ -354,7 +354,7 @@ def addSeeding(
     selectedParticles : str, "particles_selected"
         selected particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
-        the output folder for the Root output, None triggers no output
+        the output folder for theacts.examples.root.Root output, None triggers no output
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     rnd : RandomNumbers, None
@@ -713,11 +713,11 @@ def addSpacePointsMaking(
         inputMeasurements="measurements",
         outputSpacePoints="spacepoints",
         trackingGeometry=trackingGeometry,
-        geometrySelection=acts.examples.readJsonGeometryList(
+        geometrySelection= acts.examples.json.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
         stripGeometrySelection=(
-            acts.examples.readJsonGeometryList(str(stripGeoSelectionConfigFile))
+            acts.examples.json.readJsonGeometryList(str(stripGeoSelectionConfigFile))
             if stripGeoSelectionConfigFile
             else []
         ),
@@ -1426,7 +1426,7 @@ def addGbtsSeeding(
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile,
-        geometrySelection=acts.examples.readJsonGeometryList(
+        geometrySelection= acts.examples.json.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
         trackingGeometry=trackingGeometry,
@@ -1455,7 +1455,7 @@ def addSeedPerformanceWriters(
         outputDirRoot.mkdir()
 
     sequence.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
+        acts.examples.root.TrackFinderPerformanceWriter(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=selectedParticles,
@@ -1467,7 +1467,7 @@ def addSeedPerformanceWriters(
     )
 
     sequence.addWriter(
-        acts.examples.RootTrackParameterWriter(
+       acts.examples.root.RootTrackParameterWriter(
             level=customLogLevel(),
             inputTrackParameters=outputTrackParameters,
             inputProtoTracks=prototracks,
@@ -1616,7 +1616,7 @@ def addKalmanTracks(
         inputClusters=clusters if clusters is not None else "",
         outputTracks="kf_tracks",
         pickTrack=-1,
-        fit=acts.examples.makeKalmanFitterFunction(
+        fit= acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
         calibrator=calibrator,
@@ -1675,8 +1675,8 @@ def addTruthTrackingGsf(
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="gsf_tracks",
         pickTrack=-1,
-        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
-        calibrator=acts.examples.makePassThroughCalibrator(),
+        fit= acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
+        calibrator= acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
     s.addWhiteboardAlias("tracks", gsfAlg.config.outputTracks)
@@ -1734,7 +1734,7 @@ def addCKFTracks(
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
-        the output folder for the Root output, None triggers no output
+        the output folder for theacts.examples.root.Root output, None triggers no output
     trackSelectorConfig : TrackSelectorConfig(loc0, loc1, time, eta, absEta, pt, phi, minMeasurements)
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
@@ -1787,7 +1787,7 @@ def addCKFTracks(
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=customLogLevel(),
-        measurementSelectorCfg=acts.MeasurementSelector.Config(
+        measurementSelectorCfg= acts.MeasurementSelector.Config(
             [
                 (
                     acts.GeometryIdentifier(),
@@ -1808,7 +1808,7 @@ def addCKFTracks(
             else ""
         ),
         outputTracks="ckf_tracks",
-        findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
+        findTracks= acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
         ),
         **acts.examples.defaultKWArgs(
@@ -1898,7 +1898,7 @@ def addGx2fTracks(
         inputClusters=clusters if clusters is not None else "",
         outputTracks="gx2f_tracks",
         pickTrack=-1,
-        fit=acts.examples.makeGlobalChiSquareFitterFunction(
+        fit= acts.examples.makeGlobalChiSquareFitterFunction(
             trackingGeometry, field, **gx2fOptions
         ),
         calibrator=calibrator,
@@ -1947,7 +1947,7 @@ def addTrackWriters(
             outputDirRoot.mkdir()
 
         if writeSummary:
-            trackSummaryWriter = acts.examples.RootTrackSummaryWriter(
+            trackSummaryWriter = acts.examples.root.RootTrackSummaryWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
@@ -1959,7 +1959,7 @@ def addTrackWriters(
             s.addWriter(trackSummaryWriter)
 
         if writeStates:
-            trackStatesWriter = acts.examples.RootTrackStatesWriter(
+            trackStatesWriter = acts.examples.root.RootTrackStatesWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
@@ -1972,7 +1972,7 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            trackFitterPerformanceWriter = acts.examples.TrackFitterPerformanceWriter(
+            trackFitterPerformanceWriter = acts.examples.root.TrackFitterPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
@@ -1982,7 +1982,7 @@ def addTrackWriters(
             s.addWriter(trackFitterPerformanceWriter)
 
         if writeFinderPerformance:
-            trackFinderPerfWriter = acts.examples.TrackFinderPerformanceWriter(
+            trackFinderPerfWriter = acts.examples.root.TrackFinderPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
@@ -2067,7 +2067,7 @@ def addGnn(
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
             trackingGeometry=trackingGeometry,
-            geometrySelection=acts.examples.readJsonGeometryList(
+            geometrySelection= acts.examples.json.readJsonGeometryList(
                 str(geometrySelection)
             ),
         )
@@ -2156,7 +2156,7 @@ def addGnn(
 
     if outputDirRoot is not None:
         s.addWriter(
-            acts.examples.TrackFinderNTupleWriter(
+            acts.examples.root.TrackFinderNTupleWriter(
                 level=customLogLevel(),
                 inputTracks="tracks",
                 inputParticles="particles",
@@ -2421,7 +2421,7 @@ def addVertexFitting(
         addVertexFitting)
     field : magnetic field
     outputDirRoot : Path|str, path, None
-        the output folder for the Root output, None triggers no output
+        the output folder for theacts.examples.root.Root output, None triggers no output
     outputDirCsv : Path|str, path, None
         the output folder for the CSV output, None triggers no output
     vertexFinder : VertexFinder, Truth

@@ -21,6 +21,9 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
 )
 
+from acts.examples.root import (
+    RootSpacePointWriter,
+)
 from pathlib import Path
 
 from typing import Optional
@@ -381,7 +384,7 @@ if __name__ == "__main__":
     )
 
     logLevel = acts.logging.VERBOSE
-    rootSpacepointsWriter = acts.examples.RootSpacepointWriter(
+    rootSpacepointsWriter = RootSpacePointWriter(
         level=logLevel,
         inputSpacepoints="spacepoints",
         filePath=str(outputDir / "spacepoints.root"),

@@ -45,7 +45,6 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 using namespace ActsExamples;
-
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {

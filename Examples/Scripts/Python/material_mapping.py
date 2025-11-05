@@ -19,9 +19,12 @@ from acts.examples import (
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
+    MaterialMapping,
+)
+
+from acts.examples.root import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
-    MaterialMapping,
 )
 
 from acts.examples.json import (

@@ -21,9 +21,12 @@ from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
+    CoreMaterialMapping,
+)
+
+from acts.examples.root import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
-    CoreMaterialMapping,
     RootMaterialWriter,
 )
 

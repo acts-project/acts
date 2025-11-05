@@ -10,9 +10,13 @@ from acts.examples import (
     FixedMultiplicityGenerator,
     CsvParticleWriter,
     ParticlesPrinter,
+    CsvVertexWriter,
+)
+
+from acts.examples.root import (
     RootParticleWriter,
     RootVertexWriter,
-    CsvVertexWriter,
+    RootSimHitWriter,
 )
 
 import acts.examples.hepmc3
@@ -408,7 +412,7 @@ def addPythia8(
             outputDirRoot.mkdir()
 
         s.addWriter(
-            acts.examples.RootParticleWriter(
+            RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=hepmc3Converter.config.outputParticles,
                 filePath=str(outputDirRoot / "particles.root"),
@@ -416,7 +420,7 @@ def addPythia8(
         )
 
         s.addWriter(
-            acts.examples.RootVertexWriter(
+            RootVertexWriter(
                 level=customLogLevel(),
                 inputVertices=hepmc3Converter.config.outputVertices,
                 filePath=str(outputDirRoot / "vertices.root"),
@@ -570,7 +574,7 @@ def addSimWriters(
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
         s.addWriter(
-            acts.examples.RootParticleWriter(
+            RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=particlesSimulated,
                 bField=field,
@@ -579,7 +583,7 @@ def addSimWriters(
             )
         )
         s.addWriter(
-            acts.examples.RootSimHitWriter(
+            RootSimHitWriter(
                 level=customLogLevel(),
                 inputSimHits=simHits,
                 filePath=str(outputDirRoot / "hits.root"),
@@ -772,8 +776,9 @@ def addDigitization(
 
     rnd = rnd or acts.examples.RandomNumbers()
 
+    from acts.examples import json
     digiCfg = acts.examples.DigitizationAlgorithm.Config(
-        digitizationConfigs=acts.examples.readDigiConfigFromJson(
+        digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
             str(digiConfigFile),
         ),
         surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
@@ -802,7 +807,7 @@ def addDigitization(
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
-        rmwConfig = acts.examples.RootMeasurementWriter.Config(
+        rmwConfig = acts.examples.root.RootMeasurementWriter.Config(
             inputMeasurements=digiAlg.config.outputMeasurements,
             inputClusters=digiAlg.config.outputClusters,
             inputSimHits=digiAlg.config.inputSimHits,
@@ -810,7 +815,7 @@ def addDigitization(
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
-        s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, customLogLevel()))
+        s.addWriter(acts.examples.root.RootMeasurementWriter(rmwConfig, customLogLevel()))
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
