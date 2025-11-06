@@ -403,7 +403,7 @@ struct TrackSummaryReader : public TreeReader {
 };
 
 /// Struct used for reading particles written out by the
-/// TrackFinderNTupleWriter
+/// RootTrackFinderNTupleWriter
 ///
 struct ParticleReader : public TreeReader {
   // Delete the default constructor

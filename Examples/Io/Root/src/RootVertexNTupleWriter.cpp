@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
+#include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
@@ -102,7 +102,7 @@ std::uint32_t getNumberOfTruePriVertices(
   return allPriVtxIds.size();
 }
 
-double calcSumPt2(const VertexNTupleWriter::Config& config,
+double calcSumPt2(const RootVertexNTupleWriter::Config& config,
                   const Acts::Vertex& vtx) {
   double sumPt2 = 0;
   for (const auto& trk : vtx.tracks()) {
@@ -135,7 +135,7 @@ double pull(double diff, double variance, const std::string& variableStr,
 }
 
 double calculateTruthPrimaryVertexDensity(
-    const VertexNTupleWriter::Config& config,
+    const RootVertexNTupleWriter::Config& config,
     const SimVertexContainer& truthVertices, const Acts::Vertex& vtx) {
   double z = vtx.fullPosition()[Acts::CoordinateIndices::eZ];
   int count = 0;
@@ -201,9 +201,9 @@ std::optional<ConstTrackProxy> findTrack(const ConstTrackContainer& tracks,
 
 }  // namespace
 
-VertexNTupleWriter::VertexNTupleWriter(const VertexNTupleWriter::Config& config,
-                                       Acts::Logging::Level level)
-    : WriterT(config.inputVertices, "VertexNTupleWriter", level),
+RootVertexNTupleWriter::RootVertexNTupleWriter(
+    const RootVertexNTupleWriter::Config& config, Acts::Logging::Level level)
+    : WriterT(config.inputVertices, "RootVertexNTupleWriter", level),
       m_cfg(config) {
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
@@ -352,13 +352,13 @@ VertexNTupleWriter::VertexNTupleWriter(const VertexNTupleWriter::Config& config,
   }
 }
 
-VertexNTupleWriter::~VertexNTupleWriter() {
+RootVertexNTupleWriter::~RootVertexNTupleWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ProcessCode VertexNTupleWriter::finalize() {
+ProcessCode RootVertexNTupleWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -366,7 +366,7 @@ ProcessCode VertexNTupleWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode VertexNTupleWriter::writeT(
+ProcessCode RootVertexNTupleWriter::writeT(
     const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
   // In case we do not have any tracks in the vertex, we create empty
   // collections
@@ -821,7 +821,7 @@ ProcessCode VertexNTupleWriter::writeT(
   return ProcessCode::SUCCESS;
 }
 
-void VertexNTupleWriter::writeTrackInfo(
+void RootVertexNTupleWriter::writeTrackInfo(
     const AlgorithmContext& ctx, const SimParticleContainer& particles,
     const ConstTrackContainer& tracks,
     const TrackParticleMatching& trackParticleMatching,

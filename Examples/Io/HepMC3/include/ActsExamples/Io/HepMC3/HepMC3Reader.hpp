@@ -174,7 +174,7 @@ class HepMC3Reader final : public IReader {
   ProcessCode skip(std::size_t events) override;
 
  private:
-  std::size_t determineNumEvents(HepMC3::Reader& reader) const;
+  std::size_t determineNumEvents(const std::filesystem::path& path) const;
 
   static std::shared_ptr<HepMC3::GenEvent> makeEvent();
 
@@ -228,6 +228,7 @@ class HepMC3Reader final : public IReader {
     std::shared_ptr<HepMC3::Reader> reader;
     std::filesystem::path path;
     std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator;
+    std::size_t eventsRead = 0;  // Track events read from this input
   };
 
   std::vector<InputConfig> m_inputs;

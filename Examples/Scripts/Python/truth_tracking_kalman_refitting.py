@@ -87,7 +87,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        acts.examples.RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
