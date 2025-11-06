@@ -391,7 +391,7 @@ if __name__ == "__main__":
     )
     s.addWriter(rootSpacepointsWriter)
 
-    rootSeedsWriter = acts.examples.RootSeedWriter(
+    rootSeedsWriter = acts.examples.root.RootSeedWriter(
         level=logLevel,
         inputSeeds="seeds",
         filePath=str(outputDir / "seeds.root"),
