@@ -123,12 +123,13 @@ std::pair<std::size_t, std::size_t> HepMC3Reader::availableEvents() const {
 
 std::size_t HepMC3Reader::determineNumEvents(
     const std::filesystem::path& path) const {
-  std::optional<std::size_t> eventCount = HepMC3Metadata::readSidecar(path);
+  std::optional metadata = HepMC3Metadata::readSidecar(path);
 
-  if (eventCount.has_value()) {
+  if (metadata.has_value()) {
+    std::size_t numEvents = metadata.value().numEvents;
     ACTS_INFO("HepMC3Reader: Found sidecar metadata file for "
-              << path << " with " << eventCount.value() << " events");
-    return eventCount.value();
+              << path << " with " << numEvents << " events");
+    return numEvents;
   }
 
   auto reader = HepMC3Util::deduceReader(m_inputs.front().path);

@@ -242,8 +242,10 @@ ProcessCode HepMC3Writer::finalize() {
   // Write sidecar metadata file with event count
   ACTS_DEBUG("Writing sidecar metadata for " << m_actualOutputPath << " with "
                                              << m_eventsWritten << " events");
-  if (!HepMC3Metadata::writeSidecar(m_actualOutputPath, m_eventsWritten,
-                                    logger())) {
+  if (!HepMC3Metadata::writeSidecar(
+          m_actualOutputPath,
+          HepMC3Metadata::HepMC3Metadata{.numEvents = m_eventsWritten},
+          logger())) {
     ACTS_WARNING("Failed to write sidecar metadata file for "
                  << m_actualOutputPath);
   }

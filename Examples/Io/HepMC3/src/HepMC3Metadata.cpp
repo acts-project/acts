@@ -22,7 +22,7 @@ std::filesystem::path getSidecarPath(const std::filesystem::path& hepmc3File) {
   return hepmc3File.string() + ".json";
 }
 
-std::optional<std::size_t> readSidecar(
+std::optional<HepMC3Metadata> readSidecar(
     const std::filesystem::path& hepmc3File) {
   auto sidecarPath = getSidecarPath(hepmc3File);
 
@@ -44,7 +44,7 @@ std::optional<std::size_t> readSidecar(
       return std::nullopt;
     }
 
-    return j[kEventCountKey].get<std::size_t>();
+    return HepMC3Metadata{.numEvents = j[kEventCountKey].get<std::size_t>()};
   } catch (...) {
     // Any error reading or parsing the file
     return std::nullopt;
@@ -52,13 +52,13 @@ std::optional<std::size_t> readSidecar(
 }
 
 bool writeSidecar(const std::filesystem::path& hepmc3File,
-                  std::size_t eventCount, const Acts::Logger& logger) {
+                  const HepMC3Metadata& metadata, const Acts::Logger& logger) {
   auto sidecarPath = getSidecarPath(hepmc3File);
   ACTS_DEBUG("Writing HepMC3 sidecar metadata to " << sidecarPath);
 
   try {
     nlohmann::json j;
-    j[kEventCountKey] = eventCount;
+    j[kEventCountKey] = metadata.numEvents;
 
     std::ofstream file(sidecarPath);
     if (!file.is_open()) {

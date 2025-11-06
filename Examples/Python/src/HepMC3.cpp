@@ -127,9 +127,8 @@ void addHepMC3(Context& ctx) {
   });
 
   hepmc3.def("compressionExtension", &HepMC3Util::compressionExtension);
-  hepmc3.def("compressionFromFilename",
-
-             &HepMC3Util::compressionFromFilename, py::arg("filename"));
+  hepmc3.def("compressionFromFilename", &HepMC3Util::compressionFromFilename,
+             py::arg("filename"));
   hepmc3.def("formatFromFilename", &HepMC3Util::formatFromFilename,
              py::arg("filename"));
 
