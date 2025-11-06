@@ -32,6 +32,7 @@
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
+#include "ActsExamples/Io/Root/RootVertexReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -140,10 +141,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                inputTrackParticleMatching, filePath, fileMode,
                                treeNameTracks, treeNameParticles);
 
-    ACTS_PYTHON_DECLARE_WRITER(
-        RootTrackFitterPerformanceWriter, root, "RootTrackFitterPerformanceWriter",
-        inputTracks, inputParticles, inputTrackParticleMatching, filePath,
-        resPlotToolConfig, effPlotToolConfig, trackSummaryPlotToolConfig);
+    ACTS_PYTHON_DECLARE_WRITER(RootTrackFitterPerformanceWriter, root,
+                               "RootTrackFitterPerformanceWriter", inputTracks,
+                               inputParticles, inputTrackParticleMatching,
+                               filePath, resPlotToolConfig, effPlotToolConfig,
+                               trackSummaryPlotToolConfig);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterWriter, root, "RootTrackParameterWriter",
@@ -235,12 +237,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         vertexMatchThreshold, trackMatchThreshold, writeTrackInfo);
 
     ACTS_PYTHON_DECLARE_WRITER(
-        RootTrackFinderPerformanceWriter, root, "RootTrackFinderPerformanceWriter",
-        inputTracks, inputParticles, inputTrackParticleMatching,
-        inputParticleTrackMatching, inputParticleMeasurementsMap, filePath,
-        fileMode, effPlotToolConfig, fakePlotToolConfig,
-        duplicationPlotToolConfig, trackSummaryPlotToolConfig,
-        subDetectorTrackSummaryVolumes, writeMatchingDetails);
+        RootTrackFinderPerformanceWriter, root,
+        "RootTrackFinderPerformanceWriter", inputTracks, inputParticles,
+        inputTrackParticleMatching, inputParticleTrackMatching,
+        inputParticleMeasurementsMap, filePath, fileMode, effPlotToolConfig,
+        fakePlotToolConfig, duplicationPlotToolConfig,
+        trackSummaryPlotToolConfig, subDetectorTrackSummaryVolumes,
+        writeMatchingDetails);
 
     ACTS_PYTHON_DECLARE_WRITER(RootNuclearInteractionParametersWriter, root,
                                "RootNuclearInteractionParametersWriter",
