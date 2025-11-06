@@ -13,7 +13,7 @@ CMAKE_INSTALL_PREFIX="@CMAKE_INSTALL_PREFIX@"
 CMAKE_INSTALL_BINDIR="@CMAKE_INSTALL_BINDIR@"
 CMAKE_INSTALL_LIBDIR="@CMAKE_INSTALL_LIBDIR@"
 PROJECT_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
-PROJECT_BUILD_DIR="@PROJECT_BUILD_DIR@"
+PROJECT_BINARY_DIR="@PROJECT_BINARY_DIR@"
 ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS="@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@"
 
 # TODO deal with ODD activation in one place
@@ -21,7 +21,7 @@ ODD_PATH="@ODD_SOURCE_DIR@"
 ODD_FACTORY_DIR="@ODD_FACTORY_DIR@"
 
 # Make ACTS binaries available
-# detect if we are installed
+# first check if we are installed or in build tree
 if [[ "${IS_INSTALLED_VERSION}" == "ON" ]]; then
     python_dir="${CMAKE_INSTALL_PREFIX}/python"
 
@@ -34,12 +34,12 @@ if [[ "${IS_INSTALLED_VERSION}" == "ON" ]]; then
     ODD_PATH="${CMAKE_INSTALL_PREFIX}/share/OpenDataDetector"
     source "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/this_odd.sh"
 else
-    python_dir="${PROJECT_BUILD_DIR}/python"
+    python_dir="${PROJECT_BINARY_DIR}/python"
 
     # the ${VAR:+:} part adds a double colon only if VAR is not empty
-    export PATH="${PROJECT_BUILD_DIR}/bin${PATH:+:}${PATH}"
-    export LD_LIBRARY_PATH="${PROJECT_BUILD_DIR}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
-    export DYLD_LIBRARY_PATH="${PROJECT_BUILD_DIR}/lib${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
+    export PATH="${PROJECT_BINARY_DIR}/bin${PATH:+:}${PATH}"
+    export LD_LIBRARY_PATH="${PROJECT_BINARY_DIR}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+    export DYLD_LIBRARY_PATH="${PROJECT_BINARY_DIR}/lib${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
 
     # TODO deal with ODD activation in one place
     if [ -d "${ODD_FACTORY_DIR}" ]; then
@@ -66,7 +66,7 @@ if [ "${ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS}" = "ON" ]; then
     if [[ -f "${python_dir}/setup.sh" ]]; then
       source "${python_dir}/setup.sh"
     else
-      echo "ERROR:   setup.sh for python and ODD is missing."
+      echo "ERROR:   setup.sh for python is missing."
       exit 1
     fi
 else
