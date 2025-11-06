@@ -32,8 +32,8 @@ void addHepMC3(Context& ctx) {
   auto hepmc3 = mex.def_submodule("_hepmc3");
 
   ACTS_PYTHON_DECLARE_WRITER(HepMC3Writer, hepmc3, "HepMC3Writer", outputPath,
-                             perEvent, inputEvent, compression,
-                             maxEventsPending, writeEventsInOrder);
+                             inputEvent, compression, maxEventsPending,
+                             writeEventsInOrder);
 
   // Declare the HepMC3Reader class first
   auto reader =
@@ -127,7 +127,10 @@ void addHepMC3(Context& ctx) {
   });
 
   hepmc3.def("compressionExtension", &HepMC3Util::compressionExtension);
-  hepmc3.def("formatFromFilename", &HepMC3Util::formatFromFilename);
+  hepmc3.def("compressionFromFilename", &HepMC3Util::compressionFromFilename,
+             py::arg("filename"));
+  hepmc3.def("formatFromFilename", &HepMC3Util::formatFromFilename,
+             py::arg("filename"));
 
   // HepMC3 normalize function and result
   {
