@@ -233,9 +233,12 @@ if [ "${full_install:-false}" == "true" ]; then
   if ! which uv &> /dev/null ; then
     echo "uv not found, installing uv"
     curl -LsSf https://astral.sh/uv/install.sh | sh
+    UV_EXE="/root/.local/bin/uv"
     checkpoint "uv installation complete"
+  else
+    UV_EXE=$(which uv)
   fi
-  uv run "$SCRIPT_DIR/download_geant4_datasets.py" -j8 --config "${view_dir}/bin/geant4-config"
+  $UV_EXE run "$SCRIPT_DIR/download_geant4_datasets.py" -j8 --config "${view_dir}/bin/geant4-config"
   checkpoint "Geant4 datasets download complete"
 fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
