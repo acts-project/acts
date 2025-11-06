@@ -19,7 +19,7 @@ import acts
 from acts import UnitConstants as u
 from acts.examples import (
     ObjPropagationStepsWriter,
-    TrackFinderNTupleWriter,
+    RootTrackFinderNTupleWriter,
     RootPropagationStepsWriter,
     RootParticleWriter,
     RootTrackParameterWriter,
@@ -28,7 +28,7 @@ from acts.examples import (
     RootSimHitWriter,
     RootTrackStatesWriter,
     RootTrackSummaryWriter,
-    VertexNTupleWriter,
+    RootVertexNTupleWriter,
     RootMeasurementWriter,
     CsvParticleWriter,
     CsvSimHitWriter,
@@ -299,7 +299,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
     [
         RootPropagationStepsWriter,
         RootParticleWriter,
-        TrackFinderNTupleWriter,
+        RootTrackFinderNTupleWriter,
         RootTrackParameterWriter,
         RootMaterialTrackWriter,
         RootMeasurementWriter,
@@ -307,7 +307,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
         RootSimHitWriter,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
-        VertexNTupleWriter,
+        RootVertexNTupleWriter,
     ],
 )
 @pytest.mark.root
