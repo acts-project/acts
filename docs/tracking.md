@@ -242,9 +242,10 @@ using the Jacobian matrix
 
 $$
   J = \begin{bmatrix}
-    \frac{\partial l_0^f}{\partial l_0^i} & \cdots & \frac{\partial l_0^f}{\partial (q/p)^i} \\
+    \frac{\partial l_0^f}{\partial l_0^i} & \cdots  & \frac{\partial l_0^f}{\partial (t_{0})^i} \\
     \vdots & \ddots & \vdots \\
-    \frac{\partial (q/p)^f}{\partial l_0^i} & \cdots & \frac{\partial (q/p)^f}{\partial (q/p)^i}
+    %\frac{\partial (q/p)^f}{\partial l_0^i} & \cdots  & \frac{\partial (q/p)^f}{\partial (t_{0})^i} \\
+    \frac{\partial (t_{0})^f}{\partial l_0^i} & \cdots  & \frac{\partial (t_0)^f}{\partial (t_0)^i}
   \end{bmatrix},
 $$
 
