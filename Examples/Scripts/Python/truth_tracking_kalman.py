@@ -191,7 +191,7 @@ def runTruthTrackingKalman(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        acts.examples.RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
