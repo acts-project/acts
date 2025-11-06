@@ -20,7 +20,6 @@ from acts.examples.root import (
 )
 
 import acts.examples.hepmc3
-import acts.examples.pythia8
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
@@ -325,6 +324,8 @@ def addPythia8(
 
     generators = []
     if nhard is not None and nhard > 0:
+        import acts.examples.pythia8
+
         generators.append(
             acts.examples.EventGenerator.Generator(
                 multiplicity=acts.examples.FixedMultiplicityGenerator(n=nhard),
@@ -344,6 +345,8 @@ def addPythia8(
             )
         )
     if npileup > 0:
+        import acts.examples.pythia8
+
         generators.append(
             acts.examples.EventGenerator.Generator(
                 multiplicity=acts.examples.FixedMultiplicityGenerator(n=npileup),
