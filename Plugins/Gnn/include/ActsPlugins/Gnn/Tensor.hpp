@@ -20,6 +20,8 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <fstream>
+#include <format>
 
 /// Forward declare cuda stream, to be able to use the header without cuda
 struct CUstream_st;
@@ -87,6 +89,9 @@ TensorPtr createTensorMemory(std::size_t nbytes, const ExecutionContext &ctx);
 TensorPtr cloneTensorMemory(const TensorPtr &ptrFrom, std::size_t nbytes,
                             Device devFrom, const ExecutionContext &ctxTo);
 
+void dumpNpy(const std::string &filename, const std::string &type, std::span<const std::byte> data,
+             const std::array<std::size_t, 2> &shape);
+
 }  // namespace detail
 
 /// This is a very small, limited class that models a 2D tensor of arbitrary
@@ -143,6 +148,8 @@ class Tensor {
   Device device() const { return m_device; }
   /// @return Device where tensor data is stored
 
+  void dump_npy(const std::string &filename, std::optional<cudaStream_t> stream = {}) const;
+
  private:
   Tensor(Shape shape, detail::TensorPtr ptr, const ExecutionContext &ctx)
       : m_shape(shape), m_ptr(std::move(ptr)), m_device(ctx.device) {}
@@ -179,5 +186,39 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
     const Tensor<std::int64_t> &edgeIndex,
     const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,
     std::optional<cudaStream_t> stream);
+
+template<Acts::Concepts::arithmetic T>
+void Tensor<T>::dump_npy(const std::string &filename, std::optional<cudaStream_t> stream) const {
+  std::optional<Tensor<T>> maybeCpuTensor;
+  if (!device().isCpu()) {
+    maybeCpuTensor = this->clone({Device::Cpu(), stream});
+  }
+  const Tensor<T> &toDump = maybeCpuTensor.has_value() ? maybeCpuTensor.value() : *this;
+
+  // Simple NPY header for 2D float32 array
+  std::ofstream ofs(filename, std::ios::binary);
+  if (!ofs.is_open()) {
+    throw std::runtime_error("Could not open file for writing: " + filename);
+  }
+
+  std::string typeStr;
+  if constexpr (std::is_same_v<T, float>) {
+    typeStr = "<f4";
+  } else if constexpr (std::is_same_v<T, double>) {
+    typeStr = "<f8";
+  } else if constexpr (std::is_same_v<T, std::int64_t>) {
+    typeStr = "<i8";
+  } else if constexpr (std::is_same_v<T, std::int32_t>) {
+    typeStr = "<i4";
+  } else {
+    throw std::runtime_error("Unsupported type for NPY dump"); 
+  }
+  
+  detail::dumpNpy(filename, typeStr,
+                  std::as_bytes(std::span<const T>(toDump.data(), toDump.size())),
+                  m_shape);
+}
+
+
 
 }  // namespace ActsPlugins
