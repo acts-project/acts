@@ -51,7 +51,7 @@ class PodioWriterImpl {
       m_threadLocalWriters;
 
   std::mutex m_writeMutex;
-  bool m_useThreadLocalWriters;
+  bool m_useThreadLocalWriters{};
 
   std::string threadLocalFileName(std::size_t threadId) const {
     namespace fs = std::filesystem;
