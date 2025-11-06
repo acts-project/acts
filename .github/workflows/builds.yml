@@ -35,9 +35,6 @@ jobs:
           submodules: true
           lfs: true
 
-      # @TODO: Remove in favor of updated image
-      - run: apt-get update && apt-get install -y bc
-
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
@@ -118,9 +115,6 @@ jobs:
           submodules: true
           lfs: true
 
-      # @TODO: Remove in favor of updated image
-      - run: apt-get update && apt-get install -y bc
-
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
@@ -158,7 +152,7 @@ jobs:
           submodules: true
           lfs: true
 
-      - run: apt-get update && apt-get install -y time bc
+      - run: apt-get update && apt-get install -y time
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -238,9 +232,6 @@ jobs:
         with:
           submodules: true
           lfs: true
-
-      # @TODO: Remove in favor of updated image
-      - run: apt-get update && apt-get install -y bc
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
