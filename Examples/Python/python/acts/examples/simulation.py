@@ -4,6 +4,7 @@ from collections import namedtuple
 from collections.abc import Iterable
 
 import acts
+import acts.examples
 from acts.examples import (
     RandomNumbers,
     EventGenerator,
