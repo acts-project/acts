@@ -21,7 +21,7 @@
 #endif
 
 #ifdef HEPMC3_ROOT_SUPPORT
-#include <HepMC3/WriterRoot.h>
+#include <HepMC3/WriterRootTree.h>
 #endif
 
 namespace ActsExamples::HepMC3Util {
@@ -38,7 +38,7 @@ std::unique_ptr<HepMC3::Writer> createWriter(const std::filesystem::path& path,
     if (compression != Compression::none) {
       throw std::invalid_argument("Compression not supported for ROOT format");
     }
-    return std::make_unique<HepMC3::WriterRoot>(path.string());
+    return std::make_unique<HepMC3::WriterRootTree>(path.string());
 #else
     throw std::runtime_error("ROOT support not enabled in HepMC3");
 #endif
