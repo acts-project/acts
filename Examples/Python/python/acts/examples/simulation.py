@@ -300,6 +300,8 @@ def addPythia8(
         None or "short" or "long"
     """
 
+    import acts
+
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     rnd = rnd or acts.examples.RandomNumbers()
