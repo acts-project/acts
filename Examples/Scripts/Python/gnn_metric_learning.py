@@ -27,8 +27,9 @@ def runGnnMetricLearning(
     outputDir,
     digiConfigFile,
     geometrySelection,
-    modelDir,
-    backend="torch",
+    embedModelPath,
+    filterModelPath,
+    gnnModelPath,
     outputRoot=False,
     outputCsv=False,
     s=None,
@@ -45,12 +46,20 @@ def runGnnMetricLearning(
         outputDir: Output directory for ROOT/CSV files
         digiConfigFile: Digitization config file path
         geometrySelection: Geometry selection JSON file path
-        modelDir: Directory containing GNN models
-        backend: "torch" or "onnx"
+        embedModelPath: Path to embedding model (embed.pt)
+        filterModelPath: Path to filter model (filter.pt or filtering.onnx)
+        gnnModelPath: Path to GNN model (gnn.pt or gnn.onnx)
         outputRoot: Write ROOT output
         outputCsv: Write CSV output
         s: Optional sequencer (creates new one if None)
     """
+    # Check all model paths exist
+    for model_path in [embedModelPath, filterModelPath, gnnModelPath]:
+        assert Path(model_path).exists(), f"Model not found: {model_path}"
+
+    # Infer backend from filter model extension
+    backend = "torch" if Path(filterModelPath).suffix == ".pt" else "onnx"
+
     # Run simulation + digitization
     s = runDigitization(
         trackingGeometry,
@@ -67,15 +76,6 @@ def runGnnMetricLearning(
     # All parameters hardcoded based on standard metric learning configuration
 
     # Stage 1: Graph construction via metric learning
-    # Note: embed.pt is always from torchscript_models, even for ONNX backend
-    # Check if we're using CWD models (tests) or ci_models (normal run)
-    if (Path(modelDir).parent / "torchscript_models" / "embed.pt").exists():
-        embedModelPath = Path(modelDir).parent / "torchscript_models" / "embed.pt"
-    elif (Path.cwd() / "torchscript_models" / "embed.pt").exists():
-        embedModelPath = Path.cwd() / "torchscript_models" / "embed.pt"
-    else:
-        embedModelPath = Path(modelDir) / "embed.pt"  # fallback to modelDir
-
     graphConstructorConfig = {
         "level": acts.logging.INFO,
         "modelPath": str(embedModelPath),
@@ -89,12 +89,12 @@ def runGnnMetricLearning(
     # Stage 2: Two-stage edge classification (filter + GNN)
     filterConfig = {
         "level": acts.logging.INFO,
-        "modelPath": str(Path(modelDir) / ("filter.pt" if backend == "torch" else "filtering.onnx")),
+        "modelPath": str(filterModelPath),
         "cut": 0.01,
     }
     gnnConfig = {
         "level": acts.logging.INFO,
-        "modelPath": str(Path(modelDir) / ("gnn.pt" if backend == "torch" else "gnn.onnx")),
+        "modelPath": str(gnnModelPath),
         "cut": 0.5,
     }
 
@@ -176,25 +176,18 @@ if __name__ == "__main__":
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists(), f"File not found: {digiConfigFile}"
 
-    # Model directory: check CWD first (for tests), then ci_models/ (default)
+    # Model paths: check CWD first (for tests), then ci_models/ (default)
+    ci_models = srcdir / "ci_models/metric_learning"
     if backend == "torch":
-        cwd_models = Path.cwd() / "torchscript_models"
-        ci_models = srcdir / "ci_models/metric_learning/torchscript_models"
-        modelDir = cwd_models if (cwd_models / "embed.pt").exists() else ci_models
-        assert (modelDir / "embed.pt").exists(), f"Model not found: {modelDir}/embed.pt"
-        assert (modelDir / "filter.pt").exists(), f"Model not found: {modelDir}/filter.pt"
-        assert (modelDir / "gnn.pt").exists(), f"Model not found: {modelDir}/gnn.pt"
+        modelDir = Path.cwd() / "torchscript_models" if (Path.cwd() / "torchscript_models/embed.pt").exists() else ci_models / "torchscript_models"
+        embedModelPath = modelDir / "embed.pt"
+        filterModelPath = modelDir / "filter.pt"
+        gnnModelPath = modelDir / "gnn.pt"
     else:
-        cwd_models = Path.cwd() / "onnx_models"
-        ci_models_onnx = srcdir / "ci_models/metric_learning/onnx_models"
-        ci_models_torch = srcdir / "ci_models/metric_learning/torchscript_models"
-        modelDir = cwd_models if (cwd_models / "filtering.onnx").exists() else ci_models_onnx
-        # Note: metric learning still uses embed.pt even with ONNX backend
-        cwd_embed = Path.cwd() / "torchscript_models" / "embed.pt"
-        ci_embed = ci_models_torch / "embed.pt"
-        assert (cwd_embed.exists() or ci_embed.exists()), f"embed.pt not found in CWD or ci_models"
-        assert (modelDir / "filtering.onnx").exists()
-        assert (modelDir / "gnn.onnx").exists()
+        embedModelPath = Path.cwd() / "torchscript_models/embed.pt" if (Path.cwd() / "torchscript_models/embed.pt").exists() else ci_models / "torchscript_models/embed.pt"
+        modelDir = Path.cwd() / "onnx_models" if (Path.cwd() / "onnx_models/filtering.onnx").exists() else ci_models / "onnx_models"
+        filterModelPath = modelDir / "filtering.onnx"
+        gnnModelPath = modelDir / "gnn.onnx"
 
     # Sequencer
     s = acts.examples.Sequencer(events=2, numThreads=1)
@@ -210,8 +203,9 @@ if __name__ == "__main__":
         outputDir,
         digiConfigFile,
         geometrySelection,
-        modelDir,
-        backend,
+        embedModelPath,
+        filterModelPath,
+        gnnModelPath,
         outputRoot=True,
         outputCsv=False,
         s=s,

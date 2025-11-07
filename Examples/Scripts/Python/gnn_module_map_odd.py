@@ -11,7 +11,6 @@ for their specific needs.
 """
 
 from pathlib import Path
-import argparse
 
 import acts
 from acts import UnitConstants as u
@@ -188,40 +187,12 @@ if __name__ == "__main__":
     digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
     assert digiConfigFile.exists(), f"File not found: {digiConfigFile}"
 
-    # Parse command line arguments
-    argparser = argparse.ArgumentParser(
-        description="Run GNN track finding with module maps on ODD"
-    )
-
-    # Default paths point to ci_models/
+    # Hardcoded model paths
     ci_models_odd = srcdir / "ci_models/odd_module_map"
-
-    argparser.add_argument(
-        "--moduleMapPath",
-        type=str,
-        default=str(ci_models_odd / "module_map_odd_2k_events.1e-03.float"),
-        help="Path prefix for module map files (without .doublets.root/.triplets.root)",
-    )
-    argparser.add_argument(
-        "--gnnModel",
-        type=str,
-        default=str(ci_models_odd / "gnn_odd_module_map.pt"),
-        help="Path to the GNN model file (.pt, .onnx, or .engine)",
-    )
-    argparser.add_argument(
-        "--output",
-        type=Path,
-        default=Path.cwd(),
-        help="Output directory for performance files",
-    )
-    argparser.add_argument(
-        "--events",
-        type=int,
-        default=100,
-        help="Number of events to process",
-    )
-
-    args = argparser.parse_args()
+    moduleMapPath = str(ci_models_odd / "module_map_odd_2k_events.1e-03.float")
+    gnnModel = str(ci_models_odd / "gnn_odd_module_map.pt")
+    outputDir = Path.cwd()
+    events = 100
 
     # Run the workflow
     runGnnModuleMapOdd(
@@ -229,8 +200,8 @@ if __name__ == "__main__":
         field=field,
         geometrySelection=geometrySelection,
         digiConfigFile=digiConfigFile,
-        moduleMapPath=args.moduleMapPath,
-        gnnModel=args.gnnModel,
-        outputDir=args.output,
-        events=args.events,
+        moduleMapPath=moduleMapPath,
+        gnnModel=gnnModel,
+        outputDir=outputDir,
+        events=events,
     )

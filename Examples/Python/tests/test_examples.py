@@ -1296,10 +1296,13 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend):
     srcdir = Path(__file__).parent.parent.parent.parent
     ci_models = srcdir / "ci_models/odd_module_map"
 
+    # Map backend to file extension
+    model_ext = ".pt" if backend == "torch" else ".onnx"
+
     # Dict of required files - used for checking and as kwargs
     required_files = {
         "moduleMapPath": str(ci_models / "module_map_odd_2k_events.1e-03.float"),
-        "gnnModel": str(ci_models / f"gnn_odd_module_map.{backend}"),
+        "gnnModel": str(ci_models / f"gnn_odd_module_map{model_ext}"),
     }
 
     # Check if all required files exist
@@ -1340,7 +1343,6 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend):
             s=seq,
             **required_files,
         )
-        seq.run()
 
     # Verify output
     output_file = tmp_path / "performance_track_finding.root"
