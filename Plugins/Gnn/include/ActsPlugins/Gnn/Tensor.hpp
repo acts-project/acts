@@ -146,11 +146,12 @@ class Tensor {
   std::size_t nbytes() const { return size() * sizeof(T); }
 
   /// Get the device of the tensor
-  Device device() const { return m_device; }
   /// @return Device where tensor data is stored
+  Device device() const { return m_device; }
 
-  void dump_npy(const std::string &filename,
-                std::optional<cudaStream_t> stream = {}) const;
+  /// Save the tensor in the numpy NPY format version 1.0 to disk
+  void dumpNpy(const std::string &filename,
+               std::optional<cudaStream_t> stream = {}) const;
 
  private:
   Tensor(Shape shape, detail::TensorPtr ptr, const ExecutionContext &ctx)
@@ -190,8 +191,8 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
     std::optional<cudaStream_t> stream);
 
 template <Acts::Concepts::arithmetic T>
-void Tensor<T>::dump_npy(const std::string &filename,
-                         std::optional<cudaStream_t> stream) const {
+void Tensor<T>::dumpNpy(const std::string &filename,
+                        std::optional<cudaStream_t> stream) const {
   std::optional<Tensor<T>> maybeCpuTensor;
   if (!device().isCpu()) {
     maybeCpuTensor = this->clone({Device::Cpu(), stream});
