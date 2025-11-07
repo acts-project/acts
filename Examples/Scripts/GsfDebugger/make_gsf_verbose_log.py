@@ -4,6 +4,7 @@ from pathlib import Path
 
 import acts
 import acts.examples
+import ROOT
 
 from truth_tracking_gsf import runTruthTrackingGsf
 
