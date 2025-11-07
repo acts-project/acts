@@ -23,7 +23,7 @@ namespace ActsExamples {
 ///
 /// Only considers the track finding itself, i.e. grouping of hits into tracks,
 /// and computes relevant per-track and per-particles statistics.
-class TrackFinderNTupleWriter final : public WriterT<ConstTrackContainer> {
+class RootTrackFinderNTupleWriter final : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
     /// Input reconstructed track collection.
@@ -47,9 +47,9 @@ class TrackFinderNTupleWriter final : public WriterT<ConstTrackContainer> {
   /// Constructor
   /// @param config the configuration
   /// @param level The log level
-  TrackFinderNTupleWriter(Config config, Acts::Logging::Level level);
+  RootTrackFinderNTupleWriter(Config config, Acts::Logging::Level level);
 
-  ~TrackFinderNTupleWriter() override;
+  ~RootTrackFinderNTupleWriter() override;
 
   ProcessCode finalize() override;
 

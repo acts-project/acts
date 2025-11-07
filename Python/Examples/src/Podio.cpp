@@ -26,5 +26,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsPodio, m) {
                              outputFrame, category);
 
   ACTS_PYTHON_DECLARE_WRITER(PodioWriter, m, "PodioWriter", inputFrame,
-                             outputPath, category, collections);
+                             outputPath, category, collections,
+                             separateFilesPerThread);
 }
