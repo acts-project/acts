@@ -225,11 +225,8 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
 
     FitOpts_t fitOpts{};
     fitOpts.calibrator = calibrator.get();
-    fitOpts.selector = Delegate<bool(const FitTestSpacePoint&)>(
-        [](const void*, const FitTestSpacePoint& sp) {
-          return !sp.isStraw() || sp.isGood();
-        });
 
+    fitOpts.selector.connect<&isGoodHit>();
     fitOpts.measurements =
         MeasurementGenerator::spawn(line, t0, engine, genCfg, logger());
     fitOpts.startParameters = startParameters(line, fitOpts.measurements);

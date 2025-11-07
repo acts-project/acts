@@ -13,6 +13,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <random>
+#include <ranges>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -622,5 +623,9 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
   pars[toUnderlying(FitParIndex::phi)] = phi(seedDir);
   return pars;
 }
+
+bool isGoodHit(const FitTestSpacePoint& sp) {
+  return !sp.isStraw() || sp.isGood();
+};
 
 }  // namespace Acts::Test
