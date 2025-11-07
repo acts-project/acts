@@ -193,9 +193,10 @@ class SpCalibrator {
   double closestApproachDist(const Acts::CalibrationContext& /*ctx*/,
                              const Vector3& trackPos, const Vector3& trackDir,
                              const FitTestSpacePoint& measurement) const {
-    const auto closeIsect = lineIntersect(measurement.localPosition(),
-                                                               measurement.sensorDirection(), trackPos, trackDir);
-    const Vector3 closePointOnLine = closeIsect .position();
+    const auto closeIsect =
+        lineIntersect(measurement.localPosition(),
+                      measurement.sensorDirection(), trackPos, trackDir);
+    const Vector3 closePointOnLine = closeIsect.position();
     return (m_localToGlobal * closePointOnLine).norm();
   }
   /// @brief Calibrate a set of straw measurements using the best known estimate on a straight line track
@@ -563,64 +564,64 @@ class MeasurementGenerator {
 ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
   ParamVec_t pars{};
 
-  double tanAlpha0.};
-  double tanBeta{0.};
-  /// Setup the seed parameters in x0 && phi
-  auto firstPhi = std::ranges::find_if(
-      hits, [](const auto& sp) { return sp->measuresLoc0(); });
-  auto lastPhi =
-      std::ranges::find_if(std::ranges::reverse_view(hits),
-                           [](const auto& sp) { return sp->measuresLoc0(); });
+  double tanAlpha0.
+};
+double tanBeta{0.};
+/// Setup the seed parameters in x0 && phi
+auto firstPhi = std::ranges::find_if(
+    hits, [](const auto& sp) { return sp->measuresLoc0(); });
+auto lastPhi =
+    std::ranges::find_if(std::ranges::reverse_view(hits),
+                         [](const auto& sp) { return sp->measuresLoc0(); });
 
-  if (firstPhi != hits.end() && lastPhi != hits.rend()) {
-    const Vector3 firstToLastPhi =
-        (**lastPhi).localPosition() - (**firstPhi).localPosition();
-    tanAlpha = firstToLastPhi.x() / firstToLastPhi.z();
-    /// -> x = tanPhi * z + x_{0} ->
-    pars[toUnderlying(FitParIndex::x0)] =
-        (**lastPhi).localPosition().x() -
-        (**lastPhi).localPosition().z() * tanAlpha;
+if (firstPhi != hits.end() && lastPhi != hits.rend()) {
+  const Vector3 firstToLastPhi =
+      (**lastPhi).localPosition() - (**firstPhi).localPosition();
+  tanAlpha = firstToLastPhi.x() / firstToLastPhi.z();
+  /// -> x = tanPhi * z + x_{0} ->
+  pars[toUnderlying(FitParIndex::x0)] =
+      (**lastPhi).localPosition().x() -
+      (**lastPhi).localPosition().z() * tanAlpha;
+}
+/// Setup the seed parameters in y0 && theta
+auto firstTube =
+    std::ranges::find_if(hits, [](const auto& sp) { return sp->isStraw(); });
+auto lastTube =
+    std::ranges::find_if(std::ranges::reverse_view(hits),
+                         [](const auto& sp) { return sp->isStraw(); });
+
+if (firstTube != hits.end() && lastTube != hits.rend()) {
+  const int signFirst = CompSpacePointAuxiliaries::strawSign(line, **firstTube);
+  const int signLast = CompSpacePointAuxiliaries::strawSign(line, **lastTube);
+
+  auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
+      **lastTube, **firstTube,
+      CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
+  tanBeta = std::tan(seedPars.theta);
+  pars[toUnderlying(FitParIndex::y0)] = seedPars.y0;
+} else {
+  auto firstEta = std::ranges::find_if(hits, [](const auto& sp) {
+    return !sp->isStraw() && sp->measuresLoc1();
+  });
+  auto lastEta = std::ranges::find_if(
+      std::ranges::reverse_view(hits),
+      [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc1(); });
+
+  if (firstEta != hits.end() && lastEta != hits.rend()) {
+    const Vector3 firstToLastEta =
+        (**lastEta).localPosition() - (**firstEta).localPosition();
+    tanBeta = firstToLastEta.y() / firstToLastEta.z();
+    /// -> y = tanTheta * z + y_{0} ->
+    pars[toUnderlying(FitParIndex::y0)] =
+        (**lastEta).localPosition().y() -
+        (**lastEta).localPosition().z() * tanBeta;
   }
-  /// Setup the seed parameters in y0 && theta
-  auto firstTube =
-      std::ranges::find_if(hits, [](const auto& sp) { return sp->isStraw(); });
-  auto lastTube =
-      std::ranges::find_if(std::ranges::reverse_view(hits),
-                           [](const auto& sp) { return sp->isStraw(); });
+}
 
-  if (firstTube != hits.end() && lastTube != hits.rend()) {
-    const int signFirst =
-        CompSpacePointAuxiliaries::strawSign(line, **firstTube);
-    const int signLast = CompSpacePointAuxiliaries::strawSign(line, **lastTube);
-
-    auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
-        **lastTube, **firstTube,
-        CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
-    tanBeta = std::tan(seedPars.theta);
-    pars[toUnderlying(FitParIndex::y0)] = seedPars.y0;
-  } else {
-    auto firstEta = std::ranges::find_if(hits, [](const auto& sp) {
-      return !sp->isStraw() && sp->measuresLoc1();
-    });
-    auto lastEta = std::ranges::find_if(
-        std::ranges::reverse_view(hits),
-        [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc1(); });
-
-    if (firstEta != hits.end() && lastEta != hits.rend()) {
-      const Vector3 firstToLastEta =
-          (**lastEta).localPosition() - (**firstEta).localPosition();
-      tanBeta = firstToLastEta.y() / firstToLastEta.z();
-      /// -> y = tanTheta * z + y_{0} ->
-      pars[toUnderlying(FitParIndex::y0)] =
-          (**lastEta).localPosition().y() -
-          (**lastEta).localPosition().z() * tanBeta;
-    }
-  }
-
-  const Vector3 seedDir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
-  pars[toUnderlying(FitParIndex::theta)] = theta(seedDir);
-  pars[toUnderlying(FitParIndex::phi)] = phi(seedDir);
-  return pars;
+const Vector3 seedDir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
+pars[toUnderlying(FitParIndex::theta)] = theta(seedDir);
+pars[toUnderlying(FitParIndex::phi)] = phi(seedDir);
+return pars;
 }
 
 bool isGoodHit(const FitTestSpacePoint& sp) {
