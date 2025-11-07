@@ -34,9 +34,9 @@ MODELS = {
         "extract_to": "metric_learning",
     },
     "odd-module-map": {
-        "url": "https://acts.web.cern.ch/ci/gnn/odd_module_map_v01.tar",
-        "sha256": "3cae0565610e63b4f37da9d46940b235ffb12e7c1519e20b4f1c5f0dd5578a97",
-        "extract_to": "odd",
+        "url": "https://cernbox.cern.ch/s/2Sk0vcM0JrlZwl7/download",
+        "sha256": "59f0457f0043bac8594e9f5a3310a709244de980a7b0c206d7d0d95f15455d73",
+        "extract_to": "odd_module_map",
     },
 }
 

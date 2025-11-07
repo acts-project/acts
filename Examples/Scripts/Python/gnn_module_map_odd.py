@@ -194,12 +194,12 @@ if __name__ == "__main__":
     )
 
     # Default paths point to ci_models/
-    ci_models_odd = srcdir / "ci_models/odd/odd"
+    ci_models_odd = srcdir / "ci_models/odd_module_map"
 
     argparser.add_argument(
         "--moduleMapPath",
         type=str,
-        default=str(ci_models_odd / "module_map_odd_2k_events"),
+        default=str(ci_models_odd / "module_map_odd_2k_events.1e-03.float"),
         help="Path prefix for module map files (without .doublets.root/.triplets.root)",
     )
     argparser.add_argument(

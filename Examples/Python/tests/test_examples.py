@@ -1287,58 +1287,65 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, backend
 
 @pytest.mark.odd
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn_module_map(tmp_path, assert_root_hash):
+@pytest.mark.parametrize("backend", ["torch", "onnx"])
+def test_gnn_module_map(tmp_path, assert_root_hash, backend):
     """Test GNN track finding with module map graph construction on ODD"""
-    # Check for required files in ci_models
-    repo_root = Path(__file__).parent.parent.parent.parent
-    ci_models_odd = repo_root / "ci_models/odd/odd"
-    module_map_prefix = ci_models_odd / "module_map_odd_2k_events"
-    gnn_model = ci_models_odd / "gnn_odd_module_map.pt"
+    from gnn_module_map_odd import runGnnModuleMapOdd
+    from acts.examples.odd import getOpenDataDetector
 
-    if not (module_map_prefix.with_suffix(".doublets.root")).exists():
-        pytest.skip(f"Module map file not found: {module_map_prefix}.doublets.root")
-    if not (module_map_prefix.with_suffix(".triplets.root")).exists():
-        pytest.skip(f"Module map file not found: {module_map_prefix}.triplets.root")
-    if not gnn_model.exists():
-        pytest.skip(f"GNN model not found: {gnn_model}")
+    srcdir = Path(__file__).parent.parent.parent.parent
+    ci_models = srcdir / "ci_models/odd_module_map"
 
-    root_file = "performance_track_finding.root"
-    assert not (tmp_path / root_file).exists()
+    # Dict of required files - used for checking and as kwargs
+    required_files = {
+        "moduleMapPath": str(ci_models / "module_map_odd_2k_events.1e-03.float"),
+        "gnnModel": str(ci_models / f"gnn_odd_module_map.{backend}"),
+    }
 
-    script = (
-        repo_root
-        / "Examples"
-        / "Scripts"
-        / "Python"
-        / "gnn_module_map_odd.py"
-    )
-    assert script.exists()
+    # Check if all required files exist
+    missing = [
+        f for f in [
+            Path(required_files["moduleMapPath"] + ".doublets.root"),
+            Path(required_files["moduleMapPath"] + ".triplets.root"),
+            Path(required_files["gnnModel"]),
+        ] if not f.exists()
+    ]
 
-    env = os.environ.copy()
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    if missing:
+        # Try to download models
+        download_script = srcdir / "CI/dependencies/download_models.py"
+        try:
+            subprocess.check_call([sys.executable, str(download_script)])
+        except subprocess.CalledProcessError:
+            pytest.skip(f"Failed to download required files: {missing}")
 
-    try:
-        subprocess.check_call(
-            [
-                sys.executable,
-                str(script),
-                "--events", "10",
-                "--output", str(tmp_path),
-                "--moduleMapPath", str(module_map_prefix),
-                "--gnnModel", str(gnn_model),
-            ],
-            cwd=repo_root,
-            env=env,
-            stderr=subprocess.STDOUT,
+        # Recheck after download
+        if any(not f.exists() for f in missing):
+            pytest.skip(f"Required files not found after download: {missing}")
+
+    # Setup ODD detector
+    detector = getOpenDataDetector()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    seq = Sequencer(events=10, numThreads=1)
+
+    # Run GNN module map workflow
+    with detector:
+        runGnnModuleMapOdd(
+            trackingGeometry=detector.trackingGeometry(),
+            field=field,
+            geometrySelection=str(srcdir / "Examples/Configs/odd-seeding-config.json"),
+            digiConfigFile=str(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
+            outputDir=tmp_path,
+            events=10,
+            s=seq,
+            **required_files,
         )
-    except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8") if hasattr(e, "output") else "")
-        raise
+        seq.run()
 
-    rfp = tmp_path / root_file
-    assert rfp.exists()
-
-    assert_root_hash(root_file, rfp)
+    # Verify output
+    output_file = tmp_path / "performance_track_finding.root"
+    assert output_file.exists()
+    assert_root_hash("performance_track_finding.root", output_file)
 
 
 @pytest.mark.odd
