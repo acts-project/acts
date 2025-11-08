@@ -177,7 +177,7 @@ else()
 
         if(NOT _backtrace_setup_complete)
             message(STATUS "Unable to set up stacktrace setup: use noop")
-            list(APPEND _fpe_options -BOOST_STACKTRACE_USE_NOOP)
+            list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_NOOP)
         endif()
     endif()
 endif()
