@@ -5,7 +5,9 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
+
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -564,8 +566,7 @@ class MeasurementGenerator {
 ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
   ParamVec_t pars{};
 
-  double tanAlpha0.
-};
+  double tanAlpha{0.};
 double tanBeta{0.};
 /// Setup the seed parameters in x0 && phi
 auto firstPhi = std::ranges::find_if(
