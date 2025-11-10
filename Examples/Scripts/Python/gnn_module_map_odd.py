@@ -20,6 +20,8 @@ from acts.examples.simulation import (
     addPythia8,
     addFatras,
     addDigitization,
+    addGenParticleSelection,
+    ParticleSelectorConfig
 )
 from acts.examples.reconstruction import addGnn
 
@@ -80,12 +82,27 @@ def runGnnModuleMapOdd(
         logLevel=acts.logging.INFO,
     )
 
+    addGenParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
+            eta=(-3.0, 3.0),
+            pt=(150 * u.MeV, None),
+        ),
+    )
+
+
     # FATRAS simulation
     addFatras(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
+        enableInteractions=True,
+        outputDirRoot=None,
+        outputDirCsv=None,
+        outputDirObj=None,
         logLevel=acts.logging.INFO,
     )
 

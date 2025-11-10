@@ -2,6 +2,7 @@ import multiprocessing
 from pathlib import Path
 import sys
 import os
+import subprocess
 import tempfile
 import shutil
 from typing import Dict
@@ -415,3 +416,46 @@ def material_recording(material_recording_session: Path, tmp_path: Path):
     target = tmp_path / material_recording_session.name
     shutil.copytree(material_recording_session, target)
     yield target
+
+
+@pytest.fixture(scope="session")
+def ensure_gnn_models():
+    """
+    Session-level fixture to ensure GNN models are downloaded.
+
+    Returns a callable that checks for required model files and downloads if missing.
+    Downloads happen once per test session for efficiency.
+    """
+    repo_root = Path(__file__).parent.parent.parent.parent
+    download_script = repo_root / "CI/dependencies/download_models.py"
+    _download_attempted = {"value": False}
+
+    def _ensure_models(required_files: list) -> None:
+        """
+        Check if required model files exist, download if missing.
+
+        Args:
+            required_files: List of Path objects to check for existence
+
+        Raises:
+            pytest.skip: If files are missing and download fails or doesn't provide them
+        """
+        missing = [f for f in required_files if not f.exists()]
+
+        if not missing:
+            return  # All files present
+
+        # Only attempt download once per session
+        if not _download_attempted["value"]:
+            _download_attempted["value"] = True
+            try:
+                subprocess.check_call([sys.executable, str(download_script)])
+            except subprocess.CalledProcessError:
+                pytest.skip(f"Failed to download required model files: {missing}")
+
+        # Recheck after download
+        still_missing = [f for f in required_files if not f.exists()]
+        if still_missing:
+            pytest.skip(f"Required model files not found after download: {still_missing}")
+
+    return _ensure_models

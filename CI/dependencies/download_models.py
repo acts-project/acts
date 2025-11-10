@@ -24,17 +24,17 @@ from pathlib import Path
 # Model definitions with URLs, SHA256 hashes, and extraction directories
 MODELS = {
     "metric-learning-onnx": {
-        "url": "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar",
+        "url": "https://acts.web.cern.ch/ci/gnn/onnx_models_v01.tar",
         "sha256": "335d829439d9a5ae99ffc8f0bbf6a62119a140475e779e2ed00de21fdebb3cb4",
         "extract_to": "metric_learning",
     },
     "metric-learning-torch": {
-        "url": "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar",
+        "url": "https://acts.web.cern.ch/ci/gnn/torchscript_models_v01.tar",
         "sha256": "1185060ce697bbc96c9dc32b85e5f0eb4db1f64a645c0fc4d2cb2731cb2ef3dc",
         "extract_to": "metric_learning",
     },
     "odd-module-map": {
-        "url": "https://cernbox.cern.ch/s/2Sk0vcM0JrlZwl7/download",
+        "url": "https://acts.web.cern.ch/ci/gnn/odd_module_map_v01.tar",
         "sha256": "59f0457f0043bac8594e9f5a3310a709244de980a7b0c206d7d0d95f15455d73",
         "extract_to": "odd_module_map",
     },

@@ -176,18 +176,16 @@ if __name__ == "__main__":
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists(), f"File not found: {digiConfigFile}"
 
-    # Model paths: check CWD first (for tests), then ci_models/ (default)
+    # Model paths from ci_models
     ci_models = srcdir / "ci_models/metric_learning"
     if backend == "torch":
-        modelDir = Path.cwd() / "torchscript_models" if (Path.cwd() / "torchscript_models/embed.pt").exists() else ci_models / "torchscript_models"
-        embedModelPath = modelDir / "embed.pt"
-        filterModelPath = modelDir / "filter.pt"
-        gnnModelPath = modelDir / "gnn.pt"
+        embedModelPath = ci_models / "torchscript_models/embed.pt"
+        filterModelPath = ci_models / "torchscript_models/filter.pt"
+        gnnModelPath = ci_models / "torchscript_models/gnn.pt"
     else:
-        embedModelPath = Path.cwd() / "torchscript_models/embed.pt" if (Path.cwd() / "torchscript_models/embed.pt").exists() else ci_models / "torchscript_models/embed.pt"
-        modelDir = Path.cwd() / "onnx_models" if (Path.cwd() / "onnx_models/filtering.onnx").exists() else ci_models / "onnx_models"
-        filterModelPath = modelDir / "filtering.onnx"
-        gnnModelPath = modelDir / "gnn.onnx"
+        embedModelPath = ci_models / "torchscript_models/embed.pt"
+        filterModelPath = ci_models / "onnx_models/filtering.onnx"
+        gnnModelPath = ci_models / "onnx_models/gnn.onnx"
 
     # Sequencer
     s = acts.examples.Sequencer(events=2, numThreads=1)

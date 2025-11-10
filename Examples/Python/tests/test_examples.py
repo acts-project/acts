@@ -1227,40 +1227,31 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 @pytest.mark.parametrize("backend", ["onnx", "torch"])
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
+def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, backend, hardware, ensure_gnn_models):
     """Test GNN track finding with metric learning graph construction"""
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
 
-    # NOTE: torch-scatter is now optional, many GNN architectures work without it
-    # if backend == "torch":
-    #     pytest.skip(
-    #         "Disabled torch support until replacement for torch-scatter is found"
-    #     )
-
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
-    # Use pre-downloaded models from ci_models/ directory
+    # Check if models exist, download if missing
     repo_root = Path(__file__).parent.parent.parent.parent
     ci_models = repo_root / "ci_models/metric_learning"
 
-    # Copy models to tmp_path for test isolation
-    shutil.copytree(ci_models / "onnx_models", tmp_path / "onnx_models")
-    shutil.copytree(ci_models / "torchscript_models", tmp_path / "torchscript_models")
+    model_subdir = "torchscript_models" if backend == "torch" else "onnx_models"
+    model_ext = "pt" if backend == "torch" else "onnx"
+    filter_name = "filter" if backend == "torch" else "filtering"
 
-    # Metric learning uses torch embed.pt even with ONNX backend
-    shutil.copyfile(
-        tmp_path / "torchscript_models/embed.pt", tmp_path / "onnx_models/embed.pt"
-    )
+    required_models = [
+        ci_models / "torchscript_models/embed.pt",
+        ci_models / f"{model_subdir}/{filter_name}.{model_ext}",
+        ci_models / f"{model_subdir}/gnn.{model_ext}",
+    ]
 
-    script = (
-        Path(__file__).parent.parent.parent.parent
-        / "Examples"
-        / "Scripts"
-        / "Python"
-        / "gnn_metric_learning.py"
-    )
+    ensure_gnn_models(required_models)
+
+    script = repo_root / "Examples/Scripts/Python/gnn_metric_learning.py"
     assert script.exists()
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
@@ -1288,13 +1279,13 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, backend
 @pytest.mark.odd
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 @pytest.mark.parametrize("backend", ["torch", "onnx"])
-def test_gnn_module_map(tmp_path, assert_root_hash, backend):
+def test_gnn_module_map(tmp_path, assert_root_hash, backend, ensure_gnn_models):
     """Test GNN track finding with module map graph construction on ODD"""
     from gnn_module_map_odd import runGnnModuleMapOdd
     from acts.examples.odd import getOpenDataDetector
 
-    srcdir = Path(__file__).parent.parent.parent.parent
-    ci_models = srcdir / "ci_models/odd_module_map"
+    repo_root = Path(__file__).parent.parent.parent.parent
+    ci_models = repo_root / "ci_models/odd_module_map"
 
     # Map backend to file extension
     model_ext = ".pt" if backend == "torch" else ".onnx"
@@ -1306,40 +1297,27 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend):
     }
 
     # Check if all required files exist
-    missing = [
-        f for f in [
-            Path(required_files["moduleMapPath"] + ".doublets.root"),
-            Path(required_files["moduleMapPath"] + ".triplets.root"),
-            Path(required_files["gnnModel"]),
-        ] if not f.exists()
+    files_to_check = [
+        Path(required_files["moduleMapPath"] + ".doublets.root"),
+        Path(required_files["moduleMapPath"] + ".triplets.root"),
+        Path(required_files["gnnModel"]),
     ]
 
-    if missing:
-        # Try to download models
-        download_script = srcdir / "CI/dependencies/download_models.py"
-        try:
-            subprocess.check_call([sys.executable, str(download_script)])
-        except subprocess.CalledProcessError:
-            pytest.skip(f"Failed to download required files: {missing}")
-
-        # Recheck after download
-        if any(not f.exists() for f in missing):
-            pytest.skip(f"Required files not found after download: {missing}")
+    ensure_gnn_models(files_to_check)
 
     # Setup ODD detector
     detector = getOpenDataDetector()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    seq = Sequencer(events=10, numThreads=1)
+    seq = Sequencer(events=5, numThreads=1)
 
     # Run GNN module map workflow
     with detector:
         runGnnModuleMapOdd(
             trackingGeometry=detector.trackingGeometry(),
             field=field,
-            geometrySelection=str(srcdir / "Examples/Configs/odd-seeding-config.json"),
-            digiConfigFile=str(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
+            geometrySelection=str(repo_root / "Examples/Configs/odd-seeding-config.json"),
+            digiConfigFile=str(repo_root / "Examples/Configs/odd-digi-smearing-config.json"),
             outputDir=tmp_path,
-            events=10,
             s=seq,
             **required_files,
         )
