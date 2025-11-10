@@ -1,9 +1,9 @@
 import pytest
-from pathlib import Path
 
 import acts
 
 from acts.json import MaterialMapJsonConverter, JsonMaterialDecorator
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 @pytest.mark.root
@@ -26,8 +26,7 @@ def test_json_material_decorator():
     deco = JsonMaterialDecorator(
         rConfig=config,
         jFileName=str(
-            Path(__file__).parent.parent.parent.parent
-            / "thirdparty/OpenDataDetector/config/odd-material-mapping-config.json"
+            getOpenDataDetectorDirectory() / "config/odd-material-mapping-config.json"
         ),
         level=acts.logging.WARNING,
     )

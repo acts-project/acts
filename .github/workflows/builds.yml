@@ -32,7 +32,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -112,7 +111,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -149,7 +147,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - run: apt-get update && apt-get install -y time
@@ -230,7 +227,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -304,7 +300,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - name: Setup Xcode version
@@ -382,7 +377,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           path: acts
 
       - uses: actions/checkout@v5
@@ -482,7 +476,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           path: acts
       - uses: actions/checkout@v5
         with:

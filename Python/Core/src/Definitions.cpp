@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 
+#include <format>
 #include <type_traits>
 
 #include <pybind11/pybind11.h>
@@ -59,6 +60,10 @@ void addDefinitions(py::module_& m) {
            [](const Vector3& self, const Vector3& other) {
              return (self - other).eval();
            })
+      .def("__mul__",
+           [](const Vector3& self, const Vector3& other) {
+             return self.cwiseProduct(other).eval();
+           })
       .def("cross",
            [](const Vector3& self, const Vector3& other) {
              return self.cross(other).eval();
@@ -66,9 +71,7 @@ void addDefinitions(py::module_& m) {
       .def("__getitem__",
            [](const Vector3& self, Eigen::Index i) { return self[i]; })
       .def("__str__", [](const Vector3& self) {
-        std::stringstream ss;
-        ss << self.transpose();
-        return ss.str();
+        return std::format("({}, {}, {})", self[0], self[1], self[2]);
       });
 
   py::class_<Vector4>(m, "Vector4")
@@ -78,8 +81,24 @@ void addDefinitions(py::module_& m) {
         v << a[0], a[1], a[2], a[3];
         return v;
       }))
+      .def("__add__",
+           [](const Vector4& self, const Vector4& other) {
+             return (self + other).eval();
+           })
+      .def("__sub__",
+           [](const Vector4& self, const Vector4& other) {
+             return (self - other).eval();
+           })
+      .def("__mul__",
+           [](const Vector4& self, const Vector4& other) {
+             return self.cwiseProduct(other).eval();
+           })
       .def("__getitem__",
-           [](const Vector4& self, Eigen::Index i) { return self[i]; });
+           [](const Vector4& self, Eigen::Index i) { return self[i]; })
+      .def("__str__", [](const Vector4& self) {
+        return std::format("({}, {}, {}, {})", self[0], self[1], self[2],
+                           self[3]);
+      });
 
   py::class_<Translation3>(m, "Translation3")
       .def(py::init([](const Vector3& a) { return Translation3(a); }))
@@ -222,6 +241,9 @@ void addDefinitions(py::module_& m) {
       .value("eProton", PdgParticle::eProton)
       .value("eAntiProton", PdgParticle::eAntiProton)
       .value("eLead", PdgParticle::eLead);
+
+  // Add the parsePdgParticle function
+  m.def("parsePdgParticle", &parsePdgParticle, py::arg("name"));
 
   py::class_<ParticleHypothesis>(m, "ParticleHypothesis")
       .def(py::init([](PdgParticle absPdg, float mass, float absCharge) {
