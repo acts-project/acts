@@ -21,10 +21,11 @@ using namespace pybind11::literals;
 using namespace ActsExamples;
 using namespace ActsPython;
 
-PYBIND11_MODULE(ActsPythonBindingsPodio, m) {
+PYBIND11_MODULE(ActsExamplesPythonBindingsPodio, m) {
   ACTS_PYTHON_DECLARE_READER(PodioReader, m, "PodioReader", inputPath,
                              outputFrame, category);
 
   ACTS_PYTHON_DECLARE_WRITER(PodioWriter, m, "PodioWriter", inputFrame,
-                             outputPath, category, collections);
+                             outputPath, category, collections,
+                             separateFilesPerThread);
 }

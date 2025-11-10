@@ -164,6 +164,62 @@ def test_edm4hep_particle_writer(tmp_path, ptcl_gun):
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_particle_writer_separate_files(tmp_path, ptcl_gun):
+    from acts.examples.edm4hep import EDM4hepParticleOutputConverter
+    from acts.examples.podio import PodioWriter
+
+    threads = 2
+    events = 6
+
+    s = Sequencer(numThreads=threads, events=events)
+    _, h3conv = ptcl_gun(s)
+
+    out = tmp_path / "particles_edm4hep.root"
+
+    converter = EDM4hepParticleOutputConverter(
+        acts.logging.INFO,
+        inputParticles=h3conv.config.outputParticles,
+        outputParticles="MCParticles",
+    )
+    s.addAlgorithm(converter)
+
+    s.addWriter(
+        PodioWriter(
+            level=acts.logging.INFO,
+            outputPath=str(out),
+            category="events",
+            collections=converter.collections,
+            separateFilesPerThread=True,
+        )
+    )
+
+    s.run()
+
+    produced_files = sorted(tmp_path.glob("particles_edm4hep_thread*.root"))
+    assert 1 < len(produced_files) <= threads
+
+    total_events = 0
+
+    from podio.root_io import Reader
+
+    for produced in produced_files:
+        assert produced.exists()
+        assert produced.stat().st_size > 200
+        assert_podio(
+            produced,
+            "events",
+            collections=set(["MCParticles"]),
+            nevents=None,
+        )
+        reader = Reader(str(produced))
+        total_events += len(reader.get("events"))
+
+    assert total_events == events
+    assert not out.exists()
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_multitrajectory_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepMultiTrajectoryOutputConverter
     from acts.examples.podio import PodioWriter

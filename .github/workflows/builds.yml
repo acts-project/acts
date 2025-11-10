@@ -32,7 +32,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -112,7 +111,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -149,7 +147,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - run: apt-get update && apt-get install -y time
@@ -230,7 +227,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -304,7 +300,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           lfs: true
 
       - name: Setup Xcode version
@@ -382,7 +377,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           path: acts
 
       - uses: actions/checkout@v5
@@ -408,7 +402,7 @@ jobs:
         continue-on-error: true
         with:
           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
-          options: -v ${{ github.workspace }}:/work
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
           shell: bash
           run: |
             for script in /.singularity.d/env/*.sh; do
@@ -420,6 +414,7 @@ jobs:
             set -ue
 
             pushd acts
+            ccache -p | grep cache_dir
             ccache -z && \
             export CMAKE_INSTALL_PREFIX=$HOME/prefix
             export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -481,7 +476,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          submodules: true
           path: acts
       - uses: actions/checkout@v5
         with:

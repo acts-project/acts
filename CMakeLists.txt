@@ -260,11 +260,11 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 2.13.1)
-set(_acts_detray_version 0.101.0)
-set(_acts_traccc_version 0.22.0)
-set(_acts_covfie_version 0.13.0)
-set(_acts_vecmem_version 1.17.0)
-set(_acts_algebraplugins_version 0.27.0)
+set(_acts_detray_version 0.103.0)
+set(_acts_traccc_version 0.26.0)
+set(_acts_covfie_version 0.15.2)
+set(_acts_vecmem_version 1.21.0)
+set(_acts_algebraplugins_version 0.28.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
 
@@ -583,20 +583,7 @@ add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 add_subdirectory(Plugins)
 add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
-if(ACTS_BUILD_ODD)
-    if(
-        EXISTS
-            "${CMAKE_CURRENT_LIST_DIR}/thirdparty/OpenDataDetector/CMakeLists.txt"
-    )
-        add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
-    else()
-        message(
-            FATAL_ERROR
-            "ODD build was requested, but the ODD directory seems not to be present. "
-            "Did you init and update the submodule?"
-        )
-    endif()
-endif()
+add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 
 # Python bindings infrastructure
 add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)

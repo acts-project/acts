@@ -13,48 +13,49 @@ CMAKE_INSTALL_PREFIX="@CMAKE_INSTALL_PREFIX@"
 CMAKE_INSTALL_BINDIR="@CMAKE_INSTALL_BINDIR@"
 CMAKE_INSTALL_LIBDIR="@CMAKE_INSTALL_LIBDIR@"
 PROJECT_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
+PROJECT_BINARY_DIR="@PROJECT_BINARY_DIR@"
 ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS="@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@"
 
-if [ -n "${ZSH_VERSION:-}" ]; then
-    script_dir=${0:a:h}
-elif [ -n "${BASH_VERSION:-}" ]; then
-    script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-else
-    # If the current shell is not ZSH or Bash, we can't guarantee that the
-    # script will work, so we throw an error.
-    echo "ERROR:   neither ZSH nor Bash was detected, other shells are not supported. The environment has not been modified."
-    exit 1
-fi
+# TODO deal with ODD activation in one place
+ODD_PATH="@ODD_SOURCE_DIR@"
+ODD_FACTORY_DIR="@ODD_FACTORY_DIR@"
 
 # Make ACTS binaries available
-# detect if we are installed as there is no lib subdirectory
+# first check if we are installed or in build tree
 if [[ "${IS_INSTALLED_VERSION}" == "ON" ]]; then
-    script_dir=$( cd -- "${script_dir}" &> /dev/null && cd .. &> /dev/null && pwd )
+    python_dir="${CMAKE_INSTALL_PREFIX}/python"
 
-    export PATH="${script_dir}/bin:${PATH}"
-    export LD_LIBRARY_PATH="${script_dir}/lib:${LD_LIBRARY_PATH}"
-    export DYLD_LIBRARY_PATH="${script_dir}/lib:${DYLD_LIBRARY_PATH}"
-else
     # the ${VAR:+:} part adds a double colon only if VAR is not empty
     export PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}${PATH:+:}${PATH}"
     export LD_LIBRARY_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
     export DYLD_LIBRARY_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
+
+    # TODO deal with ODD activation in one place
+    ODD_PATH="${CMAKE_INSTALL_PREFIX}/share/OpenDataDetector"
+    source "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/this_odd.sh"
+else
+    python_dir="${PROJECT_BINARY_DIR}/python"
+
+    # the ${VAR:+:} part adds a double colon only if VAR is not empty
+    export PATH="${PROJECT_BINARY_DIR}/bin${PATH:+:}${PATH}"
+    export LD_LIBRARY_PATH="${PROJECT_BINARY_DIR}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+    export DYLD_LIBRARY_PATH="${PROJECT_BINARY_DIR}/lib${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
+
+    # TODO deal with ODD activation in one place
+    if [ -d "${ODD_FACTORY_DIR}" ]; then
+        export LD_LIBRARY_PATH="${ODD_FACTORY_DIR}:${LD_LIBRARY_PATH}"
+        export DYLD_LIBRARY_PATH="${ODD_FACTORY_DIR}:${DYLD_LIBRARY_PATH}"
+        export DD4HEP_LIBRARY_PATH="${ODD_FACTORY_DIR}:${DD4HEP_LIBRARY_PATH}"
+    fi
 fi
 
 # ACTS project source directory
 export ACTS_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
 
 # Make ODD available if possible
-# This seems to be only reliable on Linux for now, not on MacOS
-odd_source_dir="${PROJECT_SOURCE_DIR}/thirdparty/OpenDataDetector"
-if [ -d "${odd_source_dir}" ]; then
+if [ -d "${ODD_PATH}" ]; then
     echo "INFO:    Found OpenDataDetector and set it up"
-    export ODD_PATH="${odd_source_dir}"
-    odd_binary_dir="${script_dir}/thirdparty/OpenDataDetector/factory"
-    if [ -d "${odd_binary_dir}" ]; then
-        export LD_LIBRARY_PATH="${odd_binary_dir}:${LD_LIBRARY_PATH}"
-        export DYLD_LIBRARY_PATH="${odd_binary_dir}:${DYLD_LIBRARY_PATH}"
-    fi
+    export ODD_PATH
 else
     echo "INFO:    OpenDataDetector directory not found, ODD not set up"
 fi
@@ -62,10 +63,10 @@ fi
 # Make Python bindings available if possible
 # first check if python bindings are enabled then check if the setup.sh file exists
 if [ "${ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS}" = "ON" ]; then
-    if [[ -f "${script_dir}/python/setup.sh" ]]; then
-      source "${script_dir}/python/setup.sh"
+    if [[ -f "${python_dir}/setup.sh" ]]; then
+      source "${python_dir}/setup.sh"
     else
-      echo "ERROR:   setup.sh for python and ODD is missing."
+      echo "ERROR:   setup.sh for python is missing."
       exit 1
     fi
 else

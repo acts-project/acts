@@ -21,9 +21,6 @@
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
-#include "ActsPlugins/Geant4/Geant4DetectorElement.hpp"
-#include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
-#include "ActsPlugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -51,8 +48,7 @@ using namespace Acts;
 using namespace ActsPlugins;
 using namespace ActsPython;
 
-struct ExperimentalSensitiveCandidates
-    : public Geant4::SensitiveCandidatesBase {
+struct SensitiveCandidates : public Geant4::SensitiveCandidatesBase {
   std::shared_ptr<const Experimental::Detector> detector;
 
   /// Find the sensitive surfaces for a given position
@@ -82,7 +78,7 @@ struct ExperimentalSensitiveCandidates
   }
 };
 
-PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
+PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
   py::class_<Geant4Manager, std::unique_ptr<Geant4Manager, py::nodelete>>(
       mod, "Geant4Manager")
       .def_static("instance", &Geant4Manager::instance,
@@ -150,8 +146,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
              // Set a new surface finder
              Config ccfg = cfg;
-             auto candidateSurfaces =
-                 std::make_shared<ExperimentalSensitiveCandidates>();
+             auto candidateSurfaces = std::make_shared<SensitiveCandidates>();
              candidateSurfaces->detector = detector;
              ccfg.candidateSurfaces = candidateSurfaces;
              return std::make_shared<Geant4::SensitiveSurfaceMapper>(
@@ -207,24 +202,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                         std::shared_ptr<Config>>(alg, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, outputMaterialTracks, excludeMaterials);
-  }
-
-  {
-    using ISelector = IGeant4PhysicalVolumeSelector;
-    auto is = py::class_<ISelector, std::shared_ptr<ISelector>>(
-        mod, "IVolumeSelector");
-
-    using NameSelector = Geant4PhysicalVolumeSelectors::NameSelector;
-    auto ns = py::class_<NameSelector, std::shared_ptr<NameSelector>>(
-                  mod, "VolumeNameSelector", is)
-                  .def(py::init<const std::vector<std::string>&, bool>());
-
-    using Factory = Geant4DetectorSurfaceFactory;
-    auto o = py::class_<Factory::Options>(mod, "SurfaceFactoryOptions")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(o, scaleConversion, convertMaterial,
-                       convertedMaterialThickness, sensitiveSurfaceSelector,
-                       passiveSurfaceSelector);
   }
 
   {
