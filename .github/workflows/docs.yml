@@ -21,18 +21,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Cache doxygen
-        id: cache-doxygen
-        uses: actions/cache@v4
-        with:
-          path: /usr/local/bin/doxygen
-          key: doxygen_${{ env.DOXYGEN_VERSION }}
-
       - name: Install doxygen
-        if: steps.cache-doxygen.outputs.cache-hit != 'true'
-        run: >
-          curl -SL https://sourceforge.net/projects/doxygen/files/rel-${{ env.DOXYGEN_VERSION }}/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz/download | tar -xzC .
-          && mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
+        run: |
+          curl -SL https://acts.web.cern.ch/ci/doxygen/doxygen-${{ env.DOXYGEN_VERSION }}linux.bin.tar.gz -o doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          echo "dda773bdc62384b7d796fe8b6c5029daad72483e4c8ad4abf6ee9fb98b649388  doxygen-1.9.8.linux.bin.tar.gz" | sha256sum -c -
+          tar xf
+          mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
 
       - name: Install dependencies
         run: >
