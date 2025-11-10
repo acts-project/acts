@@ -24,10 +24,10 @@ acts_add_library(
     src/RootAthenaDumpReader.cpp
     src/RootNuclearInteractionParametersWriter.cpp
     src/detail/NuclearInteractionParametrisation.cpp
-    src/TrackFinderPerformanceWriter.cpp
-    src/TrackFinderNTupleWriter.cpp
-    src/TrackFitterPerformanceWriter.cpp
-    src/VertexNTupleWriter.cpp
+    src/RootTrackFinderPerformanceWriter.cpp
+    src/RootTrackFinderNTupleWriter.cpp
+    src/RootTrackFitterPerformanceWriter.cpp
+    src/RootVertexNTupleWriter.cpp
     src/RootMuonSpacePointWriter.cpp
     src/RootMuonSpacePointReader.cpp
 )

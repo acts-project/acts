@@ -36,14 +36,14 @@ enum class RecoVertexClassification {
   Split,
 };
 
-/// @class VertexNTupleWriter
+/// @class RootVertexNTupleWriter
 ///
 /// Writes out the number of reconstructed primary vertices along with
 /// the number of primary vertices in detector acceptance as well as
 /// reconstructable primary vertices after track fitting.
 /// Additionally it matches the reco vertices to their truth vertices
 /// and write out the difference in x,y and z position.
-class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
+class RootVertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
  public:
   struct Config {
     /// Input vertex collection.
@@ -87,9 +87,9 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
   ///
   /// @param config Configuration struct
   /// @param level Message level declaration
-  VertexNTupleWriter(const Config& config, Acts::Logging::Level level);
+  RootVertexNTupleWriter(const Config& config, Acts::Logging::Level level);
 
-  ~VertexNTupleWriter() override;
+  ~RootVertexNTupleWriter() override;
 
   /// End-of-run hook
   ProcessCode finalize() override;

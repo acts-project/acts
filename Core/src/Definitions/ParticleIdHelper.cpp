@@ -890,4 +890,44 @@ std::ostream& operator<<(std::ostream& os, HadronType hadron) {
   }
   return os;
 }
+
+PdgParticle parsePdgParticle(const std::string& name) {
+  if (name == "e-") {
+    return eElectron;
+  } else if (name == "e+") {
+    return ePositron;
+  } else if (name == "mu-") {
+    return eMuon;
+  } else if (name == "mu+") {
+    return eAntiMuon;
+  } else if (name == "tau-") {
+    return eTau;
+  } else if (name == "tau+") {
+    return eAntiTau;
+  } else if (name == "gamma") {
+    return eGamma;
+  } else if (name == "pi0") {
+    return ePionZero;
+  } else if (name == "pi+") {
+    return ePionPlus;
+  } else if (name == "pi-") {
+    return ePionMinus;
+  } else if (name == "K+") {
+    return eKaonPlus;
+  } else if (name == "K-") {
+    return eKaonMinus;
+  } else if (name == "n") {
+    return eNeutron;
+  } else if (name == "n~") {
+    return eAntiNeutron;
+  } else if (name == "p") {
+    return eProton;
+  } else if (name == "p~") {
+    return eAntiProton;
+  } else if (name == "Pb") {
+    return eLead;
+  } else {
+    throw std::invalid_argument("Unknown particle name: " + name);
+  }
+}
 }  // namespace Acts

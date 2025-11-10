@@ -12,7 +12,6 @@
 #include "Acts/Utilities/ScopedTimer.hpp"
 
 #include <chrono>
-#include <format>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -24,6 +23,7 @@
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 #include <HepMC3/Reader.h>
+#include <HepMC3/Version.h>
 #include <HepMC3/Writer.h>
 #include <nlohmann/json.hpp>
 
@@ -132,6 +132,30 @@ std::string_view HepMC3Util::compressionExtension(Compression compression) {
   }
 }
 
+HepMC3Util::Compression HepMC3Util::compressionFromFilename(
+    const std::filesystem::path& filename) {
+  using enum Compression;
+
+  std::string filenameStr = filename.string();
+
+  // Check for compression extensions in order
+  if (filenameStr.ends_with(".gz")) {
+    return zlib;
+  }
+  if (filenameStr.ends_with(".xz")) {
+    return lzma;
+  }
+  if (filenameStr.ends_with(".bz2")) {
+    return bzip2;
+  }
+  if (filenameStr.ends_with(".zst")) {
+    return zstd;
+  }
+
+  // No compression extension found
+  return none;
+}
+
 std::span<const HepMC3Util::Compression>
 HepMC3Util::availableCompressionModes() {
   using enum Compression;
@@ -200,18 +224,19 @@ std::span<const HepMC3Util::Format> HepMC3Util::availableFormats() {
   return values;
 }
 
-HepMC3Util::Format HepMC3Util::formatFromFilename(std::string_view filename) {
+HepMC3Util::Format HepMC3Util::formatFromFilename(
+    const std::filesystem::path& filename) {
   using enum Format;
 
   for (auto compression : availableCompressionModes()) {
     auto ext = compressionExtension(compression);
 
-    if (filename.ends_with(".hepmc3" + std::string(ext)) ||
-        filename.ends_with(".hepmc" + std::string(ext))) {
+    if (filename.string().ends_with(".hepmc3" + std::string(ext)) ||
+        filename.string().ends_with(".hepmc" + std::string(ext))) {
       return ascii;
     }
   }
-  if (filename.ends_with(".root")) {
+  if (filename.string().ends_with(".root")) {
     return root;
   }
 

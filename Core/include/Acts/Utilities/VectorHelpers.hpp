@@ -16,6 +16,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <cassert>
 #include <limits>
 #include <numbers>
 
