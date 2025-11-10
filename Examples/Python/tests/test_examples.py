@@ -1228,7 +1228,7 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 def test_gnn_metric_learning(
-    tmp_path, trk_geo, field, assert_root_hash, backend, hardware, ensure_gnn_models
+    tmp_path, trk_geo, field, assert_root_hash, backend, hardware
 ):
     """Test GNN track finding with metric learning graph construction"""
     if backend == "onnx" and hardware == "cpu":
@@ -1245,13 +1245,9 @@ def test_gnn_metric_learning(
     model_ext = "pt" if backend == "torch" else "onnx"
     filter_name = "filter" if backend == "torch" else "filtering"
 
-    required_models = [
-        ci_models / "torchscript_models/embed.pt",
-        ci_models / f"{model_subdir}/{filter_name}.{model_ext}",
-        ci_models / f"{model_subdir}/gnn.{model_ext}",
-    ]
-
-    ensure_gnn_models(required_models)
+    assert (ci_models / "torchscript_models/embed.pt").exists(),
+    assert (ci_models / f"{model_subdir}/{filter_name}.{model_ext}").exists()
+    assert (ci_models / f"{model_subdir}/gnn.{model_ext}").exists()
 
     script = repo_root / "Examples/Scripts/Python/gnn_metric_learning.py"
     assert script.exists()
@@ -1281,7 +1277,7 @@ def test_gnn_metric_learning(
 @pytest.mark.odd
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 @pytest.mark.parametrize("backend", ["torch", "onnx"])
-def test_gnn_module_map(tmp_path, assert_root_hash, backend, ensure_gnn_models):
+def test_gnn_module_map(tmp_path, assert_root_hash, backend):
     """Test GNN track finding with module map graph construction on ODD"""
     from gnn_module_map_odd import runGnnModuleMapOdd
     from acts.examples.odd import getOpenDataDetector
@@ -1299,13 +1295,9 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, ensure_gnn_models):
     }
 
     # Check if all required files exist
-    files_to_check = [
-        Path(required_files["moduleMapPath"] + ".doublets.root"),
-        Path(required_files["moduleMapPath"] + ".triplets.root"),
-        Path(required_files["gnnModel"]),
-    ]
-
-    ensure_gnn_models(files_to_check)
+    assert Path(required_files["moduleMapPath"] + ".doublets.root").exists()
+    assert Path(required_files["moduleMapPath"] + ".triplets.root").exists()
+    assert Path(required_files["gnnModel"]).exists()
 
     # Setup ODD detector
     detector = getOpenDataDetector()
