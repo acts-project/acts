@@ -36,14 +36,15 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
                << toString(m_config.transform.translation())
                << " and number of surfaces " << m_config.mlSurfaces.size());
 
-
   auto boundsType = m_config.bounds ? m_config.bounds->type()
-                                 : VolumeBounds::BoundsType::eOther;
-  if(!(boundsType == VolumeBounds::BoundsType::eTrapezoid || boundsType == VolumeBounds::BoundsType::eCuboid)) {
-  throw std::invalid_argument(
-        "MultiWireStructureBuilder: Only trapezoid or cuboid bounds are supported");
+                                    : VolumeBounds::BoundsType::eOther;
+  if (!(boundsType == VolumeBounds::BoundsType::eTrapezoid ||
+        boundsType == VolumeBounds::BoundsType::eCuboid)) {
+    throw std::invalid_argument(
+        "MultiWireStructureBuilder: Only trapezoid or cuboid bounds are "
+        "supported");
   }
-     
+
   std::unique_ptr<TrackingVolume> trackingVolume =
       std::make_unique<TrackingVolume>(m_config.transform, m_config.bounds,
                                        m_config.name);
