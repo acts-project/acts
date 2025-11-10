@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
@@ -35,11 +36,29 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
                << toString(m_config.transform.translation())
                << " and number of surfaces " << m_config.mlSurfaces.size());
 
-  const auto& bounds =
-      dynamic_pointer_cast<TrapezoidVolumeBounds>(m_config.bounds);
-  if (bounds == nullptr) {
+  std::shared_ptr<Acts::VolumeBounds> bounds{nullptr};
+
+  switch (m_config.bounds->type()) {
+    case VolumeBounds::BoundsType::eTrapezoid:
+      ACTS_VERBOSE("Building trapezoid volume bounds.");
+      bounds = std::dynamic_pointer_cast<Acts::TrapezoidVolumeBounds>(
+          m_config.bounds);
+      break;
+    case VolumeBounds::BoundsType::eCuboid:
+      ACTS_VERBOSE("Building cuboid volume bounds.");
+      bounds =
+          std::dynamic_pointer_cast<Acts::CuboidVolumeBounds>(m_config.bounds);
+      break;
+    default:
+      throw std::runtime_error(
+          "MultiWireVolumeBuilder: Invalid bounds - trapezoidal or cuboidal "
+          "needed");
+  }
+
+  if (!bounds) {
     throw std::runtime_error(
-        "MultiWireVolumeBuilder: Invalid bounds - trapezoidal needed");
+        "MultiWireVolumeBuilder: Failed to cast volume bounds to the correct "
+        "type");
   }
 
   std::unique_ptr<TrackingVolume> trackingVolume =
