@@ -1,3 +1,0 @@
-[submodule "thirdparty/OpenDataDetector"]
-	path = thirdparty/OpenDataDetector
-	url = https://gitlab.cern.ch/acts/OpenDataDetector.git
