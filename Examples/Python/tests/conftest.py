@@ -2,7 +2,6 @@ import multiprocessing
 from pathlib import Path
 import sys
 import os
-import subprocess
 import tempfile
 import shutil
 from typing import Dict
