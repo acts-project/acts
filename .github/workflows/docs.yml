@@ -26,7 +26,7 @@ jobs:
         run: |
           curl -SL https://acts.web.cern.ch/ci/doxygen/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz -o doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
           echo "${{ env.DOXYGEN_HASH }}  doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz" | sha256sum -c -
-          tar xf
+          tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
           mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
 
       - name: Install dependencies
