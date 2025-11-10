@@ -1227,7 +1227,9 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 @pytest.mark.parametrize("backend", ["onnx", "torch"])
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, backend, hardware, ensure_gnn_models):
+def test_gnn_metric_learning(
+    tmp_path, trk_geo, field, assert_root_hash, backend, hardware, ensure_gnn_models
+):
     """Test GNN track finding with metric learning graph construction"""
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
@@ -1315,8 +1317,12 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, ensure_gnn_models):
         runGnnModuleMapOdd(
             trackingGeometry=detector.trackingGeometry(),
             field=field,
-            geometrySelection=str(repo_root / "Examples/Configs/odd-seeding-config.json"),
-            digiConfigFile=str(repo_root / "Examples/Configs/odd-digi-smearing-config.json"),
+            geometrySelection=str(
+                repo_root / "Examples/Configs/odd-seeding-config.json"
+            ),
+            digiConfigFile=str(
+                repo_root / "Examples/Configs/odd-digi-smearing-config.json"
+            ),
             outputDir=tmp_path,
             s=seq,
             **required_files,

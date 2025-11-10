@@ -21,7 +21,7 @@ from acts.examples.simulation import (
     addFatras,
     addDigitization,
     addGenParticleSelection,
-    ParticleSelectorConfig
+    ParticleSelectorConfig,
 )
 from acts.examples.reconstruction import addGnn
 
@@ -56,10 +56,12 @@ def runGnnModuleMapOdd(
         s: Optional sequencer (creates new one if None)
     """
     # Validate inputs
-    assert Path(moduleMapPath + ".doublets.root").exists(), \
-        f"Module map not found: {moduleMapPath}.doublets.root"
-    assert Path(moduleMapPath + ".triplets.root").exists(), \
-        f"Module map not found: {moduleMapPath}.triplets.root"
+    assert Path(
+        moduleMapPath + ".doublets.root"
+    ).exists(), f"Module map not found: {moduleMapPath}.doublets.root"
+    assert Path(
+        moduleMapPath + ".triplets.root"
+    ).exists(), f"Module map not found: {moduleMapPath}.triplets.root"
     assert Path(gnnModel).exists(), f"Model file not found: {gnnModel}"
 
     s = s or Sequencer(events=events, numThreads=1)
@@ -74,9 +76,7 @@ def runGnnModuleMapOdd(
         npileup=200,
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
-            ),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
         ),
         rnd=rnd,
         logLevel=acts.logging.INFO,
@@ -91,7 +91,6 @@ def runGnnModuleMapOdd(
             pt=(150 * u.MeV, None),
         ),
     )
-
 
     # FATRAS simulation
     addFatras(
@@ -162,9 +161,18 @@ def runGnnModuleMapOdd(
     # Node features: ITk 12-feature configuration
     e = acts.examples.NodeFeature
     nodeFeatures = [
-        e.R, e.Phi, e.Z, e.Eta,
-        e.Cluster1R, e.Cluster1Phi, e.Cluster1Z, e.Cluster1Eta,
-        e.Cluster2R, e.Cluster2Phi, e.Cluster2Z, e.Cluster2Eta,
+        e.R,
+        e.Phi,
+        e.Z,
+        e.Eta,
+        e.Cluster1R,
+        e.Cluster1Phi,
+        e.Cluster1Z,
+        e.Cluster1Eta,
+        e.Cluster2R,
+        e.Cluster2Phi,
+        e.Cluster2Z,
+        e.Cluster2Eta,
     ]
     featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
 

@@ -45,10 +45,12 @@ def runGNN4ITk(
     """
     # Validate inputs
     assert inputRootDump.exists(), f"Input file not found: {inputRootDump}"
-    assert Path(moduleMapPath + ".doublets.root").exists(), \
-        f"Module map not found: {moduleMapPath}.doublets.root"
-    assert Path(moduleMapPath + ".triplets.root").exists(), \
-        f"Module map not found: {moduleMapPath}.triplets.root"
+    assert Path(
+        moduleMapPath + ".doublets.root"
+    ).exists(), f"Module map not found: {moduleMapPath}.doublets.root"
+    assert Path(
+        moduleMapPath + ".triplets.root"
+    ).exists(), f"Module map not found: {moduleMapPath}.triplets.root"
     assert gnnModel.exists(), f"Model file not found: {gnnModel}"
 
     s = acts.examples.Sequencer(
@@ -120,9 +122,18 @@ def runGNN4ITk(
     # Node features: ITk 12-feature configuration (spacepoint + 2 clusters)
     e = acts.examples.NodeFeature
     nodeFeatures = [
-        e.R, e.Phi, e.Z, e.Eta,
-        e.Cluster1R, e.Cluster1Phi, e.Cluster1Z, e.Cluster1Eta,
-        e.Cluster2R, e.Cluster2Phi, e.Cluster2Z, e.Cluster2Eta,
+        e.R,
+        e.Phi,
+        e.Z,
+        e.Eta,
+        e.Cluster1R,
+        e.Cluster1Phi,
+        e.Cluster1Z,
+        e.Cluster1Eta,
+        e.Cluster2R,
+        e.Cluster2Phi,
+        e.Cluster2Z,
+        e.Cluster2Eta,
     ]
     featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
 

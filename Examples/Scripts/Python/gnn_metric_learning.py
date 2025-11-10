@@ -99,16 +99,20 @@ def runGnnMetricLearning(
     }
 
     if backend == "torch":
-        filterConfig.update({
-            "nChunks": 5,
-            "undirected": False,
-            "selectedFeatures": [0, 1, 2],
-        })
-        gnnConfig.update({
-            "nChunks": 5,
-            "undirected": True,
-            "selectedFeatures": [0, 1, 2],
-        })
+        filterConfig.update(
+            {
+                "nChunks": 5,
+                "undirected": False,
+                "selectedFeatures": [0, 1, 2],
+            }
+        )
+        gnnConfig.update(
+            {
+                "nChunks": 5,
+                "undirected": True,
+                "selectedFeatures": [0, 1, 2],
+            }
+        )
         edgeClassifiers = [
             acts.examples.TorchEdgeClassifier(**filterConfig),
             acts.examples.TorchEdgeClassifier(**gnnConfig),

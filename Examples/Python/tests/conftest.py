@@ -456,6 +456,8 @@ def ensure_gnn_models():
         # Recheck after download
         still_missing = [f for f in required_files if not f.exists()]
         if still_missing:
-            pytest.skip(f"Required model files not found after download: {still_missing}")
+            pytest.skip(
+                f"Required model files not found after download: {still_missing}"
+            )
 
     return _ensure_models

@@ -2104,7 +2104,9 @@ def addGnn(
     # Optionally create space points if tracking geometry is provided
     if trackingGeometry is not None:
         if geometrySelection is None:
-            raise ValueError("geometrySelection must be provided if trackingGeometry is set")
+            raise ValueError(
+                "geometrySelection must be provided if trackingGeometry is set"
+            )
 
         s.addAlgorithm(
             acts.examples.SpacePointMaker(
