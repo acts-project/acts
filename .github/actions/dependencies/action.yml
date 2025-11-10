@@ -36,31 +36,31 @@ runs:
       with:
         python-version: "3.12"
 
+    - name: Install the latest version of uv
+      uses: astral-sh/setup-uv@v6
+
     - name: Prerequisites
       if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
         brew install ninja ccache
 
-    # TODO caching is commented out for now with https://github.com/acts-project/acts/pull/4723
-    # since it stopped working for macOS runners with the newest spack version due to symlink copying issues.
+    - name: Restore cache
+      id: cache-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: spack_cache
+        key: spack-r4-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
-    # - name: Restore cache
-    #   id: cache-restore
-    #   uses: actions/cache/restore@v4
-    #   with:
-    #     path: spack_cache
-    #     key: spack-r3-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
-
-    # - name: Extract cached Spack
-    #   if: steps.cache-restore.outputs.cache-hit == 'true'
-    #   shell: bash
-    #   run: |
-    #     mv spack_cache/spack .
-    #     mv spack_cache/.spack ~
+    - name: Extract cached Spack
+      if: steps.cache-restore.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        mv spack_cache/spack .
+        mv spack_cache/.spack ~
 
     - name: Setup Spack from scratch
-      # if: steps.cache-restore.outputs.cache-hit != 'true'
+      if: steps.cache-restore.outputs.cache-hit != 'true'
       shell: bash
       env:
         SPACK_VERSION: ${{ inputs.spack_version }}
@@ -68,17 +68,17 @@ runs:
         CI/dependencies/setup_spack.sh ${PWD}/spack
         spack/bin/spack list > /dev/null
         rm -rf spack/.git
-        # mkdir spack_cache
-        # cp -r spack spack_cache/
-        # cp -r ~/.spack spack_cache/
+        mkdir spack_cache
+        cp -r spack spack_cache/
+        cp -r ~/.spack spack_cache/
 
-    # - name: Save cache
-    #   if: steps.cache-restore.outputs.cache-hit != 'true'
-    #   uses: actions/cache/save@v4
-    #   with:
-    #     path: |
-    #       spack_cache
-    #     key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+    - name: Save cache
+      if: steps.cache-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          spack_cache
+        key: ${{ steps.cache-restore.outputs.cache-primary-key }}
 
     - name: Install dependencies
       shell: bash
