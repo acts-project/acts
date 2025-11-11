@@ -214,8 +214,12 @@ async def download_all_datasets(
     max_concurrent: int,
     dry_run: bool = False,
     force: bool = False,
-) -> None:
-    """Download all datasets with limited concurrency."""
+) -> int:
+    """Download all datasets with limited concurrency.
+
+    Returns:
+        Number of failures (0 if all successful)
+    """
     # Filter out already installed datasets
     if force:
         datasets_to_install = datasets
@@ -224,7 +228,7 @@ async def download_all_datasets(
 
     if not datasets_to_install:
         console.print("[green]All datasets already installed[/green]")
-        return
+        return 0
 
     if dry_run:
         console.print(
@@ -235,7 +239,7 @@ async def download_all_datasets(
             console.print(f"    URL: {base_url}/{ds['filename']}")
             console.print(f"    Destination: {ds['path']}")
             console.print(f"    MD5: {ds['md5']}")
-        return
+        return 0
 
     console.print(f"[cyan]Downloading {len(datasets_to_install)} datasets...[/cyan]")
 
@@ -281,6 +285,8 @@ async def download_all_datasets(
             if isinstance(result, Exception) or not result[0]:
                 msg = str(result) if isinstance(result, Exception) else result[1]
                 console.print(f"[red]  • {msg}[/red]")
+
+    return failures
 
 
 @app.command()
@@ -329,11 +335,15 @@ def main(
     # Create temp directory
     with tempfile.TemporaryDirectory(prefix="geant4-downloads-") as temp_dir:
         # Download datasets
-        asyncio.run(
+        failures = asyncio.run(
             download_all_datasets(
                 datasets, base_url, Path(temp_dir), max_concurrent, dry_run, force
             )
         )
+
+    # Exit with error code if any downloads failed
+    if failures > 0:
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":
