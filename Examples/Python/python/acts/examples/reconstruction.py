@@ -1398,12 +1398,11 @@ def addGbtsSeeding(
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     ConnectorInputFileStr = str(ConnectorInputConfigFile)
-    seedFinderConfig = acts.SeedFinderGbtsConfig(
+    seedFinderConfig = acts.examples.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
-            sigmaScattering=seedFinderConfigArg.sigmaScattering,
-            minPt=seedFinderConfigArg.minPt,
-            ConnectorInputFile=ConnectorInputFileStr,
-            m_useClusterWidth=False,
+            
+            m_minPt=seedFinderConfigArg.minPt,
+            ConnectorInputFile=ConnectorInputFileStr
         ),
     )
     seedFinderOptions = acts.SeedFinderOptions(
@@ -1421,14 +1420,11 @@ def addGbtsSeeding(
 
     seedingAlg = acts.examples.GbtsSeedingAlgorithm(
         level=logLevel,
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints= spacePoints,
         outputSeeds="seeds",
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile,
-        geometrySelection=acts.examples.readJsonGeometryList(
-            str(geoSelectionConfigFile)
-        ),
         trackingGeometry=trackingGeometry,
         fill_module_csv=False,
         inputClusters="clusters",

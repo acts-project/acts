@@ -12,66 +12,60 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/GbtsBase.hpp"  //definition of Trigsispacepoint base and trigtriplets
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
-
+#include "Acts/Seeding/GbtsGeometry.hpp"
 #include <memory>
 
 // core algorithm so in acts namespace
 namespace Acts::Experimental {
 
-template <typename SpacePoint>
 struct SeedFinderGbtsConfig {
-  // // how many sigmas of scattering angle should be considered?
-  float sigmaScattering = 5;
+  
+ // GbtsSeedingAlgorithm options 
+  bool BeamSpotCorrection = false;
+  std::string ConnectorInputFile{};  // Path to the connector configuration file
+                                     // that defines the layer connections
 
-  // Seed cut
-  float minPt = 400. * Acts::UnitConstants::MeV;
+ 
+ //SeedFinderGbts option
+  bool m_LRTmode = false;
+  bool m_useML = false; //use cluster width 
+  bool m_matchBeforeCreate = false;
+  bool m_useOldTunings = false;
+  float m_tau_ratio_cut = 0.007;
+  float m_etaBinOverride = 0.0f; //specify non-zero to override eta bin width from connection file (default 0.2 in createLinkingScheme.py)
+  float m_nMaxPhiSlice = 53; // used to calculate phi slices
+  float m_minPt = 1000. * UnitConstants::MeV;
+  float m_phiSliceWidth{}; //derived in CreatSeeds function
 
-  //   //detector ROI
-  //   // derived values, set on SeedFinder construction
-  float highland = 0;
-  float maxScatteringAngle2 = 0;
-  /// for load space points
-
-  // Parameter which can loosen the tolerance of the track seed to form a
-  // helix. This is useful for e.g. misaligned seeding.
-  float helixCutTolerance = 1.;
-
-  float m_phiSliceWidth{};    // initialised in loadSpacePoints function
-  float m_nMaxPhiSlice = 53;  // used to calculate phi slices
-  bool m_useClusterWidth =
-      false;  // bool for use of cluster width in loadSpacePoints function
-  std::string ConnectorInputFile;  // Path to the connector configuration file
-                                   // that defines the layer connections
-  std::vector<TrigInDetSiLayer> m_layerGeometry;
-
-  // for runGbts_TrackFinder
-  bool m_useEtaBinning =
-      true;  // bool to use eta binning from geometry structure
+    //BuildTheGraph() options
+  double ptCoeff = 0.29997 * 1.9972 / 2.0; // ~0.3*B/2 - assumes nominal field of 2*T
+  bool m_useEtaBinning = true;  // bool to use eta binning from geometry structure
   bool m_doubletFilterRZ = true;  // bool applies new Z cuts on doublets
-  float m_minDeltaRadius = 2.0;   // min dr for doublet
-  float m_tripletD0Max = 4.0;     // D0 cut for triplets
-  unsigned int m_maxTripletBufferLength =
-      3;                        // maximum number of space points per triplet
-  int MaxEdges = 2000000;       // max number of Gbts edges/doublets
-  float cut_dphi_max = 0.012;   // phi cut for triplets
-  float cut_dcurv_max = 0.001;  // curv cut for triplets
-  float cut_tau_ratio_max = 0.007;  // tau cut for doublets and triplets
-  float maxOuterRadius = 550.0;     // used to calculate Z cut on doublets
-  float m_PtMin = 1000.0;
-  float m_tripletPtMinFrac = 0.3;
-  float m_tripletPtMin = m_PtMin * m_tripletPtMinFrac;  // Limit on triplet pt
-  double ptCoeff =
-      0.29997 * 1.9972 / 2.0;  // ~0.3*B/2 - assumes nominal field of 2*T
+  int m_nMaxEdges = 2000000;     // max number of Gbts edges/doublets
+  float m_minDeltaRadius = 2.0;
 
-  // ROI:
-  bool containsPhi() {
-    return false;
-    // need to implement this function
-  }
+  //GbtsTrackingFilter
+    //Update()
+  float sigma_t = 0.0003;
+  float sigma_w = 0.00009;
 
-  ////
+  float sigmaMS = 0.016;
+
+  float sigma_x = 0.25;//was 0.22
+  float sigma_y = 2.5;//was 1.7
+
+  float weight_x = 0.5;
+  float weight_y = 0.5;
+
+  float maxDChi2_x = 60.0;//35.0;
+  float maxDChi2_y = 60.0;//31.0;
+
+  float add_hit = 14.0;
+  
+   
+    
+
   // 2 member functions
   SeedFinderGbtsConfig calculateDerivedQuantities() const {
     // thorw statement if the isInternalUnits member is false, ie if dont call
@@ -89,7 +83,7 @@ struct SeedFinderGbtsConfig {
     // divides inputs by 1mm, all ones input
     // changes member inInInternalUnits to true
     return config;
-  }
+  };
 
 };  // end of config struct
 

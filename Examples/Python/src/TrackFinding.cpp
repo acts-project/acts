@@ -90,11 +90,10 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::Experimental::SeedFinderGbtsConfig<SimSpacePoint>;
+    using Config = Acts::Experimental::SeedFinderGbtsConfig;
     auto c = py::class_<Config>(mex, "SeedFinderGbtsConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, sigmaScattering, highland, maxScatteringAngle2,
-                       ConnectorInputFile, m_phiSliceWidth, m_nMaxPhiSlice,
-                       m_useClusterWidth, m_layerGeometry);
+    ACTS_PYTHON_STRUCT(c, m_minPt,
+                       ConnectorInputFile, m_phiSliceWidth, m_nMaxPhiSlice);
     patchKwargsConstructor(c);
   }
 
@@ -143,10 +142,10 @@ void addTrackFinding(Context& ctx) {
                                 seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm", inputSpacePoints,
-      outputSeeds, seedFinderConfig, seedFinderOptions, layerMappingFile,
-      geometrySelection, trackingGeometry, ActsGbtsMap, fill_module_csv,
-      inputClusters);
+      ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
+      inputSpacePoints, outputSeeds, seedFinderConfig, seedFinderOptions,
+      layerMappingFile, trackingGeometry, ActsGbtsMap,
+      fill_module_csv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
