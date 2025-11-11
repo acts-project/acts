@@ -53,7 +53,6 @@ struct RootTrackFinderNTupleWriter::Impl {
   // number of particles contained in the track
   UShort_t trkNumParticles = 0;
   // track particle content; for each contributing particle, largest first
-  std::vector<std::vector<std::uint32_t>> trkParticleId;
   std::vector<std::uint32_t> trkParticleVertexPrimary;
   std::vector<std::uint32_t> trkParticleVertexSecondary;
   std::vector<std::uint32_t> trkParticleParticle;
@@ -69,8 +68,6 @@ struct RootTrackFinderNTupleWriter::Impl {
   std::mutex prtMutex;
   // particle identification
   ULong64_t prtEventId = 0;
-  std::vector<std::uint32_t> prtParticleId =
-      ActsFatras::Barcode::Invalid().asVector();
   std::uint32_t prtParticleVertexPrimary = 0;
   std::uint32_t prtParticleVertexSecondary = 0;
   std::uint32_t prtParticleParticle = 0;
@@ -140,7 +137,6 @@ struct RootTrackFinderNTupleWriter::Impl {
     trkTree->Branch("track_id", &trkTrackId);
     trkTree->Branch("size", &trkNumHits);
     trkTree->Branch("nparticles", &trkNumParticles);
-    trkTree->Branch("particle_id", &trkParticleId);
     trkTree->Branch("particle_id_vertex_primary", &trkParticleVertexPrimary);
     trkTree->Branch("particle_id_vertex_secondary",
                     &trkParticleVertexSecondary);
@@ -153,7 +149,6 @@ struct RootTrackFinderNTupleWriter::Impl {
         new TTree(cfg.treeNameParticles.c_str(), cfg.treeNameParticles.c_str());
     prtTree->SetDirectory(file);
     prtTree->Branch("event_id", &prtEventId);
-    prtTree->Branch("particle_id", &prtParticleId);
     prtTree->Branch("particle_id_vertex_primary", &prtParticleVertexPrimary);
     prtTree->Branch("particle_id_vertex_secondary",
                     &prtParticleVertexSecondary);
@@ -225,7 +220,6 @@ struct RootTrackFinderNTupleWriter::Impl {
         trkTrackId = track.index();
         trkNumHits = track.nMeasurements();
         trkNumParticles = particleMatch.contributingParticles.size();
-        trkParticleId.clear();
         trkParticleVertexPrimary.clear();
         trkParticleVertexSecondary.clear();
         trkParticleParticle.clear();
@@ -235,7 +229,6 @@ struct RootTrackFinderNTupleWriter::Impl {
         trkParticleNumHitsOnTrack.clear();
         for (const auto& phc : particleMatch.contributingParticles) {
           const auto barcode = phc.particleId;
-          trkParticleId.push_back(barcode.asVector());
           trkParticleVertexPrimary.push_back(barcode.vertexPrimary());
           trkParticleVertexSecondary.push_back(barcode.vertexSecondary());
           trkParticleParticle.push_back(barcode.particle());
@@ -263,7 +256,6 @@ struct RootTrackFinderNTupleWriter::Impl {
         // identification
         prtEventId = eventId;
         const auto particleBarcode = particle.particleId();
-        prtParticleId = particleBarcode.asVector();
         prtParticleVertexPrimary = particleBarcode.vertexPrimary();
         prtParticleVertexSecondary = particleBarcode.vertexSecondary();
         prtParticleParticle = particleBarcode.particle();

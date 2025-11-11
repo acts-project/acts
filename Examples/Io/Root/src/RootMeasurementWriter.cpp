@@ -88,7 +88,6 @@ RootMeasurementWriter::RootMeasurementWriter(
 
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), "Measurements");
-  m_outputTree->Branch("particles", &m_particles);
   m_outputTree->Branch("particles_vertex_primary", &m_particleVertexPrimary);
   m_outputTree->Branch("particles_vertex_secondary",
                        &m_particleVertexSecondary);
@@ -159,7 +158,6 @@ ProcessCode RootMeasurementWriter::writeT(
         Acts::VectorHelpers::incidentAngles(dir, rot);
     for (auto [_, i] : indices) {
       const auto barcode = simHits.nth(i)->particleId();
-      m_particles.push_back(barcode.asVector());
       m_particleVertexPrimary.push_back(barcode.vertexPrimary());
       m_particleVertexSecondary.push_back(barcode.vertexSecondary());
       m_particleParticle.push_back(barcode.particle());
@@ -180,7 +178,6 @@ ProcessCode RootMeasurementWriter::writeT(
     }
 
     m_outputTree->Fill();
-    m_particles.clear();
     m_particleVertexPrimary.clear();
     m_particleVertexSecondary.clear();
     m_particleParticle.clear();

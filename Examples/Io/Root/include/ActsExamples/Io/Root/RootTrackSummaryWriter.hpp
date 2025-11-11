@@ -136,8 +136,6 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   // The majority truth particle info
   /// The number of hits from majority particle
   std::vector<unsigned int> m_nMajorityHits;
-  /// The particle Id of the majority particle
-  std::vector<std::vector<std::uint32_t>> m_majorityParticleId;
   /// Decoded barcode components for convenience columns
   std::vector<std::uint32_t> m_majorityParticleVertexPrimary;
   std::vector<std::uint32_t> m_majorityParticleVertexSecondary;

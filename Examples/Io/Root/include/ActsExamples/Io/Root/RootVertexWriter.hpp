@@ -87,15 +87,11 @@ class RootVertexWriter final : public WriterT<SimVertexContainer> {
   std::vector<float> m_vy;
   std::vector<float> m_vz;
   std::vector<float> m_vt;
-  /// Incoming particles to the vertex.
-  std::vector<std::vector<std::vector<std::uint32_t>>> m_incomingParticles;
   std::vector<std::vector<std::uint32_t>> m_incomingParticlesVertexPrimary;
   std::vector<std::vector<std::uint32_t>> m_incomingParticlesVertexSecondary;
   std::vector<std::vector<std::uint32_t>> m_incomingParticlesParticle;
   std::vector<std::vector<std::uint32_t>> m_incomingParticlesGeneration;
   std::vector<std::vector<std::uint32_t>> m_incomingParticlesSubParticle;
-  /// Outgoing particles from the vertex.
-  std::vector<std::vector<std::vector<std::uint32_t>>> m_outgoingParticles;
   std::vector<std::vector<std::uint32_t>> m_outgoingParticlesVertexPrimary;
   std::vector<std::vector<std::uint32_t>> m_outgoingParticlesVertexSecondary;
   std::vector<std::vector<std::uint32_t>> m_outgoingParticlesParticle;

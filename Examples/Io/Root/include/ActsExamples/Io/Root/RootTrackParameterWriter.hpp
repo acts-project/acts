@@ -126,8 +126,6 @@ class RootTrackParameterWriter final
   // Truth parameters
   /// Whether the seed is matched with truth
   bool m_t_matched{false};
-  std::vector<std::uint32_t> m_t_particleId =
-      ActsFatras::Barcode::Invalid().asVector();
   std::uint32_t m_t_particleVertexPrimary{0};
   std::uint32_t m_t_particleVertexSecondary{0};
   std::uint32_t m_t_particleParticle{0};

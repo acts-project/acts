@@ -116,7 +116,6 @@ RootTrackParameterWriter::RootTrackParameterWriter(
 
   // The truth meta
   m_outputTree->Branch("truthMatched", &m_t_matched);
-  m_outputTree->Branch("particleId", &m_t_particleId);
   m_outputTree->Branch("particleId_vertex_primary", &m_t_particleVertexPrimary);
   m_outputTree->Branch("particleId_vertex_secondary",
                        &m_t_particleVertexSecondary);
@@ -238,7 +237,6 @@ ProcessCode RootTrackParameterWriter::writeT(
     if (particleHitCounts.size() == 1) {
       m_t_matched = true;
       const auto& matchedBarcode = particleHitCounts.front().particleId;
-      m_t_particleId = matchedBarcode.asVector();
       m_t_particleVertexPrimary = matchedBarcode.vertexPrimary();
       m_t_particleVertexSecondary = matchedBarcode.vertexSecondary();
       m_t_particleParticle = matchedBarcode.particle();
@@ -313,7 +311,6 @@ ProcessCode RootTrackParameterWriter::writeT(
       m_pull_time = getPull(m_res_time, m_err_time);
     } else {
       m_t_matched = false;
-      m_t_particleId = ActsFatras::Barcode::Invalid().asVector();
       m_t_particleVertexPrimary = 0;
       m_t_particleVertexSecondary = 0;
       m_t_particleParticle = 0;

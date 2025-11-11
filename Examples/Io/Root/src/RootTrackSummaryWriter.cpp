@@ -89,7 +89,6 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_outputTree->Branch("outlierLayer", &m_outlierLayer);
 
   m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
-  m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
   m_outputTree->Branch("majorityParticleId_vertex_primary",
                        &m_majorityParticleVertexPrimary);
   m_outputTree->Branch("majorityParticleId_vertex_secondary",
@@ -377,7 +376,6 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     // Push the corresponding truth particle info for the track.
     // Always push back even if majority particle not found
-    m_majorityParticleId.push_back(majorityParticleId.asVector());
     m_majorityParticleVertexPrimary.push_back(
         majorityParticleId.vertexPrimary());
     m_majorityParticleVertexSecondary.push_back(
@@ -571,7 +569,6 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   m_outlierLayer.clear();
 
   m_nMajorityHits.clear();
-  m_majorityParticleId.clear();
   m_majorityParticleVertexPrimary.clear();
   m_majorityParticleVertexSecondary.clear();
   m_majorityParticleParticle.clear();

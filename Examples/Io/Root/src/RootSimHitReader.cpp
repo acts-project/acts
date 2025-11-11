@@ -55,7 +55,6 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   setBranches(m_uint32Keys, m_uint32Columns);
   setBranches(m_uint64Keys, m_uint64Columns);
   setBranches(m_int32Keys, m_int32Columns);
-  setBranches(m_vecUint32Keys, m_vecUint32Columns);
 
   // add file to the input chain
   m_inputChain->Add(m_cfg.filePath.c_str());
@@ -149,7 +148,17 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
 
     const Acts::GeometryIdentifier geoid{m_uint64Columns.at("geometry_id")};
     const SimBarcode pid =
-        SimBarcode().withData(*m_vecUint32Columns.at("barcode"));
+        SimBarcode()
+            .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(
+                m_uint32Columns.at("barcode_vertex_primary")))
+            .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                m_uint32Columns.at("barcode_vertex_secondary")))
+            .withParticle(static_cast<SimBarcode::ParticleId>(
+                m_uint32Columns.at("barcode_particle")))
+            .withGeneration(static_cast<SimBarcode::GenerationId>(
+                m_uint32Columns.at("barcode_generation")))
+            .withSubParticle(static_cast<SimBarcode::SubParticleId>(
+                m_uint32Columns.at("barcode_sub_particle")));
     const auto index = m_int32Columns.at("index");
 
     const Acts::Vector4 pos4 = {

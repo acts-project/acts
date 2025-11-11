@@ -59,7 +59,16 @@ RootTrackSummaryReader::RootTrackSummaryReader(
   m_inputChain->SetBranchAddress("outlierVolume", &m_outlierVolume);
   m_inputChain->SetBranchAddress("outlierLayer", &m_outlierLayer);
 
-  m_inputChain->SetBranchAddress("majorityParticleId", &m_majorityParticleId);
+  m_inputChain->SetBranchAddress("majorityParticleId_vertex_primary",
+                                 &m_majorityParticleVertexPrimary);
+  m_inputChain->SetBranchAddress("majorityParticleId_vertex_secondary",
+                                 &m_majorityParticleVertexSecondary);
+  m_inputChain->SetBranchAddress("majorityParticleId_particle",
+                                 &m_majorityParticleParticle);
+  m_inputChain->SetBranchAddress("majorityParticleId_generation",
+                                 &m_majorityParticleGeneration);
+  m_inputChain->SetBranchAddress("majorityParticleId_sub_particle",
+                                 &m_majorityParticleSubParticle);
   m_inputChain->SetBranchAddress("nMajorityHits", &m_nMajorityHits);
   m_inputChain->SetBranchAddress("t_charge", &m_t_charge);
   m_inputChain->SetBranchAddress("t_time", &m_t_time);
@@ -130,7 +139,11 @@ RootTrackSummaryReader::~RootTrackSummaryReader() {
   delete m_measurementLayer;
   delete m_outlierVolume;
   delete m_outlierLayer;
-  delete m_majorityParticleId;
+  delete m_majorityParticleVertexPrimary;
+  delete m_majorityParticleVertexSecondary;
+  delete m_majorityParticleParticle;
+  delete m_majorityParticleGeneration;
+  delete m_majorityParticleSubParticle;
   delete m_nMajorityHits;
   delete m_t_charge;
   delete m_t_time;
@@ -218,7 +231,17 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
                                  (*m_t_time)[i]);
       truthParticle.setDirection((*m_t_px)[i], (*m_t_py)[i], (*m_t_pz)[i]);
       truthParticle.setParticleId(
-          SimBarcode{}.withData((*m_majorityParticleId)[i]));
+          SimBarcode()
+              .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(
+                  (*m_majorityParticleVertexPrimary)[i]))
+              .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                  (*m_majorityParticleVertexSecondary)[i]))
+              .withParticle(static_cast<SimBarcode::ParticleId>(
+                  (*m_majorityParticleParticle)[i]))
+              .withGeneration(static_cast<SimBarcode::GenerationId>(
+                  (*m_majorityParticleGeneration)[i]))
+              .withSubParticle(static_cast<SimBarcode::SubParticleId>(
+                  (*m_majorityParticleSubParticle)[i])));
 
       truthParticleCollection.insert(truthParticleCollection.end(),
                                      SimParticle(truthParticle, truthParticle));
