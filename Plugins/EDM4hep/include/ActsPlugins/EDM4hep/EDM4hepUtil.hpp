@@ -32,6 +32,22 @@
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
+#include <podio/podioVersion.h>
+
+#if podio_VERSION_MAJOR == 0 || \
+    (podio_VERSION_MAJOR == 1 && podio_VERSION_MINOR <= 2)
+
+template <>
+struct std::hash<podio::ObjectID> {
+  std::size_t operator()(const podio::ObjectID& id) const noexcept {
+    auto hash_collectionID = std::hash<uint32_t>{}(id.collectionID);
+    auto hash_index = std::hash<int>{}(id.index);
+
+    return hash_collectionID ^ hash_index;
+  }
+};
+
+#endif
 
 namespace ActsPlugins::EDM4hepUtil {
 
