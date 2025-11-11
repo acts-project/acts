@@ -21,10 +21,9 @@ from acts.examples.simulation import (
     addFatras,
     addDigitization,
     addGenParticleSelection,
-    addSpacePointsMaking,
     ParticleSelectorConfig,
 )
-from acts.examples.reconstruction import addGnn
+from acts.examples.reconstruction import addGnn, addSpacePointsMaking
 
 
 def runGnnModuleMap(
@@ -120,8 +119,8 @@ def runGnnModuleMap(
     addSpacePointsMaking(
         s,
         trackingGeometry,
-        geometrySelection=geometrySelection,
-        stripGeometrySelection=stripGeometrySelection,
+        geoSelectionConfigFile=geometrySelection,
+        stripGeoSelectionConfigFile=stripGeometrySelection,
         logLevel=acts.logging.INFO,
     )
 
@@ -186,8 +185,6 @@ def runGnnModuleMap(
         trackBuilder=trackBuilder,
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
-        trackingGeometry=trackingGeometry,
-        geometrySelection=geometrySelection,
         inputClusters="clusters",
         outputDirRoot=str(outputDir),
         logLevel=acts.logging.INFO,

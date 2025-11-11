@@ -6,7 +6,7 @@ import sys
 
 import acts.examples
 import acts
-from acts.examples.reconstruction import addGnn
+from acts.examples.reconstruction import addGnn, addSpacePointsMaking
 from acts import UnitConstants as u
 
 from digitization import runDigitization
@@ -18,8 +18,9 @@ def runGnnMetricLearning(
     outputDir,
     digiConfigFile,
     geometrySelection,
-    backend,
-    modelDir,
+    embedModelPath,
+    filterModelPath,
+    gnnModelPath,
     outputRoot=False,
     outputCsv=False,
     s=None,
@@ -35,7 +36,14 @@ def runGnnMetricLearning(
         s=s,
     )
     
-    # Stage 1: Graph construction via metric learning
+    addSpacePointsMaking(
+        s,
+        geoSelectionConfigFile=geometrySelection,
+        stripGeoSelectionConfigFile=None,
+        trackingGeometry=trackingGeometry,
+        logLevel=acts.logging.INFO,
+    )
+
     graphConstructorConfig = {
         "level": acts.logging.INFO,
         "modelPath": str(embedModelPath),
@@ -46,7 +54,6 @@ def runGnnMetricLearning(
     }
     graphConstructor = acts.examples.TorchMetricLearning(**graphConstructorConfig)
 
-    # Stage 2: Two-stage edge classification (filter + GNN)
     filterConfig = {
         "level": acts.logging.INFO,
         "modelPath": str(filterModelPath),
@@ -111,8 +118,6 @@ def runGnnMetricLearning(
         trackBuilder=trackBuilder,
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
-        trackingGeometry=trackingGeometry,
-        geometrySelection=geometrySelection,
         outputDirRoot=outputDir if outputRoot else None,
         logLevel=acts.logging.INFO,
     )

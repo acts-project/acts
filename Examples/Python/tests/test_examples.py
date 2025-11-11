@@ -1245,11 +1245,11 @@ def test_gnn_metric_learning(
     model_ext = "pt" if backend == "torch" else "onnx"
     filter_name = "filter" if backend == "torch" else "filtering"
 
-    assert (ci_models / "torchscript_models/embed.pt").exists(),
+    assert (ci_models / "torchscript_models/embed.pt").exists()
     assert (ci_models / f"{model_subdir}/{filter_name}.{model_ext}").exists()
     assert (ci_models / f"{model_subdir}/gnn.{model_ext}").exists()
 
-    script = repo_root / "Examples/Scripts/Python/gnn_metric_learning.py"
+    script = repo_root / "Examples/Scripts/Python/gnn.py"
     assert script.exists()
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
@@ -1279,7 +1279,7 @@ def test_gnn_metric_learning(
 @pytest.mark.parametrize("backend", ["torch", "onnx"])
 def test_gnn_module_map(tmp_path, assert_root_hash, backend):
     """Test GNN track finding with module map graph construction on ODD"""
-    from gnn_module_map_odd import runGnnModuleMapOdd
+    from gnn_module_map_odd import runGnnModuleMap
     from acts.examples.odd import getOpenDataDetector
 
     repo_root = Path(__file__).parent.parent.parent.parent
@@ -1306,11 +1306,14 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend):
 
     # Run GNN module map workflow
     with detector:
-        runGnnModuleMapOdd(
+        runGnnModuleMap(
             trackingGeometry=detector.trackingGeometry(),
             field=field,
             geometrySelection=str(
                 repo_root / "Examples/Configs/odd-seeding-config.json"
+            ),
+            stripGeometrySelection=str(
+                repo_root / "Examples/Configs/odd-strip-spacepoint-selection.json"
             ),
             digiConfigFile=str(
                 repo_root / "Examples/Configs/odd-digi-smearing-config.json"
