@@ -239,9 +239,6 @@ build_gnn_tensorrt:
     - !reference [.spack_cache, cache]
     - !reference [.ccache_base, cache]
 
-  tags:
-    - docker-gpu-nvidia
-
   script:
     - git clone $CLONE_URL src
     - cd src
