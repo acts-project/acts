@@ -35,7 +35,7 @@ def runGnnMetricLearning(
         outputCsv=outputCsv,
         s=s,
     )
-    
+
     addSpacePointsMaking(
         s,
         geoSelectionConfigFile=geometrySelection,
@@ -73,7 +73,7 @@ def runGnnMetricLearning(
                 **filterConfig,
                 nChunks=5,
                 undirected=False,
-                selectedFeatures=[0,1,2],
+                selectedFeatures=[0, 1, 2],
             )
         )
     elif filterModelPath.suffix == ".onnx":
@@ -86,7 +86,7 @@ def runGnnMetricLearning(
             acts.examples.TorchEdgeClassifier(
                 **filterConfig,
                 undirected=True,
-                selectedFeatures=[0,1,2],
+                selectedFeatures=[0, 1, 2],
             )
         )
     elif gnnModelPath.suffix == ".onnx":
@@ -138,7 +138,6 @@ if "__main__" == __name__:
 
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists()
-
 
     # Model paths from ci_models
     ci_models = srcdir / "ci_models/metric_learning"

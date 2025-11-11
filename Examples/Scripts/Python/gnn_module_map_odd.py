@@ -208,7 +208,9 @@ if __name__ == "__main__":
     geometrySelection = srcdir / "Examples/Configs/odd-seeding-config.json"
     assert geometrySelection.exists(), f"File not found: {geometrySelection}"
 
-    stripGeometrySelection = srcdir / "Examples/Configs/odd-strip-spacepoint-selection.json"
+    stripGeometrySelection = (
+        srcdir / "Examples/Configs/odd-strip-spacepoint-selection.json"
+    )
     assert srcdir.exists(), f"File not found: {stripGeometrySelection}"
 
     digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
