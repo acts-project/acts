@@ -21,15 +21,17 @@ from acts.examples.simulation import (
     addFatras,
     addDigitization,
     addGenParticleSelection,
+    addSpacePointsMaking,
     ParticleSelectorConfig,
 )
 from acts.examples.reconstruction import addGnn
 
 
-def runGnnModuleMapOdd(
+def runGnnModuleMap(
     trackingGeometry,
     field,
     geometrySelection,
+    stripGeometrySelection,
     digiConfigFile,
     moduleMapPath,
     gnnModel,
@@ -115,10 +117,14 @@ def runGnnModuleMapOdd(
         logLevel=acts.logging.INFO,
     )
 
-    # Configure GNN stages for module map workflow
-    # All parameters hardcoded based on ODD + module map configuration
+    addSpacePointsMaking(
+        s,
+        trackingGeometry,
+        geometrySelection=geometrySelection,
+        stripGeometrySelection=stripGeometrySelection,
+        logLevel=acts.logging.INFO,
+    )
 
-    # Stage 1: Graph construction via module map
     moduleMapConfig = {
         "level": acts.logging.INFO,
         "moduleMapPath": moduleMapPath,
@@ -132,7 +138,6 @@ def runGnnModuleMapOdd(
     }
     graphConstructor = acts.examples.ModuleMapCuda(**moduleMapConfig)
 
-    # Stage 2: Single-stage edge classification (auto-detect backend)
     gnnModel = Path(gnnModel)
     edgeClassifierConfig = {
         "level": acts.logging.INFO,
@@ -150,7 +155,6 @@ def runGnnModuleMapOdd(
     else:
         raise ValueError(f"Unsupported model format: {gnnModel.suffix}")
 
-    # Stage 3: GPU track building
     trackBuilderConfig = {
         "level": acts.logging.INFO,
         "useOneBlockImplementation": False,
@@ -158,7 +162,6 @@ def runGnnModuleMapOdd(
     }
     trackBuilder = acts.examples.CudaTrackBuilding(**trackBuilderConfig)
 
-    # Node features: ITk 12-feature configuration
     e = acts.examples.NodeFeature
     nodeFeatures = [
         e.R,
@@ -176,7 +179,6 @@ def runGnnModuleMapOdd(
     ]
     featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
 
-    # Add GNN tracking
     addGnn(
         s,
         graphConstructor=graphConstructor,
@@ -209,6 +211,9 @@ if __name__ == "__main__":
     geometrySelection = srcdir / "Examples/Configs/odd-seeding-config.json"
     assert geometrySelection.exists(), f"File not found: {geometrySelection}"
 
+    stripGeometrySelection = srcdir / "Examples/Configs/odd-strip-spacepoint-selection.json"
+    assert srcdir.exists(), f"File not found: {stripGeometrySelection}"
+
     digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
     assert digiConfigFile.exists(), f"File not found: {digiConfigFile}"
 
@@ -220,10 +225,11 @@ if __name__ == "__main__":
     events = 100
 
     # Run the workflow
-    runGnnModuleMapOdd(
+    runGnnModuleMap(
         trackingGeometry=trackingGeometry,
         field=field,
         geometrySelection=geometrySelection,
+        stripGeometrySelection=stripGeometrySelection,
         digiConfigFile=digiConfigFile,
         moduleMapPath=moduleMapPath,
         gnnModel=gnnModel,

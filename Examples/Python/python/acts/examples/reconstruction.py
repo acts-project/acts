@@ -2058,8 +2058,6 @@ def addGnn(
     trackBuilder: acts.examples.TrackBuildingBase,
     nodeFeatures: list,
     featureScales: list,
-    trackingGeometry: Optional[acts.TrackingGeometry] = None,
-    geometrySelection: Optional[Union[Path, str]] = None,
     inputSpacePoints: str = "spacepoints",
     inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -2099,25 +2097,6 @@ def addGnn(
         raise ValueError(
             f"nodeFeatures and featureScales must have the same length "
             f"(got {len(nodeFeatures)} and {len(featureScales)})"
-        )
-
-    # Optionally create space points if tracking geometry is provided
-    if trackingGeometry is not None:
-        if geometrySelection is None:
-            raise ValueError(
-                "geometrySelection must be provided if trackingGeometry is set"
-            )
-
-        s.addAlgorithm(
-            acts.examples.SpacePointMaker(
-                level=customLogLevel(),
-                inputMeasurements="measurements",
-                outputSpacePoints=inputSpacePoints,
-                trackingGeometry=trackingGeometry,
-                geometrySelection=acts.examples.readJsonGeometryList(
-                    str(geometrySelection)
-                ),
-            )
         )
 
     # GNN track finding algorithm
