@@ -40,7 +40,7 @@
 template <>
 struct std::hash<podio::ObjectID> {
   std::size_t operator()(const podio::ObjectID& id) const noexcept {
-    auto hash_collectionID = std::hash<uint32_t>{}(id.collectionID);
+    auto hash_collectionID = std::hash<std::uint32_t>{}(id.collectionID);
     auto hash_index = std::hash<int>{}(id.index);
 
     return hash_collectionID ^ hash_index;
