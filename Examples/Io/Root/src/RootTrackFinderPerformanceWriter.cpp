@@ -70,7 +70,6 @@ RootTrackFinderPerformanceWriter::RootTrackFinderPerformanceWriter(
     m_matchingTree = new TTree("matchingdetails", "matchingdetails");
 
     m_matchingTree->Branch("event_nr", &m_treeEventNr);
-    m_matchingTree->Branch("particle_id", &m_treeParticleId);
     m_matchingTree->Branch("particle_id_vertex_primary",
                            &m_treeParticleVertexPrimary);
     m_matchingTree->Branch("particle_id_vertex_secondary",
@@ -361,7 +360,6 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
       auto particleId = particle.particleId();
 
       m_treeEventNr = ctx.eventNumber;
-      m_treeParticleId = particleId.asVector();
       m_treeParticleVertexPrimary = particleId.vertexPrimary();
       m_treeParticleVertexSecondary = particleId.vertexSecondary();
       m_treeParticleParticle = particleId.particle();

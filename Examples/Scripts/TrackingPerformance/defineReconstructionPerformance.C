@@ -162,7 +162,7 @@ void defineReconstructionPerformance(
         auto pt = std::abs(1 / qop) * std::sin(theta);
         auto eta = std::atanh(std::cos(theta));
         auto nMajorityHits = tReaders[ifile].nMajorityHits->at(j);
-        auto majorityParticleId = tReaders[ifile].majorityParticleId->at(j);
+        auto majorityParticleId = tReaders[ifile].majorityParticleHash(j);
 
         // Select the track, e.g. you might also want to add cuts on the
         // nOutliers, nHoles

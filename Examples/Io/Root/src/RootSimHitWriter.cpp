@@ -47,7 +47,6 @@ ActsExamples::RootSimHitWriter::RootSimHitWriter(
   // setup the branches
   m_outputTree->Branch("event_id", &m_eventId);
   m_outputTree->Branch("geometry_id", &m_geometryId, "geometry_id/l");
-  m_outputTree->Branch("barcode", &m_barcode);
   m_outputTree->Branch("barcode_vertex_primary", &m_barcodeVertexPrimary);
   m_outputTree->Branch("barcode_vertex_secondary", &m_barcodeVertexSecondary);
   m_outputTree->Branch("barcode_particle", &m_barcodeParticle);
@@ -100,7 +99,6 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
   for (const auto& hit : hits) {
     m_geometryId = hit.geometryId().value();
     const auto barcode = hit.particleId();
-    m_barcode = barcode.asVector();
     m_barcodeVertexPrimary = barcode.vertexPrimary();
     m_barcodeVertexSecondary = barcode.vertexSecondary();
     m_barcodeParticle = barcode.particle();

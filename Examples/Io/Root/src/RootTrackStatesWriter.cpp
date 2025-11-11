@@ -117,7 +117,6 @@ RootTrackStatesWriter::RootTrackStatesWriter(
   m_outputTree->Branch("t_eTHETA", &m_t_eTHETA);
   m_outputTree->Branch("t_eQOP", &m_t_eQOP);
   m_outputTree->Branch("t_eT", &m_t_eT);
-  m_outputTree->Branch("particle_ids", &m_particleId);
   m_outputTree->Branch("particle_ids_vertex_primary", &m_particleVertexPrimary);
   m_outputTree->Branch("particle_ids_vertex_secondary",
                        &m_particleVertexSecondary);
@@ -359,9 +358,6 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     // Get the trackStates on the trajectory
     m_nParams = {0, 0, 0, 0};
 
-    // particle barcodes for a given track state (size depends on a type of
-    // digitization, for smeared digitization is not more than 1)
-    std::vector<std::vector<std::uint32_t>> particleIds;
     std::vector<std::uint32_t> particleVertexPrimary;
     std::vector<std::uint32_t> particleVertexSecondary;
     std::vector<std::uint32_t> particleParticle;
@@ -388,7 +384,6 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       // the truth track parameter at this track state
       Acts::BoundVector truthParams;
 
-      particleIds.clear();
       particleVertexPrimary.clear();
       particleVertexSecondary.clear();
       particleParticle.clear();
@@ -439,7 +434,6 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           for (auto const& [key, simHitIdx] : indices) {
             const auto& simHit = *simHits.nth(simHitIdx);
             const auto barcode = simHit.particleId();
-            particleIds.push_back(barcode.asVector());
             particleVertexPrimary.push_back(barcode.vertexPrimary());
             particleVertexSecondary.push_back(barcode.vertexSecondary());
             particleParticle.push_back(barcode.particle());
@@ -723,7 +717,6 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           m_dim_hit.push_back(state.calibratedSize());
         }
       }
-      m_particleId.push_back(std::move(particleIds));
       m_particleVertexPrimary.push_back(std::move(particleVertexPrimary));
       m_particleVertexSecondary.push_back(std::move(particleVertexSecondary));
       m_particleParticle.push_back(std::move(particleParticle));
@@ -758,8 +751,6 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     m_t_eTHETA.clear();
     m_t_eQOP.clear();
     m_t_eT.clear();
-
-    m_particleId.clear();
     m_particleVertexPrimary.clear();
     m_particleVertexSecondary.clear();
     m_particleParticle.clear();

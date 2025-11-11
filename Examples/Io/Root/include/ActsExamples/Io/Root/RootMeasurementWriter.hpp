@@ -108,7 +108,6 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   TFile* m_outputFile = nullptr;
   // the output tree
   TTree* m_outputTree = nullptr;
-  std::vector<std::vector<std::uint32_t>> m_particles = {};
   std::vector<std::uint32_t> m_particleVertexPrimary = {};
   std::vector<std::uint32_t> m_particleVertexSecondary = {};
   std::vector<std::uint32_t> m_particleParticle = {};

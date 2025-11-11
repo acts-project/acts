@@ -139,9 +139,17 @@ class RootTrackSummaryReader : public IReader {
   // The majority truth particle info
   /// The number of hits from majority particle
   std::vector<unsigned int>* m_nMajorityHits = new std::vector<unsigned int>;
-  /// The particle Id of the majority particle
-  std::vector<std::vector<std::uint32_t>>* m_majorityParticleId =
-      new std::vector<std::vector<std::uint32_t>>;
+  /// Decoded barcode components for the majority particle
+  std::vector<std::uint32_t>* m_majorityParticleVertexPrimary =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_majorityParticleVertexSecondary =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_majorityParticleParticle =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_majorityParticleGeneration =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_majorityParticleSubParticle =
+      new std::vector<std::uint32_t>;
   /// Charge of majority particle
   std::vector<int>* m_t_charge = new std::vector<int>;
   /// Time of majority particle

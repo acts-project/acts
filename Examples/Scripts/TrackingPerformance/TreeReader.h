@@ -32,6 +32,30 @@ struct ParticleInfo {
   UShort_t nHits = 0;
 };
 
+namespace {
+
+inline std::uint64_t hashBarcodeComponents(std::uint32_t vertexPrimary,
+                                           std::uint32_t vertexSecondary,
+                                           std::uint32_t particle,
+                                           std::uint32_t generation,
+                                           std::uint32_t subParticle) {
+  auto hashCombine = [](std::uint64_t seed, std::uint64_t value) {
+    constexpr std::uint64_t kMagic = 0x9e3779b97f4a7c15ull;
+    seed ^= value + kMagic + (seed << 6) + (seed >> 2);
+    return seed;
+  };
+
+  std::uint64_t hash = 0xcbf29ce484222325ull;
+  hash = hashCombine(hash, vertexPrimary);
+  hash = hashCombine(hash, vertexSecondary);
+  hash = hashCombine(hash, particle);
+  hash = hashCombine(hash, generation);
+  hash = hashCombine(hash, subParticle);
+  return hash;
+}
+
+}  // namespace
+
 /// Helper for reading tree
 ///
 struct TreeReader {
@@ -309,7 +333,16 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("outlierLayer", &outlierLayer);
     tree->SetBranchAddress("nMajorityHits", &nMajorityHits);
     tree->SetBranchAddress("nSharedHits", &nSharedHits);
-    tree->SetBranchAddress("majorityParticleId", &majorityParticleId);
+    tree->SetBranchAddress("majorityParticleId_vertex_primary",
+                           &majorityParticleVertexPrimary);
+    tree->SetBranchAddress("majorityParticleId_vertex_secondary",
+                           &majorityParticleVertexSecondary);
+    tree->SetBranchAddress("majorityParticleId_particle",
+                           &majorityParticleParticle);
+    tree->SetBranchAddress("majorityParticleId_generation",
+                           &majorityParticleGeneration);
+    tree->SetBranchAddress("majorityParticleId_sub_particle",
+                           &majorityParticleSubParticle);
 
     tree->SetBranchAddress("hasFittedParams", &hasFittedParams);
 
@@ -370,8 +403,24 @@ struct TrackSummaryReader : public TreeReader {
   std::vector<std::vector<double>>* outlierLayer =
       new std::vector<std::vector<double>>;
   std::vector<unsigned int>* nMajorityHits = new std::vector<unsigned int>;
-  std::vector<std::uint64_t>* majorityParticleId =
-      new std::vector<std::uint64_t>;
+  std::vector<std::uint32_t>* majorityParticleVertexPrimary =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* majorityParticleVertexSecondary =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* majorityParticleParticle =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* majorityParticleGeneration =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* majorityParticleSubParticle =
+      new std::vector<std::uint32_t>;
+
+  std::uint64_t majorityParticleHash(std::size_t idx) const {
+    return hashBarcodeComponents(majorityParticleVertexPrimary->at(idx),
+                                 majorityParticleVertexSecondary->at(idx),
+                                 majorityParticleParticle->at(idx),
+                                 majorityParticleGeneration->at(idx),
+                                 majorityParticleSubParticle->at(idx));
+  }
 
   std::vector<bool>* hasFittedParams = new std::vector<bool>;
 
@@ -412,7 +461,13 @@ struct ParticleReader : public TreeReader {
   // The constructor
   ParticleReader(TTree* tree_, bool sortEvents) : TreeReader(tree_) {
     tree->SetBranchAddress("event_id", &eventId);
-    tree->SetBranchAddress("particle_id", &particleId);
+    tree->SetBranchAddress("particle_id_vertex_primary",
+                           &particleVertexPrimary);
+    tree->SetBranchAddress("particle_id_vertex_secondary",
+                           &particleVertexSecondary);
+    tree->SetBranchAddress("particle_id_particle", &particleParticle);
+    tree->SetBranchAddress("particle_id_generation", &particleGeneration);
+    tree->SetBranchAddress("particle_id_sub_particle", &particleSubParticle);
     tree->SetBranchAddress("particle_type", &particleType);
     tree->SetBranchAddress("vx", &vx);
     tree->SetBranchAddress("vy", &vy);
@@ -459,14 +514,21 @@ struct ParticleReader : public TreeReader {
       auto pt = std::hypot(px, py);
       auto p = std::hypot(pt, pz);
       auto eta = std::atanh(pz / p * 1.);
-      particles.push_back({particleId, eta, p, pt, nHits});
+      const auto barcodeHash = hashBarcodeComponents(
+          particleVertexPrimary, particleVertexSecondary, particleParticle,
+          particleGeneration, particleSubParticle);
+      particles.push_back({barcodeHash, eta, p, pt, nHits});
     }
     return particles;
   }
 
   // The variables
   ULong64_t eventId = 0;
-  ULong64_t particleId = 0;
+  std::uint32_t particleVertexPrimary = 0;
+  std::uint32_t particleVertexSecondary = 0;
+  std::uint32_t particleParticle = 0;
+  std::uint32_t particleGeneration = 0;
+  std::uint32_t particleSubParticle = 0;
   Int_t particleType = 0;
   float vx = 0, vy = 0, vz = 0;
   float vt = 0;

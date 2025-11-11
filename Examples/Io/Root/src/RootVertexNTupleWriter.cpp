@@ -326,17 +326,6 @@ RootVertexNTupleWriter::RootVertexNTupleWriter(
     m_outputTree->Branch("trk_recoThetaFitted", &m_recoThetaFitted);
     m_outputTree->Branch("trk_recoQOverPFitted", &m_recoQOverPFitted);
 
-    m_outputTree->Branch("trk_particleId", &m_trkParticleId);
-    m_outputTree->Branch("trk_particleId_vertex_primary",
-                         &m_trkParticleIdVertexPrimary);
-    m_outputTree->Branch("trk_particleId_vertex_secondary",
-                         &m_trkParticleIdVertexSecondary);
-    m_outputTree->Branch("trk_particleId_particle", &m_trkParticleIdParticle);
-    m_outputTree->Branch("trk_particleId_generation",
-                         &m_trkParticleIdGeneration);
-    m_outputTree->Branch("trk_particleId_sub_particle",
-                         &m_trkParticleIdSubParticle);
-
     m_outputTree->Branch("trk_truthPhi", &m_truthPhi);
     m_outputTree->Branch("trk_truthTheta", &m_truthTheta);
     m_outputTree->Branch("trk_truthQOverP", &m_truthQOverP);
@@ -808,7 +797,6 @@ ProcessCode RootVertexNTupleWriter::writeT(
   m_recoPhiFitted.clear();
   m_recoThetaFitted.clear();
   m_recoQOverPFitted.clear();
-  m_trkParticleId.clear();
   m_trkParticleIdVertexPrimary.clear();
   m_trkParticleIdVertexSecondary.clear();
   m_trkParticleIdParticle.clear();
@@ -864,7 +852,6 @@ void RootVertexNTupleWriter::writeTrackInfo(
   auto& innerRecoThetaFitted = m_recoThetaFitted.emplace_back();
   auto& innerRecoQOverPFitted = m_recoQOverPFitted.emplace_back();
 
-  auto& innerTrkParticleId = m_trkParticleId.emplace_back();
   auto& innerTrkParticleIdVertexPrimary =
       m_trkParticleIdVertexPrimary.emplace_back();
   auto& innerTrkParticleIdVertexSecondary =
@@ -950,7 +937,6 @@ void RootVertexNTupleWriter::writeTrackInfo(
 
     if (particle != nullptr) {
       const auto barcode = particle->particleId();
-      innerTrkParticleId.push_back(barcode.asVector());
       innerTrkParticleIdVertexPrimary.push_back(barcode.vertexPrimary());
       innerTrkParticleIdVertexSecondary.push_back(barcode.vertexSecondary());
       innerTrkParticleIdParticle.push_back(barcode.particle());
@@ -967,7 +953,6 @@ void RootVertexNTupleWriter::writeTrackInfo(
     } else {
       ACTS_VERBOSE("Track has no matching truth particle.");
 
-      innerTrkParticleId.push_back(ActsFatras::Barcode::Invalid().asVector());
       innerTrkParticleIdVertexPrimary.push_back(0);
       innerTrkParticleIdVertexSecondary.push_back(0);
       innerTrkParticleIdParticle.push_back(0);

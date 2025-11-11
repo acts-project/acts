@@ -97,13 +97,29 @@ class RootVertexReader : public IReader {
   std::vector<float>* m_vz = new std::vector<float>;
   std::vector<float>* m_vt = new std::vector<float>;
 
-  /// Incoming particles to the vertex.
-  std::vector<std::vector<std::vector<std::uint32_t>>>* m_incomingParticles =
-      new std::vector<std::vector<std::vector<std::uint32_t>>>;
+  /// Incoming particles to the vertex broken into barcode components.
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesVertexPrimary =
+      new std::vector<std::vector<std::uint32_t>>;
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesVertexSecondary =
+      new std::vector<std::vector<std::uint32_t>>;
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesParticle =
+      new std::vector<std::vector<std::uint32_t>>;
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesGeneration =
+      new std::vector<std::vector<std::uint32_t>>;
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesSubParticle =
+      new std::vector<std::vector<std::uint32_t>>;
 
-  /// Outgoing particles from the vertex.
-  std::vector<std::vector<std::vector<std::uint32_t>>>* m_outgoingParticles =
-      new std::vector<std::vector<std::vector<std::uint32_t>>>;
+  /// Outgoing particles from the vertex broken into barcode components.
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesVertexPrimary =
+      new std::vector<std::vector<std::uint32_t>>;
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesVertexSecondary =
+      new std::vector<std::vector<std::uint32_t>>;
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesParticle =
+      new std::vector<std::vector<std::uint32_t>>;
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesGeneration =
+      new std::vector<std::vector<std::uint32_t>>;
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesSubParticle =
+      new std::vector<std::vector<std::uint32_t>>;
 
   /// Decoded vertex identifier; see Barcode definition for details.
   std::vector<std::uint16_t>* m_vertexPrimary = new std::vector<std::uint16_t>;

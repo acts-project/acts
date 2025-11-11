@@ -235,7 +235,6 @@ class RootVertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
   std::vector<std::vector<double>> m_recoThetaFitted;
   std::vector<std::vector<double>> m_recoQOverPFitted;
 
-  std::vector<std::vector<std::vector<std::uint32_t>>> m_trkParticleId;
   std::vector<std::vector<std::uint32_t>> m_trkParticleIdVertexPrimary;
   std::vector<std::vector<std::uint32_t>> m_trkParticleIdVertexSecondary;
   std::vector<std::vector<std::uint32_t>> m_trkParticleIdParticle;
