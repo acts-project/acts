@@ -118,6 +118,11 @@ class RootTrackFinderPerformanceWriter final
   /// Variables to fill in the TTree
   std::uint32_t m_treeEventNr{};
   std::vector<std::uint32_t> m_treeParticleId{};
+  std::uint32_t m_treeParticleVertexPrimary{};
+  std::uint32_t m_treeParticleVertexSecondary{};
+  std::uint32_t m_treeParticleParticle{};
+  std::uint32_t m_treeParticleGeneration{};
+  std::uint32_t m_treeParticleSubParticle{};
   bool m_treeIsMatched{};
 
   // Adding numbers for efficiency, fake, duplicate calculations

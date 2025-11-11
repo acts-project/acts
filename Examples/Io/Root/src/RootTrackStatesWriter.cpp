@@ -118,6 +118,12 @@ RootTrackStatesWriter::RootTrackStatesWriter(
   m_outputTree->Branch("t_eQOP", &m_t_eQOP);
   m_outputTree->Branch("t_eT", &m_t_eT);
   m_outputTree->Branch("particle_ids", &m_particleId);
+  m_outputTree->Branch("particle_ids_vertex_primary", &m_particleVertexPrimary);
+  m_outputTree->Branch("particle_ids_vertex_secondary",
+                       &m_particleVertexSecondary);
+  m_outputTree->Branch("particle_ids_particle", &m_particleParticle);
+  m_outputTree->Branch("particle_ids_generation", &m_particleGeneration);
+  m_outputTree->Branch("particle_ids_sub_particle", &m_particleSubParticle);
 
   m_outputTree->Branch("dim_hit", &m_dim_hit);
   m_outputTree->Branch("l_x_hit", &m_lx_hit);
@@ -356,6 +362,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     // particle barcodes for a given track state (size depends on a type of
     // digitization, for smeared digitization is not more than 1)
     std::vector<std::vector<std::uint32_t>> particleIds;
+    std::vector<std::uint32_t> particleVertexPrimary;
+    std::vector<std::uint32_t> particleVertexSecondary;
+    std::vector<std::uint32_t> particleParticle;
+    std::vector<std::uint32_t> particleGeneration;
+    std::vector<std::uint32_t> particleSubParticle;
 
     for (const auto& state : track.trackStatesReversed()) {
       const Acts::Surface& surface = state.referenceSurface();
@@ -378,6 +389,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       Acts::BoundVector truthParams;
 
       particleIds.clear();
+      particleVertexPrimary.clear();
+      particleVertexSecondary.clear();
+      particleParticle.clear();
+      particleGeneration.clear();
+      particleSubParticle.clear();
 
       if (!state.hasUncalibratedSourceLink()) {
         m_t_x.push_back(nan);
@@ -422,7 +438,13 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           // extract particle ids contributed to this track state
           for (auto const& [key, simHitIdx] : indices) {
             const auto& simHit = *simHits.nth(simHitIdx);
-            particleIds.push_back(simHit.particleId().asVector());
+            const auto barcode = simHit.particleId();
+            particleIds.push_back(barcode.asVector());
+            particleVertexPrimary.push_back(barcode.vertexPrimary());
+            particleVertexSecondary.push_back(barcode.vertexSecondary());
+            particleParticle.push_back(barcode.particle());
+            particleGeneration.push_back(barcode.generation());
+            particleSubParticle.push_back(barcode.subParticle());
           }
         }
 
@@ -702,6 +724,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         }
       }
       m_particleId.push_back(std::move(particleIds));
+      m_particleVertexPrimary.push_back(std::move(particleVertexPrimary));
+      m_particleVertexSecondary.push_back(std::move(particleVertexSecondary));
+      m_particleParticle.push_back(std::move(particleParticle));
+      m_particleGeneration.push_back(std::move(particleGeneration));
+      m_particleSubParticle.push_back(std::move(particleSubParticle));
     }
 
     // fill the variables for one track to tree
@@ -733,6 +760,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     m_t_eT.clear();
 
     m_particleId.clear();
+    m_particleVertexPrimary.clear();
+    m_particleVertexSecondary.clear();
+    m_particleParticle.clear();
+    m_particleGeneration.clear();
+    m_particleSubParticle.clear();
 
     m_dim_hit.clear();
     m_lx_hit.clear();

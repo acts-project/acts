@@ -236,6 +236,11 @@ class RootVertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
   std::vector<std::vector<double>> m_recoQOverPFitted;
 
   std::vector<std::vector<std::vector<std::uint32_t>>> m_trkParticleId;
+  std::vector<std::vector<std::uint32_t>> m_trkParticleIdVertexPrimary;
+  std::vector<std::vector<std::uint32_t>> m_trkParticleIdVertexSecondary;
+  std::vector<std::vector<std::uint32_t>> m_trkParticleIdParticle;
+  std::vector<std::vector<std::uint32_t>> m_trkParticleIdGeneration;
+  std::vector<std::vector<std::uint32_t>> m_trkParticleIdSubParticle;
 
   // True track momenta at the vertex
   std::vector<std::vector<double>> m_truthPhi;
