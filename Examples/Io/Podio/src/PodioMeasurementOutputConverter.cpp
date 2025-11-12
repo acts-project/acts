@@ -10,7 +10,7 @@
 
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
-#include <ActsPodioEdm/MeasurementCollection.h>
+#include "ActsPodioEdm/MeasurementCollection.h"
 
 #include <cstdint>
 
