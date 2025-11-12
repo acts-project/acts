@@ -37,13 +37,13 @@ void TryAllNavigationPolicy::initializeCandidates(
   ACTS_VERBOSE("TryAllNavigationPolicy");
   assert(m_volume != nullptr);
 
-  if (m_cfg.portals) {
+  if (m_cfg.resolvePortals) {
     for (const auto& portal : m_volume->portals()) {
       stream.addPortalCandidate(portal);
     }
   }
 
-  if (!(m_cfg.resolveSensitives || m_cfg.resolvePassives ||
+  if (!(m_cfg.resolveSensitive || m_cfg.resolvePassive ||
         m_cfg.resolveMaterial)) {
     return;
   }
@@ -51,8 +51,8 @@ void TryAllNavigationPolicy::initializeCandidates(
   for (const auto& surface : m_volume->surfaces()) {
     bool isSensitive = surface.associatedDetectorElement() != nullptr;
     bool hasMaterial = surface.surfaceMaterial() != nullptr;
-    if ((m_cfg.resolvePassives && !isSensitive) ||
-        (m_cfg.resolveSensitives && isSensitive) ||
+    if ((m_cfg.resolvePassive && !isSensitive) ||
+        (m_cfg.resolveSensitive && isSensitive) ||
         (m_cfg.resolveMaterial && hasMaterial)) {
       stream.addSurfaceCandidate(surface, args.tolerance);
     }
