@@ -1283,7 +1283,7 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend):
     from acts.examples.odd import getOpenDataDetector
 
     repo_root = Path(__file__).parent.parent.parent.parent
-    ci_models = repo_root / "ci_models/odd_module_map"
+    ci_models = repo_root / "ci_models"
 
     # Map backend to file extension
     model_ext = ".pt" if backend == "torch" else ".onnx"

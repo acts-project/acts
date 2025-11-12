@@ -149,6 +149,7 @@
                 "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_GNN": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
+                "ACTS_BUILD_ODD": "ON",
                 "ACTS_GNN_ENABLE_TORCH": "ON",
                 "ACTS_GNN_ENABLE_ONNX": "ON",
                 "ACTS_GNN_ENABLE_CUDA": "ON",

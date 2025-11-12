@@ -217,7 +217,7 @@ if __name__ == "__main__":
     assert digiConfigFile.exists(), f"File not found: {digiConfigFile}"
 
     # Hardcoded model paths
-    ci_models_odd = srcdir / "ci_models/odd_module_map"
+    ci_models_odd = srcdir / "ci_models"
     moduleMapPath = str(ci_models_odd / "module_map_odd_2k_events.1e-03.float")
     gnnModel = str(ci_models_odd / "gnn_odd_module_map.pt")
     outputDir = Path.cwd()
