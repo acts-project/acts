@@ -142,10 +142,6 @@ void CylinderNavigationPolicy::initializeCandidates(
     const Logger& logger) const {
   using enum CylinderVolumeBounds::Face;
 
-  if (!args.wantsPortals) {
-    return;
-  }
-
   ACTS_VERBOSE("CylinderNavigationPolicy::initializeCandidates for volume "
                << m_volume->volumeName()
                << " with gpos: " << args.position.transpose()
