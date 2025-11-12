@@ -62,8 +62,7 @@ RootTrackSummaryReader::RootTrackSummaryReader(
   if (m_inputChain->GetBranch("majorityParticleId") != nullptr) {
     m_hasCombinedMajorityParticleId = true;
     m_majorityParticleId = new std::vector<std::vector<std::uint32_t>>;
-    m_inputChain->SetBranchAddress("majorityParticleId",
-                                   &m_majorityParticleId);
+    m_inputChain->SetBranchAddress("majorityParticleId", &m_majorityParticleId);
   } else {
     m_hasCombinedMajorityParticleId = false;
     m_majorityParticleVertexPrimary = new std::vector<std::uint32_t>;
@@ -250,11 +249,9 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
         SimBarcode barcode = SimBarcode::Invalid();
         return barcode
             .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(vp))
-            .withVertexSecondary(
-                static_cast<SimBarcode::SecondaryVertexId>(vs))
+            .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(vs))
             .withParticle(static_cast<SimBarcode::ParticleId>(particle))
-            .withGeneration(
-                static_cast<SimBarcode::GenerationId>(generation))
+            .withGeneration(static_cast<SimBarcode::GenerationId>(generation))
             .withSubParticle(
                 static_cast<SimBarcode::SubParticleId>(subParticle));
       };
@@ -271,12 +268,11 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
                          std::size_t idx) -> std::uint32_t {
           return (vec != nullptr && vec->size() > idx) ? vec->at(idx) : 0u;
         };
-        barcode = makeBarcode(
-            safeAt(m_majorityParticleVertexPrimary, i),
-            safeAt(m_majorityParticleVertexSecondary, i),
-            safeAt(m_majorityParticleParticle, i),
-            safeAt(m_majorityParticleGeneration, i),
-            safeAt(m_majorityParticleSubParticle, i));
+        barcode = makeBarcode(safeAt(m_majorityParticleVertexPrimary, i),
+                              safeAt(m_majorityParticleVertexSecondary, i),
+                              safeAt(m_majorityParticleParticle, i),
+                              safeAt(m_majorityParticleGeneration, i),
+                              safeAt(m_majorityParticleSubParticle, i));
       }
       truthParticle.setParticleId(barcode);
 

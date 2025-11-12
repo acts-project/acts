@@ -99,7 +99,7 @@ class RootSimHitReader : public IReader {
   std::unordered_map<std::string_view, float> m_floatColumns;
   std::unordered_map<std::string_view, std::uint32_t> m_uint32Columns;
   std::unordered_map<std::string_view, std::int32_t> m_int32Columns;
-  std::vector<std::uint32_t>* m_barcodeVector = nullptr;
+  std::vector<std::uint32_t> *m_barcodeVector = nullptr;
   bool m_hasBarcodeVector = false;
 
   // For some reason I need to use here `unsigned long long` instead of
