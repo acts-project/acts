@@ -47,8 +47,8 @@ class TryAllNavigatorBase {
     bool resolveSensitive = true;
     /// stop at every material surface (whether it is passive or not)
     bool resolveMaterial = true;
-    /// stop at every surface regardless what it is
-    bool resolvePassive = false;
+    /// stop at passive non-sensitive surfaces 
+    bool resolvePassive = true;
 
     /// Which boundary checks to perform for surface approach
     BoundaryTolerance boundaryToleranceSurfaceApproach =

@@ -23,7 +23,7 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& /*gctx*/,
                << m_volume->volumeName() << " with config: "
                << " portals=" << m_cfg.resolvePortales
                << " sensitives=" << m_cfg.resolveSensitives
-               << " passives=" << m_cfg.passives);
+               << " passives=" << m_cfg.resolvePassives);
 }
 
 TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
@@ -43,12 +43,15 @@ void TryAllNavigationPolicy::initializeCandidates(
     }
   }
 
-  if (m_cfg.sensitives) {
-    for (const auto& surface : m_volume->surfaces()) {
-      // skip no sensitive surfaces
-      if (m_cfg.passives || surface.associatedDetectorElement() != nullptr) {
-        stream.addSurfaceCandidate(surface, args.tolerance);
-      }
+  if( !(m_cfg.resolveSensitives || m_cfg.resolvePassives || m_cfg.resolveMaterial) ) {
+    return;
+  }
+
+  for (const auto& surface : m_volume->surfaces()) {
+    bool isSensitive = surface.associatedDetectorElement() != nullptr;
+    bool hasMaterial = surface.surfaceMaterial() != nullptr;
+    if( (m_cfg.resolvePassives && !sensitive) || (m_cfg.resolveSensitives && sensitive) || (m_cfg.resolveMaterial && hasMaterial) ) {
+      stream.addSurfaceCandidate(surface, args.tolerance);
     }
   }
 }
