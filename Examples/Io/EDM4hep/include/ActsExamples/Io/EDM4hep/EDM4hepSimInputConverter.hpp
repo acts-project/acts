@@ -14,7 +14,8 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
+#include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <memory>
 #include <string>
@@ -36,12 +37,14 @@ struct ParticleInfo;
 
 class DD4hepDetector;
 
+using EDM4hepSimHitAssociation = std::vector<edm4hep::SimTrackerHit>;
+
 /// Read particles from EDM4hep.
 ///
 /// Inpersistent information:
 /// - particle ID
 /// - process
-class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
+class EDM4hepSimInputConverter final : public PodioInputConverter {
  public:
   struct Config {
     /// Where to read input file from.
@@ -56,6 +59,9 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
     std::string outputParticlesSimulation;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
+    /// Output a mapping from internal sim hit index to edm4hep input hits
+    /// @note Optional, will not be computed if it's not stored
+    std::optional<std::string> outputSimHitAssociation = std::nullopt;
     /// Output simulated vertices collection.
     std::string outputSimVertices;
 
@@ -98,11 +104,18 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
       std::vector<SimBarcode>& particles,
       ParentRelationship& parentRelationship,
       std::unordered_map<int, detail::ParticleInfo>& particleMap,
-      std::size_t& nSecondaryVertices, std::size_t& maxGen) const;
+      std::size_t& nSecondaryVertices, std::size_t& maxGen,
+      const std::function<std::uint8_t(const edm4hep::MCParticle&)>& getNumHits)
+      const;
 
   static void setSubParticleIds(std::span<SimBarcode> particles);
 
   bool acceptParticle(const edm4hep::MCParticle& particle) const;
+
+  bool particleOrDescendantsHaveHits(
+      const edm4hep::MCParticle& particle,
+      const std::function<std::uint8_t(const edm4hep::MCParticle&)>& getNumHits)
+      const;
 
   Config m_cfg;
 
@@ -114,6 +127,8 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
       this, "OutputParticlesSimulation"};
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+  WriteDataHandle<ActsPlugins::EDM4hepUtil::SimHitAssociation>
+      m_outputSimHitAssociation{this, "OutputSimHitAssociation"};
 
   WriteDataHandle<SimVertexContainer> m_outputSimVertices{this,
                                                           "OutputSimVertices"};

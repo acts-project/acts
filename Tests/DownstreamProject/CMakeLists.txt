@@ -39,13 +39,6 @@ if(DD4HEP)
     target_link_libraries(ShowActsVersion PRIVATE Acts::PluginDD4hep)
 endif()
 
-option(PODIO "Build with podio" ON)
-if(PODIO)
-    message(STATUS "Adding podio plugin")
-    find_package(Acts CONFIG REQUIRED COMPONENTS PluginPodio)
-    target_link_libraries(ShowActsVersion PRIVATE Acts::PluginPodio)
-endif()
-
 option(EDM4HEP "Build with EDM4hep" ON)
 if(EDM4HEP)
     message(STATUS "Adding EDM4hep plugin")
