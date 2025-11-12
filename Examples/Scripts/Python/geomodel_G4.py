@@ -119,11 +119,7 @@ def main():
     logLevel = logging.INFO
 
     # Create the tracking geometry builder for the muon system
-<<<<<<< HEAD
-    gmBuilderConfig = gmexample.GeoModelMuonMockupBuilder.Config()
-=======
     gmBuilderConfig = gm_ex.GeoModelMuonMockupBuilder.Config()
->>>>>>> f848b368c (remove old module.py files)
 
     # Read the geometry model from the database
     gmTree = None
@@ -133,21 +129,13 @@ def main():
         gmBuilderConfig.stationNames = ["BIL", "BML", "BOL"]
 
     elif args.mockupDetector == "Muon":
-<<<<<<< HEAD
-        mockUpCfg = gmexample.GeoMuonMockupExperiment.Config()
-=======
         mockUpCfg = gm_ex.GeoMuonMockupExperiment.Config()
->>>>>>> f848b368c (remove old module.py files)
         mockUpCfg.dumpTree = True
         mockUpCfg.dbName = "ActsGeoMS.db"
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
         mockUpCfg.buildEndcaps = False
-<<<<<<< HEAD
-        mockUpBuilder = gmexample.GeoMuonMockupExperiment(
-=======
         mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
->>>>>>> f848b368c (remove old module.py files)
             mockUpCfg, "GeoMockUpMS", logLevel
         )
         gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
@@ -177,15 +165,6 @@ def main():
 
     gmBuilderConfig.volumeBoxFPVs = gmFactoryCache.boundingBoxes
 
-<<<<<<< HEAD
-    gmDetectorCfg = gmexample.GeoModelDetector.Config()
-    gmDetectorCfg.geoModelTree = gmTree
-    detector = gmexample.GeoModelDetector(gmDetectorCfg)
-
-    field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
-
-    trackingGeometryBuilder = gmexample.GeoModelMuonMockupBuilder(
-=======
     gmDetectorCfg = gm_ex.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
     detector = gm_ex.GeoModelDetector(gmDetectorCfg)
@@ -193,7 +172,6 @@ def main():
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
     trackingGeometryBuilder = gm_ex.GeoModelMuonMockupBuilder(
->>>>>>> f848b368c (remove old module.py files)
         gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
     )
 
