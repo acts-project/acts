@@ -36,9 +36,9 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
-#include "ActsPlugins/Podio/PodioTrackContainer.hpp"
-#include "ActsPlugins/Podio/PodioTrackStateContainer.hpp"
-#include "ActsPlugins/Podio/PodioUtil.hpp"
+#include "ActsPlugins/EDM4hep/PodioTrackContainer.hpp"
+#include "ActsPlugins/EDM4hep/PodioTrackStateContainer.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "ActsPodioEdm/Surface.h"
 #include <ActsPodioEdm/TrackCollection.h>
 
@@ -49,13 +49,10 @@
 #include <stdexcept>
 
 using namespace Acts;
-using namespace Acts::UnitLiterals;
-using namespace Acts::HashedStringLiteral;
 using namespace ActsPlugins;
-
-namespace ActsTests {
-
-BOOST_AUTO_TEST_SUITE(PodioSuite)
+using namespace UnitLiterals;
+using namespace HashedStringLiteral;
+BOOST_AUTO_TEST_SUITE(PodioTrackContainerTest)
 
 class NullHelper : public PodioUtil::ConversionHelper {
  public:
@@ -393,5 +390,3 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-}  // namespace ActsTests

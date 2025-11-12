@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsPlugins/Podio/PodioUtil.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -110,12 +110,12 @@ PodioWriter::PodioWriter(const Config& config, Acts::Logging::Level level)
 
   ACTS_DEBUG("Adding " << m_impl->m_cfg.collections.size() << " collections");
   for (const auto& collection : m_impl->m_cfg.collections) {
+    ACTS_DEBUG("- " << collection);
     auto up = std::make_unique<detail::CollectionHandle>(this, collection);
     m_impl->m_collections.push_back(std::move(up));
 
     m_impl->m_collections.back()->initialize(collection);
   }
-  ACTS_DEBUG("PodioWriter::PodioWriter: " << m_impl->m_collections.size());
 }
 
 std::string PodioWriter::name() const {
@@ -145,6 +145,8 @@ ProcessCode PodioWriter::write(const AlgorithmContext& ctx) {
       ACTS_ERROR("PodioWriter::write: collection is not initialized");
       return ProcessCode::ABORT;
     }
+    ACTS_VERBOSE("PodioWriter::write: adding collection " << handle->name()
+                                                          << " to frame");
     frame.put(std::move(collectionPtr), handle->name());
   }
   auto& writer = m_impl->writerForThread(ctx.threadId);

@@ -7,19 +7,6 @@ options:
 
 components:
 
-    ActsPodioEdm::Vector3f :
-      Members:
-        - float x
-        - float y
-        - float z
-      ExtraCode:
-        declaration: "
-        constexpr Vector3f() : x(0),y(0),z(0) {}\n
-        constexpr Vector3f(float xx, float yy, float zz) : x(xx),y(yy),z(zz) {}\n
-        constexpr Vector3f(const float* v) : x(v[0]),y(v[1]),z(v[2]) {}\n
-        constexpr bool operator==(const Vector3f& v) const { return (x==v.x&&y==v.y&&z==v.z) ; }\n
-        constexpr float operator[](unsigned i) const { return *( &x + i ) ; }\n
-        "
 
     ActsPodioEdm::Surface:
       Members:
@@ -112,19 +99,25 @@ datatypes:
     Members:
       - ActsPodioEdm::JacobianInfo data // the jacobian data
 
-      # - int32_t type                         //flagword that defines the type of track.Bits 16-31 are used internally
-      # - float chi2                       //Chi^2 of the track fit
-      # - int32_t ndf                          //number of degrees of freedom of the track fit
-      # - float dEdx                       //dEdx of the track.
-      # - float dEdxError                  //error of dEdx.
-      # - float radiusOfInnermostHit       //radius of the innermost hit that has been used in the track fit
-    # VectorMembers:
-      # - int32_t subDetectorHitNumbers        //number of hits in particular subdetectors.Check/set collection variable TrackSubdetectorNames for decoding the indices
-      # - edm4hep::TrackState trackStates  //track states
-      # - edm4hep::Quantity dxQuantities // different measurements of dx quantities
-    # OneToManyRelations:
-      # - edm4hep::TrackerHit trackerHits  //hits that have been used to create this track
-      # - edm4hep::Track tracks            //tracks (segments) that have been combined to create this track
-    # ExtraCode:
-      # declaration: >
-        # auto data() { return &m_obj->data; }
+
+  ActsPodioEdm::Measurement:
+    Description: "Local representation of a measurement"
+    Author : "Paul Gessinger, CERN"
+
+    Members:
+      - std::uint64_t geometryId // the associated surface identifier
+    VectorMembers:
+      - std::uint16_t indices // the local indices
+      - double parameterValues // the measurement parameter value
+      - double covarianceValues // the measurement covairance value
+
+    # @TODO: Should map back to the simhit(s) that created it
+
+    OneToOneRelations:
+      - edm4hep::SimTrackerHit simHit // the associated simulated hit
+
+    ExtraCode:
+      declaration: |
+        std::size_t size() const {
+          return indices_size();
+        }
