@@ -55,7 +55,7 @@ std::shared_ptr<const bounds_t> createBounds(
 }  // namespace
 
 ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
-                                            const Acts::Surface& surface) {
+                                            const Surface& surface) {
   ActsPodioEdm::Surface result;
 
   std::optional<Identifier> identifier = helper.surfaceToIdentifier(surface);
@@ -85,7 +85,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
 
     // This is safe ONLY(!) if there is no associated detector element, since
     // the surface will not inspect the geometry context at all by itself.
-    Acts::GeometryContext gctx;
+    GeometryContext gctx;
     trf = surface.transform(gctx).matrix();
   }
 
@@ -121,14 +121,14 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
 
     case T::Cone:
       throw_assert(surface.boundsType == B::eCone, "Unexpected bounds type");
-      result = Acts::Surface::makeShared<ConeSurface>(
+      result = Surface::makeShared<ConeSurface>(
           transform, createBounds<ConeBounds>(surface));
       break;
 
     case T::Cylinder:
       throw_assert(surface.boundsType == B::eCylinder,
                    "Unexpected bounds type");
-      result = Acts::Surface::makeShared<CylinderSurface>(
+      result = Surface::makeShared<CylinderSurface>(
           transform, createBounds<CylinderBounds>(surface));
       break;
 
@@ -150,14 +150,14 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
           dBounds = createBounds<DiscTrapezoidBounds>(surface);
           break;
       }
-      result = Acts::Surface::makeShared<DiscSurface>(transform, dBounds);
+      result = Surface::makeShared<DiscSurface>(transform, dBounds);
       break;
     }
 
     case T::Perigee:
       throw_assert(surface.boundsType == B::eBoundless,
                    "Unexpected bounds type");
-      result = Acts::Surface::makeShared<PerigeeSurface>(transform);
+      result = Surface::makeShared<PerigeeSurface>(transform);
       break;
 
     case T::Plane: {
@@ -185,21 +185,21 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
           break;
       }
       assert(pBounds && "No PlanarBounds");
-      result = Acts::Surface::makeShared<PlaneSurface>(transform, pBounds);
+      result = Surface::makeShared<PlaneSurface>(transform, pBounds);
 
       break;
     }
 
     case T::Straw:
       throw_assert(surface.boundsType == B::eLine, "Unexpected bounds type");
-      result = Acts::Surface::makeShared<StrawSurface>(
+      result = Surface::makeShared<StrawSurface>(
           transform, createBounds<LineBounds>(surface));
       break;
 
     case T::Curvilinear:
       throw_assert(surface.boundsType == B::eBoundless,
                    "Unexpected bounds type");
-      result = Acts::Surface::makeShared<PlaneSurface>(transform);
+      result = Surface::makeShared<PlaneSurface>(transform);
       break;
   }
 
