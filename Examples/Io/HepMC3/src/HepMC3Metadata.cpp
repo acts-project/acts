@@ -16,7 +16,7 @@
 
 namespace ActsExamples::HepMC3Metadata {
 
-constexpr std::string_view kEventCountKey = "num_events";
+static const std::string kEventCountKey = "num_events";
 
 std::filesystem::path getSidecarPath(const std::filesystem::path& hepmc3File) {
   return hepmc3File.string() + ".json";

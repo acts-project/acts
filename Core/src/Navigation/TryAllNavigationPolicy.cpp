@@ -34,19 +34,16 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
 void TryAllNavigationPolicy::initializeCandidates(
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
-  ACTS_VERBOSE(std::format("TryAllNavigationPolicy: portals={}, sensitives={}, passives={}",
-                           args.wantsPortals && m_cfg.resolvePortales,
-                           args.wantsSurfaces && m_cfg.resolveSensitives,
-                           args.wantsSurfaces && m_cfg.resolvePassives);
+  ACTS_VERBOSE("TryAllNavigationPolicy");
   assert(m_volume != nullptr);
 
-  if (m_cfg.resolvePortals && args.wantsPortals) {
+  if (m_cfg.portals) {
     for (const auto& portal : m_volume->portals()) {
       stream.addPortalCandidate(portal);
     }
   }
 
-  if (m_cfg.resolveSensitives && args.wantsSurfaces) {
+  if (m_cfg.sensitives) {
     for (const auto& surface : m_volume->surfaces()) {
       // skip no sensitive surfaces
       if (m_cfg.passives || surface.associatedDetectorElement() != nullptr) {
