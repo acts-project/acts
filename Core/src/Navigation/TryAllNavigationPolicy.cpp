@@ -43,14 +43,17 @@ void TryAllNavigationPolicy::initializeCandidates(
     }
   }
 
-  if( !(m_cfg.resolveSensitives || m_cfg.resolvePassives || m_cfg.resolveMaterial) ) {
+  if (!(m_cfg.resolveSensitives || m_cfg.resolvePassives ||
+        m_cfg.resolveMaterial)) {
     return;
   }
 
   for (const auto& surface : m_volume->surfaces()) {
     bool isSensitive = surface.associatedDetectorElement() != nullptr;
     bool hasMaterial = surface.surfaceMaterial() != nullptr;
-    if( (m_cfg.resolvePassives && !sensitive) || (m_cfg.resolveSensitives && sensitive) || (m_cfg.resolveMaterial && hasMaterial) ) {
+    if ((m_cfg.resolvePassives && !isSensitive) ||
+        (m_cfg.resolveSensitives && isSensitive) ||
+        (m_cfg.resolveMaterial && hasMaterial)) {
       stream.addSurfaceCandidate(surface, args.tolerance);
     }
   }
