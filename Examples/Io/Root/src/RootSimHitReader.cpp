@@ -117,7 +117,9 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
                              << availableEvents().second);
 }
 
-RootSimHitReader::~RootSimHitReader() { delete m_barcodeVector; }
+RootSimHitReader::~RootSimHitReader() {
+  delete m_barcodeVector;
+}
 
 std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
   return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
@@ -168,9 +170,8 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
       pid = SimBarcode()
                 .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(
                     m_uint32Columns.at("barcode_vertex_primary")))
-                .withVertexSecondary(
-                    static_cast<SimBarcode::SecondaryVertexId>(
-                        m_uint32Columns.at("barcode_vertex_secondary")))
+                .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                    m_uint32Columns.at("barcode_vertex_secondary")))
                 .withParticle(static_cast<SimBarcode::ParticleId>(
                     m_uint32Columns.at("barcode_particle")))
                 .withGeneration(static_cast<SimBarcode::GenerationId>(

@@ -57,10 +57,8 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
         new std::vector<std::vector<std::uint32_t>>;
     m_incomingParticlesVertexSecondary =
         new std::vector<std::vector<std::uint32_t>>;
-    m_incomingParticlesParticle =
-        new std::vector<std::vector<std::uint32_t>>;
-    m_incomingParticlesGeneration =
-        new std::vector<std::vector<std::uint32_t>>;
+    m_incomingParticlesParticle = new std::vector<std::vector<std::uint32_t>>;
+    m_incomingParticlesGeneration = new std::vector<std::vector<std::uint32_t>>;
     m_incomingParticlesSubParticle =
         new std::vector<std::vector<std::uint32_t>>;
     m_inputChain->SetBranchAddress("incoming_particles_vertex_primary",
@@ -86,10 +84,8 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
         new std::vector<std::vector<std::uint32_t>>;
     m_outgoingParticlesVertexSecondary =
         new std::vector<std::vector<std::uint32_t>>;
-    m_outgoingParticlesParticle =
-        new std::vector<std::vector<std::uint32_t>>;
-    m_outgoingParticlesGeneration =
-        new std::vector<std::vector<std::uint32_t>>;
+    m_outgoingParticlesParticle = new std::vector<std::vector<std::uint32_t>>;
+    m_outgoingParticlesGeneration = new std::vector<std::vector<std::uint32_t>>;
     m_outgoingParticlesSubParticle =
         new std::vector<std::vector<std::uint32_t>>;
     m_inputChain->SetBranchAddress("outgoing_particles_vertex_primary",
@@ -202,23 +198,19 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
       const auto& incomingSecondaries =
           (*m_incomingParticlesVertexSecondary)[i];
       const auto& incomingParticles = (*m_incomingParticlesParticle)[i];
-      const auto& incomingGenerations =
-          (*m_incomingParticlesGeneration)[i];
-      const auto& incomingSubParticles =
-          (*m_incomingParticlesSubParticle)[i];
+      const auto& incomingGenerations = (*m_incomingParticlesGeneration)[i];
+      const auto& incomingSubParticles = (*m_incomingParticlesSubParticle)[i];
       for (std::size_t j = 0; j < incomingPrimaries.size(); ++j) {
         v.incoming.insert(
             SimBarcode()
                 .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(
                     incomingPrimaries[j]))
-                .withVertexSecondary(
-                    static_cast<SimBarcode::SecondaryVertexId>(
-                        incomingSecondaries[j]))
-                .withParticle(static_cast<SimBarcode::ParticleId>(
-                    incomingParticles[j]))
-                .withGeneration(
-                    static_cast<SimBarcode::GenerationId>(
-                        incomingGenerations[j]))
+                .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                    incomingSecondaries[j]))
+                .withParticle(
+                    static_cast<SimBarcode::ParticleId>(incomingParticles[j]))
+                .withGeneration(static_cast<SimBarcode::GenerationId>(
+                    incomingGenerations[j]))
                 .withSubParticle(static_cast<SimBarcode::SubParticleId>(
                     incomingSubParticles[j])));
       }
@@ -234,23 +226,19 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
       const auto& outgoingSecondaries =
           (*m_outgoingParticlesVertexSecondary)[i];
       const auto& outgoingParticles = (*m_outgoingParticlesParticle)[i];
-      const auto& outgoingGenerations =
-          (*m_outgoingParticlesGeneration)[i];
-      const auto& outgoingSubParticles =
-          (*m_outgoingParticlesSubParticle)[i];
+      const auto& outgoingGenerations = (*m_outgoingParticlesGeneration)[i];
+      const auto& outgoingSubParticles = (*m_outgoingParticlesSubParticle)[i];
       for (std::size_t j = 0; j < outgoingPrimaries.size(); ++j) {
         v.outgoing.insert(
             SimBarcode()
                 .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(
                     outgoingPrimaries[j]))
-                .withVertexSecondary(
-                    static_cast<SimBarcode::SecondaryVertexId>(
-                        outgoingSecondaries[j]))
-                .withParticle(static_cast<SimBarcode::ParticleId>(
-                    outgoingParticles[j]))
-                .withGeneration(
-                    static_cast<SimBarcode::GenerationId>(
-                        outgoingGenerations[j]))
+                .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                    outgoingSecondaries[j]))
+                .withParticle(
+                    static_cast<SimBarcode::ParticleId>(outgoingParticles[j]))
+                .withGeneration(static_cast<SimBarcode::GenerationId>(
+                    outgoingGenerations[j]))
                 .withSubParticle(static_cast<SimBarcode::SubParticleId>(
                     outgoingSubParticles[j])));
       }
