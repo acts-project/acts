@@ -17,7 +17,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(TransformRangeTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 auto checkSameAddresses = [](const auto& orig, auto& act) {
   BOOST_CHECK_EQUAL(orig.size(), act.size());
@@ -272,3 +274,5 @@ BOOST_AUTO_TEST_CASE(Ranges) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

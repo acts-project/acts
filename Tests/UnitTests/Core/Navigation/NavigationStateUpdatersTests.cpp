@@ -8,13 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
 #include <algorithm>
@@ -167,35 +165,41 @@ class MultiGrid2D {
 };
 }  // namespace Acts
 
-using SingleVolumeUpdater = Acts::Experimental::SingleObjectNavigation<
-    Acts::Experimental::IExternalNavigation, Acts::Experimental::DetectorVolume,
-    Acts::Experimental::DetectorVolumeFiller>;
+using namespace Acts;
 
-using AllSurfacesProvider = Acts::Experimental::StaticAccessNavigation<
-    Acts::Experimental::IInternalNavigation,
-    Acts::Experimental::AllSurfacesExtractor,
-    Acts::Experimental::SurfacesFiller>;
+namespace ActsTests {
 
-using AllPortalsProvider = Acts::Experimental::StaticAccessNavigation<
-    Acts::Experimental::IInternalNavigation,
-    Acts::Experimental::AllPortalsExtractor, Acts::Experimental::PortalsFiller>;
+using SingleVolumeUpdater =
+    Experimental::SingleObjectNavigation<Experimental::IExternalNavigation,
+                                         Experimental::DetectorVolume,
+                                         Experimental::DetectorVolumeFiller>;
 
-auto surfaceA = Acts::Surface::makeShared<Acts::SurfaceStub>();
-auto surfaceB = Acts::Surface::makeShared<Acts::SurfaceStub>();
-auto surfaceC = Acts::Surface::makeShared<Acts::SurfaceStub>();
+using AllSurfacesProvider =
+    Experimental::StaticAccessNavigation<Experimental::IInternalNavigation,
+                                         Experimental::AllSurfacesExtractor,
+                                         Experimental::SurfacesFiller>;
 
-auto pSurfaceA = Acts::Surface::makeShared<Acts::SurfaceStub>();
-auto pSurfaceB = Acts::Surface::makeShared<Acts::SurfaceStub>();
-auto portalA = std::make_shared<Acts::Experimental::Portal>(pSurfaceA);
-auto portalB = std::make_shared<Acts::Experimental::Portal>(pSurfaceB);
+using AllPortalsProvider =
+    Experimental::StaticAccessNavigation<Experimental::IInternalNavigation,
+                                         Experimental::AllPortalsExtractor,
+                                         Experimental::PortalsFiller>;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+auto surfaceA = Surface::makeShared<SurfaceStub>();
+auto surfaceB = Surface::makeShared<SurfaceStub>();
+auto surfaceC = Surface::makeShared<SurfaceStub>();
+
+auto pSurfaceA = Surface::makeShared<SurfaceStub>();
+auto pSurfaceB = Surface::makeShared<SurfaceStub>();
+auto portalA = std::make_shared<Experimental::Portal>(pSurfaceA);
+auto portalB = std::make_shared<Experimental::Portal>(pSurfaceB);
+
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
 BOOST_AUTO_TEST_CASE(SingleExternalNavigationDelegate) {
-  Acts::Experimental::NavigationState nState;
+  Experimental::NavigationState nState;
 
   // Create a single object and a single object updator
-  auto sVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
+  auto sVolume = std::make_shared<Experimental::DetectorVolume>();
   SingleVolumeUpdater sVolumeUpdater(sVolume.get());
 
   // Update the volume and check that it is indeed updated
@@ -205,11 +209,11 @@ BOOST_AUTO_TEST_CASE(SingleExternalNavigationDelegate) {
 
 BOOST_AUTO_TEST_CASE(AllSurfaces) {
   // Create a single object and a single object updator
-  auto dVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
+  auto dVolume = std::make_shared<Experimental::DetectorVolume>();
   (*dVolume).sfs = {surfaceA.get(), surfaceB.get(), surfaceC.get()};
   (*dVolume).prts = {portalA.get(), portalB.get()};
 
-  Acts::Experimental::NavigationState nState;
+  Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
   BOOST_CHECK(nState.surfaceCandidates.empty());
   AllSurfacesProvider allSurfaces;
@@ -219,11 +223,11 @@ BOOST_AUTO_TEST_CASE(AllSurfaces) {
 
 BOOST_AUTO_TEST_CASE(AllPortals) {
   // Create a single object and a single object updator
-  auto dVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
+  auto dVolume = std::make_shared<Experimental::DetectorVolume>();
   (*dVolume).sfs = {surfaceA.get(), surfaceB.get(), surfaceC.get()};
   (*dVolume).prts = {portalA.get(), portalB.get()};
 
-  Acts::Experimental::NavigationState nState;
+  Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
   BOOST_CHECK(nState.surfaceCandidates.empty());
   AllPortalsProvider allPortals;
@@ -233,19 +237,20 @@ BOOST_AUTO_TEST_CASE(AllPortals) {
 
 BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
   // Create a single object and a single object updator
-  auto dVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
+  auto dVolume = std::make_shared<Experimental::DetectorVolume>();
   (*dVolume).sfs = {surfaceA.get(), surfaceB.get(), surfaceC.get()};
   (*dVolume).prts = {portalA.get(), portalB.get()};
 
-  Acts::Experimental::NavigationState nState;
+  Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
   BOOST_CHECK(nState.surfaceCandidates.empty());
 
   AllPortalsProvider allPortals;
   AllSurfacesProvider allSurfaces;
-  auto allPortalsAllSurfaces = Acts::Experimental::ChainedNavigation<
-      Acts::Experimental::IInternalNavigation, AllPortalsProvider,
-      AllSurfacesProvider>(std::tie(allPortals, allSurfaces));
+  auto allPortalsAllSurfaces =
+      Experimental::ChainedNavigation<Experimental::IInternalNavigation,
+                                      AllPortalsProvider, AllSurfacesProvider>(
+          std::tie(allPortals, allSurfaces));
 
   allPortalsAllSurfaces.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 5u);
@@ -253,26 +258,27 @@ BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
 
 BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
   // Create a single object and a single object updator
-  auto dVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
+  auto dVolume = std::make_shared<Experimental::DetectorVolume>();
   (*dVolume).sfs = {surfaceA.get(), surfaceB.get(), surfaceC.get()};
   (*dVolume).prts = {portalA.get(), portalB.get()};
 
-  Acts::Experimental::NavigationState nState;
+  Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
   BOOST_CHECK(nState.surfaceCandidates.empty());
 
   AllPortalsProvider allPortals;
-  Acts::MultiGrid1D grid;
-  using Grid1DSurfacesProvider = Acts::Experimental::IndexedGridNavigation<
-      Acts::Experimental::IInternalNavigation, decltype(grid),
-      Acts::Experimental::IndexedSurfacesExtractor,
-      Acts::Experimental::SurfacesFiller>;
+  MultiGrid1D grid;
+  using Grid1DSurfacesProvider = Experimental::IndexedGridNavigation<
+      Experimental::IInternalNavigation, decltype(grid),
+      Experimental::IndexedSurfacesExtractor, Experimental::SurfacesFiller>;
   auto grid1DSurfaces =
-      Grid1DSurfacesProvider(std::move(grid), {Acts::AxisDirection::AxisR});
+      Grid1DSurfacesProvider(std::move(grid), {AxisDirection::AxisR});
 
-  auto allPortalsGrid1DSurfaces = Acts::Experimental::ChainedNavigation<
-      Acts::Experimental::IInternalNavigation, AllPortalsProvider,
-      Grid1DSurfacesProvider>(std::tie(allPortals, grid1DSurfaces));
+  auto allPortalsGrid1DSurfaces =
+      Experimental::ChainedNavigation<Experimental::IInternalNavigation,
+                                      AllPortalsProvider,
+                                      Grid1DSurfacesProvider>(
+          std::tie(allPortals, grid1DSurfaces));
 
   allPortalsGrid1DSurfaces.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 4u);
@@ -280,30 +286,32 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
 
 BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
   // Create a single object and a single object updator
-  auto dVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
+  auto dVolume = std::make_shared<Experimental::DetectorVolume>();
   (*dVolume).sfs = {surfaceA.get(), surfaceB.get(), surfaceC.get()};
   (*dVolume).prts = {portalA.get(), portalB.get()};
 
-  Acts::Experimental::NavigationState nState;
+  Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
   BOOST_CHECK(nState.surfaceCandidates.empty());
 
   AllPortalsProvider allPortals;
-  Acts::MultiGrid2D grid;
-  using Grid2DSurfacesProvider = Acts::Experimental::IndexedGridNavigation<
-      Acts::Experimental::IInternalNavigation, decltype(grid),
-      Acts::Experimental::IndexedSurfacesExtractor,
-      Acts::Experimental::SurfacesFiller>;
+  MultiGrid2D grid;
+  using Grid2DSurfacesProvider = Experimental::IndexedGridNavigation<
+      Experimental::IInternalNavigation, decltype(grid),
+      Experimental::IndexedSurfacesExtractor, Experimental::SurfacesFiller>;
   auto grid2DSurfaces = Grid2DSurfacesProvider(
-      std::move(grid),
-      {Acts::AxisDirection::AxisR, Acts::AxisDirection::AxisZ});
+      std::move(grid), {AxisDirection::AxisR, AxisDirection::AxisZ});
 
-  auto allPortalsGrid2DSurfaces = Acts::Experimental::ChainedNavigation<
-      Acts::Experimental::IInternalNavigation, AllPortalsProvider,
-      Grid2DSurfacesProvider>(std::tie(allPortals, grid2DSurfaces));
+  auto allPortalsGrid2DSurfaces =
+      Experimental::ChainedNavigation<Experimental::IInternalNavigation,
+                                      AllPortalsProvider,
+                                      Grid2DSurfacesProvider>(
+          std::tie(allPortals, grid2DSurfaces));
 
   allPortalsGrid2DSurfaces.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

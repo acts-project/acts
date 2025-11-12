@@ -13,6 +13,7 @@
 
 namespace Acts {
 
+/// Error codes for multi-stepper operations
 enum class MultiStepperError {
   // ensure all values are non-zero
   ComponentNotOnSurface = 1,
@@ -23,6 +24,9 @@ enum class MultiStepperError {
   SomeComponentsConversionToBoundFailed = 6
 };
 
+/// Create error code from MultiStepperError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::MultiStepperError e);
 
 }  // namespace Acts

@@ -13,12 +13,21 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
+/// Interface for triplet seed filtering.
+///
+/// The filter is expected to be stateful and maintain internal information
+/// across calls.
 class ITripletSeedFilter {
  public:
   virtual ~ITripletSeedFilter() = default;
 
+  /// @brief Check if there are sufficient top doublets for triplet formation
+  /// @param spacePoints Container of space points
+  /// @param spM Middle space point proxy
+  /// @param topDoublets Collection of top doublets for the middle space point
+  /// @return True if sufficient doublets are available for triplet seeds
   virtual bool sufficientTopDoublets(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp& topDoublets) const = 0;
@@ -44,4 +53,4 @@ class ITripletSeedFilter {
       SeedContainer2& outputCollection) const = 0;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

@@ -81,6 +81,7 @@ class LineSurface : public Surface {
   /// Assignment operator
   ///
   /// @param other is the source surface dor copying
+  /// @return Reference to this LineSurface after assignment
   LineSurface& operator=(const LineSurface& other);
 
   Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
@@ -238,7 +239,7 @@ class LineSurface : public Surface {
   /// @param boundaryTolerance The boundary check directive for the estimate
   /// @param tolerance the tolerance used for the intersection
   /// @return is the intersection object
-  SurfaceMultiIntersection intersect(
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
@@ -248,15 +249,21 @@ class LineSurface : public Surface {
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
   ///
+  /// @param gctx Geometry context (ignored)
+  /// @param position Position parameter (ignored)
+  /// @param direction Direction parameter (ignored)
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
+  /// @return Always returns 1.0 for line surfaces
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
                         const Vector3& direction) const override;
 
   /// This method returns the bounds of the surface by reference
+  /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const final;
 
   /// Return properly formatted class name for screen output
+  /// @return String representation of the class name
   std::string name() const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
@@ -284,6 +291,9 @@ class LineSurface : public Surface {
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
+  /// Get the line direction in global coordinates
+  /// @param gctx The geometry context
+  /// @return The direction vector of the line surface
   Vector3 lineDirection(const GeometryContext& gctx) const;
 
  protected:

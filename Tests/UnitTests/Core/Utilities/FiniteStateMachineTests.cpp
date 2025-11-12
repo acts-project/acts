@@ -14,7 +14,9 @@
 #include <optional>
 #include <stdexcept>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 namespace states {
 struct Disconnected {};
@@ -86,7 +88,7 @@ struct fsm : FiniteStateMachine<fsm, states::Disconnected, states::Connecting,
   void on_process(Args&&... /*unused*/) {}
 };
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(Transitions) {
   fsm sm{};
@@ -297,4 +299,4 @@ BOOST_AUTO_TEST_CASE(InternalTransitions) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

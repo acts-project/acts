@@ -6,30 +6,34 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorStructure.hpp"
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBlueprintFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
 
 #include <fstream>
 
 #include <DD4hep/DetElement.h>
 
-Acts::Experimental::DD4hepDetectorStructure::DD4hepDetectorStructure(
+using namespace Acts;
+using namespace Acts::Experimental;
+using namespace Acts::Experimental::detail;
+
+namespace ActsPlugins {
+
+DD4hepDetectorStructure::DD4hepDetectorStructure(
     std::unique_ptr<const Logger> mlogger)
     : m_logger(std::move(mlogger)) {}
 
-std::tuple<std::shared_ptr<const Acts::Experimental::Detector>,
-           Acts::DD4hepDetectorElement::Store>
-Acts::Experimental::DD4hepDetectorStructure::construct(
-    const GeometryContext& gctx, const dd4hep::DetElement& dd4hepElement,
-    const Options& options) const {
+std::tuple<std::shared_ptr<const Detector>, DD4hepDetectorElement::Store>
+DD4hepDetectorStructure::construct(const GeometryContext& gctx,
+                                   const dd4hep::DetElement& dd4hepElement,
+                                   const Options& options) const {
   ACTS_DEBUG("Building detector from " << dd4hepElement.name());
 
   // Return objects
@@ -60,7 +64,7 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
   if (!options.emulateToGraph.empty()) {
     ACTS_DEBUG("Writing the initial bluepring to file before gap filling.");
     std::ofstream bpi(options.emulateToGraph + "_initial.dot");
-    detail::BlueprintDrawer::dotStream(bpi, *dd4hepBlueprint);
+    BlueprintDrawer::dotStream(bpi, *dd4hepBlueprint);
     bpi.close();
   }
 
@@ -68,13 +72,13 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
     ACTS_DEBUG("Cylindrical detector building detected.");
 
     // Now fill the gaps
-    detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
+    BlueprintHelper::fillGaps(*dd4hepBlueprint);
 
     // Draw the synchronized graph
     if (!options.emulateToGraph.empty()) {
       ACTS_DEBUG("Writing the final bluepring to file.");
       std::ofstream bpf(options.emulateToGraph + "_final.dot");
-      detail::BlueprintDrawer::dotStream(bpf, *dd4hepBlueprint);
+      BlueprintDrawer::dotStream(bpf, *dd4hepBlueprint);
       bpf.close();
       // Return without building
       return {detector, detectorStore};
@@ -104,3 +108,5 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
   }
   return {detector, detectorStore};
 }
+
+}  // namespace ActsPlugins

@@ -6,16 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/detail/CudaUtils.cuh"
-#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
-#include "Acts/Plugins/Gnn/detail/JunctionRemoval.hpp"
+#include "ActsPlugins/Gnn/detail/CudaUtils.cuh"
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/JunctionRemoval.hpp"
 
 #include <thrust/count.h>
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 #include <thrust/transform_scan.h>
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
 
 __global__ void findNumInOutEdge(std::size_t nEdges,
                                  const std::int64_t *srcNodes,
@@ -230,4 +230,4 @@ std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
   return std::make_pair(newSrcNodes, static_cast<std::size_t>(nEdgesAfter));
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

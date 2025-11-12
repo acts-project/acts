@@ -6,25 +6,26 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBlueprintFactory.hpp"
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBinningHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
-#include <sstream>
+using namespace Acts;
+using namespace Acts::Experimental;
 
-Acts::Experimental::DD4hepBlueprintFactory::DD4hepBlueprintFactory(
+namespace ActsPlugins {
+
+DD4hepBlueprintFactory::DD4hepBlueprintFactory(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {
   ACTS_DEBUG("UnitLength conversion factor (DD4hep -> Acts): " << unitLength);
 }
 
-std::unique_ptr<Acts::Experimental::Gen2Blueprint::Node>
-Acts::Experimental::DD4hepBlueprintFactory::create(
+std::unique_ptr<Gen2Blueprint::Node> DD4hepBlueprintFactory::create(
     Cache& cache, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement) const {
   ACTS_DEBUG("Drawing a blueprint from the DD4hep element '"
@@ -32,10 +33,10 @@ Acts::Experimental::DD4hepBlueprintFactory::create(
 
   // Create the root node
   std::vector<double> bValues = {0., 150., 1000.};
-  std::vector<AxisDirection> binning = {Acts::AxisDirection::AxisR};
-  auto root = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
-      dd4hepElement.name(), Acts::Transform3::Identity(),
-      Acts::VolumeBounds::eCylinder, bValues, binning);
+  std::vector<AxisDirection> binning = {AxisDirection::AxisR};
+  auto root = std::make_unique<Gen2Blueprint::Node>(
+      dd4hepElement.name(), Transform3::Identity(), VolumeBounds::eCylinder,
+      bValues, binning);
 
   // Recursively parse the tree
   recursiveParse(cache, *root, gctx, dd4hepElement);
@@ -43,7 +44,7 @@ Acts::Experimental::DD4hepBlueprintFactory::create(
   return root;
 }
 
-void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
+void DD4hepBlueprintFactory::recursiveParse(
     Cache& cache, Gen2Blueprint::Node& mother, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, unsigned int hiearchyLevel) const {
   // This will allow to skip empty hierarchy levels
@@ -83,14 +84,14 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
 
       } else if (nType == "acts_container") {
         // Creating the branch node
-        auto branch = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
+        auto branch = std::make_unique<Gen2Blueprint::Node>(
             dd4hepElement.name(), transform, bValueType, bValues, binning);
         current = branch.get();
         mother.add(std::move(branch));
 
       } else if (nType == "acts_volume") {
         // Crreating a leaf node
-        auto leaf = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
+        auto leaf = std::make_unique<Gen2Blueprint::Node>(
             dd4hepElement.name(), transform, bValueType, bValues);
         current = leaf.get();
         mother.add(std::move(leaf));
@@ -153,9 +154,9 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
   }
 }
 
-std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType,
-           std::vector<double>, std::vector<Acts::AxisDirection>, std::string>
-Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
+std::tuple<Transform3, VolumeBounds::BoundsType, std::vector<double>,
+           std::vector<AxisDirection>, std::string>
+DD4hepBlueprintFactory::extractExternals(
     [[maybe_unused]] const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const std::string& baseName,
     const std::optional<Extent>& extOpt) const {
@@ -205,8 +206,7 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
   // Get the binning values
   auto binningString =
       getParamOr<std::string>(baseName + "_binning", dd4hepElement, "");
-  std::vector<AxisDirection> bBinning =
-      Acts::stringToAxisDirections(binningString);
+  std::vector<AxisDirection> bBinning = stringToAxisDirections(binningString);
   if (!binningString.empty()) {
     aux += "vol. binning : " + binningString;
   }
@@ -214,21 +214,18 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
   return {transform, bValueType, bValues, bBinning, aux};
 }
 
-std::tuple<std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
-           std::shared_ptr<const Acts::Experimental::IRootVolumeFinderBuilder>,
-           std::shared_ptr<const Acts::Experimental::IGeometryIdGenerator>,
-           std::array<std::string, 3u>, std::optional<Acts::Extent>>
-Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
-    Acts::DD4hepDetectorElement::Store& dd4hepStore,
-    const GeometryContext& gctx, const dd4hep::DetElement& dd4hepElement,
+std::tuple<std::shared_ptr<const IInternalStructureBuilder>,
+           std::shared_ptr<const IRootVolumeFinderBuilder>,
+           std::shared_ptr<const IGeometryIdGenerator>,
+           std::array<std::string, 3u>, std::optional<Extent>>
+DD4hepBlueprintFactory::extractInternals(
+    DD4hepDetectorElement::Store& dd4hepStore, const GeometryContext& gctx,
+    const dd4hep::DetElement& dd4hepElement,
     const std::string& baseName) const {
   // Return objects
-  std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>
-      internalsBuilder = nullptr;
-  std::shared_ptr<const Acts::Experimental::IRootVolumeFinderBuilder>
-      rootsFinderBuilder = nullptr;
-  std::shared_ptr<const Acts::Experimental::IGeometryIdGenerator>
-      geoIdGenerator = nullptr;
+  std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
+  std::shared_ptr<const IRootVolumeFinderBuilder> rootsFinderBuilder = nullptr;
+  std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
   /// The hand-over information for externals
   std::optional<Extent> ext = std::nullopt;
   /// Auxiliary information
@@ -236,10 +233,10 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
 
   // Check for internal structure builder
   auto internals =
-      Acts::getParamOr<bool>(baseName + "_internals", dd4hepElement, false);
+      getParamOr<bool>(baseName + "_internals", dd4hepElement, false);
   if (internals) {
-    auto internalsType = Acts::getParamOr<std::string>(
-        baseName + "_internals_type", dd4hepElement, "");
+    auto internalsType = getParamOr<std::string>(baseName + "_internals_type",
+                                                 dd4hepElement, "");
     if (internalsType == "layer") {
       aux[0u] = "int. struct : layer";
       // Create a new layer builder
@@ -247,16 +244,15 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
       lOptions.name = dd4hepElement.name();
       // Check whether internal/sensitive surfaces should have directly
       // translated material
-      auto convertMaterial = Acts::getParamOr<bool>(
+      auto convertMaterial = getParamOr<bool>(
           "acts_surface_material_conversion", dd4hepElement, false);
       lOptions.conversionOptions.convertMaterial = convertMaterial;
       // Check if the extent should be measured
-      auto interenalsMeasure = Acts::getParamOr<std::string>(
+      auto interenalsMeasure = getParamOr<std::string>(
           baseName + "_internals_measure", dd4hepElement, "");
       auto internalsClearance =
-          unitLength *
-          Acts::getParamOr<double>(baseName + "_internals_clearance",
-                                   dd4hepElement, 0.);
+          unitLength * getParamOr<double>(baseName + "_internals_clearance",
+                                          dd4hepElement, 0.);
       auto internalAxisDirections = stringToAxisDirections(interenalsMeasure);
       if (!internalAxisDirections.empty()) {
         ACTS_VERBOSE(" - internals extent measurement requested");
@@ -284,34 +280,33 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
   }
 
   // Check for root volume finder
-  auto rootFinder = Acts::getParamOr<std::string>(
-      baseName + "_root_volume_finder", dd4hepElement, "");
+  auto rootFinder = getParamOr<std::string>(baseName + "_root_volume_finder",
+                                            dd4hepElement, "");
   if (rootFinder == "indexed") {
     aux[1u] = "root finder : indexed";
     std::vector<AxisDirection> binning = {AxisDirection::AxisZ,
                                           AxisDirection::AxisR};
     rootsFinderBuilder =
-        std::make_shared<Acts::Experimental::IndexedRootVolumeFinderBuilder>(
-            binning);
+        std::make_shared<IndexedRootVolumeFinderBuilder>(binning);
   }
 
   // Check for geo Id generator
   auto geoIdGen =
-      Acts::getParamOr<std::string>(baseName + "_geo_id", dd4hepElement, "");
+      getParamOr<std::string>(baseName + "_geo_id", dd4hepElement, "");
   if (geoIdGen == "incremental") {
     aux[2u] = "geo_id gen. : incremental";
-    Acts::Experimental::GeometryIdGenerator::Config geoIdCfg;
-    geoIdGenerator =
-        std::make_shared<Acts::Experimental::GeometryIdGenerator>(geoIdCfg);
+    GeometryIdGenerator::Config geoIdCfg;
+    geoIdGenerator = std::make_shared<GeometryIdGenerator>(geoIdCfg);
   } else if (geoIdGen == "container") {
     aux[2u] = "geo_id gen. : container";
-    Acts::Experimental::GeometryIdGenerator::Config geoIdCfg;
+    GeometryIdGenerator::Config geoIdCfg;
     geoIdCfg.containerMode = true;
     geoIdCfg.containerId =
-        Acts::getParamOr<int>(baseName + "_geo_id_base", dd4hepElement, 1);
-    geoIdGenerator =
-        std::make_shared<Acts::Experimental::GeometryIdGenerator>(geoIdCfg);
+        getParamOr<int>(baseName + "_geo_id_base", dd4hepElement, 1);
+    geoIdGenerator = std::make_shared<GeometryIdGenerator>(geoIdCfg);
   }
 
   return {internalsBuilder, rootsFinderBuilder, geoIdGenerator, aux, ext};
 }
+
+}  // namespace ActsPlugins

@@ -34,16 +34,20 @@ void TryAllNavigationPolicy::initializeCandidates(
   ACTS_VERBOSE("TryAllNavigationPolicy");
   assert(m_volume != nullptr);
 
-  if (m_cfg.portals && args.wantsPortals) {
+  if (m_cfg.portals) {
     for (const auto& portal : m_volume->portals()) {
       stream.addPortalCandidate(portal);
     }
   }
 
-  if (m_cfg.sensitives && args.wantsSurfaces) {
+  if (m_cfg.sensitives) {
     for (const auto& surface : m_volume->surfaces()) {
+      // skip no sensitive surfaces
+      if (surface.associatedDetectorElement() == nullptr) {
+        continue;
+      }
       stream.addSurfaceCandidate(surface, args.tolerance);
-    };
+    }
   }
 }
 

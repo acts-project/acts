@@ -10,14 +10,13 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Seeding2/ITripletSeedCuts.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <numeric>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 
@@ -382,4 +381,4 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
   ACTS_VERBOSE("Identified " << numTotalSeeds << " seeds");
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

@@ -10,8 +10,8 @@
 
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/PortalNavigation.hpp"
-#include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "ActsPlugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 
 #include <fstream>
 #include <memory>
@@ -19,13 +19,17 @@
 
 #include <nlohmann/json.hpp>
 
-BOOST_AUTO_TEST_SUITE(DetectorVolumeFinderJsonConverter)
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(RzVolumes) {
   std::vector<double> zBoundaries = {-1000., -500, 150.};
   std::vector<double> rBoundaries = {0., 10., 30., 35.};
 
-  using AxesGeneratorType = Acts::GridAxisGenerators::VarBoundVarBound;
+  using AxesGeneratorType = GridAxisGenerators::VarBoundVarBound;
 
   AxesGeneratorType zrAxes{zBoundaries, rBoundaries};
 
@@ -51,28 +55,28 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   grid.atPosition(p22) = 22u;
   grid.atPosition(p23) = 23u;
 
-  auto casts = std::array<Acts::AxisDirection, 2u>{Acts::AxisDirection::AxisZ,
-                                                   Acts::AxisDirection::AxisR};
+  auto casts =
+      std::array<AxisDirection, 2u>{AxisDirection::AxisZ, AxisDirection::AxisR};
 
-  using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedGridNavigation<
-      Acts::Experimental::IExternalNavigation, GridType,
-      Acts::Experimental::IndexedDetectorVolumeExtractor,
-      Acts::Experimental::DetectorVolumeFiller>;
+  using IndexedDetectorVolumesImpl = Experimental::IndexedGridNavigation<
+      Experimental::IExternalNavigation, GridType,
+      Experimental::IndexedDetectorVolumeExtractor,
+      Experimental::DetectorVolumeFiller>;
 
   auto indexedDetectorVolumesImpl =
       std::make_unique<const IndexedDetectorVolumesImpl>(std::move(grid),
                                                          casts);
 
   // Return the root volume finder
-  Acts::Experimental::ExternalNavigationDelegate rootVolumeFinder;
+  Experimental::ExternalNavigationDelegate rootVolumeFinder;
   rootVolumeFinder.connect<&IndexedDetectorVolumesImpl::update>(
       std::move(indexedDetectorVolumesImpl));
 
   nlohmann::json rFinderJson =
-      Acts::DetectorVolumeFinderJsonConverter::toJson(rootVolumeFinder);
+      DetectorVolumeFinderJsonConverter::toJson(rootVolumeFinder);
 
   auto readInRootVolumeFinder =
-      Acts::DetectorVolumeFinderJsonConverter::fromJson(rFinderJson);
+      DetectorVolumeFinderJsonConverter::fromJson(rFinderJson);
 
   BOOST_REQUIRE(readInRootVolumeFinder.instance() != nullptr);
 
@@ -93,3 +97,5 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

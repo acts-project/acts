@@ -12,10 +12,12 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstdint>
 #include <mutex>
 #include <string>
+#include <vector>
 
 class TFile;
 class TTree;
@@ -77,7 +79,8 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
   /// Hit surface identifier.
   std::uint64_t m_geometryId = 0;
   /// Event-unique particle identifier a.k.a. barcode.
-  std::uint64_t m_particleId = 0;
+  std::vector<std::uint32_t> m_barcode =
+      ActsFatras::Barcode::Invalid().asVector();
   /// True global hit position components in mm.
   float m_tx = 0, m_ty = 0, m_tz = 0;
   // True global hit time in ns.

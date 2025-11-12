@@ -13,6 +13,7 @@
 
 namespace Acts {
 
+/// Error codes for vertexing operations
 enum class VertexingError {
   // ensure all values are non-zero
   NumericFailure = 1,
@@ -25,8 +26,12 @@ enum class VertexingError {
   NonPositiveVariance,
   MatrixNotPositiveDefinite,
   InvalidInput,
+  CouldNotRemoveTrack,
 };
 
+/// Create error code from VertexingError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::VertexingError e);
 
 }  // namespace Acts

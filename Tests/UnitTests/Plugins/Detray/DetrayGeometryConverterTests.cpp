@@ -12,15 +12,16 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalDetector.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <numbers>
@@ -30,14 +31,15 @@
 
 using namespace Acts;
 using namespace Acts::Experimental;
-using namespace Acts::Test;
+using namespace ActsPlugins;
 
 GeometryContext tContext;
 
-auto logger =
-    Acts::getDefaultLogger("DetrayGeometryConverterTests", Acts::Logging::INFO);
+auto logger = getDefaultLogger("DetrayGeometryConverterTests", Logging::INFO);
 
-BOOST_AUTO_TEST_SUITE(DetrayConversion)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetraySuite)
 
 BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
   auto transform = Transform3::Identity();
@@ -45,7 +47,7 @@ BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
   transform.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3::UnitZ()));
 
   detray::io::transform_payload payload =
-      DetrayGeometryConverter::convertTransform(transform);
+      DetrayConversionUtils::convertTransform(transform);
   // Transform is correctly translated
   CHECK_CLOSE_ABS(payload.tr[0u], 1., std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.tr[1u], 2., std::numeric_limits<double>::epsilon());
@@ -80,10 +82,10 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversion) {
 
 BOOST_AUTO_TEST_CASE(DetraySurfaceConversion) {
   // Translate a cylinder
-  auto cylinderSurface = Acts::Surface::makeShared<CylinderSurface>(
+  auto cylinderSurface = Surface::makeShared<CylinderSurface>(
       Transform3::Identity(), std::make_shared<CylinderBounds>(20., 100.));
 
-  auto sgID = Acts::GeometryIdentifier().withSensitive(1);
+  auto sgID = GeometryIdentifier().withSensitive(1);
   cylinderSurface->assignGeometryId(sgID);
 
   detray::io::surface_payload payload = DetrayGeometryConverter::convertSurface(
@@ -167,3 +169,5 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

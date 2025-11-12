@@ -16,6 +16,7 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <vector>
 
@@ -23,6 +24,16 @@ namespace Acts {
 
 using VectorHelpers::perp;
 using VectorHelpers::phi;
+
+std::shared_ptr<DiscLayer> DiscLayer::create(
+    const Transform3& transform,
+    const std::shared_ptr<const DiscBounds>& dbounds,
+    std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+    std::unique_ptr<ApproachDescriptor> ad, LayerType laytyp) {
+  return std::shared_ptr<DiscLayer>(
+      new DiscLayer(transform, dbounds, std::move(surfaceArray), thickness,
+                    std::move(ad), laytyp));
+}
 
 DiscLayer::DiscLayer(const Transform3& transform,
                      const std::shared_ptr<const DiscBounds>& dbounds,

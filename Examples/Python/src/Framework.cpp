@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -16,14 +15,18 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
 using namespace py::literals;
+using namespace Acts;
 using namespace ActsExamples;
-using namespace Acts::Python;
+using namespace ActsPython;
+using namespace ActsPlugins;
 
 namespace {
 #if defined(__clang__)
@@ -96,18 +99,15 @@ void trigger_invalid() {
 
 }  // namespace
 
-namespace Acts::Python {
+namespace ActsPython {
 void addFramework(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  py::class_<ActsExamples::IWriter, std::shared_ptr<ActsExamples::IWriter>>(
-      mex, "IWriter");
+  py::class_<IWriter, std::shared_ptr<IWriter>>(mex, "IWriter");
 
-  py::class_<ActsExamples::IReader, std::shared_ptr<ActsExamples::IReader>>(
-      mex, "IReader");
+  py::class_<IReader, std::shared_ptr<IReader>>(mex, "IReader");
 
-  py::class_<ActsExamples::IContextDecorator,
-             std::shared_ptr<ActsExamples::IContextDecorator>>(
+  py::class_<IContextDecorator, std::shared_ptr<IContextDecorator>>(
       mex, "IContextDecorator")
       .def("decorate", &IContextDecorator::decorate)
       .def("name", &IContextDecorator::name);
@@ -118,9 +118,8 @@ void addFramework(Context& ctx) {
       .value("END", ProcessCode::END);
 
   py::class_<WhiteBoard>(mex, "WhiteBoard")
-      .def(py::init([](Acts::Logging::Level level, const std::string& name) {
-             return std::make_unique<WhiteBoard>(
-                 Acts::getDefaultLogger(name, level));
+      .def(py::init([](Logging::Level level, const std::string& name) {
+             return std::make_unique<WhiteBoard>(getDefaultLogger(name, level));
            }),
            py::arg("level"), py::arg("name") = "WhiteBoard")
       .def("exists", &WhiteBoard::exists)
@@ -142,21 +141,18 @@ void addFramework(Context& ctx) {
       .def_readwrite("fpeMonitor", &AlgorithmContext::fpeMonitor);
 
   auto pySequenceElement =
-      py::class_<ActsExamples::SequenceElement, PySequenceElement,
-                 std::shared_ptr<ActsExamples::SequenceElement>>(
-          mex, "SequenceElement")
+      py::class_<SequenceElement, PySequenceElement,
+                 std::shared_ptr<SequenceElement>>(mex, "SequenceElement")
           .def("internalExecute", &SequenceElement::internalExecute)
           .def("name", &SequenceElement::name);
 
   auto bareAlgorithm =
-      py::class_<ActsExamples::IAlgorithm,
-                 std::shared_ptr<ActsExamples::IAlgorithm>, SequenceElement,
+      py::class_<IAlgorithm, std::shared_ptr<IAlgorithm>, SequenceElement,
                  PyIAlgorithm>(mex, "IAlgorithm")
-          .def(py::init_alias<const std::string&, Acts::Logging::Level>(),
+          .def(py::init_alias<const std::string&, Logging::Level>(),
                py::arg("name"), py::arg("level"))
           .def("execute", &IAlgorithm::execute);
 
-  using ActsExamples::Sequencer;
   using Config = Sequencer::Config;
   auto sequencer =
       py::class_<Sequencer>(mex, "_Sequencer")
@@ -198,7 +194,7 @@ void addFramework(Context& ctx) {
       py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
           .def(py::init<>())
           .def(py::init<std::string, std::pair<unsigned int, unsigned int>,
-                        Acts::FpeType, std::size_t>())
+                        FpeType, std::size_t>())
           .def("__repr__", [](const Sequencer::FpeMask& self) {
             std::stringstream ss;
             ss << self;
@@ -208,25 +204,24 @@ void addFramework(Context& ctx) {
   ACTS_PYTHON_STRUCT(fpem, file, lines, type, count);
 
   struct FpeMonitorContext {
-    std::optional<Acts::FpeMonitor> mon;
+    std::optional<FpeMonitor> mon;
   };
 
-  auto fpe = py::class_<Acts::FpeMonitor>(m, "FpeMonitor")
+  auto fpe = py::class_<FpeMonitor>(m, "FpeMonitor")
                  .def_static("_trigger_divbyzero", &trigger_divbyzero)
                  .def_static("_trigger_overflow", &trigger_overflow)
                  .def_static("_trigger_invalid", &trigger_invalid)
                  .def_static("context", []() { return FpeMonitorContext(); });
 
-  fpe.def_property_readonly("result",
-                            py::overload_cast<>(&Acts::FpeMonitor::result),
+  fpe.def_property_readonly("result", py::overload_cast<>(&FpeMonitor::result),
                             py::return_value_policy::reference_internal)
-      .def("rearm", &Acts::FpeMonitor::rearm);
+      .def("rearm", &FpeMonitor::rearm);
 
-  py::class_<Acts::FpeMonitor::Result>(fpe, "Result")
-      .def("merged", &Acts::FpeMonitor::Result::merged)
-      .def("merge", &Acts::FpeMonitor::Result::merge)
-      .def("count", &Acts::FpeMonitor::Result::count)
-      .def("__str__", [](const Acts::FpeMonitor::Result& result) {
+  py::class_<FpeMonitor::Result>(fpe, "Result")
+      .def("merged", &FpeMonitor::Result::merged)
+      .def("merge", &FpeMonitor::Result::merge)
+      .def("count", &FpeMonitor::Result::count)
+      .def("__str__", [](const FpeMonitor::Result& result) {
         std::stringstream os;
         result.summary(os);
         return os.str();
@@ -236,7 +231,7 @@ void addFramework(Context& ctx) {
       .def(py::init([]() { return std::make_unique<FpeMonitorContext>(); }))
       .def(
           "__enter__",
-          [](FpeMonitorContext& fm) -> Acts::FpeMonitor& {
+          [](FpeMonitorContext& fm) -> FpeMonitor& {
             fm.mon.emplace();
             return fm.mon.value();
           },
@@ -245,42 +240,37 @@ void addFramework(Context& ctx) {
                           py::object /*exc_value*/,
                           py::object /*traceback*/) { fm.mon.reset(); });
 
-  py::enum_<Acts::FpeType>(m, "FpeType")
-      .value("INTDIV", Acts::FpeType::INTDIV)
-      .value("INTOVF", Acts::FpeType::INTOVF)
-      .value("FLTDIV", Acts::FpeType::FLTDIV)
-      .value("FLTOVF", Acts::FpeType::FLTOVF)
-      .value("FLTUND", Acts::FpeType::FLTUND)
-      .value("FLTRES", Acts::FpeType::FLTRES)
-      .value("FLTINV", Acts::FpeType::FLTINV)
-      .value("FLTSUB", Acts::FpeType::FLTSUB)
+  py::enum_<FpeType>(m, "FpeType")
+      .value("INTDIV", FpeType::INTDIV)
+      .value("INTOVF", FpeType::INTOVF)
+      .value("FLTDIV", FpeType::FLTDIV)
+      .value("FLTOVF", FpeType::FLTOVF)
+      .value("FLTUND", FpeType::FLTUND)
+      .value("FLTRES", FpeType::FLTRES)
+      .value("FLTINV", FpeType::FLTINV)
+      .value("FLTSUB", FpeType::FLTSUB)
 
       .def_property_readonly_static(
           "values", [](py::object /*self*/) -> const auto& {
-            static const std::vector<Acts::FpeType> values = {
-                Acts::FpeType::INTDIV, Acts::FpeType::INTOVF,
-                Acts::FpeType::FLTDIV, Acts::FpeType::FLTOVF,
-                Acts::FpeType::FLTUND, Acts::FpeType::FLTRES,
-                Acts::FpeType::FLTINV, Acts::FpeType::FLTSUB};
+            static const std::vector<FpeType> values = {
+                FpeType::INTDIV, FpeType::INTOVF, FpeType::FLTDIV,
+                FpeType::FLTOVF, FpeType::FLTUND, FpeType::FLTRES,
+                FpeType::FLTINV, FpeType::FLTSUB};
             return values;
           });
 
-  py::register_exception<ActsExamples::FpeFailure>(m, "FpeFailure",
-                                                   PyExc_RuntimeError);
+  py::register_exception<FpeFailure>(m, "FpeFailure", PyExc_RuntimeError);
 
-  using ActsExamples::RandomNumbers;
   auto randomNumbers =
       py::class_<RandomNumbers, std::shared_ptr<RandomNumbers>>(mex,
                                                                 "RandomNumbers")
           .def(py::init<const RandomNumbers::Config&>());
 
-  py::class_<ActsExamples::RandomEngine>(mex, "RandomEngine").def(py::init<>());
+  py::class_<RandomEngine>(mex, "RandomEngine").def(py::init<>());
 
   py::class_<RandomNumbers::Config>(randomNumbers, "Config")
       .def(py::init<>())
       .def_readwrite("seed", &RandomNumbers::Config::seed);
-
-  // mex.def()
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

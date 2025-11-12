@@ -6,20 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/detail/GeoShiftConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoShiftConverter.hpp"
 
-#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoBoxConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoTrdConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoTubeConverter.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoBoxConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoTrdConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoTubeConverter.hpp"
 
 #include <GeoModelKernel/GeoShapeShift.h>
 #include <GeoModelKernel/GeoTube.h>
 
-namespace Acts::detail {
+using namespace Acts;
+
+namespace ActsPlugins::detail {
 
 namespace {
 
@@ -95,4 +97,4 @@ Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
   return GeoModelConversionError::WrongShapeForConverter;
 }
 
-}  // namespace Acts::detail
+}  // namespace ActsPlugins::detail

@@ -265,6 +265,8 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
     seq = Sequencer(events=10, numThreads=1)
 
+    rnd = acts.examples.RandomNumbers(seed=4242)
+
     root_files = [
         (
             "estimatedparams.root",
@@ -299,6 +301,7 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
         geoSelectionConfigFile=geoSelectionConfigFile,
         config=config,
         s=seq,
+        rnd=rnd,
     ).run()
 
     del seq
@@ -357,7 +360,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
         field,
         outputDir=str(tmp_path),
         s=seq,
-        seedingAlgorithm=SeedingAlgorithm.Orthogonal,
+        seedingAlgorithm=SeedingAlgorithm.OrthogonalTriplet,
     ).run()
 
     for fn, tn in root_files:
@@ -702,8 +705,8 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     assert not map_file.exists()
 
     odd_dir = getOpenDataDetectorDirectory()
-    config = acts.MaterialMapJsonConverter.Config()
-    materialDecorator = acts.JsonMaterialDecorator(
+    config = acts.json.MaterialMapJsonConverter.Config()
+    materialDecorator = acts.json.JsonMaterialDecorator(
         level=acts.logging.INFO,
         rConfig=config,
         jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),

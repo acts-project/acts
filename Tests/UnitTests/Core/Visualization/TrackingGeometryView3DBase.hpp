@@ -10,9 +10,9 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -22,7 +22,7 @@ namespace Acts::TrackingGeometryView3DTest {
 
 GeometryContext tgContext = GeometryContext();
 
-Test::CylindricalTrackingGeometry cGeometry(tgContext);
+ActsTests::CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
 /// Helper method to visualize all types of surfaces

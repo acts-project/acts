@@ -31,11 +31,11 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
-#include <limits>
+using namespace Acts;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 auto tContext = GeometryContext();
 auto mContext = MagneticFieldContext();
@@ -53,7 +53,7 @@ auto surfaceMaterial = std::make_shared<HomogeneousSurfaceMaterial>();
 Material mat = Material::fromMolarDensity(1., 2., 3., 4., 5.);
 auto volumeMaterial = std::make_shared<HomogeneousVolumeMaterial>(mat);
 
-BOOST_AUTO_TEST_SUITE(PropagatorMaterialAssignerTestSuite)
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test with TrackingGeometry
 BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
@@ -177,8 +177,8 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingVolume) {
   auto pc = Experimental::detail::CylindricalDetectorHelper::connectInR(
       tContext, volumes);
 
-  auto detector = Acts::Experimental::Detector::makeShared(
-      "Detector", volumes, Acts::Experimental::tryRootVolumes());
+  auto detector = Experimental::Detector::makeShared(
+      "Detector", volumes, Experimental::tryRootVolumes());
 
   // Create a navigator and a propagator
   Experimental::DetectorNavigator::Config navConfig{detector.get()};
@@ -203,4 +203,4 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingVolume) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

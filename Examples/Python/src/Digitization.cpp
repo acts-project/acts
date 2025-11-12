@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
@@ -14,6 +13,8 @@
 #include "ActsExamples/Digitization/DigitizationCoordinatesConverter.hpp"
 #include "ActsExamples/Digitization/MuonSpacePointDigitizer.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
 #include <memory>
@@ -28,25 +29,24 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addDigitization(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
-  mex.def("readDigiConfigFromJson", ActsExamples::readDigiConfigFromJson);
-  mex.def("writeDigiConfigToJson", ActsExamples::writeDigiConfigToJson);
+  mex.def("readDigiConfigFromJson", readDigiConfigFromJson);
+  mex.def("writeDigiConfigToJson", writeDigiConfigToJson);
 
   {
-    using Config = ActsExamples::DigitizationAlgorithm::Config;
+    using Config = DigitizationAlgorithm::Config;
 
-    auto a = py::class_<ActsExamples::DigitizationAlgorithm,
-                        ActsExamples::IAlgorithm,
-                        std::shared_ptr<ActsExamples::DigitizationAlgorithm>>(
-                 mex, "DigitizationAlgorithm")
-                 .def(py::init<Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"))
-                 .def_property_readonly(
-                     "config", &ActsExamples::DigitizationAlgorithm::config);
+    auto a =
+        py::class_<DigitizationAlgorithm, IAlgorithm,
+                   std::shared_ptr<DigitizationAlgorithm>>(
+            mex, "DigitizationAlgorithm")
+            .def(py::init<Config&, Logging::Level>(), py::arg("config"),
+                 py::arg("level"))
+            .def_property_readonly("config", &DigitizationAlgorithm::config);
 
     auto c = py::class_<Config>(a, "Config").def(py::init<>());
 
@@ -55,10 +55,10 @@ void addDigitization(Context& ctx) {
         outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
         outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
         surfaceByIdentifier, randomNumbers, doOutputCells, doClusterization,
-        doMerge, minEnergyDeposit, digitizationConfigs, minMaxRetries);
+        doMerge, mergeCommonCorner, minEnergyDeposit, digitizationConfigs,
+        minMaxRetries);
 
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);
-    c.def_readonly("mergeCommonCorner", &Config::mergeCommonCorner);
 
     patchKwargsConstructor(c);
 
@@ -73,8 +73,8 @@ void addDigitization(Context& ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::MuonSpacePointDigitizer, mex, "MuonSpacePointDigitizer",
-      inputSimHits, inputParticles, outputSpacePoints, randomNumbers,
+      MuonSpacePointDigitizer, mex, "MuonSpacePointDigitizer", inputSimHits,
+      inputParticles, outputSpacePoints, randomNumbers,
       /// @todo: Expose <calibrator> to python bindings
       trackingGeometry, digitizeTime, dumpVisualization, strawDeadTime
 
@@ -91,18 +91,15 @@ void addDigitization(Context& ctx) {
   }
 
   {
-    py::class_<ActsExamples::DigitizationCoordinatesConverter,
-               std::shared_ptr<ActsExamples::DigitizationCoordinatesConverter>>(
+    py::class_<DigitizationCoordinatesConverter,
+               std::shared_ptr<DigitizationCoordinatesConverter>>(
         mex, "DigitizationCoordinatesConverter")
-        .def(py::init<ActsExamples::DigitizationAlgorithm::Config&>(),
-             py::arg("config"))
-        .def_property_readonly(
-            "config", &ActsExamples::DigitizationCoordinatesConverter::config)
-        .def("globalToLocal",
-             &ActsExamples::DigitizationCoordinatesConverter::globalToLocal)
-        .def("localToGlobal",
-             &ActsExamples::DigitizationCoordinatesConverter::localToGlobal);
+        .def(py::init<DigitizationAlgorithm::Config&>(), py::arg("config"))
+        .def_property_readonly("config",
+                               &DigitizationCoordinatesConverter::config)
+        .def("globalToLocal", &DigitizationCoordinatesConverter::globalToLocal)
+        .def("localToGlobal", &DigitizationCoordinatesConverter::localToGlobal);
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

@@ -16,17 +16,17 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -37,7 +37,11 @@
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-BOOST_AUTO_TEST_SUITE(EDM4hepParameterConversion)
+using namespace ActsPlugins;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EDM4HepSuite)
 
 BOOST_AUTO_TEST_CASE(JacobianRoundtrip) {
   BoundVector par;
@@ -48,9 +52,8 @@ BOOST_AUTO_TEST_CASE(JacobianRoundtrip) {
 
   double Bz = 2_T;
 
-  double tanLambda = std::tan(std::numbers::pi / 2. - par[Acts::eBoundTheta]);
-  double omega =
-      par[Acts::eBoundQOverP] / std::sin(par[Acts::eBoundTheta]) * Bz;
+  double tanLambda = std::tan(std::numbers::pi / 2. - par[eBoundTheta]);
+  double omega = par[eBoundQOverP] / std::sin(par[eBoundTheta]) * Bz;
 
   auto J1 = EDM4hepUtil::detail::jacobianToEdm4hep(par[eBoundTheta],
                                                    par[eBoundQOverP], Bz);
@@ -80,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 
   double Bz = 2_T;
 
-  Acts::GeometryContext gctx;
+  GeometryContext gctx;
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
@@ -125,7 +128,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
 
   double Bz = 2_T;
 
-  Acts::GeometryContext gctx;
+  GeometryContext gctx;
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, planePar);
@@ -154,9 +157,9 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   BoundTrackParameters roundtripPar =
       EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
-  BOOST_CHECK_NE(dynamic_cast<const Acts::PerigeeSurface*>(
-                     &roundtripPar.referenceSurface()),
-                 nullptr);
+  BOOST_CHECK_NE(
+      dynamic_cast<const PerigeeSurface*>(&roundtripPar.referenceSurface()),
+      nullptr);
 
   BOOST_CHECK((converted.covariance.value().topLeftCorner<3, 3>().isApprox(
       roundtripPar.covariance().value().topLeftCorner<3, 3>())));
@@ -165,8 +168,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   BOOST_CHECK_EQUAL(roundtripPar.covariance().value()(5, 5), 25_ns);
 
   auto roundtripPlaneBoundParams =
-      Acts::detail::boundToBoundConversion(gctx, roundtripPar, *planeSurface)
-          .value();
+      detail::boundToBoundConversion(gctx, roundtripPar, *planeSurface).value();
 
   BOOST_CHECK(roundtripPlaneBoundParams.parameters().isApprox(par));
 
@@ -186,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
 
   double Bz = 2_T;
 
-  Acts::GeometryContext gctx;
+  GeometryContext gctx;
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
@@ -221,7 +223,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
 
   double Bz = 2_T;
 
-  Acts::GeometryContext gctx;
+  GeometryContext gctx;
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
@@ -265,8 +267,8 @@ BOOST_AUTO_TEST_CASE(CovariancePacking) {
 }
 
 BOOST_AUTO_TEST_CASE(RoundTripTests) {
-  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
-  auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+  auto trackContainer = std::make_shared<VectorTrackContainer>();
+  auto trackStateContainer = std::make_shared<VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, trackStateContainer);
 
   std::mt19937 rng{42};
@@ -310,7 +312,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
       track.covariance() = cov;
     }
     track.setReferenceSurface(
-        Acts::Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
+        Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
 
     std::uint32_t numTs = nTs(rng);
     for (std::uint32_t i = 0; i < numTs; i++) {
@@ -336,7 +338,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
       ts.smoothedCovariance() = cov;
       Vector3 pos;
       pos << 1000 * f(rng), 1000 * f(rng), 3000 * f(rng);
-      ts.setReferenceSurface(Acts::Surface::makeShared<PerigeeSurface>(pos));
+      ts.setReferenceSurface(Surface::makeShared<PerigeeSurface>(pos));
     }
 
     calculateTrackQuantities(track);
@@ -344,7 +346,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   edm4hep::TrackCollection edm4hepTracks;
 
-  Acts::GeometryContext gctx;
+  GeometryContext gctx;
 
   double Bz = 3_T;
 
@@ -368,8 +370,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   const edm4hep::TrackCollection& edm4hepTracksConst = edm4hepTracks;
 
-  TrackContainer readTracks(std::make_shared<Acts::VectorTrackContainer>(),
-                            std::make_shared<Acts::VectorMultiTrajectory>());
+  TrackContainer readTracks(std::make_shared<VectorTrackContainer>(),
+                            std::make_shared<VectorMultiTrajectory>());
 
   for (const auto edm4hepTrack : edm4hepTracksConst) {
     auto track = readTracks.makeTrack();
@@ -437,3 +439,5 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

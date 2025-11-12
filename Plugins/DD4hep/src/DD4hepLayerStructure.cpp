@@ -6,11 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
 
-#include "Acts/Utilities/BinningType.hpp"
+using namespace Acts;
+using namespace Acts::Experimental;
 
-Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
+namespace ActsPlugins {
+
+DD4hepLayerStructure::DD4hepLayerStructure(
     std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
     std::unique_ptr<const Logger> logger)
     : m_surfaceFactory(std::move(surfaceFactory)), m_logger(std::move(logger)) {
@@ -20,11 +23,11 @@ Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
   }
 }
 
-std::tuple<std::shared_ptr<Acts::Experimental::LayerStructureBuilder>,
-           std::optional<Acts::Extent>>
-Acts::Experimental::DD4hepLayerStructure::builder(
-    DD4hepDetectorElement::Store& dd4hepStore, const GeometryContext& gctx,
-    const dd4hep::DetElement& dd4hepElement, const Options& options) const {
+std::tuple<std::shared_ptr<LayerStructureBuilder>, std::optional<Extent>>
+DD4hepLayerStructure::builder(DD4hepDetectorElement::Store& dd4hepStore,
+                              const GeometryContext& gctx,
+                              const dd4hep::DetElement& dd4hepElement,
+                              const Options& options) const {
   // Check for misconfiguration with double naming
   if (dd4hepStore.contains(options.name)) {
     std::string reMessage = "DD4hepLayerStructure: structure with name '";
@@ -138,3 +141,5 @@ Acts::Experimental::DD4hepLayerStructure::builder(
               lsbConfig, getDefaultLogger(options.name, options.logLevel)),
           fCache.sExtent};
 }
+
+}  // namespace ActsPlugins

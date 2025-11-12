@@ -32,11 +32,14 @@ namespace Acts {
 template <detail::TrackParamsGrid grid_t>
 class TrackParamsLookupAccumulator {
  public:
+  /// Type alias for track parameter lookup grid
   using LookupGrid = grid_t;
+  /// Type alias for track parameters type
   using TrackParameters = typename std::pointer_traits<
       typename grid_t::value_type::first_type>::element_type;
 
   /// @brief Constructor
+  /// @param grid Grid to use for track parameter lookup accumulation
   explicit TrackParamsLookupAccumulator(grid_t grid)
       : m_grid(std::move(grid)) {}
 

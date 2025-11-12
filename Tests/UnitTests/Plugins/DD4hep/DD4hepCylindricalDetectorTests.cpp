@@ -14,15 +14,15 @@
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBlueprintFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <fstream>
 #include <string>
@@ -35,9 +35,13 @@
 
 #include "DD4hepTestsHelper.hpp"
 
-Acts::GeometryContext tContext;
-Acts::Test::CylindricalTrackingGeometry cGeometry =
-    Acts::Test::CylindricalTrackingGeometry(tContext);
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
+
+GeometryContext tContext;
+CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 const char* beampipe_head_xml =
     R""""(
@@ -140,10 +144,8 @@ const std::string indent_4_xml(4, ' ');
 const std::string indent_8_xml(8, ' ');
 const std::string indent_12_xml(12, ' ');
 
-namespace {
-
-Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
-  Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
+CylindricalTrackingGeometry::DetectorStore generateXML() {
+  CylindricalTrackingGeometry::DetectorStore dStore;
 
   // Nec surfaces
   double necZ = -800.;
@@ -153,8 +155,8 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   auto necR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., necZ, 2., 22u);
 
-  std::vector<std::vector<Acts::Surface*>> necSurfaces = {necR0Surfaces,
-                                                          necR1Surfaces};
+  std::vector<std::vector<Surface*>> necSurfaces = {necR0Surfaces,
+                                                    necR1Surfaces};
 
   // Barrel surfaces
   std::vector<std::array<double, 2u>> innerOuter = {
@@ -168,8 +170,8 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   auto b2Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
                                                116., 3., 2., {52, 14});
 
-  std::vector<std::vector<Acts::Surface*>> barrelSurfaces = {
-      b0Surfaces, b1Surfaces, b2Surfaces};
+  std::vector<std::vector<Surface*>> barrelSurfaces = {b0Surfaces, b1Surfaces,
+                                                       b2Surfaces};
 
   // Nec surfaces
   double pecZ = 800.;
@@ -179,8 +181,8 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   auto pecR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., pecZ, 2., 22u);
 
-  std::vector<std::vector<Acts::Surface*>> pecSurfaces = {pecR0Surfaces,
-                                                          pecR1Surfaces};
+  std::vector<std::vector<Surface*>> pecSurfaces = {pecR0Surfaces,
+                                                    pecR1Surfaces};
 
   // Create an XML from it
   std::ofstream cxml;
@@ -227,7 +229,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
     for (const auto& s : ring) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
   }
@@ -240,7 +242,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   cxml << barrel_head_xml << '\n';
   cxml << indent_8_xml << "<layers>" << '\n';
   cxml << indent_8_xml << "<acts_container/> " << '\n';
-  for (const auto [ib, bs] : Acts::enumerate(barrelSurfaces)) {
+  for (const auto [ib, bs] : enumerate(barrelSurfaces)) {
     cxml << indent_4_xml << "<layer name=\"PixelBarrel_" << ib << "\" id=\""
          << ib << "\">" << '\n';
     cxml << indent_4_xml << "<acts_volume rmin=\"" << innerOuter[ib][0u]
@@ -249,7 +251,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
     for (const auto& s : bs) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
     cxml << indent_8_xml << "</modules>" << '\n';
@@ -269,7 +271,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
     for (const auto& s : ring) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
   }
@@ -286,11 +288,9 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   return dStore;
 }
 
-}  // namespace
-
 auto store = generateXML();
 
-BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
+BOOST_AUTO_TEST_SUITE(DD4hepSuite)
 
 BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   auto lcdd = &(dd4hep::Detector::getInstance());
@@ -301,23 +301,20 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   auto world = lcdd->world();
 
   // Test starts here
-  Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
-  auto surfaceFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
-      sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                                             Acts::Logging::VERBOSE));
+  DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
+  auto surfaceFactory = std::make_shared<DD4hepDetectorSurfaceFactory>(
+      sFactoryConfig,
+      getDefaultLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
 
-  auto layerStructure =
-      std::make_shared<Acts::Experimental::DD4hepLayerStructure>(
-          std::move(surfaceFactory),
-          Acts::getDefaultLogger("DD4hepLayerStructure",
-                                 Acts::Logging::VERBOSE));
+  auto layerStructure = std::make_shared<DD4hepLayerStructure>(
+      std::move(surfaceFactory),
+      getDefaultLogger("DD4hepLayerStructure", Logging::VERBOSE));
 
-  Acts::Experimental::DD4hepBlueprintFactory::Config bpCfg{layerStructure};
-  Acts::Experimental::DD4hepBlueprintFactory::Cache bpCache;
+  DD4hepBlueprintFactory::Config bpCfg{layerStructure};
+  DD4hepBlueprintFactory::Cache bpCache;
 
-  Acts::Experimental::DD4hepBlueprintFactory bp(
-      bpCfg,
-      Acts::getDefaultLogger("DD4hepBlueprintFactory", Acts::Logging::VERBOSE));
+  DD4hepBlueprintFactory bp(
+      bpCfg, getDefaultLogger("DD4hepBlueprintFactory", Logging::VERBOSE));
   auto dd4hepBlueprint = bp.create(bpCache, tContext, world);
 
   // We should have 6 store entries now
@@ -328,27 +325,27 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   BOOST_CHECK_EQUAL(bpCache.dd4hepStore.size(), 6u);
 
   // Now fill the gaps
-  Acts::Experimental::detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
+  Experimental::detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
 
   // dot -P -Tsvg -o plugins.svg
   std::ofstream cbp("cylindrical_detector_dd4hep.dot");
-  Acts::Experimental::detail::BlueprintDrawer::dotStream(cbp, *dd4hepBlueprint);
+  Experimental::detail::BlueprintDrawer::dotStream(cbp, *dd4hepBlueprint);
   cbp.close();
 
   // Create a Cylindrical detector builder from this blueprint
   auto detectorBuilder =
-      std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(
-          *dd4hepBlueprint, Acts::Logging::VERBOSE);
+      std::make_shared<Experimental::CylindricalContainerBuilder>(
+          *dd4hepBlueprint, Logging::VERBOSE);
 
   // Detector builder
-  Acts::Experimental::DetectorBuilder::Config dCfg;
+  Experimental::DetectorBuilder::Config dCfg;
   dCfg.auxiliary =
       "*** Test : auto generated cylindrical detector builder  ***";
   dCfg.name = "Cylindrical detector from blueprint";
   dCfg.builder = detectorBuilder;
   dCfg.geoIdGenerator = dd4hepBlueprint->geoIdGenerator;
 
-  auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
+  auto detector = Experimental::DetectorBuilder(dCfg).construct(tContext);
 
   // Detector construction check
   BOOST_REQUIRE_NE(detector, nullptr);
@@ -371,14 +368,13 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
 
   auto world = lcdd->world();
 
-  Acts::Experimental::DD4hepDetectorStructure::Options dsOptions;
-  dsOptions.logLevel = Acts::Logging::VERBOSE;
+  DD4hepDetectorStructure::Options dsOptions;
+  dsOptions.logLevel = Logging::VERBOSE;
   dsOptions.emulateToGraph = "cylindrical_detector_structure";
 
   auto [detectorEm, detectorStoreEm] =
-      Acts::Experimental::DD4hepDetectorStructure(
-          Acts::getDefaultLogger("DD4hepDetectorStructure",
-                                 Acts::Logging::VERBOSE))
+      DD4hepDetectorStructure(
+          getDefaultLogger("DD4hepDetectorStructure", Logging::VERBOSE))
           .construct(tContext, world, dsOptions);
 
   // Detector construction : no detector constructed, as we have only
@@ -388,9 +384,8 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
   // Now build in non-emulation mode
   dsOptions.emulateToGraph = "";
   auto [detector, detectorStore] =
-      Acts::Experimental::DD4hepDetectorStructure(
-          Acts::getDefaultLogger("DD4hepDetectorStructure",
-                                 Acts::Logging::VERBOSE))
+      DD4hepDetectorStructure(
+          getDefaultLogger("DD4hepDetectorStructure", Logging::VERBOSE))
           .construct(tContext, world, dsOptions);
 
   BOOST_REQUIRE_NE(detector, nullptr);
@@ -435,3 +430,5 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

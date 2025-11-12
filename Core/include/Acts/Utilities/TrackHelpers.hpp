@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -20,6 +19,7 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -29,6 +29,7 @@
 
 namespace Acts {
 
+/// Strategy for track extrapolation to target surface
 enum class TrackExtrapolationStrategy {
   /// Use the first track state to reach target surface
   first,
@@ -39,13 +40,20 @@ enum class TrackExtrapolationStrategy {
   firstOrLast,
 };
 
+/// Error codes for track extrapolation operations
 enum class TrackExtrapolationError {
   CompatibleTrackStateNotFound = 1,
   ReferenceSurfaceUnreachable = 2,
 };
 
+/// Create error code from TrackExtrapolationError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(TrackExtrapolationError e);
 
+/// Find the first measurement state in a track
+/// @param track The track to search
+/// @return Result containing the first measurement state proxy or error
 template <TrackProxyConcept track_proxy_t>
 Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
     const track_proxy_t &track) {
@@ -73,6 +81,9 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
       TrackExtrapolationError::CompatibleTrackStateNotFound);
 }
 
+/// Find the last measurement state in a track
+/// @param track The track to search
+/// @return Result containing the last measurement state proxy or error
 template <TrackProxyConcept track_proxy_t>
 Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
     const track_proxy_t &track) {
@@ -178,7 +189,7 @@ findTrackStateForExtrapolation(
                                              Logging::INFO)) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
-  auto intersect = [&](const TrackStateProxy &state) -> SurfaceIntersection {
+  auto intersect = [&](const TrackStateProxy &state) -> Intersection3D {
     assert(state.hasSmoothed() || state.hasFiltered());
 
     FreeVector freeVector;
@@ -205,7 +216,7 @@ findTrackStateForExtrapolation(
         return first.error();
       }
 
-      SurfaceIntersection intersection = intersect(*first);
+      Intersection3D intersection = intersect(*first);
       if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
@@ -225,7 +236,7 @@ findTrackStateForExtrapolation(
         return last.error();
       }
 
-      SurfaceIntersection intersection = intersect(*last);
+      Intersection3D intersection = intersect(*last);
       if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
@@ -251,8 +262,8 @@ findTrackStateForExtrapolation(
         return last.error();
       }
 
-      SurfaceIntersection intersectionFirst = intersect(*first);
-      SurfaceIntersection intersectionLast = intersect(*last);
+      Intersection3D intersectionFirst = intersect(*first);
+      Intersection3D intersectionLast = intersect(*last);
 
       double absDistanceFirst = std::abs(intersectionFirst.pathLength());
       double absDistanceLast = std::abs(intersectionLast.pathLength());
@@ -591,7 +602,7 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
 
   MeasurementVector residual = measurement - filtered;
   MeasurementMatrix residualCovariance =
-      measurementCovariance + filteredCovariance;
+      measurementCovariance - filteredCovariance;
 
   return {residual, residualCovariance};
 }
@@ -628,7 +639,7 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
 
   MeasurementVector residual = measurement - smoothed;
   MeasurementMatrix residualCovariance =
-      measurementCovariance + smoothedCovariance;
+      measurementCovariance - smoothedCovariance;
 
   return {residual, residualCovariance};
 }
