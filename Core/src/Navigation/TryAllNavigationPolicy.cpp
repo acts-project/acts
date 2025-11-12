@@ -20,7 +20,10 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& /*gctx*/,
     : m_cfg{config}, m_volume(&volume) {
   assert(m_volume != nullptr);
   ACTS_VERBOSE("TryAllNavigationPolicy created for volume "
-               << m_volume->volumeName());
+               << m_volume->volumeName() << " with config: "
+               << " portals=" << m_cfg.resolvePortales
+               << " sensitives=" << m_cfg.resolveSensitives
+               << " passives=" << m_cfg.passives);
 }
 
 TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
@@ -31,22 +34,24 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
 void TryAllNavigationPolicy::initializeCandidates(
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
-  ACTS_VERBOSE("TryAllNavigationPolicy");
+  ACTS_VERBOSE(std::format("TryAllNavigationPolicy: portals={}, sensitives={}, passives={}",
+                           args.wantsPortals && m_cfg.resolvePortales,
+                           args.wantsSurfaces && m_cfg.resolveSensitives,
+                           args.wantsSurfaces && m_cfg.resolvePassives);
   assert(m_volume != nullptr);
 
-  if (m_cfg.portals && args.wantsPortals) {
+  if (m_cfg.resolvePortals && args.wantsPortals) {
     for (const auto& portal : m_volume->portals()) {
       stream.addPortalCandidate(portal);
     }
   }
 
-  if (m_cfg.sensitives && args.wantsSurfaces) {
+  if (m_cfg.resolveSensitives && args.wantsSurfaces) {
     for (const auto& surface : m_volume->surfaces()) {
       // skip no sensitive surfaces
-      if (surface.associatedDetectorElement() == nullptr) {
-        continue;
+      if (m_cfg.passives || surface.associatedDetectorElement() != nullptr) {
+        stream.addSurfaceCandidate(surface, args.tolerance);
       }
-      stream.addSurfaceCandidate(surface, args.tolerance);
     }
   }
 }
