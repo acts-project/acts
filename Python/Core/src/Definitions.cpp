@@ -242,6 +242,9 @@ void addDefinitions(py::module_& m) {
       .value("eAntiProton", PdgParticle::eAntiProton)
       .value("eLead", PdgParticle::eLead);
 
+  // Add the parsePdgParticle function
+  m.def("parsePdgParticle", &parsePdgParticle, py::arg("name"));
+
   py::class_<ParticleHypothesis>(m, "ParticleHypothesis")
       .def(py::init([](PdgParticle absPdg, float mass, float absCharge) {
              return ParticleHypothesis(absPdg, mass, AnyCharge{absCharge});
