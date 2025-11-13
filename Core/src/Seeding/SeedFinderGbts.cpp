@@ -171,7 +171,7 @@ std::vector<std::vector<SeedFinderGbts::GNN_Node>> SeedFinderGbts::CreateNodes(
     node.m_r = sp.r();
     node.m_phi = sp.phi();
     node.m_idx =
-        sp.index();  // change node so that is uses SpacePointIndex2 (doesnt
+        sp.index();  // change node so that is uses SpacePointIndex2 (doesn't
                      // affect code but i guess it looks cleaner)
     node.m_pcw = sp.extra(std::get<2>(container));
   }

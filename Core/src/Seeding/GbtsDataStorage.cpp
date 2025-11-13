@@ -36,8 +36,9 @@ void GbtsEtaBin::sortByPhi() {
   int nBuckets = 31;
 
   for (const auto& n : m_vn) {
-    int bIdx = static_cast<int>(0.5 * nBuckets *
-                                (n->phi() / static_cast<float>(std::numbers::pi) + 1.0f));
+    int bIdx = static_cast<int>(
+        0.5 * nBuckets *
+        (n->phi() / static_cast<float>(std::numbers::pi) + 1.0f));
     phiBuckets[bIdx].push_back(std::make_pair(n->phi(), n));
   }
 
@@ -81,7 +82,8 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
     float phi = m_params[nIdx][2];
     if (phi <= std::numbers::pi - dphi)
       continue;
-    m_vPhiNodes.push_back(std::pair<float, unsigned int>(phi - 2 * std::numbers::pi, nIdx));
+    m_vPhiNodes.push_back(
+        std::pair<float, unsigned int>(phi - 2 * std::numbers::pi, nIdx));
   }
 
   for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
@@ -93,7 +95,8 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
     float phi = m_params[nIdx][2];
     if (phi >= -std::numbers::pi + dphi)
       break;
-    m_vPhiNodes.push_back(std::pair<float, unsigned int>(phi + 2 * std::numbers::pi, nIdx));
+    m_vPhiNodes.push_back(
+        std::pair<float, unsigned int>(phi + 2 * std::numbers::pi, nIdx));
   }
 }
 
