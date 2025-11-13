@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/*
-  Copyright (C) 2002-2025 CERN for the benefit of the ATLAS collaboration
-*/
-
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 
 #include <algorithm>
