@@ -58,7 +58,8 @@ class ToroidalField final : public MagneticFieldProvider {
 
     // Per-coil current senses (applied to dl):
     // - barrelSigns size must be nCoils
-    // - ectSigns    size must be 2*nCoils (first +z endcap [0..nCoils-1], then -z [nCoils..2*nCoils-1])
+    // - ectSigns    size must be 2*nCoils (first +z endcap [0..nCoils-1], then
+    // -z [nCoils..2*nCoils-1])
     std::vector<int> barrelSigns;  // default filled in ctor if empty
     std::vector<int> ectSigns;     // default filled in ctor if empty
   };
@@ -87,8 +88,10 @@ class ToroidalField final : public MagneticFieldProvider {
   static std::vector<std::array<float, 2>> ectRacetrackRadial(
       float Lrho, float Lz, int nArc, int nStraight, bool close);
 
-  static std::vector<std::array<float, 2>> racetrackRZ(
-      float a, float b, float Lz, int nArc, int nStraight, bool close);
+  static std::vector<std::array<float, 2>> racetrackRZ(float a, float b,
+                                                       float Lz, int nArc,
+                                                       int nStraight,
+                                                       bool close);
 
   static void buildSegsMidsRZ(const std::vector<std::array<float, 2>>& rz,
                               std::vector<std::array<float, 2>>& d_rz,
@@ -113,14 +116,13 @@ class ToroidalField final : public MagneticFieldProvider {
   std::vector<std::array<float, 3>> m_segs_ect;  // both endcaps combined
   std::vector<std::array<float, 3>> m_mids_ect;
 
-  void accumulateBarrelField(double X, double Y, double Z,
-                             double eps, double pref,
-                             double& bx, double& by, double& bz) const;
+  void accumulateBarrelField(double X, double Y, double Z, double eps,
+                             double pref, double& bx, double& by,
+                             double& bz) const;
 
-  void accumulateEndcapField(double X, double Y, double Z,
-                             double eps, double pref,
-                             double& bx, double& by, double& bz) const;
-                             
+  void accumulateEndcapField(double X, double Y, double Z, double eps,
+                             double pref, double& bx, double& by,
+                             double& bz) const;
 };
 
 }  // namespace Acts

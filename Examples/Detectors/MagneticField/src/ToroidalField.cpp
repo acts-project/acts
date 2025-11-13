@@ -1,5 +1,13 @@
 // This file is part of the ACTS project.
 //
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// This file is part of the ACTS project.
+//
 // Copyright (C) 2016 CERN
 //
 // MPL 2.0: https://mozilla.org/MPL/2.0/
@@ -58,19 +66,17 @@ Result<Vector3> ToroidalField::getField(
   double bx = 0.0, by = 0.0, bz = 0.0;
 
   constexpr double mu0 = 4e-7 * std::numbers::pi;  // [T·m/A]
-  const double prefBarrel =
-      (mu0 * static_cast<double>(m_cfg.barrel.Nturns) *
-       static_cast<double>(m_cfg.barrel.I)) /
-      (4.0 * std::numbers::pi);
-  const double prefECT =
-      (mu0 * static_cast<double>(m_cfg.ect.Nturns) *
-       static_cast<double>(m_cfg.ect.I)) /
-      (4.0 * std::numbers::pi);
+  const double prefBarrel = (mu0 * static_cast<double>(m_cfg.barrel.Nturns) *
+                             static_cast<double>(m_cfg.barrel.I)) /
+                            (4.0 * std::numbers::pi);
+  const double prefECT = (mu0 * static_cast<double>(m_cfg.ect.Nturns) *
+                          static_cast<double>(m_cfg.ect.I)) /
+                         (4.0 * std::numbers::pi);
   const double eps = static_cast<double>(m_cfg.layout.eps);
 
   // Split computations
   accumulateBarrelField(X, Y, Z, eps, prefBarrel, bx, by, bz);
-  accumulateEndcapField(X, Y, Z, eps, prefECT,   bx, by, bz);
+  accumulateEndcapField(X, Y, Z, eps, prefECT, bx, by, bz);
 
   return Result<Vector3>::success(Vector3(bx, by, bz));
 }
@@ -80,17 +86,17 @@ Result<Vector3> ToroidalField::getField(
 //-------------------------
 
 void ToroidalField::accumulateBarrelField(double X, double Y, double Z,
-                                          double eps, double pref,
-                                          double& bx, double& by, double& bz) const {
+                                          double eps, double pref, double& bx,
+                                          double& by, double& bz) const {
   for (std::size_t i = 0; i < m_mids_barrel.size(); ++i) {
     const auto& mid = m_mids_barrel[i];
-    const auto& dl  = m_segs_barrel[i];
+    const auto& dl = m_segs_barrel[i];
 
     const double rx = X - static_cast<double>(mid[0]);
     const double ry = Y - static_cast<double>(mid[1]);
     const double rz = Z - static_cast<double>(mid[2]);
 
-    const double r2   = rx * rx + ry * ry + rz * rz + eps;
+    const double r2 = rx * rx + ry * ry + rz * rz + eps;
     const double invr = 1.0 / std::sqrt(r2);
     const double invr3 = invr / r2;
 
@@ -108,17 +114,17 @@ void ToroidalField::accumulateBarrelField(double X, double Y, double Z,
 }
 
 void ToroidalField::accumulateEndcapField(double X, double Y, double Z,
-                                          double eps, double pref,
-                                          double& bx, double& by, double& bz) const {
+                                          double eps, double pref, double& bx,
+                                          double& by, double& bz) const {
   for (std::size_t i = 0; i < m_mids_ect.size(); ++i) {
     const auto& mid = m_mids_ect[i];
-    const auto& dl  = m_segs_ect[i];
+    const auto& dl = m_segs_ect[i];
 
     const double rx = X - static_cast<double>(mid[0]);
     const double ry = Y - static_cast<double>(mid[1]);
     const double rz = Z - static_cast<double>(mid[2]);
 
-    const double r2   = rx * rx + ry * ry + rz * rz + eps;
+    const double r2 = rx * rx + ry * ry + rz * rz + eps;
     const double invr = 1.0 / std::sqrt(r2);
     const double invr3 = invr / r2;
 
@@ -139,7 +145,8 @@ float ToroidalField::deg2rad(float deg) {
   return deg * static_cast<float>(std::numbers::pi / 180.0);
 }
 
-// End-cap racetrack with LONG straights along z (kept for parity with header-only version)
+// End-cap racetrack with LONG straights along z (kept for parity with
+// header-only version)
 std::vector<std::array<float, 2>> ToroidalField::ectRacetrackRadial(
     float Lrho, float Lz, int nArc, int nStraight, bool close) {
   const float rr = 0.5f * Lrho;  // radial half-span
@@ -156,9 +163,9 @@ std::vector<std::array<float, 2>> ToroidalField::ectRacetrackRadial(
   }
   // Inner arc at z = -rz : θ: +π/2 → -π/2 (exclude endpoint) ; ρ = rr*sin(θ)
   for (int i = 0; i < nArc; ++i) {
-    const float th = static_cast<float>(std::numbers::pi / 2) +
-                     (static_cast<float>(i) / nArc) *
-                         static_cast<float>(-std::numbers::pi);
+    const float th =
+        static_cast<float>(std::numbers::pi / 2) +
+        (static_cast<float>(i) / nArc) * static_cast<float>(-std::numbers::pi);
     const float rho = rr * std::sin(th);
     const float z = -rz;
     pts.push_back({rho, z});
@@ -171,9 +178,9 @@ std::vector<std::array<float, 2>> ToroidalField::ectRacetrackRadial(
   }
   // Outer arc at z = +rz : θ: -π/2 → +π/2 (close if requested)
   for (int i = 0; i < nArc; ++i) {
-    const float th = -static_cast<float>(std::numbers::pi) / 2 +
-                     (static_cast<float>(i) / nArc) *
-                         static_cast<float>(std::numbers::pi);
+    const float th =
+        -static_cast<float>(std::numbers::pi) / 2 +
+        (static_cast<float>(i) / nArc) * static_cast<float>(std::numbers::pi);
     const float rho = rr * std::sin(th);
     const float z = +rz;
     pts.push_back({rho, z});
@@ -187,8 +194,10 @@ std::vector<std::array<float, 2>> ToroidalField::ectRacetrackRadial(
 }
 
 // Rounded-rectangle racetrack in local (ρ, z)
-std::vector<std::array<float, 2>> ToroidalField::racetrackRZ(
-    float a, float b, float Lz, int nArc, int nStraight, bool close) {
+std::vector<std::array<float, 2>> ToroidalField::racetrackRZ(float a, float b,
+                                                             float Lz, int nArc,
+                                                             int nStraight,
+                                                             bool close) {
   const float r = 0.5f * b;    // corner radius
   const float rz = 0.5f * Lz;  // axial half-length
   const float zTop = rz - r;   // top straight z
@@ -240,10 +249,9 @@ std::vector<std::array<float, 2>> ToroidalField::racetrackRZ(
   return pts;
 }
 
-void ToroidalField::buildSegsMidsRZ(
-    const std::vector<std::array<float, 2>>& rz,
-    std::vector<std::array<float, 2>>& d_rz,
-    std::vector<std::array<float, 2>>& m_rz) {
+void ToroidalField::buildSegsMidsRZ(const std::vector<std::array<float, 2>>& rz,
+                                    std::vector<std::array<float, 2>>& d_rz,
+                                    std::vector<std::array<float, 2>>& m_rz) {
   d_rz.clear();
   m_rz.clear();
   d_rz.reserve(rz.size() - 1);
@@ -252,16 +260,17 @@ void ToroidalField::buildSegsMidsRZ(
     const float dr = rz[i + 1][0] - rz[i][0];
     const float dz = rz[i + 1][1] - rz[i][1];
     d_rz.push_back({dr, dz});
-    m_rz.push_back({0.5f * (rz[i + 1][0] + rz[i][0]),
-                    0.5f * (rz[i + 1][1] + rz[i][1])});
+    m_rz.push_back(
+        {0.5f * (rz[i + 1][0] + rz[i][0]), 0.5f * (rz[i + 1][1] + rz[i][1])});
   }
 }
 
-void ToroidalField::mapRingToXYZ(
-    float l, const std::vector<std::array<float, 2>>& m_rz,
-    const std::vector<std::array<float, 2>>& d_rz, float phi, int sign,
-    float zShift, std::vector<std::array<float, 3>>& mids_out,
-    std::vector<std::array<float, 3>>& segs_out) {
+void ToroidalField::mapRingToXYZ(float l,
+                                 const std::vector<std::array<float, 2>>& m_rz,
+                                 const std::vector<std::array<float, 2>>& d_rz,
+                                 float phi, int sign, float zShift,
+                                 std::vector<std::array<float, 3>>& mids_out,
+                                 std::vector<std::array<float, 3>>& segs_out) {
   const float ct = std::cos(phi), st = std::sin(phi);
   const float s = (sign >= 0) ? 1.0f : -1.0f;
 
@@ -282,8 +291,7 @@ void ToroidalField::buildGeometry() {
   // ---- Barrel base curve ----
   const float rEndB = 0.5f * m_cfg.barrel.b;
   const float lB = 0.5f * (m_cfg.barrel.R_in + m_cfg.barrel.R_out);
-  const float aB =
-      (m_cfg.barrel.R_out - m_cfg.barrel.R_in) - 2.0f * rEndB;
+  const float aB = (m_cfg.barrel.R_out - m_cfg.barrel.R_in) - 2.0f * rEndB;
 
   const auto rz_barrel =
       racetrackRZ(aB, m_cfg.barrel.b, m_cfg.barrel.c, m_cfg.layout.nArc,
@@ -294,12 +302,10 @@ void ToroidalField::buildGeometry() {
   // ---- ECT base curve ----
   const float lE = 0.5f * (m_cfg.ect.R_in + m_cfg.ect.R_out);
   const float rEndECT = 0.5f * m_cfg.ect.b;
-  const float aE =
-      (m_cfg.ect.R_out - m_cfg.ect.R_in) - 2.0f * rEndECT;
-  const auto rz_ect =
-      racetrackRZ(/*a=*/aE, /*b=*/m_cfg.ect.b, /*Lz=*/m_cfg.ect.c,
-                  m_cfg.layout.nArc, m_cfg.layout.nStraight,
-                  m_cfg.layout.closeLoop);
+  const float aE = (m_cfg.ect.R_out - m_cfg.ect.R_in) - 2.0f * rEndECT;
+  const auto rz_ect = racetrackRZ(
+      /*a=*/aE, /*b=*/m_cfg.ect.b, /*Lz=*/m_cfg.ect.c, m_cfg.layout.nArc,
+      m_cfg.layout.nStraight, m_cfg.layout.closeLoop);
   std::vector<std::array<float, 2>> d_rzE, m_rzE;
   buildSegsMidsRZ(rz_ect, d_rzE, m_rzE);
 
