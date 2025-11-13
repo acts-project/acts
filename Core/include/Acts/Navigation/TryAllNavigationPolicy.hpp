@@ -24,7 +24,7 @@ class TryAllNavigationPolicy final : public INavigationPolicy {
   struct Config {
     bool portals = true;
     bool sensitives = true;
-    bool passives = false;
+    bool passives = true;
   };
 
   /// Constructor from a volume
