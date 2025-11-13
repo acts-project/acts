@@ -24,6 +24,8 @@ with tempfile.TemporaryDirectory() as temp:
         field=setup.field,
         digiConfigFile=setup.digiConfig,
         outputDir=tp,
+        doGeant4=True,
+        detector=setup.detector,
         s=s,
     )
 
