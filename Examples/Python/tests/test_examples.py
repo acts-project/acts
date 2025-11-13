@@ -1277,7 +1277,8 @@ def test_gnn_metric_learning(
 @pytest.mark.odd
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 @pytest.mark.parametrize("backend", ["torch", "onnx"])
-def test_gnn_module_map(tmp_path, assert_root_hash, backend):
+@pytest.mark.parametrize("hardware", ["gpu"])
+def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     """Test GNN track finding with module map graph construction on ODD"""
     from gnn_module_map_odd import runGnnModuleMap
     from acts.examples.odd import getOpenDataDetector
