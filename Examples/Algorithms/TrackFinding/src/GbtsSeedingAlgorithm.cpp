@@ -8,16 +8,14 @@
 
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 
+#include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -28,123 +26,130 @@
 #include <stdexcept>
 #include <vector>
 
- 
 ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
     ActsExamples::GbtsSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
-
-  
-  //initialise the spacepoint, seed and cluster handles 
-  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints); //TO DO: change bindings so it only gives a string instead of a vector 
+  // initialise the spacepoint, seed and cluster handles
+  m_inputSpacePoints.initialize(
+      m_cfg.inputSpacePoints);  // TO DO: change bindings so it only gives a
+                                // string instead of a vector
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_inputClusters.initialize(m_cfg.inputClusters);
 
-  // parse the mapping file and turn into map 
+  // parse the mapping file and turn into map
   m_cfg.ActsGbtsMap = makeActsGbtsMap();
 
   // create the TrigInDetSiLayers (Logical Layers),
-  //as well as a map that tracks there index in m_layerGeometry
+  // as well as a map that tracks there index in m_layerGeometry
   m_layerGeometry = LayerNumbering();
-  
-  //parse connection file 
+
+  // parse connection file
   std::ifstream input_ifstream(
       m_cfg.seedFinderConfig.ConnectorInputFile.c_str(), std::ifstream::in);
-  
+
   if (input_ifstream.peek() == std::ifstream::traits_type::eof()) {
-
     ACTS_WARNING("Cannot find layer connections file ");
-    throw std::runtime_error("connection file not found"); //not sure if this is the right thing to do 
-    
-  }
-  
-  //create the connection objects
-  else {
+    throw std::runtime_error(
+        "connection file not found");  // not sure if this is the right thing to
+                                       // do
 
-     m_connector = std::make_unique<Acts::Experimental::GbtsConnector>(input_ifstream, m_cfg.seedFinderConfig.m_LRTmode);
-  
+  }
+
+  // create the connection objects
+  else {
+    m_connector = std::make_unique<Acts::Experimental::GbtsConnector>(
+        input_ifstream, m_cfg.seedFinderConfig.m_LRTmode);
+
     // option that allows for adding custom eta binning (default is at 0.2)
     if (m_cfg.seedFinderConfig.m_etaBinOverride != 0.0f) {
-
       m_connector->m_etaBin = m_cfg.seedFinderConfig.m_etaBinOverride;
-
     }
   }
 
-  // initiliase the object that holds all the geometry information needed for the algorithm
-  m_gbtsGeo = std::make_unique<Acts::Experimental::GbtsGeometry>(m_layerGeometry, m_connector); 
+  // initiliase the object that holds all the geometry information needed for
+  // the algorithm
+  m_gbtsGeo = std::make_unique<Acts::Experimental::GbtsGeometry>(
+      m_layerGeometry, m_connector);
 
-  //manually convert min Pt as no conversion available in ACTS Examples (currently inputs as 0.9 GeV but need 900 MeV)
-  m_cfg.seedFinderConfig.m_minPt = m_cfg.seedFinderConfig.m_minPt*1000;
+  // manually convert min Pt as no conversion available in ACTS Examples
+  // (currently inputs as 0.9 GeV but need 900 MeV)
+  m_cfg.seedFinderConfig.m_minPt = m_cfg.seedFinderConfig.m_minPt * 1000;
   printSeedFinderGbtsConfig(m_cfg.seedFinderConfig);
-} 
+}
 
 // execute:
 ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
-  const AlgorithmContext &ctx) const {
-
-
-  
-  //take spacepoints, add veriables needed for GBTS and add them to new container 
-  //due to how spacepoint container works, we need to keep the container and the external coloumns we added alive 
-  //this is done by using a tuple of the core container and the two extra coloumns
+    const AlgorithmContext &ctx) const {
+  // take spacepoints, add veriables needed for GBTS and add them to new
+  // container due to how spacepoint container works, we need to keep the
+  // container and the external coloumns we added alive this is done by using a
+  // tuple of the core container and the two extra coloumns
   auto SpContainerComponents = MakeSpContainer(ctx, m_cfg.ActsGbtsMap);
-  
+
   // this is now calling on a core algorithm
-  Acts::Experimental::SeedFinderGbts finder(m_cfg.seedFinderConfig, m_gbtsGeo.get(), &m_layerGeometry,
-                                            logger().cloneWithSuffix("GbtdFinder"));
-  
-  //used to reserve size of nodes 2D vector in core
+  Acts::Experimental::SeedFinderGbts finder(
+      m_cfg.seedFinderConfig, m_gbtsGeo.get(), &m_layerGeometry,
+      logger().cloneWithSuffix("GbtdFinder"));
+
+  // used to reserve size of nodes 2D vector in core
   int max_layers = m_LayeridMap.size();
 
-  // ROI file:Defines what region in detector we are interested in, currntly set to entire detector
+  // ROI file:Defines what region in detector we are interested in, currntly set
+  // to entire detector
   //  Acts::Experimental::RoiDescriptor internalRoi(0, -5, 5, 0,
   //  -std::numbers::pi, std::numbers::pi, 0, -225., 225.);
   Acts::Experimental::RoiDescriptor internalRoi(
       0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
- 
+
   // create the seeds
-  
-  Acts::SeedContainer2 seeds = finder.CreateSeeds(internalRoi, SpContainerComponents, max_layers);
-  
-  // move seeds to simseedcontainer to be used down stream 
-  // currently as simseeds need to be hard types so only 3 spacepoint can be added
-  // but in future we should be able to have any length seed
+
+  Acts::SeedContainer2 seeds =
+      finder.CreateSeeds(internalRoi, SpContainerComponents, max_layers);
+
+  // move seeds to simseedcontainer to be used down stream
+  // currently as simseeds need to be hard types so only 3 spacepoint can be
+  // added but in future we should be able to have any length seed
   SimSeedContainer seedContainerForStorage;
   seedContainerForStorage.reserve(seeds.size());
-  for (const auto& seed : seeds) {
+  for (const auto &seed : seeds) {
     auto sps = seed.spacePointIndices();
-    unsigned int indices = sps.size()-1;
+    unsigned int indices = sps.size() - 1;
     size_t mid = static_cast<size_t>(std::round(indices / 2.0));
-    seedContainerForStorage.emplace_back(*std::get<0>(SpContainerComponents).at(sps[0])//first spacepoint
-                                              .sourceLinks()[0]
-                                              .get<const SimSpacePoint*>(),
-                                         *std::get<0>(SpContainerComponents).at(sps[mid]) //middle spacepoint
-                                              .sourceLinks()[0]
-                                              .get<const SimSpacePoint*>(),
-                                         *std::get<0>(SpContainerComponents).at(sps[indices]) //last spacepoint
-                                              .sourceLinks()[0]
-                                              .get<const SimSpacePoint*>());
+    seedContainerForStorage.emplace_back(
+        *std::get<0>(SpContainerComponents)
+             .at(sps[0])  // first spacepoint
+             .sourceLinks()[0]
+             .get<const SimSpacePoint *>(),
+        *std::get<0>(SpContainerComponents)
+             .at(sps[mid])  // middle spacepoint
+             .sourceLinks()[0]
+             .get<const SimSpacePoint *>(),
+        *std::get<0>(SpContainerComponents)
+             .at(sps[indices])  // last spacepoint
+             .sourceLinks()[0]
+             .get<const SimSpacePoint *>());
 
-    //not sure if these have set values in GBTSv2 but are currently set to the defaults 
-    seedContainerForStorage.back().setVertexZ(seed.vertexZ()); 
+    // not sure if these have set values in GBTSv2 but are currently set to the
+    // defaults
+    seedContainerForStorage.back().setVertexZ(seed.vertexZ());
     seedContainerForStorage.back().setQuality(seed.quality());
   }
 
-  
   m_outputSeeds(ctx, std::move(seedContainerForStorage));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-std::map<std::pair<int, int>, std::tuple<int, int,int>>
+std::map<std::pair<int, int>, std::tuple<int, int, int>>
 ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   std::map<std::pair<int, int>, std::tuple<int, int, int>> ActsGbts;
 
-  //prepare the acts to gbts mapping file 
+  // prepare the acts to gbts mapping file
   std::ifstream data(
       m_cfg.layerMappingFile);  // 0 in this file refers to no Gbts ID
   std::string line;
-  std::vector<std::vector<std::string>> parsedCsv; // row = physical module, coloumn = ACTS ID components
+  std::vector<std::vector<std::string>>
+      parsedCsv;  // row = physical module, coloumn = ACTS ID components
   while (std::getline(data, line)) {
     std::stringstream lineStream(line);
     std::string cell;
@@ -170,116 +175,108 @@ ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   return ActsGbts;
 }
 
-Acts::Experimental::SPContainerComponentsType 
-  ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
+Acts::Experimental::SPContainerComponentsType
+ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
     const AlgorithmContext &ctx,
     std::map<std::pair<int, int>, std::tuple<int, int, int>> map) const {
-
-  //new seeding container test
-  //initialise input spacepoints from handle and define new container 
-  const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
+  // new seeding container test
+  // initialise input spacepoints from handle and define new container
+  const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
   Acts::SpacePointContainer2 coreSpacePoints(
 
-      Acts::SpacePointColumns::SourceLinks |
-      Acts::SpacePointColumns::X |
-      Acts::SpacePointColumns::Y |
-      Acts::SpacePointColumns::Z |
-      Acts::SpacePointColumns::R |
-      Acts::SpacePointColumns::Phi
-      );
+      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::X |
+      Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
+      Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
 
-  //add new coloumn for layer ID and clusterwidth
+  // add new coloumn for layer ID and clusterwidth
   auto LayerColoumn = coreSpacePoints.createColumn<int>("LayerID");
-  auto ClusterWidthColoumn = coreSpacePoints.createColumn<float>("Cluster_Width");
+  auto ClusterWidthColoumn =
+      coreSpacePoints.createColumn<float>("Cluster_Width");
   coreSpacePoints.reserve(spacePoints.size());
-  
- 
-      
-    // for loop filling space
-    
-    for (const auto &spacePoint : spacePoints) {
-      // Gbts space point vector
-      // loop over space points, call on map
-      const auto &sourceLink = spacePoint.sourceLinks();
 
-      // warning if source link empty
-      if (sourceLink.empty()) {
-        // warning in officaial acts format
-        ACTS_WARNING("warning source link vector is empty");
-        continue;
-      }
-      
-      const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
+  // for loop filling space
 
-      
-      
-      int ACTS_vol_id = indexSourceLink.geometryId().volume(); 
-      int ACTS_lay_id = indexSourceLink.geometryId().layer(); 
-      int ACTS_mod_id = indexSourceLink.geometryId().sensitive();
+  for (const auto &spacePoint : spacePoints) {
+    // Gbts space point vector
+    // loop over space points, call on map
+    const auto &sourceLink = spacePoint.sourceLinks();
 
-      // dont want strips or HGTD 
-      if (ACTS_vol_id == 2 || ACTS_vol_id == 22 || ACTS_vol_id == 23 ||
-          ACTS_vol_id == 24) {
-        continue;
-      }
-
-      // Search for vol, lay and module=0, if doesn't esist (end) then search
-      // for full thing vol*100+lay as first number in pair then 0 or mod id
-      auto ACTS_joint_id = ACTS_vol_id * 100 + ACTS_lay_id;
-      auto key = std::make_pair(
-          ACTS_joint_id,
-          0);  // here the key needs to be pair of(vol*100+lay, 0)
-      auto Find = map.find(key);
-
-      if (Find ==
-          map.end()) {  // if end then make new key of (vol*100+lay, modid)
-        key = std::make_pair(ACTS_joint_id, ACTS_mod_id);  // mod ID
-        Find = map.find(key);
-      }
-
-      // warning if key not in map
-      if (Find == map.end()) {
-        ACTS_WARNING("Key not found in Gbts map for volume id: "
-                     << ACTS_vol_id << " and layer id: " << ACTS_lay_id);
-        continue;
-      }
-
-      // now should be pixel with Gbts ID:
-      int Gbts_id =
-          std::get<0>(Find->second);  // new map the item is a pair so want first from it
-
-      if (Gbts_id == 0) {
-        ACTS_WARNING("No assigned Gbts ID for key for volume id: "
-                     << ACTS_vol_id << " and layer id: " << ACTS_lay_id);
-      }
-
-      // access IDs from map
-      
-      auto newSp = coreSpacePoints.createSpacePoint();
-      
-      newSp.assignSourceLinks(
-        std::array<Acts::SourceLink, 1>{Acts::SourceLink(&spacePoint)});
-      newSp.x() = spacePoint.x();
-      newSp.y() = spacePoint.y();
-      newSp.z() = spacePoint.z();
-      newSp.r() = spacePoint.r();
-      newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
-      newSp.extra(LayerColoumn) = std::get<2>(Find->second);
-      newSp.extra(ClusterWidthColoumn) = 0; // false input as this is not available in examples
-      
+    // warning if source link empty
+    if (sourceLink.empty()) {
+      // warning in officaial acts format
+      ACTS_WARNING("warning source link vector is empty");
+      continue;
     }
-    
-    
+
+    const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
+
+    int ACTS_vol_id = indexSourceLink.geometryId().volume();
+    int ACTS_lay_id = indexSourceLink.geometryId().layer();
+    int ACTS_mod_id = indexSourceLink.geometryId().sensitive();
+
+    // dont want strips or HGTD
+    if (ACTS_vol_id == 2 || ACTS_vol_id == 22 || ACTS_vol_id == 23 ||
+        ACTS_vol_id == 24) {
+      continue;
+    }
+
+    // Search for vol, lay and module=0, if doesn't esist (end) then search
+    // for full thing vol*100+lay as first number in pair then 0 or mod id
+    auto ACTS_joint_id = ACTS_vol_id * 100 + ACTS_lay_id;
+    auto key =
+        std::make_pair(ACTS_joint_id,
+                       0);  // here the key needs to be pair of(vol*100+lay, 0)
+    auto Find = map.find(key);
+
+    if (Find ==
+        map.end()) {  // if end then make new key of (vol*100+lay, modid)
+      key = std::make_pair(ACTS_joint_id, ACTS_mod_id);  // mod ID
+      Find = map.find(key);
+    }
+
+    // warning if key not in map
+    if (Find == map.end()) {
+      ACTS_WARNING("Key not found in Gbts map for volume id: "
+                   << ACTS_vol_id << " and layer id: " << ACTS_lay_id);
+      continue;
+    }
+
+    // now should be pixel with Gbts ID:
+    int Gbts_id = std::get<0>(
+        Find->second);  // new map the item is a pair so want first from it
+
+    if (Gbts_id == 0) {
+      ACTS_WARNING("No assigned Gbts ID for key for volume id: "
+                   << ACTS_vol_id << " and layer id: " << ACTS_lay_id);
+    }
+
+    // access IDs from map
+
+    auto newSp = coreSpacePoints.createSpacePoint();
+
+    newSp.assignSourceLinks(
+        std::array<Acts::SourceLink, 1>{Acts::SourceLink(&spacePoint)});
+    newSp.x() = spacePoint.x();
+    newSp.y() = spacePoint.y();
+    newSp.z() = spacePoint.z();
+    newSp.r() = spacePoint.r();
+    newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
+    newSp.extra(LayerColoumn) = std::get<2>(Find->second);
+    newSp.extra(ClusterWidthColoumn) =
+        0;  // false input as this is not available in examples
+  }
+
   ACTS_VERBOSE("Space point collection successfully assigned LayerID's");
 
-  return std::make_tuple(std::move(coreSpacePoints), LayerColoumn.asConst(), ClusterWidthColoumn.asConst());
+  return std::make_tuple(std::move(coreSpacePoints), LayerColoumn.asConst(),
+                         ClusterWidthColoumn.asConst());
 }
 
 std::vector<Acts::Experimental::TrigInDetSiLayer>
 ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
   std::vector<Acts::Experimental::TrigInDetSiLayer> input_vector{};
   std::vector<std::size_t> count_vector{};
-  
+
   m_cfg.trackingGeometry->visitSurfaces([this, &input_vector, &count_vector](
                                             const Acts::Surface *surface) {
     Acts::GeometryIdentifier geoid = surface->geometryId();
@@ -315,7 +312,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
         std::make_pair(ACTS_joint_id,
                        0);  // here the key needs to be pair of(vol*100+lay, 0)
     auto Find = m_cfg.ActsGbtsMap.find(key);
-    int Gbts_id = 0;               // initialise first to avoid FLTUND later
+    int Gbts_id = 0;  // initialise first to avoid FLTUND later
     Gbts_id = std::get<0>(Find->second);  // new map, item is pair want first
     if (Find ==
         m_cfg.ActsGbtsMap
@@ -327,7 +324,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
 
     short barrel_ec = 0;  // a variable that says if barrrel, 0 = barrel
     int eta_mod = std::get<1>(Find->second);
-    
+
     // assign barrel_ec depending on Gbts_layer
     if (79 < Gbts_id && Gbts_id < 85) {  // 80s, barrel
       barrel_ec = 0;
@@ -361,9 +358,9 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
         maxBound = max;
       }
     }
-    
+
     int combined_id = Gbts_id * 1000 + eta_mod;
-    
+
     auto current_index =
         find_if(input_vector.begin(), input_vector.end(),
                 [combined_id](auto n) { return n.m_subdet == combined_id; });
@@ -382,24 +379,22 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
       count_vector.push_back(
           1);  // so the element exists and not divinding by 0
 
-      //tracking the index of each TrigInDetSiLayer as there added to the vector
-      int LayerID = count_vector.size() - 1;//so layer ID referres to actual index and not size of vector
-      std::get<2>(Find->second) = LayerID; 
-      m_LayeridMap.insert({combined_id, LayerID}); 
-      
-      
+      // tracking the index of each TrigInDetSiLayer as there added to the
+      // vector
+      int LayerID =
+          count_vector.size() -
+          1;  // so layer ID referres to actual index and not size of vector
+      std::get<2>(Find->second) = LayerID;
+      m_LayeridMap.insert({combined_id, LayerID});
     }
-    //look up for every combined ID to see if it has a layer 
+    // look up for every combined ID to see if it has a layer
     auto FindLayer = m_LayeridMap.find(combined_id);
-    if(FindLayer == m_LayeridMap.end()){
-      
-      ACTS_WARNING("No assigned Layer ID for combined ID: "<<combined_id);
-    }else{
-
+    if (FindLayer == m_LayeridMap.end()) {
+      ACTS_WARNING("No assigned Layer ID for combined ID: " << combined_id);
+    } else {
       std::get<2>(Find->second) = FindLayer->second;
     }
-    
-    
+
     if (m_cfg.fill_module_csv) {
       std::fstream fout;
       fout.open("ACTS_modules.csv",
@@ -415,11 +410,8 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
            << sqrt(center(0) * center(0) + center(1) * center(1))  // r
            << "\n";
     }
-
-    
   });
- 
-  
+
   for (std::size_t i = 0; i < input_vector.size(); i++) {
     input_vector[i].m_refCoord = input_vector[i].m_refCoord / count_vector[i];
   }
@@ -427,42 +419,43 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
   return input_vector;
 }
 
+void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
+    const Acts::Experimental::SeedFinderGbtsConfig &cfg) {
+  ACTS_DEBUG("===== SeedFinderGbtsConfig =====");
 
+  ACTS_DEBUG("BeamSpotCorrection: " << cfg.BeamSpotCorrection
+                                    << " (default: false)");
+  ACTS_DEBUG("ConnectorInputFile: " << cfg.ConnectorInputFile
+                                    << " (default: empty string)");
+  ACTS_DEBUG("m_LRTmode: " << cfg.m_LRTmode << " (default: false)");
+  ACTS_DEBUG("m_useML: " << cfg.m_useML << " (default: false)");
+  ACTS_DEBUG("m_matchBeforeCreate: " << cfg.m_matchBeforeCreate
+                                     << " (default: false)");
+  ACTS_DEBUG("m_useOldTunings: " << cfg.m_useOldTunings << " (default: false)");
+  ACTS_DEBUG("m_tau_ratio_cut: " << cfg.m_tau_ratio_cut << " (default: 0.007)");
+  ACTS_DEBUG("m_etaBinOverride: " << cfg.m_etaBinOverride << " (default: 0.0)");
+  ACTS_DEBUG("m_nMaxPhiSlice: " << cfg.m_nMaxPhiSlice << " (default: 53)");
+  ACTS_DEBUG("m_minPt: " << cfg.m_minPt
+                         << " (default: 1.0 * Acts::UnitConstants::GeV)");
+  ACTS_DEBUG("m_phiSliceWidth: " << cfg.m_phiSliceWidth
+                                 << " (default: derived)");
+  ACTS_DEBUG("ptCoeff: " << cfg.ptCoeff
+                         << " (default: 0.29997 * 1.9972 / 2.0)");
+  ACTS_DEBUG("m_useEtaBinning: " << cfg.m_useEtaBinning << " (default: true)");
+  ACTS_DEBUG("m_doubletFilterRZ: " << cfg.m_doubletFilterRZ
+                                   << " (default: true)");
+  ACTS_DEBUG("m_nMaxEdges: " << cfg.m_nMaxEdges << " (default: 2000000)");
+  ACTS_DEBUG("m_minDeltaRadius: " << cfg.m_minDeltaRadius << " (default: 2.0)");
+  ACTS_DEBUG("sigma_t: " << cfg.sigma_t << " (default: 0.0003)");
+  ACTS_DEBUG("sigma_w: " << cfg.sigma_w << " (default: 0.00009)");
+  ACTS_DEBUG("sigmaMS: " << cfg.sigmaMS << " (default: 0.016)");
+  ACTS_DEBUG("sigma_x: " << cfg.sigma_x << " (default: 0.25)");
+  ACTS_DEBUG("sigma_y: " << cfg.sigma_y << " (default: 2.5)");
+  ACTS_DEBUG("weight_x: " << cfg.weight_x << " (default: 0.5)");
+  ACTS_DEBUG("weight_y: " << cfg.weight_y << " (default: 0.5)");
+  ACTS_DEBUG("maxDChi2_x: " << cfg.maxDChi2_x << " (default: 60.0)");
+  ACTS_DEBUG("maxDChi2_y: " << cfg.maxDChi2_y << " (default: 60.0)");
+  ACTS_DEBUG("add_hit: " << cfg.add_hit << " (default: 14.0)");
 
-
-
-void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(const Acts::Experimental::SeedFinderGbtsConfig& cfg) {
-  ACTS_DEBUG( "===== SeedFinderGbtsConfig =====");
-
-  ACTS_DEBUG( "BeamSpotCorrection: " << cfg.BeamSpotCorrection << " (default: false)");
-  ACTS_DEBUG( "ConnectorInputFile: " << cfg.ConnectorInputFile << " (default: empty string)");
-  ACTS_DEBUG( "m_LRTmode: " << cfg.m_LRTmode << " (default: false)");
-  ACTS_DEBUG( "m_useML: " << cfg.m_useML << " (default: false)");
-  ACTS_DEBUG( "m_matchBeforeCreate: " << cfg.m_matchBeforeCreate << " (default: false)");
-  ACTS_DEBUG( "m_useOldTunings: " << cfg.m_useOldTunings << " (default: false)");
-  ACTS_DEBUG( "m_tau_ratio_cut: " << cfg.m_tau_ratio_cut << " (default: 0.007)");
-  ACTS_DEBUG( "m_etaBinOverride: " << cfg.m_etaBinOverride << " (default: 0.0)");
-  ACTS_DEBUG( "m_nMaxPhiSlice: " << cfg.m_nMaxPhiSlice << " (default: 53)");
-  ACTS_DEBUG( "m_minPt: " << cfg.m_minPt << " (default: 1.0 * Acts::UnitConstants::GeV)");
-  ACTS_DEBUG( "m_phiSliceWidth: " << cfg.m_phiSliceWidth << " (default: derived)");
-  ACTS_DEBUG( "ptCoeff: " << cfg.ptCoeff << " (default: 0.29997 * 1.9972 / 2.0)");
-  ACTS_DEBUG( "m_useEtaBinning: " << cfg.m_useEtaBinning << " (default: true)");
-  ACTS_DEBUG( "m_doubletFilterRZ: " << cfg.m_doubletFilterRZ << " (default: true)");
-  ACTS_DEBUG( "m_nMaxEdges: " << cfg.m_nMaxEdges << " (default: 2000000)");
-  ACTS_DEBUG( "m_minDeltaRadius: " << cfg.m_minDeltaRadius << " (default: 2.0)");
-  ACTS_DEBUG( "sigma_t: " << cfg.sigma_t << " (default: 0.0003)");
-  ACTS_DEBUG( "sigma_w: " << cfg.sigma_w << " (default: 0.00009)");
-  ACTS_DEBUG( "sigmaMS: " << cfg.sigmaMS << " (default: 0.016)");
-  ACTS_DEBUG( "sigma_x: " << cfg.sigma_x << " (default: 0.25)");
-  ACTS_DEBUG( "sigma_y: " << cfg.sigma_y << " (default: 2.5)");
-  ACTS_DEBUG( "weight_x: " << cfg.weight_x << " (default: 0.5)");
-  ACTS_DEBUG( "weight_y: " << cfg.weight_y << " (default: 0.5)");
-  ACTS_DEBUG( "maxDChi2_x: " << cfg.maxDChi2_x << " (default: 60.0)");
-  ACTS_DEBUG( "maxDChi2_y: " << cfg.maxDChi2_y << " (default: 60.0)");
-  ACTS_DEBUG( "add_hit: " << cfg.add_hit << " (default: 14.0)");
-
-  ACTS_DEBUG( "================================");
+  ACTS_DEBUG("================================");
 }
-
-
-

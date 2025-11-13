@@ -31,37 +31,42 @@ namespace ActsExamples {
 class GbtsSeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    
-     
-    // this is used to initiliase the handle that points to the container of spacepoints 
-    std::string inputSpacePoints; 
+    // this is used to initiliase the handle that points to the container of
+    // spacepoints
+    std::string inputSpacePoints;
 
-    // this is used to initiliase the handle that points to the container of seeds
+    // this is used to initiliase the handle that points to the container of
+    // seeds
     std::string outputSeeds;
 
-    // contains all the options used to steer the algorithm 
-    // includes both user options avilable to change in the python script and those seen just be the algorithm
+    // contains all the options used to steer the algorithm
+    // includes both user options avilable to change in the python script and
+    // those seen just be the algorithm
     Acts::Experimental::SeedFinderGbtsConfig seedFinderConfig;
     Acts::SeedFinderOptions seedFinderOptions;
 
-    // the connection table (parsed from csv file) used to make geoemetry cuts be GBTS
+    // the connection table (parsed from csv file) used to make geoemetry cuts
+    // be GBTS
     std::string layerMappingFile;
 
-    // holds detector information, used to make the geometry objects used by GBTS
+    // holds detector information, used to make the geometry objects used by
+    // GBTS
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
 
-    //conversion between ACTS labelling of volume, layer and modules to that used by GBTS
-    mutable std::map<std::pair<int, int>, std::tuple<int, int, int>> ActsGbtsMap;
+    // conversion between ACTS labelling of volume, layer and modules to that
+    // used by GBTS
+    mutable std::map<std::pair<int, int>, std::tuple<int, int, int>>
+        ActsGbtsMap;
 
     bool fill_module_csv = false;
 
-    // this is used to initiliase the handle that points to the container of clusters 
-    // which each SpacePoint is constructed from
-    std::string inputClusters; //TO DO: add the cluster width
+    // this is used to initiliase the handle that points to the container of
+    // clusters which each SpacePoint is constructed from
+    std::string inputClusters;  // TO DO: add the cluster width
   };
 
   // access to config
-  //allows python bindings to work 
+  // allows python bindings to work
   const Config &config() const { return m_cfg; }
 
   // constructor:
@@ -76,48 +81,49 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
   // own class functions
   // make the map between ACTS geometry ID's and GBTS geometry ID's
-  std::map<std::pair<int, int>, std::tuple<int, int, int>> makeActsGbtsMap() const;
+  std::map<std::pair<int, int>, std::tuple<int, int, int>> makeActsGbtsMap()
+      const;
 
-  // make the container that holds spacepoints that have been given 
+  // make the container that holds spacepoints that have been given
   // all the veriables needed for GBTS algorithm to run
   Acts::Experimental::SPContainerComponentsType MakeSpContainer(
       const AlgorithmContext &ctx,
       std::map<std::pair<int, int>, std::tuple<int, int, int>> map) const;
 
-  // makes the geometry objects used by GBTS that correspond to the objects in the connection table
-  // for ease these are sometimes called "logical layers"
+  // makes the geometry objects used by GBTS that correspond to the objects in
+  // the connection table for ease these are sometimes called "logical layers"
   std::vector<Acts::Experimental::TrigInDetSiLayer> LayerNumbering() const;
-  
-  void printSeedFinderGbtsConfig(const Acts::Experimental::SeedFinderGbtsConfig& cfg);
-  
-  private:
-  
-  //holds all objects either used in intialise or handed out of algorithm
+
+  void printSeedFinderGbtsConfig(
+      const Acts::Experimental::SeedFinderGbtsConfig &cfg);
+
+ private:
+  // holds all objects either used in intialise or handed out of algorithm
   Config m_cfg{};
-  
-  // object that processes and holds connection table information 
+
+  // object that processes and holds connection table information
   std::unique_ptr<Acts::Experimental::GbtsConnector> m_connector = nullptr;
 
   // object that holds all geometry information after:
-    // connection table has been processed 
-    // vector of logical layers that have been created
+  // connection table has been processed
+  // vector of logical layers that have been created
   std::unique_ptr<Acts::Experimental::GbtsGeometry> m_gbtsGeo = nullptr;
 
-  //collection of geometry objects used by GBTS
+  // collection of geometry objects used by GBTS
   std::vector<Acts::Experimental::TrigInDetSiLayer> m_layerGeometry{};
-  
-  //used to assign LayerIds to the GbtsActsMap
+
+  // used to assign LayerIds to the GbtsActsMap
   mutable std::map<int, int> m_LayeridMap{};
-   
-  //handle that points to the container of input spacepoints 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this, "InputSpacePoints"};
 
-  //handle that points to container of output seeds
+  // handle that points to the container of input spacepoints
+  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
+                                                            "InputSpacePoints"};
+
+  // handle that points to container of output seeds
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-  
-  //handle that points to clusters used by spacepoints
-  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
+  // handle that points to clusters used by spacepoints
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 
 }  // namespace ActsExamples

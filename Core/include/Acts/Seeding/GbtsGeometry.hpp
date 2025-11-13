@@ -36,7 +36,7 @@ class TrigInDetSiLayer {
 };
 
 class GbtsLayer {
-public:
+ public:
   GbtsLayer(const TrigInDetSiLayer&, float, int);
   ~GbtsLayer();
 
@@ -45,12 +45,12 @@ public:
   float getMinBinRadius(int) const;
   float getMaxBinRadius(int) const;
 
-  int num_bins() const {return m_bins.size();} 
+  int num_bins() const { return m_bins.size(); }
 
   bool verifyBin(const GbtsLayer*, int, int, float, float) const;
 
   const TrigInDetSiLayer& m_layer;
-  std::vector<int> m_bins;//eta-bin indices
+  std::vector<int> m_bins;  // eta-bin indices
   std::vector<float> m_minRadius;
   std::vector<float> m_maxRadius;
   std::vector<float> m_minBinCoord;
@@ -58,40 +58,39 @@ public:
 
   float m_minEta, m_maxEta, m_etaBin;
 
-protected:
-
+ protected:
   float m_etaBinWidth;
 
   float m_r1, m_z1, m_r2, m_z2;
-  int m_nBins; 
-
+  int m_nBins;
 };
 
 class GbtsGeometry {
-public:
-  GbtsGeometry(const std::vector<TrigInDetSiLayer>&, const std::unique_ptr<GbtsConnector>&);
+ public:
+  GbtsGeometry(const std::vector<TrigInDetSiLayer>&,
+               const std::unique_ptr<GbtsConnector>&);
   ~GbtsGeometry();
-  
+
   const GbtsLayer* getGbtsLayerByKey(unsigned int) const;
   const GbtsLayer* getGbtsLayerByIndex(int) const;
 
-  int num_bins() const {return m_nEtaBins;}
-  unsigned int num_layers() const {return m_layArray.size();}
-  const std::vector<std::pair<int, std::vector<int> > >& bin_groups() const {return m_binGroups;}
-  
-protected:
+  int num_bins() const { return m_nEtaBins; }
+  unsigned int num_layers() const { return m_layArray.size(); }
+  const std::vector<std::pair<int, std::vector<int> > >& bin_groups() const {
+    return m_binGroups;
+  }
 
+ protected:
   const GbtsLayer* addNewLayer(const TrigInDetSiLayer&, int);
 
   float m_etaBinWidth;
 
   std::map<unsigned int, GbtsLayer*> m_layMap;
   std::vector<GbtsLayer*> m_layArray;
-  
+
   int m_nEtaBins;
 
   std::vector<std::pair<int, std::vector<int> > > m_binGroups;
-  
 };
 
 }  // namespace Acts::Experimental

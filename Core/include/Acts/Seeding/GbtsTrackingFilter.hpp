@@ -10,9 +10,10 @@
 
 // TODO: update to C++17 style
 #include "Acts/Seeding/GbtsDataStorage.hpp"  //includes geo which has trigindetsilayer, may move this to trigbase
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -23,15 +24,13 @@
 namespace Acts::Experimental {
 
 struct GbtsEdgeState {
-
-public:
-
-struct Compare {
-    bool operator()(const struct GbtsEdgeState* s1, const struct GbtsEdgeState* s2) {
+ public:
+  struct Compare {
+    bool operator()(const struct GbtsEdgeState* s1,
+                    const struct GbtsEdgeState* s2) {
       return s1->m_J > s2->m_J;
     }
   };
-
 
   GbtsEdgeState() {};
 
@@ -48,33 +47,31 @@ struct Compare {
 
   float m_X[3]{}, m_Y[2]{}, m_Cx[3][3]{}, m_Cy[2][2]{};
   float m_refX{}, m_refY{}, m_c{}, m_s{};
-  
-  bool m_initialized{false};
 
+  bool m_initialized{false};
 };
 
 #define MAX_EDGE_STATE 2500
 
 class GbtsTrackingFilter {
  public:
-  GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>&, std::vector<GbtsEdge>&, SeedFinderGbtsConfig& config);
-  ~GbtsTrackingFilter(){};
+  GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>&,
+                     std::vector<GbtsEdge>&, SeedFinderGbtsConfig& config);
+  ~GbtsTrackingFilter() {};
 
   void followTrack(GbtsEdge*, GbtsEdgeState&);
 
  protected:
-
   void propagate(GbtsEdge*, GbtsEdgeState&);
 
   bool update(GbtsEdge*, GbtsEdgeState&);
 
-  int getLayerType(int);  
-
+  int getLayerType(int);
 
   const std::vector<TrigInDetSiLayer>& m_geo;
-  
+
   std::vector<GbtsEdge>& m_segStore;
- 
+
   std::vector<GbtsEdgeState*> m_stateVec;
 
   GbtsEdgeState m_stateStore[MAX_EDGE_STATE];
@@ -82,9 +79,6 @@ class GbtsTrackingFilter {
   int m_globalStateCounter{0};
 
   SeedFinderGbtsConfig& m_config;
-
 };
-
-
 
 }  // namespace Acts::Experimental
