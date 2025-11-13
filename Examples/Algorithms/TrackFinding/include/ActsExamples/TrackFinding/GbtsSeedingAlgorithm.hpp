@@ -31,16 +31,16 @@ namespace ActsExamples {
 class GbtsSeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    // this is used to initiliase the handle that points to the container of
+    // this is used to initialise the handle that points to the container of
     // spacepoints
     std::string inputSpacePoints;
 
-    // this is used to initiliase the handle that points to the container of
+    // this is used to initialise the handle that points to the container of
     // seeds
     std::string outputSeeds;
 
     // contains all the options used to steer the algorithm
-    // includes both user options avilable to change in the python script and
+    // includes both user options available to change in the python script and
     // those seen just be the algorithm
     Acts::Experimental::SeedFinderGbtsConfig seedFinderConfig;
     Acts::SeedFinderOptions seedFinderOptions;
@@ -60,7 +60,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
     bool fill_module_csv = false;
 
-    // this is used to initiliase the handle that points to the container of
+    // this is used to initialise the handle that points to the container of
     // clusters which each SpacePoint is constructed from
     std::string inputClusters;  // TO DO: add the cluster width
   };
@@ -85,7 +85,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
       const;
 
   // make the container that holds spacepoints that have been given
-  // all the veriables needed for GBTS algorithm to run
+  // all the variables needed for GBTS algorithm to run
   Acts::Experimental::SPContainerComponentsType MakeSpContainer(
       const AlgorithmContext &ctx,
       std::map<std::pair<int, int>, std::tuple<int, int, int>> map) const;
@@ -98,7 +98,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
       const Acts::Experimental::SeedFinderGbtsConfig &cfg);
 
  private:
-  // holds all objects either used in intialise or handed out of algorithm
+  // holds all objects either used in initialise or handed out of algorithm
   Config m_cfg{};
 
   // object that processes and holds connection table information

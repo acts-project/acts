@@ -66,7 +66,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
     }
   }
 
-  // initiliase the object that holds all the geometry information needed for
+  // initialise the object that holds all the geometry information needed for
   // the algorithm
   m_gbtsGeo = std::make_unique<Acts::Experimental::GbtsGeometry>(
       m_layerGeometry, m_connector);
@@ -80,10 +80,10 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 // execute:
 ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
     const AlgorithmContext &ctx) const {
-  // take spacepoints, add veriables needed for GBTS and add them to new
+  // take spacepoints, add variables needed for GBTS and add them to new
   // container due to how spacepoint container works, we need to keep the
-  // container and the external coloumns we added alive this is done by using a
-  // tuple of the core container and the two extra coloumns
+  // container and the external columns we added alive this is done by using a
+  // tuple of the core container and the two extra columns
   auto SpContainerComponents = MakeSpContainer(ctx, m_cfg.ActsGbtsMap);
 
   // this is now calling on a core algorithm
@@ -94,7 +94,7 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   // used to reserve size of nodes 2D vector in core
   int max_layers = m_LayeridMap.size();
 
-  // ROI file:Defines what region in detector we are interested in, currntly set
+  // ROI file:Defines what region in detector we are interested in, currently set
   // to entire detector
   //  Acts::Experimental::RoiDescriptor internalRoi(0, -5, 5, 0,
   //  -std::numbers::pi, std::numbers::pi, 0, -225., 225.);
@@ -114,7 +114,7 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   for (const auto &seed : seeds) {
     auto sps = seed.spacePointIndices();
     unsigned int indices = sps.size() - 1;
-    size_t mid = static_cast<size_t>(std::round(indices / 2.0));
+    std::size_t mid = static_cast<std::size_t>(std::round(indices / 2.0));
     seedContainerForStorage.emplace_back(
         *std::get<0>(SpContainerComponents)
              .at(sps[0])  // first spacepoint
@@ -149,7 +149,7 @@ ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
       m_cfg.layerMappingFile);  // 0 in this file refers to no Gbts ID
   std::string line;
   std::vector<std::vector<std::string>>
-      parsedCsv;  // row = physical module, coloumn = ACTS ID components
+      parsedCsv;  // row = physical module, column = ACTS ID components
   while (std::getline(data, line)) {
     std::stringstream lineStream(line);
     std::string cell;
@@ -188,7 +188,7 @@ ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
       Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
       Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
 
-  // add new coloumn for layer ID and clusterwidth
+  // add new column for layer ID and clusterwidth
   auto LayerColoumn = coreSpacePoints.createColumn<int>("LayerID");
   auto ClusterWidthColoumn =
       coreSpacePoints.createColumn<float>("Cluster_Width");
@@ -383,7 +383,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
       // vector
       int LayerID =
           count_vector.size() -
-          1;  // so layer ID referres to actual index and not size of vector
+          1;  // so layer ID refers to actual index and not size of vector
       std::get<2>(Find->second) = LayerID;
       m_LayeridMap.insert({combined_id, LayerID});
     }

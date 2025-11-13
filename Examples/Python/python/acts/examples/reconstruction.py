@@ -1400,9 +1400,7 @@ def addGbtsSeeding(
     ConnectorInputFileStr = str(ConnectorInputConfigFile)
     seedFinderConfig = acts.examples.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
-            
-            m_minPt=seedFinderConfigArg.minPt,
-            ConnectorInputFile=ConnectorInputFileStr
+            m_minPt=seedFinderConfigArg.minPt, ConnectorInputFile=ConnectorInputFileStr
         ),
     )
     seedFinderOptions = acts.SeedFinderOptions(
@@ -1420,7 +1418,7 @@ def addGbtsSeeding(
 
     seedingAlg = acts.examples.GbtsSeedingAlgorithm(
         level=logLevel,
-        inputSpacePoints= spacePoints,
+        inputSpacePoints=spacePoints,
         outputSeeds="seeds",
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,

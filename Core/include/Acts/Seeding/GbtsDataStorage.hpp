@@ -71,7 +71,7 @@ class GbtsEtaBin {
   std::vector<const GbtsNode*> m_vn;  // nodes of the graph
   std::vector<std::pair<float, unsigned int> > m_vPhiNodes;
   std::vector<std::vector<unsigned int> >
-      m_in;  // vectors of incoming edges, stores indicies of edges in the edge
+      m_in;  // vectors of incoming edges, stores indices of edges in the edge
              // vector
   std::vector<std::array<float, 5> >
       m_params;  // node attributes: m_minCutOnTau, m_maxCutOnTau, m_phi, m_r,

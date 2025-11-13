@@ -37,7 +37,7 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
   unsigned int nPixelLoaded = 0;
   unsigned int nStripLoaded = 0;
 
-  for (size_t l = 0; l < node_storage.size(); l++) {
+  for (std::size_t l = 0; l < node_storage.size(); l++) {
     const std::vector<GNN_Node>& nodes = node_storage[l];
 
     if (nodes.size() == 0)
