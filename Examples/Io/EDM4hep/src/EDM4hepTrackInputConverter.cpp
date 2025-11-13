@@ -20,8 +20,8 @@ namespace ActsExamples {
 
 EDM4hepTrackInputConverter::EDM4hepTrackInputConverter(
     const Config& config, Acts::Logging::Level level)
-    : EDM4hepInputConverter("EDM4hepTrackInputConverter", level,
-                            config.inputFrame),
+    : PodioInputConverter("EDM4hepTrackInputConverter", level,
+                          config.inputFrame),
       m_cfg(config) {
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
