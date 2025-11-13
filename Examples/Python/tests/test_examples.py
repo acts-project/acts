@@ -1239,7 +1239,7 @@ def test_gnn_metric_learning(
 
     # Check if models exist, download if missing
     repo_root = Path(__file__).parent.parent.parent.parent
-    ci_models = repo_root / "ci_models/metric_learning"
+    ci_models = repo_root / "ci_models"
 
     model_subdir = "torchscript_models" if backend == "torch" else "onnx_models"
     model_ext = "pt" if backend == "torch" else "onnx"

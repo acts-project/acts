@@ -140,7 +140,7 @@ if "__main__" == __name__:
     assert digiConfigFile.exists()
 
     # Model paths from ci_models
-    ci_models = srcdir / "ci_models/metric_learning"
+    ci_models = srcdir / "ci_models"
     if "onnx" in sys.argv:
         embedModelPath = ci_models / "torchscript_models/embed.pt"
         filterModelPath = ci_models / "torchscript_models/filter.pt"
