@@ -15,8 +15,8 @@
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsPlugins/Podio/PodioDynamicColumns.hpp"
-#include "ActsPlugins/Podio/PodioUtil.hpp"
+#include "ActsPlugins/EDM4hep/PodioDynamicColumns.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "ActsPodioEdm/Surface.h"
 
 #pragma GCC diagnostic push
@@ -37,9 +37,11 @@ namespace ActsPlugins {
 
 class MutablePodioTrackContainer;
 class ConstPodioTrackContainer;
+
 }  // namespace ActsPlugins
 
 namespace Acts {
+
 template <>
 struct IsReadOnlyTrackContainer<ActsPlugins::MutablePodioTrackContainer>
     : std::false_type {};
@@ -50,6 +52,7 @@ struct IsReadOnlyTrackContainer<ActsPlugins::ConstPodioTrackContainer>
 }  // namespace Acts
 
 namespace ActsPlugins {
+
 class PodioTrackContainerBase {
  public:
   using IndexType = Acts::MultiTrajectoryTraits::IndexType;

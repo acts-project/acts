@@ -57,7 +57,6 @@
                 "ACTS_BUILD_FATRAS_GEANT4": "ON",
                 "ACTS_BUILD_PLUGIN_ACTSVG": "ON",
                 "ACTS_BUILD_PLUGIN_DD4HEP": "ON",
-                "ACTS_BUILD_PLUGIN_PODIO": "ON",
                 "ACTS_BUILD_PLUGIN_EDM4HEP": "ON",
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "ON",
                 "ACTS_BUILD_PLUGIN_TRACCC": "ON",

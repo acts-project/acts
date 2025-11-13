@@ -34,11 +34,6 @@ else
     exit 1
 fi
 
-# detect if we are installed as there is no lib subdirectory
-if [[ -n "${IS_INSTALLED_VERSION}" && ! "${IS_INSTALLED_VERSION,,}" == "off" ]]; then
-    script_dir=$( cd -- "${script_dir}" &> /dev/null && cd .. &> /dev/null && pwd )
-fi
-
 # remember which path we used for python
 python_path=$(which python3)
 python_path=$(dirname "${python_path}")
