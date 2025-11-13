@@ -417,9 +417,9 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
               float dPhi = Phi2 - pS->m_p[2];
 
-              if (dPhi < -M_PI)
+              if (dPhi < -std::numbers::pi)
                 dPhi += 2 * std::numbers::pi;
-              else if (dPhi > M_PI)
+              else if (dPhi > std::numbers::pi)
                 dPhi -= 2 * std::numbers::pi;
 
               if (dPhi < -cut_dphi_max || dPhi > cut_dphi_max) {

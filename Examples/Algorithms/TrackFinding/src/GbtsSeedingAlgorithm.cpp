@@ -94,8 +94,8 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   // used to reserve size of nodes 2D vector in core
   int max_layers = m_LayeridMap.size();
 
-  // ROI file:Defines what region in detector we are interested in, currently set
-  // to entire detector
+  // ROI file:Defines what region in detector we are interested in, currently
+  // set to entire detector
   //  Acts::Experimental::RoiDescriptor internalRoi(0, -5, 5, 0,
   //  -std::numbers::pi, std::numbers::pi, 0, -225., 225.);
   Acts::Experimental::RoiDescriptor internalRoi(
