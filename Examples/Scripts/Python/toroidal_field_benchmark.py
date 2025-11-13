@@ -4,16 +4,17 @@
 # This file is part of ACTS.
 # See LICENSE for details.
 
+import argparse
 import time
-import numpy as np
+from pathlib import Path
+
 import acts
 import acts.acts_toroidal_field as toroidal_field
-import argparse
-from acts import MagneticFieldContext
 import matplotlib.pyplot as plt
+import numpy as np
+from acts import MagneticFieldContext
 from matplotlib.colors import LogNorm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from pathlib import Path
 
 
 def create_toroidal_field():
@@ -38,7 +39,7 @@ def benchmark_single_evaluations(field, num_evaluations=10000):
 
     # Generate points in cylindrical coordinates, then convert
     r = np.random.uniform(0.1, 5.0, num_evaluations)  # 0.1m to 5m radius
-    phi = np.random.uniform(0, 2*np.pi, num_evaluations)
+    phi = np.random.uniform(0, 2 * np.pi, num_evaluations)
     z = np.random.uniform(-10.0, 10.0, num_evaluations)  # -10m to +10m in z
 
     x = r * np.cos(phi)
@@ -67,8 +68,7 @@ def benchmark_single_evaluations(field, num_evaluations=10000):
     evaluations_per_second = num_evaluations / total_time
 
     print(f"Total time: {total_time:.4f} seconds")
-    print(f"Average time per evaluation: "
-          f"{avg_time_per_eval*1e6:.2f} microseconds")
+    print(f"Average time per evaluation: " f"{avg_time_per_eval*1e6:.2f} microseconds")
     print(f"Evaluations per second: {evaluations_per_second:.0f}")
 
     return avg_time_per_eval, evaluations_per_second
@@ -88,7 +88,7 @@ def benchmark_vectorized_evaluations(field, batch_sizes=None):
         # Generate random test points for this batch size
         np.random.seed(42)
         r = np.random.uniform(0.1, 5.0, batch_size)
-        phi = np.random.uniform(0, 2*np.pi, batch_size)
+        phi = np.random.uniform(0, 2 * np.pi, batch_size)
         z = np.random.uniform(-10.0, 10.0, batch_size)
 
         x = r * np.cos(phi)
@@ -123,18 +123,21 @@ def benchmark_vectorized_evaluations(field, batch_sizes=None):
         evaluations_per_second = total_evaluations / total_time
 
         print(f"  Total evaluations: {total_evaluations}")
-        print(f"  Total time: "
-              f"{total_time:.4f} seconds")
-        print(f"  Average time per evaluation: "
-              f"{avg_time_per_eval*1e6:.2f} microseconds")
+        print(f"  Total time: " f"{total_time:.4f} seconds")
+        print(
+            f"  Average time per evaluation: "
+            f"{avg_time_per_eval*1e6:.2f} microseconds"
+        )
         print(f"  Evaluations per second: {evaluations_per_second:.0f}")
 
-        results.append({
-            'batch_size': batch_size,
-            'avg_time_us': avg_time_per_eval * 1e6,
-            'eval_per_sec': evaluations_per_second,
-            'total_evaluations': total_evaluations
-        })
+        results.append(
+            {
+                "batch_size": batch_size,
+                "avg_time_us": avg_time_per_eval * 1e6,
+                "eval_per_sec": evaluations_per_second,
+                "total_evaluations": total_evaluations,
+            }
+        )
 
     return results
 
@@ -146,12 +149,9 @@ def benchmark_spatial_distribution(field, grid_resolution=50):
 
     # Test different spatial regions
     regions = [
-        {"name": "Barrel Toroid",
-         "r_range": (1.0, 3.0), "z_range": (-2.0, 2.0)},
-        {"name": "Forward Endcap",
-         "r_range": (0.5, 4.0), "z_range": (2.0, 8.0)},
-        {"name": "Backward Endcap",
-         "r_range": (0.5, 4.0), "z_range": (-8.0, -2.0)},
+        {"name": "Barrel Toroid", "r_range": (1.0, 3.0), "z_range": (-2.0, 2.0)},
+        {"name": "Forward Endcap", "r_range": (0.5, 4.0), "z_range": (2.0, 8.0)},
+        {"name": "Backward Endcap", "r_range": (0.5, 4.0), "z_range": (-8.0, -2.0)},
         {"name": "Central", "r_range": (0.1, 1.0), "z_range": (-1.0, 1.0)},
     ]
 
@@ -161,8 +161,8 @@ def benchmark_spatial_distribution(field, grid_resolution=50):
         print(f"\n--- {region['name']} Region ---")
 
         # Generate grid points in this region
-        r_min, r_max = region['r_range']
-        z_min, z_max = region['z_range']
+        r_min, r_max = region["r_range"]
+        z_min, z_max = region["z_range"]
 
         r_vals = np.linspace(r_min, r_max, grid_resolution)
         z_vals = np.linspace(z_min, z_max, grid_resolution)
@@ -189,7 +189,8 @@ def benchmark_spatial_distribution(field, grid_resolution=50):
 
                 times.append(eval_end - eval_start)
                 field_magnitudes.append(
-                    np.sqrt(b_field[0]**2 + b_field[1]**2 + b_field[2]**2))
+                    np.sqrt(b_field[0] ** 2 + b_field[1] ** 2 + b_field[2] ** 2)
+                )
 
         end_time = time.perf_counter()
 
@@ -200,23 +201,24 @@ def benchmark_spatial_distribution(field, grid_resolution=50):
         avg_field_magnitude = np.mean(field_magnitudes)
 
         print(f"  Total evaluations: {total_evaluations}")
-        print(f"  Total time: "
-              f"{total_time:.4f} seconds")
-        print(f"  Average time per evaluation: "
-              f"{avg_time*1e6:.2f} ± {std_time*1e6:.2f} microseconds")
-        print(f"  Average field magnitude: "
-              f"{avg_field_magnitude:.4f} Tesla")
-        print(f"  Evaluations per second: "
-              f"{total_evaluations/total_time:.0f}")
+        print(f"  Total time: " f"{total_time:.4f} seconds")
+        print(
+            f"  Average time per evaluation: "
+            f"{avg_time*1e6:.2f} ± {std_time*1e6:.2f} microseconds"
+        )
+        print(f"  Average field magnitude: " f"{avg_field_magnitude:.4f} Tesla")
+        print(f"  Evaluations per second: " f"{total_evaluations/total_time:.0f}")
 
-        region_results.append({
-            'region': region['name'],
-            'total_evaluations': total_evaluations,
-            'avg_time_us': avg_time * 1e6,
-            'std_time_us': std_time * 1e6,
-            'avg_field_magnitude': avg_field_magnitude,
-            'eval_per_sec': total_evaluations / total_time
-        })
+        region_results.append(
+            {
+                "region": region["name"],
+                "total_evaluations": total_evaluations,
+                "avg_time_us": avg_time * 1e6,
+                "std_time_us": std_time * 1e6,
+                "avg_field_magnitude": avg_field_magnitude,
+                "eval_per_sec": total_evaluations / total_time,
+            }
+        )
 
     return region_results
 
@@ -229,58 +231,73 @@ def plot_benchmark_results(batch_results, region_results, output_dir):
     # Plot 1: Batch size performance
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
-    batch_sizes = [r['batch_size'] for r in batch_results]
-    avg_times = [r['avg_time_us'] for r in batch_results]
-    eval_rates = [r['eval_per_sec'] for r in batch_results]
+    batch_sizes = [r["batch_size"] for r in batch_results]
+    avg_times = [r["avg_time_us"] for r in batch_results]
+    eval_rates = [r["eval_per_sec"] for r in batch_results]
 
-    ax1.semilogx(batch_sizes, avg_times, 'o-',
-                 linewidth=2, markersize=8)
-    ax1.set_xlabel('Batch Size')
-    ax1.set_ylabel('Average Time per Evaluation (μs)')
-    ax1.set_title('Evaluation Time vs Batch Size')
+    ax1.semilogx(batch_sizes, avg_times, "o-", linewidth=2, markersize=8)
+    ax1.set_xlabel("Batch Size")
+    ax1.set_ylabel("Average Time per Evaluation (μs)")
+    ax1.set_title("Evaluation Time vs Batch Size")
     ax1.grid(True, alpha=0.3)
 
-    ax2.semilogx(batch_sizes, eval_rates, 's-', linewidth=2, markersize=8, color='orange')
-    ax2.set_xlabel('Batch Size')
-    ax2.set_ylabel('Evaluations per Second')
-    ax2.set_title('Evaluation Rate vs Batch Size')
+    ax2.semilogx(
+        batch_sizes, eval_rates, "s-", linewidth=2, markersize=8, color="orange"
+    )
+    ax2.set_xlabel("Batch Size")
+    ax2.set_ylabel("Evaluations per Second")
+    ax2.set_title("Evaluation Rate vs Batch Size")
     ax2.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig(output_dir / 'batch_performance.png', dpi=150, bbox_inches='tight')
+    plt.savefig(output_dir / "batch_performance.png", dpi=150, bbox_inches="tight")
     plt.close()
 
     # Plot 2: Regional performance
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
-    regions = [r['region'] for r in region_results]
-    region_times = [r['avg_time_us'] for r in region_results]
-    region_rates = [r['eval_per_sec'] for r in region_results]
+    regions = [r["region"] for r in region_results]
+    region_times = [r["avg_time_us"] for r in region_results]
+    region_rates = [r["eval_per_sec"] for r in region_results]
 
-    bars1 = ax1.bar(regions, region_times, color=['skyblue', 'lightgreen', 'lightcoral', 'gold'])
-    ax1.set_ylabel('Average Time per Evaluation (μs)')
-    ax1.set_title('Evaluation Time by Region')
-    ax1.tick_params(axis='x', rotation=45)
+    bars1 = ax1.bar(
+        regions, region_times, color=["skyblue", "lightgreen", "lightcoral", "gold"]
+    )
+    ax1.set_ylabel("Average Time per Evaluation (μs)")
+    ax1.set_title("Evaluation Time by Region")
+    ax1.tick_params(axis="x", rotation=45)
 
     # Add value labels on bars
     for bar, time_val in zip(bars1, region_times):
         height = bar.get_height()
-        ax1.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
-                 f'{time_val:.1f}μs', ha='center', va='bottom')
+        ax1.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height + height * 0.01,
+            f"{time_val:.1f}μs",
+            ha="center",
+            va="bottom",
+        )
 
-    bars2 = ax2.bar(regions, region_rates, color=['skyblue', 'lightgreen', 'lightcoral', 'gold'])
-    ax2.set_ylabel('Evaluations per Second')
-    ax2.set_title('Evaluation Rate by Region')
-    ax2.tick_params(axis='x', rotation=45)
+    bars2 = ax2.bar(
+        regions, region_rates, color=["skyblue", "lightgreen", "lightcoral", "gold"]
+    )
+    ax2.set_ylabel("Evaluations per Second")
+    ax2.set_title("Evaluation Rate by Region")
+    ax2.tick_params(axis="x", rotation=45)
 
     # Add value labels on bars
     for bar, rate_val in zip(bars2, region_rates):
         height = bar.get_height()
-        ax2.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
-                 f'{rate_val:.0f}/s', ha='center', va='bottom')
+        ax2.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height + height * 0.01,
+            f"{rate_val:.0f}/s",
+            ha="center",
+            va="bottom",
+        )
 
     plt.tight_layout()
-    plt.savefig(output_dir / 'regional_performance.png', dpi=150, bbox_inches='tight')
+    plt.savefig(output_dir / "regional_performance.png", dpi=150, bbox_inches="tight")
     plt.close()
 
     print(f"\nPlots saved to {output_dir}/")
@@ -317,8 +334,8 @@ def plot_field_maps(
     # Viz params
     log_vmin=1e-4,
     log_vmax=4.1,
-    quiver_stride_xy=28,   # ~ how many arrows across
-    quiver_stride_zx=28
+    quiver_stride_xy=28,  # ~ how many arrows across
+    quiver_stride_zx=28,
 ):
     """
     Produce two figures:
@@ -330,10 +347,8 @@ def plot_field_maps(
     output_dir.mkdir(exist_ok=True)
 
     # ---------- XY slice ----------
-    x = np.linspace(xy_xlim[0], xy_xlim[1], int(max(60, xy_nx)),
-                    dtype=np.float64)
-    y = np.linspace(xy_ylim[0], xy_ylim[1], int(max(60, xy_ny)),
-                    dtype=np.float64)
+    x = np.linspace(xy_xlim[0], xy_xlim[1], int(max(60, xy_nx)), dtype=np.float64)
+    y = np.linspace(xy_ylim[0], xy_ylim[1], int(max(60, xy_ny)), dtype=np.float64)
     X, Y = np.meshgrid(x, y, indexing="xy")
     Z = np.full_like(X, float(xy_z_plane), dtype=np.float64)
 
@@ -360,8 +375,8 @@ def plot_field_maps(
     # Quiver (unit-length for direction)
     step = max(1, X.shape[1] // quiver_stride_xy)
     Bsafe = np.where(Bmag > 0, Bmag, np.inf)
-    Ux = (Bx / Bsafe)
-    Uy = (By / Bsafe)
+    Ux = Bx / Bsafe
+    Uy = By / Bsafe
     ax.quiver(
         X[::step, ::step],
         Y[::step, ::step],
@@ -378,15 +393,12 @@ def plot_field_maps(
     ax.set_title(f"|B| in z = {float(xy_z_plane):.2f} m plane")
     plt.tight_layout()
     (output_dir / "field_xy.png").unlink(missing_ok=True)
-    plt.savefig(output_dir / "field_xy.png", dpi=150,
-                bbox_inches="tight")
+    plt.savefig(output_dir / "field_xy.png", dpi=150, bbox_inches="tight")
     plt.close()
 
     # ---------- ZX slice (Z horizontal, X vertical) ----------
-    z = np.linspace(zx_zlim[0], zx_zlim[1], int(max(60, zx_nz)),
-                    dtype=np.float64)
-    x = np.linspace(zx_xlim[0], zx_xlim[1], int(max(60, zx_nx)),
-                    dtype=np.float64)
+    z = np.linspace(zx_zlim[0], zx_zlim[1], int(max(60, zx_nz)), dtype=np.float64)
+    x = np.linspace(zx_xlim[0], zx_xlim[1], int(max(60, zx_nx)), dtype=np.float64)
     Z, Xg = np.meshgrid(z, x, indexing="xy")
     Y = np.full_like(Xg, float(zx_y_plane), dtype=np.float64)
 
@@ -415,8 +427,8 @@ def plot_field_maps(
     # Quiver (projected in z–x plane)
     step = max(1, Z.shape[1] // quiver_stride_zx)
     Bsafe = np.where(Bmag > 0, Bmag, np.inf)
-    Uz = (Bz / Bsafe)
-    Ux = (Bx / Bsafe)
+    Uz = Bz / Bsafe
+    Ux = Bx / Bsafe
     ax.quiver(
         Z[::step, ::step],
         Xg[::step, ::step],
@@ -436,57 +448,130 @@ def plot_field_maps(
     plt.savefig(output_dir / "field_zx.png", dpi=150, bbox_inches="tight")
     plt.close()
 
-    print(f"\nSaved field maps to: {output_dir}/field_xy.png and {output_dir}/field_zx.png")
+    print(
+        f"\nSaved field maps to: {output_dir}/field_xy.png and {output_dir}/field_zx.png"
+    )
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Benchmark toroidal magnetic field performance')
-    parser.add_argument('--num-evaluations', type=int, default=10000,
-                        help='Number of evaluations for single benchmark (default: 10000)')
-    parser.add_argument('--batch-sizes', type=int, nargs='+', default=[1, 10, 100, 1000, 10000],
-                        help='Batch sizes to test (default: 1 10 100 1000 10000)')
-    parser.add_argument('--grid-resolution', type=int, default=50,
-                        help='Grid resolution for spatial benchmark (default: 50)')
-    parser.add_argument('--output-dir', type=str, default='toroidal_field_benchmark',
-                        help='Output directory for results (default: toroidal_field_benchmark)')
-    parser.add_argument('--skip-plots', action='store_true',
-                        help='Skip generating performance plots')
-    parser.add_argument('--plot-field', action='store_true',
-                        help='Also compute and save XY/ZX field maps')
+    parser = argparse.ArgumentParser(
+        description="Benchmark toroidal magnetic field performance"
+    )
+    parser.add_argument(
+        "--num-evaluations",
+        type=int,
+        default=10000,
+        help="Number of evaluations for single benchmark (default: 10000)",
+    )
+    parser.add_argument(
+        "--batch-sizes",
+        type=int,
+        nargs="+",
+        default=[1, 10, 100, 1000, 10000],
+        help="Batch sizes to test (default: 1 10 100 1000 10000)",
+    )
+    parser.add_argument(
+        "--grid-resolution",
+        type=int,
+        default=50,
+        help="Grid resolution for spatial benchmark (default: 50)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="toroidal_field_benchmark",
+        help="Output directory for results (default: toroidal_field_benchmark)",
+    )
+    parser.add_argument(
+        "--skip-plots", action="store_true", help="Skip generating performance plots"
+    )
+    parser.add_argument(
+        "--plot-field",
+        action="store_true",
+        help="Also compute and save XY/ZX field maps",
+    )
 
     # XY slice controls
-    parser.add_argument('--xy-z-plane', type=float, default=0.20,
-                        help='z (m) for XY slice (default: 0.20)')
-    parser.add_argument('--xy-xlim', type=float, nargs=2, default=(-10.0, 10.0),
-                        help='x limits for XY slice (m) (default: -10 10)')
-    parser.add_argument('--xy-ylim', type=float, nargs=2, default=(-10.0, 10.0),
-                        help='y limits for XY slice (m) (default: -10 10)')
-    parser.add_argument('--xy-nx', type=int, default=520,
-                        help='grid Nx for XY slice (default: 520)')
-    parser.add_argument('--xy-ny', type=int, default=520,
-                        help='grid Ny for XY slice (default: 520)')
+    parser.add_argument(
+        "--xy-z-plane",
+        type=float,
+        default=0.20,
+        help="z (m) for XY slice (default: 0.20)",
+    )
+    parser.add_argument(
+        "--xy-xlim",
+        type=float,
+        nargs=2,
+        default=(-10.0, 10.0),
+        help="x limits for XY slice (m) (default: -10 10)",
+    )
+    parser.add_argument(
+        "--xy-ylim",
+        type=float,
+        nargs=2,
+        default=(-10.0, 10.0),
+        help="y limits for XY slice (m) (default: -10 10)",
+    )
+    parser.add_argument(
+        "--xy-nx", type=int, default=520, help="grid Nx for XY slice (default: 520)"
+    )
+    parser.add_argument(
+        "--xy-ny", type=int, default=520, help="grid Ny for XY slice (default: 520)"
+    )
 
     # ZX slice controls
-    parser.add_argument('--zx-y-plane', type=float, default=0.10,
-                        help='y (m) for ZX slice (default: 0.10)')
-    parser.add_argument('--zx-zlim', type=float, nargs=2, default=(-22.0, 22.0),
-                        help='z limits for ZX slice (m) (default: -22 22)')
-    parser.add_argument('--zx-xlim', type=float, nargs=2, default=(-11.0, 11.0),
-                        help='x limits for ZX slice (m) (default: -11 11)')
-    parser.add_argument('--zx-nz', type=int, default=560,
-                        help='grid Nz for ZX slice (default: 560)')
-    parser.add_argument('--zx-nx', type=int, default=560,
-                        help='grid Nx for ZX slice (default: 560)')
+    parser.add_argument(
+        "--zx-y-plane",
+        type=float,
+        default=0.10,
+        help="y (m) for ZX slice (default: 0.10)",
+    )
+    parser.add_argument(
+        "--zx-zlim",
+        type=float,
+        nargs=2,
+        default=(-22.0, 22.0),
+        help="z limits for ZX slice (m) (default: -22 22)",
+    )
+    parser.add_argument(
+        "--zx-xlim",
+        type=float,
+        nargs=2,
+        default=(-11.0, 11.0),
+        help="x limits for ZX slice (m) (default: -11 11)",
+    )
+    parser.add_argument(
+        "--zx-nz", type=int, default=560, help="grid Nz for ZX slice (default: 560)"
+    )
+    parser.add_argument(
+        "--zx-nx", type=int, default=560, help="grid Nx for ZX slice (default: 560)"
+    )
 
     # Color/arrow controls
-    parser.add_argument('--log-vmin', type=float, default=1e-4,
-                        help='LogNorm vmin for |B| (T) (default: 1e-4)')
-    parser.add_argument('--log-vmax', type=float, default=4.1,
-                        help='LogNorm vmax for |B| (T) (default: 4.1)')
-    parser.add_argument('--quiver-stride-xy', type=int, default=28,
-                        help='Quiver density for XY (default: 28)')
-    parser.add_argument('--quiver-stride-zx', type=int, default=28,
-                        help='Quiver density for ZX (default: 28)')
+    parser.add_argument(
+        "--log-vmin",
+        type=float,
+        default=1e-4,
+        help="LogNorm vmin for |B| (T) (default: 1e-4)",
+    )
+    parser.add_argument(
+        "--log-vmax",
+        type=float,
+        default=4.1,
+        help="LogNorm vmax for |B| (T) (default: 4.1)",
+    )
+    parser.add_argument(
+        "--quiver-stride-xy",
+        type=int,
+        default=28,
+        help="Quiver density for XY (default: 28)",
+    )
+    parser.add_argument(
+        "--quiver-stride-zx",
+        type=int,
+        default=28,
+        help="Quiver density for ZX (default: 28)",
+    )
 
     args = parser.parse_args()
 
@@ -501,7 +586,9 @@ def main():
     # Run benchmarks
     try:
         # Single evaluation benchmark
-        single_time, single_rate = benchmark_single_evaluations(field, args.num_evaluations)
+        single_time, single_rate = benchmark_single_evaluations(
+            field, args.num_evaluations
+        )
 
         # Batch evaluation benchmark
         batch_results = benchmark_vectorized_evaluations(field, args.batch_sizes)
@@ -511,10 +598,18 @@ def main():
 
         # Print summary
         print("\n=== Benchmark Summary ===")
-        print(f"Single evaluation average: {single_time*1e6:.2f} μs ({single_rate:.0f} eval/s)")
-        print(f"Best batch performance: {min(r['avg_time_us'] for r in batch_results):.2f} μs")
-        print(f"Fastest region: {min(region_results, key=lambda x: x['avg_time_us'])['region']}")
-        print(f"Slowest region: {max(region_results, key=lambda x: x['avg_time_us'])['region']}")
+        print(
+            f"Single evaluation average: {single_time*1e6:.2f} μs ({single_rate:.0f} eval/s)"
+        )
+        print(
+            f"Best batch performance: {min(r['avg_time_us'] for r in batch_results):.2f} μs"
+        )
+        print(
+            f"Fastest region: {min(region_results, key=lambda x: x['avg_time_us'])['region']}"
+        )
+        print(
+            f"Slowest region: {max(region_results, key=lambda x: x['avg_time_us'])['region']}"
+        )
 
         # Generate plots if requested
         if not args.skip_plots:
@@ -545,7 +640,9 @@ def main():
                     quiver_stride_zx=args.quiver_stride_zx,
                 )
             except ImportError:
-                print("\nWarning: matplotlib (extras) not available, skipping field maps")
+                print(
+                    "\nWarning: matplotlib (extras) not available, skipping field maps"
+                )
 
         print("\n✓ Benchmark completed successfully!")
 
@@ -556,5 +653,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())

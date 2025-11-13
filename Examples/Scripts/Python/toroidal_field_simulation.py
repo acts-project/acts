@@ -4,15 +4,13 @@
 # This file is part of ACTS.
 # See LICENSE for details.
 
+import argparse
 import os
+from pathlib import Path
+
 import acts
 import acts.acts_toroidal_field as toroidal_field
-import argparse
-from acts import (
-    logging,
-    GeometryContext,
-)
-from pathlib import Path
+from acts import GeometryContext, logging
 
 # Import GeoModel if available
 try:
@@ -26,11 +24,8 @@ except ImportError:
 # Import examples if available
 try:
     from acts import examples
-    from acts.examples import (
-        AlgorithmContext,
-        WhiteBoard,
-        ObjTrackingGeometryWriter,
-    )
+    from acts.examples import (AlgorithmContext, ObjTrackingGeometryWriter,
+                               WhiteBoard)
 
     HAS_EXAMPLES = True
 except ImportError:
@@ -78,14 +73,10 @@ def runGeant4(
         return None
 
     try:
-        from acts.examples.simulation import (
-            addGeant4,
-            ParticleConfig,
-            MomentumConfig,
-            ParticleSelectorConfig,
-        )
-        from acts.examples.simulation import EtaConfig
-        from acts.examples.simulation import addParticleGun
+        from acts.examples.simulation import (EtaConfig, MomentumConfig,
+                                              ParticleConfig,
+                                              ParticleSelectorConfig,
+                                              addGeant4, addParticleGun)
 
         logger = acts.logging.getLogger("Geant4Simulation")
         logger.setLevel(acts.logging.INFO)
@@ -391,11 +382,8 @@ def main():
     if args.geoSvgDump and HAS_EXAMPLES:
         print("Adding geometry visualization...")
         try:
-            from acts.examples import (
-                WhiteBoard,
-                AlgorithmContext,
-                ObjTrackingGeometryWriter,
-            )
+            from acts.examples import (AlgorithmContext,
+                                       ObjTrackingGeometryWriter, WhiteBoard)
 
             wb = WhiteBoard(acts.logging.INFO)
             context = AlgorithmContext(0, 0, wb, 10)

@@ -43,47 +43,53 @@ Usage Examples:
 
 """
 
+import argparse
+import hashlib
+import os
 import time
-import numpy as np
+from pathlib import Path
+
 import acts
 import acts.acts_toroidal_field as toroidal_field
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.colors import LogNorm
-import argparse
-from pathlib import Path
-import os
-import hashlib
+
 
 def create_analytical_field():
     """Create the analytical toroidal field"""
     config = toroidal_field.Config()
     return toroidal_field.ToroidalField(config)
 
+
 # Global cache for LUT within session
 _lut_cache = {}
 
-def create_lut_field(analytical_field, resolution='medium', force_recreate=False, lut_dir='lut_cache'):
+
+def create_lut_field(
+    analytical_field, resolution="medium", force_recreate=False, lut_dir="lut_cache"
+):
     """Create the LUT toroidal field map with smart caching"""
 
     resolutions = {
-        'low': {
-            'rLim': (0.01, 12.0),
-            'phiLim': (0.0, 2*np.pi),
-            'zLim': (-20.0, 20.0),
-            'nBins': (61, 65, 201)
+        "low": {
+            "rLim": (0.01, 12.0),
+            "phiLim": (0.0, 2 * np.pi),
+            "zLim": (-20.0, 20.0),
+            "nBins": (61, 65, 201),
         },
-        'medium': {
-            'rLim': (0.01, 12.0),
-            'phiLim': (0.0, 2*np.pi),
-            'zLim': (-20.0, 20.0),
-            'nBins': (121, 129, 401)
+        "medium": {
+            "rLim": (0.01, 12.0),
+            "phiLim": (0.0, 2 * np.pi),
+            "zLim": (-20.0, 20.0),
+            "nBins": (121, 129, 401),
         },
-        'high': {
-            'rLim': (0.01, 12.0),
-            'phiLim': (0.0, 2*np.pi),
-            'zLim': (-20.0, 20.0),
-            'nBins': (241, 257, 801)
-        }
+        "high": {
+            "rLim": (0.01, 12.0),
+            "phiLim": (0.0, 2 * np.pi),
+            "zLim": (-20.0, 20.0),
+            "nBins": (241, 257, 801),
+        },
     }
 
     params = resolutions[resolution]
@@ -95,53 +101,66 @@ def create_lut_field(analytical_field, resolution='medium', force_recreate=False
     # Check session cache first
     if not force_recreate and config_hash in _lut_cache:
         print(f"Reusing LUT from session cache ({resolution} resolution)")
-        return _lut_cache[config_hash]['lut'], _lut_cache[config_hash]['params']
+        return _lut_cache[config_hash]["lut"], _lut_cache[config_hash]["params"]
 
     # Check if cached info exists on disk
     os.makedirs(lut_dir, exist_ok=True)
-    cache_info_file = os.path.join(lut_dir, f'lut_info_{config_hash}.txt')
+    cache_info_file = os.path.join(lut_dir, f"lut_info_{config_hash}.txt")
 
     if not force_recreate and os.path.exists(cache_info_file):
         try:
-            with open(cache_info_file, 'r') as f:
+            with open(cache_info_file, "r") as f:
                 cached_info = f.read().strip()
             print(f"Found existing LUT cache info: {cached_info}")
-            print(f"Creating LUT with existing {resolution} resolution (parameters verified)")
+            print(
+                f"Creating LUT with existing {resolution} resolution (parameters verified)"
+            )
         except:
             print(f"Failed to read cache info, creating fresh LUT")
     else:
         print(f"Creating LUT with {resolution} resolution:")
 
-    print(f"  r: {params['rLim'][0]:.2f} to {params['rLim'][1]:.2f} m, {params['nBins'][0]} bins")
-    print(f"  φ: {params['phiLim'][0]:.2f} to {params['phiLim'][1]:.2f} rad, {params['nBins'][1]} bins")
-    print(f"  z: {params['zLim'][0]:.2f} to {params['zLim'][1]:.2f} m, {params['nBins'][2]} bins")
+    print(
+        f"  r: {params['rLim'][0]:.2f} to {params['rLim'][1]:.2f} m, {params['nBins'][0]} bins"
+    )
+    print(
+        f"  φ: {params['phiLim'][0]:.2f} to {params['phiLim'][1]:.2f} rad, {params['nBins'][1]} bins"
+    )
+    print(
+        f"  z: {params['zLim'][0]:.2f} to {params['zLim'][1]:.2f} m, {params['nBins'][2]} bins"
+    )
     print(f"  Total bins: {np.prod(params['nBins']):,}")
 
     # Create LUT
     start_time = time.time()
     lut_field = toroidal_field.toroidalFieldMapCyl(
-        params['rLim'],
-        params['phiLim'],
-        params['zLim'],
-        params['nBins'],
-        analytical_field
+        params["rLim"],
+        params["phiLim"],
+        params["zLim"],
+        params["nBins"],
+        analytical_field,
     )
     creation_time = time.time() - start_time
 
     print(f"  LUT created in {creation_time:.2f} seconds")
 
     # Cache in session
-    _lut_cache[config_hash] = {'lut': lut_field, 'params': params}
+    _lut_cache[config_hash] = {"lut": lut_field, "params": params}
 
     # Save cache info to disk for next run
     try:
-        with open(cache_info_file, 'w') as f:
-            f.write(f"Resolution: {resolution}, Bins: {params['nBins']}, Created: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"  Cache info saved - subsequent runs with same resolution will be faster")
+        with open(cache_info_file, "w") as f:
+            f.write(
+                f"Resolution: {resolution}, Bins: {params['nBins']}, Created: {time.strftime('%Y-%m-%d %H:%M:%S')}"
+            )
+        print(
+            f"  Cache info saved - subsequent runs with same resolution will be faster"
+        )
     except:
         print(f"  Note: Could not save cache info")
 
     return lut_field, params
+
 
 def generate_test_points(n_points=1000):
     """Generate random test points in detector geometry"""
@@ -157,12 +176,13 @@ def generate_test_points(n_points=1000):
 
     return np.column_stack([x, y, z])
 
+
 def benchmark_lookup_times(analytical_field, lut_field, test_points, n_points=10000):
     """Benchmark field lookup times"""
     print(f"\n=== Timing Benchmark ===")
 
     # Use subset of test points
-    timing_points = test_points[:min(n_points, len(test_points))]
+    timing_points = test_points[: min(n_points, len(test_points))]
     print(f"Timing {len(timing_points)} field evaluations...")
 
     ctx = acts.MagneticFieldContext()
@@ -193,25 +213,32 @@ def benchmark_lookup_times(analytical_field, lut_field, test_points, n_points=10
             continue
     lut_time = time.perf_counter() - start_time
 
-    analytical_rate = analytical_successful / analytical_time if analytical_time > 0 else 0
+    analytical_rate = (
+        analytical_successful / analytical_time if analytical_time > 0 else 0
+    )
     lut_rate = lut_successful / lut_time if lut_time > 0 else 0
     speedup = analytical_time / lut_time if lut_time > 0 else 0
 
     print(f"Results:")
-    print(f"  Analytical field: {analytical_time:.4f} s ({analytical_rate:.0f} lookups/s)")
+    print(
+        f"  Analytical field: {analytical_time:.4f} s ({analytical_rate:.0f} lookups/s)"
+    )
     print(f"    Successful lookups: {analytical_successful}/{len(timing_points)}")
     print(f"  LUT field:        {lut_time:.4f} s ({lut_rate:.0f} lookups/s)")
     print(f"    Successful lookups: {lut_successful}/{len(timing_points)}")
-    print(f"  Speedup factor:   {speedup:.2f}x {'(LUT faster)' if speedup > 1 else '(Analytical faster)'}")
+    print(
+        f"  Speedup factor:   {speedup:.2f}x {'(LUT faster)' if speedup > 1 else '(Analytical faster)'}"
+    )
 
     return {
-        'analytical_time': analytical_time,
-        'lut_time': lut_time,
-        'speedup': speedup,
-        'analytical_success': analytical_successful,
-        'lut_success': lut_successful,
-        'n_points': len(timing_points)
+        "analytical_time": analytical_time,
+        "lut_time": lut_time,
+        "speedup": speedup,
+        "analytical_success": analytical_successful,
+        "lut_success": lut_successful,
+        "n_points": len(timing_points),
     }
+
 
 def compare_field_values(analytical_field, lut_field, test_points):
     """Compare field values between analytical and LUT"""
@@ -255,7 +282,9 @@ def compare_field_values(analytical_field, lut_field, test_points):
     # Calculate differences
     field_diff = np.linalg.norm(lut_fields - analytical_fields, axis=1)
     analytical_mag = np.linalg.norm(analytical_fields, axis=1)
-    relative_error = np.where(analytical_mag > 1e-10, field_diff / analytical_mag * 100, 0)
+    relative_error = np.where(
+        analytical_mag > 1e-10, field_diff / analytical_mag * 100, 0
+    )
 
     print(f"Comparison Statistics ({len(valid_points)} valid points):")
     print(f"  Mean absolute error: {np.mean(field_diff):.6f} T")
@@ -264,12 +293,13 @@ def compare_field_values(analytical_field, lut_field, test_points):
     print(f"  Max relative error:  {np.max(relative_error):.3f}%")
 
     return {
-        'points': valid_points,
-        'analytical': analytical_fields,
-        'lut': lut_fields,
-        'field_diff': field_diff,
-        'relative_error': relative_error
+        "points": valid_points,
+        "analytical": analytical_fields,
+        "lut": lut_fields,
+        "field_diff": field_diff,
+        "relative_error": relative_error,
     }
+
 
 def plot_field_comparison(comparison_data, output_dir="toroidal_field_plots"):
     """Create field map plots using existing test points only"""
@@ -278,9 +308,9 @@ def plot_field_comparison(comparison_data, output_dir="toroidal_field_plots"):
     output_path = Path(output_dir)
     output_path.mkdir(exist_ok=True)
 
-    points = comparison_data['points']
-    analytical_fields = comparison_data['analytical']
-    lut_fields = comparison_data.get('lut', None)
+    points = comparison_data["points"]
+    analytical_fields = comparison_data["analytical"]
+    lut_fields = comparison_data.get("lut", None)
 
     analytical_mag = np.linalg.norm(analytical_fields, axis=1)
     lut_mag = np.linalg.norm(lut_fields, axis=1) if lut_fields is not None else None
@@ -299,11 +329,15 @@ def plot_field_comparison(comparison_data, output_dir="toroidal_field_plots"):
 
     xy_x, xy_y = xy_points[:, 0], xy_points[:, 1]
     xy_sym_x, xy_sym_y, xy_sym_mag = apply_xy_symmetry(xy_x, xy_y, xy_analytical_mag)
-    xy_lut_sym_mag = apply_xy_symmetry(xy_x, xy_y, xy_lut_mag)[2] if xy_lut_mag is not None else None
+    xy_lut_sym_mag = (
+        apply_xy_symmetry(xy_x, xy_y, xy_lut_mag)[2] if xy_lut_mag is not None else None
+    )
 
     zx_z, zx_x = zx_points[:, 2], zx_points[:, 0]
     zx_sym_z, zx_sym_x, zx_sym_mag = apply_zx_symmetry(zx_z, zx_x, zx_analytical_mag)
-    zx_lut_sym_mag = apply_zx_symmetry(zx_z, zx_x, zx_lut_mag)[2] if zx_lut_mag is not None else None
+    zx_lut_sym_mag = (
+        apply_zx_symmetry(zx_z, zx_x, zx_lut_mag)[2] if zx_lut_mag is not None else None
+    )
 
     # Create plots
     create_fast_xy_plot(xy_sym_x, xy_sym_y, xy_sym_mag, xy_lut_sym_mag, output_path)
@@ -318,7 +352,7 @@ def plot_field_comparison(comparison_data, output_dir="toroidal_field_plots"):
 
 def apply_xy_symmetry(x, y, values):
     """Apply 8-fold rotational symmetry in XY plane"""
-    angles = np.linspace(0, 2*np.pi, 8, endpoint=False)
+    angles = np.linspace(0, 2 * np.pi, 8, endpoint=False)
 
     sym_x = []
     sym_y = []
@@ -348,35 +382,49 @@ def apply_zx_symmetry(z, x, values):
 def create_fast_xy_plot(x, y, analytical_mag, lut_mag, output_path):
     """Create XY plot using scatter points only"""
     n_plots = 2 if lut_mag is not None else 1
-    fig, axes = plt.subplots(1, n_plots, figsize=(6*n_plots, 5))
+    fig, axes = plt.subplots(1, n_plots, figsize=(6 * n_plots, 5))
     if n_plots == 1:
         axes = [axes]
 
     # Analytical plot
-    sc1 = axes[0].scatter(x, y, c=analytical_mag, cmap='gnuplot2',
-                         norm=LogNorm(vmin=1e-4, vmax=4.1), s=0.5, alpha=0.8)
-    axes[0].set_title('Analytical |B| at z=0.20m')
-    axes[0].set_xlabel('x [m]')
-    axes[0].set_ylabel('y [m]')
+    sc1 = axes[0].scatter(
+        x,
+        y,
+        c=analytical_mag,
+        cmap="gnuplot2",
+        norm=LogNorm(vmin=1e-4, vmax=4.1),
+        s=0.5,
+        alpha=0.8,
+    )
+    axes[0].set_title("Analytical |B| at z=0.20m")
+    axes[0].set_xlabel("x [m]")
+    axes[0].set_ylabel("y [m]")
     axes[0].set_xlim(-12, 12)
     axes[0].set_ylim(-12, 12)
-    axes[0].set_aspect('equal')
-    plt.colorbar(sc1, ax=axes[0], label='|B| [T]')
+    axes[0].set_aspect("equal")
+    plt.colorbar(sc1, ax=axes[0], label="|B| [T]")
 
     # LUT plot if available
     if lut_mag is not None:
-        sc2 = axes[1].scatter(x, y, c=lut_mag, cmap='gnuplot2',
-                             norm=LogNorm(vmin=1e-4, vmax=4.1), s=0.5, alpha=0.8)
-        axes[1].set_title('LUT |B| at z=0.20m')
-        axes[1].set_xlabel('x [m]')
-        axes[1].set_ylabel('y [m]')
+        sc2 = axes[1].scatter(
+            x,
+            y,
+            c=lut_mag,
+            cmap="gnuplot2",
+            norm=LogNorm(vmin=1e-4, vmax=4.1),
+            s=0.5,
+            alpha=0.8,
+        )
+        axes[1].set_title("LUT |B| at z=0.20m")
+        axes[1].set_xlabel("x [m]")
+        axes[1].set_ylabel("y [m]")
         axes[1].set_xlim(-12, 12)
         axes[1].set_ylim(-12, 12)
-        axes[1].set_aspect('equal')
-        plt.colorbar(sc2, ax=axes[1], label='|B| [T]')
+        axes[1].set_aspect("equal")
+        plt.colorbar(sc2, ax=axes[1], label="|B| [T]")
 
     plt.tight_layout()
-    plt.savefig(output_path / 'field_xy_fast.png', dpi=150, bbox_inches='tight')
+    plt.savefig(output_path / "field_xy_fast.png", dpi=150, bbox_inches="tight")
     plt.close()
     print(f"Saved: {output_path}/field_xy_fast.png")
 
@@ -384,35 +432,49 @@ def create_fast_xy_plot(x, y, analytical_mag, lut_mag, output_path):
 def create_fast_zx_plot(z, x, analytical_mag, lut_mag, output_path):
     """Create ZX plot using scatter points only"""
     n_plots = 2 if lut_mag is not None else 1
-    fig, axes = plt.subplots(1, n_plots, figsize=(6*n_plots, 5))
+    fig, axes = plt.subplots(1, n_plots, figsize=(6 * n_plots, 5))
     if n_plots == 1:
         axes = [axes]
 
     # Analytical plot
-    sc1 = axes[0].scatter(z, x, c=analytical_mag, cmap='gnuplot2',
-                         norm=LogNorm(vmin=1e-4, vmax=4.1), s=0.5, alpha=0.8)
-    axes[0].set_title('Analytical |B| at y=0.10m')
-    axes[0].set_xlabel('z [m]')
-    axes[0].set_ylabel('x [m]')
+    sc1 = axes[0].scatter(
+        z,
+        x,
+        c=analytical_mag,
+        cmap="gnuplot2",
+        norm=LogNorm(vmin=1e-4, vmax=4.1),
+        s=0.5,
+        alpha=0.8,
+    )
+    axes[0].set_title("Analytical |B| at y=0.10m")
+    axes[0].set_xlabel("z [m]")
+    axes[0].set_ylabel("x [m]")
     axes[0].set_xlim(-20, 20)
     axes[0].set_ylim(-12, 12)
-    axes[0].set_aspect('equal')
-    plt.colorbar(sc1, ax=axes[0], label='|B| [T]')
+    axes[0].set_aspect("equal")
+    plt.colorbar(sc1, ax=axes[0], label="|B| [T]")
 
     # LUT plot if available
     if lut_mag is not None:
-        sc2 = axes[1].scatter(z, x, c=lut_mag, cmap='gnuplot2',
-                             norm=LogNorm(vmin=1e-4, vmax=4.1), s=0.5, alpha=0.8)
-        axes[1].set_title('LUT |B| at y=0.10m')
-        axes[1].set_xlabel('z [m]')
-        axes[1].set_ylabel('x [m]')
+        sc2 = axes[1].scatter(
+            z,
+            x,
+            c=lut_mag,
+            cmap="gnuplot2",
+            norm=LogNorm(vmin=1e-4, vmax=4.1),
+            s=0.5,
+            alpha=0.8,
+        )
+        axes[1].set_title("LUT |B| at y=0.10m")
+        axes[1].set_xlabel("z [m]")
+        axes[1].set_ylabel("x [m]")
         axes[1].set_xlim(-20, 20)
         axes[1].set_ylim(-12, 12)
-        axes[1].set_aspect('equal')
-        plt.colorbar(sc2, ax=axes[1], label='|B| [T]')
+        axes[1].set_aspect("equal")
+        plt.colorbar(sc2, ax=axes[1], label="|B| [T]")
 
     plt.tight_layout()
-    plt.savefig(output_path / 'field_zx_fast.png', dpi=150, bbox_inches='tight')
+    plt.savefig(output_path / "field_zx_fast.png", dpi=150, bbox_inches="tight")
     plt.close()
     print(f"Saved: {output_path}/field_zx_fast.png")
 
@@ -421,36 +483,42 @@ def create_fast_difference_plot(points, analytical_mag, lut_mag, output_path):
     """Create difference analysis using existing data only"""
     # Calculate differences
     field_diff = np.abs(lut_mag - analytical_mag)
-    relative_error = np.where(analytical_mag > 1e-10, field_diff / analytical_mag * 100, 0)
-    r = np.sqrt(points[:, 0]**2 + points[:, 1]**2)
+    relative_error = np.where(
+        analytical_mag > 1e-10, field_diff / analytical_mag * 100, 0
+    )
+    r = np.sqrt(points[:, 0] ** 2 + points[:, 1] ** 2)
 
     # Create compact difference plot
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 
     # Absolute difference
-    axes[0].hist(field_diff, bins=30, alpha=0.7, edgecolor='black')
-    axes[0].set_xlabel('|B_lut - B_analytical| [T]')
-    axes[0].set_ylabel('Count')
-    axes[0].set_title('Absolute Difference')
+    axes[0].hist(field_diff, bins=30, alpha=0.7, edgecolor="black")
+    axes[0].set_xlabel("|B_lut - B_analytical| [T]")
+    axes[0].set_ylabel("Count")
+    axes[0].set_title("Absolute Difference")
     axes[0].grid(True, alpha=0.3)
 
     # Relative error
-    axes[1].hist(relative_error, bins=30, alpha=0.7, color='orange', edgecolor='black')
-    axes[1].set_xlabel('Relative Error [%]')
-    axes[1].set_ylabel('Count')
-    axes[1].set_title('Relative Error')
+    axes[1].hist(relative_error, bins=30, alpha=0.7, color="orange", edgecolor="black")
+    axes[1].set_xlabel("Relative Error [%]")
+    axes[1].set_ylabel("Count")
+    axes[1].set_title("Relative Error")
     axes[1].grid(True, alpha=0.3)
 
     # Spatial distribution
-    sc = axes[2].scatter(r, points[:, 2], c=relative_error, cmap='plasma', s=1, alpha=0.7)
-    axes[2].set_xlabel('r [m]')
-    axes[2].set_ylabel('z [m]')
-    axes[2].set_title('Error Distribution')
+    sc = axes[2].scatter(
+        r, points[:, 2], c=relative_error, cmap="plasma", s=1, alpha=0.7
+    )
+    axes[2].set_xlabel("r [m]")
+    axes[2].set_ylabel("z [m]")
+    axes[2].set_title("Error Distribution")
     axes[2].grid(True, alpha=0.3)
-    plt.colorbar(sc, ax=axes[2], label='Rel. Error [%]')
+    plt.colorbar(sc, ax=axes[2], label="Rel. Error [%]")
 
     plt.tight_layout()
-    plt.savefig(output_path / 'field_differences_fast.png', dpi=150, bbox_inches='tight')
+    plt.savefig(
+        output_path / "field_differences_fast.png", dpi=150, bbox_inches="tight"
+    )
     plt.close()
     print(f"Saved: {output_path}/field_differences_fast.png")
 
@@ -462,19 +530,36 @@ def create_fast_difference_plot(points, analytical_mag, lut_mag, output_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='ToroidalField vs ToroidalFieldMap benchmark')
-    parser.add_argument('--resolution', choices=['low', 'medium', 'high'], default='medium',
-                        help='LUT resolution (default: medium)')
-    parser.add_argument('--n-points', type=int, default=2000,
-                        help='Number of test points for comparison (default: 2000)')
-    parser.add_argument('--n-timing', type=int, default=5000,
-                        help='Number of points for timing benchmark (default: 5000)')
-    parser.add_argument('--output-dir', default='toroidal_field_plots',
-                        help='Output directory for plots (default: toroidal_field_plots)')
-    parser.add_argument('--no-plots', action='store_true',
-                        help='Skip generating plots')
-    parser.add_argument('--force-recreate-lut', action='store_true',
-                        help='Force recreation of LUT')
+    parser = argparse.ArgumentParser(
+        description="ToroidalField vs ToroidalFieldMap benchmark"
+    )
+    parser.add_argument(
+        "--resolution",
+        choices=["low", "medium", "high"],
+        default="medium",
+        help="LUT resolution (default: medium)",
+    )
+    parser.add_argument(
+        "--n-points",
+        type=int,
+        default=2000,
+        help="Number of test points for comparison (default: 2000)",
+    )
+    parser.add_argument(
+        "--n-timing",
+        type=int,
+        default=5000,
+        help="Number of points for timing benchmark (default: 5000)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="toroidal_field_plots",
+        help="Output directory for plots (default: toroidal_field_plots)",
+    )
+    parser.add_argument("--no-plots", action="store_true", help="Skip generating plots")
+    parser.add_argument(
+        "--force-recreate-lut", action="store_true", help="Force recreation of LUT"
+    )
 
     args = parser.parse_args()
 
@@ -494,9 +579,7 @@ def main():
         # Create/load LUT field
         print(f"\n=== Creating/Loading LUT Field ===")
         lut_field, lut_params = create_lut_field(
-            analytical_field,
-            args.resolution,
-            args.force_recreate_lut
+            analytical_field, args.resolution, args.force_recreate_lut
         )
 
         # Generate test points
@@ -505,10 +588,14 @@ def main():
         print(f"Generated {len(test_points)} test points")
 
         # Benchmark lookup times
-        timing_results = benchmark_lookup_times(analytical_field, lut_field, test_points, args.n_timing)
+        timing_results = benchmark_lookup_times(
+            analytical_field, lut_field, test_points, args.n_timing
+        )
 
         # Compare field values
-        comparison_results = compare_field_values(analytical_field, lut_field, test_points)
+        comparison_results = compare_field_values(
+            analytical_field, lut_field, test_points
+        )
 
         # Generate plots
         if not args.no_plots:
@@ -518,8 +605,12 @@ def main():
 
         print(f"\n=== Benchmark Complete ===")
         print(f"Results summary:")
-        print(f"  Valid comparisons: {len(comparison_results['points'])}/{args.n_points}")
-        print(f"  Mean relative error: {np.mean(comparison_results['relative_error']):.3f}%")
+        print(
+            f"  Valid comparisons: {len(comparison_results['points'])}/{args.n_points}"
+        )
+        print(
+            f"  Mean relative error: {np.mean(comparison_results['relative_error']):.3f}%"
+        )
         print(f"  Speedup: {timing_results['speedup']:.1f}x")
         if not args.no_plots:
             print(f"  Plots saved to: {args.output_dir}/")
@@ -529,9 +620,12 @@ def main():
     except Exception as e:
         print(f"ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
+
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())
