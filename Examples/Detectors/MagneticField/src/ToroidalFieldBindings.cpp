@@ -8,6 +8,7 @@
 
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/MagneticField/ToroidalField.hpp"
+#include "ActsExamples/MagneticField/ToroidalFieldMap.hpp"
 
 #include <memory>
 #include <sstream>
@@ -84,4 +85,13 @@ PYBIND11_MODULE(acts_toroidal_field, m) {
       .def("makeCache", &ToroidalField::makeCache)
       .def("config", &ToroidalField::config,
            py::return_value_policy::reference_internal);
+
+  // ToroidalFieldMap functions
+  m.def("toroidalFieldMapCyl", &Acts::toroidalFieldMapCyl,
+        py::arg("rLim"), py::arg("phiLim"), py::arg("zLim"), py::arg("nBins"), py::arg("field"),
+        "Create cylindrical toroidal field map");
+  
+  m.def("toroidalFieldMapXYZ", &Acts::toroidalFieldMapXYZ,
+        py::arg("xLim"), py::arg("yLim"), py::arg("zLim"), py::arg("nBins"), py::arg("field"),
+        "Create Cartesian toroidal field map");
 }
