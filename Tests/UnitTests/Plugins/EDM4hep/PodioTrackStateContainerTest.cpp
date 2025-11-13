@@ -18,8 +18,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "ActsPlugins/Podio/PodioTrackStateContainer.hpp"
-#include "ActsPlugins/Podio/PodioUtil.hpp"
+#include "ActsPlugins/EDM4hep/PodioTrackStateContainer.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
@@ -31,10 +31,9 @@
 namespace {
 
 using namespace Acts;
-using namespace Acts::UnitLiterals;
-using namespace Acts::detail::Test;
 using namespace ActsPlugins;
-
+using namespace UnitLiterals;
+using namespace detail::Test;
 namespace bd = boost::unit_test::data;
 
 std::default_random_engine rng(31415);
@@ -108,9 +107,7 @@ using CommonTests = MultiTrajectoryTestsCommon<Factory>;
 
 }  // namespace
 
-namespace ActsTests {
-
-BOOST_AUTO_TEST_SUITE(PodioSuite)
+BOOST_AUTO_TEST_SUITE(PodioTrackStateContainerTest)
 
 BOOST_AUTO_TEST_CASE(Build) {
   CommonTests ct;
@@ -308,7 +305,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   BOOST_CHECK(!t2.hasReferenceSurface());
   BOOST_CHECK(t3.hasReferenceSurface());
 
-  Acts::GeometryContext gctx;
+  GeometryContext gctx;
 
   const auto& ext = t1.referenceSurface();
   BOOST_CHECK_NE(&ext, free.get());
@@ -344,5 +341,3 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-}  // namespace ActsTests

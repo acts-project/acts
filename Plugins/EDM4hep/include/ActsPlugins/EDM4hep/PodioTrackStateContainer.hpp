@@ -16,9 +16,9 @@
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsPlugins/Podio/PodioDynamicColumns.hpp"
-#include "ActsPlugins/Podio/PodioTrackContainer.hpp"
-#include "ActsPlugins/Podio/PodioUtil.hpp"
+#include "ActsPlugins/EDM4hep/PodioDynamicColumns.hpp"
+#include "ActsPlugins/EDM4hep/PodioTrackContainer.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -41,6 +41,20 @@ namespace ActsPlugins {
 
 class MutablePodioTrackStateContainer;
 class ConstPodioTrackStateContainer;
+
+}  // namespace ActsPlugins
+
+namespace Acts {
+template <>
+struct IsReadOnlyMultiTrajectory<ActsPlugins::ConstPodioTrackStateContainer>
+    : std::true_type {};
+
+template <>
+struct IsReadOnlyMultiTrajectory<ActsPlugins::MutablePodioTrackStateContainer>
+    : std::false_type {};
+}  // namespace Acts
+
+namespace ActsPlugins {
 
 class PodioTrackStateContainerBase {
  public:
@@ -185,16 +199,6 @@ class PodioTrackStateContainerBase {
     }
   }
 };
-
-}  // namespace ActsPlugins
-
-namespace Acts {
-template <>
-struct IsReadOnlyMultiTrajectory<ActsPlugins::ConstPodioTrackStateContainer>
-    : std::true_type {};
-}  // namespace Acts
-
-namespace ActsPlugins {
 
 class ConstPodioTrackStateContainer final
     : public PodioTrackStateContainerBase,
@@ -361,18 +365,6 @@ static_assert(
     Acts::ConstMultiTrajectoryBackend<ConstPodioTrackStateContainer>,
     "ConstPodioTrackStateContainer does not fulfill TrackContainerBackend");
 
-}  // namespace ActsPlugins
-
-namespace Acts {
-
-template <>
-struct IsReadOnlyMultiTrajectory<ActsPlugins::MutablePodioTrackStateContainer>
-    : std::false_type {};
-
-}  // namespace Acts
-
-namespace ActsPlugins {
-
 class MutablePodioTrackStateContainer final
     : public PodioTrackStateContainerBase,
       public Acts::MultiTrajectory<MutablePodioTrackStateContainer> {
@@ -477,25 +469,27 @@ class MutablePodioTrackStateContainer final
     PodioUtil::getReferenceSurfaceMutable(trackState).surfaceType =
         PodioUtil::kNoSurface;
 
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Predicted)) {
+    using enum Acts::TrackStatePropMask;
+
+    if (ACTS_CHECK_BIT(mask, Predicted)) {
       m_params->create();
       data.ipredicted = m_params->size() - 1;
     }
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Filtered)) {
+    if (ACTS_CHECK_BIT(mask, Filtered)) {
       m_params->create();
       data.ifiltered = m_params->size() - 1;
     }
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Smoothed)) {
+    if (ACTS_CHECK_BIT(mask, Smoothed)) {
       m_params->create();
       data.ismoothed = m_params->size() - 1;
     }
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Jacobian)) {
+    if (ACTS_CHECK_BIT(mask, Jacobian)) {
       m_jacs->create();
       data.ijacobian = m_jacs->size() - 1;
     }
     data.measdim = kInvalid;
     data.hasProjector = false;
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Calibrated)) {
+    if (ACTS_CHECK_BIT(mask, Calibrated)) {
       data.hasProjector = true;
     }
     m_surfaces.emplace_back();
@@ -515,32 +509,29 @@ class MutablePodioTrackStateContainer final
                                     Acts::TrackStatePropMask mask) {
     auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
 
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Predicted) &&
-        data.ipredicted == kInvalid) {
+    using enum Acts::TrackStatePropMask;
+
+    if (ACTS_CHECK_BIT(mask, Predicted) && data.ipredicted == kInvalid) {
       m_params->create();
       data.ipredicted = m_params->size() - 1;
     }
 
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Filtered) &&
-        data.ifiltered == kInvalid) {
+    if (ACTS_CHECK_BIT(mask, Filtered) && data.ifiltered == kInvalid) {
       m_params->create();
       data.ifiltered = m_params->size() - 1;
     }
 
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Smoothed) &&
-        data.ismoothed == kInvalid) {
+    if (ACTS_CHECK_BIT(mask, Smoothed) && data.ismoothed == kInvalid) {
       m_params->create();
       data.ismoothed = m_params->size() - 1;
     }
 
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Jacobian) &&
-        data.ijacobian == kInvalid) {
+    if (ACTS_CHECK_BIT(mask, Jacobian) && data.ijacobian == kInvalid) {
       m_jacs->create();
       data.ijacobian = m_jacs->size() - 1;
     }
 
-    if (ACTS_CHECK_BIT(mask, Acts::TrackStatePropMask::Calibrated) &&
-        !data.hasProjector) {
+    if (ACTS_CHECK_BIT(mask, Calibrated) && !data.hasProjector) {
       data.hasProjector = true;
     }
   }
@@ -554,20 +545,20 @@ class MutablePodioTrackStateContainer final
     assert(ACTS_CHECK_BIT(getTrackState(iother).getMask(), shareSource) &&
            "Source has incompatible allocation");
 
-    using PM = Acts::TrackStatePropMask;
+    using enum Acts::TrackStatePropMask;
 
     IndexType sourceIndex{kInvalid};
     switch (shareSource) {
-      case PM::Predicted:
+      case Predicted:
         sourceIndex = other.ipredicted;
         break;
-      case PM::Filtered:
+      case Filtered:
         sourceIndex = other.ifiltered;
         break;
-      case PM::Smoothed:
+      case Smoothed:
         sourceIndex = other.ismoothed;
         break;
-      case PM::Jacobian:
+      case Jacobian:
         sourceIndex = other.ijacobian;
         break;
       default:
@@ -577,20 +568,20 @@ class MutablePodioTrackStateContainer final
     assert(sourceIndex != kInvalid);
 
     switch (shareTarget) {
-      case PM::Predicted:
-        assert(shareSource != PM::Jacobian);
+      case Predicted:
+        assert(shareSource != Jacobian);
         self.ipredicted = sourceIndex;
         break;
-      case PM::Filtered:
-        assert(shareSource != PM::Jacobian);
+      case Filtered:
+        assert(shareSource != Jacobian);
         self.ifiltered = sourceIndex;
         break;
-      case PM::Smoothed:
-        assert(shareSource != PM::Jacobian);
+      case Smoothed:
+        assert(shareSource != Jacobian);
         self.ismoothed = sourceIndex;
         break;
-      case PM::Jacobian:
-        assert(shareSource == PM::Jacobian);
+      case Jacobian:
+        assert(shareSource == Jacobian);
         self.ijacobian = sourceIndex;
         break;
       default:
@@ -601,20 +592,23 @@ class MutablePodioTrackStateContainer final
   void unset_impl(Acts::TrackStatePropMask target,
                   Acts::TrackIndexType istate) {
     auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
+
     switch (target) {
-      case Acts::TrackStatePropMask::Predicted:
+      using enum Acts::TrackStatePropMask;
+
+      case Predicted:
         data.ipredicted = kInvalid;
         break;
-      case Acts::TrackStatePropMask::Filtered:
+      case Filtered:
         data.ifiltered = kInvalid;
         break;
-      case Acts::TrackStatePropMask::Smoothed:
+      case Smoothed:
         data.ismoothed = kInvalid;
         break;
-      case Acts::TrackStatePropMask::Jacobian:
+      case Jacobian:
         data.ijacobian = kInvalid;
         break;
-      case Acts::TrackStatePropMask::Calibrated:
+      case Calibrated:
         data.measdim = kInvalid;
         break;
       default:
