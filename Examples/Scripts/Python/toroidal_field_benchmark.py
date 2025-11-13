@@ -18,12 +18,17 @@ def create_toroidal_field():
 
 
 def benchmark_single_evaluations(field, num_evaluations=10000):
-    """Benchmark single magnetic field evaluations at random points"""
+    """
+    Benchmark single magnetic field evaluations at random points.
+    
+    This function tests the performance of individual field evaluations across
+    a representative sample of detector geometry positions. It measures the time
+    required for single getField() calls and provides statistics on evaluation
+    speed.
+    """
     print(f"\n=== Single Field Evaluation Benchmark ===")
     print(f"Number of evaluations: {num_evaluations}")
     
-    # Generate random test points
-    # Sample points in a reasonable detector volume
     np.random.seed(42)  # For reproducible results
     
     # Generate points in cylindrical coordinates, then convert
