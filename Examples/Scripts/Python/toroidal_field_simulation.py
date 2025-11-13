@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2025 ACTS-Project
+# This file is part of ACTS.
+# See LICENSE for details.
+
 import os
 import acts
 import acts.acts_toroidal_field as toroidal_field

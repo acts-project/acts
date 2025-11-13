@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2025 ACTS-Project
+# This file is part of ACTS.
+# See LICENSE for details.
+
 """
 Simple test script for ToroidalField Python bindings
 Tests the magnetic field functionality without complex dependencies
