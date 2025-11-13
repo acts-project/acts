@@ -27,6 +27,7 @@ def runTruthTrackingGsf(
         PhiConfig,
         MomentumConfig,
         addFatras,
+        addGeant4,
         addDigitization,
         ParticleSelectorConfig,
         addDigiParticleSelection,
