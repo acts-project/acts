@@ -104,7 +104,7 @@ addSeeding(
     ConnectorInputConfigFile=geo_dir / "itk-hgtd/GbtsBinTable.txt",
     outputDirRoot=outputDir,
 )
-"""
+
 addCKFTracks(
     s,
     trackingGeometry,
@@ -116,6 +116,6 @@ addCKFTracks(
     ),
     outputDirRoot=outputDir,
 )
-"""
+
 
 s.run()
