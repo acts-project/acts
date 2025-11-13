@@ -63,7 +63,7 @@ namespace Acts::Experimental {
         }
     }
     else {
-        float nB = static_cast<int>(deltaEta/m_etaBinWidth);
+        int nB = static_cast<int>(deltaEta/m_etaBinWidth);
         m_nBins = nB;
         if(deltaEta - m_etaBinWidth*nB > 0.5*m_etaBinWidth) m_nBins++;
 
