@@ -3,7 +3,7 @@ import argparse
 from pathlib import Path
 
 import acts
-from acts.examples.odd import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 PhysmonSetup = collections.namedtuple(
     "Setup",
@@ -22,6 +22,7 @@ PhysmonSetup = collections.namedtuple(
 def makeSetup() -> PhysmonSetup:
     u = acts.UnitConstants
     srcdir = Path(__file__).resolve().parent.parent.parent
+    odd_dir = getOpenDataDetectorDirectory()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("outdir")
@@ -29,8 +30,7 @@ def makeSetup() -> PhysmonSetup:
     args = parser.parse_args()
 
     matDeco = acts.IMaterialDecorator.fromFile(
-        srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
-        level=acts.logging.INFO,
+        odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
     )
 
     detector = getOpenDataDetector(matDeco)

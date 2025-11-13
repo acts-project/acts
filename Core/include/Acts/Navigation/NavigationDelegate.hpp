@@ -28,11 +28,6 @@ struct NavigationArguments {
 
   /// Boundary tolerance for surface intersection calculations
   BoundaryTolerance tolerance = BoundaryTolerance::None();
-
-  /// Flag indicating whether portal intersections are desired
-  bool wantsPortals = true;
-  /// Flag indicating whether surface intersections are desired
-  bool wantsSurfaces = true;
 };
 
 /// Central alias for the navigation delegate. This type is owning to support

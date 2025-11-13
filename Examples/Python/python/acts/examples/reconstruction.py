@@ -1455,7 +1455,7 @@ def addSeedPerformanceWriters(
         outputDirRoot.mkdir()
 
     sequence.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
+        acts.examples.RootTrackFinderPerformanceWriter(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=selectedParticles,
@@ -1972,17 +1972,19 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            trackFitterPerformanceWriter = acts.examples.TrackFitterPerformanceWriter(
-                level=customLogLevel(),
-                inputTracks=tracks,
-                inputParticles="particles_selected",
-                inputTrackParticleMatching="track_particle_matching",
-                filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
+            RootTrackFitterPerformanceWriter = (
+                acts.examples.RootTrackFitterPerformanceWriter(
+                    level=customLogLevel(),
+                    inputTracks=tracks,
+                    inputParticles="particles_selected",
+                    inputTrackParticleMatching="track_particle_matching",
+                    filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
+                )
             )
-            s.addWriter(trackFitterPerformanceWriter)
+            s.addWriter(RootTrackFitterPerformanceWriter)
 
         if writeFinderPerformance:
-            trackFinderPerfWriter = acts.examples.TrackFinderPerformanceWriter(
+            trackFinderPerfWriter = acts.examples.RootTrackFinderPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
@@ -2156,7 +2158,7 @@ def addGnn(
 
     if outputDirRoot is not None:
         s.addWriter(
-            acts.examples.TrackFinderNTupleWriter(
+            acts.examples.RootTrackFinderNTupleWriter(
                 level=customLogLevel(),
                 inputTracks="tracks",
                 inputParticles="particles",
@@ -2445,7 +2447,7 @@ def addVertexFitting(
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
-        VertexNTupleWriter,
+        RootVertexNTupleWriter,
         CsvVertexWriter,
     )
 
@@ -2542,7 +2544,7 @@ def addVertexFitting(
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
         s.addWriter(
-            VertexNTupleWriter(
+            RootVertexNTupleWriter(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
                 inputTracks=tracks,
@@ -2569,7 +2571,7 @@ def addHoughVertexFinding(
 ) -> None:
     from acts.examples import (
         HoughVertexFinderAlgorithm,
-        VertexNTupleWriter,
+        RootVertexNTupleWriter,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2591,7 +2593,7 @@ def addHoughVertexFinding(
             outputDirRoot.mkdir()
 
         s.addWriter(
-            VertexNTupleWriter(
+            RootVertexNTupleWriter(
                 level=customLogLevel(),
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,

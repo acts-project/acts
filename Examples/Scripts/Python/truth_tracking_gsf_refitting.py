@@ -88,7 +88,7 @@ def runRefittingGsf(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        acts.examples.RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",

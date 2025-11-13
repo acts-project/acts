@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <iosfwd>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace Acts {
@@ -130,5 +131,14 @@ enum class HadronType {
 };
 
 std::ostream& operator<<(std::ostream& os, HadronType hadron);
+
+/// Parse a PdgParticle from a particle name string.
+/// Supports common particle names like "e-", "e+", "mu-", "mu+", "tau-",
+/// "tau+", "gamma", "pi0", "pi+", "pi-", "K+", "K-", "n", "n~", "p", "p~",
+/// "Pb".
+/// @param name The particle name string
+/// @return The corresponding PdgParticle enum value
+/// @throws std::invalid_argument if the name is not recognized
+PdgParticle parsePdgParticle(const std::string& name);
 
 }  // namespace Acts
