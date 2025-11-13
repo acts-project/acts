@@ -46,6 +46,7 @@ Usage Examples:
 import argparse
 import hashlib
 import os
+import pickle
 import time
 from pathlib import Path
 
@@ -103,22 +104,48 @@ def create_lut_field(
         print(f"Reusing LUT from session cache ({resolution} resolution)")
         return _lut_cache[config_hash]["lut"], _lut_cache[config_hash]["params"]
 
-    # Check if cached info exists on disk
+    # Set up disk cache files
     os.makedirs(lut_dir, exist_ok=True)
     cache_info_file = os.path.join(lut_dir, f"lut_info_{config_hash}.txt")
+    cache_data_file = os.path.join(lut_dir, f"lut_data_{config_hash}.pkl")
 
-    if not force_recreate and os.path.exists(cache_info_file):
+    # Check if LUT data exists on disk
+    if not force_recreate and os.path.exists(cache_data_file) and os.path.exists(cache_info_file):
         try:
-            with open(cache_info_file, "r") as f:
-                cached_info = f.read().strip()
-            print(f"Found existing LUT cache info: {cached_info}")
-            print(
-                f"Creating LUT with existing {resolution} resolution (parameters verified)"
-            )
-        except:
-            print(f"Failed to read cache info, creating fresh LUT")
-    else:
-        print(f"Creating LUT with {resolution} resolution:")
+            print(f"Loading existing LUT parameters from disk cache ({resolution} resolution)...")
+            with open(cache_data_file, "rb") as f:
+                cached_lut_data = pickle.load(f)
+            
+            # Verify parameters match
+            if cached_lut_data["params"] == params:
+                print(f"✓ Parameters match, recreating LUT from disk cache...")
+                start_time = time.time()
+                
+                # Recreate LUT with same parameters (much faster than generating new grid)
+                lut_field = toroidal_field.toroidalFieldMapCyl(
+                    params["rLim"],
+                    params["phiLim"],
+                    params["zLim"],
+                    params["nBins"],
+                    analytical_field,
+                )
+                recreation_time = time.time() - start_time
+                
+                with open(cache_info_file, "r") as f:
+                    cached_info = f.read().strip()
+                print(f"✓ LUT recreated in {recreation_time:.2f}s from cached parameters: {cached_info}")
+                
+                # Store in session cache for faster subsequent access
+                _lut_cache[config_hash] = {"lut": lut_field, "params": params}
+                return lut_field, params
+            else:
+                print(f"Parameters changed, creating fresh LUT")
+            
+        except Exception as e:
+            print(f"Failed to load cached LUT ({e}), creating fresh LUT")
+
+    # Create new LUT if no cache or loading failed
+    print(f"Creating new LUT with {resolution} resolution:")
 
     print(
         f"  r: {params['rLim'][0]:.2f} to {params['rLim'][1]:.2f} m, {params['nBins'][0]} bins"
@@ -147,17 +174,35 @@ def create_lut_field(
     # Cache in session
     _lut_cache[config_hash] = {"lut": lut_field, "params": params}
 
-    # Save cache info to disk for next run
+    # Save LUT data and info to disk for future sessions
     try:
+        lut_data_to_save = {
+            "resolution": resolution,
+            "params": params,
+            "creation_time": creation_time,
+            "created": time.strftime('%Y-%m-%d %H:%M:%S'),
+            "total_bins": int(np.prod(params['nBins'])),
+        }
+        
+        with open(cache_data_file, "wb") as f:
+            pickle.dump(lut_data_to_save, f)
+        
+        # Save human-readable cache info
         with open(cache_info_file, "w") as f:
             f.write(
-                f"Resolution: {resolution}, Bins: {params['nBins']}, Created: {time.strftime('%Y-%m-%d %H:%M:%S')}"
+                f"Resolution: {resolution}, Bins: {params['nBins']}, Created: {time.strftime('%Y-%m-%d %H:%M:%S')}, Size: {np.prod(params['nBins']):,} bins"
             )
-        print(
-            f"  Cache info saved - subsequent runs with same resolution will be faster"
-        )
-    except:
-        print(f"  Note: Could not save cache info")
+        
+        # Calculate approximate disk usage
+        total_bins = np.prod(params['nBins'])
+        estimated_size_mb = total_bins * 24 / (1024 * 1024)  # 3 vectors × 8 bytes each
+        
+        print(f"  ✓ LUT saved to disk (~{estimated_size_mb:.1f} MB estimated)")
+        print(f"  ✓ Future sessions will load this LUT instantly")
+        
+    except Exception as e:
+        print(f"  Warning: Could not save LUT to disk ({e})")
+        print(f"  LUT will be recreated in future sessions")
 
     return lut_field, params
 
