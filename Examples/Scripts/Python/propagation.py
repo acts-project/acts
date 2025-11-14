@@ -12,6 +12,8 @@ from acts.examples.simulation import (
     MomentumConfig,
 )
 
+from acts.examples.root import RootPropagationSummaryWriter, RootPropagationStepsWriter
+
 u = acts.UnitConstants
 
 
@@ -58,7 +60,7 @@ def runPropagation(
     s.addAlgorithm(propagationAlgorithm)
 
     s.addWriter(
-        acts.examples.RootPropagationSummaryWriter(
+        RootPropagationSummaryWriter(
             level=acts.logging.INFO,
             inputSummaryCollection="propagation_summary",
             filePath=outputDir + "/propagation_summary.root",
@@ -67,7 +69,7 @@ def runPropagation(
 
     if sterileLogger is False:
         s.addWriter(
-            acts.examples.RootPropagationStepsWriter(
+            RootPropagationStepsWriter(
                 level=acts.logging.INFO,
                 collection="propagation_summary",
                 filePath=outputDir + "/propagation_steps.root",

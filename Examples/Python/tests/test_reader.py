@@ -9,10 +9,6 @@ from helpers import (
 import acts
 from acts import UnitConstants as u
 from acts.examples import (
-    RootParticleWriter,
-    RootParticleReader,
-    RootMaterialTrackReader,
-    RootTrackSummaryReader,
     CsvParticleWriter,
     CsvParticleReader,
     CsvMeasurementWriter,
@@ -21,6 +17,13 @@ from acts.examples import (
     CsvSimHitReader,
     Sequencer,
 )
+from acts.examples.root import (
+    RootParticleWriter,
+    RootParticleReader,
+    RootMaterialTrackReader,
+    RootTrackSummaryReader,
+)
+
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
@@ -286,7 +289,7 @@ def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
     # reset sequencer for reading
     s2 = Sequencer(events=eventsToProcess, numThreads=1, logLevel=acts.logging.WARNING)
 
-    reader = acts.examples.RootParticleReader(
+    reader = RootParticleReader(
         level=acts.logging.WARNING,
         outputParticles="particles_input",
         filePath=str(file),

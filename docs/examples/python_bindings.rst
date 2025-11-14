@@ -60,7 +60,7 @@ sets up the particle propagation and runs a few events.
    )
 
    s.addWriter(
-       acts.examples.RootPropagationStepsWriter(
+       acts.examples.root.RootPropagationStepsWriter(
            level=acts.logging.INFO,
            collection="propagation_summary",
            filePath=outputDir + "/propagation_steps.root",

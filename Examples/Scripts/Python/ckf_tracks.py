@@ -5,7 +5,8 @@ from typing import Optional
 
 import acts
 from acts import UnitConstants as u
-from acts.examples import GenericDetector, RootParticleReader
+from acts.examples import GenericDetector
+from acts.examples.root import RootParticleReader
 
 
 def runCKFTracks(
