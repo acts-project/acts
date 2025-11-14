@@ -111,71 +111,6 @@ source /cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>/setup.sh
 
 After sourcing the setup script, you can build ACTS as described above.
 
-### In a container
-
-A set of container images is available through the [ACTS container
-registry][acts_containers]. These images are built using the configuration that is used in CI,
-and they contain all the dependencies required to build ACTS.
-
-.. note::
-   Most containers are only build for the `x86_64` platform. If you are on an
-   `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2404`
-   container, which is built for `aarch64` and `x86_64`!
-
-Furthermore, we are also testing on, but do not provide the corresponding containers:
-
-- `alma9` (HEP-specific software from LCG 106 or 107 and various clang versions)
-- `macOS-10.15`
-
-:::{attention}
-We stopped producing fully-contained LCG containers in favor of running LCG
-based tests directly from CVMFS.
-:::
-
-To use these locally, you first need to pull the relevant images from the
-registry. Stable versions are tagged as `vX` where `X` is the version number.
-The latest, potentially unstable, version is tagged as `latest`. To list all
-available tags, e.g. for the `ubuntu2004` image, you can use the following
-command:
-
-```console
-docker search --list-tags ghcr.io/acts-project/ubuntu2404
-```
-
-The following command then downloads a stable tag of the `ubuntu2404` image:
-
-```console
-docker pull ghcr.io/acts-project/ubuntu2404:51
-```
-
-This should print the image id as part of the output. You can also find out the
-image id by running `docker images` to list all your locally available container
-images.
-
-Now, you need to start a shell within the container to run the build. Assuming
-that `<source>` is the path to your source checkout on your host machine, the
-following command will make the source directory available as `/acts` in the
-container and start an interactive `bash` shell
-
-```console
-docker run --volume=<source>:/acts:ro --interactive --tty <image> /bin/bash
-```
-
-where `<image>` is the image id that was previously mentioned. If you are using the Ubuntu-based image you are already good to go. For the images based on LCG releases, you can now activate the LCG release in the container shell by sourcing a setup script:
-
-```console
-container $ source /opt/lcg_view/setup.sh
-```
-
-Building ACTS follows the instructions above with `/acts` as the source directory, e.g.
-
-```console
-container $ cmake -B build -S /acts -DACTS_BUILD_FATRAS=on
-container $ cmake --build build
-```
-
-[acts_containers]: https://github.com/acts-project/ci-dependencies/pkgs/container/spack-container
-
 ### On your local machine
 
 Building and running ACTS on your local machine is not officially supported.
@@ -273,7 +208,6 @@ components.
 | ACTS_USE_SYSTEM_EIGEN3              | Use a system-provided eigen3<br> type: `bool`, default: `ON`                                                                                                                                                                       |
 | ACTS_BUILD_PLUGIN_ACTSVG            | Build SVG display plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                          |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
-| ACTS_BUILD_PLUGIN_PODIO             | Build Podio plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                |
 | ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_PLUGIN_FASTJET           | Build FastJet plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
@@ -363,20 +297,17 @@ The following environment variables might be useful.
 ## The OpenDataDetector
 
 ACTS comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map.
-It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.com/) need to be installed on your machine):
+When configuring with `ACTS_BUILD_ODD=ON`, the detector is fetched automatically via CMake's `ExternalProject_Add`. This step requires network access during the first build to clone the upstream repository.
 
-```console
-git submodule init
-git submodule update
-```
-
-To use it, you will then need to build ACTS with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or
-`DYLD_LIBRARY_PATH` and `DD4HEP_LIBRARY_PATH` on MacOs to the install path of the ODD factory (for example: `build/thirdparty/OpenDataDetector/factory`).
+To use it, build ACTS with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or
+`DYLD_LIBRARY_PATH` and `DD4HEP_LIBRARY_PATH` on macOS to the install path of the ODD factory (for example: `$ODD_BUILD_DIR/factory`). The setup scripts generated by the build do this automatically when present.
 
 You can now use the ODD in the python binding by using:
 
 ```python
-oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_ACTS/thirdparty/OpenDataDetector/data/odd-material-maps.root")
+from acts.examples.odd import getOpenDataDetectorDirectory
+odd_dir = getOpenDataDetectorDirectory()
+oddMaterialDeco = acts.IMaterialDecorator.fromFile(odd_dir / "data/odd-material-maps.root")
 detector = getOpenDataDetector(oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()

@@ -14,7 +14,6 @@
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
-#include "ActsPlugins/Root/RootMaterialDecorator.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -26,7 +25,6 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 using namespace ActsExamples;
-using namespace ActsPlugins;
 
 namespace ActsPython {
 
@@ -72,20 +70,6 @@ void addRootInput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(RootSimHitReader, mex, "RootSimHitReader",
                              treeName, filePath, outputSimHits);
-
-  {
-    auto rmd =
-        py::class_<RootMaterialDecorator, IMaterialDecorator,
-                   std::shared_ptr<RootMaterialDecorator>>(
-            mex, "RootMaterialDecorator")
-            .def(py::init<RootMaterialDecorator::Config, Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
-
-    using Config = RootMaterialDecorator::Config;
-    auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, accessorConfig, accessorOptions, fileName);
-  }
 }
 
 }  // namespace ActsPython

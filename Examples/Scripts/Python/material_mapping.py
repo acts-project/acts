@@ -10,8 +10,10 @@ from acts import (
     Navigator,
     Propagator,
     StraightLineStepper,
-    MaterialMapJsonConverter,
 )
+
+from acts.json import MaterialMapJsonConverter
+
 from acts.examples import (
     Sequencer,
     WhiteBoard,

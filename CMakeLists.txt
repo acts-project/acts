@@ -78,7 +78,6 @@ option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
-option(ACTS_BUILD_PLUGIN_PODIO "Build Podio plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FASTJET "Build FastJet plugin" OFF)
@@ -169,7 +168,6 @@ set_option_if(
 )
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
-set_option_if(ACTS_BUILD_PLUGIN_PODIO ACTS_BUILD_EXAMPLES_PODIO)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
 set_option_if(
     ACTS_BUILD_PLUGIN_ROOT
@@ -181,7 +179,7 @@ set_option_if(
     ACTS_BUILD_PLUGIN_IDENTIFICATION
     ACTS_BUILD_PLUGIN_ROOT
     OR
-    ACTS_BUILD_PLUGIN_PODIO
+    ACTS_BUILD_PLUGIN_EDM4HEP
     OR
     ACTS_BUILD_EXAMPLES
 )
@@ -443,7 +441,8 @@ endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)
 endif()
-if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
+if(ACTS_BUILD_PLUGIN_EDM4HEP)
+    find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
     find_package(podio ${_acts_podio_version} CONFIG)
     if(NOT podio_FOUND)
         message(
@@ -453,9 +452,6 @@ if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
         find_package(podio ${_acts_podio_fallback_version} CONFIG REQUIRED)
     endif()
     find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core)
-endif()
-if(ACTS_BUILD_PLUGIN_EDM4HEP)
-    find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
@@ -583,20 +579,7 @@ add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 add_subdirectory(Plugins)
 add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
-if(ACTS_BUILD_ODD)
-    if(
-        EXISTS
-            "${CMAKE_CURRENT_LIST_DIR}/thirdparty/OpenDataDetector/CMakeLists.txt"
-    )
-        add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
-    else()
-        message(
-            FATAL_ERROR
-            "ODD build was requested, but the ODD directory seems not to be present. "
-            "Did you init and update the submodule?"
-        )
-    endif()
-endif()
+add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 
 # Python bindings infrastructure
 add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
