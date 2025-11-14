@@ -95,9 +95,8 @@ class FitTestSpacePoint {
         m_toNextSen{toNext},
         m_time{time},
         m_covariance{cov} {
-    using enum ResidualIdx;
-    m_measLoc0 = m_covariance[toUnderlying(nonBending)] > 0.;
-    m_measLoc1 = m_covariance[toUnderlying(bending)] > 0.;
+    m_measLoc0 = m_covariance[toUnderlying(ResidualIdx::nonBending)] > 0.;
+    m_measLoc1 = m_covariance[toUnderlying(ResidualIdx::bending)] > 0.;
   }
 
   /// @brief Position of the space point
