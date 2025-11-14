@@ -79,7 +79,7 @@ def runGnnModuleMap(
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
         EtaConfig(-3.0, 3.0, uniform=True),
         PhiConfig(0.0, 360.0 * u.degree),
-        ParticleConfig(10, acts.PdgParticle.ePion, randomizeCharge=True),
+        ParticleConfig(10, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
             stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns),
