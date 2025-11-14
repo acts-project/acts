@@ -124,8 +124,8 @@ class FastStrawLineFitter {
   std::optional<FitResult> fit(const StrawCont_t& measurements,
                                const std::vector<int>& signs) const;
   /// @brief Fit a straight line to a set of strip measurements and return the associated
-  ///        angle & intercept. As strips are assumed to measure bending & non-bending coordinates
-  ///        the fitting plane needs to be specified
+  ///        angle & intercept. As strips are assumed to measure bending &
+  ///        non-bending coordinates the fitting plane needs to be specified
   /// @param measurements: List of measurements that are supposed to be fitted
   /// @param projection: Specificitation of the plane (nonBending / bending)
   template <CompositeSpacePointContainer StripCont_t>
@@ -304,7 +304,7 @@ class FastStrawLineFitter {
   void completeResult(const FitAuxiliaries& fitPars, const double thetaTwoPrime,
                       FitResult& result) const;
   /// @brief Enumeration to describe the outcome of the fit iteration
-  enum class UpdateStatus: std::uint8_t {
+  enum class UpdateStatus : std::uint8_t {
     Converged,  ///< The fit converged
     Exceeded,   ////< Maximum number of iterations exceeded
     GoodStep,   ///< The fit did not converge yet

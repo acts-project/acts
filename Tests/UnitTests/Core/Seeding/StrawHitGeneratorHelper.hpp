@@ -37,21 +37,21 @@ namespace Acts::Test {
 
 class FitTestSpacePoint {
  public:
-  /// @brief Constructor for straw wires
+  /// @brief Constructor for standard straw wires
   /// @param pos: Position of the wire
   /// @param driftR: Straw drift radius
   /// @param driftRUncert: Uncertainty on the drift radius uncertainty
   /// @param twinUncert: Uncertainty on the measurement along the straw
   FitTestSpacePoint(const Vector3& pos, const double driftR,
                     const double driftRUncert,
-                    const std::optional<double> twnUncert = std::nullopt)
+                    const std::optional<double> twinUncert = std::nullopt)
       : m_position{pos},
         m_driftR{driftR},
-        m_measLoc0{twnUncert != std::nullopt} {
+        m_measLoc0{twinUncert != std::nullopt} {
     using enum ResidualIdx;
     m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
     m_covariance[toUnderlying(nonBending)] =
-        Acts::square(twnUncert.value_or(0.));
+        Acts::square(twinUncert.value_or(0.));
   }
 
   /// @brief Constructor for strip measurements
