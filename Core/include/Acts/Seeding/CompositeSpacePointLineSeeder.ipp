@@ -49,21 +49,22 @@ CompositeSpacePointLineSeeder::constructTangentLine(
     const SpacePoint_t& topHit, const SpacePoint_t& bottomHit,
     const TangentAmbi ambi) {
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
+  using namespace Acts::UnitLiterals;
+  using namespace Acts::detail;
   TwoCircleTangentPars result{};
   const auto& [signTop, signBot] = s_signCombo[toUnderlying(ambi)];
 
   const Vector& bottomPos{bottomHit.localPosition()};
   const Vector& topPos{topHit.localPosition()};
+  const Vector& eX{bottomHit.sensorDirection()};
   const Vector& eY{bottomHit.toNextSensor()};
   const Vector& eZ{bottomHit.planeNormal()};
 
   const Vector D = topPos - bottomPos;
 
   assert(Acts::abs(eY.dot(eZ)) < std::numeric_limits<double>::epsilon());
-  assert(Acts::abs(bottomHit.sensorDirection().dot(eY)) <
-         std::numeric_limits<double>::epsilon());
-  assert(Acts::abs(bottomHit.sensorDirection().dot(eZ)) <
-         std::numeric_limits<double>::epsilon());
+  assert(Acts::abs(eX.dot(eY)) < std::numeric_limits<double>::epsilon());
+  assert(Acts::abs(eX.dot(eZ)) < std::numeric_limits<double>::epsilon());
 
   assert(topHit.isStraw() && bottomHit.isStraw());
   const double dY = D.dot(eY);
@@ -78,8 +79,22 @@ CompositeSpacePointLineSeeder::constructTangentLine(
   const double R =
       -signBot * bottomHit.driftRadius() + signTop * topHit.driftRadius();
   result.theta = thetaTubes - std::asin(std::clamp(R / distTubes, -1., 1.));
+
   const double cosTheta = std::cos(result.theta);
   const double sinTheta = std::sin(result.theta);
+
+  Vector flipedDir = (sinTheta * eY + cosTheta * eZ) * sign(sinTheta);
+  std::cout << "DIE CASSY " << Acts::toString(flipedDir) << " "
+            << " " << Acts::toString(Vector{0., cosTheta, sinTheta})
+            << (VectorHelpers::theta(flipedDir) / 1._degree) << ", "
+            << (result.theta / 1._degree)
+
+            << " Wer raucht den meisten pfeffer kuchen: " << Acts::toString(eX)
+            << "/" << Acts::toString(eY) << "/" << Acts::toString(eZ)
+            << " haeh?" << std::endl;
+
+  result.theta = VectorHelpers::theta(flipedDir);
+
   result.y0 = bottomPos.dot(eY) * cosTheta - bottomPos.dot(eZ) * sinTheta -
               signBot * bottomHit.driftRadius();
   assert(Acts::abs(topPos.dot(eY) * cosTheta - topPos.dot(eZ) * sinTheta -

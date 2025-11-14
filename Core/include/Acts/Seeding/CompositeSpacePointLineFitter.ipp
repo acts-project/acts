@@ -569,7 +569,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << ": Current parameters " << toString(miniPars)
                         << " with chi2: " << cache.chi2 << ",  gradient: "
                         << toString(cache.gradient) << ", hessian: \n"
-                        << cache.hessian);
+                        << toString(cache.hessian));
 
   // Take out the filled block from the gradient
   Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
@@ -587,7 +587,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << ": Projected parameters: " << toString(miniPars)
                         << " gradient: " << toString(miniGradient)
                         << ", hessian: \n"
-                        << miniHessian
+                        << toString(miniHessian)
                         << ", determinant: " << miniHessian.determinant());
 
   auto inverseH = safeInverse(miniHessian);
@@ -602,7 +602,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     }
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Inverted Hessian \n"
-                          << (*inverseH) << "\n-> Update parameters by "
+                          << toString(*inverseH) << "\n-> Update parameters by "
                           << toString(update));
     miniPars -= update;
 
@@ -654,7 +654,7 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
 
   ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                       << ": Evaluated covariance: \n"
-                      << covariance);
+                      << toString(covariance));
 }
 
 }  // namespace Acts::Experimental
