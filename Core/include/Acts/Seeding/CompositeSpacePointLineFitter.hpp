@@ -84,7 +84,10 @@ class CompositeSpacePointLineFitter {
     std::size_t nParsOutOfBounds{1};
     /// @brief Allowed parameter ranges
     using RangeArray = std::array<std::array<double, 2>, s_nPars>;
-    RangeArray ranges{};
+    RangeArray ranges{filledArray<std::array<double, 2>, s_nPars>(
+        filledArray<double, 2>(0.))};
+    /// @brief Overwrite the set of parameters to use, if it's absolutely necessary
+    std::vector<FitParIndex> parsToUse{};
   };
   /// @brief Auxiliary object to store the fitted parameters, covariance,
   ///        the chi2 / nDoF & the number of required iterations
