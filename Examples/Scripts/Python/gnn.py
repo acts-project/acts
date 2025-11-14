@@ -84,7 +84,7 @@ def runGnnMetricLearning(
     if gnnModelPath.suffix == ".pt":
         edgeClassifiers.append(
             acts.examples.TorchEdgeClassifier(
-                **filterConfig,
+                **gnnConfig,
                 undirected=True,
                 selectedFeatures=[0, 1, 2],
             )
