@@ -14,7 +14,7 @@ setup = makeSetup()
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
         events=10000,
-        numThreads=-1,
+        numThreads=1,
         logLevel=acts.logging.INFO,
     )
 
@@ -24,6 +24,8 @@ with tempfile.TemporaryDirectory() as temp:
         field=setup.field,
         digiConfigFile=setup.digiConfig,
         outputDir=tp,
+        doGeant4=True,
+        detector=setup.detector,
         s=s,
     )
 

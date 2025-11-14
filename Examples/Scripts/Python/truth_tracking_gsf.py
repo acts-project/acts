@@ -16,6 +16,8 @@ def runTruthTrackingGsf(
     outputDir: Path,
     inputParticlePath: Optional[Path] = None,
     decorators=[],
+    doGeant4=False,
+    detector=None,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
@@ -25,6 +27,7 @@ def runTruthTrackingGsf(
         PhiConfig,
         MomentumConfig,
         addFatras,
+        addGeant4,
         addDigitization,
         ParticleSelectorConfig,
         addDigiParticleSelection,
@@ -73,13 +76,27 @@ def runTruthTrackingGsf(
             )
         )
 
-    addFatras(
-        s,
-        trackingGeometry,
-        field,
-        rnd=rnd,
-        enableInteractions=True,
-    )
+    if doGeant4:
+        assert detector is not None
+        addGeant4(
+            s,
+            detector,
+            trackingGeometry,
+            field,
+            rnd,
+            killVolume=trackingGeometry.highestTrackingVolume,
+            killAfterTime=25 * u.ns,
+            killSecondaries=True,
+            outputDirRoot=None,
+        )
+    else:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            rnd=rnd,
+            enableInteractions=True,
+        )
 
     addDigitization(
         s,
@@ -212,4 +229,5 @@ if "__main__" == __name__:
         field=field,
         digiConfigFile=digiConfigFile,
         outputDir=Path.cwd(),
+        detector=detector,
     ).run()
