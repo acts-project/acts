@@ -17,7 +17,11 @@ from acts import UnitConstants as u
 from acts.examples import Sequencer
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
-    addPythia8,
+    addParticleGun,
+    EtaConfig,
+    PhiConfig,
+    MomentumConfig,
+    ParticleConfig,
     addFatras,
     addDigitization,
     addGenParticleSelection,
@@ -69,18 +73,19 @@ def runGnnModuleMap(
 
     # Random number generator
     rnd = acts.examples.RandomNumbers(seed=42)
-
-    # Pythia8: ttbar events with pile-up 200 (matching full_chain_odd.py)
-    addPythia8(
+   
+    addParticleGun(
         s,
-        hardProcess=["Top:qqbar2ttbar=on"],
-        npileup=200,
+        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+        EtaConfig(-3.0, 3.0, uniform=True),
+        PhiConfig(0.0, 360.0 * u.degree),
+        ParticleConfig(10, acts.PdgParticle.ePion, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns),
         ),
+        multiplicity=50,
         rnd=rnd,
-        logLevel=acts.logging.INFO,
     )
 
     addGenParticleSelection(
