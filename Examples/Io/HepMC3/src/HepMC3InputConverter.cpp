@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
 
 #include "Acts/Utilities/ScopedTimer.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
@@ -52,14 +53,6 @@ ProcessCode HepMC3InputConverter::execute(const AlgorithmContext& ctx) const {
 }
 
 namespace {
-
-constexpr int kBeamParticleStatus = 4;
-constexpr int kUndecayedParticleStatus = 1;
-
-Acts::Vector4 convertPosition(const HepMC3::FourVector& vec) {
-  return Acts::Vector4(vec.x() * 1_mm, vec.y() * 1_mm, vec.z() * 1_mm,
-                       vec.t() * 1_mm);
-}
 
 std::string printListing(const auto& vertices, const auto& particles) {
   auto findParticle = [&](SimBarcode particleId) {
@@ -122,7 +115,8 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
       }
       seenVertices.at(std::abs(endVertex.id()) - 1) = true;
 
-      const auto endVertexPosition = convertPosition(endVertex.position());
+      const auto endVertexPosition =
+          HepMC3Util::convertPosition(endVertex.position());
 
       ACTS_VERBOSE("Found secondary vertex at "
                    << endVertexPosition.transpose());
@@ -141,7 +135,8 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         nSecondaryVertices += 1;
         secondaryVertex.id =
             SimVertexBarcode{vertex.id}.withVertexSecondary(nSecondaryVertices);
-        secondaryVertex.position4 = convertPosition(endVertex.position());
+        secondaryVertex.position4 =
+            HepMC3Util::convertPosition(endVertex.position());
 
         handleVertex(endVertex, secondaryVertex, vertices, particles,
                      nSecondaryVertices, nParticles, seenVertices);
@@ -152,11 +147,17 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         }
       }
     } else {
-      if (particle->status() != kUndecayedParticleStatus) {
+      if (particle->status() != HepMC3Util::kUndecayedParticleStatus) {
         ACTS_ERROR("Undecayed particle has status "
                    << particle->status() << "(and not "
-                   << kUndecayedParticleStatus << ")");
+                   << HepMC3Util::kUndecayedParticleStatus << ")");
       }
+
+      Acts::PdgParticle pdg{particle->pdg_id()};
+      if (!Acts::ParticleIdHelper::isInteracting(pdg)) {
+        continue;
+      }
+
       // This particle is a final state particle
       nParticles += 1;
       SimBarcode particleId =
@@ -165,7 +166,6 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
               .withVertexSecondary(vertex.vertexId().vertexSecondary())
               .withParticle(nParticles);
 
-      Acts::PdgParticle pdg{particle->pdg_id()};
       double mass = 0.0;
       double charge = 0.0;
 
@@ -194,6 +194,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
 
       SimParticle simParticle{particleId, pdg, charge, mass};
       simParticle.initialState().setPosition4(vertex.position4);
+      simParticle.setGenParticle(particle.get());
 
       const HepMC3::FourVector& genMomentum = particle->momentum();
       Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,
@@ -230,7 +231,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
     for (const auto& vertex : genEvent.vertices()) {
       if (vertex->particles_in().empty() ||
           std::ranges::all_of(vertex->particles_in(), [](const auto& particle) {
-            return particle->status() == kBeamParticleStatus;
+            return particle->status() == HepMC3Util::kBeamParticleStatus;
           })) {
         // Check if primary vertex is within tolerance of an existing primary
         // vertex
@@ -242,13 +243,13 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
                           return ss.str();
                         }());
 
-        auto position = convertPosition(vertex->position());
+        auto position = HepMC3Util::convertPosition(vertex->position());
 
         if (auto it = std::ranges::find_if(
                 vertexClusters,
                 [&](const auto& cluster) {
                   const auto clusterPosition =
-                      convertPosition(cluster.at(0)->position());
+                      HepMC3Util::convertPosition(cluster.at(0)->position());
                   return (position - clusterPosition)
                              .template head<3>()
                              .cwiseAbs()
@@ -300,23 +301,25 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
     particlesUnordered.reserve(nUndecayedParticles);
 
     for (auto& cluster : vertexClusters) {
-      ACTS_VERBOSE("Primary vertex cluster at "
-                   << convertPosition(cluster.at(0)->position()).transpose()
-                   << " containing " << cluster.size() << " vertices:\n"
-                   <<
-                   [&]() {
-                     std::stringstream ss;
-                     for (auto& vertex : cluster) {
-                       HepMC3::Print::listing(ss, vertex);
-                     }
-                     return ss.str();
-                   }()
-                   << "--------------");
+      ACTS_VERBOSE(
+          "Primary vertex cluster at "
+          << HepMC3Util::convertPosition(cluster.at(0)->position()).transpose()
+          << " containing " << cluster.size() << " vertices:\n"
+          <<
+          [&]() {
+            std::stringstream ss;
+            for (auto& vertex : cluster) {
+              HepMC3::Print::listing(ss, vertex);
+            }
+            return ss.str();
+          }()
+          << "--------------");
 
       nPrimaryVertices += 1;
       SimVertex primaryVertex;
       primaryVertex.id = SimVertexBarcode().withVertexPrimary(nPrimaryVertices);
-      primaryVertex.position4 = convertPosition(cluster.at(0)->position());
+      primaryVertex.position4 =
+          HepMC3Util::convertPosition(cluster.at(0)->position());
 
       std::size_t nSecondaryVertices = 0;
       std::size_t nParticles = 0;
