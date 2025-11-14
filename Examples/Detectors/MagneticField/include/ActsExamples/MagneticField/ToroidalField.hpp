@@ -69,7 +69,7 @@ class ToroidalField final : public MagneticFieldProvider {
   };
 
   ToroidalField();                 // default config
-  explicit ToroidalField(Config);  // with config
+  explicit ToroidalField(Config cfg);  // with config
 
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override;

@@ -36,12 +36,14 @@ ToroidalField::ToroidalField(Config cfg) : m_cfg(std::move(cfg)) {
     m_cfg.ectSigns.assign(2 * nC, +1);
   }
   // Sanity on sizes
-  if (static_cast<int>(m_cfg.barrelSigns.size()) != nC)
+  if (static_cast<int>(m_cfg.barrelSigns.size()) != nC) {
     throw std::invalid_argument(
         "ToroidalField: barrelSigns size must equal nCoils");
-  if (static_cast<int>(m_cfg.ectSigns.size()) != 2 * nC)
+  }
+  if (static_cast<int>(m_cfg.ectSigns.size()) != 2 * nC) {
     throw std::invalid_argument(
         "ToroidalField: ectSigns size must equal 2*nCoils");
+  }
 
   buildGeometry();
 }
