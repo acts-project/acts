@@ -46,7 +46,7 @@ CompositeSpacePointLineFitter::countDoF(
     }
     if (sp->isStraw()) {
       ++counts.straw;
-    } else if (sp->hasTime()) {
+    } else if (m_cfg.fitT0 && sp->hasTime()) {
       ++counts.time;
     }
   }
