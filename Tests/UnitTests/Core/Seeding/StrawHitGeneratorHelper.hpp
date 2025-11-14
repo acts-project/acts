@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
+#include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"

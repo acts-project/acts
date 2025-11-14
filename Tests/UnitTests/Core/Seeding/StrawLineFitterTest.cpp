@@ -8,13 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
-#include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
-
 #include <chrono>
 #include <format>
 #include <random>
@@ -51,7 +44,7 @@ constexpr std::size_t nEvents = 1;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
-namespace Acts::Test  {
+namespace Acts::Test {
 
 using GenCfg_t = MeasurementGenerator::Config;
 
@@ -342,4 +335,4 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace ActsTests
+}  // namespace Acts::Test
