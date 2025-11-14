@@ -68,7 +68,7 @@ class ToroidalField final : public MagneticFieldProvider {
     explicit Cache(const MagneticFieldContext& /*ctx*/) {}
   };
 
-  ToroidalField();                 // default config
+  ToroidalField();                     // default config
   explicit ToroidalField(Config cfg);  // with config
 
   MagneticFieldProvider::Cache makeCache(
