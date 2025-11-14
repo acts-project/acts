@@ -55,8 +55,25 @@ class FitTestSpacePoint {
     m_covariance[toUnderlying(nonBending)] =
         Acts::square(twinUncert.value_or(0.));
   }
+  /// @brief Constructor for rotated straw wires
+  /// @param pos: Position of the wire
+  /// @param wire: Orientation of the wire
+  /// @param driftR: Drift radius of the measurement
+  /// @param driftRUncert: Associated uncertainty on the measurement
+  /// @param twinUncert: Uncertainty on the measurement along the straw
+  FitTestSpacePoint(const Vector3& pos, const Vector3& wire,
+                    const double driftR, const double driftRUncert,
+                    const std::optional<double> twinUncert = std::nullopt)
+      : FitTestSpacePoint{pos, driftR, driftRUncert, twinUncert} {
+    m_sensorDir = wire;
+  }
 
-  /// @brief Constructor for strip measurements
+  /// @brief Constructor for spatial strip measurements
+  /// @param stripPos: Position of the strip
+  /// @param stripDir: Direction along the strip
+  /// @param toNext: Vector pointing to the next strip inside the plane
+  /// @param uncertLoc0: Uncertainty of the measurement in the non bending direction
+  /// @param uncertLoc1: Uncertainty of the measurement in the bending direction
   FitTestSpacePoint(const Vector3& stripPos, const Vector3& stripDir,
                     const Vector3& toNext, const double uncertLoc0,
                     const double uncertLoc1)
@@ -69,6 +86,20 @@ class FitTestSpacePoint {
     m_covariance[toUnderlying(nonBending)] = Acts::square(uncertLoc0);
     m_covariance[toUnderlying(bending)] = Acts::square(uncertLoc1);
   }
+  /// @brief Constructor for strip measurements with time
+  FitTestSpacePoint(const Vector3& stripPos, const Vector3& stripDir,
+                    const Vector3& toNext, const double time,
+                    const std::array<double, 3>& cov)
+      : m_position{stripPos},
+        m_sensorDir{stripDir},
+        m_toNextSen{toNext},
+        m_time{time},
+        m_covariance{cov} {
+    using enum ResidualIdx;
+    m_measLoc0 = m_covariance[toUnderlying(nonBending)] > 0.;
+    m_measLoc1 = m_covariance[toUnderlying(bending)] > 0.;
+  }
+
   /// @brief Position of the space point
   const Vector3& localPosition() const { return m_position; }
   /// @brief Wire direction

@@ -372,8 +372,10 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     CompSpacePointAuxiliaries resCalc{resCfg,
                                       Acts::getDefaultLogger(calcName, logLvl)};
 
-    resCalc.updateFullResidual(line, t0, FitTestSpacePoint{pos, dir, driftR},
-                               driftV, driftA);
+    resCalc.updateFullResidual(
+        line, t0,
+        FitTestSpacePoint{pos, dir, driftR, SpCalibrator::driftUncert(driftR)},
+        driftV, driftA);
     return resCalc;
   };
 
@@ -468,24 +470,28 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
 
   for (std::size_t e = 0; e < nEvents; ++e) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
-    Pars_t linePars{generateLine(rndEngine, logger()).parameters()};
+    const Line_t line{generateLine(rndEngine, logger())};
     // Generate the first test measurement
-    testResidual(linePars, FitTestSpacePoint{wirePos, wireDir1, 10._cm});
+    constexpr double R = 10._cm;
+    const double dR = SpCalibrator::driftUncert(R);
+    constexpr double uncertWire = 1._cm;
+    testResidual(line.parameters(),
+                 FitTestSpacePoint{wirePos, wireDir1, R, dR});
 
-    testResidual(linePars, FitTestSpacePoint{wirePos, wireDir2, 10._cm});
+    testResidual(line.parameters(),
+                 FitTestSpacePoint{wirePos, wireDir2, R, dR});
 
-    const Line_t line{linePars};
     auto isect =
         lineIntersect(line.position(), line.direction(), wirePos, wireDir1);
-    testResidual(linePars, FitTestSpacePoint{
-                               isect.position() +
-                                   uniform{-50._cm, 50._cm}(rndEngine)*wireDir1,
-                               wireDir1, 10._cm, true});
+    testResidual(line.parameters(),
+                 FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(
+                                                          rndEngine)*wireDir1,
+                                   wireDir1, R, dR, uncertWire});
     isect = lineIntersect(line.position(), line.direction(), wirePos, wireDir2);
-    testResidual(linePars, FitTestSpacePoint{
-                               isect.position() +
-                                   uniform{-50._cm, 50._cm}(rndEngine)*wireDir2,
-                               wireDir2, 10._cm, true});
+    testResidual(line.parameters(),
+                 FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(
+                                                          rndEngine)*wireDir2,
+                                   wireDir2, R, dR, uncertWire});
   }
 }
 BOOST_AUTO_TEST_CASE(StripResidual) {
@@ -498,22 +504,16 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
     Pars_t linePars{generateLine(rndEngine, logger()).parameters()};
 
-    testResidual(linePars, FitTestSpacePoint{stripPos, b1, b2,
-                                             FitTestSpacePoint::bendingDir});
+    /// Test solely the residual along the bending direction
+    testResidual(linePars, FitTestSpacePoint{stripPos, b1, b2, 0._cm, 1._cm});
+    /// Test solely the residual along the non-bending direction
+    testResidual(linePars, FitTestSpacePoint{stripPos, b2, b1, 1._cm, 0._cm});
+    /// Test the combined residual
+    testResidual(linePars, FitTestSpacePoint{stripPos, b1, b2, 1._cm, 1._cm});
+    const Vector b3 = makeDirectionFromPhiTheta(30._degree, 90._degree);
+    const Vector b4 = makeDirectionFromPhiTheta(60._degree, 90._degree);
 
-    testResidual(linePars, FitTestSpacePoint{stripPos, b2, b1,
-                                             FitTestSpacePoint::nonBendingDir});
-
-    testResidual(
-        linePars,
-        FitTestSpacePoint{stripPos, b1, b2, FitTestSpacePoint::bothDirections});
-
-    testResidual(
-        linePars,
-        FitTestSpacePoint{stripPos,
-                          makeDirectionFromPhiTheta(30._degree, 90._degree),
-                          makeDirectionFromPhiTheta(60._degree, 90_degree),
-                          FitTestSpacePoint::bothDirections});
+    testResidual(linePars, FitTestSpacePoint{stripPos, b3, b4, 1._cm, 1._cm});
   }
 }
 
@@ -524,49 +524,40 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
 
   Acts::Transform3 locToGlob{Acts::Transform3::Identity()};
 
-  timeStripResidualTest(
-      linePars, 10.,
-      FitTestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
-                        makeDirectionFromPhiTheta(30._degree, 90._degree),
-                        makeDirectionFromPhiTheta(60._degree, 90_degree), 15},
-      locToGlob);
+  const Vector pos{75._cm, -75._cm, 100._cm};
+  const Vector pos1{75._cm, -75._cm, 200._cm};
 
-  timeStripResidualTest(
-      linePars, 10.,
-      FitTestSpacePoint{Vector{75._cm, -75_cm, 200_cm},
-                        makeDirectionFromPhiTheta(0_degree, 90_degree),
-                        makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
-      locToGlob);
+  const Vector b1{makeDirectionFromPhiTheta(30._degree, 90._degree)};
+  const Vector b2{makeDirectionFromPhiTheta(60._degree, 90._degree)};
+  const Vector b3{makeDirectionFromPhiTheta(00._degree, 90._degree)};
+  const Vector b4{makeDirectionFromPhiTheta(60._degree, 75._degree)};
+  FitTestSpacePoint p1{
+      pos,
+      b1,
+      b2,
+      15._ns,
+      {Acts::square(10._cm), Acts::square(10._cm), Acts::square(1._ns)}};
+
+  FitTestSpacePoint p2{
+      pos1,
+      b3,
+      b4,
+      15._ns,
+      {Acts::square(10._cm), Acts::square(10._cm), Acts::square(1._ns)}};
+
+  timeStripResidualTest(linePars, 10., p1, locToGlob);
+
+  timeStripResidualTest(linePars, 10., p2, locToGlob);
 
   locToGlob.translation() = Vector{75._cm, -75._cm, -35._cm};
-  timeStripResidualTest(
-      linePars, 10.,
-      FitTestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
-                        makeDirectionFromPhiTheta(30._degree, 90._degree),
-                        makeDirectionFromPhiTheta(60._degree, 90_degree), 15},
-      locToGlob);
+  timeStripResidualTest(linePars, 10., p1, locToGlob);
 
-  timeStripResidualTest(
-      linePars, 10.,
-      FitTestSpacePoint{Vector{75._cm, -75_cm, 200_cm},
-                        makeDirectionFromPhiTheta(0_degree, 90_degree),
-                        makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
-      locToGlob);
+  timeStripResidualTest(linePars, 10., p2, locToGlob);
   locToGlob *= Acts::AngleAxis3{
       30_degree, makeDirectionFromPhiTheta(30_degree, -45_degree)};
-  timeStripResidualTest(
-      linePars, 10.,
-      FitTestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
-                        makeDirectionFromPhiTheta(30._degree, 90._degree),
-                        makeDirectionFromPhiTheta(60._degree, 90_degree), 15},
-      locToGlob);
+  timeStripResidualTest(linePars, 10., p1, locToGlob);
 
-  timeStripResidualTest(
-      linePars, 10.,
-      FitTestSpacePoint{Vector{75._cm, -75_cm, 200_cm},
-                        makeDirectionFromPhiTheta(0_degree, 90_degree),
-                        makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
-      locToGlob);
+  timeStripResidualTest(linePars, 10., p2, locToGlob);
 }
 
 BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
@@ -685,20 +676,14 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   //// Test ordinary straws
   testChi2(FitTestSpacePoint{
       line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
-      Vector3::UnitX(),
-      5._cm,
-      false,
-      {0., Acts::pow(10._mm, 2), 0.}});
+      Vector3::UnitX(), 5._cm, 10._mm});
 
   /// Test straws with information on the position along the
   /// tube
   testChi2(FitTestSpacePoint{
       line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()) +
           4._cm * Vector::UnitX(),
-      Vector3::UnitX(),
-      5._cm,
-      true,
-      {Acts::pow(0.5_cm, 2), Acts::pow(10._mm, 2), 0.}});
+      Vector3::UnitX(), 5._cm, 0.5_cm});
 }
 
 BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
@@ -748,8 +733,7 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
           intersections[layer] + parameters[layer] * stripDirections[layer];
 
       spacePoints[layer] = std::make_shared<FitTestSpacePoint>(
-          stripPos, stripDirections[layer], Vector3::UnitZ(),
-          FitTestSpacePoint::nonBendingDir);
+          stripPos, stripDirections[layer], Vector3::UnitZ(), 1._cm, 0._cm);
     }
 
     // let's pick four strips on fours different layers
