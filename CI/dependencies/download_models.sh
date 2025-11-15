@@ -1,6 +1,8 @@
 #!/bin/bash
 
 set -e
+set -u
+set -o pipefail
 
 function download {
   tarname=$(basename $1)
