@@ -33,8 +33,8 @@ CompositeSpacePointLineFitter::countDoF(
   for (const auto& sp : measurements) {
     if (selector.connected() && !selector(*sp)) {
       ACTS_VERBOSE(__func__ << "() " << __LINE__
-                            << " -  Skip invalid measurement @"
-                            << toString(sp->localPosition()));
+                            << " -  Skip invalid measurement "
+                            << toString(*sp));
       continue;
     }
     ++nValid;
@@ -210,7 +210,7 @@ CompositeSpacePointLineFitter::fastFit(
 
   // Copy spatial parameters & covariance from precision fit and
   // perform non-bending fit (if required)
-  const bool fitT0{true};
+  constexpr bool fitT0{true};
   mergePrecAndNonPrec(result, precResult, measurements, parsToUse, fitT0);
 
   return result;
