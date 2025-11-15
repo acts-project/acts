@@ -2053,9 +2053,9 @@ GnnBackend = Enum("GnnBackend", "Torch Onnx")
 
 def addGnn(
     s: acts.examples.Sequencer,
-    graphConstructor: acts.examples.GraphConstructionBase,
-    edgeClassifiers: list[acts.examples.EdgeClassificationBase],
-    trackBuilder: acts.examples.TrackBuildingBase,
+    graphConstructor,
+    edgeClassifiers: list,
+    trackBuilder,
     nodeFeatures: list,
     featureScales: list,
     inputSpacePoints: str = "spacepoints",
