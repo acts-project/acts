@@ -73,7 +73,7 @@ def runGnnModuleMap(
 
     # Random number generator
     rnd = acts.examples.RandomNumbers(seed=42)
-   
+
     addParticleGun(
         s,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
