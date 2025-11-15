@@ -10,6 +10,8 @@
 
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
+
 namespace Acts::Experimental {
 
 constexpr CompositeSpacePointLineSeeder::TangentAmbi
@@ -56,23 +58,22 @@ CompositeSpacePointLineSeeder::constructTangentLine(
 
   const Vector& bottomPos{bottomHit.localPosition()};
   const Vector& topPos{topHit.localPosition()};
-  const Vector& eX{bottomHit.sensorDirection()};
   const Vector& eY{bottomHit.toNextSensor()};
   const Vector& eZ{bottomHit.planeNormal()};
 
   const Vector D = topPos - bottomPos;
 
-  assert(Acts::abs(eY.dot(eZ)) < std::numeric_limits<double>::epsilon());
-  assert(Acts::abs(eX.dot(eY)) < std::numeric_limits<double>::epsilon());
-  assert(Acts::abs(eX.dot(eZ)) < std::numeric_limits<double>::epsilon());
-
+  assert(Acts::abs(eY.dot(eZ)) < s_epsilon);
+  assert(Acts::abs(bottomHit.sensorDirection().dot(eY)) < s_epsilon);
+  assert(Acts::abs(bottomHit.sensorDirection().dot(eZ)) < s_epsilon);
   assert(topHit.isStraw() && bottomHit.isStraw());
+
   const double dY = D.dot(eY);
   const double dZ = D.dot(eZ);
 
   const double thetaTubes = std::atan2(dY, dZ);
   const double distTubes = Acts::fastHypot(dY, dZ);
-
+  assert(distTubes > 1._mm);
   constexpr auto covIdx = Acts::toUnderlying(ResidualIdx::bending);
   const double combDriftUncert{topHit.covariance()[covIdx] +
                                bottomHit.covariance()[covIdx]};
@@ -83,16 +84,7 @@ CompositeSpacePointLineSeeder::constructTangentLine(
   const double cosTheta = std::cos(result.theta);
   const double sinTheta = std::sin(result.theta);
 
-  Vector flipedDir = (sinTheta * eY + cosTheta * eZ) * sign(sinTheta);
-  std::cout << "DIE CASSY " << Acts::toString(flipedDir) << " "
-            << " " << Acts::toString(Vector{0., cosTheta, sinTheta})
-            << (VectorHelpers::theta(flipedDir) / 1._degree) << ", "
-            << (result.theta / 1._degree)
-
-            << " Wer raucht den meisten pfeffer kuchen: " << Acts::toString(eX)
-            << "/" << Acts::toString(eY) << "/" << Acts::toString(eZ)
-            << " haeh?" << std::endl;
-
+  const Vector flipedDir = (sinTheta * eY + cosTheta * eZ) * sign(sinTheta);
   result.theta = VectorHelpers::theta(flipedDir);
 
   result.y0 = bottomPos.dot(eY) * cosTheta - bottomPos.dot(eZ) * sinTheta -
