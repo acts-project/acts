@@ -25,23 +25,24 @@ GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
   m_connMap.clear();
   m_layerGroups.clear();
 
-  int nLinks;
-
+  int nLinks{};
+  
   inFile >> nLinks >> m_etaBin;
 
   for (int l = 0; l < nLinks; l++) {
-    unsigned int stage, lIdx, src, dst, nEntries;
-    int height, width;
+    unsigned int stage{}, lIdx{}, src{}, dst{}, nEntries{};
+    int height{}, width{};
 
     inFile >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
 
     GbtsConnection* pC = new GbtsConnection(src, dst);
 
-    int dummy;
+    int dummy{};
 
     for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++)
+      for (int j = 0; j < width; j++) {
         inFile >> dummy;  // pC->m_binTable[j+i*width];
+}
     }
 
     int srcvol_id = src / 1000;
@@ -67,8 +68,9 @@ GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
     if (it == m_connMap.end()) {
       std::vector<GbtsConnection*> v = {pC};
       m_connMap.insert(std::make_pair(stage, v));
-    } else
+    } else {
       (*it).second.push_back(pC);
+}
   }
 
   // re-arrange the connection stages
@@ -115,8 +117,9 @@ GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
     std::set<unsigned int> zeroLayers;
 
     for (const auto& layerCounts : mCounter) {
-      if (layerCounts.second.second != 0)
+      if (layerCounts.second.second != 0) {
         continue;
+}
 
       zeroLayers.insert(layerCounts.first);
     }
@@ -162,9 +165,9 @@ GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
 
       std::map<unsigned int, std::vector<const GbtsConnection*> >::iterator
           l1MapIt = l1ConnMap.find(dst);
-      if (l1MapIt != l1ConnMap.end())
+      if (l1MapIt != l1ConnMap.end()) {
         (*l1MapIt).second.push_back(conn);
-      else {
+      } else {
         std::vector<const GbtsConnection*> v = {conn};
         l1ConnMap.insert(std::make_pair(dst, v));
       }
@@ -188,8 +191,9 @@ GbtsConnector::~GbtsConnector() {
   m_layerGroups.clear();
 
   for (auto& conn : m_connMap) {
-    for (auto& link : conn.second)
+    for (auto& link : conn.second) {
       delete link;
+}
     conn.second.clear();
   }
 

@@ -40,7 +40,7 @@ class GbtsConnector {
   GbtsConnector(std::ifstream&, bool LRTmode);
   ~GbtsConnector();
 
-  float m_etaBin;
+  float m_etaBin{};
 
   std::map<int, std::vector<struct LayerGroup> > m_layerGroups;
   std::map<int, std::vector<GbtsConnection*> > m_connMap;
