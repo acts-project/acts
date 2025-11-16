@@ -36,9 +36,9 @@ class SeedFinderGbts {
                      Acts::getDefaultLogger("Finder",
                                             Acts::Logging::Level::INFO));
 
-  typedef GbtsNode GNN_Node;
-  typedef GbtsDataStorage GNN_DataStorage;
-  typedef GbtsEdge GNN_Edge;
+  using GNN_Node = GbtsNode;
+  using GNN_DataStorage = GbtsDataStorage;
+  using GNN_Edge = GbtsEdge;
 
   SeedContainer2 CreateSeeds(
       const RoiDescriptor& roi,

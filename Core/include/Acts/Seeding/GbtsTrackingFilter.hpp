@@ -32,9 +32,9 @@ struct GbtsEdgeState {
     }
   };
 
-  GbtsEdgeState() {};
+  GbtsEdgeState() = default;
 
-  GbtsEdgeState(bool f) : m_initialized(f) {};
+  explicit GbtsEdgeState(bool f) : m_initialized(f) {};
 
   ~GbtsEdgeState() {};
 

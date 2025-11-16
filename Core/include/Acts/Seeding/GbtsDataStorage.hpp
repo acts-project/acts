@@ -27,8 +27,8 @@ namespace Acts::Experimental {
 class GbtsGeometry;
 
 struct GbtsNode {
-  GbtsNode(unsigned short l)
-      : m_x(0), m_y(0), m_z(0), m_r(0), m_phi(0), m_layer(l), m_pcw(0) {};
+  explicit GbtsNode(unsigned short l)
+      :  m_layer(l) {};
 
   inline float x() const { return m_x; }
   inline float y() const { return m_y; }
@@ -41,10 +41,10 @@ struct GbtsNode {
 
   inline int sp_idx() const { return m_idx; }
 
-  float m_x, m_y, m_z, m_r, m_phi;
+  float m_x{}, m_y{}, m_z{}, m_r{}, m_phi{};
   unsigned short m_layer{10000};
   unsigned int m_idx{std::numeric_limits<unsigned int>::max()};
-  float m_pcw;
+  float m_pcw{};
 };
 
 class GbtsEtaBin {
@@ -82,7 +82,7 @@ class GbtsEtaBin {
 
 class GbtsDataStorage {
  public:
-  GbtsDataStorage(const GbtsGeometry&);
+  explicit GbtsDataStorage(const GbtsGeometry&);
   ~GbtsDataStorage();
 
   int loadPixelGraphNodes(short, const std::vector<GbtsNode>&, bool);
@@ -94,8 +94,9 @@ class GbtsDataStorage {
   void generatePhiIndexing(float);
 
   GbtsEtaBin& getEtaBin(int idx) {
-    if (idx >= static_cast<int>(m_etaBins.size()))
+    if (idx >= static_cast<int>(m_etaBins.size())) {
       idx = idx - 1;
+}
     return m_etaBins.at(idx);
   }
 
@@ -121,8 +122,7 @@ class GbtsEdge {
     m_p[2] = p3;
   }
 
-  GbtsEdge()
-      : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1), m_nNei(0) {};
+  GbtsEdge()= default;
 
   const GbtsNode* m_n1{nullptr};
   const GbtsNode* m_n2{nullptr};
