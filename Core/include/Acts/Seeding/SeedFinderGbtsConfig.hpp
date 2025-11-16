@@ -11,8 +11,8 @@
 // TODO: update to C++17 style
 
 #include "Acts/Definitions/Units.hpp"
-#include <string>
 
+#include <string>
 
 // core algorithm so in acts namespace
 namespace Acts::Experimental {

@@ -53,14 +53,14 @@ void GbtsEtaBin::sortByPhi() {
 void GbtsEtaBin::initializeNodes() {
   if (m_vn.empty()) {
     return;
-}
+  }
 
   m_params.resize(m_vn.size());
 
   m_in.resize(m_vn.size());
   for (auto& v : m_in) {
     v.reserve(50);  // reasonably high number of incoming edges per node
-}
+  }
 
   std::transform(
       m_vn.begin(), m_vn.end(), m_params.begin(), [](const GbtsNode* pN) {
@@ -80,7 +80,7 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
     float phi = m_params[nIdx][2];
     if (phi <= std::numbers::pi - dphi) {
       continue;
-}
+    }
     m_vPhiNodes.push_back(
         std::pair<float, unsigned int>(phi - 2 * std::numbers::pi, nIdx));
   }
@@ -94,7 +94,7 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
     float phi = m_params[nIdx][2];
     if (phi >= -std::numbers::pi + dphi) {
       break;
-}
+    }
     m_vPhiNodes.push_back(
         std::pair<float, unsigned int>(phi + 2 * std::numbers::pi, nIdx));
   }
@@ -133,7 +133,7 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
         float cluster_width = node.pixelClusterWidth();
         if (cluster_width > 0.2) {
           continue;
-}
+        }
       }
       m_etaBins.at(binIndex).m_vn.push_back(&node);
     }
@@ -180,7 +180,7 @@ unsigned int GbtsDataStorage::numberOfNodes() const {
 void GbtsDataStorage::sortByPhi() {
   for (auto& b : m_etaBins) {
     b.sortByPhi();
-}
+  }
 }
 
 void GbtsDataStorage::initializeNodes(bool useML) {
@@ -190,7 +190,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
 
   if (!useML) {
     return;
-}
+  }
 
   unsigned int nL = m_geo.num_layers();
 
@@ -206,7 +206,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
 
     if (!isBarrel) {
       continue;
-}
+    }
 
     int nBins = pL->m_bins.size();
 
@@ -216,7 +216,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
 
       if (B.empty()) {
         continue;
-}
+      }
 
       for (unsigned int nIdx = 0; nIdx < B.m_vn.size(); nIdx++) {
         float cluster_width = B.m_vn[nIdx]->pixelClusterWidth();
@@ -238,7 +238,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
 void GbtsDataStorage::generatePhiIndexing(float dphi) {
   for (auto& b : m_etaBins) {
     b.generatePhiIndexing(dphi);
-}
+  }
 }
 
 }  // namespace Acts::Experimental

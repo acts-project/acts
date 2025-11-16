@@ -85,7 +85,7 @@ GbtsTrackingFilter::GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
 void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
   if (pS->m_level == -1) {
     return;  // already collected
-}
+  }
 
   m_globalStateCounter = 0;
 
@@ -103,7 +103,7 @@ void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
 
   if (m_stateVec.empty()) {
     return;
-}
+  }
 
   std::sort(m_stateVec.begin(), m_stateVec.end(),
             typename GbtsEdgeState::Compare());
@@ -118,7 +118,7 @@ void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
 void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
   if (m_globalStateCounter >= MAX_EDGE_STATE) {
     return;
-}
+  }
 
   GbtsEdgeState* p_new_ts = &m_stateStore[m_globalStateCounter++];
 
@@ -131,7 +131,7 @@ void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
 
   if (!accepted) {
     return;  // stop further propagation
-}
+  }
 
   int level = pS->m_level;
 
@@ -145,7 +145,7 @@ void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
 
     if (pN->m_level == -1) {
       continue;  // already collected
-}
+    }
 
     if (pN->m_level == level - 1) {
       lCont.push_back(pN);
@@ -289,10 +289,10 @@ bool GbtsTrackingFilter::update(GbtsEdge* pS, GbtsEdgeState& ts) {
 
   for (int i = 0; i < 3; i++) {
     ts.m_X[i] = X[i] + Kx[i] * resid_x;
-}
+  }
   for (int i = 0; i < 2; i++) {
     ts.m_Y[i] = Y[i] + Ky[i] * resid_y;
-}
+  }
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {

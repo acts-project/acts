@@ -43,7 +43,7 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
 
     if (nodes.size() == 0) {
       continue;
-}
+    }
 
     bool is_pixel = true;
     if (is_pixel) {  // placeholder for now until strip hits are added in
@@ -91,7 +91,7 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
 
     if (pS->m_level < minLevel) {
       continue;
-}
+    }
 
     vSeeds.push_back(pS);
   }
@@ -105,7 +105,7 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
   for (auto pS : vSeeds) {
     if (pS->m_level == -1) {
       continue;
-}
+    }
 
     GbtsEdgeState rs(false);  // this is in tracking filter as well
 
@@ -117,7 +117,7 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
 
     if (static_cast<int>(rs.m_vs.size()) < minLevel) {
       continue;
-}
+    }
 
     std::vector<const GNN_Node*> vN;
 
@@ -134,7 +134,7 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
 
     if (vN.size() < 3) {
       continue;
-}
+    }
 
     // add to seed container:
     std::vector<SpacePointIndex2> Sp_Indexes{};
@@ -160,7 +160,7 @@ std::vector<std::vector<SeedFinderGbts::GNN_Node>> SeedFinderGbts::CreateNodes(
 
   for (auto& v : node_storage) {
     v.reserve(100000);
-}
+  }
 
   for (auto sp : std::get<0>(container)) {
     // for every sp in container,
@@ -246,7 +246,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
     if (B1.empty()) {
       continue;
-}
+    }
 
     float rb1 = B1.getMinBinRadius();
 
@@ -255,7 +255,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
       if (B2.empty()) {
         continue;
-}
+      }
 
       float rb2 = B2.getMaxBinRadius();
 
@@ -281,7 +281,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
         if (v1In.size() >= MAX_SEG_PER_NODE) {
           continue;
-}
+        }
 
         const std::array<float, 5>& n1pars = B1.m_params[n1Idx];
 
@@ -305,7 +305,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
           }
           if (phi2 > maxPhi) {
             break;
-}
+          }
 
           unsigned int n2Idx = B2.m_vPhiNodes[n2PhiIdx].second;
 
@@ -313,7 +313,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
           if (v2In.size() >= MAX_SEG_PER_NODE) {
             continue;
-}
+          }
 
           const std::array<float, 5>& n2pars = B2.m_params[n2Idx];
 
@@ -336,30 +336,30 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
           if (ftau < n1pars[0]) {
             continue;
-}
+          }
           if (ftau > n1pars[1]) {
             continue;
-}
+          }
 
           if (ftau < n2pars[0]) {
             continue;
-}
+          }
           if (ftau > n2pars[1]) {
             continue;
-}
+          }
 
           if (m_config.m_doubletFilterRZ) {
             float z0 = z1 - r1 * tau;
 
             if (z0 < min_z0 || z0 > max_z0) {
               continue;
-}
+            }
 
             float zouter = z0 + maxOuterRadius * tau;
 
             if (zouter < cut_zMinU || zouter > cut_zMaxU) {
               continue;
-}
+            }
           }
 
           float curv = (phi2 - phi1) / dr;
@@ -412,7 +412,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
             if (v1In.size() < MAX_SEG_PER_NODE) {
               v1In.push_back(nEdges);
-}
+            }
 
             int outEdgeIdx = nEdges;
 
@@ -427,7 +427,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
               if (pS->m_nNei >= N_SEG_CONNS) {
                 continue;
-}
+              }
 
               float tau_ratio = pS->m_p[0] * uat_2 - 1.0f;
 
@@ -441,7 +441,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
                 dPhi += 2 * std::numbers::pi;
               } else if (dPhi > std::numbers::pi) {
                 dPhi -= 2 * std::numbers::pi;
-}
+              }
 
               if (dPhi < -cut_dphi_max || dPhi > cut_dphi_max) {
                 continue;
@@ -486,7 +486,7 @@ int SeedFinderGbts::runCCA(int nEdges,
     GbtsEdge* pS = &(edgeStorage[edgeIndex]);
     if (pS->m_nNei == 0) {
       continue;
-}
+    }
 
     v_old.push_back(pS);  // TO-DO: increment level for segments as they already
                           // have at least one neighbour
@@ -526,13 +526,13 @@ int SeedFinderGbts::runCCA(int nEdges,
         pS->m_level = pS->m_next;
         if (maxLevel < pS->m_level) {
           maxLevel = pS->m_level;
-}
+        }
       }
     }
 
     if (nChanges == 0) {
       break;
-}
+    }
 
     v_old = std::move(v_new);
     v_new.clear();

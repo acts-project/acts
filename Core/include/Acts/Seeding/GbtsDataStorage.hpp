@@ -22,8 +22,7 @@ namespace Acts::Experimental {
 class GbtsGeometry;
 
 struct GbtsNode {
-  explicit GbtsNode(unsigned short l)
-      :  m_layer(l) {};
+  explicit GbtsNode(unsigned short l) : m_layer(l) {};
 
   inline float x() const { return m_x; }
   inline float y() const { return m_y; }
@@ -91,7 +90,7 @@ class GbtsDataStorage {
   GbtsEtaBin& getEtaBin(int idx) {
     if (idx >= static_cast<int>(m_etaBins.size())) {
       idx = idx - 1;
-}
+    }
     return m_etaBins.at(idx);
   }
 
@@ -117,7 +116,7 @@ class GbtsEdge {
     m_p[2] = p3;
   }
 
-  GbtsEdge()= default;
+  GbtsEdge() = default;
 
   const GbtsNode* m_n1{nullptr};
   const GbtsNode* m_n2{nullptr};

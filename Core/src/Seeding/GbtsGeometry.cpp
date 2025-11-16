@@ -69,7 +69,7 @@ GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, float ew, int bin0)
     m_nBins = nB;
     if (deltaEta - m_etaBinWidth * nB > 0.5 * m_etaBinWidth) {
       m_nBins++;
-}
+    }
 
     m_etaBin = deltaEta / m_nBins;
 
@@ -140,7 +140,7 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
 
     if (z0_max < min_z0 - tol || z0_min > max_z0 + tol) {
       return false;
-}
+    }
 
     return true;
   }
@@ -155,7 +155,7 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
 
     if (r2max <= r1) {
       return false;
-}
+    }
 
     if (r2min <= r1) {
       r2min = r1 + 1e-3;
@@ -174,7 +174,7 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
 
     if (z0_max < min_z0 - tol || z0_min > max_z0 + tol) {
       return false;
-}
+    }
     return true;
   }
 
@@ -184,7 +184,7 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
 int GbtsLayer::getEtaBin(float zh, float rh) const {
   if (m_bins.size() == 1) {
     return m_bins.at(0);
-}
+  }
 
   float t1 = zh / rh;
   float eta = -std::log(std::sqrt(1 + t1 * t1) - t1);
@@ -193,10 +193,10 @@ int GbtsLayer::getEtaBin(float zh, float rh) const {
 
   if (idx < 0) {
     idx = 0;
-}
+  }
   if (idx >= static_cast<int>(m_bins.size())) {
     idx = static_cast<int>(m_bins.size()) - 1;
-}
+  }
 
   return m_bins.at(idx);  // index in the global storage
 }
@@ -204,10 +204,10 @@ int GbtsLayer::getEtaBin(float zh, float rh) const {
 float GbtsLayer::getMinBinRadius(int idx) const {
   if (idx >= static_cast<int>(m_minRadius.size())) {
     idx = idx - 1;
-}
+  }
   if (idx < 0) {
     idx = 0;
-}
+  }
 
   return m_minRadius.at(idx);
 }
@@ -215,10 +215,10 @@ float GbtsLayer::getMinBinRadius(int idx) const {
 float GbtsLayer::getMaxBinRadius(int idx) const {
   if (idx >= static_cast<int>(m_maxRadius.size())) {
     idx = idx - 1;
-}
+  }
   if (idx < 0) {
     idx = 0;
-}
+  }
 
   return m_maxRadius.at(idx);
 }
@@ -275,7 +275,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
         for (int b2 = 0; b2 < nSrcBins; b2++) {  // loop over bins in Layer 2
           if (!pL1->verifyBin(pL2, b1, b2, min_z0, max_z0)) {
             continue;
-}
+          }
           int address = b1 + b2 * nDstBins;
           (*cIt)->m_binTable.at(address) = 1;
 

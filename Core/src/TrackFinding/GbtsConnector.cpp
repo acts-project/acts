@@ -26,7 +26,7 @@ GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
   m_layerGroups.clear();
 
   int nLinks{};
-  
+
   inFile >> nLinks >> m_etaBin;
 
   for (int l = 0; l < nLinks; l++) {
@@ -42,7 +42,7 @@ GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
         inFile >> dummy;  // pC->m_binTable[j+i*width];
-}
+      }
     }
 
     int srcvol_id = src / 1000;
@@ -70,7 +70,7 @@ GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
       m_connMap.insert(std::make_pair(stage, v));
     } else {
       (*it).second.push_back(pC);
-}
+    }
   }
 
   // re-arrange the connection stages
@@ -119,7 +119,7 @@ GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
     for (const auto& layerCounts : mCounter) {
       if (layerCounts.second.second != 0) {
         continue;
-}
+      }
 
       zeroLayers.insert(layerCounts.first);
     }
@@ -193,7 +193,7 @@ GbtsConnector::~GbtsConnector() {
   for (auto& conn : m_connMap) {
     for (auto& link : conn.second) {
       delete link;
-}
+    }
     conn.second.clear();
   }
 
