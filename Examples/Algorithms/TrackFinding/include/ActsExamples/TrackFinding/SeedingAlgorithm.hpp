@@ -113,6 +113,7 @@ class SeedingAlgorithm final : public IAlgorithm {
   ReadDataHandle<std::vector<Acts::Vertex>> m_inputVertex{
       this, "fittedHoughVertices"};
 
+
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
     static float rMin = 45.;
     static float cotThetaMax = 1.5;

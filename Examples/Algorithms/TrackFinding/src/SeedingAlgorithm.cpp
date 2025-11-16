@@ -209,18 +209,20 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     auto houghVertices = m_inputVertex(ctx);
 
     if (houghVertices.empty()) {
-      ACTS_DEBUG(
-          "No fitted Hough vertices found in event; skipping seed filtering");
+
+      ACTS_DEBUG("No fitted Hough vertices found in event; skipping seed filtering");
     } else {
+
       z_position = houghVertices.at(0).position()[2];
       applySeedFiltering = true;
     }
   }
 
   if (applySeedFiltering) {
-    m_seedFinder.setCustomCollisionRegion(z_position - m_cfg.tolerance,
-                                          z_position + m_cfg.tolerance);
+    m_seedFinder.setCustomCollisionRegion(
+        z_position - m_cfg.tolerance, z_position + m_cfg.tolerance);
   }
+
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_inputSpacePoints) {
