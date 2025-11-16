@@ -84,17 +84,13 @@ CompositeSpacePointLineSeeder::constructTangentLine(
   const double cosTheta = std::cos(result.theta);
   const double sinTheta = std::sin(result.theta);
 
-  const Vector flipedDir = (sinTheta * eY + cosTheta * eZ) * sign(sinTheta);
-  result.theta = VectorHelpers::theta(flipedDir);
-
   result.y0 = bottomPos.dot(eY) * cosTheta - bottomPos.dot(eZ) * sinTheta -
               signBot * bottomHit.driftRadius();
   assert(Acts::abs(topPos.dot(eY) * cosTheta - topPos.dot(eZ) * sinTheta -
-                   signTop * topHit.driftRadius() - result.y0) <
-         std::numeric_limits<float>::epsilon());
+                   signTop * topHit.driftRadius() - result.y0) < s_epsilon);
   result.y0 /= cosTheta;
   const double denomSquare = 1. - Acts::pow(R / distTubes, 2);
-  if (denomSquare < std::numeric_limits<double>::epsilon()) {
+  if (denomSquare < s_epsilon) {
     return result;
   }
   result.dTheta = combDriftUncert / std::sqrt(denomSquare) / distTubes;
@@ -104,4 +100,18 @@ CompositeSpacePointLineSeeder::constructTangentLine(
       result.dTheta;
   return result;
 }
+
+template <CompositeSpacePoint SpacePoint_t>
+std::array<double, 2> CompositeSpacePointLineSeeder::extractPhiTheta(
+    const SpacePoint_t& refHit, const double tanAngle) {
+  const Vector& eY{refHit.toNextSensor()};
+  const Vector& eZ{refHit.planeNormal()};
+  const double cosTheta = std::cos(tanAngle);
+  const double sinTheta = std::sin(tanAngle);
+
+  const Vector combDir = (sinTheta * eY + cosTheta * eZ) * sign(sinTheta);
+  using namespace Acts::VectorHelpers;
+  return std::array{phi(combDir), theta(combDir)};
+}
+
 }  // namespace Acts::Experimental

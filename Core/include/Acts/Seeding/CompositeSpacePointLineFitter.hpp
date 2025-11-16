@@ -260,7 +260,7 @@ class CompositeSpacePointLineFitter {
   /// @param measurements: List of measurements to be fitted. Only the ones with measuresLoc1() are
   ///                      considered by the fast fitter
   /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
-  /// @param nStraws: number of straw measurements
+  /// @param nStraws: Number of straw measurements
   /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
   ///                   at least enough measurements parsed for the fit.
   template <CompositeSpacePointContainer Cont_t>

@@ -53,6 +53,13 @@ class CompositeSpacePointLineSeeder {
   static TwoCircleTangentPars constructTangentLine(
       const SpacePoint_t& topHit, const SpacePoint_t& bottomHit,
       const TangentAmbi ambi);
+  /// @brief Extracts the phi & theta angle in the local coordinates from the constructed
+  ///        tangent line angle
+  /// @param refHit: Reference hit used to define the tangent
+  /// @param tanAngle: Calculated angle from the tangent
+  template <CompositeSpacePoint SpacePoint_t>
+  static std::array<double, 2> extractPhiTheta(const SpacePoint_t& refHit,
+                                               const double tanAngle);
 
  private:
   static constexpr std::array<std::array<int, 2>, 4> s_signCombo{
