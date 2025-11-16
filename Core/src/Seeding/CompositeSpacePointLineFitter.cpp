@@ -25,6 +25,9 @@ CompositeSpacePointLineFitter::fastFitterCfg() const {
 std::vector<CompositeSpacePointLineFitter::FitParIndex>
 CompositeSpacePointLineFitter::extractFitablePars(
     const DoFcounts& hitCounts) const {
+  if (m_cfg.parsToUse.size()) {
+    return m_cfg.parsToUse;
+  }
   std::vector<FitParIndex> pars{};
   using enum FitParIndex;
   if (hitCounts.nonBending > 1) {

@@ -15,6 +15,11 @@
 
 #include <cstdint>
 
+namespace Acts {
+template <Experimental::CompositeSpacePoint SpacePoint_t>
+std::string toString(const SpacePoint_t& measurement);
+}
+
 namespace Acts::Experimental::detail {
 /// @brief Helper class to calculate the residual between a straight line and
 ///        a CompositeSpacePoint measurement as well as the partial derivatives.

@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 
+#include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
@@ -33,8 +34,8 @@ CompositeSpacePointLineFitter::countDoF(
   for (const auto& sp : measurements) {
     if (selector.connected() && !selector(*sp)) {
       ACTS_VERBOSE(__func__ << "() " << __LINE__
-                            << " -  Skip invalid measurement @"
-                            << toString(sp->localPosition()));
+                            << " -  Skip invalid measurement "
+                            << toString(*sp));
       continue;
     }
     ++nValid;
@@ -46,7 +47,7 @@ CompositeSpacePointLineFitter::countDoF(
     }
     if (sp->isStraw()) {
       ++counts.straw;
-    } else if (sp->hasTime()) {
+    } else if (m_cfg.fitT0 && sp->hasTime()) {
       ++counts.time;
     }
   }
@@ -86,7 +87,7 @@ CompositeSpacePointLineFitter::fastPrecFit(
       ACTS_DEBUG(__func__ << "() " << __LINE__
                           << " - The fit result is of poor quality "
                           << (*precResult) << " attempt with L<->R swapping");
-      for (auto& s : signs) {
+      for (int& s : signs) {
         s = -s;
       }
       // Retry & check whether the chi2 is better
@@ -105,7 +106,6 @@ CompositeSpacePointLineFitter::fastPrecFit(
     }
     return precResult;
   }
-
   // Not enough straw measurements, proceeding with strip fast fit
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
   return m_fastFitter.fit(measurements, ResidualIdx::bending);
@@ -141,7 +141,7 @@ CompositeSpacePointLineFitter::fastPrecFit(
     ACTS_DEBUG(__func__ << "() " << __LINE__
                         << " - The fit result is of poor quality "
                         << (*precResult) << " attempt with L<->R swapping");
-    for (auto& s : signs) {
+    for (int& s : signs) {
       s = -s;
     }
     // Retry & check whether the chi2 is better
@@ -210,7 +210,7 @@ CompositeSpacePointLineFitter::fastFit(
 
   // Copy spatial parameters & covariance from precision fit and
   // perform non-bending fit (if required)
-  const bool fitT0{true};
+  constexpr bool fitT0{true};
   mergePrecAndNonPrec(result, precResult, measurements, parsToUse, fitT0);
 
   return result;
@@ -226,13 +226,18 @@ void CompositeSpacePointLineFitter::mergePrecAndNonPrec(
 
   // Copy the parameters & covariance from precision fit result
   result.parameters[toUnderlying(y0)] = precResult->y0;
-  result.parameters[toUnderlying(theta)] = precResult->theta;
+  const auto [polar, azimuthal] =
+      CompositeSpacePointLineSeeder::extractPhiTheta(**measurements.begin(),
+                                                     precResult->theta);
+  result.parameters[toUnderlying(theta)] = azimuthal;
+  result.parameters[toUnderlying(phi)] = polar;
+
   result.covariance(toUnderlying(y0), toUnderlying(y0)) =
       Acts::square(precResult->dY0);
   result.covariance(toUnderlying(theta), toUnderlying(theta)) =
       Acts::square(precResult->dTheta);
-  result.nDoF = static_cast<unsigned>(precResult->nDoF);
-  result.nIter = static_cast<unsigned>(precResult->nIter);
+  result.nDoF = precResult->nDoF;
+  result.nIter = precResult->nIter;
   result.chi2 = precResult->chi2;
   result.converged = true;
 
@@ -240,7 +245,6 @@ void CompositeSpacePointLineFitter::mergePrecAndNonPrec(
   if (std::ranges::none_of(parsToUse, [](const FitParIndex idx) {
         return idx == phi || idx == x0;
       })) {
-    result.parameters[toUnderlying(phi)] = 90._degree;
     ACTS_DEBUG(
         __func__ << "() " << __LINE__
                  << " - No measurements in non precision direction parsed.");
@@ -253,7 +257,6 @@ void CompositeSpacePointLineFitter::mergePrecAndNonPrec(
   const FastFitResult nonPrecResult =
       m_fastFitter.fit(measurements, ResidualIdx::nonBending);
   if (!nonPrecResult) {
-    result.parameters[toUnderlying(phi)] = 90._degree;
     ACTS_DEBUG(__func__ << "() " << __LINE__
                         << " - Fast non-precision fit failed.");
     return;
@@ -569,7 +572,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << ": Current parameters " << toString(miniPars)
                         << " with chi2: " << cache.chi2 << ",  gradient: "
                         << toString(cache.gradient) << ", hessian: \n"
-                        << cache.hessian);
+                        << toString(cache.hessian));
 
   // Take out the filled block from the gradient
   Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
@@ -587,7 +590,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << ": Projected parameters: " << toString(miniPars)
                         << " gradient: " << toString(miniGradient)
                         << ", hessian: \n"
-                        << miniHessian
+                        << toString(miniHessian)
                         << ", determinant: " << miniHessian.determinant());
 
   auto inverseH = safeInverse(miniHessian);
@@ -602,7 +605,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     }
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Inverted Hessian \n"
-                          << (*inverseH) << "\n-> Update parameters by "
+                          << toString(*inverseH) << "\n-> Update parameters by "
                           << toString(update));
     miniPars -= update;
 
@@ -654,7 +657,7 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
 
   ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                       << ": Evaluated covariance: \n"
-                      << covariance);
+                      << toString(covariance));
 }
 
 }  // namespace Acts::Experimental

@@ -84,7 +84,10 @@ class CompositeSpacePointLineFitter {
     std::size_t nParsOutOfBounds{1};
     /// @brief Allowed parameter ranges
     using RangeArray = std::array<std::array<double, 2>, s_nPars>;
-    RangeArray ranges{};
+    RangeArray ranges{filledArray<std::array<double, 2>, s_nPars>(
+        filledArray<double, 2>(0.))};
+    /// @brief Overwrite the set of parameters to use, if it's absolutely necessary
+    std::vector<FitParIndex> parsToUse{};
   };
   /// @brief Auxiliary object to store the fitted parameters, covariance,
   ///        the chi2 / nDoF & the number of required iterations
@@ -257,7 +260,7 @@ class CompositeSpacePointLineFitter {
   /// @param measurements: List of measurements to be fitted. Only the ones with measuresLoc1() are
   ///                      considered by the fast fitter
   /// @param initialGuess: Instantiated line from the start parameters needed for the L<->R ambiguity
-  /// @param nStraws: number of straw measurements
+  /// @param nStraws: Number of straw measurements
   /// @param parsToUse: List of parameters to fit. Used as an initial check to ensure that there're
   ///                   at least enough measurements parsed for the fit.
   template <CompositeSpacePointContainer Cont_t>
