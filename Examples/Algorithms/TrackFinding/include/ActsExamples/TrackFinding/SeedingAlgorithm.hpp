@@ -64,6 +64,7 @@ class SeedingAlgorithm final : public IAlgorithm {
     bool allowSeparateRMax = false;
     
     float tolerance = 10;
+    std::string fittedHoughVertices = "";
 
     // vector containing the map of z bins in the top and bottom layers
     std::vector<std::pair<int, int>> zBinNeighborsTop;
@@ -110,6 +111,7 @@ class SeedingAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
   ReadDataHandle<std::vector<Acts::Vertex>> m_inputVertex{this, "fittedHoughVertices"};
+
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
     static float rMin = 45.;

@@ -106,8 +106,9 @@ SeedingAlgorithmConfigArg = namedtuple(
         "numPhiNeighbors",
         "useExtraCuts",
         "tolerance",
+        "fittedHoughVertices",
     ],
-    defaults=[None] * 6,
+    defaults=[None] * 7,
 )
 
 TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
@@ -334,7 +335,7 @@ def addSeeding(
     spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, maxPhiBins, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
-    seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts, tolerance)
+    seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts, tolerance, fittedHoughVertices)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     hashingTrainingConfigArg : HashingTrainingConfigArg(annoySeed, f)
                                 Defaults specified in Plugins/Hashing/include/Acts/Plugins/Hashing/HashingTrainingConfig.hpp
@@ -816,6 +817,7 @@ def addStandardSeeding(
             numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
             tolerance=seedingAlgorithmConfigArg.tolerance,
+            fittedHoughVertices=seedingAlgorithmConfigArg.fittedHoughVertices,
         ),
         gridConfig=gridConfig,
         gridOptions=gridOptions,
