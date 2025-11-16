@@ -10,12 +10,9 @@
 
 // TODO: update to C++17 style
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/GbtsGeometry.hpp"
-#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include <string>
 
-#include <memory>
 
 // core algorithm so in acts namespace
 namespace Acts::Experimental {
