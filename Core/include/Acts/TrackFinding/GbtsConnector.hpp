@@ -12,7 +12,6 @@
 // Consider to moving to detail subdirectory
 #include <fstream>
 #include <map>
-#include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
