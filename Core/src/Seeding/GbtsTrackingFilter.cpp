@@ -83,8 +83,9 @@ GbtsTrackingFilter::GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
     : m_geo(g), m_segStore(sb), m_config(config) {}
 
 void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
-  if (pS->m_level == -1)
+  if (pS->m_level == -1) {
     return;  // already collected
+}
 
   m_globalStateCounter = 0;
 
@@ -100,8 +101,9 @@ void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
 
   propagate(pS, *pInitState);
 
-  if (m_stateVec.empty())
+  if (m_stateVec.empty()) {
     return;
+}
 
   std::sort(m_stateVec.begin(), m_stateVec.end(),
             typename GbtsEdgeState::Compare());
@@ -114,8 +116,9 @@ void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
 }
 
 void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
-  if (m_globalStateCounter >= MAX_EDGE_STATE)
+  if (m_globalStateCounter >= MAX_EDGE_STATE) {
     return;
+}
 
   GbtsEdgeState* p_new_ts = &m_stateStore[m_globalStateCounter++];
 
@@ -126,8 +129,9 @@ void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
 
   bool accepted = update(pS, new_ts);  // update using n1 of the segment
 
-  if (!accepted)
+  if (!accepted) {
     return;  // stop further propagation
+}
 
   int level = pS->m_level;
 
@@ -139,8 +143,9 @@ void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
 
     GbtsEdge* pN = &(m_segStore[nextSegmentIdx]);
 
-    if (pN->m_level == -1)
+    if (pN->m_level == -1) {
       continue;  // already collected
+}
 
     if (pN->m_level == level - 1) {
       lCont.push_back(pN);
@@ -202,9 +207,9 @@ bool GbtsTrackingFilter::update(GbtsEdge* pS, GbtsEdgeState& ts) {
   float X[3], Y[2];
   float Cx[3][3], Cy[2][2];
 
-  float refX, refY, mx, my;
+  float refX{}, refY{}, mx{}, my{};
 
-  float x, y, z, r;
+  float x{}, y{}, z{}, r{};
 
   x = pS->m_n1->x();
   y = pS->m_n1->y();
@@ -282,10 +287,12 @@ bool GbtsTrackingFilter::update(GbtsEdge* pS, GbtsEdgeState& ts) {
   float Kx[3] = {Dx * Cx[0][0], Dx * Cx[0][1], Dx * Cx[0][2]};
   float Ky[2] = {Dy * Cy[0][0], Dy * Cy[0][1]};
 
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 3; i++) {
     ts.m_X[i] = X[i] + Kx[i] * resid_x;
-  for (int i = 0; i < 2; i++)
+}
+  for (int i = 0; i < 2; i++) {
     ts.m_Y[i] = Y[i] + Ky[i] * resid_y;
+}
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
