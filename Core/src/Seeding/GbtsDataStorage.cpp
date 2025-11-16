@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/GbtsDataStorage.hpp"
 
+#include <numbers>
 #include <algorithm>
 #include <cmath>
 #include <cstring>
