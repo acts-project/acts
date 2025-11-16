@@ -65,7 +65,9 @@ SeedingAlgorithm::SeedingAlgorithm(SeedingAlgorithm::Config cfg,
   }
 
   m_outputSeeds.initialize(m_cfg.outputSeeds);
-  m_inputVertex.initialize("fittedHoughVertices");
+  if (!m_cfg.fittedHoughVertices.empty()) {
+    m_inputVertex.initialize(m_cfg.fittedHoughVertices);
+  }
 
 
   if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax &&
@@ -202,9 +204,10 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     nSpacePoints += (*isp)(ctx).size();
   }
 
-  auto houghVertex = m_inputVertex(ctx);
-  float z_position = houghVertex.at(0).position()[2];
+  bool applySeedFiltering = false;
+  float z_position = 0.0f;
 
+<<<<<<< HEAD
   ACTS_INFO("SeedingAlgorithm: " << nSpacePoints << " spacepoints");
 <<<<<<< HEAD
   ACTS_INFO("tolerance " << m_cfg.tolerance );
@@ -214,6 +217,25 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
 =======
   // m_seedFinder.setCustomcCollisionRegion(20.2309 -30.0, 20.2309 +30.0);
 >>>>>>> 6dc2d6e64 (post-creation seed filtering)
+=======
+  if (!m_cfg.fittedHoughVertices.empty()) {
+    auto houghVertices = m_inputVertex(ctx);
+
+    if (houghVertices.empty()) {
+
+      ACTS_DEBUG("No fitted Hough vertices found in event; skipping seed filtering");
+    } else {
+
+      z_position = houghVertices.at(0).position()[2];
+      applySeedFiltering = true;
+    }
+  }
+
+  if (applySeedFiltering) {
+    m_seedFinder.setCustomCollisionRegion(
+        z_position - m_cfg.tolerance, z_position + m_cfg.tolerance);
+  }
+>>>>>>> d8109f96a (adding switch for hough vertex filter)
 
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
@@ -292,7 +314,7 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                      middle, top, rMiddleSPRange);
   }
 
-  ACTS_INFO("Created " << seeds.size() << " track seeds from "
+  ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
 <<<<<<< HEAD
