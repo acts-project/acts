@@ -8,7 +8,6 @@
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <iostream>
@@ -68,8 +67,9 @@ GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, float ew, int bin0)
   } else {
     int nB = static_cast<int>(deltaEta / m_etaBinWidth);
     m_nBins = nB;
-    if (deltaEta - m_etaBinWidth * nB > 0.5 * m_etaBinWidth)
+    if (deltaEta - m_etaBinWidth * nB > 0.5 * m_etaBinWidth) {
       m_nBins++;
+}
 
     m_etaBin = deltaEta / m_nBins;
 
@@ -138,8 +138,9 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
     float z0_min = z1min * A - max_b2 * B;
     float z0_max = z1max * A - min_b2 * B;
 
-    if (z0_max < min_z0 - tol || z0_min > max_z0 + tol)
+    if (z0_max < min_z0 - tol || z0_min > max_z0 + tol) {
       return false;
+}
 
     return true;
   }
@@ -152,8 +153,9 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
     float r2max = pL->m_maxBinCoord.at(b2);
     float r2min = pL->m_minBinCoord.at(b2);
 
-    if (r2max <= r1)
+    if (r2max <= r1) {
       return false;
+}
 
     if (r2min <= r1) {
       r2min = r1 + 1e-3;
@@ -170,8 +172,9 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
       z0_min = (z1min * r2max - z2 * r1) / (r2max - r1);
     }
 
-    if (z0_max < min_z0 - tol || z0_min > max_z0 + tol)
+    if (z0_max < min_z0 - tol || z0_min > max_z0 + tol) {
       return false;
+}
     return true;
   }
 
@@ -179,36 +182,43 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
 }
 
 int GbtsLayer::getEtaBin(float zh, float rh) const {
-  if (m_bins.size() == 1)
+  if (m_bins.size() == 1) {
     return m_bins.at(0);
+}
 
   float t1 = zh / rh;
   float eta = -std::log(std::sqrt(1 + t1 * t1) - t1);
 
   int idx = static_cast<int>((eta - m_minEta) / m_etaBin);
 
-  if (idx < 0)
+  if (idx < 0) {
     idx = 0;
-  if (idx >= static_cast<int>(m_bins.size()))
+}
+  if (idx >= static_cast<int>(m_bins.size())) {
     idx = static_cast<int>(m_bins.size()) - 1;
+}
 
   return m_bins.at(idx);  // index in the global storage
 }
 
 float GbtsLayer::getMinBinRadius(int idx) const {
-  if (idx >= static_cast<int>(m_minRadius.size()))
+  if (idx >= static_cast<int>(m_minRadius.size())) {
     idx = idx - 1;
-  if (idx < 0)
+}
+  if (idx < 0) {
     idx = 0;
+}
 
   return m_minRadius.at(idx);
 }
 
 float GbtsLayer::getMaxBinRadius(int idx) const {
-  if (idx >= static_cast<int>(m_maxRadius.size()))
+  if (idx >= static_cast<int>(m_maxRadius.size())) {
     idx = idx - 1;
-  if (idx < 0)
+}
+  if (idx < 0) {
     idx = 0;
+}
 
   return m_maxRadius.at(idx);
 }
@@ -263,8 +273,9 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
 
       for (int b1 = 0; b1 < nDstBins; b1++) {    // loop over bins in Layer 1
         for (int b2 = 0; b2 < nSrcBins; b2++) {  // loop over bins in Layer 2
-          if (!pL1->verifyBin(pL2, b1, b2, min_z0, max_z0))
+          if (!pL1->verifyBin(pL2, b1, b2, min_z0, max_z0)) {
             continue;
+}
           int address = b1 + b2 * nDstBins;
           (*cIt)->m_binTable.at(address) = 1;
 
