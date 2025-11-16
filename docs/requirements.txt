@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.1
+aiohttp==3.13.2
     # via -r docs/requirements.in
 aiosignal==1.4.0
     # via aiohttp
@@ -20,13 +20,13 @@ babel==2.17.0
     # via sphinx
 breathe==4.36.0
     # via -r docs/requirements.in
-certifi==2025.10.5
+certifi==2025.11.12
     # via requests
 cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.4
     # via requests
-click==8.3.0
+click==8.3.1
     # via typer
 cryptography==46.0.3
     # via pyjwt
@@ -40,7 +40,7 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2025.9.0
+fsspec==2025.10.0
     # via -r docs/requirements.in
 gidgethub==5.4.0
     # via -r docs/requirements.in
@@ -80,9 +80,9 @@ propcache==0.4.1
     #   yarl
 pycparser==2.23
     # via cffi
-pydantic==2.12.3
+pydantic==2.12.4
     # via -r docs/requirements.in
-pydantic-core==2.41.4
+pydantic-core==2.41.5
     # via pydantic
 pygments==2.19.2
     # via
@@ -92,7 +92,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   gidgethub
     #   pyjwt
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via -r docs/requirements.in
 pyyaml==6.0.3
     # via myst-parser
