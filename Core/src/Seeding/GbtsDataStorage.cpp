@@ -8,10 +8,10 @@
 
 #include "Acts/Seeding/GbtsDataStorage.hpp"
 
-#include <numbers>
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <numbers>
 namespace Acts::Experimental {
 
 GbtsEtaBin::GbtsEtaBin() : m_minRadius(0), m_maxRadius(0) {
