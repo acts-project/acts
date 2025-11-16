@@ -12,13 +12,9 @@
 #include "Acts/Seeding/GbtsDataStorage.hpp"  //includes geo which has trigindetsilayer, may move this to trigbase
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <iostream>
-#include <list>
 #include <vector>
 
 namespace Acts::Experimental {

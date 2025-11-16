@@ -9,15 +9,10 @@
 #pragma once
 
 // TODO: update to C++17 style
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 
-#include <algorithm>
 #include <array>
-#include <iostream>
 #include <limits>
-#include <map>
-#include <numbers>
 #include <vector>
 namespace Acts::Experimental {
 
