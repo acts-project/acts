@@ -186,9 +186,46 @@ auto defaultConnectionHelper([[maybe_unused]] const cell_container_t &cells) {
 template <typename coordinate_t>
 auto absDifference(coordinate_t a, coordinate_t b) {
   if constexpr (std::is_signed_v<coordinate_t>) {
-    return std::abs(a - b);
+    return static_cast<coordinate_t>(std::abs(a - b));
   } else {
-    return (a > b ? a - b : b - a);
+    return static_cast<coordinate_t>((a > b ? a - b : b - a));
+  }
+}
+
+/// @brief Initialize an array with the absolute difference of the coordinates of two
+///        cells.
+/// @param cell_a one cell (order does not matter for the absolute difference).
+/// @param cell_b a second cell.
+/// @param args initially empty, will ultimately be the argument list used to
+///        initialize the array.
+/// @tparam NDim the total number of axes.
+/// @tparam cell_t the cell type.
+/// @tparam axis_i number of axes that still need to be initialized should be NDim
+///         for the first call of the recursion.
+/// @tparam args_t the types matching args.
+/// The function will create recursively an argument list for aggregate
+/// initialization, starting from the last axis. It avoids a false warning about
+/// uninitialized variables triggered  by clang-tidy when using a trivial loop
+/// for initialization instead.
+template <std::size_t NDim, CellWithLabel cell_t, std::size_t axis_i = NDim,
+          typename... args_t>
+auto makeAbsDifferenceArray(const cell_t &cell_a, const cell_t &cell_b,
+                            args_t... args)
+  requires(NDim > 0 && axis_i <= NDim)
+{
+  using coordinate_t =
+      std::remove_cvref_t<decltype(traits::getCellCoordinate(cell_a, 0u))>;
+  if constexpr (axis_i > 0) {
+    // prepend the differences to the argument list start from the last axis
+    return makeAbsDifferenceArray<NDim, cell_t, axis_i - 1>(
+        cell_a, cell_b,
+        absDifference(traits::getCellCoordinate(cell_a, axis_i - 1),
+                      traits::getCellCoordinate(cell_b, axis_i - 1)),
+        args...);
+  } else {
+    // check that every element of the array is initialized.
+    static_assert(NDim == sizeof...(args_t));
+    return std::array<coordinate_t, NDim>{args...};
   }
 }
 
@@ -214,37 +251,30 @@ void labelSortedCells(cell_collection_t &cells,
   for (index_t idx_a = 0; idx_a < cells.size(); ++idx_a) {
     traits::setLabel(cells[idx_a], idx_a);
     for (index_t idx_b = idx_a; idx_b-- > 0;) {
-      // NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
-      // all elements of diff will be set to a value no need to initialize
-      // with a dummy value.
-      std::array<coordinate_t, NDim> diff;
-      for (unsigned int axis_i = 0; axis_i < NDim; ++axis_i) {
-        diff[axis_i] =
-            absDifference(traits::getCellCoordinate(cells[idx_a], axis_i),
-                          traits::getCellCoordinate(cells[idx_b], axis_i));
-      }
-      // NOLINTEND(cppcoreguidelines-pro-type-member-init)
+      std::array<coordinate_t, NDim> diff =
+          makeAbsDifferenceArray<NDim>(cells[idx_a], cells[idx_b]);
 
       if (connection_helper.isConnected(diff)) {
         if (traits::getLabel(cells[idx_a]) < idx_a) {
           // if the label is not its index, the cell was merged to a cluster
           // thus the two clusters need to be merged rather than just merging
           // in this one cell
-          // NOLINTBEGIN(cppcoreguidelines-init-variables)
-          // min_label and max_label will be set before use, no reason to set
-          // to unused dummy value before.
-          unsigned int min_label;
-          unsigned int max_label;
-          if (traits::getLabel(cells[idx_a]) < traits::getLabel(cells[idx_b])) {
-            min_label = traits::getLabel(cells[idx_a]);
-            max_label = traits::getLabel(cells[idx_b]);
-            traits::setLabel(cells[idx_b], min_label);
-          } else {
-            max_label = traits::getLabel(cells[idx_a]);
-            min_label = traits::getLabel(cells[idx_b]);
-            traits::setLabel(cells[idx_a], min_label);
-          }
-          // NOLINTEND(cppcoreguidelines-init-variables)
+          // Helper function to avoid that min_label and max_label are declared
+          // without initialization, which clang-tidy would complain about.
+          auto [min_label, max_label] = [&]() {
+            if (traits::getLabel(cells[idx_a]) <
+                traits::getLabel(cells[idx_b])) {
+              index_t min_label_tmp = traits::getLabel(cells[idx_a]);
+              index_t max_label_tmp = traits::getLabel(cells[idx_b]);
+              traits::setLabel(cells[idx_b], min_label_tmp);
+              return std::make_pair(min_label_tmp, max_label_tmp);
+            } else {
+              index_t max_label_tmp = traits::getLabel(cells[idx_a]);
+              index_t min_label_tmp = traits::getLabel(cells[idx_b]);
+              traits::setLabel(cells[idx_a], min_label_tmp);
+              return std::make_pair(min_label_tmp, max_label_tmp);
+            }
+          }();
           // nothing will be done if the min and the max label are identical
           if (min_label != max_label) {
             // can only encounter cells with label max_label down to index
