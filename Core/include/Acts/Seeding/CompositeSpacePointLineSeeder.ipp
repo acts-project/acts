@@ -102,16 +102,15 @@ CompositeSpacePointLineSeeder::constructTangentLine(
 }
 
 template <CompositeSpacePoint SpacePoint_t>
-std::array<double, 2> CompositeSpacePointLineSeeder::extractPhiTheta(
-    const SpacePoint_t& refHit, const double tanAngle) {
+CompositeSpacePointLineSeeder::Vector
+CompositeSpacePointLineSeeder::makeDirection(const SpacePoint_t& refHit,
+                                             const double tanAngle) {
   const Vector& eY{refHit.toNextSensor()};
   const Vector& eZ{refHit.planeNormal()};
   const double cosTheta = std::cos(tanAngle);
   const double sinTheta = std::sin(tanAngle);
 
-  const Vector combDir = (sinTheta * eY + cosTheta * eZ) * sign(sinTheta);
-  using namespace Acts::VectorHelpers;
-  return std::array{phi(combDir), theta(combDir)};
+  return (sinTheta * eY + cosTheta * eZ) * sign(sinTheta);
 }
 
 }  // namespace Acts::Experimental
