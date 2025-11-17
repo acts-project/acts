@@ -66,8 +66,11 @@ struct AxisDirectionReferenceGenerator {
 ///
 /// The grid filling then completes the empty bins in between and
 /// expands if necessary.
-template <std::size_t nSEGS = 1u, bool aBARY = true>
 struct PolyhedronReferenceGenerator {
+  bool addBarycenter = false;
+
+  int nSegements = 1;
+
   /// Helper to access the Center point of for filling the grid
   ///
   /// @param gctx the geometry context of this operation
@@ -75,21 +78,7 @@ struct PolyhedronReferenceGenerator {
   ///
   /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
-                                        const Surface& surface) const {
-    // Create the return  vector
-    std::vector<Vector3> rPositions;
-    auto pHedron = surface.polyhedronRepresentation(gctx, nSEGS);
-    rPositions.insert(rPositions.end(), pHedron.vertices.begin(),
-                      pHedron.vertices.end());
-    // Add the barycenter if configured
-    if constexpr (aBARY) {
-      Vector3 bc(0., 0., 0.);
-      std::ranges::for_each(rPositions, [&](const auto& p) { bc += p; });
-      bc *= 1. / rPositions.size();
-      rPositions.push_back(bc);
-    }
-    return rPositions;
-  }
+                                        const Surface& surface) const;
 };
 
 }  // namespace Acts::Experimental::detail
