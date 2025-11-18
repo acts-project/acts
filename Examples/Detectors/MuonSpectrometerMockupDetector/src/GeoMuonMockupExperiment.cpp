@@ -310,7 +310,7 @@ void GeoMuonMockupExperiment::assembleBigWheel(const PVLink& envelopeVol,
                           GeoTrf::RotateY3D(90. * GeoModelKernelUnits::deg)));
       }
       const int castEta =
-          (wheelZ > 0 ? 1 : -1) * static_cast<int>(stationEta + 1);
+          static_cast<int>(sign(wheelZ)) * static_cast<int>(stationEta + 1);
       wheelEnvelope->add(assembleEndcapStation(radius, layer, sector, castEta));
     }
   }
@@ -730,8 +730,7 @@ void GeoMuonMockupExperiment::assembleSmallWheel(const PVLink& envelope,
                                                   envelopeShape->getRMin())) *
                       GeoTrf::RotateY3D(90. * GeoModelKernelUnits::deg)));
 
-    envelopeWheel->add(
-        assembleSmallWheelSector(wedgeL, wheelZ > 0 ? 1 : -1, sector));
+    envelopeWheel->add(assembleSmallWheelSector(wedgeL, sign(wheelZ), sector));
   }
   envelope->add(makeTransform(GeoTrf::TranslateZ3D(wheelZ)));
   envelope->add(envelopeWheel);
