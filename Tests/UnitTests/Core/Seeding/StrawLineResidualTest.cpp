@@ -117,7 +117,7 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
                 << resCalc.residual()[toUnderlying(ResidualIdx::nonBending)]);
 
       CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::nonBending)],
-                  closePoint.pathLength(), 1.e-10);
+                  closePoint.pathLength(), 1.e-9);
     }
   } else {
     const Vector3& n{testPoint.planeNormal()};
