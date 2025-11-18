@@ -730,7 +730,8 @@ void GeoMuonMockupExperiment::assembleSmallWheel(const PVLink& envelope,
                                                   envelopeShape->getRMin())) *
                       GeoTrf::RotateY3D(90. * GeoModelKernelUnits::deg)));
 
-    envelopeWheel->add(assembleSmallWheelSector(wedgeL, sign(wheelZ), sector));
+    envelopeWheel->add(assembleSmallWheelSector(
+        wedgeL, static_cast<int>(sign(wheelZ)), sector));
   }
   envelope->add(makeTransform(GeoTrf::TranslateZ3D(wheelZ)));
   envelope->add(envelopeWheel);
