@@ -17,6 +17,9 @@
 
 namespace Acts {
 template <Experimental::CompositeSpacePoint SpacePoint_t>
+/// @brief Print the position, the drift radius & the sensor directions of a space point. 
+///        If the space point is shipped with an ostream operator, this oone is used
+/// @param measurement: Reference to the space point to print
 std::string toString(const SpacePoint_t& measurement);
 }
 
