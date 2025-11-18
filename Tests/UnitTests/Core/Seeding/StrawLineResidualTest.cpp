@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
         const Vector numDeriv1{
             (resCalcUp.gradient(partial2) - resCalcDn.gradient(partial2)) /
             (2. * h)};
-        ACTS_INFO(__func__ << "() - " << __LINE__ << ": Second deriv ("
+        ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
                            << CompSpacePointAuxiliaries::parName(partial)
                            << ", "
                            << CompSpacePointAuxiliaries::parName(partial2)
