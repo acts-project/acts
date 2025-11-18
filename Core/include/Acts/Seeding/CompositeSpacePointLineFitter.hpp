@@ -218,7 +218,7 @@ class CompositeSpacePointLineFitter {
   using FastFitResultT0 = std::optional<FastFitter_t::FitResultT0>;
   template <CompositeSpacePointContainer Cont_t, bool fitTime>
   using FastFitDelegate_t =
-      Delegate<std::conditional<fitTime, FastFitResultT0, FastFitResult>(
+      std::function<std::conditional_t<fitTime, FastFitResultT0, FastFitResult>(
           const Cont_t& measurements, const std::vector<int>& strawSigns)>;
 
   /// @brief Executes a fast (pre)fit using the FastStrawLineFitter. First the parameters
@@ -233,10 +233,9 @@ class CompositeSpacePointLineFitter {
   /// @param nStraws: number of straw measurements
   /// @param parsToUse: List of parameters to fit (y0, theta), (x0, phi) or (y0, theta, x0, phi).
   template <bool fitStraws, bool fitTime, CompositeSpacePointContainer Cont_t>
-  FitParameters fastFit(
-      const Cont_t& measurements, const Line_t& initialGuess,
-      const std::vector<FitParIndex>& parsToUse,
-      const FastFitDelegate_t<Cont_t, fitTime>& precDelegate) const;
+  FitParameters fastFit(const Cont_t& measurements, const Line_t& initialGuess,
+                        const std::vector<FitParIndex>& parsToUse,
+                        FastFitDelegate_t<Cont_t, fitTime> precDelegate) const;
   /// @brief Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was
   ///        sufficiently small such that the fit is converged
