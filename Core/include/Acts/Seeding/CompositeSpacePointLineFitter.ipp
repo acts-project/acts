@@ -271,8 +271,13 @@ CompositeSpacePointLineFitter::fit(
                                         resCfg.parsToUse, fitDelegate);
     }
     if (fastResult.converged) {
+      if (fitTime) {
+         fastResult.parameters[toUnderlying(FitParIndex::t0)] -=
+              (fitOpts.localToGlobal * line.position()).norm() /
+              PhysicalConstants::c;
+      }
       static_cast<FitParameters&>(result) = std::move(fastResult);
-      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit converged.");
+      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit converged.");
       // Use the result from the fast fitter as final answer
       if (!m_cfg.fastPreFitter) {
         line.updateParameters(result.parameters);
