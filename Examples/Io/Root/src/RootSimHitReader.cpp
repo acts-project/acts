@@ -118,7 +118,9 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
 }
 
 RootSimHitReader::~RootSimHitReader() {
-  delete m_barcodeVector;
+  if (m_barcodeVector != nullptr) {
+    delete m_barcodeVector;
+  }
 }
 
 std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
