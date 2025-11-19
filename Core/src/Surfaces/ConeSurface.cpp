@@ -147,7 +147,7 @@ double ConeSurface::pathCorrection(const GeometryContext& gctx,
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3 normalC(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
                   sgn * sinAlpha);
-  normalC = transform(gctx) * normalC;
+  normalC = transform(gctx).linear() * normalC;
   // Back to the global frame
   double cAlpha = normalC.dot(direction);
   return std::abs(1. / cAlpha);
