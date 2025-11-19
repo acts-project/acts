@@ -420,12 +420,12 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
             (resCalcUp.gradient(partial2) - resCalcDn.gradient(partial2)) /
             (2. * h)};
         ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
-                           << CompSpacePointAuxiliaries::parName(partial)
-                           << ", "
-                           << CompSpacePointAuxiliaries::parName(partial2)
-                           << ") -- numerical: " << toString(numDeriv1)
-                           << ", analytic: "
-                           << toString(resCalc.hessian(partial, partial2)));
+                            << CompSpacePointAuxiliaries::parName(partial)
+                            << ", "
+                            << CompSpacePointAuxiliaries::parName(partial2)
+                            << ") -- numerical: " << toString(numDeriv1)
+                            << ", analytic: "
+                            << toString(resCalc.hessian(partial, partial2)));
         COMPARE_VECTORS(numDeriv1, resCalc.hessian(partial, partial2),
                         tolerance);
       }

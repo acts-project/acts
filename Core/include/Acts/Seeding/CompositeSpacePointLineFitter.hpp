@@ -84,10 +84,11 @@ class CompositeSpacePointLineFitter {
     bool includeToF{true};
     /// @brief Abort the fit as soon as more than n parameters leave the fit range
     std::size_t nParsOutOfBounds{1};
-    /// @brief Allowed parameter ranges
+    /// @brief Allowed parameter ranges. If the lower interval edge is higher than the upper
+    ///        edge, the parameters are unbound
     using RangeArray = std::array<std::array<double, 2>, s_nPars>;
-    RangeArray ranges{filledArray<std::array<double, 2>, s_nPars>(
-        filledArray<double, 2>(0.))};
+    RangeArray ranges{
+        filledArray<std::array<double, 2>, s_nPars>(std::array{1., -1.})};
     /// @brief Overwrite the set of parameters to use, if it's absolutely necessary
     std::vector<FitParIndex> parsToUse{};
   };
@@ -213,14 +214,24 @@ class CompositeSpacePointLineFitter {
     outOfBounds = 2,  // Too many fit parameters fell out of bounds -> abort
   };
 
+  /// @brief Checks whether the parameters from the iteration or the final result parameters
+  ///        remain within the intervals defined by the user.
+  /// @param pars: Line parameters to check
+  /// @param parsToUse: Which parameters are altered by the fit
+  bool withinRange(const ParamVec_t& pars,
+                   const std::vector<FitParIndex>& parsToUse) const;
+  /// @brief Checks whether a parameter value is within the range intreval defined by the user
+  /// @param parValue: Value of the line parameter to check
+  /// @param fitPar: Parameter index to which the value corresponds and which interval shall be picked
+  bool withinRange(const double parValue, const FitParIndex fitPar) const;
   /// @brief Abrivation of the fit result returned by the FastStrawLineFitter
   using FastFitResult = std::optional<FastFitter_t::FitResult>;
   using FastFitResultT0 = std::optional<FastFitter_t::FitResultT0>;
   template <CompositeSpacePointContainer Cont_t, bool fitTime>
+  /// @brief Abrivation of the standard function wrapping the call to the precision fitter
   using FastFitDelegate_t =
       std::function<std::conditional_t<fitTime, FastFitResultT0, FastFitResult>(
           const Cont_t& measurements, const std::vector<int>& strawSigns)>;
-
   /// @brief Executes a fast (pre)fit using the FastStrawLineFitter. First the parameters
   ///        (theta, y0) are fitted using the straw measurements only, if
   ///        present. Otherwise, strips measuring the bending direction are
@@ -233,9 +244,10 @@ class CompositeSpacePointLineFitter {
   /// @param nStraws: number of straw measurements
   /// @param parsToUse: List of parameters to fit (y0, theta), (x0, phi) or (y0, theta, x0, phi).
   template <bool fitStraws, bool fitTime, CompositeSpacePointContainer Cont_t>
-  FitParameters fastFit(const Cont_t& measurements, const Line_t& initialGuess,
-                        const std::vector<FitParIndex>& parsToUse,
-                        FastFitDelegate_t<Cont_t, fitTime> precDelegate) const;
+  FitParameters fastFit(
+      const Cont_t& measurements, const Line_t& initialGuess,
+      const std::vector<FitParIndex>& parsToUse,
+      const FastFitDelegate_t<Cont_t, fitTime>& precDelegate) const;
   /// @brief Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was
   ///        sufficiently small such that the fit is converged

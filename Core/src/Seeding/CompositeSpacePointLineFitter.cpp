@@ -45,6 +45,30 @@ CompositeSpacePointLineFitter::extractFitablePars(
   return pars;
 }
 
+bool CompositeSpacePointLineFitter::withinRange(
+    const double parValue, const FitParIndex fitPar) const {
+  const auto p = toUnderlying(fitPar);
+  /// The parameter is unbound
+  if (m_cfg.ranges[p][0] >= m_cfg.ranges[p][1]) {
+    return true;
+  }
+  if (parValue < m_cfg.ranges[p][0] || parValue > m_cfg.ranges[p][1]) {
+    ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": The parameter "
+                          << detail::CompSpacePointAuxiliaries::parName(fitPar)
+                          << " " << parValue << " is out range ["
+                          << m_cfg.ranges[p][0] << ";" << m_cfg.ranges[p][1]
+                          << "]");
+    return false;
+  }
+  return true;
+}
+bool CompositeSpacePointLineFitter::withinRange(
+    const ParamVec_t& pars, const std::vector<FitParIndex>& parsToUse) const {
+  return std::ranges::all_of(parsToUse, [&](const FitParIndex par) {
+    return withinRange(pars[toUnderlying(par)], par);
+  });
+}
+
 void CompositeSpacePointLineFitter::FitParameters::print(
     std::ostream& ostr) const {
   using namespace Acts::UnitLiterals;

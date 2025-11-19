@@ -65,7 +65,7 @@ CompositeSpacePointLineFitter::FitParameters
 CompositeSpacePointLineFitter::fastFit(
     const Cont_t& measurements, const Line_t& initialGuess,
     const std::vector<FitParIndex>& parsToUse,
-    FastFitDelegate_t<Cont_t, fitTime> precFit) const {
+    const FastFitDelegate_t<Cont_t, fitTime>& precFit) const {
   FitParameters result{};
 
   using enum FitParIndex;
@@ -152,7 +152,7 @@ CompositeSpacePointLineFitter::fastFit(
   double tanAlpha = initialGuess.direction().x() / initialGuess.direction().z();
   const double tanBeta = postFitDir.y() / postFitDir.z();
   // Try to perform a fast fit in non-precision direction
-  if (std::ranges::any_of(parsToUse, [](const FitParIndex idx) {
+  if (false && std::ranges::any_of(parsToUse, [](const FitParIndex idx) {
         return idx == phi || idx == x0;
       })) {
     ACTS_DEBUG(__func__ << " < fit" << (fitStraws ? "straws" : "strips") << ", "
@@ -272,9 +272,9 @@ CompositeSpacePointLineFitter::fit(
     }
     if (fastResult.converged) {
       if (fitTime) {
-         fastResult.parameters[toUnderlying(FitParIndex::t0)] -=
-              (fitOpts.localToGlobal * line.position()).norm() /
-              PhysicalConstants::c;
+        fastResult.parameters[toUnderlying(FitParIndex::t0)] -=
+            (fitOpts.localToGlobal * line.position()).norm() /
+            PhysicalConstants::c;
       }
       static_cast<FitParameters&>(result) = std::move(fastResult);
       ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit converged.");
@@ -397,18 +397,8 @@ CompositeSpacePointLineFitter::fit(
         return result;
     }
     /// Check whether the fit parameters are within range
-    for (const FitParIndex par : pullCalculator.config().parsToUse) {
-      const auto p = toUnderlying(par);
-      if (m_cfg.ranges[p][0] < m_cfg.ranges[p][1] &&
-          (result.parameters[p] < m_cfg.ranges[p][0] ||
-           result.parameters[p] > m_cfg.ranges[p][1])) {
-        ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": The parameter "
-                              << pullCalculator.parName(par) << " "
-                              << result.parameters[p] << " is out range ["
-                              << m_cfg.ranges[p][0] << ";" << m_cfg.ranges[p][1]
-                              << "]");
-        update = UpdateStep::outOfBounds;
-      }
+    if (!withinRange(result.parameters, pullCalculator.config().parsToUse)) {
+      update = UpdateStep::outOfBounds;
     }
     switch (update) {
       using enum UpdateStep;
