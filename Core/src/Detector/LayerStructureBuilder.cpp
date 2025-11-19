@@ -257,9 +257,11 @@ Acts::Experimental::LayerStructureBuilder::construct(
         Acts::Experimental::detail::ProjectedReferenceGenerator rGenerator;
         rGenerator.expansionValue = m_cfg.expansionValue;
         rGenerator.referenceSurface = m_cfg.projectionReferenceSurface;
+        rGenerator.luminousRegion = m_cfg.luminousRegion;
 
         internalCandidatesUpdater = createInternalNavigationDelegate(
             gctx, internalSurfaces, binnings, rGenerator, assignToAll);
+
       } else if (m_cfg.referenceGeneratorType ==
                  detail::ReferenceGeneratorType::Center) {
         Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
@@ -273,6 +275,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
 
         internalCandidatesUpdater = createInternalNavigationDelegate(
             gctx, internalSurfaces, binnings, rGenerator, assignToAll);
+
       } else {
         throw std::invalid_argument(
             "LayerStructureBuilder: unknown reference generator type.");

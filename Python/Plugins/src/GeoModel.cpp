@@ -206,6 +206,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
         .def_readwrite("projectionDistance",
                        &GeoModelBlueprintCreater::Options::projectionDistance)
         .def_readwrite(
+            "projectionLuminousRegion",
+            &GeoModelBlueprintCreater::Options::projectionLuminousRegion)
+        .def_readwrite(
             "minSurfacesForLayerStructure",
             &GeoModelBlueprintCreater::Options::minSurfacesForLayerStructure);
   }

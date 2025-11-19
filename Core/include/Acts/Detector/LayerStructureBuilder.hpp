@@ -86,8 +86,11 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
     std::vector<std::tuple<DirectedProtoAxis, std::size_t>> binnings = {};
-    /// Expansion value for the projection
+    /// Expansion value for the reference generation
     double expansionValue = 0.0;
+    /// Sampling the luminous region for projected reference generation
+    std::vector<Vector3> luminousRegion = {Vector3(0., 0., -200.),
+                                           Vector3(0., 0., 200.)};
     /// Reference generator to be used
     detail::ReferenceGeneratorType referenceGeneratorType =
         detail::ReferenceGeneratorType::Polyhedron;

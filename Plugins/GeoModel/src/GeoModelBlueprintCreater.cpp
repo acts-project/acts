@@ -395,8 +395,8 @@ ActsPlugins::GeoModelBlueprintCreater::createInternalStructureBuilder(
             if (binning.size() > 2u && binning.substr(0, 3u) == "exp") {
               double expansionValue =
                   std::stod(binning.substr(4, binning.size() - 4u));
-              ACTS_INFO("- Expansion value of " << expansionValue
-                                                << " detected");
+              ACTS_VERBOSE("- Expansion value of " << expansionValue
+                                                   << " detected");
               lsbCfg.expansionValue = expansionValue;
               continue;
             }
@@ -419,6 +419,7 @@ ActsPlugins::GeoModelBlueprintCreater::createInternalStructureBuilder(
         if (lsbCfg.binnings.size() == 2u && options.projectedBinFilling) {
           lsbCfg.referenceGeneratorType =
               Acts::Experimental::detail::ReferenceGeneratorType::Projected;
+          lsbCfg.luminousRegion = options.projectionLuminousRegion;
           if (!rDetected) {
             // Create a cylindrical projection surface
             double rMin = internalExtent.min(AxisDirection::AxisR) -
@@ -426,7 +427,7 @@ ActsPlugins::GeoModelBlueprintCreater::createInternalStructureBuilder(
             auto projSurface = Acts::Surface::makeShared<CylinderSurface>(
                 Transform3::Identity(), rMin, 10e10);
             lsbCfg.projectionReferenceSurface = projSurface;
-            ACTS_INFO(
+            ACTS_VERBOSE(
                 " - Using projected reference generator with cylinder at r = "
                 << rMin);
           } else {
@@ -441,7 +442,7 @@ ActsPlugins::GeoModelBlueprintCreater::createInternalStructureBuilder(
             auto projSurface =
                 Acts::Surface::makeShared<PlaneSurface>(transform);
             lsbCfg.projectionReferenceSurface = projSurface;
-            ACTS_INFO(
+            ACTS_VERBOSE(
                 " - Using projected reference generator with plane at z = "
                 << zPos);
           }

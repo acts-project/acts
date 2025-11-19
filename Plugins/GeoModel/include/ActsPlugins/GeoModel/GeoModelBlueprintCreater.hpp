@@ -65,6 +65,9 @@ class GeoModelBlueprintCreater {
     /// The projection distance, should be roughly if not identical to the
     /// envelope "i+X" value in the database
     double projectionDistance = 2.0;
+    /// Sampling the luminous region for projected reference generation
+    std::vector<Acts::Vector3> projectionLuminousRegion = {
+        Acts::Vector3(0., 0., -200.), Acts::Vector3(0., 0., 200.)};
     /// Minimal surfaces for creating a layer structure
     unsigned int minSurfacesForLayerStructure = 4u;
   };

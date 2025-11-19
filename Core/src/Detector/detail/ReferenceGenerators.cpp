@@ -8,6 +8,8 @@
 
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 
+#include "Acts/Utilities/VectorHelpers.hpp"
+
 const std::vector<Acts::Vector3>
 Acts::Experimental::detail::PolyhedronReferenceGenerator::references(
     const GeometryContext& gctx, const Surface& surface) const {
@@ -65,6 +67,7 @@ Acts::Experimental::detail::ProjectedReferenceGenerator::references(
       rCog += rPositions.back();
     }
   }
+
   // Normalize center of gravity
   rCog /= rPositions.size();
 
