@@ -16,13 +16,64 @@ Acts::Experimental::detail::PolyhedronReferenceGenerator::references(
   auto pHedron = surface.polyhedronRepresentation(gctx, nSegements);
   rPositions.insert(rPositions.end(), pHedron.vertices.begin(),
                     pHedron.vertices.end());
+
+  // Compute the barycenter
+  Vector3 bc(0., 0., 0.);
+  std::ranges::for_each(rPositions, [&](const auto& p) { bc += p; });
+  bc *= 1. / rPositions.size();
+
+  // if an expansion is requested, calculate it for every vertex
+  if (expansionValue != 0.0) {
+    std::ranges::for_each(rPositions, [&](auto& p) {
+      p += expansionValue * Vector3(p - bc).normalized();
+    });
+  }
+
   // Add the barycenter if configured
   if (addBarycenter) {
-    Vector3 bc(0., 0., 0.);
-    std::ranges::for_each(rPositions, [&](const auto& p) { bc += p; });
-    bc *= 1. / rPositions.size();
     rPositions.push_back(bc);
   }
   return rPositions;
 }
 
+const std::vector<Acts::Vector3>
+Acts::Experimental::detail::ProjectedReferenceGenerator::references(
+    const GeometryContext& gctx, const Surface& surface) const {
+  if (referenceSurface == nullptr) {
+    throw std::invalid_argument(
+        "ProjectedReferenceGenerator: reference surface is nullptr.");
+  }
+
+  // Create the test polyhedron
+  std::vector<Vector3> tPositions;
+  auto pHedron = surface.polyhedronRepresentation(gctx, nSegements);
+  tPositions.insert(tPositions.end(), pHedron.vertices.begin(),
+                    pHedron.vertices.end());
+
+  // Create intersected position
+  std::vector<Vector3> rPositions;
+  Vector3 rCog;  // reference center of gravity
+  // Loop over luminous regious points and project
+  for (const auto& lp : luminousRegion) {
+    for (const auto& tp : tPositions) {
+      // Create the ray from luminous point to test point
+      Vector3 rayDirection = (tp - lp).normalized();
+      auto refMultiIntersections =
+          referenceSurface->intersect(gctx, lp, rayDirection);
+      // Take the closest intersection point in forward direction
+      rPositions.push_back(refMultiIntersections.closestForward().position());
+      rCog += rPositions.back();
+    }
+  }
+  // Normalize center of gravity
+  rCog /= rPositions.size();
+
+  // if an expansion is requested, calculate it for every vertex
+  if (expansionValue != 0.0) {
+    std::ranges::for_each(rPositions, [&](auto& p) {
+      p += expansionValue * Vector3(p - rCog).normalized();
+    });
+  }
+
+  return rPositions;
+}

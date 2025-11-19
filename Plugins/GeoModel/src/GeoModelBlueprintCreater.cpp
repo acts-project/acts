@@ -13,6 +13,8 @@
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -130,8 +132,8 @@ ActsPlugins::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
 
   // Recursively create the nodes
   blueprint.name = topEntry->second.name;
-  blueprint.topNode =
-      createNode(cache, gctx, topEntry->second, blueprintTableMap, Extent());
+  blueprint.topNode = createNode(cache, gctx, topEntry->second,
+                                 blueprintTableMap, Extent(), options);
 
   // Export to dot graph if configured
   if (!options.dotGraph.empty()) {
@@ -149,7 +151,7 @@ std::unique_ptr<Experimental::Gen2Blueprint::Node>
 ActsPlugins::GeoModelBlueprintCreater::createNode(
     Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
     const std::map<std::string, TableEntry>& tableEntryMap,
-    const Extent& motherExtent) const {
+    const Extent& motherExtent, const Options& options) const {
   ACTS_DEBUG("Build Blueprint node for '" << entry.name << "'.");
 
   // Peak into the volume entry to understand which one should be constraint
@@ -176,7 +178,7 @@ ActsPlugins::GeoModelBlueprintCreater::createNode(
 
   // Create and return the container node with internal constrtins
   auto [internalsBuilder, internalExtent] = createInternalStructureBuilder(
-      cache, gctx, entry, motherExtent, internalConstraints);
+      cache, gctx, entry, motherExtent, internalConstraints, options);
 
   if (internalsBuilder != nullptr) {
     ACTS_VERBOSE("Internal building yielded extent "
@@ -258,8 +260,8 @@ ActsPlugins::GeoModelBlueprintCreater::createNode(
                                     childName + "' of '" + entry.name +
                                     "' NOT found in blueprint table");
       }
-      auto node =
-          createNode(cache, gctx, childEntry->second, tableEntryMap, extent);
+      auto node = createNode(cache, gctx, childEntry->second, tableEntryMap,
+                             extent, options);
       children.push_back(std::move(node));
     }
 
@@ -316,7 +318,8 @@ std::tuple<std::shared_ptr<const Experimental::IInternalStructureBuilder>,
 ActsPlugins::GeoModelBlueprintCreater::createInternalStructureBuilder(
     Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
     const Extent& externalExtent,
-    const std::vector<AxisDirection>& internalConstraints) const {
+    const std::vector<AxisDirection>& internalConstraints,
+    const Options& options) const {
   // Check if the internals entry is empty
   if (entry.internals.empty()) {
     return {nullptr, Extent()};
@@ -373,6 +376,7 @@ ActsPlugins::GeoModelBlueprintCreater::createInternalStructureBuilder(
 
       // Create the layer structure builder
       Experimental::LayerStructureBuilder::Config lsbCfg;
+      lsbCfg.nMinimalSurfaces = options.minSurfacesForLayerStructure;
       lsbCfg.surfacesProvider =
           std::make_shared<Experimental::LayerStructureBuilder::SurfacesHolder>(
               surfaces);
@@ -380,14 +384,70 @@ ActsPlugins::GeoModelBlueprintCreater::createInternalStructureBuilder(
       // Let's check the binning description
       if (!entry.binnings.empty()) {
         ACTS_VERBOSE("Binning description detected for this layer structure.");
+        std::size_t dim = 0u;
+
+        bool rDetected = false;
+
         for (const auto& binning : entry.binnings) {
           if (!binning.empty()) {
-            ACTS_VERBOSE("- Adding binning: " << binning);
-            lsbCfg.binnings.push_back(
-                detail::GeoModelBinningHelper::toProtoAxis(binning,
-                                                           internalExtent));
+            /// Transcribe the expansion value if present,
+            ACTS_VERBOSE("- Checking binning entry: " << binning);
+            if (binning.size() > 2u && binning.substr(0, 3u) == "exp") {
+              double expansionValue =
+                  std::stod(binning.substr(4, binning.size() - 4u));
+              ACTS_INFO("- Expansion value of " << expansionValue
+                                                << " detected");
+              lsbCfg.expansionValue = expansionValue;
+              continue;
+            }
+            if (++dim < 3u) {
+              ACTS_VERBOSE("- Adding binning: " << binning);
+              lsbCfg.binnings.push_back(
+                  detail::GeoModelBinningHelper::toProtoAxis(binning,
+                                                             internalExtent));
+              rDetected =
+                  rDetected ||
+                  std::get<0>(lsbCfg.binnings.back()).getAxisDirection() ==
+                      AxisDirection::AxisR;
+            }
           }
         }
+        // Bit of a hack, but here we use Gen2 as a playground
+        // - this will switch projecte bin fillling on
+        // - projection distance should be identical to tie "i+X" value in the
+        // database
+        if (lsbCfg.binnings.size() == 2u && options.projectedBinFilling) {
+          lsbCfg.referenceGeneratorType =
+              Acts::Experimental::detail::ReferenceGeneratorType::Projected;
+          if (!rDetected) {
+            // Create a cylindrical projection surface
+            double rMin = internalExtent.min(AxisDirection::AxisR) -
+                          options.projectionDistance;
+            auto projSurface = Acts::Surface::makeShared<CylinderSurface>(
+                Transform3::Identity(), rMin, 10e10);
+            lsbCfg.projectionReferenceSurface = projSurface;
+            ACTS_INFO(
+                " - Using projected reference generator with cylinder at r = "
+                << rMin);
+          } else {
+            // Create a planar projection surface
+            double zPos = internalExtent.min(AxisDirection::AxisZ) < 0
+                              ? internalExtent.min(AxisDirection::AxisZ) -
+                                    options.projectionDistance
+                              : internalExtent.max(AxisDirection::AxisZ) +
+                                    options.projectionDistance;
+            auto transform = Transform3::Identity();
+            transform.translation() = Vector3(0., 0., zPos);
+            auto projSurface =
+                Acts::Surface::makeShared<PlaneSurface>(transform);
+            lsbCfg.projectionReferenceSurface = projSurface;
+            ACTS_INFO(
+                " - Using projected reference generator with plane at z = "
+                << zPos);
+          }
+        }
+        // End of hack for projected reference generator
+
       } else {
         lsbCfg.nMinimalSurfaces = surfaces.size() + 1u;
       }

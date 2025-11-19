@@ -200,7 +200,13 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
         .def_readwrite("topBoundsOverride",
                        &GeoModelBlueprintCreater::Options::topBoundsOverride)
         .def_readwrite("table", &GeoModelBlueprintCreater::Options::table)
-        .def_readwrite("dotGraph",
-                       &GeoModelBlueprintCreater::Options::dotGraph);
+        .def_readwrite("dotGraph", &GeoModelBlueprintCreater::Options::dotGraph)
+        .def_readwrite("projectedBinFilling",
+                       &GeoModelBlueprintCreater::Options::projectedBinFilling)
+        .def_readwrite("projectionDistance",
+                       &GeoModelBlueprintCreater::Options::projectionDistance)
+        .def_readwrite(
+            "minSurfacesForLayerStructure",
+            &GeoModelBlueprintCreater::Options::minSurfacesForLayerStructure);
   }
 }

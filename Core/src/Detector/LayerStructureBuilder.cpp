@@ -63,6 +63,45 @@ void adaptBinningRange(
   }
 }
 
+template <typename reference_generator>
+Acts::Experimental::InternalNavigationDelegate createInternalNavigationDelegate(
+    const Acts::GeometryContext& gctx,
+    const std::vector<std::shared_ptr<Acts::Surface>>& internalSurfaces,
+    std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>>& binnings,
+    const reference_generator& rGenerator,
+    const std::vector<std::size_t>& assignToAll) {
+  // shorthand it
+  using namespace Acts;
+  using namespace Acts::Experimental;
+
+  // Retrieve the layer surfaces
+  InternalNavigationDelegate internalCandidatesUpdater =
+      tryAllPortalsAndSurfaces();
+
+  // 1D surface binning
+  if (binnings.size() == 1) {
+    const auto& [protoAxis, fillExpansion] = binnings.at(0);
+    internalCandidatesUpdater =
+        Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+            Acts::Experimental::IndexedSurfacesNavigation>(
+            gctx, internalSurfaces, rGenerator, protoAxis, fillExpansion,
+            assignToAll);
+  } else if (binnings.size() == 2u) {
+    const auto& [protoAxisA, fillExpansionA] = binnings.at(0);
+    const auto& [protoAxisB, fillExpansionB] = binnings.at(1);
+    internalCandidatesUpdater =
+        Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+            Experimental::IndexedSurfacesNavigation>(
+            gctx, internalSurfaces, rGenerator, protoAxisA, fillExpansionA,
+            protoAxisB, fillExpansionB, assignToAll);
+  } else {
+    throw std::runtime_error(
+        "LayerStructureBuilder: only 1D or 2D surface binning "
+        "supported.");
+  }
+  return internalCandidatesUpdater;
+}
+
 }  // namespace
 
 Acts::Experimental::LayerStructureBuilder::LayerStructureBuilder(
@@ -209,31 +248,34 @@ Acts::Experimental::LayerStructureBuilder::construct(
         adaptBinningRange(binnings, m_cfg.extent.value());
       }
 
+      ACTS_VERBOSE("Creating internal layer structure with "
+                   << binnings.size() << " surface binning from "
+                   << internalSurfaces.size() << " surfaces.");
       // Provide a reference generator
-      Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
+      if (m_cfg.referenceGeneratorType ==
+          detail::ReferenceGeneratorType::Projected) {
+        Acts::Experimental::detail::ProjectedReferenceGenerator rGenerator;
+        rGenerator.expansionValue = m_cfg.expansionValue;
+        rGenerator.referenceSurface = m_cfg.projectionReferenceSurface;
 
-      // 1D surface binning
-      if (binnings.size() == 1) {
-        ACTS_DEBUG("- creating a 1D internal binning and portal navigation");
-        const auto& [protoAxis, fillExpansion] = binnings.at(0);
-        internalCandidatesUpdater =
-            Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
-                Experimental::IndexedSurfacesNavigation>(
-                gctx, internalSurfaces, rGenerator, protoAxis, fillExpansion,
-                assignToAll);
-      } else if (binnings.size() == 2u) {
-        ACTS_DEBUG("- creating a 2D internal binning and portal navigation");
-        const auto& [protoAxisA, fillExpansionA] = binnings.at(0);
-        const auto& [protoAxisB, fillExpansionB] = binnings.at(1);
-        internalCandidatesUpdater =
-            Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
-                Experimental::IndexedSurfacesNavigation>(
-                gctx, internalSurfaces, rGenerator, protoAxisA, fillExpansionA,
-                protoAxisB, fillExpansionB, assignToAll);
+        internalCandidatesUpdater = createInternalNavigationDelegate(
+            gctx, internalSurfaces, binnings, rGenerator, assignToAll);
+      } else if (m_cfg.referenceGeneratorType ==
+                 detail::ReferenceGeneratorType::Center) {
+        Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
+
+        internalCandidatesUpdater = createInternalNavigationDelegate(
+            gctx, internalSurfaces, binnings, rGenerator, assignToAll);
+      } else if (m_cfg.referenceGeneratorType ==
+                 detail::ReferenceGeneratorType::Polyhedron) {
+        Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
+        rGenerator.expansionValue = m_cfg.expansionValue;
+
+        internalCandidatesUpdater = createInternalNavigationDelegate(
+            gctx, internalSurfaces, binnings, rGenerator, assignToAll);
       } else {
-        throw std::runtime_error(
-            "LayerStructureBuilder: only 1D or 2D surface binning "
-            "supported.");
+        throw std::invalid_argument(
+            "LayerStructureBuilder: unknown reference generator type.");
       }
     }
   } else {
