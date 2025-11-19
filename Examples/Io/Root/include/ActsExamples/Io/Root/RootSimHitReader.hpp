@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/Root/detail/RootBranchPtr.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -99,7 +100,7 @@ class RootSimHitReader : public IReader {
   std::unordered_map<std::string_view, float> m_floatColumns;
   std::unordered_map<std::string_view, std::uint32_t> m_uint32Columns;
   std::unordered_map<std::string_view, std::int32_t> m_int32Columns;
-  std::vector<std::uint32_t> *m_barcodeVector = nullptr;
+  RootBranchPtr<std::vector<std::uint32_t>> m_barcodeVector{nullptr};
   bool m_hasBarcodeVector = false;
 
   // For some reason I need to use here `unsigned long long` instead of
