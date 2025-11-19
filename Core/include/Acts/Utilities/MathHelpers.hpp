@@ -12,15 +12,6 @@
 
 namespace Acts {
 
-/// @brief Returns the sign of a number
-template <typename T>
-constexpr T sign(const T N)
-  requires(std::is_signed_v<T>)
-{
-  constexpr T zero = 0;
-  constexpr T one = 1;
-  return N < zero ? -one : one;
-}
 /// @brief Returns the absolute of a number
 ///        (Can be removed for c++ 23)
 /// @param n The number to take absolute value of
@@ -36,6 +27,21 @@ constexpr T abs(const T n) {
     return n;
   } else {
     return std::abs(n);
+  }
+}
+/// @brief Returns the sign of a number
+/// @param x: Number for which the sign is estimated
+template <typename T>
+constexpr T sign(const T x)
+  requires(std::is_signed_v<T>)
+{
+  constexpr T one = 1;
+  if (std::is_constant_evaluated()) {
+    constexpr T zero = 0;
+    return abs(x) < std::numeric_limits<T>::epsilon() ? zero
+                                                      : (x < zero ? -one : one);
+  } else {
+    return std::copysign(one, x);
   }
 }
 
