@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
@@ -35,15 +36,17 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
                << toString(m_config.transform.translation())
                << " and number of surfaces " << m_config.mlSurfaces.size());
 
-  const auto& bounds =
-      dynamic_pointer_cast<TrapezoidVolumeBounds>(m_config.bounds);
-  if (bounds == nullptr) {
-    throw std::runtime_error(
-        "MultiWireVolumeBuilder: Invalid bounds - trapezoidal needed");
+  auto boundsType = m_config.bounds ? m_config.bounds->type()
+                                    : VolumeBounds::BoundsType::eOther;
+  if (!(boundsType == VolumeBounds::BoundsType::eTrapezoid ||
+        boundsType == VolumeBounds::BoundsType::eCuboid)) {
+    throw std::invalid_argument(
+        "MultiWireStructureBuilder: Only trapezoid or cuboid bounds are "
+        "supported");
   }
 
   std::unique_ptr<TrackingVolume> trackingVolume =
-      std::make_unique<TrackingVolume>(m_config.transform, bounds,
+      std::make_unique<TrackingVolume>(m_config.transform, m_config.bounds,
                                        m_config.name);
 
   // Add the surfaces to the tracking volume

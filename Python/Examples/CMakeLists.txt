@@ -70,4 +70,3 @@ add_examples_binding_if(Geant4
     ACTS_BUILD_EXAMPLES_GEANT4
     TRUE
 )
-add_examples_binding_if(Podio Acts::ExamplesIoPodio "" ACTS_BUILD_EXAMPLES_PODIO FALSE)
