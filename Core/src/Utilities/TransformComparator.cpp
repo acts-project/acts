@@ -19,7 +19,7 @@ int TransformComparator::compare(const Acts::RotationMatrix3& a,
   for (int i = 0; i < 3; ++i) {
     const double diff = anglesA[i] - anglesB[i];
     if (Acts::abs(diff) > m_tolRot) {
-      return static_cast<int>(Acts::sign(diff));
+      return static_cast<int>(std::copysign(1., diff));
     }
   }
   return 0;

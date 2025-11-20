@@ -135,7 +135,7 @@ int CompSpacePointAuxiliaries::strawSign(const Vector& pos, const Vector& dir,
   }
   const double dist = Acts::detail::LineHelper::signedDistance(
       pos, dir, strawSp.localPosition(), strawSp.sensorDirection());
-  return static_cast<int>(sign(dist));
+  return static_cast<int>(std::copysign(1., dist));
 }
 template <CompositeSpacePointContainer StrawCont_t>
 std::vector<int> CompSpacePointAuxiliaries::strawSigns(

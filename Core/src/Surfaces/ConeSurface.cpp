@@ -142,7 +142,7 @@ double ConeSurface::pathCorrection(const GeometryContext& gctx,
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   Vector3 posLocal = transform(gctx).inverse() * position;
   double phi = VectorHelpers::phi(posLocal);
-  double sgn = -sign(posLocal.z());
+  double sgn = -std::copysign(1., posLocal.z());
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3 normalC(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
@@ -161,7 +161,7 @@ Vector3 ConeSurface::normal(const GeometryContext& gctx,
                             const Vector2& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   double phi = lposition[0] / (bounds().r(lposition[1])),
-         sgn = -sign(lposition[1]);
+         sgn = -std::copysign(1., lposition[1]);
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3 localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);

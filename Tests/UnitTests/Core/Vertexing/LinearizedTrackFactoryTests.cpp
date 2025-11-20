@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Construct random track emerging from vicinity of vertex position
   for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
     // Random charge
-    double q = sign(qDist(gen));
+    double q = std::copysign(1., qDist(gen));
 
     // Random track parameters
     BoundVector paramVec;

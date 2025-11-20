@@ -635,7 +635,7 @@ double charge(const DecodedPID& p) {
 int charge3(const DecodedPID& p) {
   auto ap = std::abs(p.pid());
   if (ap < TABLESIZE) {
-    return sign(p.pid()) * triple_charge.at(ap);
+    return std::copysign(1, p.pid()) * triple_charge.at(ap);
   }
   if (ap == K0) {
     return 0;
@@ -644,10 +644,10 @@ int charge3(const DecodedPID& p) {
     return 0;
   }
   if (ap == GEANTINOPLUS) {
-    return sign(p.pid()) * 3;
+    return std::copysign(1, p.pid()) * 3;
   }
   if (ap == MAVTOP) {
-    return sign(p.pid()) * 2;
+    return std::copysign(1, p.pid()) * 2;
   }
   std::size_t nq = 0;
   int sign = 1;
@@ -734,13 +734,13 @@ int charge3(const DecodedPID& p) {
         3.));  // the multi-charged particles might have a fractional charge
                // that's not a multiple of 1/3, in that case round to the
                // closest multiple of 1/3 for charge3 and threecharge
-    return Acts::sign(p.pid()) * abs_threecharge;
+    return std::copysign(1, p.pid()) * abs_threecharge;
   }
   for (auto r = p.second.rbegin() + 1; r != p.second.rbegin() + 1 + nq; ++r) {
     result += triple_charge.at(*r) * sign;
     sign *= signmult;
   }
-  return Acts::sign(p.pid()) * result;
+  return std::copysign(1, p.pid()) * result;
 }
 double fractionalCharge(const DecodedPID& p) {
   if (!isGenericMultichargedParticle(p)) {
@@ -760,7 +760,7 @@ double fractionalCharge(const DecodedPID& p) {
         (p(5) * 10.0 + p(6));  // multi-charged particle PDG ID is +/-200XXYY0,
   }
   // where the charge is XX/YY
-  return Acts::sign(p.pid()) * abs_charge;
+  return std::copysign(1, p.pid()) * abs_charge;
 }
 
 // APID: Including Z' and Z'' as EM interacting.

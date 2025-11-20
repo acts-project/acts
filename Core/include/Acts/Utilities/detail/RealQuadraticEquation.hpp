@@ -60,7 +60,8 @@ struct RealQuadraticEquation {
     double discriminant = beta * beta - 4 * alpha * gamma;
     if (discriminant >= 0) {
       solutions = (discriminant == 0) ? 1 : 2;
-      double q = -0.5 * (beta + sign(beta) * std::sqrt(discriminant));
+      double q =
+          -0.5 * (beta + std::copysign(1., beta) * std::sqrt(discriminant));
       first = q / alpha;
       second = gamma / q;
     }

@@ -29,22 +29,6 @@ constexpr T abs(const T n) {
     return std::abs(n);
   }
 }
-/// @brief Returns the sign of a number
-/// @param x: Number for which the sign is estimated
-template <typename T>
-constexpr T sign(const T x)
-  requires(std::is_signed_v<T>)
-{
-  constexpr T one = 1;
-  if (std::is_constant_evaluated()) {
-    constexpr T zero = 0;
-    return abs(x) < std::numeric_limits<T>::epsilon() ? zero
-                                                      : (x < zero ? -one : one);
-  } else {
-    return std::copysign(one, x);
-  }
-}
-
 /// @brief Calculates the ordinary power of the number x.
 /// @param x: Number to take the power from
 /// @param p: Power to take

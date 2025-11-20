@@ -171,7 +171,7 @@ std::pair<Vector3, Vector3> seedSolution(
   Vector3 seedPositionZ0 = intersectionZ0.position();
 
   return std::make_pair(seedPositionZ0,
-                        Acts::sign(seedDirection.z()) * seedDirection);
+                        std::copysign(1., seedDirection.z()) * seedDirection);
 };
 
 }  // namespace Acts::Experimental::CombinatorialSeedSolver
