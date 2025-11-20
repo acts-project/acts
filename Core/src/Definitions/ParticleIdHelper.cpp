@@ -634,7 +634,7 @@ double charge(const DecodedPID& p) {
 int charge3(const DecodedPID& p) {
   auto ap = std::abs(p.pid());
   if (ap < TABLESIZE) {
-    return std::copysign(1, p.pid()) * triple_charge.at(ap);
+    return std::copysign(triple_charge.at(ap), p.pid());
   }
   if (ap == K0) {
     return 0;
