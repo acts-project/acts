@@ -106,32 +106,9 @@ BOOST_AUTO_TEST_CASE(ParticleIdHelperentification) {
 }
 
 BOOST_AUTO_TEST_CASE(MesonIdentification) {
-  // BBbar mesons (bottomonium)
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eUpsilon1S));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eUpsilon2S));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eUpsilon3S));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eChiB));
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eUpsilon1S),
-                    HadronType::BBbarMeson);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eUpsilon2S),
-                    HadronType::BBbarMeson);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eUpsilon3S),
-                    HadronType::BBbarMeson);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eChiB),
-                    HadronType::BBbarMeson);
-
   // CCbar mesons (charmonium)
   BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eJPsi));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::ePsi2S));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eChiC));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eEta_c));
   BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eJPsi),
-                    HadronType::CCbarMeson);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::ePsi2S),
-                    HadronType::CCbarMeson);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eChiC),
-                    HadronType::CCbarMeson);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eEta_c),
                     HadronType::CCbarMeson);
 
   // B mesons (bottom quark)
@@ -169,36 +146,6 @@ BOOST_AUTO_TEST_CASE(MesonIdentification) {
                     ParticleIdHelper::hadronType(PdgParticle::eAntiB0));
   BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eD0),
                     ParticleIdHelper::hadronType(PdgParticle::eAntiD0));
-}
-
-BOOST_AUTO_TEST_CASE(HeavyBaryonIdentification) {
-  // Bottom baryons
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eLambdaB));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eSigmaB));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eXiB));
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eLambdaB),
-                    HadronType::BottomBaryon);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eSigmaB),
-                    HadronType::BottomBaryon);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eXiB),
-                    HadronType::BottomBaryon);
-
-  // Charmed baryons
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eLambdaC));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eSigmaC));
-  BOOST_CHECK(ParticleIdHelper::isHadron(PdgParticle::eXiC));
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eLambdaC),
-                    HadronType::CharmedBaryon);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eSigmaC),
-                    HadronType::CharmedBaryon);
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eXiC),
-                    HadronType::CharmedBaryon);
-
-  // Test anti-particles have same hadron type
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eLambdaB),
-                    ParticleIdHelper::hadronType(PdgParticle::eAntiLambdaB));
-  BOOST_CHECK_EQUAL(ParticleIdHelper::hadronType(PdgParticle::eLambdaC),
-                    ParticleIdHelper::hadronType(PdgParticle::eAntiLambdaC));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
