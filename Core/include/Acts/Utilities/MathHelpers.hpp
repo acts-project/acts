@@ -29,6 +29,7 @@ constexpr T abs(const T n) {
     return std::abs(n);
   }
 }
+
 /// @brief Calculates the ordinary power of the number x.
 /// @param x: Number to take the power from
 /// @param p: Power to take
