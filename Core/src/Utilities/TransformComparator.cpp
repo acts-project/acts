@@ -18,7 +18,7 @@ int TransformComparator::compare(const Acts::RotationMatrix3& a,
   const Acts::Vector3 anglesB = b.eulerAngles(2, 1, 0);
   for (int i = 0; i < 3; ++i) {
     const double diff = anglesA[i] - anglesB[i];
-    if (Acts::abs(diff) > m_tolRot) {
+    if (std::abs(diff) > m_tolRot) {
       return static_cast<int>(std::copysign(1., diff));
     }
   }

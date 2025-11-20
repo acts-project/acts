@@ -42,7 +42,7 @@ class TransformComparator {
               const Acts::ActsVector<kSize>& b) const {
     for (unsigned int i = 0; i < kSize; ++i) {
       const double diff = a[i] - b[i];
-      if (Acts::abs(diff) > m_tolTrans) {
+      if (std::abs(diff) > m_tolTrans) {
         return static_cast<int>(std::copysign(1., diff));
       }
     }
