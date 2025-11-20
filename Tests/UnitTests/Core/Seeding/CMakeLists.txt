@@ -11,8 +11,6 @@ add_unittest(StrawLineResiduals StrawLineResidualTest.cpp)
 add_unittest(FastStrawLineFitTests FastStrawLineFitTests.cpp)
 add_unittest(StrawLineFitterTest StrawLineFitterTest.cpp)
 
-find_package(ROOT COMPONENTS Tree RIO)
-
 target_link_libraries(
     ActsUnitTestFastStrawLineFitTests
     PRIVATE ROOT::Tree ROOT::RIO
