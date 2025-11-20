@@ -35,7 +35,7 @@ using normal_t = std::normal_distribution<double>;
 using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 class FitTestSpacePoint {
  public:
@@ -662,4 +662,4 @@ bool isGoodHit(const FitTestSpacePoint& sp) {
   return !sp.isStraw() || sp.isGood();
 };
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

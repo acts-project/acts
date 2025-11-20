@@ -27,7 +27,6 @@ using namespace Acts::UnitLiterals;
 using namespace Acts::detail::LineHelper;
 using namespace Acts::PlanarHelper;
 using namespace Acts::VectorHelpers;
-using namespace Acts::Test;
 
 using TimePoint_t = std::chrono::system_clock::time_point;
 using RandomEngine = std::mt19937;
@@ -44,7 +43,7 @@ constexpr std::size_t nEvents = 1;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using GenCfg_t = MeasurementGenerator::Config;
 
@@ -335,4 +334,4 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+}  // namespace ActsTests

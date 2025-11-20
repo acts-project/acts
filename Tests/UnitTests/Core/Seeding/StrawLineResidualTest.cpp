@@ -42,7 +42,7 @@ constexpr double tolerance = 1.e-3;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
 
-namespace Acts::Test {
+namespace ActsTests {
 
 template <typename T>
 constexpr T absMax(const T& a, const T& b) {
@@ -762,5 +762,5 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   }
 }
 
-}  // namespace Acts::Test
+}  // namespace ActsTests
 BOOST_AUTO_TEST_SUITE_END()
