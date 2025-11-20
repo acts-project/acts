@@ -12,7 +12,6 @@
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <concepts>
 #include <iostream>

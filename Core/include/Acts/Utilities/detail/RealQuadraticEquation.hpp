@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include "Acts/Utilities/MathHelpers.hpp"
-
 #include <cmath>
 #include <utility>
 

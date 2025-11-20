@@ -8,7 +8,6 @@
 
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <array>

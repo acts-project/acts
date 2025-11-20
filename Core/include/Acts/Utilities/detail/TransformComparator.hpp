@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/MathHelpers.hpp"
 
 namespace Acts::detail {
 /// @brief Auxiliary class to coherently sort Transforms and Vectors such that
