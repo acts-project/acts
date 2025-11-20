@@ -54,9 +54,9 @@ BOOST_AUTO_TEST_CASE(PolyhedronReference) {
   // Simply return binning position, we test only the behavior of the generator
   // not the output
   auto referencePositions =
-      PolyhedronReferenceGenerator<>{}.references(tContext, *pSurface);
-  // 4 corners with center of gravity
-  BOOST_CHECK_EQUAL(referencePositions.size(), 5u);
+      PolyhedronReferenceGenerator{}.references(tContext, *pSurface);
+  // 4 corners without center of gravity
+  BOOST_CHECK_EQUAL(referencePositions.size(), 4u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
