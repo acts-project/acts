@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     // Calculate random track emerging from vicinity of vertex position
     for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
       // Charge
-      double q = std::copysign(1., qDist(gen));
+      double q = copySign(1., qDist(gen));
 
       // Track parameters
       BoundVector paramVec;

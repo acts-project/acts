@@ -52,8 +52,8 @@ std::array<Intersection2D, 2> IntersectionHelper2D::intersectEllipse(
     Vector2 toSolD(sol - origin);
     Vector2 toAltD(alt - origin);
 
-    double solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
-    double altD = std::copysign(toAltD.norm(), toAltD.dot(dir));
+    double solD = copySign(toSolD.norm(), toSolD.dot(dir));
+    double altD = copySign(toAltD.norm(), toAltD.dot(dir));
 
     if (std::abs(solD) < std::abs(altD)) {
       return {Intersection2D(sol, solD, IntersectionStatus::reachable),
@@ -105,7 +105,7 @@ std::array<Intersection2D, 2> IntersectionHelper2D::intersectEllipse(
     double x = solver.first;
     Vector2 sol(x, k * x + d);
     Vector2 toSolD(sol - origin);
-    double solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
+    double solD = copySign(toSolD.norm(), toSolD.dot(dir));
     return {Intersection2D(sol, solD, IntersectionStatus::reachable),
             Intersection2D::Invalid()};
   } else if (solver.solutions > 1) {

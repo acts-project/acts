@@ -8,6 +8,8 @@
 
 #include "Acts/Utilities/detail/TransformComparator.hpp"
 
+#include "Acts/Utilities/MathHelpers.hpp"
+
 namespace Acts::detail {
 TransformComparator::TransformComparator(const double transTolerance,
                                          const double rotTolerance)
@@ -18,8 +20,8 @@ int TransformComparator::compare(const Acts::RotationMatrix3& a,
   const Acts::Vector3 anglesB = b.eulerAngles(2, 1, 0);
   for (int i = 0; i < 3; ++i) {
     const double diff = anglesA[i] - anglesB[i];
-    if (std::abs(diff) > m_tolRot) {
-      return static_cast<int>(std::copysign(1., diff));
+    if (Acts::abs(diff) > m_tolRot) {
+      return copySign(1, diff);
     }
   }
   return 0;

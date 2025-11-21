@@ -660,7 +660,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
   using namespace Acts::detail::LineHelper;
   using namespace Acts::UnitLiterals;
 
-  const double dSign = std::copysign(1., driftR);
+  const double dSign = copySign(1., driftR);
   // Only assign drift velocity and acceleration
   if (!m_cfg.includeToF) {
     resetTime();

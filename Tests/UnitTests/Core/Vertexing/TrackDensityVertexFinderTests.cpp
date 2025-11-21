@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = std::copysign(1., etaDist(gen));
+    double charge = copySign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);

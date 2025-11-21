@@ -29,6 +29,26 @@ constexpr T abs(const T n) {
     return std::abs(n);
   }
 }
+/// @brief
+template <typename out_t, typename sign_t>
+constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
+  constexpr sign_t zero{};
+  if (std::is_constant_evaluated()) {
+    if (sign == zero) {
+      return out_t{};
+    }
+    return sign > zero ? copyTo : -copyTo;
+  } else {
+    if constexpr (std::is_floating_point_v<out_t>) {
+      return copySign(copyTo, sign);
+    } else {
+      if (sign == zero) {
+        return out_t{};
+      }
+      return sign > zero ? copyTo : -copyTo;
+    }
+  }
+}
 
 /// @brief Calculates the ordinary power of the number x.
 /// @param x: Number to take the power from
