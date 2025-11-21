@@ -417,10 +417,16 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         // Use average truth in the case of multiple contributing sim hits
         const auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+
+        ACTS_INFO("-> Got it.");
+
         const auto hitIdx = sl.index();
         const auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         const auto [truthLocal, truthPos4, truthUnitDir] =
             averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+
+        ACTS_INFO("-> Got average sim hits.");
+
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         if (!indices.empty()) {
