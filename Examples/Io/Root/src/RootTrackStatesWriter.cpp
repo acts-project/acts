@@ -326,10 +326,13 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     m_trackNr = track.index();
 
     ACTS_INFO("Writing track states for track " << track.index());
-    
+
     // Collect the track summary info
     m_nMeasurements = track.nMeasurements();
     m_nStates = track.nTrackStates();
+
+    ACTS_INFO("Got " << m_nStates << " track states, "
+                             << m_nMeasurements << " measurements");
 
     // Get the majority truth particle to this track
     int truthQ = 1;
@@ -359,6 +362,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     // digitization, for smeared digitization is not more than 1)
     std::vector<std::vector<std::uint32_t>> particleIds;
 
+    ACTS_INFO("Start Loop over Track States");
+
     for (const auto& state : track.trackStatesReversed()) {
       const Acts::Surface& surface = state.referenceSurface();
 
@@ -382,6 +387,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       particleIds.clear();
 
       if (!state.hasUncalibratedSourceLink()) {
+
+        ACTS_INFO("-> uncalibrated source link NOT available");
+
         m_t_x.push_back(nan);
         m_t_y.push_back(nan);
         m_t_z.push_back(nan);
@@ -402,6 +410,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_y_hit.push_back(nan);
         m_z_hit.push_back(nan);
       } else {
+
+        ACTS_INFO("-> uncalibrated source link IS available");
+
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
         const auto sl =
@@ -427,6 +438,10 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
             particleIds.push_back(simHit.particleId().asVector());
           }
         }
+
+        ACTS_INFO("Number of contributing sim hits: "
+                  << indices.size()
+                  << ", particle ids collected: " << particleIds.size());
 
         // fill the truth hit info
         m_t_x.push_back(Acts::clampValue<float>(truthPos4[Acts::ePos0]));
@@ -476,6 +491,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_y_hit.push_back(Acts::clampValue<float>(global[Acts::ePos1]));
         m_z_hit.push_back(Acts::clampValue<float>(global[Acts::ePos2]));
       }
+
+      ACTS_INFO("Get the paramters !");
 
       // lambda to get the fitted track parameters
       auto getTrackParams = [&](unsigned int ipar)
@@ -555,6 +572,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         ++m_nParams[ipar];
         const auto& [parameters, covariance] = *trackParamsOpt;
 
+        ACTS_INFO("Clamp them to the values !");
+
         // track parameters
         m_eLOC0[ipar].push_back(
             Acts::clampValue<float>(parameters[Acts::eBoundLoc0]));
@@ -614,6 +633,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         if (!state.hasUncalibratedSourceLink()) {
           continue;
         }
+        ACTS_INFO("Residuals ...");
+
 
         // track parameters residual
         Acts::BoundVector residuals = parameters - truthParams;
