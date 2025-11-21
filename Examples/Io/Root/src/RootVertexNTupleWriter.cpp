@@ -326,8 +326,6 @@ RootVertexNTupleWriter::RootVertexNTupleWriter(
     m_outputTree->Branch("trk_recoThetaFitted", &m_recoThetaFitted);
     m_outputTree->Branch("trk_recoQOverPFitted", &m_recoQOverPFitted);
 
-    m_outputTree->Branch("trk_particleId", &m_trkParticleId);
-
     m_outputTree->Branch("trk_truthPhi", &m_truthPhi);
     m_outputTree->Branch("trk_truthTheta", &m_truthTheta);
     m_outputTree->Branch("trk_truthQOverP", &m_truthQOverP);
@@ -799,7 +797,11 @@ ProcessCode RootVertexNTupleWriter::writeT(
   m_recoPhiFitted.clear();
   m_recoThetaFitted.clear();
   m_recoQOverPFitted.clear();
-  m_trkParticleId.clear();
+  m_trkParticleIdVertexPrimary.clear();
+  m_trkParticleIdVertexSecondary.clear();
+  m_trkParticleIdParticle.clear();
+  m_trkParticleIdGeneration.clear();
+  m_trkParticleIdSubParticle.clear();
   m_truthPhi.clear();
   m_truthTheta.clear();
   m_truthQOverP.clear();
@@ -850,7 +852,14 @@ void RootVertexNTupleWriter::writeTrackInfo(
   auto& innerRecoThetaFitted = m_recoThetaFitted.emplace_back();
   auto& innerRecoQOverPFitted = m_recoQOverPFitted.emplace_back();
 
-  auto& innerTrkParticleId = m_trkParticleId.emplace_back();
+  auto& innerTrkParticleIdVertexPrimary =
+      m_trkParticleIdVertexPrimary.emplace_back();
+  auto& innerTrkParticleIdVertexSecondary =
+      m_trkParticleIdVertexSecondary.emplace_back();
+  auto& innerTrkParticleIdParticle = m_trkParticleIdParticle.emplace_back();
+  auto& innerTrkParticleIdGeneration = m_trkParticleIdGeneration.emplace_back();
+  auto& innerTrkParticleIdSubParticle =
+      m_trkParticleIdSubParticle.emplace_back();
 
   auto& innerTruthPhi = m_truthPhi.emplace_back();
   auto& innerTruthTheta = m_truthTheta.emplace_back();
@@ -927,7 +936,12 @@ void RootVertexNTupleWriter::writeTrackInfo(
     }
 
     if (particle != nullptr) {
-      innerTrkParticleId.push_back(particle->particleId().asVector());
+      const auto barcode = particle->particleId();
+      innerTrkParticleIdVertexPrimary.push_back(barcode.vertexPrimary());
+      innerTrkParticleIdVertexSecondary.push_back(barcode.vertexSecondary());
+      innerTrkParticleIdParticle.push_back(barcode.particle());
+      innerTrkParticleIdGeneration.push_back(barcode.generation());
+      innerTrkParticleIdSubParticle.push_back(barcode.subParticle());
 
       trueUnitDir = particle->direction();
       trueMom.head<2>() = Acts::makePhiThetaFromDirection(trueUnitDir);
@@ -939,7 +953,11 @@ void RootVertexNTupleWriter::writeTrackInfo(
     } else {
       ACTS_VERBOSE("Track has no matching truth particle.");
 
-      innerTrkParticleId.push_back(ActsFatras::Barcode::Invalid().asVector());
+      innerTrkParticleIdVertexPrimary.push_back(0);
+      innerTrkParticleIdVertexSecondary.push_back(0);
+      innerTrkParticleIdParticle.push_back(0);
+      innerTrkParticleIdGeneration.push_back(0);
+      innerTrkParticleIdSubParticle.push_back(0);
 
       innerTruthPhi.push_back(nan);
       innerTruthTheta.push_back(nan);

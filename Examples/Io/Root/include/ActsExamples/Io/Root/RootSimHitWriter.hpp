@@ -78,9 +78,12 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
   std::uint32_t m_eventId = 0;
   /// Hit surface identifier.
   std::uint64_t m_geometryId = 0;
-  /// Event-unique particle identifier a.k.a. barcode.
-  std::vector<std::uint32_t> m_barcode =
-      ActsFatras::Barcode::Invalid().asVector();
+  /// Decoded barcode components written as convenience columns.
+  std::uint32_t m_barcodeVertexPrimary = 0;
+  std::uint32_t m_barcodeVertexSecondary = 0;
+  std::uint32_t m_barcodeParticle = 0;
+  std::uint32_t m_barcodeGeneration = 0;
+  std::uint32_t m_barcodeSubParticle = 0;
   /// True global hit position components in mm.
   float m_tx = 0, m_ty = 0, m_tz = 0;
   // True global hit time in ns.

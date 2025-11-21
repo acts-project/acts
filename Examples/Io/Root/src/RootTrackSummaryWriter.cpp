@@ -89,7 +89,16 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_outputTree->Branch("outlierLayer", &m_outlierLayer);
 
   m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
-  m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
+  m_outputTree->Branch("majorityParticleId_vertex_primary",
+                       &m_majorityParticleVertexPrimary);
+  m_outputTree->Branch("majorityParticleId_vertex_secondary",
+                       &m_majorityParticleVertexSecondary);
+  m_outputTree->Branch("majorityParticleId_particle",
+                       &m_majorityParticleParticle);
+  m_outputTree->Branch("majorityParticleId_generation",
+                       &m_majorityParticleGeneration);
+  m_outputTree->Branch("majorityParticleId_sub_particle",
+                       &m_majorityParticleSubParticle);
   m_outputTree->Branch("trackClassification", &m_trackClassification);
   m_outputTree->Branch("t_charge", &m_t_charge);
   m_outputTree->Branch("t_time", &m_t_time);
@@ -367,7 +376,13 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     // Push the corresponding truth particle info for the track.
     // Always push back even if majority particle not found
-    m_majorityParticleId.push_back(majorityParticleId.asVector());
+    m_majorityParticleVertexPrimary.push_back(
+        majorityParticleId.vertexPrimary());
+    m_majorityParticleVertexSecondary.push_back(
+        majorityParticleId.vertexSecondary());
+    m_majorityParticleParticle.push_back(majorityParticleId.particle());
+    m_majorityParticleGeneration.push_back(majorityParticleId.generation());
+    m_majorityParticleSubParticle.push_back(majorityParticleId.subParticle());
     m_trackClassification.push_back(static_cast<int>(trackClassification));
     m_nMajorityHits.push_back(nMajorityHits);
     m_t_charge.push_back(t_charge);
@@ -554,7 +569,11 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   m_outlierLayer.clear();
 
   m_nMajorityHits.clear();
-  m_majorityParticleId.clear();
+  m_majorityParticleVertexPrimary.clear();
+  m_majorityParticleVertexSecondary.clear();
+  m_majorityParticleParticle.clear();
+  m_majorityParticleGeneration.clear();
+  m_majorityParticleSubParticle.clear();
   m_trackClassification.clear();
   m_t_charge.clear();
   m_t_time.clear();
