@@ -6,20 +6,21 @@ import sys
 
 import acts.examples
 import acts
-from acts.examples.reconstruction import addGnn, GnnBackend
+from acts.examples.reconstruction import addGnn, addSpacePointsMaking
 from acts import UnitConstants as u
 
 from digitization import runDigitization
 
 
-def runGNNTrackFinding(
+def runGnnMetricLearning(
     trackingGeometry,
     field,
     outputDir,
     digiConfigFile,
     geometrySelection,
-    backend,
-    modelDir,
+    embedModelPath,
+    filterModelPath,
+    gnnModelPath,
     outputRoot=False,
     outputCsv=False,
     s=None,
@@ -35,27 +36,96 @@ def runGNNTrackFinding(
         s=s,
     )
 
+    addSpacePointsMaking(
+        s,
+        geoSelectionConfigFile=geometrySelection,
+        stripGeoSelectionConfigFile=None,
+        trackingGeometry=trackingGeometry,
+        logLevel=acts.logging.INFO,
+    )
+
+    graphConstructorConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(embedModelPath),
+        "embeddingDim": 8,
+        "rVal": 1.6,
+        "knnVal": 100,
+        "selectedFeatures": [0, 1, 2],  # R, Phi, Z
+    }
+    graphConstructor = acts.examples.TorchMetricLearning(**graphConstructorConfig)
+
+    filterConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(filterModelPath),
+        "cut": 0.01,
+    }
+    gnnConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(gnnModelPath),
+        "cut": 0.5,
+    }
+
+    edgeClassifiers = []
+
+    if filterModelPath.suffix == ".pt":
+        edgeClassifiers.append(
+            acts.examples.TorchEdgeClassifier(
+                **filterConfig,
+                nChunks=5,
+                undirected=False,
+                selectedFeatures=[0, 1, 2],
+            )
+        )
+    elif filterModelPath.suffix == ".onnx":
+        edgeClassifiers.append(acts.examples.OnnxEdgeClassifier(**filterConfig))
+    else:
+        raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
+
+    if gnnModelPath.suffix == ".pt":
+        edgeClassifiers.append(
+            acts.examples.TorchEdgeClassifier(
+                **gnnConfig,
+                undirected=True,
+                selectedFeatures=[0, 1, 2],
+            )
+        )
+    elif gnnModelPath.suffix == ".onnx":
+        edgeClassifiers.append(
+            acts.examples.OnnxEdgeClassifier(**gnnConfig),
+        )
+    else:
+        raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
+
+    # Stage 3: CPU track building
+    trackBuilderConfig = {
+        "level": acts.logging.INFO,
+    }
+    trackBuilder = acts.examples.BoostTrackBuilding(**trackBuilderConfig)
+
+    # Node features: Standard 3 features (R, Phi, Z)
+    nodeFeatures = [
+        acts.examples.NodeFeature.R,
+        acts.examples.NodeFeature.Phi,
+        acts.examples.NodeFeature.Z,
+    ]
+    featureScales = [1.0, 1.0, 1.0]
+
+    # Add GNN tracking
     addGnn(
         s,
-        trackingGeometry,
-        geometrySelection,
-        modelDir,
-        backend=backend,
+        graphConstructor=graphConstructor,
+        edgeClassifiers=edgeClassifiers,
+        trackBuilder=trackBuilder,
+        nodeFeatures=nodeFeatures,
+        featureScales=featureScales,
         outputDirRoot=outputDir if outputRoot else None,
+        logLevel=acts.logging.INFO,
     )
 
     s.run()
 
 
 if "__main__" == __name__:
-
-    backend = GnnBackend.Torch
-
-    if "onnx" in sys.argv:
-        backend = GnnBackend.Onnx
-    if "torch" in sys.argv:
-        backend = GnnBackend.Torch
-
     detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
 
@@ -69,16 +139,18 @@ if "__main__" == __name__:
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists()
 
-    if backend == GnnBackend.Torch:
-        modelDir = Path.cwd() / "torchscript_models"
-        assert (modelDir / "embed.pt").exists()
-        assert (modelDir / "filter.pt").exists()
-        assert (modelDir / "gnn.pt").exists()
+    # Model paths from ci_models
+    ci_models = srcdir / "ci_models"
+    if "onnx" in sys.argv:
+        embedModelPath = ci_models / "torchscript_models/embed.pt"
+        filterModelPath = ci_models / "torchscript_models/filter.pt"
+        gnnModelPath = ci_models / "torchscript_models/gnn.pt"
+    elif "torch" in sys.argv:
+        embedModelPath = ci_models / "torchscript_models/embed.pt"
+        filterModelPath = ci_models / "onnx_models/filtering.onnx"
+        gnnModelPath = ci_models / "onnx_models/gnn.onnx"
     else:
-        modelDir = Path.cwd() / "onnx_models"
-        assert (modelDir / "embedding.onnx").exists()
-        assert (modelDir / "filtering.onnx").exists()
-        assert (modelDir / "gnn.onnx").exists()
+        raise ValueError("Please specify backend: 'torch' or 'onnx'")
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
@@ -86,14 +158,15 @@ if "__main__" == __name__:
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(os.getcwd())
 
-    runGNNTrackFinding(
+    runGnnMetricLearning(
         trackingGeometry,
         field,
         outputDir,
         digiConfigFile,
         geometrySelection,
-        backend,
-        modelDir,
+        embedModelPath,
+        filterModelPath,
+        gnnModelPath,
         outputRoot=True,
         outputCsv=False,
         s=s,
