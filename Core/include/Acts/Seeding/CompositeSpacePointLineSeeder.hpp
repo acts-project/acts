@@ -276,7 +276,7 @@ class CompositeSpacePointLineSeeder {
   explicit CompositeSpacePointLineSeeder(
       const Config& cfg,
       std::unique_ptr<const Logger> logger = getDefaultLogger(
-          "CompositeSpacePointLineSeeder", Logging::Level::DEBUG));
+          "CompositeSpacePointLineSeeder", Logging::Level::INFO));
 
   /// @brief Reference to the logger object
   const Logger& logger() const { return *m_logger; }
