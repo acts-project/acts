@@ -28,6 +28,13 @@ inline double roundWithPrecision(double val, int precision) {
 }
 }  // namespace detail
 
+/// @brief Define a generic concept whether an object can be piped to an ostream / cout
+/// @tparam ObjType: Generic class type
+template <typename ObjType>
+concept hasPrintOperator = requires(const ObjType& obj, std::ostream& ostr) {
+  { ostr << obj } -> std::same_as<std::ostream&>;
+};
+
 /// Print out a matrix in a structured way.
 ///
 /// @tparam derived_t Type of the matrix

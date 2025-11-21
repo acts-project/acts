@@ -8,13 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
-#include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
-
 #include <chrono>
 #include <format>
 #include <random>
@@ -34,7 +27,6 @@ using namespace Acts::UnitLiterals;
 using namespace Acts::detail::LineHelper;
 using namespace Acts::PlanarHelper;
 using namespace Acts::VectorHelpers;
-using namespace Acts::Test;
 
 using TimePoint_t = std::chrono::system_clock::time_point;
 using RandomEngine = std::mt19937;
@@ -73,7 +65,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
     const auto line = generateLine(engine, logger());
     auto testTubes =
         MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
-    const double lineTanTheta = line.direction().y() / line.direction().z();
+    const double lineTanBeta = line.direction().y() / line.direction().z();
     const double lineY0 = line.position().y();
     for (std::size_t m1 = testTubes.size() - 1; m1 > testTubes.size() / 2;
          --m1) {
@@ -102,7 +94,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
               Seeder::constructTangentLine(topTube, bottomTube, ambi);
 
           const bool isTruePars =
-              Acts::abs(std::tan(pars.theta) - lineTanTheta) < tolerance &&
+              Acts::abs(std::tan(pars.theta) - lineTanBeta) < tolerance &&
               Acts::abs(lineY0 - pars.y0) < tolerance;
           seenTruePars |= isTruePars;
           ACTS_VERBOSE(__func__
@@ -137,11 +129,11 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
             Seeder::constructTangentLine(topTube, bottomTube, trueAmbi);
         /// Construct line parameters
         ACTS_DEBUG(__func__
-                   << "() " << __LINE__ << " - Line tan theta: " << lineTanTheta
+                   << "() " << __LINE__ << " - Line tan theta: " << lineTanBeta
                    << ", reconstructed theta: " << std::tan(seedPars.theta)
                    << ", line y0: " << lineY0
                    << ", reconstructed y0: " << seedPars.y0);
-        BOOST_CHECK_CLOSE(std::tan(seedPars.theta), lineTanTheta, tolerance);
+        BOOST_CHECK_CLOSE(std::tan(seedPars.theta), lineTanBeta, tolerance);
         BOOST_CHECK_CLOSE(seedPars.y0, lineY0, tolerance);
       }
     }
