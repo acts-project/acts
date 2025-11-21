@@ -325,6 +325,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
   for (const auto& track : tracks) {
     m_trackNr = track.index();
 
+    ACTS_INFO("Writing track states for track " << track.index());
+    
     // Collect the track summary info
     m_nMeasurements = track.nMeasurements();
     m_nStates = track.nTrackStates();
