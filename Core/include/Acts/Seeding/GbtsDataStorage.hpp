@@ -79,7 +79,8 @@ class GbtsDataStorage {
   explicit GbtsDataStorage(const GbtsGeometry& g);
   ~GbtsDataStorage();
 
-  int loadPixelGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll, bool useML);
+  int loadPixelGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll,
+                          bool useML);
   int loadStripGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll);
 
   unsigned int numberOfNodes() const;
@@ -110,7 +111,7 @@ class GbtsEdge {
   };
 
   GbtsEdge(const GbtsNode* n1, const GbtsNode* n2, float p1, float p2, float p3)
-      : m_n1(n1), m_n2(n2), m_level(1), m_next(1)  {
+      : m_n1(n1), m_n2(n2), m_level(1), m_next(1) {
     m_p[0] = p1;
     m_p[1] = p2;
     m_p[2] = p3;

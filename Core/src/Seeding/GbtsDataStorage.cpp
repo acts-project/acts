@@ -105,7 +105,7 @@ GbtsDataStorage::GbtsDataStorage(const GbtsGeometry& g) : m_geo(g) {
   m_etaBins.resize(g.num_bins());
 }
 
-GbtsDataStorage::~GbtsDataStorage()=default;
+GbtsDataStorage::~GbtsDataStorage() = default;
 
 int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
                                          const std::vector<GbtsNode>& coll,

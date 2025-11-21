@@ -45,7 +45,8 @@ class GbtsLayer {
 
   int num_bins() const { return m_bins.size(); }
 
-  bool verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0, float max_z0) const;
+  bool verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
+                 float max_z0) const;
 
   const TrigInDetSiLayer& m_layer;
   std::vector<int> m_bins;  // eta-bin indices
