@@ -20,3 +20,7 @@ target_link_libraries(
     ActsUnitTestStrawLineFitterTest
     PRIVATE ROOT::Tree ROOT::RIO
 )
+target_link_libraries(
+    ActsUnitTestCompositeSpacePointLineSeederTest
+    PRIVATE ROOT::Tree ROOT::RIO
+)
