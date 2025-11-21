@@ -40,7 +40,7 @@ constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
     return sign > zero ? copyTo : -copyTo;
   } else {
     if constexpr (std::is_floating_point_v<out_t>) {
-      return copySign(copyTo, sign);
+      return std::copysign(copyTo, sign);
     } else {
       if (sign == zero) {
         return out_t{};
