@@ -10,6 +10,7 @@ add_unittest(CandidatesForMiddleSp CandidatesForMiddleSpTests.cpp)
 add_unittest(StrawLineResiduals StrawLineResidualTest.cpp)
 add_unittest(FastStrawLineFitTests FastStrawLineFitTests.cpp)
 add_unittest(StrawLineFitterTest StrawLineFitterTest.cpp)
+add_unittest(CompositeSpacePointLineSeederTest CompositeSpacePointLineSeederTest.cpp)
 
 target_link_libraries(
     ActsUnitTestFastStrawLineFitTests
@@ -17,5 +18,9 @@ target_link_libraries(
 )
 target_link_libraries(
     ActsUnitTestStrawLineFitterTest
+    PRIVATE ROOT::Tree ROOT::RIO
+)
+target_link_libraries(
+    ActsUnitTestCompositeSpacePointLineSeederTest
     PRIVATE ROOT::Tree ROOT::RIO
 )
