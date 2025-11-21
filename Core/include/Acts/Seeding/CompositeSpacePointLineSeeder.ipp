@@ -75,7 +75,6 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Spt_t& topHit,
   const Vector& topPos{topHit.localPosition()};
   const Vector& eY{bottomHit.toNextSensor()};
   const Vector& eZ{bottomHit.planeNormal()};
-  // std::cout <<"Quack" <<topPos << " miau " << bottomPos << std::endl;
   const Vector D = topPos - bottomPos;
 
   assert(Acts::abs(eY.dot(eZ)) < s_epsilon);
@@ -340,10 +339,6 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
   ACTS_DEBUG("Will start looking for seeds now");
   while (options.lowerLayer < options.upperLayer) {
     found = buildSeed(options);
-    // if(found){
-    //   ACTS_DEBUG(*found);
-    //   ACTS_DEBUG(options);
-    // }
     moveToNextCandidate(options);
     if (found) {
       return found;
