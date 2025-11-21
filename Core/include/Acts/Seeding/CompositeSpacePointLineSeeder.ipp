@@ -75,7 +75,7 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Spt_t& topHit,
   const Vector& topPos{topHit.localPosition()};
   const Vector& eY{bottomHit.toNextSensor()};
   const Vector& eZ{bottomHit.planeNormal()};
-
+  // std::cout <<"Quack" <<topPos << " miau " << bottomPos << std::endl;
   const Vector D = topPos - bottomPos;
 
   assert(Acts::abs(eY.dot(eZ)) < s_epsilon);
@@ -171,12 +171,16 @@ bool CompositeSpacePointLineSeeder::prepareSeedOptions(
   }
 
   options.upperLayer = options.splitter->strawHits().size() - 1;
+  for (uint i_layer{0}; i_layer < options.splitter->strawHits().size();
+       ++i_layer) {
+    const Cont_t& layerHits = options.splitter->strawHits()[i_layer];
+    ACTS_DEBUG("Layer " << i_layer << " has " << layerHits.size()
+                        << " straw hits ");
+  }
 
   while (options.lowerLayer < options.upperLayer) {
     const Cont_t& lowerLayerHits =
         options.splitter->strawHits()[options.lowerLayer];
-    ACTS_DEBUG("layer " << options.lowerLayer << " has n straws "
-                        << lowerLayerHits.size());
     if (lowerLayerHits.size() > m_cfg.busyLayerLimit ||
         !firstGoodHit(lowerLayerHits, options.selector,
                       options.lowerHitIndex)) {
@@ -185,10 +189,9 @@ bool CompositeSpacePointLineSeeder::prepareSeedOptions(
       break;
     }
   }
-
   while (options.lowerLayer < options.upperLayer) {
     const Cont_t& upperLayerHits =
-        options.splitter->strawHits()[options.lowerLayer];
+        options.splitter->strawHits()[options.upperLayer];
     if (upperLayerHits.size() > m_cfg.busyLayerLimit ||
         !firstGoodHit(upperLayerHits, options.selector,
                       options.upperHitIndex)) {
@@ -355,10 +358,10 @@ template <CompositeSpacePointContainer Cont_t,
           CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
 SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
     SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options) const {
-  auto& upperHit =
-      options.splitter->strawHits()[options.upperLayer][options.upperHitIndex];
-  auto& lowerHit =
-      options.splitter->strawHits()[options.lowerLayer][options.lowerHitIndex];
+  auto& upperHit = options.splitter->strawHits()[options.upperLayer].at(
+      options.upperHitIndex);
+  auto& lowerHit = options.splitter->strawHits()[options.lowerLayer].at(
+      options.lowerHitIndex);
   TangentAmbi ambi = encodeAmbiguity(s_signCombo[options.m_signComboIndex]);
   const CalibrationContext* ctx = options.calibContext;
 

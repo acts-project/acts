@@ -11,6 +11,8 @@
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 
 #include "StrawHitGeneratorHelper.hpp"
+#include "TFile.h"
+#include "TTree.h"
 
 using namespace Acts;
 using namespace Acts::Experimental;
@@ -23,17 +25,32 @@ using namespace Acts::Test;
 
 using Seeder = CompositeSpacePointLineSeeder;
 
-constexpr auto logLvl = Acts::Logging::Level::DEBUG;
-constexpr std::size_t nEvents = 1;
+constexpr auto logLvl = Acts::Logging::Level::INFO;
+constexpr std::size_t nEvents = 5000;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineSeederTest", logLvl));
 
 namespace ActsTests {
 
+#define DECLARE_BRANCH(dTYPE, NAME) \
+  dTYPE NAME{};                     \
+  outTree->Branch(#NAME, &NAME);
+
 BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
-BOOST_AUTO_TEST_CASE(CompositeSpacePointLineSeeder) {
-  RandomEngine engine{1602};
+void testSeeder(RandomEngine& engine, TFile& outFile) {
+  auto outTree = std::make_unique<TTree>("StrawSeederTree", "StrawSeederTree");
+
+  DECLARE_BRANCH(double, trueY0);
+  DECLARE_BRANCH(double, trueTheta);
+
+  DECLARE_BRANCH(std::vector<double>, recoY0);
+  DECLARE_BRANCH(std::vector<double>, recoTheta);
+  DECLARE_BRANCH(std::vector<double>, uncertY0);
+  DECLARE_BRANCH(std::vector<double>, uncertTheta);
+  DECLARE_BRANCH(std::vector<uint>, nStraws);
+  DECLARE_BRANCH(std::vector<uint>, nStrips);
+  DECLARE_BRANCH(uint, nSeeds);
 
   using GenCfg_t = MeasurementGenerator::Config;
   GenCfg_t genCfg{};
@@ -47,6 +64,9 @@ BOOST_AUTO_TEST_CASE(CompositeSpacePointLineSeeder) {
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     ACTS_INFO("Generating event " << evt);
     const auto line = generateLine(engine, logger());
+    auto linePars = line.parameters();
+    trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
+    trueTheta = linePars[toUnderlying(Line_t::ParIndex::theta)];
     auto testTubes =
         MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
     std::unique_ptr<SpSorter> sorterPtr = std::make_unique<SpSorter>(testTubes);
@@ -61,13 +81,36 @@ BOOST_AUTO_TEST_CASE(CompositeSpacePointLineSeeder) {
     ACTS_DEBUG(seedOpts);
     seeder.prepareSeedOptions(seedOpts);
     ACTS_DEBUG(seedOpts);
-
+    nSeeds = 0;
     while (auto seed = seeder.nextSeed(seedOpts)) {
       if (seed == std::nullopt)
         break;
-      ACTS_INFO(*seed);
+      recoY0.push_back(seed->y0);
+      recoTheta.push_back(seed->theta);
+      uncertY0.push_back(seed->dY0);
+      uncertTheta.push_back(seed->dTheta);
+      nStraws.push_back(seed->nStrawHits);
+      nSeeds++;
     }
+    outTree->Fill();
+    recoY0.clear();
+    recoTheta.clear();
+    uncertY0.clear();
+    uncertTheta.clear();
+    nStraws.clear();
+    nStrips.clear();
   }
+  outFile.WriteObject(outTree.get(), outTree->GetName());
+}
+
+BOOST_AUTO_TEST_CASE(CompositeSpacePointLineSeeder) {
+  RandomEngine engine{1602};
+  std::unique_ptr<TFile> outFile{
+      TFile::Open("StrawLineSeedTest.root", "RECREATE")};
+
+  BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
+
+  testSeeder(engine, *outFile);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
