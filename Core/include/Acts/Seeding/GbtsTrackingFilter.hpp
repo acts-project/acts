@@ -32,10 +32,10 @@ struct GbtsEdgeState {
 
   explicit GbtsEdgeState(bool f) : m_initialized(f) {};
 
-  ~GbtsEdgeState() {};
+  ~GbtsEdgeState()=default;
 
-  void initialize(GbtsEdge*);
-  void clone(const struct GbtsEdgeState&);
+  void initialize(GbtsEdge* pS);
+  void clone(const struct GbtsEdgeState& st);
 
   float m_J{};
 
@@ -51,18 +51,18 @@ struct GbtsEdgeState {
 
 class GbtsTrackingFilter {
  public:
-  GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>&,
-                     std::vector<GbtsEdge>&, SeedFinderGbtsConfig& config);
-  ~GbtsTrackingFilter() {};
+  GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
+                     std::vector<GbtsEdge>& sb, SeedFinderGbtsConfig& config);
+  ~GbtsTrackingFilter()=default;
 
-  void followTrack(GbtsEdge*, GbtsEdgeState&);
+  void followTrack(GbtsEdge* pS, GbtsEdgeState& output);
 
  protected:
-  void propagate(GbtsEdge*, GbtsEdgeState&);
+  void propagate(GbtsEdge* pS, GbtsEdgeState& ts);
 
-  bool update(GbtsEdge*, GbtsEdgeState&);
+  bool update(GbtsEdge* pS, GbtsEdgeState& ts);
 
-  int getLayerType(int);
+  int getLayerType(int l);
 
   const std::vector<TrigInDetSiLayer>& m_geo;
 

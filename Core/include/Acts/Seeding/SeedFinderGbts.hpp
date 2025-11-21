@@ -45,11 +45,11 @@ class SeedFinderGbts {
   std::vector<std::vector<SeedFinderGbts::GNN_Node>> CreateNodes(
       const auto& container, int MaxLayers);
 
-  std::pair<int, int> buildTheGraph(const RoiDescriptor&,
-                                    const std::unique_ptr<GNN_DataStorage>&,
-                                    std::vector<GNN_Edge>&) const;
+  std::pair<int, int> buildTheGraph(const RoiDescriptor& roi,
+                                    const std::unique_ptr<GNN_DataStorage>& storage,
+                                    std::vector<GNN_Edge>& edgeStorage) const;
 
-  int runCCA(int, std::vector<GNN_Edge>&) const;
+  int runCCA(int nEdges, std::vector<GNN_Edge>& edgeStorage) const;
 
  private:
   SeedFinderGbtsConfig m_config;

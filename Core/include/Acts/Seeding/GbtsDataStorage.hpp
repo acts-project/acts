@@ -56,7 +56,7 @@ class GbtsEtaBin {
   void initializeNodes();
   bool empty() const { return m_vn.empty(); }
 
-  void generatePhiIndexing(float);
+  void generatePhiIndexing(float dphi);
 
   float getMinBinRadius() const { return m_minRadius; }
 
@@ -71,21 +71,21 @@ class GbtsEtaBin {
       m_params;  // node attributes: m_minCutOnTau, m_maxCutOnTau, m_phi, m_r,
                  // m_z;
 
-  float m_minRadius, m_maxRadius;
+  float m_minRadius{}, m_maxRadius{};
 };
 
 class GbtsDataStorage {
  public:
-  explicit GbtsDataStorage(const GbtsGeometry&);
+  explicit GbtsDataStorage(const GbtsGeometry& g);
   ~GbtsDataStorage();
 
-  int loadPixelGraphNodes(short, const std::vector<GbtsNode>&, bool);
-  int loadStripGraphNodes(short, const std::vector<GbtsNode>&);
+  int loadPixelGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll, bool useML);
+  int loadStripGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll);
 
   unsigned int numberOfNodes() const;
   void sortByPhi();
-  void initializeNodes(bool);
-  void generatePhiIndexing(float);
+  void initializeNodes(bool useML);
+  void generatePhiIndexing(float dphi);
 
   GbtsEtaBin& getEtaBin(int idx) {
     if (idx >= static_cast<int>(m_etaBins.size())) {
@@ -110,7 +110,7 @@ class GbtsEdge {
   };
 
   GbtsEdge(const GbtsNode* n1, const GbtsNode* n2, float p1, float p2, float p3)
-      : m_n1(n1), m_n2(n2), m_level(1), m_next(1), m_nNei(0) {
+      : m_n1(n1), m_n2(n2), m_level(1), m_next(1)  {
     m_p[0] = p1;
     m_p[1] = p2;
     m_p[2] = p3;

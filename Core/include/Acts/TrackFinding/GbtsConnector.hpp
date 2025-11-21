@@ -17,7 +17,7 @@
 namespace Acts::Experimental {
 
 struct GbtsConnection {
-  GbtsConnection(unsigned int, unsigned int);
+  GbtsConnection(unsigned int s, unsigned int d);
 
   unsigned int m_src, m_dst;
 
@@ -37,7 +37,7 @@ class GbtsConnector {
   };
 
  public:
-  GbtsConnector(std::ifstream&, bool LRTmode);
+  GbtsConnector(std::ifstream& inFile, bool LRTmode);
   ~GbtsConnector();
 
   float m_etaBin{};
