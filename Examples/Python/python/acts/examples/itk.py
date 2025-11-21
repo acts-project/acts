@@ -4,7 +4,7 @@ import math
 
 import acts
 import acts.examples
-from acts.examples import TGeoDetector
+from acts.examples.tgeo import TGeoDetector
 
 from acts.examples.reconstruction import (
     SeedFinderConfigArg,
@@ -61,6 +61,8 @@ def buildITkGeometry(
             volumeLogLevel=customLogLevel(),
             materialDecorator=matDeco,
         )
+
+    from acts.examples.tgeo import TGeoDetector
 
     Volume = TGeoDetector.Config.Volume
     LayerTriplet = TGeoDetector.Config.LayerTriplet

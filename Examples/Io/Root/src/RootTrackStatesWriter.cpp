@@ -281,10 +281,6 @@ ProcessCode RootTrackStatesWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
-
-  ACTS_INFO("Wrote states of trajectories to tree '"
-            << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
-
   return ProcessCode::SUCCESS;
 }
 
@@ -404,10 +400,12 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         // Use average truth in the case of multiple contributing sim hits
         const auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+
         const auto hitIdx = sl.index();
         const auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         const auto [truthLocal, truthPos4, truthUnitDir] =
             averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         if (!indices.empty()) {
@@ -425,6 +423,10 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
             particleIds.push_back(simHit.particleId().asVector());
           }
         }
+
+        ACTS_INFO("Number of contributing sim hits: "
+                  << indices.size()
+                  << ", particle ids collected: " << particleIds.size());
 
         // fill the truth hit info
         m_t_x.push_back(Acts::clampValue<float>(truthPos4[Acts::ePos0]));

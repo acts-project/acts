@@ -24,13 +24,9 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 using namespace ActsExamples;
+using namespace ActsPython;
 
-namespace ActsPython {
-void addHepMC3(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-
-  auto hepmc3 = mex.def_submodule("_hepmc3");
-
+PYBIND11_MODULE(ActsExamplesPythonBindingsHepMC3, hepmc3) {
   ACTS_PYTHON_DECLARE_WRITER(HepMC3Writer, hepmc3, "HepMC3Writer", outputPath,
                              inputEvent, compression, maxEventsPending,
                              writeEventsInOrder);
@@ -159,4 +155,3 @@ void addHepMC3(Context& ctx) {
              py::arg("compression") = HepMC3Util::Compression::none,
              py::arg("compressionLevel") = 6, py::arg("verbose") = false);
 }
-}  // namespace ActsPython

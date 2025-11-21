@@ -6,7 +6,8 @@ import argparse
 
 import acts
 from acts import UnitConstants as u
-from acts.examples import GenericDetector, RootParticleReader
+from acts.examples import GenericDetector
+from acts.exsamples.root import RootParticleReader
 
 
 def getArgumentParser():
