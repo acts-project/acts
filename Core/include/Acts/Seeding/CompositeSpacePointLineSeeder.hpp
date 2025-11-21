@@ -55,11 +55,6 @@ concept CompositeSpacePointSorter =
       } -> std::same_as<const std::vector<SpacePointCont_t>&>;
     };
 
-// template <CompositeSpacePointContainer UnCalibCont_t,
-//           CompositeSpacePointSorter<UnCalibCont_t> Splitter_t,
-//           CompositeSpacePointContainer CalibCont_t,
-//           CompositeSpacePointCalibrator<UnCalibCont_t, CalibCont_t>
-//           Calibrator_t>
 class CompositeSpacePointLineSeeder {
  public:
   using Vector = detail::CompSpacePointAuxiliaries::Vector;
@@ -113,8 +108,6 @@ class CompositeSpacePointLineSeeder {
     bool overlapCorridor{true};
     /// @brief Recalibrate the seed drift circles from the initial estimate
     bool recalibSeedCircles{false};
-    /// @brief Pointer to the space point calibrator
-    // const ISpacePointCalibrator* calibrator{nullptr};
     /// @brief Toggle whether the seed is rapidly refitted
     bool fastSeedFit{true};
     /// @brief Toggle whether an initial t0 fit shall be executed
@@ -123,11 +116,6 @@ class CompositeSpacePointLineSeeder {
     std::size_t nMaxIter{100};
     /// @brief Precision cut off in the fast segment fit
     double precCutOff{1.e-6};
-    /// @brief Pointer to the calibrator object
-    // const Calibrator_t* calibrator{nullptr};
-    /// @brief Good hit selector
-    // Selector_t<UncalibSp_t> selector{};
-    /* data */
   };
 
   struct SeedParameters {
@@ -175,7 +163,6 @@ class CompositeSpacePointLineSeeder {
     SeedSolution(const SeedParameters& pars) : SeedParameters(pars) {};
     SeedSolution() {};
     /// @brief Used hits in the seed
-    // SpInSeedBookCont_t<Spt_t> seedHits{};
     Cont_t seedHits{};
   };
 
