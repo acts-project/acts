@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 namespace Acts::detail {
 /// @brief Auxiliary class to coherently sort Transforms and Vectors such that
@@ -42,8 +43,8 @@ class TransformComparator {
               const Acts::ActsVector<kSize>& b) const {
     for (unsigned int i = 0; i < kSize; ++i) {
       const double diff = a[i] - b[i];
-      if (std::abs(diff) > m_tolTrans) {
-        return diff > 0 ? 1 : -1;
+      if (Acts::abs(diff) > m_tolTrans) {
+        return static_cast<int>(Acts::sign(diff));
       }
     }
     return 0;
