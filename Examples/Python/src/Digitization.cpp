@@ -12,7 +12,6 @@
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Digitization/DigitizationCoordinatesConverter.hpp"
 #include "ActsExamples/Digitization/MuonSpacePointDigitizer.hpp"
-#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -33,9 +32,6 @@ namespace ActsPython {
 
 void addDigitization(Context& ctx) {
   auto& mex = ctx.get("examples");
-
-  mex.def("readDigiConfigFromJson", readDigiConfigFromJson);
-  mex.def("writeDigiConfigToJson", writeDigiConfigToJson);
 
   {
     using Config = DigitizationAlgorithm::Config;
