@@ -363,13 +363,7 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   const CalibrationContext* ctx = options.calibContext;
 
   auto seedPars = constructTangentLine(*lowerHit, *upperHit, ambi);
-  // ACTS_DEBUG(" constructed line pars " << seedPars);
-  // Vector3 flippedDir =
-  //     Eigen::AngleAxisd(seedSol.theta, upperHit.sensoreDirection()) *
-  //     upperHit.planeNormal();
-  // seedSol.theta = Acts::VectorHelpers::theta(flippedDir);
   if (!isValidLine(seedPars)) {
-    // ACTS_DEBUG("seed pars are invalid");
     return std::nullopt;
   }
 
