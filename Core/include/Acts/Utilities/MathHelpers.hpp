@@ -29,7 +29,12 @@ constexpr T abs(const T n) {
     return std::abs(n);
   }
 }
-/// @brief
+/// @brief Copies the sign of a signed variable onto the copyTo input object
+///        The return type remains unchanged which allows to also flip vectors
+///        using this function. If the sign variable is zero, then an empty
+///        object is returned
+/// @param copyTo: Variable to which the sign is copied to.
+/// @param sign: Variable from which the sign is taken.
 template <typename out_t, typename sign_t>
 constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
   constexpr sign_t zero{};
