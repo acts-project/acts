@@ -67,6 +67,6 @@ void BoundDeduplicator::visitSurface(Surface& surface) {
 
 void BoundDeduplicator::visitBoundarySurface(
     BoundarySurfaceT<TrackingVolume>& boundary) {
-  visitSurface(const_cast<RegularSurface&>(boundary.surfaceRepresentation()));
+  visitSurface(*boundary.m_surface);
 }
 }  // namespace Acts::detail
