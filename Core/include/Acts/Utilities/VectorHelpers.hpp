@@ -120,7 +120,7 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept
   requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == 3)
 {
   if (v[0] == 0. && v[1] == 0.) {
-    return std::copysign(std::numeric_limits<double>::infinity(), v[2]);
+    return copySign(std::numeric_limits<double>::infinity(), v[2]);
   } else {
     return std::asinh(v[2] / perp(v));
   }
@@ -137,7 +137,7 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept
 {
   assert(v.rows() == 3 && "Eta function not valid for non-3D vectors.");
   if (v[0] == 0. && v[1] == 0.) {
-    return std::copysign(std::numeric_limits<double>::infinity(), v[2]);
+    return copySign(std::numeric_limits<double>::infinity(), v[2]);
   } else {
     return std::asinh(v[2] / perp(v));
   }

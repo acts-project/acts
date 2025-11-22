@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
       int part = getRndInt(gen, 0, 1) * 2 - 1;
 
       for (int rIndx = 1; rIndx <= 3; rIndx += 1) {
-        double sgn = std::copysign(1., dirY);
+        double sgn = copySign(1., dirY);
         double dirR2 = dirX * dirX + dirY * dirY;
         double D = vtxX * (vtxY + dirY) - vtxY * (vtxX + dirX);
         // add some smearing to the layers

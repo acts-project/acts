@@ -128,7 +128,7 @@ struct SinglyCharged {
   /// @param qOverP Charge over momentum
   /// @return Signed elementary charge (+e or -e)
   constexpr float extractCharge(double qOverP) const noexcept {
-    return std::copysign(UnitConstants::e, qOverP);
+    return copySign(UnitConstants::e, qOverP);
   }
 
   /// Extract momentum magnitude from q/p
@@ -182,7 +182,7 @@ class NonNeutralCharge {
   /// @param qOverP Charge over momentum
   /// @return Signed charge with correct magnitude
   constexpr float extractCharge(double qOverP) const noexcept {
-    return std::copysign(m_absQ, qOverP);
+    return copySign(m_absQ, qOverP);
   }
   /// Extract momentum magnitude from q/p
   /// @param qOverP Charge over momentum
@@ -239,7 +239,7 @@ class AnyCharge {
   /// @param qOverP Charge over momentum
   /// @return Signed charge with correct magnitude (0 for neutral)
   constexpr float extractCharge(double qOverP) const noexcept {
-    return std::copysign(m_absQ, qOverP);
+    return copySign(m_absQ, qOverP);
   }
   /// Extract momentum magnitude from q/p
   /// @param qOverP Charge over momentum

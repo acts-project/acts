@@ -48,7 +48,7 @@ double PointwiseMaterialInteraction::updateVariance(
     double variance, double change, NoiseUpdateMode updateMode) const {
   // Add/Subtract the change
   // Protect the variance against becoming negative
-  return std::max(0., variance + std::copysign(change, updateMode));
+  return std::max(0., variance + copySign(change, updateMode));
 }
 
 }  // namespace Acts::detail

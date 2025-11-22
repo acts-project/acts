@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <stdexcept>
 
@@ -75,14 +76,14 @@ bool BoundaryTolerance::isTolerated(
       chi2Bound != nullptr) {
     double chi2 =
         boundDelta.transpose() * chi2Bound->weightMatrix() * boundDelta;
-    return std::copysign(chi2, chi2Bound->maxChi2) <= chi2Bound->maxChi2;
+    return copySign(chi2, chi2Bound->maxChi2) <= chi2Bound->maxChi2;
   }
 
   Vector2 cartesianDelta = boundToCartesian * boundDelta;
 
   if (const auto* absoluteEuclidean = getVariantPtr<AbsoluteEuclideanParams>();
       absoluteEuclidean != nullptr) {
-    return std::copysign(cartesianDelta.norm(), absoluteEuclidean->tolerance) <=
+    return copySign(cartesianDelta.norm(), absoluteEuclidean->tolerance) <=
            absoluteEuclidean->tolerance;
   }
 
@@ -90,8 +91,7 @@ bool BoundaryTolerance::isTolerated(
       chi2Cartesian != nullptr) {
     double chi2 = cartesianDelta.transpose() * chi2Cartesian->weightMatrix() *
                   cartesianDelta;
-    return std::copysign(chi2, chi2Cartesian->maxChi2) <=
-           chi2Cartesian->maxChi2;
+    return copySign(chi2, chi2Cartesian->maxChi2) <= chi2Cartesian->maxChi2;
   }
 
   throw std::logic_error("Unsupported tolerance type");

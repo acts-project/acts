@@ -156,7 +156,7 @@ struct PointwiseMaterialInteraction {
     static constexpr double minP = 10 * Acts::UnitConstants::MeV;
     nextP = std::max(minP, nextP);
     const double nextQOverP =
-        std::copysign(particleHypothesis.qOverP(nextP, absQ), qOverP);
+        copySign(particleHypothesis.qOverP(nextP, absQ), qOverP);
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextQOverP, time);
     state.stepping.cov(eBoundPhi, eBoundPhi) = updateVariance(

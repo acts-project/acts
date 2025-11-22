@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <type_traits>
 
 namespace Acts {
 
@@ -27,6 +28,35 @@ constexpr T abs(const T n) {
     return n;
   } else {
     return std::abs(n);
+  }
+}
+/// @brief Copies the sign of a signed variable onto the copyTo input object
+///        The return type remains unchanged which allows to also flip vectors
+///        using this function. If the sign variable is zero, then an empty
+///        object is returned
+/// @param copyTo: Variable to which the sign is copied to.
+/// @param sign: Variable from which the sign is taken.
+template <typename out_t, typename sign_t>
+constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
+  if constexpr (std::is_enum_v<sign_t>) {
+    return copySign(copyTo, static_cast<std::underlying_type_t<sign_t>>(sign));
+  } else {
+    constexpr sign_t zero = 0;
+    if (std::is_constant_evaluated()) {
+      if (sign == zero) {
+        return out_t{};
+      }
+      return sign > zero ? copyTo : -copyTo;
+    } else {
+      if constexpr (std::is_floating_point_v<out_t>) {
+        return std::copysign(copyTo, static_cast<out_t>(sign));
+      } else {
+        if (sign == zero) {
+          return out_t{};
+        }
+        return sign > zero ? copyTo : -copyTo;
+      }
+    }
   }
 }
 

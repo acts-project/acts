@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/MathHelpers.hpp"
+
 #include <cmath>
 #include <utility>
 
@@ -58,8 +60,7 @@ struct RealQuadraticEquation {
     double discriminant = beta * beta - 4 * alpha * gamma;
     if (discriminant >= 0) {
       solutions = (discriminant == 0) ? 1 : 2;
-      double q = -0.5 * (beta + (beta > 0 ? std::sqrt(discriminant)
-                                          : -std::sqrt(discriminant)));
+      double q = -0.5 * (beta + copySign(std::sqrt(discriminant), beta));
       first = q / alpha;
       second = gamma / q;
     }

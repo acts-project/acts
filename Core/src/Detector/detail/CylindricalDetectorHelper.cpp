@@ -533,7 +533,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   std::vector<double> zBoundaries = {};
   for (const auto& zb3D : zBoundaries3D) {
     auto proj3D = (zb3D - combinedCenter).dot(rotation.col(2));
-    double zBoundary = std::copysign((zb3D - combinedCenter).norm(), proj3D);
+    double zBoundary = copySign((zb3D - combinedCenter).norm(), proj3D);
     zBoundaries.push_back(zBoundary);
   }
 
