@@ -650,7 +650,7 @@ class AtlasStepper {
     state.pVector[4] = direction.x();
     state.pVector[5] = direction.y();
     state.pVector[6] = direction.z();
-    state.pVector[7] = copySign(parameters[eFreeQOverP], state.pVector[7]);
+    state.pVector[7] = std::copysign(parameters[eFreeQOverP], state.pVector[7]);
 
     // @todo: remove magic numbers - is that the charge ?
     if (std::abs(state.pVector[7]) < .000000000000001) {
