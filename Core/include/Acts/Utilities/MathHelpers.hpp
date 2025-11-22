@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <type_traits>
 
 namespace Acts {
 
@@ -37,20 +38,24 @@ constexpr T abs(const T n) {
 /// @param sign: Variable from which the sign is taken.
 template <typename out_t, typename sign_t>
 constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
-  constexpr sign_t zero = 0;
-  if (std::is_constant_evaluated()) {
-    if (sign == zero) {
-      return out_t{};
-    }
-    return sign > zero ? copyTo : -copyTo;
+  if constexpr (std::is_enum_v<sign_t>) {
+    return copySign(copyTo, static_cast<std::underlying_type_t<sign_t>>(sign));
   } else {
-    if constexpr (std::is_floating_point_v<out_t>) {
-      return std::copysign(copyTo, static_cast<out_t>(sign));
-    } else {
+    constexpr sign_t zero = 0;
+    if (std::is_constant_evaluated()) {
       if (sign == zero) {
         return out_t{};
       }
       return sign > zero ? copyTo : -copyTo;
+    } else {
+      if constexpr (std::is_floating_point_v<out_t>) {
+        return std::copysign(copyTo, static_cast<out_t>(sign));
+      } else {
+        if (sign == zero) {
+          return out_t{};
+        }
+        return sign > zero ? copyTo : -copyTo;
+      }
     }
   }
 }
