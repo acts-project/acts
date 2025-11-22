@@ -43,8 +43,8 @@ class BoundarySurfaceT {
   using VolumeArray = BinnedArray<VolumePtr>;
 
  public:
- /// @brief Default constructor
-  BoundarySurfaceT()  = default;
+  /// @brief Default constructor
+  BoundarySurfaceT() = default;
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   ///
@@ -67,7 +67,7 @@ class BoundarySurfaceT {
                    VolumePtr inside, VolumePtr outside)
       : m_surface(std::move(surface)),
         m_oppositeVolume(inside.get()),
-        m_alongVolume(outside.get()){}
+        m_alongVolume(outside.get()) {}
 
   /// Constructor for a Boundary with exact multiple Volumes attached to it
   /// - usually used in a volume constructor

@@ -20,9 +20,6 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 
 namespace Acts::detail {
-/// @brief Visit and potentially modify a tracking volume
-/// @param volume The tracking volume being visited
-/// @note Called for each volume in the geometry hierarchy during traversal
 void BoundDeduplicator::visitVolume(TrackingVolume& volume) {
   volume.assignVolumeBounds(m_volFactory.insert(volume.volumeBoundsPtr()));
 }

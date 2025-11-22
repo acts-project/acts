@@ -12,7 +12,12 @@
 #include "Acts/Utilities/BoundFactory.hpp"
 
 namespace Acts::detail {
-/// @brief Tracking geometry visitor that deduplicates the bounds of Surfaces & TrackingVolumes. E.g., if two PlaneSurfaces have each a RectangularBounds object with (10.cm, 5.cm), the visitor ensures that there's only one instance of these bounds and that both surfaces hold this pointer. The same logic applies to the sharing of the TrackingVolumeBounds
+/// @brief Tracking geometry visitor that deduplicates the bounds of Surfaces &
+///        TrackingVolumes. E.g., if two PlaneSurfaces have each a
+///        RectangularBounds object with (10.cm, 5.cm), the visitor ensures that
+///        there is only one instance of with these parameters and that both
+///        surfaces hold this pointer. The same logic applies to the sharing
+///        of the TrackingVolumeBounds
 class BoundDeduplicator : public TrackingGeometryMutableVisitor {
  public:
   /// @brief Default constructor
