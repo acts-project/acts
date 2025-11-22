@@ -43,13 +43,8 @@ class BoundarySurfaceT {
   using VolumeArray = BinnedArray<VolumePtr>;
 
  public:
-  BoundarySurfaceT()
-      : m_surface(nullptr),
-        m_oppositeVolume(nullptr),
-        m_alongVolume(nullptr),
-        m_oppositeVolumeArray(nullptr),
-        m_alongVolumeArray(nullptr) {}
-
+ /// @brief Default constructor
+  BoundarySurfaceT()  = default;
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   ///
@@ -59,10 +54,8 @@ class BoundarySurfaceT {
   BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
                    const volume_t* inside, const volume_t* outside)
       : m_surface(std::move(surface)),
-        m_oppositeVolume(inside),
-        m_alongVolume(outside),
-        m_oppositeVolumeArray(nullptr),
-        m_alongVolumeArray(nullptr) {}
+        m_oppositeVolume{inside},
+        m_alongVolume{outside} {}
 
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
@@ -74,9 +67,7 @@ class BoundarySurfaceT {
                    VolumePtr inside, VolumePtr outside)
       : m_surface(std::move(surface)),
         m_oppositeVolume(inside.get()),
-        m_alongVolume(outside.get()),
-        m_oppositeVolumeArray(nullptr),
-        m_alongVolumeArray(nullptr) {}
+        m_alongVolume(outside.get()){}
 
   /// Constructor for a Boundary with exact multiple Volumes attached to it
   /// - usually used in a volume constructor
@@ -88,11 +79,9 @@ class BoundarySurfaceT {
   BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
                    std::shared_ptr<const VolumeArray> insideArray,
                    std::shared_ptr<const VolumeArray> outsideArray)
-      : m_surface(std::move(surface)),
-        m_oppositeVolume(nullptr),
-        m_alongVolume(nullptr),
-        m_oppositeVolumeArray(insideArray),
-        m_alongVolumeArray(outsideArray) {}
+      : m_surface{std::move(surface)},
+        m_oppositeVolumeArray{std::move(insideArray)},
+        m_alongVolumeArray{std::move(outsideArray)} {}
 
   virtual ~BoundarySurfaceT() = default;
 
@@ -167,15 +156,15 @@ class BoundarySurfaceT {
 
  protected:
   /// the represented surface by this
-  std::shared_ptr<const RegularSurface> m_surface;
+  std::shared_ptr<const RegularSurface> m_surface{};
   /// the inside (w.r.t. normal vector) volume to point to if only one exists
-  const volume_t* m_oppositeVolume;
+  const volume_t* m_oppositeVolume{};
   /// the outside (w.r.t. normal vector) volume to point to if only one exists
-  const volume_t* m_alongVolume;
+  const volume_t* m_alongVolume{};
   /// the inside (w.r.t. normal vector) volume array to point to
-  std::shared_ptr<const VolumeArray> m_oppositeVolumeArray;
+  std::shared_ptr<const VolumeArray> m_oppositeVolumeArray{};
   /// the outside (w.r.t. normal vector) volume array to point to
-  std::shared_ptr<const VolumeArray> m_alongVolumeArray;
+  std::shared_ptr<const VolumeArray> m_alongVolumeArray{};
 };
 
 class TrackingVolume;

@@ -26,6 +26,10 @@
 #include <numbers>
 #include <string>
 
+namespace Acts::detail {
+class BoundDeduplicator;
+}
+
 namespace Acts {
 
 /// @class ConeSurface
@@ -41,6 +45,7 @@ namespace Acts {
 ///
 class ConeSurface : public RegularSurface {
   friend class Surface;
+  friend class detail::BoundDeduplicator;
 
  protected:
   /// Constructor form HepTransform and an opening angle

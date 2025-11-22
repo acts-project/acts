@@ -22,6 +22,10 @@
 #include <memory>
 #include <string>
 
+namespace Acts::detail {
+class BoundDeduplicator;
+}
+
 namespace Acts {
 
 class LineBounds;
@@ -39,6 +43,7 @@ class SurfaceBounds;
 /// @image html LineSurface.png
 class LineSurface : public Surface {
   friend class Surface;
+  friend class detail::BoundDeduplicator;
 
  protected:
   /// Constructor for LineSurface from Transform3 and radial dimensions

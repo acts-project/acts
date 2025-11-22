@@ -27,6 +27,10 @@
 #include <numbers>
 #include <string>
 
+namespace Acts::detail {
+class BoundDeduplicator;
+}
+
 namespace Acts {
 class DetectorElementBase;
 
@@ -43,6 +47,7 @@ class DetectorElementBase;
 
 class CylinderSurface : public RegularSurface {
   friend class Surface;
+  friend class detail::BoundDeduplicator;
 
  protected:
   /// Constructor from Transform3 and CylinderBounds

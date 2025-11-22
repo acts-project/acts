@@ -22,6 +22,10 @@
 #include <memory>
 #include <string>
 
+namespace Acts::detail {
+class BoundDeduplicator;
+}
+
 namespace Acts {
 
 class DetectorElementBase;
@@ -39,6 +43,7 @@ class SurfaceBounds;
 ///
 class PlaneSurface : public RegularSurface {
   friend class Surface;
+  friend class detail::BoundDeduplicator;
 
  protected:
   /// Copy Constructor
