@@ -37,7 +37,7 @@ constexpr T abs(const T n) {
 /// @param sign: Variable from which the sign is taken.
 template <typename out_t, typename sign_t>
 constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
-  constexpr sign_t zero{};
+  constexpr sign_t zero = 0;
   if (std::is_constant_evaluated()) {
     if (sign == zero) {
       return out_t{};
