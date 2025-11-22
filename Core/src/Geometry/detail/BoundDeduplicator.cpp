@@ -19,6 +19,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 
+#include <format>
+
 namespace Acts::detail {
 void BoundDeduplicator::visitVolume(TrackingVolume& volume) {
   volume.assignVolumeBounds(m_volFactory.insert(volume.volumeBoundsPtr()));
@@ -56,10 +58,10 @@ void BoundDeduplicator::visitSurface(Surface& surface) {
       break;
     }
     default:
-      throw std::invalid_argument(
-          "BoundDeduplicator::visitSurface() - The surface " +
-          Surface::s_surfaceTypeNames[toUnderlying(surface.type())] +
-          " is not yet supported.");
+      throw std::invalid_argument(std::format(
+          "BoundDeduplicator::visitSurface() - The surface {:} is not yet "
+          "supported",
+          Surface::s_surfaceTypeNames[toUnderlying(surface.type())]));
   }
 }
 
