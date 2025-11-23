@@ -26,8 +26,8 @@
     auto& castSurf = static_cast<SURFACE_T&>(surface);             \
     if (castSurf.m_bounds) {                                       \
       castSurf.m_bounds = m_surfFactory.insert(castSurf.m_bounds); \
-      break;                                                       \
     }                                                              \
+    break;                                                         \
   }
 
 namespace Acts::detail {
