@@ -4,23 +4,25 @@
 #
 #    pip-compile Examples/Python/tests/requirements.in
 #
-awkward==2.8.9
+awkward==2.8.10
     # via
     #   -r Examples/Python/tests/requirements.in
     #   uproot
 awkward-cpp==50
     # via awkward
+backports-zstd==1.0.0
+    # via pyhepmc
 cramjam==2.11.0
     # via uproot
-execnet==2.1.1
+execnet==2.1.2
     # via pytest-xdist
-fsspec==2025.9.0
+fsspec==2025.10.0
     # via
     #   awkward
     #   uproot
 iniconfig==2.3.0
     # via pytest
-numpy==2.3.4
+numpy==2.3.5
     # via
     #   -r Examples/Python/tests/requirements.in
     #   awkward
@@ -37,9 +39,9 @@ pluggy==1.6.0
     # via pytest
 pygments==2.19.2
     # via pytest
-pyhepmc==2.14.0
+pyhepmc==2.15.1
     # via -r Examples/Python/tests/requirements.in
-pytest==8.4.2
+pytest==9.0.1
     # via
     #   -r Examples/Python/tests/requirements.in
     #   pytest-check
@@ -56,7 +58,7 @@ pytest-xdist==3.8.0
     # via -r Examples/Python/tests/requirements.in
 pyyaml==6.0.3
     # via -r Examples/Python/tests/requirements.in
-uproot==5.6.6
+uproot==5.6.8
     # via -r Examples/Python/tests/requirements.in
 xxhash==3.6.0
     # via uproot
