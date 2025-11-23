@@ -25,6 +25,10 @@
 #include <numbers>
 #include <string>
 
+namespace Acts::detail {
+class BoundDeduplicator;
+}
+
 namespace Acts {
 
 class DetectorElementBase;
@@ -52,6 +56,7 @@ class SurfaceBounds;
 ///
 class DiscSurface : public RegularSurface {
   friend class Surface;
+  friend class detail::BoundDeduplicator;
 
  protected:
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max} \f$
