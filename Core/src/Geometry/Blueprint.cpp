@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/detail/BoundDeduplicator.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
@@ -300,6 +301,11 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   BlueprintVisitor visitor{logger, volumesById};
   world->apply(visitor);
+
+  if (m_cfg.boundDeduplication) {
+    detail::BoundDeduplicator deduplicator{};
+    world->apply(deduplicator);
+  }
 
   return std::make_unique<TrackingGeometry>(
       std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);

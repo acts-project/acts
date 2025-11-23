@@ -21,6 +21,15 @@
 
 #include <format>
 
+#define IMPL_SURF_DEDUPLICATION(ENUM_CASE, SURFACE_T)              \
+  case ENUM_CASE: {                                                \
+    auto& castSurf = static_cast<SURFACE_T&>(surface);             \
+    if (castSurf.m_bounds) {                                       \
+      castSurf.m_bounds = m_surfFactory.insert(castSurf.m_bounds); \
+      break;                                                       \
+    }                                                              \
+  }
+
 namespace Acts::detail {
 void BoundDeduplicator::visitVolume(TrackingVolume& volume) {
   volume.assignVolumeBounds(m_volFactory.insert(volume.volumeBoundsPtr()));
@@ -32,31 +41,11 @@ void BoundDeduplicator::visitPortal(Portal& portal) {
 void BoundDeduplicator::visitSurface(Surface& surface) {
   switch (surface.type()) {
     using enum Surface::SurfaceType;
-    case Cone: {
-      auto& castSurf = static_cast<ConeSurface&>(surface);
-      castSurf.m_bounds = m_surfFactory.insert(castSurf.m_bounds);
-      break;
-    }
-    case Cylinder: {
-      auto& castSurf = static_cast<CylinderSurface&>(surface);
-      castSurf.m_bounds = m_surfFactory.insert(castSurf.m_bounds);
-      break;
-    }
-    case Disc: {
-      auto& castSurf = static_cast<CylinderSurface&>(surface);
-      castSurf.m_bounds = m_surfFactory.insert(castSurf.m_bounds);
-      break;
-    }
-    case Plane: {
-      auto& castSurf = static_cast<PlaneSurface&>(surface);
-      castSurf.m_bounds = m_surfFactory.insert(castSurf.m_bounds);
-      break;
-    }
-    case Straw: {
-      auto& castSurf = static_cast<LineSurface&>(surface);
-      castSurf.m_bounds = m_surfFactory.insert(castSurf.m_bounds);
-      break;
-    }
+    IMPL_SURF_DEDUPLICATION(Cone, ConeSurface);
+    IMPL_SURF_DEDUPLICATION(Cylinder, CylinderSurface);
+    IMPL_SURF_DEDUPLICATION(Disc, DiscSurface);
+    IMPL_SURF_DEDUPLICATION(Plane, PlaneSurface);
+    IMPL_SURF_DEDUPLICATION(Straw, LineSurface);
     default:
       throw std::invalid_argument(std::format(
           "BoundDeduplicator::visitSurface() - The surface {:} is not yet "
