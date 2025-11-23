@@ -25,22 +25,21 @@ class BoundDeduplicator : public TrackingGeometryMutableVisitor {
   /// @brief Visit and potentially modify a tracking volume
   /// @param volume The tracking volume being visited
   /// @note Called for each volume in the geometry hierarchy during traversal
-  void visitVolume(TrackingVolume& volume) override final;
+  void visitVolume(TrackingVolume& volume) final;
 
   /// @brief Visit and potentially modify a portal
   /// @param portal The portal being visited
   /// @note Called for each portal encountered during geometry traversal
-  void visitPortal(Portal& portal) override final;
+  void visitPortal(Portal& portal) final;
 
   /// @brief Visit and potentially modify a surface
   /// @param surface The surface being visited
   /// @note Called for each surface encountered during geometry traversal
-  void visitSurface(Surface& surface) override final;
+  void visitSurface(Surface& surface) final;
   /// @brief Visit and potentially modify a boundary surface
   /// @param boundary The boundary surface being visited
   /// @note Called for each boundary surface encountered during geometry traversal
-  void visitBoundarySurface(
-      BoundarySurfaceT<TrackingVolume>& boundary) override final;
+  void visitBoundarySurface(BoundarySurfaceT<TrackingVolume>& boundary) final;
 
  private:
   SurfaceBoundFactory m_surfFactory{};
