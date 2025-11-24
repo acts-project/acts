@@ -20,8 +20,6 @@ namespace Acts::detail {
 ///        of the TrackingVolumeBounds
 class BoundDeduplicator : public TrackingGeometryMutableVisitor {
  public:
-  /// @brief Default constructor
-  BoundDeduplicator() = default;
   /// @brief Visit and potentially modify a tracking volume
   /// @param volume The tracking volume being visited
   /// @note Called for each volume in the geometry hierarchy during traversal
