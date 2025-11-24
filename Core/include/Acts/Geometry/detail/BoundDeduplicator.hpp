@@ -40,7 +40,7 @@ class BoundDeduplicator : public TrackingGeometryMutableVisitor {
   void visitBoundarySurface(BoundarySurfaceT<TrackingVolume>& boundary) final;
 
  private:
-  SurfaceBoundFactory m_surfFactory{};
-  VolumeBoundFactory m_volFactory{};
+  SurfaceBoundFactory m_surfFactory;
+  VolumeBoundFactory m_volFactory;
 };
 }  // namespace Acts::detail
