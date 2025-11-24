@@ -31,12 +31,15 @@
   }
 
 namespace Acts::detail {
+
 void BoundDeduplicator::visitVolume(TrackingVolume& volume) {
   volume.assignVolumeBounds(m_volFactory.insert(volume.volumeBoundsPtr()));
 }
+
 void BoundDeduplicator::visitPortal(Portal& portal) {
   visitSurface(portal.surface());
 }
+
 
 void BoundDeduplicator::visitSurface(Surface& surface) {
   switch (surface.type()) {
