@@ -12,16 +12,12 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <numbers>
-#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -49,9 +45,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 
   if (input_ifstream.peek() == std::ifstream::traits_type::eof()) {
     ACTS_WARNING("Cannot find layer connections file ");
-    throw std::runtime_error(
-        "connection file not found");  // not sure if this is the right thing to
-                                       // do
+    throw std::runtime_error("connection file not found");
 
   }
 
@@ -106,9 +100,10 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   Acts::SeedContainer2 seeds =
       finder.CreateSeeds(internalRoi, SpContainerComponents, max_layers);
 
-  // move seeds to simseedcontainer to be used down stream
-  // currently as simseeds need to be hard types so only 3 spacepoint can be
-  // added but in future we should be able to have any length seed
+  // move seeds to simseedcontainer to be used down stream taking fist middle
+  // and last sps currently as simseeds need to be hard types so only 3
+  // spacepoint can be added but in future we should be able to have any length
+  // seed
   SimSeedContainer seedContainerForStorage;
   seedContainerForStorage.reserve(seeds.size());
   for (const auto &seed : seeds) {
@@ -129,8 +124,6 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
              .sourceLinks()[0]
              .get<const SimSpacePoint *>());
 
-    // not sure if these have set values in GBTSv2 but are currently set to the
-    // defaults
     seedContainerForStorage.back().setVertexZ(seed.vertexZ());
     seedContainerForStorage.back().setQuality(seed.quality());
   }

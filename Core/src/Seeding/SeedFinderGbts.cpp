@@ -202,19 +202,16 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
   const float max_z0 = m_config.m_LRTmode ? 600.0 : roi.zedPlus();
   const float min_deltaPhi = m_config.m_LRTmode ? 0.01f : 0.001f;
 
-  const float maxOuterRadius =
-      m_config.m_LRTmode ? 1050.0
-                         : 550.0;  // used to calculate Z cut on doublets
+  // used to calculate Z cut on doublets
+  const float maxOuterRadius = m_config.m_LRTmode ? 1050.0 : 550.0;
 
   const float cut_zMinU = min_z0 + maxOuterRadius * roi.dzdrMinus();
   const float cut_zMaxU = max_z0 + maxOuterRadius * roi.dzdrPlus();
 
-  float tripletPtMin =
-      0.8 * m_config.m_minPt;  // correction due to limited pT resolution
-  const float pt_scale =
-      900.0 /
-      m_config
-          .m_minPt;  // to re-scale original tunings done for the 900 MeV pT cut
+  // correction due to limited pT resolution
+  float tripletPtMin = 0.8 * m_config.m_minPt;
+  // to re-scale original tunings done for the 900 MeV pT cut
+  const float pt_scale = 900.0 / m_config.m_minPt;
 
   float maxCurv = m_config.ptCoeff / tripletPtMin;
 
@@ -223,16 +220,16 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
   float maxKappa_low_eta =
       m_config.m_LRTmode ? 1.0 * maxCurv : std::sqrt(0.6) * maxCurv;
 
-  if (!m_config.m_useOldTunings &&
-      !m_config.m_LRTmode) {  // new settings for curvature cuts
+  // new settings for curvature cuts
+  if (!m_config.m_useOldTunings && !m_config.m_LRTmode) {
     maxKappa_high_eta = 4.75e-4f * pt_scale;
     maxKappa_low_eta = 3.75e-4f * pt_scale;
   }
 
   const float dphi_coeff = m_config.m_LRTmode ? 1.0 * maxCurv : 0.68 * maxCurv;
 
-  float deltaPhi =
-      0.5f * m_config.m_phiSliceWidth;  // the default sliding window along phi
+  // the default sliding window along phi
+  float deltaPhi = 0.5f * m_config.m_phiSliceWidth;
 
   unsigned int nConnections = 0;
 
