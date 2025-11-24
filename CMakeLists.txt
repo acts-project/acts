@@ -317,7 +317,27 @@ endif()
 
 if(ACTS_SETUP_EIGEN3)
     if(ACTS_USE_SYSTEM_EIGEN3)
-        find_package(Eigen3 3.4.0...5 REQUIRED CONFIG)
+        find_package(Eigen3 REQUIRED CONFIG)
+
+        if(DEFINED Eigen3_VERSION)
+            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_version)
+                message(
+                    FATAL_ERROR
+                    "Eigen3 ${Eigen3_VERSION} is too old (need >= 3.4.0)"
+                )
+            endif()
+            if(Eigen3_VERSION VERSION_GREATER_EQUAL 6.0.0)
+                message(
+                    FATAL_ERROR
+                    "Eigen3 ${Eigen3_VERSION} is not supported (need < 6.0.0)"
+                )
+            endif()
+        else()
+            message(
+                WARNING
+                "Eigen3 version unknown - cannot verify version requirements"
+            )
+        endif()
     else()
         add_subdirectory(thirdparty/eigen3)
     endif()
