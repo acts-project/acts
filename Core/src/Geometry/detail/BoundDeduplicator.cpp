@@ -21,13 +21,14 @@
 
 #include <format>
 
-#define IMPL_SURF_DEDUPLICATION(ENUM_CASE, SURFACE_T)              \
-  case ENUM_CASE: {                                                \
-    auto& castSurf = static_cast<SURFACE_T&>(surface);             \
-    if (castSurf.m_bounds) {                                       \
-      castSurf.m_bounds = m_surfFactory.insert(castSurf.m_bounds); \
-    }                                                              \
-    break;                                                         \
+#define IMPL_SURF_DEDUPLICATION(ENUM_CASE, SURFACE_T)  \
+  case ENUM_CASE: {                                    \
+    auto& castSurf = static_cast<SURFACE_T&>(surface); \
+    if (castSurf.m_bounds) {                           \
+      castSurf.assignSurfaceBounds(                    \
+          m_surfFactory.insert(castSurf.boundsPtr())); \
+    }                                                  \
+    break;                                             \
   }
 
 namespace Acts::detail {

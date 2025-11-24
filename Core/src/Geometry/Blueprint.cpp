@@ -266,6 +266,11 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   // want to change
   shell.fill(*world);
 
+  if (m_cfg.boundDeduplication) {
+    ACTS_DEBUG("Deduplicate equivalent bounds");
+    detail::BoundDeduplicator deduplicator{};
+    world->apply(deduplicator);
+  }
   child.finalize(options, gctx, *world, logger);
 
   std::set<std::string, std::less<>> volumeNames;
@@ -301,11 +306,6 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   BlueprintVisitor visitor{logger, volumesById};
   world->apply(visitor);
-
-  if (m_cfg.boundDeduplication) {
-    detail::BoundDeduplicator deduplicator{};
-    world->apply(deduplicator);
-  }
 
   return std::make_unique<TrackingGeometry>(
       std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);

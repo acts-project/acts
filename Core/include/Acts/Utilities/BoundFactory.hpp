@@ -42,7 +42,7 @@ concept ComparableBoundConcept = requires(const BoundsType_t& bounds) {
 template <detail::ComparableBoundConcept BoundsType_t>
 class BoundFactory {
  public:
-  /// @brief Abbrevation of the class return type. If the set is over const
+  /// @brief Abbreviation of the class return type. If the set is over const
   ///        objects, the return type is const as well and non-const otherwise
   template <typename T>
   using BoundsRet_t =

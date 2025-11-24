@@ -25,10 +25,6 @@
 #include <numbers>
 #include <string>
 
-namespace Acts::detail {
-class BoundDeduplicator;
-}
-
 namespace Acts {
 
 class DetectorElementBase;
@@ -56,7 +52,6 @@ class SurfaceBounds;
 ///
 class DiscSurface : public RegularSurface {
   friend class Surface;
-  friend class detail::BoundDeduplicator;
 
  protected:
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max} \f$
@@ -170,7 +165,12 @@ class DiscSurface : public RegularSurface {
 
   /// This method returns the bounds by reference
   /// @return Reference to the surface bounds
-  const SurfaceBounds& bounds() const final;
+  const DiscBounds& bounds() const final;
+  /// This method returns the shared_ptr to the DiscBounds
+  const std::shared_ptr<const DiscBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const DiscBounds> newBounds);
 
   /// Local to global transformation
   /// For planar surfaces the momentum direction is ignored in the local to

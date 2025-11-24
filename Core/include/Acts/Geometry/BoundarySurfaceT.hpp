@@ -17,10 +17,6 @@
 
 #include <memory>
 
-namespace Acts::detail {
-class BoundDeduplicator;
-}
-
 namespace Acts {
 
 /// @class BoundarySurfaceT
@@ -41,7 +37,6 @@ template <class volume_t>
 class BoundarySurfaceT {
 #ifndef DOXYGEN
   friend volume_t;
-  friend detail::BoundDeduplicator;
 #endif
 
   using VolumePtr = std::shared_ptr<const volume_t>;
@@ -131,6 +126,10 @@ class BoundarySurfaceT {
   virtual const RegularSurface& surfaceRepresentation() const {
     return *m_surface;
   }
+
+  /// The Surface Representation of this
+  /// @return Reference to the surface representation of this boundary
+  RegularSurface& surfaceRepresentation() { return *m_surface; }
 
   /// Helper method: attach a Volume to this BoundarySurfaceT
   /// this is done during the geometry construction.
