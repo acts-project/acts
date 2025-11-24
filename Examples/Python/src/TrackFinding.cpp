@@ -149,7 +149,7 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
-      gridConfig, gridOptions, allowSeparateRMax, tolerance, zBinNeighborsTop,
+      gridConfig, gridOptions, allowSeparateRMax, tolerance, fittedHoughVertices, zBinNeighborsTop,
       zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
