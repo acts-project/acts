@@ -58,4 +58,5 @@ void BoundDeduplicator::visitBoundarySurface(
     BoundarySurfaceT<TrackingVolume>& boundary) {
   visitSurface(*boundary.m_surface);
 }
+
 }  // namespace Acts::detail
