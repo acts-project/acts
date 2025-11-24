@@ -40,7 +40,6 @@ void BoundDeduplicator::visitPortal(Portal& portal) {
   visitSurface(portal.surface());
 }
 
-
 void BoundDeduplicator::visitSurface(Surface& surface) {
   switch (surface.type()) {
     using enum Surface::SurfaceType;
