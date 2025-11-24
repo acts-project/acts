@@ -24,7 +24,7 @@
 #define IMPL_SURF_DEDUPLICATION(ENUM_CASE, SURFACE_T)  \
   case ENUM_CASE: {                                    \
     auto& castSurf = static_cast<SURFACE_T&>(surface); \
-    if (castSurf.m_bounds) {                           \
+    if (castSurf.boundsPtr()) {                        \
       castSurf.assignSurfaceBounds(                    \
           m_surfFactory.insert(castSurf.boundsPtr())); \
     }                                                  \
@@ -59,7 +59,7 @@ void BoundDeduplicator::visitSurface(Surface& surface) {
 
 void BoundDeduplicator::visitBoundarySurface(
     BoundarySurfaceT<TrackingVolume>& boundary) {
-  visitSurface(*boundary.m_surface);
+  visitSurface(boundary.surfaceRepresentation());
 }
 
 }  // namespace Acts::detail
