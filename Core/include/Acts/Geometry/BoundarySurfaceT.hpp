@@ -16,6 +16,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 
 #include <memory>
+
 namespace Acts::detail {
 class BoundDeduplicator;
 }
