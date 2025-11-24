@@ -59,7 +59,7 @@ class Blueprint : public BlueprintNode {
     /// in the geometry hierarchy and the world volume.
     ExtentEnvelope envelope = ExtentEnvelope::Zero();
     /// Apply a bound deduplication on the world volume. It ensures
-    /// that equivalent bounds are instantiated only ones & recycled
+    /// that equivalent bounds are instantiated only once & recycled
     /// across the geometry components
     bool boundDeduplication{true};
   };
