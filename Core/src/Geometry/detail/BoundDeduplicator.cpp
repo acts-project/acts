@@ -23,7 +23,7 @@
 
 #define IMPL_SURF_DEDUPLICATION(ENUM_CASE, SURFACE_T)  \
   case ENUM_CASE: {                                    \
-    auto& castSurf = static_cast<SURFACE_T&>(surface); \
+    auto& castSurf = dynamic_cast<SURFACE_T&>(surface); \
     if (castSurf.boundsPtr()) {                        \
       castSurf.assignSurfaceBounds(                    \
           m_surfFactory.insert(castSurf.boundsPtr())); \
