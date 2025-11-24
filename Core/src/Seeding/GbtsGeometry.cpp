@@ -228,8 +228,7 @@ GbtsLayer::~GbtsLayer() {
 }
 
 GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
-                           const std::unique_ptr<GbtsConnector>& conn)
-    : m_nEtaBins(0) {
+                           const std::unique_ptr<GbtsConnector>& conn) {
   const float min_z0 = -168.0;
   const float max_z0 = 168.0;
 

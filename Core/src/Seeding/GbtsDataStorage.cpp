@@ -14,7 +14,7 @@
 #include <numbers>
 namespace Acts::Experimental {
 
-GbtsEtaBin::GbtsEtaBin() : m_minRadius(0), m_maxRadius(0) {
+GbtsEtaBin::GbtsEtaBin()  {
   m_in.clear();
   m_vn.clear();
   m_params.clear();
