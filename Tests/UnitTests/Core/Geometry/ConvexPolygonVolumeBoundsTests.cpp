@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonVolumeBoundsCreation) {
 
   Transform3 transform = Transform3(Translation3(100., 25., -250.));
   // add a rotation also
-  transform.rotate(AngleAxis3(M_PI / 6, Vector3::UnitZ()));
+  transform.rotate(AngleAxis3(30._degree, Vector3::UnitZ()));
 
-  std::unique_ptr<TrackingVolume> trackingVolume =
+  auto trackingVolume =
       std::make_unique<TrackingVolume>(
           transform, std::make_shared<ConvexPolygonVolumeBounds>(polygonBounds),
           "TestConvexPolygonVolume");
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonVolumeBoundsInside) {
                                           halfY2, halfZ);
 
   // Points inside
-  BOOST_CHECK(polygonBounds.inside(Vector3(0.0, 0.0, 0.0), 0.1));
+  BOOST_CHECK(polygonBounds.inside(Vector3::Zero(), 0.1));
   BOOST_CHECK(polygonBounds.inside(Vector3(5.0, 2.0, 1.0), 0.1));
   BOOST_CHECK(polygonBounds.inside(Vector3(-5.0, -2.0, -1.0), 0.1));
 
@@ -120,9 +120,9 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundarySurfaces) {
   }
 
   // Test orientation of the boundary surfaces
-  Vector3 xaxis(1., 0., 0.);
-  Vector3 yaxis(0., 1., 0.);
-  Vector3 zaxis(0., 0., 1.);
+  const Vector3 xaxis = Vector3::UnitX();
+  const Vector3 yaxis = Vector3::UnitY();
+  const Vector3 zaxis= Vector3::UnitZ();
 
   using enum ConvexPolygonVolumeBounds::Face;
 

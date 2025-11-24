@@ -26,8 +26,8 @@ ConvexPolygonVolumeBounds::ConvexPolygonVolumeBounds(
   m_values[eHalfLengthY1] = y1;
   m_values[eHalfLengthY2] = y2;
   m_values[eHalfLengthZ] = halez;
-  m_values[eAlphaAngle] = std::numbers::pi - atan2(y1, (x2 - x1));
-  m_values[eBetaAngle] = atan2(y2, (x2 - x3));
+  m_values[eAlphaAngle] = std::numbers::pi - std::atan2(y1, (x2 - x1));
+  m_values[eBetaAngle] = std::atan2(y2, (x2 - x3));
 
   checkConsistency();
   buildSurfaceBounds();
@@ -62,7 +62,7 @@ std::vector<OrientedSurface> ConvexPolygonVolumeBounds::orientedSurfaces(
                         -0.5 * get(eHalfLengthY1), 0.);
   auto nyz12Transform = transform * Translation3(nyz12Position) *
                         AngleAxis3(-std::numbers::pi / 2. + get(eAlphaAngle),
-                                   Vector3(0., 0., 1.)) *
+                                   Vector3::UnitZ()) *
                         s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(nyz12Transform, m_FaceYZ12Bounds);
   surfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
@@ -72,7 +72,7 @@ std::vector<OrientedSurface> ConvexPolygonVolumeBounds::orientedSurfaces(
                         -0.5 * get(eHalfLengthY1), 0.);
   auto pyz12Transform = transform * Translation3(pyz12Position) *
                         AngleAxis3(-std::numbers::pi / 2. + get(eAlphaAngle),
-                                   Vector3(0., 0., -1.)) *
+                                   -Vector3::UnitZ()) *
                         s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(pyz12Transform, m_FaceYZ12Bounds);
   surfaces.push_back(
@@ -93,7 +93,7 @@ std::vector<OrientedSurface> ConvexPolygonVolumeBounds::orientedSurfaces(
                         0.5 * get(eHalfLengthY2), 0.);
   auto pyz23Transform =
       transform * Translation3(pyz23Position) *
-      AngleAxis3(std::numbers::pi / 2. - get(eBetaAngle), Vector3(0., 0., 1.)) *
+      AngleAxis3(std::numbers::pi / 2. - get(eBetaAngle), Vector3::UnitZ()) *
       s_planeYZ;
 
   sf = Surface::makeShared<PlaneSurface>(pyz23Transform, m_FaceYZ23Bounds);
