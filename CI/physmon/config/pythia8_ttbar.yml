@@ -73,5 +73,13 @@ exclude:
   - total_l0
   - number_of_hits
   - outcome
-  - incoming_particles
-  - outgoing_particles
+  - incoming_particles_vertex_primary
+  - incoming_particles_vertex_secondary
+  - incoming_particles_particle
+  - incoming_particles_generation
+  - incoming_particles_sub_particle
+  - outgoing_particles_vertex_primary
+  - outgoing_particles_vertex_secondary
+  - outgoing_particles_particle
+  - outgoing_particles_generation
+  - outgoing_particles_sub_particle

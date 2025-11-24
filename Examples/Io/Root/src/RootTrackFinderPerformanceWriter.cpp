@@ -70,7 +70,14 @@ RootTrackFinderPerformanceWriter::RootTrackFinderPerformanceWriter(
     m_matchingTree = new TTree("matchingdetails", "matchingdetails");
 
     m_matchingTree->Branch("event_nr", &m_treeEventNr);
-    m_matchingTree->Branch("particle_id", &m_treeParticleId);
+    m_matchingTree->Branch("particle_id_vertex_primary",
+                           &m_treeParticleVertexPrimary);
+    m_matchingTree->Branch("particle_id_vertex_secondary",
+                           &m_treeParticleVertexSecondary);
+    m_matchingTree->Branch("particle_id_particle", &m_treeParticleParticle);
+    m_matchingTree->Branch("particle_id_generation", &m_treeParticleGeneration);
+    m_matchingTree->Branch("particle_id_sub_particle",
+                           &m_treeParticleSubParticle);
     m_matchingTree->Branch("matched", &m_treeIsMatched);
   }
 
@@ -353,7 +360,11 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
       auto particleId = particle.particleId();
 
       m_treeEventNr = ctx.eventNumber;
-      m_treeParticleId = particleId.asVector();
+      m_treeParticleVertexPrimary = particleId.vertexPrimary();
+      m_treeParticleVertexSecondary = particleId.vertexSecondary();
+      m_treeParticleParticle = particleId.particle();
+      m_treeParticleGeneration = particleId.generation();
+      m_treeParticleSubParticle = particleId.subParticle();
 
       m_treeIsMatched = false;
       if (auto imatched = particleTrackMatching.find(particleId);
