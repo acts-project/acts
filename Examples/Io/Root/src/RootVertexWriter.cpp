@@ -52,8 +52,26 @@ RootVertexWriter::RootVertexWriter(const RootVertexWriter::Config& cfg,
   m_outputTree->Branch("vy", &m_vy);
   m_outputTree->Branch("vz", &m_vz);
   m_outputTree->Branch("vt", &m_vt);
-  m_outputTree->Branch("incoming_particles", &m_incomingParticles);
-  m_outputTree->Branch("outgoing_particles", &m_outgoingParticles);
+  m_outputTree->Branch("incoming_particles_vertex_primary",
+                       &m_incomingParticlesVertexPrimary);
+  m_outputTree->Branch("incoming_particles_vertex_secondary",
+                       &m_incomingParticlesVertexSecondary);
+  m_outputTree->Branch("incoming_particles_particle",
+                       &m_incomingParticlesParticle);
+  m_outputTree->Branch("incoming_particles_generation",
+                       &m_incomingParticlesGeneration);
+  m_outputTree->Branch("incoming_particles_sub_particle",
+                       &m_incomingParticlesSubParticle);
+  m_outputTree->Branch("outgoing_particles_vertex_primary",
+                       &m_outgoingParticlesVertexPrimary);
+  m_outputTree->Branch("outgoing_particles_vertex_secondary",
+                       &m_outgoingParticlesVertexSecondary);
+  m_outputTree->Branch("outgoing_particles_particle",
+                       &m_outgoingParticlesParticle);
+  m_outputTree->Branch("outgoing_particles_generation",
+                       &m_outgoingParticlesGeneration);
+  m_outputTree->Branch("outgoing_particles_sub_particle",
+                       &m_outgoingParticlesSubParticle);
   m_outputTree->Branch("vertex_primary", &m_vertexPrimary);
   m_outputTree->Branch("vertex_secondary", &m_vertexSecondary);
   m_outputTree->Branch("generation", &m_generation);
@@ -95,18 +113,48 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
                                            Acts::UnitConstants::mm));
 
     // incoming particles
-    std::vector<std::vector<std::uint32_t>> incoming_particles;
+    std::vector<std::uint32_t> incoming_vertex_primary;
+    std::vector<std::uint32_t> incoming_vertex_secondary;
+    std::vector<std::uint32_t> incoming_particle_component;
+    std::vector<std::uint32_t> incoming_generation;
+    std::vector<std::uint32_t> incoming_sub_particle;
     for (const auto& particle : vertex.incoming) {
-      incoming_particles.push_back(particle.asVector());
+      incoming_vertex_primary.push_back(particle.vertexPrimary());
+      incoming_vertex_secondary.push_back(particle.vertexSecondary());
+      incoming_particle_component.push_back(particle.particle());
+      incoming_generation.push_back(particle.generation());
+      incoming_sub_particle.push_back(particle.subParticle());
     }
-    m_incomingParticles.push_back(std::move(incoming_particles));
+    m_incomingParticlesVertexPrimary.push_back(
+        std::move(incoming_vertex_primary));
+    m_incomingParticlesVertexSecondary.push_back(
+        std::move(incoming_vertex_secondary));
+    m_incomingParticlesParticle.push_back(
+        std::move(incoming_particle_component));
+    m_incomingParticlesGeneration.push_back(std::move(incoming_generation));
+    m_incomingParticlesSubParticle.push_back(std::move(incoming_sub_particle));
 
     // outgoing particles
-    std::vector<std::vector<std::uint32_t>> outgoing_particles;
+    std::vector<std::uint32_t> outgoing_vertex_primary;
+    std::vector<std::uint32_t> outgoing_vertex_secondary;
+    std::vector<std::uint32_t> outgoing_particle_component;
+    std::vector<std::uint32_t> outgoing_generation;
+    std::vector<std::uint32_t> outgoing_sub_particle;
     for (const auto& particle : vertex.outgoing) {
-      outgoing_particles.push_back(particle.asVector());
+      outgoing_vertex_primary.push_back(particle.vertexPrimary());
+      outgoing_vertex_secondary.push_back(particle.vertexSecondary());
+      outgoing_particle_component.push_back(particle.particle());
+      outgoing_generation.push_back(particle.generation());
+      outgoing_sub_particle.push_back(particle.subParticle());
     }
-    m_outgoingParticles.push_back(std::move(outgoing_particles));
+    m_outgoingParticlesVertexPrimary.push_back(
+        std::move(outgoing_vertex_primary));
+    m_outgoingParticlesVertexSecondary.push_back(
+        std::move(outgoing_vertex_secondary));
+    m_outgoingParticlesParticle.push_back(
+        std::move(outgoing_particle_component));
+    m_outgoingParticlesGeneration.push_back(std::move(outgoing_generation));
+    m_outgoingParticlesSubParticle.push_back(std::move(outgoing_sub_particle));
 
     // decoded barcode components
     m_vertexPrimary.push_back(vertex.vertexId().vertexPrimary());
@@ -121,8 +169,16 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
   m_vy.clear();
   m_vz.clear();
   m_vt.clear();
-  m_incomingParticles.clear();
-  m_outgoingParticles.clear();
+  m_incomingParticlesVertexPrimary.clear();
+  m_incomingParticlesVertexSecondary.clear();
+  m_incomingParticlesParticle.clear();
+  m_incomingParticlesGeneration.clear();
+  m_incomingParticlesSubParticle.clear();
+  m_outgoingParticlesVertexPrimary.clear();
+  m_outgoingParticlesVertexSecondary.clear();
+  m_outgoingParticlesParticle.clear();
+  m_outgoingParticlesGeneration.clear();
+  m_outgoingParticlesSubParticle.clear();
   m_vertexPrimary.clear();
   m_vertexSecondary.clear();
   m_generation.clear();
