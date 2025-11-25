@@ -85,6 +85,7 @@ class GeometryIdentifier {
   constexpr Value extra() const { return getBits(kExtraMask); }
 
   /// Set the volume identifier.
+  /// @deprecated Use @ref withVolume() instead
   /// @param volume The volume identifier value to set
   /// @return Reference to this identifier for chaining
   [[deprecated("Use withVolume() instead")]]
@@ -94,6 +95,7 @@ class GeometryIdentifier {
   }
 
   /// Set the boundary identifier.
+  /// @deprecated Use @ref withBoundary() instead
   /// @param boundary The boundary identifier value
   /// @return Reference to this identifier for chaining
   [[deprecated("Use withBoundary() instead")]]
@@ -103,6 +105,7 @@ class GeometryIdentifier {
   }
 
   /// Set the layer identifier.
+  /// @deprecated Use @ref withLayer() instead
   /// @param layer The layer identifier value to set
   /// @return Reference to this identifier for chaining
   [[deprecated("Use withLayer() instead")]]
@@ -112,6 +115,7 @@ class GeometryIdentifier {
   }
 
   /// Set the approach identifier.
+  /// @deprecated Use @ref withApproach() instead
   /// @param approach The approach identifier value
   /// @return Reference to this identifier for chaining
   [[deprecated("Use withApproach() instead")]]
@@ -121,6 +125,7 @@ class GeometryIdentifier {
   }
 
   /// Set the approach identifier - shared with Passive
+  /// @deprecated Use @ref withPassive() instead
   /// @param approach The passive identifier value to set
   /// @return Reference to this identifier for chaining
   [[deprecated("Use withPassive() instead")]]
@@ -130,6 +135,7 @@ class GeometryIdentifier {
   }
 
   /// Set the sensitive identifier.
+  /// @deprecated Use @ref withSensitive() instead
   /// @param sensitive The sensitive identifier value to set
   /// @return Reference to this identifier for chaining
   [[deprecated("Use withSensitive() instead")]]
@@ -139,6 +145,7 @@ class GeometryIdentifier {
   }
 
   /// Set the extra identifier
+  /// @deprecated Use @ref withExtra() instead
   /// @param extra The extra identifier value to set
   /// @return Reference to this identifier for chaining
   [[deprecated("Use withExtra() instead")]]
