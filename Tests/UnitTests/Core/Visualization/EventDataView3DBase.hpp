@@ -74,7 +74,7 @@ void createDetector(GeometryContext& tgContext,
   double rotationAngle = 90_degree;
   Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-std::sin(rotationAngle), 0.,std::cos(rotationAngle));
+  Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;

@@ -400,7 +400,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
       // sqrt(sigma(d0)^2+sigma(z0)^2), where sigma(d0)^2 is the variance of d0
       double hypotVariance =
           std::sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) +
-               (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
+                    (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
 
       if (hypotVariance == 0.) {
         ACTS_WARNING(

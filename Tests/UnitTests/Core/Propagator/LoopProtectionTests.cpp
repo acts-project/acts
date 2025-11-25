@@ -180,7 +180,7 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double px = pT *std::cos(phi);
+  double px = pT * std::cos(phi);
   double py = pT * std::sin(phi);
   double pz = pT / tan(theta);
   double p = pT / std::sin(theta);

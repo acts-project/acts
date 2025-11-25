@@ -200,7 +200,7 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT *std::cos(phi);
+  double px = pT * std::cos(phi);
   double py = pT * std::sin(phi);
   double pz = pT / tan(theta);
   double q = dcharge;
@@ -251,7 +251,7 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT *std::cos(phi);
+  double px = pT * std::cos(phi);
   double py = pT * std::sin(phi);
   double pz = pT / tan(theta);
   double q = dcharge;
@@ -331,7 +331,7 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT *std::cos(phi);
+  double px = pT * std::cos(phi);
   double py = pT * std::sin(phi);
   double pz = pT / tan(theta);
   double q = dcharge;

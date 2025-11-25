@@ -119,7 +119,7 @@ Vector3 CylinderSurface::localToGlobal(const GeometryContext& gctx,
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[0] / r;
-  Vector3 position(r *std::cos(phi), r * std::sin(phi), lposition[1]);
+  Vector3 position(r * std::cos(phi), r * std::sin(phi), lposition[1]);
   return transform(gctx) * position;
 }
 

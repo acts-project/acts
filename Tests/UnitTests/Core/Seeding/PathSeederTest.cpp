@@ -179,7 +179,7 @@ std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
   double angle = 90_degree;
   Vector3 xPos(std::cos(angle), 0., std::sin(angle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-std::sin(angle), 0.,std::cos(angle));
+  Vector3 zPos(-std::sin(angle), 0., std::cos(angle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;

@@ -424,7 +424,8 @@ BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
 
   // now test the (remaining) phi scaling
   float underscaledAngle = -std::numbers::pi - 0.5 * deltaPhi;
-  Vector3 underscaledPos(std::cos(underscaledAngle), std::sin(underscaledAngle), 0.);
+  Vector3 underscaledPos(std::cos(underscaledAngle), std::sin(underscaledAngle),
+                         0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(underscaledAngle), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), std::size_t{4});
 }

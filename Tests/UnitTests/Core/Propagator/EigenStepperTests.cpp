@@ -904,7 +904,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   double rotationAngle = std::numbers::pi / 2.;
   Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-std::sin(rotationAngle), 0.,std::cos(rotationAngle));
+  Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
   MaterialSlab matProp(makeBeryllium(), 0.5_mm);
 
   CuboidVolumeBuilder cvb;

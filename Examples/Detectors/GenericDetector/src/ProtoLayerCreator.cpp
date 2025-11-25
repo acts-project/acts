@@ -83,7 +83,7 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
         Acts::Vector3 moduleLocalY(0., 0., 1);
         // the local x axis the normal to local y,z
         Acts::Vector3 moduleLocalX(-std::sin(modulePhi + modulePhiTilt),
-                                  std::cos(modulePhi + modulePhiTilt), 0.);
+                                   std::cos(modulePhi + modulePhiTilt), 0.);
         // create the RotationMatrix
         Acts::RotationMatrix3 moduleRotation;
         moduleRotation.col(0) = moduleLocalX;
@@ -233,7 +233,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
           Acts::Vector3 moduleCenter(ringModulePosition);
           moduleCenter.z() *= side;
           // the rotation matrix of the module
-          Acts::Vector3 moduleLocalY(std::cos(modulePhi), std::sin(modulePhi), 0.);
+          Acts::Vector3 moduleLocalY(std::cos(modulePhi), std::sin(modulePhi),
+                                     0.);
           // take different axis to have the same readout direction
           Acts::Vector3 moduleLocalZ(0., 0., side * 1.);
           Acts::Vector3 moduleLocalX = moduleLocalY.cross(moduleLocalZ);
