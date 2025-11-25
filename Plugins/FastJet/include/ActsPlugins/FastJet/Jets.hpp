@@ -92,7 +92,7 @@ class TruthJet : public Jet {
   }
 
   /// @brief Set the indices of the truth particles that are constituents of this truth jet
-  /// @param indices 
+  /// @param indices
   void setConstituentIndices(const std::vector<int>& indices) {
     m_constituentIndices = indices;
   }

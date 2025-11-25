@@ -17,15 +17,9 @@
 #include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <algorithm>
-#include <fstream>
-#include <mutex>
-#include <ostream>
 #include <ranges>
 #include <stdexcept>
 
-#include <HepMC3/GenEvent.h>
-#include <HepMC3/GenParticle.h>
-#include <HepMC3/Print.h>
 #include <boost/container/flat_map.hpp>
 #include <fastjet/ClusterSequence.hh>
 #include <fastjet/JetDefinition.hh>
@@ -68,30 +62,6 @@ ActsPlugins::FastJet::JetLabel jetLabelFromHadronType(
 
 }  // namespace
 
-ProcessCode ActsExamples::TruthJetAlgorithm::initialize() {
-  if (m_cfg.debugCsvOutput) {
-    std::ofstream outfile;
-    outfile.open("particles.csv");
-    outfile << "event,pt,eta,phi,pdg,label" << std::endl;
-
-    outfile.flush();
-    outfile.close();
-
-    outfile.open("jets.csv");
-    outfile << "event,pt,eta,phi,label" << std::endl;
-
-    outfile.flush();
-    outfile.close();
-
-    outfile.open("hadrons.csv");
-    outfile << "event,pt,eta,phi,pdg,label" << std::endl;
-
-    outfile.flush();
-    outfile.close();
-  }
-  return ProcessCode::SUCCESS;
-}
-
 ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Initialize the output container
@@ -114,19 +84,9 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   // Get the 4-momentum information from the simulated truth particles
   // and create fastjet::PseudoJet objects
   std::vector<fastjet::PseudoJet> inputPseudoJets;
-
-  static std::mutex mtxPseudoJets;
   {
-    std::ofstream outfile;
     Acts::ScopedTimer timer("Input particle building", logger(),
                             Acts::Logging::DEBUG);
-
-    std::unique_lock lock(mtxPseudoJets, std::defer_lock);
-    if (m_cfg.debugCsvOutput) {
-      lock.lock();
-      outfile.open("particles.csv",
-                   std::ios_base::app);  // append instead of overwrite
-    }
 
     for (unsigned int i = 0; i < truthParticles.size(); ++i) {
       const auto* particle = truthParticles.at(i);
@@ -148,22 +108,8 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
           particle->momentum().x(), particle->momentum().y(),
           particle->momentum().z(), particle->energy());
 
-      if (m_cfg.debugCsvOutput) {
-        outfile << ctx.eventNumber << "," << pseudoJet.pt() << ","
-                << pseudoJet.eta() << "," << pseudoJet.phi() << ","
-                << static_cast<int>(particle->pdg()) << ","
-                << static_cast<int>(jetLabelFromHadronType(
-                       Acts::ParticleIdHelper::hadronType(particle->pdg())));
-        outfile << std::endl;
-      }
-
       pseudoJet.set_user_index(i);
       inputPseudoJets.push_back(pseudoJet);
-    }
-
-    if (m_cfg.debugCsvOutput) {
-      outfile.flush();
-      outfile.close();
     }
   }
 
@@ -246,12 +192,6 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
     auto unique = std::ranges::unique(hadrons);
     hadrons.erase(unique.begin(), unique.end());
-
-    if (m_cfg.debugCsvOutput) {
-      static std::mutex mtxHadrons;
-      std::lock_guard lock(mtxHadrons);
-      std::ofstream outfile;
-    }
   }
 
   // Jet classification
@@ -310,17 +250,9 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   boost::container::flat_map<ActsPlugins::FastJet::JetLabel, std::size_t>
       jetLabelCounts;
 
-  static std::mutex mtxJets;
   {
     Acts::AveragingScopedTimer timer("Jet classification", logger(),
                                      Acts::Logging::DEBUG);
-
-    std::ofstream outfile;
-    std::unique_lock lock(mtxJets, std::defer_lock);
-    if (m_cfg.debugCsvOutput) {
-      lock.lock();
-      outfile.open("jets.csv", std::ios_base::app);
-    }
 
     for (unsigned int i = 0; i < jets.size(); ++i) {
       const auto& jet = jets.at(i);
@@ -333,12 +265,6 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
         ACTS_DEBUG("Classifying jet " << i);
         auto sample = timer.sample();
         jetLabel = classifyJet(jet);
-      }
-
-      if (m_cfg.debugCsvOutput) {
-        outfile << ctx.eventNumber << "," << jet.pt() << "," << jet.eta() << ","
-                << jet.phi() << "," << static_cast<int>(jetLabel);
-        outfile << std::endl;
       }
 
       // Initialize truth jet for storing in the output container
@@ -368,11 +294,6 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
           ACTS_VERBOSE("- " << particle);
         }
       }
-    }
-
-    if (m_cfg.debugCsvOutput) {
-      outfile.flush();
-      outfile.close();
     }
   }
 
