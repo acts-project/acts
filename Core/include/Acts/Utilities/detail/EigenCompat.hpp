@@ -28,7 +28,7 @@ inline auto canonicalEulerAngles(const Eigen::MatrixBase<Derived>& matrix,
 #if EIGEN_VERSION_AT_LEAST(5, 0, 0)
 constexpr auto all = Eigen::placeholders::all;
 #else
-constexpr auto all = Eigen::all;
+static const auto all = Eigen::all;
 #endif
 
 }  // namespace Acts::detail::EigenCompat
