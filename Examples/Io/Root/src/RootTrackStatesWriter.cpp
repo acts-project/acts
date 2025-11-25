@@ -440,10 +440,6 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           }
         }
 
-        ACTS_INFO("Number of contributing sim hits: "
-                  << indices.size()
-                  << ", particle ids collected: " << particleIds.size());
-
         // fill the truth hit info
         m_t_x.push_back(Acts::clampValue<float>(truthPos4[Acts::ePos0]));
         m_t_y.push_back(Acts::clampValue<float>(truthPos4[Acts::ePos1]));
