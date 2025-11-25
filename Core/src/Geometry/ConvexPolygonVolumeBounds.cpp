@@ -198,7 +198,7 @@ void ConvexPolygonVolumeBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument(
         "ConvexPolygonVolumeBounds: invalid z extrusion.");
   }
-  // make sure this is a convex polygon - do not allow angles > M_PI
+  // make sure this is a convex polygon - do not allow angles > 180 deg
   if (get(eHalfLengthX2) < get(eHalfLengthX1) ||
       get(eHalfLengthX2) < get(eHalfLengthX3)) {
     throw std::invalid_argument(

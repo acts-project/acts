@@ -51,9 +51,6 @@ class DiamondBounds;
 ///  - positiveYFaceZX   [7] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
-/// ```
-
-/// ```
 class ConvexPolygonVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for access / streaming
@@ -85,8 +82,6 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
     PositiveYFaceZX = 7
 
   };
-
-  ConvexPolygonVolumeBounds() = delete;
 
   /// Constructor - the polygonal prism boundaries
   ///
