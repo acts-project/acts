@@ -56,11 +56,10 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 
   ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-  const auto projectedPredictedCovariance =
-      (H * predictedCovariance * H.transpose()).eval();
   const auto K =
       (predictedCovariance * H.transpose() *
-       (projectedPredictedCovariance + calibratedCovariance).inverse())
+       (H * predictedCovariance * H.transpose() + calibratedCovariance)
+           .inverse())
           .eval();
 
   ACTS_VERBOSE("Gain Matrix K:\n" << K);
@@ -82,7 +81,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   const ProjectedVector residual = calibrated - H * filteredParameters;
   ACTS_VERBOSE("Residual: " << residual.transpose());
 
-  const ProjectedMatrix m = calibratedCovariance - projectedPredictedCovariance;
+  const ProjectedMatrix m =
+      calibratedCovariance - H * filteredCovariance * H.transpose();
   const double chi2 = (residual.transpose() * m.inverse() * residual).value();
   ACTS_VERBOSE("Chi2: " << chi2);
 
