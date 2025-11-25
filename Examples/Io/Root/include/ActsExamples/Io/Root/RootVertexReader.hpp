@@ -97,13 +97,37 @@ class RootVertexReader : public IReader {
   std::vector<float>* m_vz = new std::vector<float>;
   std::vector<float>* m_vt = new std::vector<float>;
 
-  /// Incoming particles to the vertex.
+  /// Legacy combined barcode vectors.
   std::vector<std::vector<std::vector<std::uint32_t>>>* m_incomingParticles =
-      new std::vector<std::vector<std::vector<std::uint32_t>>>;
-
-  /// Outgoing particles from the vertex.
+      nullptr;
   std::vector<std::vector<std::vector<std::uint32_t>>>* m_outgoingParticles =
-      new std::vector<std::vector<std::vector<std::uint32_t>>>;
+      nullptr;
+  bool m_hasCombinedIncoming = false;
+  bool m_hasCombinedOutgoing = false;
+
+  /// Incoming particles to the vertex broken into barcode components.
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesVertexPrimary =
+      nullptr;
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesVertexSecondary =
+      nullptr;
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesParticle =
+      nullptr;
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesGeneration =
+      nullptr;
+  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesSubParticle =
+      nullptr;
+
+  /// Outgoing particles from the vertex broken into barcode components.
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesVertexPrimary =
+      nullptr;
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesVertexSecondary =
+      nullptr;
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesParticle =
+      nullptr;
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesGeneration =
+      nullptr;
+  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesSubParticle =
+      nullptr;
 
   /// Decoded vertex identifier; see Barcode definition for details.
   std::vector<std::uint16_t>* m_vertexPrimary = new std::vector<std::uint16_t>;
