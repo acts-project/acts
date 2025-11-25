@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
           targets.push_back(actsvg::draw::text(
               gBinID,
               {static_cast<actsvg::scalar>(rp * std::cos(phip)),
-               static_cast<actsvg::scalar>(rp * sin(phip))},
+               static_cast<actsvg::scalar>(rp * std::sin(phip))},
               glBin));
         }
       }
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   auto phiAxis = actsvg::draw::arc_measure(
       "phi_axis", 410., {410, 0.},
       {static_cast<actsvg::scalar>(410. * std::cos(0.25)),
-       static_cast<actsvg::scalar>(410. * sin(0.25))},
+       static_cast<actsvg::scalar>(410. * std::sin(0.25))},
       axis_stroke, actsvg::style::marker(), axis_marker);
 
   auto phiLabel =

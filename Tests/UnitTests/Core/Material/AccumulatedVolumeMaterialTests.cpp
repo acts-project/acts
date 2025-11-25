@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(two_materials_different_lengh) {
                   (0.5 * 5 * 3. + 2 * 10 * 8.) / (0.5 * 5 + 2 * 10), 1e-4);
   CHECK_CLOSE_REL(
       result.Z(),
-      std::exp((0.5 / (0.5 + 2.)) * log(4.) + (2. / (0.5 + 2.)) * log(9.)),
+      std::exp((0.5 / (0.5 + 2.)) * std::log(4.) + (2. / (0.5 + 2.)) * std::log(9.)),
       1e-4);
   CHECK_CLOSE_REL(result.molarDensity(), (0.5 * 5. + 2 * 10.) / (0.5 + 2),
                   1e-4);
