@@ -113,6 +113,10 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   ConvexPolygonVolumeBounds& operator=(const ConvexPolygonVolumeBounds& other) =
       default;
 
+  /// Move constructor assignment
+  ConvexPolygonVolumeBounds& operator=(ConvexPolygonVolumeBounds&& other) =
+      default;
+
   /// Default destructor
   ~ConvexPolygonVolumeBounds() override = default;
 
