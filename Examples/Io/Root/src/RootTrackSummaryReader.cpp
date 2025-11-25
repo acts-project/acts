@@ -59,7 +59,28 @@ RootTrackSummaryReader::RootTrackSummaryReader(
   m_inputChain->SetBranchAddress("outlierVolume", &m_outlierVolume);
   m_inputChain->SetBranchAddress("outlierLayer", &m_outlierLayer);
 
-  m_inputChain->SetBranchAddress("majorityParticleId", &m_majorityParticleId);
+  if (m_inputChain->GetBranch("majorityParticleId") != nullptr) {
+    m_hasCombinedMajorityParticleId = true;
+    m_majorityParticleId = new std::vector<std::vector<std::uint32_t>>;
+    m_inputChain->SetBranchAddress("majorityParticleId", &m_majorityParticleId);
+  } else {
+    m_hasCombinedMajorityParticleId = false;
+    m_majorityParticleVertexPrimary = new std::vector<std::uint32_t>;
+    m_majorityParticleVertexSecondary = new std::vector<std::uint32_t>;
+    m_majorityParticleParticle = new std::vector<std::uint32_t>;
+    m_majorityParticleGeneration = new std::vector<std::uint32_t>;
+    m_majorityParticleSubParticle = new std::vector<std::uint32_t>;
+    m_inputChain->SetBranchAddress("majorityParticleId_vertex_primary",
+                                   &m_majorityParticleVertexPrimary);
+    m_inputChain->SetBranchAddress("majorityParticleId_vertex_secondary",
+                                   &m_majorityParticleVertexSecondary);
+    m_inputChain->SetBranchAddress("majorityParticleId_particle",
+                                   &m_majorityParticleParticle);
+    m_inputChain->SetBranchAddress("majorityParticleId_generation",
+                                   &m_majorityParticleGeneration);
+    m_inputChain->SetBranchAddress("majorityParticleId_sub_particle",
+                                   &m_majorityParticleSubParticle);
+  }
   m_inputChain->SetBranchAddress("nMajorityHits", &m_nMajorityHits);
   m_inputChain->SetBranchAddress("t_charge", &m_t_charge);
   m_inputChain->SetBranchAddress("t_time", &m_t_time);
@@ -131,6 +152,11 @@ RootTrackSummaryReader::~RootTrackSummaryReader() {
   delete m_outlierVolume;
   delete m_outlierLayer;
   delete m_majorityParticleId;
+  delete m_majorityParticleVertexPrimary;
+  delete m_majorityParticleVertexSecondary;
+  delete m_majorityParticleParticle;
+  delete m_majorityParticleGeneration;
+  delete m_majorityParticleSubParticle;
   delete m_nMajorityHits;
   delete m_t_charge;
   delete m_t_time;
@@ -217,8 +243,38 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
       truthParticle.setPosition4((*m_t_vx)[i], (*m_t_vy)[i], (*m_t_vz)[i],
                                  (*m_t_time)[i]);
       truthParticle.setDirection((*m_t_px)[i], (*m_t_py)[i], (*m_t_pz)[i]);
-      truthParticle.setParticleId(
-          SimBarcode{}.withData((*m_majorityParticleId)[i]));
+      auto makeBarcode = [](std::uint32_t vp, std::uint32_t vs,
+                            std::uint32_t particle, std::uint32_t generation,
+                            std::uint32_t subParticle) {
+        SimBarcode barcode = SimBarcode::Invalid();
+        return barcode
+            .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(vp))
+            .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(vs))
+            .withParticle(static_cast<SimBarcode::ParticleId>(particle))
+            .withGeneration(static_cast<SimBarcode::GenerationId>(generation))
+            .withSubParticle(
+                static_cast<SimBarcode::SubParticleId>(subParticle));
+      };
+
+      SimBarcode barcode = SimBarcode::Invalid();
+      if (m_hasCombinedMajorityParticleId && m_majorityParticleId != nullptr) {
+        const auto& components = (*m_majorityParticleId)[i];
+        auto comp = [&](std::size_t idx) -> std::uint32_t {
+          return (components.size() > idx) ? components[idx] : 0u;
+        };
+        barcode = makeBarcode(comp(0), comp(1), comp(2), comp(3), comp(4));
+      } else {
+        auto safeAt = [](const std::vector<std::uint32_t>* vec,
+                         std::size_t idx) -> std::uint32_t {
+          return (vec != nullptr && vec->size() > idx) ? vec->at(idx) : 0u;
+        };
+        barcode = makeBarcode(safeAt(m_majorityParticleVertexPrimary, i),
+                              safeAt(m_majorityParticleVertexSecondary, i),
+                              safeAt(m_majorityParticleParticle, i),
+                              safeAt(m_majorityParticleGeneration, i),
+                              safeAt(m_majorityParticleSubParticle, i));
+      }
+      truthParticle.setParticleId(barcode);
 
       truthParticleCollection.insert(truthParticleCollection.end(),
                                      SimParticle(truthParticle, truthParticle));
