@@ -104,6 +104,11 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   /// @return Reference to this object
   ConvexPolygonVolumeBounds(const ConvexPolygonVolumeBounds& other) = default;
 
+  /// Move constructor
+  /// @param other The other ConvexPolygonVolumeBounds to move from
+  /// @return Reference to this object
+  ConvexPolygonVolumeBounds(ConvexPolygonVolumeBounds&& other) = default;
+
   /// Copy constructor assignment
   ConvexPolygonVolumeBounds& operator=(const ConvexPolygonVolumeBounds& other) =
       default;
