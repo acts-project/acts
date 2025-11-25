@@ -20,30 +20,30 @@ namespace Acts::Experimental {
 struct SeedFinderGbtsConfig {
   // GbtsSeedingAlgorithm options
   bool BeamSpotCorrection = false;
-  std::string ConnectorInputFile{};  // Path to the connector configuration file
-                                     // that defines the layer connections
+
+  // Path to the connector configuration file that defines the layer connections
+  std::string ConnectorInputFile;
 
   // SeedFinderGbts option
-  bool m_LRTmode = false;
-  bool m_useML = false;  // use cluster width
-  bool m_matchBeforeCreate = false;
-  bool m_useOldTunings = false;
-  float m_tau_ratio_cut = 0.007;
-  float m_etaBinOverride =
+  bool LRTmode = false;
+  bool useML = false;  // use cluster width
+  bool matchBeforeCreate = false;
+  bool useOldTunings = false;
+  float tau_ratio_cut = 0.007;
+  float etaBinOverride =
       0.0f;  // specify non-zero to override eta bin width from connection file
              // (default 0.2 in createLinkingScheme.py)
-  float m_nMaxPhiSlice = 53;  // used to calculate phi slices
-  float m_minPt = 1000. * UnitConstants::MeV;
-  float m_phiSliceWidth{};  // derived in CreatSeeds function
+  float nMaxPhiSlice = 53;  // used to calculate phi slices
+  float minPt = 1000. * UnitConstants::MeV;
+  float phiSliceWidth{};  // derived in CreatSeeds function
 
   // BuildTheGraph() options
   double ptCoeff =
       0.29997 * 1.9972 / 2.0;  // ~0.3*B/2 - assumes nominal field of 2*T
-  bool m_useEtaBinning =
-      true;  // bool to use eta binning from geometry structure
-  bool m_doubletFilterRZ = true;  // bool applies new Z cuts on doublets
-  int m_nMaxEdges = 2000000;      // max number of Gbts edges/doublets
-  float m_minDeltaRadius = 2.0;
+  bool useEtaBinning = true;  // bool to use eta binning from geometry structure
+  bool doubletFilterRZ = true;  // bool applies new Z cuts on doublets
+  int nMaxEdges = 2000000;      // max number of Gbts edges/doublets
+  float minDeltaRadius = 2.0;
 
   // GbtsTrackingFilter
   // Update()
@@ -80,7 +80,7 @@ struct SeedFinderGbtsConfig {
     // divides inputs by 1mm, all ones input
     // changes member inInInternalUnits to true
     return config;
-  };
+  }
 
 };  // end of config struct
 

@@ -52,11 +52,11 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   // create the connection objects
   else {
     m_connector = std::make_unique<Acts::Experimental::GbtsConnector>(
-        input_ifstream, m_cfg.seedFinderConfig.m_LRTmode);
+        input_ifstream, m_cfg.seedFinderConfig.LRTmode);
 
     // option that allows for adding custom eta binning (default is at 0.2)
-    if (m_cfg.seedFinderConfig.m_etaBinOverride != 0.0f) {
-      m_connector->m_etaBin = m_cfg.seedFinderConfig.m_etaBinOverride;
+    if (m_cfg.seedFinderConfig.etaBinOverride != 0.0f) {
+      m_connector->m_etaBin = m_cfg.seedFinderConfig.etaBinOverride;
     }
   }
 
@@ -67,7 +67,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 
   // manually convert min Pt as no conversion available in ACTS Examples
   // (currently inputs as 0.9 GeV but need 900 MeV)
-  m_cfg.seedFinderConfig.m_minPt = m_cfg.seedFinderConfig.m_minPt * 1000;
+  m_cfg.seedFinderConfig.minPt = m_cfg.seedFinderConfig.minPt * 1000;
   printSeedFinderGbtsConfig(m_cfg.seedFinderConfig);
 }
 
@@ -420,25 +420,23 @@ void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
                                     << " (default: false)");
   ACTS_DEBUG("ConnectorInputFile: " << cfg.ConnectorInputFile
                                     << " (default: empty string)");
-  ACTS_DEBUG("m_LRTmode: " << cfg.m_LRTmode << " (default: false)");
-  ACTS_DEBUG("m_useML: " << cfg.m_useML << " (default: false)");
-  ACTS_DEBUG("m_matchBeforeCreate: " << cfg.m_matchBeforeCreate
-                                     << " (default: false)");
-  ACTS_DEBUG("m_useOldTunings: " << cfg.m_useOldTunings << " (default: false)");
-  ACTS_DEBUG("m_tau_ratio_cut: " << cfg.m_tau_ratio_cut << " (default: 0.007)");
-  ACTS_DEBUG("m_etaBinOverride: " << cfg.m_etaBinOverride << " (default: 0.0)");
-  ACTS_DEBUG("m_nMaxPhiSlice: " << cfg.m_nMaxPhiSlice << " (default: 53)");
-  ACTS_DEBUG("m_minPt: " << cfg.m_minPt
-                         << " (default: 1.0 * Acts::UnitConstants::GeV)");
-  ACTS_DEBUG("m_phiSliceWidth: " << cfg.m_phiSliceWidth
-                                 << " (default: derived)");
+  ACTS_DEBUG("LRTmode: " << cfg.LRTmode << " (default: false)");
+  ACTS_DEBUG("useML: " << cfg.useML << " (default: false)");
+  ACTS_DEBUG("matchBeforeCreate: " << cfg.matchBeforeCreate
+                                   << " (default: false)");
+  ACTS_DEBUG("useOldTunings: " << cfg.useOldTunings << " (default: false)");
+  ACTS_DEBUG("tau_ratio_cut: " << cfg.tau_ratio_cut << " (default: 0.007)");
+  ACTS_DEBUG("etaBinOverride: " << cfg.etaBinOverride << " (default: 0.0)");
+  ACTS_DEBUG("nMaxPhiSlice: " << cfg.nMaxPhiSlice << " (default: 53)");
+  ACTS_DEBUG("minPt: " << cfg.minPt
+                       << " (default: 1.0 * Acts::UnitConstants::GeV)");
+  ACTS_DEBUG("phiSliceWidth: " << cfg.phiSliceWidth << " (default: derived)");
   ACTS_DEBUG("ptCoeff: " << cfg.ptCoeff
                          << " (default: 0.29997 * 1.9972 / 2.0)");
-  ACTS_DEBUG("m_useEtaBinning: " << cfg.m_useEtaBinning << " (default: true)");
-  ACTS_DEBUG("m_doubletFilterRZ: " << cfg.m_doubletFilterRZ
-                                   << " (default: true)");
-  ACTS_DEBUG("m_nMaxEdges: " << cfg.m_nMaxEdges << " (default: 2000000)");
-  ACTS_DEBUG("m_minDeltaRadius: " << cfg.m_minDeltaRadius << " (default: 2.0)");
+  ACTS_DEBUG("useEtaBinning: " << cfg.useEtaBinning << " (default: true)");
+  ACTS_DEBUG("doubletFilterRZ: " << cfg.doubletFilterRZ << " (default: true)");
+  ACTS_DEBUG("nMaxEdges: " << cfg.nMaxEdges << " (default: 2000000)");
+  ACTS_DEBUG("minDeltaRadius: " << cfg.minDeltaRadius << " (default: 2.0)");
   ACTS_DEBUG("sigma_t: " << cfg.sigma_t << " (default: 0.0003)");
   ACTS_DEBUG("sigma_w: " << cfg.sigma_w << " (default: 0.00009)");
   ACTS_DEBUG("sigmaMS: " << cfg.sigmaMS << " (default: 0.016)");

@@ -48,8 +48,7 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
     bool is_pixel = true;
     if (is_pixel) {  // placeholder for now until strip hits are added in
 
-      nPixelLoaded +=
-          m_storage->loadPixelGraphNodes(l, nodes, m_config.m_useML);
+      nPixelLoaded += m_storage->loadPixelGraphNodes(l, nodes, m_config.useML);
 
     } else {
       nStripLoaded += m_storage->loadStripGraphNodes(l, nodes);
@@ -60,10 +59,10 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
 
   m_storage->sortByPhi();
 
-  m_storage->initializeNodes(m_config.m_useML);
+  m_storage->initializeNodes(m_config.useML);
 
-  m_config.m_phiSliceWidth = 2 * std::numbers::pi / m_config.m_nMaxPhiSlice;
-  m_storage->generatePhiIndexing(1.5 * m_config.m_phiSliceWidth);
+  m_config.phiSliceWidth = 2 * std::numbers::pi / m_config.nMaxPhiSlice;
+  m_storage->generatePhiIndexing(1.5 * m_config.phiSliceWidth);
 
   std::vector<GNN_Edge> edgeStorage;
 
@@ -78,7 +77,7 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
 
   int minLevel = 3;  // a triplet + 2 confirmation
 
-  if (m_config.m_LRTmode) {
+  if (m_config.LRTmode) {
     minLevel = 2;  // a triplet + 1 confirmation
   }
 
@@ -189,51 +188,49 @@ std::vector<std::vector<SeedFinderGbts::GNN_Node>> SeedFinderGbts::CreateNodes(
 std::pair<int, int> SeedFinderGbts::buildTheGraph(
     const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,
     std::vector<GbtsEdge>& edgeStorage) const {
-  const float cut_dphi_max =
-      m_config.m_LRTmode ? 0.07f : 0.012f;  // phi cut for triplets
-  const float cut_dcurv_max =
-      m_config.m_LRTmode ? 0.015f : 0.001f;  // curv cut for triplets
+  // phi cut for triplets
+  const float cut_dphi_max = m_config.LRTmode ? 0.07f : 0.012f;
+  // curv cut for triplets
+  const float cut_dcurv_max = m_config.LRTmode ? 0.015f : 0.001f;
+  // tau cut for doublets and triplets
   const float cut_tau_ratio_max =
-      m_config.m_LRTmode
-          ? 0.015f
-          : static_cast<float>(
-                m_config.m_tau_ratio_cut);  // tau cut for doublets and triplets
-  const float min_z0 = m_config.m_LRTmode ? -600.0 : roi.zedMinus();
-  const float max_z0 = m_config.m_LRTmode ? 600.0 : roi.zedPlus();
-  const float min_deltaPhi = m_config.m_LRTmode ? 0.01f : 0.001f;
+      m_config.LRTmode ? 0.015f : static_cast<float>(m_config.tau_ratio_cut);
+  const float min_z0 = m_config.LRTmode ? -600.0 : roi.zedMinus();
+  const float max_z0 = m_config.LRTmode ? 600.0 : roi.zedPlus();
+  const float min_deltaPhi = m_config.LRTmode ? 0.01f : 0.001f;
 
   // used to calculate Z cut on doublets
-  const float maxOuterRadius = m_config.m_LRTmode ? 1050.0 : 550.0;
+  const float maxOuterRadius = m_config.LRTmode ? 1050.0 : 550.0;
 
   const float cut_zMinU = min_z0 + maxOuterRadius * roi.dzdrMinus();
   const float cut_zMaxU = max_z0 + maxOuterRadius * roi.dzdrPlus();
 
   // correction due to limited pT resolution
-  float tripletPtMin = 0.8 * m_config.m_minPt;
+  float tripletPtMin = 0.8 * m_config.minPt;
   // to re-scale original tunings done for the 900 MeV pT cut
-  const float pt_scale = 900.0 / m_config.m_minPt;
+  const float pt_scale = 900.0 / m_config.minPt;
 
   float maxCurv = m_config.ptCoeff / tripletPtMin;
 
   float maxKappa_high_eta =
-      m_config.m_LRTmode ? 1.0 * maxCurv : std::sqrt(0.8) * maxCurv;
+      m_config.LRTmode ? 1.0 * maxCurv : std::sqrt(0.8) * maxCurv;
   float maxKappa_low_eta =
-      m_config.m_LRTmode ? 1.0 * maxCurv : std::sqrt(0.6) * maxCurv;
+      m_config.LRTmode ? 1.0 * maxCurv : std::sqrt(0.6) * maxCurv;
 
   // new settings for curvature cuts
-  if (!m_config.m_useOldTunings && !m_config.m_LRTmode) {
+  if (!m_config.useOldTunings && !m_config.LRTmode) {
     maxKappa_high_eta = 4.75e-4f * pt_scale;
     maxKappa_low_eta = 3.75e-4f * pt_scale;
   }
 
-  const float dphi_coeff = m_config.m_LRTmode ? 1.0 * maxCurv : 0.68 * maxCurv;
+  const float dphi_coeff = m_config.LRTmode ? 1.0 * maxCurv : 0.68 * maxCurv;
 
   // the default sliding window along phi
-  float deltaPhi = 0.5f * m_config.m_phiSliceWidth;
+  float deltaPhi = 0.5f * m_config.phiSliceWidth;
 
   unsigned int nConnections = 0;
 
-  edgeStorage.reserve(m_config.m_nMaxEdges);
+  edgeStorage.reserve(m_config.nMaxEdges);
 
   int nEdges = 0;
 
@@ -256,9 +253,9 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
       float rb2 = B2.getMaxBinRadius();
 
-      if (m_config.m_useEtaBinning) {
+      if (m_config.useEtaBinning) {
         float abs_dr = std::fabs(rb2 - rb1);
-        if (m_config.m_useOldTunings) {
+        if (m_config.useOldTunings) {
           deltaPhi = min_deltaPhi + dphi_coeff * abs_dr;
         } else {
           if (abs_dr < 60.0) {
@@ -318,7 +315,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
           float dr = r2 - r1;
 
-          if (dr < m_config.m_minDeltaRadius) {
+          if (dr < m_config.minDeltaRadius) {
             continue;
           }
 
@@ -345,7 +342,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
             continue;
           }
 
-          if (m_config.m_doubletFilterRZ) {
+          if (m_config.doubletFilterRZ) {
             float z0 = z1 - r1 * tau;
 
             if (z0 < min_z0 || z0 > max_z0) {
@@ -374,8 +371,8 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
 
           float exp_eta = std::sqrt(1 + tau * tau) - tau;
 
-          if (m_config.m_matchBeforeCreate) {  // match edge candidate against
-                                               // edges incoming to n2
+          if (m_config.matchBeforeCreate) {  // match edge candidate against
+                                             // edges incoming to n2
 
             bool isGood = v2In.size() <=
                           2;  // we must have enough incoming edges to decide
@@ -403,7 +400,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
           float dPhi2 = curv * r2;
           float dPhi1 = curv * r1;
 
-          if (nEdges < m_config.m_nMaxEdges) {
+          if (nEdges < m_config.nMaxEdges) {
             edgeStorage.emplace_back(B1.m_vn[n1Idx], B2.m_vn[n2Idx], exp_eta,
                                      curv, phi1 + dPhi1);
 
@@ -461,7 +458,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
     }  // loop over bins in Layer 2
   }  // loop over bin groups
 
-  if (nEdges >= m_config.m_nMaxEdges) {
+  if (nEdges >= m_config.nMaxEdges) {
     ACTS_WARNING(
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << nEdges);
