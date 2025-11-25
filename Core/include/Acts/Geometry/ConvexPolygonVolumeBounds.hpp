@@ -35,21 +35,21 @@ class DiamondBounds;
 ///  BoundarySurfaceFace [index]:
 ///
 ///  - negativeFaceXY     [0] : Diamond Acts::PlaneSurface,
-///                             parallel to \f$ xy \f$ plane at negative \f$z\f$
+///                             parallel to \f$ xy \f$ plane at negative \f$ z \f$
 ///  - positiveFaceXY     [1] : Diamond Acts::PlaneSurface,
-///                             parallel to \f$ xy \f$ plane at positive \f$z\f$
+///                             parallel to \f$ xy \f$ plane at positive \f$ z \f$
 ///  - negativeXFaceYZ12  [2] : Rectangular  Acts::PlaneSurface,
-///                             parallel to \f$ yz \f$ plane at negative \f$x\f attached at [-x1,-y1] and [-x2,0]
+///                             parallel to \f$ yz \f$ plane at negative \f$ x \f$ attached at [-x1,-y1] and [-x2,0]
 ///  - positiveXFaceYZ12  [3] : Rectangular  Acts::PlaneSurface,
-///                             parallel to \f$ yz \f$ plane at positive \f$x\f attached at [x1,-y1] and [x2,0]
+///                             parallel to \f$ yz \f$ plane at positive \f$ x \f$ attached at [x1,-y1] and [x2,0]
 ///  - negativeXFaceYZ23  [4] : Rectangular  Acts::PlaneSurface,
-///                             parallel to \f$ yz \f$ plane at negative \f$x\f attached at [-x2,0] and [-x3,y2]
+///                             parallel to \f$ yz \f$ plane at negative \f$ x \f$ attached at [-x2,0] and [-x3,y2]
 ///  - positiveXFaceYZ23  [5] : Rectangular  Acts::PlaneSurface,
-///                             parallel to \f$ yz \f$ plane at positive \f$x\f attached at [x2,0] and [x3,y2]
+///                             parallel to \f$ yz \f$ plane at positive \f$ x \f$ attached at [x2,0] and [x3,y2]
 ///  - negativeYFaceZX   [6] : Rectangular  Acts::PlaneSurface,
-///                             parallel to \f$ zx \f$ plane at negative \f$y\f$
+///                             parallel to \f$ zx \f$ plane at negative \f$ y \f$
 ///  - positiveYFaceZX   [7] : Rectangular  Acts::PlaneSurface,
-///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
+///                             parallel to \f$ zx \f$ plane at positive \f$ y \f$
 ///
 class ConvexPolygonVolumeBounds : public VolumeBounds {
  public:
@@ -96,19 +96,19 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
 
   /// Copy constructor
   /// @param other The other ConvexPolygonVolumeBounds to copy from
-  /// @return Reference to this object
   ConvexPolygonVolumeBounds(const ConvexPolygonVolumeBounds& other) = default;
 
   /// Move constructor
   /// @param other The other ConvexPolygonVolumeBounds to move from
-  /// @return Reference to this object
   ConvexPolygonVolumeBounds(ConvexPolygonVolumeBounds&& other) = default;
 
   /// Copy constructor assignment
+  /// @param other The other ConvexPolygonVolumeBounds to copy from
   ConvexPolygonVolumeBounds& operator=(const ConvexPolygonVolumeBounds& other) =
       default;
 
   /// Move constructor assignment
+  /// @param other The other ConvexPolygonVolumeBounds to move from
   ConvexPolygonVolumeBounds& operator=(ConvexPolygonVolumeBounds&& other) =
       default;
 
