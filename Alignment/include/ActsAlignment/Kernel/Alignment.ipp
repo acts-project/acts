@@ -316,7 +316,7 @@ ActsAlignment::Alignment<fitter_t>::align(
       const auto& translation = transform.translation();
       const auto& rotation = transform.rotation();
       const Acts::Vector3 rotAngles =
-          Acts::detail::canonicalEulerAngles(rotation, 2, 1, 0);
+          Acts::detail::EigenCompat::canonicalEulerAngles(rotation, 2, 1, 0);
       ACTS_VERBOSE("Detector element with surface "
                    << surface->geometryId()
                    << " has aligned geometry position as below:");

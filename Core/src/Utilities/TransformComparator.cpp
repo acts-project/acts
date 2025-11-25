@@ -16,8 +16,10 @@ TransformComparator::TransformComparator(const double transTolerance,
     : m_tolTrans{transTolerance}, m_tolRot{rotTolerance} {}
 int TransformComparator::compare(const Acts::RotationMatrix3& a,
                                  const Acts::RotationMatrix3& b) const {
-  const Acts::Vector3 anglesA = detail::canonicalEulerAngles(a, 2, 1, 0);
-  const Acts::Vector3 anglesB = detail::canonicalEulerAngles(b, 2, 1, 0);
+  const Acts::Vector3 anglesA =
+      detail::EigenCompat::canonicalEulerAngles(a, 2, 1, 0);
+  const Acts::Vector3 anglesB =
+      detail::EigenCompat::canonicalEulerAngles(b, 2, 1, 0);
   for (int i = 0; i < 3; ++i) {
     const double diff = anglesA[i] - anglesB[i];
     if (std::abs(diff) > m_tolRot) {
