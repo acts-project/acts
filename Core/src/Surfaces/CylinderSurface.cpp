@@ -556,4 +556,13 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
   }
 }
 
+const std::shared_ptr<const CylinderBounds>& CylinderSurface::boundsPtr()
+    const {
+  return m_bounds;
+}
+void CylinderSurface::assignSurfaceBounds(
+    std::shared_ptr<const CylinderBounds> newBounds) {
+  m_bounds = std::move(newBounds);
+}
+
 }  // namespace Acts
