@@ -55,7 +55,7 @@ void Acts::EventDataView3D::drawCovarianceAngular(
 
   // Now generate the ellipse points
   std::vector<Vector3> ellipse =
-      createEllipse(angularErrorScale * directionScale * lambda0 * sin(dtheta),
+      createEllipse(angularErrorScale * directionScale * lambda0 * std::sin(dtheta),
                     angularErrorScale * directionScale * lambda1, theta,
                     viewConfig.quarterSegments, 0., {0., 0.}, eplane);
 

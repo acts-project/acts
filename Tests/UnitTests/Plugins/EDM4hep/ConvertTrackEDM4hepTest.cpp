@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     double z0 = 20_mm * gauss(rng);
     double phi = phiDist(rng);
     double eta = etaDist(rng);
-    double theta = 2 * atan(exp(-eta));
+    double theta = 2 * std::atan(exp(-eta));
     double pt = ptDist(rng);
     double p = pt / sin(theta);
     double charge = qDist(rng) > 0.5 ? 1. : -1.;

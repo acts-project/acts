@@ -30,7 +30,7 @@ TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double maxhalex,
   m_values[eHalfLengthXposY] = maxhalex;
   m_values[eHalfLengthY] = haley;
   m_values[eHalfLengthZ] = halez;
-  m_values[eAlpha] = atan2(2 * haley, (maxhalex - minhalex));
+  m_values[eAlpha] = std::atan2(2 * haley, (maxhalex - minhalex));
   m_values[eBeta] = std::numbers::pi - get(eAlpha);
   checkConsistency();
   buildSurfaceBounds();
@@ -130,11 +130,11 @@ void TrapezoidVolumeBounds::buildSurfaceBounds() {
       get(eHalfLengthXnegY), get(eHalfLengthXposY), get(eHalfLengthY));
 
   m_faceAlphaRectangleBounds = std::make_shared<const RectangleBounds>(
-      get(eHalfLengthY) / cos(get(eAlpha) - std::numbers::pi / 2.),
+      get(eHalfLengthY) /std::cos(get(eAlpha) - std::numbers::pi / 2.),
       get(eHalfLengthZ));
 
   m_faceBetaRectangleBounds = std::make_shared<const RectangleBounds>(
-      get(eHalfLengthY) / cos(get(eBeta) - std::numbers::pi / 2.),
+      get(eHalfLengthY) /std::cos(get(eBeta) - std::numbers::pi / 2.),
       get(eHalfLengthZ));
 
   m_faceZXRectangleBoundsBottom = std::make_shared<const RectangleBounds>(

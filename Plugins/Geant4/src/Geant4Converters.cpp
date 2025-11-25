@@ -246,7 +246,7 @@ ActsPlugins::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
   auto z = static_cast<double>(g4Trap.GetZHalfLength());
 
   double hlX0 = (x1 + x2) * 0.5;
-  double hlX1 = 2 * z * tan(theta) * cos(phi) + (x3 + x4) * 0.5;
+  double hlX1 = 2 * z * tan(theta) *std::cos(phi) + (x3 + x4) * 0.5;
   double hlY0 = y1;
   double hlY1 = y2 + 2 * z * tan(theta) * sin(phi);
   double hlZ = z;
