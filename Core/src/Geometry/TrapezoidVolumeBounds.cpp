@@ -48,7 +48,7 @@ TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double haley,
   // now calculate the remaining max half X
   double gamma = (alpha > beta) ? (alpha - std::numbers::pi / 2.)
                                 : (beta - std::numbers::pi / 2.);
-  m_values[eHalfLengthXposY] = minhalex + (2. * haley) * tan(gamma);
+  m_values[eHalfLengthXposY] = minhalex + (2. * haley) * std::tan(gamma);
 
   checkConsistency();
   buildSurfaceBounds();

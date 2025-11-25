@@ -202,7 +202,7 @@ BOOST_DATA_TEST_CASE(
   double z = 0;
   double px = pT * std::cos(phi);
   double py = pT * std::sin(phi);
-  double pz = pT / tan(theta);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -253,7 +253,7 @@ BOOST_DATA_TEST_CASE(
   double z = 0;
   double px = pT * std::cos(phi);
   double py = pT * std::sin(phi);
-  double pz = pT / tan(theta);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -333,7 +333,7 @@ BOOST_DATA_TEST_CASE(
   double z = 0;
   double px = pT * std::cos(phi);
   double py = pT * std::sin(phi);
-  double pz = pT / tan(theta);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);

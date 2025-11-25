@@ -182,7 +182,7 @@ BOOST_DATA_TEST_CASE(
 
   double px = pT * std::cos(phi);
   double py = pT * std::sin(phi);
-  double pz = pT / tan(theta);
+  double pz = pT / std::tan(theta);
   double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
 
