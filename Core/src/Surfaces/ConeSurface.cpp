@@ -395,5 +395,11 @@ ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
-
+const std::shared_ptr<const ConeBounds>& ConeSurface::boundsPtr() const {
+  return m_bounds;
+}
+void ConeSurface::assignSurfaceBounds(
+    std::shared_ptr<const ConeBounds> newBounds) {
+  m_bounds = std::move(newBounds);
+}
 }  // namespace Acts
