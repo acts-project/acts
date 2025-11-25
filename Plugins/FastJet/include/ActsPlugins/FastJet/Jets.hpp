@@ -91,6 +91,12 @@ class TruthJet : public Jet {
     m_constituents = constituents;
   }
 
+  /// @brief Set the indices of the truth particles that are constituents of this truth jet
+  /// @param indices 
+  void setConstituentIndices(const std::vector<int>& indices) {
+    m_constituentIndices = indices;
+  }
+
   /// @brief Get the truth particles that are truth jet constituents
   const std::vector<ActsFatras::Barcode>& constituents() const {
     return m_constituents;
@@ -112,6 +118,8 @@ class TruthJet : public Jet {
  private:
   /// @brief  Truth particles as the constituents of the truth jet
   std::vector<ActsFatras::Barcode> m_constituents;
+  /// @brief Indices of the constituents in the input collection
+  std::vector<int> m_constituentIndices;
   /// @brief The tracks associated to this truth jet
   std::vector<typename TrackContainer::TrackProxy> m_associatedTracks;
 };
