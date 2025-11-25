@@ -61,8 +61,8 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
     eHalfLengthX1 = 0,  //!< half length in x at positive y1
     eHalfLengthX2 = 1,  //!< half length in x at y=0
     eHalfLengthX3 = 2,  //!< half length in x at negative y2
-    eHalfLengthY1 = 3,  //!< half length in positive y1
-    eHalfLengthY2 = 4,  //!< half length in negative y2
+    eLengthY1 = 3,      //!<  length in positive y1
+    eLengthY2 = 4,      //!<  length in negative y2
     eHalfLengthZ = 5,   //!< half length in z
     eAlphaAngle = 6,    //!< angle alpha between negYFaceZX and faceYZ12
     eBetaAngle = 7,     //!< angle beta between FaceYZ12 and FaceYZ23
@@ -104,6 +104,10 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   /// @return Reference to this object
   ConvexPolygonVolumeBounds(const ConvexPolygonVolumeBounds& other) = default;
 
+  /// Copy constructor assignment
+  ConvexPolygonVolumeBounds& operator=(const ConvexPolygonVolumeBounds& other) =
+      default;
+
   /// Default destructor
   ~ConvexPolygonVolumeBounds() override = default;
 
@@ -123,7 +127,7 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   /// @param tol is the tolerance applied
   ///
   /// @return boolean indicator if position is inside
-  bool inside(const Vector3& pos, double tol = 0.) const override;
+  bool inside(const Vector3& pos, double tol = 0.) const override final;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -136,7 +140,8 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   std::vector<OrientedSurface> orientedSurfaces(
-      const Transform3& transform = Transform3::Identity()) const override;
+      const Transform3& transform =
+          Transform3::Identity()) const override final;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform

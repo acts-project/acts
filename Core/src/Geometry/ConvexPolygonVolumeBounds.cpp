@@ -23,8 +23,8 @@ ConvexPolygonVolumeBounds::ConvexPolygonVolumeBounds(
   m_values[eHalfLengthX1] = x1;
   m_values[eHalfLengthX2] = x2;
   m_values[eHalfLengthX3] = x3;
-  m_values[eHalfLengthY1] = y1;
-  m_values[eHalfLengthY2] = y2;
+  m_values[eLengthY1] = y1;
+  m_values[eLengthY2] = y2;
   m_values[eHalfLengthZ] = halez;
   m_values[eAlphaAngle] = std::numbers::pi - std::atan2(y1, (x2 - x1));
   m_values[eBetaAngle] = std::atan2(y2, (x2 - x3));
@@ -53,34 +53,34 @@ std::vector<OrientedSurface> ConvexPolygonVolumeBounds::orientedSurfaces(
   surfaces.push_back(
       OrientedSurface{std::move(sf), Direction::OppositeNormal()});
 
-  double posXOffset23 = 0.5 * get(eHalfLengthY2) / std::tan(get(eBetaAngle));
+  double posXOffset23 = 0.5 * get(eLengthY2) / std::tan(get(eBetaAngle));
   double posXOffset12 =
-      0.5 * get(eHalfLengthY1) / std::tan(std::numbers::pi - get(eAlphaAngle));
+      0.5 * get(eLengthY1) / std::tan(std::numbers::pi - get(eAlphaAngle));
 
   // (2) - At negative x face yz12
   Vector3 nyz12Position(-get(eHalfLengthX1) - posXOffset12,
-                        -0.5 * get(eHalfLengthY1), 0.);
-  auto nyz12Transform = transform * Translation3(nyz12Position) *
-                        AngleAxis3(-std::numbers::pi / 2. + get(eAlphaAngle),
-                                   Vector3::UnitZ()) *
-                        s_planeYZ;
+                        -0.5 * get(eLengthY1), 0.);
+  auto nyz12Transform =
+      transform * Translation3(nyz12Position) *
+      AngleAxis3(-std::numbers::pi / 2. + get(eAlphaAngle), Vector3::UnitZ()) *
+      s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(nyz12Transform, m_FaceYZ12Bounds);
   surfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
 
-  // (3) - At positive x face yz12 (ge)
+  // (3) - At positive x face yz12
   Vector3 pyz12Position(get(eHalfLengthX1) + posXOffset12,
-                        -0.5 * get(eHalfLengthY1), 0.);
-  auto pyz12Transform = transform * Translation3(pyz12Position) *
-                        AngleAxis3(-std::numbers::pi / 2. + get(eAlphaAngle),
-                                   -Vector3::UnitZ()) *
-                        s_planeYZ;
+                        -0.5 * get(eLengthY1), 0.);
+  auto pyz12Transform =
+      transform * Translation3(pyz12Position) *
+      AngleAxis3(-std::numbers::pi / 2. + get(eAlphaAngle), -Vector3::UnitZ()) *
+      s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(pyz12Transform, m_FaceYZ12Bounds);
   surfaces.push_back(
       OrientedSurface{std::move(sf), Direction::OppositeNormal()});
 
   // (4) - At negative x face yz23
   Vector3 nyz23Position(-get(eHalfLengthX3) - posXOffset23,
-                        0.5 * get(eHalfLengthY2), 0.);
+                        0.5 * get(eLengthY2), 0.);
   auto nyz23Transform = transform * Translation3(nyz23Position) *
                         AngleAxis3(std::numbers::pi / 2. - get(eBetaAngle),
                                    Vector3(0., 0., -1.)) *
@@ -89,8 +89,8 @@ std::vector<OrientedSurface> ConvexPolygonVolumeBounds::orientedSurfaces(
   surfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
 
   // (5) - At positive x face yz23
-  Vector3 pyz23Position(get(eHalfLengthX3) + posXOffset23,
-                        0.5 * get(eHalfLengthY2), 0.);
+  Vector3 pyz23Position(get(eHalfLengthX3) + posXOffset23, 0.5 * get(eLengthY2),
+                        0.);
   auto pyz23Transform =
       transform * Translation3(pyz23Position) *
       AngleAxis3(std::numbers::pi / 2. - get(eBetaAngle), Vector3::UnitZ()) *
@@ -102,13 +102,13 @@ std::vector<OrientedSurface> ConvexPolygonVolumeBounds::orientedSurfaces(
 
   // (6) - At negative y face zx
   auto nyTransform =
-      transform * Translation3(0., -get(eHalfLengthY1), 0.) * s_planeZX;
+      transform * Translation3(0., -get(eLengthY1), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(nyTransform, m_negYFaceZXBounds);
   surfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
 
   // (7) - At positive y face zx
   auto pyTransform =
-      transform * Translation3(0., get(eHalfLengthY2), 0.) * s_planeZX;
+      transform * Translation3(0., get(eLengthY2), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(pyTransform, m_posYFaceZXBounds);
   surfaces.push_back(
       OrientedSurface{std::move(sf), Direction::OppositeNormal()});
@@ -119,12 +119,12 @@ std::vector<OrientedSurface> ConvexPolygonVolumeBounds::orientedSurfaces(
 void ConvexPolygonVolumeBounds::buildSurfaceBounds() {
   m_FaceXYBounds = std::make_shared<Acts::DiamondBounds>(
       get(eHalfLengthX1), get(eHalfLengthX2), get(eHalfLengthX3),
-      get(eHalfLengthY1), get(eHalfLengthY2));
+      get(eLengthY1), get(eLengthY2));
 
   double dx23 =
-      fastHypot((get(eHalfLengthX2) - get(eHalfLengthX3)), get(eHalfLengthY2));
+      fastHypot((get(eHalfLengthX2) - get(eHalfLengthX3)), get(eLengthY2));
   double dx12 =
-      fastHypot((get(eHalfLengthX2) - get(eHalfLengthX1)), get(eHalfLengthY1));
+      fastHypot((get(eHalfLengthX2) - get(eHalfLengthX1)), get(eLengthY1));
 
   m_FaceYZ12Bounds =
       std::make_shared<Acts::RectangleBounds>(0.5 * dx12, get(eHalfLengthZ));
@@ -142,7 +142,7 @@ Volume::BoundingBox ConvexPolygonVolumeBounds::boundingBox(
     const Volume* entity) const {
   double maxX =
       std::max({get(eHalfLengthX1), get(eHalfLengthX2), get(eHalfLengthX3)});
-  double maxY = std::max(get(eHalfLengthY1), get(eHalfLengthY2));
+  double maxY = std::max(get(eLengthY1), get(eLengthY2));
   double halez = get(eHalfLengthZ);
 
   std::array<Vector3, 8> vertices = {{{-maxX, -maxY, -halez},
@@ -175,8 +175,7 @@ bool ConvexPolygonVolumeBounds::inside(const Vector3& pos, double tol) const {
     return false;
   }
 
-  if (std::abs(pos.y()) >
-      std::max(get(eHalfLengthY1), get(eHalfLengthY2)) + tol) {
+  if (std::abs(pos.y()) > std::max(get(eLengthY1), get(eLengthY2)) + tol) {
     return false;
   }
 
@@ -191,7 +190,7 @@ void ConvexPolygonVolumeBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument(
         "ConvexPolygonVolumeBounds: invalid polygon parameters in x.");
   }
-  if (get(eHalfLengthY1) <= 0. || get(eHalfLengthY2) <= 0.) {
+  if (get(eLengthY1) <= 0. || get(eLengthY2) <= 0.) {
     throw std::invalid_argument(
         "ConvexPolygonVolumeBounds: invalid y extrusion.");
   }
@@ -200,7 +199,7 @@ void ConvexPolygonVolumeBounds::checkConsistency() noexcept(false) {
         "ConvexPolygonVolumeBounds: invalid z extrusion.");
   }
   // make sure this is a convex polygon - do not allow angles > M_PI
-  if (get(eHalfLengthX2) < get(eHalfLengthX1) &&
+  if (get(eHalfLengthX2) < get(eHalfLengthX1) ||
       get(eHalfLengthX2) < get(eHalfLengthX3)) {
     throw std::invalid_argument(
         "ConvexPolygonVolumeBounds: invalid polygon shape - not convex.");
@@ -213,8 +212,8 @@ std::ostream& ConvexPolygonVolumeBounds::toStream(std::ostream& os) const {
   os << "ConvexPolygonVolumeBounds: (halfX1, halfX2, halfX3, halfY1, halfY2, "
         "halfZ) = ";
   os << "(" << get(eHalfLengthX1) << ", " << get(eHalfLengthX2) << ", "
-     << get(eHalfLengthX3) << ", " << get(eHalfLengthY1) << ", "
-     << get(eHalfLengthY2) << ", " << get(eHalfLengthZ) << ")";
+     << get(eHalfLengthX3) << ", " << get(eLengthY1) << ", " << get(eLengthY2)
+     << ", " << get(eHalfLengthZ) << ")";
   return os;
 }
 
