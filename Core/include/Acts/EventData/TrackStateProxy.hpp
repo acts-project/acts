@@ -31,6 +31,23 @@ namespace Acts {
 template <typename derived_t>
 class MultiTrajectory;
 
+namespace detail_tsp {
+inline constexpr HashedString kPreviousKey = hashString("previous");
+inline constexpr HashedString kChi2Key = hashString("chi2");
+inline constexpr HashedString kPathLengthKey = hashString("pathLength");
+inline constexpr HashedString kTypeFlagsKey = hashString("typeFlags");
+inline constexpr HashedString kPredictedKey = hashString("predicted");
+inline constexpr HashedString kFilteredKey = hashString("filtered");
+inline constexpr HashedString kSmoothedKey = hashString("smoothed");
+inline constexpr HashedString kJacobianKey = hashString("jacobian");
+inline constexpr HashedString kProjectorKey = hashString("projector");
+inline constexpr HashedString kUncalibratedKey =
+    hashString("uncalibratedSourceLink");
+inline constexpr HashedString kCalibratedKey = hashString("calibrated");
+inline constexpr HashedString kCalibratedCovKey = hashString("calibratedCov");
+inline constexpr HashedString kNextKey = hashString("next");
+}  // namespace detail_tsp
+
 namespace detail_lt {
 
 /// Either type T or const T depending on the boolean.
@@ -300,7 +317,7 @@ class TrackStateProxy {
   /// Return the index of the track state `previous` in the track sequence
   /// @return The index of the previous track state.
   IndexType previous() const {
-    return component<IndexType, hashString("previous")>();
+    return component<IndexType, detail_tsp::kPreviousKey>();
   }
 
   /// Return a mutable reference to the index of the track state 'previous' in
@@ -310,13 +327,13 @@ class TrackStateProxy {
   IndexType& previous()
     requires(!ReadOnly)
   {
-    return component<IndexType, hashString("previous")>();
+    return component<IndexType, detail_tsp::kPreviousKey>();
   }
 
   /// Return whether this track state has a previous (parent) track state.
   /// @return Boolean indicating whether a previous track state exists
   bool hasPrevious() const {
-    return component<IndexType, hashString("previous")>() != kInvalid;
+    return component<IndexType, detail_tsp::kPreviousKey>() != kInvalid;
   }
 
   /// Build a mask that represents all the allocated components of this track
@@ -377,14 +394,14 @@ class TrackStateProxy {
   float& chi2()
     requires(!ReadOnly)
   {
-    return component<float, hashString("chi2")>();
+    return component<float, detail_tsp::kChi2Key>();
   }
 
   /// Getter for the chi2 value associated with the track state.
   /// This overload returns a copy of the chi2 value, and thus does not allow
   /// modification of the value in the backing storage.
   /// @return the chi2 value of the track state
-  float chi2() const { return component<float, hashString("chi2")>(); }
+  float chi2() const { return component<float, detail_tsp::kChi2Key>(); }
 
   /// Getter for the path length associated with the track state.
   /// This overloaded is only enabled if not read-only, and returns a mutable
@@ -393,13 +410,13 @@ class TrackStateProxy {
   double& pathLength()
     requires(!ReadOnly)
   {
-    return component<double, hashString("pathLength")>();
+    return component<double, detail_tsp::kPathLengthKey>();
   }
 
   /// Getter for the path length. Returns a copy of the path length value.
   /// @return The path length of this track state
   double pathLength() const {
-    return component<double, hashString("pathLength")>();
+    return component<double, detail_tsp::kPathLengthKey>();
   }
 
   /// Getter for the type flags associated with the track state.
@@ -410,14 +427,14 @@ class TrackStateProxy {
     requires(!ReadOnly)
   {
     return TrackStateType{
-        component<TrackStateType::raw_type, hashString("typeFlags")>()};
+        component<TrackStateType::raw_type, detail_tsp::kTypeFlagsKey>()};
   }
 
   /// Getter for the type flags. Returns a copy of the type flags value.
   /// @return The type flags of this track state
   ConstTrackStateType typeFlags() const {
     return ConstTrackStateType{
-        component<TrackStateType::raw_type, hashString("typeFlags")>()};
+        component<TrackStateType::raw_type, detail_tsp::kTypeFlagsKey>()};
   }
 
   /// @}
