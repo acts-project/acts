@@ -351,6 +351,12 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsSvg, svg) {
     ACTS_PYTHON_STRUCT(c, portalIndices, portalOptions, surfaceOptions,
                        indexedSurfacesOptions);
 
+    py::class_<Svg::ProtoVolume>(svg, "ProtoVolume");
+
+    py::class_<Svg::ProtoGrid>(svg, "ProtoGrid");
+
+    py::class_<Svg::ProtoIndexedSurfaceGrid>(svg, "ProtoIndexedSurfaceGrid");
+
     // Convert an DetectorVolume object into an
     // svg::proto::volume
     svg.def("convertDetectorVolume", &Svg::DetectorVolumeConverter::convert);
