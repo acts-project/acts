@@ -41,6 +41,9 @@ template <TrackContainerBackend track_container_t,
           template <typename> class holder_t>
 class TrackContainer;
 
+template <bool read_only>
+class AnyTrack;
+
 /// Proxy class representing a single track.
 /// This class provides a **view** into an associated @ref TrackContainer, and
 /// has **reference semantics**. You can think of it as a pointer to a vector
@@ -112,6 +115,8 @@ class TrackProxy {
   // Track proxies are friends, not food!
   template <typename A, typename B, template <typename> class H, bool R>
   friend class TrackProxy;
+  template <bool R>
+  friend class AnyTrack;
 #endif
 
   /// @anchor track_proxy_construct
