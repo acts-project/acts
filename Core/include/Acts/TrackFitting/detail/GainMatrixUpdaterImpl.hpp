@@ -82,7 +82,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   ACTS_VERBOSE("Residual: " << residual.transpose());
 
   const ProjectedMatrix m =
-      calibratedCovariance - H * filteredCovariance * H.transpose();
+      ((ProjectedMatrix::Identity() - H * K) * calibratedCovariance);
   const double chi2 = (residual.transpose() * m.inverse() * residual).value();
   ACTS_VERBOSE("Chi2: " << chi2);
 
