@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <format>
 
