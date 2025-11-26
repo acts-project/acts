@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -197,28 +198,28 @@ class TrackHandler final : public TrackHandlerMutableBase {
                                  TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<TrackIndexType>(tc, index, kTipIndexKey);
+    return getConstColumn<TrackIndexType>(tc, index, detail_tp::kTipIndexKey);
   }
 
   TrackIndexType& tipIndex(void* container,
                            TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<TrackIndexType>(tc, index, kTipIndexKey);
+    return getMutableColumn<TrackIndexType>(tc, index, detail_tp::kTipIndexKey);
   }
 
   const TrackIndexType& stemIndex(const void* container,
                                   TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<TrackIndexType>(tc, index, kStemIndexKey);
+    return getConstColumn<TrackIndexType>(tc, index, detail_tp::kStemIndexKey);
   }
 
   TrackIndexType& stemIndex(void* container,
                             TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<TrackIndexType>(tc, index, kStemIndexKey);
+    return getMutableColumn<TrackIndexType>(tc, index, detail_tp::kStemIndexKey);
   }
 
   const Surface* referenceSurface(const void* container,
@@ -310,81 +311,81 @@ class TrackHandler final : public TrackHandlerMutableBase {
                                     TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, kMeasurementsKey);
+    return getConstColumn<unsigned int>(tc, index, detail_tp::kMeasurementsKey);
   }
 
   unsigned int& nMeasurements(void* container,
                               TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, kMeasurementsKey);
+    return getMutableColumn<unsigned int>(tc, index, detail_tp::kMeasurementsKey);
   }
 
   const unsigned int& nHoles(const void* container,
                              TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, kHolesKey);
+    return getConstColumn<unsigned int>(tc, index, detail_tp::kHolesKey);
   }
 
   unsigned int& nHoles(void* container, TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, kHolesKey);
+    return getMutableColumn<unsigned int>(tc, index, detail_tp::kHolesKey);
   }
 
   const unsigned int& nOutliers(const void* container,
                                 TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, kOutliersKey);
+    return getConstColumn<unsigned int>(tc, index, detail_tp::kOutliersKey);
   }
 
   unsigned int& nOutliers(void* container,
                           TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, kOutliersKey);
+    return getMutableColumn<unsigned int>(tc, index, detail_tp::kOutliersKey);
   }
 
   const unsigned int& nSharedHits(const void* container,
                                   TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, kSharedHitsKey);
+    return getConstColumn<unsigned int>(tc, index, detail_tp::kSharedHitsKey);
   }
 
   unsigned int& nSharedHits(void* container,
                             TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, kSharedHitsKey);
+    return getMutableColumn<unsigned int>(tc, index, detail_tp::kSharedHitsKey);
   }
 
   const float& chi2(const void* container,
                     TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<float>(tc, index, kChi2Key);
+    return getConstColumn<float>(tc, index, detail_tp::kChi2Key);
   }
 
   float& chi2(void* container, TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<float>(tc, index, kChi2Key);
+    return getMutableColumn<float>(tc, index, detail_tp::kChi2Key);
   }
 
   const unsigned int& nDoF(const void* container,
                            TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, kNdfKey);
+    return getConstColumn<unsigned int>(tc, index, detail_tp::kNdfKey);
   }
 
   unsigned int& nDoF(void* container, TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, kNdfKey);
+    return getMutableColumn<unsigned int>(tc, index, detail_tp::kNdfKey);
   }
 
   unsigned int nTrackStates(const void* container,
@@ -415,15 +416,6 @@ class TrackHandler final : public TrackHandlerMutableBase {
   }
 
  private:
-  static constexpr HashedString kTipIndexKey = hashString("tipIndex");
-  static constexpr HashedString kStemIndexKey = hashString("stemIndex");
-  static constexpr HashedString kMeasurementsKey = hashString("nMeasurements");
-  static constexpr HashedString kHolesKey = hashString("nHoles");
-  static constexpr HashedString kOutliersKey = hashString("nOutliers");
-  static constexpr HashedString kSharedHitsKey = hashString("nSharedHits");
-  static constexpr HashedString kChi2Key = hashString("chi2");
-  static constexpr HashedString kNdfKey = hashString("ndf");
-
   template <typename value_t>
   static const value_t& getConstColumn(const container_t* tc,
                                        TrackIndexType index, HashedString key) {
