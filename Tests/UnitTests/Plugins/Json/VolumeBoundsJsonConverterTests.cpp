@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinder) {
 
 BOOST_AUTO_TEST_CASE(GenericCuboid) {
   std::ofstream out("GenericCuboidVolumeBounds.json");
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},
