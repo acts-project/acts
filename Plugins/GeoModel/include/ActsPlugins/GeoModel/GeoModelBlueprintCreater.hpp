@@ -60,6 +60,16 @@ class GeoModelBlueprintCreater {
     std::string topBoundsOverride = "";
     /// Export dot graph
     std::string dotGraph = "";
+    /// Use projected bin filling
+    bool projectedBinFilling = true;
+    /// The projection distance, should be roughly if not identical to the
+    /// envelope "i+X" value in the database
+    double projectionDistance = 2.0;
+    /// Sampling the luminous region for projected reference generation
+    std::vector<Acts::Vector3> projectionLuminousRegion = {
+        Acts::Vector3(0., 0., -200.), Acts::Vector3(0., 0., 200.)};
+    /// Minimal surfaces for creating a layer structure
+    unsigned int minSurfacesForLayerStructure = 4u;
   };
 
   /// The Blueprint return object
@@ -119,12 +129,13 @@ class GeoModelBlueprintCreater {
   /// @param entry the table entry
   /// @param tableEntryMap the map of table entries allows construction of children
   /// @param motherExtent an extent given from external parameters (e.g. mother volume)
+  /// @param options the options from the blueprint creation
   ///
   /// @return a newly created node
   std::unique_ptr<Acts::Experimental::Gen2Blueprint::Node> createNode(
       Cache& cache, const Acts::GeometryContext& gctx, const TableEntry& entry,
       const std::map<std::string, TableEntry>& tableEntryMap,
-      const Acts::Extent& motherExtent = Acts::Extent()) const;
+      const Acts::Extent& motherExtent, const Options& options) const;
 
   /// Create an IInternalStructureBuilder
   ///
@@ -133,6 +144,7 @@ class GeoModelBlueprintCreater {
   /// @param entry the teable entry map
   /// @param externalExtent an extent given from external parameters (e.g. confining volume)
   /// @param interalContstraints a set of binning values to be estimated
+  /// @param options the options from the blueprint creation
   ///
   /// @return a newly created IInternalStructureBuilder and the internal extent from it
   std::tuple<
@@ -140,8 +152,9 @@ class GeoModelBlueprintCreater {
       Acts::Extent>
   createInternalStructureBuilder(
       Cache& cache, const Acts::GeometryContext& gctx, const TableEntry& entry,
-      const Acts::Extent& externalExtent = Acts::Extent(),
-      const std::vector<Acts::AxisDirection>& internalConstraints = {}) const;
+      const Acts::Extent& externalExtent,
+      const std::vector<Acts::AxisDirection>& internalConstraints,
+      const Options& options) const;
 
   /// @brief Parse bound value string from the database
   ///

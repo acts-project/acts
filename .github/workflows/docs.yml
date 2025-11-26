@@ -20,7 +20,7 @@ jobs:
       DOXYGEN_VERSION: "1.9.8"
       DOXYGEN_HASH: "dda773bdc62384b7d796fe8b6c5029daad72483e4c8ad4abf6ee9fb98b649388"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install doxygen
         run: |

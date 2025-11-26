@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/ProtoSupport.hpp"
+#include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/ISurfacesProvider.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -85,6 +86,16 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
     std::vector<std::tuple<DirectedProtoAxis, std::size_t>> binnings = {};
+    /// Expansion value for the reference generation
+    double expansionValue = 0.0;
+    /// Sampling the luminous region for projected reference generation
+    std::vector<Vector3> luminousRegion = {Vector3(0., 0., -200.),
+                                           Vector3(0., 0., 200.)};
+    /// Reference generator to be used
+    detail::ReferenceGeneratorType referenceGeneratorType =
+        detail::ReferenceGeneratorType::Polyhedron;
+    /// Projection surface for projected reference generator
+    std::shared_ptr<Surface> projectionReferenceSurface = nullptr;
     /// Optional extent (if already parsed), will trigger binning autorange
     /// check
     std::optional<Extent> extent = std::nullopt;

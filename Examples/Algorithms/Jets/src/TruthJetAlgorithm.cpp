@@ -72,7 +72,8 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   // ActsPlugins::FastJet::TruthJet objects
   for (const auto& jet : jets) {
     Acts::Vector4 jetFourMom(jet.px(), jet.py(), jet.pz(), jet.e());
-    ActsPlugins::FastJet::TruthJet<TrackContainer> truthJet(jetFourMom);
+    ActsPlugins::FastJet::TruthJet<TrackContainer> truthJet(
+        jetFourMom, ActsPlugins::FastJet::JetLabel::Unknown);
     outputJetContainer.push_back(truthJet);
   }
 
