@@ -14,12 +14,14 @@ Acts is a modern C++ tracking software framework designed for high-energy physic
 ## 📚 Documentation Sections
 
 ### Core Components
+
 - @subpage core_concepts "Core Concepts" - Fundamental design principles
 - @subpage geometry_guide "Geometry System" - Detector geometry handling
 - @subpage tracking_guide "Tracking Algorithms" - Event reconstruction
 
 ### Developer Resources
-- @subpage getting_started "Getting Started" - Setup and build instructions
+
+- [Getting Started](getting_started.md) - Setup and build instructions
 - @subpage api_guidelines "API Guidelines" - Coding standards and best practices
 - @subpage examples_page "Code Examples" - Practical usage examples
 
@@ -50,3 +52,4 @@ Use the sidebar to browse through different modules and classes. The documentati
 **Version**: Development  
 **Generated**: @date  
 **Theme**: [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css)
+
