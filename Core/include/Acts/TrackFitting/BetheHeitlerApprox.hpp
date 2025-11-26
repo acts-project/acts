@@ -89,7 +89,8 @@ class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
   /// Bethe-Heitler-Distribution
   ///
   /// @param xOverX0 pathlength in terms of the radiation length
-  /// @return Array containing single Gaussian component approximating Bethe-Heitler distribution
+  /// @param mixture preallocated array to store the result
+  /// @return the unmodified input span containing the single component
   std::span<Component> mixture(
       const double xOverX0, const std::span<Component> mixture) const override {
     mixture[0].weight = 1.0;
@@ -175,7 +176,7 @@ class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
 
   /// Checks if an input is valid for the parameterization
   ///
-  /// @param x pathlength in terms of the radiation length
+  /// @param xOverX0 pathlength in terms of the radiation length
   /// @return True if x/x0 is within valid range for this parameterization
   bool validXOverX0(const double xOverX0) const override {
     if (m_clampToRange) {
@@ -188,8 +189,9 @@ class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
   /// Generates the mixture from the polynomials and reweights them, so
   /// that the sum of all weights is 1
   ///
-  /// @param x pathlength in terms of the radiation length
-  /// @return Vector of Gaussian components representing the Bethe-Heitler distribution
+  /// @param xOverX0 pathlength in terms of the radiation length
+  /// @param mixture preallocated array to store the result
+  /// @return the potentially modified input span containing the mixture
   std::span<Component> mixture(
       double xOverX0, const std::span<Component> mixture) const override;
 
