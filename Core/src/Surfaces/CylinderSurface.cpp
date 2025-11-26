@@ -119,7 +119,7 @@ Vector3 CylinderSurface::localToGlobal(const GeometryContext& gctx,
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[0] / r;
-  Vector3 position(r * cos(phi), r * sin(phi), lposition[1]);
+  Vector3 position(r * std::cos(phi), r * std::sin(phi), lposition[1]);
   return transform(gctx) * position;
 }
 
@@ -152,7 +152,7 @@ std::string CylinderSurface::name() const {
 Vector3 CylinderSurface::normal(const GeometryContext& gctx,
                                 const Vector2& lposition) const {
   double phi = lposition[0] / m_bounds->get(CylinderBounds::eR);
-  Vector3 localNormal(cos(phi), sin(phi), 0.);
+  Vector3 localNormal(std::cos(phi), std::sin(phi), 0.);
   return transform(gctx).linear() * localNormal;
 }
 

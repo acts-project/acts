@@ -345,7 +345,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
   // Arrowheads - if configured
   if (arrows != 0) {
     double awith = thickness * arrowWidth;
-    double alpha = atan2(thickness * arrowWidth, alength);
+    double alpha = std::atan2(thickness * arrowWidth, alength);
     auto plateBounds = std::make_shared<RadialBounds>(thickness, awith);
 
     if (arrows > 0) {

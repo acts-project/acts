@@ -119,7 +119,7 @@ Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,
   // create the position in the local 3d frame
   double r = lposition[1] * bounds().tanAlpha();
   double phi = lposition[0] / r;
-  Vector3 loc3Dframe(r * cos(phi), r * sin(phi), lposition[1]);
+  Vector3 loc3Dframe(r * std::cos(phi), r * std::sin(phi), lposition[1]);
   return transform(gctx) * loc3Dframe;
 }
 
@@ -132,7 +132,7 @@ Result<Vector2> ConeSurface::globalToLocal(const GeometryContext& gctx,
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Vector2>::success(
-      Vector2(r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()));
+      Vector2(r * std::atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()));
 }
 
 double ConeSurface::pathCorrection(const GeometryContext& gctx,
@@ -163,7 +163,8 @@ Vector3 ConeSurface::normal(const GeometryContext& gctx,
          sgn = -std::copysign(1., lposition[1]);
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
-  Vector3 localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
+  Vector3 localNormal(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
+                      sgn * sinAlpha);
   return Vector3(transform(gctx).linear() * localNormal);
 }
 
