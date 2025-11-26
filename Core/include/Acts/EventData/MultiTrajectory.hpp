@@ -34,6 +34,11 @@ template <typename derived_t>
 class MultiTrajectory;
 class Surface;
 
+namespace detail {
+template <typename trajectory_t>
+class TrackStateHandler;
+}  // namespace detail
+
 namespace detail_lt {
 
 /// Helper type that wraps two iterators
@@ -170,6 +175,10 @@ class MultiTrajectory {
 
   friend class TrackStateProxy<Derived, MeasurementSizeMax, true>;
   friend class TrackStateProxy<Derived, MeasurementSizeMax, false>;
+  template <bool R>
+  friend class AnyTrackState;
+  template <typename T>
+  friend class detail::TrackStateHandler;
   template <typename T>
   friend class MultiTrajectory;
 
@@ -451,34 +460,22 @@ class MultiTrajectory {
     return self().has_impl(key, istate);
   }
 
-  /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param parIdx Index into the parameter column
-  /// @return Mutable proxy
   typename TrackStateProxy::Parameters parameters(IndexType parIdx)
     requires(!ReadOnly)
   {
     return self().parameters_impl(parIdx);
   }
 
-  /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param parIdx Index into the parameter column
-  /// @return Const proxy
   typename ConstTrackStateProxy::Parameters parameters(IndexType parIdx) const {
     return self().parameters_impl(parIdx);
   }
 
-  /// Retrieve a covariance proxy instance for a covariance at a given index
-  /// @param covIdx Index into the covariance column
-  /// @return Mutable proxy
   typename TrackStateProxy::Covariance covariance(IndexType covIdx)
     requires(!ReadOnly)
   {
     return self().covariance_impl(covIdx);
   }
 
-  /// Retrieve a covariance proxy instance for a covariance at a given index
-  /// @param covIdx Index into the covariance column
-  /// @return Const proxy
   typename ConstTrackStateProxy::Covariance covariance(IndexType covIdx) const {
     return self().covariance_impl(covIdx);
   }
