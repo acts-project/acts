@@ -31,6 +31,9 @@ namespace Acts {
 template <typename derived_t>
 class MultiTrajectory;
 
+template <bool read_only>
+class AnyTrackState;
+
 namespace detail_tsp {
 inline constexpr HashedString kPreviousKey = hashString("previous");
 inline constexpr HashedString kChi2Key = hashString("chi2");
@@ -45,6 +48,7 @@ inline constexpr HashedString kUncalibratedKey =
     hashString("uncalibratedSourceLink");
 inline constexpr HashedString kCalibratedKey = hashString("calibrated");
 inline constexpr HashedString kCalibratedCovKey = hashString("calibratedCov");
+inline constexpr HashedString kMeasDimKey = hashString("measdim");
 inline constexpr HashedString kNextKey = hashString("next");
 }  // namespace detail_tsp
 
@@ -83,12 +87,15 @@ class TransitiveConstPointer {
 
   template <typename U>
   friend class TransitiveConstPointer;
+  template <bool R>
+  friend class Acts::AnyTrackState;
 
   const T& operator*() const { return *m_ptr; }
 
   T& operator*() { return *m_ptr; }
 
   explicit operator bool() const { return m_ptr != nullptr; }
+  T* get() const { return m_ptr; }
 
  private:
   T* ptr() const { return m_ptr; }
@@ -1159,6 +1166,10 @@ class TrackStateProxy {
   friend class Acts::MultiTrajectory<Trajectory>;
   friend class TrackStateProxy<Trajectory, M, true>;
   friend class TrackStateProxy<Trajectory, M, false>;
+  template <bool R>
+  friend class AnyTrackState;
+
+  auto rawTrajectoryPtr() const { return m_traj.get(); }
 };
 }  // namespace Acts
 
