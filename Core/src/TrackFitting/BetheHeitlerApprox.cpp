@@ -8,6 +8,7 @@
 
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <stdexcept>
 #include <tuple>
