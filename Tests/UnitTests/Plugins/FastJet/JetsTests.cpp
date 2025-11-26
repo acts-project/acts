@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_SUITE(FastJetSuite)
 BOOST_AUTO_TEST_CASE(TruthParticleOneJet) {
   ActsFatras::Barcode barcode;
   ActsPlugins::FastJet::TruthJet<TrackContainer> jet(
-      Acts::Vector4(100, 0, 0, 100));
+      Acts::Vector4(100, 0, 0, 100), ActsPlugins::FastJet::JetLabel::Unknown);
   jet.setConstituents(std::vector<ActsFatras::Barcode>{barcode});
   BOOST_CHECK_EQUAL(jet.constituents().size(), 1);
   BOOST_CHECK_EQUAL(jet.constituents()[0], barcode);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(SingleTrackJet) {
   tracks.insert(Track(100, 0, 0));
 
   ActsPlugins::FastJet::TrackJet<TrackContainer> jet(
-      Acts::Vector4(100, 0, 0, 100));
+      Acts::Vector4(100, 0, 0, 100), ActsPlugins::FastJet::JetLabel::Unknown);
   std::vector<TrackContainer::TrackProxy> constituents{tracks.getTrack(0)};
   jet.setConstituents(constituents);
 
