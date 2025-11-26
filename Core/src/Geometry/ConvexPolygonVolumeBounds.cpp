@@ -17,9 +17,10 @@
 
 namespace Acts {
 
-ConvexPolygonVolumeBounds::ConvexPolygonVolumeBounds(
-    double x1, double x2, double x3, double y1, double y2,
-    double halez) noexcept(false) {
+ConvexPolygonVolumeBounds::ConvexPolygonVolumeBounds(double x1, double x2,
+                                                     double x3, double y1,
+                                                     double y2, double halez)
+    : VolumeBounds() {
   m_values[eHalfLengthX1] = x1;
   m_values[eHalfLengthX2] = x2;
   m_values[eHalfLengthX3] = x3;

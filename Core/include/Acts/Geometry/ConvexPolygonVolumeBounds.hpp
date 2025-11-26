@@ -131,7 +131,7 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   /// @param tol is the tolerance applied
   ///
   /// @return boolean indicator if position is inside
-  bool inside(const Vector3& pos, double tol = 0.) const override final;
+  bool inside(const Vector3& pos, double tol = 0.) const final;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -144,8 +144,7 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   std::vector<OrientedSurface> orientedSurfaces(
-      const Transform3& transform =
-          Transform3::Identity()) const override final;
+      const Transform3& transform = Transform3::Identity()) const final;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
