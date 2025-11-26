@@ -167,7 +167,7 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
 
  private:
   /// The bound values stored in an array
-  std::array<double, eSize> m_values;
+  std::array<double, eSize> m_values{};
   /// The face plane surface parallel to YZ at positive X attached to [x1,y1]
   /// and [x2,0]
   std::shared_ptr<Acts::RectangleBounds> m_FaceYZ12Bounds;
