@@ -202,7 +202,7 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
   const VertexType far_dir = {m_normals[0].y(), -m_normals[0].x()};
   const VertexType far_point = m_normals[0] * far_distance;
 
-  std::array<VertexType, 2> points;
+  std::array<VertexType, 2> points{};
 
   for (std::size_t i = 1; i < n_normals; i++) {
     VertexType plane_dir(m_normals[i].y(), -m_normals[i].x());
