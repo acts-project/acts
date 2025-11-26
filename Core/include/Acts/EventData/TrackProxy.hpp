@@ -895,6 +895,11 @@ class TrackProxy {
     return m_container->template component<T, key>(m_index);
   }
 
+  /// Check whether a dynamic column exists
+  /// @param key String key for the component to check
+  /// @return whether the column exists
+  bool hasColumn(HashedString key) const { return m_container->hasColumn(key); }
+
   /// Retrieve a const reference to a component
   /// @tparam T The type of the component to access
   /// @param key String key for the component to access
