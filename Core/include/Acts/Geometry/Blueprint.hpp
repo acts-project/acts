@@ -58,6 +58,10 @@ class Blueprint : public BlueprintNode {
     /// Determine how much envelope space to produce from the highest volume
     /// in the geometry hierarchy and the world volume.
     ExtentEnvelope envelope = ExtentEnvelope::Zero();
+    /// Apply a bound deduplication on the world volume. It ensures
+    /// that equivalent bounds are instantiated only once & recycled
+    /// across the geometry components
+    bool boundDeduplication{true};
   };
 
   /// Constructor from a config object

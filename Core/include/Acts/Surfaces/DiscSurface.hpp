@@ -166,6 +166,11 @@ class DiscSurface : public RegularSurface {
   /// This method returns the bounds by reference
   /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const final;
+  /// This method returns the shared_ptr to the DiscBounds
+  const std::shared_ptr<const DiscBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const DiscBounds> newBounds);
 
   /// Local to global transformation
   /// For planar surfaces the momentum direction is ignored in the local to

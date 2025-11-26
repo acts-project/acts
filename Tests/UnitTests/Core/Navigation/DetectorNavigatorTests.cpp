@@ -199,9 +199,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   // Construct a cubic detector with 3 volumes
   RotationMatrix3 rotation;
   double angle = 90_degree;
-  Vector3 xPos(cos(angle), 0., sin(angle));
+  Vector3 xPos(std::cos(angle), 0., std::sin(angle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-sin(angle), 0., cos(angle));
+  Vector3 zPos(-std::sin(angle), 0., std::cos(angle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;
