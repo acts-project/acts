@@ -52,8 +52,8 @@ using namespace Acts::UnitLiterals;
 template <int D>
 struct DummyComponent {
   double weight = 0;
-  Acts::ActsVector<D> boundPars;
-  Acts::ActsSquareMatrix<D> boundCov;
+  Acts::ActsVector<D> boundPars{};
+  Acts::ActsSquareMatrix<D> boundCov{};
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -149,8 +149,8 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
 // subtraction object to enable circular behaviour
 template <int D, typename subtract_t = std::minus<ActsVector<D>>>
 auto boundCov(const std::vector<ActsVector<D>> &samples,
-              const ActsVector<D> &mu,
-              const subtract_t &sub = subtract_t{}) -> ActsSquareMatrix<D> {
+              const ActsVector<D> &mu, const subtract_t &sub = subtract_t{})
+    -> ActsSquareMatrix<D> {
   ActsSquareMatrix<D> boundCov = ActsSquareMatrix<D>::Zero();
 
   for (const auto &smpl : samples) {

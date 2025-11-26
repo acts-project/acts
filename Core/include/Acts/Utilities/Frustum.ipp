@@ -114,7 +114,7 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization3D& helper,
     planeFarIXs.at(i - 1) = ixLine;
   }
 
-  std::array<VertexType, SIDES> points;
+  std::array<VertexType, SIDES> points{};
 
   for (std::size_t i = 0; i < std::size(planeFarIXs); i++) {
     std::size_t j = (i + 1) % std::size(planeFarIXs);

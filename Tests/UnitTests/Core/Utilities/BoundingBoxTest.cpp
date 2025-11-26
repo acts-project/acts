@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
 BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
   using Ray = Ray<double, 3>;
 
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0.4},
                {2, 1, 0.4},

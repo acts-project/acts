@@ -113,7 +113,7 @@ class PathWidthProvider {
 // and the direction at the first hit
 class TrackEstimator {
  public:
-  Vector3 m_ip;
+  Vector3 m_ip{};
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
   std::pair<BoundTrackParameters, BoundTrackParameters> operator()(
