@@ -214,27 +214,43 @@ void labelSortedCells(cell_collection_t &cells,
   for (index_t idx_a = 0; idx_a < cells.size(); ++idx_a) {
     traits::setLabel(cells[idx_a], idx_a);
     for (index_t idx_b = idx_a; idx_b-- > 0;) {
-      // NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
-      // all elements of diff will be set to a value no need to initialize
-      // with a dummy value.
-      std::array<coordinate_t, NDim> diff;
+      // Unnecessary default initialization diff for the sole purpose of
+      // satisfying clang-tidy. Although the number of array elements is known
+      // at compile time, and proper initialization could be realized with some
+      // recursive array generator, the solution would be too complicated for
+      // this simple case.
+      //
+      // The implications are:
+      // - the compiler may not optimize these unnecessary initialization
+      //   away, and
+      // - proper static analyzers and tools like valgrind or memory
+      //   sanitizer would not be able to spot actual initialization
+      //   errors, since what concerns these tools the variables are
+      //   initialized.
+      std::array<coordinate_t, NDim> diff{};
       for (unsigned int axis_i = 0; axis_i < NDim; ++axis_i) {
         diff[axis_i] =
             absDifference(traits::getCellCoordinate(cells[idx_a], axis_i),
                           traits::getCellCoordinate(cells[idx_b], axis_i));
       }
-      // NOLINTEND(cppcoreguidelines-pro-type-member-init)
 
       if (connection_helper.isConnected(diff)) {
         if (traits::getLabel(cells[idx_a]) < idx_a) {
-          // if the label is not its index, the cell was merged to a cluster
-          // thus the two clusters need to be merged rather than just merging
-          // in this one cell
-          // NOLINTBEGIN(cppcoreguidelines-init-variables)
-          // min_label and max_label will be set before use, no reason to set
-          // to unused dummy value before.
-          label_t min_label;
-          label_t max_label;
+          // Unnecessary initialization of min_label and max_label for the sole
+          // purpose of satisfying clang-tidy. The correct values are only known
+          // a couple of lines below and an alternative implementation which
+          // would provide a correct initialization would make the code more
+          // complicated.
+          //
+          // The implications are:
+          // - the compiler may not optimize these unnecessary initialization
+          //   away, and
+          // - proper static analyzers and tools like valgrind or memory
+          //   sanitizer would not be able to spot actual initialization
+          //   errors, since what concerns these tools the variables are
+          //   initialized.
+          label_t min_label{};
+          label_t max_label{};
           if (traits::getLabel(cells[idx_a]) < traits::getLabel(cells[idx_b])) {
             min_label = traits::getLabel(cells[idx_a]);
             max_label = traits::getLabel(cells[idx_b]);
@@ -244,7 +260,6 @@ void labelSortedCells(cell_collection_t &cells,
             min_label = traits::getLabel(cells[idx_b]);
             traits::setLabel(cells[idx_a], min_label);
           }
-          // NOLINTEND(cppcoreguidelines-init-variables)
           // nothing will be done if the min and the max label are identical
           if (min_label != max_label) {
             // can only encounter cells with label max_label down to index
