@@ -103,7 +103,7 @@ enum class MixtureReductionAlgorithm { weightCut, KLDistance };
 std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    std::shared_ptr<Acts::BetheHeitlerApprox> betheHeitlerApprox,
+    const std::shared_ptr<const Acts::BetheHeitlerApprox>& betheHeitlerApprox,
     std::size_t maxComponents, double weightCutoff,
     Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,

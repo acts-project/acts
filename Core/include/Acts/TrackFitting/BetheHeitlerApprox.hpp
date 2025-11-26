@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <numbers>
@@ -22,34 +20,29 @@ namespace Acts {
 namespace detail {
 
 struct GaussianComponent {
-  double weight = 0.0;
-  double mean = 0.0;
-  double var = 0.0;
+  double weight = 0;
+  double mean = 0;
+  double var = 0;
 };
 
 /// Transform a gaussian component to a space where all values are defined from
 /// [-inf, inf]
-inline void transformComponent(const GaussianComponent &cmp,
-                               double &transformed_weight,
-                               double &transformed_mean,
-                               double &transformed_var) {
-  const auto &[weight, mean, var] = cmp;
-
-  transformed_weight = std::log(weight) - std::log(1 - weight);
-  transformed_mean = std::log(mean) - std::log(1 - mean);
-  transformed_var = std::log(var);
+inline GaussianComponent transformComponent(const GaussianComponent &cmp) {
+  GaussianComponent transformed_cmp;
+  transformed_cmp.weight = std::log(cmp.weight) - std::log(1 - cmp.weight);
+  transformed_cmp.mean = std::log(cmp.mean) - std::log(1 - cmp.mean);
+  transformed_cmp.var = std::log(cmp.var);
+  return transformed_cmp;
 }
 
 /// Transform a gaussian component back from the [-inf, inf]-space to the usual
 /// space
-inline auto inverseTransformComponent(double transformed_weight,
-                                      double transformed_mean,
-                                      double transformed_var) {
+inline GaussianComponent inverseTransformComponent(
+    const GaussianComponent &transformed_cmp) {
   GaussianComponent cmp;
-  cmp.weight = 1. / (1 + std::exp(-transformed_weight));
-  cmp.mean = 1. / (1 + std::exp(-transformed_mean));
-  cmp.var = std::exp(transformed_var);
-
+  cmp.weight = 1 / (1 + std::exp(-transformed_cmp.weight));
+  cmp.mean = 1 / (1 + std::exp(-transformed_cmp.mean));
+  cmp.var = std::exp(transformed_cmp.var);
   return cmp;
 }
 

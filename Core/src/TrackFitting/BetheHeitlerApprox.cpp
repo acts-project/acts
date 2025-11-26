@@ -77,9 +77,9 @@ std::span<AtlasBetheHeitlerApprox::Component> AtlasBetheHeitlerApprox::mixture(
       // These transformations must be applied to the data according to ATHENA
       // (TrkGaussianSumFilter/src/GsfCombinedMaterialEffects.cxx:79)
       if (transform) {
-        mixture[i] = detail::inverseTransformComponent(
+        mixture[i] = detail::inverseTransformComponent(Component(
             poly(xx, data[i].weightCoeffs), poly(xx, data[i].meanCoeffs),
-            poly(xx, data[i].varCoeffs));
+            poly(xx, data[i].varCoeffs)));
       } else {
         mixture[i].weight = poly(xx, data[i].weightCoeffs);
         mixture[i].mean = poly(xx, data[i].meanCoeffs);
