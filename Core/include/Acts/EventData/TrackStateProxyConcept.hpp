@@ -172,7 +172,7 @@ concept ConstTrackStateProxyConcept =
         v.effectiveCalibratedCovariance()
       } -> std::same_as<detail::ConstDynamicMeasurementCovariance>;
 
-      { v.chi2() } -> std::same_as<double>;
+      { v.chi2() } -> std::same_as<float>;
 
       { v.pathLength() } -> std::same_as<double>;
 
@@ -232,7 +232,7 @@ concept MutableTrackStateProxyConcept =
                              ActsSquareMatrix<eBoundSize>{})
       };
 
-      { v.chi2() } -> std::same_as<double&>;
+      { v.chi2() } -> std::same_as<float&>;
 
       { v.pathLength() } -> std::same_as<double&>;
 
