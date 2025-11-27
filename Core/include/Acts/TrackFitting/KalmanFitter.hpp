@@ -790,14 +790,15 @@ class KalmanFitter {
 
   /// Common fit implementation
   ///
+  /// @tparam source_link_iterator_t Iterator type used to pass source links
   /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam actor_list_t Type of the actor list
-  /// @tparam aborter_list_t Type of the abort list
   /// @tparam track_container_t Type of the track container
   ///
+  /// @param it Begin iterator for the fittable uncalibrated measurements
+  /// @param end End iterator for the fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
-  /// @param propagatorOptions The Propagator Options
   /// @param kfOptions KalmanOptions steering the fit
+  /// @param sSequence surface sequence used to initialize a DirectNavigator
   /// @param trackContainer Input track container storage to append into
   ///
   /// @return the output as an output track
