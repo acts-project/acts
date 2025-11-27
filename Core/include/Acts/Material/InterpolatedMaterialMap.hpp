@@ -28,7 +28,7 @@ namespace Acts {
 /// which is used to look up the material classification value in the
 /// underlying material map.
 template <typename G>
-struct MaterialMapper {
+struct MaterialMapLookup {
  public:
   /// Type alias for material grid
   using Grid_t = G;
@@ -115,7 +115,7 @@ struct MaterialMapper {
   /// @param [in] transformPos Mapping of global 3D coordinates (cartesian)
   /// onto grid space
   /// @param [in] grid Grid storing material classification values
-  MaterialMapper(
+  MaterialMapLookup(
       std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos,
       Grid_t grid)
       : m_transformPos(std::move(transformPos)), m_grid(std::move(grid)) {}

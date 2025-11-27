@@ -63,7 +63,7 @@ class Material;
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
 /// @return A material mapper for RZ coordinate system with equidistant grid
-MaterialMapper<
+MaterialMapLookup<
     Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
          Axis<Acts::AxisType::Equidistant>>>
 materialMapperRZ(
@@ -74,7 +74,7 @@ materialMapperRZ(
     const std::vector<Acts::Material>& material,
     double lengthUnit = UnitConstants::mm);
 
-/// Method to setup the MaterialMapper
+/// Method to setup the MaterialLookup
 /// @param [in] materialVectorToGridMapper Function mapping the vector of
 /// material to the map of material values
 ///
@@ -117,7 +117,7 @@ materialMapperRZ(
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
 /// @return A material mapper for XYZ coordinate system with equidistant grid
-MaterialMapper<
+MaterialMapLookup<
     Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
          Axis<Acts::AxisType::Equidistant>, Axis<Acts::AxisType::Equidistant>>>
 materialMapperXYZ(
