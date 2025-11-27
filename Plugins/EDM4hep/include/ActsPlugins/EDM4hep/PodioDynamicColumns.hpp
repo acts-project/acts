@@ -16,6 +16,8 @@
 #include <podio/UserDataCollection.h>
 
 namespace ActsPlugins::podio_detail {
+/// @addtogroup edm4hep_plugin
+/// @{
 
 struct ConstDynamicColumnBase {
   explicit ConstDynamicColumnBase(std::string_view name) : m_name{name} {}
@@ -123,4 +125,5 @@ struct DynamicColumn : public DynamicColumnBase {
   podio::UserDataCollection<T> m_collection;
 };
 
+/// @}
 }  // namespace ActsPlugins::podio_detail

@@ -34,6 +34,8 @@
 #include <podio/Frame.h>
 
 namespace ActsPlugins {
+/// @addtogroup edm4hep_plugin
+/// @{
 
 class MutablePodioTrackContainer;
 class ConstPodioTrackContainer;
@@ -424,4 +426,5 @@ static_assert(
     Acts::ConstTrackContainerBackend<ConstPodioTrackContainer>,
     "ConstPodioTrackContainer does not fulfill ConstTrackContainerBackend");
 
+/// @}
 }  // namespace ActsPlugins
