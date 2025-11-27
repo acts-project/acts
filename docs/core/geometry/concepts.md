@@ -69,6 +69,9 @@ Not complete yet
 :::{doxygenclass} Acts::SingleTrapezoidPortalShell
 :::
 
+:::{doxygenclass} Acts::SingleConvexPolygonPortalShell
+:::
+
 ### Navigation policy
 
 :::{doxygenclass} Acts::INavigationPolicy
