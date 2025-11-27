@@ -22,9 +22,9 @@ class Logger;
 /// It is not supposed to be used as an lvalue.
 struct NavigationArguments {
   /// Current position in 3D space for navigation
-  Vector3 position;
+  Vector3 position{};
   /// Direction vector for navigation propagation
-  Vector3 direction;
+  Vector3 direction{};
 
   /// Boundary tolerance for surface intersection calculations
   BoundaryTolerance tolerance = BoundaryTolerance::None();
