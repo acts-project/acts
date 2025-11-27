@@ -20,13 +20,9 @@
 namespace py = pybind11;
 
 using namespace ActsExamples;
+using namespace ActsPython;
 
-namespace ActsPython {
-
-void addTruthJet(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(TruthJetAlgorithm, mex, "TruthJetAlgorithm",
+PYBIND11_MODULE(ActsExamplesPythonBindingsTruthJet, tjet) {
+  ACTS_PYTHON_DECLARE_ALGORITHM(TruthJetAlgorithm, tjet, "TruthJetAlgorithm",
                                 inputTruthParticles, outputJets, jetPtMin);
-}  // addTruthJet
 }  // namespace ActsPython
