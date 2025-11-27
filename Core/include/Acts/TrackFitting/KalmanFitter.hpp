@@ -888,6 +888,8 @@ class KalmanFitter {
         track.setReferenceSurface(
             reverseTrack.referenceSurface().getSharedPtr());
       }
+
+      trackContainer.removeTrack(reverseTrack.index());
     } else {
       ACTS_VERBOSE("Smooth track directly without reversed filtering");
 
@@ -932,8 +934,6 @@ class KalmanFitter {
         return extrapolationResult.error();
       }
     }
-
-    calculateTrackQuantities(track);
 
     if (trackContainer.hasColumn(hashString("smoothed"))) {
       track.template component<bool, hashString("smoothed")>() =
