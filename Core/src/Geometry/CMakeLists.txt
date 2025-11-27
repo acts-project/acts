@@ -32,6 +32,7 @@ target_sources(
         TrackingVolume.cpp
         TrackingVolumeArrayCreator.cpp
         TrapezoidVolumeBounds.cpp
+        ConvexPolygonVolumeBounds.cpp
         Volume.cpp
         VolumeBounds.cpp
         CylinderVolumeStack.cpp
