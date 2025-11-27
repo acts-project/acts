@@ -28,7 +28,7 @@ namespace Acts {
 /// @defgroup algebra_types Algebra types
 ///
 /// These are the default vector/matrix types that should be used throughout the
-/// codebase. They all use the common Acts scalar type but support variable size
+/// codebase. They all use the common ACTS scalar type but support variable size
 /// either at compile- or runtime.
 ///
 /// Eigen does not have a distinct type for symmetric matrices. A typedef for
@@ -40,7 +40,9 @@ namespace Acts {
 /// Without a distinct type for symmetric matrices, there is no way to provide
 /// any conditions e.g. square size, for the dynamic-sized case. Consequently,
 /// no dynamic-sized symmetric matrix type is defined. Use the
-/// `ActsDynamicMatrix` instead.
+/// @ref Acts::ActsDynamicMatrix instead.
+///
+/// @{
 
 /// @brief Fixed-size vector type for N-dimensional vectors
 /// @tparam kSize The dimension of the vector
@@ -98,5 +100,7 @@ using Transform3 = Eigen::Transform<double, 3, Eigen::Affine>;
 
 /// Tolerance for transform equivalence checks
 constexpr double s_transformEquivalentTolerance = 1e-9;
+
+/// @}
 
 }  // namespace Acts

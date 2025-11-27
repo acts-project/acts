@@ -22,11 +22,10 @@
 #include <thread>
 #include <utility>
 
-/// @defgroup Logging Logging
+/// @addtogroup logging
+/// @{
 
-// clang-format off
 /// @brief macro to use a local Acts::Logger object
-/// @ingroup Logging
 ///
 /// @param log_object logger instance of type
 //         <tt>std::unique_ptr<const Acts::Logger></tt>
@@ -48,14 +47,11 @@
 /// }
 /// @endcode
 #define ACTS_LOCAL_LOGGER(log_object)                                          \
-  struct __local_acts_logger                                                   \
-  {                                                                            \
-    explicit __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger):         \
-      m_logger(std::move(logger))                                              \
-    {}                                                                         \
+  struct __local_acts_logger {                                                 \
+    explicit __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger) \
+        : m_logger(std::move(logger)) {}                                       \
                                                                                \
-    const ::Acts::Logger& operator()() const                                   \
-    {                                                                          \
+    const ::Acts::Logger& operator()() const {                                 \
       return *m_logger;                                                        \
     }                                                                          \
                                                                                \
@@ -64,18 +60,16 @@
   __local_acts_logger logger(log_object);
 
 // Debug level agnostic implementation of the ACTS_XYZ logging macros
-#define ACTS_LOG(level, x)                                                     \
-  do {                                                                         \
-    if (logger().doPrint(level)) {                                             \
-      std::ostringstream os;                                                   \
-      os << x;                                                                 \
-      logger().log(level, os.str());                                           \
-    }                                                                          \
-  }                                                                            \
-  while(0)
+#define ACTS_LOG(level, x)           \
+  do {                               \
+    if (logger().doPrint(level)) {   \
+      std::ostringstream os;         \
+      os << x;                       \
+      logger().log(level, os.str()); \
+    }                                \
+  } while (0)
 
 /// @brief macro for verbose debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -84,10 +78,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::VERBOSE.
-#define ACTS_VERBOSE(x)  ACTS_LOG(Acts::Logging::VERBOSE, x)
+#define ACTS_VERBOSE(x) ACTS_LOG(Acts::Logging::VERBOSE, x)
 
 /// @brief macro for debug debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -96,10 +89,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::DEBUG.
-#define ACTS_DEBUG(x)  ACTS_LOG(Acts::Logging::DEBUG, x)
+#define ACTS_DEBUG(x) ACTS_LOG(Acts::Logging::DEBUG, x)
 
 /// @brief macro for info debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -108,10 +100,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::INFO.
-#define ACTS_INFO(x)  ACTS_LOG(Acts::Logging::INFO, x)
+#define ACTS_INFO(x) ACTS_LOG(Acts::Logging::INFO, x)
 
 /// @brief macro for warning debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -120,10 +111,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::WARNING.
-#define ACTS_WARNING(x)  ACTS_LOG(Acts::Logging::WARNING, x)
+#define ACTS_WARNING(x) ACTS_LOG(Acts::Logging::WARNING, x)
 
 /// @brief macro for error debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -132,10 +122,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::ERROR.
-#define ACTS_ERROR(x)  ACTS_LOG(Acts::Logging::ERROR, x)
+#define ACTS_ERROR(x) ACTS_LOG(Acts::Logging::ERROR, x)
 
 /// @brief macro for fatal debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -144,14 +133,17 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::FATAL.
-#define ACTS_FATAL(x)  ACTS_LOG(Acts::Logging::FATAL, x)
-// clang-format on
+#define ACTS_FATAL(x) ACTS_LOG(Acts::Logging::FATAL, x)
+
+/// @}
 
 namespace Acts {
 
-/// @brief debug output related helper classes and functions
-/// @ingroup Logging
 namespace Logging {
+
+/// @addtogroup logging
+/// @{
+
 /// @brief constants steering the debug output
 ///
 /// All messages with a debug level equal or higher than the currently set
@@ -488,7 +480,7 @@ class TimedOutputDecorator final : public OutputDecorator {
     char buffer[20];
     time_t t{};
     std::time(&t);
-    struct tm tbuf {};
+    struct tm tbuf{};
     std::strftime(buffer, sizeof(buffer), m_format.c_str(),
                   localtime_r(&t, &tbuf));
     return buffer;
@@ -638,14 +630,17 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// pointer to destination output stream
   std::ostream* m_out;
 };
+
+/// @}
+
 }  // namespace Logging
 
 /// @brief class for printing debug output
+/// @ingroup logging
 ///
 /// This class provides the user interface for printing debug messages with
 /// different levels of severity.
 ///
-/// @ingroup Logging
 class Logger {
  public:
   /// @brief construct from output print and filter policy

@@ -22,9 +22,10 @@ namespace Acts {
 /// @brief This is the central definition of the Acts
 /// payload object regarding detector geometry status (e.g. alignment)
 ///
+/// @ingroup context
+///
 /// It is propagated through the code to allow for event/thread
 /// dependent geometry changes
-
 class GeometryContext : public ContextType {
  public:
   /// Inherit all constructors

@@ -19,7 +19,11 @@ class OverlayedField;
 
 namespace ActsPlugins {
 
+/// @ingroup magnetic_field dd4hep_plugin
 class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
+  /// Cache object for DD4hep field adapter
+  /// @note As DD4hep does not implement a caching mechanism, this struct is
+  ///       empty.
   struct Cache {};
 
  public:
