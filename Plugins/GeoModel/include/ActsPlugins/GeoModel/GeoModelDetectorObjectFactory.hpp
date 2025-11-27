@@ -28,6 +28,9 @@ class Surface;
 
 namespace ActsPlugins {
 
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @brief Factory class to convert GeoModel objects into Acts volumes and surfaces. The surface conversion
 ///        process constructs surfaces from GeoTrd, GeoBox, GeoTube,
 ///        GeoSimplePolygonBrep volume shapes with transforms being in the
@@ -149,4 +152,7 @@ class GeoModelDetectorObjectFactory {
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
+
+/// @}
+
 }  // namespace ActsPlugins

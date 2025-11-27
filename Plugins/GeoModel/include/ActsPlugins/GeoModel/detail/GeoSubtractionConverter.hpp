@@ -19,6 +19,9 @@
 #include <GeoModelKernel/GeoShapeSubtraction.h>
 
 namespace ActsPlugins::detail {
+
+/// @ingroup geomodel_plugin
+
 struct GeoSubtractionConverter {
   /// @brief Convert a GeoBox to a detector element and surface
   ///

@@ -16,6 +16,9 @@
 
 namespace ActsPlugins {
 
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @brief Holder struct to manage a GeoModel world. It holds the pointer to the
 ///        root volume of the world and provides additional links to dedicated
 ///        volumes inside the tree representing the sensors and chambers in a
@@ -83,5 +86,7 @@ struct GeoModelTree {
   /// @brief Name of the Root node
   std::string worldVolumeName{"World"};
 };
+
+/// @}
 
 }  // namespace ActsPlugins

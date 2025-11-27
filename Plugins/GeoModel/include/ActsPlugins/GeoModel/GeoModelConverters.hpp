@@ -34,6 +34,9 @@
 
 namespace ActsPlugins {
 
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @brief The GeoBox converter
 ///
 /// This is a dedicated converter for GeoBox shapes
@@ -103,5 +106,7 @@ inline std::shared_ptr<const IGeoShapeConverter> geoShapesConverters(
 
   return itr != converters.end() ? itr->second : nullptr;
 };
+
+/// @}
 
 }  // namespace ActsPlugins

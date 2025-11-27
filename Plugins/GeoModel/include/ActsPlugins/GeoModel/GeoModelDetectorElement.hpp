@@ -27,6 +27,10 @@ class PlanarBounds;
 }  // namespace Acts
 
 namespace ActsPlugins {
+
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @class GeoModelDetectorElement
 ///
 /// Detector element representative for GeoModel based
@@ -129,5 +133,7 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
 using GeoModelSensitiveSurface =
     std::tuple<std::shared_ptr<GeoModelDetectorElement>,
                std::shared_ptr<Acts::Surface>>;
+
+/// @}
 
 }  // namespace ActsPlugins

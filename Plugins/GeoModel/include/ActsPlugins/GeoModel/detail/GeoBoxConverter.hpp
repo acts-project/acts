@@ -20,6 +20,8 @@
 
 namespace ActsPlugins::detail {
 
+/// @ingroup geomodel_plugin
+
 struct GeoBoxConverter {
   /// @brief Convert a GeoBox to a detector element and surface
   ///
