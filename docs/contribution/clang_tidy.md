@@ -21,18 +21,18 @@ example you would find it [here][readability].  This page will tell you that
 
 ```cpp
 if (condition)
-  statement;
+   statement;
 ```
 
 with
 
 ```cpp
 if (condition) {
-  statement;
+   statement;
 }
 ```
 
 Some error codes are less obvious, or not this trivial to fix. When in doubt,
-@mention the ACTS maintainers on your pull request.
+\@mention the ACTS maintainers on your pull request.
 
 [readability]: https://clang.llvm.org/extra/clang-tidy/checks/readability/braces-around-statements.html

@@ -771,9 +771,11 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = main_page.md \
+INPUT                  = index.md \
                          getting_started.md \
-                         contribution/ \
+                         contribution \
+                         misc \
+                         groups \
                          ../Core/include \
                          ../Fatras/include \
                          ../Plugins/DD4hep/include \
@@ -879,7 +881,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = figures/doxygen
+IMAGE_PATH             = figures
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -900,7 +902,7 @@ IMAGE_PATH             = figures/doxygen
 # need to set EXTENSION_MAPPING for the extension otherwise the files are not
 # properly processed by doxygen.
 
-INPUT_FILTER = "sed -E 's/ \$/ \\f\$/g;s/([^f\$])\$/\1\\f\$/g'"
+INPUT_FILTER = ""
 
 # The FILTER_PATTERNS tag can be used to specify filters on a per file pattern
 # basis. Doxygen will compare the file name with each pattern and apply the
@@ -935,7 +937,7 @@ FILTER_SOURCE_PATTERNS =
 # (index.html). This can be useful if you have a project on for instance GitHub
 # and want to reuse the introduction page also for the doxygen output.
 
-USE_MDFILE_AS_MAINPAGE = main_page.md
+USE_MDFILE_AS_MAINPAGE = index.md
 
 #---------------------------------------------------------------------------
 # Configuration options related to source browsing
