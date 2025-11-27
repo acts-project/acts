@@ -23,6 +23,10 @@ class Surface;
 }
 
 namespace ActsPlugins {
+
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @class IGeoShapeConverter
 ///
 /// Interface for the conversion of GeoShapes to Acts surfaces
@@ -52,5 +56,7 @@ class IGeoShapeConverter {
       PVConstLink geoPV, const Acts::Transform3& transform,
       Acts::SurfaceBoundFactory& boundFactory) const = 0;
 };
+
+/// @}
 
 }  // namespace ActsPlugins

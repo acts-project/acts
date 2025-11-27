@@ -15,6 +15,9 @@ class GeoShape;
 
 namespace ActsPlugins::GeoModel {
 
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @brief Calculates the absolute volume position w.r.t. the world node
 ///        This is only possible, if the volume is not shared in multiple
 ///        branches of the GeoModelTree.
@@ -32,5 +35,7 @@ Acts::Transform3 volumePosInSpace(const PVConstLink& physVol);
 std::shared_ptr<Acts::Volume> convertVolume(
     const Acts::Transform3& trf, const GeoShape* shape,
     Acts::VolumeBoundFactory& boundFactory);
+
+/// @}
 
 }  // namespace ActsPlugins::GeoModel

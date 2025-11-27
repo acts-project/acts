@@ -15,6 +15,9 @@ class GeoFullPhysVol;
 
 namespace ActsPlugins {
 
+/// @addtogroup geomodel_plugin
+/// @{
+
 enum class GeoModelConversionError {
   // ensure all values are non-zero
   WrongShapeForConverter = 1,
@@ -24,6 +27,8 @@ enum class GeoModelConversionError {
 };
 
 std::error_code make_error_code(GeoModelConversionError e);
+
+/// @}
 
 }  // namespace ActsPlugins
 

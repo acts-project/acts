@@ -24,6 +24,8 @@ class GeoTube;
 
 namespace ActsPlugins::detail {
 
+/// @ingroup geomodel_plugin
+
 struct GeoUnionDoubleTrdConverter {
   /// Merge trapezoids up to this gap
   double gapTolerance = 0.2;
