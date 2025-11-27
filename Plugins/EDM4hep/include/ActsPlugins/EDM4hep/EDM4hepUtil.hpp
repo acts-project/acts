@@ -50,9 +50,12 @@ struct std::hash<podio::ObjectID> {
 #endif
 
 namespace ActsPlugins::EDM4hepUtil {
+/// @addtogroup edm4hep_plugin
+/// @{
 
 static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
+/// @ingroup edm4hep_plugin
 namespace detail {
 struct Parameters {
   Acts::ActsVector<6> values{};
@@ -285,4 +288,5 @@ class SimHitAssociation {
   std::unordered_map<podio::ObjectID, std::size_t> m_edm4hepToInternal;
 };
 
+/// @}
 }  // namespace ActsPlugins::EDM4hepUtil
