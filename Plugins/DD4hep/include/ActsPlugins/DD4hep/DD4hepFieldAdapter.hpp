@@ -18,6 +18,8 @@ class OverlayedField;
 }
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
 
 /// @ingroup magnetic_field dd4hep_plugin
 class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
@@ -42,4 +44,5 @@ class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
   std::unique_ptr<dd4hep::OverlayedField> m_field;
 };
 
+/// @}
 }  // namespace ActsPlugins

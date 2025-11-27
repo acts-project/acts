@@ -35,6 +35,8 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
 
 /// Sort function which sorts dd4hep::DetElement by their ID
 /// @param [in,out] det the dd4hep::DetElements to be sorted
@@ -213,4 +215,5 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
                           std::vector<dd4hep::DetElement>& layers,
                           const Acts::Logger& logger);
 
+/// @}
 }  // namespace ActsPlugins
