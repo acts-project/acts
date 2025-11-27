@@ -16,7 +16,7 @@
 
 namespace Acts {
 
-/// @class HomogeneousSurfaceMaterial
+/// @ingroup material
 ///
 /// It extends the ISurfaceMaterial virtual base class to describe
 /// a simple homogeneous material on a surface

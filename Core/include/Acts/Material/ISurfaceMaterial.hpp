@@ -20,12 +20,14 @@ namespace Acts {
 /// This enum describes the type of surface material mapping
 enum MappingType { PreMapping = -1, Default = 0, PostMapping = 1, Sensor = 2 };
 
-/// @class ISurfaceMaterial
+/// @ingroup material
 ///
-/// Virtual base class of surface based material description
+/// Base class of all surface-based material description
 ///
-/// MaterialSlab that are associated to a surface,
-/// extended by certain special representations (binned, homogeneous)
+/// The class supplies references to @ref MaterialSlab that are associated to a
+/// surface, extended by certain special representations (binned, homogeneous).
+/// The concrete @ref MaterialSlab can depend on the local position on the
+/// surface.
 ///
 class ISurfaceMaterial {
  public:
