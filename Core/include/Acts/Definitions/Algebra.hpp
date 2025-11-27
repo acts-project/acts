@@ -25,7 +25,7 @@
 
 namespace Acts {
 
-/// @defgroup acts-algebra-types Vector/matrix types with a common scalar type
+/// @defgroup algebra_types Algebra types
 ///
 /// These are the default vector/matrix types that should be used throughout the
 /// codebase. They all use the common Acts scalar type but support variable size
@@ -64,14 +64,6 @@ using ActsDynamicVector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 /// @brief Dynamic-sized matrix type
 using ActsDynamicMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 
-/// @defgroup coordinates-types Fixed-size vector/matrix types for coordinates
-///
-/// These predefined types should always be used when handling coordinate
-/// vectors in different coordinate systems, i.e. on surfaces (2d), spatial
-/// position (3d), or space-time (4d).
-///
-
-// coordinate vectors
 /// @brief 2-dimensional vector type for 2D coordinates
 using Vector2 = ActsVector<2>;
 /// @brief 3-dimensional vector type for e.g. spatial coordinates and momenta
@@ -79,7 +71,6 @@ using Vector3 = ActsVector<3>;
 /// @brief 4-dimensional vector type for space-time coordinates
 using Vector4 = ActsVector<4>;
 
-// square matrices e.g. for coordinate covariance matrices
 /// @brief 2x2 square matrix type, typically used for 2D coordinate covariance
 using SquareMatrix2 = ActsSquareMatrix<2>;
 /// @brief 3x3 square matrix type, typically used for 3D coordinate covariance
@@ -87,7 +78,6 @@ using SquareMatrix3 = ActsSquareMatrix<3>;
 /// @brief 4x4 square matrix type, typically used for 4D coordinate covariance
 using SquareMatrix4 = ActsSquareMatrix<4>;
 
-// pure translation transformations
 /// @brief 2D translation transformation
 using Translation2 = Eigen::Translation<double, 2>;
 /// @brief 3D translation transformation
@@ -98,7 +88,6 @@ using RotationMatrix2 = SquareMatrix2;
 /// @brief 3D rotation matrix
 using RotationMatrix3 = SquareMatrix3;
 
-// pure rotation defined by a rotation angle around a rotation axis
 /// @brief Rotation defined by an angle around a rotation axis in 3D
 using AngleAxis3 = Eigen::AngleAxis<double>;
 
