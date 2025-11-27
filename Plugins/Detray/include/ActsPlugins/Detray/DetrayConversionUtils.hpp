@@ -30,7 +30,11 @@ using DetrayMetaData = detray::default_metadata<detray::array<double>>;
 
 using DetrayHostDetector = detray::detector<DetrayMetaData>;
 
+/// @ingroup detray_plugin
 namespace DetrayConversionUtils {
+
+/// @addtogroup detray_plugin
+/// @{
 
 /// Detray conversion cache object
 ///
@@ -111,6 +115,8 @@ detray::io::transform_payload convertTransform(
 ///   - a boolean indicating if axes were swapped
 std::tuple<Acts::BinUtility, bool> convertBinUtilityTo2D(
     const Acts::BinUtility& bUtility);
+
+/// @}
 
 }  // namespace DetrayConversionUtils
 }  // namespace ActsPlugins
