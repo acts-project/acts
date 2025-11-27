@@ -848,6 +848,8 @@ class KalmanFitter {
 
       auto reverseStartParameters = forwardTrack.createParametersFromState(
           typename traj_t::ConstTrackStateProxy(lastMeasurementState));
+      reverseStartParameters.covariance().value() *=
+          kfOptions.reversedFilteringCovarianceScaling;
       auto reversePropagatorOptions = make_propagator_options(
           it, end, kfOptions, sSequence, kfOptions.referenceSurface, true);
       auto reverseFilterResult = filter_impl(
