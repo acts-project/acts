@@ -25,6 +25,9 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
+
 /// @class Geant4DetectorElement
 ///
 /// Detector element representative for Geant4 sensitive
@@ -76,4 +79,5 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
   double m_thickness{0.};
 };
 
+/// @}
 }  // namespace ActsPlugins
