@@ -18,8 +18,11 @@ from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
-    RootMaterialTrackWriter,
     MaterialValidation,
+)
+
+from acts.examples.root import (
+    RootMaterialTrackWriter,
 )
 
 
