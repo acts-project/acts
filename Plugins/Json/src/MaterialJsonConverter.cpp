@@ -541,7 +541,7 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
   }
   // Only option remaining: material map
   auto bvMaterial2D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-      Acts::MaterialMapper<Acts::MaterialGrid2D>>*>(material);
+      Acts::MaterialMapLookup<Acts::MaterialGrid2D>>*>(material);
   // Now check if we have a 2D map
   if (bvMaterial2D != nullptr) {
     // type is binned
@@ -564,7 +564,7 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
   }
   // Only option remaining: material map
   auto bvMaterial3D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-      Acts::MaterialMapper<Acts::MaterialGrid3D>>*>(material);
+      Acts::MaterialMapLookup<Acts::MaterialGrid3D>>*>(material);
   // Now check if we have a 3D map
   if (bvMaterial3D != nullptr) {
     // type is binned
@@ -638,11 +638,11 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     for (std::size_t bin = 0; bin < mmat.size(); bin++) {
       mGrid.at(bin) = mmat[bin].parameters();
     }
-    Acts::MaterialMapper<Acts::MaterialGrid2D> matMap(transfoGlobalToLocal,
-                                                      mGrid);
+    Acts::MaterialMapLookup<Acts::MaterialGrid2D> matMap(transfoGlobalToLocal,
+                                                         mGrid);
     material = new Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapper<Acts::MaterialGrid2D>>(std::move(matMap),
-                                                    bUtility);
+        Acts::MaterialMapLookup<Acts::MaterialGrid2D>>(std::move(matMap),
+                                                       bUtility);
     return;
   }
   if (bUtility.dimensions() == 3) {
@@ -663,11 +663,11 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     for (std::size_t bin = 0; bin < mmat.size(); bin++) {
       mGrid.at(bin) = mmat[bin].parameters();
     }
-    Acts::MaterialMapper<Acts::MaterialGrid3D> matMap(transfoGlobalToLocal,
-                                                      mGrid);
+    Acts::MaterialMapLookup<Acts::MaterialGrid3D> matMap(transfoGlobalToLocal,
+                                                         mGrid);
     material = new Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapper<Acts::MaterialGrid3D>>(std::move(matMap),
-                                                    bUtility);
+        Acts::MaterialMapLookup<Acts::MaterialGrid3D>>(std::move(matMap),
+                                                       bUtility);
     return;
   }
 }
