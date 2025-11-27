@@ -61,4 +61,5 @@ target_sources(
         ContainerBlueprintNode.cpp
         MultiWireVolumeBuilder.cpp
         detail/TrackingGeometryPrintVisitor.cpp
+        detail/BoundDeduplicator.cpp
 )
