@@ -11,6 +11,8 @@
 #include <cstdint>
 
 namespace ActsPlugins {
+/// @addtogroup hashing_plugin
+/// @{
 
 struct HashingTrainingConfig {
   /// Random seed for Annoy
@@ -20,4 +22,5 @@ struct HashingTrainingConfig {
   std::int32_t f = 1;
 };
 
+/// @}
 }  // namespace ActsPlugins

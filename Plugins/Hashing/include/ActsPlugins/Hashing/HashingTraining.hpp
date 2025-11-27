@@ -12,6 +12,8 @@
 #include "ActsPlugins/Hashing/HashingTrainingConfig.hpp"
 
 namespace ActsPlugins {
+/// @addtogroup hashing_plugin
+/// @{
 
 template <typename SpacePointContainer>
 class HashingTrainingAlgorithm {
@@ -35,6 +37,7 @@ class HashingTrainingAlgorithm {
   Config m_cfg;
 };
 
+/// @}
 }  // namespace ActsPlugins
 
 #include "ActsPlugins/Hashing/HashingTraining.ipp"

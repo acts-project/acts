@@ -21,8 +21,13 @@ class AnnoyIndexSingleThreadedBuildPolicy;  // Build policy
 
 // Define commonly used Annoy types
 namespace ActsPlugins {
+/// @addtogroup hashing_plugin
+/// @{
+
 using AnnoyMetric = Annoy::AngularEuclidean;
 using AnnoyModel =
     Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
                       Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
+
+/// @}
 }  // namespace ActsPlugins

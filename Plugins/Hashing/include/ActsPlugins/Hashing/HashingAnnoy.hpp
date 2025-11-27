@@ -14,6 +14,8 @@
 #include <set>
 
 namespace ActsPlugins {
+/// @addtogroup hashing_plugin
+/// @{
 
 template <typename external_spacepoint_t, typename SpacePointContainer>
 class HashingAnnoy {
@@ -25,6 +27,8 @@ class HashingAnnoy {
       const double layerRMax, const double layerZMin, const double layerZMax);
   std::map<unsigned int, std::set<external_spacepoint_t>> m_bucketsSPMap;
 };
+
+/// @}
 }  // namespace ActsPlugins
 
 #include "ActsPlugins/Hashing/HashingAnnoy.ipp"
