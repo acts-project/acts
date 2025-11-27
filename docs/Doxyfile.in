@@ -852,6 +852,7 @@ EXCLUDE_PATTERNS       = */detail/*
 # exclude all test directories use the pattern */test/*
 
 EXCLUDE_SYMBOLS        = Acts::*detail* \
+                         Acts::make_error_code \
                          ActsFatras::*detail* \
                          dfe \
                          nlohmann \
