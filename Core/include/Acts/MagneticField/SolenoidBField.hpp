@@ -17,9 +17,10 @@
 
 namespace Acts {
 
-/// @ingroup MagneticField
-//
 /// @class SolenoidBField
+///
+/// @ingroup magnetic_field
+///
 /// Implements a multi-coil solenoid magnetic field. On every call, the field
 /// is evaluated at that exact position. The field has radially symmetry, the
 /// field vectors point in +z direction.

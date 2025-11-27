@@ -15,9 +15,51 @@
 
 namespace Acts {
 
-/// @defgroup MagneticField Magnetic field
-
 /// Base class for all magnetic field providers
+/// @ingroup magnetic_field
+///
+/// All magnetic field implementations inherit and implement from this
+/// interface.
+///
+/// It provides a generic interface over different implementations. To speed up
+/// magnetic field lookup, each implementation can have a *cache* object. The
+/// cache object can for example be used to store a local interpolation domain,
+/// to speed up nearby field lookups. The client is expected to pass into
+/// lookup calls an instance of @ref Acts::MagneticFieldProvider::Cache.
+///
+/// The implementation is then free to use and update this cache instance as
+/// needed. Before a client can issue field lookup calls, it needs to obtain an
+/// initialized instance of this cache object. This can be achieved generically
+/// for all implementations by using
+/// {func}`Acts::MagneticFieldProvider::makeCache`. This function accepts an
+/// instance of {class}`Acts::MagneticFieldContext`, see
+/// [](#magnetic-field-context) for details.
+///
+/// The main lookup method of {class}`Acts::MagneticFieldProvider` is @ref
+/// Acts::MagneticFieldProvider::getField
+///
+/// Aside from the lookup position as a global position vector, it accepts an
+/// instance of the opaque cache object mentioned before. The return value is a
+/// @ref Acts::Result object. It either contains the field value at the
+/// requested location, or an @ref Acts::MagneticFieldError in case of a lookup
+/// failure, like an out-of-bounds lookup position.
+///
+/// Below is an example of how a client can interact with an instance of
+/// @ref Acts::MagneticFieldProvider.
+///
+/// ```cpp
+/// // in event context
+/// auto fieldContext = getExperimentFieldContext();
+/// const Acts::MagneticFieldProvider& fieldProvider = getFieldProvider();
+/// auto cache = fieldProvider.makeCache(fieldContext);
+///
+/// auto lookupResult = fieldProvider.getField(Acts::Vector3{10, 10, 10},
+/// cache); if(!lookupResult.ok()) {
+///    throw std::runtime_error{"Field lookup failure"};
+/// }
+///
+/// Acts::Vector3 fieldValue = *lookupResult;
+/// ```
 class MagneticFieldProvider {
  public:
   /// Opaque cache type that can store arbitrary implementation specific cache

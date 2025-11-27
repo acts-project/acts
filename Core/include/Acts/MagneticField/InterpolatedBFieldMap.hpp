@@ -21,6 +21,22 @@
 
 namespace Acts {
 
+/// @addtogroup magnetic_field
+/// @{
+
+/// @brief Base class for interpolated magnetic field providers
+///
+/// This class can be used for non-trivial magnetic field implementations.
+///
+/// The key idea here is to calculate an interpolated value of the magnetic
+/// field from a grid of known field values. In 3D, this means the
+/// interpolation is done from the 8 corner points of a *field cell*. The field
+/// cell can be retrieved for any given position. Since during typical access
+/// patterns, e.g. the propagation, subsequent steps are relatively likely to
+/// not cross the field cell boundary, the field cell can be cached.
+///
+/// @image html bfield/field_cell.svg "Illustration of the field cell concept. Subsequent steps are clustered in the same field cell. The field cell only needs to be refetched when the propagation crosses into the next grid region." width=60%
+///
 class InterpolatedMagneticField : public MagneticFieldProvider {
  public:
   /// @brief get the number of bins for all axes of the field map
@@ -53,13 +69,12 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
   virtual Vector3 getFieldUnchecked(const Vector3& position) const = 0;
 };
 
-/// @ingroup MagneticField
-/// @brief interpolate magnetic field value from field values on a given grid
+/// Interpolates magnetic field value from field values on a given grid
 ///
 /// This class implements a magnetic field service which is initialized by a
 /// field map defined by:
-/// - a list of field values on a regular grid in some n-Dimensional space,
-/// - a transformation of global 3D coordinates onto this n-Dimensional
+/// - a list of field values on a regular grid in some n-dimensional space,
+/// - a transformation of global 3D coordinates onto this n-dimensional
 /// space.
 /// - a transformation of local n-Dimensional magnetic field coordinates into
 /// global (cartesian) 3D coordinates
@@ -68,6 +83,12 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
 /// - mapping the position onto the grid,
 /// - looking up the magnetic field values on the closest grid points,
 /// - doing a linear interpolation of these magnetic field values.
+///
+/// Internally, this class uses a *field interpolation cell* to speed up
+/// lookups. This cell contains the interpolation points so the grid does not
+/// have to be consulted for each lookup. Explicit methods to create such a
+/// field cell are provided, but field cell creation is automatically handled
+/// by @ref Acts::InterpolatedBFieldMap::makeCache, opaque to the client.
 ///
 /// @tparam grid_t The Grid type which provides the field storage and
 /// interpolation
@@ -325,5 +346,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   typename Grid::point_t m_lowerLeft;
   typename Grid::point_t m_upperRight;
 };
+
+/// @}
 
 }  // namespace Acts
