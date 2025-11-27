@@ -57,7 +57,6 @@
                 "ACTS_BUILD_FATRAS_GEANT4": "ON",
                 "ACTS_BUILD_PLUGIN_ACTSVG": "ON",
                 "ACTS_BUILD_PLUGIN_DD4HEP": "ON",
-                "ACTS_BUILD_PLUGIN_PODIO": "ON",
                 "ACTS_BUILD_PLUGIN_EDM4HEP": "ON",
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "ON",
                 "ACTS_BUILD_PLUGIN_TRACCC": "ON",
@@ -154,7 +153,8 @@
                 "ACTS_GNN_ENABLE_CUDA": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
-                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
+                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
             }
         },
         {

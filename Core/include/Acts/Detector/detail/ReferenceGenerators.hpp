@@ -19,11 +19,34 @@
 
 namespace Acts::Experimental::detail {
 
+enum class ReferenceGeneratorType {
+  Center,
+  AxisDirection,
+  Polyhedron,
+  Projected
+};
+
+struct IReferenceGenerator {
+  virtual ~IReferenceGenerator() = default;
+
+  /// Helper to access reference positions for filling the grid
+  ///
+  /// @param gctx the geometry context of this operation
+  /// @param surface the surface for which the reference points are to be accessed
+  ///
+  /// @return a vector of reference points for filling
+  virtual const std::vector<Vector3> references(
+      const GeometryContext& gctx, const Surface& surface) const = 0;
+
+  /// Access the type of the reference generator
+  virtual ReferenceGeneratorType type() const = 0;
+};
+
 /// A struct to access the center position
 ///
 /// This generator will provide only one filling point and hence
 /// only a single bin in the indexed grid.
-struct CenterReferenceGenerator {
+struct CenterReferenceGenerator : public IReferenceGenerator {
   /// Helper to access the Center point of for filling the grid
   ///
   /// @param gctx the geometry context of this operation
@@ -31,8 +54,13 @@ struct CenterReferenceGenerator {
   ///
   /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
-                                        const Surface& surface) const {
+                                        const Surface& surface) const override {
     return {surface.center(gctx)};
+  }
+
+  /// Access the type of the reference generator
+  ReferenceGeneratorType type() const override {
+    return ReferenceGeneratorType::Center;
   }
 };
 
@@ -43,7 +71,7 @@ struct CenterReferenceGenerator {
 /// This generator will provide only one filling point and hence
 /// only a single bin in the indexed grid.
 template <AxisDirection bVAL>
-struct AxisDirectionReferenceGenerator {
+struct AxisDirectionReferenceGenerator : public IReferenceGenerator {
   /// Helper to access a reference position based on binning value
   ///
   /// @param gctx the geometry context of this operation
@@ -51,8 +79,13 @@ struct AxisDirectionReferenceGenerator {
   ///
   /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
-                                        const Surface& surface) const {
+                                        const Surface& surface) const override {
     return {surface.referencePosition(gctx, bVAL)};
+  }
+
+  /// Access the type of the reference generator
+  ReferenceGeneratorType type() const override {
+    return ReferenceGeneratorType::AxisDirection;
   }
 };
 
@@ -60,14 +93,19 @@ struct AxisDirectionReferenceGenerator {
 /// These vertices are then used to find the bin boundary box for the
 /// indexed grid.
 ///
-/// @tparam nSEGS the number of segments to be used for the polyhedron
-/// approximation of arcs between vertices
-/// @tparam aBARY if true, the barycenter of the polyhedron is added
 ///
 /// The grid filling then completes the empty bins in between and
 /// expands if necessary.
-template <std::size_t nSEGS = 1u, bool aBARY = true>
-struct PolyhedronReferenceGenerator {
+struct PolyhedronReferenceGenerator : public IReferenceGenerator {
+  /// This is for the barycenter addition
+  bool addBarycenter = false;
+
+  /// @brief  The number of segments for the polyhedron approximation
+  int nSegements = 1;
+
+  /// Absolute expansion value for the reference points
+  double expansionValue = 0.0;
+
   /// Helper to access the Center point of for filling the grid
   ///
   /// @param gctx the geometry context of this operation
@@ -75,20 +113,43 @@ struct PolyhedronReferenceGenerator {
   ///
   /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
-                                        const Surface& surface) const {
-    // Create the return  vector
-    std::vector<Vector3> rPositions;
-    auto pHedron = surface.polyhedronRepresentation(gctx, nSEGS);
-    rPositions.insert(rPositions.end(), pHedron.vertices.begin(),
-                      pHedron.vertices.end());
-    // Add the barycenter if configured
-    if constexpr (aBARY) {
-      Vector3 bc(0., 0., 0.);
-      std::ranges::for_each(rPositions, [&](const auto& p) { bc += p; });
-      bc *= 1. / rPositions.size();
-      rPositions.push_back(bc);
-    }
-    return rPositions;
+                                        const Surface& surface) const override;
+
+  /// Access the type of the reference generator
+  ReferenceGeneratorType type() const override {
+    return ReferenceGeneratorType::Polyhedron;
+  }
+};
+
+/// A Projected reference generator which projects the polyhedron vertices onto
+/// a given reference surface.
+///
+struct ProjectedReferenceGenerator : public IReferenceGenerator {
+  /// The reference surface onto which to project
+  std::shared_ptr<Surface> referenceSurface = nullptr;
+
+  /// @brief  The number of segments for the polyhedron approximation
+  int nSegements = 1;
+
+  /// Absolute expansion value for the reference points
+  double expansionValue = 0.0;
+
+  /// Luminous region sampling points for the projection - beam spot
+  std::vector<Vector3> luminousRegion = {Vector3(0., 0., -200.),
+                                         Vector3(0., 0., 200.0)};
+
+  /// Helper to access the Center point of for filling the grid
+  ///
+  /// @param gctx the geometry context of this operation
+  /// @param surface the surface for which the reference point is to be accessed
+  ///
+  /// @return a vector of reference points for filling
+  const std::vector<Vector3> references(const GeometryContext& gctx,
+                                        const Surface& surface) const override;
+
+  /// Access the type of the reference generator
+  ReferenceGeneratorType type() const override {
+    return ReferenceGeneratorType::Projected;
   }
 };
 

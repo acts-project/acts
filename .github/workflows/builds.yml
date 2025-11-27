@@ -24,15 +24,14 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:80
+    container: ghcr.io/acts-project/ubuntu2404:83
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -104,15 +103,14 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:80
+    container: ghcr.io/acts-project/ubuntu2404:83
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -141,15 +139,14 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:80
+    container: ghcr.io/acts-project/ubuntu2404:83
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - run: apt-get update && apt-get install -y time
@@ -222,15 +219,14 @@ jobs:
           - image: ubuntu2404_clang19
             std: 20
             cxx: clang++-19
-    container: ghcr.io/acts-project/${{ matrix.image }}:80
+    container: ghcr.io/acts-project/${{ matrix.image }}:83
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -302,9 +298,8 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - name: Setup Xcode version
@@ -380,12 +375,11 @@ jobs:
   external_eic-shell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           path: acts
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: eic/EICrecon
           path: EICrecon
@@ -408,7 +402,7 @@ jobs:
         continue-on-error: true
         with:
           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
-          options: -v ${{ github.workspace }}:/work
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
           shell: bash
           run: |
             for script in /.singularity.d/env/*.sh; do
@@ -420,6 +414,7 @@ jobs:
             set -ue
 
             pushd acts
+            ccache -p | grep cache_dir
             ccache -z && \
             export CMAKE_INSTALL_PREFIX=$HOME/prefix
             export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -479,11 +474,10 @@ jobs:
   external_key4hep-nightlies:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           path: acts
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: key4hep/k4ActsTracking
           path: k4ActsTracking

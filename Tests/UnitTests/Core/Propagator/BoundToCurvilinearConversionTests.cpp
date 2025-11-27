@@ -195,8 +195,9 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       }
     }
 
-    Vector3 direction{cos(param_vec[2]) * sin(param_vec[3]),
-                      sin(param_vec[2]) * sin(param_vec[3]), cos(param_vec[3])};
+    Vector3 direction{std::cos(param_vec[2]) * std::sin(param_vec[3]),
+                      std::sin(param_vec[2]) * std::sin(param_vec[3]),
+                      std::cos(param_vec[3])};
     Vector3 position(surface->localToGlobal(
         geoCtx, Vector2{param_vec[0], param_vec[1]}, direction));
     BoundTrackParameters params(surface, param_vec,

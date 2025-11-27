@@ -5,7 +5,7 @@ import sys
 # try importing and see if it works in order to provide a useful error message
 try:
     subprocess.check_call(
-        [sys.executable, "-c", "from acts import ActsPythonBindingsGeant4"]
+        [sys.executable, "-c", "from acts import ActsExamplesPythonBindingsGeant4"]
     )
 except subprocess.CalledProcessError as e:
     print("Error encountered importing DD4hep. Likely you need to set LD_LIBRARY_PATH.")
@@ -13,8 +13,8 @@ except subprocess.CalledProcessError as e:
 
 
 from acts._adapter import _patch_config
-from acts import ActsPythonBindingsGeant4
+from acts import ActsExamplesPythonBindingsGeant4
 
-_patch_config(ActsPythonBindingsGeant4)
+_patch_config(ActsExamplesPythonBindingsGeant4)
 
-from acts.ActsPythonBindingsGeant4 import *
+from acts.ActsExamplesPythonBindingsGeant4 import *

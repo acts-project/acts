@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 import acts
 import acts.examples
+from acts import root
 import warnings
 
 
@@ -64,12 +65,13 @@ def getOpenDataDetector(
         if not found:
             msg = (
                 "Unable to find OpenDataDetector factory library. "
-                f"You might need to point {'/'.join(env_vars)} to build/thirdparty/OpenDataDetector/factory or other ODD install location"
+                f"You might need to point {'/'.join(env_vars)} to the ODD install location."
+                f"It might be at {odd_dir / 'factory'}"
             )
             raise RuntimeError(msg)
 
     if materialDecorator is None:
-        materialDecorator = acts.examples.RootMaterialDecorator(
+        materialDecorator = acts.root.RootMaterialDecorator(
             fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )

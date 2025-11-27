@@ -9,7 +9,7 @@ variables:
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v17.0.0
+  DEPENDENCY_TAG: v18.0.0
 
 .ccache_base:
   cache:
@@ -43,7 +43,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
   tags:
     - large
   artifacts:
@@ -102,7 +102,7 @@ clang_tidy:
 
 build_gnn_cpu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
   tags:
     - large
 
@@ -129,7 +129,7 @@ build_gnn_cpu:
       -DACTS_GNN_ENABLE_MODULEMAP=OFF
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
   after_script:
@@ -137,7 +137,7 @@ build_gnn_cpu:
 
 build_gnn:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
   tags:
     - large
 
@@ -170,7 +170,7 @@ build_gnn:
       --preset=gitlab-ci-gnn
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
   after_script:
@@ -180,7 +180,7 @@ test_gnn_unittests:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
   tags:
     - docker-gpu-nvidia
 
@@ -205,7 +205,7 @@ test_gnn_python:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
   tags:
     - docker-gpu-nvidia
 
@@ -233,14 +233,11 @@ test_gnn_python:
 
 build_gnn_tensorrt:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:80
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:83
 
   cache:
     - !reference [.spack_cache, cache]
     - !reference [.ccache_base, cache]
-
-  tags:
-    - docker-gpu-nvidia
 
   script:
     - git clone $CLONE_URL src
@@ -254,7 +251,7 @@ build_gnn_tensorrt:
     - >
       cmake -B build -S src --preset gitlab-ci-tensorrt
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
   after_script:
@@ -262,7 +259,7 @@ build_gnn_tensorrt:
 
 build_linux_ubuntu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
 
   cache:
    - !reference [.ccache_base, cache]
@@ -282,8 +279,6 @@ build_linux_ubuntu:
 
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
 
     - cd ..
 
@@ -298,7 +293,7 @@ build_linux_ubuntu:
       -DACTS_BUILD_PLUGIN_ONNX=ON
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
@@ -326,7 +321,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
   needs: [build_linux_ubuntu]
 
   cache:
@@ -338,8 +333,6 @@ linux_test_examples:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - |
       CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
@@ -355,7 +348,7 @@ linux_test_examples:
 linux_physmon:
   stage: test
   needs: [build_linux_ubuntu]
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
 
   artifacts:
     when: always
@@ -372,8 +365,6 @@ linux_physmon:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - |
       CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
@@ -406,8 +397,6 @@ linux_physmon:
 
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - |
       CI/dependencies/setup.sh -c ${CXX} -e .env
       source .env
@@ -421,7 +410,7 @@ linux_physmon:
       -DCMAKE_CXX_COMPILER=${CXX}
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
@@ -454,7 +443,7 @@ linux_ubuntu_2404_clang19:
   variables:
     CXX: clang++-19
     CXXSTD: 20
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:83
 
 
 ######################
@@ -462,7 +451,7 @@ linux_ubuntu_2404_clang19:
 ######################
 
 .lcg_base_job:
-  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:80
+  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:83
   stage: build
   tags:
     - cvmfs
@@ -498,8 +487,6 @@ linux_ubuntu_2404_clang19:
 
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - cd ..
 
     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
@@ -512,7 +499,7 @@ linux_ubuntu_2404_clang19:
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
