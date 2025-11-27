@@ -39,7 +39,7 @@ using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 1;
+constexpr std::size_t nEvents = 200000;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
   genCfg.createStraws = true;
   genCfg.smearRadius = false;
 
-  for (std::size_t evt = 0; evt < nEvents; ++evt) {
+  for (std::size_t evt = 0; evt < 100; ++evt) {
     const auto line = generateLine(engine, logger());
     auto testTubes =
         MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
@@ -231,7 +231,7 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
       ACTS_INFO("Fit failed - not converged.");
       continue;
     }
-    ACTS_INFO("Fit Successful.");
+    ACTS_DEBUG("Fit Successful.");
 
     fillPars(result.parameters, recoY0, recoX0, recoTheta, recoPhi);
     fillProjected(result.parameters, recoProjTheta, recoProjPhi);
@@ -329,6 +329,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   {
     genCfg.stripDirLoc1 = makeDirectionFromPhiTheta(60._degree, 90._degree);
     RandomEngine engine{2225};
+    fitCfg.parsToUse = {FitParIndex::x0, FitParIndex::y0, FitParIndex::theta,
+                        FitParIndex::phi};
     runFitTest(fitCfg, genCfg, "StereoStripTest", engine, *outFile);
   }
 }
