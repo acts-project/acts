@@ -20,6 +20,9 @@
 // can not match our naming guidelines.
 
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 class BinningData;
 
 void to_json(nlohmann::json& j, const BinningData& bd);
@@ -53,4 +56,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(AxisDirection,
                               {AxisDirection::AxisEta, "AxisEta"},
                               {AxisDirection::AxisMag, "AxisMag"}})
 
+
+/// @}
 }  // namespace Acts

@@ -25,6 +25,9 @@
 // can not match our naming guidelines.
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// Convert VolumeBounds to JSON
 /// @param j Destination JSON object
 /// @param bounds Source VolumeBounds to convert
@@ -74,4 +77,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {VolumeBounds::BoundsType::eGenericCuboid, "GenericCuboid"},
      {VolumeBounds::BoundsType::eTrapezoid, "Trapezoid"}})
 
+
+/// @}
 }  // namespace Acts

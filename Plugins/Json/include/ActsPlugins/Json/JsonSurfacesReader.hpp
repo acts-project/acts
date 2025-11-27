@@ -16,10 +16,16 @@
 #include <vector>
 
 namespace Acts {
+
 class Surface;
+
 }
 
+/// @ingroup json_plugin
 namespace Acts::JsonSurfacesReader {
+
+/// @addtogroup json_plugin
+/// @{
 
 /// @brief Options specification for surface reading
 /// The file should contain an array of json surfaces

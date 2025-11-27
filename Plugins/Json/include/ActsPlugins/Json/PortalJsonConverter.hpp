@@ -23,6 +23,9 @@
 
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 class Surface;
 
 namespace Experimental {
@@ -97,4 +100,6 @@ std::shared_ptr<Experimental::Portal> fromJson(
         detectorVolumes);
 
 }  // namespace PortalJsonConverter
+
+/// @}
 }  // namespace Acts

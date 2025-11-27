@@ -11,6 +11,9 @@
 #include "ActsPlugins/Json/ActsJson.hpp"
 
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 class ISurfaceMaterial;
 class IVolumeMaterial;
 
@@ -37,4 +40,6 @@ class IVolumeMaterialJsonDecorator {
   virtual void decorate(const Acts::IVolumeMaterial &material,
                         nlohmann::json &json) const = 0;
 };
+
+/// @}
 }  // namespace Acts

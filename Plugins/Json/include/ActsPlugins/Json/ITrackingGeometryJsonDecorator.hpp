@@ -11,6 +11,9 @@
 #include "ActsPlugins/Json/ActsJson.hpp"
 
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 class TrackingVolume;
 class Surface;
 
@@ -35,4 +38,6 @@ class ITrackingGeometryJsonDecorator {
   virtual void decorate(const Acts::TrackingVolume &volume,
                         nlohmann::json &json) const = 0;
 };
+
+/// @}
 }  // namespace Acts

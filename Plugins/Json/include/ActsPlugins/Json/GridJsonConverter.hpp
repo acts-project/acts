@@ -19,6 +19,9 @@
 // Custom Json encoder/decoders.
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// @cond
 NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisBoundaryType,
                              {{Acts::AxisBoundaryType::Bound, "Bound"},
@@ -284,4 +287,6 @@ auto fromJson(const nlohmann::json& jGrid,
 }
 
 }  // namespace GridJsonConverter
+
+/// @}
 }  // namespace Acts
