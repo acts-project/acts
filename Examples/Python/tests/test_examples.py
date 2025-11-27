@@ -912,7 +912,7 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     ids=["smeared", "geometric", "odd-smeared", "odd-geometric"],
 )
 def test_digitization_example_input_parsing(digi_config_file):
-    from acts.examples import readDigiConfigFromJson
+    from acts.examples.json import readDigiConfigFromJson
 
     readDigiConfigFromJson(str(digi_config_file))
 

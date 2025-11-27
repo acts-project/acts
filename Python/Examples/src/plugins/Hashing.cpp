@@ -20,20 +20,13 @@ namespace py = pybind11;
 using namespace Acts;
 using namespace ActsPlugins;
 using namespace ActsExamples;
+using namespace ActsPython;
 
-namespace ActsPython {
-
-void addHashing(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
-  auto hashingExampleModule = mex.def_submodule("_hashing");
-
+PYBIND11_MODULE(ActsExamplesPythonBindingsHashing, hashing) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      SeedingAlgorithmHashing, hashingExampleModule, "SeedingAlgorithmHashing",
+      SeedingAlgorithmHashing, hashing, "SeedingAlgorithmHashing",
       inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,
       seedFinderConfig, seedFinderOptions, gridConfig, gridOptions,
       allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors,
       hashingConfig, hashingTrainingConfig);
 }
-
-}  // namespace ActsPython
