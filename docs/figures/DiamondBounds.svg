@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" width="600px" height="600px" viewBox="-50 -10 100 100">
+    <desc/>
+    <defs>
+        <marker id="head" orient="auto" markerWidth="8" markerHeight="16" refX="0.1" refY="4">
+            <path d="M0,0 V8 L8,4 Z" fill="black"/>
+        </marker>
+        <marker id="tail" orient="auto" markerWidth="-8" markerHeight="-16" refX="0.1" refY="-4">
+            <path d="M0,0 V-8 L-8,-4 Z" fill="black"/>
+        </marker>
+    </defs>
+    <g alignment-baseline="baseline">
+        <g id="title"><text x="-30" y="-2" style="font-size: 2pt">DiamondBounds(x<tspan
+                style="baseline-shift:sub; font-size:1.5">1</tspan>, x<tspan
+                style="baseline-shift:sub; font-size:1.5">2</tspan>, x<tspan
+                style="baseline-shift:sub; font-size:1.5">3</tspan>, y<tspan
+                style="baseline-shift:sub; font-size:1.5">1</tspan>, y<tspan
+                style="baseline-shift:sub; font-size:1.5">2</tspan>)</text> </g>
+        <g id="diamond">
+            <polygon points="20,5 30,15 10,35 -10,35 -30,15 -20,5" style="stroke:black; fill: azure"
+                stroke-width="0.1pt"/>
+        </g>
+    </g>
+    <g id="reflectionAxis">
+        <line stroke-dasharray="8,2,1,2" x1="0" y1="0" x2="0" y2="45" style="stroke:black"
+            stroke-width="0.1pt"/>
+    </g>
+    <g id="baseFiducial">
+        <line stroke-dasharray="1,1" x1="-10" y1="29" x2="-10" y2="40" style="stroke:black"
+            stroke-width="0.1pt"/>
+    </g>
+    <g id="baseExtent">
+        <line x1="-9" y1="37" x2="-1" y2="37" style="stroke:black" stroke-width="0.1pt"
+            marker-end="url(#head)" marker-start="url(#tail)"/>
+        <text x="-5" y="39" style="font-size: 2pt">x<tspan style="baseline-shift:sub; font-size:1.5"
+                >1</tspan></text>
+    </g>
+    <g id="midFiducial">
+        <line stroke-dasharray="1,1" x1="-30" y1="10" x2="-30" y2="20" style="stroke:black"
+            stroke-width="0.1pt"/>
+    </g>
+    <g id="midExtent">
+        <line x1="-29" y1="17" x2="-1" y2="17" style="stroke:black" stroke-width="0.1pt"
+            marker-end="url(#head)" marker-start="url(#tail)"/>
+        <text x="-20" y="19" style="font-size: 2pt">x<tspan
+                style="baseline-shift:sub; font-size:1.5">2</tspan></text>
+    </g>
+    <g id="topFiducial">
+        <line stroke-dasharray="1,1" x1="-20" y1="1" x2="-20" y2="12" style="stroke:black"
+            stroke-width="0.1pt"/>
+    </g>
+    <g id="topExtent">
+        <line x1="-19" y1="3" x2="-1" y2="3" style="stroke:black" stroke-width="0.1pt"
+            marker-end="url(#head)" marker-start="url(#tail)"/>
+        <text x="-10" y="1.7" style="font-size: 2pt">x<tspan
+                style="baseline-shift:sub; font-size:1.5">3</tspan></text>
+    </g>
+    <g id="crownFiducial">
+        <line stroke-dasharray="1,1" x1="0" y1="15" x2="30" y2="15" style="stroke:black"
+            stroke-width="0.1pt"/>
+    </g>
+    <g id="crownExtent">
+        <line x1="15" y1="6" x2="15" y2="14" style="stroke:black" stroke-width="0.1pt"
+            marker-end="url(#head)" marker-start="url(#tail)"/>
+        <text x="12" y="10" style="font-size: 2pt">y<tspan style="baseline-shift:sub; font-size:1.5"
+                >2</tspan></text>
+    </g>
+    <g id="pavilionExtent">
+        <line x1="9" y1="16" x2="9" y2="34" style="stroke:black" stroke-width="0.1pt"
+            marker-end="url(#head)" marker-start="url(#tail)"/>
+        <text x="6" y="25" style="font-size: 2pt">y<tspan style="baseline-shift:sub; font-size:1.5"
+                >1</tspan></text>
+    </g>
+    <g id="alpha1">
+        <path d="M -10 30 A 10 10 0 0 0 -13.54 31.46" stroke="black" stroke-width="0.1pt"
+            fill="none"/>
+        <text x="-14" y="29" style="font-size: 2pt">&#x03B1;<tspan
+                style="baseline-shift:sub; font-size:1.5">1</tspan></text>
+    </g>
+    <g id="alpha2">
+        <path d="M -20 10 A 10 10 0 0 1 -23.54 8.46" stroke="black" stroke-width="0.1pt" fill="none"/>
+        <text x="-23.5" y="11" style="font-size: 2pt">&#x03B1;<tspan
+                style="baseline-shift:sub; font-size:1.5">2</tspan></text>
+    </g>
+</svg>
