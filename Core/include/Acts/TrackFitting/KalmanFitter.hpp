@@ -129,6 +129,8 @@ struct KalmanFitterOptions {
   /// @param tSurface The target surface for the fit
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
+  /// @param rFiltering Whether to run reversed filtering
+  /// @param rfScaling Scaling factor for covariance at input of reversed filtering
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   KalmanFitterOptions(const GeometryContext& gctx,
                       const MagneticFieldContext& mctx,
