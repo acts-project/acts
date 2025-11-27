@@ -19,6 +19,9 @@
 
 namespace Acts {
 
+/// @addtogroup material
+/// @{
+
 /// @brief Struct for mapping global 3D positions to material values
 ///
 /// Global 3D positions are transformed into a @c DIM_POS Dimensional vector
@@ -213,7 +216,6 @@ struct MaterialMapper {
   Grid_t m_grid;
 };
 
-/// @ingroup Material
 /// @brief Interpolate material classification values from material values on a
 /// given grid
 ///
@@ -369,4 +371,6 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
 
   BinUtility m_binUtility{};
 };
+
+/// @}
 }  // namespace Acts

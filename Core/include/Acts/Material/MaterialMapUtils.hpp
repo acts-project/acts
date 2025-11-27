@@ -26,6 +26,9 @@
 
 namespace Acts {
 
+/// @addtogroup material
+/// @{
+
 class Material;
 
 /// Method to setup the MaterialMapper
@@ -124,5 +127,7 @@ materialMapperXYZ(
     std::vector<double> xPos, std::vector<double> yPos,
     std::vector<double> zPos, const std::vector<Material>& material,
     double lengthUnit = UnitConstants::mm);
+
+/// @}
 
 }  // namespace Acts
