@@ -9,7 +9,7 @@ variables:
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v17.0.0
+  DEPENDENCY_TAG: v18.0.0
 
 .ccache_base:
   cache:
