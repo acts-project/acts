@@ -22,6 +22,8 @@ enum class DeviceType : std::int8_t;
 }
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 class TorchMetricLearning final : public GraphConstructionBase {
  public:
@@ -57,4 +59,5 @@ class TorchMetricLearning final : public GraphConstructionBase {
   std::unique_ptr<torch::jit::Module> m_model;
 };
 
+/// @}
 }  // namespace ActsPlugins

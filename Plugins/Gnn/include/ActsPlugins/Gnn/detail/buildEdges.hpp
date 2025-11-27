@@ -15,7 +15,11 @@ class Tensor;
 }
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
+
 namespace detail {
+/// @ingroup gnn_plugin
 
 /// Post process edges
 at::Tensor postprocessEdgeTensor(at::Tensor edges, bool removeSelfLoops = true,
@@ -44,4 +48,5 @@ at::Tensor buildEdges(at::Tensor& embedFeatures, float rVal, int kVal,
                       bool flipDirections = false);
 
 }  // namespace detail
+/// @}
 }  // namespace ActsPlugins

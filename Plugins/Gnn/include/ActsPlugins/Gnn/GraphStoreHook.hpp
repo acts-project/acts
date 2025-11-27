@@ -11,6 +11,8 @@
 #include "ActsPlugins/Gnn/GnnPipeline.hpp"
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 class GraphStoreHook : public GnnHook {
  public:
@@ -28,4 +30,5 @@ class GraphStoreHook : public GnnHook {
   const Graph &storedGraph() const { return *m_storedGraph; }
 };
 
+/// @}
 }  // namespace ActsPlugins

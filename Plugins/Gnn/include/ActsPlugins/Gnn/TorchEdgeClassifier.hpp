@@ -22,6 +22,8 @@ enum class DeviceType : std::int8_t;
 }
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 class TorchEdgeClassifier final : public EdgeClassificationBase {
  public:
@@ -52,4 +54,5 @@ class TorchEdgeClassifier final : public EdgeClassificationBase {
   std::unique_ptr<torch::jit::Module> m_model;
 };
 
+/// @}
 }  // namespace ActsPlugins
