@@ -1,2 +1,3 @@
+#include <cassert>
 #define eigen_assert(x) assert(x)
 #include_next "Eigen/Core"

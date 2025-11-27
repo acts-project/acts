@@ -324,8 +324,8 @@ Transform3 axesOriented(const Transform3& toGlobalOriginal,
   auto originalRotation = toGlobalOriginal.rotation();
   auto colX = originalRotation.col(std::abs(axes[0u]));
   auto colY = originalRotation.col(std::abs(axes[1u]));
-  colX *= std::copysign(1, axes[0u]);
-  colY *= std::copysign(1, axes[1u]);
+  colX *= std::copysign(1., axes[0u]);
+  colY *= std::copysign(1., axes[1u]);
   Vector3 colZ = colX.cross(colY);
 
   Transform3 orientedTransform = Transform3::Identity();

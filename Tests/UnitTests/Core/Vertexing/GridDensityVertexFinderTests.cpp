@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);

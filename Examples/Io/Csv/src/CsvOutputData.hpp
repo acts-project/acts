@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include <ActsExamples/EventData/Index.hpp>
 #include <ActsExamples/Io/Csv/CsvInputOutput.hpp>
 
@@ -342,13 +343,13 @@ struct SpacePointData {
   // half of the length of the bottom strip
   float sp_bottomHalfStripLength = 0;
   // direction of the top strip
-  Acts::Vector3 sp_topStripDirection;
+  Acts::Vector3 sp_topStripDirection{};
   // direction of the bottom strip
-  Acts::Vector3 sp_bottomStripDirection;
+  Acts::Vector3 sp_bottomStripDirection{};
   // distance between the center of the two strips
-  Acts::Vector3 sp_stripCenterDistance;
+  Acts::Vector3 sp_stripCenterDistance{};
   // position of the center of the bottom strip
-  Acts::Vector3 sp_topStripCenterPosition;
+  Acts::Vector3 sp_topStripCenterPosition{};
 
   DFE_NAMEDTUPLE(SpacePointData, measurement_id, sp_x, sp_y, sp_z, sp_radius,
                  sp_covr, sp_covz, sp_topHalfStripLength,
