@@ -182,6 +182,9 @@ struct FitterTester {
     auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
+    // this is the default option. set anyway for consistency
+    options.referenceSurface = nullptr;
+
     Acts::ConstProxyAccessor<bool> reversed{"reversed"};
     Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
@@ -231,6 +234,9 @@ struct FitterTester {
     auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
+    // initial fitter options configured for backward filtering mode
+    // backward filtering requires a reference surface
+    options.referenceSurface = &start.referenceSurface();
     // this is the default option. set anyway for consistency
     options.propagatorPlainOptions.direction = Acts::Direction::Forward();
 
@@ -291,6 +297,7 @@ struct FitterTester {
             posOuter, start.direction(), start.qOverP(), start.covariance(),
             Acts::ParticleHypothesis::pion());
 
+    options.referenceSurface = &startOuter.referenceSurface();
     options.propagatorPlainOptions.direction = Acts::Direction::Backward();
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
@@ -344,6 +351,8 @@ struct FitterTester {
     std::shared_ptr<Acts::PlaneSurface> targetSurface =
         Acts::CurvilinearSurface(center, normal).planeSurface();
 
+    options.referenceSurface = targetSurface.get();
+
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
     tracks.addColumn<bool>("reversed");
@@ -379,6 +388,8 @@ struct FitterTester {
                                            resolutions, rng);
     auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
+
+    options.referenceSurface = &start.referenceSurface();
 
     Acts::BoundVector parameters = Acts::BoundVector::Zero();
 
@@ -560,6 +571,8 @@ struct FitterTester {
     Acts::Vector3 normal(1., 0., 0.);
     std::shared_ptr<Acts::PlaneSurface> targetSurface =
         Acts::CurvilinearSurface(center, normal).planeSurface();
+
+    options.referenceSurface = targetSurface.get();
 
     auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
                           options, tracks);

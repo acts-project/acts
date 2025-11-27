@@ -97,9 +97,13 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
   Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixSmoother kfSmoother;
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
+  extensions.smoother.connect<
+      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
+      &kfSmoother);
 
   // Set the KalmanFitter options
   TrackFitterOptions kfOptions(

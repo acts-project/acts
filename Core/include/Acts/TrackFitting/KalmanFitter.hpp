@@ -39,6 +39,18 @@
 
 namespace Acts {
 
+/// Strategy for selecting track states when reaching target surface in Kalman
+/// filter
+enum class KalmanFitterTargetSurfaceStrategy {
+  /// Use the first trackstate to reach target surface
+  first,
+  /// Use the last trackstate to reach target surface
+  last,
+  /// Use the first or last trackstate to reach target surface depending on the
+  /// distance
+  firstOrLast,
+};
+
 /// Extension struct which holds delegates to customise the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
@@ -61,6 +73,16 @@ struct KalmanFitterExtensions {
   /// Type alias for outlier detection delegate
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
+  /// Type alias for reverse filtering decision delegate
+  using ReverseFilteringLogic = Delegate<bool(ConstTrackStateProxy)>;
+
+  /// Type alias for track smoothing delegate
+  using Smoother = Delegate<Result<void>(const GeometryContext&, traj_t&,
+                                         std::size_t, const Logger&)>;
+
+  /// Retrieves the associated surface from a source link
+  SourceLinkSurfaceAccessor surfaceAccessor;
+
   /// The Calibrator is a dedicated calibration algorithm that allows
   /// to calibrate measurements using track information, this could be
   /// e.g. sagging for wires, module deformations, etc.
@@ -73,15 +95,22 @@ struct KalmanFitterExtensions {
   /// outlier
   OutlierFinder outlierFinder;
 
-  /// Retrieves the associated surface from a source link
-  SourceLinkSurfaceAccessor surfaceAccessor;
+  /// Decides whether the smoothing stage uses linearized transport or full
+  /// reverse propagation
+  ReverseFilteringLogic reverseFilteringLogic;
+
+  /// The smoother back-propagates measurement information along the track
+  Smoother smoother;
 
   /// Default constructor which connects the default void components
   KalmanFitterExtensions() {
+    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
     calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
     updater.template connect<&detail::voidFitterUpdater<traj_t>>();
     outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
-    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
+    reverseFilteringLogic
+        .template connect<&detail::voidReverseFilteringLogic<traj_t>>();
+    smoother.template connect<&detail::voidFitterSmoother<traj_t>>();
   }
 };
 
@@ -108,6 +137,7 @@ struct KalmanFitterOptions {
                       const PropagatorPlainOptions& pOptions,
                       const Surface* tSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
+                      bool rFiltering = false, double rfScaling = 1.0,
                       const FreeToBoundCorrection& freeToBoundCorrection_ =
                           FreeToBoundCorrection(false))
       : geoContext(gctx),
@@ -115,12 +145,12 @@ struct KalmanFitterOptions {
         calibrationContext(cctx),
         extensions(extensions_),
         propagatorPlainOptions(pOptions),
-        targetSurface(tSurface),
+        referenceSurface(tSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
+        reversedFiltering(rFiltering),
+        reversedFilteringCovarianceScaling(rfScaling),
         freeToBoundCorrection(freeToBoundCorrection_) {}
-  /// Contexts are required and the options must not be default-constructible.
-  KalmanFitterOptions() = delete;
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -136,13 +166,27 @@ struct KalmanFitterOptions {
   PropagatorPlainOptions propagatorPlainOptions;
 
   /// The target Surface
-  const Surface* targetSurface = nullptr;
+  const Surface* referenceSurface = nullptr;
+
+  /// Strategy to propagate to target surface
+  KalmanFitterTargetSurfaceStrategy referenceSurfaceStrategy =
+      KalmanFitterTargetSurfaceStrategy::firstOrLast;
 
   /// Whether to consider multiple scattering
   bool multipleScattering = true;
 
   /// Whether to consider energy loss
   bool energyLoss = true;
+
+  /// Whether to run filtering in reversed direction overwrite the
+  /// ReverseFilteringLogic
+  bool reversedFiltering = false;
+
+  /// Factor by which the covariance of the input of the reversed filtering is
+  /// scaled. This is only used in the backwardfiltering (if reversedFiltering
+  /// is true or if the ReverseFilteringLogic return true for the track of
+  /// interest)
+  double reversedFilteringCovarianceScaling = 1.0;
 
   /// Whether to include non-linear correction during global to local
   /// transformation
@@ -606,7 +650,7 @@ class KalmanFitter {
     // Catch the actor and set the measurements
     auto& kalmanActor = propagatorOptions.actorList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
-    kalmanActor.targetReached.surface = kfOptions.targetSurface;
+    kalmanActor.targetReached.surface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
@@ -680,7 +724,7 @@ class KalmanFitter {
     // Catch the actor and set the measurements
     auto& kalmanActor = propagatorOptions.actorList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
-    kalmanActor.targetReached.surface = kfOptions.targetSurface;
+    kalmanActor.targetReached.surface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;

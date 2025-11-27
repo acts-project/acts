@@ -26,6 +26,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -336,6 +337,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
 
   Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixSmoother kfSmoother;
 
   KalmanFitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator.connect<
@@ -343,6 +345,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   extensions.updater
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);
+  extensions.smoother
+      .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
+          &kfSmoother);
 
   detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor{*detector};
   extensions.surfaceAccessor
