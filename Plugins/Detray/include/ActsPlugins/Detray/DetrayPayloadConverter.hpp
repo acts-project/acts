@@ -66,6 +66,7 @@ class ISurfaceMaterial;
 
 namespace ActsPlugins {
 
+/// @ingroup detray_plugin
 class DetrayPayloadConverter {
  public:
   using DetraySurfaceMaterial =
@@ -238,6 +239,7 @@ class DetrayPayloadConverter {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
+/// @ingroup detray_plugin
 class DetrayUnsupportedMaterialException : public std::runtime_error {
  public:
   explicit DetrayUnsupportedMaterialException(std::string_view name);
