@@ -17,11 +17,11 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <fstream>
 #include <memory>
@@ -29,10 +29,9 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Test;
 using namespace ActsPlugins;
 
-namespace {
+namespace ActsTests {
 /// Helper method that allows to use the already existing testing
 /// infrastructure with the new const-correct detector design
 ///
@@ -46,14 +45,12 @@ std::vector<std::shared_ptr<Surface>> unpackSurfaces(
   return uSurfaces;
 }
 
-}  // namespace
-
 GeometryContext tContext;
 
-auto cGeometry = Test::CylindricalTrackingGeometry(tContext);
+auto cGeometry = CylindricalTrackingGeometry(tContext);
 auto nominal = Transform3::Identity();
 
-BOOST_AUTO_TEST_SUITE(ActSvg)
+BOOST_AUTO_TEST_SUITE(ActSvgSuite)
 
 BOOST_AUTO_TEST_CASE(TubeCylindricalDetectorVolume) {
   auto portalGenerator = Experimental::defaultPortalGenerator();
@@ -137,7 +134,7 @@ BOOST_AUTO_TEST_CASE(TubeSectorCylindricalDetectorVolume) {
 }
 
 BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
-  Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  CylindricalTrackingGeometry::DetectorStore dStore;
 
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., -800, 2., 22u);
@@ -203,7 +200,7 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
 }
 
 BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
-  Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  CylindricalTrackingGeometry::DetectorStore dStore;
   auto cSurfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145, 72,
                                               3., 2., {32u, 14u});
 
@@ -270,3 +267,5 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

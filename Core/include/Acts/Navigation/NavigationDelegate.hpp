@@ -22,17 +22,12 @@ class Logger;
 /// It is not supposed to be used as an lvalue.
 struct NavigationArguments {
   /// Current position in 3D space for navigation
-  Vector3 position;
+  Vector3 position{};
   /// Direction vector for navigation propagation
-  Vector3 direction;
+  Vector3 direction{};
 
   /// Boundary tolerance for surface intersection calculations
   BoundaryTolerance tolerance = BoundaryTolerance::None();
-
-  /// Flag indicating whether portal intersections are desired
-  bool wantsPortals = true;
-  /// Flag indicating whether surface intersections are desired
-  bool wantsSurfaces = true;
 };
 
 /// Central alias for the navigation delegate. This type is owning to support

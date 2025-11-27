@@ -59,115 +59,32 @@ class TrackContainer {
   std::vector<Track> m_vec{};
 };
 
-BOOST_AUTO_TEST_CASE(SingleTrack) {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(FastJetSuite)
+
+BOOST_AUTO_TEST_CASE(TruthParticleOneJet) {
+  ActsFatras::Barcode barcode;
+  ActsPlugins::FastJet::TruthJet<TrackContainer> jet(
+      Acts::Vector4(100, 0, 0, 100), ActsPlugins::FastJet::JetLabel::Unknown);
+  jet.setConstituents(std::vector<ActsFatras::Barcode>{barcode});
+  BOOST_CHECK_EQUAL(jet.constituents().size(), 1);
+  BOOST_CHECK_EQUAL(jet.constituents()[0], barcode);
+}
+
+BOOST_AUTO_TEST_CASE(SingleTrackJet) {
   TrackContainer tracks;
   tracks.insert(Track(100, 0, 0));
 
-  FastJet::InputTracks inputTracks(tracks);
+  ActsPlugins::FastJet::TrackJet<TrackContainer> jet(
+      Acts::Vector4(100, 0, 0, 100), ActsPlugins::FastJet::JetLabel::Unknown);
+  std::vector<TrackContainer::TrackProxy> constituents{tracks.getTrack(0)};
+  jet.setConstituents(constituents);
 
-  FastJet::TrackJetBuilder jetSeq =
-      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
-  std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
-
-  BOOST_CHECK_EQUAL(jets.size(), 1);
-  BOOST_CHECK_EQUAL(jets[0].constituents().size(), 1);
-  BOOST_CHECK_EQUAL(jets[0].constituents()[0].user_index(), 0);
-  BOOST_CHECK_CLOSE(jets[0].pt(), 100, 1e-3);
-  BOOST_CHECK_CLOSE(jets[0].eta(), 0, 1e-3);
-  BOOST_CHECK_CLOSE(jets[0].phi(), 0, 1e-3);
-  BOOST_CHECK_CLOSE(jets[0].m(), Track::mass, 1);
+  BOOST_CHECK_EQUAL(jet.constituents().size(), 1);
+  BOOST_CHECK(jet.constituents()[0] == tracks.getTrack(0));
 }
 
-BOOST_AUTO_TEST_CASE(TwoTracksTwoJets) {
-  TrackContainer tracks;
-  tracks.insert(Track(100, 0, 0.0));
-  tracks.insert(Track(100, 0, std::numbers::pi));
+BOOST_AUTO_TEST_SUITE_END()
 
-  FastJet::InputTracks inputTracks(tracks);
-
-  FastJet::TrackJetBuilder jetSeq =
-      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
-  std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
-
-  BOOST_CHECK_EQUAL(jets.size(), 2);
-
-  std::vector<Track> trks_0 = inputTracks.tracksInJet(jets[0]);
-  BOOST_CHECK_EQUAL(trks_0.size(), 1);
-  BOOST_CHECK(trks_0[0] == tracks.getTrack(0) ||
-              trks_0[0] == tracks.getTrack(1));
-
-  std::vector<Track> trks_1 = inputTracks.tracksInJet(jets[1]);
-  BOOST_CHECK_EQUAL(trks_1.size(), 1);
-  BOOST_CHECK(trks_1[0] == tracks.getTrack(0) ||
-              trks_1[0] == tracks.getTrack(1));
-  BOOST_CHECK(trks_0[0] != trks_1[0]);
-}
-
-BOOST_AUTO_TEST_CASE(TwoTracksOneJet) {
-  TrackContainer tracks;
-  tracks.insert(Track(100, 0, 0.0));
-  tracks.insert(Track(100, 0, 0.2));
-
-  FastJet::InputTracks inputTracks(tracks);
-
-  FastJet::TrackJetBuilder jetSeq =
-      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
-  std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
-
-  BOOST_CHECK_EQUAL(jets.size(), 1);
-
-  std::vector<Track> trks_0 = inputTracks.tracksInJet(jets[0]);
-  BOOST_CHECK_EQUAL(trks_0.size(), 2);
-  BOOST_CHECK(trks_0[0] == tracks.getTrack(0) ||
-              trks_0[0] == tracks.getTrack(1));
-  BOOST_CHECK(trks_0[1] == tracks.getTrack(0) ||
-              trks_0[1] == tracks.getTrack(1));
-  BOOST_CHECK(trks_0[0] != trks_0[1]);
-}
-
-BOOST_AUTO_TEST_CASE(TracksInJetCore) {
-  TrackContainer tracks;
-  tracks.insert(Track(100, 0, 0));
-  tracks.insert(Track(10, 0.05, 0));
-  tracks.insert(Track(10, -0.05, 0));
-  tracks.insert(Track(10, 0.2, 0));
-  tracks.insert(Track(10, -0.2, 0));
-
-  FastJet::InputTracks inputTracks(tracks);
-
-  FastJet::TrackJetBuilder jetSeq =
-      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
-  std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
-
-  BOOST_REQUIRE_EQUAL(jets.size(), 1);
-
-  std::vector<Track> trks = inputTracks.tracksInJet(jets[0], 0.1);
-  BOOST_CHECK_EQUAL(trks.size(), 3);
-
-  BOOST_CHECK(std::find(trks.begin(), trks.end(), tracks.getTrack(0)) !=
-              trks.end());
-  BOOST_CHECK(std::find(trks.begin(), trks.end(), tracks.getTrack(1)) !=
-              trks.end());
-  BOOST_CHECK(std::find(trks.begin(), trks.end(), tracks.getTrack(2)) !=
-              trks.end());
-  BOOST_CHECK(std::find(trks.begin(), trks.end(), tracks.getTrack(3)) ==
-              trks.end());
-  BOOST_CHECK(std::find(trks.begin(), trks.end(), tracks.getTrack(4)) ==
-              trks.end());
-}
-
-BOOST_AUTO_TEST_CASE(EmptyTrackContainer) {
-  FastJet::TrackJetBuilder jetSeq =
-      FastJet::TrackJetBuilder::create(std::vector<fastjet::PseudoJet>());
-  BOOST_CHECK_EQUAL(jetSeq.jets().size(), 0);
-}
-
-BOOST_AUTO_TEST_CASE(InvalidCoreRadius) {
-  TrackContainer tracks;
-  tracks.insert(Track(100, 0, 0));
-  FastJet::InputTracks inputTracks(tracks);
-  FastJet::TrackJetBuilder jetSeq =
-      FastJet::TrackJetBuilder::create(inputTracks.fourMomenta());
-  BOOST_CHECK_THROW(inputTracks.tracksInJet(jetSeq.jets()[0], -1.0),
-                    std::invalid_argument);
-}
+}  // namespace ActsTests

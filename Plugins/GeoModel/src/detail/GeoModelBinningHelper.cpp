@@ -53,6 +53,7 @@ ActsPlugins::detail::GeoModelBinningHelper::toProtoAxis(
       boundaryType == AxisBoundaryType::Closed) {
     rangeMin = -std::numbers::pi;
     rangeMax = std::numbers::pi;
+    autoRange = false;
   } else {
     if (binningDetails.size() > 3u && binningDetails[3] != "*") {
       autoRange = false;

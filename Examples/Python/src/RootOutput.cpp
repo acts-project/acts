@@ -10,6 +10,7 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
+#include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
@@ -17,15 +18,14 @@
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
-#include "ActsExamples/Io/Root/TrackFinderNTupleWriter.hpp"
-#include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
-#include "ActsPlugins/Root/RootMaterialMapIo.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -55,7 +55,7 @@ namespace ActsPython {
 void addRootOutput(Context& ctx) {
   auto& mex = ctx.get("examples");
 
-  // Bindings for the binning in e.g., TrackFinderPerformanceWriter
+  // Bindings for the binning in e.g., RootTrackFinderPerformanceWriter
   {
     py::class_<PlotHelpers::Binning>(mex, "Binning")
         .def(py::init<std::string, int, double, double>(), "title"_a, "bins"_a,
@@ -85,18 +85,25 @@ void addRootOutput(Context& ctx) {
                              inputSummaryCollection, filePath, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(RootParticleWriter, mex, "RootParticleWriter",
-                             inputParticles, filePath, fileMode, treeName);
+                             inputParticles, filePath, fileMode, treeName,
+                             referencePoint, bField, writeHelixParameters);
 
   ACTS_PYTHON_DECLARE_WRITER(RootVertexWriter, mex, "RootVertexWriter",
                              inputVertices, filePath, fileMode, treeName);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      TrackFinderNTupleWriter, mex, "TrackFinderNTupleWriter", inputTracks,
-      inputParticles, inputParticleMeasurementsMap, inputTrackParticleMatching,
-      filePath, fileMode, treeNameTracks, treeNameParticles);
+  ACTS_PYTHON_DECLARE_WRITER(RootMuonSpacePointWriter, mex,
+                             "RootMuonSpacePointWriter", inputSpacePoints,
+                             filePath, fileMode, treeName, trackingGeometry,
+                             writeGlobal);
+
+  ACTS_PYTHON_DECLARE_WRITER(RootTrackFinderNTupleWriter, mex,
+                             "RootTrackFinderNTupleWriter", inputTracks,
+                             inputParticles, inputParticleMeasurementsMap,
+                             inputTrackParticleMatching, filePath, fileMode,
+                             treeNameTracks, treeNameParticles);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      TrackFitterPerformanceWriter, mex, "TrackFitterPerformanceWriter",
+      RootTrackFitterPerformanceWriter, mex, "RootTrackFitterPerformanceWriter",
       inputTracks, inputParticles, inputTrackParticleMatching, filePath,
       resPlotToolConfig, effPlotToolConfig, trackSummaryPlotToolConfig);
 
@@ -155,25 +162,6 @@ void addRootOutput(Context& ctx) {
             .def("write",
                  py::overload_cast<const TrackingGeometry&>(&Writer::write));
 
-    auto ac =
-        py::class_<ActsPlugins::RootMaterialMapIo::Config>(w, "AccessorConfig")
-            .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(ac, volumePrefix, portalPrefix, layerPrefix,
-                       passivePrefix, sensitivePrefix, nBinsHistName,
-                       axisDirHistName, axisBoundaryTypeHistName, indexHistName,
-                       minRangeHistName, maxRangeHistName, thicknessHistName,
-                       x0HistName, l0HistName, aHistName, zHistName,
-                       rhoHistName);
-
-    auto ao = py::class_<ActsPlugins::RootMaterialMapIo::Options>(
-                  w, "AccessorOptions")
-                  .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(ao, homogeneousMaterialTreeName, indexedMaterialTreeName,
-                       folderSurfaceNameBase, folderVolumeNameBase,
-                       indexedMaterial);
-
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, processSensitives, processApproaches,
@@ -202,13 +190,13 @@ void addRootOutput(Context& ctx) {
       writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      VertexNTupleWriter, mex, "VertexNTupleWriter", inputVertices, inputTracks,
-      inputTruthVertices, inputParticles, inputSelectedParticles,
+      RootVertexNTupleWriter, mex, "RootVertexNTupleWriter", inputVertices,
+      inputTracks, inputTruthVertices, inputParticles, inputSelectedParticles,
       inputTrackParticleMatching, bField, filePath, treeName, fileMode,
       vertexMatchThreshold, trackMatchThreshold, writeTrackInfo);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      TrackFinderPerformanceWriter, mex, "TrackFinderPerformanceWriter",
+      RootTrackFinderPerformanceWriter, mex, "RootTrackFinderPerformanceWriter",
       inputTracks, inputParticles, inputTrackParticleMatching,
       inputParticleTrackMatching, inputParticleMeasurementsMap, filePath,
       fileMode, effPlotToolConfig, fakePlotToolConfig,

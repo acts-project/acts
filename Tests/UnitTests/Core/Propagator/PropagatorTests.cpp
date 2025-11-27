@@ -29,9 +29,9 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -44,11 +44,13 @@
 #include <utility>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 using Acts::VectorHelpers::perp;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -143,6 +145,8 @@ auto cSurface =
 
 const int ntests = 5;
 
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
+
 // This tests the Options
 BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
   using NullOptionsType = EigenPropagatorType::Options<>;
@@ -196,9 +200,9 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -247,9 +251,9 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -327,9 +331,9 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -477,4 +481,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                   "Propagator unexpectedly inherits from BasePropagator");
   }
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

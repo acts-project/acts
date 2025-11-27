@@ -18,8 +18,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsPlugins/Geant4/Geant4Converters.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <cmath>
@@ -46,20 +46,20 @@ using namespace ActsPlugins;
 double rho = 1.2345;
 G4Material* g4Material = new G4Material("Material", 6., 12., rho);
 
-BOOST_AUTO_TEST_SUITE(Geant4Plugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(Geant4Suite)
 
 BOOST_AUTO_TEST_CASE(Geant4AlgebraConversion) {
   G4ThreeVector g4Translation(10., 20., 30.);
 
-  auto translated =
-      ActsPlugins::Geant4AlgebraConverter{}.transform(g4Translation);
+  auto translated = Geant4AlgebraConverter{}.transform(g4Translation);
   auto actsTranslation = translated.translation();
   BOOST_CHECK_EQUAL(actsTranslation[0], 10.);
   BOOST_CHECK_EQUAL(actsTranslation[1], 20.);
   BOOST_CHECK_EQUAL(actsTranslation[2], 30.);
 
-  auto translatedScaled =
-      ActsPlugins::Geant4AlgebraConverter{10.}.transform(g4Translation);
+  auto translatedScaled = Geant4AlgebraConverter{10.}.transform(g4Translation);
   auto actsTranslationScaled = translatedScaled.translation();
   BOOST_CHECK_EQUAL(actsTranslationScaled[0], 100.);
   BOOST_CHECK_EQUAL(actsTranslationScaled[1], 200.);
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
   G4PVPlacement g4BoxPhys(g4Rot, g4Trans, g4BoxLog, "BoxPhys", nullptr, false,
                           1);
 
-  auto planeSurface = ActsPlugins::Geant4PhysicalVolumeConverter{}.surface(
+  auto planeSurface = Geant4PhysicalVolumeConverter{}.surface(
       g4BoxPhys, Transform3::Identity(), true, thickness);
   BOOST_REQUIRE_NE(planeSurface, nullptr);
   BOOST_CHECK_EQUAL(planeSurface->type(), Surface::SurfaceType::Plane);
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
 
   // Convert with compression
   double compression = 4.;
-  planeSurface = ActsPlugins::Geant4PhysicalVolumeConverter{}.surface(
+  planeSurface = Geant4PhysicalVolumeConverter{}.surface(
       g4BoxPhys, Transform3::Identity(), true, thickness / compression);
   BOOST_REQUIRE_NE(planeSurface, nullptr);
   BOOST_CHECK_EQUAL(planeSurface->type(), Surface::SurfaceType::Plane);
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
   G4PVPlacement g4CylinderPhys(g4Rot, g4Trans, g4TubeLog, "TubePhys", nullptr,
                                false, 1);
 
-  auto cylinderSurface = ActsPlugins::Geant4PhysicalVolumeConverter{}.surface(
+  auto cylinderSurface = Geant4PhysicalVolumeConverter{}.surface(
       g4CylinderPhys, Transform3::Identity(), true, thickness);
   BOOST_REQUIRE_NE(cylinderSurface, nullptr);
   BOOST_CHECK_EQUAL(cylinderSurface->type(), Surface::SurfaceType::Cylinder);
@@ -340,8 +340,8 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
 
   /// CHECK exception throwing
   BOOST_CHECK_THROW(
-      ActsPlugins::Geant4PhysicalVolumeConverter{Surface::SurfaceType::Plane}
-          .surface(g4CylinderPhys, Transform3::Identity(), true, thickness),
+      Geant4PhysicalVolumeConverter{Surface::SurfaceType::Plane}.surface(
+          g4CylinderPhys, Transform3::Identity(), true, thickness),
       std::runtime_error);
 
   delete g4Tube;
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
   G4PVPlacement g4discPhys(g4Rot, g4Trans, g4TubeLog, "TubePhys", nullptr,
                            false, 1);
 
-  auto discSurface = ActsPlugins::Geant4PhysicalVolumeConverter{}.surface(
+  auto discSurface = Geant4PhysicalVolumeConverter{}.surface(
       g4discPhys, Transform3::Identity(), true, thickness);
   BOOST_REQUIRE_NE(discSurface, nullptr);
   BOOST_CHECK_EQUAL(discSurface->type(), Surface::SurfaceType::Disc);
@@ -399,8 +399,8 @@ BOOST_AUTO_TEST_CASE(Geant4LineVPhysConversion) {
                            false, 1);
 
   auto lineSurface =
-      ActsPlugins::Geant4PhysicalVolumeConverter{Surface::SurfaceType::Straw}
-          .surface(g4linePhys, Transform3::Identity(), true, thickness);
+      Geant4PhysicalVolumeConverter{Surface::SurfaceType::Straw}.surface(
+          g4linePhys, Transform3::Identity(), true, thickness);
   BOOST_REQUIRE_NE(lineSurface, nullptr);
   BOOST_CHECK_EQUAL(lineSurface->type(), Surface::SurfaceType::Straw);
 
@@ -410,3 +410,5 @@ BOOST_AUTO_TEST_CASE(Geant4LineVPhysConversion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

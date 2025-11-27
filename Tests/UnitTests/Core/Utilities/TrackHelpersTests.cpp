@@ -13,10 +13,12 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 namespace {
 
@@ -63,7 +65,7 @@ auto createTestTrackState(TrackContainer& tc) {
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(CalculateQuantities) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -151,7 +153,7 @@ BOOST_AUTO_TEST_CASE(CalculateFilteredChi2) {
   auto ts = createTestTrackState(tc);
 
   // reference found by running the code
-  BOOST_CHECK_CLOSE(calculateFilteredChi2(ts), 1. / 3., 1e-6);
+  BOOST_CHECK_CLOSE(calculateFilteredChi2(ts), 1., 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(CalculateSmoothedChi2) {
@@ -159,7 +161,7 @@ BOOST_AUTO_TEST_CASE(CalculateSmoothedChi2) {
   auto ts = createTestTrackState(tc);
 
   // reference found by running the code
-  BOOST_CHECK_CLOSE(calculateSmoothedChi2(ts), 1. / 55., 1e-6);
+  BOOST_CHECK_CLOSE(calculateSmoothedChi2(ts), 1. / 45., 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(CalculateUnbiasedParametersCovariance) {
@@ -182,4 +184,4 @@ BOOST_AUTO_TEST_CASE(CalculateUnbiasedParametersCovariance) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

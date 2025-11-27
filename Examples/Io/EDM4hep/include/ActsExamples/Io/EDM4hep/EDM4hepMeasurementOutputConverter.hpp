@@ -11,8 +11,8 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
 #include <string>
 
@@ -28,7 +28,7 @@ namespace ActsExamples {
 /// Known issues:
 /// - cluster channels are written to inappropriate fields
 /// - local 2D coordinates and time are written to position
-class EDM4hepMeasurementOutputConverter final : public EDM4hepOutputConverter {
+class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
  public:
   struct Config {
     /// Which measurement collection to write.

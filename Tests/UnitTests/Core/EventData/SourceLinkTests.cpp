@@ -16,18 +16,19 @@
 #include <any>
 #include <sstream>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-BOOST_AUTO_TEST_SUITE(EventDataSourceLink)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
-  using Acts::detail::Test::TestSourceLink;
+  using detail::Test::TestSourceLink;
 
-  TestSourceLink ts;
-  Acts::Vector2 stddev(0.01, 0.1);
-  Acts::SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
-  TestSourceLink l1(Acts::eBoundLoc0, 0.1, cov(0, 0),
-                    Acts::GeometryIdentifier(0x999), 0);
+  Vector2 stddev(0.01, 0.1);
+  SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
+  TestSourceLink l1(eBoundLoc0, 0.1, cov(0, 0), GeometryIdentifier(0x999), 0);
   TestSourceLink l2(l1);
 
   BOOST_CHECK(l1 == l2);     // testing the ==
@@ -37,16 +38,16 @@ BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
 }
 
 struct MySourceLink {
-  Acts::GeometryIdentifier m_geometryId;
+  GeometryIdentifier m_geometryId;
 
-  Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
+  GeometryIdentifier geometryId() const { return m_geometryId; }
 };
 
 BOOST_AUTO_TEST_CASE(Construct) {
   MySourceLink msl;
-  msl.m_geometryId = Acts::GeometryIdentifier().withSensitive(42);
+  msl.m_geometryId = GeometryIdentifier().withSensitive(42);
   {
-    Acts::SourceLink sl{msl};
+    SourceLink sl{msl};
     BOOST_CHECK_EQUAL(sl.get<MySourceLink>().geometryId(), msl.geometryId());
     BOOST_CHECK_THROW(sl.get<int>(), std::bad_any_cast);
   }
@@ -54,7 +55,7 @@ BOOST_AUTO_TEST_CASE(Construct) {
 
 BOOST_AUTO_TEST_CASE(Reassign) {
   int value = 5;
-  Acts::SourceLink sl{value};
+  SourceLink sl{value};
 
   BOOST_CHECK_EQUAL(sl.get<int>(), value);
   BOOST_CHECK_THROW(sl.get<double>(), std::bad_any_cast);
@@ -62,9 +63,11 @@ BOOST_AUTO_TEST_CASE(Reassign) {
   double otherValue = 42.42;
 
   // this changes the stored type
-  sl = Acts::SourceLink{otherValue};
+  sl = SourceLink{otherValue};
   BOOST_CHECK_EQUAL(sl.get<double>(), otherValue);
   BOOST_CHECK_THROW(sl.get<int>(), std::bad_any_cast);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -35,6 +35,7 @@ def runTruthTrackingKalman(
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
+        TrackSmearingSigmas,
         addKalmanTracks,
     )
 
@@ -120,7 +121,31 @@ def runTruthTrackingKalman(
         rnd=rnd,
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        trackSmearingSigmas=TrackSmearingSigmas(
+            # zero eveything so the KF has a chance to find the measurements
+            loc0=0,
+            loc0PtA=0,
+            loc0PtB=0,
+            loc1=0,
+            loc1PtA=0,
+            loc1PtB=0,
+            time=0,
+            phi=0,
+            theta=0,
+            ptRel=0,
+        ),
         particleHypothesis=acts.ParticleHypothesis.muon,
+        initialSigmas=[
+            1 * u.mm,
+            1 * u.mm,
+            1 * u.degree,
+            1 * u.degree,
+            0 / u.GeV,
+            1 * u.ns,
+        ],
+        initialSigmaQoverPt=0.1 / u.GeV,
+        initialSigmaPtRel=0.1,
+        initialVarInflation=[1e0, 1e0, 1e0, 1e0, 1e0, 1e0],
     )
 
     addKalmanTracks(
@@ -166,7 +191,7 @@ def runTruthTrackingKalman(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        acts.examples.RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",

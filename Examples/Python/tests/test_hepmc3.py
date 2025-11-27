@@ -80,27 +80,36 @@ def handle_path(out, compression):
     return actual_path
 
 
+def check_sidecar(actual_path, expected_events):
+    """Check that a sidecar metadata file exists and contains the expected event count"""
+    sidecar_path = Path(str(actual_path) + ".json")
+    assert sidecar_path.exists(), f"Sidecar file {sidecar_path} does not exist"
+
+    import json
+
+    with sidecar_path.open("r") as f:
+        metadata = json.load(f)
+
+    assert "num_events" in metadata, "Sidecar file missing 'num_events' field"
+    assert (
+        metadata["num_events"] == expected_events
+    ), f"Expected {expected_events} events, but sidecar says {metadata['num_events']}"
+
+
 all_formats = []
 all_format_ids = []
 
 for compression in acts.examples.hepmc3.availableCompressionModes():
-    for value, id in [(True, "per_event"), (False, "combined")]:
-        all_formats.append(
-            (
-                value,
-                "hepmc3",
-                compression,
-            )
-        )
-        all_format_ids.append(
-            f"{id}-hepmc3-{compression.name if compression != cm.none else 'uncompressed'}"
-        )
+    all_formats.append(("hepmc3", compression))
+    all_format_ids.append(
+        f"hepmc3-{compression.name if compression != cm.none else 'uncompressed'}"
+    )
 
-all_formats.append((False, "root", cm.none))
+all_formats.append(("root", cm.none))
 all_format_ids.append("root")
 
 all_formats = pytest.mark.parametrize(
-    "per_event,format,compression", all_formats, ids=all_format_ids
+    "format,compression", all_formats, ids=all_format_ids
 )
 
 main_formats = []
@@ -122,7 +131,7 @@ main_formats = pytest.mark.parametrize(
 
 
 @all_formats
-def test_hemc3_writer(tmp_path, rng, per_event, compression, format):
+def test_hemc3_writer(tmp_path, rng, compression, format):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
     )
@@ -179,7 +188,6 @@ def test_hemc3_writer(tmp_path, rng, per_event, compression, format):
             acts.logging.DEBUG,
             inputEvent="hepmc3_event",
             outputPath=out,
-            perEvent=per_event,
             compression=compression,
             # writeEventsInOrder=False,
         )
@@ -187,38 +195,27 @@ def test_hemc3_writer(tmp_path, rng, per_event, compression, format):
 
     s.run()
 
-    if per_event:
-        files = list(out.parent.iterdir())
-        assert len(files) == s.config.events
-        assert all(f.stem.startswith("event") for f in files)
-        if compression == cm.none:
-            assert all(f.suffix == ".hepmc3" for f in files)
-            for f in files:
-                with f.open("r") as f:
-                    assert len(f.readlines()) == 25
-        else:
-            ext = acts.examples.hepmc3.compressionExtension(compression)
-            assert all(f.name.endswith(f".hepmc3{ext}") for f in files)
+    actual_path = handle_path(out, compression)
 
-    else:
-        actual_path = handle_path(out, compression)
+    # Check sidecar metadata file
+    check_sidecar(actual_path, s.config.events)
 
-        # pyhepmc does not support zstd
-        if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib) and format != "root":
+    # pyhepmc does not support zstd
+    if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib) and format != "root":
 
-            @with_pyhepmc
-            def check(pyhepmc):
-                nevts = 0
-                event_numbers = []
-                with pyhepmc.open(actual_path) as f:
-                    for evt in f:
-                        nevts += 1
-                        event_numbers.append(evt.event_number)
-                        assert len(evt.particles) == 4 + 2  # muons + beam particles
-                assert nevts == s.config.events
-                assert event_numbers == list(
-                    range(s.config.events)
-                ), "Events are out of order"
+        @with_pyhepmc
+        def check(pyhepmc):
+            nevts = 0
+            event_numbers = []
+            with pyhepmc.open(actual_path) as f:
+                for evt in f:
+                    nevts += 1
+                    event_numbers.append(evt.event_number)
+                    assert len(evt.particles) == 4 + 2  # muons + beam particles
+            assert nevts == s.config.events
+            assert event_numbers == list(
+                range(s.config.events)
+            ), "Events are out of order"
 
 
 class StallAlgorithm(acts.examples.IAlgorithm):
@@ -283,7 +280,6 @@ def common_writer(tmp_path, common_evgen):
                 acts.logging.INFO,
                 inputEvent=evGen.config.outputEvent,
                 outputPath=out,
-                perEvent=False,
                 compression=compression,
             )
         )
@@ -331,6 +327,9 @@ def test_hepmc3_writer_stall(common_evgen, tmp_path, bufsize):
 
     s.run()
 
+    # Check sidecar metadata file
+    check_sidecar(out, s.config.events)
+
     @with_pyhepmc
     def check(pyhepmc):
         nevts = 0
@@ -372,6 +371,9 @@ def test_hepmc3_writer_not_in_order(common_evgen, tmp_path):
     )
 
     s.run()
+
+    # Check sidecar metadata file
+    check_sidecar(out, s.config.events)
 
     @with_pyhepmc
     def check(pyhepmc):
@@ -421,7 +423,6 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression, format):
             acts.logging.VERBOSE,
             inputEvent="pythia8-event",
             outputPath=out,
-            perEvent=False,
             compression=compression,
         )
     )
@@ -443,6 +444,9 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression, format):
     actual_path = handle_path(out, compression)
 
     assert actual_path.exists(), f"File {actual_path} does not exist"
+
+    # Check sidecar metadata file
+    check_sidecar(actual_path, s.config.events)
 
     if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib) and format != "root":
 
@@ -652,23 +656,144 @@ def test_hepmc3_compression_modes():
     assert cm.none in acts.examples.hepmc3.availableCompressionModes()
 
 
-def test_hepmc3_writer_per_event_root_warning(tmp_path, capfd):
-    """Test that a warning is emitted when using per-event output with ROOT format"""
+@compression_modes
+def test_hepmc3_writer_compression_auto_detection(tmp_path, rng, compression):
+    """Test that compression is automatically detected from the output path"""
     from acts.examples.hepmc3 import HepMC3Writer
 
-    out = tmp_path / "out" / "events.root"
+    s = Sequencer(numThreads=1, events=10)
+
+    evGen = acts.examples.EventGenerator(
+        level=acts.logging.INFO,
+        generators=[
+            acts.examples.EventGenerator.Generator(
+                multiplicity=acts.examples.FixedMultiplicityGenerator(n=1),
+                vertex=acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
+                particles=acts.examples.ParametricParticleGenerator(
+                    p=(100 * u.GeV, 100 * u.GeV),
+                    eta=(-2, 2),
+                    phi=(0, 360 * u.degree),
+                    randomizeCharge=True,
+                    numParticles=2,
+                ),
+            )
+        ],
+        outputEvent="hepmc3_event",
+        randomNumbers=rng,
+    )
+    s.addReader(evGen)
+
+    # Create output path WITH compression extension but WITHOUT specifying compression in config
+    ext = acts.examples.hepmc3.compressionExtension(compression)
+    out = tmp_path / f"events.hepmc3{ext}"
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    with acts.logging.ScopedFailureThreshold(acts.logging.MAX):
+    # Don't specify compression - it should be auto-detected from the path
+    s.addWriter(
         HepMC3Writer(
             acts.logging.INFO,
             inputEvent="hepmc3_event",
             outputPath=out,
-            perEvent=True,
+            # compression=None (default)
+        )
+    )
+
+    s.run()
+
+    # File should exist with the correct extension
+    assert out.exists(), f"Output file {out} does not exist"
+
+    # Check sidecar
+    check_sidecar(out, s.config.events)
+
+    # Verify we can read it back
+    if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib):
+
+        @with_pyhepmc
+        def check(pyhepmc):
+            nevts = 0
+            with pyhepmc.open(out) as f:
+                for evt in f:
+                    nevts += 1
+            assert nevts == s.config.events
+
+
+def test_hepmc3_writer_compression_consistency(tmp_path):
+    """Test that specifying both path extension and config compression must be consistent"""
+    from acts.examples.hepmc3 import HepMC3Writer
+
+    out = tmp_path / "out" / "events.hepmc3.gz"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    # Path says .gz (zlib) but config says bzip2 - should fail
+    with acts.logging.ScopedFailureThreshold(acts.logging.MAX), pytest.raises(
+        ValueError
+    ) as excinfo:
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent="hepmc3_event",
+            outputPath=out,
+            compression=acts.examples.hepmc3.Compression.bzip2,
         )
 
-    out, err = capfd.readouterr()
-    assert "Per-event output is enabled and the output format is ROOT" in out
+    assert "Compression mismatch" in str(excinfo.value)
+    assert "zlib" in str(excinfo.value)
+    assert "bzip2" in str(excinfo.value)
+
+
+def test_hepmc3_writer_compression_explicit_with_path(tmp_path, rng):
+    """Test that you can specify compression in config and omit it from path"""
+    from acts.examples.hepmc3 import HepMC3Writer
+
+    s = Sequencer(numThreads=1, events=10)
+
+    evGen = acts.examples.EventGenerator(
+        level=acts.logging.INFO,
+        generators=[
+            acts.examples.EventGenerator.Generator(
+                multiplicity=acts.examples.FixedMultiplicityGenerator(n=1),
+                vertex=acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
+                particles=acts.examples.ParametricParticleGenerator(
+                    p=(100 * u.GeV, 100 * u.GeV),
+                    eta=(-2, 2),
+                    phi=(0, 360 * u.degree),
+                    randomizeCharge=True,
+                    numParticles=2,
+                ),
+            )
+        ],
+        outputEvent="hepmc3_event",
+        randomNumbers=rng,
+    )
+    s.addReader(evGen)
+
+    # Specify path WITHOUT extension, but WITH compression in config
+    out = tmp_path / "events.hepmc3"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent="hepmc3_event",
+            outputPath=out,
+            compression=acts.examples.hepmc3.Compression.zlib,
+        )
+    )
+
+    s.run()
+
+    # File should exist with compression extension added
+    actual_path = tmp_path / "events.hepmc3.gz"
+    assert actual_path.exists(), f"Output file {actual_path} does not exist"
+
+    # Check sidecar
+    check_sidecar(actual_path, s.config.events)
 
 
 def test_hepmc3_writer_root_compression_error(tmp_path):
@@ -688,7 +813,7 @@ def test_hepmc3_writer_root_compression_error(tmp_path):
             compression=acts.examples.hepmc3.Compression.zlib,
         )
 
-    assert "Compression not supported for Root" in str(excinfo.value)
+    assert "Compression not supported for ROOT format" in str(excinfo.value)
 
 
 def test_hepmc3_reader_multiple_files(tmp_path, rng):
@@ -738,7 +863,6 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
             acts.logging.INFO,
             inputEvent=hard_scatter.config.outputEvent,
             outputPath=out_hs,
-            perEvent=False,
             compression=compression,
         )
     )
@@ -775,7 +899,6 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
             acts.logging.INFO,
             inputEvent=pileup.config.outputEvent,
             outputPath=out_pu,
-            perEvent=False,
             compression=compression,
         )
     )
@@ -785,12 +908,19 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
     act_hs = handle_path(out_hs, compression)
     act_pu = handle_path(out_pu, compression)
 
+    # Check sidecar metadata files
+    check_sidecar(act_hs, events)
+    check_sidecar(act_pu, events * n_pileup)
+
     # do reading including merging and write combined file
 
     s = Sequencer(numThreads=10, logLevel=acts.logging.INFO)
 
     reader = HepMC3Reader(
-        inputPaths=[(act_hs, 1), (act_pu, 10)],
+        inputs=[
+            HepMC3Reader.Input.Fixed(act_hs, 1),
+            HepMC3Reader.Input.Fixed(act_pu, 10),
+        ],
         level=acts.logging.VERBOSE,
         outputEvent="hepmc3_event",
         vertexGenerator=vtxGen,
@@ -806,7 +936,6 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
             acts.logging.INFO,
             inputEvent=reader.config.outputEvent,
             outputPath=out_combined,
-            perEvent=False,
             compression=compression,
         )
     )
@@ -814,6 +943,9 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
     s.run()
 
     act_combined = handle_path(out_combined, compression)
+
+    # Check sidecar metadata file for combined output
+    check_sidecar(act_combined, events)
 
     @with_pyhepmc
     def check(pyhepmc):

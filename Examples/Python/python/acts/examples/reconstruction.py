@@ -389,15 +389,18 @@ def addSeeding(
             stripGeoSelectionConfigFile,
             logLevel,
         )
+        seeds = None
+        perSeedParticleHypothesis = None
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
-            seeds = addTruthEstimatedSeeding(
+            seeds, perSeedParticleHypothesis = addTruthEstimatedSeeding(
                 s,
                 spacePoints,
                 selectedParticles,
                 truthEstimatedSeedingAlgorithmConfigArg,
-                logLevel,
+                particleHypothesis=particleHypothesis,
+                logLevel=logLevel,
             )
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
@@ -505,6 +508,7 @@ def addSeeding(
         parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
             level=logLevel,
             inputSeeds=seeds,
+            inputParticleHypotheses=perSeedParticleHypothesis,
             outputTrackParameters="estimatedparameters",
             outputSeeds="estimatedseeds",
             trackingGeometry=trackingGeometry,
@@ -523,7 +527,7 @@ def addSeeding(
         s.addAlgorithm(
             acts.examples.SeedsToPrototracks(
                 level=logLevel,
-                inputSeeds=seeds,
+                inputSeeds="estimatedseeds",
                 outputProtoTracks=prototracks,
             )
         )
@@ -663,6 +667,7 @@ def addTruthEstimatedSeeding(
     spacePoints: str,
     inputParticles: str,
     TruthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg,
+    particleHypothesis: Optional[acts.ParticleHypothesis] = None,
     logLevel: acts.logging.Level = None,
 ):
     """adds truth seeding
@@ -680,14 +685,16 @@ def addTruthEstimatedSeeding(
         outputParticles="truth_seeded_particles",
         outputProtoTracks="truth_particle_tracks",
         outputSeeds="seeds",
+        outputParticleHypotheses="seed_particle_hypotheses",
         **acts.examples.defaultKWArgs(
             deltaRMin=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[0],
             deltaRMax=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[1],
+            particleHypothesis=particleHypothesis,
         ),
     )
     sequence.addAlgorithm(truthSeeding)
 
-    return truthSeeding.config.outputSeeds
+    return truthSeeding.config.outputSeeds, truthSeeding.config.outputParticleHypotheses
 
 
 def addSpacePointsMaking(
@@ -1391,12 +1398,9 @@ def addGbtsSeeding(
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     ConnectorInputFileStr = str(ConnectorInputConfigFile)
-    seedFinderConfig = acts.SeedFinderGbtsConfig(
+    seedFinderConfig = acts.examples.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
-            sigmaScattering=seedFinderConfigArg.sigmaScattering,
-            minPt=seedFinderConfigArg.minPt,
-            ConnectorInputFile=ConnectorInputFileStr,
-            m_useClusterWidth=False,
+            minPt=seedFinderConfigArg.minPt, ConnectorInputFile=ConnectorInputFileStr
         ),
     )
     seedFinderOptions = acts.SeedFinderOptions(
@@ -1414,14 +1418,11 @@ def addGbtsSeeding(
 
     seedingAlg = acts.examples.GbtsSeedingAlgorithm(
         level=logLevel,
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         outputSeeds="seeds",
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile,
-        geometrySelection=acts.examples.readJsonGeometryList(
-            str(geoSelectionConfigFile)
-        ),
         trackingGeometry=trackingGeometry,
         fill_module_csv=False,
         inputClusters="clusters",
@@ -1448,7 +1449,7 @@ def addSeedPerformanceWriters(
         outputDirRoot.mkdir()
 
     sequence.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
+        acts.examples.RootTrackFinderPerformanceWriter(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=selectedParticles,
@@ -1965,17 +1966,19 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            trackFitterPerformanceWriter = acts.examples.TrackFitterPerformanceWriter(
-                level=customLogLevel(),
-                inputTracks=tracks,
-                inputParticles="particles_selected",
-                inputTrackParticleMatching="track_particle_matching",
-                filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
+            RootTrackFitterPerformanceWriter = (
+                acts.examples.RootTrackFitterPerformanceWriter(
+                    level=customLogLevel(),
+                    inputTracks=tracks,
+                    inputParticles="particles_selected",
+                    inputTrackParticleMatching="track_particle_matching",
+                    filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
+                )
             )
-            s.addWriter(trackFitterPerformanceWriter)
+            s.addWriter(RootTrackFitterPerformanceWriter)
 
         if writeFinderPerformance:
-            trackFinderPerfWriter = acts.examples.TrackFinderPerformanceWriter(
+            trackFinderPerfWriter = acts.examples.RootTrackFinderPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
@@ -2149,7 +2152,7 @@ def addGnn(
 
     if outputDirRoot is not None:
         s.addWriter(
-            acts.examples.TrackFinderNTupleWriter(
+            acts.examples.RootTrackFinderNTupleWriter(
                 level=customLogLevel(),
                 inputTracks="tracks",
                 inputParticles="particles",
@@ -2402,6 +2405,7 @@ def addVertexFitting(
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     writeTrackInfo: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
@@ -2414,6 +2418,8 @@ def addVertexFitting(
     field : magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    outputDirCsv : Path|str, path, None
+        the output folder for the CSV output, None triggers no output
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
     seeder : enum member
@@ -2435,7 +2441,8 @@ def addVertexFitting(
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
-        VertexNTupleWriter,
+        RootVertexNTupleWriter,
+        CsvVertexWriter,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2513,12 +2520,25 @@ def addVertexFitting(
     else:
         raise RuntimeError("Invalid finder argument")
 
+    if outputDirCsv is not None:
+        outputDirCsv = Path(outputDirCsv)
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
+        s.addWriter(
+            CsvVertexWriter(
+                level=customLogLevel(),
+                inputVertices=outputVertices,
+                outputDir=str(outputDirCsv),
+                outputStem="vertices",
+            )
+        )
+
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
         s.addWriter(
-            VertexNTupleWriter(
+            RootVertexNTupleWriter(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
                 inputTracks=tracks,
@@ -2545,7 +2565,7 @@ def addHoughVertexFinding(
 ) -> None:
     from acts.examples import (
         HoughVertexFinderAlgorithm,
-        VertexNTupleWriter,
+        RootVertexNTupleWriter,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2567,7 +2587,7 @@ def addHoughVertexFinding(
             outputDirRoot.mkdir()
 
         s.addWriter(
-            VertexNTupleWriter(
+            RootVertexNTupleWriter(
                 level=customLogLevel(),
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,

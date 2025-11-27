@@ -9,12 +9,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsPlugins/Root/TGeoParser.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 #include <memory>
 #include <string>
@@ -26,7 +26,7 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 /// @brief struct to load the global geometry
 struct RootGeometry {
@@ -39,6 +39,8 @@ struct RootGeometry {
 GeometryContext tgContext = GeometryContext();
 
 RootGeometry rGeometry = RootGeometry();
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test Parsing a TGeo geometry
 BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
@@ -109,4 +111,6 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

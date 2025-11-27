@@ -15,7 +15,7 @@ from acts.examples import (
 
 import acts
 
-from acts import MaterialMapJsonConverter
+from acts.json import MaterialMapJsonConverter
 
 
 def runITk(

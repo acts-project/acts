@@ -15,19 +15,20 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "ActsPlugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <numbers>
 #include <tuple>
 
 using namespace Acts;
 using namespace ActsPlugins::Svg;
-using namespace Acts::Test;
 using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
+
+namespace ActsTests {
 
 GeometryContext tContext;
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
@@ -67,7 +68,7 @@ IndexedSurfacesConverter::Options generateDrawOptions() {
 
 auto drawOptions = generateDrawOptions();
 
-BOOST_AUTO_TEST_SUITE(ActSvg)
+BOOST_AUTO_TEST_SUITE(ActSvgSuite)
 
 BOOST_AUTO_TEST_CASE(RingDisc1D) {
   // A single ring
@@ -75,7 +76,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., 0., 2., 22u);
   // Polyhedron reference generator
-  PolyhedronReferenceGenerator<1u, true> rGenerator;
+  PolyhedronReferenceGenerator rGenerator;
   // A single proto axis clused in phi with 44 bins
   DirectedProtoAxis pAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
                           -std::numbers::pi, std::numbers::pi, 44u);
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   rSurfaces.push_back(dSurface.get());
 
   // Polyhedron reference generator
-  PolyhedronReferenceGenerator<1u, true> rGenerator;
+  PolyhedronReferenceGenerator rGenerator;
   // A single proto axis clused in phi with 44 bins
   DirectedProtoAxis pAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
                           -std::numbers::pi, std::numbers::pi, 44u);
@@ -134,7 +135,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
                              -std::numbers::pi, std::numbers::pi, 44u);
 
-  PolyhedronReferenceGenerator<1u, true> rGenerator;
+  PolyhedronReferenceGenerator rGenerator;
 
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
@@ -170,7 +171,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
                              -std::numbers::pi, std::numbers::pi, 88u);
 
-  PolyhedronReferenceGenerator<1u, true> rGenerator;
+  PolyhedronReferenceGenerator rGenerator;
 
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
@@ -201,7 +202,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
-  PolyhedronReferenceGenerator<1u, true> rGenerator;
+  PolyhedronReferenceGenerator rGenerator;
 
   DirectedProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound, 24.,
                            152, 8u);
@@ -230,7 +231,7 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
                            500., 28u);
   DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
                              -std::numbers::pi, std::numbers::pi, 52u);
-  PolyhedronReferenceGenerator<1u, true> rGenerator;
+  PolyhedronReferenceGenerator rGenerator;
 
   auto indexedCylinder =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
@@ -246,3 +247,5 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

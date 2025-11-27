@@ -52,8 +52,8 @@ using namespace Acts::UnitLiterals;
 template <int D>
 struct DummyComponent {
   double weight = 0;
-  Acts::ActsVector<D> boundPars;
-  Acts::ActsSquareMatrix<D> boundCov;
+  Acts::ActsVector<D> boundPars{};
+  Acts::ActsSquareMatrix<D> boundCov{};
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -255,6 +255,10 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
   }
 }
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
+
 BOOST_AUTO_TEST_CASE(test_with_data) {
   std::mt19937 gen(42);
   std::vector<DummyComponent<2>> cmps(2);
@@ -371,3 +375,7 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
   // Here we expect a very bad approximation
   test_surface(*surface, desc, p, 1.1);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
