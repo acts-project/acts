@@ -408,6 +408,28 @@ class KalmanFitter {
           targetReached.checkAbort(state, stepper, navigator, logger());
       if (isTrackComplete || isEndOfWorldReached || isVolumeConstraintReached ||
           isPathLimitReached || isTargetReached) {
+        ACTS_VERBOSE(
+            "Finalizing Kalman fit: "
+            << (isTrackComplete ? "track complete; " : "")
+            << (isEndOfWorldReached ? "end of world reached; " : "")
+            << (isVolumeConstraintReached ? "volume constraint reached; " : "")
+            << (isPathLimitReached ? "path limit reached; " : "")
+            << (isTargetReached ? "target surface reached; " : ""));
+
+        if (isTargetReached) {
+          ACTS_VERBOSE("Target surface reached - setting fitted parameters");
+
+          // Bind the parameter to the target surface
+          auto res = stepper.boundState(state.stepping, *targetReached.surface);
+          if (res.ok()) {
+            ACTS_ERROR("Error while acquiring bound state for target surface: "
+                       << res.error() << " " << res.error().message());
+          } else {
+            const auto& [boundParams, jacobian, pathLength] = *res;
+            result.fittedParameters = boundParams;
+          }
+        }
+
         result.finished = true;
       }
     }
@@ -632,7 +654,6 @@ class KalmanFitter {
     // Create the ActorList
     using KalmanActor = Actor<parameters_t>;
 
-    using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActorList<KalmanActor>;
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
@@ -660,9 +681,7 @@ class KalmanFitter {
     kalmanActor.extensions = kfOptions.extensions;
     kalmanActor.actorLogger = m_actorLogger.get();
 
-    return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
-                    track_container_t>(sParameters, propagatorOptions,
-                                       trackContainer);
+    return fit_impl(sParameters, propagatorOptions, kfOptions, trackContainer);
   }
 
   /// Fit implementation of the forward filter, calls the
@@ -712,7 +731,6 @@ class KalmanFitter {
     // Create the ActorList
     using KalmanActor = Actor<parameters_t>;
 
-    using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActorList<KalmanActor>;
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
@@ -737,30 +755,15 @@ class KalmanFitter {
     // Set the surface sequence
     propagatorOptions.navigation.surfaces = sSequence;
 
-    return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
-                    track_container_t>(sParameters, propagatorOptions,
-                                       trackContainer);
+    return fit_impl(sParameters, propagatorOptions, kfOptions, trackContainer);
   }
 
  private:
-  /// Common fit implementation
-  ///
-  /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam actor_list_t Type of the actor list
-  /// @tparam aborter_list_t Type of the abort list
-  /// @tparam kalman_result_t Type of the KF result
-  /// @tparam track_container_t Type of the track container
-  ///
-  /// @param sParameters The initial track parameters
-  /// @param propagatorOptions The Propagator Options
-  /// @param trackContainer Input track container storage to append into
-  ///
-  /// @return the output as an output track
   template <typename start_parameters_t, typename propagator_options_t,
-            typename kalman_result_t, TrackContainerFrontend track_container_t>
-  auto fit_impl(const start_parameters_t& sParameters,
-                const propagator_options_t& propagatorOptions,
-                track_container_t& trackContainer) const
+            TrackContainerFrontend track_container_t>
+  auto filter_impl(const start_parameters_t& sParameters,
+                   const propagator_options_t& propagatorOptions,
+                   track_container_t& trackContainer) const
       -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState = m_propagator.makeState(propagatorOptions);
 
@@ -804,6 +807,145 @@ class KalmanFitter {
       track.parameters() = params.parameters();
       track.covariance() = params.covariance().value();
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+    }
+
+    calculateTrackQuantities(track);
+
+    return track;
+  }
+
+  /// Common fit implementation
+  ///
+  /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam actor_list_t Type of the actor list
+  /// @tparam aborter_list_t Type of the abort list
+  /// @tparam track_container_t Type of the track container
+  ///
+  /// @param sParameters The initial track parameters
+  /// @param propagatorOptions The Propagator Options
+  /// @param kfOptions KalmanOptions steering the fit
+  /// @param trackContainer Input track container storage to append into
+  ///
+  /// @return the output as an output track
+  template <typename start_parameters_t, typename propagator_options_t,
+            TrackContainerFrontend track_container_t>
+  auto fit_impl(const start_parameters_t& sParameters,
+                const propagator_options_t& propagatorOptions,
+                const KalmanFitterOptions<traj_t>& kfOptions,
+                track_container_t& trackContainer) const
+      -> Result<typename track_container_t::TrackProxy> {
+    auto forwardFilterResult =
+        filter_impl(sParameters, propagatorOptions, trackContainer);
+
+    if (!forwardFilterResult.ok()) {
+      ACTS_ERROR("KalmanFilter failed: "
+                 << forwardFilterResult.error() << ", "
+                 << forwardFilterResult.error().message());
+      return forwardFilterResult.error();
+    }
+
+    typename track_container_t::TrackProxy forwardTrack =
+        forwardFilterResult.value();
+
+    typename track_container_t::TrackStateProxy firstMeasurementState =
+        trackContainer.trackStateContainer().getTrackState(
+            findFirstMeasurementState(forwardTrack).value().index());
+    typename track_container_t::TrackStateProxy lastMeasurementState =
+        trackContainer.trackStateContainer().getTrackState(
+            findLastMeasurementState(forwardTrack).value().index());
+    lastMeasurementState.smoothed() = lastMeasurementState.filtered();
+    lastMeasurementState.smoothedCovariance() =
+        lastMeasurementState.filteredCovariance();
+
+    typename track_container_t::TrackProxy track = forwardTrack;
+
+    const bool doReverseFilter =
+        kfOptions.reversedFiltering ||
+        kfOptions.extensions.reverseFilteringLogic(
+            typename traj_t::ConstTrackStateProxy(lastMeasurementState));
+    if (doReverseFilter) {
+      ACTS_VERBOSE("Smooth track by reversed filtering");
+
+      auto reverseStartParameters = forwardTrack.createParametersFromState(
+          typename traj_t::ConstTrackStateProxy(lastMeasurementState));
+      auto reversePropagatorOptions = propagatorOptions;
+      reversePropagatorOptions.direction = propagatorOptions.direction.invert();
+      auto reverseFilterResult = filter_impl(
+          reverseStartParameters, reversePropagatorOptions, trackContainer);
+
+      if (!reverseFilterResult.ok()) {
+        ACTS_ERROR("Reversed KalmanFilter failed: "
+                   << reverseFilterResult.error() << ", "
+                   << reverseFilterResult.error().message());
+        return reverseFilterResult.error();
+      }
+
+      typename track_container_t::TrackProxy reverseTrack =
+          reverseFilterResult.value();
+
+      typename track_container_t::TrackStateProxy reverseLastMeasurementState =
+          trackContainer.trackStateContainer().getTrackState(
+              findLastMeasurementState(reverseTrack).value().index());
+
+      if (&firstMeasurementState.referenceSurface() !=
+          &reverseLastMeasurementState.referenceSurface()) {
+        ACTS_ERROR(
+            "Inconsistent reference surfaces between forward and "
+            "reversed filtered tracks");
+        return Result<typename track_container_t::TrackProxy>::failure(
+            KalmanFitterError::InconsistentTrackStates);
+      }
+      firstMeasurementState.smoothed() = reverseLastMeasurementState.filtered();
+      firstMeasurementState.smoothedCovariance() =
+          reverseLastMeasurementState.filteredCovariance();
+
+      if (reverseTrack.hasReferenceSurface()) {
+        track.parameters() = reverseTrack.parameters();
+        track.covariance() = reverseTrack.covariance();
+        track.setReferenceSurface(
+            reverseTrack.referenceSurface().getSharedPtr());
+      }
+    } else {
+      ACTS_VERBOSE("Smooth track directly without reversed filtering");
+
+      auto smoothRes = kfOptions.extensions.smoother(
+          kfOptions.geoContext, trackContainer.trackStateContainer(),
+          forwardTrack.tipIndex(), logger());
+      if (!smoothRes.ok()) {
+        ACTS_ERROR("Smoothing step failed: " << smoothRes.error() << ", "
+                                             << smoothRes.error().message());
+        return smoothRes.error();
+      }
+    }
+
+    if (!track.hasReferenceSurface() && kfOptions.referenceSurface != nullptr) {
+      // TODO get rid of `KalmanFitterTargetSurfaceStrategy` enum
+      TrackExtrapolationStrategy strategy{};
+      switch (kfOptions.referenceSurfaceStrategy) {
+        case KalmanFitterTargetSurfaceStrategy::first:
+          strategy = TrackExtrapolationStrategy::first;
+          break;
+        case KalmanFitterTargetSurfaceStrategy::last:
+          strategy = TrackExtrapolationStrategy::last;
+          break;
+        case KalmanFitterTargetSurfaceStrategy::firstOrLast:
+          strategy = TrackExtrapolationStrategy::firstOrLast;
+          break;
+        default:
+          ACTS_ERROR("Unknown KalmanFitterTargetSurfaceStrategy: "
+                     << static_cast<int>(kfOptions.referenceSurfaceStrategy));
+      }
+
+      auto extrapolationResult = extrapolateTrackToReferenceSurface(
+          track, *kfOptions.referenceSurface, m_propagator, propagatorOptions,
+          strategy, logger());
+
+      if (!extrapolationResult.ok()) {
+        ACTS_ERROR("Extrapolation to reference surface failed: "
+                   << extrapolationResult.error() << ", "
+                   << extrapolationResult.error().message());
+        return extrapolationResult.error();
+      }
     }
 
     calculateTrackQuantities(track);
