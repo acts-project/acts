@@ -23,6 +23,8 @@
 #include <boost/stacktrace/stacktrace_fwd.hpp>
 
 namespace ActsPlugins {
+/// @addtogroup fpemonitoring_plugin
+/// @{
 
 enum class FpeType : std::uint32_t {
   INTDIV = FPE_INTDIV,
@@ -158,4 +160,5 @@ class FpeMonitor {
       m_recorded;
 };
 
+/// @}
 }  // namespace ActsPlugins

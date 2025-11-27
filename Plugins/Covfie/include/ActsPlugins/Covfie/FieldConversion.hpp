@@ -26,6 +26,9 @@
 
 namespace ActsPlugins::Covfie {
 
+/// @addtogroup covfie_plugin
+/// @{
+
 using BuilderBackend =
     covfie::backend::strided<covfie::vector::size3,
                              covfie::backend::array<covfie::vector::float3>>;
@@ -60,5 +63,7 @@ InterpolatedField covfieField(const Acts::MagneticFieldProvider& magneticField,
                               const std::array<std::size_t, 3>& nPoints,
                               const Acts::Vector3& min,
                               const Acts::Vector3& max);
+
+/// @}
 
 }  // namespace ActsPlugins::Covfie
