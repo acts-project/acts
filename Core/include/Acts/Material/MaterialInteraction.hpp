@@ -18,6 +18,9 @@ namespace Acts {
 class Surface;
 
 /// @brief The Material interaction volume struct
+///
+/// @ingroup material
+///
 /// It acts as a switch between detctor and tracking volume
 /// as long as those co-exist alongside
 struct InteractionVolume {
