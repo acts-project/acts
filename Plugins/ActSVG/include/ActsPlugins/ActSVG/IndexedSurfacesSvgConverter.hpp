@@ -35,7 +35,9 @@ using ProtoAssociations = std::vector<std::vector<std::size_t>>;
 using ProtoIndexedSurfaceGrid =
     std::tuple<ProtoSurfaces, ProtoGrid, ProtoAssociations>;
 
+/// @ingroup actsvg_plugin
 namespace IndexedSurfacesConverter {
+/// @ingroup actsvg_plugin
 /// Nested options struct
 struct Options {
   /// Hierarchy map of styles
@@ -175,6 +177,7 @@ ProtoIndexedSurfaceGrid convertImpl(const Acts::GeometryContext& gctx,
 
 }  // namespace IndexedSurfacesConverter
 
+/// @ingroup actsvg_plugin
 namespace View {
 
 /// Convert into an ActsPlugins::Svg::object with an XY view

@@ -19,6 +19,7 @@
 
 namespace ActsPlugins::Svg {
 
+/// @ingroup actsvg_plugin
 /// @brief Style struct
 struct Style {
   // Fill parameters

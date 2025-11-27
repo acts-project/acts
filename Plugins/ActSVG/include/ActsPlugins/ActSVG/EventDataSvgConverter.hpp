@@ -13,6 +13,7 @@
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 
+/// @ingroup actsvg_plugin
 namespace ActsPlugins::Svg::EventDataConverter {
 
 /// Write/create a 3D point in XY view
