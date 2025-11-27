@@ -93,6 +93,6 @@ class SingleConvexPolygonPortalShell : public ConvexPolygonPortalShell {
  private:
   std::array<std::shared_ptr<Portal>, 8> m_portals;
 
-  TrackingVolume* m_volume;
+  TrackingVolume* m_volume{nullptr};
 };
 }  // namespace Acts

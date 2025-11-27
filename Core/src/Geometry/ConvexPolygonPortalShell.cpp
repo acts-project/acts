@@ -24,7 +24,7 @@
 namespace Acts {
 
 void ConvexPolygonPortalShell::fill(TrackingVolume& volume) {
-  for (Face face : {Face::NegativeZFaceXY, Face::PositiveZFaceXY,
+  for (const auto face : {Face::NegativeZFaceXY, Face::PositiveZFaceXY,
                     Face::NegativeXFaceYZ12, Face::PositiveXFaceYZ12,
                     Face::NegativeXFaceYZ23, Face::PositiveXFaceYZ23,
                     Face::NegativeYFaceZX, Face::PositiveYFaceZX}) {
@@ -77,14 +77,11 @@ void SingleConvexPolygonPortalShell::setPortal(std::shared_ptr<Portal> portal,
 }
 
 std::size_t SingleConvexPolygonPortalShell::size() const {
-  std::size_t count = 0;
-  std::ranges::for_each(
-      m_portals, [&count](const auto& portal) { count += portal ? 1 : 0; });
-  return count;
+   return std::ranges::count_if(m_portals, [](const auto& portal){ return portal != nullptr;});
 }
 
 void SingleConvexPolygonPortalShell::applyToVolume() {
-  for (std::size_t p = 0; p < m_portals.size(); p++) {
+  for (std::size_t p = 0; p < m_portals.size(); ++p) {
     const auto& portal = m_portals.at(p);
     if (portal != nullptr) {
       if (!portal->isValid()) {
