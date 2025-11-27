@@ -29,11 +29,13 @@ namespace ActsPlugins::Svg {
 
 using ProtoGrid = actsvg::proto::grid;
 
+/// @ingroup actsvg_plugin
 namespace GridConverter {
 
 // An optional range and binning value
 using AxisBound = std::tuple<std::array<double, 2u>, Acts::AxisDirection>;
 
+/// @ingroup actsvg_plugin
 /// Nested Options struct
 struct Options {
   /// A The style for the surfaces

@@ -24,8 +24,10 @@ class SurfaceArray;
 
 }  // namespace Acts
 
+/// @ingroup actsvg_plugin
 namespace ActsPlugins::Svg::SurfaceArrayConverter {
 
+/// @ingroup actsvg_plugin
 /// Nested options struct
 struct Options {
   /// Hierarchy map of styles

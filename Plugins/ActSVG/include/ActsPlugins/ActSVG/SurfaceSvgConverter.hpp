@@ -23,8 +23,10 @@ namespace ActsPlugins::Svg {
 
 using ProtoSurface = actsvg::proto::surface<std::vector<Acts::Vector3>>;
 
+/// @ingroup actsvg_plugin
 namespace SurfaceConverter {
 
+/// @ingroup actsvg_plugin
 /// Nested Options struct
 struct Options {
   /// A The style for the surfaces
@@ -46,6 +48,7 @@ ProtoSurface convert(const Acts::GeometryContext& gctx,
 
 }  // namespace SurfaceConverter
 
+/// @ingroup actsvg_plugin
 namespace View {
 
 /// Convert into an ActsPlugins::Svg::object with an x-y view
@@ -101,6 +104,7 @@ static inline actsvg::svg::object zrphi(const ProtoSurface& pSurface,
 
 }  // namespace View
 
+/// @ingroup actsvg_plugin
 namespace Sheet {
 
 /// Convert into an ActsPlugins::Svg::object with an XY sheet
