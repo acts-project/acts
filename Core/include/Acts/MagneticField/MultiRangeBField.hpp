@@ -15,10 +15,10 @@
 
 namespace Acts {
 
-/// @ingroup MagneticField
-///
-/// @brief Magnetic field provider modelling a magnetic field consisting of
+/// Magnetic field provider modelling a magnetic field consisting of
 /// several (potentially overlapping) regions of constant values.
+///
+/// @ingroup magnetic_field
 class MultiRangeBField final : public MagneticFieldProvider {
  private:
   struct Cache {
