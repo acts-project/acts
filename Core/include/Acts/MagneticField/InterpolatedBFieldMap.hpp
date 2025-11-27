@@ -90,6 +90,14 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
 /// field cell are provided, but field cell creation is automatically handled
 /// by @ref Acts::InterpolatedBFieldMap::makeCache, opaque to the client.
 ///
+/// This class can leverage spatial symmetries in the magnetic field
+/// distribution. For cylindrically symmetric fields (e.g., solenoids, toroids),
+/// a 2D rz map can be used instead of a full 3D xyz map, significantly reducing
+/// memory
+/// requirements and improving performance. Helper functions @ref Acts::fieldMapRZ
+/// and @ref Acts::fieldMapXYZ are provided to construct field maps with the
+/// appropriate symmetries.
+///
 /// @tparam grid_t The Grid type which provides the field storage and
 /// interpolation
 template <typename grid_t>
@@ -104,8 +112,12 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
   /// @brief struct representing smallest grid unit in magnetic field grid
   ///
-  /// This type encapsulate all required information to perform linear
-  /// interpolation of magnetic field values within a confined 3D volume.
+  /// This type encapsulates all required information to perform linear
+  /// interpolation of magnetic field values within a confined spatial region
+  /// (hyper-box). The cell stores field values at all corner points and
+  /// performs interpolation for any position within the cell boundaries.
+  /// This allows for efficient repeated lookups within the same grid cell
+  /// without consulting the full grid structure.
   struct FieldCell {
     /// number of corner points defining the confining hyper-box
     static constexpr unsigned int N = 1 << DIM_POS;
@@ -167,11 +179,20 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     std::array<Vector3, N> m_fieldValues;
   };
 
+  /// @brief Cache for field cell to improve performance of field lookups
+  ///
+  /// This cache stores the current field cell which contains the interpolation
+  /// data for a confined region of space. By caching the cell, subsequent
+  /// lookups at nearby positions (e.g., during track propagation) can avoid
+  /// expensive grid queries. The cache automatically updates when a position
+  /// outside the current cell is queried.
   struct Cache {
     /// @brief Constructor with magnetic field context
     explicit Cache(const MagneticFieldContext& /*mctx*/) {}
 
+    /// Stored field cell containing interpolation data
     std::optional<FieldCell> fieldCell;
+    /// Flag indicating if the cache has been initialized
     bool initialized = false;
   };
 
