@@ -31,11 +31,10 @@ namespace Acts {
 /// needed. Before a client can issue field lookup calls, it needs to obtain an
 /// initialized instance of this cache object. This can be achieved generically
 /// for all implementations by using
-/// {func}`Acts::MagneticFieldProvider::makeCache`. This function accepts an
-/// instance of {class}`Acts::MagneticFieldContext`, see
-/// [](#magnetic-field-context) for details.
+/// @ref Acts::MagneticFieldProvider::makeCache. This function accepts an
+/// instance of @ref Acts::MagneticFieldContext.
 ///
-/// The main lookup method of {class}`Acts::MagneticFieldProvider` is @ref
+/// The main lookup method of @ref Acts::MagneticFieldProvider is @ref
 /// Acts::MagneticFieldProvider::getField
 ///
 /// Aside from the lookup position as a global position vector, it accepts an
@@ -48,13 +47,15 @@ namespace Acts {
 /// @ref Acts::MagneticFieldProvider.
 ///
 /// ```cpp
-/// // in event context
+/// // In event context
 /// auto fieldContext = getExperimentFieldContext();
 /// const Acts::MagneticFieldProvider& fieldProvider = getFieldProvider();
+/// // Make an opaque cache for field lookups
 /// auto cache = fieldProvider.makeCache(fieldContext);
 ///
 /// auto lookupResult = fieldProvider.getField(Acts::Vector3{10, 10, 10},
-/// cache); if(!lookupResult.ok()) {
+///                                   cache);
+/// if(!lookupResult.ok()) {
 ///    throw std::runtime_error{"Field lookup failure"};
 /// }
 ///
@@ -65,17 +66,20 @@ class MagneticFieldProvider {
   /// Opaque cache type that can store arbitrary implementation specific cache
   /// data. Examples are an interpolation cell, or an experiment specific
   /// conditions data handle.
+  ///
+  /// The cache is always creaded through @ref makeCache.
   using Cache = Acts::AnyBase<sizeof(char) * 512>;
 
   /// Make an opaque cache for the magnetic field. Instructs the specific
-  /// implementation to generate a @c Cache instance for magnetic field lookup.
+  /// implementation to generate a @ref Acts::MagneticFieldProvider::Cache instance
+  /// for magnetic field lookup.
   ///
   /// @param mctx The magnetic field context to generate cache for
   /// @return Cache The opaque cache object
   virtual Cache makeCache(const MagneticFieldContext& mctx) const = 0;
 
-  /// Retrieve magnetic field value at a given location. Requires a cache object
-  /// created through makeCache().
+  /// Retrieve magnetic field value at a given location. Requires an instance
+  /// of @ref Acts::MagneticFieldProvider::Cache created through @ref makeCache.
   ///
   /// @param [in] position global 3D position for the lookup
   /// @param [in,out] cache Field provider specific cache object

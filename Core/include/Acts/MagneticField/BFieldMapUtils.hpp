@@ -26,6 +26,9 @@
 
 namespace Acts {
 
+/// @addtogroup magnetic_field
+/// @{
+
 class SolenoidBField;
 
 /// Method to setup the FieldMap
@@ -159,5 +162,7 @@ solenoidFieldMap(const std::pair<double, double>& rLim,
                  const std::pair<double, double>& zLim,
                  const std::pair<std::size_t, std::size_t>& nBins,
                  const SolenoidBField& field);
+
+/// @}
 
 }  // namespace Acts
