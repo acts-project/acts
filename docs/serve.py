@@ -119,6 +119,8 @@ def main(
     if layout_file.exists():
         server.watch(str(layout_file), rebuild)
 
+    server.watch(str(source_dir / "CONTRIBUTING.md"), rebuild)
+
     server.serve(root=str(output_dir), port=port)
 
 
