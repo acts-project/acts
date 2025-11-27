@@ -24,8 +24,12 @@ template <typename T>
 class CUDA_module_map_triplet;
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 namespace detail {
+/// @ingroup gnn_plugin
+
 class GraphCreatorWrapperBase;
 
 template <typename T>
@@ -103,4 +107,5 @@ class ModuleMapCuda : public GraphConstructionBase {
                              const ExecutionContext &execContext = {}) override;
 };
 
+/// @}
 }  // namespace ActsPlugins

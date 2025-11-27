@@ -13,6 +13,7 @@
 #include <cuda_runtime_api.h>
 
 namespace ActsPlugins::detail {
+/// @ingroup gnn_plugin
 
 inline void cudaAssert(cudaError_t code, const char *file, int line) {
   if (code != cudaSuccess) {

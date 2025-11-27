@@ -14,6 +14,8 @@
 #include <memory>
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 class BoostTrackBuilding final : public TrackBuildingBase {
  public:
@@ -34,4 +36,5 @@ class BoostTrackBuilding final : public TrackBuildingBase {
   const auto &logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace ActsPlugins

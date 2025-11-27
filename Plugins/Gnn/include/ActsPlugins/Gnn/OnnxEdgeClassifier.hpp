@@ -20,6 +20,8 @@ class Value;
 }  // namespace Ort
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 class OnnxEdgeClassifier final : public EdgeClassificationBase {
  public:
@@ -49,4 +51,5 @@ class OnnxEdgeClassifier final : public EdgeClassificationBase {
   std::string m_outputName;
 };
 
+/// @}
 }  // namespace ActsPlugins

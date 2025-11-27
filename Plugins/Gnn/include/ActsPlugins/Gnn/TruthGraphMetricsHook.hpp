@@ -13,6 +13,8 @@
 #include "ActsPlugins/Gnn/detail/CantorEdge.hpp"
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 class TruthGraphMetricsHook : public GnnHook {
   std::unique_ptr<const Acts::Logger> m_logger;
@@ -28,4 +30,5 @@ class TruthGraphMetricsHook : public GnnHook {
                   const ExecutionContext &execCtx) const override;
 };
 
+/// @}
 }  // namespace ActsPlugins

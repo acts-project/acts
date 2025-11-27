@@ -11,6 +11,7 @@
 #include <ostream>
 
 namespace ActsPlugins::detail {
+/// @ingroup gnn_plugin
 
 template <typename It>
 struct RangePrinter {

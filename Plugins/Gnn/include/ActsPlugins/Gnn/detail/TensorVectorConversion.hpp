@@ -16,6 +16,7 @@
 #include <torch/torch.h>
 
 namespace ActsPlugins::detail {
+/// @ingroup gnn_plugin
 
 struct TensorDetails {
   const torch::Tensor &tensor;
