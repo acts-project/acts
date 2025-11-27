@@ -42,6 +42,8 @@ class ProtoLayerHelper;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 class TGeoDetectorElement;
 class ITGeoDetectorElementSplitter;
@@ -258,4 +260,5 @@ inline const std::string& TGeoLayerBuilder::identification() const {
   return m_cfg.configurationName;
 }
 
+/// @}
 }  // namespace ActsPlugins

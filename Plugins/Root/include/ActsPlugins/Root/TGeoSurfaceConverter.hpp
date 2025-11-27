@@ -33,6 +33,9 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
+
 class TGeoDetectorElement;
 
 /// Helper struct to convert TGeoShapes into Surface or Volume Bounds
@@ -113,4 +116,5 @@ struct TGeoSurfaceConverter {
   }
 };
 
+/// @}
 }  // namespace ActsPlugins

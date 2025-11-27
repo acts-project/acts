@@ -28,6 +28,8 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @class TGeoDetectorElement
 ///
@@ -183,4 +185,5 @@ inline double TGeoDetectorElement::thickness() const {
   return m_thickness;
 }
 
+/// @}
 }  // namespace ActsPlugins

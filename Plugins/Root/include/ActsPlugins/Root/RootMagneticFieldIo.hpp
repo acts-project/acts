@@ -19,6 +19,8 @@
 #include <string>
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of r,z to the
@@ -115,4 +117,5 @@ makeMagneticFieldMapXyzFromRoot(
     const std::string& fieldMapFile, const std::string& treeName,
     double lengthUnit, double BFieldUnit, bool firstOctant = false);
 
+/// @}
 }  // namespace ActsPlugins
