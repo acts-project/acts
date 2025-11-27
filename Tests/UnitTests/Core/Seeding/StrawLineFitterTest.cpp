@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   }
   // 2D straws + twin measurement test
   {
-    fitCfg.useFastFitter = true;
+    fitCfg.useFastFitter = false;
     genCfg.twinStraw = true;
     RandomEngine engine{1701};
     runFitTest(fitCfg, genCfg, "StrawAndTwinTest", engine, *outFile);
