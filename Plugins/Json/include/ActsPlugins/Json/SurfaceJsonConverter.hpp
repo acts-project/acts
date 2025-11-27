@@ -26,6 +26,9 @@
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 class ISurfaceMaterial;
 
 using SurfaceAndMaterialWithContext =
@@ -141,4 +144,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {Surface::SurfaceType::Curvilinear, "CurvilinearSurface"},
      {Surface::SurfaceType::Other, "Other"}})
 
+
+/// @}
 }  // namespace Acts

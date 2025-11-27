@@ -21,6 +21,8 @@
 /// constructor which is deleted
 namespace Acts::ProtoAxisJsonConverter {
 
+/// @ingroup json_plugin
+
 /// Write the ProtoAxis to a json object
 ///
 /// @param pa the proto axis to be written out

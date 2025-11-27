@@ -17,6 +17,9 @@
 // can not match our naming guidelines.
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// Convert Extent to JSON
 /// @param j Destination JSON object
 /// @param e Source Extent to convert
@@ -27,4 +30,6 @@ void to_json(nlohmann::json& j, const Extent& e);
 /// @param e Destination Extent to populate
 void from_json(const nlohmann::json& j, Extent& e);
 
+
+/// @}
 }  // namespace Acts

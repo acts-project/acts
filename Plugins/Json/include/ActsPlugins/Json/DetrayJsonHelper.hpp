@@ -18,6 +18,8 @@
 
 namespace Acts::DetrayJsonHelper {
 
+/// @ingroup json_plugin
+
 /// @brief Helper function to switch keys from ACTS to detray
 ///
 /// DETRAY types @todo change to detray imports when available

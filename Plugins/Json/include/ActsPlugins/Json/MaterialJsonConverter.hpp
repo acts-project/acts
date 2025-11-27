@@ -20,6 +20,9 @@
 // can not match our naming guidelines.
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 class Surface;
 class ISurfaceMaterial;
 class IVolumeMaterial;
@@ -116,4 +119,6 @@ nlohmann::json toJsonDetray(const Acts::BinUtility& binUtility,
 
 }  // namespace MaterialJsonConverter
 
+
+/// @}
 }  // namespace Acts

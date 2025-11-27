@@ -17,6 +17,9 @@
 // can not match our naming guidelines.
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// Convert Transform3 to JSON
 /// @param j Destination JSON object
 /// @param t Source Transform3 to convert
@@ -53,4 +56,6 @@ nlohmann::json toJson(const Transform3& t, const Options& options = {});
 Transform3 fromJson(const nlohmann::json& jTransform);
 
 }  // namespace Transform3JsonConverter
+
+/// @}
 }  // namespace Acts

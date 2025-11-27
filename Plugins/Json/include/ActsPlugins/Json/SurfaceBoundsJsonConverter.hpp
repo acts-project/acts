@@ -22,6 +22,9 @@
 
 // Custom Json encoder/decoders.
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 class SurfaceBounds;
 
 /// Convert SurfaceBounds to JSON
@@ -82,4 +85,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {SurfaceBounds::BoundsType::eBoundless, "Boundless"},
      {SurfaceBounds::BoundsType::eOther, "OtherBounds"}})
 
+
+/// @}
 }  // namespace Acts
