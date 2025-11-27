@@ -23,6 +23,8 @@
 #include <onnxruntime_cxx_api.h>
 
 namespace ActsPlugins {
+/// @addtogroup onnx_plugin
+/// @{
 
 /// Onnx model implementation for track scoring and selection
 class AmbiguityTrackClassifier {
@@ -110,4 +112,5 @@ class AmbiguityTrackClassifier {
   OnnxRuntimeBase m_duplicateClassifier;
 };
 
+/// @}
 }  // namespace ActsPlugins
