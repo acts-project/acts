@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
@@ -28,6 +29,7 @@ namespace Acts::detail::IndexedSurfacesGenerator {
 /// @param pFillExpansion the fill expansion
 /// @param assignToAll the indices assigned to all bins
 /// @param transform the transform into the local binning schema
+/// @param lookupSurface an optional lookup surface for intersection prior to binning
 /// @return an internal navigation delegate
 template <template <typename> class indexed_updator, typename surface_container,
           typename reference_generator>
@@ -35,7 +37,8 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
     const GeometryContext& gctx, const surface_container& surfaces,
     const reference_generator& rGenerator, const DirectedProtoAxis& pAxis,
     std::size_t pFillExpansion, const std::vector<std::size_t> assignToAll = {},
-    const Transform3 transform = Transform3::Identity()) {
+    const Transform3 transform = Transform3::Identity(),
+    const std::shared_ptr<Surface> lookupSurface = nullptr) {
   // Let the axis create the grid
   return pAxis.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axis) {
     Grid<std::vector<std::size_t>, AxisTypeA> grid(axis);
@@ -43,7 +46,7 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
     // Prepare the indexed updator
     std::array<AxisDirection, 1u> axisDirs = {pAxis.getAxisDirection()};
     indexed_updator<decltype(grid)> indexedSurfaces(std::move(grid), axisDirs,
-                                                    transform);
+                                                    transform, lookupSurface);
 
     // Prepare the filling
     Experimental::InternalNavigationDelegate nStateUpdater;
@@ -81,6 +84,7 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
 /// @param fillExpansionB the fill expansion of the second axis
 /// @param assignToAll the indices assigned to all bins
 /// @param transform the transform into the local binning schema
+/// @param lookupSurface an optional lookup surface for intersection prior to binning
 ///
 /// @return an internal navigation delegate
 template <template <typename> class indexed_updator, typename surface_container,
@@ -90,7 +94,8 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
     const reference_generator& rGenerator, const DirectedProtoAxis& pAxisA,
     std::size_t fillExpansionA, const DirectedProtoAxis& pAxisB,
     std::size_t fillExpansionB, const std::vector<std::size_t> assignToAll = {},
-    const Transform3 transform = Transform3::Identity()) {
+    const Transform3 transform = Transform3::Identity(),
+    const std::shared_ptr<Surface> lookupSurface = nullptr) {
   // Let the axes create the grid
   return pAxisA.getAxis().visit([&]<typename AxisTypeA>(
                                     const AxisTypeA& axisA) {
@@ -103,7 +108,7 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
       std::array<AxisDirection, 2u> axisDirs = {pAxisA.getAxisDirection(),
                                                 pAxisB.getAxisDirection()};
       indexed_updator<decltype(grid)> indexedSurfaces(std::move(grid), axisDirs,
-                                                      transform);
+                                                      transform, lookupSurface);
 
       std::vector<std::size_t> fillExpansion = {fillExpansionA, fillExpansionB};
 

@@ -203,14 +203,22 @@ class IndexedGridNavigation : public navigation_type {
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 
+  /// Allow for the creation of a reference surface for the look-up
+  std::shared_ptr<Surface> lookupSurface = nullptr;
+
   /// @brief  Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
+  /// @param ilookupSurface an optional lookup surface for intersection prior to binning
   IndexedGridNavigation(grid_type&& igrid,
                         const std::array<AxisDirection, grid_type::DIM>& icasts,
-                        const Transform3& itr = Transform3::Identity())
-      : grid(std::move(igrid)), casts(icasts), transform(itr) {}
+                        const Transform3& itr = Transform3::Identity(),
+                        const std::shared_ptr<Surface> ilookupSurface = nullptr)
+      : grid(std::move(igrid)),
+        casts(icasts),
+        transform(itr),
+        lookupSurface(ilookupSurface) {}
 
   IndexedGridNavigation() = delete;
 
@@ -224,8 +232,14 @@ class IndexedGridNavigation : public navigation_type {
   void fill(const GeometryContext& gctx, NavigationState& nState) const {
     // Extract the index grid entry a
     const auto& entry =
-        grid.atPosition(GridAccessHelpers::castPosition<grid_type>(
-            transform * nState.position, casts));
+        lookupSurface == nullptr
+            ? grid.atPosition(GridAccessHelpers::castPosition<grid_type>(
+                  transform * nState.position, casts))
+            : grid.atPosition(GridAccessHelpers::castPosition<grid_type>(
+                  intersectLookupSurface(gctx, nState.position,
+                                         nState.direction),
+                  casts));
+
     auto extracted = extractor.extract(gctx, nState, entry);
     filler_type::fill(nState, extracted);
   }
@@ -246,6 +260,18 @@ class IndexedGridNavigation : public navigation_type {
       // Update the candidates: initial update
       intitializeCandidates(gctx, nState);
     }
+  }
+
+  /// @brief Perform an intersection with the lookup surface if set
+  /// @param gctx is the Geometry context of this call
+  /// @param position the starting position
+  /// @param direction the direction of movement
+  Vector3 intersectLookupSurface(const GeometryContext& gctx,
+                                 const Vector3& position,
+                                 const Vector3& direction) const {
+    auto multiIntersection = lookupSurface->intersect(
+        gctx, position, direction, BoundaryTolerance::None());
+    return multiIntersection.closestForward().position();
   }
 };
 
