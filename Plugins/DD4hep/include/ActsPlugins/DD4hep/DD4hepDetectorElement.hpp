@@ -27,6 +27,9 @@ class ISurfaceMaterial;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
+
 /// @class DD4hepDetectorElement
 ///
 /// @brief DetectorElement class implementation for DD4hep geometry
@@ -112,4 +115,5 @@ struct DD4hepDetectorElementExtension {
   std::shared_ptr<DD4hepDetectorElement> detectorElement;
 };
 
+/// @}
 }  // namespace ActsPlugins

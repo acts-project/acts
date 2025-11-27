@@ -35,6 +35,9 @@ class ISurfaceMaterial;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
+
 /// @brief build layers of one cylinder-endcap setup from DD4hep input
 ///
 /// This class is an implementation of the Acts::ILayerBuilder,
@@ -207,4 +210,5 @@ inline DD4hepLayerBuilder::Config DD4hepLayerBuilder::getConfiguration() const {
   return m_cfg;
 }
 
+/// @}
 }  // namespace ActsPlugins
