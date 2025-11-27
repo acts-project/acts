@@ -186,6 +186,9 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
                             << toString(*strawMeas) << " is invalid.");
       continue;
     }
+    ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": Fill "
+                          << toString(*strawMeas) << ".");
+
     auto& invCov = (auxVars.invCovs[sIdx] = 1. / cov);
     auxVars.covNorm += invCov;
     centerOfGravity += invCov * strawMeas->localPosition();

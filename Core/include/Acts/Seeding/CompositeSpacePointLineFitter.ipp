@@ -146,6 +146,7 @@ CompositeSpacePointLineFitter::fastFit(
   auto firstPrecMeas = std::ranges::find_if(measurements, [](const auto& m) {
     return (fitStraws && m->isStraw()) || (!fitStraws && m->measuresLoc1());
   });
+  assert(firstPrecMeas != measurements.end());
   Vector postFitDir = precResult ? CompositeSpacePointLineSeeder::makeDirection(
                                        **firstPrecMeas, precResult->theta)
                                  : initialGuess.direction();
@@ -267,8 +268,8 @@ CompositeSpacePointLineFitter::fit(
             using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
             return m_fastFitter.fit(measurements, ResidualIdx::bending);
           }};
-      fastResult = fastFit<true, false>(result.measurements, line,
-                                        resCfg.parsToUse, fitDelegate);
+      fastResult = fastFit<false, false>(result.measurements, line,
+                                         resCfg.parsToUse, fitDelegate);
     }
     if (fastResult.converged) {
       if (fitTime) {
