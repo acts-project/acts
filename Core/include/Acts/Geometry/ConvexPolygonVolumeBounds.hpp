@@ -188,10 +188,8 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   void checkConsistency() noexcept(false);
 };
 
-/// Streaming operator for the Faces
-/// @param os is the output stream
-/// @param face is the face to output
-/// @return Reference to output stream
+/// @cond
+/// @brief Streaming operator for the polygon volume surfaces
 inline std::ostream& operator<<(std::ostream& os,
                                 ConvexPolygonVolumeBounds::Face face) {
   switch (face) {
@@ -215,5 +213,6 @@ inline std::ostream& operator<<(std::ostream& os,
       return os << "Unknown";
   }
 }
+/// @endcond
 
 }  // namespace Acts
