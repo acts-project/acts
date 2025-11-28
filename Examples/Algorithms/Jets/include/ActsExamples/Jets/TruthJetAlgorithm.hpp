@@ -36,7 +36,23 @@ class TruthJetAlgorithm final : public IAlgorithm {
     /// Output jets collection.
     std::string outputJets;
     /// Minimum jet pT.
-    double jetPtMin;
+    double jetPtMin = 20 * Acts::UnitConstants::GeV;
+    /// Jet eta range a pair of doubles defaulted to -inf/+inf
+    std::pair<double, double> jetEtaRange = {
+        -std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity()};
+    /// Jet clustering radius
+    double jetClusteringRadius = 0.4;
+    /// Only cluster HS particles
+    bool clusterHSParticlesOnly = true;
+    /// Do jet labeling
+    bool doJetLabeling = true;
+    /// Delta R for labeling
+    double jetLabelingDeltaR = 0.4;
+    /// Minimum hadron pT for labeling
+    double jetLabelingHadronPtMin = 5 * Acts::UnitConstants::GeV;
+    /// Only label HS hadrons
+    bool jetLabelingHSHadronsOnly = true;
   };
 
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
