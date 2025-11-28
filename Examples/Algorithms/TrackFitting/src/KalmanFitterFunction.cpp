@@ -112,7 +112,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
         extensions, options.propOptions, &(*options.referenceSurface));
 
     kfOptions.referenceSurfaceStrategy =
-        Acts::KalmanFitterTargetSurfaceStrategy::first;
+        Acts::TrackExtrapolationStrategy::first;
     kfOptions.multipleScattering = multipleScattering;
     kfOptions.energyLoss = energyLoss;
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
