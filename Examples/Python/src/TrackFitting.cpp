@@ -92,7 +92,11 @@ void addTrackFitting(Context& ctx) {
         .value("weightCut", MixtureReductionAlgorithm::weightCut)
         .value("KLDistance", MixtureReductionAlgorithm::KLDistance);
 
-    py::class_<BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
+    py::class_<BetheHeitlerApprox, std::shared_ptr<BetheHeitlerApprox>>(
+        mex, "BetheHeitlerApprox");
+    py::class_<AtlasBetheHeitlerApprox, BetheHeitlerApprox,
+               std::shared_ptr<AtlasBetheHeitlerApprox>>(
+        mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles", &AtlasBetheHeitlerApprox::loadFromFiles,
                     "lowParametersPath"_a, "highParametersPath"_a, "lowLimit"_a,
                     "highLimit"_a, "clampToRange"_a, "noChangeLimit"_a,
@@ -108,15 +112,14 @@ void addTrackFitting(Context& ctx) {
         "makeGsfFitterFunction",
         [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
            std::shared_ptr<const MagneticFieldProvider> magneticField,
-           const std::shared_ptr<const Acts::BetheHeitlerApprox>&
-               betheHeitlerApprox,
+           const std::shared_ptr<const BetheHeitlerApprox>& betheHeitlerApprox,
            std::size_t maxComponents, double weightCutoff,
            ComponentMergeMethod componentMergeMethod,
            MixtureReductionAlgorithm mixtureReductionAlgorithm,
            double reverseFilteringCovarianceScaling, Logging::Level level) {
           return makeGsfFitterFunction(
               std::move(trackingGeometry), std::move(magneticField),
-              std::move(betheHeitlerApprox), maxComponents, weightCutoff,
+              betheHeitlerApprox, maxComponents, weightCutoff,
               componentMergeMethod, mixtureReductionAlgorithm,
               reverseFilteringCovarianceScaling,
               *getDefaultLogger("GSFFunc", level));
