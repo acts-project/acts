@@ -234,7 +234,7 @@ struct KalmanFitterResult {
   std::vector<const Surface*> missedActiveSurfaces;
 
   /// Last encountered error
-  Result<void> result{Result<void>::success()};
+  Result<void> lastError{Result<void>::success()};
 
   /// Path limit aborter
   PathLimitReached pathLimitReached;
@@ -385,7 +385,7 @@ class KalmanFitter {
         if (!res.ok()) {
           ACTS_ERROR("Error in " << state.options.direction
                                  << " filter: " << res.error());
-          result.result = res.error();
+          result.lastError = res.error();
         }
       }
 
@@ -419,7 +419,7 @@ class KalmanFitter {
           if (!res.ok()) {
             ACTS_ERROR("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
-            result.result = res.error();
+            result.lastError = res.error();
           } else {
             const auto& [boundParams, jacobian, pathLength] = *res;
             result.fittedParameters = boundParams;
@@ -435,7 +435,7 @@ class KalmanFitter {
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_type& result,
                     const Logger& /*logger*/) const {
-      return !result.result.ok() || result.finished;
+      return !result.lastError.ok() || result.finished;
     }
 
     /// @brief Kalman actor operation: update
@@ -763,15 +763,16 @@ class KalmanFitter {
 
     // It could happen that the fit ends in zero measurement states.
     // The result gets meaningless so such case is regarded as fit failure.
-    if (kalmanResult.result.ok() && !kalmanResult.measurementStates) {
-      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
+    if (kalmanResult.lastError.ok() && !kalmanResult.measurementStates) {
+      kalmanResult.lastError =
+          Result<void>(KalmanFitterError::NoMeasurementFound);
     }
 
-    if (!kalmanResult.result.ok()) {
+    if (!kalmanResult.lastError.ok()) {
       ACTS_ERROR("KalmanFilter failed: "
-                 << kalmanResult.result.error() << ", "
-                 << kalmanResult.result.error().message());
-      return kalmanResult.result.error();
+                 << kalmanResult.lastError.error() << ", "
+                 << kalmanResult.lastError.error().message());
+      return kalmanResult.lastError.error();
     }
 
     auto track = trackContainer.makeTrack();
