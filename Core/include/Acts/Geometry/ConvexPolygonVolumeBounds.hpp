@@ -190,6 +190,8 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
 
 /// Streaming operator for the Faces
 /// @param os is the output stream
+/// @param face is the face to output
+/// @return Reference to output stream
 inline std::ostream& operator<<(std::ostream& os,
                                 ConvexPolygonVolumeBounds::Face face) {
   switch (face) {

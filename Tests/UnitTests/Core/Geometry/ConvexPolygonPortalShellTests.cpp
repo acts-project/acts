@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(Fill) {
   SingleConvexPolygonPortalShell polygShell(testVol);
 
   // without filling the protal shell from a volume the portal link to this
-  // direction shouldnt exist - but only the other direction
+  // direction shouldn't exist - but only the other direction
   BOOST_CHECK_EQUAL(
       polygShell.portal(NegativeZFaceXY)->getLink(Direction::OppositeNormal()),
       nullptr);
