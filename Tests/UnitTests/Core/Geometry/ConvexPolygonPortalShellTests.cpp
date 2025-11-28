@@ -83,14 +83,16 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       nXZ->resolveVolume(gctx, Vector3{0., -15._cm, 0.}, Vector3::UnitY())
           .value(),
       &testVol);
+
   BOOST_CHECK_EQUAL(
-      pXZ->resolveVolume(gctx, Vector3{0., 15._cm, 0.}, -Vector3::UnitY())
+      pXZ->resolveVolume(gctx, Vector3{0., 20._cm, 0.}, -Vector3::UnitY())
           .value(),
       &testVol);
 
   Vector3 normalVec =
       Vector3{std::cos(-std::numbers::pi / 2. + alphaAngle),
               std::sin(-std::numbers::pi / 2. + alphaAngle), 0.};
+
   BOOST_CHECK_EQUAL(
       nYZ12->resolveVolume(gctx, Vector3{-22.5_cm, -7.5_cm, 0.}, normalVec)
           .value(),
