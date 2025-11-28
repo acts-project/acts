@@ -422,21 +422,27 @@ ActsPlugins::GeoModelBlueprintCreater::createInternalStructureBuilder(
           lsbCfg.luminousRegion = options.projectionLuminousRegion;
           if (!rDetected) {
             // Create a cylindrical projection surface
-            double rMin = internalExtent.min(AxisDirection::AxisR) -
-                          options.projectionDistance;
+            double radius = options.projectionDistance == 0.
+                                ? internalExtent.medium(AxisDirection::AxisR)
+                                : internalExtent.min(AxisDirection::AxisR) -
+                                      options.projectionDistance;
             auto projSurface = Acts::Surface::makeShared<CylinderSurface>(
-                Transform3::Identity(), rMin, 10e10);
+                Transform3::Identity(), radius, 10e10);
             lsbCfg.projectionReferenceSurface = projSurface;
             ACTS_VERBOSE(
                 " - Using projected reference generator with cylinder at r = "
-                << rMin);
+                << radius);
           } else {
             // Create a planar projection surface
-            double zPos = internalExtent.min(AxisDirection::AxisZ) < 0
-                              ? internalExtent.min(AxisDirection::AxisZ) -
-                                    options.projectionDistance
-                              : internalExtent.max(AxisDirection::AxisZ) +
-                                    options.projectionDistance;
+            double zPos = internalExtent.medium(AxisDirection::AxisZ);
+
+            if (options.projectionDistance != 0.0) {
+              zPos = internalExtent.min(AxisDirection::AxisZ) > 0.
+                         ? internalExtent.min(AxisDirection::AxisZ) -
+                               options.projectionDistance
+                         : internalExtent.max(AxisDirection::AxisZ) +
+                               options.projectionDistance;
+            }
             auto transform = Transform3::Identity();
             transform.translation() = Vector3(0., 0., zPos);
             auto projSurface =

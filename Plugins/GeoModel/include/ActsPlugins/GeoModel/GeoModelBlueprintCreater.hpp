@@ -63,7 +63,8 @@ class GeoModelBlueprintCreater {
     /// Use projected bin filling
     bool projectedBinFilling = true;
     /// The projection distance, should be roughly if not identical to the
-    /// envelope "i+X" value in the database
+    /// envelope "i+X" value in the database - a value of 0 indicates the mid
+    /// point
     double projectionDistance = 2.0;
     /// Sampling the luminous region for projected reference generation
     std::vector<Acts::Vector3> projectionLuminousRegion = {
