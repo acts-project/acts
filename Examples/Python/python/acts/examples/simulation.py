@@ -757,6 +757,7 @@ def addDigitization(
     rnd: Optional[acts.examples.RandomNumbers] = None,
     doMerge: Optional[bool] = None,
     mergeCommonCorner: Optional[bool] = None,
+    useInPlaceClusterization: Optional[bool] = None,
     minEnergyDeposit: Optional[float] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
@@ -799,6 +800,7 @@ def addDigitization(
         **acts.examples.defaultKWArgs(
             doMerge=doMerge,
             mergeCommonCorner=mergeCommonCorner,
+            useInPlaceClusterization=useInPlaceClusterization,
         ),
     )
 
