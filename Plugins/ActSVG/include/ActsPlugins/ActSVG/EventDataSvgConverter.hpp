@@ -13,8 +13,10 @@
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 
+namespace ActsPlugins {
+
 /// @ingroup actsvg_plugin
-namespace ActsPlugins::Svg::EventDataConverter {
+namespace Svg::EventDataConverter {
 
 /// Write/create a 3D point in XY view
 ///
@@ -59,4 +61,5 @@ actsvg::svg::object point(const Acts::Vector3& pos, double size,
   return circle;
 }
 
-}  // namespace ActsPlugins::Svg::EventDataConverter
+}  // namespace Svg::EventDataConverter
+}  // namespace ActsPlugins

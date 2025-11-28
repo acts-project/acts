@@ -23,9 +23,6 @@
 
 namespace Acts {
 
-/// @addtogroup json_plugin
-/// @{
-
 class Surface;
 
 namespace Experimental {
@@ -33,6 +30,8 @@ class DetectorVolume;
 class Portal;
 }  // namespace Experimental
 
+/// @addtogroup json_plugin
+/// @{
 namespace PortalJsonConverter {
 
 struct Options {

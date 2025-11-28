@@ -77,7 +77,7 @@ using Identifier = std::uint64_t;
 constexpr Identifier kNoIdentifier = std::numeric_limits<Identifier>::max();
 constexpr int kNoSurface = -1;
 
-/// @TODO: We might want to consider making this a type erased type that's not an interface
+// @TODO: We might want to consider making this a type erased type that's not an interface
 /// @ingroup edm4hep_plugin
 class ConversionHelper {
  public:
@@ -98,7 +98,8 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
                                             const Acts::Surface& surface);
 }  // namespace PodioUtil
 
-/// @ingroup edm4hep_plugin
+/// @}
+
 namespace podio_detail {
 /// This is used by both the track and track state container, so the
 /// implementation is shared here
@@ -109,5 +110,4 @@ void recoverDynamicColumns(
         dynamic);
 }  // namespace podio_detail
 
-/// @}
 }  // namespace ActsPlugins

@@ -31,7 +31,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisBoundaryType,
 NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisType,
                              {{Acts::AxisType::Equidistant, "Equidistant"},
                               {Acts::AxisType::Variable, "Variable"}})
-
 /// @endcond
 
 namespace AxisJsonConverter {
