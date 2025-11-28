@@ -49,7 +49,7 @@ ActsExamples::ProcessCode ActsExamples::VolumeAssociationTest::execute(
     double r = rDist(rng);
     double phi = phiDist(rng);
     double z = zDist(rng);
-    return Acts::Vector3(r * cos(phi), r * sin(phi), z);
+    return Acts::Vector3(r * std::cos(phi), r * std::sin(phi), z);
   };
 
   std::size_t failedSearch = 0;

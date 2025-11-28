@@ -41,8 +41,8 @@ struct TestSourceLink final {
   std::size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
-  Acts::Vector2 parameters;
-  Acts::ActsSquareMatrix<2> covariance;
+  Acts::Vector2 parameters{};
+  Acts::ActsSquareMatrix<2> covariance{};
 
   /// Construct a source link for a 1d measurement.
   TestSourceLink(BoundIndices idx, double val, double var,
