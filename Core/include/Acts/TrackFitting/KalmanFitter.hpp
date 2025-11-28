@@ -40,18 +40,6 @@
 
 namespace Acts {
 
-/// Strategy for selecting track states when reaching target surface in Kalman
-/// filter
-enum class KalmanFitterTargetSurfaceStrategy {
-  /// Use the first trackstate to reach target surface
-  first,
-  /// Use the last trackstate to reach target surface
-  last,
-  /// Use the first or last trackstate to reach target surface depending on the
-  /// distance
-  firstOrLast,
-};
-
 /// Extension struct which holds delegates to customise the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
@@ -173,9 +161,9 @@ struct KalmanFitterOptions {
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
 
-  /// Strategy to propagate to reference surface
-  KalmanFitterTargetSurfaceStrategy referenceSurfaceStrategy =
-      KalmanFitterTargetSurfaceStrategy::firstOrLast;
+  /// Strategy to propagate to target surface
+  TrackExtrapolationStrategy referenceSurfaceStrategy =
+      TrackExtrapolationStrategy::firstOrLast;
 
   /// Whether to consider multiple scattering
   bool multipleScattering = true;
@@ -320,8 +308,8 @@ class KalmanFitter {
     SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
 
     /// Strategy to propagate to target surface
-    KalmanFitterTargetSurfaceStrategy targetSurfaceStrategy =
-        KalmanFitterTargetSurfaceStrategy::firstOrLast;
+    TrackExtrapolationStrategy targetSurfaceStrategy =
+        TrackExtrapolationStrategy::firstOrLast;
 
     /// Allows retrieving measurements for a surface
     const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
@@ -1053,13 +1041,13 @@ class KalmanFitter {
       // surface is not checked here.
       bool useFirstTrackState = true;
       switch (targetSurfaceStrategy) {
-        case KalmanFitterTargetSurfaceStrategy::first:
+        case TrackExtrapolationStrategy::first:
           useFirstTrackState = true;
           break;
-        case KalmanFitterTargetSurfaceStrategy::last:
+        case TrackExtrapolationStrategy::last:
           useFirstTrackState = false;
           break;
-        case KalmanFitterTargetSurfaceStrategy::firstOrLast:
+        case TrackExtrapolationStrategy::firstOrLast:
           useFirstTrackState = std::abs(firstIntersection.pathLength()) <=
                                std::abs(lastIntersection.pathLength());
           break;
@@ -1345,17 +1333,6 @@ class KalmanFitter {
 
     calculateTrackQuantities(track);
 
-    if (trackContainer.hasColumn(hashString("smoothed"))) {
-      track.template component<bool, hashString("smoothed")>() =
-          kalmanResult.smoothed;
-    }
-
-    if (trackContainer.hasColumn(hashString("reversed"))) {
-      track.template component<bool, hashString("reversed")>() =
-          kalmanResult.reversed;
-    }
-
-    // Return the converted Track
     return track;
   }
 };
