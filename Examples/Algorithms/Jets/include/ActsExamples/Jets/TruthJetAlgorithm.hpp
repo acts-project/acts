@@ -37,9 +37,10 @@ class TruthJetAlgorithm final : public IAlgorithm {
     std::string outputJets;
     /// Minimum jet pT.
     double jetPtMin = 20 * Acts::UnitConstants::GeV;
-    /// Jet eta range
-    std::pair<std::optional<double>, std::optional<double>> jetEtaRange = {
-        std::nullopt, std::nullopt};
+    /// Jet eta range a pair of doubles defaulted to -inf/+inf
+    std::pair<double, double> jetEtaRange = {
+        -std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity()};
     /// Jet clustering radius
     double jetClusteringRadius = 0.4;
     /// Only cluster HS particles

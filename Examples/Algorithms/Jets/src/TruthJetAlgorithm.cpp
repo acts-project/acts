@@ -125,16 +125,12 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     // Get the jets above a certain pt threshold
     jets = sorted_by_pt(clusterSeq.inclusive_jets(m_cfg.jetPtMin));
     // Apply eta range cut if specified
-    if (m_cfg.jetEtaRange.first.has_value() ||
-        m_cfg.jetEtaRange.second.has_value()) {
-      double minEta = m_cfg.jetEtaRange.first.value_or(
-          std::numeric_limits<double>::lowest());
-      double maxEta =
-          m_cfg.jetEtaRange.second.value_or(std::numeric_limits<double>::max());
-      std::erase_if(jets, [minEta, maxEta](const auto& jet) {
-        return jet.eta() < minEta || jet.eta() > maxEta;
-      });
-    }
+    double minEta = m_cfg.jetEtaRange.first;
+    double maxEta = m_cfg.jetEtaRange.second;
+
+    std::erase_if(jets, [minEta, maxEta](const auto& jet) {
+      return jet.eta() < minEta || jet.eta() > maxEta;
+    });
     ACTS_DEBUG("Number of clustered jets: " << jets.size());
   }
 
