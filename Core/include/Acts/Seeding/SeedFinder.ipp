@@ -254,7 +254,6 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
                              static_cast<int>(value > max));
   };
 
-
   for (auto& otherSPCol : otherSPsNeighbours) {
     const std::vector<const external_spacepoint_t*>& otherSPs =
         grid.at(otherSPCol.index);
@@ -320,14 +319,14 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // check if duplet origin on z axis within collision region
       // ACTS_INFO("zOrigin1=" << zOriginTimesDeltaR/deltaR);
       // if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR ||
-          // zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
-        // if (zOriginTimesDeltaR < 19.0 * deltaR ||
-        //     zOriginTimesDeltaR > 21.0 * deltaR) {
+      // zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
+      // if (zOriginTimesDeltaR < 19.0 * deltaR ||
+      //     zOriginTimesDeltaR > 21.0 * deltaR) {
       // ACTS_INFO("zOrigin1= " << zOriginTimesDeltaR/deltaR);
       // if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR ||
-          // zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
-        if (zOriginTimesDeltaR < 19.0 * deltaR ||
-            zOriginTimesDeltaR > 21.0 * deltaR) {
+      // zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
+      if (zOriginTimesDeltaR < 19.0 * deltaR ||
+          zOriginTimesDeltaR > 21.0 * deltaR) {
         continue;
       }
 
@@ -336,10 +335,11 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // interactionPointCut is true we apply the curvature cut first because it
       // is more frequent but requires the coordinate transformation
       if (!m_config.interactionPointCut) {
-        // ACTS_INFO("interactionPointCut = " << m_config.interactionPointCut<<", is false");
-        // check if duplet cotTheta is within the region of interest
-        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
-        // cotThetaMax by deltaR to avoid division
+        // ACTS_INFO("interactionPointCut = " <<
+        // m_config.interactionPointCut<<", is false"); check if duplet cotTheta
+        // is within the region of interest cotTheta is defined as (deltaZ /
+        // deltaR) but instead we multiply cotThetaMax by deltaR to avoid
+        // division
         if (outsideRangeCheck(deltaZ, -m_config.cotThetaMax * deltaR,
                               m_config.cotThetaMax * deltaR)) {
           continue;
