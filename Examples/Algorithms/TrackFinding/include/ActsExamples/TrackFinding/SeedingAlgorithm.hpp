@@ -15,13 +15,13 @@
 #include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 
 #include <memory>
 #include <string>
@@ -62,7 +62,7 @@ class SeedingAlgorithm final : public IAlgorithm {
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
     bool allowSeparateRMax = false;
-    
+
     float tolerance = 10;
     std::string fittedHoughVertices = "";
 
@@ -99,7 +99,7 @@ class SeedingAlgorithm final : public IAlgorithm {
       Acts::detail::RefHolder>::SpacePointProxyType;
 
   mutable Acts::SeedFinder<SpacePointProxy_t,
-                   Acts::CylindricalSpacePointGrid<SpacePointProxy_t>>
+                           Acts::CylindricalSpacePointGrid<SpacePointProxy_t>>
       m_seedFinder;
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
@@ -110,8 +110,8 @@ class SeedingAlgorithm final : public IAlgorithm {
       m_inputSpacePoints{};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-  ReadDataHandle<std::vector<Acts::Vertex>> m_inputVertex{this, "fittedHoughVertices"};
-
+  ReadDataHandle<std::vector<Acts::Vertex>> m_inputVertex{
+      this, "fittedHoughVertices"};
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
     static float rMin = 45.;

@@ -15,9 +15,6 @@
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include <Eigen/Eigenvalues>
-
 #include <chrono>
 #include <cmath>
 #include <csignal>
@@ -25,6 +22,8 @@
 #include <limits>
 #include <ostream>
 #include <stdexcept>
+
+#include <Eigen/Eigenvalues>
 
 using namespace Acts::HashedStringLiteral;
 
@@ -68,7 +67,6 @@ SeedingAlgorithm::SeedingAlgorithm(SeedingAlgorithm::Config cfg,
   if (!m_cfg.fittedHoughVertices.empty()) {
     m_inputVertex.initialize(m_cfg.fittedHoughVertices);
   }
-
 
   if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax &&
       m_cfg.allowSeparateRMax == false) {
@@ -211,18 +209,17 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     auto houghVertices = m_inputVertex(ctx);
 
     if (houghVertices.empty()) {
-
-      ACTS_DEBUG("No fitted Hough vertices found in event; skipping seed filtering");
+      ACTS_DEBUG(
+          "No fitted Hough vertices found in event; skipping seed filtering");
     } else {
-
       z_position = houghVertices.at(0).position()[2];
       applySeedFiltering = true;
     }
   }
 
   if (applySeedFiltering) {
-    m_seedFinder.setCustomCollisionRegion(
-        z_position - m_cfg.tolerance, z_position + m_cfg.tolerance);
+    m_seedFinder.setCustomCollisionRegion(z_position - m_cfg.tolerance,
+                                          z_position + m_cfg.tolerance);
   }
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
@@ -317,7 +314,7 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     Acts::Vector3 mean = mat.colwise().mean();
     Acts::SquareMatrix3 cov = (mat.rowwise() - mean.transpose()).transpose() *
-                           (mat.rowwise() - mean.transpose()) / 3.;
+                              (mat.rowwise() - mean.transpose()) / 3.;
 
     // "cov" is self-adjoint matrix
     Eigen::SelfAdjointEigenSolver<Acts::SquareMatrix3> saes(cov);
@@ -329,7 +326,8 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     float norm_size = norm.norm();
     float zDist = eivec.cross(norm).dot(mean) / (norm_size * norm_size);
 
-    if(std::abs(zDist - 20.2309)> 30.0) continue;
+    if (std::abs(zDist - 20.2309) > 30.0)
+      continue;
     else {
       filtered_seeds.push_back(seed);
     }
