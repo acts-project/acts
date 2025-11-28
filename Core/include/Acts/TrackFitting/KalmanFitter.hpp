@@ -684,13 +684,10 @@ class KalmanFitter {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << nMeasurements << " input measurements");
-    std::vector<const Surface*> sSequenceLocal;
-    sSequenceLocal.reserve(nMeasurements);
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     for (; it != end; ++it) {
       SourceLink sl = *it;
       const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
-      sSequenceLocal.push_back(surface);
       // @TODO: This can probably change over to surface pointers as keys
       auto geoId = surface->geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
@@ -714,9 +711,10 @@ class KalmanFitter {
         propagatorOptions.navigation.insertExternalSurface(surfaceId);
       }
     } else {
+      assert(sSequence != nullptr &&
+             "DirectNavigator requires a surface sequence for KalmanFitter");
       // Set the surface sequence
-      propagatorOptions.navigation.surfaces =
-          sSequence != nullptr ? *sSequence : sSequenceLocal;
+      propagatorOptions.navigation.surfaces = *sSequence;
     }
 
     // Catch the actor and set the measurements
