@@ -12,6 +12,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/Root/detail/RootBranchPtr.hpp"
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
@@ -48,7 +49,7 @@ class RootParticleReader : public IReader {
   RootParticleReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootParticleReader() override;
+  ~RootParticleReader() override = default;
 
   /// Framework name() method
   std::string name() const override { return "RootParticleReader"; }
@@ -92,34 +93,33 @@ class RootParticleReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  std::vector<std::size_t>* m_particleHash = new std::vector<std::size_t>;
-  std::vector<std::int32_t>* m_particleType = new std::vector<std::int32_t>;
-  std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
-  std::vector<float>* m_vx = new std::vector<float>;
-  std::vector<float>* m_vy = new std::vector<float>;
-  std::vector<float>* m_vz = new std::vector<float>;
-  std::vector<float>* m_vt = new std::vector<float>;
-  std::vector<float>* m_px = new std::vector<float>;
-  std::vector<float>* m_py = new std::vector<float>;
-  std::vector<float>* m_pz = new std::vector<float>;
-  std::vector<float>* m_m = new std::vector<float>;
-  std::vector<float>* m_q = new std::vector<float>;
-  std::vector<float>* m_eta = new std::vector<float>;
-  std::vector<float>* m_phi = new std::vector<float>;
-  std::vector<float>* m_pt = new std::vector<float>;
-  std::vector<float>* m_p = new std::vector<float>;
-  std::vector<std::uint32_t>* m_vertexPrimary = new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_vertexSecondary =
-      new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_particle = new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_subParticle = new std::vector<std::uint32_t>;
+  RootBranchPtr<std::vector<std::size_t>> m_particleHash;
+  RootBranchPtr<std::vector<std::int32_t>> m_particleType;
+  RootBranchPtr<std::vector<std::uint32_t>> m_process;
+  RootBranchPtr<std::vector<float>> m_vx;
+  RootBranchPtr<std::vector<float>> m_vy;
+  RootBranchPtr<std::vector<float>> m_vz;
+  RootBranchPtr<std::vector<float>> m_vt;
+  RootBranchPtr<std::vector<float>> m_px;
+  RootBranchPtr<std::vector<float>> m_py;
+  RootBranchPtr<std::vector<float>> m_pz;
+  RootBranchPtr<std::vector<float>> m_m;
+  RootBranchPtr<std::vector<float>> m_q;
+  RootBranchPtr<std::vector<float>> m_eta;
+  RootBranchPtr<std::vector<float>> m_phi;
+  RootBranchPtr<std::vector<float>> m_pt;
+  RootBranchPtr<std::vector<float>> m_p;
+  RootBranchPtr<std::vector<std::uint32_t>> m_vertexPrimary;
+  RootBranchPtr<std::vector<std::uint32_t>> m_vertexSecondary;
+  RootBranchPtr<std::vector<std::uint32_t>> m_particle;
+  RootBranchPtr<std::vector<std::uint32_t>> m_generation;
+  RootBranchPtr<std::vector<std::uint32_t>> m_subParticle;
 
-  std::vector<float>* m_eLoss = new std::vector<float>;
-  std::vector<float>* m_pathInX0 = new std::vector<float>;
-  std::vector<float>* m_pathInL0 = new std::vector<float>;
-  std::vector<std::int32_t>* m_numberOfHits = new std::vector<std::int32_t>;
-  std::vector<std::uint32_t>* m_outcome = new std::vector<std::uint32_t>;
+  RootBranchPtr<std::vector<float>> m_eLoss;
+  RootBranchPtr<std::vector<float>> m_pathInX0;
+  RootBranchPtr<std::vector<float>> m_pathInL0;
+  RootBranchPtr<std::vector<std::int32_t>> m_numberOfHits;
+  RootBranchPtr<std::vector<std::uint32_t>> m_outcome;
 };
 
 }  // namespace ActsExamples

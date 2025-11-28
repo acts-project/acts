@@ -12,6 +12,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/Root/detail/RootBranchPtr.hpp"
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
@@ -48,7 +49,7 @@ class RootVertexReader : public IReader {
   RootVertexReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootVertexReader() override;
+  ~RootVertexReader() override = default;
 
   /// Framework name() method
   std::string name() const override { return "RootVertexReader"; }
@@ -67,6 +68,14 @@ class RootVertexReader : public IReader {
  private:
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
+
+  template <typename T>
+  using BranchVector = RootBranchPtr<std::vector<T>>;
+  template <typename T>
+  using BranchMatrix = RootBranchPtr<std::vector<std::vector<T>>>;
+  template <typename T>
+  using BranchTensor =
+      RootBranchPtr<std::vector<std::vector<std::vector<T>>>>;
 
   /// The config class
   Config m_cfg;
@@ -91,49 +100,36 @@ class RootVertexReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
-  std::vector<float>* m_vx = new std::vector<float>;
-  std::vector<float>* m_vy = new std::vector<float>;
-  std::vector<float>* m_vz = new std::vector<float>;
-  std::vector<float>* m_vt = new std::vector<float>;
+  BranchVector<std::uint32_t> m_process;
+  BranchVector<float> m_vx;
+  BranchVector<float> m_vy;
+  BranchVector<float> m_vz;
+  BranchVector<float> m_vt;
 
   /// Legacy combined barcode vectors.
-  std::vector<std::vector<std::vector<std::uint32_t>>>* m_incomingParticles =
-      nullptr;
-  std::vector<std::vector<std::vector<std::uint32_t>>>* m_outgoingParticles =
-      nullptr;
+  BranchTensor<std::uint32_t> m_incomingParticles{nullptr};
+  BranchTensor<std::uint32_t> m_outgoingParticles{nullptr};
   bool m_hasCombinedIncoming = false;
   bool m_hasCombinedOutgoing = false;
 
   /// Incoming particles to the vertex broken into barcode components.
-  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesVertexPrimary =
-      nullptr;
-  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesVertexSecondary =
-      nullptr;
-  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesParticle =
-      nullptr;
-  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesGeneration =
-      nullptr;
-  std::vector<std::vector<std::uint32_t>>* m_incomingParticlesSubParticle =
-      nullptr;
+  BranchMatrix<std::uint32_t> m_incomingParticlesVertexPrimary{nullptr};
+  BranchMatrix<std::uint32_t> m_incomingParticlesVertexSecondary{nullptr};
+  BranchMatrix<std::uint32_t> m_incomingParticlesParticle{nullptr};
+  BranchMatrix<std::uint32_t> m_incomingParticlesGeneration{nullptr};
+  BranchMatrix<std::uint32_t> m_incomingParticlesSubParticle{nullptr};
 
   /// Outgoing particles from the vertex broken into barcode components.
-  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesVertexPrimary =
-      nullptr;
-  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesVertexSecondary =
-      nullptr;
-  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesParticle =
-      nullptr;
-  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesGeneration =
-      nullptr;
-  std::vector<std::vector<std::uint32_t>>* m_outgoingParticlesSubParticle =
-      nullptr;
+  BranchMatrix<std::uint32_t> m_outgoingParticlesVertexPrimary{nullptr};
+  BranchMatrix<std::uint32_t> m_outgoingParticlesVertexSecondary{nullptr};
+  BranchMatrix<std::uint32_t> m_outgoingParticlesParticle{nullptr};
+  BranchMatrix<std::uint32_t> m_outgoingParticlesGeneration{nullptr};
+  BranchMatrix<std::uint32_t> m_outgoingParticlesSubParticle{nullptr};
 
   /// Decoded vertex identifier; see Barcode definition for details.
-  std::vector<std::uint16_t>* m_vertexPrimary = new std::vector<std::uint16_t>;
-  std::vector<std::uint16_t>* m_vertexSecondary =
-      new std::vector<std::uint16_t>;
-  std::vector<std::uint8_t>* m_generation = new std::vector<std::uint8_t>;
+  BranchVector<std::uint16_t> m_vertexPrimary;
+  BranchVector<std::uint16_t> m_vertexSecondary;
+  BranchVector<std::uint8_t> m_generation;
 };
 
 }  // namespace ActsExamples

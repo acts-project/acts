@@ -18,6 +18,7 @@
 #include <ActsExamples/EventData/Cluster.hpp>
 #include <ActsExamples/EventData/SimParticle.hpp>
 #include <ActsExamples/EventData/Track.hpp>
+#include "ActsExamples/Io/Root/detail/RootBranchPtr.hpp"
 
 #include <map>
 #include <memory>
@@ -131,6 +132,11 @@ class RootAthenaDumpReader : public IReader {
   /// Private access to the logging instance
   const Acts::Logger &logger() const { return *m_logger; }
 
+  template <typename T>
+  using BranchVector = RootBranchPtr<std::vector<T>>;
+  template <typename T>
+  using BranchMatrix = RootBranchPtr<std::vector<std::vector<T>>>;
+
   /// The config class
   Config m_cfg;
 
@@ -200,7 +206,7 @@ class RootAthenaDumpReader : public IReader {
   int CLindex[maxCL] = {};  //[nCL]
 
   // Clusters
-  std::vector<std::string> *CLhardware{};
+  BranchVector<std::string> CLhardware;
   Double_t CLx[maxCL] = {};           //[nCL]
   Double_t CLy[maxCL] = {};           //[nCL]
   Double_t CLz[maxCL] = {};           //[nCL]
@@ -210,13 +216,13 @@ class RootAthenaDumpReader : public IReader {
   Int_t CLphi_module[maxCL] = {};     //[nCL]
   Int_t CLside[maxCL] = {};           //[nCL]
   ULong64_t CLmoduleID[maxCL] = {};   //[nCL]
-  std::vector<std::vector<int>> *CLparticleLink_eventIndex{};
-  std::vector<std::vector<int>> *CLparticleLink_barcode{};
-  std::vector<std::vector<bool>> *CLbarcodesLinked{};
-  std::vector<std::vector<float>> *CLparticle_charge{};
-  std::vector<std::vector<int>> *CLphis{};
-  std::vector<std::vector<int>> *CLetas{};
-  std::vector<std::vector<int>> *CLtots{};
+  BranchMatrix<int> CLparticleLink_eventIndex;
+  BranchMatrix<int> CLparticleLink_barcode;
+  BranchMatrix<bool> CLbarcodesLinked;
+  BranchMatrix<float> CLparticle_charge;
+  BranchMatrix<int> CLphis;
+  BranchMatrix<int> CLetas;
+  BranchMatrix<int> CLtots;
   Double_t CLloc_direction1[maxCL] = {};      //[nCL]
   Double_t CLloc_direction2[maxCL] = {};      //[nCL]
   Double_t CLloc_direction3[maxCL] = {};      //[nCL]
@@ -234,7 +240,7 @@ class RootAthenaDumpReader : public IReader {
   Float_t CLnorm_x[maxCL] = {};               //[nCL]
   Float_t CLnorm_y[maxCL] = {};               //[nCL]
   Float_t CLnorm_z[maxCL] = {};               //[nCL]
-  std::vector<std::vector<double>> *CLlocal_cov{};
+  BranchMatrix<double> CLlocal_cov;
 
   // Particles
   Int_t nPartEVT = 0;
@@ -257,8 +263,8 @@ class RootAthenaDumpReader : public IReader {
   Int_t Part_vProdNout[maxPart] = {};     //[nPartEVT]
   Int_t Part_vProdStatus[maxPart] = {};   //[nPartEVT]
   Int_t Part_vProdBarcode[maxPart] = {};  //[nPartEVT]
-  std::vector<std::vector<int>> *Part_vParentID{};
-  std::vector<std::vector<int>> *Part_vParentBarcode{};
+  BranchMatrix<int> Part_vParentID;
+  BranchMatrix<int> Part_vParentBarcode;
 
   // Spacepoints
   Int_t nSP = 0;
@@ -274,10 +280,10 @@ class RootAthenaDumpReader : public IReader {
   double SPcovz[maxSP] = {};        //[nSP]
   float SPhl_topstrip[maxSP] = {};  //[nSP]
   float SPhl_botstrip[maxSP] = {};  //[nSP]
-  std::vector<std::vector<float>> *SPtopStripDirection{};
-  std::vector<std::vector<float>> *SPbottomStripDirection{};
-  std::vector<std::vector<float>> *SPstripCenterDistance{};
-  std::vector<std::vector<float>> *SPtopStripCenterPosition{};
+  BranchMatrix<float> SPtopStripDirection;
+  BranchMatrix<float> SPbottomStripDirection;
+  BranchMatrix<float> SPstripCenterDistance;
+  BranchMatrix<float> SPtopStripCenterPosition;
 
   // Those fields are not used currently
   // Keep the code though, since it is annoying to write
@@ -287,17 +293,17 @@ class RootAthenaDumpReader : public IReader {
   Int_t TRKindex[maxTRK] = {};                //[nTRK]
   Int_t TRKtrack_fitter[maxTRK] = {};         //[nTRK]
   Int_t TRKparticle_hypothesis[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<int>> *TRKproperties{};
-  std::vector<std::vector<int>> *TRKpattern{};
+  BranchMatrix<int> TRKproperties;
+  BranchMatrix<int> TRKpattern;
   Int_t TRKndof[maxTRK] = {};     //[nTRK]
   Int_t TRKmot[maxTRK] = {};      //[nTRK]
   Int_t TRKoot[maxTRK] = {};      //[nTRK]
   Float_t TRKchiSq[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<int>> *TRKmeasurementsOnTrack_pixcl_sctcl_index{};
-  std::vector<std::vector<int>> *TRKoutliersOnTrack_pixcl_sctcl_index{};
+  BranchMatrix<int> TRKmeasurementsOnTrack_pixcl_sctcl_index;
+  BranchMatrix<int> TRKoutliersOnTrack_pixcl_sctcl_index;
   Int_t TRKcharge[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<double>> *TRKperigee_position{};
-  std::vector<std::vector<double>> *TRKperigee_momentum{};
+  BranchMatrix<double> TRKperigee_position;
+  BranchMatrix<double> TRKperigee_momentum;
   Int_t TTCindex[maxTRK] = {};          //[nTRK]
   Int_t TTCevent_index[maxTRK] = {};    //[nTRK]
   Int_t TTCparticle_link[maxTRK] = {};  //[nTRK]
@@ -307,11 +313,11 @@ class RootAthenaDumpReader : public IReader {
   Int_t nDTT = 0;
   Int_t DTTindex[maxDTT] = {};  //[nDTT]
   Int_t DTTsize[maxDTT] = {};   //[nDTT]
-  std::vector<std::vector<int>> *DTTtrajectory_eventindex{};
-  std::vector<std::vector<int>> *DTTtrajectory_barcode{};
-  std::vector<std::vector<int>> *DTTstTruth_subDetType{};
-  std::vector<std::vector<int>> *DTTstTrack_subDetType{};
-  std::vector<std::vector<int>> *DTTstCommon_subDetType{};
+  BranchMatrix<int> DTTtrajectory_eventindex;
+  BranchMatrix<int> DTTtrajectory_barcode;
+  BranchMatrix<int> DTTstTruth_subDetType;
+  BranchMatrix<int> DTTstTrack_subDetType;
+  BranchMatrix<int> DTTstCommon_subDetType;
   */
 };
 }  // namespace ActsExamples
