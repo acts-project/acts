@@ -26,6 +26,7 @@ struct CUstream_st;
 using cudaStream_t = CUstream_st *;
 
 namespace ActsPlugins {
+
 /// @addtogroup gnn_plugin
 /// @{
 
@@ -80,6 +81,7 @@ struct ExecutionContext {
   std::optional<cudaStream_t> stream;
 };
 
+/// @cond
 namespace detail {
 
 using TensorDeleter = std::function<void(void *)>;
@@ -90,6 +92,7 @@ TensorPtr cloneTensorMemory(const TensorPtr &ptrFrom, std::size_t nbytes,
                             Device devFrom, const ExecutionContext &ctxTo);
 
 }  // namespace detail
+/// @endcond
 
 /// This is a very small, limited class that models a 2D tensor of arbitrary
 /// type. It is move-only, and only possible to create via static factory

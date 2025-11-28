@@ -49,13 +49,15 @@ struct std::hash<podio::ObjectID> {
 
 #endif
 
-namespace ActsPlugins::EDM4hepUtil {
+namespace ActsPlugins {
+
 /// @addtogroup edm4hep_plugin
 /// @{
+namespace EDM4hepUtil {
 
 static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
-/// @ingroup edm4hep_plugin
+/// @cond
 namespace detail {
 struct Parameters {
   Acts::ActsVector<6> values{};
@@ -83,6 +85,7 @@ Acts::BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
 }  // namespace detail
+/// @endcond
 
 // Compatibility with EDM4hep < 0.99 and >= 0.99
 edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
@@ -288,5 +291,6 @@ class SimHitAssociation {
   std::unordered_map<podio::ObjectID, std::size_t> m_edm4hepToInternal;
 };
 
+}  // namespace EDM4hepUtil
 /// @}
-}  // namespace ActsPlugins::EDM4hepUtil
+}  // namespace ActsPlugins

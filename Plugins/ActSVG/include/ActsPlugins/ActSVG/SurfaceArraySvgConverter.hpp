@@ -24,8 +24,10 @@ class SurfaceArray;
 
 }  // namespace Acts
 
+namespace ActsPlugins {
+
 /// @ingroup actsvg_plugin
-namespace ActsPlugins::Svg::SurfaceArrayConverter {
+namespace Svg::SurfaceArrayConverter {
 
 /// @ingroup actsvg_plugin
 /// Nested options struct
@@ -52,4 +54,6 @@ ProtoIndexedSurfaceGrid convert(const Acts::GeometryContext& gctx,
                                 const Acts::SurfaceArray& surfaceArray,
                                 const Options& cOptions = Options());
 
-}  // namespace ActsPlugins::Svg::SurfaceArrayConverter
+}  // namespace Svg::SurfaceArrayConverter
+
+}  // namespace ActsPlugins

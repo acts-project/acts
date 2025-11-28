@@ -19,9 +19,12 @@
 /// This uses a custom API and nomenclature as it would
 /// otherwise require the ProtoAxis to have a default
 /// constructor which is deleted
-namespace Acts::ProtoAxisJsonConverter {
+namespace Acts {
 
-/// @ingroup json_plugin
+/// @addtogroup json_plugin
+/// @{
+
+namespace ProtoAxisJsonConverter {
 
 /// Write the ProtoAxis to a json object
 ///
@@ -35,4 +38,8 @@ nlohmann::json toJson(const ProtoAxis& pa);
 /// @return ProtoAxis created from the JSON object
 Acts::ProtoAxis fromJson(const nlohmann::json& j);
 
-}  // namespace Acts::ProtoAxisJsonConverter
+}  // namespace ProtoAxisJsonConverter
+
+/// @}
+
+}  // namespace Acts

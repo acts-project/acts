@@ -778,9 +778,16 @@ INPUT                  = index.md \
                          groups \
                          ../Core/include \
                          ../Fatras/include \
+                         ../Plugins/ActSVG/include \
+                         ../Plugins/Covfie/include \
                          ../Plugins/DD4hep/include \
+                         ../Plugins/Detray/include \
                          ../Plugins/EDM4hep/include \
+                         ../Plugins/FastJet/include \
+                         ../Plugins/FpeMonitoring/include \
                          ../Plugins/Geant4/include \
+                         ../Plugins/GeoModel/include \
+                         ../Plugins/Hashing/include \
                          ../Plugins/Json/include \
                          ../Plugins/Onnx/include \
                          ../Plugins/Root/include \
