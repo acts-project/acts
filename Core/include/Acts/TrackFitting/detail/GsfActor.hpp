@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
@@ -21,7 +21,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
-#include <ios>
 #include <map>
 
 namespace Acts::detail {
@@ -67,7 +66,7 @@ struct GsfResult {
 };
 
 /// The actor carrying out the GSF algorithm
-template <typename bethe_heitler_approx_t, typename traj_t>
+template <typename traj_t>
 struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
@@ -87,7 +86,7 @@ struct GsfActor {
 
     /// Bethe Heitler Approximator pointer. The fitter holds the approximator
     /// instance TODO if we somehow could initialize a reference here...
-    const bethe_heitler_approx_t* bethe_heitler_approx = nullptr;
+    std::shared_ptr<const BetheHeitlerApprox> bethe_heitler_approx;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
