@@ -378,14 +378,14 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   }
   ACTS_DEBUG("Found N seeds so far " << options.seenSolutions.size());
   // check if we have already seen this solution
-  if (std::ranges::find_if(
+  if (std::ranges::any_of(
           options.seenSolutions, [&seedPars](const auto& seen) {
             const double deltaY = Acts::abs(seen.y0 - seedPars.y0);
-            const double limitY = std::hypot(seen.dY0, seedPars.dY0);
+            const double limitY = Acts::hypot(seen.dY0, seedPars.dY0);
             const double deltaTheta = Acts::abs(seen.theta - seedPars.theta);
-            const double limitTheta = std::hypot(seen.dTheta, seedPars.dTheta);
+            const double limitTheta = Acts::hypot(seen.dTheta, seedPars.dTheta);
             return deltaY < limitY && deltaTheta < limitTheta;
-          }) != options.seenSolutions.end()) {
+          })) {
     return std::nullopt;
   }
   ACTS_DEBUG("start looking for compatible hits ");

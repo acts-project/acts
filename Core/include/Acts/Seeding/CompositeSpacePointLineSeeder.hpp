@@ -58,11 +58,11 @@ concept CompositeSpacePointSorter =
 class CompositeSpacePointLineSeeder {
  public:
   using Vector = detail::CompSpacePointAuxiliaries::Vector;
-  using SeedParam_t = ActsVector<6>;
+  using SeedParam_t = CompositeSpacePointLineFitter::ParamVec_t ;
   /// @brief typedef to the underlying space point object
   template <CompositeSpacePoint SpacePoint_t>
   using Selector_t = Delegate<bool(const SpacePoint_t&)>;
-  using AbortSelector_t = Delegate<bool(uint layerIdx)>;
+  using AbortSelector_t = Delegate<bool(std::size_t layerIdx)>;
   template <CompositeSpacePointContainer Cont_t>
   using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
 
@@ -161,7 +161,7 @@ class CompositeSpacePointLineSeeder {
   template <CompositeSpacePointContainer Cont_t>
   struct SeedSolution : public SeedParameters {
     SeedSolution(const SeedParameters& pars) : SeedParameters(pars) {};
-    SeedSolution() {};
+    SeedSolution() = default;
     /// @brief Used hits in the seed
     Cont_t seedHits{};
   };
@@ -187,7 +187,7 @@ class CompositeSpacePointLineSeeder {
     std::size_t lowerHitIndex{0};
     std::size_t upperHitIndex{0};
 
-    uint m_signComboIndex{0};
+    std::size_t signComboIndex{0};
 
     /// @brief Try at the first time the external seed parameters as candidate
     bool startWithPattern{false};
