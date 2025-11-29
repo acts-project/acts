@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/EventData/CompositeSpacePointCalibrator.hpp"
-#include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
+#include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 namespace Acts::Experimental {
@@ -59,7 +59,7 @@ concept CompositeSpacePointSorter =
 class CompositeSpacePointLineSeeder {
  public:
   using Vector = detail::CompSpacePointAuxiliaries::Vector;
-  using SeedParam_t = CompositeSpacePointLineFitter::ParamVec_t ;
+  using SeedParam_t = CompositeSpacePointLineFitter::ParamVec_t;
   /// @brief typedef to the underlying space point object
   template <CompositeSpacePoint SpacePoint_t>
   using Selector_t = Delegate<bool(const SpacePoint_t&)>;
@@ -91,7 +91,7 @@ class CompositeSpacePointLineSeeder {
     std::array<double, 2> interceptRange{-20. * UnitConstants::m,
                                          20. * UnitConstants::m};
 
-    /// @brief do not apply any cuts on the seed parameters 
+    /// @brief do not apply any cuts on the seed parameters
     bool noCutsOnSeedParams{false};
     /// @brief Upper cut on the hit chi2 w.r.t. seed in order to be associated to the seed
     double hitPullCut{5.};
