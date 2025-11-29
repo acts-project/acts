@@ -268,9 +268,9 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
                   .count();
   std::unique_lock guard{writeMutex};
   outFile.WriteObject(outTree.get(), outTree->GetName());
-  ACTS_INFO("Test finished. " << outTree->GetEntries()
-                              << " tracks written. Test took " << (diff / 1000)
-                              << " seconds.");
+  ACTS_INFO("Test " << outTree->GetName() << " finished. "
+                    << outTree->GetEntries() << " tracks written. It took "
+                    << (diff / 1000) << " seconds.");
   return diff;
 }
 #undef DECLARE_BRANCH
@@ -287,21 +287,41 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   fitCfg.recalibrate = false;
   fitCfg.useFastFitter = false;
   /// Configuration for fast pre-fit
-  Fitter_t::Config fastCfg{fitCfg};
-  fastCfg.useFastFitter = true;
+  Fitter_t::Config fastPreCfg{fitCfg};
+  fastPreCfg.useFastFitter = true;
+  /// Configuration for fast only fit
+  Fitter_t::Config fastCfg{fastPreCfg};
+  fastPreCfg.fastPreFitter = false;
+
   // 2D straw only test
   std::vector<std::pair<std::string, std::future<long int>>> timings{};
-
+  /// @brief Helper lambda to launch the test for a given measurement configuration.
+  ///        Always three tests are launched:
+  ///           Fast: Use only the fast fitter to obtain the results
+  ///           FastPre: Use the fast fitter for a pre estimate of the
+  ///           parameters
+  ///                    followed by the full fitter
+  ///           Full: Just use the full fitter to obtain the results
+  /// @param testName: Name of the tests
+  /// @param genCfg: Configuration object to generate the measurements
+  /// @param seed: Seed number for the random number generator
   auto launchTest = [&](const std::string& testName, const GenCfg_t& genCfg,
                         std::size_t seed) {
+    timings.emplace_back(
+        "Fast" + testName, std::async(std::launch::async, [&]() {
+          return runFitTest(fastCfg, genCfg, "Fast" + testName, seed, *outFile);
+        }));
+    std::this_thread::sleep_for(100ms);
+
     timings.emplace_back(testName, std::async(std::launch::async, [&]() {
                            return runFitTest(fitCfg, genCfg, testName, seed,
                                              *outFile);
                          }));
     std::this_thread::sleep_for(100ms);
     timings.emplace_back(
-        "Fast" + testName, std::async(std::launch::async, [&]() {
-          return runFitTest(fastCfg, genCfg, "Fast" + testName, seed, *outFile);
+        "FastPre" + testName, std::async(std::launch::async, [&]() {
+          return runFitTest(fastPreCfg, genCfg, "FastPre" + testName, seed,
+                            *outFile);
         }));
     std::this_thread::sleep_for(100ms);
   };
@@ -404,8 +424,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     int bin{1};
     for (auto& [label, result] : timings) {
       timeHisto->GetXaxis()->SetBinLabel(bin, label.c_str());
-      timeHisto->SetBinContent(
-          bin, static_cast<double>(result.get()) / static_cast<double>(nEvents));
+      timeHisto->SetBinContent(bin, static_cast<double>(result.get()) /
+                                        static_cast<double>(nEvents));
       ++bin;
     }
     outFile->WriteObject(timeHisto.get(), timeHisto->GetName());
