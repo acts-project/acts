@@ -11,12 +11,13 @@
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/EventData/CompositeSpacePointCalibrator.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
+#include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 namespace Acts::Experimental {
 
 using Line_t = detail::CompSpacePointAuxiliaries::Line_t;
-using Line_t = detail::CompSpacePointAuxiliaries::Line_t;
+using ParIdx = detail::CompSpacePointAuxiliaries::FitParIndex;
 
 namespace detail {
 /// @brief Abrivation to dereference a pointer to a const object
@@ -89,10 +90,11 @@ class CompositeSpacePointLineSeeder {
     /// @brief Cut on the intercept range
     std::array<double, 2> interceptRange{-20. * UnitConstants::m,
                                          20. * UnitConstants::m};
+
+    /// @brief do not apply any cuts on the seed parameters 
+    bool noCutsOnSeedParams{false};
     /// @brief Upper cut on the hit chi2 w.r.t. seed in order to be associated to the seed
     double hitPullCut{5.};
-    /// @brief Try at the first time the external seed parameters as candidate
-    bool startWithPattern{false};
     /// @brief How many drift circles may be on a layer to be used for seeding
     std::size_t busyLayerLimit{2};
     /// @brief How many drift circle hits needs the seed to contain in order to be valid
@@ -108,14 +110,6 @@ class CompositeSpacePointLineSeeder {
     bool overlapCorridor{true};
     /// @brief Recalibrate the seed drift circles from the initial estimate
     bool recalibSeedCircles{false};
-    /// @brief Toggle whether the seed is rapidly refitted
-    bool fastSeedFit{true};
-    /// @brief Toggle whether an initial t0 fit shall be executed
-    bool fastSegFitWithT0{false};
-    /// @brief Maximum number of iterations in the fast segment fit
-    std::size_t nMaxIter{100};
-    /// @brief Precision cut off in the fast segment fit
-    double precCutOff{1.e-6};
   };
 
   struct SeedParameters {
@@ -131,14 +125,12 @@ class CompositeSpacePointLineSeeder {
     Line_t line{};
     /// @brief Vector of radial signs of the valid hits
     std::vector<int> solutionSigns{};
-    /// @brief Iterations to obtain the seed with fast fit
-    std::size_t nIter{0};
     /// @brief Seed chi2
     double chi2{0.};
     /// @brief Number of straw hits on the seed
     std::size_t nStrawHits{0};
     /// @brief Estimated parameters from pattern
-    Line_t::ParamVector patternParams{};
+    SeedParam_t patternParams{};
 
     /// @brief Stringstream output operator
     friend std::ostream& operator<<(std::ostream& ostr,

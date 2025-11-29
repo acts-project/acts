@@ -62,7 +62,7 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
   Seeder seeder{seederCfg};
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
-    ACTS_INFO("Generating event " << evt);
+    if(evt%100 == 0) ACTS_INFO("Generating event " << evt);
     const auto line = generateLine(engine, logger());
     auto linePars = line.parameters();
     trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
