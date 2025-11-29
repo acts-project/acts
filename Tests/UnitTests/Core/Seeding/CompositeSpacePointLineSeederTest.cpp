@@ -58,7 +58,7 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
   genCfg.createStrips = false;
 
   Seeder::Config seederCfg{};
-  seederCfg.busyLayerLimit = 5;
+  seederCfg.busyLayerLimit = 20;
   Seeder seeder{seederCfg};
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
@@ -79,10 +79,12 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
     seedOpts.calibrator = calibrator.get();
     seedOpts.selector.connect<&isGoodHit>();
     ACTS_DEBUG(seedOpts);
+    ACTS_DEBUG("Preparing seed options ");
     seeder.prepareSeedOptions(seedOpts);
     ACTS_DEBUG(seedOpts);
     nSeeds = 0;
     while (auto seed = seeder.nextSeed(seedOpts)) {
+      ACTS_DEBUG("Seed finder loop "<< seedOpts);
       if (seed == std::nullopt)
         break;
       recoY0.push_back(seed->y0);
@@ -92,6 +94,7 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
       nStraws.push_back(seed->nStrawHits);
       nSeeds++;
     }
+
     outTree->Fill();
     recoY0.clear();
     recoTheta.clear();
