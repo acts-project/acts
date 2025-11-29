@@ -61,10 +61,6 @@ SingleConvexPolygonPortalShell::SingleConvexPolygonPortalShell(
   }
 }
 
-Portal* SingleConvexPolygonPortalShell::portal(Face face) {
-  return portalPtr(face).get();
-}
-
 std::shared_ptr<Portal> SingleConvexPolygonPortalShell::portalPtr(Face face) {
   return m_portals.at(toUnderlying(face));
 }

@@ -27,11 +27,6 @@ class ConvexPolygonPortalShell : public PortalShellBase {
 
   using enum ConvexPolygonVolumeBounds::Face;
 
-  /// Retrieve the portal associated to the given face. Can be nullptr if unset.
-  /// @param face The face to retrieve the portal for
-  /// @return The portal associated to the face
-  virtual Portal* portal(Face face) = 0;
-
   /// Retrieve a shared_ptr for the portal associated to the given face. Can be
   /// nullptr if unset.
   /// @param face The face to retrieve the portal for
@@ -63,9 +58,6 @@ class SingleConvexPolygonPortalShell : public ConvexPolygonPortalShell {
   /// Constructor of a convex polygon shape portal shell for the given volume
   /// @param volume The tracking volume this portal shell is associated with
   explicit SingleConvexPolygonPortalShell(TrackingVolume& volume);
-
-  /// @copydoc ConvexPolygonPortalShell::portal
-  Portal* portal(Face face) override;
 
   /// @copydoc ConvexPolygonPortalShell::portalPtr
   std::shared_ptr<Portal> portalPtr(Face face) override;
