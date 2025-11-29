@@ -701,4 +701,9 @@ bool isGoodHit(const FitTestSpacePoint& sp) {
   return !sp.isStraw() || sp.isGood();
 };
 
-}  // namespace ActsTests
+// Abort the seeding/fitting after half of the layers
+bool abortAfterHalfLayers(size_t layer){
+  return layer >= 8;
+}
+
+}  // namespace Acts::Test
