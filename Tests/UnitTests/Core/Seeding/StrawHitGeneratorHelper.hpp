@@ -702,7 +702,7 @@ bool isGoodHit(const FitTestSpacePoint& sp) {
 };
 
 // Abort the seeding/fitting after half of the layers
-bool abortAfterHalfLayers(size_t layer){
+bool abortAfterHalfLayers(std::size_t layer) {
   return layer >= 8;
 }
 
