@@ -43,7 +43,7 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
 
   DECLARE_BRANCH(double, trueY0);
   DECLARE_BRANCH(double, trueTheta);
-
+  DECLARE_BRANCH(uint, nTruthStraws);
   DECLARE_BRANCH(std::vector<double>, recoY0);
   DECLARE_BRANCH(std::vector<double>, recoTheta);
   DECLARE_BRANCH(std::vector<double>, uncertY0);
@@ -59,6 +59,7 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
 
   Seeder::Config seederCfg{};
   seederCfg.busyLayerLimit = 20;
+  seederCfg.noCutsOnSeedParams = false;
   Seeder seeder{seederCfg};
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
@@ -69,12 +70,14 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
     trueTheta = linePars[toUnderlying(Line_t::ParIndex::theta)];
     auto testTubes =
         MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
+    nTruthStraws = testTubes.size();
     std::unique_ptr<SpSorter> sorterPtr = std::make_unique<SpSorter>(testTubes);
     auto calibrator = std::make_unique<SpCalibrator>();
 
     using SeedOptions_t =
         Seeder::SeedOptions<Container_t, SpSorter, Container_t, SpCalibrator>;
     SeedOptions_t seedOpts{};
+    seedOpts.abortSelector.connect<&abortAfterHalfLayers>();
     seedOpts.splitter = std::move(sorterPtr);
     seedOpts.calibrator = calibrator.get();
     seedOpts.selector.connect<&isGoodHit>();
@@ -94,6 +97,7 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
       nStraws.push_back(seed->nStrawHits);
       nSeeds++;
     }
+    ACTS_DEBUG("======Event " << evt << " found " << nSeeds << " seeds.");
 
     outTree->Fill();
     recoY0.clear();
