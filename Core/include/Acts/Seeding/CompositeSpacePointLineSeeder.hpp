@@ -86,7 +86,7 @@ class CompositeSpacePointLineSeeder {
 
   struct Config {
     /// @brief Cut on the theta angle
-    std::array<double, 2> thetaRange{0, 179. * UnitConstants::degree};
+    std::array<double, 2> thetaRange{0, 180. * UnitConstants::degree};
     /// @brief Cut on the intercept range
     std::array<double, 2> interceptRange{-20. * UnitConstants::m,
                                          20. * UnitConstants::m};

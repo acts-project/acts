@@ -413,14 +413,17 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   for (const auto [layerNr, hitsInLayer] :
        Acts::enumerate(options.splitter->strawHits())) {
     bool hadGoodHit{false};
-    for (const auto& testMe : hitsInLayer) {
+    for (const auto& [hitNr,testMe] : Acts::enumerate(hitsInLayer)) {
        const double distance =
           Acts::abs(Acts::detail::LineHelper::signedDistance(
               testMe->localPosition(), testMe->sensorDirection(),
               seedSol.line.position(), seedSol.line.direction()));
       const double chi2 = detail::CompSpacePointAuxiliaries::chi2Term(seedSol.line, *testMe);
-
-      if (chi2 < Acts::pow(m_cfg.hitPullCut,2) && distance < testMe->driftRadius()) {
+      
+      ACTS_DEBUG("Hit in layer " << layerNr << " pull " << std::sqrt(chi2)
+                                 << " distance " << distance
+                                 << " drift radius " << testMe->driftRadius());
+      if (chi2 < Acts::pow(m_cfg.hitPullCut,2) /*&& distance < testMe->driftRadius()*/) {
         hadGoodHit = true;
         seedSol.seedHits.emplace_back(testMe);
         seedSol.nStrawHits +=
