@@ -364,18 +364,16 @@ class MeasurementGenerator {
     bool discretizeStrips{false};
     /// @brief Combine the two strip measurements to a single space point
     bool combineSpacePoints{false};
-    /// @brief Create strip measurements constraining Loc0
-    bool createStripsLoc0{true};
-    /// @brief Create strip measurements constraining Loc1
-    bool createStripsLoc1{true};
     /// @brief Pitch between two loc0 strips
     double stripPitchLoc0{4._cm};
     /// @brief Pitch between two loc1 strips
     double stripPitchLoc1{3._cm};
     /// @brief Direction of the strip if it measures loc1
-    Vector3 stripDirLoc1{Vector3::UnitX()};
+    std::vector<Vector3> stripDirLoc1 =
+        std::vector<Vector3>(8, Vector3::UnitX());
     /// @brief Direction of the strip if it measures loc0
-    Vector3 stripDirLoc0{Vector3::UnitY()};
+    std::vector<Vector3> stripDirLoc0 =
+        std::vector<Vector3>(8, Vector3::UnitY());
     /// @brief Experiment specific calibration context
     Acts::CalibrationContext calibContext{};
     /// @brief Local to global transform
@@ -414,8 +412,6 @@ class MeasurementGenerator {
     constexpr double tubeStripDist = 30._cm;
     /// Distance between two strip layers
     constexpr double stripLayDist = 0.5_cm;
-    /// Number of strip layers on each side
-    constexpr std::size_t nStripLay = 8;
 
     std::array<Vector3, nTubeLayers> tubePositions{
         filledArray<Vector3, nTubeLayers>(chamberDistance * Vector3::UnitZ())};
@@ -457,7 +453,7 @@ class MeasurementGenerator {
         const auto dToFirstHigh = static_cast<int>(std::ceil(
             (planeExtpHigh.position().y() - stag.y()) / (2. * tubeRadius)));
         /// Does the track go from left to right or right to left?
-        const int dT = dToFirstHigh > dToFirstLow ? 1 : -1;
+        const int dT = copySign(1, dToFirstHigh - dToFirstLow);
         /// Loop over the candidate tubes and check each one whether the track
         /// actually crossed them. Then generate the circle and optionally smear
         /// the radius
@@ -508,13 +504,14 @@ class MeasurementGenerator {
       /// @param extPos: Extrapolated position of the straight line in the plane
       /// @param loc1: Boolean to fetch either the loc1 projection or the loc0 projection
       auto discretize = [&genCfg, &engine](const Vector3& extPos,
+                                           const std::size_t lay,
                                            const bool loc1) -> Vector3 {
         const double pitch =
             loc1 ? genCfg.stripPitchLoc1 : genCfg.stripPitchLoc0;
         assert(pitch > 0.);
 
         const Vector3& stripDir =
-            loc1 ? genCfg.stripDirLoc1 : genCfg.stripDirLoc0;
+            loc1 ? genCfg.stripDirLoc1.at(lay) : genCfg.stripDirLoc0.at(lay);
         const Vector3 stripNormal = stripDir.cross(Vector3::UnitZ());
         const double dist = stripNormal.dot(extPos);
         if (genCfg.smearStrips) {
@@ -533,7 +530,9 @@ class MeasurementGenerator {
       const double stripCovLoc1 =
           Acts::square(genCfg.stripPitchLoc1) / std::sqrt(12.);
 
-      for (std::size_t sL = 0; sL < nStripLay; ++sL) {
+      for (std::size_t sL = 0; sL < std::max(genCfg.stripDirLoc0.size(),
+                                             genCfg.stripDirLoc1.size());
+           ++sL) {
         const double distInZ = tubeStripDist + sL * stripLayDist;
         const double planeLow = tubePositions.front().z() - distInZ;
         const double planeHigh = tubePositions.back().z() + distInZ;
@@ -543,21 +542,24 @@ class MeasurementGenerator {
                                            Vector3::UnitZ(), plane);
           ACTS_VERBOSE("spawn() - Propagated line to "
                        << toString(extp.position()) << ".");
-          if (genCfg.combineSpacePoints) {
-            const Vector3 extpPos{discretize(extp.position(), false) +
-                                  discretize(extp.position(), true) +
+
+          if (genCfg.combineSpacePoints &&
+              sL < std::min(genCfg.stripDirLoc0.size(),
+                            genCfg.stripDirLoc1.size())) {
+            const Vector3 extpPos{discretize(extp.position(), sL, false) +
+                                  discretize(extp.position(), sL, true) +
                                   plane * Vector3::UnitZ()};
             measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                extpPos, genCfg.stripDirLoc0, genCfg.stripDirLoc1, stripCovLoc0,
-                stripCovLoc1));
+                extpPos, genCfg.stripDirLoc0.at(sL), genCfg.stripDirLoc1.at(sL),
+                stripCovLoc0, stripCovLoc1));
           } else {
-            if (genCfg.createStripsLoc0) {
-              const Vector3 extpPos{discretize(extp.position(), false) +
+            if (sL < genCfg.stripDirLoc0.size()) {
+              const Vector3 extpPos{discretize(extp.position(), sL, false) +
                                     plane * Vector3::UnitZ()};
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                  extpPos, genCfg.stripDirLoc0,
-                  genCfg.stripDirLoc0.cross(Vector3::UnitZ()), stripCovLoc0,
-                  0.));
+                  extpPos, genCfg.stripDirLoc0.at(sL),
+                  genCfg.stripDirLoc0.at(sL).cross(Vector3::UnitZ()),
+                  stripCovLoc0, 0.));
               const auto& nM{*measurements.back()};
               ACTS_VERBOSE("spawn() - Created loc0 strip @"
                            << toString(nM.localPosition())
@@ -565,12 +567,12 @@ class MeasurementGenerator {
                            << ", to-next:" << toString(nM.toNextSensor())
                            << " -> covariance: " << nM.covariance()[0] << ".");
             }
-            if (genCfg.createStripsLoc1) {
-              const Vector3 extpPos{discretize(extp.position(), true) +
+            if (sL < genCfg.stripDirLoc1.size()) {
+              const Vector3 extpPos{discretize(extp.position(), sL, true) +
                                     plane * Vector3::UnitZ()};
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                  extpPos, genCfg.stripDirLoc1,
-                  genCfg.stripDirLoc1.cross(Vector3::UnitZ()), 0.,
+                  extpPos, genCfg.stripDirLoc1.at(sL),
+                  genCfg.stripDirLoc1.at(sL).cross(Vector3::UnitZ()), 0.,
                   stripCovLoc1));
               const auto& nM{*measurements.back()};
               ACTS_VERBOSE("spawn() - Created loc1 strip @"
