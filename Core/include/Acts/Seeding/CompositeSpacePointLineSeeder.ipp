@@ -113,6 +113,9 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Spt_t& topHit,
       std::hypot(bottomPos.dot(eY) * sinTheta + bottomPos.dot(eZ) * cosTheta,
                  1.) *
       result.dTheta;
+  if(result.theta < 0){
+    result.theta += std::numbers::pi;
+  }
   return result;
 }
 
@@ -130,6 +133,13 @@ bool CompositeSpacePointLineSeeder::moveToNextHit(
     const UnCalibCont_t& hitVec,
     const Selector_t<SpacePoint_t<UnCalibCont_t>>& selector,
     std::size_t& hitIdx) const {
+  ACTS_DEBUG(__func__ << "() " << __LINE__
+                         << ": Moving to next good hit from index " << hitIdx
+                         << " in hit vector of size " << hitVec.size()
+                        << " with selector " << selector.connected());
+  if(hitIdx+1 < hitVec.size()){
+    ACTS_DEBUG(" Next hit is good "<< !selector(*hitVec[hitIdx+1]));
+  }
   while (++hitIdx < hitVec.size() && selector.connected() &&
          !selector(*hitVec[hitIdx])) {
   }
@@ -143,7 +153,8 @@ bool CompositeSpacePointLineSeeder::firstGoodHit(
     const Selector_t<SpacePoint_t<UnCalibCont_t>>& selector,
     std::size_t& hitIdx) const {
   hitIdx = 0;
-  return moveToNextHit(hitVec, selector, hitIdx);
+  if (hitVec.empty()) return false;
+  return !selector.connected() || selector(*hitVec[hitIdx]) || moveToNextHit(hitVec, selector, hitIdx);
 }
 
 template <CompositeSpacePointContainer Cont_t,
@@ -183,6 +194,10 @@ bool CompositeSpacePointLineSeeder::prepareSeedOptions(
     if (lowerLayerHits.size() > m_cfg.busyLayerLimit ||
         !firstGoodHit(lowerLayerHits, options.selector,
                       options.lowerHitIndex)) {
+      ACTS_DEBUG("Skipping lower layer " << options.lowerLayer
+                                           << " with "
+                                           << lowerLayerHits.size()
+                                           << " hits ");
       ++options.lowerLayer;
     } else {
       break;
@@ -361,6 +376,7 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   const CalibrationContext* ctx = options.calibContext;
 
   auto seedPars = constructTangentLine(*lowerHit, *upperHit, ambi);
+  ACTS_DEBUG("Line pars " <<  seedPars << " seed opts "<< options);
   if (!isValidLine(seedPars)) {
     return std::nullopt;
   }
@@ -379,7 +395,7 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
       return std::nullopt;
     }
   }
-
+  ACTS_DEBUG("Found N seeds so far " << options.seenSolutions.size());
   // check if we have already seen this solution
   if (std::ranges::find_if(
           options.seenSolutions, [&seedPars](const auto& seen) {
@@ -391,7 +407,7 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
           }) != options.seenSolutions.end()) {
     return std::nullopt;
   }
-
+  ACTS_DEBUG("start looking for compatible hits ");
   // now we search for the uncalibrated hits that are compatible with the seed
   SeedSolution<Cont_t> seedSol(seedPars);
   for (const auto [layerNr, hitsInLayer] :
@@ -421,6 +437,7 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   const unsigned hitCut =
       std::max(1. * m_cfg.nStrawHitCut,
                m_cfg.nStrawLayHitCut * options.splitter->strawHits().size());
+  ACTS_DEBUG("Found " << seedSol.nStrawHits << " compatible straw hits. Hit cut is " << hitCut);
   if (seedSol.nStrawHits < hitCut) {
     return std::nullopt;
   }

@@ -58,10 +58,12 @@ std::ostream& CompositeSpacePointLineSeeder::SeedParameters::print(
 bool CompositeSpacePointLineSeeder::isValidLine(SeedParameters seedSol) const {
   if (seedSol.theta < m_cfg.thetaRange[0] ||
       seedSol.theta > m_cfg.thetaRange[1]) {
+    ACTS_DEBUG("rejecting theta " << seedSol.theta);
     return false;
   }
   if (seedSol.y0 < m_cfg.interceptRange[0] ||
       seedSol.y0 > m_cfg.interceptRange[1]) {
+    ACTS_DEBUG("rejecting y0 " << seedSol.y0);
     return false;
   }
   return true;
