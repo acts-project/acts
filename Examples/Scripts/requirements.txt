@@ -24,7 +24,7 @@ cramjam==2.11.0
     # via uproot
 cycler==0.12.1
     # via matplotlib
-fonttools==4.60.1
+fonttools==4.61.0
     # via matplotlib
 fsspec==2025.10.0
     # via
