@@ -241,8 +241,8 @@ class CompositeSpacePointLineFitter {
   /// @param measurements: List of measurements to fit
   /// @param initialGuess: Line representing the start parameters parsed by the user. Needed to determine
   ///                      the L<->R ambiguity of the straws
-  /// @param nStraws: number of straw measurements
   /// @param parsToUse: List of parameters to fit (y0, theta), (x0, phi) or (y0, theta, x0, phi).
+  /// @param precDelegate: Delegate function to call the fast fitter for to perform the precision fit
   template <bool fitStraws, bool fitTime, CompositeSpacePointContainer Cont_t>
   FitParameters fastFit(
       const Cont_t& measurements, const Line_t& initialGuess,
