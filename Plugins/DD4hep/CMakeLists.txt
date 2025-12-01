@@ -1,10 +1,8 @@
 acts_add_library(
     PluginDD4hep
     src/ConvertDD4hepDetector.cpp
-    src/DD4hepBinningHelpers.cpp
     src/DD4hepMaterialHelpers.cpp
     src/DD4hepDetectorElement.cpp
-    src/DD4hepDetectorSurfaceFactory.cpp
     src/DD4hepLayerBuilder.cpp
     src/DD4hepVolumeBuilder.cpp
     src/DD4hepFieldAdapter.cpp

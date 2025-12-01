@@ -2,7 +2,6 @@ add_library(
     ActsTestsDD4hepFactories
     SHARED
     DD4hepTestsHelper.cpp
-    LayerFactory.cpp
     PrimitivesFactory.cpp
 )
 
@@ -42,7 +41,6 @@ if(NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
     set(unittest_extra_libraries Acts::TestsDD4hepFactories Acts::PluginDD4hep)
     set(dd4hep_tests
         DD4hepDetectorElement
-        DD4hepDetectorSurfaceFactory
         DD4hepCylindricalDetectorGen3
     )
     foreach(_test ${dd4hep_tests})
