@@ -12,7 +12,6 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
-#include "Acts/Geometry/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"

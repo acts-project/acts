@@ -23,7 +23,7 @@ mockupChamberConfigOuter.PassiveNames = ["xx"]
 dirOfThisScript = os.path.dirname(__file__)
 mockupConfig.gdmlPath = os.path.join(
     dirOfThisScript,
-    "../../../../Detectors/MuonSpectrometerMockupDetector/MuonChamber.gdml",
+    "../../../../Detectors/MuonSpectrometerMockupGeometry/MuonChamber.gdml",
 )
 mockupConfig.NumberOfSectors = 8
 

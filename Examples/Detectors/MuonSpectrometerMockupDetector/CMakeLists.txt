@@ -19,17 +19,4 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL OR ACTS_BUILD_EXAMPLES_GEANT4)
             PUBLIC ActsPluginGeoModel GeoModelIO::GeoModelWrite
         )
     endif()
-    if(ACTS_BUILD_EXAMPLES_GEANT4)
-        target_sources(
-            ActsExamplesMuonSpectrometerMockupDetector
-            PUBLIC src/MockupSectorBuilder.cpp
-        )
-        target_link_libraries(
-            ActsExamplesMuonSpectrometerMockupDetector
-            PUBLIC
-                Acts::ExamplesGeant4
-                Acts::ExamplesDetectorGeant4
-                Acts::PluginGeant4
-        )
-    endif()
 endif()

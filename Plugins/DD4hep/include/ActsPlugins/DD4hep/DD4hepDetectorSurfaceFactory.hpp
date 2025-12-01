@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Detector/ProtoSupport.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -79,8 +78,6 @@ class DD4hepDetectorSurfaceFactory {
     std::size_t convertedMaterials = 0;
     /// The collected binnings
     std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> binnings = {};
-    /// The collected supports
-    std::vector<Acts::Experimental::ProtoSupport> supports = {};
     /// Optionally provide an Extent object to measure the sensitives
     std::optional<Acts::Extent> sExtent = std::nullopt;
     /// Optionally provide an Extent object to measure the passive

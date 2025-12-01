@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Detector/ProtoDetector.hpp"
+#include "Acts/Geometry/ProtoDetector.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <nlohmann/json.hpp>

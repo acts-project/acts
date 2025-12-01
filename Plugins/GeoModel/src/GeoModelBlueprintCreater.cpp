@@ -8,11 +8,11 @@
 
 #include "ActsPlugins/GeoModel/GeoModelBlueprintCreater.hpp"
 
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/detail/BlueprintDrawer.hpp"
-#include "Acts/Detector/detail/BlueprintHelper.hpp"
-#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
+#include "Acts/Geometry/BlueprintDrawer.hpp"
+#include "Acts/Geometry/BlueprintHelper.hpp"
+#include "Acts/Geometry/GeometryIdGenerator.hpp"
+#include "Acts/Geometry/LayerStructureBuilder.hpp"
+#include "Acts/Geometry/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
