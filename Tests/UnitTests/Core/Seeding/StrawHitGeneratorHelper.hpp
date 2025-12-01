@@ -32,6 +32,7 @@ using RandomEngine = std::mt19937;
 using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using normal_t = std::normal_distribution<double>;
+using uniform_t = std::uniform_real_distribution<double>;
 using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 
@@ -318,13 +319,13 @@ Line_t generateLine(RandomEngine& engine, const Logger& logger) {
   using ParIndex = Line_t::ParIndex;
   Line_t::ParamVector linePars{};
   linePars[toUnderlying(ParIndex::phi)] =
-      std::uniform_real_distribution{-120_degree, 120_degree}(engine);
+      uniform_t{-120_degree, 120_degree}(engine);
   linePars[toUnderlying(ParIndex::x0)] =
-      std::uniform_real_distribution{-5000., 5000.}(engine);
+      uniform_t{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::y0)] =
-      std::uniform_real_distribution{-5000., 5000.}(engine);
+      uniform_t{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
-      std::uniform_real_distribution{5_degree, 175_degree}(engine);
+      uniform_t{5_degree, 175_degree}(engine);
   if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
       3_degree) {
     return generateLine(engine, logger);
@@ -614,9 +615,11 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
         (**lastPhi).localPosition() - (**firstPhi).localPosition();
     tanAlpha = firstToLastPhi.x() / firstToLastPhi.z();
     /// -> x = tanPhi * z + x_{0} ->
+    RandomEngine fart{firstToLastPhi.x()};
     pars[toUnderlying(FitParIndex::x0)] =
         (**lastPhi).localPosition().x() -
-        (**lastPhi).localPosition().z() * tanAlpha;
+        (**lastPhi).localPosition().z() * tanAlpha
+        +uniform_t{-10._cm,10._cm}(fart);
   }
   /// Setup the seed parameters in y0 && theta
   auto firstTube =
@@ -653,8 +656,11 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
           (**lastEta).localPosition().z() * tanBeta;
     }
   }
-
+  RandomEngine fart{10101*tanBeta};
+  tanBeta +=std::copysign(uniform_t{0., 10._degree}(fart), tanBeta);
   const Vector3 seedDir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
+
+  
   pars[toUnderlying(FitParIndex::theta)] = theta(seedDir);
   pars[toUnderlying(FitParIndex::phi)] = phi(seedDir);
   return pars;

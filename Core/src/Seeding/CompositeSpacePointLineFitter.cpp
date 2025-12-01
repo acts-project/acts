@@ -55,7 +55,7 @@ bool CompositeSpacePointLineFitter::withinRange(
     return true;
   }
   if (parValue < m_cfg.ranges[p][0] || parValue > m_cfg.ranges[p][1]) {
-    ACTS_INFO(__func__ << "() " << __LINE__ << ": The parameter "
+    ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": The parameter "
                        << detail::CompSpacePointAuxiliaries::parName(fitPar)
                        << " " << parValue << " is out range ["
                        << m_cfg.ranges[p][0] << ";" << m_cfg.ranges[p][1]
