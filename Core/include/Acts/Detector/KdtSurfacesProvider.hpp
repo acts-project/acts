@@ -29,8 +29,7 @@ namespace Acts::Experimental {
 /// KDTree lookup positions
 ///
 template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
-          typename reference_generator =
-              detail::PolyhedronReferenceGenerator<1u, false>>
+          typename reference_generator = detail::PolyhedronReferenceGenerator>
 class KdtSurfaces {
  public:
   /// Broadcast the surface KDT type
@@ -49,11 +48,11 @@ class KdtSurfaces {
   /// @param surfaces the surfaces to be filled into the tree
   /// @param casts the cast list from global position into kdtree local
   /// @param rgen the reference point generator
-  KdtSurfaces(const GeometryContext& gctx,
-              const std::vector<std::shared_ptr<Surface>>& surfaces,
-              const std::array<AxisDirection, kDIM>& casts,
-              const reference_generator& rgen =
-                  detail::PolyhedronReferenceGenerator<1u, false>{})
+  KdtSurfaces(
+      const GeometryContext& gctx,
+      const std::vector<std::shared_ptr<Surface>>& surfaces,
+      const std::array<AxisDirection, kDIM>& casts,
+      const reference_generator& rgen = detail::PolyhedronReferenceGenerator{})
       : m_kdt(nullptr), m_casts(casts), m_rGenerator(rgen) {
     // Simple check if the dimension is correct
     if (kDIM == 0u) {
@@ -161,8 +160,7 @@ class KdtSurfaces {
 /// This allows to create small region based callable structs at
 /// configuration level that are then connected to an InternalStructureBuilder
 template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
-          typename reference_generator =
-              detail::PolyhedronReferenceGenerator<1u, false>>
+          typename reference_generator = detail::PolyhedronReferenceGenerator>
 class KdtSurfacesProvider : public ISurfacesProvider {
  public:
   /// The prefilled surfaces in a KD tree structure, it is generally shared

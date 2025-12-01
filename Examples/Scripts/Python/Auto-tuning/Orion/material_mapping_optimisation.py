@@ -24,11 +24,19 @@ from acts.examples import (
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
-    RootMaterialTrackReader,
     MaterialMapping,
+)
+
+from acts.examples.root import (
+    RootMaterialTrackReader,
+    RootMaterialTrackWriter,
+)
+
+from acts.examples.json import (
     JsonMaterialWriter,
     JsonFormat,
 )
+
 from acts.examples.odd import getOpenDataDetector
 
 

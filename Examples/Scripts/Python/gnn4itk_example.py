@@ -60,7 +60,7 @@ def runGNN4ITk(
 
     # Read ATLAS Athena ROOT dump
     s.addReader(
-        acts.examples.RootAthenaDumpReader(
+        acts.examples.root.RootAthenaDumpReader(
             level=logLevel,
             treename="GNN4ITk",
             inputfiles=[str(inputRootDump)],
