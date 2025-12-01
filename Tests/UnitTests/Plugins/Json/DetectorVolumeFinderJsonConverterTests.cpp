@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   auto casts =
       std::array<AxisDirection, 2u>{AxisDirection::AxisZ, AxisDirection::AxisR};
 
-  using IndexedDetectorVolumesImpl = Experimental::IndexedGridNavigation<
+  using IndexedDetectorVolumesImpl = Experimental::IndexGridNavigation<
       Experimental::IExternalNavigation, GridType,
       Experimental::IndexedDetectorVolumeExtractor,
       Experimental::DetectorVolumeFiller>;

@@ -10,8 +10,7 @@
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-const std::vector<Acts::Vector3>
-Acts::PolyhedronReferenceGenerator::references(
+const std::vector<Acts::Vector3> Acts::PolyhedronReferenceGenerator::references(
     const GeometryContext& gctx, const Surface& surface) const {
   // Create the return  vector
   std::vector<Vector3> rPositions;
@@ -38,8 +37,7 @@ Acts::PolyhedronReferenceGenerator::references(
   return rPositions;
 }
 
-const std::vector<Acts::Vector3>
-Acts::ProjectedReferenceGenerator::references(
+const std::vector<Acts::Vector3> Acts::ProjectedReferenceGenerator::references(
     const GeometryContext& gctx, const Surface& surface) const {
   if (referenceSurface == nullptr) {
     throw std::invalid_argument(

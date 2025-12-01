@@ -153,4 +153,4 @@ struct ProjectedReferenceGenerator : public IReferenceGenerator {
   }
 };
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts

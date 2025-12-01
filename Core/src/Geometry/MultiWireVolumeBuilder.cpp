@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Navigation/IndexedGridNavigation.hpp"
+#include "Acts/Navigation/IndexGridNavigation.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"

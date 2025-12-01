@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Geometry/IndexedGridFiller.hpp"
+#include "Acts/Geometry/IndexGridFiller.hpp"
 #include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
-#include "Acts/Navigation/IndexedGridNavigation.hpp"
+#include "Acts/Navigation/IndexGridNavigation.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/Grid.hpp"
@@ -20,7 +20,7 @@
 namespace Acts::Experimental {
 
 template <typename grid_type>
-using IndexedSurfacesNavigation = IndexedGridNavigation<grid_type>;
+using IndexedSurfacesNavigation = IndexGridNavigation<grid_type>;
 
 /// A navigation policy that uses grid based navigation for indexed surfaces
 /// Navigate through a multilayer structure by creating an artificial path on

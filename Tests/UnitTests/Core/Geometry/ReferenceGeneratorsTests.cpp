@@ -21,7 +21,6 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Experimental::detail;
 
 GeometryContext tContext;
 

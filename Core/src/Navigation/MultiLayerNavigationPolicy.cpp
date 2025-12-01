@@ -29,7 +29,7 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
   }
 
   CenterReferenceGenerator rGenerator;
-  IndexedGridFiller filler{config.binExpansion};
+  IndexGridFiller filler{config.binExpansion};
   filler.fill(gctx, m_indexedGrid, surfaces, rGenerator, {});
 }
 

@@ -31,7 +31,7 @@ namespace Acts {
 /// @tparam extractor_type is the helper to extract the object
 /// @tparam filler_type is the helper to fill the object into the nState
 template <typename grid_t>
-class IndexedGridNavigation {
+class IndexGridNavigation {
  public:
   /// Broadcast the grid type
   using grid_type = grid_t;
@@ -49,12 +49,12 @@ class IndexedGridNavigation {
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
-  IndexedGridNavigation(grid_type&& igrid,
-                        const std::array<AxisDirection, grid_type::DIM>& icasts,
-                        const Transform3& itr = Transform3::Identity())
+  IndexGridNavigation(grid_type&& igrid,
+                      const std::array<AxisDirection, grid_type::DIM>& icasts,
+                      const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
-  IndexedGridNavigation() = delete;
+  IndexGridNavigation() = delete;
 };
 
 }  // namespace Acts

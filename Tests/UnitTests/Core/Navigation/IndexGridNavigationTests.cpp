@@ -10,39 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/IndexedGridFiller.hpp"
+#include "Acts/Geometry/IndexGridFiller.hpp"
 #include "Acts/Geometry/ReferenceGenerators.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Navigation/NavigationStateUpdaters.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Navigation/IndexGridNavigation.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <array>
-#include <cmath>
-#include <cstddef>
-#include <memory>
-#include <numbers>
-#include <ostream>
-#include <set>
-#include <utility>
-#include <vector>
-
 using namespace Acts;
-using namespace Acts::detail;
-using namespace Acts::Experimental;
-using namespace Acts::Experimental::detail;
-
-GeometryContext tContext;
-Logging::Level logLevel = Logging::VERBOSE;
 
 namespace {
 
@@ -63,58 +41,11 @@ std::size_t countBins(const indexed_surface_grid& isGrid) {
 
 namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(DetectorSuite)
+GeometryContext tContext;
 
-BOOST_AUTO_TEST_CASE(BinSequence) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Pre-Test", logLevel));
-  ACTS_INFO("Testing bin sequence generators.");
+Logging::Level logLevel = Logging::VERBOSE;
 
-  // Test standard bound local bin sequence
-  auto seq48e0b10B = binSequence({4u, 8u}, 0u, 10u, AxisBoundaryType::Bound);
-  std::vector<std::size_t> reference = {4u, 5u, 6u, 7u, 8u};
-  BOOST_CHECK(seq48e0b10B == reference);
-
-  // Test bound local bin sequence with expansion 1u
-  auto seq48e1b10B = binSequence({4u, 8u}, 1u, 10u, AxisBoundaryType::Bound);
-  reference = {3u, 4u, 5u, 6u, 7u, 8u, 9u};
-  BOOST_CHECK(seq48e1b10B == reference);
-
-  // Test bound local bin sequence with expansion 3u - clipped to max bin 10u
-  auto seq48e3b10B = binSequence({4u, 8u}, 3u, 10u, AxisBoundaryType::Bound);
-  reference = {1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u};
-  BOOST_CHECK(seq48e3b10B == reference);
-
-  // Test open bin sequence with overflow filling
-  auto seq48e3b10O = binSequence({4u, 8u}, 3u, 10u, AxisBoundaryType::Open);
-  reference = {1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u};
-  BOOST_CHECK(seq48e3b10O == reference);
-
-  // Test standard closed local bins
-  auto seq48e0b10C = binSequence({4u, 8u}, 0u, 20u, AxisBoundaryType::Closed);
-  reference = {4u, 5u, 6u, 7u, 8u};
-  BOOST_CHECK(seq48e0b10C == reference);
-
-  // Test closed local bins with expansion
-  auto seq48e1b10C = binSequence({4u, 8u}, 1u, 20u, AxisBoundaryType::Closed);
-  reference = {3u, 4u, 5u, 6u, 7u, 8u, 9u};
-  BOOST_CHECK(seq48e1b10C == reference);
-
-  // Test closed local bins with expansion over bin boundary
-  auto seq1029e1b20C =
-      binSequence({19u, 20u}, 1u, 20u, AxisBoundaryType::Closed);
-  reference = {1u, 18u, 19u, 20u};
-  BOOST_CHECK(seq1029e1b20C == reference);
-
-  // Test closed local bins with bin boundary jump
-  auto seq218e0b20C = binSequence({2u, 18u}, 0u, 20u, AxisBoundaryType::Closed);
-  reference = {1u, 2u, 18u, 19u, 20u};
-  BOOST_CHECK(seq218e0b20C == reference);
-
-  // Test closed local bins with bin boundary jump with extension
-  auto seq218e2b20C = binSequence({2u, 18u}, 2u, 20u, AxisBoundaryType::Closed);
-  reference = {1u, 2u, 3u, 4u, 16u, 17u, 18u, 19u, 20u};
-  BOOST_CHECK(seq218e2b20C == reference);
-}
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 0", logLevel));
@@ -128,7 +59,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
       std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
 
   // Create a single surface in the center
@@ -137,7 +68,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
                                                     std::move(rBounds));
 
   // The Filler instance and a center based generator
-  IndexedGridFiller filler{{}};
+  IndexGridFiller filler{{}};
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::VERBOSE);
   CenterReferenceGenerator generator;
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
@@ -164,7 +95,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
       std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
 
   // Create a single surface in the center
@@ -173,7 +104,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
                                                     std::move(rBounds));
 
   // The Filler instance and a center based generator
-  IndexedGridFiller filler{{}};
+  IndexGridFiller filler{{}};
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::VERBOSE);
 
   AxisDirectionReferenceGenerator<AxisDirection::AxisX> generator;
@@ -201,7 +132,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
       std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
 
   // Create a single surface in the center
@@ -210,7 +141,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
                                                     std::move(rBounds));
 
   // The Filler instance and a center based generator
-  IndexedGridFiller filler{{0u, 0u}};
+  IndexGridFiller filler{{0u, 0u}};
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator generator;
@@ -238,7 +169,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
       std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
 
   // Create a single surface in the center
@@ -247,7 +178,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
                                                     std::move(rBounds));
 
   // The Filler instance and a center based generator
-  IndexedGridFiller filler{{1u, 1u}};
+  IndexGridFiller filler{{1u, 1u}};
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator generator;
@@ -275,7 +206,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
                 std::move(axisPhi));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridZPhi)> indexedGridZPhi(
+  IndexGridNavigation<decltype(gridZPhi)> indexedGridZPhi(
       std::move(gridZPhi), {AxisDirection::AxisZ, AxisDirection::AxisPhi});
 
   auto cBounds =
@@ -284,7 +215,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
                                                        std::move(cBounds));
 
   // The Filler instance and a center based generator
-  IndexedGridFiller filler{{0u, 0u}};
+  IndexGridFiller filler{{0u, 0u}};
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator generator;
@@ -313,7 +244,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
                 std::move(axisPhi));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridZPhi)> indexedGridZPhi(
+  IndexGridNavigation<decltype(gridZPhi)> indexedGridZPhi(
       std::move(gridZPhi), {AxisDirection::AxisZ, AxisDirection::AxisPhi});
 
   auto cBounds =
@@ -323,7 +254,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   auto cSurface = Surface::makeShared<CylinderSurface>(tf, std::move(cBounds));
 
   // The Filler instance and a center based generator
-  IndexedGridFiller filler{{0u, 0u}};
+  IndexGridFiller filler{{0u, 0u}};
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator generator;

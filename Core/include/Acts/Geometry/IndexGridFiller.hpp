@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -156,13 +156,13 @@ std::string outputIndices(const std::set<local_bin>& lbins) {
 }
 
 /// A helper class that fills surfaces into predefined grids
-struct IndexedGridFiller {
+struct IndexGridFiller {
   /// Bin expansion where needed
   std::vector<std::size_t> binExpansion = {};
 
   /// Screen output logger
   std::unique_ptr<const Logger> oLogger =
-      getDefaultLogger("IndexedGridFiller", Logging::INFO);
+      getDefaultLogger("IndexGridFiller", Logging::INFO);
 
   /// @brief This method takes a collection of objects and fills them
   /// into an index grid - it uses a reference generator for grid query points
@@ -250,4 +250,4 @@ struct IndexedGridFiller {
   const Logger& logger() const { return (*oLogger); }
 };
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts
