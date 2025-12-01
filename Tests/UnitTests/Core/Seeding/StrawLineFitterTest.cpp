@@ -200,8 +200,12 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
                      double& phi) {
     y0 = pars[toUnderlying(FitParIndex::y0)];
     x0 = pars[toUnderlying(FitParIndex::x0)];
-    theta = pars[toUnderlying(FitParIndex::theta)] / 1._degree;
-    phi = pars[toUnderlying(FitParIndex::phi)] / 1._degree;
+    Vector3 properDir =
+        makeDirectionFromPhiTheta(pars[toUnderlying(FitParIndex::phi)],
+                                  pars[toUnderlying(FitParIndex::theta)]);
+    theta =
+        VectorHelpers::theta(copySign(properDir, properDir.z())) / 1._degree;
+    phi = VectorHelpers::phi(copySign(properDir, properDir.z())) / 1._degree;
   };
   /// @brief Fill the
   auto fillProjected = [](const auto pars, double& projTheta, double& projPhi) {
@@ -236,7 +240,7 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
 
     auto result = fitter.fit(std::move(fitOpts));
     if (!result.converged) {
-      ACTS_INFO("Fit " << outTree->GetName() << " failed.");
+      ACTS_DEBUG("Fit " << outTree->GetName() << " failed.");
       converged = false;
       chi2 = -1.;
       nDoF = 1;
@@ -341,7 +345,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
         }));
     std::this_thread::sleep_for(100ms);
   };
- if (false) {
+  if (false) {
     GenCfg_t genCfg{};
     genCfg.twinStraw = false;
     genCfg.createStrips = false;
@@ -357,7 +361,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StrawAndTwinTest", genCfg, 1503);
   }
   // 1D straws + single strip measurements
- if(false) {
+  if (false) {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -369,7 +373,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StrawAndStripTest", genCfg, 1701);
   }
   // 1D straws + 2D strip measurements
- if (false) {
+  if (false) {
     RandomEngine engine{1404};
     GenCfg_t genCfg{};
 
@@ -383,7 +387,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StrawAndStrip2DTest", genCfg, 1404);
   }
   // Strip only
-  if (false){
+  if (false) {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -395,7 +399,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StripOnlyTest", genCfg, 2070);
   }
   // 2D Strip only
-  if (false){
+  if (false) {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -407,7 +411,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("Strip2DOnlyTest", genCfg, 2225);
   }
   // Strip stereo test
- if (false) {
+  if (false) {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -416,15 +420,15 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.createStraws = false;
     genCfg.stripPitchLoc1 = 500._um;
     genCfg.stripDirLoc0.clear();
-    genCfg.stripDirLoc1 = {makeDirectionFromPhiTheta(0._degree, 90._degree),
-                           makeDirectionFromPhiTheta(0._degree, 90._degree),
-                           makeDirectionFromPhiTheta(-1.5_degree, 90._degree),
-                           makeDirectionFromPhiTheta(1.5_degree, 90._degree),
-                           makeDirectionFromPhiTheta(-1.5_degree, 90._degree),
-                           makeDirectionFromPhiTheta(1.5_degree, 90._degree),
-                           makeDirectionFromPhiTheta(0._degree, 90._degree),
-                           makeDirectionFromPhiTheta(0._degree, 90._degree),
-                           
+    genCfg.stripDirLoc1 = {
+        makeDirectionFromPhiTheta(0._degree, 90._degree),
+        makeDirectionFromPhiTheta(0._degree, 90._degree),
+        makeDirectionFromPhiTheta(-1.5_degree, 90._degree),
+        makeDirectionFromPhiTheta(1.5_degree, 90._degree),
+        makeDirectionFromPhiTheta(-1.5_degree, 90._degree),
+        makeDirectionFromPhiTheta(1.5_degree, 90._degree),
+        makeDirectionFromPhiTheta(0._degree, 90._degree),
+        makeDirectionFromPhiTheta(0._degree, 90._degree),
 
     };
 

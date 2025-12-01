@@ -130,8 +130,23 @@ CompositeSpacePointLineFitter::fastFit(
       result.covariance(toUnderlying(t0), toUnderlying(t0)) =
           Acts::square(precResult->dT0);
       result.parameters[toUnderlying(t0)] = precResult->t0;
+      if (!withinRange(precResult->t0, FitParIndex::t0)) {
+        ACTS_DEBUG(__func__ << " < fit" << (fitStraws ? "straws" : "strips")
+                            << ", " << (fitTime ? "with" : "no") << " time>() "
+                            << __LINE__ << " - Time is out of bounds.");
+        return result;
+      }
+    }
+    if (!withinRange(precResult->y0, FitParIndex::y0) ||
+        !withinRange(precResult->theta, FitParIndex::theta)) {
+      ACTS_DEBUG(__func__ << " < fit" << (fitStraws ? "straws" : "strips")
+                          << ", " << (fitTime ? "with" : "no") << " time>() "
+                          << __LINE__
+                          << " - Fit parameters are out of bounds.");
+      return result;
     }
     result.parameters[toUnderlying(y0)] = precResult->y0;
+
     result.covariance(toUnderlying(y0), toUnderlying(y0)) =
         Acts::square(precResult->dY0);
     result.covariance(toUnderlying(theta), toUnderlying(theta)) =
@@ -153,7 +168,7 @@ CompositeSpacePointLineFitter::fastFit(
   double tanAlpha = initialGuess.direction().x() / initialGuess.direction().z();
   const double tanBeta = postFitDir.y() / postFitDir.z();
   // Try to perform a fast fit in non-precision direction
-  if (false && std::ranges::any_of(parsToUse, [](const FitParIndex idx) {
+  if (std::ranges::any_of(parsToUse, [](const FitParIndex idx) {
         return idx == phi || idx == x0;
       })) {
     ACTS_DEBUG(__func__ << " < fit" << (fitStraws ? "straws" : "strips") << ", "
@@ -227,7 +242,8 @@ CompositeSpacePointLineFitter::fit(
 
     constexpr bool fastCalibrator =
         CompositeSpacePointFastCalibrator<Calibrator_t, SpacePoint_t<Cont_t>>;
-    const bool fitTime{resCfg.parsToUse.back() == FitParIndex::t0 && fastCalibrator};
+    const bool fitTime{resCfg.parsToUse.back() == FitParIndex::t0 &&
+                       fastCalibrator};
     if constexpr (!fastCalibrator) {
       if (resCfg.parsToUse.back() == FitParIndex::t0) {
         ACTS_WARNING(__func__ << "() " << __LINE__
@@ -262,7 +278,7 @@ CompositeSpacePointLineFitter::fit(
         fastResult = fastFit<true, false>(result.measurements, line,
                                           resCfg.parsToUse, fitDelegate);
       }
-    } 
+    }
     // Pure strip fit
     else {
       FastFitDelegate_t<Cont_t, false> fitDelegate{
