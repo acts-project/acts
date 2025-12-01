@@ -40,6 +40,8 @@ static const std::vector<std::tuple<std::string, Acts::AxisDirection>>
 /// @param binningString
 ///
 /// @return a binningValue
+/// @deprecated Gen2 construction code for DD4hep is deprecated.
+[[deprecated("Gen2 construction code for DD4hep is deprecated.")]]
 inline Acts::AxisDirection stringToAxisDirection(
     const std::string &binningString) {
   using enum Acts::AxisDirection;
@@ -66,6 +68,8 @@ inline Acts::AxisDirection stringToAxisDirection(
 /// @param del the delimiter for the splitting
 ///
 /// @return a vector of binninng values
+/// @deprecated Gen2 construction code for DD4hep is deprecated.
+[[deprecated("Gen2 construction code for DD4hep is deprecated.")]]
 inline std::vector<Acts::AxisDirection> stringToAxisDirections(
     const std::string &binningString, const char &del = ',') {
   if (binningString.empty()) {

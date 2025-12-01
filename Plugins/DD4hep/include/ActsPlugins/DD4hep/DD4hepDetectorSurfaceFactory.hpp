@@ -42,7 +42,10 @@ class DD4hepDetectorElement;
 /// of passive surfaces which are filled into a Cache object,
 /// also the create DD4hepDetector elements are provided
 ///
-class DD4hepDetectorSurfaceFactory {
+/// @deprecated Gen2 construction code for DD4hep is deprecated.
+class [[deprecated(
+    "Gen2 construction code for DD4hep is "
+    "deprecated.")]] DD4hepDetectorSurfaceFactory {
  public:
   /// DD4hepDetectorElement construction factory
   using ElementFactory = std::function<std::shared_ptr<DD4hepDetectorElement>(
