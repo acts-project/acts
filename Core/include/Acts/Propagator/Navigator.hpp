@@ -25,6 +25,7 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <map>
 #include <optional>
 #include <sstream>
@@ -56,7 +57,7 @@ struct NavigationOptions {
   const object_t* endObject = nullptr;
 
   /// External surface identifier for which the boundary check is ignored
-  std::vector<GeometryIdentifier> externalSurfaces = {};
+  std::vector<const Surface*> externalSurfaces = {};
 
   /// The minimum distance for a surface to be considered
   double nearLimit = 0;
@@ -97,8 +98,6 @@ class Navigator {
   /// Type alias for generic navigation candidates container
   using NavigationCandidates =
       boost::container::small_vector<NavigationTarget, 10>;
-
-  using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
 
   /// Type alias for geometry version enumeration
   using GeometryVersion = TrackingGeometry::GeometryVersion;
@@ -141,13 +140,12 @@ class Navigator {
     double farLimit = std::numeric_limits<double>::max();
 
     /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces = {};
+    boost::container::small_vector<const Surface*, 30> externalSurfaces{};
 
     /// Insert an external surface to be considered during navigation
-    /// @param geoid Geometry identifier of the surface to insert
-    void insertExternalSurface(GeometryIdentifier geoid) {
-      externalSurfaces.insert(
-          std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+    /// @param surface: Reference to the surface to insert
+    void insertExternalSurface(const Surface& surface) {
+      externalSurfaces.push_back(&surface);
     }
 
     /// Set the plain navigation options
@@ -173,25 +171,25 @@ class Navigator {
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
     /// the current surface index of the navigation state
-    std::optional<std::size_t> navSurfaceIndex;
+    std::optional<std::size_t> navSurfaceIndex{std::nullopt};
 
     // Navigation on layer level
     /// the vector of navigation layers to work through
     NavigationLayers navLayers = {};
     /// the current layer index of the navigation state
-    std::optional<std::size_t> navLayerIndex;
+    std::optional<std::size_t> navLayerIndex{std::nullopt};
 
     // Navigation on volume level
     /// the vector of boundary surfaces to work through
     NavigationBoundaries navBoundaries = {};
     /// the current boundary index of the navigation state
-    std::optional<std::size_t> navBoundaryIndex;
+    std::optional<std::size_t> navBoundaryIndex{std::nullopt};
 
     // Navigation candidates(portals and surfaces together)
     /// the vector of navigation candidates to work through
     NavigationCandidates navCandidates = {};
     /// the current candidate index of the navigation state
-    std::optional<std::size_t> navCandidateIndex;
+    std::optional<std::size_t> navCandidateIndex{std::nullopt};
 
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
@@ -768,9 +766,7 @@ class Navigator {
 
     if (m_geometryVersion == GeometryVersion::Gen1) {
       return getNextTargetGen1(state, position, direction);
-
     } else {  // gen3 handling of the next target
-
       return getNextTargetGen3(state, position, direction);
     }
   }
@@ -870,17 +866,15 @@ class Navigator {
     navOpts.endObject = state.targetSurface;
     navOpts.nearLimit = state.options.nearLimit;
     navOpts.farLimit = state.options.farLimit;
-
+    /// setup the surface candidates requested by the user
     if (!state.options.externalSurfaces.empty()) {
       auto layerId = layerSurface->geometryId().layer();
-      auto externalSurfaceRange =
-          state.options.externalSurfaces.equal_range(layerId);
-      navOpts.externalSurfaces.reserve(
-          state.options.externalSurfaces.count(layerId));
-      for (auto itSurface = externalSurfaceRange.first;
-           itSurface != externalSurfaceRange.second; itSurface++) {
-        navOpts.externalSurfaces.push_back(itSurface->second);
-      }
+      navOpts.externalSurfaces.reserve(state.options.externalSurfaces.size());
+      std::ranges::copy_if(state.options.externalSurfaces,
+                           std::back_inserter(navOpts.externalSurfaces),
+                           [layerId](const Surface* surf) {
+                             return surf->geometryId().layer() == layerId;
+                           });
     }
 
     // Request the compatible surfaces

@@ -161,7 +161,7 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
       return;
     }
     BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
-    if (rangeContainsValue(options.externalSurfaces, surface.geometryId())) {
+    if (rangeContainsValue(options.externalSurfaces, &surface)) {
       boundaryTolerance = BoundaryTolerance::Infinite();
     }
     // the surface intersection
