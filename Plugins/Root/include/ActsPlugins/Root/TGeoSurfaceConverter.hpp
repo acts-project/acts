@@ -95,14 +95,28 @@ struct TGeoSurfaceConverter {
 
   /// Translate TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)
+  /// * it will return any multiple of 360.0 to 2pi
   /// @param degree The input in degree
   /// @return angle in radians
   static double toRadian(double degree) {
-    if (degree > 180. && degree < 360.) {
-      degree -= 360.;
-    }
-    return degree / 180. * std::numbers::pi;
+    
+    constexpr double eps = 1e-6;
+    
+    // Check if degree is a non-zero multiple of 360. If it is, return 2pi
+    double r = std::fmod(degree, 360.0);
+    if (std::fabs(r) < eps && std::fabs(degree) > eps)
+      return 2.0 * std::numbers::pi;
+
+    // Reduced angle
+    double d = r;
+    
+    if (d < -180.0)
+      d += 360.0;
+    else if (d >= 180.0)
+      d -= 360.0;
+    
+    return d / 180.0 * std::numbers::pi;
   }
 };
-
+  
 }  // namespace ActsPlugins
