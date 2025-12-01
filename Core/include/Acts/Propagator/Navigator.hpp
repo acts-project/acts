@@ -140,7 +140,7 @@ class Navigator {
     double farLimit = std::numeric_limits<double>::max();
 
     /// Externally provided surfaces - these are tried to be hit
-    boost::container::small_vector<const Surface*, 30> externalSurfaces{};
+    std::vector<const Surface*> externalSurfaces{};
 
     /// Insert an external surface to be considered during navigation
     /// @param surface: Reference to the surface to insert
