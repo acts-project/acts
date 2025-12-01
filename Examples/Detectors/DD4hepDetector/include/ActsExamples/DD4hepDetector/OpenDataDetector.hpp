@@ -14,11 +14,26 @@ namespace Acts {
 class GeometryContext;
 }
 
+namespace ActsPlugins {
+class DD4hepDetectorElement;
+}
+
 namespace ActsExamples {
 
 class OpenDataDetector final : public DD4hepDetectorBase {
  public:
-  struct Config : public DD4hepDetectorBase::Config {};
+  struct Config : public DD4hepDetectorBase::Config {
+    using ElementFactory =
+        std::function<std::shared_ptr<ActsPlugins::DD4hepDetectorElement>(
+            const dd4hep::DetElement& element, const std::string& axes,
+            double scale)>;
+
+    ElementFactory detectorElementFactory = defaultDetectorElementFactory;
+  };
+
+  static std::shared_ptr<ActsPlugins::DD4hepDetectorElement>
+  defaultDetectorElementFactory(const dd4hep::DetElement& element,
+                                const std::string& axes, double scale);
 
   explicit OpenDataDetector(const Config& cfg,
                             const Acts::GeometryContext& gctx);
