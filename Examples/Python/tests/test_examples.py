@@ -1237,9 +1237,10 @@ def test_gnn_metric_learning(
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
-    # Check if models exist, download if missing
-    repo_root = Path(__file__).parent.parent.parent.parent
-    ci_models = repo_root / "ci_models"
+    # Check if models exist using MODEL_STORAGE environment variable
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models = Path(model_storage)
 
     model_subdir = "torchscript_models" if backend == "torch" else "onnx_models"
     model_ext = "pt" if backend == "torch" else "onnx"
@@ -1249,10 +1250,12 @@ def test_gnn_metric_learning(
     assert (ci_models / f"{model_subdir}/{filter_name}.{model_ext}").exists()
     assert (ci_models / f"{model_subdir}/gnn.{model_ext}").exists()
 
+    repo_root = Path(__file__).parent.parent.parent.parent
     script = repo_root / "Examples/Scripts/Python/gnn.py"
     assert script.exists()
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    env["MODEL_STORAGE"] = model_storage
 
     if hardware == "cpu":
         env["CUDA_VISIBLE_DEVICES"] = ""
@@ -1283,8 +1286,10 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     from gnn_module_map_odd import runGnnModuleMap
     from acts.examples.odd import getOpenDataDetector
 
-    repo_root = Path(__file__).parent.parent.parent.parent
-    ci_models = repo_root / "ci_models"
+    # Get model storage from MODEL_STORAGE environment variable
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models = Path(model_storage)
 
     # Map backend to file extension
     model_ext = ".pt" if backend == "torch" else ".onnx"
@@ -1294,6 +1299,8 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
         "moduleMapPath": str(ci_models / "module_map_odd_2k_events.1e-03.float"),
         "gnnModel": str(ci_models / f"gnn_odd_module_map{model_ext}"),
     }
+
+    repo_root = Path(__file__).parent.parent.parent.parent
 
     # Check if all required files exist
     assert Path(required_files["moduleMapPath"] + ".doublets.root").exists()

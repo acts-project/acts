@@ -11,6 +11,7 @@ for their specific needs.
 """
 
 from pathlib import Path
+import os
 
 import acts
 from acts import UnitConstants as u
@@ -225,8 +226,10 @@ if __name__ == "__main__":
     digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
     assert digiConfigFile.exists(), f"File not found: {digiConfigFile}"
 
-    # Hardcoded model paths
-    ci_models_odd = srcdir / "ci_models"
+    # Model paths from MODEL_STORAGE environment variable
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models_odd = Path(model_storage)
     moduleMapPath = str(ci_models_odd / "module_map_odd_2k_events.1e-03.float")
     gnnModel = str(ci_models_odd / "gnn_odd_module_map.pt")
     outputDir = Path.cwd()

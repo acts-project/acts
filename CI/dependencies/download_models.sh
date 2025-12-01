@@ -4,6 +4,12 @@ set -e
 set -u
 set -o pipefail
 
+# Assert MODEL_STORAGE environment variable is set
+if [ -z "${MODEL_STORAGE+x}" ]; then
+  echo "Error: MODEL_STORAGE environment variable is not set"
+  exit 1
+fi
+
 function download {
   tarname=$(basename $1)
   curl -SL $1 -o $tarname
@@ -11,8 +17,8 @@ function download {
   tar -xf $tarname
 }
 
-mkdir -p ci_models
-cd ci_models
+mkdir -p "${MODEL_STORAGE}"
+cd "${MODEL_STORAGE}"
 
 download \
   https://acts.web.cern.ch/ci/gnn/onnx_models_v01.tar \

@@ -11,6 +11,8 @@ variables:
 
   DEPENDENCY_TAG: v18.0.0
 
+  MODEL_STORAGE: ${CI_PROJECT_DIR}/ci_models
+
 .ccache_base:
   cache:
     - key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${REPO_SLUG}_${HEAD_REF}
@@ -222,9 +224,9 @@ test_gnn_python:
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
     - CI/dependencies/download_models.sh
-    - ls ci_models
+    - ls ${MODEL_STORAGE}
     - apt-get install tree
-    - tree ./ci_models
+    - tree ${MODEL_STORAGE}
     - source ../build/this_acts_withdeps.sh
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
     # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
