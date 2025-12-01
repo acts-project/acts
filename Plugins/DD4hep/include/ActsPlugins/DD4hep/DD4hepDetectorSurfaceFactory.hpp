@@ -45,7 +45,7 @@ class DD4hepDetectorSurfaceFactory {
  public:
   /// DD4hepDetectorElement construction factory
   using ElementFactory = std::function<std::shared_ptr<DD4hepDetectorElement>(
-      const dd4hep::DetElement&, const std::string&, double, bool,
+      const dd4hep::DetElement&, const std::string&, double,
       std::shared_ptr<const Acts::ISurfaceMaterial>)>;
 
   /// Collect the sensitive surface & detector element
@@ -62,10 +62,10 @@ class DD4hepDetectorSurfaceFactory {
     /// The factory to create the DD4hepDetectorElement
     ElementFactory detectorElementFactory =
         [](const dd4hep::DetElement& detElem, const std::string& axes,
-           double scalor, bool isDisc,
+           double scalor,
            const std::shared_ptr<const Acts::ISurfaceMaterial>& material) {
           return std::make_shared<DD4hepDetectorElement>(detElem, axes, scalor,
-                                                         isDisc, material);
+                                                         material);
         };
   };
 

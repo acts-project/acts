@@ -31,7 +31,6 @@ using AlignedDD4hepDetectorElement =
 std::shared_ptr<AlignedDD4hepDetectorElement>
 alignedDD4hepDetectorElementFactory(
     const dd4hep::DetElement detElement, const std::string& axes, double scalor,
-    bool isDisc,
     std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
 }  // namespace ActsExamples

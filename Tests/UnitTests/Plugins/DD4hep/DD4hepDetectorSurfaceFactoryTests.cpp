@@ -332,11 +332,10 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
 
   auto extendedFactory =
       [](const dd4hep::DetElement& detElem, const std::string& axes,
-         double scalor, bool isDisc,
-         const std::shared_ptr<const ISurfaceMaterial>& material)
+         double scalor, const std::shared_ptr<const ISurfaceMaterial>& material)
       -> std::shared_ptr<ActsPlugins::DD4hepDetectorElement> {
     return std::make_shared<ExtendedDetectorElement>(detElem, axes, scalor,
-                                                     isDisc, material);
+                                                     material);
   };
 
   // Test starts here - with nonimal detector construction

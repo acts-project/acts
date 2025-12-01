@@ -197,7 +197,7 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
       // In case the layer is sensitive
       if (detElement.volume().isSensitive()) {
         // Create the sensitive surface
-        auto sensitiveSurf = createSensitiveSurface(detElement, true);
+        auto sensitiveSurf = createSensitiveSurface(detElement);
         // Create the surfaceArray
         auto sArray = std::make_unique<SurfaceArray>(sensitiveSurf);
 
@@ -386,7 +386,7 @@ void DD4hepLayerBuilder::resolveSensitive(
       dd4hep::DetElement childDetElement = child.second;
       if (childDetElement.volume().isSensitive()) {
         // create the surface
-        surfaces.push_back(createSensitiveSurface(childDetElement, false));
+        surfaces.push_back(createSensitiveSurface(childDetElement));
       }
       resolveSensitive(childDetElement, surfaces);
     }
@@ -394,12 +394,12 @@ void DD4hepLayerBuilder::resolveSensitive(
 }
 
 std::shared_ptr<const Surface> DD4hepLayerBuilder::createSensitiveSurface(
-    const dd4hep::DetElement& detElement, bool isDisc) const {
+    const dd4hep::DetElement& detElement) const {
   std::string detAxis =
       getParamOr<std::string>("axis_definitions", detElement, "XYZ");
   // Create the corresponding detector element !- memory leak --!
   auto dd4hepDetElement = m_cfg.detectorElementFactory(
-      detElement, detAxis, UnitConstants::cm, isDisc, nullptr);
+      detElement, detAxis, UnitConstants::cm, nullptr);
 
   detElement.addExtension<DD4hepDetectorElementExtension>(
       new dd4hep::rec::StructExtension(
@@ -426,10 +426,9 @@ Transform3 DD4hepLayerBuilder::convertTransform(
 std::shared_ptr<DD4hepDetectorElement>
 DD4hepLayerBuilder::defaultDetectorElementFactory(
     const dd4hep::DetElement& detElement, const std::string& detAxis,
-    double thickness, bool isDisc,
-    std::shared_ptr<const ISurfaceMaterial> surfaceMaterial) {
-  return std::make_shared<DD4hepDetectorElement>(
-      detElement, detAxis, thickness, isDisc, std::move(surfaceMaterial));
+    double scale, std::shared_ptr<const ISurfaceMaterial> surfaceMaterial) {
+  return std::make_shared<DD4hepDetectorElement>(detElement, detAxis, scale,
+                                                 std::move(surfaceMaterial));
 }
 
 }  // namespace ActsPlugins
