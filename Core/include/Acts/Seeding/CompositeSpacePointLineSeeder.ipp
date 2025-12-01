@@ -35,11 +35,6 @@ CompositeSpacePointLineSeeder::encodeAmbiguity(const int signTop,
   return LL;
 }
 
-constexpr CompositeSpacePointLineSeeder::TangentAmbi
-CompositeSpacePointLineSeeder::encodeAmbiguity(const std::array<int, 2> ambi) {
-  return encodeAmbiguity(ambi[0], ambi[1]);
-}
-
 inline std::string CompositeSpacePointLineSeeder::toString(
     const CompositeSpacePointLineSeeder::TangentAmbi ambi) {
   switch (ambi) {
@@ -376,7 +371,8 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
       options.upperHitIndex);
   auto& lowerHit = options.splitter->strawHits()[options.lowerLayer].at(
       options.lowerHitIndex);
-  TangentAmbi ambi = encodeAmbiguity(s_signCombo[options.signComboIndex]);
+  TangentAmbi ambi = encodeAmbiguity(s_signCombo[options.signComboIndex][0],
+                                   s_signCombo[options.signComboIndex][1]);
   const CalibrationContext* ctx = options.calibContext;
 
   auto seedPars = constructTangentLine(*lowerHit, *upperHit, ambi);
@@ -504,7 +500,7 @@ std::ostream& CompositeSpacePointLineSeeder::SeedOptions<
        << " N strip layers: " << splitter->stripHits().size() << "\n";
   ostr << "upperLayer " << upperLayer << " lowerLayer " << lowerLayer
        << " upperHitIndex " << upperHitIndex << " lower layer hit index "
-       << lowerHitIndex << " sign combo index " << signComboIndex << "\n";
+       << lowerHitIndex << " sign combo index " << toString(encodeAmbiguity(s_signCombo[signComboIndex][0], s_signCombo[signComboIndex][1])) << "\n";
   ostr << " start with pattern " << startWithPattern << " nGenSeeds "
        << nGenSeeds << " nStrawCut " << nStrawCut << "\n";
   return ostr;

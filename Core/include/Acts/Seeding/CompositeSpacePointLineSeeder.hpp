@@ -62,7 +62,7 @@ class CompositeSpacePointLineSeeder {
   using SeedParam_t = CompositeSpacePointLineFitter::ParamVec_t;
   /// @brief typedef to the underlying space point object
   template <CompositeSpacePoint SpacePoint_t>
-  using Selector_t = Delegate<bool(const SpacePoint_t&)>;
+  using Selector_t = CompositeSpacePointLineFitter::Selector_t<SpacePoint_t>;
   using AbortSelector_t = Delegate<bool(std::size_t layerIdx)>;
   template <CompositeSpacePointContainer Cont_t>
   using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
@@ -172,11 +172,15 @@ class CompositeSpacePointLineSeeder {
     // @brief Experiment specific calibration context
     const CalibrationContext* calibContext{};
 
+    /// @brief  @brief Index of the upper layer under consideration for the seeding
     std::size_t upperLayer{0};
+    /// @brief Index of the lower layer under consideration for the seeding
     std::size_t lowerLayer{0};
+    /// @brief  Index of the hit in the lower layer under consideration for the seeding
     std::size_t lowerHitIndex{0};
+    /// @brief  Index of the hit in the upper layer under consideration for the seeding
     std::size_t upperHitIndex{0};
-
+    /// @brief  Index of the sign combination under consideration for the seeding
     std::size_t signComboIndex{0};
 
     /// @brief Try at the first time the external seed parameters as candidate
@@ -217,11 +221,6 @@ class CompositeSpacePointLineSeeder {
   /// @param signBottom: Left/right sign of the bottom straw tube
   static constexpr TangentAmbi encodeAmbiguity(const int signTop,
                                                const int signBottom);
-  /// @brief Translate the array of two drift signs into the proper
-  ///        tangent ambiguity enum value
-  /// @param signTop: Left/right sign of the top straw tube
-  /// @param signBottom: Left/right sign of the bottom straw tube
-  static constexpr TangentAmbi encodeAmbiguity(const std::array<int, 2> ambi);
   /// @brief Construct the line that is tangential to a pair of two straw circle measurements
   /// @param topHit: First straw hit
   /// @param bottomHit: Second straw hit
