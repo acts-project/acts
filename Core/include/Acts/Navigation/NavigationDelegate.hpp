@@ -18,7 +18,7 @@ namespace Acts {
 class NavigationStream;
 class AppendOnlyNavigationStream;
 class Logger;
-class Surface;
+class GeometryIdentifier;
 /// Struct that serves as the argument to the navigation delegate.
 /// It is not supposed to be used as an lvalue.
 struct NavigationArguments {
@@ -28,7 +28,7 @@ struct NavigationArguments {
   Vector3 direction{Vector3::Zero()};
   /// List of surfaces that are requested by the user. The policy should
   /// append the ones from the list which are managed by it
-  std::span<const Surface*> externalSurfaces{};
+  std::span<GeometryIdentifier> externalSurfaces{};
   /// Boundary tolerance for surface intersection calculations
   BoundaryTolerance tolerance = BoundaryTolerance::None();
 };
