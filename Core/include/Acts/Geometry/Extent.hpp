@@ -56,6 +56,12 @@ struct ExtentEnvelope {
     }
   }
 
+  /// Setter that allows for method chaining
+  ExtentEnvelope& set(AxisDirection aDir, const Envelope& envelope) {
+    m_values[toUnderlying(aDir)] = envelope;
+    return *this;
+  }
+
   /// Static factory for a zero envelope
   /// @return the zero envelope
   constexpr static ExtentEnvelope Zero() {
@@ -121,7 +127,8 @@ struct ExtentEnvelope {
 };
 
 /// A class representing the geometric extent of an object in its possible
-/// dimensions, these can be all dimensions that are described as AxisDirections
+/// dimensions, these can be all dimensions that are described as
+/// AxisDirections
 ///
 /// The extent object can have an optional envelope in all of those values
 /// @note that the consistency of the different envelopes is not checked
