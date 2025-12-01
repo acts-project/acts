@@ -227,7 +227,7 @@ CompositeSpacePointLineFitter::fit(
 
     constexpr bool fastCalibrator =
         CompositeSpacePointFastCalibrator<Calibrator_t, SpacePoint_t<Cont_t>>;
-    const bool fitTime{resCfg.parsToUse.back() == FitParIndex::t0};
+    const bool fitTime{resCfg.parsToUse.back() == FitParIndex::t0 && fastCalibrator};
     if constexpr (!fastCalibrator) {
       if (resCfg.parsToUse.back() == FitParIndex::t0) {
         ACTS_WARNING(__func__ << "() " << __LINE__
@@ -237,6 +237,7 @@ CompositeSpacePointLineFitter::fit(
       }
     }
     FitParameters fastResult{};
+    // Straw fit
     if (nStraws >= 2) {
       if (fitTime) {
         if constexpr (fastCalibrator) {
@@ -261,7 +262,9 @@ CompositeSpacePointLineFitter::fit(
         fastResult = fastFit<true, false>(result.measurements, line,
                                           resCfg.parsToUse, fitDelegate);
       }
-    } else {
+    } 
+    // Pure strip fit
+    else {
       FastFitDelegate_t<Cont_t, false> fitDelegate{
           [this](const Cont_t& measurements,
                  const std::vector<int>& /*strawSigns*/) {

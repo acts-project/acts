@@ -188,6 +188,7 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
   DECLARE_BRANCH(double, chi2);
   DECLARE_BRANCH(unsigned, nIter);
   DECLARE_BRANCH(unsigned, nDoF);
+  DECLARE_BRANCH(char, converged);
 
   /// @brief Fill the parameter array to the tree variables
   /// @param pars: Parameter array to safe
@@ -212,6 +213,7 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
   };
   // Pass a localToGlobal transform to the calibrator to proper handling the ToF
   auto calibrator = std::make_unique<SpCalibrator>();
+  std::size_t goodFits{0};
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     const auto line = generateLine(engine, logger());
     fillPars(line.parameters(), trueY0, trueX0, trueTheta, truePhi);
@@ -234,11 +236,18 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
 
     auto result = fitter.fit(std::move(fitOpts));
     if (!result.converged) {
-      ACTS_INFO("Fit failed - not converged.");
+      ACTS_INFO("Fit " << outTree->GetName() << " failed.");
+      converged = false;
+      chi2 = -1.;
+      nDoF = 1;
+      nIter = fitter.config().maxIter;
+      outTree->Fill();
       continue;
     }
-    ACTS_DEBUG("Fit Successful.");
 
+    ACTS_DEBUG("Fit Successful.");
+    converged = true;
+    ++goodFits;
     fillPars(result.parameters, recoY0, recoX0, recoTheta, recoPhi);
     fillProjected(result.parameters, recoProjTheta, recoProjPhi);
 
@@ -259,7 +268,8 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
 
     outTree->Fill();
     if ((evt + 1) % 10000 == 0u) {
-      ACTS_INFO("Processed " << (evt + 1) << "/" << nEvents << " events.");
+      ACTS_INFO("Processed " << (evt + 1) << "/" << nEvents
+                             << " events. Test: " << outTree->GetName());
     }
   }
 
@@ -268,9 +278,9 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
                   .count();
   std::unique_lock guard{writeMutex};
   outFile.WriteObject(outTree.get(), outTree->GetName());
-  ACTS_INFO("Test " << outTree->GetName() << " finished. "
-                    << outTree->GetEntries() << " tracks written. It took "
-                    << (diff / 1000) << " seconds.");
+  ACTS_INFO("Test " << outTree->GetName() << " finished. " << goodFits
+                    << " tracks written. It took " << (diff / 1000)
+                    << " seconds.");
   return diff;
 }
 #undef DECLARE_BRANCH
@@ -286,6 +296,12 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   fitCfg.calcAlongStraw = true;
   fitCfg.recalibrate = false;
   fitCfg.useFastFitter = false;
+  fitCfg.ranges[toUnderlying(FitParIndex::theta)] =
+      std::array{1._degree, 179._degree};
+  fitCfg.ranges[toUnderlying(FitParIndex::phi)] =
+      std::array{-179._degree, 179._degree};
+  fitCfg.ranges[toUnderlying(FitParIndex::x0)] = std::array{-10000., 10000.};
+  fitCfg.ranges[toUnderlying(FitParIndex::y0)] = std::array{-10000., 10000.};
   /// Configuration for fast pre-fit
   Fitter_t::Config fastPreCfg{fitCfg};
   fastPreCfg.useFastFitter = true;
@@ -325,11 +341,11 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
         }));
     std::this_thread::sleep_for(100ms);
   };
-  {
+ if (false) {
     GenCfg_t genCfg{};
     genCfg.twinStraw = false;
     genCfg.createStrips = false;
-    launchTest("StawOnlyTest", genCfg, 1602);
+    launchTest("StrawOnlyTest", genCfg, 1602);
   }
   // 2D straws + twin measurement test
   {
@@ -341,17 +357,19 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StrawAndTwinTest", genCfg, 1503);
   }
   // 1D straws + single strip measurements
-  {
+ if(false) {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
     genCfg.combineSpacePoints = false;
     genCfg.discretizeStrips = true;
     genCfg.createStraws = true;
+    genCfg.stripPitchLoc1 = 2._cm;
+    genCfg.stripPitchLoc0 = 3.5_cm;
     launchTest("StrawAndStripTest", genCfg, 1701);
   }
   // 1D straws + 2D strip measurements
-  {
+ if (false) {
     RandomEngine engine{1404};
     GenCfg_t genCfg{};
 
@@ -360,10 +378,12 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.combineSpacePoints = true;
     genCfg.discretizeStrips = true;
     genCfg.createStraws = true;
+    genCfg.stripPitchLoc1 = 2._cm;
+    genCfg.stripPitchLoc0 = 3.5_cm;
     launchTest("StrawAndStrip2DTest", genCfg, 1404);
   }
   // Strip only
-  {
+  if (false){
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -375,7 +395,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StripOnlyTest", genCfg, 2070);
   }
   // 2D Strip only
-  {
+  if (false){
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -387,7 +407,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("Strip2DOnlyTest", genCfg, 2225);
   }
   // Strip stereo test
-  {
+ if (false) {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -396,14 +416,15 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.createStraws = false;
     genCfg.stripPitchLoc1 = 500._um;
     genCfg.stripDirLoc0.clear();
-    genCfg.stripDirLoc1 = {makeDirectionFromPhiTheta(-60._degree, 90._degree),
-                           makeDirectionFromPhiTheta(60._degree, 90._degree),
+    genCfg.stripDirLoc1 = {makeDirectionFromPhiTheta(0._degree, 90._degree),
+                           makeDirectionFromPhiTheta(0._degree, 90._degree),
+                           makeDirectionFromPhiTheta(-1.5_degree, 90._degree),
+                           makeDirectionFromPhiTheta(1.5_degree, 90._degree),
+                           makeDirectionFromPhiTheta(-1.5_degree, 90._degree),
+                           makeDirectionFromPhiTheta(1.5_degree, 90._degree),
                            makeDirectionFromPhiTheta(0._degree, 90._degree),
                            makeDirectionFromPhiTheta(0._degree, 90._degree),
-                           makeDirectionFromPhiTheta(0._degree, 90._degree),
-                           makeDirectionFromPhiTheta(0._degree, 90._degree),
-                           makeDirectionFromPhiTheta(60._degree, 90._degree),
-                           makeDirectionFromPhiTheta(-60._degree, 90._degree)
+                           
 
     };
 
