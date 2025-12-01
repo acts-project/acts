@@ -50,14 +50,14 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   // check if the portals are correctly built from the faces
   using enum ConvexPolygonVolumeBounds::Face;
 
-  const auto& nXY = polygShell.portalPtr(NegativeZFaceXY);
-  const auto& pXY = polygShell.portalPtr(PositiveZFaceXY);
-  const auto& nXZ = polygShell.portalPtr(NegativeYFaceZX);
-  const auto& pXZ = polygShell.portalPtr(PositiveYFaceZX);
-  const auto& nYZ12 = polygShell.portalPtr(NegativeXFaceYZ12);
-  const auto& pYZ12 = polygShell.portalPtr(PositiveXFaceYZ12);
-  const auto& nYZ23 = polygShell.portalPtr(NegativeXFaceYZ23);
-  const auto& pYZ23 = polygShell.portalPtr(PositiveXFaceYZ23);
+  const auto nXY = polygShell.portalPtr(NegativeZFaceXY);
+  const auto pXY = polygShell.portalPtr(PositiveZFaceXY);
+  const auto nXZ = polygShell.portalPtr(NegativeYFaceZX);
+  const auto pXZ = polygShell.portalPtr(PositiveYFaceZX);
+  const auto nYZ12 = polygShell.portalPtr(NegativeXFaceYZ12);
+  const auto pYZ12 = polygShell.portalPtr(PositiveXFaceYZ12);
+  const auto nYZ23 = polygShell.portalPtr(NegativeXFaceYZ23);
+  const auto pYZ23 = polygShell.portalPtr(PositiveXFaceYZ23);
 
   double alphaAngle = std::numbers::pi - std::atan2(15._cm, 5._cm);
   double betaAngle = std::atan2(20._cm, 10._cm);
@@ -126,20 +126,20 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   SingleConvexPolygonPortalShell polygShell{polygVol};
 
   // get the portal faces
-  const auto& nXY = polygShell.portalPtr(NegativeZFaceXY);
-  const auto& pXY = polygShell.portalPtr(PositiveZFaceXY);
+  const auto nXY = polygShell.portalPtr(NegativeZFaceXY);
+  const auto pXY = polygShell.portalPtr(PositiveZFaceXY);
 
   BOOST_REQUIRE_NE(nXY, nullptr);
   BOOST_REQUIRE_NE(pXY, nullptr);
 
-  const auto& nYZ12 = polygShell.portalPtr(NegativeXFaceYZ12);
-  const auto& pYZ12 = polygShell.portalPtr(PositiveXFaceYZ12);
+  const auto nYZ12 = polygShell.portalPtr(NegativeXFaceYZ12);
+  const auto pYZ12 = polygShell.portalPtr(PositiveXFaceYZ12);
 
-  const auto& nYZ23 = polygShell.portalPtr(NegativeXFaceYZ23);
-  const auto& pYZ23 = polygShell.portalPtr(PositiveXFaceYZ23);
+  const auto nYZ23 = polygShell.portalPtr(NegativeXFaceYZ23);
+  const auto pYZ23 = polygShell.portalPtr(PositiveXFaceYZ23);
 
-  const auto& nZX = polygShell.portalPtr(NegativeYFaceZX);
-  const auto& pZX = polygShell.portalPtr(PositiveYFaceZX);
+  const auto nZX = polygShell.portalPtr(NegativeYFaceZX);
+  const auto pZX = polygShell.portalPtr(PositiveYFaceZX);
 
   BOOST_REQUIRE_NE(nYZ23, nullptr);
   BOOST_REQUIRE_NE(pYZ23, nullptr);
