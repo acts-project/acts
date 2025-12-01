@@ -141,8 +141,9 @@ void CompSpacePointAuxiliaries::resetTime() {
   m_gradient[toUnderlying(FitParIndex::t0)].setZero();
   if (m_cfg.useHessian) {
     for (const auto partial : m_cfg.parsToUse) {
-      m_hessian[vecIdxFromSymMat<s_nPars>(toUnderlying(FitParIndex::t0),
-                                          toUnderlying(partial))]
+      const auto pIdx = vecIdxFromSymMat<s_nPars>(toUnderlying(FitParIndex::t0),
+                                          toUnderlying(partial));
+      m_hessian[pIdx]
           .setZero();
     }
   }
