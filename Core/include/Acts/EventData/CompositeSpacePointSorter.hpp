@@ -41,4 +41,4 @@ concept CompositeSpacePointSorter =
       } -> std::same_as<const std::vector<SpacePointCont_t>&>;
     };
 
-}
+}  // namespace Acts::Experimental
