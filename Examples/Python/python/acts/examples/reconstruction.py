@@ -2095,25 +2095,25 @@ def addGnn(
         gnnConfig["undirected"] = True
         gnnConfig["selectedFeatures"] = [0, 1, 2]
 
-        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
+        graphConstructor = acts.examples.gnn.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
-            acts.examples.TorchEdgeClassifier(**filterConfig),
-            acts.examples.TorchEdgeClassifier(**gnnConfig),
+            acts.examples.gnn.TorchEdgeClassifier(**filterConfig),
+            acts.examples.gnn.TorchEdgeClassifier(**gnnConfig),
         ]
-        trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
+        trackBuilder = acts.examples.gnn.BoostTrackBuilding(customLogLevel())
     elif backend == GnnBackend.Onnx:
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
         # There is currently no implementation of a Metric learning based fully on ONNX
-        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
+        graphConstructor = acts.examples.gnn.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
-            acts.examples.OnnxEdgeClassifier(**filterConfig),
-            acts.examples.OnnxEdgeClassifier(**gnnConfig),
+            acts.examples.gnn.OnnxEdgeClassifier(**filterConfig),
+            acts.examples.gnn.OnnxEdgeClassifier(**gnnConfig),
         ]
-        trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
+        trackBuilder = acts.examples.gnn.BoostTrackBuilding(customLogLevel())
 
-    findingAlg = acts.examples.TrackFindingAlgorithmGnn(
+    findingAlg = acts.examples.gnn.TrackFindingAlgorithmGnn(
         level=customLogLevel(),
         inputSpacePoints="spacepoints",
         outputProtoTracks="gnn_prototracks",
