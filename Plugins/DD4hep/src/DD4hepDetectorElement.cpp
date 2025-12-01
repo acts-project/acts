@@ -20,7 +20,7 @@ namespace ActsPlugins {
 
 DD4hepDetectorElement::DD4hepDetectorElement(
     const dd4hep::DetElement detElement, const std::string& axes, double scalor,
-    bool /*isDisc*/, std::shared_ptr<const ISurfaceMaterial> material)
+    std::shared_ptr<const ISurfaceMaterial> material)
     : TGeoDetectorElement(
           static_cast<TGeoDetectorElement::Identifier>(detElement.volumeID()),
           *(detElement.placement().ptr()),
