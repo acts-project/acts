@@ -9,10 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/detail/IndexedGridFiller.hpp"
-#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/IndexedGridFiller.hpp"
+#include "Acts/Geometry/IndexedSurfacesGenerator.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Grid.hpp"

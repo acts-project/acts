@@ -9,10 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
-#include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"

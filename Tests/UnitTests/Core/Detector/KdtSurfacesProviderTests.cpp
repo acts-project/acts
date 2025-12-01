@@ -9,9 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/KdtSurfacesProvider.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/KdtSurfacesProvider.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"

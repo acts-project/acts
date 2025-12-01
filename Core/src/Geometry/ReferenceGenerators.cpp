@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Detector/detail/ReferenceGenerators.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 const std::vector<Acts::Vector3>
-Acts::Experimental::detail::PolyhedronReferenceGenerator::references(
+Acts::PolyhedronReferenceGenerator::references(
     const GeometryContext& gctx, const Surface& surface) const {
   // Create the return  vector
   std::vector<Vector3> rPositions;
@@ -39,7 +39,7 @@ Acts::Experimental::detail::PolyhedronReferenceGenerator::references(
 }
 
 const std::vector<Acts::Vector3>
-Acts::Experimental::detail::ProjectedReferenceGenerator::references(
+Acts::ProjectedReferenceGenerator::references(
     const GeometryContext& gctx, const Surface& surface) const {
   if (referenceSurface == nullptr) {
     throw std::invalid_argument(

@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/LayerStructureBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsPlugins/Geant4/Geant4SurfaceProvider.hpp"

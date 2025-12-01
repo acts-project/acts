@@ -9,11 +9,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/detail/DetectorVolumeConsistency.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
+#include "Acts/Geometry/DetectorVolumeConsistency.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/PortalGenerators.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 
 using namespace Acts;

@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/MultiWireStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/MultiWireStructureBuilder.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"

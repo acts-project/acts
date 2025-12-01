@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/CylindricalContainerBuilder.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorBuilder.hpp"
-#include "Acts/Detector/detail/BlueprintDrawer.hpp"
-#include "Acts/Detector/detail/BlueprintHelper.hpp"
+#include "Acts/Geometry/BlueprintDrawer.hpp"
+#include "Acts/Geometry/BlueprintHelper.hpp"
+#include "Acts/Geometry/CylindricalContainerBuilder.hpp"
+#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/DetectorBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"

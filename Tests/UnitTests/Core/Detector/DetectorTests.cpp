@@ -9,14 +9,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdGenerator.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/PortalGenerators.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"

@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/VolumeStructureBuilder.hpp"
 
 #include <memory>
 #include <vector>

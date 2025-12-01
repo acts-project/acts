@@ -8,13 +8,13 @@
 
 #include "ActsTests/CommonHelpers/CylindricalDetector.hpp"
 
-#include "Acts/Detector/CylindricalContainerBuilder.hpp"
-#include "Acts/Detector/DetectorBuilder.hpp"
-#include "Acts/Detector/DetectorComponents.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylindricalContainerBuilder.hpp"
+#include "Acts/Geometry/DetectorBuilder.hpp"
+#include "Acts/Geometry/DetectorComponents.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdGenerator.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"

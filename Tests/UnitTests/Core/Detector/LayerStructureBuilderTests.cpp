@@ -9,11 +9,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/DetectorComponents.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Geometry/DetectorComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/LayerStructureBuilder.hpp"
+#include "Acts/Geometry/PortalGenerators.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"

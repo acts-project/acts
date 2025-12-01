@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Detector/GeometryCompatibilityConcept.hpp"
+#include "Acts/Geometry/GeometryCompatibilityConcept.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"

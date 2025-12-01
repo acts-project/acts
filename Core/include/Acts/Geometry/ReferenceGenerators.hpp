@@ -17,7 +17,7 @@
 #include <ranges>
 #include <vector>
 
-namespace Acts::Experimental::detail {
+namespace Acts {
 
 enum class ReferenceGeneratorType {
   Center,

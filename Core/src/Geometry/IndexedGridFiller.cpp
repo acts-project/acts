@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Detector/detail/IndexedGridFiller.hpp"
+#include "Acts/Geometry/IndexedGridFiller.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/detail/ReferenceGenerators.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-std::vector<std::size_t> Acts::Experimental::detail::binSequence(
+std::vector<std::size_t> Acts::binSequence(
     std::array<std::size_t, 2u> minMaxBins, std::size_t expand,
     std::size_t nBins, Acts::AxisBoundaryType type) {
   // Return vector for iterations

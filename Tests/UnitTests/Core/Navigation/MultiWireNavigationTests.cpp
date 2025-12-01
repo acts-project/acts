@@ -9,9 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/MultiWireStructureBuilder.hpp"
+#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
+#include "Acts/Geometry/MultiWireStructureBuilder.hpp"
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 #include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"

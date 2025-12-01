@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/DetectorComponents.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DetectorComponents.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
+#include "Acts/Geometry/PortalGenerators.hpp"
+#include "Acts/Geometry/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/Enumerate.hpp"

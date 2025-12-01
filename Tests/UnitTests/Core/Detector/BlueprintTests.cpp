@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/Blueprint.hpp"
-#include "Acts/Detector/detail/BlueprintDrawer.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintDrawer.hpp"
 
 #include <fstream>
 

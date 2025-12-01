@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/Portal.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"

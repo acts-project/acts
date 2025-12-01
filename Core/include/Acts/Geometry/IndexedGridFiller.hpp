@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/detail/ReferenceGenerators.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts::Experimental::detail {
+namespace Acts {
 
 /// @brief Helper method to generate completely populated bin sequences
 /// that respect the boundary type of the axis

@@ -9,10 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylindricalDetectorHelper.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
+#include "Acts/Geometry/PortalGenerators.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "ActsPlugins/ActSVG/PortalSvgConverter.hpp"

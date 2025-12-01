@@ -9,9 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/detail/IndexedGridFiller.hpp"
-#include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/IndexedGridFiller.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"

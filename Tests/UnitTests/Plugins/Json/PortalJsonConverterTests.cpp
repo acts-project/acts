@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Detector/Portal.hpp"
-#include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/PortalHelper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"

@@ -8,13 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/DetectorVolumeBuilder.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
+#include "Acts/Geometry/DetectorVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/LayerStructureBuilder.hpp"
+#include "Acts/Geometry/PortalGenerators.hpp"
+#include "Acts/Geometry/VolumeStructureBuilder.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
