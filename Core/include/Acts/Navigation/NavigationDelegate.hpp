@@ -12,20 +12,23 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <span>
 namespace Acts {
 
 class NavigationStream;
 class AppendOnlyNavigationStream;
 class Logger;
-
+class Surface;
 /// Struct that serves as the argument to the navigation delegate.
 /// It is not supposed to be used as an lvalue.
 struct NavigationArguments {
   /// Current position in 3D space for navigation
-  Vector3 position{};
+  Vector3 position{Vector3::Zero()};
   /// Direction vector for navigation propagation
-  Vector3 direction{};
-
+  Vector3 direction{Vector3::Zero()};
+  /// List of surfaces that are requested by the user. The policy should
+  /// append the ones from the list which are managed by it
+  std::span<const Surface*> externalSurfaces{};
   /// Boundary tolerance for surface intersection calculations
   BoundaryTolerance tolerance = BoundaryTolerance::None();
 };

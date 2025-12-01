@@ -792,6 +792,7 @@ class Navigator {
     NavigationArguments args;
     args.position = position;
     args.direction = direction;
+    args.externalSurfaces = state.options.externalSurfaces;
     state.currentVolume->initializeNavigationCandidates(args, appendOnly,
                                                         logger());
 
