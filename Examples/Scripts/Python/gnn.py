@@ -52,7 +52,7 @@ def runGnnMetricLearning(
         "knnVal": 100,
         "selectedFeatures": [0, 1, 2],  # R, Phi, Z
     }
-    graphConstructor = acts.examples.TorchMetricLearning(**graphConstructorConfig)
+    graphConstructor = acts.examples.gnn.TorchMetricLearning(**graphConstructorConfig)
 
     filterConfig = {
         "level": acts.logging.INFO,
@@ -69,7 +69,7 @@ def runGnnMetricLearning(
 
     if filterModelPath.suffix == ".pt":
         edgeClassifiers.append(
-            acts.examples.TorchEdgeClassifier(
+            acts.examples.gnn.TorchEdgeClassifier(
                 **filterConfig,
                 nChunks=5,
                 undirected=False,
@@ -77,13 +77,13 @@ def runGnnMetricLearning(
             )
         )
     elif filterModelPath.suffix == ".onnx":
-        edgeClassifiers.append(acts.examples.OnnxEdgeClassifier(**filterConfig))
+        edgeClassifiers.append(acts.examples.gnn.OnnxEdgeClassifier(**filterConfig))
     else:
         raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
 
     if gnnModelPath.suffix == ".pt":
         edgeClassifiers.append(
-            acts.examples.TorchEdgeClassifier(
+            acts.examples.gnn.TorchEdgeClassifier(
                 **gnnConfig,
                 undirected=True,
                 selectedFeatures=[0, 1, 2],
@@ -91,7 +91,7 @@ def runGnnMetricLearning(
         )
     elif gnnModelPath.suffix == ".onnx":
         edgeClassifiers.append(
-            acts.examples.OnnxEdgeClassifier(**gnnConfig),
+            acts.examples.gnn.OnnxEdgeClassifier(**gnnConfig),
         )
     else:
         raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
@@ -100,13 +100,13 @@ def runGnnMetricLearning(
     trackBuilderConfig = {
         "level": acts.logging.INFO,
     }
-    trackBuilder = acts.examples.BoostTrackBuilding(**trackBuilderConfig)
+    trackBuilder = acts.examples.gnn.BoostTrackBuilding(**trackBuilderConfig)
 
     # Node features: Standard 3 features (R, Phi, Z)
     nodeFeatures = [
-        acts.examples.NodeFeature.R,
-        acts.examples.NodeFeature.Phi,
-        acts.examples.NodeFeature.Z,
+        acts.examples.gnn.NodeFeature.R,
+        acts.examples.gnn.NodeFeature.Phi,
+        acts.examples.gnn.NodeFeature.Z,
     ]
     featureScales = [1.0, 1.0, 1.0]
 

@@ -2094,7 +2094,7 @@ def addGnn(
         )
 
     # GNN track finding algorithm
-    findingAlg = acts.examples.TrackFindingAlgorithmGnn(
+    findingAlg = acts.examples.gnn.TrackFindingAlgorithmGnn(
         level=customLogLevel(),
         inputSpacePoints=inputSpacePoints,
         inputClusters=inputClusters,
