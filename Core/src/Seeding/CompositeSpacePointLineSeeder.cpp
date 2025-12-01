@@ -20,8 +20,8 @@ Seeder::CompositeSpacePointLineSeeder(const Config& cfg,
                                       std::unique_ptr<const Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-CompositeSpacePointLineSeeder::SeedParam_t Seeder::constructLine(const double theta, const double y0,
-                             SeedParam_t patternParams) const {
+CompositeSpacePointLineSeeder::SeedParam_t Seeder::constructLine(
+    const double theta, const double y0, SeedParam_t patternParams) const {
   SeedParam_t lineParams{};
   lineParams[toUnderlying(Line_t::ParIndex::y0)] = y0;
   lineParams[toUnderlying(Line_t::ParIndex::x0)] =

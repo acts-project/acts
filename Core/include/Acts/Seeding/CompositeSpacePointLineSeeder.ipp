@@ -320,12 +320,15 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
     found->seedHits.reserve(options.splitter->strawHits().size() +
                             options.splitter->stripHits().size());
 
-    Vector posForCalib = Vector(found->lineParams[toUnderlying(ParIdx::x0)], found->lineParams[toUnderlying(ParIdx::y0)], 0.);
-    Vector dirForCalib = makeDirectionFromPhiTheta(found->lineParams[toUnderlying(ParIdx::phi)], found->lineParams[toUnderlying(ParIdx::theta)]);
+    Vector posForCalib =
+        Vector(found->lineParams[toUnderlying(ParIdx::x0)],
+               found->lineParams[toUnderlying(ParIdx::y0)], 0.);
+    Vector dirForCalib = makeDirectionFromPhiTheta(
+        found->lineParams[toUnderlying(ParIdx::phi)],
+        found->lineParams[toUnderlying(ParIdx::theta)]);
     for (const auto& strawLayerHits : options.splitter->strawHits()) {
       Cont_t tmpCalibHits = options.calibrator->calibrate(
-          *options.calibContext, posForCalib,
-          dirForCalib,
+          *options.calibContext, posForCalib, dirForCalib,
           options.patternParams[toUnderlying(ParIdx::t0)], strawLayerHits);
       found->seedHits.insert(found->seedHits.end(),
                              std::make_move_iterator(tmpCalibHits.begin()),
@@ -335,8 +338,7 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
     found->nStrawHits = found->seedHits.size();
     for (const auto& stripLayerHits : options.splitter->stripHits()) {
       Cont_t tmpCalibHits = options.calibrator->calibrate(
-          *options.calibContext, posForCalib,
-          dirForCalib,
+          *options.calibContext, posForCalib, dirForCalib,
           options.patternParams[toUnderlying(ParIdx::t0)], stripLayerHits);
       found->seedHits.insert(found->seedHits.end(),
                              std::make_move_iterator(tmpCalibHits.begin()),
@@ -372,7 +374,7 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   auto& lowerHit = options.splitter->strawHits()[options.lowerLayer].at(
       options.lowerHitIndex);
   TangentAmbi ambi = encodeAmbiguity(s_signCombo[options.signComboIndex][0],
-                                   s_signCombo[options.signComboIndex][1]);
+                                     s_signCombo[options.signComboIndex][1]);
   const CalibrationContext* ctx = options.calibContext;
 
   auto seedPars = constructTangentLine(*lowerHit, *upperHit, ambi);
@@ -384,8 +386,12 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   seedPars.lineParams =
       constructLine(seedPars.theta, seedPars.y0, options.patternParams);
 
-  Vector posForCalib = Vector(seedPars.lineParams[toUnderlying(ParIdx::x0)], seedPars.lineParams[toUnderlying(ParIdx::y0)], 0.);
-  Vector dirForCalib = makeDirectionFromPhiTheta(seedPars.lineParams[toUnderlying(ParIdx::phi)], seedPars.lineParams[toUnderlying(ParIdx::theta)]);
+  Vector posForCalib =
+      Vector(seedPars.lineParams[toUnderlying(ParIdx::x0)],
+             seedPars.lineParams[toUnderlying(ParIdx::y0)], 0.);
+  Vector dirForCalib = makeDirectionFromPhiTheta(
+      seedPars.lineParams[toUnderlying(ParIdx::phi)],
+      seedPars.lineParams[toUnderlying(ParIdx::theta)]);
   if (m_cfg.recalibSeedCircles) {
     Cont_t lowerUpperToCalib{lowerHit, upperHit};
     CalibCont_t calibLowerUpper = options.calibrator->calibrate(
@@ -417,10 +423,10 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
     for (const auto& [hitNr, testMe] : Acts::enumerate(hitsInLayer)) {
       const double distance =
           Acts::abs(Acts::detail::LineHelper::signedDistance(
-              testMe->localPosition(), testMe->sensorDirection(),
-              posForCalib, dirForCalib));
-      const double chi2 =
-          detail::CompSpacePointAuxiliaries::chi2Term(posForCalib, dirForCalib, *testMe);
+              testMe->localPosition(), testMe->sensorDirection(), posForCalib,
+              dirForCalib));
+      const double chi2 = detail::CompSpacePointAuxiliaries::chi2Term(
+          posForCalib, dirForCalib, *testMe);
 
       ACTS_DEBUG("Hit in layer " << layerNr << " pull " << std::sqrt(chi2)
                                  << " distance " << distance << " drift radius "
@@ -500,7 +506,10 @@ std::ostream& CompositeSpacePointLineSeeder::SeedOptions<
        << " N strip layers: " << splitter->stripHits().size() << "\n";
   ostr << "upperLayer " << upperLayer << " lowerLayer " << lowerLayer
        << " upperHitIndex " << upperHitIndex << " lower layer hit index "
-       << lowerHitIndex << " sign combo index " << toString(encodeAmbiguity(s_signCombo[signComboIndex][0], s_signCombo[signComboIndex][1])) << "\n";
+       << lowerHitIndex << " sign combo index "
+       << toString(encodeAmbiguity(s_signCombo[signComboIndex][0],
+                                   s_signCombo[signComboIndex][1]))
+       << "\n";
   ostr << " start with pattern " << startWithPattern << " nGenSeeds "
        << nGenSeeds << " nStrawCut " << nStrawCut << "\n";
   return ostr;
