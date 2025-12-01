@@ -60,8 +60,8 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
       id = GeometryIdentifier().withVolume(
           std::distance(m_volumesById.begin(), it) + 1);
 
-      ACTS_DEBUG("Assigning volume ID " << id << " for "
-                                        << volume.volumeName());
+      ACTS_VERBOSE("Assigning volume ID " << id << " for "
+                                          << volume.volumeName());
       volume.assignGeometryId(id);
       *it = &volume;
     }
@@ -72,7 +72,7 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
       }
       iportal += 1;
       auto portalId = id.withBoundary(iportal);
-      ACTS_DEBUG("Assigning portal ID: " << portalId);
+      ACTS_VERBOSE("Assigning portal ID: " << portalId);
       portal.surface().assignGeometryId(portalId);
     }
     for (auto &surface : volume.surfaces()) {
@@ -81,7 +81,7 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
       }
       isensitive += 1;
       auto surfaceId = id.withSensitive(isensitive);
-      ACTS_DEBUG("Assigning surface ID: " << surfaceId);
+      ACTS_VERBOSE("Assigning surface ID: " << surfaceId);
       surface.assignGeometryId(surfaceId);
     }
   }
