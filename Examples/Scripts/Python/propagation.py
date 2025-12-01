@@ -87,15 +87,15 @@ if "__main__" == __name__:
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
-    detector = GenericDetector(materialDecorator=matDeco)
-    trackingGeometry = detector.trackingGeometry()
+    # detector = GenericDetector(materialDecorator=matDeco)
+    # trackingGeometry = detector.trackingGeometry()
 
     ## Alternative: Aligned Generic detector
     # detector = AlignedGenericDetector(materialDecorator=matDeco)
 
     ## Alternative: DD4hep detector
-    # detector = getOpenDataDetector()
-    # trackingGeometry = detector.trackingGeometry()
+    detector = getOpenDataDetector(gen3=True, logLevel=acts.logging.DEBUG)
+    trackingGeometry = detector.trackingGeometry()
 
     ## Alternative: Misaligned DD4hep detector
     # detector = getOpenDataDetector(misaligned=True)
@@ -153,5 +153,5 @@ if "__main__" == __name__:
         outputDir=os.getcwd() + "/propagation",
         s=None,
         decorators=contextDecorators,
-        sterileLogger=True,
+        sterileLogger=False,
     ).run()
