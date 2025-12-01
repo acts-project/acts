@@ -321,14 +321,16 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
   if (!options.nGenSeeds && options.startWithPattern) {
     ++options.nGenSeeds;
     found = std::make_optional(SeedSolution<CalibCont_t>());
-    found->line = Line_t(options.patternParams);
+    found->lineParams = options.patternParams;
     found->seedHits.reserve(options.splitter->strawHits().size() +
                             options.splitter->stripHits().size());
 
+    Vector posForCalib = Vector(found->lineParams[toUnderlying(ParIdx::x0)], found->lineParams[toUnderlying(ParIdx::y0)], 0.);
+    Vector dirForCalib = makeDirectionFromPhiTheta(found->lineParams[toUnderlying(ParIdx::phi)], found->lineParams[toUnderlying(ParIdx::theta)]);
     for (const auto& strawLayerHits : options.splitter->strawHits()) {
       Cont_t tmpCalibHits = options.calibrator->calibrate(
-          *options.calibContext, found->line.position(),
-          found->line.direction(),
+          *options.calibContext, posForCalib,
+          dirForCalib,
           options.patternParams[toUnderlying(ParIdx::t0)], strawLayerHits);
       found->seedHits.insert(found->seedHits.end(),
                              std::make_move_iterator(tmpCalibHits.begin()),
@@ -338,8 +340,8 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
     found->nStrawHits = found->seedHits.size();
     for (const auto& stripLayerHits : options.splitter->stripHits()) {
       Cont_t tmpCalibHits = options.calibrator->calibrate(
-          *options.calibContext, found->line.position(),
-          found->line.direction(),
+          *options.calibContext, posForCalib,
+          dirForCalib,
           options.patternParams[toUnderlying(ParIdx::t0)], stripLayerHits);
       found->seedHits.insert(found->seedHits.end(),
                              std::make_move_iterator(tmpCalibHits.begin()),
@@ -383,13 +385,15 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
     return std::nullopt;
   }
 
-  seedPars.line =
+  seedPars.lineParams =
       constructLine(seedPars.theta, seedPars.y0, options.patternParams);
 
+  Vector posForCalib = Vector(seedPars.lineParams[toUnderlying(ParIdx::x0)], seedPars.lineParams[toUnderlying(ParIdx::y0)], 0.);
+  Vector dirForCalib = makeDirectionFromPhiTheta(seedPars.lineParams[toUnderlying(ParIdx::phi)], seedPars.lineParams[toUnderlying(ParIdx::theta)]);
   if (m_cfg.recalibSeedCircles) {
     Cont_t lowerUpperToCalib{lowerHit, upperHit};
     CalibCont_t calibLowerUpper = options.calibrator->calibrate(
-        *ctx, seedPars.line.position(), seedPars.line.direction(),
+        *ctx, posForCalib, dirForCalib,
         options.patternParams[toUnderlying(ParIdx::t0)], lowerUpperToCalib);
     auto seedSolCalib = constructTangentLine(*(calibLowerUpper.at(0)),
                                              *(calibLowerUpper.at(1)), ambi);
@@ -418,9 +422,9 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
       const double distance =
           Acts::abs(Acts::detail::LineHelper::signedDistance(
               testMe->localPosition(), testMe->sensorDirection(),
-              seedSol.line.position(), seedSol.line.direction()));
+              posForCalib, dirForCalib));
       const double chi2 =
-          detail::CompSpacePointAuxiliaries::chi2Term(seedSol.line, *testMe);
+          detail::CompSpacePointAuxiliaries::chi2Term(posForCalib, dirForCalib, *testMe);
 
       ACTS_DEBUG("Hit in layer " << layerNr << " pull " << std::sqrt(chi2)
                                  << " distance " << distance << " drift radius "
@@ -448,13 +452,13 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
 
   if (m_cfg.overlapCorridor) {
     seedSol.solutionSigns = detail::CompSpacePointAuxiliaries::strawSigns(
-        seedSol.line, seedSol.seedHits);
+        posForCalib, dirForCalib, seedSol.seedHits);
     for (unsigned int a = options.startWithPattern;
          a < options.seenSolutions.size(); ++a) {
       const auto& acceptedSol = options.seenSolutions[a];
       unsigned int nOverlap{0};
       std::vector<int> corridor = detail::CompSpacePointAuxiliaries::strawSigns(
-          seedSol.line, acceptedSol.seedHits);
+          posForCalib, dirForCalib, acceptedSol.seedHits);
       for (unsigned int l = 0; l < acceptedSol.seedHits.size(); ++l) {
         nOverlap += (corridor[l] == acceptedSol.solutionSigns[l]);
       }
@@ -468,7 +472,7 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   // Calibrate the seed hits to be returned
   auto finalSeedSol = std::make_optional(SeedSolution<CalibCont_t>(seedPars));
   finalSeedSol->seedHits = options.calibrator->calibrate(
-      *ctx, seedSol.line.position(), seedSol.line.direction(),
+      *ctx, posForCalib, dirForCalib,
       options.patternParams[toUnderlying(ParIdx::t0)], seedSol.seedHits);
   finalSeedSol->nStrawHits = finalSeedSol->seedHits.size();
 

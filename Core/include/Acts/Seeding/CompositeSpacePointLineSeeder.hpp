@@ -122,15 +122,13 @@ class CompositeSpacePointLineSeeder {
     /// @brief Uncertainty on the intercept
     double dY0{0.};
     /// @brief Line parameters
-    Line_t line{};
+    SeedParam_t lineParams{};
     /// @brief Vector of radial signs of the valid hits
     std::vector<int> solutionSigns{};
     /// @brief Seed chi2
     double chi2{0.};
     /// @brief Number of straw hits on the seed
     std::size_t nStrawHits{0};
-    /// @brief Estimated parameters from pattern
-    SeedParam_t patternParams{};
 
     /// @brief Stringstream output operator
     friend std::ostream& operator<<(std::ostream& ostr,
@@ -152,7 +150,7 @@ class CompositeSpacePointLineSeeder {
   /// @brief Cache of all solutions seen thus far
   template <CompositeSpacePointContainer Cont_t>
   struct SeedSolution : public SeedParameters {
-    SeedSolution(const SeedParameters& pars) : SeedParameters(pars) {};
+    explicit SeedSolution (const SeedParameters& pars) : SeedParameters(pars) {};
     SeedSolution() = default;
     /// @brief Used hits in the seed
     Cont_t seedHits{};
@@ -185,8 +183,7 @@ class CompositeSpacePointLineSeeder {
     bool startWithPattern{false};
 
     /// @brief Estimated parameters from pattern
-    Line_t::ParamVector patternParams{};
-    double t0Estimate{0.};
+    SeedParam_t patternParams{};
 
     std::vector<SeedSolution<Cont_t>> seenSolutions{};
     std::size_t nGenSeeds{0};
@@ -298,8 +295,8 @@ class CompositeSpacePointLineSeeder {
       SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
       const;
 
-  Line_t constructLine(const double theta, const double y0,
-                       Line_t::ParamVector patternPars) const;
+  SeedParam_t constructLine(const double theta, const double y0,
+                       SeedParam_t patternParams) const;
 
   /// @brief check if the seed line is valid within the configured cuts
   bool isValidLine(SeedParameters seedSol) const;

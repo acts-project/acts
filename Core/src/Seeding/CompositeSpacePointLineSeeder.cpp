@@ -20,30 +20,29 @@ Seeder::CompositeSpacePointLineSeeder(const Config& cfg,
                                       std::unique_ptr<const Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-Line_t Seeder::constructLine(const double theta, const double y0,
-                             Line_t::ParamVector patternPars) const {
-  Line_t::ParamVector linePars{};
-  linePars[toUnderlying(Line_t::ParIndex::y0)] = y0;
-  linePars[toUnderlying(Line_t::ParIndex::x0)] =
-      patternPars[toUnderlying(Line_t::ParIndex::x0)];
-
+CompositeSpacePointLineSeeder::SeedParam_t Seeder::constructLine(const double theta, const double y0,
+                             SeedParam_t patternParams) const {
+  SeedParam_t lineParams{};
+  lineParams[toUnderlying(Line_t::ParIndex::y0)] = y0;
+  lineParams[toUnderlying(Line_t::ParIndex::x0)] =
+      patternParams[toUnderlying(Line_t::ParIndex::x0)];
   Vector3 patternDir{makeDirectionFromPhiTheta(
-      patternPars[toUnderlying(Line_t::ParIndex::phi)],
-      patternPars[toUnderlying(Line_t::ParIndex::theta)])};
+      patternParams[toUnderlying(Line_t::ParIndex::phi)],
+      patternParams[toUnderlying(Line_t::ParIndex::theta)])};
 
   double patternTanAlpha = patternDir.x() / patternDir.z();
   if (patternTanAlpha > std::numeric_limits<double>::epsilon()) {
     const Vector3 dir =
         makeDirectionFromAxisTangents(patternTanAlpha, tan(theta));
-    linePars[toUnderlying(Line_t::ParIndex::phi)] =
+    lineParams[toUnderlying(Line_t::ParIndex::phi)] =
         Acts::VectorHelpers::phi(dir);
-    linePars[toUnderlying(Line_t::ParIndex::theta)] =
+    lineParams[toUnderlying(Line_t::ParIndex::theta)] =
         Acts::VectorHelpers::theta(dir);
   } else {
-    linePars[toUnderlying(Line_t::ParIndex::phi)] = 90._degree;
-    linePars[toUnderlying(Line_t::ParIndex::theta)] = theta;
+    lineParams[toUnderlying(Line_t::ParIndex::phi)] = 90._degree;
+    lineParams[toUnderlying(Line_t::ParIndex::theta)] = theta;
   }
-  return Line_t(linePars);
+  return lineParams;
 }
 
 std::ostream& CompositeSpacePointLineSeeder::SeedParameters::print(
