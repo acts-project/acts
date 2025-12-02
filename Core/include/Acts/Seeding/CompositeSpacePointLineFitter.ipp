@@ -191,7 +191,6 @@ CompositeSpacePointLineFitter::FastFitResult
 CompositeSpacePointLineFitter::fastNonPrecFit(
     const Cont_t& measurements,
     const std::vector<FitParIndex>& parsToUse) const {
-  using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
   using enum FitParIndex;
 
   if (std::ranges::none_of(parsToUse, [](const FitParIndex idx) {
@@ -209,8 +208,9 @@ CompositeSpacePointLineFitter::fastNonPrecFit(
     return std::nullopt;
   }
   ACTS_DEBUG(__func__ << "() " << __LINE__ << " Start non precision fit.");
-  FastFitResult nonPrecResult =
-      m_fastFitter.fit(measurements, ResidualIdx::nonBending);
+
+  FastFitResult nonPrecResult = m_fastFitter.fit(
+      measurements, detail::CompSpacePointAuxiliaries::ResidualIdx::nonBending);
   if (!nonPrecResult) {
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " Non precision fit failed.");
     return nonPrecResult;
@@ -313,8 +313,9 @@ CompositeSpacePointLineFitter::fit(
       FastFitDelegate_t<Cont_t, false> fitDelegate{
           [this](const Cont_t& measurements,
                  const std::vector<int>& /*strawSigns*/) {
-            using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
-            return m_fastFitter.fit(measurements, ResidualIdx::bending);
+            return m_fastFitter.fit(
+                measurements,
+                detail::CompSpacePointAuxiliaries::ResidualIdx::bending);
           }};
       fastResult = fastFit<false, false>(result.measurements, line,
                                          resCfg.parsToUse, fitDelegate);
