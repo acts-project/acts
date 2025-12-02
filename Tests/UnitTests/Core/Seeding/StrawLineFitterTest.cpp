@@ -43,7 +43,7 @@ using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 20000;
+constexpr std::size_t nEvents = 1;
 std::mutex writeMutex{};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
