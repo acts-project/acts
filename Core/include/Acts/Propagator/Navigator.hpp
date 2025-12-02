@@ -264,6 +264,7 @@ class Navigator {
       navSurfaces.clear();
       navSurfaceIndex.reset();
       freeCandidateIndex.reset();
+      navSurfaceIsFree = false;
     }
 
     /// Reset navigation state after switching volumes
@@ -790,21 +791,43 @@ class Navigator {
   /// @param direction The current direction
   NavigationTarget getNextTargetGen3(State& state, const Vector3& position,
                                      const Vector3& direction) const {
+    if (!state.freeCandidates.empty() &&
+        !state.freeCandidateIndex.has_value()) {
+      updateFreeInterSections(state, position, direction);
+    } else if (state.navSurfaceIsFree) {
+      ++state.freeCandidateIndex.value();
+    }
+
     if (!state.navCandidateIndex.has_value()) {
       // first time, resolve the candidates
       resolveCandidates(state, position, direction);
       state.navCandidateIndex = 0;
-    } else {
+    } else if (!state.navSurfaceIsFree) {
       ++state.navCandidateIndex.value();
     }
-    if (state.navCandidateIndex.value() < state.navCandidates.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next candidate.");
-      return state.navCandidate();
-    } else {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Candidate targets exhausted. Renavigate.");
-      return NavigationTarget::None();
+    constexpr auto maxIdx = std::numeric_limits<std::size_t>::max();
+    const auto navIdx = state.navSurfaceIndex.value_or(maxIdx);
+    const auto freeIdx = state.freeCandidateIndex.value_or(maxIdx);
+    /// Check whether free surfaces and geometry surfaces are available at the
+    /// same time If the free surface is closer than the geometry surface
+    /// return the free
+    state.navSurfaceIsFree =
+        freeIdx < state.freeCandidates.size() &&
+        (navIdx >= state.navSurfaces.size() ||
+         state.navSurfaces.at(navIdx).pathLength() >
+             state.freeCandidates.at(freeIdx).pathLength());
+
+    if (!state.navSurfaceIsFree && navIdx < state.navSurfaces.size()) {
+      ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
+      return state.navSurface();
     }
+    if (state.navSurfaceIsFree) {
+      ACTS_VERBOSE(volInfo(state) << "Target set to next free surface.");
+      return state.navSurface();
+    }
+
+    ACTS_VERBOSE(volInfo(state) << "Candidate targets exhausted. Renavigate.");
+    return NavigationTarget::None();
   }
 
   /// @brief NextTarget helper function
