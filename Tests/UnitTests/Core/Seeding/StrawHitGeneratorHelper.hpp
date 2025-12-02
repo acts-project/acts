@@ -15,7 +15,6 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/detail/Polynomials.hpp"
 
 #include <random>
 #include <ranges>
@@ -157,78 +156,29 @@ class SpCalibrator {
 
   explicit SpCalibrator(const Acts::Transform3& localToGlobal)
       : m_localToGlobal{localToGlobal} {}
-  
-  /// @brief Normalize input variable within a given range
-  static double normalize(const double value, const double min, const double max) {
-    return 2 * (std::clamp(value, min, max) - min) / (max - min) - 1;
+
+  static constexpr double s_tolerance = 1.e-12;
+  inline static const double s_CoeffRtoT = 750._ns / std::pow(15._mm, 1. / 3.);
+  inline static const double s_CoeffTtoR = 1 / std::pow(s_CoeffRtoT, 3);
+  /// @brief t(r) relation. The coefficient are tuned for t(r = 15 mm) = 750 ns
+  static double driftTime(const double r) {
+    return s_CoeffRtoT * std::pow(r, 1. / 3.);
   }
-  /// @brief Drift time validity limits for the parametrized r(t) relation 
-  static constexpr double s_minDriftTime = 0._ns;
-  static constexpr double s_maxDriftTime = 741.324 * 1._ns;
-  /// @brief Normalize input drift time for r(t) relation
-  static double normDriftTime(const double t) {
-    return normalize(t, s_minDriftTime, s_maxDriftTime);
-  }
-  /// @brief Coefficients for the parametrized r(t) relation 
-  static constexpr std::array<double, 9> s_TtoRcoeffs = {
-      9.0102, 6.7419, -1.5829, 0.56475, -0.19245, 0.019055, 0.030006, -0.034591, 0.023517};
-  /// @brief Parametrized ATLAS r(t) relation
+  /// @brief r(t) relation, defined as the inverted t(r) relation
   static double driftRadius(const double t) {
-    const double x = normDriftTime(t);
-    double r {0.0}; 
-    for (std::size_t n = 0; n < s_TtoRcoeffs.size(); ++n) {
-      r += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyTn(x, n);
-    }
-    return r;
+    return s_CoeffTtoR * std::pow(t, 3);
   }
   /// @brief First derivative of r(t) relation
   static double driftVelocity(const double t) {
-    const double x = normDriftTime(t);
-    double v {0.0}; 
-    for (std::size_t n = 1; n < s_TtoRcoeffs.size(); ++n) {
-      v += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyUn(x, n, 1u);
-    }
-    return v * 2.0 / (s_maxDriftTime - s_minDriftTime);
+    return 3 * s_CoeffTtoR * std::pow(t, 2);
   }
   /// @brief Second derivative of r(t) relation
   static double driftAcceleration(const double t) {
-    const double x = normDriftTime(t);
-    double a {0.0};
-    for (std::size_t n = 2; n < s_TtoRcoeffs.size(); ++n) {
-      a += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyUn(x, n, 2u);
-    }
-    return a * 4.0 / Acts::square(s_maxDriftTime - s_minDriftTime);
+    return 6 * s_CoeffTtoR * t;
   }
-  /// @brief Drift radius validity limits for the parametrized t(r) relation 
-  static constexpr double s_minDriftRadius = 0.064502;
-  static constexpr double s_maxDriftRadius = 14.566;
-  /// @brief Normalize input drift radius for t(r) relation
-  static double normDriftRadius(const double r) {
-    return normalize(r, s_minDriftRadius, s_maxDriftRadius);
-  }
-  /// @brief Coefficients for the parametrized t(r) relation 
-  static constexpr std::array<double, 5> s_RtoTcoeffs = {
-      256.476, 349.056, 118.349, 18.748, -6.4142};
-  /// @brief Parametrized t(r) relation
-  static double driftTime(const double r) {
-    const double x = normDriftRadius(r);
-    double t {0.0};
-    for (std::size_t n = 0; n < s_RtoTcoeffs.size(); ++n) {
-      t += s_RtoTcoeffs[n] * Acts::detail::legendrePoly(x, n);
-    }
-    return t * 1._ns;
-  }
-  /// @brief Coefficients for the uncertanty on the drift radius
-  static constexpr std::array<double, 4> s_driftRUncertCoeffs {
-    0.10826, -0.07182, 0.037597, -0.011712};
   /// @brief Compute the drift radius uncertanty
   static double driftUncert(const double r) {
-    const double x = normDriftRadius(r);
-    double s {0.0};
-    for (std::size_t n = 0; n < s_driftRUncertCoeffs.size(); ++n) {
-      s += s_driftRUncertCoeffs[n] * Acts::detail::chebychevPolyTn(x, n);
-    }
-    return s;
+    return 0.2_mm / (1._mm + Acts::square(r)) + 0.1_mm;
   }
   /// @brief Provide the calibrated drift radius given the straw measurement and time offset
   ///        Needed for the Fast Fitter.
@@ -274,7 +224,8 @@ class SpCalibrator {
   /// @param trackPos: Position of the track at z=0.
   /// @param trackDir: Direction of the track in the local frame
   /// @param measurement: Measurement
-  double closestApproachDist(const Vector3& trackPos, const Vector3& trackDir,
+  double closestApproachDist(const Acts::CalibrationContext& /*ctx*/,
+                             const Vector3& trackPos, const Vector3& trackDir,
                              const FitTestSpacePoint& measurement) const {
     const auto closeIsect =
         lineIntersect(measurement.localPosition(),
@@ -288,7 +239,7 @@ class SpCalibrator {
   /// @param trackDir: Direction of the track in the local frame
   /// @param timeOffSet: Offset in the time of arrival (To be implemented)
   /// @param uncalibCont: Uncalibrated composite space point container
-  Container_t calibrate(const Acts::CalibrationContext& /*ctx*/,
+  Container_t calibrate(const Acts::CalibrationContext& ctx,
                         const Vector3& trackPos, const Vector3& trackDir,
                         const double timeOffSet,
                         const Container_t& uncalibCont) const {
@@ -303,13 +254,12 @@ class SpCalibrator {
       if (sp->isStraw()) {
         const double driftTime{
             sp->time() - timeOffSet -
-            closestApproachDist(trackPos, trackDir, *sp) /
+            closestApproachDist(ctx, trackPos, trackDir, *sp) /
                 PhysicalConstants::c};
         if (driftTime < 0) {
           sp->updateStatus(false);
           sp->updateDriftR(0.);
         } else {
-          sp->updateStatus(true);
           sp->updateDriftR(Acts::abs(driftRadius(driftTime)));
         }
       }
@@ -544,7 +494,8 @@ class MeasurementGenerator {
                       ? std::make_optional<double>(genCfg.twinStrawReso)
                       : std::nullopt));
           sp->updateTime(SpCalibrator::driftTime(sp->driftRadius()) + t0 +
-                         calibrator.closestApproachDist(line.position(),
+                         calibrator.closestApproachDist(genCfg.calibContext,
+                                                        line.position(),
                                                         line.direction(), *sp) /
                              PhysicalConstants::c);
         }

@@ -277,7 +277,6 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     }
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);
   }
-  calcPostFitChi2(ctx, measurements, calibrator, result);
   if (logger().doPrint(Logging::VERBOSE)) {
     ACTS_VERBOSE("Fit failed, printing all measurements:");
     for (const auto& meas : measurements) {
@@ -293,7 +292,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     }
     ACTS_VERBOSE("Result: " << result);
   }
-  return result;
+  return std::nullopt;
 }
 
 template <CompositeSpacePointContainer StrawCont_t,

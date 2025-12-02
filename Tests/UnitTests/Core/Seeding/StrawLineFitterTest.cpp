@@ -17,8 +17,6 @@
 
 #include <TFile.h>
 #include <TTree.h>
-#include <TH1D.h>
-#include "Acts/Utilities/detail/Polynomials.hpp"
 
 #include "StrawHitGeneratorHelper.hpp"
 
@@ -41,7 +39,7 @@ using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 1e4;
+constexpr std::size_t nEvents = 1;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
@@ -142,39 +140,6 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
   }
 }
 
-void runCalibratorTest(const SpCalibrator* calibrator, TFile& outFile) {
-
-  ACTS_INFO("Start Calibrator Test.");
-
-  const int Nbin = 1000;
-  const double& tMin = SpCalibrator::s_minDriftTime/ 1._ns;
-  const double& tMax = SpCalibrator::s_maxDriftTime/ 1._ns;
-  TH1D h_rt("h_rt", "R-T relation; t [ns]; r [mm]", Nbin, tMin, tMax);
-  TH1D h_vt("h_vt", "V-T relation; t [ns]; v [mm/ns]", Nbin, tMin, tMax);
-  TH1D h_at("h_at", "A-T relation; t [ns]; a [mm/ns^2]", Nbin, tMin, tMax);
-  const double& rMin = SpCalibrator::s_minDriftRadius;
-  const double& rMax = SpCalibrator::s_maxDriftRadius;
-  TH1D h_tr("h_tr", "T-R relation; r [mm]; t [ns]", Nbin, rMin, rMax);
-  TH1D h_sr("h_sr", "Sigma-R relation; r [mm]; sigma [mm]", Nbin, rMin, rMax);
-
-  for (int i = 0; i < Nbin; ++i) {
-    const double t = tMin + (i + 0.5) * (tMax - tMin) / Nbin;
-    h_rt.SetBinContent(i, calibrator->driftRadius(t * 1._ns));
-    h_vt.SetBinContent(i, calibrator->driftVelocity(t * 1._ns) * 1._ns);
-    h_at.SetBinContent(i, calibrator->driftAcceleration(t * 1._ns) * 1._ns * 1._ns);
-
-    const double r = rMin + (i + 0.5) * (rMax - rMin) / Nbin;
-    h_tr.SetBinContent(i, calibrator->driftTime(r) / 1._ns);
-    h_sr.SetBinContent(i, calibrator->driftUncert(r));
-  }
-
-  outFile.WriteObject(&h_rt, h_rt.GetName());
-  outFile.WriteObject(&h_vt, h_vt.GetName());
-  outFile.WriteObject(&h_at, h_at.GetName());
-  outFile.WriteObject(&h_tr, h_tr.GetName());
-  outFile.WriteObject(&h_sr, h_sr.GetName());
-}
-
 #define DECLARE_BRANCH(dType, bName) \
   dType bName{};                     \
   outTree->Branch(#bName, &bName);
@@ -241,9 +206,7 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
   };
   // Pass a localToGlobal transform to the calibrator to proper handling the ToF
   auto calibrator = std::make_unique<SpCalibrator>();
-  runCalibratorTest(calibrator.get(), outFile);
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
-    ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Start event " << (evt + 1) << "/" << nEvents << ".");
     const auto line = generateLine(engine, logger());
     fillPars(line.parameters(), trueY0, trueX0, trueTheta, truePhi);
     fillProjected(line.parameters(), trueProjTheta, trueProjPhi);
@@ -265,10 +228,10 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
 
     auto result = fitter.fit(std::move(fitOpts));
     if (!result.converged) {
-      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed - not converged.");
+      ACTS_INFO("Fit failed - not converged.");
       continue;
     }
-    ACTS_INFO(__func__ << "() " << __LINE__ << " - Fit Successful.");
+    ACTS_INFO("Fit Successful.");
 
     fillPars(result.parameters, recoY0, recoX0, recoTheta, recoPhi);
     fillProjected(result.parameters, recoProjTheta, recoProjPhi);
@@ -320,7 +283,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   // 2D straw only test
   {
     RandomEngine engine{1602};
-    // runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
   }
   // 2D straw only test with time
   {
@@ -337,14 +300,14 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     fitCfg.useFastFitter = true;
     fitCfg.fastPreFitter = false;
     RandomEngine engine{1503};
-    // runFitTest(fitCfg, genCfg, "FastStrawOnlyTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "FastStrawOnlyTest", engine, *outFile);
   }
   // 2D straws + twin measurement test
   {
     fitCfg.useFastFitter = true;
     genCfg.twinStraw = true;
     RandomEngine engine{1701};
-    // runFitTest(fitCfg, genCfg, "StrawAndTwinTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StrawAndTwinTest", engine, *outFile);
   }
   genCfg.createStrips = true;
   genCfg.twinStraw = false;
@@ -352,7 +315,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   // 1D straws + single strip measurements
   {
     RandomEngine engine{1404};
-    // runFitTest(fitCfg, genCfg, "StrawAndStripTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StrawAndStripTest", engine, *outFile);
   }
   // Strip only
   {
@@ -360,13 +323,13 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.combineSpacePoints = true;
     genCfg.stripPitchLoc1 = 500._um;
     RandomEngine engine{2070};
-    // runFitTest(fitCfg, genCfg, "StripOnlyTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StripOnlyTest", engine, *outFile);
   }
   // Strip stereo test
   {
     genCfg.stripDirLoc1 = makeDirectionFromPhiTheta(60._degree, 90._degree);
     RandomEngine engine{2225};
-    // runFitTest(fitCfg, genCfg, "StereoStripTest", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StereoStripTest", engine, *outFile);
   }
 }
 
