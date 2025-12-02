@@ -204,6 +204,11 @@ class Navigator {
     /// the current candidate index of the navigation state
     std::optional<std::size_t> navCandidateIndex{std::nullopt};
 
+    // Navigation on free surface level. Free surfaces are traversed
+    NavigationCandidates freeCandidates = {};
+    /// the current free surface index of the navigation state
+    std::optional<std::size_t> freeSurfaceIndex{std::nullopt};
+
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
@@ -265,6 +270,8 @@ class Navigator {
       navBoundaryIndex.reset();
       navCandidates.clear();
       navCandidateIndex.reset();
+      freeCandidates.clear();
+      freeSurfaceIndex.reset();
 
       currentLayer = nullptr;
     }
@@ -396,6 +403,24 @@ class Navigator {
 
     state.startSurface = state.options.startSurface;
     state.targetSurface = state.options.targetSurface;
+
+    /// If the state has 
+    if (!state.options.freeSurfaces.empty()) {
+      std::ranges::for_each(
+          state.options.freeSurfaces, [&](const Surface* freeSurf) {
+            auto [intersection, intersectionIndex] =
+                freeSurf
+                    ->intersect(state.options.geoContext, position, direction,
+                                BoundaryTolerance::Infinite())
+                    .closestWithIndex();
+            state.freeSurfaces.emplace_back(intersection, intersectionIndex,
+                                           *freeSurf,
+                                           BoundaryTolerance::Infinite());
+          });
+      // Sort the candidates by path length
+  std::ranges::sort(state.freeSurfaces, NavigationTarget::pathLengthOrder);
+
+    }
 
     // @TODO: Implement fast initialization with Gen3. This requires the volume lookup to work properly
 
@@ -807,21 +832,6 @@ class Navigator {
     args.externalSurfaces = state.options.externalSurfaces;
     state.currentVolume->initializeNavigationCandidates(args, appendOnly,
                                                         logger());
-    if (!state.options.freeSurfaces.empty()) {
-      std::ranges::for_each(
-          state.options.freeSurfaces, [&](const Surface* freeSurf) {
-            auto [intersection, intersectionIndex] =
-                freeSurf
-                    ->intersect(state.options.geoContext, position, direction,
-                                BoundaryTolerance::Infinite())
-                    .closestWithIndex();
-            if (intersection.pathLength() < 0.) {
-              return;
-            }
-            appendOnly.addSurfaceCandidate(*freeSurf,
-                                           BoundaryTolerance::Infinite());
-          });
-    }
     ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                                 << " navigation candidates.");
 
@@ -907,23 +917,6 @@ class Navigator {
     // Request the compatible surfaces
     state.navSurfaces = currentLayer->compatibleSurfaces(
         state.options.geoContext, position, direction, navOpts);
-    /// If the
-    if (!state.options.freeSurfaces.empty()) {
-      std::ranges::for_each(
-          state.options.freeSurfaces, [&](const Surface* freeSurf) {
-            auto [intersection, intersectionIndex] =
-                freeSurf
-                    ->intersect(state.options.geoContext, position, direction,
-                                BoundaryTolerance::Infinite())
-                    .closestWithIndex();
-            if (intersection.pathLength() < 0.) {
-              return;
-            }
-            state.navSurfaces.emplace_back(intersection, intersectionIndex,
-                                           *freeSurf,
-                                           BoundaryTolerance::Infinite());
-          });
-    }
     // Sort the surfaces by path length.
     // Special care is taken for the external surfaces which should always
     // come first, so they are preferred to be targeted and hit first.
