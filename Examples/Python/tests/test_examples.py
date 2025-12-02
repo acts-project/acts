@@ -1268,7 +1268,8 @@ def test_gnn_metric_learning(
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
         raise
 
     rfp = tmp_path / root_file

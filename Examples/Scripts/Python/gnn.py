@@ -4,8 +4,9 @@ from pathlib import Path
 import os
 import sys
 
-import acts.examples
 import acts
+import acts.examples
+import acts.examples.gnn
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
 from acts import UnitConstants as u
 
