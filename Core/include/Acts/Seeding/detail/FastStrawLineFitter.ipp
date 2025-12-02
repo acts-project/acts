@@ -284,7 +284,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
       ACTS_VERBOSE(toString(*meas)
                    << ", t0: " << result.t0 / 1._ns
                    << ", truthR, RecoR: " << meas->driftRadius() << ", "
-                   << calibrator.driftRadius(ctx, *meas, result.t0) << ", v: "
+                   << calibrator.driftRadius(ctx, *meas, result.t0) << ", velocity: "
                    << calibrator.driftVelocity(ctx, *meas, result.t0) * 1._ns
                    << ", a: "
                    << calibrator.driftAcceleration(ctx, *meas, result.t0) *
