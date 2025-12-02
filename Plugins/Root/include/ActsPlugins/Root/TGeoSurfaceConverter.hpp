@@ -115,7 +115,7 @@ struct TGeoSurfaceConverter {
       d -= 360.0;
 
     // Convert to rads
-    return d * Acts::Units::degree;
+    return d * Acts::UnitConstants::degree;
   }
 };
 
