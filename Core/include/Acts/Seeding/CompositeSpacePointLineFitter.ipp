@@ -370,7 +370,7 @@ CompositeSpacePointLineFitter::fit(
       // Set convergence flag to false because the full fit comes later.
       result.converged = false;
     } else {
-      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed.");
+      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit failed.");
       return result;
     }
   }
@@ -383,7 +383,8 @@ CompositeSpacePointLineFitter::fit(
   /// Proceed with the usual fit
   ChiSqCache cache{};
   detail::CompSpacePointAuxiliaries pullCalculator{resCfg, logger().clone()};
-  for (; !result.converged && result.nIter < m_cfg.maxIter; ++result.nIter) {
+  const int maxIter {result.nIter + m_cfg.maxIter}; 
+  for (; !result.converged && result.nIter < maxIter; ++result.nIter) {
     cache.reset();
     // Update the parameters from the last iteration
     line.updateParameters(result.parameters);
