@@ -14,9 +14,9 @@
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/DD4hep/LayerBlueprintNode.hpp"
 
+#include <DD4hep/DetElement.h>
+#include <DD4hep/Detector.h>
 #include <DDRec/DetectorData.h>
-#include <dd4hep/DetElement.h>
-#include <dd4hep/Detector.h>
 
 namespace ActsPlugins::DD4hep {
 
