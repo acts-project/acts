@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Detector/Detector.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/DetectorCommons/StructureSelector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/AlignedGenericDetector.hpp"
@@ -46,7 +45,6 @@ void addDetector(Context& ctx) {
     py::class_<Detector, std::shared_ptr<Detector>>(mex, "DetectorBase")
         .def("nominalGeometryContext", &Detector::nominalGeometryContext)
         .def("trackingGeometry", &Detector::trackingGeometry)
-        .def("gen2Geometry", &Detector::gen2Geometry)
         .def("contextDecorators", &Detector::contextDecorators)
         .def("__enter__",
              [](const std::shared_ptr<Detector>& self) { return self; })

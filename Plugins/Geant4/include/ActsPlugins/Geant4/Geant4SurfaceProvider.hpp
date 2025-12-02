@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Detector/KdtSurfacesProvider.hpp"
-#include "Acts/Detector/interface/ISurfacesProvider.hpp"
+#include "Acts/Geometry/ISurfacesProvider.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 
 #include "G4GDMLParser.hh"
@@ -36,9 +36,8 @@ namespace ActsPlugins {
 /// @tparam bSize The maximum number of surfaces per KDTree leaf
 /// @tparam reference_generator The reference generator for the KDTree
 template <std::size_t kDim = 2u, std::size_t bSize = 100u,
-          typename reference_generator =
-              Acts::Experimental::detail::PolyhedronReferenceGenerator>
-class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
+          typename reference_generator = Acts::PolyhedronReferenceGenerator>
+class Geant4SurfaceProvider : public Acts::ISurfacesProvider {
  public:
   /// Nested configuration struct
   struct Config {
@@ -142,9 +141,8 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
     }
 
     /// Otherwise, select the surfaces based on the range
-    auto kdtSurfaces =
-        Acts::Experimental::KdtSurfaces<kDim, bSize, reference_generator>(
-            gctx, surfaces, m_kdtOptions.binningValues);
+    auto kdtSurfaces = KdtSurfaces<kDim, bSize, reference_generator>(
+        gctx, surfaces, m_kdtOptions.binningValues);
 
     return kdtSurfaces.surfaces(m_kdtOptions.range);
   };
