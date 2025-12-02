@@ -7,12 +7,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 #include "ActsPlugins/Json/JsonSurfacesReader.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
-#include "ActsPlugins/Json/ProtoDetectorJsonConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -75,19 +73,5 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
 
     json.def("readDetectorElementsFromJson",
              JsonSurfacesReader::readDetectorElements);
-  }
-
-  {
-    py::class_<ProtoDetector>(json, "ProtoDetector")
-        .def(py::init<>([](std::string pathName) {
-          nlohmann::json jDetector;
-          auto in = std::ifstream(pathName, std::ifstream::in);
-          if (in.good()) {
-            in >> jDetector;
-            in.close();
-          }
-          ProtoDetector pDetector = jDetector["detector"];
-          return pDetector;
-        }));
   }
 }
