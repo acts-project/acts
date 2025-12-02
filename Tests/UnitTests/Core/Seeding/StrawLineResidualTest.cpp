@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
                  FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(
                                                           rndEngine)*wireDir1,
                                    wireDir1, R, dR, uncertWire});
-    throw std::runtime_error("Am arsch");
+
     isect = lineIntersect(line.position(), line.direction(), wirePos, wireDir2);
     testResidual(line.parameters(),
                  FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(

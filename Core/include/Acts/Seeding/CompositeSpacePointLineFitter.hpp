@@ -248,6 +248,14 @@ class CompositeSpacePointLineFitter {
       const Cont_t& measurements, const Line_t& initialGuess,
       const std::vector<FitParIndex>& parsToUse,
       const FastFitDelegate_t<Cont_t, fitTime>& precDelegate) const;
+  /// @brief Executes the fast fit in the non-bending direction. In case of success, the
+  ///        fitted angle is overwritten with tanAlpha for an easier combination
+  ///        with the precision fit
+  /// @param measurements: List of measurements to fit
+  /// @param parsToUse: List of parameters to fit (y0, theta), (x0, phi) or (y0, theta, x0, phi).
+  template <CompositeSpacePointContainer Cont_t>
+  FastFitResult fastNonPrecFit(const Cont_t& measurements,
+                               const std::vector<FitParIndex>& parsToUse) const;
   /// @brief Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was
   ///        sufficiently small such that the fit is converged

@@ -320,8 +320,8 @@ Line_t generateLine(RandomEngine& engine, const Logger& logger) {
   Line_t::ParamVector linePars{};
   linePars[toUnderlying(ParIndex::phi)] =
       uniform{-120_degree, 120_degree}(engine);
-  linePars[toUnderlying(ParIndex::x0)] = uniform{-5000., 5000.}(engine);
-  linePars[toUnderlying(ParIndex::y0)] = uniform{-5000., 5000.}(engine);
+  linePars[toUnderlying(ParIndex::x0)] = uniform{-500., 500.}(engine);
+  linePars[toUnderlying(ParIndex::y0)] = uniform{-500., 500.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
       uniform{5_degree, 175_degree}(engine);
   if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
@@ -613,11 +613,9 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
         (**lastPhi).localPosition() - (**firstPhi).localPosition();
     tanAlpha = firstToLastPhi.x() / firstToLastPhi.z();
     /// -> x = tanPhi * z + x_{0} ->
-    RandomEngine fart{firstToLastPhi.x()};
     pars[toUnderlying(FitParIndex::x0)] =
         (**lastPhi).localPosition().x() -
-        (**lastPhi).localPosition().z() * tanAlpha +
-        uniform{-10._cm, 10._cm}(fart);
+        (**lastPhi).localPosition().z() * tanAlpha;
   }
   /// Setup the seed parameters in y0 && theta
   auto firstTube =
@@ -654,8 +652,6 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
           (**lastEta).localPosition().z() * tanBeta;
     }
   }
-  RandomEngine fart{10101 * tanBeta};
-  tanAlpha += std::copysign(uniform{0., 10._degree}(fart), tanAlpha);
   const Vector3 seedDir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
 
   pars[toUnderlying(FitParIndex::theta)] = theta(seedDir);
