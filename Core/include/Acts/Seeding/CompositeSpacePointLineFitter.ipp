@@ -91,12 +91,7 @@ CompositeSpacePointLineFitter::fastPrecFit(
       }
       // Retry & check whether the chi2 is better
       FastFitResult swappedPrecResult = {m_fastFitter.fit(measurements, signs)};
-      if (!swappedPrecResult) {
-        ACTS_DEBUG(__func__ << "() " << __LINE__
-                            << " - Fit with swapped signs fit failed, returning original one.");
-        return precResult;
-      }
-      if (swappedPrecResult->chi2 < precResult->chi2) {
+      if (swappedPrecResult && swappedPrecResult->chi2 < precResult->chi2) {
         ACTS_DEBUG(__func__ << "() " << __LINE__
                             << " - Swapped fit is of better quality "
                             << (*swappedPrecResult));
@@ -152,12 +147,7 @@ CompositeSpacePointLineFitter::fastPrecFit(
     // Retry & check whether the chi2 is better
     FastFitResultT0 swappedPrecResult{
         m_fastFitter.fit(ctx, calibrator, measurements, signs, initialT0)};
-    if (!swappedPrecResult) {
-      ACTS_DEBUG(__func__ << "() " << __LINE__
-                          << " - Fit with swapped signs fit failed, returning original one.");
-      return precResult;
-    }
-    if (swappedPrecResult->chi2 < precResult->chi2) {
+    if (swappedPrecResult && swappedPrecResult->chi2 < precResult->chi2) {
       ACTS_DEBUG(__func__ << "() " << __LINE__
                           << " - Swapped fit is of better quality "
                           << (*swappedPrecResult));
@@ -363,7 +353,7 @@ CompositeSpacePointLineFitter::fit(
     }
     if (fastResult.converged) {
       static_cast<FitParameters&>(result) = std::move(fastResult);
-      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit converged.");
+      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit converged.");
       // Use the result from the fast fitter as final answer
       if (!m_cfg.fastPreFitter) {
         line.updateParameters(result.parameters);
@@ -377,7 +367,7 @@ CompositeSpacePointLineFitter::fit(
       // Set convergence flag to false because the full fit comes later.
       result.converged = false;
     } else {
-      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit failed.");
+      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed.");
       return result;
     }
   }
@@ -390,8 +380,7 @@ CompositeSpacePointLineFitter::fit(
   /// Proceed with the usual fit
   ChiSqCache cache{};
   detail::CompSpacePointAuxiliaries pullCalculator{resCfg, logger().clone()};
-  const int maxIter {result.nIter + m_cfg.maxIter}; 
-  for (; !result.converged && result.nIter < maxIter; ++result.nIter) {
+  for (; !result.converged && result.nIter < m_cfg.maxIter; ++result.nIter) {
     cache.reset();
     // Update the parameters from the last iteration
     line.updateParameters(result.parameters);
