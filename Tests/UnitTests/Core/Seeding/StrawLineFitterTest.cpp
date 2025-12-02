@@ -28,6 +28,7 @@ using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 1;
+constexpr std::size_t nThreads = 1;
 std::mutex writeMutex{};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
@@ -43,16 +44,9 @@ using GenCfg_t = MeasurementGenerator::Config;
 long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
                     const std::string& testName, std::size_t seed,
                     TFile& outFile) {
-  RandomEngine engine{seed};
-  Fitter_t fitter{fitCfg, getDefaultLogger(
-                              std::format("LineFitter_{:}", testName), logLvl)};
-
   auto outTree = std::make_unique<TTree>(
       std::format("{:}Tree", testName).c_str(), "MonitorTree");
   outTree->SetDirectory(nullptr);
-  TimePoint_t start = std::chrono::system_clock::now();
-
-  ACTS_INFO("Start test " << testName << ".");
 
   DECLARE_BRANCH(double, trueY0);
   DECLARE_BRANCH(double, trueX0);
@@ -80,6 +74,14 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
   DECLARE_BRANCH(unsigned, nIter);
   DECLARE_BRANCH(unsigned, nDoF);
   DECLARE_BRANCH(char, converged);
+
+  RandomEngine engine{seed};
+  Fitter_t fitter{fitCfg, getDefaultLogger(
+                              std::format("LineFitter_{:}", testName), logLvl)};
+
+  TimePoint_t start = std::chrono::system_clock::now();
+
+  ACTS_INFO("Start test " << testName << ".");
 
   /// @brief Fill the parameter array to the tree variables
   /// @param pars: Parameter array to safe
@@ -208,6 +210,15 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
   // 2D straw only test
   std::vector<std::pair<std::string, std::future<long int>>> timings{};
+  using namespace std::chrono_literals;
+
+  auto sendSleep = [&timings]() {
+    do {
+      std::this_thread::sleep_for(100ms);
+    } while (std::ranges::count_if(timings, [](const auto& timeObj) {
+               return timeObj.second.wait_for(0ms) != std::future_status::ready;
+             }) >= nThreads);
+  };
   /// @brief Helper lambda to launch the test for a given measurement configuration.
   ///        Always three tests are launched:
   ///           Fast: Use only the fast fitter to obtain the results
@@ -220,24 +231,24 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   /// @param seed: Seed number for the random number generator
   auto launchTest = [&](const std::string& testName, const GenCfg_t& genCfg,
                         const unsigned seed) {
+    sendSleep();
     timings.emplace_back(
         "Fast" + testName, std::async(std::launch::async, [&]() {
           return runFitTest(fastCfg, genCfg, "Fast" + testName, seed, *outFile);
         }));
-    std::this_thread::sleep_for(100ms);
-
+    sendSleep();
     timings.emplace_back(testName, std::async(std::launch::async, [&]() {
                            return runFitTest(fitCfg, genCfg, testName, seed,
                                              *outFile);
                          }));
 
-    std::this_thread::sleep_for(100ms);
+    sendSleep();
     timings.emplace_back(
         "FastPre" + testName, std::async(std::launch::async, [&]() {
           return runFitTest(fastPreCfg, genCfg, "FastPre" + testName, seed,
                             *outFile);
         }));
-    std::this_thread::sleep_for(100ms);
+    sendSleep();
   };
   {
     GenCfg_t genCfg{};
@@ -331,7 +342,6 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   }
   /// Wait until all tests ar ecompleted
   while (std::ranges::any_of(timings, [](const auto& lblTh) {
-    using namespace std::chrono_literals;
     return lblTh.second.wait_for(0ms) != std::future_status::ready;
   })) {
     std::this_thread::sleep_for(10ms);
