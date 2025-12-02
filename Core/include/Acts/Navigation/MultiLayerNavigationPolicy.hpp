@@ -19,21 +19,17 @@
 
 namespace Acts::Experimental {
 
-template <typename grid_type>
-using IndexedSurfacesNavigation = IndexGridNavigation<grid_type>;
-
 /// A navigation policy that uses grid based navigation for indexed surfaces
 /// Navigate through a multilayer structure by creating an artificial path on
 /// the grid.
 class MultiLayerNavigationPolicy : public INavigationPolicy {
  public:
   /// Type alias for 2D equidistant grid holding surface indices
-  using GridType =
-      Grid<std::vector<std::size_t>,
-           Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
-           Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
+  using GridType = Grid<std::vector<std::size_t>,
+                        Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
+                        Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
   /// Type alias for indexed surfaces navigation updater
-  using IndexedUpdatorType = IndexedSurfacesNavigation<GridType>;
+  using IndexedUpdatorType = IndexGridNavigation<GridType>;
 
   struct Config {
     // The binning expansion for grid neighbor lookups
