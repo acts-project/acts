@@ -922,7 +922,11 @@ class Navigator {
       logger().log(Logging::VERBOSE, os.str());
     }
   }
-
+  /// @brief  Update the intersections with the free surfaces of the navigation state.
+  ///         Selects the first free surface which is ahead of the track
+  /// @param state: The current navigation state
+  /// @param position: The current track position
+  /// @param direction: The current track direction
   void updateFreeInterSections(State& state, const Vector3& position,
                                const Vector3& direction) const {
     std::ranges::for_each(state.freeCandidates, [&](NavigationTarget& target) {
@@ -944,7 +948,7 @@ class Navigator {
                                             return target.pathLength() >= 0.;
                                           });
     state.freeCandidateIndex =
-        std::disance(state.freeCandidates.begin(), firstFree);
+        std::distance(state.freeCandidates.begin(), firstFree);
   }
   /// @brief Resolve compatible surfaces
   ///
