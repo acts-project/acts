@@ -37,7 +37,6 @@ namespace DetrayConversionUtils {
 /// This object is used to synchronize link information between the
 /// different converters (geometry, material, surface grids)
 struct Cache {
-
   /// This is a map to pass on volume link information
   std::map<Acts::GeometryIdentifier, unsigned long> volumeLinks;
   /// This is a multimap to pass volume local surface link information

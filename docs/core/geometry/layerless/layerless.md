@@ -11,4 +11,3 @@ The combination of the original (Gen 1) geometry classes and the new *layerless*
 :::{toctree}
 building
 :::
-
