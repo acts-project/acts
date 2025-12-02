@@ -20,6 +20,7 @@
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/detail/TrackingGeometryPrintVisitor.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -130,40 +131,31 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     std::size_t childVol = 1;
     auto chamberId = chamberVolume->geometryId();
 
-    for (const auto& child : childrenTrkVols) {
+    for (auto& child : childrenTrkVols) {
       std::unique_ptr<Acts::TrackingVolume> trVol{nullptr};
 
       // use dedicated builder for MDT multilayers
       if (child.name.find("MDT") != std::string::npos) {
-        std::cout << "name of children " << child.name << std::endl;
         MultiWireVolumeBuilder::Config mwCfg;
-
         auto vb = child.volume->volumeBoundsPtr();
         double halfY{0};
         double halfZ{0};
+        using LineBounds = Acts::LineBounds::BoundValues;
 
         if (vb->type() == Acts::VolumeBounds::eTrapezoid) {
           using BoundVal = Acts::TrapezoidVolumeBounds::BoundValues;
 
-          auto tzb =
-              std::dynamic_pointer_cast<const Acts::TrapezoidVolumeBounds>(vb);
-          mwCfg.bounds = boundFactory.makeBounds<Acts::TrapezoidVolumeBounds>(
-              tzb->get(BoundVal::eHalfLengthXnegY),
-              tzb->get(BoundVal::eHalfLengthXposY),
-              tzb->get(BoundVal::eHalfLengthY),
-              tzb->get(BoundVal::eHalfLengthZ));
+          auto tzb = std::dynamic_pointer_cast<Acts::TrapezoidVolumeBounds>(vb);
+          mwCfg.bounds = boundFactory.insert<Acts::TrapezoidVolumeBounds>(tzb);
           halfY = tzb->get(BoundVal::eHalfLengthY);
           halfZ = tzb->get(BoundVal::eHalfLengthZ);
 
         } else if (vb->type() == Acts::VolumeBounds::eCuboid) {
           using BoundVal = Acts::CuboidVolumeBounds::BoundValues;
 
-          auto cbb =
-              std::dynamic_pointer_cast<const Acts::CuboidVolumeBounds>(vb);
-          mwCfg.bounds = boundFactory.makeBounds<Acts::CuboidVolumeBounds>(
-              cbb->get(BoundVal::eHalfLengthX),
-              cbb->get(BoundVal::eHalfLengthY),
-              cbb->get(BoundVal::eHalfLengthZ));
+          auto cbb = std::dynamic_pointer_cast<Acts::CuboidVolumeBounds>(vb);
+          mwCfg.bounds = boundFactory.insert<Acts::CuboidVolumeBounds>(cbb);
+
           halfY = cbb->get(BoundVal::eHalfLengthY);
           halfZ = cbb->get(BoundVal::eHalfLengthZ);
 
@@ -174,7 +166,13 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
         mwCfg.name = child.name;
         mwCfg.mlSurfaces = child.surfaces;
         mwCfg.transform = child.volume->transform();
-        double tubeR = child.surfaces.front()->bounds().values()[0];
+        auto& sb = child.surfaces.front()->bounds();
+        auto lineBounds = dynamic_cast<const Acts::LineBounds*>(&sb);
+        if (!lineBounds) {
+          throw std::runtime_error(
+              "This MDT does not have tubes, what does it have?");
+        }
+        double tubeR = lineBounds->get(LineBounds::eR);
         mwCfg.binning = {
             {{Acts::AxisDirection::AxisY, Acts::AxisBoundaryType::Bound, -halfY,
               halfY, static_cast<std::size_t>(std::lround(1. * halfY / tubeR))},
