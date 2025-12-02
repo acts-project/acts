@@ -5,16 +5,19 @@ set -u
 set -o pipefail
 
 # Assert MODEL_STORAGE environment variable is set
-if [ -z "${MODEL_STORAGE+x}" ]; then
+if [[ -z "${MODEL_STORAGE+x}" ]]; then
   echo "Error: MODEL_STORAGE environment variable is not set"
   exit 1
 fi
 
 function download {
-  tarname=$(basename $1)
-  curl -SL $1 -o $tarname
-  echo "$2 $tarname" | sha256sum -c
-  tar -xf $tarname
+  URL=$1
+  HASH=$2
+
+  tarname=$(basename "$URL")
+  curl -SL "$URL" -o "$tarname"
+  echo "$HASH $tarname" | sha256sum -c
+  tar -xf "$tarname"
 }
 
 mkdir -p "${MODEL_STORAGE}"
