@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Geometry/ISurfacesProvider.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/KDTree.hpp"
@@ -48,11 +48,10 @@ class KdtSurfaces {
   /// @param surfaces the surfaces to be filled into the tree
   /// @param casts the cast list from global position into kdtree local
   /// @param rgen the reference point generator
-  KdtSurfaces(
-      const GeometryContext& gctx,
-      const std::vector<std::shared_ptr<Surface>>& surfaces,
-      const std::array<AxisDirection, kDIM>& casts,
-      const reference_generator& rgen = PolyhedronReferenceGenerator{})
+  KdtSurfaces(const GeometryContext& gctx,
+              const std::vector<std::shared_ptr<Surface>>& surfaces,
+              const std::array<AxisDirection, kDIM>& casts,
+              const reference_generator& rgen = PolyhedronReferenceGenerator{})
       : m_kdt(nullptr), m_casts(casts), m_rGenerator(rgen) {
     // Simple check if the dimension is correct
     if (kDIM == 0u) {
