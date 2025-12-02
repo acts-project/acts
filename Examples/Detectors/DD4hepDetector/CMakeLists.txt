@@ -4,6 +4,8 @@ acts_add_library(
     src/DD4hepDetector.cpp
     src/AlignedDD4hepDetectorElement.cpp
     src/OpenDataDetector.cpp
+    src/ePICDetector.cpp
+    ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
 target_include_directories(
@@ -58,3 +60,5 @@ set_target_properties(
     ActsExamplesDetectorDD4hep
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+acts_compile_headers(ExamplesDetectorDD4hep GLOB "include/**/*.hpp")
