@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "ActsPlugins/DD4hep/LayerBlueprintNode.hpp"
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
@@ -98,9 +98,11 @@ std::vector<dd4hep::DetElement> BlueprintBuilder::resolveSensitives(
   return sensitives;
 }
 
-std::shared_ptr<LayerBlueprintNode> BlueprintBuilder::addLayer(
-    const dd4hep::DetElement& detElement, const std::string& axes) {
-  auto node = std::make_shared<LayerBlueprintNode>(detElement.name());
+std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+BlueprintBuilder::addLayer(const dd4hep::DetElement& detElement,
+                           const std::string& axes) {
+  auto node = std::make_shared<Acts::Experimental::LayerBlueprintNode>(
+      detElement.name());
 
   auto sensitives = resolveSensitives(detElement);
 
@@ -115,6 +117,8 @@ std::shared_ptr<LayerBlueprintNode> BlueprintBuilder::addLayer(
   node->setSurfaces(std::move(surfaces));
 
   // @TODO: Try to auto-detect what kind of layer this is
+  // @TODO: Auto-detect from `detElement` what the layer transform should be
+  //        (lookup rotation and set on layer)
 
   return node;
 }
@@ -123,20 +127,81 @@ std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
 BlueprintBuilder::addLayers(const dd4hep::DetElement& container,
                             const std::string& axes,
                             Acts::AxisDirection direction,
-                            const std::regex& layerPattern) {
+                            const std::regex& layerPattern,
+                            const Acts::ExtentEnvelope& envelope) {
+  ACTS_DEBUG("Adding layers to container " << container.name());
   using enum Acts::AxisDirection;
   using namespace Acts::UnitLiterals;
   auto node =
       std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
           container.name(), direction);
-  for (const auto& element :
-       findDetElementByNamePattern(container, layerPattern)) {
+  const auto& layerElements =
+      findDetElementByNamePattern(container, layerPattern);
+
+  if (container.children().empty()) {
+    ACTS_WARNING("Container " << container.name()
+                              << " has no children, no layers added.");
+  }
+  for (const auto& element : layerElements) {
     auto layer = addLayer(element, axes);
-    layer->setEnvelope(Acts::ExtentEnvelope{}
-                           .set(AxisZ, {-5_mm, 5_mm})
-                           .set(AxisR, {-5_mm, 5_mm}));
+    layer->setEnvelope(envelope);
 
     node->addChild(layer);
+  }
+
+  return node;
+}
+
+LayerHelper BlueprintBuilder::layerHelper() {
+  return LayerHelper(*this);
+}
+
+std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+LayerHelper::build() const {
+  const auto& logger = m_builder->logger();
+
+  if (!m_layerType.has_value()) {
+    throw std::runtime_error("Layer type not set in LayerHelper");
+  }
+
+  if (!m_axes.has_value()) {
+    throw std::runtime_error("Axes not set in LayerHelper");
+  }
+
+  if (!m_pattern.has_value()) {
+    throw std::runtime_error("Pattern not set in LayerHelper");
+  }
+
+  if (!m_container.has_value()) {
+    throw std::runtime_error("Container not set in LayerHelper");
+  }
+
+  Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
+                                    ? Acts::AxisDirection::AxisR
+                                    : Acts::AxisDirection::AxisZ;
+
+  const auto& container = m_container.value();
+  auto node =
+      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+          container.name(), axisDir);
+
+  const auto& layerElements =
+      m_builder->findDetElementByNamePattern(container, m_pattern.value());
+
+  if (container.children().empty()) {
+    ACTS_WARNING("Container " << container.name()
+                              << " has no children, no layers added.");
+  }
+  for (const auto& element : layerElements) {
+    auto layer = m_builder->addLayer(element, m_axes.value());
+    if (m_envelope.has_value()) {
+      layer->setEnvelope(m_envelope.value());
+    }
+    node->addChild(layer);
+
+    if (m_customizer) {
+      m_customizer(element, *layer);
+    }
   }
 
   return node;
