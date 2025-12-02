@@ -42,7 +42,7 @@ using GenCfg_t = MeasurementGenerator::Config;
   outTree->Branch(#bName, &bName);
 
 long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
-                    const std::string& testName, std::size_t seed,
+                    const std::string& testName, const unsigned seed,
                     TFile& outFile) {
   auto outTree = std::make_unique<TTree>(
       std::format("{:}Tree", testName).c_str(), "MonitorTree");
