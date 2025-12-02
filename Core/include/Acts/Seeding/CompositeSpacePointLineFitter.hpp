@@ -227,11 +227,15 @@ class CompositeSpacePointLineFitter {
   /// @brief Abrivation of the fit result returned by the FastStrawLineFitter
   using FastFitResult = std::optional<FastFitter_t::FitResult>;
   using FastFitResultT0 = std::optional<FastFitter_t::FitResultT0>;
-  template <CompositeSpacePointContainer Cont_t, bool fitTime>
+
+  /// @brief Combine the two return types into a single conditional
+  template <bool fitTime>
+  using DelegateRet_t =
+      std::conditional_t<fitTime, FastFitResultT0, FastFitResult>;
   /// @brief Abrivation of the standard function wrapping the call to the precision fitter
-  using FastFitDelegate_t =
-      std::function<std::conditional_t<fitTime, FastFitResultT0, FastFitResult>(
-          const Cont_t& measurements, const std::vector<int>& strawSigns)>;
+  template <CompositeSpacePointContainer Cont_t, bool fitTime>
+  using FastFitDelegate_t = std::function<DelegateRet_t<fitTime>(
+      const Cont_t& measurements, const std::vector<int>& strawSigns)>;
   /// @brief Executes a fast (pre)fit using the FastStrawLineFitter. First the parameters
   ///        (theta, y0) are fitted using the straw measurements only, if
   ///        present. Otherwise, strips measuring the bending direction are
@@ -248,14 +252,23 @@ class CompositeSpacePointLineFitter {
       const Cont_t& measurements, const Line_t& initialGuess,
       const std::vector<FitParIndex>& parsToUse,
       const FastFitDelegate_t<Cont_t, fitTime>& precDelegate) const;
+
+  /// @brief Executes the fast fit in the bending direction.
+  /// @param measurements: List of measurements to fit
+  /// @param initialGuess: Line representing the start parameters parsed by the user. Needed to determine
+  ///                      the L<->R ambiguity of the straws
+  /// @param precDelegate: Delegate function to call the fast fitter for to perform the precision fit
+  template <bool fitStraws, bool fitTime, CompositeSpacePointContainer Cont_t>
+  DelegateRet_t<fitTime> fastPrecFit(
+      const Cont_t& measurements, const Line_t& initialGuess,
+      const FastFitDelegate_t<Cont_t, fitTime>& precDelegate) const;
+
   /// @brief Executes the fast fit in the non-bending direction. In case of success, the
   ///        fitted angle is overwritten with tanAlpha for an easier combination
   ///        with the precision fit
   /// @param measurements: List of measurements to fit
-  /// @param parsToUse: List of parameters to fit (y0, theta), (x0, phi) or (y0, theta, x0, phi).
   template <CompositeSpacePointContainer Cont_t>
-  FastFitResult fastNonPrecFit(const Cont_t& measurements,
-                               const std::vector<FitParIndex>& parsToUse) const;
+  FastFitResult fastNonPrecFit(const Cont_t& measurements) const;
   /// @brief Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was
   ///        sufficiently small such that the fit is converged

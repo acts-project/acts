@@ -61,11 +61,82 @@ CompositeSpacePointLineFitter::countDoF(
 }
 
 template <bool fitStraws, bool fitTime, CompositeSpacePointContainer Cont_t>
+CompositeSpacePointLineFitter::DelegateRet_t<fitTime>
+CompositeSpacePointLineFitter::fastPrecFit(
+    const Cont_t& measurements, const Line_t& initialGuess,
+    const FastFitDelegate_t<Cont_t, fitTime>& delegate) const {
+  std::vector<int> strawSigns{};
+  if constexpr (fitStraws) {
+    strawSigns = detail::CompSpacePointAuxiliaries::strawSigns(initialGuess,
+                                                               measurements);
+  }
+  ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
+                      << (fitTime ? "with" : "no") << " time>() " << __LINE__
+                      << " - Start precision fit.");
+  auto result = delegate(measurements, strawSigns);
+
+  if constexpr (!fitStraws) {
+    ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
+                        << (fitTime ? "with" : "no") << " time>() " << __LINE__
+                        << " - Precision fit "
+                        << (result ? "succeeded" : "failed"));
+
+    return result;
+  }
+  if (result) {
+    ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
+                        << (fitTime ? "with" : "no") << " time>() " << __LINE__
+                        << " - Precision fit converged. " << (*result));
+
+    if (result->chi2 / static_cast<double>(result->nDoF) <
+        m_cfg.badFastChi2SignSwap) {
+      return result;
+    }
+  }
+
+  ACTS_DEBUG(
+      __func__
+      << " <fit " << (fitStraws ? "straws" : "strips") << ", "
+      << (fitTime ? "with" : "no") << " time>() " << __LINE__
+      << " - The fit result is of poor quality attempt with L<->R swapping");
+  // Swap signs
+
+  for (int& s : strawSigns) {
+    s = -s;
+  }
+  // Retry & check whether the chi2 is better
+  auto swappedPrecResult = delegate(measurements, strawSigns);
+  if (!swappedPrecResult) {
+    ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
+                        << (fitTime ? "with" : "no") << " time>() " << __LINE__
+                        << " - The fit did not improve");
+
+    return result;
+  }
+  if (!result || swappedPrecResult->chi2 < result->chi2) {
+    ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
+                        << (fitTime ? "with" : "no") << " time>() " << __LINE__
+                        << " - Swapped fit is of better quality "
+                        << (*swappedPrecResult));
+    if (result) {
+      swappedPrecResult->nIter += result->nIter;
+    }
+    return swappedPrecResult;
+  } else {
+    result->nIter += swappedPrecResult->nIter;
+    ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
+                        << (fitTime ? "with" : "no") << " time>() " << __LINE__
+                        << " - Fit did not improve " << (*swappedPrecResult));
+  }
+  return result;
+}
+
+template <bool fitStraws, bool fitTime, CompositeSpacePointContainer Cont_t>
 CompositeSpacePointLineFitter::FitParameters
 CompositeSpacePointLineFitter::fastFit(
     const Cont_t& measurements, const Line_t& initialGuess,
     const std::vector<FitParIndex>& parsToUse,
-    const FastFitDelegate_t<Cont_t, fitTime>& precFit) const {
+    const FastFitDelegate_t<Cont_t, fitTime>& precFitDelegate) const {
   FitParameters result{};
 
   using enum FitParIndex;
@@ -73,59 +144,24 @@ CompositeSpacePointLineFitter::fastFit(
   static_assert(fitTime == false || (fitStraws == true && fitTime == true),
                 "Initial t0 can only be fitted with straws");
 
+  const bool doPrecFit = std::ranges::any_of(
+      parsToUse,
+      [](const FitParIndex idx) { return idx == theta || idx == y0; });
+  const bool doNonPrecFit = std::ranges::any_of(
+      parsToUse, [](const FitParIndex idx) { return idx == phi || idx == x0; });
+  const Vector& preFitDir{initialGuess.direction()};
+  double tanAlpha = preFitDir.x() / preFitDir.z();
+  double tanBeta = preFitDir.y() / preFitDir.z();
+
   using precResult_t = FastFitDelegate_t<Cont_t, fitTime>::result_type;
-  precResult_t precResult{};
-  /// Perform the fit in the bending direction
-  if (std::ranges::any_of(parsToUse, [](const FitParIndex idx) {
-        return idx == theta || idx == y0;
-      })) {
-    std::vector<int> strawSigns{};
-    if constexpr (fitStraws) {
-      strawSigns = detail::CompSpacePointAuxiliaries::strawSigns(initialGuess,
-                                                                 measurements);
-    }
-    ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
-                        << (fitTime ? "with" : "no") << " time>() " << __LINE__
-                        << " - Start precision fit.");
-    precResult = precFit(measurements, strawSigns);
-    if constexpr (fitStraws) {
-      if (precResult != std::nullopt &&
-          precResult->chi2 / static_cast<double>(precResult->nDoF) >
-              m_cfg.badFastChi2SignSwap) {
-        // Swap signs
-        ACTS_DEBUG(__func__
-                   << " <fit " << (fitStraws ? "straws" : "strips") << ", "
-                   << (fitTime ? "with" : "no") << " time>() " << __LINE__
-                   << " - The fit result is of poor quality " << (*precResult)
-                   << " attempt with L<->R swapping");
-        for (int& s : strawSigns) {
-          s = -s;
-        }
-        // Retry & check whether the chi2 is better
-        precResult_t swappedPrecResult = precFit(measurements, strawSigns);
-        if (swappedPrecResult && swappedPrecResult->chi2 < precResult->chi2) {
-          ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips")
-                              << ", " << (fitTime ? "with" : "no")
-                              << " time>() " << __LINE__
-                              << " - Swapped fit is of better quality "
-                              << (*swappedPrecResult));
-          swappedPrecResult->nIter += precResult->nIter;
-          precResult = std::move(swappedPrecResult);
-        } else if (swappedPrecResult) {
-          precResult->nIter += swappedPrecResult->nIter;
-          ACTS_DEBUG(__func__
-                     << " <fit " << (fitStraws ? "straws" : "strips") << ", "
-                     << (fitTime ? "with" : "no") << " time>() " << __LINE__
-                     << " - Fit did not improve " << (*swappedPrecResult));
-        }
-      }
-    }
-    if (precResult == std::nullopt) {
-      ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips")
-                          << ", " << (fitTime ? "with" : "no") << " time>() "
-                          << __LINE__ << " - Precision fit failed.");
-      return result;
-    }
+  precResult_t precResult =
+      doPrecFit ? fastPrecFit<fitStraws, fitTime>(measurements, initialGuess,
+                                                  precFitDelegate)
+                : std::nullopt;
+
+  if (doPrecFit && !precResult) {
+    return result;
+  } else if (precResult) {
     if constexpr (fitTime) {
       result.covariance(toUnderlying(t0), toUnderlying(t0)) =
           Acts::square(precResult->dT0);
@@ -154,22 +190,19 @@ CompositeSpacePointLineFitter::fastFit(
     result.nIter = precResult->nIter;
     result.chi2 = precResult->chi2;
     result.converged = true;
+
+    auto firstPrecMeas = std::ranges::find_if(measurements, [](const auto& m) {
+      return (fitStraws && m->isStraw()) || (!fitStraws && m->measuresLoc1());
+    });
+    assert(firstPrecMeas != measurements.end());
+
+    const Vector postFitDir = CompositeSpacePointLineSeeder::makeDirection(
+        **firstPrecMeas, precResult->theta);
+    tanBeta = postFitDir.y() / postFitDir.z();
   }
-
-  /// Find the first precision measurement
-  auto firstPrecMeas = std::ranges::find_if(measurements, [](const auto& m) {
-    return (fitStraws && m->isStraw()) || (!fitStraws && m->measuresLoc1());
-  });
-  assert(!precResult || firstPrecMeas != measurements.end());
-
-  Vector postFitDir = precResult ? CompositeSpacePointLineSeeder::makeDirection(
-                                       **firstPrecMeas, precResult->theta)
-                                 : initialGuess.direction();
-  double tanAlpha = initialGuess.direction().x() / initialGuess.direction().z();
-  const double tanBeta = postFitDir.y() / postFitDir.z();
-
   // Try to perform a fast fit in non-precision direction
-  const FastFitResult nonPrecResult = fastNonPrecFit(measurements, parsToUse);
+  const FastFitResult nonPrecResult =
+      doNonPrecFit ? fastNonPrecFit(measurements) : std::nullopt;
 
   if (nonPrecResult) {
     tanAlpha = nonPrecResult->theta;
@@ -180,7 +213,7 @@ CompositeSpacePointLineFitter::fastFit(
     result.nIter += nonPrecResult->nIter;
   }
 
-  postFitDir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
+  const Vector postFitDir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
   result.parameters[toUnderlying(theta)] = VectorHelpers::theta(postFitDir);
   result.parameters[toUnderlying(phi)] = VectorHelpers::phi(postFitDir);
 
@@ -189,17 +222,9 @@ CompositeSpacePointLineFitter::fastFit(
 template <CompositeSpacePointContainer Cont_t>
 CompositeSpacePointLineFitter::FastFitResult
 CompositeSpacePointLineFitter::fastNonPrecFit(
-    const Cont_t& measurements,
-    const std::vector<FitParIndex>& parsToUse) const {
+    const Cont_t& measurements) const {
   using enum FitParIndex;
 
-  if (std::ranges::none_of(parsToUse, [](const FitParIndex idx) {
-        return idx == phi || idx == x0;
-      })) {
-    ACTS_VERBOSE(__func__ << "() " << __LINE__
-                          << " - Do not fit the non-precision direction.");
-    return std::nullopt;
-  }
   auto firstNonPrecMeas = std::ranges::find_if(
       measurements, [](const auto& m) { return m->measuresLoc0(); });
   if (firstNonPrecMeas == measurements.end()) {
@@ -209,21 +234,25 @@ CompositeSpacePointLineFitter::fastNonPrecFit(
   }
   ACTS_DEBUG(__func__ << "() " << __LINE__ << " Start non precision fit.");
 
-  FastFitResult nonPrecResult = m_fastFitter.fit(
+  FastFitResult result = m_fastFitter.fit(
       measurements, detail::CompSpacePointAuxiliaries::ResidualIdx::nonBending);
-  if (!nonPrecResult) {
+  if (!result) {
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " Non precision fit failed.");
-    return nonPrecResult;
+    return result;
+  }
+  if (!withinRange(result->y0, FitParIndex::x0)) {
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << " Intercept is out of bounds.");
+    return std::nullopt;
   }
   const auto& refHit{**firstNonPrecMeas};
   const Vector& eY{!refHit.measuresLoc1() ? refHit.toNextSensor()
                                           : refHit.sensorDirection()};
   const Vector& eZ{refHit.planeNormal()};
-  const double sinPhi = std::sin(nonPrecResult->theta);
+  const double sinPhi = std::sin(result->theta);
   const auto dir = copySign<Vector, double>(
-      sinPhi * eY + std::cos(nonPrecResult->theta) * eZ, sinPhi);
-  nonPrecResult->theta = dir.x() / dir.z();
-  return nonPrecResult;
+      sinPhi * eY + std::cos(result->theta) * eZ, sinPhi);
+  result->theta = dir.x() / dir.z();
+  return result;
 }
 
 template <CompositeSpacePointContainer Cont_t,
