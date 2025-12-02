@@ -101,6 +101,41 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   m_candidates.resize(std::distance(m_candidates.begin(), firstInvalid),
                       NavigationTarget::None());
 
+  /// If the navigation state contain free surfaces append the ones which are
+  /// between the farthest & closest portals
+  if (!m_freeSurfaces.empty()) {
+    bool added{false};
+    /// First find the shortest & longest portal
+    double closestPath{std::numeric_limits<double>::max()};
+    double farthestPath{-std::numeric_limits<double>::max()};
+    for (const auto& candidate : m_candidates) {
+      if (!candidate.isPortalTarget()) {
+        continue;
+      }
+      closestPath = std::min(candidate.pathLength(), closestPath);
+      farthestPath = std::max(candidate.pathLength(), farthestPath);
+    }
+    std::ranges::for_each(m_freeSurfaces, [&](const Surface* freeSurf) {
+      auto [intersection, intersectionIndex] =
+          freeSurf
+              ->intersect(state.options.geoContext, position, direction,
+                          BoundaryTolerance::Infinite())
+              .closestWithIndex();
+      if (intersection.pathLength() < closestPath ||
+          intersection.pathLength() > farthestPath) {
+        return;
+      }
+      m_candidates.emplace_back(intersection, intersectionIndex, *freeSurf,
+                                BoundaryTolerance::Infinite());
+      added = true;
+    });
+
+    if (added) {
+      // Resort the candidates again
+      std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
+    }
+  }
+
   m_currentIndex = 0;
   if (m_candidates.empty()) {
     return false;
@@ -142,6 +177,7 @@ bool NavigationStream::update(const GeometryContext& gctx,
 void NavigationStream::reset() {
   m_candidates.clear();
   m_currentIndex = 0;
+  m_freeSurfaces = {};
 }
 
 void NavigationStream::addSurfaceCandidate(
