@@ -65,8 +65,14 @@ class FitTestSpacePoint {
   FitTestSpacePoint(const Vector3& pos, const Vector3& wire,
                     const double driftR, const double driftRUncert,
                     const std::optional<double> twinUncert = std::nullopt)
-      : FitTestSpacePoint{pos, driftR, driftRUncert, twinUncert} {
-    m_sensorDir = wire;
+      : m_position{pos},
+        m_sensorDir{wire},
+        m_driftR{driftR},
+        m_measLoc0{twinUncert != std::nullopt} {
+    using enum ResidualIdx;
+    m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
+    m_covariance[toUnderlying(nonBending)] =
+        Acts::square(twinUncert.value_or(0.));
   }
 
   /// @brief Constructor for spatial strip measurements

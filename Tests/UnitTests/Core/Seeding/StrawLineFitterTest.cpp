@@ -14,7 +14,6 @@
 #include <iostream>
 #include <random>
 #include <ranges>
-#include <set>
 #include <span>
 #include <thread>
 
@@ -24,22 +23,7 @@
 
 #include "StrawHitGeneratorHelper.hpp"
 
-using namespace Acts;
-using namespace Acts::Experimental;
-using namespace Acts::Experimental::detail;
-using namespace Acts::UnitLiterals;
-using namespace Acts::detail::LineHelper;
-using namespace Acts::PlanarHelper;
-using namespace Acts::VectorHelpers;
-
 using TimePoint_t = std::chrono::system_clock::time_point;
-using RandomEngine = std::mt19937;
-using uniform = std::uniform_real_distribution<double>;
-using normal_t = std::normal_distribution<double>;
-using Line_t = CompSpacePointAuxiliaries::Line_t;
-using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
-using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
-using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
@@ -51,100 +35,6 @@ ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 namespace ActsTests {
 
 using GenCfg_t = MeasurementGenerator::Config;
-
-BOOST_AUTO_TEST_SUITE(SeedingSuite)
-
-BOOST_AUTO_TEST_CASE(SeedTangents) {
-  RandomEngine engine{117};
-  constexpr double tolerance = 1.e-3;
-  return;
-
-  using Seeder = CompositeSpacePointLineSeeder;
-  using SeedAux = CompSpacePointAuxiliaries;
-  using enum Seeder::TangentAmbi;
-  GenCfg_t genCfg{};
-  genCfg.createStrips = false;
-  genCfg.createStraws = true;
-  genCfg.smearRadius = false;
-
-  for (std::size_t evt = 0; evt < 100; ++evt) {
-    const auto line = generateLine(engine, logger());
-    auto testTubes =
-        MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
-    const double lineTanBeta = line.direction().y() / line.direction().z();
-    const double lineY0 = line.position().y();
-    for (std::size_t m1 = testTubes.size() - 1; m1 > testTubes.size() / 2;
-         --m1) {
-      for (std::size_t m2 = 0; m2 < m1; ++m2) {
-        const auto& bottomTube = *testTubes[m2];
-        const auto& topTube = *testTubes[m1];
-        const int signTop = SeedAux::strawSign(line, topTube);
-        const int signBot = SeedAux::strawSign(line, bottomTube);
-        const auto trueAmbi = Seeder::encodeAmbiguity(signTop, signBot);
-
-        ACTS_DEBUG(__func__ << "() " << __LINE__ << " - "
-                            << std::format("bottom tube @ {:}, r: {:.3f}({:})",
-                                           toString(bottomTube.localPosition()),
-                                           (signBot * bottomTube.driftRadius()),
-                                           signBot > 0 ? "R" : "L")
-                            << ", "
-                            << std::format("top tube @ {:}, r: {:.3f} ({:})",
-                                           toString(topTube.localPosition()),
-                                           (signTop * topTube.driftRadius()),
-                                           signTop > 0 ? "R" : "L"));
-
-        bool seenTruePars{false};
-        std::set<std::pair<double, double>> fourSeedPars{};
-        for (const auto ambi : {LL, RL, LR, RR}) {
-          const auto pars =
-              Seeder::constructTangentLine(topTube, bottomTube, ambi);
-
-          const bool isTruePars =
-              Acts::abs(std::tan(pars.theta) - lineTanBeta) < tolerance &&
-              Acts::abs(lineY0 - pars.y0) < tolerance;
-          seenTruePars |= isTruePars;
-          ACTS_VERBOSE(__func__
-                       << "() " << __LINE__ << " - Test ambiguity "
-                       << CompositeSpacePointLineSeeder::toString(ambi)
-                       << " -> "
-                       << std::format("theta: {:.3f}, ", pars.theta / 1._degree)
-                       << std::format("tanTheta: {:.3f}, ",
-                                      std::tan(pars.theta))
-                       << std::format("y0: {:.3f}", pars.y0)
-                       << (!isTruePars ? (ambi == trueAmbi ? " xxxxxx" : "")
-                                       : " <-------"));
-          const Vector3 seedPos = pars.y0 * Vector3::UnitY();
-          const Vector3 seedDir =
-              makeDirectionFromAxisTangents(0., std::tan(pars.theta));
-
-          const double chi2Top = SeedAux::chi2Term(seedPos, seedDir, topTube);
-          const double chi2Bot =
-              SeedAux::chi2Term(seedPos, seedDir, bottomTube);
-          ACTS_VERBOSE(__func__ << "() " << __LINE__
-                                << " - Resulting chi2 top: " << chi2Top
-                                << ", bottom: " << chi2Bot);
-          BOOST_CHECK_LE(chi2Top, 1.e-17);
-          BOOST_CHECK_LE(chi2Bot, 1.e-17);
-          BOOST_CHECK_EQUAL(
-              fourSeedPars.insert(std::make_pair(pars.theta, pars.y0)).second,
-              true);
-        }
-        BOOST_CHECK_EQUAL(seenTruePars, true);
-        BOOST_CHECK_EQUAL(fourSeedPars.size(), 4);
-        const auto seedPars =
-            Seeder::constructTangentLine(topTube, bottomTube, trueAmbi);
-        /// Construct line parameters
-        ACTS_DEBUG(__func__
-                   << "() " << __LINE__ << " - Line tan theta: " << lineTanBeta
-                   << ", reconstructed theta: " << std::tan(seedPars.theta)
-                   << ", line y0: " << lineY0
-                   << ", reconstructed y0: " << seedPars.y0);
-        BOOST_CHECK_CLOSE(std::tan(seedPars.theta), lineTanBeta, tolerance);
-        BOOST_CHECK_CLOSE(seedPars.y0, lineY0, tolerance);
-      }
-    }
-  }
-}
 
 #define DECLARE_BRANCH(dType, bName) \
   dType bName{};                     \
@@ -289,6 +179,8 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
   return diff;
 }
 #undef DECLARE_BRANCH
+
+BOOST_AUTO_TEST_SUITE(StrawLineFitTestSuite)
 
 BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   using namespace std::chrono_literals;
