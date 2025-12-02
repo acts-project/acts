@@ -24,10 +24,6 @@
 #include <detray/detectors/default_metadata.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
-namespace Acts::Experimental {
-class DetectorVolume;
-}  // namespace Acts::Experimental
-
 namespace ActsPlugins {
 
 using DetrayMetaData = detray::default_metadata<detray::array<double>>;
@@ -41,15 +37,7 @@ namespace DetrayConversionUtils {
 /// This object is used to synchronize link information between the
 /// different converters (geometry, material, surface grids)
 struct Cache {
-  /// Explicit constructor with detector volumes
-  ///
-  /// @param detectorVolumes the number of detector volumes
-  explicit Cache(
-      const std::vector<const Acts::Experimental::DetectorVolume*>& dVolumes)
-      : detectorVolumes(dVolumes) {}
 
-  /// The volumes of the detector for index lookup
-  std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes;
   /// This is a map to pass on volume link information
   std::map<Acts::GeometryIdentifier, unsigned long> volumeLinks;
   /// This is a multimap to pass volume local surface link information
@@ -58,20 +46,6 @@ struct Cache {
   /// These are volume local, hence indexed per volumes
   std::map<std::size_t, std::multimap<Acts::GeometryIdentifier, unsigned long>>
       localSurfaceLinks;
-
-  /// Find the position of the volume to point to
-  ///
-  /// @param volume the volume to find
-  ///
-  /// @note throws exception if volume is not found
-  std::size_t volumeIndex(
-      const Acts::Experimental::DetectorVolume* volume) const {
-    if (auto candidate = std::ranges::find(detectorVolumes, volume);
-        candidate != detectorVolumes.end()) {
-      return std::distance(detectorVolumes.begin(), candidate);
-    }
-    throw std::invalid_argument("Volume not found in the cache");
-  }
 };
 
 /// Convert the binning option
