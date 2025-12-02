@@ -70,7 +70,7 @@ std::optional<dd4hep::DetElement> BlueprintBuilder::findDetElementByName(
   return findDetElementByName(world(), name);
 }
 
-std::vector<dd4hep::DetElement> findDetElementByNamePattern(
+std::vector<dd4hep::DetElement> BlueprintBuilder::findDetElementByNamePattern(
     const dd4hep::DetElement& parent, const std::regex& pattern) {
   std::vector<dd4hep::DetElement> matches;
 
