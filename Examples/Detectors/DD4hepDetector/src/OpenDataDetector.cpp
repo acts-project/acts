@@ -193,6 +193,7 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
     auto envelope =
         ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
 
+    // @TODO: Make it configurable if empty result is received
     auto barrel =
         builder.layerHelper()
             .barrel()
