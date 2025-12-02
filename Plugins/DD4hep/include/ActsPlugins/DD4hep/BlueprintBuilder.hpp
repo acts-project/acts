@@ -66,7 +66,8 @@ class BlueprintBuilder {
       const dd4hep::DetElement& detElement, const std::string& axes) const;
 
   std::shared_ptr<Acts::Experimental::LayerBlueprintNode> addLayer(
-      const dd4hep::DetElement& detElement, const std::string& axes);
+      const dd4hep::DetElement& detElement, const std::string& axes,
+      std::optional<std::string> layerAxes = std::nullopt);
 
   [[deprecated("Consider using .layerHelper() to produce the layers")]]
   std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode> addLayers(
@@ -120,6 +121,11 @@ class LayerHelper {
     return *this;
   }
 
+  LayerHelper& setLayerAxes(const std::string& layerAxes) {
+    m_layerAxes = layerAxes;
+    return *this;
+  }
+
   LayerHelper& setPattern(const std::string& pattern) {
     m_pattern = std::regex{pattern};
     return *this;
@@ -156,6 +162,7 @@ class LayerHelper {
   ActsPlugins::DD4hep::BlueprintBuilder* m_builder;
   std::optional<LayerType> m_layerType;
   std::optional<std::string> m_axes;
+  std::optional<std::string> m_layerAxes;
   std::optional<std::regex> m_pattern;
   std::optional<dd4hep::DetElement> m_container;
   std::optional<Acts::ExtentEnvelope> m_envelope;

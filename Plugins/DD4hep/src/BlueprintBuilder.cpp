@@ -8,11 +8,13 @@
 
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
@@ -98,13 +100,53 @@ std::vector<dd4hep::DetElement> BlueprintBuilder::resolveSensitives(
   return sensitives;
 }
 
+namespace {
+Acts::Transform3 convertTGeoTransform(const TGeoShape& shape,
+                                      const TGeoMatrix& transform,
+                                      const std::string& axes,
+                                      double lengthScale) {
+  // This is somewhat duplicated from the TGeoDetectorElement constructor
+  //
+  const Double_t* translation = transform.GetTranslation();
+  const Double_t* rotation = transform.GetRotationMatrix();
+
+  auto [cBounds, cTransform, cThickness] =
+      ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
+          shape, rotation, translation, axes, lengthScale);
+  if (cBounds != nullptr) {
+    return cTransform;
+  }
+
+  auto [dBounds, dTransform, dThickness] = TGeoSurfaceConverter::discComponents(
+      shape, rotation, translation, axes, lengthScale);
+  if (dBounds != nullptr) {
+    return dTransform;
+  }
+
+  auto [pBounds, pTransform, pThickness] =
+      TGeoSurfaceConverter::planeComponents(shape, rotation, translation, axes,
+                                            lengthScale);
+  if (pBounds != nullptr) {
+    return pTransform;
+  }
+
+  throw std::runtime_error(
+      "Could not extract transform from TGeoShape of type " +
+      std::string(shape.ClassName()));
+}
+
+}  // namespace
+
 std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
 BlueprintBuilder::addLayer(const dd4hep::DetElement& detElement,
-                           const std::string& axes) {
+                           const std::string& axes,
+                           std::optional<std::string> layerAxes) {
+  ACTS_DEBUG("Adding layer from element: " << detElement.name());
   auto node = std::make_shared<Acts::Experimental::LayerBlueprintNode>(
       detElement.name());
 
   auto sensitives = resolveSensitives(detElement);
+  ACTS_DEBUG("  Found " << sensitives.size() << " sensitive elements.");
 
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   surfaces.reserve(sensitives.size());
@@ -116,9 +158,19 @@ BlueprintBuilder::addLayer(const dd4hep::DetElement& detElement,
 
   node->setSurfaces(std::move(surfaces));
 
+  if (layerAxes.has_value()) {
+    ACTS_DEBUG("Finding layer transform automatically using layer axes: "
+               << layerAxes.value());
+    Acts::Transform3 layerTransform = convertTGeoTransform(
+        *detElement.placement().ptr()->GetVolume()->GetShape(),
+        detElement.nominal().worldTransformation(), layerAxes.value(),
+        m_cfg.lengthScale);
+
+    ACTS_VERBOSE(" -> Layer transform:\n" << layerTransform.matrix());
+    node->setTransform(layerTransform);
+  }
+
   // @TODO: Try to auto-detect what kind of layer this is
-  // @TODO: Auto-detect from `detElement` what the layer transform should be
-  //        (lookup rotation and set on layer)
 
   return node;
 }
@@ -193,7 +245,7 @@ LayerHelper::build() const {
                               << " has no children, no layers added.");
   }
   for (const auto& element : layerElements) {
-    auto layer = m_builder->addLayer(element, m_axes.value());
+    auto layer = m_builder->addLayer(element, m_axes.value(), m_layerAxes);
     if (m_envelope.has_value()) {
       layer->setEnvelope(m_envelope.value());
     }
