@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   /// @param genCfg: Configuration object to generate the measurements
   /// @param seed: Seed number for the random number generator
   auto launchTest = [&](const std::string& testName, const GenCfg_t& genCfg,
-                        std::size_t seed) {
+                        const unsigned seed) {
     timings.emplace_back(
         "Fast" + testName, std::async(std::launch::async, [&]() {
           return runFitTest(fastCfg, genCfg, "Fast" + testName, seed, *outFile);
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
         }));
     std::this_thread::sleep_for(100ms);
   };
-  if (false) {
+  {
     GenCfg_t genCfg{};
     genCfg.twinStraw = false;
     genCfg.createStrips = false;
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StrawAndTwinTest", genCfg, 1503);
   }
   // 1D straws + single strip measurements
-  if (false) {
+  {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -267,8 +267,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StrawAndStripTest", genCfg, 1701);
   }
   // 1D straws + 2D strip measurements
-  if (false) {
-    RandomEngine engine{1404};
+  {
     GenCfg_t genCfg{};
 
     genCfg.createStrips = true;
@@ -281,7 +280,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StrawAndStrip2DTest", genCfg, 1404);
   }
   // Strip only
-  if (false) {
+  {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -293,7 +292,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("StripOnlyTest", genCfg, 2070);
   }
   // 2D Strip only
-  if (false) {
+  {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
@@ -305,7 +304,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     launchTest("Strip2DOnlyTest", genCfg, 2225);
   }
   // Strip stereo test
-  if (false) {
+  {
     GenCfg_t genCfg{};
     genCfg.createStrips = true;
     genCfg.twinStraw = false;
