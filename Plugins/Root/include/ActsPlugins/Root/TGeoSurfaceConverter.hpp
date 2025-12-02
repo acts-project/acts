@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #include <cmath>
 #include <memory>
@@ -98,11 +99,11 @@ struct TGeoSurfaceConverter {
   /// * it will return any multiple of 360.0 to 2pi
   /// @param degree The input in degree
   /// @return angle in radians
-  static double toRadian(double degree) {
+  static double toRadian(double deg) {
     constexpr double eps = 1e-6;
     // Check if degree is a non-zero multiple of 360. If it is, return 2pi
-    double r = std::fmod(degree, 360.0);
-    if (std::fabs(r) < eps && std::fabs(degree) > eps)
+    double r = std::fmod(deg, 360.0);
+    if (std::fabs(r) < eps && std::fabs(deg) > eps)
       return 2.0 * std::numbers::pi;
 
     // Reduced angle
@@ -113,7 +114,8 @@ struct TGeoSurfaceConverter {
     else if (d >= 180.0)
       d -= 360.0;
 
-    return d / 180.0 * std::numbers::pi;
+    // Convert to rads
+    return d * Acts::Units::degree;
   }
 };
 
