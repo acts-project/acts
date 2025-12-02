@@ -708,13 +708,20 @@ class Navigator {
         updateFreeInterSections(state, position, direction);
       } else if (state.navSurfaceIsFree) {
         ++state.freeCandidateIndex.value();
+        ACTS_VERBOSE(volInfo(state) << " Increment free surface index to "
+                                    << state.freeCandidateIndex.value() << "/"
+                                    << state.freeCandidates.size());
       }
       if (!state.navSurfaceIndex.has_value()) {
         // First time, resolve the surfaces
+        ACTS_VERBOSE(volInfo(state) << " Initialize surface candidates.");
         resolveSurfaces(state, position, direction);
         state.navSurfaceIndex = 0;
       } else if (!state.navSurfaceIsFree) {
         ++state.navSurfaceIndex.value();
+        ACTS_VERBOSE(volInfo(state) << " Increment navSurface index to "
+                                    << state.navSurfaceIndex.value() << "/"
+                                    << state.navSurfaces.size());
       }
       constexpr auto maxIdx = std::numeric_limits<std::size_t>::max();
       const auto navIdx = state.navSurfaceIndex.value_or(maxIdx);
@@ -800,26 +807,34 @@ class Navigator {
 
     if (!state.navCandidateIndex.has_value()) {
       // first time, resolve the candidates
+      ACTS_VERBOSE(volInfo(state) << " Initialize the candidates");
       resolveCandidates(state, position, direction);
       state.navCandidateIndex = 0;
     } else if (!state.navSurfaceIsFree) {
       ++state.navCandidateIndex.value();
+      ACTS_VERBOSE(volInfo(state) << " Increment the navSurfaceIndex to "
+                                  << state.navCandidateIndex.value() << "/"
+                                  << state.navCandidates.size() << ".");
     }
     constexpr auto maxIdx = std::numeric_limits<std::size_t>::max();
-    const auto navIdx = state.navSurfaceIndex.value_or(maxIdx);
+    const auto navIdx = state.navCandidateIndex.value_or(maxIdx);
     const auto freeIdx = state.freeCandidateIndex.value_or(maxIdx);
+    ACTS_VERBOSE(volInfo(state)
+                 << " Geometry surface candidate " << navIdx << "/"
+                 << state.navCandidates.size() << ", free surface candidte "
+                 << freeIdx << "/" << state.freeCandidates.size());
     /// Check whether free surfaces and geometry surfaces are available at the
     /// same time If the free surface is closer than the geometry surface
     /// return the free
     state.navSurfaceIsFree =
         freeIdx < state.freeCandidates.size() &&
-        (navIdx >= state.navSurfaces.size() ||
-         state.navSurfaces.at(navIdx).pathLength() >
+        (navIdx >= state.navCandidates.size() ||
+         state.navCandidates.at(navIdx).pathLength() >
              state.freeCandidates.at(freeIdx).pathLength());
 
-    if (!state.navSurfaceIsFree && navIdx < state.navSurfaces.size()) {
+    if (!state.navSurfaceIsFree && navIdx < state.navCandidates.size()) {
       ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
-      return state.navSurface();
+      return state.navCandidate();
     }
     if (state.navSurfaceIsFree) {
       ACTS_VERBOSE(volInfo(state) << "Target set to next free surface.");
