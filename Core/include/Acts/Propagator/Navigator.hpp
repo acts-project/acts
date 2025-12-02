@@ -207,9 +207,14 @@ class Navigator {
     // Navigation on free surface level. Free surfaces are traversed
     NavigationCandidates freeCandidates = {};
     /// the current free surface index of the navigation state
-    std::optional<std::size_t> freeSurfaceIndex{std::nullopt};
-
+    std::optional<std::size_t> freeCandidateIndex{std::nullopt};
+    /// Switch toggling whether the free or the navigation surface shall
+    /// be returned by navSurface
+    bool navSurfaceIsFree{false};
     NavigationTarget& navSurface() {
+      if (navSurfaceIsFree) {
+        return freeCandidates.at(freeCandidateIndex.value());
+      }
       return navSurfaces.at(navSurfaceIndex.value());
     }
 
@@ -258,6 +263,7 @@ class Navigator {
     void resetAfterLayerSwitch() {
       navSurfaces.clear();
       navSurfaceIndex.reset();
+      freeCandidateIndex.reset();
     }
 
     /// Reset navigation state after switching volumes
@@ -270,9 +276,6 @@ class Navigator {
       navBoundaryIndex.reset();
       navCandidates.clear();
       navCandidateIndex.reset();
-      freeCandidates.clear();
-      freeSurfaceIndex.reset();
-
       currentLayer = nullptr;
     }
 
@@ -280,6 +283,7 @@ class Navigator {
     void reset() {
       resetAfterVolumeSwitch();
 
+      freeCandidates.clear();
       currentVolume = nullptr;
       currentSurface = nullptr;
 
@@ -404,7 +408,7 @@ class Navigator {
     state.startSurface = state.options.startSurface;
     state.targetSurface = state.options.targetSurface;
 
-    /// If the state has 
+    /// If the state has
     if (!state.options.freeSurfaces.empty()) {
       std::ranges::for_each(
           state.options.freeSurfaces, [&](const Surface* freeSurf) {
@@ -413,13 +417,13 @@ class Navigator {
                     ->intersect(state.options.geoContext, position, direction,
                                 BoundaryTolerance::Infinite())
                     .closestWithIndex();
-            state.freeSurfaces.emplace_back(intersection, intersectionIndex,
-                                           *freeSurf,
-                                           BoundaryTolerance::Infinite());
+            state.freeCandidates.emplace_back(intersection, intersectionIndex,
+                                              *freeSurf,
+                                              BoundaryTolerance::Infinite());
           });
       // Sort the candidates by path length
-  std::ranges::sort(state.freeSurfaces, NavigationTarget::pathLengthOrder);
-
+      std::ranges::sort(state.freeCandidates,
+                        NavigationTarget::pathLengthOrder);
     }
 
     // @TODO: Implement fast initialization with Gen3. This requires the volume lookup to work properly
@@ -698,21 +702,42 @@ class Navigator {
                                      const Vector3& direction) const {
     // Try targeting the surfaces - then layers - then boundaries
     if (state.navigationStage == Stage::surfaceTarget) {
+      if (!state.freeCandidates.empty() &&
+          !state.freeCandidateIndex.has_value()) {
+        updateFreeInterSections(state, position, direction);
+      } else if (state.navSurfaceIsFree) {
+        ++state.freeCandidateIndex.value();
+      }
       if (!state.navSurfaceIndex.has_value()) {
         // First time, resolve the surfaces
         resolveSurfaces(state, position, direction);
         state.navSurfaceIndex = 0;
-      } else {
+      } else if (!state.navSurfaceIsFree) {
         ++state.navSurfaceIndex.value();
       }
-      if (state.navSurfaceIndex.value() < state.navSurfaces.size()) {
+      constexpr auto maxIdx = std::numeric_limits<std::size_t>::max();
+      const auto navIdx = state.navSurfaceIndex.value_or(maxIdx);
+      const auto freeIdx = state.freeCandidateIndex.value_or(maxIdx);
+      /// Check whether free surfaces and geometry surfaces are available at the
+      /// same time If the free surface is closer than the geometry surface
+      /// return the free
+      state.navSurfaceIsFree =
+          freeIdx < state.freeCandidates.size() &&
+          (navIdx >= state.navSurfaces.size() ||
+           state.navSurfaces.at(navIdx).pathLength() >
+               state.freeCandidates.at(freeIdx).pathLength());
+
+      if (!state.navSurfaceIsFree && navIdx < state.navSurfaces.size()) {
         ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
         return state.navSurface();
-      } else {
-        // This was the last surface, switch to layers
-        ACTS_VERBOSE(volInfo(state) << "Target layers.");
-        state.navigationStage = Stage::layerTarget;
       }
+      if (state.navSurfaceIsFree) {
+        ACTS_VERBOSE(volInfo(state) << "Target set to next free surface.");
+        return state.navSurface();
+      }
+      // This was the last surface, switch to layers
+      ACTS_VERBOSE(volInfo(state) << "Target layers.");
+      state.navigationStage = Stage::layerTarget;
     }
 
     if (state.navigationStage == Stage::layerTarget) {
@@ -875,6 +900,29 @@ class Navigator {
     }
   }
 
+  void updateFreeInterSections(State& state, const Vector3& position,
+                               const Vector3& direction) const {
+    std::ranges::for_each(state.freeCandidates, [&](NavigationTarget& target) {
+      if (target.pathLength() < 0.) {
+        return;
+      }
+
+      auto [intersection, intersectionIndex] =
+          target.surface()
+              .intersect(state.options.geoContext, position, direction,
+                         BoundaryTolerance::Infinite())
+              .closestWithIndex();
+      target =
+          NavigationTarget{intersection, intersectionIndex, target.surface(),
+                           BoundaryTolerance::Infinite()};
+    });
+    auto firstFree = std::ranges::find_if(state.freeCandidates,
+                                          [](const NavigationTarget& target) {
+                                            return target.pathLength() >= 0.;
+                                          });
+    state.freeCandidateIndex =
+        std::disance(state.freeCandidates.begin(), firstFree);
+  }
   /// @brief Resolve compatible surfaces
   ///
   /// This function resolves the compatible surfaces for the navigation.
