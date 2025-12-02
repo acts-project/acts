@@ -28,7 +28,7 @@ using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 1;
-constexpr std::size_t nThreads = 1;
+constexpr long int nThreads = 1;
 std::mutex writeMutex{};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
