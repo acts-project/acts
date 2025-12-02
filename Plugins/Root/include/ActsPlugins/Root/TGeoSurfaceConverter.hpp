@@ -97,7 +97,7 @@ struct TGeoSurfaceConverter {
   /// Translate TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)
   /// * it will return any multiple of 360.0 to 2pi
-  /// @param degree The input in degree
+  /// @param deg The input in degree
   /// @return angle in radians
   static double toRadian(double deg) {
     constexpr double eps = 1e-6;
