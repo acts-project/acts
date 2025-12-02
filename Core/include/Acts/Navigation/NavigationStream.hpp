@@ -144,17 +144,12 @@ class NavigationStream {
   /// This clears the candidates vector and resets the current index to 0.
   void reset();
 
-  /// @brief Set
-  void appendFreeSurfaces(std::span<const Surface*> freeSurfaces);
-
  private:
   /// The candidates of this navigation stream
   std::vector<NavigationTarget> m_candidates;
 
   /// The currently active candidate
   std::size_t m_currentIndex = 0u;
-  /// Pointer to the free surfaces
-  std::span<const Surface*> m_freeSurfaces{};
 };
 
 class AppendOnlyNavigationStream {
