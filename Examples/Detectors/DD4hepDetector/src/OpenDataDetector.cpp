@@ -108,6 +108,7 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
   outer.addChild(builder.makeBeampipe());
 
   using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
+  using ResizeStrategy = Acts::VolumeResizeStrategy;
   using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
 
   auto constant = [this](const std::string& name) -> int {
@@ -141,8 +142,17 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
                                             .add<SrfArrayNavPol>(cfg)
                                             .asUniquePtr());
 
+      layer->setEnvelope(
+          Acts::ExtentEnvelope::Zero().set(AxisZ, {2, 2}).set(AxisR, {2, 2}));
+
       return layer;
     };
+  };
+
+  auto customizeContainer = [&](const auto& /*elem*/, auto node) {
+    node->setAttachmentStrategy(AttachmentStrategy::Gap);
+    node->setResizeStrategies(ResizeStrategy::Gap, ResizeStrategy::Gap);
+    return node;
   };
 
   auto pixelAssembly = builder.findDetElementByName("Pixels").value();
@@ -151,28 +161,33 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
       .setAssembly(pixelAssembly)
       .setAxes("XYZ", "XZY")
       .setLayerPattern(pixelLayerPattern)
-      .setAttachmentStrategies(AttachmentStrategy::Gap, AttachmentStrategy::Gap)
-      .customize(makeCustomizer("pix", pixelLayerPattern))
+      // .setEndcapPatterns(
+      //     {"layer_0_neg", "layer_1_neg", "layer_0_pos", "layer_1_pos"})
+      // .setBarrelPatterns({"layer_0", "layer_1"})
+      .customizeLayer(makeCustomizer("pix", pixelLayerPattern))
+      .customize(customizeContainer)
       .addTo(outer);
 
-  // auto sstripAssembly = builder.findDetElementByName("ShortStrips").value();
-  // std::regex sstripLayerPattern{
-  //     "(?:ShortStripLayer|ShortStripEndcap[NP])(\\d)"};
-  // builder.barrelEndcapAssemblyHelper()
-  //     .setAssembly(sstripAssembly)
-  //     .setAxes("XYZ", "XZY")
-  //     .setLayerPattern(sstripLayerPattern)
-  //     .customize(makeCustomizer("ss", sstripLayerPattern))
-  //     .addTo(outer);
-  //
-  // auto lstripAssembly = builder.findDetElementByName("LongStrips").value();
-  // std::regex lstripLayerPattern{"(?:LongStripLayer|LongStripEndcap[NP])(\\d)"};
-  // builder.barrelEndcapAssemblyHelper()
-  //     .setAssembly(lstripAssembly)
-  //     .setAxes("XYZ", "XZY")
-  //     .setLayerPattern(lstripLayerPattern)
-  //     .customize(makeCustomizer("ls", lstripLayerPattern))
-  //     .addTo(outer);
+  auto sstripAssembly = builder.findDetElementByName("ShortStrips").value();
+  std::regex sstripLayerPattern{
+      "(?:ShortStripLayer|ShortStripEndcap[NP])(\\d)"};
+  builder.barrelEndcapAssemblyHelper()
+      .setAssembly(sstripAssembly)
+      .setAxes("XYZ", "XZY")
+      .setLayerPattern(sstripLayerPattern)
+      .customizeLayer(makeCustomizer("ss", sstripLayerPattern))
+      .customize(customizeContainer)
+      .addTo(outer);
+
+  auto lstripAssembly = builder.findDetElementByName("LongStrips").value();
+  std::regex lstripLayerPattern{"(?:LongStripLayer|LongStripEndcap[NP])(\\d)"};
+  builder.barrelEndcapAssemblyHelper()
+      .setAssembly(lstripAssembly)
+      .setAxes("XYZ", "XZY")
+      .setLayerPattern(lstripLayerPattern)
+      .customizeLayer(makeCustomizer("ls", lstripLayerPattern))
+      .customize(customizeContainer)
+      .addTo(outer);
 
   BlueprintOptions options;
 

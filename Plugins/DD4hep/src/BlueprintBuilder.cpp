@@ -21,6 +21,7 @@
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 #include "ActsPlugins/Root/TGeoVolumeConverter.hpp"
+#include <Acts/Utilities/Ranges.hpp>
 
 #include <ranges>
 #include <string>
@@ -30,6 +31,8 @@
 #include <DD4hep/Detector.h>
 #include <DDRec/DetectorData.h>
 #include <boost/algorithm/string/join.hpp>
+
+using namespace Acts::Ranges;
 
 namespace ActsPlugins::DD4hep {
 
@@ -159,12 +162,26 @@ Acts::Transform3 convertTGeoTransform(const TGeoShape& shape,
       std::string(shape.ClassName()));
 }
 
+std::vector<dd4hep::DetElement> findDetElementsByType(
+    const dd4hep::DetElement& parent,
+    dd4hep::DetType::DetectorTypeEnumeration type) {
+  std::vector<dd4hep::DetElement> result;
+  visitSubtree(parent, [&](const auto& elem) {
+    dd4hep::DetType subDetType{elem.typeFlag()};
+    if (subDetType.is(type)) {
+      result.push_back(elem);
+    }
+  });
+  return result;
+}
+
 }  // namespace
 
 std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
 BlueprintBuilder::makeLayer(const dd4hep::DetElement& detElement,
                             const std::string& axes,
                             std::optional<std::string> layerAxes) const {
+  ACTS_DEBUG("Adding layer from element: " << detElement.name());
   return makeLayer(detElement, resolveSensitives(detElement), axes,
                    std::nullopt, std::move(layerAxes));
 }
@@ -186,6 +203,8 @@ BlueprintBuilder::makeLayer(const dd4hep::DetElement& parent,
       getPathToElementName(parent) + postfix);
 
   ACTS_DEBUG("Using " << sensitives.size() << " sensitive elements.");
+  ACTS_DEBUG("Adding layer with name: " << node->name());
+
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   surfaces.reserve(sensitives.size());
 
@@ -207,8 +226,6 @@ BlueprintBuilder::makeLayer(const dd4hep::DetElement& parent,
     ACTS_VERBOSE(" -> Layer transform:\n" << layerTransform.matrix());
     node->setTransform(layerTransform);
   }
-
-  // @TODO: Try to auto-detect what kind of layer this is
 
   return node;
 }
@@ -302,49 +319,6 @@ BarrelEndcapAssemblyHelper BlueprintBuilder::barrelEndcapAssemblyHelper()
     const {
   return BarrelEndcapAssemblyHelper(*this);
 }
-
-namespace {
-std::vector<dd4hep::DetElement> findDetElementsByType(
-    const dd4hep::DetElement& parent,
-    dd4hep::DetType::DetectorTypeEnumeration type) {
-  std::vector<dd4hep::DetElement> result;
-  visitSubtree(parent, [&](const auto& elem) {
-    dd4hep::DetType subDetType{elem.typeFlag()};
-    if (subDetType.is(type)) {
-      result.push_back(elem);
-    }
-  });
-  return result;
-}
-
-// template <template <typename...> class Container, typename Range>
-// auto to(Range&& range) {
-//   using ValueType = std::ranges::range_value_t<Range>;
-//   return Container<ValueType>(std::ranges::begin(range),
-//                               std::ranges::end(range));
-// }
-
-template <template <typename...> class Container>
-struct to_adaptor {
-  template <typename Range>
-  auto operator()(Range&& range) const {
-    using ValueType = std::ranges::range_value_t<Range>;
-    return Container<ValueType>(std::ranges::begin(range),
-                                std::ranges::end(range));
-  }
-};
-
-// Overload operator| for piping
-template <typename Range, template <typename...> class Container>
-auto operator|(Range&& range, to_adaptor<Container> adaptor) {
-  return adaptor(std::forward<Range>(range));
-}
-
-// Create the adaptor objects
-template <template <typename...> class Container>
-inline constexpr to_adaptor<Container> to{};
-
-}  // namespace
 
 std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
 BlueprintBuilder::makeBarrelEndcapAssembly(
@@ -479,6 +453,8 @@ void LayerHelper::addTo(Acts::Experimental::BlueprintNode& node) const {
 
 std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
 BarrelEndcapAssemblyHelper::build() const {
+  using enum Acts::AxisDirection;
+
   const auto& logger = m_builder->logger();
 
   if (!m_assembly.has_value()) {
@@ -532,25 +508,31 @@ BarrelEndcapAssemblyHelper::build() const {
           assembly.name(), Acts::AxisDirection::AxisZ);
 
   for (const auto& barrel : barrels) {
-    node->addChild(m_builder->layerHelper()
-                       .barrel()
-                       .setAxes(m_barrelAxes.value())
-                       .setPattern(m_layerPattern.value())
-                       .setContainer(barrel)
-                       .setAttachmentStrategy(m_barrelAttachmentStrategy)
-                       .customize(m_customizer)
-                       .build());
+    auto barrelNode = m_builder->layerHelper()
+                          .barrel()
+                          .setAxes(m_barrelAxes.value())
+                          .setPattern(m_layerPattern.value())
+                          .setContainer(barrel)
+                          .customize(m_layerCustomizer)
+                          .build();
+    if (m_customizer) {
+      barrelNode = m_customizer(barrel, std::move(barrelNode));
+    }
+    node->addChild(barrelNode);
   }
 
   for (const auto& endcap : endcaps) {
-    node->addChild(m_builder->layerHelper()
-                       .endcap()
-                       .setAxes(m_endcapAxes.value())
-                       .setPattern(m_layerPattern.value())
-                       .setContainer(endcap)
-                       .setAttachmentStrategy(m_endcapAttachmentStrategy)
-                       .customize(m_customizer)
-                       .build());
+    auto endcapNode = m_builder->layerHelper()
+                          .endcap()
+                          .setAxes(m_endcapAxes.value())
+                          .setPattern(m_layerPattern.value())
+                          .setContainer(endcap)
+                          .customize(m_layerCustomizer)
+                          .build();
+    if (m_customizer) {
+      endcapNode = m_customizer(endcap, std::move(endcapNode));
+    }
+    node->addChild(endcapNode);
   }
 
   return node;

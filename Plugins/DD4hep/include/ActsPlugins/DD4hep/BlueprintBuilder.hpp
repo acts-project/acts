@@ -126,6 +126,11 @@ class LayerHelper {
 
 class BarrelEndcapAssemblyHelper {
  public:
+  using Customizer = std::function<
+      std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>(
+          const dd4hep::DetElement&,
+          std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>)>;
+
   explicit BarrelEndcapAssemblyHelper(const BlueprintBuilder& builder)
       : m_builder{&builder} {}
 
@@ -134,7 +139,12 @@ class BarrelEndcapAssemblyHelper {
 
   void addTo(Acts::Experimental::BlueprintNode& node) const;
 
-  auto& customize(LayerHelper::Customizer customizer) {
+  auto& customizeLayer(LayerHelper::Customizer customizer) {
+    m_layerCustomizer = std::move(customizer);
+    return *this;
+  }
+
+  auto& customize(Customizer customizer) {
     m_customizer = std::move(customizer);
     return *this;
   }
@@ -160,22 +170,14 @@ class BarrelEndcapAssemblyHelper {
     return *this;
   }
 
-  auto& setAttachmentStrategies(Acts::VolumeAttachmentStrategy barrel,
-                                Acts::VolumeAttachmentStrategy endcap) {
-    m_barrelAttachmentStrategy = barrel;
-    m_endcapAttachmentStrategy = endcap;
-    return *this;
-  }
-
  private:
-  LayerHelper::Customizer m_customizer;
+  LayerHelper::Customizer m_layerCustomizer;
+  Customizer m_customizer;
 
   std::optional<dd4hep::DetElement> m_assembly;
   std::optional<std::string> m_barrelAxes;
   std::optional<std::string> m_endcapAxes;
   std::optional<std::regex> m_layerPattern;
-  std::optional<Acts::VolumeAttachmentStrategy> m_barrelAttachmentStrategy;
-  std::optional<Acts::VolumeAttachmentStrategy> m_endcapAttachmentStrategy;
   const BlueprintBuilder* m_builder;
 };
 
@@ -208,13 +210,6 @@ class BlueprintBuilder {
 
   std::shared_ptr<DD4hepDetectorElement> createDetectorElement(
       const dd4hep::DetElement& detElement, const std::string& axes) const;
-
-  [[deprecated("Renamed to `makeLayer()`")]]
-  std::shared_ptr<Acts::Experimental::LayerBlueprintNode> addLayer(
-      const dd4hep::DetElement& detElement, const std::string& axes,
-      std::optional<std::string> layerAxes = std::nullopt) {
-    return makeLayer(detElement, axes, std::move(layerAxes));
-  }
 
   std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
       const dd4hep::DetElement& detElement, const std::string& axes,
