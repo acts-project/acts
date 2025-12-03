@@ -20,26 +20,26 @@
 
 namespace Acts::Experimental {
 
+class IndexGridNavigationConfig {
+ public:
+  /// The binning expansion for grid neighbor lookups
+  std::vector<std::size_t> binExpansion = {0u, 0u};
+
+  /// A potential lookup surface - this would be intersected first,
+  /// assumption is always closest forward
+  std::shared_ptr<Surface> surface = nullptr;
+
+  /// The reference generator
+  std::shared_ptr<IReferenceGenerator> referenceGenerator =
+      std::make_shared<PolyhedronReferenceGenerator>();
+};
+
 /// A navigation policy that uses grid based navigation for indexed surfaces
 /// Navigate through a multilayer structure by creating an artificial path on
 /// the grid.
 template <typename GridType>
 class IndexGridNavigationPolicy : public INavigationPolicy {
  public:
-  class Config {
-   public:
-    /// The binning expansion for grid neighbor lookups
-    std::vector<std::size_t> binExpansion = {0u, 0u};
-
-    /// A potential lookup surface - this would be intersected first,
-    /// assumption is always closest forward
-    std::shared_ptr<Surface> surface = nullptr;
-
-    /// The reference generator
-    std::shared_ptr<IReferenceGenerator> referenceGenerator =
-        std::make_shared<PolyhedronReferenceGenerator>();
-  };
-
   using IndexGridType = IndexGrid<GridType>;
 
   /// Main constructor, which expects the grid and will fill it with the
@@ -52,16 +52,23 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
   /// @param grid The index grid to use for navigation
   explicit IndexGridNavigationPolicy(const GeometryContext& gctx,
                                      const TrackingVolume& volume,
-                                     const Logger& logger, const Config& config,
-                                     IndexGridType&& grid)
-      : m_volume(volume), m_cfg(config), m_indexGrid(std::move(grid)) {
+                                     const Logger& logger,
+                                     const IndexGridNavigationConfig& config,
+                                     const IndexGridType& grid)
+      : m_cfg(config), m_volume(volume), m_indexGrid(grid) {
     ACTS_VERBOSE("Constructing IndexGridNavigationPolicy for volume "
                  << m_volume.volumeName());
 
     // Fill the grid with the surfaces from the volume
     IndexGridFiller filler{m_cfg.binExpansion};
-    filler.fill(gctx, m_indexGrid, m_volume.surfaces(),
-                *m_cfg.referenceGenerator);
+    const auto& surfaces = m_volume.surfaces();
+    // Fill the grid with surfaces
+    std::vector<std::shared_ptr<const Surface>> surfacePtrs = {};
+    surfacePtrs.reserve(surfaces.size());
+    for (const auto& surface : surfaces) {
+      surfacePtrs.push_back(surface.getSharedPtr());
+    }
+    filler.fill(gctx, m_indexGrid, surfacePtrs, *m_cfg.referenceGenerator);
   }
 
   /// Update the navigation state from the surface array
@@ -75,25 +82,25 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
         "IndexGridNavigationPolicy Candidates initialization for volume"
         << m_volume.volumeName());
 
-    // This needs to come from the navigaiton argumetns or the function
+    // This needs to come from the navigaiton arguments or the function
     auto gctx = GeometryContext();
 
     // Nominal or intersected position
     Vector3 position = args.position;
     if (m_cfg.surface) {
       auto multiIntersection = m_cfg.surface->intersect(
-          args, args.position, args.direction, BoundaryTolerance::Infinite());
+          gctx, args.position, args.direction, BoundaryTolerance::Infinite());
       position = multiIntersection.closestForward().position();
     }
 
     // The indexing is guaranteed
     const auto& surfaces = m_volume.surfaces();
     const auto& indices =
-        m_indexGrid.grid.at(GridAccessHelpers::castPosition<GridType>(
+        m_indexGrid.grid.atPosition(GridAccessHelpers::castPosition<GridType>(
             m_indexGrid.transform * position, m_indexGrid.casts));
     // Fill the navigation stream with the container
     for (const auto& idx : indices) {
-      stream.addSurfaceCandidate(*surfaces[idx], args.tolerance);
+      stream.addSurfaceCandidate(surfaces[idx], args.tolerance);
     }
   }
 
@@ -103,9 +110,13 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
     connectDefault<IndexGridNavigationPolicy>(delegate);
   }
 
+  /// @brief  Give const access to the index grid
+  /// @return
+  const IndexGridType& indexGrid() const { return m_indexGrid; }
+
  private:
   // Keep the config
-  Config m_cfg;
+  IndexGridNavigationConfig m_cfg;
   // The tracking volume
   const TrackingVolume& m_volume;
   // The index grid

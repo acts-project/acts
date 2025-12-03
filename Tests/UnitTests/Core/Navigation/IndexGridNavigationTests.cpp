@@ -23,8 +23,7 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
-BOOST_AUTO_TEST_CASE(IndexGridNavigation_RegularCylinder) {
-}
+BOOST_AUTO_TEST_CASE(IndexGridNavigation_RegularCylinder) {}
 
 BOOST_AUTO_TEST_SUITE_END()
 

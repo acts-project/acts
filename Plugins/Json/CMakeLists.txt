@@ -16,6 +16,7 @@ acts_add_library(
     src/VolumeJsonConverter.cpp
     src/AmbiguityConfigJsonConverter.cpp
     src/DetrayJsonHelper.cpp
+    src/IndexGridNavigationJsonConverter.cpp
     src/JsonDetectorElement.cpp
     src/JsonSurfacesReader.cpp
     src/DefinitionsJsonConverter.cpp

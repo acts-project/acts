@@ -17,7 +17,6 @@
 
 namespace Acts::Experimental {
 
-
 /// A navigation policy that uses grid based navigation for indexed surfaces
 /// Navigate through a multilayer structure by creating an artificial path on
 /// the grid.
