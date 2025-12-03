@@ -95,7 +95,7 @@ def runGeometry(
 
 if "__main__" == __name__:
     # detector = acts.examples.GenericDetector()
-    detector = getOpenDataDetector(gen3=True, logLevel=acts.logging.DEBUG)
+    detector = getOpenDataDetector(gen3=True, logLevel=acts.logging.VERBOSE)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 

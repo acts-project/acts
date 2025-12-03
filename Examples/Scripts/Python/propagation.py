@@ -31,7 +31,7 @@ def runPropagation(
     addParticleGun(
         s,
         ParticleConfig(num=1000, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
-        EtaConfig(-4.0, 4.0),
+        EtaConfig(-4, 4),
         MomentumConfig(1 * u.GeV, 100 * u.GeV, transverse=True),
         rnd=rnd,
     )
@@ -43,13 +43,15 @@ def runPropagation(
     )
     s.addAlgorithm(trkParamExtractor)
 
-    nav = acts.Navigator(trackingGeometry=trackingGeometry)
+    nav = acts.Navigator(trackingGeometry=trackingGeometry, level=acts.logging.INFO)
 
     stepper = acts.EigenStepper(field)
     # stepper = acts.AtlasStepper(field)
     # stepper = acts.StraightLineStepper()
 
-    propagator = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
+    propagator = acts.examples.ConcretePropagator(
+        acts.Propagator(stepper, nav, level=acts.logging.INFO)
+    )
 
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
