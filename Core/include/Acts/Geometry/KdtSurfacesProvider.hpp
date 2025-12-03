@@ -28,8 +28,7 @@ namespace Acts {
 /// It also deals with the conversion from global query to
 /// KDTree lookup positions
 ///
-template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
-          typename reference_generator = PolyhedronReferenceGenerator>
+template <std::size_t kDIM = 2u, std::size_t bSize = 100u>
 class KdtSurfaces {
  public:
   /// Broadcast the surface KDT type
@@ -51,7 +50,8 @@ class KdtSurfaces {
   KdtSurfaces(const GeometryContext& gctx,
               const std::vector<std::shared_ptr<Surface>>& surfaces,
               const std::array<AxisDirection, kDIM>& casts,
-              const reference_generator& rgen = PolyhedronReferenceGenerator{})
+              const std::shared_ptr<IReferenceGenerator>& rgen =
+                  std::make_shared<PolyhedronReferenceGenerator>() m)
       : m_kdt(nullptr), m_casts(casts), m_rGenerator(rgen) {
     // Simple check if the dimension is correct
     if (kDIM == 0u) {
@@ -63,7 +63,7 @@ class KdtSurfaces {
     kdtEntries.reserve(surfaces.size());
     for (auto& s : surfaces) {
       // Generate the references and the center of gravity from it
-      const auto references = m_rGenerator.references(gctx, *s);
+      const auto references = m_rGenerator->references(gctx, *s);
       std::vector<Query> castedReferences;
       castedReferences.reserve(references.size());
       for (const auto& r : references) {
@@ -115,7 +115,7 @@ class KdtSurfaces {
   std::array<AxisDirection, kDIM> m_casts = {};
 
   /// Helper to generate reference points for filling
-  reference_generator m_rGenerator;
+  std::shared_ptr<IReferenceGenerator> m_rGenerator = nullptr;
 
   /// Unroll the cast loop
   /// @param position is the position of the update call
@@ -158,8 +158,7 @@ class KdtSurfaces {
 ///
 /// This allows to create small region based callable structs at
 /// configuration level that are then connected to an InternalStructureBuilder
-template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
-          typename reference_generator = PolyhedronReferenceGenerator>
+template <std::size_t kDIM = 2u, std::size_t bSize = 100u>
 class KdtSurfacesProvider : public ISurfacesProvider {
  public:
   /// The prefilled surfaces in a KD tree structure, it is generally shared
@@ -167,9 +166,8 @@ class KdtSurfacesProvider : public ISurfacesProvider {
   ///
   /// @param kdts the prefilled KDTree structure
   /// @param kregion the region where these are pulled from
-  KdtSurfacesProvider(
-      std::shared_ptr<KdtSurfaces<kDIM, bSize, reference_generator>> kdts,
-      const Extent& kregion)
+  KdtSurfacesProvider(std::shared_ptr<KdtSurfaces<kDIM, bSize>> kdts,
+                      const Extent& kregion)
       : m_kdt(std::move(kdts)), m_region(kregion) {
     /// Sanity check that the KDTree is not empty
     if (m_kdt == nullptr) {

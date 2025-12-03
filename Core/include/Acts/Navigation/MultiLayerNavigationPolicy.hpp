@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/IndexGridFiller.hpp"
-#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/IndexGridNavigation.hpp"
