@@ -51,7 +51,7 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;
     m_surfaceArray =
-        sac.surfaceArrayOnDisc(gctx, std::move(surfaces), binsPhi, binsR);
+        sac.surfaceArrayOnDisc(gctx, std::move(surfaces), binsR, binsPhi);
   } else if (config.layerType == LayerType::Cylinder) {
     auto [binsPhi, binsZ] = config.bins;
     m_surfaceArray =
