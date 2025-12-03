@@ -92,6 +92,7 @@ ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
         "Number of features mismatches number of scale parameters.");
   }
 
+// Reset error state to prevent failure due to previous runs
 #ifdef ACTS_GNN_WITH_CUDA
   cudaGetLastError();
 #endif
