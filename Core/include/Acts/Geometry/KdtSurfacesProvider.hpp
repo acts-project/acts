@@ -51,7 +51,7 @@ class KdtSurfaces {
               const std::vector<std::shared_ptr<Surface>>& surfaces,
               const std::array<AxisDirection, kDIM>& casts,
               const std::shared_ptr<IReferenceGenerator>& rgen =
-                  std::make_shared<PolyhedronReferenceGenerator>() m)
+                  std::make_shared<PolyhedronReferenceGenerator>())
       : m_kdt(nullptr), m_casts(casts), m_rGenerator(rgen) {
     // Simple check if the dimension is correct
     if (kDIM == 0u) {
