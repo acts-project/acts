@@ -425,6 +425,10 @@ LayerHelper::build() const {
       std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
           container.name(), axisDir);
 
+  if (m_attachmentStrategy.has_value()) {
+    node->setAttachmentStrategy(m_attachmentStrategy.value());
+  }
+
   const auto& layerElements =
       m_builder->findDetElementByNamePattern(container, m_pattern.value());
 
@@ -443,11 +447,12 @@ LayerHelper::build() const {
     if (m_envelope.has_value()) {
       layer->setEnvelope(m_envelope.value());
     }
-    node->addChild(layer);
 
     if (m_customizer) {
-      m_customizer(element, *layer);
+      layer = m_customizer(element, std::move(layer));
     }
+
+    node->addChild(layer);
   }
 
   return node;
@@ -517,6 +522,7 @@ BarrelEndcapAssemblyHelper::build() const {
                        .setAxes(m_barrelAxes.value())
                        .setPattern(m_layerPattern.value())
                        .setContainer(barrel)
+                       .setAttachmentStrategy(m_barrelAttachmentStrategy)
                        .customize(m_customizer)
                        .build());
   }
@@ -527,6 +533,7 @@ BarrelEndcapAssemblyHelper::build() const {
                        .setAxes(m_endcapAxes.value())
                        .setPattern(m_layerPattern.value())
                        .setContainer(endcap)
+                       .setAttachmentStrategy(m_endcapAttachmentStrategy)
                        .customize(m_customizer)
                        .build());
   }

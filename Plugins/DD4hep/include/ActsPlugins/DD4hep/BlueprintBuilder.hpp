@@ -12,6 +12,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 
@@ -41,8 +42,10 @@ class BlueprintBuilder;
 class LayerHelper {
  public:
   using LayerType = Acts::Experimental::LayerBlueprintNode::LayerType;
-  using Customizer = std::function<void(
-      const dd4hep::DetElement&, Acts::Experimental::LayerBlueprintNode&)>;
+  using Customizer =
+      std::function<std::shared_ptr<Acts::Experimental::LayerBlueprintNode>(
+          const dd4hep::DetElement&,
+          std::shared_ptr<Acts::Experimental::LayerBlueprintNode>)>;
 
   explicit LayerHelper(const BlueprintBuilder& builder) : m_builder{&builder} {}
 
@@ -95,6 +98,12 @@ class LayerHelper {
     return *this;
   }
 
+  auto& setAttachmentStrategy(
+      std::optional<Acts::VolumeAttachmentStrategy> strategy) {
+    m_attachmentStrategy = strategy;
+    return *this;
+  }
+
   std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode> build()
       const;
 
@@ -108,6 +117,7 @@ class LayerHelper {
   std::optional<std::regex> m_pattern;
   std::optional<dd4hep::DetElement> m_container;
   std::optional<Acts::ExtentEnvelope> m_envelope;
+  std::optional<Acts::VolumeAttachmentStrategy> m_attachmentStrategy;
   bool m_emptyOk = false;
 
   Customizer m_customizer;
@@ -123,7 +133,7 @@ class BarrelEndcapAssemblyHelper {
 
   void addTo(Acts::Experimental::BlueprintNode& node) const;
 
-  auto& setCustomizer(LayerHelper::Customizer customizer) {
+  auto& customize(LayerHelper::Customizer customizer) {
     m_customizer = std::move(customizer);
     return *this;
   }
@@ -133,8 +143,9 @@ class BarrelEndcapAssemblyHelper {
     return *this;
   }
 
-  auto& setBarrelAxes(const std::string& axes) {
-    m_barrelAxes = axes;
+  auto& setAxes(const std::string& barrel, const std::string& endcap) {
+    m_barrelAxes = barrel;
+    m_endcapAxes = endcap;
     return *this;
   }
 
@@ -148,6 +159,13 @@ class BarrelEndcapAssemblyHelper {
     return *this;
   }
 
+  auto& setAttachmentStrategies(Acts::VolumeAttachmentStrategy barrel,
+                                Acts::VolumeAttachmentStrategy endcap) {
+    m_barrelAttachmentStrategy = barrel;
+    m_endcapAttachmentStrategy = endcap;
+    return *this;
+  }
+
  private:
   LayerHelper::Customizer m_customizer;
 
@@ -155,6 +173,8 @@ class BarrelEndcapAssemblyHelper {
   std::optional<std::string> m_barrelAxes;
   std::optional<std::string> m_endcapAxes;
   std::optional<std::regex> m_layerPattern;
+  std::optional<Acts::VolumeAttachmentStrategy> m_barrelAttachmentStrategy;
+  std::optional<Acts::VolumeAttachmentStrategy> m_endcapAttachmentStrategy;
   const BlueprintBuilder* m_builder;
 };
 
