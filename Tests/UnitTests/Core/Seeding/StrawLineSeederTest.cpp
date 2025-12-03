@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// This file is part of the ACTS project.
-//
-// Copyright (C) 2016 CERN for the benefit of the ACTS project
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 #include <boost/test/unit_test.hpp>
 
 #include <set>
@@ -114,7 +106,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
         /// Construct line parameters
         ACTS_DEBUG(__func__
                    << "() " << __LINE__ << " - Line tan theta: " << lineTanBeta
-                   << ", reconstructed theta: " << std::tan(seedPars.theta)
+                   << ", reconstructed tan theta: " << std::tan(seedPars.theta)
                    << ", line y0: " << lineY0
                    << ", reconstructed y0: " << seedPars.y0);
         BOOST_CHECK_CLOSE(std::tan(seedPars.theta), lineTanBeta, tolerance);
