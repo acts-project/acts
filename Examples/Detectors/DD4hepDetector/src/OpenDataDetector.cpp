@@ -95,9 +95,8 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
   Blueprint root{cfg};
 
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
-  outer.addStaticVolume(
-      Transform3::Identity(),
-      std::make_unique<CylinderVolumeBounds>(0_mm, 20_mm, 1000_mm), "Beampipe");
+
+  outer.addChild(builder.makeBeampipe());
 
   using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
   using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
