@@ -30,7 +30,7 @@ struct CenterReferenceGenerator : public IReferenceGenerator {
   /// @param gctx the geometry context of this operation
   /// @param surface the surface for which the reference point is to be accessed
   ///
-  /// @return a vector of reference points for filling
+  /// @return a vector of reference point sets for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const override {
     return {surface.center(gctx)};
