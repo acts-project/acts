@@ -201,9 +201,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
       return ProcessCode::ABORT;
     }
 
-    /// Geometric digitizer
-    ActsFatras::Channelizer channelizer;
-
     const Surface* hitSurf = surfaceItr->second;
     assert(hitSurf != nullptr);
 
@@ -212,7 +209,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
     // Iterate over all simHits in a single module
     for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
       const auto& simHit = *h;
-      const auto simHitIdx = gotSimHits.index_of(h);
 
       // Convert the hit trajectory into local coordinates
       const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
@@ -294,10 +290,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   calibCfg.rpcPhiStripPitch, calibCfg.rpcEtaStripPitch,
                   m_cfg.digitizeTime ? calibCfg.rpcTimeResolution : 0.);
 
-              globalPositions.push_back(
-                  std::make_tuple(simHit.position(), smearedHit[ePos0],
-                                  smearedHit[ePos1], hitSurf->getSharedPtr()));
-
               break;
             }
             /// Endcap strips not yet available
@@ -364,8 +356,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
           }
 
           const double sigmaZ = 0.5 * maxZ;
-          auto smearedZ =
-              (*Digitization::Gauss{sigmaZ}(nominalPos.z(), rndEngine)).first;
 
           newSp.setRadius(driftR);
           newSp.setCovariance(square(uncert), square(sigmaZ), 0.);
@@ -386,7 +376,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
           break;
         }
         default:
-          ACTS_DEBUG("Unsupported detector case in muon space point digitizer.")
+          ACTS_DEBUG("Unsupported detector case in muon space point digitizer.");
           convertSp = false;
       }
 
