@@ -55,10 +55,6 @@ struct TGeoSurfaceConverter {
                      const Double_t* translation, TGeoAxes axes,
                      double scalor = 10.) noexcept(false);
 
-  static std::unique_ptr<Acts::Volume> cylinderVolume(
-      const TGeoShape& tgShape, const TGeoMatrix& tgTransform,
-      double lengthScale = 10.);
-
   /// Convert a TGeoShape into disk surface components
   ///
   /// @param tgShape The TGeoShape
