@@ -40,10 +40,11 @@ using GenCfg_t = MeasurementGenerator::Config;
 #define DECLARE_BRANCH(dType, bName) \
   dType bName{};                     \
   outTree->Branch(#bName, &bName);
-
+// NOLINTBEGIN
 long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
                     const std::string& testName, const unsigned seed,
                     TFile& outFile) {
+  // NOLINTEND
   auto outTree = std::make_unique<TTree>(
       std::format("{:}Tree", testName).c_str(), "MonitorTree");
   outTree->SetDirectory(nullptr);
@@ -134,7 +135,7 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
     auto result = fitter.fit(std::move(fitOpts));
     if (!result.converged) {
       ACTS_DEBUG("Fit " << outTree->GetName() << " failed.");
-      converged = false;
+      converged = 0;
       chi2 = -1.;
       nDoF = 1;
       nIter = fitter.config().maxIter;
@@ -143,7 +144,7 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
     }
 
     ACTS_DEBUG("Fit Successful.");
-    converged = true;
+    converged = 1;
     ++goodFits;
     fillPars(result.parameters, recoY0, recoX0, recoTheta, recoPhi);
     fillProjected(result.parameters, recoProjTheta, recoProjPhi);

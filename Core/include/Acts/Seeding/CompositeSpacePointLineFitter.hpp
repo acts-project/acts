@@ -246,22 +246,22 @@ class CompositeSpacePointLineFitter {
   /// @param initialGuess: Line representing the start parameters parsed by the user. Needed to determine
   ///                      the L<->R ambiguity of the straws
   /// @param parsToUse: List of parameters to fit (y0, theta), (x0, phi) or (y0, theta, x0, phi).
-  /// @param precDelegate: Delegate function to call the fast fitter for to perform the precision fit
+  /// @param precFitDelegate: Delegate function to call the fast fitter for to perform the precision fit
   template <bool fitStraws, bool fitTime, CompositeSpacePointContainer Cont_t>
   FitParameters fastFit(
       const Cont_t& measurements, const Line_t& initialGuess,
       const std::vector<FitParIndex>& parsToUse,
-      const FastFitDelegate_t<Cont_t, fitTime>& precDelegate) const;
+      const FastFitDelegate_t<Cont_t, fitTime>& precFitDelegate) const;
 
   /// @brief Executes the fast fit in the bending direction.
   /// @param measurements: List of measurements to fit
   /// @param initialGuess: Line representing the start parameters parsed by the user. Needed to determine
   ///                      the L<->R ambiguity of the straws
-  /// @param precDelegate: Delegate function to call the fast fitter for to perform the precision fit
+  /// @param delegate: Delegate function to call the fast fitter for to perform the precision fit
   template <bool fitStraws, bool fitTime, CompositeSpacePointContainer Cont_t>
   DelegateRet_t<fitTime> fastPrecFit(
       const Cont_t& measurements, const Line_t& initialGuess,
-      const FastFitDelegate_t<Cont_t, fitTime>& precDelegate) const;
+      const FastFitDelegate_t<Cont_t, fitTime>& delegate) const;
 
   /// @brief Executes the fast fit in the non-bending direction. In case of success, the
   ///        fitted angle is overwritten with tanAlpha for an easier combination
