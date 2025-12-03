@@ -11,7 +11,6 @@
 #include "ActsExamples/Traccc/DetrayStore.hpp"
 #include "ActsPlugins/Covfie/FieldConversion.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
-#include "ActsPlugins/Detray/DetrayConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 
 #include <detray/core/detector.hpp>
@@ -37,17 +36,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
   {
     py::class_<DetrayHostStore, std::shared_ptr<DetrayHostStore>>(
         traccc, "DetrayHostStore");
-
-    /// Convert the detector and create a DetrayHostStore
-    ///
-    /// @param gctx the geometry context
-    /// @param detector the detector to be converted
-    /// @param options the conversion options
-    traccc.def("convertDetectorHost", [](const GeometryContext& gctx,
-                                         const Experimental::Detector& detector,
-                                         DetrayConverter::Options options) {
-      return DetrayHostStore::create(gctx, detector, options);
-    });
 
     /// Read the detray detector from files
     /// @param geometry the geometry file name

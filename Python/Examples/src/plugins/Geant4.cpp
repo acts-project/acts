@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
@@ -20,7 +19,6 @@
 #include "ActsExamples/Geant4Detector/GdmlDetector.hpp"
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
-#include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -47,36 +45,6 @@ using namespace ActsExamples;
 using namespace Acts;
 using namespace ActsPlugins;
 using namespace ActsPython;
-
-struct SensitiveCandidates : public Geant4::SensitiveCandidatesBase {
-  std::shared_ptr<const Experimental::Detector> detector;
-
-  /// Find the sensitive surfaces for a given position
-  std::vector<const Surface*> queryPosition(
-      const GeometryContext& gctx, const Vector3& position) const override {
-    std::vector<const Surface*> surfaces;
-    // Here's the detector volume
-    auto volume = detector->findDetectorVolume(gctx, position);
-    if (volume != nullptr) {
-      for (const auto& surface : volume->surfaces()) {
-        if (surface->associatedDetectorElement() != nullptr) {
-          surfaces.push_back(surface);
-        }
-      }
-    }
-    return surfaces;
-  }
-
-  std::vector<const Surface*> queryAll() const override {
-    std::vector<const Surface*> surfaces;
-    detector->visitSurfaces([&](const Surface* surface) {
-      if (surface->associatedDetectorElement() != nullptr) {
-        surfaces.push_back(surface);
-      }
-    });
-    return surfaces;
-  }
-};
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
   py::class_<Geant4Manager, std::unique_ptr<Geant4Manager, py::nodelete>>(
@@ -135,20 +103,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
              ccfg.candidateSurfaces =
                  std::make_shared<Geant4::SensitiveCandidates>(
                      tGeometry, getDefaultLogger("SensitiveCandidates", level));
-             return std::make_shared<Geant4::SensitiveSurfaceMapper>(
-                 ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
-           });
-
-    sm.def("create",
-           [](const Config& cfg, Logging::Level level,
-              const std::shared_ptr<const Experimental::Detector>& detector) {
-             // Helper struct to find the sensitive surface candidates
-
-             // Set a new surface finder
-             Config ccfg = cfg;
-             auto candidateSurfaces = std::make_shared<SensitiveCandidates>();
-             candidateSurfaces->detector = detector;
-             ccfg.candidateSurfaces = candidateSurfaces;
              return std::make_shared<Geant4::SensitiveSurfaceMapper>(
                  ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
            });
@@ -284,26 +238,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
               std::move(detectorElements), std::move(surfaces),
               std::move(passiveSurfaces));
         });
-  }
-
-  {
-    using MockupSectorBuilder = MockupSectorBuilder;
-    using Config = MockupSectorBuilder::Config;
-    using ChamberConfig = MockupSectorBuilder::ChamberConfig;
-
-    auto ms =
-        py::class_<MockupSectorBuilder, std::shared_ptr<MockupSectorBuilder>>(
-            mod, "MockupSectorBuilder")
-            .def(py::init<const Config&>())
-            .def("buildChamber", &MockupSectorBuilder::buildChamber)
-            .def("buildSector", &MockupSectorBuilder::buildSector)
-            .def("drawSector", &MockupSectorBuilder::drawSector);
-
-    auto c = py::class_<Config>(ms, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, gdmlPath, NumberOfSectors, toleranceOverlap);
-
-    auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(cch, name, SensitiveNames, PassiveNames);
   }
 
   {

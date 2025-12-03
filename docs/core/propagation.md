@@ -81,7 +81,6 @@ ACTS comes with a couple of different navigator implementations:
 - The {class}`Acts::DirectNavigator` which takes a sequence of surfaces and just navigates to one after the other.
 - The {class}`Acts::TryAllNavigator` which, as the name suggests, tries to intersect all available surfaces without acceleration structure and special assumptions. This navigator is meant for validation rather than production.
 - The {class}`Acts::TryAllOverstepNavigator` which is similar to the {class}`Acts::TryAllNavigator`, but deliberately oversteps and then intersects surfaces which might have been missed by that step and targets them. This navigator is meant for validation rather than production.
-- The {class}`Acts::Experimental::DetectorNavigator` which performs the full navigation in the gen2 geometry. Note that this is still experimental and should not be included in production code as it might be unstable and break with minor version updates of ACTS.
 
 The navigators provide information about the current position inside the geometry in their state variable (e.g. {struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
 

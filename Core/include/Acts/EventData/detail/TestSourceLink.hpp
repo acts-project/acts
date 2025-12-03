@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -100,19 +99,6 @@ struct TestSourceLinkSurfaceAccessor {
     return geometry.findSurface(testSourceLink.m_geometryId);
   }
 };
-
-namespace Experimental {
-
-struct TestSourceLinkSurfaceAccessor {
-  const Acts::Experimental::Detector& geometry;
-
-  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-    const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-    return geometry.findSurface(testSourceLink.m_geometryId);
-  }
-};
-
-}  // namespace Experimental
 
 inline std::ostream& operator<<(std::ostream& os,
                                 const TestSourceLink& sourceLink) {
