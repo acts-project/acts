@@ -110,7 +110,7 @@ struct TGeoSurfaceConverter {
       return 2.0 * std::numbers::pi;
     }
 
-    double d = Acts::detail::wrap_periodic(deg, -180.0, 180.0);
+    double d = Acts::detail::wrap_periodic(deg, -180.0, 360.0);
 
     // Convert to rads
     return d * Acts::UnitConstants::degree;
