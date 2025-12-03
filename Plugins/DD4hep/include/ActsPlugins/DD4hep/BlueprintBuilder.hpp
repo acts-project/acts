@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 
@@ -17,6 +18,7 @@
 #include <memory>
 #include <regex>
 #include <string>
+#include <utility>
 
 namespace dd4hep {
 class DetElement;
@@ -68,6 +70,8 @@ class BlueprintBuilder {
   std::shared_ptr<Acts::Experimental::LayerBlueprintNode> addLayer(
       const dd4hep::DetElement& detElement, const std::string& axes,
       std::optional<std::string> layerAxes = std::nullopt);
+
+  std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeBeampipe() const;
 
   [[deprecated("Consider using .layerHelper() to produce the layers")]]
   std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode> addLayers(

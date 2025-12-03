@@ -13,10 +13,13 @@
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsPlugins/Root/TGeoVolumeConverter.hpp"
 
 #include <DD4hep/DetElement.h>
+#include <DD4hep/DetType.h>
 #include <DD4hep/Detector.h>
 #include <DDRec/DetectorData.h>
 
@@ -173,6 +176,44 @@ BlueprintBuilder::addLayer(const dd4hep::DetElement& detElement,
   // @TODO: Try to auto-detect what kind of layer this is
 
   return node;
+}
+
+std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
+BlueprintBuilder::makeBeampipe() const {
+  std::optional<dd4hep::DetElement> beampipeElement = std::nullopt;
+
+  visitSubtree(world(), [&](const dd4hep::DetElement& elem) {
+    dd4hep::DetType subDetType{elem.typeFlag()};
+    if (subDetType.is(dd4hep::DetType::BEAMPIPE)) {
+      if (beampipeElement.has_value()) {
+        ACTS_WARNING("Multiple beampipe elements found, using first: "
+                     << beampipeElement->name()
+                     << ", ignoring: " << elem.name());
+        return;
+      }
+      beampipeElement = elem;
+    }
+  });
+
+  if (!beampipeElement.has_value()) {
+    ACTS_ERROR("No beampipe element found in DD4hep detector.");
+    throw std::runtime_error("No beampipe element found in DD4hep detector.");
+  }
+
+  ACTS_INFO("Beampipe element found: " << beampipeElement->name());
+
+  std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
+      *TGeoVolumeConverter::cylinderVolume(
+          *beampipeElement->placement().ptr()->GetVolume()->GetShape(),
+          beampipeElement->nominal().worldTransformation(), m_cfg.lengthScale),
+      beampipeElement->name());
+
+  ACTS_INFO("-> Created beampipe volume: " << volume->volumeBounds()
+                                           << " transform:\n"
+                                           << volume->transform().matrix());
+
+  return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+      std::move(volume));
 }
 
 std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
