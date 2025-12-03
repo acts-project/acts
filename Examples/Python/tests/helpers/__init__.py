@@ -91,7 +91,7 @@ except ImportError:
 gnnEnabled = shutil.which("nvidia-smi") is not None
 if gnnEnabled:
     try:
-        from acts.examples import TrackFindingAlgorithmGnn
+        from acts.examples.gnn import TrackFindingAlgorithmGnn
     except ImportError:
         gnnEnabled = False
 
