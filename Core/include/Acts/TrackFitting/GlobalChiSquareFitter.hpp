@@ -546,7 +546,8 @@ void fillGx2fSystem(
   for (const auto& trackState : track.trackStates()) {
     // Get and store geoId for the current surface
     const GeometryIdentifier geoId = trackState.referenceSurface().geometryId();
-    ACTS_DEBUG("Start to investigate trackState on surface " << geoId);
+    ACTS_DEBUG("Start to investigate trackState on "
+               << trackState.referenceSurface().type() << " surface " << geoId);
     const auto typeFlags = trackState.typeFlags();
     const bool stateHasMeasurement =
         typeFlags.test(TrackStateFlag::MeasurementFlag);
@@ -840,8 +841,8 @@ class Gx2Fitter {
           (surface->associatedDetectorElement() != nullptr) ||
           inputMeasurements->count(surface);
       const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
-      ACTS_DEBUG("Surface "
-                 << geoId << " detected. Is sensitive: "
+      ACTS_DEBUG(surface->type()
+                 << " Surface " << geoId << " detected. Is sensitive: "
                  << (surfaceIsSensitive ? "yes" : "no")
                  << ", has material: " << (surfaceHasMaterial ? "yes" : "no"));
 
