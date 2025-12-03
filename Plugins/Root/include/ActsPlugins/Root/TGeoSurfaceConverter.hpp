@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <memory>
@@ -95,13 +97,28 @@ struct TGeoSurfaceConverter {
 
   /// Translate TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)
-  /// @param degree The input in degree
+  /// * it will return any multiple of 360.0 to 2pi
+  /// @param deg The input in degree
   /// @return angle in radians
-  static double toRadian(double degree) {
-    if (degree > 180. && degree < 360.) {
-      degree -= 360.;
+  static double toRadian(double deg) {
+    constexpr double eps = 1e-6;
+    // Check if degree is a non-zero multiple of 360. If it is, return 2pi
+    double r = std::fmod(deg, 360.0);
+    if (std::abs(r) < eps && std::abs(deg) > eps) {
+      return 2.0 * std::numbers::pi;
     }
-    return degree / 180. * std::numbers::pi;
+
+    // Reduced angle
+    double d = r;
+
+    if (d < -180.0) {
+      d += 360.0;
+    } else if (d >= 180.0) {
+      d -= 360.0;
+    }
+
+    // Convert to rads
+    return d * Acts::UnitConstants::degree;
   }
 };
 
