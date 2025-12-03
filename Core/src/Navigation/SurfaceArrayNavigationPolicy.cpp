@@ -9,6 +9,7 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
@@ -48,14 +49,18 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     throw std::runtime_error("Cannot create surface array with zero surfaces");
   }
 
+  Transform3 layerTransform{volume.transform().linear()};
+
+  ProtoLayer protoLayer(gctx, surfaces, layerTransform);
+
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;
-    m_surfaceArray =
-        sac.surfaceArrayOnDisc(gctx, std::move(surfaces), binsR, binsPhi);
+    m_surfaceArray = sac.surfaceArrayOnDisc(
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, layerTransform);
   } else if (config.layerType == LayerType::Cylinder) {
     auto [binsPhi, binsZ] = config.bins;
-    m_surfaceArray =
-        sac.surfaceArrayOnCylinder(gctx, std::move(surfaces), binsPhi, binsZ);
+    m_surfaceArray = sac.surfaceArrayOnCylinder(
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, layerTransform);
   } else if (config.layerType == LayerType::Plane) {
     ACTS_ERROR("Plane layers are not yet supported");
     throw std::invalid_argument("Plane layers are not yet supported");
