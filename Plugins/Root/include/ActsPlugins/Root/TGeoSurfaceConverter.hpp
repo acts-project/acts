@@ -103,14 +103,12 @@ struct TGeoSurfaceConverter {
   static double toRadian(double deg) {
     constexpr double eps = 1e-6;
 
-    // double r = Acts::detail::wrap_periodic(deg, 0., 360.);
-    // Check if degree is a non-zero multiple of 360. If it is, return 2pi
-    double r = std::fmod(deg, 360.0);
-    if (std::abs(r) < eps && std::abs(deg) > eps) {
-      return 2.0 * std::numbers::pi;
-    }
-
     double d = Acts::detail::wrap_periodic(deg, -180.0, 360.0);
+
+    // Check if degree is a non-zero multiple of 360. If it is, return 2pi
+    if (std::abs(d) < eps && std::abs(deg) > eps) {
+      d = 360.;
+    }
 
     // Convert to rads
     return d * Acts::UnitConstants::degree;
