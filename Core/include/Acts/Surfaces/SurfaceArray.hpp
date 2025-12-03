@@ -558,6 +558,8 @@ class SurfaceArray {
   /// @return Reference to the surface grid lookup interface
   const ISurfaceGridLookup& gridLookup() const { return *p_gridLookup; }
 
+  void checkGrid(AnyGridConstView<SurfaceVector> grid);
+
  private:
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;
   // this vector makes sure we have shared ownership over the surfaces
