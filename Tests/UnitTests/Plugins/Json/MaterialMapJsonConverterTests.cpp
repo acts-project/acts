@@ -9,10 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
-#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Json/IVolumeMaterialJsonDecorator.hpp"
+#include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
+#include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 #include <fstream>
 #include <memory>
@@ -23,27 +23,31 @@ namespace Acts {
 class IVolumeMaterial;
 }  // namespace Acts
 
-class DummyDecorator : public Acts::IVolumeMaterialJsonDecorator {
+using namespace Acts;
+
+class DummyDecorator : public IVolumeMaterialJsonDecorator {
  public:
-  void decorate([[maybe_unused]] const Acts::ISurfaceMaterial &material,
+  void decorate([[maybe_unused]] const ISurfaceMaterial &material,
                 [[maybe_unused]] nlohmann::json &json) const override {};
 
-  void decorate([[maybe_unused]] const Acts::IVolumeMaterial &material,
+  void decorate([[maybe_unused]] const IVolumeMaterial &material,
                 [[maybe_unused]] nlohmann::json &json) const override {};
 };
 
-BOOST_AUTO_TEST_SUITE(MaterialMapJsonConverter)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(RoundtripFromFile) {
   // read reference map from file
-  std::ifstream refFile(Acts::Test::getDataPath("material-map.json"));
+  std::ifstream refFile(ActsTests::getDataPath("material-map.json"));
   nlohmann::json refJson;
   refFile >> refJson;
 
   DummyDecorator decorator;
   // convert to the material map and back again
-  Acts::MaterialMapJsonConverter::Config converterCfg;
-  Acts::MaterialMapJsonConverter converter(converterCfg, Acts::Logging::INFO);
+  MaterialMapJsonConverter::Config converterCfg;
+  MaterialMapJsonConverter converter(converterCfg, Logging::INFO);
   auto materialMap = converter.jsonToMaterialMaps(refJson);
   nlohmann::json encodedJson =
       converter.materialMapsToJson(materialMap, &decorator);
@@ -53,3 +57,5 @@ BOOST_AUTO_TEST_CASE(RoundtripFromFile) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

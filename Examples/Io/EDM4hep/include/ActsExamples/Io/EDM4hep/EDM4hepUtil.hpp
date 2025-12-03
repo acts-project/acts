@@ -8,12 +8,12 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
+#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
 
 #include <functional>
 
@@ -34,7 +34,7 @@ using MapParticleIdTo =
 
 inline ActsFatras::Barcode zeroParticleMapper(
     const edm4hep::MCParticle& /*particle*/) {
-  return ActsFatras::Barcode();
+  return ActsFatras::Barcode::Invalid();
 }
 
 using MapGeometryIdFrom =
@@ -66,7 +66,8 @@ void writeParticle(const SimParticle& from, edm4hep::MutableMCParticle to);
 /// - digitization channel
 ActsFatras::Hit readSimHit(const edm4hep::SimTrackerHit& from,
                            const MapParticleIdFrom& particleMapper,
-                           const MapGeometryIdFrom& geometryMapper);
+                           const MapGeometryIdFrom& geometryMapper,
+                           std::uint32_t index = -1);
 
 /// Writes a Fatras hit to EDM4hep.
 ///

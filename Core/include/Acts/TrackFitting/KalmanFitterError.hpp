@@ -13,6 +13,7 @@
 
 namespace Acts {
 
+/// Error codes for Kalman filter operations
 enum class KalmanFitterError {
   // ensure all values are non-zero
   UpdateFailed = 1,
@@ -22,6 +23,9 @@ enum class KalmanFitterError {
   ReversePropagationFailed,
 };
 
+/// Create error code from @ref KalmanFitterError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::KalmanFitterError e);
 
 }  // namespace Acts

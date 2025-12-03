@@ -9,25 +9,25 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 namespace Acts {
 
 class NavigationStream;
+class AppendOnlyNavigationStream;
 class Logger;
 
 /// Struct that serves as the argument to the navigation delegate.
 /// It is not supposed to be used as an lvalue.
 struct NavigationArguments {
-  Vector3 position;
-  Vector3 direction;
+  /// Current position in 3D space for navigation
+  Vector3 position{};
+  /// Direction vector for navigation propagation
+  Vector3 direction{};
 
+  /// Boundary tolerance for surface intersection calculations
   BoundaryTolerance tolerance = BoundaryTolerance::None();
-
-  bool wantsPortals = true;
-  bool wantsSurfaces = true;
 };
 
 /// Central alias for the navigation delegate. This type is owning to support

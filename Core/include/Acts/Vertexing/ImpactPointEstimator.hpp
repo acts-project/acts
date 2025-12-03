@@ -167,6 +167,7 @@ class ImpactPointEstimator {
   /// @param trkParams Track parameters
   /// @param vtxPos Vertex position
   /// @param state The state object
+  /// @return Pair containing the distance vector and momentum direction at PCA
   template <int nDim>
   Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
   getDistanceAndMomentum(const GeometryContext& gctx,
@@ -192,6 +193,7 @@ class ImpactPointEstimator {
   /// @param gctx The geometry context
   /// @param mctx The magnetic field context
   /// @param calculateTimeIP If true, the difference in time is computed
+  /// @return Impact parameters and their uncertainties for the track-vertex pair
   Result<ImpactParametersAndSigma> getImpactParameters(
       const BoundTrackParameters& track, const Vertex& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx,

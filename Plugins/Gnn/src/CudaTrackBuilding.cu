@@ -6,14 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/CudaTrackBuilding.hpp"
-#include "Acts/Plugins/Gnn/detail/ConnectedComponents.cuh"
-#include "Acts/Plugins/Gnn/detail/CudaUtils.cuh"
-#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
-#include "Acts/Plugins/Gnn/detail/JunctionRemoval.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsPlugins/Gnn/CudaTrackBuilding.hpp"
+#include "ActsPlugins/Gnn/detail/ConnectedComponents.cuh"
+#include "ActsPlugins/Gnn/detail/CudaUtils.cuh"
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/JunctionRemoval.hpp"
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 std::vector<std::vector<int>> CudaTrackBuilding::operator()(
     PipelineTensors tensors, std::vector<int>& spacepointIDs,
@@ -149,4 +151,4 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   return trackCandidates;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

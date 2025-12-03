@@ -22,6 +22,8 @@ namespace Acts {
 /// Bounds for a LineSurface.
 class LineBounds : public SurfaceBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int { eR = 0, eHalfLengthZ = 1, eSize = 2 };
 
   /// Constructor
@@ -79,10 +81,12 @@ class LineBounds : public SurfaceBounds {
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
+  /// @return Reference to the output stream for method chaining
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The bound value for the specified parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

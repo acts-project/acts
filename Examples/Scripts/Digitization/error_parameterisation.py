@@ -48,6 +48,39 @@ def run_error_parametriation(
     var_entries = []
 
     measurements = rfile["measurements"].arrays(library="pd")
+    # Make a new column with g_r = sqrt(x^2+y^2)
+    measurements["rec_gr"] = np.sqrt(
+        measurements["rec_gx"] ** 2 + measurements["rec_gy"] ** 2
+    )
+    measurements["true_r"] = np.sqrt(
+        measurements["true_x"] ** 2 + measurements["true_y"] ** 2
+    )
+
+    plt.scatter(x=measurements["rec_gz"], y=measurements["rec_gr"], s=1, alpha=0.1)
+    plt.xlabel("z [mm]")
+    plt.ylabel("r [mm]")
+    plt.title("Reconstructed hit positions")
+    plt.savefig(output_fig_dir / "overview_rec_hit_positions.png")
+    plt.clf()
+    volume_overview = (
+        '<div><img src="'
+        + str(output_fig_dir / "overview_rec_hit_positions.png")
+        + '" alt="Rec hit positions">'
+    )
+
+    plt.scatter(
+        x=measurements["true_z"], y=measurements["true_r"], s=1, alpha=0.1, c="orange"
+    )
+    plt.xlabel("z [mm]")
+    plt.ylabel("r [mm]")
+    plt.title("True hit positions")
+    plt.savefig(output_fig_dir / "overview_true_hit_positions.png")
+    volume_overview += (
+        '<img src="'
+        + str(output_fig_dir / "overview_true_hit_positions.png")
+        + '" alt="True hit positions"></div>'
+    )
+    plt.clf()
 
     # loop over the volumes
     for iv, v_id_n in enumerate(volumes):
@@ -69,10 +102,10 @@ def run_error_parametriation(
 
         # We should be able to get this from the volume
         local_values = []
-        if "clus_size_loc0" in vol.columns and vol["clus_size_loc0"].any():
+        if not np.isnan(vol["rec_loc0"]).any():
             logging.info(f" - local 0 coorindate found")
             local_values.append(0)
-        if "clus_size_loc1" in vol.columns and vol["clus_size_loc1"].any():
+        if not np.isnan(vol["rec_loc1"]).any():
             local_values.append(1)
             logging.info(f" - local 1 coorindate found")
 
@@ -328,6 +361,9 @@ def run_error_parametriation(
 <h1>Error Parameterisation</h1>
 Generated: {date}<br>
 <div class="grid">
+{overall_content}
+</div>
+<div class="grid">
 {volume_content}
 </div>
 </div>
@@ -335,6 +371,7 @@ Generated: {date}<br>
 </html>
         """.format(
                 date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                overall_content=volume_overview,
                 volume_content=volume_links,
             )
         )

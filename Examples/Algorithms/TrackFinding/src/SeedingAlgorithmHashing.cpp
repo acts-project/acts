@@ -10,20 +10,44 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Seed.hpp"
-#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
-#include "Acts/Plugins/Hashing/HashingTraining.hpp"
-#include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
-#include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/GridBinFinder.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-
-#include <cmath>
-#include <csignal>
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingTraining.hpp"
 
 namespace ActsExamples {
+
+namespace {
+
+// Custom seed comparison function
+template <typename external_spacepoint_t>
+struct SeedComparison {
+  bool operator()(const Acts::Seed<external_spacepoint_t>& seed1,
+                  const Acts::Seed<external_spacepoint_t>& seed2) const {
+    const auto& sp1 = seed1.sp();
+    const auto& sp2 = seed2.sp();
+
+    for (std::size_t i = 0; i < sp1.size(); ++i) {
+      if (sp1[i]->z() != sp2[i]->z()) {
+        return sp1[i]->z() < sp2[i]->z();
+      }
+    }
+
+    for (std::size_t i = 0; i < sp1.size(); ++i) {
+      if (sp1[i]->x() != sp2[i]->x()) {
+        return sp1[i]->x() < sp2[i]->x();
+      }
+    }
+
+    for (std::size_t i = 0; i < sp1.size(); ++i) {
+      if (sp1[i]->y() != sp2[i]->y()) {
+        return sp1[i]->y() < sp2[i]->y();
+      }
+    }
+
+    return false;
+  }
+};
+
+}  // namespace
 
 SeedingAlgorithmHashing::SeedingAlgorithmHashing(
     SeedingAlgorithmHashing::Config cfg, Acts::Logging::Level lvl)
@@ -151,15 +175,6 @@ SeedingAlgorithmHashing::SeedingAlgorithmHashing(
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
-  if (m_cfg.useExtraCuts) {
-    // This function will be applied to select space points during grid filling
-    m_cfg.seedFinderConfig.spacePointSelector
-        .connect<itkFastTrackingSPselect>();
-
-    // This function will be applied to the doublet compatibility selection
-    m_cfg.seedFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
-  }
-
   m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom, 0);
   m_topBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
@@ -172,11 +187,11 @@ SeedingAlgorithmHashing::SeedingAlgorithmHashing(
       Acts::SeedFinder<SpacePointProxy_type,
                        Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(
           m_cfg.seedFinderConfig);
-  m_hashing = Acts::HashingAlgorithm<const SimSpacePoint*,
-                                     std::vector<const SimSpacePoint*>>(
+  m_hashing = ActsPlugins::HashingAlgorithm<const SimSpacePoint*,
+                                            std::vector<const SimSpacePoint*>>(
       m_cfg.hashingConfig);
   m_hashingTraining =
-      Acts::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>(
+      ActsPlugins::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>(
           m_cfg.hashingTrainingConfig);
 }
 
@@ -213,7 +228,8 @@ ProcessCode SeedingAlgorithmHashing::execute(
   spOptions.beamPos = {0., 0.};
 
   // Hashing Training
-  Acts::AnnoyModel annoyModel = m_hashingTraining.execute(spacePointPtrs);
+  ActsPlugins::AnnoyModel annoyModel =
+      m_hashingTraining.execute(spacePointPtrs);
   // Hashing
   static thread_local std::vector<SpacePointPtrVector> bucketsPtrs;
   bucketsPtrs.clear();

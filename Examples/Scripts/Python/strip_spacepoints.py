@@ -31,6 +31,12 @@ def createStripSpacepoints(
         addDigitization,
     )
 
+    from acts.examples.root import (
+        RootParticleReader,
+        RootSimHitReader,
+        RootSpacepointWriter,
+    )
+
     s = s or acts.examples.Sequencer(
         events=100, numThreads=1, logLevel=acts.logging.INFO
     )
@@ -62,7 +68,7 @@ def createStripSpacepoints(
         logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
-            acts.examples.RootParticleReader(
+            RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles="particles_generated",
@@ -82,7 +88,7 @@ def createStripSpacepoints(
         logger.info("Reading hits from %s", inputHitsPath.resolve())
         assert inputHitsPath.exists()
         s.addReader(
-            acts.examples.RootSimHitReader(
+            RootSimHitReader(
                 level=acts.logging.INFO,
                 filePath=str(inputHitsPath.resolve()),
                 outputSimHits="simhits",
@@ -104,14 +110,14 @@ def createStripSpacepoints(
             trackingGeometry=trackingGeometry,
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
-            stripGeometrySelection=acts.examples.readJsonGeometryList(
+            stripGeometrySelection=acts.examples.json.readJsonGeometryList(
                 str(geoSelection)
             ),
         )
     )
 
     s.addWriter(
-        acts.examples.RootSpacepointWriter(
+        RootSpacepointWriter(
             level=acts.logging.INFO,
             inputSpacepoints="spacepoints",
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -126,12 +132,15 @@ if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     # ODD
-    from acts.examples.odd import getOpenDataDetector
+    from acts.examples.odd import (
+        getOpenDataDetector,
+        getOpenDataDetectorDirectory,
+    )
 
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
     digiConfigFile = (
-        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+        getOpenDataDetectorDirectory() / "config/odd-digi-smearing-config.json"
     )
 
     geoSelection = srcdir / "Examples/Configs/odd-strip-spacepoint-selection.json"

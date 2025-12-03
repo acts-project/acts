@@ -24,7 +24,7 @@
 
 #include <boost/functional/hash.hpp>
 
-namespace Acts::Test {
+using namespace Acts;
 
 using Rectangle = std::array<int, 4>;
 
@@ -195,6 +195,10 @@ Cluster2D gencluster(int x0, int y0, int x1, int y1, RNG& rng,
   return cl;
 }
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(ClusterizationSuite)
+
 BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
   using Cell = Cell2D;
   using CellC = std::vector<Cell>;
@@ -227,7 +231,7 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
 
     std::shuffle(cells.begin(), cells.end(), rnd);
 
-    Acts::Ccl::ClusteringData data;
+    Ccl::ClusteringData data;
     ClusterC newCls;
     Ccl::createClusters<CellC, ClusterC>(data, cells, newCls);
 
@@ -245,4 +249,22 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_CASE(Grid_2D_duplicate_cells) {
+  using Cell = Cell2D;
+  using CellC = std::vector<Cell>;
+  using Cluster = Cluster2D;
+  using ClusterC = std::vector<Cluster>;
+
+  CellC cells = {Cell(10, 20), Cell(10, 20)};
+  ClusterC clusters;
+
+  Ccl::ClusteringData data;
+
+  BOOST_CHECK_THROW(
+      (Ccl::createClusters<CellC, ClusterC>(data, cells, clusters)),
+      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -44,15 +44,15 @@ def runGNN4ITk(
         "doJunctionRemoval": True,
     }
 
-    graphConstructor = acts.examples.ModuleMapCuda(**moduleMapConfig)
+    graphConstructor = acts.examples.gnn.ModuleMapCuda(**moduleMapConfig)
     if gnnModel.suffix == ".pt":
         edgeClassifier = acts.examples.TorchEdgeClassifier(**gnnConfig)
     elif gnnModel.suffix == ".onnx":
         del gnnConfig["useEdgeFeatures"]
-        edgeClassifier = acts.examples.OnnxEdgeClassifier(**gnnConfig)
+        edgeClassifier = acts.examples.gnn.OnnxEdgeClassifier(**gnnConfig)
     elif gnnModel.suffix == ".engine":
-        edgeClassifier = acts.examples.TensorRTEdgeClassifier(**gnnConfig)
-    trackBuilder = acts.examples.CudaTrackBuilding(**builderCfg)
+        edgeClassifier = acts.examples.gnn.TensorRTEdgeClassifier(**gnnConfig)
+    trackBuilder = acts.examples.gnn.CudaTrackBuilding(**builderCfg)
 
     s = acts.examples.Sequencer(
         events=events,
@@ -60,7 +60,7 @@ def runGNN4ITk(
     )
 
     s.addReader(
-        acts.examples.RootAthenaDumpReader(
+        acts.examples.root.RootAthenaDumpReader(
             level=logLevel,
             treename="GNN4ITk",
             inputfiles=[str(inputRootDump)],
@@ -152,7 +152,7 @@ def runGNN4ITk(
     )
 
     s.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
+        acts.examples.root.RootTrackFinderPerformanceWriter(
             level=logLevel,
             inputParticles="particles_selected",
             inputParticleMeasurementsMap="particle_measurements_map",

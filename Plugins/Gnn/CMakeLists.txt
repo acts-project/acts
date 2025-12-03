@@ -6,7 +6,7 @@ acts_add_library(
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
     src/GraphStoreHook.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 if(ACTS_GNN_ENABLE_CUDA)
@@ -88,7 +88,10 @@ endif()
 
 if(ACTS_GNN_ENABLE_TORCH)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_TORCH_BACKEND)
-    target_link_libraries(ActsPluginGnn PRIVATE ${TORCH_LIBRARIES} frnn)
+    target_link_libraries(ActsPluginGnn PRIVATE ${TORCH_LIBRARIES})
+    if(ACTS_GNN_ENABLE_CUDA)
+        target_link_libraries(ActsPluginGnn PRIVATE frnn)
+    endif()
     find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)
         message(

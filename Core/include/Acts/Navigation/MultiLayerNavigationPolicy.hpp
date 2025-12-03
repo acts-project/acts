@@ -8,15 +8,14 @@
 
 #pragma once
 
-#include "Acts/Detector/detail/IndexedGridFiller.hpp"
-#include "Acts/Detector/detail/ReferenceGenerators.hpp"
+#include "Acts/Geometry/IndexGridFiller.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
+#include "Acts/Navigation/IndexGridNavigation.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts::Experimental {
 
@@ -25,11 +24,12 @@ namespace Acts::Experimental {
 /// the grid.
 class MultiLayerNavigationPolicy : public INavigationPolicy {
  public:
-  using GridType =
-      Grid<std::vector<std::size_t>,
-           Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
-           Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
-  using IndexedUpdatorType = IndexedSurfacesNavigation<GridType>;
+  /// Type alias for 2D equidistant grid holding surface indices
+  using GridType = Grid<std::vector<std::size_t>,
+                        Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
+                        Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
+  /// Type alias for indexed surfaces navigation updater
+  using IndexedUpdatorType = IndexGridNavigation<GridType>;
 
   struct Config {
     // The binning expansion for grid neighbor lookups

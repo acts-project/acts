@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 import acts
 import acts.examples
+from acts import root
 import warnings
 
 
@@ -21,6 +22,7 @@ def getOpenDataDetector(
     misaligned=False,
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
+    gen3=False,
 ):
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
@@ -63,51 +65,77 @@ def getOpenDataDetector(
         if not found:
             msg = (
                 "Unable to find OpenDataDetector factory library. "
-                f"You might need to point {'/'.join(env_vars)} to build/thirdparty/OpenDataDetector/factory or other ODD install location"
+                f"You might need to point {'/'.join(env_vars)} to the ODD install location."
+                f"It might be at {odd_dir / 'factory'}"
             )
             raise RuntimeError(msg)
 
-    volumeRadiusCutsMap = {
-        28: [850.0],  # LStrip negative z
-        30: [850.0],  # LStrip positive z
-        23: [400.0, 550.0],  # SStrip negative z
-        25: [400.0, 550.0],  # SStrip positive z
-        16: [100.0],  # Pixels negative z
-        18: [100.0],  # Pixels positive z
-    }
-
-    def geoid_hook(geoid, surface):
-        gctx = acts.GeometryContext()
-        if geoid.volume in volumeRadiusCutsMap:
-            r = math.sqrt(surface.center(gctx)[0] ** 2 + surface.center(gctx)[1] ** 2)
-
-            geoid.extra = 1
-            for cut in volumeRadiusCutsMap[geoid.volume]:
-                if r > cut:
-                    geoid.extra += 1
-
-        return geoid
-
     if materialDecorator is None:
-        materialDecorator = acts.examples.RootMaterialDecorator(
+        materialDecorator = acts.root.RootMaterialDecorator(
             fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
-    dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
-        xmlFileNames=[str(odd_xml)],
-        name="OpenDataDetector",
-        logLevel=customLogLevel(),
-        dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
-        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
-        materialDecorator=materialDecorator,
-    )
-    if misaligned:
-        dd4hepConfig.detectorElementFactory = (
-            acts.examples.dd4hep.alignedDD4hepDetectorElementFactory
+    if gen3:
+        if misaligned:
+            raise InvalidArgumentError(
+                "Gen3 ODD currently does not support misalignment"
+            )
+
+        oddConfig = acts.examples.dd4hep.OpenDataDetector.Config(
+            xmlFileNames=[str(odd_xml)],
+            name="OpenDataDetector",
+            logLevel=customLogLevel(),
+            dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
+        )
+        # Use default constructed geometry context. This will have to change if DD4hep gains alignment awareness.
+        gctx = acts.GeometryContext()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            detector = acts.examples.dd4hep.OpenDataDetector(
+                config=oddConfig, gctx=gctx
+            )
+
+        return detector
+    else:
+        volumeRadiusCutsMap = {
+            28: [850.0],  # LStrip negative z
+            30: [850.0],  # LStrip positive z
+            23: [400.0, 550.0],  # SStrip negative z
+            25: [400.0, 550.0],  # SStrip positive z
+            16: [100.0],  # Pixels negative z
+            18: [100.0],  # Pixels positive z
+        }
+
+        def geoid_hook(geoid, surface):
+            gctx = acts.GeometryContext()
+            if geoid.volume in volumeRadiusCutsMap:
+                r = math.sqrt(
+                    surface.center(gctx)[0] ** 2 + surface.center(gctx)[1] ** 2
+                )
+
+                geoid.extra = 1
+                for cut in volumeRadiusCutsMap[geoid.volume]:
+                    if r > cut:
+                        geoid.extra += 1
+
+            return geoid
+
+        dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
+            xmlFileNames=[str(odd_xml)],
+            name="OpenDataDetector",
+            logLevel=customLogLevel(),
+            dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
+            geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
+            materialDecorator=materialDecorator,
         )
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
-    return detector
+        if misaligned:
+            dd4hepConfig.detectorElementFactory = (
+                acts.examples.dd4hep.alignedDD4hepDetectorElementFactory
+            )
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+        return detector

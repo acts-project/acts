@@ -9,11 +9,11 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
 
 #include <stdexcept>
 
@@ -26,7 +26,7 @@ namespace ActsExamples {
 EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
     const EDM4hepMeasurementOutputConverter::Config& config,
     Acts::Logging::Level level)
-    : EDM4hepOutputConverter("EDM4hepMeasurementOutputConverter", level),
+    : PodioOutputConverter("EDM4hepMeasurementOutputConverter", level),
       m_cfg(config) {
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);

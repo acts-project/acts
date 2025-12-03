@@ -80,7 +80,9 @@ bool checkDerivative(const std::array<double, O>& unitArray,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(PolynomialTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(DerivativeCoeffs) {
   constexpr std::size_t order = 20;
@@ -253,3 +255,5 @@ BOOST_AUTO_TEST_CASE(ChebychevPolynomials) {
   }
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

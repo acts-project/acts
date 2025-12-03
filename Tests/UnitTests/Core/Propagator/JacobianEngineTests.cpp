@@ -14,9 +14,12 @@
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTest {
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 /// These tests do not test for a correct covariance transport but only for the
 /// correct conservation or modification of certain variables. A test suite for
@@ -201,4 +204,6 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   BOOST_CHECK(newFreeCovariance1.isApprox(newFreeCovariance2));
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTest

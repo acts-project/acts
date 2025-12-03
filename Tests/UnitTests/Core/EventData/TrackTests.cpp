@@ -115,7 +115,9 @@ using const_holder_types =
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(EventDataTrack)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   factory_t factory;
@@ -312,6 +314,18 @@ BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
   t.appendTrackState();
   t = mutTc.makeTrack();
   t.appendTrackState();
+  std::cout << "New track with l0: " << t.loc0() << ", l1: " << t.loc1()
+            << ", phi: " << t.phi() << ", theta: " << t.theta()
+            << ", q/p: " << t.qOverP() << ", q: " << t.charge()
+            << ", P: " << t.absoluteMomentum()
+            << ", pT: " << t.transverseMomentum()
+            << ", direction: " << t.direction().transpose()
+            << ", mom: " << t.momentum().transpose()
+            << ", p4: " << t.fourMomentum() << ", nStates: " << t.nTrackStates()
+            << ", nMeasurements: " << t.nMeasurements()
+            << ", nHoles: " << t.nHoles() << ", nOutlier: " << t.nOutliers()
+            << ", nShared: " << t.nSharedHits() << ", chi2: " << t.chi2()
+            << ", nDoF: " << t.nDoF() << std::endl;
 
   BOOST_CHECK_EQUAL(mutTc.size(), 2);
   BOOST_CHECK_EQUAL(mutMtj.size(), 4);
@@ -518,3 +532,5 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

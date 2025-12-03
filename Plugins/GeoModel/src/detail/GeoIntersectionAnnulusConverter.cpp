@@ -6,15 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/detail/GeoIntersectionAnnulusConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoIntersectionAnnulusConverter.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/AnnulusBoundsHelper.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 
 #include <algorithm>
 
@@ -26,14 +26,17 @@
 #include <GeoModelKernel/GeoShapeShift.h>
 #include <GeoModelKernel/GeoTubs.h>
 
-Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoIntersectionAnnulusConverter::operator()(
+using namespace Acts;
+using namespace Acts::detail;
+
+Result<ActsPlugins::GeoModelSensitiveSurface>
+ActsPlugins::detail::GeoIntersectionAnnulusConverter::operator()(
     const PVConstLink& geoPV, const GeoShapeIntersection& geoIntersection,
-    const Transform3& absTransform, Acts::SurfaceBoundFactory& boundFactory,
+    const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
     bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr double unitLength =
-      Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
+      UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Returns the first operand being ANDed
   const GeoShape* opA = geoIntersection.getOpA();
@@ -76,8 +79,7 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
         }
 
         auto [annulusBounds, annulusTransform] =
-            Acts::detail::AnnulusBoundsHelper::create(absTransform, rMin, rMax,
-                                                      faceVertices);
+            AnnulusBoundsHelper::create(absTransform, rMin, rMax, faceVertices);
         if (!sensitive) {
           auto surface = Surface::makeShared<DiscSurface>(
               annulusTransform, boundFactory.insert(annulusBounds));

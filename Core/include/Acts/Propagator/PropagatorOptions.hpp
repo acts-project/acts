@@ -65,6 +65,8 @@ struct PurePropagatorPlainOptions {
 /// @brief Holds the generic propagator options
 struct PropagatorPlainOptions : public detail::PurePropagatorPlainOptions {
   /// PropagatorPlainOptions with context
+  /// @param gctx Geometry context for propagation
+  /// @param mctx Magnetic field context for propagation
   PropagatorPlainOptions(const GeometryContext& gctx,
                          const MagneticFieldContext& mctx)
       : geoContext(gctx),
@@ -93,11 +95,16 @@ struct PropagatorPlainOptions : public detail::PurePropagatorPlainOptions {
 template <typename stepper_options_t, typename navigator_options_t,
           typename actor_list_t = ActorList<>>
 struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
+  /// Type alias for stepper options
   using stepper_options_type = stepper_options_t;
+  /// Type alias for navigator options
   using navigator_options_type = navigator_options_t;
+  /// Type alias for actor list
   using actor_list_type = actor_list_t;
 
   /// PropagatorOptions with context
+  /// @param gctx Geometry context for propagation
+  /// @param mctx Magnetic field context for propagation
   PropagatorOptions(const GeometryContext& gctx,
                     const MagneticFieldContext& mctx)
       : geoContext(gctx),
@@ -106,6 +113,7 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
         navigation(gctx) {}
 
   /// PropagatorOptions with context and plain options
+  /// @param pOptions Plain options to initialize from
   explicit PropagatorOptions(const PropagatorPlainOptions& pOptions)
       : geoContext(pOptions.geoContext),
         magFieldContext(pOptions.magFieldContext),
@@ -129,6 +137,7 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
   /// @tparam extended_actor_list_t Type of the new actor list
   ///
   /// @param extendedActorList The new actor list to be used (internally)
+  /// @return PropagatorOptions with the extended actor list
   template <typename extended_actor_list_t>
   PropagatorOptions<stepper_options_t, navigator_options_t,
                     extended_actor_list_t>

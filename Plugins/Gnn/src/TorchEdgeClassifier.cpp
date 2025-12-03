@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/TorchEdgeClassifier.hpp"
+#include "ActsPlugins/Gnn/TorchEdgeClassifier.hpp"
 
-#include "Acts/Plugins/Gnn/detail/TensorVectorConversion.hpp"
-#include "Acts/Plugins/Gnn/detail/Utils.hpp"
+#include "ActsPlugins/Gnn/detail/TensorVectorConversion.hpp"
+#include "ActsPlugins/Gnn/detail/Utils.hpp"
 
 #include <chrono>
 
@@ -24,7 +24,9 @@
 
 using namespace torch::indexing;
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
                                          std::unique_ptr<const Logger> _logger)
@@ -35,8 +37,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
   if (!torch::cuda::is_available()) {
     ACTS_DEBUG("Running on CPU...");
   } else {
-    if (cfg.deviceID >= 0 &&
-        static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
+    if (cfg.deviceID >= 0 && cfg.deviceID < torch::cuda::device_count()) {
       ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
       device = torch::Device(torch::kCUDA, cfg.deviceID);
     } else {
@@ -68,7 +69,7 @@ TorchEdgeClassifier::~TorchEdgeClassifier() {}
 PipelineTensors TorchEdgeClassifier::operator()(
     PipelineTensors tensors, const ExecutionContext& execContext) {
   const auto device =
-      execContext.device.type == Acts::Device::Type::eCUDA
+      execContext.device.type == Device::Type::eCUDA
           ? torch::Device(torch::kCUDA, execContext.device.index)
           : torch::kCPU;
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
@@ -194,4 +195,4 @@ PipelineTensors TorchEdgeClassifier::operator()(
                                            execContext)};
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

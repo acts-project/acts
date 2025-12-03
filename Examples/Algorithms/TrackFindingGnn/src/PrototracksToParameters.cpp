@@ -23,13 +23,12 @@
 #include <algorithm>
 #include <tuple>
 
-using namespace ActsExamples;
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-PrototracksToParameters::PrototracksToParameters(Config cfg,
-                                                 Acts::Logging::Level lvl)
+PrototracksToParameters::PrototracksToParameters(Config cfg, Logging::Level lvl)
     : IAlgorithm("PrototracksToParsAndSeeds", lvl), m_cfg(std::move(cfg)) {
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
@@ -45,7 +44,7 @@ PrototracksToParameters::PrototracksToParameters(Config cfg,
   }
 
   // Set up the track parameters covariance (the same for all tracks)
-  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+  for (std::size_t i = eBoundLoc0; i < eBoundSize; ++i) {
     m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
                          m_cfg.initialSigmas[i];
   }
@@ -63,15 +62,15 @@ ProcessCode PrototracksToParameters::execute(
   // Note this is a heuristic, since it is not garantueed that each measurement
   // is part of a spacepoint
   std::vector<const SimSpacePoint *> indexToSpacepoint(2 * sps.size(), nullptr);
-  std::vector<Acts::GeometryIdentifier> indexToGeoId(
-      2 * sps.size(), Acts::GeometryIdentifier{0});
+  std::vector<GeometryIdentifier> indexToGeoId(2 * sps.size(),
+                                               GeometryIdentifier{0});
 
   for (const auto &sp : sps) {
     for (const auto &sl : sp.sourceLinks()) {
       const auto &isl = sl.template get<IndexSourceLink>();
       if (isl.index() >= indexToSpacepoint.size()) {
         indexToSpacepoint.resize(isl.index() + 1, nullptr);
-        indexToGeoId.resize(isl.index() + 1, Acts::GeometryIdentifier{0});
+        indexToGeoId.resize(isl.index() + 1, GeometryIdentifier{0});
       }
       indexToSpacepoint.at(isl.index()) = &sp;
       indexToGeoId.at(isl.index()) = isl.geometryId();
@@ -168,15 +167,15 @@ ProcessCode PrototracksToParameters::execute(
       ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;
     }
-    Acts::Vector3 field = *fieldRes;
+    Vector3 field = *fieldRes;
 
     if (field.norm() < m_cfg.bFieldMin) {
       ACTS_WARNING("Magnetic field at seed is too small " << field.norm());
       continue;
     }
 
-    auto parsResult = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp(), surface, field);
+    auto parsResult =
+        estimateTrackParamsFromSeed(ctx.geoContext, seed.sp(), surface, field);
     if (!parsResult.ok()) {
       ACTS_WARNING("Skip track because of bad params");
     }
@@ -184,7 +183,7 @@ ProcessCode PrototracksToParameters::execute(
 
     seededTracks.push_back(track);
     seeds.emplace_back(std::move(seed));
-    parameters.push_back(Acts::BoundTrackParameters(
+    parameters.push_back(BoundTrackParameters(
         surface.getSharedPtr(), pars, m_covariance, m_cfg.particleHypothesis));
   }
 

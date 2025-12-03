@@ -143,6 +143,7 @@ class TrackProxy {
 
   /// Equality operator with another track proxy
   /// Checks the container identity and the track index
+  /// @param other Other track proxy to compare with
   /// @return True if the track proxies refer to the same track
   bool operator==(const TrackProxy& other) const {
     return &(*m_container) == &(*other.m_container) && m_index == other.m_index;
@@ -296,7 +297,7 @@ class TrackProxy {
   /// Get the charge of the tack
   /// @note this depends on the charge hypothesis
   /// @return The absolute track momentum
-  double charge() const { return particleHypothesis().qFromQOP(qOverP()); }
+  double charge() const { return particleHypothesis().extractCharge(qOverP()); }
 
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
@@ -740,6 +741,7 @@ class TrackProxy {
   /// Creates  a *shallow copy* of the track. Track states are not copied, but
   /// the resulting track points at the same track states as the original.
   /// @note Only available if the track proxy is not read-only
+  /// @return A shallow copy of this track proxy
   [[deprecated("Use copyFromShallow() instead")]]
   TrackProxy shallowCopy()
     requires(!ReadOnly)
@@ -924,6 +926,7 @@ class TrackProxy {
 
   /// Convert a track state into track parameters
   /// @note The parameters are created on the fly
+  /// @param trackState Track state to convert to parameters
   /// @return the track parameters
   BoundTrackParameters createParametersFromState(
       const ConstTrackStateProxy& trackState) const {

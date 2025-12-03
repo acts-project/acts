@@ -8,8 +8,10 @@
 
 #pragma once
 
-#include <Acts/Plugins/Gnn/detail/CudaUtils.hpp>
-#include <Acts/Utilities/Logger.hpp>
+#include "Acts/Utilities/Logger.hpp"
+#ifndef ACTS_GNN_CPUONLY
+#include <ActsPlugins/Gnn/detail/CudaUtils.hpp>
+#endif
 
 #ifndef ACTS_GNN_CPUONLY
 #include <cuda_runtime_api.h>

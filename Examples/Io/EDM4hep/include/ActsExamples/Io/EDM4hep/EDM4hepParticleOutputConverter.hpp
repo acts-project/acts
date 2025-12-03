@@ -10,8 +10,8 @@
 
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
 #include <string>
 
@@ -22,7 +22,7 @@ namespace ActsExamples {
 /// Inpersistent information:
 /// - particle ID
 /// - process
-class EDM4hepParticleOutputConverter final : public EDM4hepOutputConverter {
+class EDM4hepParticleOutputConverter final : public PodioOutputConverter {
  public:
   struct Config {
     /// Input particles collection to write.

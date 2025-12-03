@@ -15,6 +15,15 @@
 
 #include <cstdint>
 
+namespace Acts {
+template <Experimental::CompositeSpacePoint SpacePoint_t>
+/// @brief Print the position, the drift radius & the sensor directions of a space point.
+///        If the space point is shipped with an ostream operator, this oone is
+///        used
+/// @param measurement: Reference to the space point to print
+std::string toString(const SpacePoint_t& measurement);
+}
+
 namespace Acts::Experimental::detail {
 /// @brief Helper class to calculate the residual between a straight line and
 ///        a CompositeSpacePoint measurement as well as the partial derivatives.
@@ -106,6 +115,8 @@ class CompSpacePointAuxiliaries {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("CompSpacePointAuxiliaries", Logging::Level::INFO));
 
+  /// @brief Returns the config object
+  const Config& config() const { return m_cfg; }
   /// @brief Updates the spatial residual components between the line and the passed
   ///        measurement. The result is cached internally and can be later
   ///        fetched by the residual(), gradient() and hessian() methods. If the
@@ -150,7 +161,10 @@ class CompSpacePointAuxiliaries {
   /// @param cov: The composite space point's covariance values
   void updateChiSq(ChiSqWithDerivatives& chiSqObj,
                    const std::array<double, 3>& cov) const;
-
+  /// @brief Fills the upper triangle of the Hessian matrix with the
+  ///        values from the lower triangle
+  /// @param chiSqObj: Reference to the chiSqObj carrying the Hessian
+  void symmetrizeHessian(ChiSqWithDerivatives& chiSqObj) const;
   /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
   /// @brief Returns the gradient of the previously calculated residual
@@ -325,7 +339,6 @@ class CompSpacePointAuxiliaries {
   /// @param hitMinSeg: Difference of the straw position & the line reference point
   /// @param wireDir: The direction along the wire
   /// @param driftR: Current drift radius of the straw measurement
-
   /// @param driftV: Associated drift velocity given as the derivative of the r-t relation
   /// @param driftA: Associated drift acceleration given as the second derivative of the r-t relation
   void updateTimeStrawRes(const Line_t& line, const Vector& hitMinSeg,
@@ -358,7 +371,7 @@ class CompSpacePointAuxiliaries {
   std::array<Vector, s_nLinePars> m_gradProjDir{
       filledArray<Vector, s_nLinePars>(Vector::Zero())};
   /// @brief Component of the direction vector parallel to the wire
-  double m_wireProject{1.};
+  double m_wireProject{0.};
   /// @brief Length squared of the projected direction
   double m_invProjDirLenSq{0.};
   /// @brief Inverse of the projected direction length

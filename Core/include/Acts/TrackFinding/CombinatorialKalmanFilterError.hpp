@@ -13,6 +13,7 @@
 
 namespace Acts {
 
+/// Error codes for combinatorial Kalman filter operations
 enum class CombinatorialKalmanFilterError {
   // ensure all values are non-zero
   UpdateFailed = 1,
@@ -23,6 +24,9 @@ enum class CombinatorialKalmanFilterError {
   NoMeasurementExpected
 };
 
+/// Create error code from @ref CombinatorialKalmanFilterError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::CombinatorialKalmanFilterError e);
 
 }  // namespace Acts

@@ -30,7 +30,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   if (!result) {
     return std::nullopt;
   }
-  /// Calculate the chi2
+  // Calculate the chi2
   calcPostFitChi2(measurements, *result);
   return result;
 }
@@ -70,6 +70,102 @@ double FastStrawLineFitter::chi2Term(const TrigonomHelper& angle,
   return Acts::pow(dist - r.value_or(strawMeas.driftRadius()), 2) / cov;
 }
 
+template <CompositeSpacePointContainer StripCont_t>
+std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
+    const StripCont_t& measurements, const ResidualIdx projection) const {
+  if (projection == ResidualIdx::time) {
+    ACTS_WARNING(__func__ << "() - " << __LINE__
+                          << ": Only spatial projections, "
+                          << "i.e. nonBending / bending are sensible");
+    return std::nullopt;
+  }
+
+  FitAuxiliaries auxVars{};
+  Vector centerOfGravity{Vector::Zero()};
+  // @brief Selector function to check that the current strip provides a constraint in the projetor direction
+  auto select = [&projection](const auto& strip) -> bool {
+    // Skip straw measurements that are not twins &
+    // don't measure non-bending coordinate
+    if (strip->isStraw()) {
+      return strip->measuresLoc0() && projection == ResidualIdx::nonBending;
+    }
+    // Check that the strip is actually measuring the projection
+    return (strip->measuresLoc0() && projection == ResidualIdx::nonBending) ||
+           (strip->measuresLoc1() && projection == ResidualIdx::bending);
+  };
+
+  auxVars.invCovs.resize(measurements.size());
+  for (const auto& [sIdx, strip] : enumerate(measurements)) {
+    if (!select(strip)) {
+      ACTS_VERBOSE(__func__ << "() - " << __LINE__
+                            << ": Skip strip measurement @"
+                            << toString(strip->localPosition()));
+      continue;
+    }
+    const auto& invCov =
+        (auxVars.invCovs[sIdx] =
+             1. / strip->covariance()[toUnderlying(projection)]);
+    auxVars.covNorm += invCov;
+    centerOfGravity += invCov * strip->localPosition();
+    ++auxVars.nDoF;
+  }
+  // To little information provided
+  if (auxVars.nDoF < 3) {
+    return std::nullopt;
+  }
+  // Reduce the number of degrees of freedom by 2 to account
+  // for the two free parameters to fit
+  auxVars.nDoF -= 2u;
+  auxVars.covNorm = 1. / auxVars.covNorm;
+  centerOfGravity *= auxVars.covNorm;
+
+  bool centerSet{false};
+  for (const auto& [sIdx, strip] : enumerate(measurements)) {
+    if (!select(strip)) {
+      continue;
+    }
+    const Vector pos = strip->localPosition() - centerOfGravity;
+    const Vector& measDir{
+        (projection == ResidualIdx::nonBending && strip->measuresLoc1()) ||
+                strip->isStraw()
+            ? strip->sensorDirection()
+            : strip->toNextSensor()};
+
+    if (!centerSet) {
+      auxVars.centerY = centerOfGravity.dot(measDir);
+      auxVars.centerZ = centerOfGravity.dot(strip->planeNormal());
+      centerSet = true;
+    }
+
+    const double y = pos.dot(measDir);
+    const double z = pos.dot(strip->planeNormal());
+
+    const auto& invCov = auxVars.invCovs[sIdx];
+    auxVars.T_zzyy += invCov * (Acts::square(z) - Acts::square(y));
+    auxVars.T_yz += invCov * z * y;
+  }
+  return fit(auxVars);
+}
+
+template <CompositeSpacePointContainer StrawCont_t,
+          CompositeSpacePointFastCalibrator<
+              Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+              Calibrator_t>
+void FastStrawLineFitter::calcPostFitChi2(const Acts::CalibrationContext& ctx,
+                                          const StrawCont_t& measurements,
+                                          const Calibrator_t& calibrator,
+                                          FitResultT0& result) const {
+  const TrigonomHelper angles{result.theta};
+  result.chi2 = 0.;
+  for (const auto& strawMeas : measurements) {
+    result.chi2 += chi2Term(angles, result.y0, *strawMeas,
+                            calibrator.driftRadius(ctx, *strawMeas, result.t0));
+  }
+  ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Overall chi2: "
+                      << result.chi2 << ", nDoF: " << result.nDoF
+                      << ", redChi2: " << (result.chi2 / result.nDoF));
+}
+
 template <CompositeSpacePointContainer StrawCont_t>
 FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
     const StrawCont_t& measurements, const std::vector<int>& signs) const {
@@ -77,11 +173,11 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
   auxVars.invCovs.resize(signs.size(), -1.);
   Vector centerOfGravity{Vector::Zero()};
 
-  /// Calculate first the center of gravity
+  // Calculate first the center of gravity
   for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
     if (!strawMeas->isStraw()) {
-      ACTS_WARNING(__func__ << "() - " << __LINE__
-                            << ": The measurement is not a straw");
+      ACTS_DEBUG(__func__ << "() - " << __LINE__
+                          << ": The measurement is not a straw");
       continue;
     }
     const double cov = strawMeas->covariance()[s_covIdx];
@@ -107,10 +203,11 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
                           << ": At least 3 measurements are required to "
                              "perform the straw line fit\n"
                           << sstr.str());
+    auxVars.nDoF = 0u;
     return auxVars;
   }
-  /// Reduce the number of degrees of freedom by 2 to account for the two free
-  /// parameters
+  // Reduce the number of degrees of freedom by 2 to account
+  // for the two free parameters to fit
   auxVars.nDoF -= 2u;
   auxVars.covNorm = 1. / auxVars.covNorm;
   centerOfGravity *= auxVars.covNorm;
@@ -119,7 +216,7 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
   bool centerSet{false};
   for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
     const auto& invCov = auxVars.invCovs[sIdx];
-    /// The invalid measurements were marked
+    // Invalid measurements were marked
     if (invCov < 0.) {
       continue;
     }
@@ -144,4 +241,121 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
 
   return auxVars;
 }
+
+template <CompositeSpacePointContainer StrawCont_t,
+          CompositeSpacePointFastCalibrator<
+              Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+              Calibrator_t>
+std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
+    const Acts::CalibrationContext& ctx, const Calibrator_t& calibrator,
+    const StrawCont_t& measurements, const std::vector<int>& signs,
+    std::optional<double> startT0) const {
+  using namespace Acts::UnitLiterals;
+  if (measurements.size() != signs.size()) {
+    ACTS_WARNING(
+        __func__ << "() - " << __LINE__
+                 << ": Not all measurements are associated with a drift sign");
+    return std::nullopt;
+  }
+
+  FitResultT0 result{};
+  result.t0 = startT0.value_or(0.);
+
+  FitAuxiliariesWithT0 fitPars{
+      fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0)};
+  result.theta = startTheta(fitPars);
+  result.nDoF = fitPars.nDoF;
+  ACTS_DEBUG(__func__ << "() - " << __LINE__
+                      << ": Initial fit parameters: " << result);
+  UpdateStatus iterStatus{UpdateStatus::GoodStep};
+
+  while ((iterStatus = updateIteration(fitPars, result)) !=
+         UpdateStatus::Exceeded) {
+    if (iterStatus == UpdateStatus::Converged) {
+      calcPostFitChi2(ctx, measurements, calibrator, result);
+      return result;
+    }
+    fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);
+  }
+  if (logger().doPrint(Logging::VERBOSE)) {
+    ACTS_VERBOSE("Fit failed, printing all measurements:");
+    for (const auto& meas : measurements) {
+      ACTS_VERBOSE(
+          "Pos: " << Acts::toString(meas->localPosition()) << ", t,t0: "
+                  << meas->time() / 1._ns << ", " << result.t0 / 1._ns
+                  << ", truthR, RecoR: " << meas->driftRadius() << ", "
+                  << calibrator.driftRadius(ctx, *meas, result.t0) << ", v: "
+                  << calibrator.driftVelocity(ctx, *meas, result.t0) * 1._ns
+                  << ", a: "
+                  << calibrator.driftAcceleration(ctx, *meas, result.t0) *
+                         1._ns * 1._ns);
+    }
+    ACTS_VERBOSE("Result: " << result);
+  }
+  return std::nullopt;
+}
+
+template <CompositeSpacePointContainer StrawCont_t,
+          CompositeSpacePointFastCalibrator<
+              Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+              Calibrator_t>
+FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
+    const CalibrationContext& ctx, const Calibrator_t& calibrator,
+    const StrawCont_t& measurements, const std::vector<int>& signs,
+    const double t0) const {
+  using namespace Acts::UnitLiterals;
+  FitAuxiliariesWithT0 auxVars{fillAuxiliaries(measurements, signs)};
+  if (auxVars.nDoF <= 1) {
+    auxVars.nDoF = 0;
+    return auxVars;
+  }
+  // Account for the time offset as extra degree of freedom
+  --auxVars.nDoF;
+  // Fill the new extra variables
+  auxVars.T_rz = 0.;
+  auxVars.T_ry = 0.;
+  auxVars.fitY0 = 0.;
+  for (const auto& [spIdx, strawMeas] : enumerate(measurements)) {
+    const double& invCov = auxVars.invCovs[spIdx];
+    // Invalid (non)-straw measurements
+    if (invCov < 0.) {
+      continue;
+    }
+    const double sInvCov = -invCov * signs[spIdx];
+    const double r = calibrator.driftRadius(ctx, *strawMeas, t0);
+    const double v = calibrator.driftVelocity(ctx, *strawMeas, t0);
+    const double a = calibrator.driftAcceleration(ctx, *strawMeas, t0);
+    const double y = strawMeas->localPosition().dot(strawMeas->toNextSensor()) -
+                     auxVars.centerY;
+    const double z = strawMeas->localPosition().dot(strawMeas->planeNormal()) -
+                     auxVars.centerZ;
+
+    ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": # " << (spIdx + 1)
+                          << ") t,t0: " << strawMeas->time() / 1._ns << ", "
+                          << t0 / 1._ns << " r: " << r << ", v: " << v * 1._ns
+                          << ", a: " << a * 1._ns * 1._ns);
+    auxVars.fitY0 += sInvCov * r;
+    auxVars.R_v += sInvCov * v;
+    auxVars.R_a += sInvCov * a;
+
+    auxVars.T_rz += sInvCov * z * r;
+    auxVars.T_ry += sInvCov * y * r;
+
+    auxVars.T_vy += sInvCov * v * y;
+    auxVars.T_vz += sInvCov * v * z;
+
+    auxVars.R_vr += invCov * r * v;
+    auxVars.R_vv += invCov * v * v;
+
+    auxVars.T_ay += sInvCov * a * y;
+    auxVars.T_az += sInvCov * a * z;
+
+    auxVars.R_ar += invCov * a * r;
+  }
+  auxVars.fitY0 *= auxVars.covNorm;
+  ACTS_DEBUG(__func__ << "() - " << __LINE__ << " Fit constants calculated \n"
+                      << auxVars);
+  return auxVars;
+}
+
 }  // namespace Acts::Experimental::detail

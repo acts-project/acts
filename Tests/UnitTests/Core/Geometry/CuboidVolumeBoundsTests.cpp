@@ -17,7 +17,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -26,13 +26,15 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 GeometryContext gctx = GeometryContext();
 
 double hx{10.}, hy{20.}, hz{30.};
 
-BOOST_AUTO_TEST_SUITE(Geometry)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeConstruction) {
   // Test Construction
@@ -115,13 +117,10 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
   }
 
   // Check the binning value positions
-  CHECK_CLOSE_ABS(box.referenceBorder(Acts::AxisDirection::AxisX), hx,
-                  s_epsilon);
-  CHECK_CLOSE_ABS(box.referenceBorder(Acts::AxisDirection::AxisY), hy,
-                  s_epsilon);
-  CHECK_CLOSE_ABS(box.referenceBorder(Acts::AxisDirection::AxisZ), hz,
-                  s_epsilon);
-  CHECK_CLOSE_ABS(box.referenceBorder(Acts::AxisDirection::AxisR),
+  CHECK_CLOSE_ABS(box.referenceBorder(AxisDirection::AxisX), hx, s_epsilon);
+  CHECK_CLOSE_ABS(box.referenceBorder(AxisDirection::AxisY), hy, s_epsilon);
+  CHECK_CLOSE_ABS(box.referenceBorder(AxisDirection::AxisZ), hz, s_epsilon);
+  CHECK_CLOSE_ABS(box.referenceBorder(AxisDirection::AxisR),
                   std::sqrt(hx * hx + hy * hy), s_epsilon);
 }
 
@@ -135,8 +134,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
 
   for (auto& os : cvbOrientedSurfaces) {
     auto osCenter = os.surface->center(geoCtx);
-    const auto* pSurface =
-        dynamic_cast<const Acts::PlaneSurface*>(os.surface.get());
+    const auto* pSurface = dynamic_cast<const PlaneSurface*>(os.surface.get());
     BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
                           "The surface is not a plane surface");
     auto osNormal = pSurface->normal(geoCtx);
@@ -217,4 +215,4 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundsSetValues) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests
