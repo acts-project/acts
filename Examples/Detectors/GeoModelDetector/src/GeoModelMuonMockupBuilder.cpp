@@ -168,7 +168,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
         mwCfg.transform = child.volume->transform();
         auto& sb = child.surfaces.front()->bounds();
         auto lineBounds = dynamic_cast<const Acts::LineBounds*>(&sb);
-        if (!lineBounds) {
+        if (lineBounds == nullptr) {
           throw std::runtime_error(
               "This MDT does not have tubes, what does it have?");
         }
