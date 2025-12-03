@@ -281,9 +281,15 @@ LayerHelper::build() const {
   const auto& layerElements =
       m_builder->findDetElementByNamePattern(container, m_pattern.value());
 
-  if (container.children().empty()) {
-    ACTS_WARNING("Container " << container.name()
-                              << " has no children, no layers added.");
+  if (layerElements.empty()) {
+    ACTS_LOG(m_emptyOk ? Acts::Logging::INFO : Acts::Logging::ERROR,
+             "No layers found in container " << container.name()
+                                             << " matching pattern");
+    if (!m_emptyOk) {
+      throw std::runtime_error(
+          std::format("No layers found in container {} matching pattern",
+                      container.name()));
+    }
   }
   for (const auto& element : layerElements) {
     auto layer = m_builder->makeLayer(element, m_axes.value(), m_layerAxes);
