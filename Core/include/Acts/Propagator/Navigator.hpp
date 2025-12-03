@@ -231,6 +231,10 @@ class Navigator {
     /// Get reference to current navigation candidate
     /// @return Reference to current boundary intersection
     NavigationTarget& navCandidate() {
+      if (navSurfaceIsFree) {
+        return freeCandidates.at(freeCandidateIndex.value());
+      }
+
       return navCandidates.at(navCandidateIndex.value());
     }
 
@@ -838,7 +842,7 @@ class Navigator {
     }
     if (state.navSurfaceIsFree) {
       ACTS_VERBOSE(volInfo(state) << "Target set to next free surface.");
-      return state.navSurface();
+      return state.navCandidate();
     }
 
     ACTS_VERBOSE(volInfo(state) << "Candidate targets exhausted. Renavigate.");
