@@ -115,7 +115,7 @@ class KdtSurfaces {
   std::array<AxisDirection, kDIM> m_casts = {};
 
   /// Helper to generate reference points for filling
-  std::shared_ptr<IReferenceGenerator> m_rGenerator = nullptr;
+  std::shared_ptr<IReferenceGenerator> m_rGenerator{nullptr};
 
   /// Unroll the cast loop
   /// @param position is the position of the update call
