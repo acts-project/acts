@@ -160,7 +160,9 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
           halfZ = cbb->get(BoundVal::eHalfLengthZ);
 
         } else {
-          throw std::runtime_error("GeoModelMuonMockupBuilder::buildBarrelNode() - Not a trapezoid or cuboid volume bounds");
+          throw std::runtime_error(
+              "GeoModelMuonMockupBuilder::buildBarrelNode() - Not a trapezoid "
+              "or cuboid volume bounds");
         }
 
         mwCfg.name = child.name;
