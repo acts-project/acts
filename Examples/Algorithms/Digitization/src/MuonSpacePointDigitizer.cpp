@@ -205,7 +205,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
     assert(hitSurf != nullptr);
 
     const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
-####
     const auto& calibCfg = calibrator().config();
     switch (hitSurf->type()) {
       /// Strip measurements
@@ -395,7 +394,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
       outSpacePoints.push_back(std::move(bucket));
     }
   }
-
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
 
   return ProcessCode::SUCCESS;
