@@ -188,4 +188,31 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   void checkConsistency() noexcept(false);
 };
 
+/// @cond
+/// @brief Streaming operator for the polygon volume surfaces
+inline std::ostream& operator<<(std::ostream& os,
+                                ConvexPolygonVolumeBounds::Face face) {
+  switch (face) {
+    case ConvexPolygonVolumeBounds::Face::NegativeZFaceXY:
+      return os << "NegativeZFaceXY";
+    case ConvexPolygonVolumeBounds::Face::PositiveZFaceXY:
+      return os << "PositiveZFaceXY";
+    case ConvexPolygonVolumeBounds::Face::NegativeXFaceYZ12:
+      return os << "NegativeXFaceYZ12";
+    case ConvexPolygonVolumeBounds::Face::PositiveXFaceYZ12:
+      return os << "PositiveXFaceYZ12";
+    case ConvexPolygonVolumeBounds::Face::NegativeXFaceYZ23:
+      return os << "NegativeXFaceYZ23";
+    case ConvexPolygonVolumeBounds::Face::PositiveXFaceYZ23:
+      return os << "PositiveXFaceYZ23";
+    case ConvexPolygonVolumeBounds::Face::NegativeYFaceZX:
+      return os << "NegativeYFaceZX";
+    case ConvexPolygonVolumeBounds::Face::PositiveYFaceZX:
+      return os << "PositiveYFaceZX";
+    default:
+      return os << "Unknown";
+  }
+}
+/// @endcond
+
 }  // namespace Acts
