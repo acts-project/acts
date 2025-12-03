@@ -67,9 +67,16 @@ class BlueprintBuilder {
   std::shared_ptr<DD4hepDetectorElement> createDetectorElement(
       const dd4hep::DetElement& detElement, const std::string& axes) const;
 
+  [[deprecated("Renamed to `makeLayer()`")]]
   std::shared_ptr<Acts::Experimental::LayerBlueprintNode> addLayer(
       const dd4hep::DetElement& detElement, const std::string& axes,
-      std::optional<std::string> layerAxes = std::nullopt);
+      std::optional<std::string> layerAxes = std::nullopt) {
+    return makeLayer(detElement, axes, std::move(layerAxes));
+  }
+
+  std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
+      const dd4hep::DetElement& detElement, const std::string& axes,
+      std::optional<std::string> layerAxes = std::nullopt) const;
 
   std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeBeampipe() const;
 
