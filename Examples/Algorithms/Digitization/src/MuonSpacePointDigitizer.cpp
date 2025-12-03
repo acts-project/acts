@@ -205,6 +205,36 @@ ProcessCode MuonSpacePointDigitizer::execute(
     assert(hitSurf != nullptr);
 
     const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
+
+        // Iterate over all simHits in a single module
+    for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
+      const auto& simHit = *h;
+      const auto simHitIdx = gotSimHits.index_of(h);
+
+      if (simHit.position()[0] < 6000 || simHit.position()[0] > 7000) {
+        continue;
+      }
+
+      // Convert the hit trajectory into local coordinates
+      const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
+      const Vector3 locDir =
+          surfLocToGlob.inverse().linear() * simHit.direction();
+
+      const auto& bounds = hitSurf->bounds();
+      ACTS_DEBUG("Process hit: "
+                 << toString(locPos) << ", dir: " << toString(locDir)
+                 << " recorded in a "
+                 << Surface::s_surfaceTypeNames[toUnderlying(hitSurf->type())]
+                 << " surface with id: " << moduleGeoId
+                 << ", bounds: " << bounds);
+      bool convertSp{true};
+
+      MuonSpacePoint newSp{};
+      newSp.setGeometryId(moduleGeoId);
+
+      /// Transformation to the common coordinate system of all space points
+      const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
+    
     const auto& calibCfg = calibrator().config();
     switch (hitSurf->type()) {
       /// Strip measurements
