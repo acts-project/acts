@@ -210,6 +210,12 @@ BlueprintBuilder::makeBeampipe() const {
           tgTransform.GetRotationMatrix(), tgTransform.GetTranslation(), "XYZ",
           m_cfg.lengthScale);
 
+  if (bounds == nullptr) {
+    ACTS_ERROR("Beampipe element shape could not be converted to cylinder.");
+    throw std::runtime_error(
+        "Beampipe element shape could not be converted to cylinder.");
+  }
+
   std::shared_ptr volBounds = std::make_shared<Acts::CylinderVolumeBounds>(
       0, bounds->get(Acts::CylinderBounds::eR),
       bounds->get(Acts::CylinderBounds::eHalfLengthZ));
