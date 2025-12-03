@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
@@ -202,11 +203,19 @@ BlueprintBuilder::makeBeampipe() const {
 
   ACTS_INFO("Beampipe element found: " << beampipeElement->name());
 
-  std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
-      *TGeoVolumeConverter::cylinderVolume(
+  const auto& tgTransform = beampipeElement->nominal().worldTransformation();
+  auto [bounds, transform, thickness] =
+      ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
           *beampipeElement->placement().ptr()->GetVolume()->GetShape(),
-          beampipeElement->nominal().worldTransformation(), m_cfg.lengthScale),
-      beampipeElement->name());
+          tgTransform.GetRotationMatrix(), tgTransform.GetTranslation(), "XYZ",
+          m_cfg.lengthScale);
+
+  std::shared_ptr volBounds = std::make_shared<Acts::CylinderVolumeBounds>(
+      0, bounds->get(Acts::CylinderBounds::eR),
+      bounds->get(Acts::CylinderBounds::eHalfLengthZ));
+
+  std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
+      transform, volBounds, beampipeElement->name());
 
   ACTS_INFO("-> Created beampipe volume: " << volume->volumeBounds()
                                            << " transform:\n"
