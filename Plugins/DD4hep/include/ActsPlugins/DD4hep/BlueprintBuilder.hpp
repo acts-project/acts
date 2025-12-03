@@ -161,6 +161,11 @@ class LayerHelper {
     return *this;
   }
 
+  LayerHelper& setEmptyOk(bool emptyOk) {
+    m_emptyOk = emptyOk;
+    return *this;
+  }
+
   LayerHelper& customize(Customizer customizer) {
     m_customizer = std::move(customizer);
     return *this;
@@ -177,6 +182,7 @@ class LayerHelper {
   std::optional<std::regex> m_pattern;
   std::optional<dd4hep::DetElement> m_container;
   std::optional<Acts::ExtentEnvelope> m_envelope;
+  bool m_emptyOk = false;
 
   Customizer m_customizer;
 };
