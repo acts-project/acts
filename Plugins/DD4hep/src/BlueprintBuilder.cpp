@@ -141,9 +141,9 @@ Acts::Transform3 convertTGeoTransform(const TGeoShape& shape,
 }  // namespace
 
 std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-BlueprintBuilder::addLayer(const dd4hep::DetElement& detElement,
-                           const std::string& axes,
-                           std::optional<std::string> layerAxes) {
+BlueprintBuilder::makeLayer(const dd4hep::DetElement& detElement,
+                            const std::string& axes,
+                            std::optional<std::string> layerAxes) const {
   ACTS_DEBUG("Adding layer from element: " << detElement.name());
   auto node = std::make_shared<Acts::Experimental::LayerBlueprintNode>(
       detElement.name());
@@ -236,7 +236,7 @@ BlueprintBuilder::addLayers(const dd4hep::DetElement& container,
                               << " has no children, no layers added.");
   }
   for (const auto& element : layerElements) {
-    auto layer = addLayer(element, axes);
+    auto layer = makeLayer(element, axes);
     layer->setEnvelope(envelope);
 
     node->addChild(layer);
@@ -286,7 +286,7 @@ LayerHelper::build() const {
                               << " has no children, no layers added.");
   }
   for (const auto& element : layerElements) {
-    auto layer = m_builder->addLayer(element, m_axes.value(), m_layerAxes);
+    auto layer = m_builder->makeLayer(element, m_axes.value(), m_layerAxes);
     if (m_envelope.has_value()) {
       layer->setEnvelope(m_envelope.value());
     }
