@@ -59,12 +59,19 @@ OpenDataDetector::defaultDetectorElementFactory(
 
 namespace {
 
-std::optional<int> parseLayerNumber(const dd4hep::DetElement& elem,
-                                    const std::regex& pattern) {
+int parseLayerNumber(const dd4hep::DetElement& elem,
+                     const std::regex& pattern) {
   std::cmatch match;
 
   if (!std::regex_match(elem.name(), match, pattern)) {
-    return std::nullopt;
+    throw std::runtime_error(std::format(
+        "Layer name {} does not match expected pattern", elem.name()));
+  }
+
+  if (match.size() != 2) {
+    throw std::runtime_error(std::format(
+        "Layer name {} matched pattern but did not capture layer number",
+        elem.name()));
   }
 
   int n = std::stoi(match[1]);
@@ -105,220 +112,66 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
     return dd4hepDetector().constant<int>(name);
   };
 
-  auto makeBinningFromConstants =
-      [&](const dd4hep::DetElement& elem, const std::regex& pattern,
-          const std::string& constant0, const std::string& constant1) {
-        std::cmatch match;
+  auto makeCustomizer = [&](const std::string& det,
+                            const std::regex& layerPattern)
+      -> ActsPlugins::DD4hep::LayerHelper::Customizer {
+    return [&, det](const auto& elem,
+                    Acts::Experimental::LayerBlueprintNode& layer) {
+      int n = parseLayerNumber(elem, layerPattern);
 
-        if (!std::regex_match(elem.name(), match, pattern)) {
-          throw std::runtime_error(std::format(
-              "Could not extract layer number from {}", elem.name()));
-        }
+      std::string name = elem.name();
+      using enum SrfArrayNavPol::LayerType;
+      SrfArrayNavPol::Config cfg;
 
-        if (auto n = parseLayerNumber(elem, pattern)) {
-          return std::pair{
-              constant(std::vformat(constant0, std::make_format_args(*n))),
-              constant(std::vformat(constant1, std::make_format_args(*n)))};
-        } else {
-          throw std::runtime_error(std::format(
-              "Could not extract layer number from {}", elem.name()));
-        }
-      };
+      if (name.find("Endcap") != std::string::npos) {
+        cfg.bins = {constant(std::format("{}_e_sf_b_r", det)),
+                    constant(std::format("{}_e_sf_b_phi", det))};
+        cfg.layerType = Disc;
+      } else {
+        cfg.bins = {constant(std::format("{}_b{}_sf_b_phi", det, n)),
+                    constant(std::format("{}_b_sf_b_z", det))};
+        cfg.layerType = Cylinder;
+      }
 
-  outer.addCylinderContainer("Pixel", AxisZ, [&](auto& pixel) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-    auto barrel =
-        builder.layerHelper()
-            .barrel()
-            .setAxes("XYZ")
-            .setPattern("PixelLayer\\d")
-            .setContainer("PixelBarrel")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& elem, auto& layer) {
-              layer.setNavigationPolicyFactory(
-                  NavigationPolicyFactory{}
-                      .add<CylinderNavigationPolicy>()
-                      .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                          .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                          .bins = makeBinningFromConstants(
-                              elem, std::regex{"PixelLayer(\\d+)"},
-                              "pix_b{}_sf_b_phi", "pix_b_sf_b_z")})
-                      .asUniquePtr());
-            })
-            .build();
-    barrel->setAttachmentStrategy(AttachmentStrategy::First);
+      layer.setNavigationPolicyFactory(NavigationPolicyFactory{}
+                                           .add<CylinderNavigationPolicy>()
+                                           .add<SrfArrayNavPol>(cfg)
+                                           .asUniquePtr());
 
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {constant("pix_e_sf_b_r"), constant("pix_e_sf_b_phi")}})
-            .asUniquePtr();
+      // @TODO: This needs to set the material as well
+    };
+  };
 
-    auto negEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("PixelEndcapN\\d")
-            .setContainer("PixelEndcapN")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& /*elem*/, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    negEndcap->setAttachmentStrategy(AttachmentStrategy::First);
+  auto pixelAssembly = builder.findDetElementByName("Pixels").value();
+  std::regex pixelLayerPattern{"(?:PixelLayer|PixelEndcap[NP])(\\d)"};
+  builder.barrelEndcapAssemblyHelper()
+      .setAssembly(pixelAssembly)
+      .setBarrelAxes("XYZ")
+      .setEndcapAxes("XZY")
+      .setLayerPattern(pixelLayerPattern)
+      .setCustomizer(makeCustomizer("pix", pixelLayerPattern))
+      .addTo(outer);
 
-    auto posEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("PixelEndcapP\\d")
-            .setContainer("PixelEndcapP")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& /*elem*/, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    posEndcap->setAttachmentStrategy(AttachmentStrategy::First);
+  auto sstripAssembly = builder.findDetElementByName("ShortStrips").value();
+  std::regex sstripLayerPattern{
+      "(?:ShortStripLayer|ShortStripEndcap[NP])(\\d)"};
+  builder.barrelEndcapAssemblyHelper()
+      .setAssembly(sstripAssembly)
+      .setBarrelAxes("XYZ")
+      .setEndcapAxes("XZY")
+      .setLayerPattern(sstripLayerPattern)
+      .setCustomizer(makeCustomizer("ss", sstripLayerPattern))
+      .addTo(outer);
 
-    pixel.addChild(barrel);
-    pixel.addChild(negEndcap);
-    pixel.addChild(posEndcap);
-  });
-
-  outer.addCylinderContainer("ShortStrip", AxisZ, [&](auto& sstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    // @TODO: Make it configurable if empty result is received
-    auto barrel =
-        builder.layerHelper()
-            .barrel()
-            .setAxes("XYZ")
-            .setPattern("ShortStripLayer\\d")
-            .setContainer("ShortStripBarrel")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& elem, auto& layer) {
-              layer.setNavigationPolicyFactory(
-                  NavigationPolicyFactory{}
-                      .add<CylinderNavigationPolicy>()
-                      .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                          .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                          .bins = makeBinningFromConstants(
-                              elem, std::regex{"ShortStripLayer(\\d)"},
-                              "ss_b{}_sf_b_phi", "ss_b_sf_b_z")})
-                      .asUniquePtr());
-            })
-            .build();
-    barrel->setAttachmentStrategy(AttachmentStrategy::First);
-
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {constant("ss_e_sf_b_r"), constant("ss_e_sf_b_phi")}})
-            .asUniquePtr();
-
-    auto posEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("ShortStripEndcapP\\d")
-            .setContainer("ShortStripEndcapP")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& /*elem*/, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    posEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    auto negEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("ShortStripEndcapN\\d")
-            .setContainer("ShortStripEndcapN")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& /*elem*/, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    negEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    sstrip.addChild(barrel);
-    sstrip.addChild(posEndcap);
-    sstrip.addChild(negEndcap);
-  });
-
-  outer.addCylinderContainer("LongStrip", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    auto barrel =
-        builder.layerHelper()
-            .barrel()
-            .setAxes("XYZ")
-            .setPattern("LongStripLayer\\d")
-            .setContainer("LongStripBarrel")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& elem, auto& layer) {
-              layer.setNavigationPolicyFactory(
-                  NavigationPolicyFactory{}
-                      .add<CylinderNavigationPolicy>()
-
-                      .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                          .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                          .bins = makeBinningFromConstants(
-                              elem, std::regex{"LongStripLayer(\\d)"},
-                              "ls_b{}_sf_b_phi", "ls_b_sf_b_z")})
-                      .asUniquePtr());
-            })
-            .build();
-    barrel->setAttachmentStrategy(AttachmentStrategy::First);
-
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {constant("ls_e_sf_b_r"), constant("ls_e_sf_b_phi")}})
-            .asUniquePtr();
-
-    auto posEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("LongStripEndcapP\\d")
-            .setContainer("LongStripEndcapP")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& /*elem*/, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    posEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    auto negEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("LongStripEndcapN\\d")
-            .setContainer("LongStripEndcapN")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& /*elem*/, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    negEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(barrel);
-    lstrip.addChild(posEndcap);
-    lstrip.addChild(negEndcap);
-  });
-
-  // @TODO: Add plugin way to take this from xml
+  auto lstripAssembly = builder.findDetElementByName("LongStrips").value();
+  std::regex lstripLayerPattern{"(?:LongStripLayer|LongStripEndcap[NP])(\\d)"};
+  builder.barrelEndcapAssemblyHelper()
+      .setAssembly(lstripAssembly)
+      .setBarrelAxes("XYZ")
+      .setEndcapAxes("XZY")
+      .setLayerPattern(lstripLayerPattern)
+      .setCustomizer(makeCustomizer("ls", lstripLayerPattern))
+      .addTo(outer);
 
   BlueprintOptions options;
 
