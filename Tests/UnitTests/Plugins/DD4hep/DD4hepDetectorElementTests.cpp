@@ -180,8 +180,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementDisc) {
 
   std::shared_ptr<ActsPlugins::DD4hepDetectorElement> discElement = nullptr;
   for (const auto& [chn, child] : world.children()) {
-    discElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
-        child, "XYZ", 10., true);
+    discElement =
+        std::make_shared<ActsPlugins::DD4hepDetectorElement>(child, "XYZ", 10.);
   }
 
   BOOST_REQUIRE_NE(discElement, nullptr);
@@ -213,8 +213,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralDisc) {
 
   std::shared_ptr<ActsPlugins::DD4hepDetectorElement> discElement = nullptr;
   for (const auto& [chn, child] : world.children()) {
-    discElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
-        child, "XYZ", 10., true);
+    discElement =
+        std::make_shared<ActsPlugins::DD4hepDetectorElement>(child, "XYZ", 10.);
   }
 
   BOOST_REQUIRE_NE(discElement, nullptr);
@@ -250,8 +250,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
   std::shared_ptr<ActsPlugins::DD4hepDetectorElement> rectangleElement =
       nullptr;
   for (const auto& [chn, child] : world.children()) {
-    rectangleElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
-        child, "XYZ", 10., true);
+    rectangleElement =
+        std::make_shared<ActsPlugins::DD4hepDetectorElement>(child, "XYZ", 10.);
   }
 
   BOOST_REQUIRE_NE(rectangleElement, nullptr);
@@ -295,8 +295,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
   std::shared_ptr<ActsPlugins::DD4hepDetectorElement> trapezoidElement =
       nullptr;
   for (const auto& [chn, child] : world.children()) {
-    trapezoidElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
-        child, "xZ", 10., true);
+    trapezoidElement =
+        std::make_shared<ActsPlugins::DD4hepDetectorElement>(child, "xZ", 10.);
   }
 
   BOOST_REQUIRE_NE(trapezoidElement, nullptr);
