@@ -12,12 +12,17 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 #include "ActsPlugins/Root/TGeoVolumeConverter.hpp"
+
+#include <ranges>
+#include <string>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetType.h>
@@ -73,7 +78,7 @@ std::optional<dd4hep::DetElement> BlueprintBuilder::findDetElementByName(
 }
 
 std::optional<dd4hep::DetElement> BlueprintBuilder::findDetElementByName(
-    const std::string& name) {
+    const std::string& name) const {
   return findDetElementByName(world(), name);
 }
 
@@ -274,8 +279,121 @@ BlueprintBuilder::addLayers(const dd4hep::DetElement& container,
   return node;
 }
 
-LayerHelper BlueprintBuilder::layerHelper() {
+LayerHelper BlueprintBuilder::layerHelper() const {
   return LayerHelper(*this);
+}
+
+BarrelEndcapAssemblyHelper BlueprintBuilder::barrelEndcapAssemblyHelper()
+    const {
+  return BarrelEndcapAssemblyHelper(*this);
+}
+
+namespace {
+std::vector<dd4hep::DetElement> findDetElementsByType(
+    const dd4hep::DetElement& parent,
+    dd4hep::DetType::DetectorTypeEnumeration type) {
+  std::vector<dd4hep::DetElement> result;
+  visitSubtree(parent, [&](const auto& elem) {
+    dd4hep::DetType subDetType{elem.typeFlag()};
+    if (subDetType.is(type)) {
+      result.push_back(elem);
+    }
+  });
+  return result;
+}
+
+// template <template <typename...> class Container, typename Range>
+// auto to(Range&& range) {
+//   using ValueType = std::ranges::range_value_t<Range>;
+//   return Container<ValueType>(std::ranges::begin(range),
+//                               std::ranges::end(range));
+// }
+
+template <template <typename...> class Container>
+struct to_adaptor {
+  template <typename Range>
+  auto operator()(Range&& range) const {
+    using ValueType = std::ranges::range_value_t<Range>;
+    return Container<ValueType>(std::ranges::begin(range),
+                                std::ranges::end(range));
+  }
+};
+
+// Overload operator| for piping
+template <typename Range, template <typename...> class Container>
+auto operator|(Range&& range, to_adaptor<Container> adaptor) {
+  return adaptor(std::forward<Range>(range));
+}
+
+// Create the adaptor objects
+template <template <typename...> class Container>
+inline constexpr to_adaptor<Container> to{};
+
+}  // namespace
+
+std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+BlueprintBuilder::makeBarrelEndcapAssembly(
+    const dd4hep::DetElement& assembly, const std::regex& layerPattern,
+    const std::string& barrelAxes, const std::string& endcapAxes,
+    const LayerHelper::Customizer& customizer) const {
+  ACTS_INFO(
+      "Converting barrel-endcap assembly from element: " << assembly.name());
+  auto isTracker = [](auto& elem) {
+    return dd4hep::DetType{elem.typeFlag()}.is(dd4hep::DetType::TRACKER);
+  };
+
+  auto barrels = findDetElementsByType(assembly, dd4hep::DetType::BARREL) |
+                 std::views::filter(isTracker) | to<std::vector>;
+
+  ACTS_DEBUG("Have " << barrels.size() << " barrel elements in assembly "
+                     << assembly.name());
+  if (barrels.size() > 1) {
+    ACTS_ERROR("Expected exactly zero or one barrel in assembly "
+               << assembly.name() << ", found " << barrels.size());
+    throw std::runtime_error(std::format(
+        "Expected exactly zero or one barrel in assembly {}", assembly.name()));
+  }
+
+  auto endcaps = findDetElementsByType(assembly, dd4hep::DetType::ENDCAP) |
+                 std::views::filter(isTracker) | to<std::vector>;
+
+  ACTS_DEBUG("Have " << endcaps.size() << " endcap elements in assembly "
+                     << assembly.name());
+
+  std::shared_ptr node =
+      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+          assembly.name(), Acts::AxisDirection::AxisZ);
+
+  for (const auto& barrel : barrels) {
+    node->addChild(layerHelper()
+                       .barrel()
+                       .setAxes(barrelAxes)
+                       .setPattern(layerPattern)
+                       .setContainer(barrel)
+                       .customize(customizer)
+                       .build());
+  }
+
+  for (const auto& endcap : endcaps) {
+    node->addChild(layerHelper()
+                       .endcap()
+                       .setAxes(endcapAxes)
+                       .setPattern(layerPattern)
+                       .setContainer(endcap)
+                       .customize(customizer)
+                       .build());
+  }
+
+  return node;
+}
+
+LayerHelper& LayerHelper::setContainer(const std::string& name) {
+  m_container = m_builder->findDetElementByName(name);
+  if (!m_container.has_value()) {
+    throw std::runtime_error("Could not find DetElement with name " + name +
+                             " in LayerHelper");
+  }
+  return *this;
 }
 
 std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
@@ -333,6 +451,92 @@ LayerHelper::build() const {
   }
 
   return node;
+}
+
+void LayerHelper::addTo(Acts::Experimental::BlueprintNode& node) const {
+  node.addChild(build());
+}
+
+std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+BarrelEndcapAssemblyHelper::build() const {
+  const auto& logger = m_builder->logger();
+
+  if (!m_assembly.has_value()) {
+    throw std::runtime_error(
+        "Assembly detector element not set in BarrelEndcapAssemblyHelper");
+  }
+
+  if (!m_barrelAxes.has_value()) {
+    throw std::runtime_error(
+        "Barrel axes not set in BarrelEndcapAssemblyHelper");
+  }
+
+  if (!m_endcapAxes.has_value()) {
+    throw std::runtime_error(
+        "Endcap axes not set in BarrelEndcapAssemblyHelper");
+  }
+
+  if (!m_layerPattern.has_value()) {
+    throw std::runtime_error(
+        "Layer pattern not set in BarrelEndcapAssemblyHelper");
+  }
+
+  const auto& assembly = m_assembly.value();
+
+  ACTS_INFO(
+      "Converting barrel-endcap assembly from element: " << assembly.name());
+  auto isTracker = [](auto& elem) {
+    return dd4hep::DetType{elem.typeFlag()}.is(dd4hep::DetType::TRACKER);
+  };
+
+  auto barrels = findDetElementsByType(assembly, dd4hep::DetType::BARREL) |
+                 std::views::filter(isTracker) | to<std::vector>;
+
+  ACTS_DEBUG("Have " << barrels.size() << " barrel elements in assembly "
+                     << assembly.name());
+  if (barrels.size() > 1) {
+    ACTS_ERROR("Expected exactly zero or one barrel in assembly "
+               << assembly.name() << ", found " << barrels.size());
+    throw std::runtime_error(std::format(
+        "Expected exactly zero or one barrel in assembly {}", assembly.name()));
+  }
+
+  auto endcaps = findDetElementsByType(assembly, dd4hep::DetType::ENDCAP) |
+                 std::views::filter(isTracker) | to<std::vector>;
+
+  ACTS_DEBUG("Have " << endcaps.size() << " endcap elements in assembly "
+                     << assembly.name());
+
+  std::shared_ptr node =
+      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+          assembly.name(), Acts::AxisDirection::AxisZ);
+
+  for (const auto& barrel : barrels) {
+    node->addChild(m_builder->layerHelper()
+                       .barrel()
+                       .setAxes(m_barrelAxes.value())
+                       .setPattern(m_layerPattern.value())
+                       .setContainer(barrel)
+                       .customize(m_customizer)
+                       .build());
+  }
+
+  for (const auto& endcap : endcaps) {
+    node->addChild(m_builder->layerHelper()
+                       .endcap()
+                       .setAxes(m_endcapAxes.value())
+                       .setPattern(m_layerPattern.value())
+                       .setContainer(endcap)
+                       .customize(m_customizer)
+                       .build());
+  }
+
+  return node;
+}
+
+void BarrelEndcapAssemblyHelper::addTo(
+    Acts::Experimental::BlueprintNode& node) const {
+  node.addChild(build());
 }
 
 }  // namespace ActsPlugins::DD4hep

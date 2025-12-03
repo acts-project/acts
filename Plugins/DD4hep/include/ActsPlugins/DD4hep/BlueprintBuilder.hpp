@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
@@ -35,7 +36,127 @@ namespace ActsPlugins {
 namespace DD4hep {
 
 class LayerBlueprintNode;
-class LayerHelper;
+class BlueprintBuilder;
+
+class LayerHelper {
+ public:
+  using LayerType = Acts::Experimental::LayerBlueprintNode::LayerType;
+  using Customizer = std::function<void(
+      const dd4hep::DetElement&, Acts::Experimental::LayerBlueprintNode&)>;
+
+  explicit LayerHelper(const BlueprintBuilder& builder) : m_builder{&builder} {}
+
+  LayerHelper& setLayerType(LayerType layerType) {
+    m_layerType = layerType;
+    return *this;
+  }
+
+  LayerHelper& endcap() { return setLayerType(LayerType::Disc); }
+  LayerHelper& barrel() { return setLayerType(LayerType::Cylinder); }
+
+  LayerHelper& setAxes(const std::string& axes) {
+    m_axes = axes;
+    return *this;
+  }
+
+  LayerHelper& setLayerAxes(const std::string& layerAxes) {
+    m_layerAxes = layerAxes;
+    return *this;
+  }
+
+  LayerHelper& setPattern(const std::string& pattern) {
+    return setPattern(std::regex{pattern});
+  }
+
+  LayerHelper& setPattern(const std::regex& pattern) {
+    m_pattern = pattern;
+    return *this;
+  }
+
+  LayerHelper& setContainer(const dd4hep::DetElement& container) {
+    m_container = container;
+    return *this;
+  }
+
+  LayerHelper& setContainer(const std::string& name);
+
+  LayerHelper& setEnvelope(const Acts::ExtentEnvelope& envelope) {
+    m_envelope = envelope;
+    return *this;
+  }
+
+  LayerHelper& setEmptyOk(bool emptyOk) {
+    m_emptyOk = emptyOk;
+    return *this;
+  }
+
+  LayerHelper& customize(Customizer customizer) {
+    m_customizer = std::move(customizer);
+    return *this;
+  }
+
+  std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode> build()
+      const;
+
+  void addTo(Acts::Experimental::BlueprintNode& node) const;
+
+ private:
+  const ActsPlugins::DD4hep::BlueprintBuilder* m_builder;
+  std::optional<LayerType> m_layerType;
+  std::optional<std::string> m_axes;
+  std::optional<std::string> m_layerAxes;
+  std::optional<std::regex> m_pattern;
+  std::optional<dd4hep::DetElement> m_container;
+  std::optional<Acts::ExtentEnvelope> m_envelope;
+  bool m_emptyOk = false;
+
+  Customizer m_customizer;
+};
+
+class BarrelEndcapAssemblyHelper {
+ public:
+  explicit BarrelEndcapAssemblyHelper(const BlueprintBuilder& builder)
+      : m_builder{&builder} {}
+
+  std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode> build()
+      const;
+
+  void addTo(Acts::Experimental::BlueprintNode& node) const;
+
+  auto& setCustomizer(LayerHelper::Customizer customizer) {
+    m_customizer = std::move(customizer);
+    return *this;
+  }
+
+  auto& setAssembly(const dd4hep::DetElement& assembly) {
+    m_assembly = assembly;
+    return *this;
+  }
+
+  auto& setBarrelAxes(const std::string& axes) {
+    m_barrelAxes = axes;
+    return *this;
+  }
+
+  auto& setEndcapAxes(const std::string& axes) {
+    m_endcapAxes = axes;
+    return *this;
+  }
+
+  auto& setLayerPattern(const std::regex& pattern) {
+    m_layerPattern = pattern;
+    return *this;
+  }
+
+ private:
+  LayerHelper::Customizer m_customizer;
+
+  std::optional<dd4hep::DetElement> m_assembly;
+  std::optional<std::string> m_barrelAxes;
+  std::optional<std::string> m_endcapAxes;
+  std::optional<std::regex> m_layerPattern;
+  const BlueprintBuilder* m_builder;
+};
 
 class BlueprintBuilder {
  public:
@@ -86,13 +207,20 @@ class BlueprintBuilder {
       Acts::AxisDirection direction, const std::regex& layerPattern,
       const Acts::ExtentEnvelope& envelope = Acts::ExtentEnvelope::Zero());
 
-  LayerHelper layerHelper();
+  LayerHelper layerHelper() const;
+  BarrelEndcapAssemblyHelper barrelEndcapAssemblyHelper() const;
+
+  std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+  makeBarrelEndcapAssembly(
+      const dd4hep::DetElement& assembly, const std::regex& layerPattern,
+      const std::string& barrelAxes, const std::string& endcapAxes,
+      const LayerHelper::Customizer& customizer = {}) const;
 
   static std::optional<dd4hep::DetElement> findDetElementByName(
       const dd4hep::DetElement& parent, const std::string& name);
 
   std::optional<dd4hep::DetElement> findDetElementByName(
-      const std::string& name);
+      const std::string& name) const;
 
   std::string getPathToElementName(const dd4hep::DetElement& elem) const;
 
@@ -110,83 +238,6 @@ class BlueprintBuilder {
   Config m_cfg;
 
   std::unique_ptr<const Acts::Logger> m_logger;
-};
-
-class LayerHelper {
- public:
-  using LayerType = Acts::Experimental::LayerBlueprintNode::LayerType;
-  using Customizer = std::function<void(
-      const dd4hep::DetElement&, Acts::Experimental::LayerBlueprintNode&)>;
-
-  explicit LayerHelper(ActsPlugins::DD4hep::BlueprintBuilder& builder)
-      : m_builder{&builder} {}
-
-  LayerHelper& setLayerType(LayerType layerType) {
-    m_layerType = layerType;
-    return *this;
-  }
-
-  LayerHelper& endcap() { return setLayerType(LayerType::Disc); }
-  LayerHelper& barrel() { return setLayerType(LayerType::Cylinder); }
-
-  LayerHelper& setAxes(const std::string& axes) {
-    m_axes = axes;
-    return *this;
-  }
-
-  LayerHelper& setLayerAxes(const std::string& layerAxes) {
-    m_layerAxes = layerAxes;
-    return *this;
-  }
-
-  LayerHelper& setPattern(const std::string& pattern) {
-    m_pattern = std::regex{pattern};
-    return *this;
-  }
-
-  LayerHelper& setContainer(const dd4hep::DetElement& container) {
-    m_container = container;
-    return *this;
-  }
-
-  LayerHelper& setContainer(const std::string& name) {
-    m_container = m_builder->findDetElementByName(name);
-    if (!m_container.has_value()) {
-      throw std::runtime_error("Could not find DetElement with name " + name +
-                               " in LayerHelper");
-    }
-    return *this;
-  }
-
-  LayerHelper& setEnvelope(const Acts::ExtentEnvelope& envelope) {
-    m_envelope = envelope;
-    return *this;
-  }
-
-  LayerHelper& setEmptyOk(bool emptyOk) {
-    m_emptyOk = emptyOk;
-    return *this;
-  }
-
-  LayerHelper& customize(Customizer customizer) {
-    m_customizer = std::move(customizer);
-    return *this;
-  }
-
-  std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode> build()
-      const;
-
- private:
-  ActsPlugins::DD4hep::BlueprintBuilder* m_builder;
-  std::optional<LayerType> m_layerType;
-  std::optional<std::string> m_axes;
-  std::optional<std::string> m_layerAxes;
-  std::optional<std::regex> m_pattern;
-  std::optional<dd4hep::DetElement> m_container;
-  std::optional<Acts::ExtentEnvelope> m_envelope;
-  bool m_emptyOk = false;
-
-  Customizer m_customizer;
 };
 
 }  // namespace DD4hep
