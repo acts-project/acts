@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <memory>
@@ -102,12 +103,12 @@ struct TGeoSurfaceConverter {
   static double toRadian(double deg) {
     constexpr double eps = 1e-6;
 
-    double d = wrap_periodic(deg, -180.0, 180.0);
+    double d = Acts::detail::wrap_periodic(deg, -180.0, 180.0);
 
     // Return 2pi for multiples of 360 excluding 0.
     if (std::abs(d) < eps && std::abs(deg) > eps) {
-      d = 360.0
-    };
+      d = 360.0;
+    }
 
     // Convert to rads
     return d * Acts::UnitConstants::degree;
