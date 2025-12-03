@@ -201,19 +201,18 @@ ProcessCode MuonSpacePointDigitizer::execute(
       return ProcessCode::ABORT;
     }
 
+    /// Geometric digitizer
+    ActsFatras::Channelizer channelizer;
+
     const Surface* hitSurf = surfaceItr->second;
     assert(hitSurf != nullptr);
 
     const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
 
-        // Iterate over all simHits in a single module
+    // Iterate over all simHits in a single module
     for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
       const auto& simHit = *h;
       const auto simHitIdx = gotSimHits.index_of(h);
-
-      if (simHit.position()[0] < 6000 || simHit.position()[0] > 7000) {
-        continue;
-      }
 
       // Convert the hit trajectory into local coordinates
       const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
@@ -234,40 +233,29 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
       /// Transformation to the common coordinate system of all space points
       const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
-    
-    const auto& calibCfg = calibrator().config();
-    switch (hitSurf->type()) {
-      /// Strip measurements
-      using enum Surface::SurfaceType;
-      case Plane: {
-        ACTS_VERBOSE("Hit is recorded in a strip detector ");
-        auto planeCross = intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.);
-        const auto hitPos = planeCross.position();
-        Vector3 smearedHit{Vector3::Zero()};
-        switch (bounds.type()) {
-          case SurfaceBounds::BoundsType::eRectangle: {
-            smearedHit[ePos0] =
-                quantize(hitPos[ePos0], calibCfg.rpcPhiStripPitch);
-            smearedHit[ePos1] =
-                quantize(hitPos[ePos1], calibCfg.rpcEtaStripPitch);
-            ACTS_VERBOSE("Position before "
-                         << toString(hitPos) << ", after smearing"
-                         << toString(smearedHit) << ", " << bounds);
 
-            if (!bounds.inside(Vector2{smearedHit[ePos0], smearedHit[ePos1]})) {
-              convertSp = false;
-              break;
-            }
-            auto ranges = stripTimes.equal_range(hitId);
-            for (auto digitHitItr = ranges.first; digitHitItr != ranges.second;
-                 ++digitHitItr) {
-              const auto& existCoords = digitHitItr->second;
-              /// Same virtual strip point is digitized
-              if (std::abs(existCoords[0] - smearedHit[ePos0]) <
-                      std::numeric_limits<double>::epsilon() &&
-                  std::abs(existCoords[1] - smearedHit[ePos1]) <
-                      std::numeric_limits<double>::epsilon() &&
-                  hit.time() - existCoords[2] < config().rpcDeadTime) {
+      const auto& calibCfg = calibrator().config();
+      switch (hitSurf->type()) {
+        /// Strip measurements
+        using enum Surface::SurfaceType;
+        case Plane: {
+          ACTS_VERBOSE("Hit is recorded in a strip detector ");
+          auto planeCross =
+              intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.);
+          const auto hitPos = planeCross.position();
+          Vector3 smearedHit{Vector3::Zero()};
+          switch (bounds.type()) {
+            case SurfaceBounds::BoundsType::eRectangle: {
+              smearedHit[ePos0] =
+                  quantize(hitPos[ePos0], calibCfg.rpcPhiStripPitch);
+              smearedHit[ePos1] =
+                  quantize(hitPos[ePos1], calibCfg.rpcEtaStripPitch);
+              ACTS_VERBOSE("Position before "
+                           << toString(hitPos) << ", after smearing "
+                           << toString(smearedHit) << ", " << bounds);
+
+              if (!bounds.inside(
+                      Vector2{smearedHit[ePos0], smearedHit[ePos1]})) {
                 convertSp = false;
                 break;
               }
@@ -288,7 +276,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   break;
                 }
               }
-
               /// Mark the
               stripTimes.insert(std::make_pair(
                   moduleGeoId, std::array{smearedHit[ePos0], smearedHit[ePos1],
@@ -306,10 +293,13 @@ ProcessCode MuonSpacePointDigitizer::execute(
               newSp.setCovariance(
                   calibCfg.rpcPhiStripPitch, calibCfg.rpcEtaStripPitch,
                   m_cfg.digitizeTime ? calibCfg.rpcTimeResolution : 0.);
-                   
+
+              globalPositions.push_back(
+                  std::make_tuple(simHit.position(), smearedHit[ePos0],
+                                  smearedHit[ePos1], hitSurf->getSharedPtr()));
+
               break;
             }
-
             /// Endcap strips not yet available
             case SurfaceBounds::BoundsType::eTrapezoid:
               break;
@@ -335,7 +325,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
           break;
         }
         case Straw: {
-         auto closeApproach = lineIntersect<3>(
+          auto closeApproach = lineIntersect<3>(
               Vector3::Zero(), Vector3::UnitZ(), locPos, locDir);
           const auto nominalPos = closeApproach.position();
           const double unsmearedR = fastHypot(nominalPos.x(), nominalPos.y());
@@ -389,7 +379,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
           id.setChamber(MuonId_t::StationName::BIS,
                         simHit.position().z() > 0 ? MuonId_t::DetSide::A
                                                   : MuonId_t::DetSide::C,
-                        1, MuonId_t::TechField::Rpc);
+                        1, MuonId_t::TechField::Mdt);
           id.setCoordFlags(true, false);
           newSp.setId(id);
 
@@ -424,6 +414,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
       outSpacePoints.push_back(std::move(bucket));
     }
   }
+
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
 
   return ProcessCode::SUCCESS;
