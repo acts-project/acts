@@ -21,11 +21,6 @@
 
 namespace Acts {
 
-// To be removed when the namespace Experimental is omitted
-namespace Experimental {
-class Portal;
-}
-
 class Surface;
 
 /// The NavigationStream is a container for the navigation candidates that
@@ -109,16 +104,8 @@ class NavigationStream {
 
   /// Fill one portal into the candidate vector
   ///
-  /// @param portal Portal to add as candidate
-  void addPortalCandidate(const Experimental::Portal& portal);
   /// @param portal the portals that are filled in
-
   void addPortalCandidate(const Portal& portal);
-
-  /// Fill n portals into the candidate vector
-  ///
-  /// @param portals the portals that are filled in
-  void addPortalCandidates(std::span<const Experimental::Portal*> portals);
 
   /// Initialize the stream from a query point
   ///

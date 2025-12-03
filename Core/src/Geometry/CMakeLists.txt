@@ -44,6 +44,7 @@ target_sources(
         CompositePortalLink.cpp
         PortalLinkBase.cpp
         PortalError.cpp
+        ProtoDetector.cpp
         CylinderPortalShell.cpp
         CuboidPortalShell.cpp
         BlueprintNode.cpp
@@ -51,6 +52,7 @@ target_sources(
         BlueprintOptions.cpp
         StaticBlueprintNode.cpp
         LayerBlueprintNode.cpp
+        IndexGridFiller.cpp
         MaterialDesignatorBlueprintNode.cpp
         VolumeAttachmentStrategy.cpp
         VolumeResizeStrategy.cpp
@@ -61,6 +63,7 @@ target_sources(
         VolumeStack.cpp
         ContainerBlueprintNode.cpp
         MultiWireVolumeBuilder.cpp
+        ReferenceGenerators.cpp
         detail/TrackingGeometryPrintVisitor.cpp
         detail/BoundDeduplicator.cpp
 )

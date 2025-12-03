@@ -27,7 +27,6 @@ void addMaterial(py::module_& m);
 void addSurfaces(py::module_& m);
 void addGeometry(py::module_& m);
 void addGeometryGen1(py::module_& m);
-void addGeometryGen2(py::module_& m);
 void addGeometryGen3(py::module_& m);
 void addNavigation(py::module_& m);
 void addPropagation(py::module_& m);
@@ -69,7 +68,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addSurfaces(m);
   addGeometry(m);
   addGeometryGen1(m);
-  addGeometryGen2(m);
   addGeometryGen3(m);
   addNavigation(m);
   addPropagation(m);

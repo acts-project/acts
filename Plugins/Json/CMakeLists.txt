@@ -2,18 +2,12 @@ acts_add_library(
     PluginJson
     SHARED
     src/AlgebraJsonConverter.cpp
-    src/DetectorJsonConverter.cpp
-    src/DetectorVolumeJsonConverter.cpp
     src/ExtentJsonConverter.cpp
     src/GridJsonConverter.cpp
-    src/DetectorVolumeFinderJsonConverter.cpp
     src/GeometryIdentifierJsonConverter.cpp
-    src/IndexedSurfacesJsonConverter.cpp
     src/JsonMaterialDecorator.cpp
     src/MaterialMapJsonConverter.cpp
     src/MaterialJsonConverter.cpp
-    src/PortalJsonConverter.cpp
-    src/ProtoDetectorJsonConverter.cpp
     src/ProtoAxisJsonConverter.cpp
     src/SurfaceBoundsJsonConverter.cpp
     src/SurfaceJsonConverter.cpp

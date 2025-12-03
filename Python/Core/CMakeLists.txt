@@ -18,7 +18,6 @@ target_sources(
         src/Surfaces.cpp
         src/Geometry.cpp
         src/GeometryGen1.cpp
-        src/GeometryGen2.cpp
         src/GeometryGen3.cpp
         src/Navigation.cpp
         src/Propagation.cpp
