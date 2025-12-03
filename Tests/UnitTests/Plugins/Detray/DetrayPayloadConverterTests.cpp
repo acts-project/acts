@@ -30,7 +30,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
-#include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -42,9 +41,12 @@
 #include <detray/io/backend/geometry_reader.hpp>
 #include <detray/io/backend/geometry_writer.hpp>
 #include <detray/io/backend/homogeneous_material_reader.hpp>
+#include <detray/io/backend/homogeneous_material_writer.hpp>
 #include <detray/io/backend/material_map_reader.hpp>
 #include <detray/io/backend/surface_grid_reader.hpp>
 #include <detray/io/frontend/definitions.hpp>
+#include <detray/io/frontend/detector_writer.hpp>
+#include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/io/frontend/payloads.hpp>
 #include <detray/io/json/json_io.hpp>
 #include <detray/plugins/svgtools/illustrator.hpp>

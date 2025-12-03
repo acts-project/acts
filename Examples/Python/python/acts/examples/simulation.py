@@ -617,7 +617,7 @@ __geant4Handle = None
 def addGeant4(
     s: acts.examples.Sequencer,
     detector: Optional[Any],
-    trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
+    trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     volumeMappings: List[str] = [],
@@ -749,7 +749,7 @@ def addSimParticleSelection(
 
 def addDigitization(
     s: acts.examples.Sequencer,
-    trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
+    trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     digiConfigFile: Union[Path, str],
     outputDirCsv: Optional[Union[Path, str]] = None,

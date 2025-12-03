@@ -37,7 +37,7 @@ namespace ActsExamples {
 ///        object dumper.
 ///        Specifically written for the input ntuple for GNN
 ///        See:
-///        https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.cxx
+///        https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerGeometry/InDetGNNTracking/src/DumpObjects.cxx
 class RootAthenaDumpReader : public IReader {
  public:
   /// @brief The nested configuration struct
@@ -73,7 +73,7 @@ class RootAthenaDumpReader : public IReader {
 
     /// Only extract particles that passed the tracking requirements, for
     /// details see:
-    /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.cxx?ref_type=heads#L1363
+    /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerGeometry/InDetGNNTracking/src/DumpObjects.cxx?ref_type=heads#L1363
     bool onlyPassedParticles = false;
 
     /// Skip spacepoints with phi overlap
@@ -125,7 +125,7 @@ class RootAthenaDumpReader : public IReader {
  private:
   /// Particles with barcodes larger then this value are considered to be
   /// secondary particles
-  /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
+  /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerGeometry/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
   constexpr static int s_maxBarcodeForPrimary = 200000;
 
   /// Private access to the logging instance

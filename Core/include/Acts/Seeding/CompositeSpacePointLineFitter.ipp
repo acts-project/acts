@@ -578,6 +578,9 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   if (miniGradient.norm() < m_cfg.precCutOff) {
     ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                         << ": Gradient is small enough");
+    if constexpr (N == 3) {
+      std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
+    }
     return UpdateStep::converged;
   }
   // Take out the filled block from the hessian
@@ -598,6 +601,9 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     if (update.norm() < m_cfg.precCutOff) {
       ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__ << ": Update "
                           << toString(update) << " is negligible small.");
+      if constexpr (N == 3) {
+        std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
+      }
       return UpdateStep::converged;
     }
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
