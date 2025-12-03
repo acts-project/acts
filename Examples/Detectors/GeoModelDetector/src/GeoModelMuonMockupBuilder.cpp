@@ -146,7 +146,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
           using BoundVal = Acts::TrapezoidVolumeBounds::BoundValues;
 
           auto tzb = std::dynamic_pointer_cast<Acts::TrapezoidVolumeBounds>(vb);
-          mwCfg.bounds = boundFactory.insert<Acts::TrapezoidVolumeBounds>(tzb);
+          mwCfg.bounds = boundFactory.insert(tzb);
           halfY = tzb->get(BoundVal::eHalfLengthY);
           halfZ = tzb->get(BoundVal::eHalfLengthZ);
 
@@ -154,13 +154,13 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
           using BoundVal = Acts::CuboidVolumeBounds::BoundValues;
 
           auto cbb = std::dynamic_pointer_cast<Acts::CuboidVolumeBounds>(vb);
-          mwCfg.bounds = boundFactory.insert<Acts::CuboidVolumeBounds>(cbb);
+          mwCfg.bounds = boundFactory.insert(cbb);
 
           halfY = cbb->get(BoundVal::eHalfLengthY);
           halfZ = cbb->get(BoundVal::eHalfLengthZ);
 
         } else {
-          throw std::runtime_error("Not a trapezoid or cuboid volume bounds");
+          throw std::runtime_error("GeoModelMuonMockupBuilder::buildBarrelNode() - Not a trapezoid or cuboid volume bounds");
         }
 
         mwCfg.name = child.name;
