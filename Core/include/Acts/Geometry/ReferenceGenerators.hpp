@@ -13,14 +13,14 @@
 #include "Acts/Geometry/IReferenceGenerator.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <ranges>
 #include <vector>
 
 namespace Acts {
 
-/// A struct to access the center position
+/// A struct to access the center position as a sole reference
 ///
 /// This generator will provide only one filling point and hence
 /// only a single bin in the indexed grid.
