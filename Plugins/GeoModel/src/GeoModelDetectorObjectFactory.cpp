@@ -8,14 +8,11 @@
 
 #include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
 #include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
 
@@ -134,10 +131,9 @@ bool GeoModelDetectorObjectFactory::convertBox(const std::string &name) const {
   return convB;
 }
 
-void GeoModelDetectorObjectFactory::convertFpv(const std::string &name,
-                                               const FpvConstLink &fpv,
-                                               Cache &cache,
-                                               const GeometryContext &gctx) {
+void GeoModelDetectorObjectFactory::convertFpv(
+    const std::string &name, const FpvConstLink &fpv, Cache &cache,
+    const GeometryContext & /*gctx*/) {
   const std::size_t prevSize = cache.sensitiveSurfaces.size();
   {
     /** Search all subvolumes that may be converted to sensitive surfaces */
@@ -183,9 +179,6 @@ void GeoModelDetectorObjectFactory::convertFpv(const std::string &name,
                    [](const GeoModelSensitiveSurface &sensitive) {
                      return std::get<1>(sensitive);
                    });
-    // convert bounding boxes with surfaces inside
-    convEnvelope.gen2Volume = GeoModel::convertDetectorVolume(
-        gctx, *convEnvelope.volume, name, convEnvelope.surfaces);
   }
 }
 // function to determine if object fits query

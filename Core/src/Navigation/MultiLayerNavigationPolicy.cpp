@@ -28,8 +28,8 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
     surfaces.push_back(surface.getSharedPtr());
   }
 
-  Experimental::detail::CenterReferenceGenerator rGenerator;
-  Experimental::detail::IndexedGridFiller filler{config.binExpansion};
+  CenterReferenceGenerator rGenerator;
+  IndexGridFiller filler{config.binExpansion};
   filler.fill(gctx, m_indexedGrid, surfaces, rGenerator, {});
 }
 
