@@ -44,18 +44,18 @@ class FitTestSpacePoint {
   /// @param driftR: Straw drift radius
   /// @param driftRUncert: Uncertainty on the drift radius uncertainty
   /// @param layer: Layer index of the space point
-  /// @param twnUncert: Uncertainty on the measurement along the straw
+  /// @param twinUncert: Uncertainty on the measurement along the straw
   FitTestSpacePoint(const Vector3& pos, const double driftR,
                     const double driftRUncert, uint layer = 0,
-                    const std::optional<double> twnUncert = std::nullopt)
+                    const std::optional<double> twinUncert = std::nullopt)
       : m_position{pos},
         m_driftR{driftR},
-        m_measLoc0{twnUncert != std::nullopt},
+        m_measLoc0{twinUncert != std::nullopt},
         m_layer{layer} {
     using enum ResidualIdx;
     m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
     m_covariance[toUnderlying(nonBending)] =
-        Acts::square(twnUncert.value_or(0.));
+        Acts::square(twinUncert.value_or(0.));
   }
   /// @brief Constructor for rotated straw wires
   /// @param pos: Position of the wire
@@ -63,20 +63,20 @@ class FitTestSpacePoint {
   /// @param driftR: Drift radius of the measurement
   /// @param driftRUncert: Associated uncertainty on the measurement
   /// @param layer: Layer index of the space point
-  /// @param twnUncert: Uncertainty on the measurement along the straw
+  /// @param twinUncert: Uncertainty on the measurement along the straw
   FitTestSpacePoint(const Vector3& pos, const Vector3& wire,
                     const double driftR, const double driftRUncert,
                     uint layer = 0,
-                    const std::optional<double> twnUncert = std::nullopt)
+                    const std::optional<double> twinUncert = std::nullopt)
       : m_position{pos},
         m_sensorDir{wire},
         m_driftR{driftR},
-        m_measLoc0{twnUncert != std::nullopt},
+        m_measLoc0{twinUncert != std::nullopt},
         m_layer{layer} {
     using enum ResidualIdx;
     m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
     m_covariance[toUnderlying(nonBending)] =
-        Acts::square(twnUncert.value_or(0.));
+        Acts::square(twinUncert.value_or(0.));
   }
 
   /// @brief Constructor for spatial strip measurements
