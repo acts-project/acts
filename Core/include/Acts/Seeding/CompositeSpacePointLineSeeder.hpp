@@ -232,9 +232,8 @@ class CompositeSpacePointLineSeeder {
   ///        construct the tangent seed and the result on theta
   /// @param refHit: Reference hit to define the local axes (Bottom hit)
   /// @param tanAngle: Theta value from the TwoCircleTangentPars
-  template <CompositeSpacePoint SpacePoint_t>
-  static Vector makeDirection(const SpacePoint_t& refHit,
-                              const double tanAngle);
+  template <CompositeSpacePoint Spt_t>
+  static Vector makeDirection(const Spt_t& refHit, const double tanAngle);
 
  private:
   static constexpr std::array<std::array<int, 2>, 4> s_signCombo{
