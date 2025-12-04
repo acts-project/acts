@@ -54,7 +54,7 @@ If some files were modified, then just `git add` and `git commit` again to pick 
 ### Execution
 ```console
 cd acts/
-pre-commit run --all-files 
+pre-commit run --all-files
 ```
 
 ## C++ formatting: `clang-format`
