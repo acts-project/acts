@@ -19,6 +19,9 @@
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 #include "ActsPlugins/Root/TGeoVolumeConverter.hpp"
 
+#include <algorithm>
+#include <ranges>
+
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetType.h>
 #include <DD4hep/Detector.h>
@@ -74,6 +77,23 @@ std::optional<dd4hep::DetElement> BlueprintBuilder::findDetElementByName(
 std::optional<dd4hep::DetElement> BlueprintBuilder::findDetElementByName(
     const std::string& name) {
   return findDetElementByName(world(), name);
+}
+
+std::string BlueprintBuilder::getPathToElementName(
+    const dd4hep::DetElement& elem) const {
+  std::vector<std::string> names;
+  names.emplace_back(std::string(elem.name()) + "|");
+  auto parent = elem.parent();
+  while (parent != world()) {
+    ACTS_VERBOSE("Adding " << parent.name());
+    names.emplace_back(std::string(parent.name()) + "|");
+    parent = parent.parent();
+  }
+
+  std::string result;
+  std::ranges::copy(std::ranges::reverse_view{names} | std::views::join,
+                    std::back_inserter(result));
+  return result;
 }
 
 std::vector<dd4hep::DetElement> BlueprintBuilder::findDetElementByNamePattern(
@@ -147,7 +167,7 @@ BlueprintBuilder::makeLayer(const dd4hep::DetElement& detElement,
                             std::optional<std::string> layerAxes) const {
   ACTS_DEBUG("Adding layer from element: " << detElement.name());
   auto node = std::make_shared<Acts::Experimental::LayerBlueprintNode>(
-      detElement.name());
+      getPathToElementName(detElement));
 
   auto sensitives = resolveSensitives(detElement);
   ACTS_DEBUG("  Found " << sensitives.size() << " sensitive elements.");
