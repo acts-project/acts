@@ -11,6 +11,8 @@
 #include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 
+#include <unordered_set>
+
 namespace Acts::Experimental {
 
 MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
@@ -62,9 +64,25 @@ void MultiLayerNavigationPolicy::initializeCandidates(
                << surfCandidates.size() << " candidates");
 
   // fill the navigation stream with the container
+  std::unordered_set<GeometryIdentifier> addedIds{};
   for (const auto* surf : surfCandidates) {
     stream.addSurfaceCandidate(*surf, args.tolerance);
+    if (!args.externalSurfaces.empty()) {
+      addedIds.insert(surf->geometryId());
+    }
   }
+  if (args.externalSurfaces.empty()) {
+    return;
+  }
+  std::ranges::for_each(surfaces, [&](const Surface& surf) {
+    if (addedIds.count(surf.geometryId()) == 0u &&
+        rangeContainsValue(args.externalSurfaces, surf.geometryId())) {
+      ACTS_VERBOSE(
+          "MultiLayerNavigationPolicy add externally requested candidate "
+          << surf.geometryId());
+      stream.addSurfaceCandidate(surf, args.tolerance);
+    }
+  });
 }
 
 std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
