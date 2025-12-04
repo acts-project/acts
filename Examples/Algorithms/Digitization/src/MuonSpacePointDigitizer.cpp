@@ -333,8 +333,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
           double driftR =
               (*Digitization::Gauss{uncert}(unsmearedR, rndEngine)).first;
 
-          std::cout << driftR << " " << unsmearedR << " " << uncert
-                    << std::endl;
           // bounds
           const auto& lBounds = static_cast<const LineBounds&>(bounds);
           const double maxR = lBounds.get(LineBounds::eR);
