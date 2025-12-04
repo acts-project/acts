@@ -216,12 +216,11 @@ ProcessCode MuonSpacePointDigitizer::execute(
           surfLocToGlob.inverse().linear() * simHit.direction();
 
       const auto& bounds = hitSurf->bounds();
-      ACTS_DEBUG("Process hit: "
-                 << toString(locPos) << ", dir: " << toString(locDir)
-                 << " recorded in a "
-                 << hitSurf->type()
-                 << " surface with id: " << moduleGeoId
-                 << ", bounds: " << bounds);
+      ACTS_DEBUG("Process hit: " << toString(locPos)
+                                 << ", dir: " << toString(locDir)
+                                 << " recorded in a " << hitSurf->type()
+                                 << " surface with id: " << moduleGeoId
+                                 << ", bounds: " << bounds);
       bool convertSp{true};
 
       MuonSpacePoint newSp{};
@@ -261,7 +260,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                 const auto& existCoords = digitHitItr->second;
                 /// Same virtual strip point is digitized
                 if (std::abs(existCoords[0] - smearedHit[ePos0]) <
-                       Acts::s_epsilon &&
+                        Acts::s_epsilon &&
                     std::abs(existCoords[1] - smearedHit[ePos1]) <
                         Acts::s_epsilon &&
                     simHit.time() - existCoords[2] < config().rpcDeadTime) {
@@ -374,7 +373,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
           break;
         }
         default:
-          ACTS_DEBUG("Unsupported detector case in muon space point digitizer.");
+          ACTS_DEBUG(
+              "Unsupported detector case in muon space point digitizer.");
           convertSp = false;
       }
 
