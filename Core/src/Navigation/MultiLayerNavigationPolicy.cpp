@@ -8,6 +8,7 @@
 
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 
 namespace Acts::Experimental {
