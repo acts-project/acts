@@ -431,8 +431,8 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
       ACTS_DEBUG("Hit in layer " << layerNr << " pull " << std::sqrt(chi2)
                                  << " distance " << distance << " drift radius "
                                  << testMe->driftRadius());
-      if (chi2 < Acts::pow(m_cfg.hitPullCut,
-                           2) /*&& distance < testMe->driftRadius()*/) {
+      if (chi2 < Acts::pow(m_cfg.hitPullCut, 2) &&
+          distance < options.strawRadius) {
         hadGoodHit = true;
         seedSol.seedHits.emplace_back(testMe);
         seedSol.nStrawHits +=
