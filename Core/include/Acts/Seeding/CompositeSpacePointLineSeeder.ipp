@@ -437,8 +437,8 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
     }
   }
   // check if we collected enough straw hits
-  const unsigned hitCut =
-      std::max(1. * m_cfg.nStrawHitCut,
+  const double hitCut =
+      std::max(1.0 * m_cfg.nStrawHitCut,
                m_cfg.nStrawLayHitCut * options.splitter->strawHits().size());
   ACTS_DEBUG("Found " << seedSol.nStrawHits
                       << " compatible straw hits. Hit cut is " << hitCut);
