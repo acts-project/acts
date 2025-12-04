@@ -5,7 +5,7 @@ target_sources(
         MultiStepperError.cpp
         NavigatorError.cpp
         SympyStepper.cpp
-        NavigationTartget.cpp
+        NavigationTarget.cpp
         PropagatorError.cpp
         StraightLineStepper.cpp
         detail/MaterialEffectsAccumulator.cpp

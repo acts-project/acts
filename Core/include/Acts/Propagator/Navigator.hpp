@@ -864,10 +864,10 @@ class Navigator {
                                          state.options.nearLimit,
                                          state.options.farLimit, logger());
         });
-    if (!state.freeSurfaces.empty()) {
-      updateFreeCandidates(state, position, direction);
+    if (!state.freeCandidates.empty()) {
+      updateFreeInterSections(state, position, direction);
       std::ranges::copy_if(
-          state.freeSurfaces, std::back_inserter(state.navCandidates),
+          state.freeCandidates, std::back_inserter(state.navCandidates),
           [&](const NavigationTarget& candidate) {
             return detail::checkPathLength(
                 candidate.intersection().pathLength(), state.options.nearLimit,
