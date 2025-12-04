@@ -101,7 +101,7 @@ DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
 
   // Create the corresponding detector element
   auto dd4hepDetElement = m_config.detectorElementFactory(
-      dd4hepElement, detAxis, unitLength, false, nullptr);
+      dd4hepElement, detAxis, unitLength, nullptr);
   auto sSurface = dd4hepDetElement->surface().getSharedPtr();
   // Measure if configured to do so
   if (cache.sExtent.has_value()) {

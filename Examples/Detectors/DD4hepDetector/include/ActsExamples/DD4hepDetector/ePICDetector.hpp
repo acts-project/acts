@@ -20,7 +20,7 @@ class DD4hepDetectorElement;
 
 namespace ActsExamples {
 
-class OpenDataDetector final : public DD4hepDetectorBase {
+class ePICDetector final : public DD4hepDetectorBase {
  public:
   struct Config : public DD4hepDetectorBase::Config {
     using ElementFactory =
@@ -35,8 +35,8 @@ class OpenDataDetector final : public DD4hepDetectorBase {
   defaultDetectorElementFactory(const dd4hep::DetElement& element,
                                 const std::string& axes, double scale);
 
-  explicit OpenDataDetector(const Config& cfg,
-                            const Acts::GeometryContext& gctx);
+  explicit ePICDetector(const Config& cfg,
+                        const Acts::GeometryContext& gctx);
 
   const Config& config() const override;
 

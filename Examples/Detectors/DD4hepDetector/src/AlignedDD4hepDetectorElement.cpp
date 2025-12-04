@@ -11,7 +11,7 @@
 std::shared_ptr<ActsExamples::AlignedDD4hepDetectorElement>
 ActsExamples::alignedDD4hepDetectorElementFactory(
     const dd4hep::DetElement detElement, const std::string& axes, double scalor,
-    bool isDisc, std::shared_ptr<const Acts::ISurfaceMaterial> material) {
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   return std::make_shared<AlignedDD4hepDetectorElement>(
-      detElement, axes, scalor, isDisc, std::move(material));
+      detElement, axes, scalor, std::move(material));
 };
