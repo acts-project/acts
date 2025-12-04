@@ -489,9 +489,45 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   }
 
   ++options.nGenSeeds;
-  return finalSeedSol;
 
-  /** Associate strip hits */
+  /** Associate strip hits to the seed */
+
+  double bestChi2Loc0{std::numeric_limits<double>::max()},
+      bestChi2Loc1{std::numeric_limits<double>::max()};
+  std::size_t bestIdxLoc0{0}, bestIdxLoc1{0};
+  for (const auto& stripLayerHits : options.splitter->stripHits()) {
+    for (const auto& [hitIdx, testMe] : Acts::enumerate(stripLayerHits)) {
+      const double chi2 = detail::CompSpacePointAuxiliaries::chi2Term(
+          posForCalib, dirForCalib, *testMe);
+      if (testMe->measuresLoc0() && chi2 < bestChi2Loc0) {
+        bestChi2Loc0 = chi2;
+        bestIdxLoc0 = hitIdx;
+      }
+      if (testMe->measuresLoc1() && chi2 < bestChi2Loc1) {
+        bestChi2Loc1 = chi2;
+        bestIdxLoc1 = hitIdx;
+      }
+      std::vector<typename Cont_t::value_type> stripHitsToCalibrate{};
+      if (bestChi2Loc0 < Acts::pow(m_cfg.hitPullCut, 2)) {
+        stripHitsToCalibrate.emplace_back(stripLayerHits.at(bestIdxLoc0));
+      }
+      if (bestChi2Loc1 < Acts::pow(m_cfg.hitPullCut, 2) &&
+          bestIdxLoc1 != bestIdxLoc0) {
+        stripHitsToCalibrate.emplace_back(stripLayerHits.at(bestIdxLoc1));
+      }
+
+      auto calibratedStripHits = options.calibrator->calibrate(
+          *ctx, posForCalib, dirForCalib,
+          options.patternParams[toUnderlying(ParIdx::t0)],
+          stripHitsToCalibrate);
+      finalSeedSol->seedHits.insert(
+          finalSeedSol->seedHits.end(),
+          std::make_move_iterator(calibratedStripHits.begin()),
+          std::make_move_iterator(calibratedStripHits.end()));
+    }
+  }
+
+  return finalSeedSol;
 }
 
 template <CompositeSpacePointContainer Cont_t,
