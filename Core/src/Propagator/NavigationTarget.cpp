@@ -28,7 +28,7 @@ void NavigationTarget::print(std::ostream& ostr) const {
                << surf.geometryId();
         } else if constexpr (std::is_same_v<Target_t, const Portal*>) {
           const auto& surf{target->surface()};
-          ostr << "Portal " << target->surface().geometryId();
+          ostr << surf.type() << " portal " << surf.geometryId();
         }
       },
       m_target);
