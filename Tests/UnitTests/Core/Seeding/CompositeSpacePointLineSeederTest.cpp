@@ -21,7 +21,7 @@ using namespace Acts::UnitLiterals;
 using namespace Acts::detail::LineHelper;
 using namespace Acts::PlanarHelper;
 using namespace Acts::VectorHelpers;
-using namespace Acts::Test;
+using namespace ActsTests;
 
 using Seeder = CompositeSpacePointLineSeeder;
 

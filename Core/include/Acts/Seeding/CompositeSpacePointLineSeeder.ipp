@@ -10,13 +10,10 @@
 
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 
-<<<<<<< HEAD
 #include "Acts/Definitions/Tolerance.hpp"
-=======
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 
 #include <algorithm>
->>>>>>> f8ec41ee1 (first implementation of line seeding with straws)
 
 namespace Acts::Experimental {
 
@@ -57,13 +54,9 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Spt_t& topHit,
                                                     const Spt_t& bottomHit,
                                                     const TangentAmbi ambi) {
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
-<<<<<<< HEAD
   using namespace Acts::UnitLiterals;
   using namespace Acts::detail;
-  TwoCircleTangentPars result{};
-=======
   SeedParameters result{};
->>>>>>> f8ec41ee1 (first implementation of line seeding with straws)
   const auto& [signTop, signBot] = s_signCombo[toUnderlying(ambi)];
 
   const Vector& bottomPos{bottomHit.localPosition()};
@@ -114,15 +107,17 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Spt_t& topHit,
   return result;
 }
 
-template <CompositeSpacePoint SpacePoint_t>
+template <CompositeSpacePoint Spt_t>
 CompositeSpacePointLineSeeder::Vector
-CompositeSpacePointLineSeeder::makeDirection(const SpacePoint_t& refHit,
+CompositeSpacePointLineSeeder::makeDirection(const Spt_t& refHit,
                                              const double tanAngle) {
   const Vector& eY{refHit.toNextSensor()};
   const Vector& eZ{refHit.planeNormal()};
   const double cosTheta = std::cos(tanAngle);
   const double sinTheta = std::sin(tanAngle);
   return copySign<Vector, double>(sinTheta * eY + cosTheta * eZ, sinTheta);
+}
+
 template <CompositeSpacePointContainer UnCalibCont_t>
 bool CompositeSpacePointLineSeeder::moveToNextHit(
     const UnCalibCont_t& hitVec,
