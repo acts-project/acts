@@ -866,12 +866,21 @@ class Navigator {
         });
     if (!state.freeCandidates.empty()) {
       updateFreeInterSections(state, position, direction);
+      double freeFarLimit{-std::numeric_limits<double>::max()};
+      std::ranges::for_each(
+          state.navCandidates,
+          [&freeFarLimit](const NavigationTarget& candidate) {
+            if (candidate.isPortalTarget()) {
+              freeFarLimit =
+                  std::max(freeFarLimit, candidate.intersection().pathLength());
+            }
+          });
       std::ranges::copy_if(
           state.freeCandidates, std::back_inserter(state.navCandidates),
           [&](const NavigationTarget& candidate) {
             return detail::checkPathLength(
                 candidate.intersection().pathLength(), state.options.nearLimit,
-                state.options.farLimit, logger());
+                freeFarLimit, logger());
           });
     }
     // Sort the candidates with the path length
