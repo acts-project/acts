@@ -8,18 +8,15 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-#include <array>
-#include <cstddef>
-#include <iostream>
-#include <iterator>
-#include <memory>
-#include <stdexcept>
+// #include <array>
+// #include <cstddef>
+// #include <iostream>
+// #include <iterator>
+// #include <memory>
+// #include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -102,7 +99,7 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
 /// @param ba Bin axis index
 /// @return Maximum bin index in the specified axis
 inline std::size_t maxBin(std::vector<DirectedProtoAxis>& axes,
-                          std::size_t ba = 0) const {
+                          std::size_t ba = 0) {
   std::vector<BinningData> binningDataVec;
   binningDataVec.reserve(axes.size());
   for (const auto& axis : axes) {
