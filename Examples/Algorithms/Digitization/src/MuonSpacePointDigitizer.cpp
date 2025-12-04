@@ -219,7 +219,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
       ACTS_DEBUG("Process hit: "
                  << toString(locPos) << ", dir: " << toString(locDir)
                  << " recorded in a "
-                 << Surface::s_surfaceTypeNames[toUnderlying(hitSurf->type())]
+                 << hitSurf->type()
                  << " surface with id: " << moduleGeoId
                  << ", bounds: " << bounds);
       bool convertSp{true};
@@ -261,9 +261,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
                 const auto& existCoords = digitHitItr->second;
                 /// Same virtual strip point is digitized
                 if (std::abs(existCoords[0] - smearedHit[ePos0]) <
-                        std::numeric_limits<double>::epsilon() &&
+                       Acts::s_epsilon &&
                     std::abs(existCoords[1] - smearedHit[ePos1]) <
-                        std::numeric_limits<double>::epsilon() &&
+                        Acts::s_epsilon &&
                     simHit.time() - existCoords[2] < config().rpcDeadTime) {
                   convertSp = false;
                   break;
