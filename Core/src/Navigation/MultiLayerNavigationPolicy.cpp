@@ -35,6 +35,7 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
 }
 
 void MultiLayerNavigationPolicy::initializeCandidates(
+    [[maybe_unused]] const GeometryContext& gctx,
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
   ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates initialization for volume"
