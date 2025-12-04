@@ -82,6 +82,7 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
     seedOpts.splitter = std::move(sorterPtr);
     seedOpts.calibrator = calibrator.get();
     seedOpts.selector.connect<&isGoodHit>();
+    seedOpts.strawRadius = 15._mm;
     ACTS_DEBUG(seedOpts);
     ACTS_DEBUG("Preparing seed options ");
     seeder.prepareSeedOptions(seedOpts);

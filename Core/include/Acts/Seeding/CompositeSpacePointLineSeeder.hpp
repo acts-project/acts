@@ -141,6 +141,8 @@ class CompositeSpacePointLineSeeder {
     const Calibrator_t* calibrator{nullptr};
     // @brief Experiment specific calibration context
     const CalibrationContext* calibContext{};
+    // @brief radius of the straw tubes used to reject hits outside the tube
+    double strawRadius{0.};
 
     /// @brief  @brief Index of the upper layer under consideration for the seeding
     std::size_t upperLayer{0};
