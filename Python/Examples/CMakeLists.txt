@@ -73,7 +73,7 @@ endmacro()
 add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
 add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)
 add_examples_binding_if(Geant4
-    "Acts::ExamplesGeant4;Acts::ExamplesDetectorGeant4;Acts::ExamplesMuonSpectrometerMockupDetector"
+    "Acts::ExamplesGeant4;Acts::ExamplesDetectorGeant4"
     ACTS_BUILD_EXAMPLES_GEANT4
     TRUE
 )

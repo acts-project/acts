@@ -43,7 +43,6 @@ target_link_libraries(
     PUBLIC
         Acts::PythonUtilities
         Acts::ExamplesFramework
-        Acts::ExamplesGeometry
         Acts::ExamplesDetectorGeneric
         Acts::ExamplesIoCsv
         Acts::ExamplesIoObj
