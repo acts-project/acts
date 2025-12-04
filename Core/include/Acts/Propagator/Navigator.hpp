@@ -727,7 +727,8 @@ class Navigator {
         ++state.navLayerIndex.value();
       }
       if (state.navLayerIndex.value() < state.navLayers.size()) {
-        ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
+        ACTS_VERBOSE(volInfo(state)
+                     << "Target set to next layer " << state.navLayer());
         return state.navLayer();
       } else {
         // This was the last layer, switch to boundaries
@@ -745,7 +746,8 @@ class Navigator {
         ++state.navBoundaryIndex.value();
       }
       if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
-        ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
+        ACTS_VERBOSE(volInfo(state)
+                     << "Target set to next boundary " << state.navBoundary());
         return state.navBoundary();
       } else {
         // This was the last boundary, we have to leave the volume somehow,
@@ -784,7 +786,8 @@ class Navigator {
                                 << state.navCandidates.size());
 
     if (state.navCandidateIndex.value() < state.navCandidates.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
+      ACTS_VERBOSE(volInfo(state) << "Target set to next navigation candidate: "
+                                  << state.navCandidate());
       return state.navCandidate();
     }
     ACTS_VERBOSE(volInfo(state) << "Candidate targets exhausted. Renavigate.");
@@ -854,16 +857,23 @@ class Navigator {
 
     state.navCandidates.clear();
 
-    for (auto& candidate : state.stream.candidates()) {
-      if (!detail::checkPathLength(candidate.intersection().pathLength(),
-                                   state.options.nearLimit,
-                                   state.options.farLimit, logger())) {
-        continue;
-      }
-
-      state.navCandidates.emplace_back(candidate);
+    std::ranges::copy_if(
+        state.stream.candidates(), std::back_inserter(state.navCandidates),
+        [&](const NavigationTarget& candidate) {
+          return detail::checkPathLength(candidate.intersection().pathLength(),
+                                         state.options.nearLimit,
+                                         state.options.farLimit, logger());
+        });
+    if (!state.freeSurfaces.empty()) {
+      updateFreeCandidates(state, position, direction);
+      std::ranges::copy_if(
+          state.freeSurfaces, std::back_inserter(state.navCandidates),
+          [&](const NavigationTarget& candidate) {
+            return detail::checkPathLength(
+                candidate.intersection().pathLength(), state.options.nearLimit,
+                state.options.farLimit, logger());
+          });
     }
-
     // Sort the candidates with the path length
     std::ranges::sort(state.navCandidates, [](const auto& a, const auto& b) {
       return a.intersection().pathLength() < b.intersection().pathLength();
