@@ -33,7 +33,7 @@ CompositeSpacePointLineSeeder::encodeAmbiguity(const int signTop,
 }
 
 inline std::string CompositeSpacePointLineSeeder::toString(
-    const CompositeSpacePointLineSeeder::TangentAmbi ambi) {
+    const TangentAmbi ambi) {
   switch (ambi) {
     using enum TangentAmbi;
     case RR:
@@ -101,9 +101,8 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Spt_t& topHit,
       Acts::fastHypot(
           bottomPos.dot(eY) * sinTheta + bottomPos.dot(eZ) * cosTheta, 1.) *
       result.dTheta;
-  if (result.theta < 0) {
-    result.theta += std::numbers::pi;
-  }
+
+  result.theta = VectorHelpers::theta(makeDirection(bottomHit, result.theta));
   return result;
 }
 
