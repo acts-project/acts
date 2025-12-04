@@ -963,10 +963,18 @@ class Navigator {
     state.navSurfaces = currentLayer->compatibleSurfaces(
         state.options.geoContext, position, direction, navOpts);
     if (!state.freeCandidates.empty()) {
+      auto iSect = currentLayer->surfaceRepresentation()
+                       .intersect(state.options.geoContext, position, direction,
+                                  BoundaryTolerance::Infinite())
+                       .closestWithIndex()
+                       .first;
       updateFreeInterSections(state, position, direction);
       std::ranges::copy_if(
           state.freeCandidates, std::back_inserter(state.navSurfaces),
-          [](const NavigationTarget& cand) { return cand.pathLength() > 0.; });
+          [&](const NavigationTarget& cand) {
+            return std::abs(cand.pathLength() - iSect.pathLength()) <
+                   0.5 * currentLayer->thickness();
+          });
     }
     // Sort the surfaces by path length.
     // Special care is taken for the external surfaces which should always
