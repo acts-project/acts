@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/ISurfacesProvider.hpp"
-#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 
 #include "G4GDMLParser.hh"
@@ -34,9 +33,7 @@ namespace ActsPlugins {
 ///
 /// @tparam kDim The number of dimensions for the KDTree
 /// @tparam bSize The maximum number of surfaces per KDTree leaf
-/// @tparam reference_generator The reference generator for the KDTree
-template <std::size_t kDim = 2u, std::size_t bSize = 100u,
-          typename reference_generator = Acts::PolyhedronReferenceGenerator>
+template <std::size_t kDim = 2u, std::size_t bSize = 100u>
 class Geant4SurfaceProvider : public Acts::ISurfacesProvider {
  public:
   /// Nested configuration struct
@@ -63,7 +60,7 @@ class Geant4SurfaceProvider : public Acts::ISurfacesProvider {
   };
 
   /// Optional configuration for the KDTree
-  struct kdtOptions {
+  struct KdtOptions {
     /// A set of ranges to separate the surfaces
     Acts::RangeXD<kDim, double> range;
 
@@ -73,11 +70,12 @@ class Geant4SurfaceProvider : public Acts::ISurfacesProvider {
     /// The maximum number of surfaces per leaf
     std::size_t leafSize = bSize;
 
-    /// The reference generator for the KDTree
-    reference_generator rgen;
+    /// A reference generator for the KDTree
+    std::shared_ptr<IReferenceGenerator> referenceGenerator =
+        std::make_shared<PolyhedronReferenceGenerator>();
 
     /// Initialize range to be degenerate by default
-    kdtOptions() {
+    KdtOptions() {
       for (std::size_t i = 0; i < kDim; ++i) {
         range[i].set(1, -1);
       }
@@ -88,7 +86,7 @@ class Geant4SurfaceProvider : public Acts::ISurfacesProvider {
   /// @param config The configuration struct
   /// @param options The optional configuration for KDTree
   explicit Geant4SurfaceProvider(const Config& config,
-                                 const kdtOptions& options = kdtOptions()) {
+                                 const KdtOptions& options = KdtOptions()) {
     if (config.g4World == nullptr) {
       throw std::invalid_argument(
           "Geant4SurfaceProvider: No World volume provided");
@@ -141,8 +139,9 @@ class Geant4SurfaceProvider : public Acts::ISurfacesProvider {
     }
 
     /// Otherwise, select the surfaces based on the range
-    auto kdtSurfaces = KdtSurfaces<kDim, bSize, reference_generator>(
-        gctx, surfaces, m_kdtOptions.binningValues);
+    auto kdtSurfaces =
+        KdtSurfaces<kDim, bSize>(gctx, surfaces, m_kdtOptions.binningValues,
+                                 m_kdtOptions.referenceGenerator);
 
     return kdtSurfaces.surfaces(m_kdtOptions.range);
   };
@@ -150,7 +149,7 @@ class Geant4SurfaceProvider : public Acts::ISurfacesProvider {
  private:
   Config m_cfg;
 
-  kdtOptions m_kdtOptions;
+  KdtOptions m_kdtOptions;
 
   const G4VPhysicalVolume* m_g4World;
 
