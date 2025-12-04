@@ -61,7 +61,7 @@ inline std::size_t binFromProtoAxis(const DirectedProtoAxis& axis,
 inline std::size_t binFromProtoAxis(const DirectedProtoAxis& axis,
                                     const Vector3& gp) {
   BinningData bd(axis);
-  return bd.searchGlobal( gp);
+  return bd.searchGlobal(gp);
 }
 
 /// @brief Get the bin triple from multiple ProtoAxes using global coordinates
@@ -70,8 +70,7 @@ inline std::size_t binFromProtoAxis(const DirectedProtoAxis& axis,
 /// @return Array of bin indices corresponding to the global position for each axis
 inline std::array<std::size_t, 3> binTripleFromProtoAxes(
     const std::vector<DirectedProtoAxis>& axes, const Vector3& gp) {
-  const Transform3& invTransform3 = Transform3::Identity().inverse();
-  const Vector3& bPosition = invTransform3 * gp;
+  const Vector3& bPosition = gp;
   std::array<std::size_t, 3> bTriple = {0, 0, 0};
   if (axes.size() > 0) {
     BinningData bd0(axes[0]);
