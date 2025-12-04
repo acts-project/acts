@@ -50,11 +50,12 @@ This adds a hook `.git/hooks/pre-commit` which automatically calls `pre-commit`
 
 - At this point, `git commit` should pick up the pre-commit and run the formatting tools and apply corrections.
 If some files were modified, then just `git add` and `git commit` again to pick the changes.
-#Execution
+
+### Execution
 ```console
 cd acts/
 pre-commit run --all-files 
-
+```
 
 ## C++ formatting: `clang-format`
 
