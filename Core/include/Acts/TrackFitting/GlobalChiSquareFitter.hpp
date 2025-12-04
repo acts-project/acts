@@ -1440,8 +1440,9 @@ class Gx2Fitter {
     /// Finish Fitting /////////////////////////////////////////////////////////
 
     /// Actual MATERIAL Fitting ////////////////////////////////////////////////
-    ACTS_DEBUG("Start to evaluate material");
     if (multipleScattering) {
+      ACTS_DEBUG("Start to evaluate material");
+
       // Setup the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
@@ -1574,20 +1575,22 @@ class Gx2Fitter {
       ACTS_VERBOSE("Updated parameters: " << params.parameters().transpose());
 
       updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
-    }
-    ACTS_DEBUG("Finished to evaluate material");
-    ACTS_VERBOSE(
-        "Final parameters after material: " << params.parameters().transpose());
-    /// Finish MATERIAL Fitting ////////////////////////////////////////////////
+      ACTS_DEBUG("Finished to evaluate material");
+      ACTS_VERBOSE("Final parameters after material: "
+                   << params.parameters().transpose());
 
-    ACTS_VERBOSE("Final scattering angles:");
-    for (const auto& [key, value] : scatteringMap) {
-      if (!value.materialIsValid()) {
-        continue;
+      /// Finish MATERIAL Fitting
+      /// ////////////////////////////////////////////////
+
+      ACTS_VERBOSE("Final scattering angles:");
+      for (const auto& [key, value] : scatteringMap) {
+        if (!value.materialIsValid()) {
+          continue;
+        }
+        const auto& angles = value.scatteringAngles();
+        ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | "
+                              << angles[eBoundPhi] << " )");
       }
-      const auto& angles = value.scatteringAngles();
-      ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | " << angles[eBoundPhi]
-                            << " )");
     }
 
     ACTS_VERBOSE("Final covariance:\n" << fullCovariancePredicted);
@@ -1604,6 +1607,13 @@ class Gx2Fitter {
 
       // set up the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
+
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(*surface);
+      }
+
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;

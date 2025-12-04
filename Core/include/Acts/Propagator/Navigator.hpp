@@ -287,8 +287,6 @@ class Navigator {
     /// Completely reset navigation state to initial conditions
     void reset() {
       resetAfterVolumeSwitch();
-
-      freeCandidates.clear();
       currentVolume = nullptr;
       currentSurface = nullptr;
 
@@ -413,8 +411,13 @@ class Navigator {
     state.startSurface = state.options.startSurface;
     state.targetSurface = state.options.targetSurface;
 
-    /// If the state has
+    /// If the state has free surfaces initialize the interactions
     if (!state.options.freeSurfaces.empty()) {
+      state.freeCandidates.clear();
+      ACTS_VERBOSE(volInfo(state)
+                   << "Instantiate " << state.options.freeSurfaces.size()
+                   << " free surface intersections.");
+
       std::ranges::for_each(
           state.options.freeSurfaces, [&](const Surface* freeSurf) {
             auto [intersection, intersectionIndex] =
@@ -825,7 +828,7 @@ class Navigator {
     const auto freeIdx = state.freeCandidateIndex.value_or(maxIdx);
     ACTS_VERBOSE(volInfo(state)
                  << " Geometry surface candidate " << navIdx << "/"
-                 << state.navCandidates.size() << ", free surface candidte "
+                 << state.navCandidates.size() << ", free surface candidate "
                  << freeIdx << "/" << state.freeCandidates.size());
     /// Check whether free surfaces and geometry surfaces are available at the
     /// same time If the free surface is closer than the geometry surface
@@ -949,10 +952,6 @@ class Navigator {
   void updateFreeInterSections(State& state, const Vector3& position,
                                const Vector3& direction) const {
     std::ranges::for_each(state.freeCandidates, [&](NavigationTarget& target) {
-      if (target.pathLength() < 0.) {
-        return;
-      }
-
       auto [intersection, intersectionIndex] =
           target.surface()
               .intersect(state.options.geoContext, position, direction,
