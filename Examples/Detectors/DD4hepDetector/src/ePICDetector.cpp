@@ -89,16 +89,6 @@ void ePICDetector::construct(const Acts::GeometryContext& gctx) {
   cfg.envelope[AxisR] = {0_mm, 20_mm};
   Blueprint root{cfg};
 
-  // TODO DetElement acts_beampipe_central is beampipe
-  // constants:
-  // - IPBeampipeID,
-  // - IPBeampipeUpstreamStraightLength,
-  // - IPBeampipeDownstreamStraightLength
-  auto& outer = root.addCylinderContainer("ePICDetector", AxisR);
-  outer.addStaticVolume(
-      Transform3::Identity(),
-      std::make_unique<CylinderVolumeBounds>(0_mm, 20_mm, 1000_mm), "Beampipe");
-
   using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
   using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
 
@@ -126,468 +116,375 @@ void ePICDetector::construct(const Acts::GeometryContext& gctx) {
         }
       };
 
-  // VertexBarrel
-  // TODO common pattern: nphi by variable, nz by fixed constant
-  // which may need makeBinningFromConstants with variant<string,int>
-  outer.addCylinderContainer("VertexBarrel", AxisZ, [&](auto& pixel) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-    auto barrel =
-        builder.layerHelper()
-            .barrel()
-            .setAxes("XYZ")
-            .setPattern("VertexBarrel_layer\\d")
-            .setContainer("VertexBarrel")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& elem, auto& layer) {
-              layer.setNavigationPolicyFactory(
-                  NavigationPolicyFactory{}
-                      .add<CylinderNavigationPolicy>()
-                      .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                          .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                          .bins = makeBinningFromConstants(
-                              elem, std::regex{"VertexBarrel_layer(\\d)"},
-                              "VertexBarrelL{}_nphi", "VertexBarrelL{}_nz")})
-                      .asUniquePtr());
-            })
-            .build();
-    barrel->setAttachmentStrategy(AttachmentStrategy::First);
+  //
+  // DEFINE DETECTORS
+  //
 
-    pixel.addChild(barrel);
-  });
+  // VertexBarrel
+  auto VertexBarrel =
+      builder.layerHelper()
+          .barrel()
+          .setAxes("XYZ")
+          .setPattern("VertexBarrel_layer\\d")
+          .setContainer("VertexBarrel")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement& elem, auto& layer) {
+            layer.setNavigationPolicyFactory(
+                NavigationPolicyFactory{}
+                    .add<CylinderNavigationPolicy>()
+                    .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+                        .layerType = SrfArrayNavPol::LayerType::Cylinder,
+                        .bins = makeBinningFromConstants(
+                            elem, std::regex{"VertexBarrel_layer(\\d)"},
+                            "VertexBarrelL{}_nphi", "VertexBarrelL{}_nz")})
+                    .asUniquePtr());
+          })
+          .build();
+  VertexBarrel->setAttachmentStrategy(AttachmentStrategy::First);
 
   // SagittaSiBarrel
-  outer.addCylinderContainer("SagittaSiBarrel", AxisZ, [&](auto& sstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    auto barrel =
-        builder.layerHelper()
-            .barrel()
-            .setAxes("XYZ")
-            .setPattern("SagittaSiBarrel_layer\\d")
-            .setContainer("SagittaSiBarrel")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& elem, auto& layer) {
-              layer.setNavigationPolicyFactory(
-                  NavigationPolicyFactory{}
-                      .add<CylinderNavigationPolicy>()
-                      .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                          .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                          .bins = {constant("SiBarrelStave1_count"), 100}})
-                      .asUniquePtr());
-            })
-            .build();
-    barrel->setAttachmentStrategy(AttachmentStrategy::First);
-
-    sstrip.addChild(barrel);
-  });
+  // FIXME Volumes are not aligned: translation in x or y
+  // Requires changing number of modules to multiple of 4
+  auto SagittaSiBarrel =
+      builder.layerHelper()
+          .barrel()
+          .setAxes("XYZ")
+          .setPattern("SagittaSiBarrel_layer\\d")
+          .setContainer("SagittaSiBarrel")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement& elem, auto& layer) {
+            layer.setNavigationPolicyFactory(
+                NavigationPolicyFactory{}
+                    .add<CylinderNavigationPolicy>()
+                    .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+                        .layerType = SrfArrayNavPol::LayerType::Cylinder,
+                        .bins = {constant("SiBarrelStave1_count"), 100}})
+                    .asUniquePtr());
+          })
+          .build();
+  SagittaSiBarrel->setAttachmentStrategy(AttachmentStrategy::First);
 
   // OuterSiBarrel
-  outer.addCylinderContainer("OuterSiBarrel", AxisZ, [&](auto& sstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
+  // FIXME Volumes are not aligned: translation in x or y
+  // Requires changing number of modules to multiple of 4
+  auto OuterSiBarrel =
+      builder.layerHelper()
+          .barrel()
+          .setAxes("XYZ")
+          .setPattern("OuterSiBarrel_layer\\d")
+          .setContainer("OuterSiBarrel")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement& elem, auto& layer) {
+            layer.setNavigationPolicyFactory(
+                NavigationPolicyFactory{}
+                    .add<CylinderNavigationPolicy>()
+                    .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+                        .layerType = SrfArrayNavPol::LayerType::Cylinder,
+                        .bins = {128, 100}})
+                    .asUniquePtr());
+          })
+          .build();
+  OuterSiBarrel->setAttachmentStrategy(AttachmentStrategy::First);
 
-    auto barrel =
-        builder.layerHelper()
-            .barrel()
-            .setAxes("XYZ")
-            .setPattern("OuterSiBarrel_layer\\d")
-            .setContainer("OuterSiBarrel")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& elem, auto& layer) {
-              layer.setNavigationPolicyFactory(
-                  NavigationPolicyFactory{}
-                      .add<CylinderNavigationPolicy>()
-                      .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                          .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                          .bins = {128, 100}})
-                      .asUniquePtr());
-            })
-            .build();
-    barrel->setAttachmentStrategy(AttachmentStrategy::First);
-
-    sstrip.addChild(barrel);
-  });
+  // endcapPolicyFactory
+  std::shared_ptr SiTrackerEndcapPolicyFactory =
+    NavigationPolicyFactory{}
+        .add<CylinderNavigationPolicy>()
+        .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+            .layerType = SrfArrayNavPol::LayerType::Disc,
+            .bins = {5*constant("SiTrackerEndcapMod_count"), 100}})
+        .asUniquePtr();
 
   // InnerTrackerEndcapP
-  outer.addCylinderContainer("InnerTrackerEndcapP", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {5*constant("SiTrackerEndcapMod_count"), 100}})
-            .asUniquePtr();
-
-    auto posEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("InnerTrackerEndcapP_layer\\d_P")
-            .setContainer("InnerTrackerEndcapP")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    posEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(posEndcap);
-  });
+  auto InnerTrackerEndcapP =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("InnerTrackerEndcapP_layer\\d_P")
+          .setContainer("InnerTrackerEndcapP")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(SiTrackerEndcapPolicyFactory);
+          })
+          .build();
+  InnerTrackerEndcapP->setAttachmentStrategy(AttachmentStrategy::First);
 
   // InnerTrackerEndcapN
-  outer.addCylinderContainer("InnerTrackerEndcapN", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-        
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {5*constant("SiTrackerEndcapMod_count"), 100}})
-            .asUniquePtr();
-        
-    auto negEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("InnerTrackerEndcapN_layer\\d_N")
-            .setContainer("InnerTrackerEndcapN")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    negEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(negEndcap);
-  });
+  auto InnerTrackerEndcapN =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("InnerTrackerEndcapN_layer\\d_N")
+          .setContainer("InnerTrackerEndcapN")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(SiTrackerEndcapPolicyFactory);
+          })
+          .build();
+  InnerTrackerEndcapN->setAttachmentStrategy(AttachmentStrategy::First);
 
   // MiddleTrackerEndcapP
-  outer.addCylinderContainer("MiddleTrackerEndcapP", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {5*constant("SiTrackerEndcapMod_count"), 100}})
-            .asUniquePtr();
-
-    auto posEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("MiddleTrackerEndcapP_layer\\d_P")
-            .setContainer("MiddleTrackerEndcapP")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    posEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(posEndcap);
-  });
+  auto MiddleTrackerEndcapP =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("MiddleTrackerEndcapP_layer\\d_P")
+          .setContainer("MiddleTrackerEndcapP")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(SiTrackerEndcapPolicyFactory);
+          })
+          .build();
+  MiddleTrackerEndcapP->setAttachmentStrategy(AttachmentStrategy::First);
 
   // MiddleTrackerEndcapN
-  outer.addCylinderContainer("MiddleTrackerEndcapN", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {5*constant("SiTrackerEndcapMod_count"), 100}})
-            .asUniquePtr();
-
-    auto negEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("MiddleTrackerEndcapN_layer\\d_N")
-            .setContainer("MiddleTrackerEndcapN")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    negEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(negEndcap);
-  });
+  auto MiddleTrackerEndcapN =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("MiddleTrackerEndcapN_layer\\d_N")
+          .setContainer("MiddleTrackerEndcapN")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(SiTrackerEndcapPolicyFactory);
+          })
+          .build();
+  MiddleTrackerEndcapN->setAttachmentStrategy(AttachmentStrategy::First);
 
   // OuterTrackerEndcapP
-  outer.addCylinderContainer("OuterTrackerEndcapP", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {5*constant("SiTrackerEndcapMod_count"), 100}})
-            .asUniquePtr();
-
-    auto posEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("OuterTrackerEndcapP_layer\\d_P")
-            .setContainer("OuterTrackerEndcapP")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    posEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(posEndcap);
-  });
+  auto OuterTrackerEndcapP =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("OuterTrackerEndcapP_layer\\d_P")
+          .setContainer("OuterTrackerEndcapP")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(SiTrackerEndcapPolicyFactory);
+          })
+          .build();
+  OuterTrackerEndcapP->setAttachmentStrategy(AttachmentStrategy::First);
 
   // OuterTrackerEndcapN
-  outer.addCylinderContainer("OuterTrackerEndcapN", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {5*constant("SiTrackerEndcapMod_count"), 100}})
-            .asUniquePtr();
-
-    auto negEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("OuterTrackerEndcapN_layer\\d_N")
-            .setContainer("OuterTrackerEndcapN")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    negEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(negEndcap);
-  });
-
-
-  // InnerMPGDBarrel
-  outer.addCylinderContainer("InnerMPGDBarrel", AxisZ, [&](auto& sstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    auto barrel =
-        builder.layerHelper()
-            .barrel()
-            .setAxes("XYZ")
-            .setPattern("InnerMPGDBarrel_layer\\d")
-            .setContainer("InnerMPGDBarrel")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& elem, auto& layer) {
-              layer.setNavigationPolicyFactory(
-                  NavigationPolicyFactory{}
-                      .add<CylinderNavigationPolicy>()
-                      .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                          .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                          .bins = {24*constant("MPGDBarrelStave_count"), 100}})
-                      .asUniquePtr());
-            })                                                
-            .build();
-    barrel->setAttachmentStrategy(AttachmentStrategy::First);
-
-    sstrip.addChild(barrel);
-  });
-
-  // MPGDOuterBarrel
-  outer.addCylinderContainer("MPGDOuterBarrel", AxisZ, [&](auto& sstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    auto barrel =
-        builder.layerHelper()
-            .barrel()
-            .setAxes("XYZ")
-            .setPattern("MPGDOuterBarrel_layer\\d")
-            .setContainer("MPGDOuterBarrel")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& elem, auto& layer) {
-              layer.setNavigationPolicyFactory(
-                  NavigationPolicyFactory{}
-                      .add<CylinderNavigationPolicy>()
-                      .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                          .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                          .bins = {10*constant("MPGDOuterBarrelModule_count"), 100}})
-                      .asUniquePtr());
-            })
-            .build();
-    barrel->setAttachmentStrategy(AttachmentStrategy::First);
-
-    sstrip.addChild(barrel);
-  });
+  auto OuterTrackerEndcapN =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("OuterTrackerEndcapN_layer\\d_N")
+          .setContainer("OuterTrackerEndcapN")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(SiTrackerEndcapPolicyFactory);
+          })
+          .build();
+  OuterTrackerEndcapN->setAttachmentStrategy(AttachmentStrategy::First);
 
   // ForwardMPGD
-  outer.addCylinderContainer("ForwardMPGD", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {constant("ForwardMPGDEndcapMod_count"), 30}})
-            .asUniquePtr();
-
-    auto posEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("ForwardMPGD_layer\\d_P")
-            .setContainer("ForwardMPGD")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    posEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(posEndcap);
-  });
+  std::shared_ptr ForwardMPGDPolicyFactory =
+      NavigationPolicyFactory{}
+          .add<CylinderNavigationPolicy>()
+          .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+              .layerType = SrfArrayNavPol::LayerType::Disc,
+              .bins = {constant("ForwardMPGDEndcapMod_count"), 30}})
+          .asUniquePtr();
+  auto ForwardMPGD =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("ForwardMPGD_layer\\d_P")
+          .setContainer("ForwardMPGD")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(ForwardMPGDPolicyFactory);
+          })
+          .build();
+  ForwardMPGD->setAttachmentStrategy(AttachmentStrategy::First);
 
   // BackwardMPGD
-  outer.addCylinderContainer("BackwardMPGD", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
+  std::shared_ptr BackwardMPGDPolicyFactory =
+      NavigationPolicyFactory{}
+          .add<CylinderNavigationPolicy>()
+          .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+              .layerType = SrfArrayNavPol::LayerType::Disc,
+              .bins = {constant("BackwardMPGDEndcapMod_count"), 50}})
+          .asUniquePtr();
+  auto BackwardMPGD =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("BackwardMPGD_layer\\d_N")
+          .setContainer("BackwardMPGD")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(BackwardMPGDPolicyFactory);
+          })
+          .build();
+  BackwardMPGD->setAttachmentStrategy(AttachmentStrategy::First);
 
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {constant("BackwardMPGDEndcapMod_count"), 50}})
-            .asUniquePtr();
-
-    auto negEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("BackwardMPGD_layer\\d_N")
-            .setContainer("BackwardMPGD")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    negEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(negEndcap);
-  });
+  // InnerMPGDBarrel
+  auto InnerMPGDBarrel =
+      builder.layerHelper()
+          .barrel()
+          .setAxes("XYZ")
+          .setPattern("InnerMPGDBarrel_layer\\d")
+          .setContainer("InnerMPGDBarrel")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement& elem, auto& layer) {
+            layer.setNavigationPolicyFactory(
+                NavigationPolicyFactory{}
+                    .add<CylinderNavigationPolicy>()
+                    .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+                        .layerType = SrfArrayNavPol::LayerType::Cylinder,
+                        .bins = {24*constant("MPGDBarrelStave_count"), 100}})
+                    .asUniquePtr());
+          })
+          .build();
+  InnerMPGDBarrel->setAttachmentStrategy(AttachmentStrategy::First);
 
   // BarrelTOF
-  outer.addCylinderContainer("BarrelTOF", AxisZ, [&](auto& sstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
+  auto BarrelTOF =
+      builder.layerHelper()
+          .barrel()
+          .setAxes("XYZ")
+          .setPattern("BarrelTOF_layer\\d")
+          .setContainer("BarrelTOF")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement& elem, auto& layer) {
+            layer.setNavigationPolicyFactory(
+                NavigationPolicyFactory{}
+                    .add<CylinderNavigationPolicy>()
+                    .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+                        .layerType = SrfArrayNavPol::LayerType::Cylinder,
+                        .bins = {constant("BarrelTOF_Module_nphi"), 100}})
+                    .asUniquePtr());
+          })
+          .build();
+  BarrelTOF->setAttachmentStrategy(AttachmentStrategy::First);
 
-    auto barrel =
-        builder.layerHelper()
-            .barrel()
-            .setAxes("XYZ")
-            .setPattern("BarrelTOF_layer\\d")
-            .setContainer("BarrelTOF")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement& elem, auto& layer) {
-              layer.setNavigationPolicyFactory(
-                  NavigationPolicyFactory{}
-                      .add<CylinderNavigationPolicy>()
-                      .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                          .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                          .bins = {constant("BarrelTOF_Module_nphi"), 100}})
-                      .asUniquePtr());
-            })
-            .build();
-    barrel->setAttachmentStrategy(AttachmentStrategy::First); 
-    
-    sstrip.addChild(barrel);
-  });
+  // MPGDOuterBarrel
+  auto MPGDOuterBarrel =
+      builder.layerHelper()
+          .barrel()
+          .setAxes("XYZ")
+          .setPattern("MPGDOuterBarrel_layer\\d")
+          .setContainer("MPGDOuterBarrel")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement& elem, auto& layer) {
+            layer.setNavigationPolicyFactory(
+                NavigationPolicyFactory{}
+                    .add<CylinderNavigationPolicy>()
+                    .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+                        .layerType = SrfArrayNavPol::LayerType::Cylinder,
+                        .bins = {10*constant("MPGDOuterBarrelModule_count"), 100}})
+                    .asUniquePtr());
+          })
+          .build();
+  MPGDOuterBarrel->setAttachmentStrategy(AttachmentStrategy::First);
 
   // ForwardTOF
-  outer.addCylinderContainer("ForwardTOF", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
+  // FIXME Volumes are not aligned: translation in x or y
+  std::shared_ptr ForwardTOFPolicyFactory =
+      NavigationPolicyFactory{}
+          .add<CylinderNavigationPolicy>()
+          .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+              .layerType = SrfArrayNavPol::LayerType::Disc,
+              .bins = {30, 30}})
+          .asUniquePtr();
+  auto ForwardTOF =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("ForwardTOF_layer1")
+          //.setPattern("ForwardTOF_layer\\d")
+          // ^ FIXME LayerBlueprintNode: no surfaces provided for ForwardTOF_layer2
+          .setContainer("ForwardTOF")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}))
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(ForwardTOFPolicyFactory);
+          })
+          .build();
+  ForwardTOF->setAttachmentStrategy(AttachmentStrategy::First);
 
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {30, 30}})
-            .asUniquePtr();
-
-    auto posEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("ForwardTOF_layer1")
-            //.setPattern("ForwardTOF_layer\\d")
-            // ^ FIXME LayerBlueprintNode: no surfaces provided for ForwardTOF_layer2
-            .setContainer("ForwardTOF")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    posEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(posEndcap);
-  });
-
-  // B0 Tracker
+  // B0Tracker (OFF AXIS)
   // FIXME VolumeStack requires at least one volume
   /*
-  outer.addCylinderContainer("B0Tracker", AxisZ, [&](auto& lstrip) {
-    auto envelope =
-        ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm});
-
-    std::shared_ptr endcapPolicyFactory =
-        NavigationPolicyFactory{}
-            .add<CylinderNavigationPolicy>()
-            .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                .layerType = SrfArrayNavPol::LayerType::Disc,
-                .bins = {2*constant("B0TrackerLayerSmallMod_nModules"), 12}})
-            .asUniquePtr();
-
-    auto posEndcap =
-        builder.layerHelper()
-            .endcap()
-            .setAxes("XZY")
-            .setPattern("B0Tracker_layer\\d")
-            .setContainer("B0Tracker")
-            .setEnvelope(envelope)
-            .customize([&](const dd4hep::DetElement&, auto& layer) {
-              layer.setNavigationPolicyFactory(endcapPolicyFactory);
-            })
-            .build();
-    posEndcap->setAttachmentStrategy(AttachmentStrategy::First);
-
-    lstrip.addChild(posEndcap);     
-  });
+  std::shared_ptr B0TrackerPolicyFactory =
+      NavigationPolicyFactory{}
+          .add<CylinderNavigationPolicy>()
+          .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+              .layerType = SrfArrayNavPol::LayerType::Disc,
+              .bins = {2*constant("B0TrackerLayerSmallMod_nModules"), 12}})
+          .asUniquePtr();
+  auto B0Tracker =
+      builder.layerHelper()
+          .endcap()
+          .setAxes("XZY")
+          .setPattern("B0Tracker_layer\\d")
+          .setContainer("B0Tracker")
+          .setEnvelope(
+            ExtentEnvelope{}.set(AxisZ, {5_mm, 5_mm}).set(AxisR, {5_mm, 5_mm}
+          .customize([&](const dd4hep::DetElement&, auto& layer) {
+            layer.setNavigationPolicyFactory(B0TrackerPolicyFactory);
+          })
+          .build();
+  B0Tracker->setAttachmentStrategy(AttachmentStrategy::First);
   */
 
-  ACTS_INFO("ePICDetector blueprint");
+  //
+  // PLACE IN NESTED CONTAINERS
+  //
+
+  // TODO DetElement acts_beampipe_central is beampipe
+  // constants:
+  // - IPBeampipeID,
+  // - IPBeampipeUpstreamStraightLength,
+  // - IPBeampipeDownstreamStraightLength
+
+  // Note: easiest to think from inside to outside
+  root.addCylinderContainer("Tracker4", AxisZ, [&](auto& tracker4) {
+    tracker4.addCylinderContainer("Tracker3", AxisR, [&](auto& tracker3) {
+      tracker3.addStaticVolume(
+          Transform3::Identity(),
+          std::make_unique<CylinderVolumeBounds>(0_mm, 20_mm, 100_mm), "Beampipe");
+      tracker3.addCylinderContainer("Tracker2", AxisZ, [&](auto& tracker2) {
+        tracker2.addChild(BackwardMPGD);               // r=[65–405], z=[−1462,−1324]
+        tracker2.addChild(OuterTrackerEndcapN);        // r=[32–426], z=[−1275,−895]
+        tracker2.addChild(MiddleTrackerEndcapN);       // r=[32-420], z ~ -450
+        tracker2.addCylinderContainer("Tracker1", AxisR, [&](auto& tracker1) {
+          tracker1.addCylinderContainer("Tracker0", AxisZ, [&](auto& tracker0) {
+            tracker0.addChild(InnerTrackerEndcapN);    // r=[32-245], z ~ -250
+            tracker0.addChild(VertexBarrel);           // r=[33–130], z=[−135,+135]
+            tracker0.addChild(InnerTrackerEndcapP);    // r=[32-245], z ~ +250
+          });
+          tracker1.addChild(SagittaSiBarrel);          // r=[258-275], z=[-256,+256]
+          tracker1.addChild(OuterSiBarrel);            // r=[413–430], z=[−402,+402]
+        });
+        tracker2.addChild(MiddleTrackerEndcapP);       // r=[32-420], z ~ +450
+        tracker2.addChild(OuterTrackerEndcapP);        // r=[34–426], z=[+695,+1355]
+        tracker2.addChild(ForwardMPGD);                // r=[76–405], z=[+1249,+1387]
+      });
+      tracker3.addChild(InnerMPGDBarrel);              // r=[547–589], z=[−1192,+1192]
+      tracker3.addChild(BarrelTOF);                    // r=[629–654], z=[−1285,+1285]
+      tracker3.addChild(MPGDOuterBarrel);              // r=[731–762], z=[−1700,+1700]
+    });
+    tracker4.addChild(ForwardTOF);                     // r=[101–602], z ~ +1861
+    //tracker4.addChild(B0Tracker);                      // r=[35-150], z=[+5895,+6705] OFF-AXIS
+  });
 
   // @TODO: Add plugin way to take this from xml
 
