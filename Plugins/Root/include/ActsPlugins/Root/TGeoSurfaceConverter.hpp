@@ -103,9 +103,8 @@ struct TGeoSurfaceConverter {
   static double toRadian(double deg) {
     double d = Acts::detail::wrap_periodic(deg, -180.0, 360.0);
 
-    // Check if degree is a non-zero multiple of 360. If it is, return 2pi
-    constexpr double eps = 1e-6;
-    if (std::abs(d) < eps && std::abs(deg) > eps) {
+    // If the angle was mapped to 0 from a non-0 multiple of 360, set it to 360
+    if (constexpr double eps = 1e-6; std::abs(d) < eps && std::abs(deg) > eps) {
       d = 360.;
     }
 
