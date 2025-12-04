@@ -131,6 +131,7 @@ bool CompositeSpacePointLineSeeder::moveToNextHit(
   }
   while (++hitIdx < hitVec.size() && selector.connected() &&
          !selector(*hitVec[hitIdx])) {
+    // find the next good hit
   }
   return hitIdx < hitVec.size() && selector.connected() &&
          selector(*hitVec[hitIdx]);
@@ -166,7 +167,7 @@ bool CompositeSpacePointLineSeeder::prepareSeedOptions(
 
   if (std::ranges::any_of(options.splitter->strawHits(),
                           [this](const Cont_t& layerHits) {
-                            return layerHits.size() > m_cfg.busyLayerLimit;
+                            return std::size(layerHits) > m_cfg.busyLayerLimit;
                           })) {
     options.startWithPattern = false;
   }
@@ -228,12 +229,12 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
     return;
   }
 
-  // Reset to the first good hit in the lower layer
-  if (firstGoodHit(lower, options.selector, options.lowerHitIndex)) {
+  // Reset to the first good hit in the lower layer and move to the next good
+  // hit in the upper layer
+  if (firstGoodHit(lower, options.selector, options.lowerHitIndex) &&
+      moveToNextHit(upper, options.selector, options.upperHitIndex)) {
+    return;
     // --> so we can update to the next hit in the upper layer
-    if (moveToNextHit(upper, options.selector, options.upperHitIndex)) {
-      return;
-    }
   }
 
   // All combinations of hits & lines in both layers have been processed
@@ -313,20 +314,19 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
     found->lineParams = options.patternParams;
     found->seedHits.reserve(options.splitter->strawHits().size() +
                             options.splitter->stripHits().size());
-
-    Vector posForCalib =
-        Vector(found->lineParams[toUnderlying(ParIdx::x0)],
-               found->lineParams[toUnderlying(ParIdx::y0)], 0.);
-    Vector dirForCalib = makeDirectionFromPhiTheta(
-        found->lineParams[toUnderlying(ParIdx::phi)],
-        found->lineParams[toUnderlying(ParIdx::theta)]);
+    using enum ParIdx;
+    Vector posForCalib = Vector(found->lineParams[toUnderlying(x0)],
+                                found->lineParams[toUnderlying(y0)], 0.);
+    Vector dirForCalib =
+        makeDirectionFromPhiTheta(found->lineParams[toUnderlying(phi)],
+                                  found->lineParams[toUnderlying(theta)]);
     for (const auto& strawLayerHits : options.splitter->strawHits()) {
       Cont_t tmpCalibHits = options.calibrator->calibrate(
           *options.calibContext, posForCalib, dirForCalib,
-          options.patternParams[toUnderlying(ParIdx::t0)], strawLayerHits);
+          options.patternParams[toUnderlying(t0)], strawLayerHits);
       found->seedHits.insert(found->seedHits.end(),
-                             std::make_move_iterator(tmpCalibHits.begin()),
-                             std::make_move_iterator(tmpCalibHits.end()));
+                             std::make_move_iterator(std::begin(tmpCalibHits)),
+                             std::make_move_iterator(std::end(tmpCalibHits)));
     }
 
     found->nStrawHits = found->seedHits.size();
@@ -335,8 +335,8 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
           *options.calibContext, posForCalib, dirForCalib,
           options.patternParams[toUnderlying(ParIdx::t0)], stripLayerHits);
       found->seedHits.insert(found->seedHits.end(),
-                             std::make_move_iterator(tmpCalibHits.begin()),
-                             std::make_move_iterator(tmpCalibHits.end()));
+                             std::make_move_iterator(std::begin(tmpCalibHits)),
+                             std::make_move_iterator(std::end(tmpCalibHits)));
     }
 
     found->y0 = options.patternParams[toUnderlying(ParIdx::y0)];
@@ -486,9 +486,11 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
 
   /** Associate strip hits to the seed */
 
-  double bestChi2Loc0{std::numeric_limits<double>::max()},
-      bestChi2Loc1{std::numeric_limits<double>::max()};
-  std::size_t bestIdxLoc0{0}, bestIdxLoc1{0};
+  double bestChi2Loc0{std::numeric_limits<double>::max()};
+  double bestChi2Loc1{std::numeric_limits<double>::max()};
+  std::size_t bestIdxLoc0{0};
+  std::size_t bestIdxLoc1{0};
+
   for (const auto& stripLayerHits : options.splitter->stripHits()) {
     for (const auto& [hitIdx, testMe] : Acts::enumerate(stripLayerHits)) {
       const double chi2 = detail::CompSpacePointAuxiliaries::chi2Term(

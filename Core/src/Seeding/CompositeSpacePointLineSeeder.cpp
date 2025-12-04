@@ -54,7 +54,8 @@ std::ostream& CompositeSpacePointLineSeeder::SeedParameters::print(
   return os;
 }
 
-bool CompositeSpacePointLineSeeder::isValidLine(SeedParameters seedSol) const {
+bool CompositeSpacePointLineSeeder::isValidLine(
+    const SeedParameters& seedSol) const {
   if (m_cfg.noCutsOnSeedParams) {
     return true;
   }

@@ -271,7 +271,7 @@ class CompositeSpacePointLineSeeder {
                             SeedParam_t patternParams) const;
 
   /// @brief check if the seed line is valid within the configured cuts
-  bool isValidLine(SeedParameters seedSol) const;
+  bool isValidLine(const SeedParameters& seedSol) const;
 
   Config m_cfg{};
   /// @brief Logger instance
