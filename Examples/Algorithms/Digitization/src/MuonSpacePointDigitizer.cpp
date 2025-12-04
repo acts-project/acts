@@ -187,21 +187,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
     // otherwise clang on macos complains that it is unable to capture the local
     // binding in the lambda used for visiting the smearer below.
     Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
-    const auto& moduleSimHits = simHitsGroup.second;
-
-    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
-        surfaceByIdentifier = m_cfg.trackingGeometry->geoIdSurfaceMap();
-    auto surfaceItr = surfaceByIdentifier.find(moduleGeoId);
-
-    if (surfaceItr == surfaceByIdentifier.end()) {
-      // this is either an invalid geometry id or a misconfigured smearer
-      // setup; both cases can not be handled and should be fatal.
-      ACTS_ERROR("Could not find surface " << moduleGeoId
-                                           << " for configured smearer");
-      return ProcessCode::ABORT;
-    }
-
-    const Surface* hitSurf = surfaceItr->second;
+    const Surface* hitSurf = trackingGeometry().findSurface(moduleGeoId);
     assert(hitSurf != nullptr);
 
     const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
