@@ -10,39 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/IReferenceGenerator.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <ranges>
 #include <vector>
 
 namespace Acts {
 
-enum class ReferenceGeneratorType {
-  Center,
-  AxisDirection,
-  Polyhedron,
-  Projected
-};
-
-struct IReferenceGenerator {
-  virtual ~IReferenceGenerator() = default;
-
-  /// Helper to access reference positions for filling the grid
-  ///
-  /// @param gctx the geometry context of this operation
-  /// @param surface the surface for which the reference points are to be accessed
-  ///
-  /// @return a vector of reference points for filling
-  virtual const std::vector<Vector3> references(
-      const GeometryContext& gctx, const Surface& surface) const = 0;
-
-  /// Access the type of the reference generator
-  virtual ReferenceGeneratorType type() const = 0;
-};
-
-/// A struct to access the center position
+/// A struct to access the center position as a sole reference
 ///
 /// This generator will provide only one filling point and hence
 /// only a single bin in the indexed grid.
@@ -56,11 +34,6 @@ struct CenterReferenceGenerator : public IReferenceGenerator {
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const override {
     return {surface.center(gctx)};
-  }
-
-  /// Access the type of the reference generator
-  ReferenceGeneratorType type() const override {
-    return ReferenceGeneratorType::Center;
   }
 };
 
@@ -81,11 +54,6 @@ struct AxisDirectionReferenceGenerator : public IReferenceGenerator {
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const override {
     return {surface.referencePosition(gctx, bVAL)};
-  }
-
-  /// Access the type of the reference generator
-  ReferenceGeneratorType type() const override {
-    return ReferenceGeneratorType::AxisDirection;
   }
 };
 
@@ -114,11 +82,6 @@ struct PolyhedronReferenceGenerator : public IReferenceGenerator {
   /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const override;
-
-  /// Access the type of the reference generator
-  ReferenceGeneratorType type() const override {
-    return ReferenceGeneratorType::Polyhedron;
-  }
 };
 
 /// A Projected reference generator which projects the polyhedron vertices onto
@@ -146,11 +109,6 @@ struct ProjectedReferenceGenerator : public IReferenceGenerator {
   /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const override;
-
-  /// Access the type of the reference generator
-  ReferenceGeneratorType type() const override {
-    return ReferenceGeneratorType::Projected;
-  }
 };
 
 }  // namespace Acts
