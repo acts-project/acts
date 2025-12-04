@@ -10,13 +10,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/Transform3.hpp"
 
-// #include <array>
-// #include <cstddef>
-// #include <iostream>
-// #include <iterator>
-// #include <memory>
-// #include <stdexcept>
 #include <string>
 #include <vector>
 
