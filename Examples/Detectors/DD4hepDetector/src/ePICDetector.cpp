@@ -482,7 +482,7 @@ void ePICDetector::construct(const Acts::GeometryContext& gctx) {
       tracker3.addChild(BarrelTOF);                    // r=[629–654], z=[−1285,+1285]
       tracker3.addChild(MPGDOuterBarrel);              // r=[731–762], z=[−1700,+1700]
     });
-    tracker4.addChild(ForwardTOF);                     // r=[101–602], z ~ +1861
+    //tracker4.addChild(ForwardTOF);                     // r=[101–602], z ~ +1861
     //tracker4.addChild(B0Tracker);                      // r=[35-150], z=[+5895,+6705] OFF-AXIS
   });
 
