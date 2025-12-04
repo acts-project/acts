@@ -11,14 +11,10 @@
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/EventData/CompositeSpacePointCalibrator.hpp"
 #include "Acts/EventData/CompositeSpacePointSorter.hpp"
-#include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 namespace Acts::Experimental {
-
-using Line_t = detail::CompSpacePointAuxiliaries::Line_t;
-using ParIdx = detail::CompSpacePointAuxiliaries::FitParIndex;
 
 namespace detail {
 /// @brief Abrivation to dereference a pointer to a const object
@@ -28,11 +24,17 @@ using PointerConstDref_t = std::add_const_t<RemovePointer_t<T>>&;
 
 class CompositeSpacePointLineSeeder {
  public:
+  using Line_t = detail::CompSpacePointAuxiliaries::Line_t;
+  using ParIdx = detail::CompSpacePointAuxiliaries::FitParIndex;
   using Vector = detail::CompSpacePointAuxiliaries::Vector;
-  using SeedParam_t = CompositeSpacePointLineFitter::ParamVec_t;
-  /// @brief typedef to the underlying space point object
-  template <CompositeSpacePoint SpacePoint_t>
-  using Selector_t = CompositeSpacePointLineFitter::Selector_t<SpacePoint_t>;
+  static constexpr auto s_nPars = toUnderlying(ParIdx::nPars);
+  /// @brief Vector containing the 5 straight segment line parameters
+  using SeedParam_t = std::array<double, s_nPars>;
+  ///@brief During the repetitive recalibration, single hits may be invalidated
+  ///       under the track parameters. Define a Delegate to sort out the
+  ///       invalid hits
+  template <CompositeSpacePoint Sp_t>
+  using Selector_t = Delegate<bool(const Sp_t&)>;
   using AbortSelector_t = Delegate<bool(std::size_t layerIdx)>;
   template <CompositeSpacePointContainer Cont_t>
   using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
