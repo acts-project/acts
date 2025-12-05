@@ -128,6 +128,9 @@ inline static actsvg::svg::object group(
 /// @param yStart the start position y
 /// @param xEnd the end position x
 /// @param yEnd the end position y
+/// @param variable the variable name
+/// @param value the value
+/// @param unit the unit
 ///
 /// @return a single svg object as a measure
 inline static actsvg::svg::object measure(double xStart, double yStart,
@@ -180,6 +183,7 @@ inline static actsvg::svg::object axesXY(double xMin, double xMax, double yMin,
 /// @param info the text of the info box
 /// @param infoStyle the style of the info box (body)
 /// @param object the connected object
+/// @param highlights the highlight events
 ///
 /// @return an svg object
 inline static actsvg::svg::object infoBox(

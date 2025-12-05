@@ -40,7 +40,7 @@ struct Options {
 
 /// Convert a surface array into needed constituents
 ///
-/// @param gtcx is the geometry context of the conversion call
+/// @param gctx is the geometry context of the conversion call
 /// @param surfaceArray is the surface to convert
 /// @param cOptions the conversion options
 ///

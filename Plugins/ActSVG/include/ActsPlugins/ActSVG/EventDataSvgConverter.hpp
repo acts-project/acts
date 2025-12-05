@@ -34,7 +34,7 @@ actsvg::svg::object pointXY(const Acts::Vector3& pos, double size,
 /// @param pos the position
 /// @param size the size of the object
 /// @param style the style of the object
-/// @param indx the running index
+/// @param idx the running index
 ///
 /// @return a vector of svg objects
 actsvg::svg::object pointZR(const Acts::Vector3& pos, double size,
@@ -45,7 +45,7 @@ actsvg::svg::object pointZR(const Acts::Vector3& pos, double size,
 /// @param pos the position
 /// @param size the size of the object
 /// @param style the style of the object
-/// @param indx the running index
+/// @param idx the running index
 ///
 /// @return a vector of svg objects
 template <typename view_type>

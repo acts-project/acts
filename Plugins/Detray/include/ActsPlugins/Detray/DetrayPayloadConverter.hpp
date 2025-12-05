@@ -164,6 +164,7 @@ class DetrayPayloadConverter {
             convertProtoSurfaceMaterialBinUtility};
   };
 
+  /// @param bounds the surface bounds to convert
   /// @param forPortal detray special cases the local parametrization for portals for performance reasons
   static detray::io::mask_payload convertMask(const Acts::SurfaceBounds& bounds,
                                               bool forPortal);

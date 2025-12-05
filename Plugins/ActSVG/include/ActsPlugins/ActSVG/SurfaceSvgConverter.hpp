@@ -21,7 +21,9 @@ class Surface;
 
 namespace ActsPlugins::Svg {
 
+/// @cond
 using ProtoSurface = actsvg::proto::surface<std::vector<Acts::Vector3>>;
+/// @endcond
 
 /// @ingroup actsvg_plugin
 namespace SurfaceConverter {
@@ -37,9 +39,9 @@ struct Options {
 
 /// Convert into a svg::proto surface
 ///
-/// @param gtcx is the geometry context of the conversion call
+/// @param gctx is the geometry context of the conversion call
 /// @param surface is the surface to convert
-/// @param cOption is the conversion options struct
+/// @param cOptions is the conversion options struct
 ///
 /// @return a proto surface object
 ProtoSurface convert(const Acts::GeometryContext& gctx,
