@@ -10,7 +10,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
-#include "Acts/Utilities/Transform3.hpp"
 
 #include <string>
 #include <vector>
