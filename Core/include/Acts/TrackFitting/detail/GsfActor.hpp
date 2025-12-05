@@ -61,6 +61,9 @@ struct GsfResult {
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
 
+  // Internal: bethe heitler approximation component cache
+  std::vector<BetheHeitlerApprox::Component> betheHeitlerCache;
+
   // Internal: component cache to avoid reallocation
   std::vector<GsfComponent> componentCache;
 };
@@ -86,7 +89,7 @@ struct GsfActor {
 
     /// Bethe Heitler Approximator pointer. The fitter holds the approximator
     /// instance TODO if we somehow could initialize a reference here...
-    std::shared_ptr<const BetheHeitlerApprox> bethe_heitler_approx;
+    const BetheHeitlerApprox* bethe_heitler_approx = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -368,7 +371,7 @@ struct GsfActor {
                            const navigator_t& navigator,
                            const BoundTrackParameters& old_bound,
                            const double old_weight,
-                           std::vector<ComponentCache>& componentCaches,
+                           std::vector<ComponentCache>& componentCache,
                            result_type& result) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
@@ -397,7 +400,10 @@ struct GsfActor {
     }
 
     // Get the mixture
-    const auto mixture = m_cfg.bethe_heitler_approx->mixture(pathXOverX0);
+    result.betheHeitlerCache.resize(
+        m_cfg.bethe_heitler_approx->maxComponents());
+    const auto mixture = m_cfg.bethe_heitler_approx->mixture(
+        pathXOverX0, result.betheHeitlerCache);
 
     // Create all possible new components
     for (const auto& gaussian : mixture) {
@@ -448,7 +454,7 @@ struct GsfActor {
              "new cov not finite");
 
       // Set the remaining things and push to vector
-      componentCaches.push_back({new_weight, new_pars, new_cov});
+      componentCache.push_back({new_weight, new_pars, new_cov});
     }
 
     return pathXOverX0;

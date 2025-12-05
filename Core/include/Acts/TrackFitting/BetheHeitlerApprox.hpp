@@ -54,15 +54,9 @@ class BetheHeitlerApprox {
 
   virtual ~BetheHeitlerApprox() = default;
 
-  virtual std::size_t numComponents() const = 0;
+  virtual std::size_t maxComponents() const = 0;
 
   virtual bool validXOverX0(double xOverX0) const = 0;
-
-  virtual std::vector<Component> mixture(double xOverX0) const {
-    std::vector<Component> comps(numComponents());
-    mixture(xOverX0, std::span<Component>(comps));
-    return comps;
-  }
 
   virtual std::span<Component> mixture(double xOverX0,
                                        std::span<Component> mixture) const = 0;
@@ -75,7 +69,7 @@ class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
  public:
   /// Returns the number of components the returned mixture will have
   /// @return Number of components (always 1 for single component approximation)
-  std::size_t numComponents() const override { return 1; }
+  std::size_t maxComponents() const override { return 1; }
 
   /// Checks if an input is valid for the parameterization. The threshold for
   /// x/x0 is 0.002 and orientates on the values used in ATLAS
@@ -170,7 +164,7 @@ class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
 
   /// Returns the number of components the returned mixture will have
   /// @return Number of components in the mixture
-  std::size_t numComponents() const override {
+  std::size_t maxComponents() const override {
     return std::max(m_lowData.size(), m_highData.size());
   }
 
