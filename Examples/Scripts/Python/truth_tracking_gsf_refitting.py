@@ -24,7 +24,6 @@ def runRefittingGsf(
     outputDir = Path(outputDir)
 
     # Run Kalman tracking to produce initial tracks for refitting
-    # Note: Uses electron particles but muon hypothesis (particle-agnostic tracking)
     s = runTruthTrackingKalman(
         trackingGeometry,
         field,
