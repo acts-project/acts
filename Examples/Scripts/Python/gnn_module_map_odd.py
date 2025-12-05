@@ -29,6 +29,14 @@ from acts.examples.simulation import (
     ParticleSelectorConfig,
 )
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
+from acts.examples.gnn import (
+    ModuleMapCuda,
+    TorchEdgeClassifier,
+    OnnxEdgeClassifier,
+    TensorRTEdgeClassifier,
+    CudaTrackBuilding,
+    NodeFeature,
+)
 
 
 def runGnnModuleMap(
@@ -141,7 +149,7 @@ def runGnnModuleMap(
         "gpuBlocks": 512,
         "moreParallel": True,
     }
-    graphConstructor = acts.examples.gnn.ModuleMapCuda(**moduleMapConfig)
+    graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
     gnnModel = Path(gnnModel)
     edgeClassifierConfig = {
@@ -152,15 +160,11 @@ def runGnnModuleMap(
 
     if gnnModel.suffix == ".pt":
         edgeClassifierConfig["useEdgeFeatures"] = True
-        edgeClassifiers = [
-            acts.examples.gnn.TorchEdgeClassifier(**edgeClassifierConfig)
-        ]
+        edgeClassifiers = [TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
-        edgeClassifiers = [acts.examples.gnn.OnnxEdgeClassifier(**edgeClassifierConfig)]
+        edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
-        edgeClassifiers = [
-            acts.examples.gnn.TensorRTEdgeClassifier(**edgeClassifierConfig)
-        ]
+        edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:
         raise ValueError(f"Unsupported model format: {gnnModel.suffix}")
 
@@ -169,9 +173,9 @@ def runGnnModuleMap(
         "useOneBlockImplementation": False,
         "doJunctionRemoval": True,
     }
-    trackBuilder = acts.examples.gnn.CudaTrackBuilding(**trackBuilderConfig)
+    trackBuilder = CudaTrackBuilding(**trackBuilderConfig)
 
-    e = acts.examples.gnn.NodeFeature
+    e = NodeFeature
     nodeFeatures = [
         e.R,
         e.Phi,
