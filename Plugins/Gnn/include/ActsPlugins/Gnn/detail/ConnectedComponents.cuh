@@ -297,7 +297,6 @@ __global__ void setBounds(const TLabel *labels, TLabel *bounds,
 /// @param numSpacepoints The number of spacepoints
 /// @param numLabels The number of unique labels
 /// @param stream The CUDA stream to use for the operation
-/// NOTE: This doesn't set the last bound.
 template <typename TLabel, typename TSpacepointId>
 void findTrackCandidateBounds(TLabel *labels, TSpacepointId *spacepointIds,
                               TLabel *bounds, std::size_t numSpacepoints,
