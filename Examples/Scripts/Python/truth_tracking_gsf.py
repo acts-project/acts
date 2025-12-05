@@ -46,6 +46,7 @@ def runTruthTrackingGsf(
 
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
+    logger = acts.logging.getLogger("GSF Example")
 
     if inputParticlePath is None:
         addParticleGun(
@@ -62,9 +63,7 @@ def runTruthTrackingGsf(
             rnd=rnd,
         )
     else:
-        acts.logging.getLogger("GSF Example").info(
-            "Reading particles from %s", inputParticlePath.resolve()
-        )
+        logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
             acts.examples.RootParticleReader(
@@ -73,10 +72,9 @@ def runTruthTrackingGsf(
                 outputParticles="particles_generated",
             )
         )
+        s.addWhiteboardAlias("particles", "particles_generated")
 
-    # Read pre-simulated hits or run FATRAS
     if inputSimHitsPath is None:
-        # Fallback: run FATRAS for quick testing without Geant4
         addFatras(
             s,
             trackingGeometry,
@@ -85,7 +83,7 @@ def runTruthTrackingGsf(
             enableInteractions=True,
         )
     else:
-        # Read pre-simulated hits from Geant4
+        logger.info("Reading hits from %s", inputSimHitsPath.resolve())
         s.addReader(
             acts.examples.RootSimHitReader(
                 level=acts.logging.INFO,
@@ -93,6 +91,7 @@ def runTruthTrackingGsf(
                 outputSimHits="simhits",
             )
         )
+        s.addWhiteboardAlias("particles_simulated_selected", "particles_generated")
 
     addDigitization(
         s,

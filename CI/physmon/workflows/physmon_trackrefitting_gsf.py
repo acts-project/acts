@@ -12,7 +12,7 @@ from physmon_common import makeSetup
 setup = makeSetup()
 
 # Paths to pre-simulated data (same as fitting workflow)
-simDir = setup.outdir / "simulation"
+simDir = (setup.outdir / "../simulation_gsf/simulation").resolve()
 particlesPath = simDir / "particles_simulation.root"
 simhitsPath = simDir / "hits.root"
 

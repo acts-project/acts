@@ -96,6 +96,7 @@ def runTruthTrackingKalman(
                 outputSimHits="simhits",
             )
         )
+        s.addWhiteboardAlias("particles_simulated_selected", "particles_generated")
 
     addDigitization(
         s,
