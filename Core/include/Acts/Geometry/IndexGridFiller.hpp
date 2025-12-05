@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"

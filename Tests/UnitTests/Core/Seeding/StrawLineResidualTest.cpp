@@ -25,8 +25,6 @@ using namespace Acts::UnitLiterals;
 using namespace Acts::PlanarHelper;
 using namespace Acts::detail::LineHelper;
 using namespace Acts::VectorHelpers;
-using RandomEngine = std::mt19937;
-using uniform = std::uniform_real_distribution<double>;
 
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using Config_t = CompSpacePointAuxiliaries::Config;
@@ -486,10 +484,12 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
 
     auto isect =
         lineIntersect(line.position(), line.direction(), wirePos, wireDir1);
+
     testResidual(line.parameters(),
                  FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(
                                                           rndEngine)*wireDir1,
                                    wireDir1, R, dR, uncertWire});
+
     isect = lineIntersect(line.position(), line.direction(), wirePos, wireDir2);
     testResidual(line.parameters(),
                  FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(
@@ -534,19 +534,11 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
   const Vector b2{makeDirectionFromPhiTheta(60._degree, 90._degree)};
   const Vector b3{makeDirectionFromPhiTheta(00._degree, 90._degree)};
   const Vector b4{makeDirectionFromPhiTheta(60._degree, 75._degree)};
-  FitTestSpacePoint p1{
-      pos,
-      b1,
-      b2,
-      15._ns,
-      {Acts::square(10._cm), Acts::square(10._cm), Acts::square(1._ns)}};
+  const std::array cov{Acts::square(10._cm), Acts::square(10._cm),
+                       Acts::square(1._ns)};
+  FitTestSpacePoint p1{pos, b1, b2, 15._ns, cov};
 
-  FitTestSpacePoint p2{
-      pos1,
-      b3,
-      b4,
-      15._ns,
-      {Acts::square(10._cm), Acts::square(10._cm), Acts::square(1._ns)}};
+  FitTestSpacePoint p2{pos1, b3, b4, 15._ns, cov};
 
   timeStripResidualTest(linePars, 10., p1, locToGlob);
 
