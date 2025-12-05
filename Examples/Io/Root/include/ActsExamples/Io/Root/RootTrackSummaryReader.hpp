@@ -81,7 +81,7 @@ class RootTrackSummaryReader : public IReader {
   template <typename T>
   using BranchVector = RootBranchPtr<std::vector<T>>;
   template <typename T>
-  using BranchMatrix = RootBranchPtr<std::vector<std::vector<T>>>;
+  using BranchJaggedVector = RootBranchPtr<std::vector<std::vector<T>>>;
 
   /// The config class
   Config m_cfg;
@@ -125,23 +125,23 @@ class RootTrackSummaryReader : public IReader {
   /// The number of ndf of the measurements+outliers
   BranchVector<unsigned int> m_NDF;
   /// The chi2 on all measurement states
-  BranchMatrix<double> m_measurementChi2;
+  BranchJaggedVector<double> m_measurementChi2;
   /// The chi2 on all outlier states
-  BranchMatrix<double> m_outlierChi2;
+  BranchJaggedVector<double> m_outlierChi2;
   /// The volume id of the measurements
-  BranchMatrix<std::uint32_t> m_measurementVolume;
+  BranchJaggedVector<std::uint32_t> m_measurementVolume;
   /// The layer id of the measurements
-  BranchMatrix<std::uint32_t> m_measurementLayer;
+  BranchJaggedVector<std::uint32_t> m_measurementLayer;
   /// The volume id of the outliers
-  BranchMatrix<std::uint32_t> m_outlierVolume;
+  BranchJaggedVector<std::uint32_t> m_outlierVolume;
   /// The layer id of the outliers
-  BranchMatrix<std::uint32_t> m_outlierLayer;
+  BranchJaggedVector<std::uint32_t> m_outlierLayer;
 
   // The majority truth particle info
   /// The number of hits from majority particle
   BranchVector<unsigned int> m_nMajorityHits;
   /// Combined barcode vector (legacy)
-  BranchMatrix<std::uint32_t> m_majorityParticleId{nullptr};
+  BranchJaggedVector<std::uint32_t> m_majorityParticleId{nullptr};
   /// Decoded barcode components for the majority particle
   BranchVector<std::uint32_t> m_majorityParticleVertexPrimary{nullptr};
   BranchVector<std::uint32_t> m_majorityParticleVertexSecondary{nullptr};

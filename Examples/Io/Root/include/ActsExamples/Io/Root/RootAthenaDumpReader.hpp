@@ -135,7 +135,7 @@ class RootAthenaDumpReader : public IReader {
   template <typename T>
   using BranchVector = RootBranchPtr<std::vector<T>>;
   template <typename T>
-  using BranchMatrix = RootBranchPtr<std::vector<std::vector<T>>>;
+  using BranchJaggedVector = RootBranchPtr<std::vector<std::vector<T>>>;
 
   /// The config class
   Config m_cfg;
@@ -216,13 +216,13 @@ class RootAthenaDumpReader : public IReader {
   Int_t CLphi_module[maxCL] = {};     //[nCL]
   Int_t CLside[maxCL] = {};           //[nCL]
   ULong64_t CLmoduleID[maxCL] = {};   //[nCL]
-  BranchMatrix<int> CLparticleLink_eventIndex;
-  BranchMatrix<int> CLparticleLink_barcode;
-  BranchMatrix<bool> CLbarcodesLinked;
-  BranchMatrix<float> CLparticle_charge;
-  BranchMatrix<int> CLphis;
-  BranchMatrix<int> CLetas;
-  BranchMatrix<int> CLtots;
+  BranchJaggedVector<int> CLparticleLink_eventIndex;
+  BranchJaggedVector<int> CLparticleLink_barcode;
+  BranchJaggedVector<bool> CLbarcodesLinked;
+  BranchJaggedVector<float> CLparticle_charge;
+  BranchJaggedVector<int> CLphis;
+  BranchJaggedVector<int> CLetas;
+  BranchJaggedVector<int> CLtots;
   Double_t CLloc_direction1[maxCL] = {};      //[nCL]
   Double_t CLloc_direction2[maxCL] = {};      //[nCL]
   Double_t CLloc_direction3[maxCL] = {};      //[nCL]
@@ -240,7 +240,7 @@ class RootAthenaDumpReader : public IReader {
   Float_t CLnorm_x[maxCL] = {};               //[nCL]
   Float_t CLnorm_y[maxCL] = {};               //[nCL]
   Float_t CLnorm_z[maxCL] = {};               //[nCL]
-  BranchMatrix<double> CLlocal_cov;
+  BranchJaggedVector<double> CLlocal_cov;
 
   // Particles
   Int_t nPartEVT = 0;
@@ -263,8 +263,8 @@ class RootAthenaDumpReader : public IReader {
   Int_t Part_vProdNout[maxPart] = {};     //[nPartEVT]
   Int_t Part_vProdStatus[maxPart] = {};   //[nPartEVT]
   Int_t Part_vProdBarcode[maxPart] = {};  //[nPartEVT]
-  BranchMatrix<int> Part_vParentID;
-  BranchMatrix<int> Part_vParentBarcode;
+  BranchJaggedVector<int> Part_vParentID;
+  BranchJaggedVector<int> Part_vParentBarcode;
 
   // Spacepoints
   Int_t nSP = 0;
@@ -280,10 +280,10 @@ class RootAthenaDumpReader : public IReader {
   double SPcovz[maxSP] = {};        //[nSP]
   float SPhl_topstrip[maxSP] = {};  //[nSP]
   float SPhl_botstrip[maxSP] = {};  //[nSP]
-  BranchMatrix<float> SPtopStripDirection;
-  BranchMatrix<float> SPbottomStripDirection;
-  BranchMatrix<float> SPstripCenterDistance;
-  BranchMatrix<float> SPtopStripCenterPosition;
+  BranchJaggedVector<float> SPtopStripDirection;
+  BranchJaggedVector<float> SPbottomStripDirection;
+  BranchJaggedVector<float> SPstripCenterDistance;
+  BranchJaggedVector<float> SPtopStripCenterPosition;
 
   // Those fields are not used currently
   // Keep the code though, since it is annoying to write
@@ -293,17 +293,17 @@ class RootAthenaDumpReader : public IReader {
   Int_t TRKindex[maxTRK] = {};                //[nTRK]
   Int_t TRKtrack_fitter[maxTRK] = {};         //[nTRK]
   Int_t TRKparticle_hypothesis[maxTRK] = {};  //[nTRK]
-  BranchMatrix<int> TRKproperties;
-  BranchMatrix<int> TRKpattern;
+  BranchJaggedVector<int> TRKproperties;
+  BranchJaggedVector<int> TRKpattern;
   Int_t TRKndof[maxTRK] = {};     //[nTRK]
   Int_t TRKmot[maxTRK] = {};      //[nTRK]
   Int_t TRKoot[maxTRK] = {};      //[nTRK]
   Float_t TRKchiSq[maxTRK] = {};  //[nTRK]
-  BranchMatrix<int> TRKmeasurementsOnTrack_pixcl_sctcl_index;
-  BranchMatrix<int> TRKoutliersOnTrack_pixcl_sctcl_index;
+  BranchJaggedVector<int> TRKmeasurementsOnTrack_pixcl_sctcl_index;
+  BranchJaggedVector<int> TRKoutliersOnTrack_pixcl_sctcl_index;
   Int_t TRKcharge[maxTRK] = {};  //[nTRK]
-  BranchMatrix<double> TRKperigee_position;
-  BranchMatrix<double> TRKperigee_momentum;
+  BranchJaggedVector<double> TRKperigee_position;
+  BranchJaggedVector<double> TRKperigee_momentum;
   Int_t TTCindex[maxTRK] = {};          //[nTRK]
   Int_t TTCevent_index[maxTRK] = {};    //[nTRK]
   Int_t TTCparticle_link[maxTRK] = {};  //[nTRK]
@@ -313,11 +313,11 @@ class RootAthenaDumpReader : public IReader {
   Int_t nDTT = 0;
   Int_t DTTindex[maxDTT] = {};  //[nDTT]
   Int_t DTTsize[maxDTT] = {};   //[nDTT]
-  BranchMatrix<int> DTTtrajectory_eventindex;
-  BranchMatrix<int> DTTtrajectory_barcode;
-  BranchMatrix<int> DTTstTruth_subDetType;
-  BranchMatrix<int> DTTstTrack_subDetType;
-  BranchMatrix<int> DTTstCommon_subDetType;
+  BranchJaggedVector<int> DTTtrajectory_eventindex;
+  BranchJaggedVector<int> DTTtrajectory_barcode;
+  BranchJaggedVector<int> DTTstTruth_subDetType;
+  BranchJaggedVector<int> DTTstTrack_subDetType;
+  BranchJaggedVector<int> DTTstCommon_subDetType;
   */
 };
 }  // namespace ActsExamples

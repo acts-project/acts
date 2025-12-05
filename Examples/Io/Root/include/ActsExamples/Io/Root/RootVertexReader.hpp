@@ -72,10 +72,9 @@ class RootVertexReader : public IReader {
   template <typename T>
   using BranchVector = RootBranchPtr<std::vector<T>>;
   template <typename T>
-  using BranchMatrix = RootBranchPtr<std::vector<std::vector<T>>>;
+  using BranchJaggedVector = RootBranchPtr<std::vector<std::vector<T>>>;
   template <typename T>
-  using BranchTensor =
-      RootBranchPtr<std::vector<std::vector<std::vector<T>>>>;
+  using BranchTensor = RootBranchPtr<std::vector<std::vector<std::vector<T>>>>;
 
   /// The config class
   Config m_cfg;
@@ -113,18 +112,18 @@ class RootVertexReader : public IReader {
   bool m_hasCombinedOutgoing = false;
 
   /// Incoming particles to the vertex broken into barcode components.
-  BranchMatrix<std::uint32_t> m_incomingParticlesVertexPrimary{nullptr};
-  BranchMatrix<std::uint32_t> m_incomingParticlesVertexSecondary{nullptr};
-  BranchMatrix<std::uint32_t> m_incomingParticlesParticle{nullptr};
-  BranchMatrix<std::uint32_t> m_incomingParticlesGeneration{nullptr};
-  BranchMatrix<std::uint32_t> m_incomingParticlesSubParticle{nullptr};
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesVertexPrimary{nullptr};
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesVertexSecondary{nullptr};
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesParticle{nullptr};
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesGeneration{nullptr};
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesSubParticle{nullptr};
 
   /// Outgoing particles from the vertex broken into barcode components.
-  BranchMatrix<std::uint32_t> m_outgoingParticlesVertexPrimary{nullptr};
-  BranchMatrix<std::uint32_t> m_outgoingParticlesVertexSecondary{nullptr};
-  BranchMatrix<std::uint32_t> m_outgoingParticlesParticle{nullptr};
-  BranchMatrix<std::uint32_t> m_outgoingParticlesGeneration{nullptr};
-  BranchMatrix<std::uint32_t> m_outgoingParticlesSubParticle{nullptr};
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesVertexPrimary{nullptr};
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesVertexSecondary{nullptr};
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesParticle{nullptr};
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesGeneration{nullptr};
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesSubParticle{nullptr};
 
   /// Decoded vertex identifier; see Barcode definition for details.
   BranchVector<std::uint16_t> m_vertexPrimary;
