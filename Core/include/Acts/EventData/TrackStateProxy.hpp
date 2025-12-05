@@ -1135,6 +1135,11 @@ class TrackStateProxy {
   /// @return a const reference to the backend
   const auto& container() const { return *m_traj; }
 
+  /// Check if the track state has a specific dynamic column
+  /// @param key The hashed column key
+  /// @return true if the column exists
+  bool hasColumn(HashedString key) const { return container().hasColumn(key); }
+
  private:
   // Private since it can only be created by the trajectory.
   TrackStateProxy(
