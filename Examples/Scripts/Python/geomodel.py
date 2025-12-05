@@ -3,9 +3,6 @@ import argparse
 from acts import (
     logging,
     GeometryContext,
-    CylindricalContainerBuilder,
-    DetectorBuilder,
-    GeometryIdGenerator,
 )
 from acts import geomodel as gm
 from acts import examples

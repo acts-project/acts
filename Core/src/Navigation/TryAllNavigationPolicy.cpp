@@ -31,6 +31,7 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
     : TryAllNavigationPolicy(gctx, volume, logger, {}) {}
 
 void TryAllNavigationPolicy::initializeCandidates(
+    [[maybe_unused]] const GeometryContext& gctx,
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
   ACTS_VERBOSE("TryAllNavigationPolicy");

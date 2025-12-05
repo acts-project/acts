@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -47,24 +46,6 @@ void addPropagation(py::module_& m) {
                        trackingGeometry);
   }
 
-  {
-    using Config = Experimental::DetectorNavigator::Config;
-    auto nav =
-        py::class_<Experimental::DetectorNavigator,
-                   std::shared_ptr<Experimental::DetectorNavigator>>(
-            m, "DetectorNavigator")
-            .def(py::init<>(
-                     [](Config cfg, Logging::Level level = Logging::INFO) {
-                       return Experimental::DetectorNavigator{
-                           cfg, getDefaultLogger("DetectorNavigator", level)};
-                     }),
-                 py::arg("cfg"), py::arg("level") = Logging::INFO);
-
-    auto c = py::class_<Config>(nav, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, resolveMaterial, resolvePassive, resolveSensitive,
-                       detector);
-  }
   {
     auto stepper = py::class_<AtlasStepper>(m, "AtlasStepper");
     stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());

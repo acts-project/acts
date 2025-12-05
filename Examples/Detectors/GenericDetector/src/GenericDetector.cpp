@@ -8,7 +8,6 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"

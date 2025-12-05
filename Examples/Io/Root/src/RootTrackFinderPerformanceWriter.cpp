@@ -341,8 +341,8 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
     }
 
     // Fill efficiency plots
-    m_effPlotTool.fill(m_effPlotCache, particle.initialState(), minDeltaR,
-                       isReconstructed);
+    m_effPlotTool.fill(ctx.geoContext, m_effPlotCache, particle.initialState(),
+                       minDeltaR, isReconstructed);
     // Fill number of duplicated tracks for this particle
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle.initialState(),
                                nMatchedTracks - 1);
