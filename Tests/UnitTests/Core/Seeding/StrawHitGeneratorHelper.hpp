@@ -354,7 +354,7 @@ class SpSorter {
   std::vector<Container_t> m_strips{};
 };
 
-static_assert(detail::CompositeSpacePointSorter<SpSorter, Container_t>);
+static_assert(CompositeSpacePointSorter<SpSorter, Container_t>);
 
 /// @brief Generates a random straight line
 /// @param engine Random number sequence to draw the parameters from

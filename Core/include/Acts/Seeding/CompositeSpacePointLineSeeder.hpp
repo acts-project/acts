@@ -243,6 +243,7 @@ class CompositeSpacePointLineSeeder {
     void append(const std::size_t layIdx, const std::size_t hitIdx);
     /// @brief Vector of the associate left-rignt ambiguities
     std::vector<int> solutionSigns{};
+
    private:
     /// @brief Pointer to the space point per layer splitter to gain access to the
     ///        input space point container
@@ -317,22 +318,13 @@ class CompositeSpacePointLineSeeder {
     std::size_t m_signComboIndex{0ul};
   };
 
-#ifdef STONJEK
-  template <CompositeSpacePointContainer Cont_t,
-            CompositeSpacePointSorter<Cont_t> Splitter_t,
+  template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
-            CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
-  bool prepareSeedOptions(SeedOptions<Cont_t, Splitter_t, CalibCont_t,
-                                      Calibrator_t>& options) const;
+            detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
+                Delegate_t>
+  std::optional<SegmentSeed<CalibCont_t>> nextSeed(
+      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
 
-  template <CompositeSpacePointContainer Cont_t,
-            CompositeSpacePointSorter<Cont_t> Splitter_t,
-            CompositeSpacePointContainer CalibCont_t,
-            CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
-  std::optional<SeedSolution<CalibCont_t>> nextSeed(
-      SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
-      const;
-#endif
 
  private:
   /// @brief Reference to the logger object
@@ -361,15 +353,15 @@ class CompositeSpacePointLineSeeder {
   bool firstGoodHit(const UnCalibCont_t& hitVec,
                     const Selector_t<UnCalibCont_t>& selector,
                     std::size_t& hitIdx) const;
-  /// @brief Move the layer index towards the possible value or,if the 
-  ///        layer index is not yet initializes the lyaer index to 
+  /// @brief Move the layer index towards the possible value or,if the
+  ///        layer index is not yet initializes the lyaer index to
   //         the next possible value.
   /// @param strawLayers: List of all straw hits split into the particular layers
   /// @param selector: Delegate method to skip bad hits
   /// @param boundary: Boundary value that the layer index must not cross
   /// @param layerIndex: Mutable reference to the layer index that needs to be moved
   /// @param hitIdx: Mutable reference to the associated hit index inside the layer
-  /// @param moveForward: Flag toggling whether the layer index shall be incremented or 
+  /// @param moveForward: Flag toggling whether the layer index shall be incremented or
   ///                     decremented.
   template <CompositeSpacePointContainer UnCalibCont_t>
   bool nextLayer(const StrawLayers_t<UnCalibCont_t>& strawLayers,
@@ -383,16 +375,17 @@ class CompositeSpacePointLineSeeder {
             CompositeSpacePointSorter<Cont_t> Splitter_t,
             CompositeSpacePointContainer CalibCont_t,
             CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
-  void moveToNextCandidate(SeedOptions<Cont_t, Splitter_t, CalibCont_t,
-                                       Calibrator_t>& options) const;
+  std::optional<SeedSolution<CalibCont_t>> buildSeed(
+      SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
+      const;
+
 
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointSorter<Cont_t> Splitter_t,
             CompositeSpacePointContainer CalibCont_t,
             CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
-  std::optional<SeedSolution<CalibCont_t>> buildSeed(
-      SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
-      const;
+  void moveToNextCandidate(SeedOptions<Cont_t, Splitter_t, CalibCont_t,
+                                       Calibrator_t>& options) const;
 #endif
   /// @brief Construct the final seed parameters by combining the initial
   ///        pattern parameters with the parameter from two circle tangent

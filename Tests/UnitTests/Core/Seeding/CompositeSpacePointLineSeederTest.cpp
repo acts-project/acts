@@ -59,7 +59,6 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
 
   Seeder::Config seederCfg{};
   seederCfg.busyLayerLimit = 20;
-  seederCfg.noCutsOnSeedParams = false;
   Seeder seeder{seederCfg};
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
