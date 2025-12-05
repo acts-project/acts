@@ -10,14 +10,17 @@
 
 #include "Acts/EventData/AnyTrackState.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 
 namespace {
 
 using namespace Acts;
+using namespace Acts::HashedStringLiteral;
 
 struct TestTrackStateFixture {
   using Trajectory = VectorMultiTrajectory;
@@ -106,6 +109,29 @@ BOOST_FIXTURE_TEST_CASE(AccessCalibratedFixedSize, TestTrackStateFixture) {
   BOOST_CHECK_CLOSE(constView[0], 4.5, 1e-6);
   auto constCov = constState.calibratedCovariance<2>();
   BOOST_CHECK_CLOSE(constCov(0, 0), 0.5, 1e-6);
+}
+
+BOOST_FIXTURE_TEST_CASE(ProxyAccessorWithAnyTrackState, TestTrackStateFixture) {
+  container.trackStateContainer().addColumn<float>("customFloat");
+
+  auto track = container.makeTrack();
+  auto state = container.trackStateContainer().makeTrackState();
+  track.tipIndex() = state.index();
+
+  state.template component<float>("customFloat"_hash) = 0.25f;
+
+  ProxyAccessor<float> mutableAccessor("customFloat");
+  ConstProxyAccessor<float> constAccessor("customFloat");
+
+  AnyMutableTrackState anyState(state);
+  BOOST_CHECK_CLOSE(mutableAccessor(anyState), 0.25f, 1e-6);
+  mutableAccessor(anyState) = 0.75f;
+  BOOST_CHECK_CLOSE(state.template component<float>("customFloat"_hash), 0.75f,
+                    1e-6);
+
+  AnyConstTrackState constState(state);
+  BOOST_CHECK_CLOSE(constAccessor(constState), 0.75f, 1e-6);
+  BOOST_CHECK(constAccessor.hasColumn(constState));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

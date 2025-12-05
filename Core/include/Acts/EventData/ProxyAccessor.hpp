@@ -38,6 +38,10 @@ concept ProxyType = (MutableProxyType<T> || ConstProxyType<T>) && requires {
   requires ConstProxyType<typename T::ConstProxyType>;
 };
 
+template <typename T>
+concept TrackProxyLike = ProxyType<T> &&
+    std::is_same_v<typename T::ConstProxyType, typename T::ConstProxyType>;
+
 }  // namespace Acts::detail
 
 namespace Acts {
@@ -51,11 +55,21 @@ struct associatedConstProxy<TrackStateProxy<trajectory_t, M, read_only>> {
   using type = TrackStateProxy<trajectory_t, M, true>;
 };
 
+template <bool read_only>
+struct associatedConstProxy<AnyTrackState<read_only>> {
+  using type = AnyTrackState<true>;
+};
+
 template <typename track_container_t, typename trajectory_t,
           template <typename> class holder_t, bool read_only>
 struct associatedConstProxy<
     TrackProxy<track_container_t, trajectory_t, holder_t, read_only>> {
   using type = TrackProxy<track_container_t, trajectory_t, holder_t, true>;
+};
+
+template <bool read_only>
+struct associatedConstProxy<AnyTrack<read_only>> {
+  using type = AnyTrack<true>;
 };
 
 }  // namespace detail
