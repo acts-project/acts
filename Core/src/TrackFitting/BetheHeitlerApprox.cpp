@@ -26,7 +26,8 @@ AtlasBetheHeitlerApprox AtlasBetheHeitlerApprox::loadFromFiles(
       throw std::invalid_argument("Could not open '" + filepath + "'");
     }
 
-    std::size_t n_cmps = 0, degree = 0;
+    std::size_t n_cmps = 0;
+    std::size_t degree = 0;
     bool transform_code = false;
 
     file >> n_cmps >> degree >> transform_code;
@@ -78,9 +79,9 @@ std::span<AtlasBetheHeitlerApprox::Component> AtlasBetheHeitlerApprox::mixture(
       // These transformations must be applied to the data according to ATHENA
       // (TrkGaussianSumFilter/src/GsfCombinedMaterialEffects.cxx:79)
       if (transform) {
-        mixture[i] = detail::inverseTransformComponent(Component(
-            poly(xx, data[i].weightCoeffs), poly(xx, data[i].meanCoeffs),
-            poly(xx, data[i].varCoeffs)));
+        mixture[i] = detail::inverseTransformComponent(
+            {poly(xx, data[i].weightCoeffs), poly(xx, data[i].meanCoeffs),
+             poly(xx, data[i].varCoeffs)});
       } else {
         mixture[i].weight = poly(xx, data[i].weightCoeffs);
         mixture[i].mean = poly(xx, data[i].meanCoeffs);
