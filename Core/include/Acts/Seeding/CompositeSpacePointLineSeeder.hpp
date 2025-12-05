@@ -265,7 +265,7 @@ class CompositeSpacePointLineSeeder {
     ///        a new hit container
     /// @param _pars:
     /// @param _hits
-    explicit SegmentSeed(SeedParam_t&& _pars, contType_t&& _hits) noexcept
+    explicit SegmentSeed(SeedParam_t _pars, contType_t&& _hits) noexcept
         : parameters{std::move(_pars)}, hits{std::move(_hits)} {}
     /// @brief Seed line parameters
     SeedParam_t parameters;
@@ -280,8 +280,6 @@ class CompositeSpacePointLineSeeder {
   struct SeedOptions {
     /// @brief Splitter holding the straw and strip hits
     std::unique_ptr<Delegate_t> delegate{};
-    /// @brief Experiment specific calibration context
-    CalibrationContext calibContext{};
     /// @brief radius of the straw tubes used to reject hits outside the tube
     double strawRadius{15. * UnitConstants::mm};
     /// @brief Try at the first time the external seed parameters as candidate
@@ -323,8 +321,8 @@ class CompositeSpacePointLineSeeder {
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
   std::optional<SegmentSeed<CalibCont_t>> nextSeed(
+      const CalibrationContext& cctx,
       SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
-
 
  private:
   /// @brief Reference to the logger object
@@ -378,7 +376,6 @@ class CompositeSpacePointLineSeeder {
   std::optional<SeedSolution<CalibCont_t>> buildSeed(
       SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
       const;
-
 
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointSorter<Cont_t> Splitter_t,

@@ -234,7 +234,7 @@ bool CompositeSpacePointLineSeeder::nextLayer(
     if (hitVec.size() > m_cfg.busyLayerLimit) {
       ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": The layer "
                             << layerIndex.value()
-                            << " is too busy for seeding: " <<hitVec.size()
+                            << " is too busy for seeding: " << hitVec.size()
                             << ". Limit: " << m_cfg.busyLayerLimit << ".");
       continue;
     }
@@ -257,6 +257,7 @@ template <
     detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t> Delegate_t>
 std::optional<CompositeSpacePointLineSeeder::SegmentSeed<CalibCont_t>>
 CompositeSpacePointLineSeeder::nextSeed(
+    const CalibrationContext& cctx,
     SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const {
   if (!options.delegate) {
     throw std::invalid_argument(
@@ -264,10 +265,37 @@ CompositeSpacePointLineSeeder::nextSeed(
         "delegate");
   }
 
-  Selector_t<UncalibCont_t> selectDelegate{};
+  const StrawLayers_t<UncalibCont_t>& strawLayers{
+      options.delegate->strawHits()};
+
+  Selector_t<UncalibCont_t> selector{};
   /// The layer hast not yet been initialized
   if (!options.m_upperLayer || !options.m_lowerLayer) {
+    /// Check whether the seeding can start with the external pattern parameters
+    if (options.startWithPattern &&
+        std::ranges::any_of(strawLayers,
+                            [this](const UncalibCont_t& layerHits) {
+                              return layerHits.size() > m_cfg.busyLayerLimit;
+                            })) {
+      options.startWithPattern = false;
+    }
+    if (options.startWithPattern) {
+      SegmentSeed<CalibCont_t> patternSeed{
+          options.patternParams, options.delegate->newContainer(cctx)};
 
+      options.startWithPattern = false;
+      return patternSeed;
+    }
+
+    /// No valid seed can be found
+    if (!nextLayer(strawLayers, selector, strawLayers.size(),
+                   options.m_lowerLayer, options.m_lowerHitIndex, false) ||
+        !nextLayer(strawLayers, selector, options.m_lowerHitIndex.value(),
+                   options.m_upperLayer, options.m_upperHitIndex, true)) {
+      ACTS_DEBUG(__func__ << "() " << __LINE__
+                          << ": No valid seed can be constructed. ");
+      return false;
+    }
   }
 
   return std::nullopt;
