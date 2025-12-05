@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -25,8 +25,6 @@
 namespace Acts {
 
 class Surface;
-
-struct AnyTrackTrajectoryTag {};
 
 namespace detail {
 
@@ -221,7 +219,8 @@ class TrackHandler final : public TrackHandlerMutableBase {
                             TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<TrackIndexType>(tc, index, detail_tp::kStemIndexKey);
+    return getMutableColumn<TrackIndexType>(tc, index,
+                                            detail_tp::kStemIndexKey);
   }
 
   const Surface* referenceSurface(const void* container,
@@ -252,7 +251,8 @@ class TrackHandler final : public TrackHandlerMutableBase {
     return tc->getTrack(index).parameters();
   }
 
-  ParametersMap parameters(void* container, TrackIndexType index) const override {
+  ParametersMap parameters(void* container,
+                           TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
     return tc->getTrack(index).parameters();
@@ -265,7 +265,8 @@ class TrackHandler final : public TrackHandlerMutableBase {
     return tc->getTrack(index).covariance();
   }
 
-  CovarianceMap covariance(void* container, TrackIndexType index) const override {
+  CovarianceMap covariance(void* container,
+                           TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
     return tc->getTrack(index).covariance();
@@ -320,7 +321,8 @@ class TrackHandler final : public TrackHandlerMutableBase {
                               TrackIndexType index) const override {
     assert(container != nullptr);
     auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, detail_tp::kMeasurementsKey);
+    return getMutableColumn<unsigned int>(tc, index,
+                                          detail_tp::kMeasurementsKey);
   }
 
   const unsigned int& nHoles(const void* container,
@@ -467,7 +469,6 @@ class AnyTrack {
   /// Alias for the const version
   using ConstTrackHandle = AnyTrack<true>;
   using ConstProxyType = AnyTrack<true>;
-  using Trajectory = AnyTrackTrajectoryTag;
 
   using ParametersMap = detail::ParametersMap;
   using ConstParametersMap = detail::ConstParametersMap;
@@ -605,7 +606,8 @@ class AnyTrack {
   /// @return Reference to the reference surface
   const Surface& referenceSurface() const {
     assert(isValid());
-    const Surface* surface = constHandler()->referenceSurface(containerPtr(), m_index);
+    const Surface* surface =
+        constHandler()->referenceSurface(containerPtr(), m_index);
     assert(surface != nullptr);
     return *surface;
   }
@@ -879,10 +881,10 @@ class AnyTrack {
     return *std::any_cast<const T*>(result);
   }
 
-  ContainerView container() const {
-    assert(isValid());
-    return ContainerView{constHandler(), containerPtr()};
-  }
+  // ContainerView container() const {
+  //   assert(isValid());
+  //   return ContainerView{constHandler(), containerPtr()};
+  // }
 
  private:
   template <bool R>
