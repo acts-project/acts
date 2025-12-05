@@ -48,9 +48,6 @@ class RootParticleReader : public IReader {
   /// @param config The Configuration struct
   RootParticleReader(const Config& config, Acts::Logging::Level level);
 
-  /// Destructor
-  ~RootParticleReader() override = default;
-
   /// Framework name() method
   std::string name() const override { return "RootParticleReader"; }
 

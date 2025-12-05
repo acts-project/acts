@@ -53,9 +53,6 @@ class RootTrackSummaryReader : public IReader {
   /// @param level The log level
   RootTrackSummaryReader(const Config& config, Acts::Logging::Level level);
 
-  /// Destructor
-  ~RootTrackSummaryReader() override = default;
-
   /// Framework name() method
   std::string name() const override { return "RootTrackSummaryReader"; }
 

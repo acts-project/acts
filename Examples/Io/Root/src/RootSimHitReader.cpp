@@ -117,8 +117,6 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
                              << availableEvents().second);
 }
 
-RootSimHitReader::~RootSimHitReader() = default;
-
 std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
   return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
 }

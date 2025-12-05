@@ -49,8 +49,6 @@ class RootSimHitReader : public IReader {
   /// @param config The Configuration struct
   RootSimHitReader(const Config &config, Acts::Logging::Level level);
 
-  ~RootSimHitReader() override;
-
   /// Framework name() method
   std::string name() const override { return "RootSimHitReader"; }
 
