@@ -12,6 +12,7 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Utilities/detail/EigenCompat.hpp"
 
 template <typename fitter_t>
 template <typename source_link_t, typename start_parameters_t,
@@ -314,7 +315,8 @@ ActsAlignment::Alignment<fitter_t>::align(
       alignResult.alignedParameters.emplace(det, transform);
       const auto& translation = transform.translation();
       const auto& rotation = transform.rotation();
-      const Acts::Vector3 rotAngles = rotation.eulerAngles(2, 1, 0);
+      const Acts::Vector3 rotAngles =
+          Acts::detail::EigenCompat::canonicalEulerAngles(rotation, 2, 1, 0);
       ACTS_VERBOSE("Detector element with surface "
                    << surface->geometryId()
                    << " has aligned geometry position as below:");
