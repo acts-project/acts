@@ -15,9 +15,8 @@ def runTruthTrackingGsf(
     digiConfigFile: Path,
     outputDir: Path,
     inputParticlePath: Optional[Path] = None,
+    inputSimHitsPath: Optional[Path] = None,
     decorators=[],
-    doGeant4=False,
-    detector=None,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
@@ -27,7 +26,6 @@ def runTruthTrackingGsf(
         PhiConfig,
         MomentumConfig,
         addFatras,
-        addGeant4,
         addDigitization,
         ParticleSelectorConfig,
         addDigiParticleSelection,
@@ -76,26 +74,24 @@ def runTruthTrackingGsf(
             )
         )
 
-    if doGeant4:
-        assert detector is not None
-        addGeant4(
-            s,
-            detector,
-            trackingGeometry,
-            field,
-            rnd,
-            killVolume=trackingGeometry.highestTrackingVolume,
-            killAfterTime=25 * u.ns,
-            killSecondaries=True,
-            outputDirRoot=None,
-        )
-    else:
+    # Read pre-simulated hits or run FATRAS
+    if inputSimHitsPath is None:
+        # Fallback: run FATRAS for quick testing without Geant4
         addFatras(
             s,
             trackingGeometry,
             field,
             rnd=rnd,
             enableInteractions=True,
+        )
+    else:
+        # Read pre-simulated hits from Geant4
+        s.addReader(
+            acts.examples.RootSimHitReader(
+                level=acts.logging.INFO,
+                filePath=str(inputSimHitsPath.resolve()),
+                outputSimHits="simhits",
+            )
         )
 
     addDigitization(
@@ -229,5 +225,4 @@ if "__main__" == __name__:
         field=field,
         digiConfigFile=digiConfigFile,
         outputDir=Path.cwd(),
-        detector=detector,
     ).run()
