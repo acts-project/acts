@@ -391,6 +391,12 @@ class CompositeSpacePointLineSeeder {
   /// @param patternParams: Parameter estimate from the hit pattern
   SeedParam_t constructLine(const double parTheta, const double parY0,
                             const SeedParam_t& patternParams) const;
+
+  /// @brief Constructs a line from the parsed seed parameters. The
+  ///        first element is the reference point && the second one
+  ///        is the direction
+  /// @param pars: Reference to the line parameters from which the line is created
+  std::pair<Vector3, Vector3> makeLine(const SeedParam_t& pars) const;
   /// @brief Check whether the generated seed parameters are within the ranges defined by the used
   /// @param tangentPars: Reference to the seed parameters to check
   bool isValidLine(const TwoCircleTangentPars& tangentPars) const;

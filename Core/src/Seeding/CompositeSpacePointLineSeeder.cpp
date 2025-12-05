@@ -70,6 +70,25 @@ std::string CompositeSpacePointLineSeeder::toString(const TangentAmbi ambi) {
   return "Undefined";
 }
 
+std::pair<Vector3, Vector3> CompositeSpacePointLineSeeder::makeLine(
+    const SeedParam_t& pars) const {
+  using enum ParIdx;
+  using Aux_t = detail::CompSpacePointAuxiliaries;
+  ACTS_VERBOSE(__func__ << "() - Create line from parameters "
+                        << std::format("{:}: {:.2f}, ", Aux_t::parName(x0),
+                                       pars[toUnderlying(x0)])
+                        << std::format("{:}: {:.2f}, ", Aux_t::parName(y0),
+                                       pars[toUnderlying(y0)])
+                        << std::format("{:}: {:.3f}, ", Aux_t::parName(theta),
+                                       inDeg(pars[toUnderlying(theta)]))
+                        << std::format("{:}: {:.3f}", Aux_t::parName(phi),
+                                       inDeg(pars[toUnderlying(phi)])));
+  return std::make_pair(
+      Vector3{pars[toUnderlying(x0)], pars[toUnderlying(y0)], 0.},
+      makeDirectionFromPhiTheta(pars[toUnderlying(phi)],
+                                pars[toUnderlying(theta)]));
+}
+
 SeedParam_t CompositeSpacePointLineSeeder::constructLine(
     const double parTheta, const double parY0,
     const SeedParam_t& patternParams) const {

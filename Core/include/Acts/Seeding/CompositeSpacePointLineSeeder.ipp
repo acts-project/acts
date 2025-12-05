@@ -283,10 +283,22 @@ CompositeSpacePointLineSeeder::nextSeed(
       SegmentSeed<CalibCont_t> patternSeed{
           options.patternParams, options.delegate->newContainer(cctx)};
 
+      const auto [pos, dir] = makeLine(options.patternParams);
+      const double t0 = patternSeed.params[toUnderlying(FitParIdx::t0)];
+
+      auto append = [&](StrawLayers_t<UncalibCont_t>& hitLayers) {
+        for (const auto& layer : hitLayers) {
+          for (const auto& hit : layer) {
+            options.delegate->append(cctx, pos, dir, t0, *hit,
+                                     patternSeed.hits);
+          }
+        }
+      };
+      append(strawLayers);
+      append(patternSeed->stripHits());
       options.startWithPattern = false;
       return patternSeed;
     }
-
     /// No valid seed can be found
     if (!nextLayer(strawLayers, selector, strawLayers.size(),
                    options.m_lowerLayer, options.m_lowerHitIndex, false) ||
