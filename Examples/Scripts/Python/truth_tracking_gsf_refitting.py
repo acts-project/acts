@@ -38,18 +38,6 @@ def runRefittingGsf(
         s=s,
     )
 
-    # Track selection: select good Kalman tracks for GSF refitting
-    s.addAlgorithm(
-        acts.examples.TrackSelectorAlgorithm(
-            level=acts.logging.INFO,
-            inputTracks="tracks",
-            outputTracks="kf_tracks",
-            selectorConfig=acts.TrackSelector.Config(
-                minMeasurements=7,
-            ),
-        )
-    )
-
     # NOTE we specify clampToRange as True to silence warnings in the test about
     # queries to the loss distribution outside the specified range, since no dedicated
     # approximation for the ODD is done yet.
@@ -68,7 +56,7 @@ def runRefittingGsf(
     s.addAlgorithm(
         acts.examples.RefittingAlgorithm(
             acts.logging.INFO,
-            inputTracks="kf_tracks",
+            inputTracks="tracks",
             outputTracks="gsf_refit_tracks",
             initialVarInflation=6 * [100.0],
             fit=acts.examples.makeGsfFitterFunction(
