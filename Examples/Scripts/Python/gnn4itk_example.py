@@ -109,12 +109,15 @@ def runGNN4ITk(
     if gnnModel.suffix == ".pt":
         edgeClassifierConfig["useEdgeFeatures"] = True
         from acts.examples.gnn import TorchEdgeClassifier
+
         edgeClassifiers = [TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
         from acts.examples.gnn import OnnxEdgeClassifier
+
         edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
         from acts.examples.gnn import TensorRTEdgeClassifier
+
         edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:
         raise ValueError(f"Unsupported model format: {gnnModel.suffix}")

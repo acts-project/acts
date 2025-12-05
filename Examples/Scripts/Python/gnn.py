@@ -84,7 +84,8 @@ def runGnnMetricLearning(
             )
         )
     elif filterModelPath.suffix == ".onnx":
-        from acts.examples.gnn import OnnxEdgeClassifier 
+        from acts.examples.gnn import OnnxEdgeClassifier
+
         edgeClassifiers.append(OnnxEdgeClassifier(**filterConfig))
     else:
         raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
