@@ -1,0 +1,13 @@
+import warnings
+
+try :
+    from .ActsPluginsPythonBindings@PLUGIN_NAME@ import *
+
+    from acts._adapter import _patch_config
+    from acts import ActsPluginsPythonBindings@PLUGIN_NAME@
+
+    _patch_config(ActsPluginsPythonBindings@PLUGIN_NAME@)
+
+except ImportError:
+    warnings.warn("@PLUGIN_NAME@ plugin not available. Try building with @PLUGIN_BUILD_FLAG@=ON.")
+    raise

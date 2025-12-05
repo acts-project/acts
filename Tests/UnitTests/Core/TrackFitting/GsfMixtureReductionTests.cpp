@@ -134,6 +134,10 @@ void testReductionEquivalence(const std::vector<GsfComponent> &cmps,
 
 }  // namespace
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
+
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   std::vector<GsfComponent> cmps = {
       {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
@@ -312,3 +316,7 @@ BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
     testReductionEquivalence(cmps, targetSize, *surface);
   }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

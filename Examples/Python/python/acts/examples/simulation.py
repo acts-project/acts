@@ -4,14 +4,20 @@ from collections import namedtuple
 from collections.abc import Iterable
 
 import acts
+import acts.examples
 from acts.examples import (
     RandomNumbers,
     EventGenerator,
     FixedMultiplicityGenerator,
     CsvParticleWriter,
     ParticlesPrinter,
+    CsvVertexWriter,
+)
+
+from acts.examples.root import (
     RootParticleWriter,
     RootVertexWriter,
+    RootSimHitWriter,
 )
 
 import acts.examples.hepmc3
@@ -294,6 +300,8 @@ def addPythia8(
         None or "short" or "long"
     """
 
+    import acts
+
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     rnd = rnd or acts.examples.RandomNumbers()
@@ -319,6 +327,8 @@ def addPythia8(
 
     generators = []
     if nhard is not None and nhard > 0:
+        import acts.examples.pythia8
+
         generators.append(
             acts.examples.EventGenerator.Generator(
                 multiplicity=acts.examples.FixedMultiplicityGenerator(n=nhard),
@@ -338,6 +348,8 @@ def addPythia8(
             )
         )
     if npileup > 0:
+        import acts.examples.pythia8
+
         generators.append(
             acts.examples.EventGenerator.Generator(
                 multiplicity=acts.examples.FixedMultiplicityGenerator(n=npileup),
@@ -406,7 +418,7 @@ def addPythia8(
             outputDirRoot.mkdir()
 
         s.addWriter(
-            acts.examples.RootParticleWriter(
+            RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=hepmc3Converter.config.outputParticles,
                 filePath=str(outputDirRoot / "particles.root"),
@@ -414,7 +426,7 @@ def addPythia8(
         )
 
         s.addWriter(
-            acts.examples.RootVertexWriter(
+            RootVertexWriter(
                 level=customLogLevel(),
                 inputVertices=hepmc3Converter.config.outputVertices,
                 filePath=str(outputDirRoot / "vertices.root"),
@@ -516,13 +528,14 @@ def addFatras(
     s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
     addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        outputParticles,
-        outputDirCsv,
-        outputDirRoot,
-        outputDirObj,
-        logLevel,
+        s=s,
+        simHits=alg.config.outputSimHits,
+        particlesSimulated=outputParticles,
+        field=field,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        outputDirObj=outputDirObj,
+        logLevel=logLevel,
     )
 
     return s
@@ -532,6 +545,8 @@ def addSimWriters(
     s: acts.examples.Sequencer,
     simHits: str = "simhits",
     particlesSimulated: str = "particles_simulated",
+    field: acts.MagneticFieldProvider = None,
+    writeHelixParameters: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirObj: Optional[Union[Path, str]] = None,
@@ -565,14 +580,16 @@ def addSimWriters(
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
         s.addWriter(
-            acts.examples.RootParticleWriter(
+            RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=particlesSimulated,
+                bField=field,
+                writeHelixParameters=writeHelixParameters,
                 filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
         s.addWriter(
-            acts.examples.RootSimHitWriter(
+            RootSimHitWriter(
                 level=customLogLevel(),
                 inputSimHits=simHits,
                 filePath=str(outputDirRoot / "hits.root"),
@@ -600,7 +617,7 @@ __geant4Handle = None
 def addGeant4(
     s: acts.examples.Sequencer,
     detector: Optional[Any],
-    trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
+    trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     volumeMappings: List[str] = [],
@@ -686,12 +703,13 @@ def addGeant4(
     s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
     addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        outputParticles,
-        outputDirCsv,
-        outputDirRoot,
-        outputDirObj,
+        s=s,
+        simHits=alg.config.outputSimHits,
+        particlesSimulated=outputParticles,
+        field=field,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        outputDirObj=outputDirObj,
         logLevel=logLevel,
     )
 
@@ -731,13 +749,14 @@ def addSimParticleSelection(
 
 def addDigitization(
     s: acts.examples.Sequencer,
-    trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
+    trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     digiConfigFile: Union[Path, str],
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     doMerge: Optional[bool] = None,
+    mergeCommonCorner: Optional[bool] = None,
     minEnergyDeposit: Optional[float] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
@@ -763,8 +782,10 @@ def addDigitization(
 
     rnd = rnd or acts.examples.RandomNumbers()
 
+    from acts.examples import json
+
     digiCfg = acts.examples.DigitizationAlgorithm.Config(
-        digitizationConfigs=acts.examples.readDigiConfigFromJson(
+        digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
             str(digiConfigFile),
         ),
         surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
@@ -777,6 +798,7 @@ def addDigitization(
         outputSimHitMeasurementsMap="simhit_measurements_map",
         **acts.examples.defaultKWArgs(
             doMerge=doMerge,
+            mergeCommonCorner=mergeCommonCorner,
         ),
     )
 
@@ -792,7 +814,7 @@ def addDigitization(
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
-        rmwConfig = acts.examples.RootMeasurementWriter.Config(
+        rmwConfig = acts.examples.root.RootMeasurementWriter.Config(
             inputMeasurements=digiAlg.config.outputMeasurements,
             inputClusters=digiAlg.config.outputClusters,
             inputSimHits=digiAlg.config.inputSimHits,
@@ -800,7 +822,9 @@ def addDigitization(
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
-        s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, customLogLevel()))
+        s.addWriter(
+            acts.examples.root.RootMeasurementWriter(rmwConfig, customLogLevel())
+        )
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
@@ -857,10 +881,10 @@ def addTruthJetAlg(
     config: TruthJetConfig,
     loglevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    from acts.examples import TruthJetAlgorithm
+    from acts.examples.truthjet import TruthJetAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, loglevel)
-    truthJetAlg = acts.examples.TruthJetAlgorithm(
+    truthJetAlg = acts.examples.truthjet.TruthJetAlgorithm(
         **acts.examples.defaultKWArgs(**_getTruthJetKWargs(config)),
         level=customLogLevel(),
     )

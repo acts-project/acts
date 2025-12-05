@@ -11,7 +11,76 @@
 #include <memory>
 #include <vector>
 
+#include <boost/pending/disjoint_sets.hpp>
+
 namespace Acts::Ccl {
+using Label = int;
+constexpr Label NO_LABEL = 0;
+}  // namespace Acts::Ccl
+
+namespace Acts::Ccl {
+// Simple wrapper around boost::disjoint_sets. In theory, could use
+// boost::vector_property_map and use boost::disjoint_sets without
+// wrapping, but it's way slower
+class DisjointSets {
+ public:
+  explicit DisjointSets(std::size_t initial_size = 128)
+      : m_defaultSize(initial_size),
+        m_size(initial_size),
+        m_rank(m_size),
+        m_parent(m_size),
+        m_ds(&m_rank[0], &m_parent[0]) {}
+
+  Acts::Ccl::Label makeSet() {
+    // Empirically, m_size = 128 seems to be good default. If we
+    // exceed this, take a performance hit and do the right thing.
+    while (m_globalId >= m_size) {
+      m_size *= 2;
+      m_rank.resize(m_size);
+      m_parent.resize(m_size);
+      m_ds = boost::disjoint_sets<std::size_t*, std::size_t*>(&m_rank[0],
+                                                              &m_parent[0]);
+    }
+    m_ds.make_set(m_globalId);
+    return static_cast<Acts::Ccl::Label>(m_globalId++);
+  }
+
+  void unionSet(std::size_t x, std::size_t y) { m_ds.union_set(x, y); }
+  Acts::Ccl::Label findSet(std::size_t x) {
+    return static_cast<Acts::Ccl::Label>(m_ds.find_set(x));
+  }
+
+  void clear() {
+    m_size = m_defaultSize;
+    m_rank.clear();
+    m_parent.clear();
+    m_rank.resize(m_size);
+    m_parent.resize(m_size);
+    m_globalId = 1;
+    m_ds = boost::disjoint_sets<std::size_t*, std::size_t*>(&m_rank[0],
+                                                            &m_parent[0]);
+  }
+
+ private:
+  std::size_t m_defaultSize{128};
+  std::size_t m_globalId = 1;
+  std::size_t m_size{m_defaultSize};
+  std::vector<std::size_t> m_rank;
+  std::vector<std::size_t> m_parent;
+  boost::disjoint_sets<std::size_t*, std::size_t*> m_ds;
+};
+
+struct ClusteringData {
+  void clear() {
+    labels.clear();
+    nClusters.clear();
+    ds.clear();
+  }
+
+  std::vector<Acts::Ccl::Label> labels{};
+  std::vector<std::size_t> nClusters{};
+  Acts::Ccl::DisjointSets ds{};
+};
 
 template <typename Cell>
 concept HasRetrievableColumnInfo = requires(Cell cell) {
@@ -33,9 +102,6 @@ concept CanReserve = requires(Cluster cluster, std::size_t n) {
   { clusterReserve(cluster, n) } -> std::same_as<void>;
 };
 
-using Label = int;
-constexpr Label NO_LABEL = 0;
-
 // When looking for a cell connected to a reference cluster, the code
 // always loops backward, starting from the reference cell. Since
 // the cells are globally sorted column-wise, the connection function
@@ -43,7 +109,8 @@ constexpr Label NO_LABEL = 0;
 enum class ConnectResult {
   eNoConn,      // No connections, keep looking
   eNoConnStop,  // No connections, stop looking
-  eConn         // Found connection
+  eConn,        // Found connection
+  eDuplicate    // Found duplicate cell, throw an exception
 };
 
 // Default connection type for 2-D grids: 4- or 8-cell connectivity
@@ -90,15 +157,16 @@ struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
 /// The `Cell` type must have the following functions defined:
 ///   int  getCellRow(const Cell&),
 ///   int  getCellColumn(const Cell&)
-///   int& getCellLabel(Cell&)
 ///
+/// @param [in] data collection of quantities for clusterization
 /// @param [in] cells the cell collection to be labeled
 /// @param [in] connect the connection type (see DefaultConnect)
+/// @throws std::invalid_argument if the input contains duplicate cells.
 template <typename CellCollection, std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
-std::vector<std::size_t> labelClusters(CellCollection& cells,
-                                       Connect&& connect = Connect());
+void labelClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
+                   Connect&& connect = Connect());
 
 /// @brief mergeClusters
 ///
@@ -106,12 +174,11 @@ std::vector<std::size_t> labelClusters(CellCollection& cells,
 /// into actual clusters. The Cluster type must have the following function
 /// defined:
 ///   void clusterAddCell(Cluster&, const Cell&)
-///
-/// @return nothing
-template <typename CellCollection, typename ClusterCollection,
-          std::size_t GridDim>
-  requires(GridDim == 1 || GridDim == 2)
-ClusterCollection mergeClusters(CellCollection& /*cells*/);
+template <typename CellCollection, typename ClusterCollection>
+  requires(Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
+                                    typename ClusterCollection::value_type>)
+void mergeClusters(Acts::Ccl::ClusteringData& data, const CellCollection& cells,
+                   ClusterCollection& outv);
 
 /// @brief createClusters
 /// Convenience function which runs both labelClusters and createClusters.
@@ -119,8 +186,22 @@ template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
+[[deprecated]]
 ClusterCollection createClusters(CellCollection& cells,
                                  Connect&& connect = Connect());
+
+/// @brief createClusters
+/// Alternative convenience function which runs both labelClusters and
+/// createClusters.
+///
+/// @throws std::invalid_argument if the input contains duplicate cells.
+template <typename CellCollection, typename ClusterCollection,
+          std::size_t GridDim = 2,
+          typename Connect =
+              DefaultConnect<typename CellCollection::value_type, GridDim>>
+  requires(GridDim == 1 || GridDim == 2)
+void createClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
+                    ClusterCollection& clusters, Connect&& connect = Connect());
 
 }  // namespace Acts::Ccl
 

@@ -9,8 +9,6 @@
 #include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Gnn/GraphStoreHook.hpp"
-#include "Acts/Plugins/Gnn/TruthGraphMetricsHook.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -18,6 +16,8 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsPlugins/Gnn/GraphStoreHook.hpp"
+#include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -25,16 +25,21 @@
 
 #include "createFeatures.hpp"
 
-using namespace ActsExamples;
+#ifdef ACTS_GNN_WITH_CUDA
+#include <cuda_runtime_api.h>
+#endif
+
+using namespace Acts;
+using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
 namespace {
 
-struct LoopHook : public Acts::GnnHook {
-  std::vector<Acts::GnnHook*> hooks;
+struct LoopHook : public GnnHook {
+  std::vector<GnnHook*> hooks;
 
-  void operator()(const Acts::PipelineTensors& tensors,
-                  const Acts::ExecutionContext& ctx) const override {
+  void operator()(const PipelineTensors& tensors,
+                  const ExecutionContext& ctx) const override {
     for (auto hook : hooks) {
       (*hook)(tensors, ctx);
     }
@@ -44,7 +49,7 @@ struct LoopHook : public Acts::GnnHook {
 }  // namespace
 
 ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
-    Config config, Acts::Logging::Level level)
+    Config config, Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
       m_cfg(std::move(config)),
       m_pipeline(m_cfg.graphConstructor, m_cfg.edgeClassifiers,
@@ -76,7 +81,7 @@ ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
 
   auto wantClFeatures = std::ranges::any_of(
       m_cfg.nodeFeatures,
-      [&](const auto& f) { return Acts::rangeContainsValue(clFeatures, f); });
+      [&](const auto& f) { return rangeContainsValue(clFeatures, f); });
 
   if (wantClFeatures && !m_inputClusters.isInitialized()) {
     throw std::invalid_argument("Cluster features requested, but not provided");
@@ -86,6 +91,11 @@ ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
     throw std::invalid_argument(
         "Number of features mismatches number of scale parameters.");
   }
+
+// Reset error state to prevent failure due to previous runs
+#ifdef ACTS_GNN_WITH_CUDA
+  cudaGetLastError();
+#endif
 }
 
 /// Allow access to features with nice names
@@ -99,16 +109,16 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
   // Setup hooks
   LoopHook hook;
 
-  std::unique_ptr<Acts::TruthGraphMetricsHook> truthGraphHook;
+  std::unique_ptr<TruthGraphMetricsHook> truthGraphHook;
   if (m_inputTruthGraph.isInitialized()) {
-    truthGraphHook = std::make_unique<Acts::TruthGraphMetricsHook>(
+    truthGraphHook = std::make_unique<TruthGraphMetricsHook>(
         m_inputTruthGraph(ctx).edges, this->logger().clone());
     hook.hooks.push_back(&*truthGraphHook);
   }
 
-  std::unique_ptr<Acts::GraphStoreHook> graphStoreHook;
+  std::unique_ptr<GraphStoreHook> graphStoreHook;
   if (m_outputGraph.isInitialized()) {
-    graphStoreHook = std::make_unique<Acts::GraphStoreHook>();
+    graphStoreHook = std::make_unique<GraphStoreHook>();
     hook.hooks.push_back(&*graphStoreHook);
   }
 
@@ -178,11 +188,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
   ACTS_DEBUG("Feature creation:        " << ms(t03, t1));
 
   // Run the pipeline
-  Acts::GnnTiming timing;
+  GnnTiming timing;
 #ifdef ACTS_GNN_CPUONLY
-  Acts::Device device = {Acts::Device::Type::eCPU, 0};
+  Device device = {Device::Type::eCPU, 0};
 #else
-  Acts::Device device = {Acts::Device::Type::eCUDA, 0};
+  Device device = {Device::Type::eCUDA, 0};
 #endif
   auto trackCandidates =
       m_pipeline.run(features, moduleIds, idxs, device, hook, &timing);
@@ -241,7 +251,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
 
     assert(timing.classifierTimes.size() == m_timing.classifierTimes.size());
     for (auto [aggr, a] :
-         Acts::zip(m_timing.classifierTimes, timing.classifierTimes)) {
+         zip(m_timing.classifierTimes, timing.classifierTimes)) {
       aggr(a.count());
     }
 
@@ -253,7 +263,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode TrackFindingAlgorithmGnn::finalize() {
+ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::finalize() {
   namespace ba = boost::accumulators;
 
   auto print = [](const auto& t) {

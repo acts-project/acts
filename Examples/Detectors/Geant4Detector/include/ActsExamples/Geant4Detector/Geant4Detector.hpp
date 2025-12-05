@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
+#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 
 #include <memory>
 #include <string>
@@ -26,12 +26,12 @@ namespace ActsExamples {
 struct Geant4Detector : public Detector {
   /// Nested configuration struct
   struct Config {
-    /// The detector/geometry name
+    /// The Geometry/geometry name
     std::string name = "";
     /// The Geant4 world volume
     const G4VPhysicalVolume* g4World = nullptr;
     /// The Converter options: detector surfaces
-    Acts::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
+    ActsPlugins::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
     /// The corresponding ProtoDetector
     Acts::ProtoDetector protoDetector;
     /// Optional geometry identifier hook to be used during closure
@@ -47,8 +47,9 @@ struct Geant4Detector : public Detector {
   /// @param logger a logger instance
   ///
   /// @return a tuple of surfaces and detector elements
-  static std::tuple<std::vector<std::shared_ptr<Acts::Surface>>,
-                    std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>>
+  static std::tuple<
+      std::vector<std::shared_ptr<Acts::Surface>>,
+      std::vector<std::shared_ptr<ActsPlugins::Geant4DetectorElement>>>
   buildGeant4Volumes(const Config& cfg, const Acts::Logger& logger);
 
   explicit Geant4Detector(const Config& cfg);

@@ -1,4 +1,12 @@
 target_sources(
     ActsCore
-    PRIVATE EstimateTrackParamsFromSeed.cpp CompSpacePointAuxiliaries.cpp
+    PRIVATE
+        EstimateTrackParamsFromSeed.cpp
+        CompSpacePointAuxiliaries.cpp
+        CompositeSpacePointLineFitter.cpp
+        GbtsDataStorage.cpp
+        GbtsGeometry.cpp
+        GbtsTrackingFilter.cpp
+        SeedFinderGbts.cpp
+        FastStrawLineFitter.cpp
 )

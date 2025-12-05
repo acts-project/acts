@@ -81,9 +81,7 @@ struct EventStore {
   /// This is done using a pseudo-barcode that contains all fields but not the
   /// subparticle counter. This can be used as key in a map to store the
   /// subparticle information
-  using BarcodeWithoutSubparticle =
-      Acts::MultiIndex<std::uint64_t, 16, 16, 16, 16>;
-  std::unordered_map<BarcodeWithoutSubparticle, std::size_t> subparticleMap;
+  std::unordered_map<SimBarcode, std::size_t> subparticleMap;
 };
 
 }  // namespace ActsExamples::Geant4

@@ -26,6 +26,7 @@ namespace Acts {
 /// volumes
 class CuboidPortalShell : public PortalShellBase {
  public:
+  /// Type alias for cuboid volume bounds face enumeration
   using Face = CuboidVolumeBounds::Face;
 
   /// Retrieve the portal associated to the given face. Can be nullptr if unset.
@@ -47,6 +48,8 @@ class CuboidPortalShell : public PortalShellBase {
   /// @copydoc PortalShellBase::fill
   void fill(TrackingVolume& volume) override;
 
+  /// @brief Get the transformation matrix for this cuboid portal shell
+  /// @return Reference to the transformation matrix
   virtual const Transform3& transform() const = 0;
 };
 
@@ -133,6 +136,7 @@ class CuboidStackPortalShell final : public CuboidPortalShell {
   std::string label() const override;
 
   /// Return the stack's group transform
+  /// @return Reference to the transform of the cuboid stack
   const Transform3& transform() const override;
 
  private:

@@ -22,7 +22,7 @@ def test_logging():
 
 
 def test_pgd_particle():
-    assert len(acts.PdgParticle.__members__) == 19
+    assert len(acts.PdgParticle.__members__) == 32
 
 
 def test_algebra():

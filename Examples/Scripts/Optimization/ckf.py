@@ -6,7 +6,8 @@ import argparse
 
 import acts
 from acts import UnitConstants as u
-from acts.examples import GenericDetector, RootParticleReader
+from acts.examples import GenericDetector
+from acts.exsamples.root import RootParticleReader
 
 
 def getArgumentParser():
@@ -41,7 +42,7 @@ def getArgumentParser():
         dest="sf_cotThetaMax",
         help="cot of maximum theta angle",
         type=float,
-        default=7.40627,
+        default=10.01788,
     )
     parser.add_argument(
         "--sf_sigmaScattering",
@@ -103,7 +104,7 @@ def runCKFTracks(
     inputParticlePath: Optional[Path] = None,
     s=None,
     MaxSeedsPerSpM=1,
-    CotThetaMax=7.40627,
+    CotThetaMax=10.01788,
     SigmaScattering=5,
     RadLengthPerSeed=0.1,
     ImpactMax=3.0,

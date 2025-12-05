@@ -18,39 +18,45 @@
 #include <TH2.h>
 #include <TProfile.h>
 
-namespace ActsExamples::PlotHelpers {
-TH1F* bookHisto(const char* histName, const char* histTitle,
-                const Binning& varBinning) {
-  TH1F* hist =
-      new TH1F(histName, histTitle, varBinning.nBins(), varBinning.data());
+namespace ActsExamples {
+
+TH1F* PlotHelpers::bookHisto(const std::string& histName,
+                             const std::string& histTitle,
+                             const Binning& varBinning) {
+  TH1F* hist = new TH1F(histName.c_str(), histTitle.c_str(), varBinning.nBins(),
+                        varBinning.binEdges());
   hist->GetXaxis()->SetTitle(varBinning.title().c_str());
   hist->GetYaxis()->SetTitle("Entries");
   hist->Sumw2();
   return hist;
 }
 
-TH2F* bookHisto(const char* histName, const char* histTitle,
-                const Binning& varXBinning, const Binning& varYBinning) {
-  TH2F* hist =
-      new TH2F(histName, histTitle, varXBinning.nBins(), varXBinning.data(),
-               varYBinning.nBins(), varYBinning.data());
+TH2F* PlotHelpers::bookHisto(const std::string& histName,
+                             const std::string& histTitle,
+                             const Binning& varXBinning,
+                             const Binning& varYBinning) {
+  TH2F* hist = new TH2F(histName.c_str(), histTitle.c_str(),
+                        varXBinning.nBins(), varXBinning.binEdges(),
+                        varYBinning.nBins(), varYBinning.binEdges());
   hist->GetXaxis()->SetTitle(varXBinning.title().c_str());
   hist->GetYaxis()->SetTitle(varYBinning.title().c_str());
   hist->Sumw2();
   return hist;
 }
 
-void fillHisto(TH1F* hist, float value, float weight) {
+void PlotHelpers::fillHisto(TH1F* hist, float value, float weight) {
   assert(hist != nullptr);
   hist->Fill(value, weight);
 }
 
-void fillHisto(TH2F* hist, float xValue, float yValue, float weight) {
+void PlotHelpers::fillHisto(TH2F* hist, float xValue, float yValue,
+                            float weight) {
   assert(hist != nullptr);
   hist->Fill(xValue, yValue, weight);
 }
 
-void anaHisto(TH1D* inputHist, int j, TH1F* meanHist, TH1F* widthHist) {
+void PlotHelpers::anaHisto(TH1D* inputHist, int j, TH1F* meanHist,
+                           TH1F* widthHist) {
   // evaluate mean and width via the Gauss fit
   assert(inputHist != nullptr);
   if (inputHist->GetEntries() > 0) {
@@ -66,44 +72,52 @@ void anaHisto(TH1D* inputHist, int j, TH1F* meanHist, TH1F* widthHist) {
   }
 }
 
-TEfficiency* bookEff(const char* effName, const char* effTitle,
-                     const Binning& varBinning) {
+TEfficiency* PlotHelpers::bookEff(const std::string& effName,
+                                  const std::string& effTitle,
+                                  const Binning& varBinning) {
   TEfficiency* efficiency =
-      new TEfficiency(effName, effTitle, varBinning.nBins(), varBinning.data());
+      new TEfficiency(effName.c_str(), effTitle.c_str(), varBinning.nBins(),
+                      varBinning.binEdges());
   return efficiency;
 }
 
-TEfficiency* bookEff(const char* effName, const char* effTitle,
-                     const Binning& varXBinning, const Binning& varYBinning) {
+TEfficiency* PlotHelpers::bookEff(const std::string& effName,
+                                  const std::string& effTitle,
+                                  const Binning& varXBinning,
+                                  const Binning& varYBinning) {
   TEfficiency* efficiency = new TEfficiency(
-      effName, effTitle, varXBinning.nBins(), varXBinning.data(),
-      varYBinning.nBins(), varYBinning.data());
+      effName.c_str(), effTitle.c_str(), varXBinning.nBins(),
+      varXBinning.binEdges(), varYBinning.nBins(), varYBinning.binEdges());
   return efficiency;
 }
 
-void fillEff(TEfficiency* efficiency, float value, bool status) {
+void PlotHelpers::fillEff(TEfficiency* efficiency, float value, bool status) {
   assert(efficiency != nullptr);
   efficiency->Fill(status, value);
 }
 
-void fillEff(TEfficiency* efficiency, float xValue, float yValue, bool status) {
+void PlotHelpers::fillEff(TEfficiency* efficiency, float xValue, float yValue,
+                          bool status) {
   assert(efficiency != nullptr);
   efficiency->Fill(status, xValue, yValue);
 }
 
-TProfile* bookProf(const char* profName, const char* profTitle,
-                   const Binning& varXBinning, const Binning& varYBinning) {
-  TProfile* prof =
-      new TProfile(profName, profTitle, varXBinning.nBins(), varXBinning.data(),
-                   varYBinning.low(), varYBinning.high());
+TProfile* PlotHelpers::bookProf(const std::string& profName,
+                                const std::string& profTitle,
+                                const Binning& varXBinning,
+                                const Binning& varYBinning) {
+  TProfile* prof = new TProfile(profName.c_str(), profTitle.c_str(),
+                                varXBinning.nBins(), varXBinning.binEdges(),
+                                varYBinning.low(), varYBinning.high());
   prof->GetXaxis()->SetTitle(varXBinning.title().c_str());
   prof->GetYaxis()->SetTitle(varYBinning.title().c_str());
   return prof;
 }
 
-void fillProf(TProfile* profile, float xValue, float yValue, float weight) {
+void PlotHelpers::fillProf(TProfile* profile, float xValue, float yValue,
+                           float weight) {
   assert(profile != nullptr);
   profile->Fill(xValue, yValue, weight);
 }
 
-}  // namespace ActsExamples::PlotHelpers
+}  // namespace ActsExamples

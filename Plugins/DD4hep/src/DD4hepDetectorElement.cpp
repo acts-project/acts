@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 
 #include <utility>
 
@@ -14,7 +14,11 @@
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Volumes.h>
 
-Acts::DD4hepDetectorElement::DD4hepDetectorElement(
+using namespace Acts;
+
+namespace ActsPlugins {
+
+DD4hepDetectorElement::DD4hepDetectorElement(
     const dd4hep::DetElement detElement, const std::string& axes, double scalor,
     bool /*isDisc*/, std::shared_ptr<const ISurfaceMaterial> material)
     : TGeoDetectorElement(
@@ -23,3 +27,5 @@ Acts::DD4hepDetectorElement::DD4hepDetectorElement(
           detElement.nominal().worldTransformation(), axes, scalor,
           std::move(material)),
       m_detElement(detElement) {}
+
+}  // namespace ActsPlugins

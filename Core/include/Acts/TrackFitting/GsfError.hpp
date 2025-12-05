@@ -13,6 +13,7 @@
 
 namespace Acts {
 
+/// Error codes for Gaussian Sum Filter operations
 enum class GsfError {
   StartParametersHaveNoCovariance,
   NoMeasurementStatesCreatedForward,
@@ -20,6 +21,9 @@ enum class GsfError {
   NoMeasurementStatesCreatedFinal,
 };
 
+/// Create error code from @ref GsfError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(GsfError e);
 
 }  // namespace Acts

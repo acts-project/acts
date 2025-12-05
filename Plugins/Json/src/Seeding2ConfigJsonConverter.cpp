@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/Seeding2ConfigJsonConverter.hpp"
+#include "ActsPlugins/Json/Seeding2ConfigJsonConverter.hpp"
 
-#include "Acts/Plugins/Json/DefinitionsJsonConverter.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Json/DefinitionsJsonConverter.hpp"
 
 #include <algorithm>
 
@@ -118,7 +118,6 @@ void Acts::Experimental::to_json(nlohmann::json& j,
   j["minPt"] = config.minPt;
   j["sigmaScattering"] = config.sigmaScattering;
   j["radLengthPerSeed"] = config.radLengthPerSeed;
-  j["maxPtScattering"] = config.maxPtScattering;
   j["impactMax"] = config.impactMax;
   j["helixCutTolerance"] = config.helixCutTolerance;
   j["toleranceParam"] = config.toleranceParam;
@@ -212,7 +211,6 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
   j["minPt"].get_to(config.minPt);
   j["sigmaScattering"].get_to(config.sigmaScattering);
   j["radLengthPerSeed"].get_to(config.radLengthPerSeed);
-  j["maxPtScattering"].get_to(config.maxPtScattering);
   j["impactMax"].get_to(config.impactMax);
   j["helixCutTolerance"].get_to(config.helixCutTolerance);
   j["toleranceParam"].get_to(config.toleranceParam);

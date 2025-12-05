@@ -52,8 +52,8 @@ using namespace Acts::UnitLiterals;
 template <int D>
 struct DummyComponent {
   double weight = 0;
-  Acts::ActsVector<D> boundPars;
-  Acts::ActsSquareMatrix<D> boundCov;
+  Acts::ActsVector<D> boundPars{};
+  Acts::ActsSquareMatrix<D> boundCov{};
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -199,10 +199,11 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   // the mean might not fulfill the perigee condition.
   Vector3 position = mean.head<3>();
   Vector3 direction = mean.segment<3>(eFreeDir0);
-  auto intersection = surface
-                          .intersect(GeometryContext{}, position, direction,
-                                     BoundaryTolerance::Infinite())
-                          .closest();
+  Intersection3D intersection =
+      surface
+          .intersect(GeometryContext{}, position, direction,
+                     BoundaryTolerance::Infinite())
+          .closest();
   mean.head<3>() = intersection.position();
 
   return *transformFreeToBoundParameters(mean, surface, GeometryContext{});
@@ -253,6 +254,10 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
     }
   }
 }
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(test_with_data) {
   std::mt19937 gen(42);
@@ -458,3 +463,7 @@ BOOST_AUTO_TEST_CASE(test_mean_shuffle) {
     BOOST_CHECK_CLOSE(meanBefore[eBoundQOverP], meanAfter[eBoundQOverP], 1.e-8);
   }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

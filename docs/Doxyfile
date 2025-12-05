@@ -721,7 +721,7 @@ WARNINGS               = YES
 # will automatically be disabled.
 # The default value is: YES.
 
-WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_UNDOCUMENTED   = YES
 
 # If the WARN_IF_DOC_ERROR tag is set to YES, doxygen will generate warnings for
 # potential errors in the documentation, such as not documenting some parameters
@@ -775,7 +775,6 @@ INPUT                  = ../Core/include \
                          ../Fatras/include \
                          ../Plugins/DD4hep/include \
                          ../Plugins/EDM4hep/include \
-                         ../Plugins/Podio/include \
                          ../Plugins/Geant4/include \
                          ../Plugins/Json/include \
                          ../Plugins/Onnx/include \

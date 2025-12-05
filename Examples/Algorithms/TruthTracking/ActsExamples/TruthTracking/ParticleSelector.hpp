@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -20,15 +21,28 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Select particles by applying some selection cuts.
 class ParticleSelector final : public IAlgorithm {
  public:
   struct MeasurementCounter {
-    // Combination of a geometry hierarchy map and a minimum hit count
-    using CounterElement =
-        std::pair<Acts::GeometryHierarchyMap<unsigned int>, unsigned int>;
+    static constexpr std::uint32_t perLayerCapMax =
+        std::numeric_limits<std::uint32_t>::max();
+
+    /// Combination of a geometry hierarchy map and a minimum hit count
+    struct CounterElement {
+      Acts::GeometryHierarchyMap<std::uint32_t> geometryMap;
+      std::uint32_t threshold{};
+      std::uint32_t perLayerCap{perLayerCapMax};
+
+      CounterElement(
+          std::vector<Acts::GeometryHierarchyMap<std::uint32_t>::InputElement>&&
+              geometryMap_,
+          std::uint32_t threshold_, std::uint32_t perLayerCap_ = perLayerCapMax)
+          : geometryMap(std::move(geometryMap_)),
+            threshold(threshold_),
+            perLayerCap(perLayerCap_) {}
+    };
 
     boost::container::small_vector<CounterElement, 4> counters;
 
@@ -38,13 +52,14 @@ class ParticleSelector final : public IAlgorithm {
         const MeasurementContainer& measurements) const;
 
     void addCounter(const std::vector<Acts::GeometryIdentifier>& identifiers,
-                    unsigned int threshold) {
+                    std::uint32_t threshold,
+                    std::uint32_t perLayerCap = perLayerCapMax) {
       std::vector<Acts::GeometryHierarchyMap<unsigned int>::InputElement>
           elements;
       for (const auto& id : identifiers) {
         elements.emplace_back(id, 0);
       }
-      counters.emplace_back(std::move(elements), threshold);
+      counters.emplace_back(std::move(elements), threshold, perLayerCap);
     }
   };
 

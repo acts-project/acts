@@ -6,13 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBinningHelpers.hpp"
 
 #include <numbers>
 
-std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>>
-Acts::DD4hepBinningHelpers::convertBinning(
-    const dd4hep::DetElement &dd4hepElement, const std::string &bname) {
+using namespace Acts;
+
+namespace ActsPlugins {
+
+std::vector<std::tuple<DirectedProtoAxis, std::size_t>>
+DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
+                                     const std::string &bname) {
   // Return proto binning vector
   std::vector<std::tuple<DirectedProtoAxis, std::size_t>> protoBinnings;
 
@@ -21,7 +25,7 @@ Acts::DD4hepBinningHelpers::convertBinning(
         getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
     if (!type.empty()) {
       // Default binning is bound
-      auto bType = Acts::AxisBoundaryType::Bound;
+      auto bType = AxisBoundaryType::Bound;
       // Equidistant or variable binning
       AxisType aType =
           type == "equidistant" ? AxisType::Equidistant : AxisType::Variable;
@@ -49,7 +53,7 @@ Acts::DD4hepBinningHelpers::convertBinning(
           // Check for closed phi binning
           if (axisDir == AxisDirection::AxisPhi &&
               (max - min) > 1.9 * std::numbers::pi) {
-            bType = Acts::AxisBoundaryType::Closed;
+            bType = AxisBoundaryType::Closed;
           }
           protoBinnings.emplace_back(
               DirectedProtoAxis(axisDir, bType, min, max, nBins), nExpansion);
@@ -64,7 +68,7 @@ Acts::DD4hepBinningHelpers::convertBinning(
         // Check for closed phi binning
         if (axisDir == AxisDirection::AxisPhi &&
             (edges.back() - edges.front()) > 1.9 * std::numbers::pi) {
-          bType = Acts::AxisBoundaryType::Closed;
+          bType = AxisBoundaryType::Closed;
         }
         protoBinnings.emplace_back(DirectedProtoAxis(axisDir, bType, edges),
                                    nExpansion);
@@ -73,3 +77,5 @@ Acts::DD4hepBinningHelpers::convertBinning(
   }
   return protoBinnings;
 }
+
+}  // namespace ActsPlugins

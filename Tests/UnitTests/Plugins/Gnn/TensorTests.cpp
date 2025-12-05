@@ -8,28 +8,31 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Plugins/Gnn/Tensor.hpp>
+#include "ActsPlugins/Gnn/Tensor.hpp"
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 #ifdef ACTS_GNN_WITH_CUDA
 #include <cuda_runtime_api.h>
 #endif
 
-const Acts::ExecutionContext execContextCpu{Acts::Device::Cpu(), {}};
+const ExecutionContext execContextCpu{Device::Cpu(), {}};
 
 template <typename T>
-Acts::Tensor<T> createCpuTensor(const std::vector<T>& data,
-                                std::array<std::size_t, 2> shape) {
-  auto tensor = Acts::Tensor<T>::Create(shape, execContextCpu);
+Tensor<T> createCpuTensor(const std::vector<T>& data,
+                          std::array<std::size_t, 2> shape) {
+  auto tensor = Tensor<T>::Create(shape, execContextCpu);
   std::copy(data.begin(), data.end(), tensor.data());
   return tensor;
 }
 
-void testSigmoid(std::vector<float> input, Acts::ExecutionContext execContext) {
+void testSigmoid(std::vector<float> input, ExecutionContext execContext) {
   auto tensor = createCpuTensor(input, {input.size(), 1ul});
 
   auto tensorTarget = tensor.clone(execContext);
-  Acts::sigmoid(tensorTarget, execContext.stream);
-  auto result = tensorTarget.clone({Acts::Device::Cpu(), execContext.stream});
+  sigmoid(tensorTarget, execContext.stream);
+  auto result = tensorTarget.clone({Device::Cpu(), execContext.stream});
 
   std::vector<float> expected(input.size());
   std::transform(input.begin(), input.end(), expected.begin(),
@@ -44,20 +47,20 @@ void testSigmoid(std::vector<float> input, Acts::ExecutionContext execContext) {
 void testEdgeSelection(const std::vector<float>& scores,
                        const std::vector<std::int64_t>& edgeIndex,
                        const std::vector<std::int64_t>& edgeIndexExpected,
-                       Acts::ExecutionContext execContext) {
+                       ExecutionContext execContext) {
   auto scoreTensor = createCpuTensor<float>(scores, {scores.size(), 1ul});
   auto edgeTensor = createCpuTensor(edgeIndex, {2, edgeIndex.size() / 2});
 
   auto scoreTensorTarget = scoreTensor.clone(execContext);
   auto edgeTensorTarget = edgeTensor.clone(execContext);
 
-  auto [selectedScores, selectedEdges] = Acts::applyScoreCut(
+  auto [selectedScores, selectedEdges] = applyScoreCut(
       scoreTensorTarget, edgeTensorTarget, 0.5f, execContext.stream);
 
   auto selectedScoresHost =
-      selectedScores.clone({Acts::Device::Cpu(), execContext.stream});
+      selectedScores.clone({Device::Cpu(), execContext.stream});
   auto selectedEdgesHost =
-      selectedEdges.clone({Acts::Device::Cpu(), execContext.stream});
+      selectedEdges.clone({Device::Cpu(), execContext.stream});
 
   BOOST_CHECK(selectedScoresHost.size() == 2);
 
@@ -68,8 +71,8 @@ void testEdgeSelection(const std::vector<float>& scores,
       edgeIndexExpected.begin(), edgeIndexExpected.end());
 }
 
-void testConstructionAndMove(Acts::ExecutionContext execContext) {
-  auto tensor = Acts::Tensor<float>::Create({10, 1}, execContext);
+void testConstructionAndMove(ExecutionContext execContext) {
+  auto tensor = Tensor<float>::Create({10, 1}, execContext);
 
   BOOST_CHECK(tensor.shape()[1] == 1);
   BOOST_CHECK(tensor.shape()[0] == 10);
@@ -81,16 +84,16 @@ void testConstructionAndMove(Acts::ExecutionContext execContext) {
   BOOST_CHECK(tensor.data() == nullptr);
 }
 
-void testEdgeLimit(Acts::ExecutionContext execContext) {
+void testEdgeLimit(ExecutionContext execContext) {
   // Create a sample edge tensor with 10 edges on CPU
-  auto edgeTensor = Acts::Tensor<std::int64_t>::Create({2, 10}, execContextCpu);
+  auto edgeTensor = Tensor<std::int64_t>::Create({2, 10}, execContextCpu);
   for (std::size_t i = 0; i < 10; ++i) {
     edgeTensor.data()[i] = i;
     edgeTensor.data()[i + 10] = 2 * i;
   }
 
   // Create a sample edge feature tensor with 3 };
-  auto edgeFeatureTensor = Acts::Tensor<float>::Create({10, 3}, execContextCpu);
+  auto edgeFeatureTensor = Tensor<float>::Create({10, 3}, execContextCpu);
   for (std::size_t i = 0; i < 10; ++i) {
     edgeFeatureTensor.data()[i * 3] = static_cast<float>(i);  // Feature 1
     edgeFeatureTensor.data()[i * 3 + 1] =
@@ -101,18 +104,18 @@ void testEdgeLimit(Acts::ExecutionContext execContext) {
 
   // Clone to execContext
   auto edgeTensorTarget = edgeTensor.clone(execContext);
-  std::optional<Acts::Tensor<float>> edgeFeatureTensorTarget =
+  std::optional<Tensor<float>> edgeFeatureTensorTarget =
       edgeFeatureTensor.clone(execContext);
 
   // Apply edge limit
-  auto [limitedEdges, limitedEdgeFeatures] = Acts::applyEdgeLimit(
+  auto [limitedEdges, limitedEdgeFeatures] = applyEdgeLimit(
       edgeTensorTarget, edgeFeatureTensorTarget, 5, execContext.stream);
 
   // Clone results back to CPU
   auto limitedEdgesHost =
-      limitedEdges.clone({Acts::Device::Cpu(), execContext.stream});
+      limitedEdges.clone({Device::Cpu(), execContext.stream});
   auto limitedEdgeFeaturesHost =
-      limitedEdgeFeatures->clone({Acts::Device::Cpu(), execContext.stream});
+      limitedEdgeFeatures->clone({Device::Cpu(), execContext.stream});
 
   // Check the size of the limited edges
   BOOST_CHECK(limitedEdgesHost.shape()[1] == 5);
@@ -133,6 +136,10 @@ void testEdgeLimit(Acts::ExecutionContext execContext) {
                 edgeFeatureTensor.data()[i * 3 + 2]);
   }
 }
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GnnSuite)
 
 BOOST_AUTO_TEST_CASE(tensor_create_move_cpu) {
   testConstructionAndMove(execContextCpu);
@@ -173,8 +180,7 @@ BOOST_AUTO_TEST_CASE(tensor_edge_limit_cpu) {
 
 #ifdef ACTS_GNN_WITH_CUDA
 
-const Acts::ExecutionContext execContextCuda{Acts::Device::Cuda(0),
-                                             cudaStreamLegacy};
+const ExecutionContext execContextCuda{Device::Cuda(0), cudaStreamLegacy};
 
 BOOST_AUTO_TEST_CASE(tensor_create_move_cuda) {
   testConstructionAndMove(execContextCuda);
@@ -192,7 +198,7 @@ BOOST_AUTO_TEST_CASE(tensor_clone_roundtrip) {
   BOOST_CHECK(tensorCloneCuda.device().isCuda());
 
   auto tensorCloneHost =
-      tensorCloneCuda.clone({Acts::Device::Cpu(), cudaStreamLegacy});
+      tensorCloneCuda.clone({Device::Cpu(), cudaStreamLegacy});
   BOOST_CHECK(tensorCloneHost.device().isCpu());
 
   BOOST_CHECK(tensorCloneHost.shape()[0] == 3);
@@ -219,3 +225,7 @@ BOOST_AUTO_TEST_CASE(tensor_edge_limit_cuda) {
 }
 
 #endif
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
