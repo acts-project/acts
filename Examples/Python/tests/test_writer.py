@@ -19,28 +19,34 @@ import acts
 from acts import UnitConstants as u
 from acts.examples import (
     ObjPropagationStepsWriter,
-    RootTrackFinderNTupleWriter,
-    RootPropagationStepsWriter,
-    RootParticleWriter,
-    RootTrackParameterWriter,
-    RootMaterialTrackWriter,
-    RootMaterialWriter,
-    RootSimHitWriter,
-    RootTrackStatesWriter,
-    RootTrackSummaryWriter,
-    RootVertexNTupleWriter,
-    RootMeasurementWriter,
     CsvParticleWriter,
     CsvSimHitWriter,
     CsvTrackParameterWriter,
     CsvTrackWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
-    JsonMaterialWriter,
-    JsonFormat,
     Sequencer,
     GenericDetector,
 )
+from acts.examples.json import (
+    JsonMaterialWriter,
+    JsonFormat,
+)
+
+from acts.examples.root import (
+    RootMaterialTrackWriter,
+    RootMaterialWriter,
+    RootMeasurementWriter,
+    RootPropagationStepsWriter,
+    RootParticleWriter,
+    RootSimHitWriter,
+    RootTrackParameterWriter,
+    RootTrackStatesWriter,
+    RootTrackSummaryWriter,
+    RootTrackFinderNTupleWriter,
+    RootVertexNTupleWriter,
+)
+
 from acts.examples.odd import getOpenDataDetectorDirectory
 
 

@@ -8,14 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/detail/CuboidalDetectorHelper.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CuboidalDetectorHelper.hpp"
+#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdGenerator.hpp"
+#include "Acts/Geometry/PortalGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Seeding/PathSeeder.hpp"
@@ -113,7 +113,7 @@ class PathWidthProvider {
 // and the direction at the first hit
 class TrackEstimator {
  public:
-  Vector3 m_ip;
+  Vector3 m_ip{};
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
   std::pair<BoundTrackParameters, BoundTrackParameters> operator()(

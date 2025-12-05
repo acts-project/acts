@@ -16,8 +16,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Utilities/Zip.hpp"
-#include "ActsPlugins/ActSVG/DetectorVolumeSvgConverter.hpp"
-#include "ActsPlugins/ActSVG/PortalSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 

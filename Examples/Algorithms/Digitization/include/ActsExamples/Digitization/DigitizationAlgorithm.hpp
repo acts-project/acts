@@ -65,11 +65,11 @@ class DigitizationAlgorithm final : public IAlgorithm {
     /// clusters, measurements, and sim-hit-maps are output.
     bool doClusterization = true;
     /// Do we merge hits or not
-    bool doMerge = false;
+    bool doMerge = true;
     /// How close do parameters have to be to consider merged
     double mergeNsigma = 1.0;
     /// Consider clusters that share a corner as merged (8-cell connectivity)
-    bool mergeCommonCorner = false;
+    bool mergeCommonCorner = true;
     /// Energy deposit threshold for accepting a hit
     /// For a generic readout frontend we assume 1000 e/h pairs, in Si each
     /// e/h-pair requiers on average an energy of 3.65 eV (PDG  review 2023,
