@@ -12,6 +12,7 @@
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <concepts>
 #include <iostream>
@@ -170,7 +171,7 @@ std::pair<Vector3, Vector3> seedSolution(
   Vector3 seedPositionZ0 = intersectionZ0.position();
 
   return std::make_pair(seedPositionZ0,
-                        seedDirection.z() > 0 ? seedDirection : -seedDirection);
+                        copySign(seedDirection, seedDirection.z()));
 };
 
 }  // namespace Acts::Experimental::CombinatorialSeedSolver

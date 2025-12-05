@@ -66,7 +66,8 @@ void writeParticle(const SimParticle& from, edm4hep::MutableMCParticle to);
 /// - digitization channel
 ActsFatras::Hit readSimHit(const edm4hep::SimTrackerHit& from,
                            const MapParticleIdFrom& particleMapper,
-                           const MapGeometryIdFrom& geometryMapper);
+                           const MapGeometryIdFrom& geometryMapper,
+                           std::uint32_t index = -1);
 
 /// Writes a Fatras hit to EDM4hep.
 ///

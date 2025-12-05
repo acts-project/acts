@@ -33,6 +33,14 @@ def runTruthTrackingKalman(
         ParticleSelectorConfig,
         addDigiParticleSelection,
     )
+
+    from acts.examples.root import (
+        RootParticleReader,
+        RootTrackStatesWriter,
+        RootTrackSummaryWriter,
+        RootTrackFitterPerformanceWriter,
+    )
+
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
@@ -70,7 +78,7 @@ def runTruthTrackingKalman(
         logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
-            acts.examples.RootParticleReader(
+            RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles="particles_generated",
@@ -90,7 +98,7 @@ def runTruthTrackingKalman(
         logger.info("Reading hits from %s", inputHitsPath.resolve())
         assert inputHitsPath.exists()
         s.addReader(
-            acts.examples.RootSimHitReader(
+            RootSimHitReader(
                 level=acts.logging.INFO,
                 filePath=str(inputHitsPath.resolve()),
                 outputSimHits="simhits",
@@ -171,7 +179,7 @@ def runTruthTrackingKalman(
     s.addWhiteboardAlias("tracks", "selected-tracks")
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -183,7 +191,7 @@ def runTruthTrackingKalman(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -193,7 +201,7 @@ def runTruthTrackingKalman(
     )
 
     s.addWriter(
-        acts.examples.RootTrackFitterPerformanceWriter(
+        RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",

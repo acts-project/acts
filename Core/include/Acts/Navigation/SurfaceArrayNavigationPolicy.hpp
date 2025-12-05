@@ -43,10 +43,12 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
                                         const Logger& logger, Config config);
 
   /// Update the navigation state from the surface array
+  /// @param gctx The geometry context
   /// @param args The navigation arguments
   /// @param stream The navigation stream to update
   /// @param logger The logger
-  void initializeCandidates(const NavigationArguments& args,
+  void initializeCandidates(const GeometryContext& gctx,
+                            const NavigationArguments& args,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 

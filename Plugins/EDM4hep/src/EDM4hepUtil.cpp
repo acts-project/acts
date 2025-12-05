@@ -215,4 +215,28 @@ void setParticle(edm4hep::MutableSimTrackerHit& hit,
 }
 #endif
 
+std::size_t SimHitAssociation::size() const {
+  return m_internalToEdm4hep.size();
+}
+
+void SimHitAssociation::reserve(std::size_t size) {
+  m_internalToEdm4hep.reserve(size);
+}
+
+void SimHitAssociation::add(std::size_t internalIndex,
+                            const edm4hep::SimTrackerHit& edm4hepHit) {
+  m_internalToEdm4hep.push_back(edm4hepHit);
+  // m_edm4hepToInternal.at(edm4hepHit.id()) = internalIndex;
+  m_edm4hepToInternal.emplace(edm4hepHit.id(), internalIndex);
+}
+
+edm4hep::SimTrackerHit SimHitAssociation::lookup(
+    std::size_t internalIndex) const {
+  return m_internalToEdm4hep.at(internalIndex);
+}
+
+std::size_t SimHitAssociation::lookup(const edm4hep::SimTrackerHit& hit) const {
+  return m_edm4hepToInternal.at(hit.id());
+}
+
 }  // namespace ActsPlugins::EDM4hepUtil

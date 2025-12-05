@@ -240,7 +240,23 @@ void addDefinitions(py::module_& m) {
       .value("eAntiNeutron", PdgParticle::eAntiNeutron)
       .value("eProton", PdgParticle::eProton)
       .value("eAntiProton", PdgParticle::eAntiProton)
-      .value("eLead", PdgParticle::eLead);
+      .value("eLead", PdgParticle::eLead)
+      .value("eJPsi", PdgParticle::eJPsi)
+      .value("eB0", PdgParticle::eB0)
+      .value("eBPlus", PdgParticle::eBPlus)
+      .value("eD0", PdgParticle::eD0)
+      .value("eDPlus", PdgParticle::eDPlus)
+      .value("eAntiB0", PdgParticle::eAntiB0)
+      .value("eAntiD0", PdgParticle::eAntiD0)
+      .value("eNeutrinoE", PdgParticle::eNeutrinoE)
+      .value("eNeutrinoMu", PdgParticle::eNeutrinoMu)
+      .value("eNeutrinoTau", PdgParticle::eNeutrinoTau)
+      .value("eAntiNeutrinoE", PdgParticle::eAntiNeutrinoE)
+      .value("eAntiNeutrinoMu", PdgParticle::eAntiNeutrinoMu)
+      .value("eAntiNeutrinoTau", PdgParticle::eAntiNeutrinoTau);
+
+  // Add the parsePdgParticle function
+  m.def("parsePdgParticle", &parsePdgParticle, py::arg("name"));
 
   py::class_<ParticleHypothesis>(m, "ParticleHypothesis")
       .def(py::init([](PdgParticle absPdg, float mass, float absCharge) {

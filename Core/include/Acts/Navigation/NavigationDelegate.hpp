@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -22,23 +23,18 @@ class Logger;
 /// It is not supposed to be used as an lvalue.
 struct NavigationArguments {
   /// Current position in 3D space for navigation
-  Vector3 position;
+  Vector3 position{};
   /// Direction vector for navigation propagation
-  Vector3 direction;
+  Vector3 direction{};
 
   /// Boundary tolerance for surface intersection calculations
   BoundaryTolerance tolerance = BoundaryTolerance::None();
-
-  /// Flag indicating whether portal intersections are desired
-  bool wantsPortals = true;
-  /// Flag indicating whether surface intersections are desired
-  bool wantsSurfaces = true;
 };
 
 /// Central alias for the navigation delegate. This type is owning to support
 /// (type-erased) navigation delegate chains (i.e. multiple policies).
-// @TODO: Add geometry context to navigation delegate signature
-using NavigationDelegate = Delegate<void(
-    const NavigationArguments&, AppendOnlyNavigationStream&, const Logger&)>;
+using NavigationDelegate =
+    Delegate<void(const GeometryContext&, const NavigationArguments&,
+                  AppendOnlyNavigationStream&, const Logger&)>;
 
 }  // namespace Acts

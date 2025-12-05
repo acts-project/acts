@@ -5,6 +5,11 @@ from typing import Optional
 
 import acts
 import acts.examples
+from acts.examples.root import (
+    RootTrackStatesWriter,
+    RootTrackSummaryWriter,
+    RootTrackFitterPerformanceWriter,
+)
 
 from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -77,7 +82,7 @@ def runRefittingGsf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",
@@ -89,7 +94,7 @@ def runRefittingGsf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",
@@ -99,7 +104,7 @@ def runRefittingGsf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackFitterPerformanceWriter(
+        RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",

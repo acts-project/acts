@@ -52,8 +52,8 @@ using namespace Acts::UnitLiterals;
 template <int D>
 struct DummyComponent {
   double weight = 0;
-  Acts::ActsVector<D> boundPars;
-  Acts::ActsSquareMatrix<D> boundCov;
+  Acts::ActsVector<D> boundPars{};
+  Acts::ActsSquareMatrix<D> boundCov{};
 };
 
 // A Multivariate distribution object working in the same way as the

@@ -138,13 +138,10 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
 }
 
 void CylinderNavigationPolicy::initializeCandidates(
+    [[maybe_unused]] const GeometryContext& gctx,
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
   using enum CylinderVolumeBounds::Face;
-
-  if (!args.wantsPortals) {
-    return;
-  }
 
   ACTS_VERBOSE("CylinderNavigationPolicy::initializeCandidates for volume "
                << m_volume->volumeName()
