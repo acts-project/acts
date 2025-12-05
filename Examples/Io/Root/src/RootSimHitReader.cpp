@@ -212,4 +212,6 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
   return ProcessCode::SUCCESS;
 }
 
+RootSimHitReader::~RootSimHitReader() = default;
+
 }  // namespace ActsExamples
