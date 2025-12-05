@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/AnyTrack.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -370,6 +371,31 @@ BOOST_AUTO_TEST_CASE(AccessDynamicColumns) {
   BOOST_CHECK_EQUAL(anyTrack.component<int>("customInt"_hash), 7);
   AnyConstTrack constTrack(track);
   BOOST_CHECK_EQUAL(constTrack.component<int>("customInt"_hash), 7);
+}
+
+BOOST_AUTO_TEST_CASE(ProxyAccessorWithAnyTrack) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
+      tc{vtc, mtj};
+
+  tc.addColumn<float>("customFloat");
+  auto track = tc.makeTrack();
+  fillTestTrack<decltype(tc)>(track);
+  track.template component<float>("customFloat"_hash) = 1.5f;
+
+  ProxyAccessor<float> mutableAccessor("customFloat");
+  ConstProxyAccessor<float> constAccessor("customFloat");
+
+  AnyMutableTrack anyTrack(track);
+  BOOST_CHECK_CLOSE(mutableAccessor(anyTrack), 1.5f, 1e-6);
+  mutableAccessor(anyTrack) = 2.25f;
+  BOOST_CHECK_CLOSE(track.template component<float>("customFloat"_hash), 2.25f,
+                    1e-6);
+
+  AnyConstTrack constTrack(track);
+  BOOST_CHECK_CLOSE(constAccessor(constTrack), 2.25f, 1e-6);
+  BOOST_CHECK(constAccessor.hasColumn(constTrack));
 }
 
 BOOST_AUTO_TEST_CASE(TypeErasureHeterogeneousStorage) {
