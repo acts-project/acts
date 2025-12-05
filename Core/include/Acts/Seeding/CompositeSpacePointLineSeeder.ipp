@@ -17,41 +17,10 @@
 
 namespace Acts::Experimental {
 
-constexpr CompositeSpacePointLineSeeder::TangentAmbi
-CompositeSpacePointLineSeeder::encodeAmbiguity(const int signTop,
-                                               const int signBottom) {
-  assert(Acts::abs(signTop) == 1 && Acts::abs(signBottom) == 1);
-  using enum TangentAmbi;
-  if (signTop == 1 && signBottom == 1) {
-    return RR;
-  } else if (signTop == 1 && signBottom == -1) {
-    return RL;
-  } else if (signTop == -1 && signBottom == 1) {
-    return LR;
-  }
-  return LL;
-}
-
-inline std::string CompositeSpacePointLineSeeder::toString(
-    const TangentAmbi ambi) {
-  switch (ambi) {
-    using enum TangentAmbi;
-    case RR:
-      return "Right - Right";
-    case RL:
-      return "Right - Left";
-    case LR:
-      return "Left - Right";
-    case LL:
-      return "Left - Left";
-  }
-  return "Undefined";
-}
-
-template <CompositeSpacePoint Spt_t>
-CompositeSpacePointLineSeeder::SeedParameters
-CompositeSpacePointLineSeeder::constructTangentLine(const Spt_t& topHit,
-                                                    const Spt_t& bottomHit,
+template <CompositeSpacePoint Sp_t>
+CompositeSpacePointLineSeeder::TwoCircleTangentPars
+CompositeSpacePointLineSeeder::constructTangentLine(const Sp_t& topHit,
+                                                    const Sp_t& bottomHit,
                                                     const TangentAmbi ambi) {
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
   using namespace Acts::UnitLiterals;
@@ -102,13 +71,12 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Spt_t& topHit,
           bottomPos.dot(eY) * sinTheta + bottomPos.dot(eZ) * cosTheta, 1.) *
       result.dTheta;
 
-  result.theta = VectorHelpers::theta(makeDirection(bottomHit, result.theta));
   return result;
 }
 
-template <CompositeSpacePoint Spt_t>
+template <CompositeSpacePoint SpacePoint_t>
 CompositeSpacePointLineSeeder::Vector
-CompositeSpacePointLineSeeder::makeDirection(const Spt_t& refHit,
+CompositeSpacePointLineSeeder::makeDirection(const SpacePoint_t& refHit,
                                              const double tanAngle) {
   const Vector& eY{refHit.toNextSensor()};
   const Vector& eZ{refHit.planeNormal()};
@@ -116,6 +84,8 @@ CompositeSpacePointLineSeeder::makeDirection(const Spt_t& refHit,
   const double sinTheta = std::sin(tanAngle);
   return copySign<Vector, double>(sinTheta * eY + cosTheta * eZ, sinTheta);
 }
+
+#ifdef STONJEK
 
 template <CompositeSpacePointContainer UnCalibCont_t>
 bool CompositeSpacePointLineSeeder::moveToNextHit(
@@ -131,10 +101,8 @@ bool CompositeSpacePointLineSeeder::moveToNextHit(
   }
   while (++hitIdx < hitVec.size() && selector.connected() &&
          !selector(*hitVec[hitIdx])) {
-    // find the next good hit
   }
-  return hitIdx < hitVec.size() && selector.connected() &&
-         selector(*hitVec[hitIdx]);
+  return hitIdx < hitVec.size();
 }
 
 template <CompositeSpacePointContainer UnCalibCont_t>
@@ -143,8 +111,9 @@ bool CompositeSpacePointLineSeeder::firstGoodHit(
     const Selector_t<SpacePoint_t<UnCalibCont_t>>& selector,
     std::size_t& hitIdx) const {
   hitIdx = 0;
-  if (hitVec.empty())
+  if (hitVec.empty()) {
     return false;
+  }
   return !selector.connected() || selector(*hitVec[hitIdx]) ||
          moveToNextHit(hitVec, selector, hitIdx);
 }
@@ -155,27 +124,26 @@ template <CompositeSpacePointContainer Cont_t,
           CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
 bool CompositeSpacePointLineSeeder::prepareSeedOptions(
     SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options) const {
-  if (options.splitter->strawHits().empty()) {
+  const auto& strawLayers{options.splitter->strawHits()};
+
+  if (strawLayers.empty()) {
     ACTS_DEBUG(__func__ << "() " << __LINE__
                         << ": No straw hits available for seeding.");
     return false;
   }
   ACTS_DEBUG(__func__ << "():" << __LINE__ << " N straw layers "
-                      << options.splitter->strawHits().size()
-                      << " and  N strip layer "
+                      << strawLayers.size() << " and  N strip layer "
                       << options.splitter->stripHits().size());
 
-  if (std::ranges::any_of(options.splitter->strawHits(),
-                          [this](const Cont_t& layerHits) {
-                            return std::size(layerHits) > m_cfg.busyLayerLimit;
-                          })) {
+  if (std::ranges::any_of(strawLayers, [this](const Cont_t& layerHits) {
+        return layerHits.size() > m_cfg.busyLayerLimit;
+      })) {
     options.startWithPattern = false;
   }
 
-  options.upperLayer = options.splitter->strawHits().size() - 1;
-  for (uint i_layer{0}; i_layer < options.splitter->strawHits().size();
-       ++i_layer) {
-    const Cont_t& layerHits = options.splitter->strawHits()[i_layer];
+  options.upperLayer = strawLayers.size() - 1;
+  for (uint i_layer{0}; i_layer < strawLayers.size(); ++i_layer) {
+    const Cont_t& layerHits = strawLayers[i_layer];
     ACTS_DEBUG("Layer " << i_layer << " has " << layerHits.size()
                         << " straw hits ");
   }
@@ -217,11 +185,12 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
   const Cont_t& upper = options.splitter->strawHits()[options.upperLayer];
 
   // Vary the left right solutions
-  if (++options.signComboIndex < s_signCombo.size()) {
+  ++options.signComboIndex;
+  if (options.signComboIndex < s_signCombo.size()) {
     return;
   }
-  // All sign combos tested. Let's reset the signs combo and move on to the next
-  // layer
+  // All sign combos tested. Let's reset the signs combo and move on
+  /// to the next hit inside the layer
   options.signComboIndex = 0;
 
   // Move to the next hit in the lower layer
@@ -229,12 +198,12 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
     return;
   }
 
-  // Reset to the first good hit in the lower layer and move to the next good
-  // hit in the upper layer
-  if (firstGoodHit(lower, options.selector, options.lowerHitIndex) &&
-      moveToNextHit(upper, options.selector, options.upperHitIndex)) {
-    return;
+  // Reset to the first good hit in the lower layer
+  if (firstGoodHit(lower, options.selector, options.lowerHitIndex)) {
     // --> so we can update to the next hit in the upper layer
+    if (moveToNextHit(upper, options.selector, options.upperHitIndex)) {
+      return;
+    }
   }
 
   // All combinations of hits & lines in both layers have been processed
@@ -295,7 +264,7 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
       break;
     }
   }
-};
+}
 
 template <typename T>
 using SeedSolutionType =
@@ -314,19 +283,20 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
     found->lineParams = options.patternParams;
     found->seedHits.reserve(options.splitter->strawHits().size() +
                             options.splitter->stripHits().size());
-    using enum ParIdx;
-    Vector posForCalib = Vector(found->lineParams[toUnderlying(x0)],
-                                found->lineParams[toUnderlying(y0)], 0.);
-    Vector dirForCalib =
-        makeDirectionFromPhiTheta(found->lineParams[toUnderlying(phi)],
-                                  found->lineParams[toUnderlying(theta)]);
+
+    Vector posForCalib =
+        Vector(found->lineParams[toUnderlying(ParIdx::x0)],
+               found->lineParams[toUnderlying(ParIdx::y0)], 0.);
+    Vector dirForCalib = makeDirectionFromPhiTheta(
+        found->lineParams[toUnderlying(ParIdx::phi)],
+        found->lineParams[toUnderlying(ParIdx::theta)]);
     for (const auto& strawLayerHits : options.splitter->strawHits()) {
       Cont_t tmpCalibHits = options.calibrator->calibrate(
           *options.calibContext, posForCalib, dirForCalib,
-          options.patternParams[toUnderlying(t0)], strawLayerHits);
+          options.patternParams[toUnderlying(ParIdx::t0)], strawLayerHits);
       found->seedHits.insert(found->seedHits.end(),
-                             std::make_move_iterator(std::begin(tmpCalibHits)),
-                             std::make_move_iterator(std::end(tmpCalibHits)));
+                             std::make_move_iterator(tmpCalibHits.begin()),
+                             std::make_move_iterator(tmpCalibHits.end()));
     }
 
     found->nStrawHits = found->seedHits.size();
@@ -335,8 +305,8 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
           *options.calibContext, posForCalib, dirForCalib,
           options.patternParams[toUnderlying(ParIdx::t0)], stripLayerHits);
       found->seedHits.insert(found->seedHits.end(),
-                             std::make_move_iterator(std::begin(tmpCalibHits)),
-                             std::make_move_iterator(std::end(tmpCalibHits)));
+                             std::make_move_iterator(tmpCalibHits.begin()),
+                             std::make_move_iterator(tmpCalibHits.end()));
     }
 
     found->y0 = options.patternParams[toUnderlying(ParIdx::y0)];
@@ -425,7 +395,7 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
       ACTS_DEBUG("Hit in layer " << layerNr << " pull " << std::sqrt(chi2)
                                  << " distance " << distance << " drift radius "
                                  << testMe->driftRadius());
-      if (chi2 < Acts::pow(m_cfg.hitPullCut, 2) &&
+      if (chi2 < Acts::pow(m_cfg.hitPullCut, 2u) &&
           distance < options.strawRadius) {
         hadGoodHit = true;
         seedSol.seedHits.emplace_back(testMe);
@@ -486,11 +456,9 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
 
   /** Associate strip hits to the seed */
 
-  double bestChi2Loc0{std::numeric_limits<double>::max()};
-  double bestChi2Loc1{std::numeric_limits<double>::max()};
-  std::size_t bestIdxLoc0{0};
-  std::size_t bestIdxLoc1{0};
-
+  double bestChi2Loc0{std::numeric_limits<double>::max()},
+      bestChi2Loc1{std::numeric_limits<double>::max()};
+  std::size_t bestIdxLoc0{0}, bestIdxLoc1{0};
   for (const auto& stripLayerHits : options.splitter->stripHits()) {
     for (const auto& [hitIdx, testMe] : Acts::enumerate(stripLayerHits)) {
       const double chi2 = detail::CompSpacePointAuxiliaries::chi2Term(
@@ -547,4 +515,5 @@ std::ostream& CompositeSpacePointLineSeeder::SeedOptions<
   return ostr;
 }
 
+#endif
 }  // namespace Acts::Experimental

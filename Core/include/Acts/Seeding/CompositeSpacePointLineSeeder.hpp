@@ -16,46 +16,29 @@
 
 namespace Acts::Experimental {
 
-namespace detail {
-/// @brief Abrivation to dereference a pointer to a const object
-template <typename T>
-using PointerConstDref_t = std::add_const_t<RemovePointer_t<T>>&;
-}  // namespace detail
+template <typename SeedFiller_t, typename UnCalibSp_t, typename CalibCont_t>
+concept SeedFiller =
+    CompositeSpacePoint<UnCalibSp_t> &&
+    CompositeSpacePointContainer<CalibCont_t> &&
+    requires(const SeedFiller_t& filler, const CalibrationContext& cctx,
+             const Vector3& pos, const Vector3& dir, const double t0,
+             const UnCalibSp_t& testSp, CalibCont_t& seedContainer) {
+      { filler.goodCandidate(cctx, testSp) } -> std::same_as<bool>;
+      {
+        filler.candidatePull(cctx, pos, dir, t0, testSp)
+      } -> std::same_as<double>;
+      {
+        filler.newContainer(cctx)
+      } -> std::same_as<std::unique_ptr<CalibCont_t>>;
+      {
+        filler.append(cctx, pos, dir, t0, testSp, seedContainer)
+      } -> std::same_as<void>;
+    };
 
 class CompositeSpacePointLineSeeder {
  public:
-  using Line_t = detail::CompSpacePointAuxiliaries::Line_t;
-  using ParIdx = detail::CompSpacePointAuxiliaries::FitParIndex;
-  using Vector = detail::CompSpacePointAuxiliaries::Vector;
-  static constexpr auto s_nPars = toUnderlying(ParIdx::nPars);
-  /// @brief Vector containing the 5 straight segment line parameters
-  using SeedParam_t = std::array<double, s_nPars>;
-  ///@brief During the repetitive recalibration, single hits may be invalidated
-  ///       under the track parameters. Define a Delegate to sort out the
-  ///       invalid hits
-  template <CompositeSpacePoint Sp_t>
-  using Selector_t = Delegate<bool(const Sp_t&)>;
-  using AbortSelector_t = Delegate<bool(std::size_t layerIdx)>;
-  template <CompositeSpacePointContainer Cont_t>
-  using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
-
-  /// @brief The SeedSolution bookkeeps the straw space points used.
-  ///         In principle, it's nothing else than a vector of pointers.
-  ///         However, if the client decides to provide a vector of unique_ptrs,
-  ///         we need to wrap the objects around a std::reference_wrapper
-  template <typename Trait_t>
-  struct UncalibSpBook_t {
-    using type = Trait_t;
-  };
-  template <SmartPointerConcept Trait_t>
-  struct UncalibSpBook_t<Trait_t> {
-    using type = std::reference_wrapper<const Trait_t>;
-  };
-
-  template <CompositeSpacePoint SpacePoint_t>
-  using SpInSeedBookCont_t =
-      std::vector<typename UncalibSpBook_t<SpacePoint_t>::type>;
-
+  /// @brief Configuration of the cuts to sort out generated
+  ///        seeds with poor quality.
   struct Config {
     /// @brief Cut on the theta angle
     std::array<double, 2> thetaRange{0, 180. * UnitConstants::degree};
@@ -63,8 +46,6 @@ class CompositeSpacePointLineSeeder {
     std::array<double, 2> interceptRange{-20. * UnitConstants::m,
                                          20. * UnitConstants::m};
 
-    /// @brief do not apply any cuts on the seed parameters
-    bool noCutsOnSeedParams{false};
     /// @brief Upper cut on the hit chi2 w.r.t. seed in order to be associated to the seed
     double hitPullCut{5.};
     /// @brief How many drift circles may be on a layer to be used for seeding
@@ -80,12 +61,26 @@ class CompositeSpacePointLineSeeder {
     /// @brief Check whether a new seed candidate shares the same left-right solution with already accepted ones
     ///          Reject the seed if it has the same amount of hits
     bool overlapCorridor{true};
-    /// @brief Recalibrate the seed drift circles from the initial estimate
-    bool recalibSeedCircles{false};
   };
+  /// @brief Class constructor
+  /// @param cfg Reference to the seeder configuration object
+  /// @param logger Logger object used for debug print out
+  explicit CompositeSpacePointLineSeeder(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger = getDefaultLogger(
+          "CompositeSpacePointLineSeeder", Logging::Level::INFO));
 
-  struct SeedParameters {
-    /// @brief: Theta of the line
+  /// @brief Use the assignment of the parameter indices from the CompSpacePointAuxiliaries
+  using ParIdx = detail::CompSpacePointAuxiliaries::FitParIndex;
+  /// @brief Use the vector from the CompSpacePointAuxiliaires
+  using Vector = detail::CompSpacePointAuxiliaries::Vector;
+  /// @brief Vector containing the 5 straight segment line parameters
+  using SeedParam_t = std::array<double, toUnderlying(ParIdx::nPars)>;
+
+  /// @brief Helper struct describing the line parameters that are
+  ///        tangential to a pair of straw measurements
+  struct TwoCircleTangentPars {
+    /// @brief Estimated angle
     double theta{0.};
     /// @brief Estimated intercept
     double y0{0.};
@@ -93,69 +88,93 @@ class CompositeSpacePointLineSeeder {
     double dTheta{0.};
     /// @brief Uncertainty on the intercept
     double dY0{0.};
-    /// @brief Line parameters
-    SeedParam_t lineParams{};
+    /// @brief Definition of the print operator
+    /// @param ostr: Mutable reference to the stream to print to
+    /// @param pars: The parameters to be printed
+    friend std::ostream& operator<<(std::ostream& ostr,
+                                    const TwoCircleTangentPars& pars) {
+      pars.print(ostr);
+      return ostr;
+    }
+
+   private:
+    /// @brief Actual implementation of the printing
+    /// @param ostr: Mutable reference to the stream to print to
+    void print(std::ostream& ostr) const;
+  };
+
+ private:
+  /// @brief Cache object of a constructed & valid seed solution.
+  ///        It basically consists out of the generated parameters.
+  ///        the straw hits contributing to the seed & the left/right
+  ///        ambiguities given the parameters of the solutions.
+  ///        To avoid the copy of the memory, the hits are encoded as a
+  ///        pair of indices representing the straw layer & hit number.
+  template <CompositeSpacePointSorter Splitter_t>
+  struct SeedSolution : public TwoCircleTangentPars {
+    /// @brief Constructor taking the constructed tangential parameters &
+    ///        the pointer to the splitter to associate the hits to the seed
+    /// @param pars: Theta & intercept describing the tangential line
+    /// @param layerSorter: Pointer to the sorter object carrying a sorted
+    ///                     collection of hits that are split per logical layer
+    explicit SeedSolution(const TwoCircleTangentPars& pars,
+                          const Splitter_t* layerSorter)
+        : TwoCircleTangentPars{pars}, spSplitter{layerSorter} {}
+
+    /// @brief Helper function to calculate the straw signs
+    std::vector<int> leftRightSigns(const TwoCircleTangentPars& pars) const;
+
     /// @brief Vector of radial signs of the valid hits
     std::vector<int> solutionSigns{};
     /// @brief Seed chi2
     double chi2{0.};
     /// @brief Number of straw hits on the seed
     std::size_t nStrawHits{0};
-
-    /// @brief Stringstream output operator
+    /// @brief Definition of the print operator
+    /// @param ostr: Mutable reference to the stream to print to
+    /// @param sol: The seed solution to be printed
     friend std::ostream& operator<<(std::ostream& ostr,
-                                    const SeedParameters& sol) {
-      return sol.print(ostr);
+                                    const SeedSolution& sol) {
+      sol.print(ostr);
+      return ostr;
     }
+
+   private:
+    /// @brief Pointer to the space point per layer splitter to gain access to the
+    ///        container
+    const Splitter_t* m_spSplitter{nullptr};
+    /// @brief Set of hits collected onto the seed. For each element
+    ///        the first index represents the layer &
+    ///        the second one the particular hit in that layer
+    std::vector<std::pair<std::size_t, std::size_t>> m_seedHits{};
+
     /// @brief Prints the seed solution to the screen
-    std::ostream& print(std::ostream& ostr) const;
+    void print(std::ostream& ostr) const;
   };
 
-  /// @brief Seed object returned by the seeder. The seed contains the initial parameter estimate w.r.t
-  ///         to the central plane surface inside the chamber.///Note* the
-  /// parameter q/p is set to zero and does not serve any purpose here.
-  ///
-  ///         Further the seed contains the list of associated measurements. If
-  /// the seeder is run in the fast 2D fit mode, the number of iterations w.r.t.
-  /// this fit procedure is appended as well.
-
-  /// @brief Cache of all solutions seen thus far
+  template <CompositeSpacePoint Sp_t>
+  using Selector_t = Delegate<bool(const Sp_t&)>;
+  using AbortSelector_t = Delegate<bool(std::size_t layerIdx)>;
   template <CompositeSpacePointContainer Cont_t>
-  struct SeedSolution : public SeedParameters {
-    explicit SeedSolution(const SeedParameters& pars) : SeedParameters(pars) {};
-    SeedSolution() = default;
-    /// @brief Used hits in the seed
-    Cont_t seedHits{};
-  };
+  using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
 
+ public:
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointSorter<Cont_t> Splitter_t,
             CompositeSpacePointContainer CalibCont_t,
             CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
+
   struct SeedOptions {
-    // @brief Splitter holding the straw and strip hits
+    /// @brief Splitter holding the straw and strip hits
     std::unique_ptr<Splitter_t> splitter{};
     using Sp_t = SpacePoint_t<Cont_t>;
-    // @brief Good hit selector
+    /// @brief Good hit selector
     Selector_t<Sp_t> selector{};
     AbortSelector_t abortSelector{};
-    // @brief Calibrator
-    const Calibrator_t* calibrator{nullptr};
     // @brief Experiment specific calibration context
-    const CalibrationContext* calibContext{};
+    CalibrationContext calibContext{};
     // @brief radius of the straw tubes used to reject hits outside the tube
-    double strawRadius{0.};
-
-    /// @brief  @brief Index of the upper layer under consideration for the seeding
-    std::size_t upperLayer{0};
-    /// @brief Index of the lower layer under consideration for the seeding
-    std::size_t lowerLayer{0};
-    /// @brief  Index of the hit in the lower layer under consideration for the seeding
-    std::size_t lowerHitIndex{0};
-    /// @brief  Index of the hit in the upper layer under consideration for the seeding
-    std::size_t upperHitIndex{0};
-    /// @brief  Index of the sign combination under consideration for the seeding
-    std::size_t signComboIndex{0};
+    double strawRadius{15. * UnitConstants::mm};
 
     /// @brief Try at the first time the external seed parameters as candidate
     bool startWithPattern{false};
@@ -163,7 +182,6 @@ class CompositeSpacePointLineSeeder {
     /// @brief Estimated parameters from pattern
     SeedParam_t patternParams{};
 
-    std::vector<SeedSolution<Cont_t>> seenSolutions{};
     std::size_t nGenSeeds{0};
     std::size_t nStrawCut{0};
 
@@ -174,6 +192,19 @@ class CompositeSpacePointLineSeeder {
     }
     /// @brief Prints the seed solution to the screen
     std::ostream& print(std::ostream& ostr) const;
+
+   private:
+    std::vector<SeedSolution<Cont_t>> seenSolutions{};
+    /// @brief  @brief Index of the upper layer under consideration for the seeding
+    std::size_t upperLayer{0};
+    /// @brief Index of the lower layer under consideration for the seeding
+    std::size_t lowerLayer{0};
+    /// @brief  Index of the hit in the lower layer under consideration for the seeding
+    std::size_t lowerHitIndex{0};
+    /// @brief  Index of the hit in the upper layer under consideration for the seeding
+    std::size_t upperHitIndex{0};
+    /// @brief  Index of the sign combination under consideration for the seeding
+    std::size_t signComboIndex{0};
   };
 
   /// @brief Enumeration to pick one of the four tangent lines to
@@ -193,16 +224,15 @@ class CompositeSpacePointLineSeeder {
   ///        tangent ambiguity enum value
   /// @param signTop: Left/right sign of the top straw tube
   /// @param signBottom: Left/right sign of the bottom straw tube
-  static constexpr TangentAmbi encodeAmbiguity(const int signTop,
-                                               const int signBottom);
+  static TangentAmbi encodeAmbiguity(const int signTop, const int signBottom);
   /// @brief Construct the line that is tangential to a pair of two straw circle measurements
   /// @param topHit: First straw hit
   /// @param bottomHit: Second straw hit
   /// @param ambi: Left right ambiguity of the bottom & top hit
-  template <CompositeSpacePoint Spt_t>
-  static SeedParameters constructTangentLine(const Spt_t& topHit,
-                                             const Spt_t& bottomHit,
-                                             const TangentAmbi ambi);
+  template <CompositeSpacePoint Sp_t>
+  static TwoCirclePars constructTangentLine(const Sp_t& topHit,
+                                            const Sp_t& bottomHit,
+                                            const TangentAmbi ambi);
 
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointSorter<Cont_t> Splitter_t,
@@ -219,17 +249,6 @@ class CompositeSpacePointLineSeeder {
       SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
       const;
 
-  /// @brief Class constructor
-  /// @param cfg Reference to the seeder configuration object
-  /// @param logger Logger object used for debug print out
-  explicit CompositeSpacePointLineSeeder(
-      const Config& cfg,
-      std::unique_ptr<const Logger> logger = getDefaultLogger(
-          "CompositeSpacePointLineSeeder", Logging::Level::INFO));
-
-  /// @brief Reference to the logger object
-  const Logger& logger() const { return *m_logger; }
-
   /// @brief Creates the direction vector from the reference hit used to
   ///        construct the tangent seed and the result on theta
   /// @param refHit: Reference hit to define the local axes (Bottom hit)
@@ -238,9 +257,8 @@ class CompositeSpacePointLineSeeder {
   static Vector makeDirection(const Spt_t& refHit, const double tanAngle);
 
  private:
-  static constexpr std::array<std::array<int, 2>, 4> s_signCombo{
-      std::array{1, 1}, std::array{1, -1}, std::array{-1, 1},
-      std::array{-1, -1}};
+  /// @brief Reference to the logger object
+  const Logger& logger() const { return *m_logger; }
 
   template <CompositeSpacePointContainer UnCalibCont_t>
   bool moveToNextHit(const UnCalibCont_t& hitVec,
@@ -267,15 +285,27 @@ class CompositeSpacePointLineSeeder {
       SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
       const;
 
-  SeedParam_t constructLine(const double theta, const double y0,
-                            SeedParam_t patternParams) const;
-
-  /// @brief check if the seed line is valid within the configured cuts
-  bool isValidLine(const SeedParameters& seedSol) const;
-
+  /// @brief  Construct the final seed parameters by combining the initial
+  ///         pattern parameters with the parameter from two circle tangent
+  /// @param parTheta: Theta angle of the two circle tangent solution
+  /// @param parY0: Intercept of the two circle tangent solution
+  /// @param patternParams: Parameter estimate from the hit pattern
+  SeedParam_t constructLine(const double parTheta, const double parY0,
+                            const SeedParam_t& patternParams) const;
+  /// @brief Check whether the generated seed parameters are within the ranges defined by the used
+  /// @param tangentPars: Reference to the seed parameters to check
+  bool isValidLine(const TwoCircleTangentPars& tangentPars) const;
+  /// @brief Configuration object
   Config m_cfg{};
   /// @brief Logger instance
   std::unique_ptr<const Logger> m_logger{};
+  /// @brief Array encoding the four possible left right solutions.
+  ///        The first (second) index encodes the ambiguity of the
+  ///        bottom (top) straw measurement. The order of the index
+  ///        pairs is coupled to the TangentAmbi index
+  static constexpr std::array<std::array<int, 2>, 4> s_signCombo{
+      std::array{1, 1}, std::array{1, -1}, std::array{-1, 1},
+      std::array{-1, -1}};
 };
 }  // namespace Acts::Experimental
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.ipp"

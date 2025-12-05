@@ -11,63 +11,98 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-using namespace Acts::Experimental;
-
 using Seeder = CompositeSpacePointLineSeeder;
 using namespace Acts::UnitLiterals;
 
-Seeder::CompositeSpacePointLineSeeder(const Config& cfg,
-                                      std::unique_ptr<const Logger> logger)
+#include <format>
+namespace {
+constexpr double inDeg(const double rad) {
+  return rad / 1._degree;
+}
+}  // namespace
+
+namespace Acts::Experimental {
+
+using SeedParam_t = CompositeSpacePointLineSeeder::SeedParam_t;
+using TangentAmbi = CompositeSpacePointLineSeeder::TangentAmbi;
+
+CompositeSpacePointLineSeeder::CompositeSpacePointLineSeeder(
+    const Config& cfg, std::unique_ptr<const Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-CompositeSpacePointLineSeeder::SeedParam_t Seeder::constructLine(
-    const double theta, const double y0, SeedParam_t patternParams) const {
-  SeedParam_t lineParams{};
-  lineParams[toUnderlying(Line_t::ParIndex::y0)] = y0;
-  lineParams[toUnderlying(Line_t::ParIndex::x0)] =
-      patternParams[toUnderlying(Line_t::ParIndex::x0)];
-  Vector3 patternDir{makeDirectionFromPhiTheta(
-      patternParams[toUnderlying(Line_t::ParIndex::phi)],
-      patternParams[toUnderlying(Line_t::ParIndex::theta)])};
+TangentAmbi CompositeSpacePointLineSeeder::encodeAmbiguity(
+    const int signTop, const int signBottom) {
+  assert(Acts::abs(signTop) == 1 && Acts::abs(signBottom) == 1);
+  using enum TangentAmbi;
+  if (signTop == 1 && signBottom == 1) {
+    return RR;
+  } else if (signTop == 1 && signBottom == -1) {
+    return RL;
+  } else if (signTop == -1 && signBottom == 1) {
+    return LR;
+  }
+  return LL;
+}
+
+std::string CompositeSpacePointLineSeeder::toString(const TangentAmbi ambi) {
+  switch (ambi) {
+    using enum TangentAmbi;
+    case RR:
+      return "Right - Right";
+    case RL:
+      return "Right - Left";
+    case LR:
+      return "Left - Right";
+    case LL:
+      return "Left - Left";
+  }
+  return "Undefined";
+}
+
+SeedParam_t Seeder::constructLine(const double parTheta, const double parY0,
+                                  SeedParam_t patternParams) const {
+  SeedParam_t result{patternParams};
+  using enum ParIdx;
+  result[toUnderlying(y0)] = parY0;
+  const Vector3 patternDir{makeDirectionFromPhiTheta(
+      result[toUnderlying(phi)], result[toUnderlying(theta)])};
 
   double patternTanAlpha = patternDir.x() / patternDir.z();
-  if (patternTanAlpha > std::numeric_limits<double>::epsilon()) {
-    const Vector3 dir =
-        makeDirectionFromAxisTangents(patternTanAlpha, tan(theta));
-    lineParams[toUnderlying(Line_t::ParIndex::phi)] =
-        Acts::VectorHelpers::phi(dir);
-    lineParams[toUnderlying(Line_t::ParIndex::theta)] =
-        Acts::VectorHelpers::theta(dir);
-  } else {
-    lineParams[toUnderlying(Line_t::ParIndex::phi)] = 90._degree;
-    lineParams[toUnderlying(Line_t::ParIndex::theta)] = theta;
-  }
+  const Vector3 dir =
+      makeDirectionFromAxisTangents(patternTanAlpha, std::tan(parTheta));
+  lineParams[toUnderlying(phi)] = VectorHelpers::phi(dir);
+  lineParams[toUnderlying(theta)] = VectorHelpers::theta(dir);
   return lineParams;
 }
 
-std::ostream& CompositeSpacePointLineSeeder::SeedParameters::print(
-    std::ostream& os) const {
-  os << "SeedSolution: theta = " << theta / UnitConstants::degree
-     << " deg, y0 = " << y0 << " +/- " << dY0
-     << ", dTheta = " << dTheta / UnitConstants::mrad
-     << " mrad, nStrawHits = " << nStrawHits;
-  return os;
+void CompositeSpacePointLineSeeder::TwoCircleTangentPars::print(
+    std::ostream& ostr) const {
+  ostr << std::format("theta: {:.3f} pm {:.3f}", inDeg(theta), inDeg(dTheta));
+  ostr << std::format(", y_{{0}}: {:.2f} : pm {:.2f}", y0, dY0);
 }
-
 bool CompositeSpacePointLineSeeder::isValidLine(
-    const SeedParameters& seedSol) const {
-  if (m_cfg.noCutsOnSeedParams) {
-    return true;
-  }
-  if (seedSol.theta < m_cfg.thetaRange[0] ||
-      seedSol.theta > m_cfg.thetaRange[1]) {
-    ACTS_DEBUG("rejecting theta " << seedSol.theta);
+    const TwoCircleTangentPars& tangentPars) const {
+  if (m_cfg.thetaRange[0] < m_cfg.thetaRange[1] &&
+      (seedSol.theta < m_cfg.thetaRange[0] ||
+       tangentPars.theta > m_cfg.thetaRange[1])) {
+    ACTS_VERBOSE(__func__ << "() " << __LINE__
+                          << " - Theta parameter out of range: "
+                          << std::format("{:.3f} ,allowed: [{:.3f};{:.3f}].",
+                                         inDeg(tangentPars.theta),
+                                         inDeg(m_cfg.thetaRange[0]),
+                                         inDeg(m_cfg.thetaRange[1])));
     return false;
   }
-  if (seedSol.y0 < m_cfg.interceptRange[0] ||
-      seedSol.y0 > m_cfg.interceptRange[1]) {
-    ACTS_DEBUG("rejecting y0 " << seedSol.y0);
+  if (m_cfg.interceptRange[0] < m_cfg.interceptRange[1] &&
+      (seedSol.y0 < m_cfg.interceptRange[0] ||
+       seedSol.y0 > m_cfg.interceptRange[1])) {
+    ACTS_VERBOSE(__func__ << "() " << __LINE__
+                          << " - Interscept parameter out of range: "
+                          << std::format("{:.2f}, allowed: [{:.2f};{:.2f}].",
+                                         seedSol.y0, m_cfg.interceptRange[0],
+                                         m_cfg.interceptRange[1]));
     return false;
   }
   return true;
 }
+}  // namespace Acts::Experimental
