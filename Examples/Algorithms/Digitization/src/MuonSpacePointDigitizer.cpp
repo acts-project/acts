@@ -187,6 +187,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
     // otherwise clang on macos complains that it is unable to capture the local
     // binding in the lambda used for visiting the smearer below.
     Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
+    const auto& moduleSimHits = simHitsGroup.second;
+
     const Surface* hitSurf = trackingGeometry().findSurface(moduleGeoId);
     assert(hitSurf != nullptr);
 
