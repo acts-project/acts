@@ -90,33 +90,36 @@ class RootParticleReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  RootBranchPtr<std::vector<std::size_t>> m_particleHash;
-  RootBranchPtr<std::vector<std::int32_t>> m_particleType;
-  RootBranchPtr<std::vector<std::uint32_t>> m_process;
-  RootBranchPtr<std::vector<float>> m_vx;
-  RootBranchPtr<std::vector<float>> m_vy;
-  RootBranchPtr<std::vector<float>> m_vz;
-  RootBranchPtr<std::vector<float>> m_vt;
-  RootBranchPtr<std::vector<float>> m_px;
-  RootBranchPtr<std::vector<float>> m_py;
-  RootBranchPtr<std::vector<float>> m_pz;
-  RootBranchPtr<std::vector<float>> m_m;
-  RootBranchPtr<std::vector<float>> m_q;
-  RootBranchPtr<std::vector<float>> m_eta;
-  RootBranchPtr<std::vector<float>> m_phi;
-  RootBranchPtr<std::vector<float>> m_pt;
-  RootBranchPtr<std::vector<float>> m_p;
-  RootBranchPtr<std::vector<std::uint32_t>> m_vertexPrimary;
-  RootBranchPtr<std::vector<std::uint32_t>> m_vertexSecondary;
-  RootBranchPtr<std::vector<std::uint32_t>> m_particle;
-  RootBranchPtr<std::vector<std::uint32_t>> m_generation;
-  RootBranchPtr<std::vector<std::uint32_t>> m_subParticle;
+  template <typename T>
+  using BranchVector = RootBranchPtr<std::vector<T>>;
 
-  RootBranchPtr<std::vector<float>> m_eLoss;
-  RootBranchPtr<std::vector<float>> m_pathInX0;
-  RootBranchPtr<std::vector<float>> m_pathInL0;
-  RootBranchPtr<std::vector<std::int32_t>> m_numberOfHits;
-  RootBranchPtr<std::vector<std::uint32_t>> m_outcome;
+  BranchVector<std::size_t> m_particleHash;
+  BranchVector<std::int32_t> m_particleType;
+  BranchVector<std::uint32_t> m_process;
+  BranchVector<float> m_vx;
+  BranchVector<float> m_vy;
+  BranchVector<float> m_vz;
+  BranchVector<float> m_vt;
+  BranchVector<float> m_px;
+  BranchVector<float> m_py;
+  BranchVector<float> m_pz;
+  BranchVector<float> m_m;
+  BranchVector<float> m_q;
+  BranchVector<float> m_eta;
+  BranchVector<float> m_phi;
+  BranchVector<float> m_pt;
+  BranchVector<float> m_p;
+  BranchVector<std::uint32_t> m_vertexSecondary;
+  BranchVector<std::uint32_t> m_vertexPrimary;
+  BranchVector<std::uint32_t> m_particle;
+  BranchVector<std::uint32_t> m_generation;
+  BranchVector<std::uint32_t> m_subParticle;
+
+  BranchVector<float> m_eLoss;
+  BranchVector<float> m_pathInX0;
+  BranchVector<float> m_pathInL0;
+  BranchVector<std::int32_t> m_numberOfHits;
+  BranchVector<std::uint32_t> m_outcome;
 };
 
 }  // namespace ActsExamples
