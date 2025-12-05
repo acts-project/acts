@@ -127,8 +127,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
                                    &CLparticleLink_eventIndex.get());
     m_inputchain->SetBranchAddress("CLparticleLink_barcode",
                                    &CLparticleLink_barcode.get());
-    m_inputchain->SetBranchAddress("CLbarcodesLinked",
-                                   &CLbarcodesLinked.get());
+    m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked.get());
     m_inputchain->SetBranchAddress("CLparticle_charge",
                                    &CLparticle_charge.get());
   }

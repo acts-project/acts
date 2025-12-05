@@ -52,13 +52,11 @@ RootTrackSummaryReader::RootTrackSummaryReader(
   m_inputChain->SetBranchAddress("nHoles", &m_nHoles.get());
   m_inputChain->SetBranchAddress("chi2Sum", &m_chi2Sum.get());
   m_inputChain->SetBranchAddress("NDF", &m_NDF.get());
-  m_inputChain->SetBranchAddress("measurementChi2",
-                                 &m_measurementChi2.get());
+  m_inputChain->SetBranchAddress("measurementChi2", &m_measurementChi2.get());
   m_inputChain->SetBranchAddress("outlierChi2", &m_outlierChi2.get());
   m_inputChain->SetBranchAddress("measurementVolume",
                                  &m_measurementVolume.get());
-  m_inputChain->SetBranchAddress("measurementLayer",
-                                 &m_measurementLayer.get());
+  m_inputChain->SetBranchAddress("measurementLayer", &m_measurementLayer.get());
   m_inputChain->SetBranchAddress("outlierVolume", &m_outlierVolume.get());
   m_inputChain->SetBranchAddress("outlierLayer", &m_outlierLayer.get());
 
@@ -99,8 +97,7 @@ RootTrackSummaryReader::RootTrackSummaryReader(
   m_inputChain->SetBranchAddress("t_eta", &m_t_eta.get());
   m_inputChain->SetBranchAddress("t_pT", &m_t_pT.get());
 
-  m_inputChain->SetBranchAddress("hasFittedParams",
-                                 &m_hasFittedParams.get());
+  m_inputChain->SetBranchAddress("hasFittedParams", &m_hasFittedParams.get());
   m_inputChain->SetBranchAddress("eLOC0_fit", &m_eLOC0_fit.get());
   m_inputChain->SetBranchAddress("eLOC1_fit", &m_eLOC1_fit.get());
   m_inputChain->SetBranchAddress("ePHI_fit", &m_ePHI_fit.get());
@@ -220,8 +217,7 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
         };
         barcode = makeBarcode(comp(0), comp(1), comp(2), comp(3), comp(4));
       } else {
-        auto safeAt = [](const auto& branch,
-                         std::size_t idx) -> std::uint32_t {
+        auto safeAt = [](const auto& branch, std::size_t idx) -> std::uint32_t {
           const auto* vec = branch.get();
           return (vec != nullptr && vec->size() > idx) ? vec->at(idx) : 0u;
         };

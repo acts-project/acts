@@ -94,8 +94,7 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
                                    &m_outgoingParticlesSubParticle.get());
   }
   m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary.get());
-  m_inputChain->SetBranchAddress("vertex_secondary",
-                                 &m_vertexSecondary.get());
+  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary.get());
   m_inputChain->SetBranchAddress("generation", &m_generation.get());
 
   auto path = m_cfg.filePath;
@@ -171,8 +170,7 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
           (*m_incomingParticlesVertexSecondary)[i];
       const auto& incomingParticles = (*m_incomingParticlesParticle)[i];
       const auto& incomingGenerations = (*m_incomingParticlesGeneration)[i];
-      const auto& incomingSubParticles =
-          (*m_incomingParticlesSubParticle)[i];
+      const auto& incomingSubParticles = (*m_incomingParticlesSubParticle)[i];
       for (std::size_t j = 0; j < incomingPrimaries.size(); ++j) {
         v.incoming.insert(
             SimBarcode()
@@ -200,8 +198,7 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
           (*m_outgoingParticlesVertexSecondary)[i];
       const auto& outgoingParticles = (*m_outgoingParticlesParticle)[i];
       const auto& outgoingGenerations = (*m_outgoingParticlesGeneration)[i];
-      const auto& outgoingSubParticles =
-          (*m_outgoingParticlesSubParticle)[i];
+      const auto& outgoingSubParticles = (*m_outgoingParticlesSubParticle)[i];
       for (std::size_t j = 0; j < outgoingPrimaries.size(); ++j) {
         v.outgoing.insert(
             SimBarcode()

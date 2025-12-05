@@ -58,8 +58,7 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
   m_inputChain->SetBranchAddress("phi", &m_phi.get());
   m_inputChain->SetBranchAddress("pt", &m_pt.get());
   m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary.get());
-  m_inputChain->SetBranchAddress("vertex_secondary",
-                                 &m_vertexSecondary.get());
+  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary.get());
   m_inputChain->SetBranchAddress("particle", &m_particle.get());
   m_inputChain->SetBranchAddress("generation", &m_generation.get());
   m_inputChain->SetBranchAddress("sub_particle", &m_subParticle.get());
