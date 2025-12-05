@@ -71,17 +71,22 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
     const std::vector<DirectedProtoAxis>& axes, const Vector3& gp) {
   const Vector3& bPosition = gp;
   std::array<std::size_t, 3> bTriple = {0, 0, 0};
-  if (axes.size() > 0) {
+  if (!axes.empty())
+    throw std::runtime_error("No axes provided for binTripleFromProtoAxes");
+  if (axes.size() == 1) {
     BinningData bd0(axes[0]);
     bTriple[0] = bd0.searchGlobal(bPosition);
   }
-  if (axes.size() > 1) {
+  if (axes.size() == 2) {
     BinningData bd1(axes[1]);
     bTriple[1] = bd1.searchGlobal(bPosition);
   }
-  if (axes.size() > 2) {
+  if (axes.size() == 3) {
     BinningData bd2(axes[2]);
     bTriple[2] = bd2.searchGlobal(bPosition);
+  } else {
+    throw std::runtime_error(
+        "Unsupported number of axes for binTripleFromProtoAxes");
   }
   return bTriple;
 }
