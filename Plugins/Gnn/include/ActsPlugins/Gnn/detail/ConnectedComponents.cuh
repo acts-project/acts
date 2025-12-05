@@ -311,6 +311,7 @@ void findTrackCandidateBounds(TLabel *labels, TSpacepointId *spacepointIds,
   dim3 gridSize = (numSpacepoints + blockSize.x - 1) / blockSize.x;
   setBounds<<<gridSize, blockSize, 0, stream>>>(labels, bounds, numSpacepoints,
                                                 numLabels);
+  ACTS_CUDA_CHECK(cudaGetLastError());
 }
 
 }  // namespace ActsPlugins::detail
