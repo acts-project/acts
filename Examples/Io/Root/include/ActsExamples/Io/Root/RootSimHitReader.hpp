@@ -49,6 +49,9 @@ class RootSimHitReader : public IReader {
   /// @param config The Configuration struct
   RootSimHitReader(const Config &config, Acts::Logging::Level level);
 
+  /// Explicit destructor to enable forward declaration of TChain
+  ~RootSimHitReader() override;
+
   /// Framework name() method
   std::string name() const override { return "RootSimHitReader"; }
 
