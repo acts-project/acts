@@ -11,7 +11,6 @@ from acts.examples.reconstruction import addGnn, addSpacePointsMaking
 from acts.examples.gnn import (
     TorchMetricLearning,
     TorchEdgeClassifier,
-    OnnxEdgeClassifier,
     BoostTrackBuilding,
     NodeFeature,
 )
@@ -85,6 +84,7 @@ def runGnnMetricLearning(
             )
         )
     elif filterModelPath.suffix == ".onnx":
+        from acts.examples.gnn import OnnxEdgeClassifier 
         edgeClassifiers.append(OnnxEdgeClassifier(**filterConfig))
     else:
         raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
