@@ -346,15 +346,15 @@ class SpSorter {
       }
     }
   }
-  const std::vector<Container_t>& strawHits() { return m_straws; }
-  const std::vector<Container_t>& stripHits() { return m_strips; }
+  const std::vector<Container_t>& strawHits() const { return m_straws; }
+  const std::vector<Container_t>& stripHits() const { return m_strips; }
 
  private:
   std::vector<Container_t> m_straws{};
   std::vector<Container_t> m_strips{};
 };
 
-static_assert(CompositeSpacePointSorter<SpSorter, Container_t>);
+static_assert(detail::CompositeSpacePointSorter<SpSorter, Container_t>);
 
 /// @brief Generates a random straight line
 /// @param engine Random number sequence to draw the parameters from

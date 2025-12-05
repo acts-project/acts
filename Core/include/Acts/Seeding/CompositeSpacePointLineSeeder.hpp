@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/EventData/CompositeSpacePoint.hpp"
-#include "Acts/EventData/CompositeSpacePointSorter.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 namespace Acts::Experimental {
@@ -82,7 +82,7 @@ concept CompositeSpacePointSeedFiller =
 template <typename Splitter_t, typename SpacePointCont_t>
 concept CompositeSpacePointSorter =
     CompositeSpacePointContainer<SpacePointCont_t> &&
-    requires(Splitter_t sorter) {
+    requires(const Splitter_t& sorter) {
       /// @brief Return the straw-hit space point sorted by straw layer
       {
         sorter.strawHits()
@@ -102,6 +102,7 @@ concept CompSpacePointSeederDelegate =
     CompositeSpacePointSorter<SeedAuxiliary_t, UnCalibCont_t>;
 
 }  // namespace detail
+
 class CompositeSpacePointLineSeeder {
  public:
   /// @brief Configuration of the cuts to sort out generated
@@ -213,7 +214,7 @@ class CompositeSpacePointLineSeeder {
   ///        To avoid the copy of the memory, the hits are encoded as a
   ///        pair of indices representing the straw layer & hit number.
   template <CompositeSpacePointContainer UnCalibCont_t,
-            CompositeSpacePointSorter<UnCalibCont_t> Splitter_t>
+            detail::CompositeSpacePointSorter<UnCalibCont_t> Splitter_t>
   struct SeedSolution : public TwoCircleTangentPars {
     /// @brief Constructor taking the constructed tangential parameters &
     ///        the pointer to the splitter to associate the hits to the seed
@@ -242,7 +243,6 @@ class CompositeSpacePointLineSeeder {
     void append(const std::size_t layIdx, const std::size_t hitIdx);
     /// @brief Vector of the associate left-rignt ambiguities
     std::vector<int> solutionSigns{};
-
    private:
     /// @brief Pointer to the space point per layer splitter to gain access to the
     ///        input space point container
@@ -252,6 +252,7 @@ class CompositeSpacePointLineSeeder {
     ///        the second one the particular hit in that layer
     std::vector<std::pair<std::size_t, std::size_t>> m_seedHits{};
     /// @brief Prints the seed solution to the screen
+    /// @param ostr: Mutable reference to the stream to print to
     void print(std::ostream& ostr) const override final;
   };
 
@@ -263,7 +264,7 @@ class CompositeSpacePointLineSeeder {
     ///        a new hit container
     /// @param _pars:
     /// @param _hits
-    explicit contType_t(SeedParam_t&& _pars, contType_t&& _hits) noexcept
+    explicit SegmentSeed(SeedParam_t&& _pars, contType_t&& _hits) noexcept
         : parameters{std::move(_pars)}, hits{std::move(_hits)} {}
     /// @brief Seed line parameters
     SeedParam_t parameters;
@@ -273,13 +274,11 @@ class CompositeSpacePointLineSeeder {
 
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
-            CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t> Delegate_t>
-
+            detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
+                Delegate_t>
   struct SeedOptions {
     /// @brief Splitter holding the straw and strip hits
     std::unique_ptr<Delegate_t> delegate{};
-
-    /// AbortSelector_t abortSelector{};
     /// @brief Experiment specific calibration context
     CalibrationContext calibContext{};
     /// @brief radius of the straw tubes used to reject hits outside the tube
@@ -289,9 +288,7 @@ class CompositeSpacePointLineSeeder {
     /// @brief Estimated parameters from pattern
     SeedParam_t patternParams{};
     /// @brief Number of generated seeds
-    std::size_t nGenSeeds{0};
-    std::size_t nStrawCut{0};
-
+    std::size_t nStrawCut{0ul};
     /// @brief Stringstream output operator
     friend std::ostream& operator<<(std::ostream& ostr,
                                     const SeedOptions& opts) {
@@ -299,15 +296,19 @@ class CompositeSpacePointLineSeeder {
       return ostr;
     }
 
+    std::size_t nGenSeeds() const;
+
+    friend CompositeSpacePointLineSeeder;
+
    private:
     /// @brief Prints the seed solution to the screen
     void print(std::ostream& ostr) const;
-    /// @brief
+    /// @brief List of straw measurement already constructed straw measurement seeds
     std::vector<SeedSolution<UncalibCont_t, Delegate_t>> m_seenSolutions{};
     /// @brief  @brief Index of the upper layer under consideration for the seeding
-    std::size_t m_upperLayer{0ul};
+    std::optional<std::size_t> m_upperLayer{std::nullopt};
     /// @brief Index of the lower layer under consideration for the seeding
-    std::size_t m_lowerLayer{0ul};
+    std::optional<std::size_t> m_lowerLayer{std::nullopt};
     /// @brief  Index of the hit in the lower layer under consideration for the seeding
     std::size_t m_lowerHitIndex{0ul};
     /// @brief  Index of the hit in the upper layer under consideration for the seeding
@@ -336,15 +337,48 @@ class CompositeSpacePointLineSeeder {
  private:
   /// @brief Reference to the logger object
   const Logger& logger() const { return *m_logger; }
-#ifdef STONJEK
+  /// @brief Abrivation of the selector delegate to skip invalid straw hits in the seed
+  template <CompositeSpacePointContainer Cont_t>
+  using Selector_t = Delegate<bool(ConstDeRef_t<typename Cont_t::value_type>)>;
+  /// @brief
+  template <CompositeSpacePointContainer Cont_t>
+  using StrawLayers_t = std::vector<Cont_t>;
+  /// @brief Moves to the hit index to the next good hit inside the layer.
+  ///        The index is incremented until the underlying hit is accepted
+  ///        by the selector or all hits in the container were tried
+  /// @param hitVec: Reference to  the straw hits inside the layer
+  /// @param selector: Delegate method to skip bad bad hits
+  /// @param hitIdx: Mutable reference to the index that incremented
   template <CompositeSpacePointContainer UnCalibCont_t>
   bool moveToNextHit(const UnCalibCont_t& hitVec,
-                     const Selector_t<SpacePoint_t<UnCalibCont_t>>& selector,
+                     const Selector_t<UnCalibCont_t>& selector,
                      std::size_t& hitIdx) const;
+  /// @brief Sets the parsed index to the first good hit inside the straw layer.
+  /// @param hitVec: Reference to  the straw hits inside the layer
+  /// @param selector: Delegate method to skip bad bad hits
+  /// @param hitIdx: Mutable reference to the index that incremented
   template <CompositeSpacePointContainer UnCalibCont_t>
   bool firstGoodHit(const UnCalibCont_t& hitVec,
-                    const Selector_t<SpacePoint_t<UnCalibCont_t>>& selector,
+                    const Selector_t<UnCalibCont_t>& selector,
                     std::size_t& hitIdx) const;
+  /// @brief Move the layer index towards the possible value or,if the 
+  ///        layer index is not yet initializes the lyaer index to 
+  //         the next possible value.
+  /// @param strawLayers: List of all straw hits split into the particular layers
+  /// @param selector: Delegate method to skip bad hits
+  /// @param boundary: Boundary value that the layer index must not cross
+  /// @param layerIndex: Mutable reference to the layer index that needs to be moved
+  /// @param hitIdx: Mutable reference to the associated hit index inside the layer
+  /// @param moveForward: Flag toggling whether the layer index shall be incremented or 
+  ///                     decremented.
+  template <CompositeSpacePointContainer UnCalibCont_t>
+  bool nextLayer(const StrawLayers_t<UnCalibCont_t>& strawLayers,
+                 const Selector_t<UnCalibCont_t>& selector,
+                 const std::size_t boundary,
+                 std::optional<std::size_t>& layerIndex, std::size_t& hitIdx,
+                 bool moveForward) const;
+#ifdef STONJEK
+
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointSorter<Cont_t> Splitter_t,
             CompositeSpacePointContainer CalibCont_t,

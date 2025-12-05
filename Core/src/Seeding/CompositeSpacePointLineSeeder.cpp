@@ -9,6 +9,7 @@
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <format>
