@@ -18,7 +18,7 @@
 #include <ActsExamples/EventData/Cluster.hpp>
 #include <ActsExamples/EventData/SimParticle.hpp>
 #include <ActsExamples/EventData/Track.hpp>
-#include "ActsExamples/Io/Root/detail/RootBranchPtr.hpp"
+#include <ActsPlugins/Root/detail/RootBranchPtr.hpp>
 
 #include <map>
 #include <memory>

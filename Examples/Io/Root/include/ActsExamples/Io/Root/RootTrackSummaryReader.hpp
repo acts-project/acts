@@ -16,7 +16,7 @@
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
-#include "ActsExamples/Io/Root/detail/RootBranchPtr.hpp"
+#include <ActsPlugins/Root/detail/RootBranchPtr.hpp>
 
 #include <cstddef>
 #include <cstdint>

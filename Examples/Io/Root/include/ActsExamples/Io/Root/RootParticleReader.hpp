@@ -12,10 +12,10 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Io/Root/detail/RootBranchPtr.hpp"
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
+#include <ActsPlugins/Root/detail/RootBranchPtr.hpp>
 
 #include <cstddef>
 #include <cstdint>
