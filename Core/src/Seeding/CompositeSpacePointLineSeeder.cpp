@@ -11,12 +11,13 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-using Seeder = CompositeSpacePointLineSeeder;
-using namespace Acts::UnitLiterals;
-
 #include <format>
+
 namespace {
+/// @brief Express an angle in degree
+/// @param rad: Angle in radians
 constexpr double inDeg(const double rad) {
+  using namespace Acts::UnitLiterals;
   return rad / 1._degree;
 }
 }  // namespace
@@ -35,12 +36,21 @@ TangentAmbi CompositeSpacePointLineSeeder::encodeAmbiguity(
   assert(Acts::abs(signTop) == 1 && Acts::abs(signBottom) == 1);
   using enum TangentAmbi;
   if (signTop == 1 && signBottom == 1) {
+    static_assert(s_signCombo[toUnderlying(RR)][0] == 1 &&
+                  s_signCombo[toUnderlying(RR)][1] == 1);
     return RR;
   } else if (signTop == 1 && signBottom == -1) {
+    static_assert(s_signCombo[toUnderlying(RL)][0] == 1 &&
+                  s_signCombo[toUnderlying(RL)][1] == -1);
+
     return RL;
   } else if (signTop == -1 && signBottom == 1) {
+    static_assert(s_signCombo[toUnderlying(LR)][0] == -1 &&
+                  s_signCombo[toUnderlying(LR)][1] == 1);
     return LR;
   }
+  static_assert(s_signCombo[toUnderlying(LL)][0] == -1 &&
+                s_signCombo[toUnderlying(LL)][1] == -1);
   return LL;
 }
 
@@ -59,8 +69,9 @@ std::string CompositeSpacePointLineSeeder::toString(const TangentAmbi ambi) {
   return "Undefined";
 }
 
-SeedParam_t Seeder::constructLine(const double parTheta, const double parY0,
-                                  SeedParam_t patternParams) const {
+SeedParam_t CompositeSpacePointLineSeeder::constructLine(
+    const double parTheta, const double parY0,
+    const SeedParam_t& patternParams) const {
   SeedParam_t result{patternParams};
   using enum ParIdx;
   result[toUnderlying(y0)] = parY0;
@@ -70,20 +81,22 @@ SeedParam_t Seeder::constructLine(const double parTheta, const double parY0,
   double patternTanAlpha = patternDir.x() / patternDir.z();
   const Vector3 dir =
       makeDirectionFromAxisTangents(patternTanAlpha, std::tan(parTheta));
-  lineParams[toUnderlying(phi)] = VectorHelpers::phi(dir);
-  lineParams[toUnderlying(theta)] = VectorHelpers::theta(dir);
-  return lineParams;
+  result[toUnderlying(phi)] = VectorHelpers::phi(dir);
+  result[toUnderlying(theta)] = VectorHelpers::theta(dir);
+  return result;
 }
 
 void CompositeSpacePointLineSeeder::TwoCircleTangentPars::print(
     std::ostream& ostr) const {
-  ostr << std::format("theta: {:.3f} pm {:.3f}", inDeg(theta), inDeg(dTheta));
-  ostr << std::format(", y_{{0}}: {:.2f} : pm {:.2f}", y0, dY0);
+  ostr << toString(ambi);
+  ostr << ", "
+       << std::format("theta: {:.3f} pm {:.3f}", inDeg(theta), inDeg(dTheta));
+  ostr << ", " << std::format("y_{{0}}: {:.2f} : pm {:.2f}", y0, dY0);
 }
 bool CompositeSpacePointLineSeeder::isValidLine(
     const TwoCircleTangentPars& tangentPars) const {
   if (m_cfg.thetaRange[0] < m_cfg.thetaRange[1] &&
-      (seedSol.theta < m_cfg.thetaRange[0] ||
+      (tangentPars.theta < m_cfg.thetaRange[0] ||
        tangentPars.theta > m_cfg.thetaRange[1])) {
     ACTS_VERBOSE(__func__ << "() " << __LINE__
                           << " - Theta parameter out of range: "
@@ -94,12 +107,13 @@ bool CompositeSpacePointLineSeeder::isValidLine(
     return false;
   }
   if (m_cfg.interceptRange[0] < m_cfg.interceptRange[1] &&
-      (seedSol.y0 < m_cfg.interceptRange[0] ||
-       seedSol.y0 > m_cfg.interceptRange[1])) {
+      (tangentPars.y0 < m_cfg.interceptRange[0] ||
+       tangentPars.y0 > m_cfg.interceptRange[1])) {
     ACTS_VERBOSE(__func__ << "() " << __LINE__
                           << " - Interscept parameter out of range: "
                           << std::format("{:.2f}, allowed: [{:.2f};{:.2f}].",
-                                         seedSol.y0, m_cfg.interceptRange[0],
+                                         tangentPars.y0,
+                                         m_cfg.interceptRange[0],
                                          m_cfg.interceptRange[1]));
     return false;
   }

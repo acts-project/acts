@@ -63,5 +63,5 @@ using RemovePointer_t = RemovePointer<T>::type;
 
 /// @brief Construct a const pointer dereference
 template <PointerConcept T>
-using ConstDeRef_t = std::add_const_t<RemovePointer_t<T>>&
+using ConstDeRef_t = std::add_const_t<RemovePointer_t<T>>&;
 }  // namespace Acts

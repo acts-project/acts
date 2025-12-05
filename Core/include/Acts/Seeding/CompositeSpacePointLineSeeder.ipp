@@ -12,8 +12,10 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
+#include <cassert>
 
 namespace Acts::Experimental {
 
@@ -25,7 +27,8 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Sp_t& topHit,
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
   using namespace Acts::UnitLiterals;
   using namespace Acts::detail;
-  SeedParameters result{};
+  TwoCircleTangentPars result{};
+  result.ambi = ambi;
   const auto& [signTop, signBot] = s_signCombo[toUnderlying(ambi)];
 
   const Vector& bottomPos{bottomHit.localPosition()};
@@ -74,15 +77,86 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Sp_t& topHit,
   return result;
 }
 
-template <CompositeSpacePoint SpacePoint_t>
+template <CompositeSpacePoint Sp_t>
 CompositeSpacePointLineSeeder::Vector
-CompositeSpacePointLineSeeder::makeDirection(const SpacePoint_t& refHit,
+CompositeSpacePointLineSeeder::makeDirection(const Sp_t& refHit,
                                              const double tanAngle) {
   const Vector& eY{refHit.toNextSensor()};
   const Vector& eZ{refHit.planeNormal()};
   const double cosTheta = std::cos(tanAngle);
   const double sinTheta = std::sin(tanAngle);
   return copySign<Vector, double>(sinTheta * eY + cosTheta * eZ, sinTheta);
+}
+
+/// ##########################################################################
+///                CompositeSpacePointLineSeeder::SeedSolution
+/// ##########################################################################
+template <CompositeSpacePointContainer UnCalibCont_t,
+          CompositeSpacePointSorter<UnCalibCont_t> Splitter_t>
+CompositeSpacePointLineSeeder::SeedSolution<UnCalibCont_t,
+                                            Splitter_t>::SpacePoint_t
+CompositeSpacePointLineSeeder::SeedSolution<UnCalibCont_t, Splitter_t>::getHit(
+    const std::size_t idx) const {
+  const auto& [layIdx, hitIdx] = m_seedHits.at(idx);
+  const UnCalibCont_t& strawLayer = m_splitter->strawHits().at(layIdx);
+  return *strawLayer.at(hitIdx);
+}
+template <CompositeSpacePointContainer UnCalibCont_t,
+          CompositeSpacePointSorter<UnCalibCont_t> Splitter_t>
+std::vector<int> CompositeSpacePointLineSeeder::SeedSolution<
+    UnCalibCont_t, Splitter_t>::leftRightAmbiguity(const Vector& seedPos,
+                                                   const Vector& seedDir)
+    const {
+  std::vector<int> result{};
+  result.reserve(size());
+  std::ranges::transform(
+      m_seedHits, std::back_inserter(result),
+      [&](const std::pair<std::size_t, std::size_t>& indices) {
+        const auto& [layIdx, hitIdx] = indices;
+        const UnCalibCont_t& strawLayer = m_splitter->strawHits().at(layIdx);
+        return detail::CompSpacePointAuxiliaries::strawSign(
+            seedPos, seedDir, *strawLayer.at(hitIdx));
+      });
+  return result;
+}
+template <CompositeSpacePointContainer UnCalibCont_t,
+          CompositeSpacePointSorter<UnCalibCont_t> Splitter_t>
+void CompositeSpacePointLineSeeder::SeedSolution<
+    UnCalibCont_t, Splitter_t>::append(const std::size_t layIdx,
+                                       const std::size_t hitIdx) {
+  assert(!rangeContainsValue(m_seedHits, std::make_pair(layIdx, hitIdx)));
+  m_seedHits.emplace_back(layIdx, hitIdx);
+}
+template <CompositeSpacePointContainer UnCalibCont_t,
+          CompositeSpacePointSorter<UnCalibCont_t> Splitter_t>
+void CompositeSpacePointLineSeeder::SeedSolution<
+    UnCalibCont_t, Splitter_t>::print(std::ostream& ostr) const {
+  TwoCircleTangentPars::print(ostr);
+  ostr << ", associated hits: " << size() << std::endl;
+  for (std::size_t h = 0; h < size(); ++h) {
+    ostr << "    **** " << h << ") " << toString(getHit(h)) << std::endl;
+  }
+}
+
+/// ##########################################################################
+///                CompositeSpacePointLineSeeder::SeedOptions
+/// ##########################################################################
+template <CompositeSpacePointContainer UncalibCont_t,
+          CompositeSpacePointContainer CalibCont_t,
+          CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t> Delegate_t>
+void CompositeSpacePointLineSeeder::SeedOptions<
+    UncalibCont_t, CalibCont_t, Delegate_t>::print(std::ostream& ostr) const {
+  ostr << "Seed options:\n";
+  ostr << "N strawLayers: " << splitter->strawHits().size()
+       << " N strip layers: " << splitter->stripHits().size() << "\n";
+  ostr << "upperLayer " << m_upperLayer << " lowerLayer " << m_lowerLayer
+       << " upperHitIndex " << m_upperHitIndex << " lower layer hit index "
+       << m_lowerHitIndex << " sign combo index "
+       << toString(encodeAmbiguity(s_signCombo[m_signComboIndex][0],
+                                   s_signCombo[m_signComboIndex][1]))
+       << "\n";
+  ostr << " start with pattern " << startWithPattern << " nGenSeeds "
+       << nGenSeeds << " nStrawCut " << nStrawCut << "\n";
 }
 
 #ifdef STONJEK
@@ -492,27 +566,6 @@ SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::buildSeed(
   }
 
   return finalSeedSol;
-}
-
-template <CompositeSpacePointContainer Cont_t,
-          CompositeSpacePointSorter<Cont_t> Splitter_t,
-          CompositeSpacePointContainer CalibCont_t,
-          CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
-std::ostream& CompositeSpacePointLineSeeder::SeedOptions<
-    Cont_t, Splitter_t, CalibCont_t, Calibrator_t>::print(std::ostream& ostr)
-    const {
-  ostr << "Seed options:\n";
-  ostr << "N strawLayers: " << splitter->strawHits().size()
-       << " N strip layers: " << splitter->stripHits().size() << "\n";
-  ostr << "upperLayer " << upperLayer << " lowerLayer " << lowerLayer
-       << " upperHitIndex " << upperHitIndex << " lower layer hit index "
-       << lowerHitIndex << " sign combo index "
-       << toString(encodeAmbiguity(s_signCombo[signComboIndex][0],
-                                   s_signCombo[signComboIndex][1]))
-       << "\n";
-  ostr << " start with pattern " << startWithPattern << " nGenSeeds "
-       << nGenSeeds << " nStrawCut " << nStrawCut << "\n";
-  return ostr;
 }
 
 #endif
