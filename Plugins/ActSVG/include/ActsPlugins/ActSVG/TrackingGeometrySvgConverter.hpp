@@ -87,7 +87,7 @@ struct Options {
 /// Convert into xy and zr projections only
 ///
 /// @param gctx the geometry context
-/// @param tVolume the tracking volume
+/// @param tGeometry the tracking volume
 /// @param cOptions the conversion options
 ///
 /// @note best performant if configured with options

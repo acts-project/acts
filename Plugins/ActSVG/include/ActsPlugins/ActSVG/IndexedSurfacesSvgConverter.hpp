@@ -50,7 +50,7 @@ struct Options {
 ///
 /// @note actual conversion implementation, bottom of unrolling loop
 ///
-/// @param gtcx is the geometry context of the conversion call
+/// @param gctx is the geometry context of the conversion call
 /// @param surfaces the container of surfaces
 /// @param indexGrid the indexGrid delegate
 /// @param cOptions the conversion options

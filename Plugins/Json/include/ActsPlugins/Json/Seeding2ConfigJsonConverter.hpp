@@ -36,7 +36,7 @@ void from_json(const nlohmann::json& j, SeedConfirmationRangeConfig& config);
 
 namespace Acts::Experimental {
 
-/// @defgroup json_plugin
+/// @ingroup json_plugin
 /// @{
 
 /// Convert DoubletSeedFinder::Config to JSON
