@@ -72,7 +72,8 @@ std::span<AtlasBetheHeitlerApprox::Component> AtlasBetheHeitlerApprox::mixture(
   };
 
   // Lambda which builds the components
-  const auto make_mixture = [&](const Data &data, double xx, bool transform) {
+  const auto make_mixture = [&](const Data &data, double xx,
+                                bool transform) -> std::span<Component> {
     // Value initialization should garanuee that all is initialized to zero
     double weight_sum = 0;
     for (std::size_t i = 0; i < data.size(); ++i) {
@@ -95,7 +96,7 @@ std::span<AtlasBetheHeitlerApprox::Component> AtlasBetheHeitlerApprox::mixture(
       mixture[i].weight /= weight_sum;
     }
 
-    return mixture;
+    return {mixture.data(), data.size()};
   };
 
   // Return no change
@@ -104,13 +105,13 @@ std::span<AtlasBetheHeitlerApprox::Component> AtlasBetheHeitlerApprox::mixture(
     mixture[0].mean = 1.0;  // p_initial = p_final
     mixture[0].var = 0.0;
 
-    return mixture;
+    return {mixture.data(), 1};
   }
 
   // Return single gaussian approximation
   if (xOverX0 < m_singleGaussianLimit) {
     BetheHeitlerApproxSingleCmp().mixture(xOverX0, mixture);
-    return mixture;
+    return {mixture.data(), 1};
   }
 
   // Return a component representation for lower x0
