@@ -90,7 +90,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGnn, gnn) {
 #endif
 
 #ifdef ACTS_GNN_WITH_CUDA
-  ACTS_PYTHON_DECLARE_GNN_STAGE(CudaTrackBuilding, TrackBuildingBase, mex,
+  ACTS_PYTHON_DECLARE_GNN_STAGE(CudaTrackBuilding, TrackBuildingBase, gnn,
                                 useOneBlockImplementation, doJunctionRemoval,
                                 minCandidateSize);
 #endif

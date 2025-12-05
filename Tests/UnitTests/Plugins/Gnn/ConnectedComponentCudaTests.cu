@@ -431,9 +431,9 @@ BOOST_AUTO_TEST_CASE(find_bounds) {
       cudaMallocAsync(&cudaBounds, numberLabels * sizeof(int), stream),
       cudaSuccess);
 
-  Acts::detail::findTrackCandidateBounds(cudaLabels, cudaSpacepointIDs,
-                                         cudaBounds, spids.size(), numberLabels,
-                                         stream);
+  ActsPlugins::detail::findTrackCandidateBounds(cudaLabels, cudaSpacepointIDs,
+                                                cudaBounds, spids.size(),
+                                                numberLabels, stream);
   BOOST_REQUIRE_EQUAL(cudaGetLastError(), cudaSuccess);
 
   // Copy bounds back to host
