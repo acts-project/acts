@@ -390,6 +390,24 @@ class AnyTrackState {
 
   using ContainerPointer = std::conditional_t<ReadOnly, const void*, void*>;
 
+  class ContainerView {
+   public:
+    ContainerView() = default;
+    ContainerView(const detail::TrackStateHandlerConstBase* handler,
+                  const void* container)
+        : m_handler(handler), m_container(container) {}
+
+    bool hasColumn(HashedString key) const {
+      assert(m_handler != nullptr && m_container != nullptr);
+      return m_handler->hasColumn(m_container, key);
+    }
+
+   private:
+    friend class AnyTrackState;
+    const detail::TrackStateHandlerConstBase* m_handler = nullptr;
+    const void* m_container = nullptr;
+  };
+
   AnyTrackState()
       : m_container(nullptr), m_index(kTrackIndexInvalid), m_handler(nullptr) {}
 
@@ -487,6 +505,11 @@ class AnyTrackState {
     requires(!ReadOnly)
   {
     return component<T>(hashStringDynamic(key));
+  }
+
+  ContainerView container() const {
+    assert(isValid());
+    return ContainerView{constHandler(), containerPtr()};
   }
 
   TrackIndexType previous() const {

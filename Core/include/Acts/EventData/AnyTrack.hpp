@@ -26,6 +26,8 @@ namespace Acts {
 
 class Surface;
 
+struct AnyTrackTrajectoryTag {};
+
 namespace detail {
 
 using ParametersMap = detail_tpc::ParametersMap;
@@ -464,6 +466,8 @@ class AnyTrack {
 
   /// Alias for the const version
   using ConstTrackHandle = AnyTrack<true>;
+  using ConstProxyType = AnyTrack<true>;
+  using Trajectory = AnyTrackTrajectoryTag;
 
   using ParametersMap = detail::ParametersMap;
   using ConstParametersMap = detail::ConstParametersMap;
@@ -474,6 +478,23 @@ class AnyTrack {
   using HandlerPointer =
       std::conditional_t<ReadOnly, const detail::TrackHandlerConstBase*,
                          const detail::TrackHandlerMutableBase*>;
+
+  class ContainerView {
+   public:
+    ContainerView() = default;
+    ContainerView(const detail::TrackHandlerConstBase* handler,
+                  const void* container)
+        : m_handler(handler), m_container(container) {}
+
+    bool hasColumn(HashedString key) const {
+      assert(m_handler != nullptr && m_container != nullptr);
+      return m_handler->hasColumn(m_container, key);
+    }
+
+   private:
+    const detail::TrackHandlerConstBase* m_handler = nullptr;
+    const void* m_container = nullptr;
+  };
 
   /// Default constructor creates an invalid track
   AnyTrack()
@@ -856,6 +877,11 @@ class AnyTrack {
     assert(isValid());
     std::any result = constHandler()->component(containerPtr(), m_index, key);
     return *std::any_cast<const T*>(result);
+  }
+
+  ContainerView container() const {
+    assert(isValid());
+    return ContainerView{constHandler(), containerPtr()};
   }
 
  private:
