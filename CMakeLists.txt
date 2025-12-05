@@ -436,7 +436,7 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         ${_acts_root_version}
         REQUIRED
         CONFIG
-        COMPONENTS Geom Graf Tree RIO
+        COMPONENTS Geom Graf Tree RIO Hist
     )
     check_root_compatibility()
 endif()

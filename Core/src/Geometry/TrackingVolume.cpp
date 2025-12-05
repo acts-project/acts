@@ -656,9 +656,9 @@ void TrackingVolume::setNavigationPolicy(
 }
 
 void TrackingVolume::initializeNavigationCandidates(
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
-  m_navigationDelegate(args, stream, logger);
+    const GeometryContext& gctx, const NavigationArguments& args,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
+  m_navigationDelegate(gctx, args, stream, logger);
 }
 
 namespace {
