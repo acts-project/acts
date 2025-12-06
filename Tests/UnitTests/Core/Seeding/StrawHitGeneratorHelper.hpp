@@ -5,12 +5,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 #pragma once
-
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -45,13 +44,15 @@ class FitTestSpacePoint {
   /// @param pos: Position of the wire
   /// @param driftR: Straw drift radius
   /// @param driftRUncert: Uncertainty on the drift radius uncertainty
+  /// @param layer: Layer index of the space point
   /// @param twinUncert: Uncertainty on the measurement along the straw
   FitTestSpacePoint(const Vector3& pos, const double driftR,
-                    const double driftRUncert,
+                    const double driftRUncert, uint layer = 0,
                     const std::optional<double> twinUncert = std::nullopt)
       : m_position{pos},
         m_driftR{driftR},
-        m_measLoc0{twinUncert != std::nullopt} {
+        m_measLoc0{twinUncert != std::nullopt},
+        m_layer{layer} {
     using enum ResidualIdx;
     m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
     m_covariance[toUnderlying(nonBending)] =
@@ -62,14 +63,17 @@ class FitTestSpacePoint {
   /// @param wire: Orientation of the wire
   /// @param driftR: Drift radius of the measurement
   /// @param driftRUncert: Associated uncertainty on the measurement
+  /// @param layer: Layer index of the space point
   /// @param twinUncert: Uncertainty on the measurement along the straw
   FitTestSpacePoint(const Vector3& pos, const Vector3& wire,
                     const double driftR, const double driftRUncert,
+                    uint layer = 0,
                     const std::optional<double> twinUncert = std::nullopt)
       : m_position{pos},
         m_sensorDir{wire},
         m_driftR{driftR},
-        m_measLoc0{twinUncert != std::nullopt} {
+        m_measLoc0{twinUncert != std::nullopt},
+        m_layer{layer} {
     using enum ResidualIdx;
     m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
     m_covariance[toUnderlying(nonBending)] =
@@ -82,14 +86,16 @@ class FitTestSpacePoint {
   /// @param toNext: Vector pointing to the next strip inside the plane
   /// @param uncertLoc0: Uncertainty of the measurement in the non bending direction
   /// @param uncertLoc1: Uncertainty of the measurement in the bending direction
+  /// @param layer: Layer index of the space point
   FitTestSpacePoint(const Vector3& stripPos, const Vector3& stripDir,
                     const Vector3& toNext, const double uncertLoc0,
-                    const double uncertLoc1)
+                    const double uncertLoc1, uint layer = 0)
       : m_position{stripPos},
         m_sensorDir{stripDir},
         m_toNextSen{toNext},
         m_measLoc0{uncertLoc0 > 0.},
-        m_measLoc1{uncertLoc1 > 0.} {
+        m_measLoc1{uncertLoc1 > 0.},
+        m_layer{layer} {
     using enum ResidualIdx;
     m_covariance[toUnderlying(nonBending)] = Acts::square(uncertLoc0);
     m_covariance[toUnderlying(bending)] = Acts::square(uncertLoc1);
@@ -97,12 +103,13 @@ class FitTestSpacePoint {
   /// @brief Constructor for strip measurements with time
   FitTestSpacePoint(const Vector3& stripPos, const Vector3& stripDir,
                     const Vector3& toNext, const double time,
-                    const std::array<double, 3>& cov)
+                    const std::array<double, 3>& cov, uint layer = 0)
       : m_position{stripPos},
         m_sensorDir{stripDir},
         m_toNextSen{toNext},
         m_time{time},
-        m_covariance{cov} {
+        m_covariance{cov},
+        m_layer{layer} {
     m_measLoc0 = m_covariance[toUnderlying(ResidualIdx::nonBending)] > 0.;
     m_measLoc1 = m_covariance[toUnderlying(ResidualIdx::bending)] > 0.;
   }
@@ -139,6 +146,8 @@ class FitTestSpacePoint {
   void updateStatus(const bool newStatus) { m_isGood = newStatus; }
   /// @brief Check if the measurement is valid after calibration
   bool isGood() const { return m_isGood; }
+  /// @brief Returns the layer index of the space point
+  uint layer() const { return m_layer; }
 
  private:
   Vector3 m_position{Vector3::Zero()};
@@ -151,6 +160,7 @@ class FitTestSpacePoint {
   bool m_measLoc0{false};
   bool m_measLoc1{false};
   bool m_isGood{true};
+  uint m_layer;  // layer index starting from 0
 };
 
 static_assert(CompositeSpacePoint<FitTestSpacePoint>);
@@ -288,10 +298,10 @@ class SpCalibrator {
   /// @param measurement: Measurement
   double closestApproachDist(const Vector3& trackPos, const Vector3& trackDir,
                              const FitTestSpacePoint& measurement) const {
-    const auto closeIsect =
+    const Vector3 closePointOnLine =
         lineIntersect(measurement.localPosition(),
-                      measurement.sensorDirection(), trackPos, trackDir);
-    const Vector3 closePointOnLine = closeIsect.position();
+                      measurement.sensorDirection(), trackPos, trackDir)
+            .position();
     return (m_localToGlobal * closePointOnLine).norm();
   }
   /// @brief Calibrate a set of straw measurements using the best known estimate on a straight line track
@@ -371,6 +381,34 @@ static_assert(
     CompositeSpacePointCalibrator<SpCalibrator, Container_t, Container_t>);
 static_assert(
     CompositeSpacePointFastCalibrator<SpCalibrator, FitTestSpacePoint>);
+
+/// @brief Split the composite space point container into straw and strip measurements
+class SpSorter {
+ public:
+  SpSorter(Container_t& hits) {
+    for (const auto& spPtr : hits) {
+      if (spPtr->isStraw()) {
+        while (spPtr->layer() >= m_straws.size()) {
+          m_straws.push_back(Container_t{});
+        }
+        m_straws[spPtr->layer()].push_back(spPtr);
+      } else {
+        while (spPtr->layer() >= m_strips.size()) {
+          m_strips.push_back(Container_t{});
+        }
+        m_strips[spPtr->layer()].push_back(spPtr);
+      }
+    }
+  }
+  const std::vector<Container_t>& strawHits() { return m_straws; }
+  const std::vector<Container_t>& stripHits() { return m_strips; }
+
+ private:
+  std::vector<Container_t> m_straws{};
+  std::vector<Container_t> m_strips{};
+};
+
+static_assert(CompositeSpacePointSorter<SpSorter, Container_t>);
 
 /// @brief Generates a random straight line
 /// @param engine Random number sequence to draw the parameters from
@@ -496,7 +534,7 @@ class MeasurementGenerator {
     /// tubes were actually hit
     if (genCfg.createStraws) {
       const SpCalibrator calibrator{genCfg.localToGlobal};
-      for (const auto& stag : tubePositions) {
+      for (const auto& [i_layer, stag] : enumerate(tubePositions)) {
         auto planeExtpLow =
             intersectPlane(line.position(), line.direction(), Vector3::UnitZ(),
                            stag.z() - tubeRadius);
@@ -544,7 +582,7 @@ class MeasurementGenerator {
 
           auto& sp =
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                  tube, smearedR, SpCalibrator::driftUncert(smearedR),
+                  tube, smearedR, SpCalibrator::driftUncert(smearedR), i_layer,
                   genCfg.twinStraw
                       ? std::make_optional<double>(genCfg.twinStrawReso)
                       : std::nullopt));
@@ -608,8 +646,8 @@ class MeasurementGenerator {
                                   discretize(extp.position(), sL, true) +
                                   plane * Vector3::UnitZ()};
             measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                extpPos, genCfg.stripDirLoc0.at(sL), genCfg.stripDirLoc1.at(sL),
-                stripCovLoc0, stripCovLoc1));
+                extpPos, genCfg.stripDirLoc0.at(0), genCfg.stripDirLoc1.at(0),
+                stripCovLoc0, stripCovLoc1, sL));
           } else {
             if (sL < genCfg.stripDirLoc0.size()) {
               const Vector3 extpPos{discretize(extp.position(), sL, false) +
@@ -617,7 +655,7 @@ class MeasurementGenerator {
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   extpPos, genCfg.stripDirLoc0.at(sL),
                   genCfg.stripDirLoc0.at(sL).cross(Vector3::UnitZ()),
-                  stripCovLoc0, 0.));
+                  stripCovLoc0, 0., sL));
               const auto& nM{*measurements.back()};
               ACTS_VERBOSE("spawn() - Created loc0 strip @"
                            << toString(nM.localPosition())
@@ -631,7 +669,7 @@ class MeasurementGenerator {
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   extpPos, genCfg.stripDirLoc1.at(sL),
                   genCfg.stripDirLoc1.at(sL).cross(Vector3::UnitZ()), 0.,
-                  stripCovLoc1));
+                  stripCovLoc1, sL));
               const auto& nM{*measurements.back()};
               ACTS_VERBOSE("spawn() - Created loc1 strip @"
                            << toString(nM.localPosition())
@@ -721,5 +759,10 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
 bool isGoodHit(const FitTestSpacePoint& sp) {
   return !sp.isStraw() || sp.isGood();
 };
+
+// Abort the seeding/fitting after half of the layers
+bool abortAfterHalfLayers(std::size_t layer) {
+  return layer >= 8;
+}
 
 }  // namespace ActsTests
