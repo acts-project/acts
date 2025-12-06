@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(DiamondVolumeBoundsCreation) {
   double halfY2 = 10.0;
   double halfZ = 2.0;
 
-  DiamondVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1,
-                                          halfY2, halfZ);
+  DiamondVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1, halfY2,
+                                    halfZ);
 
   // Test correct parameter return
   BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eHalfLengthX1),
@@ -41,10 +41,8 @@ BOOST_AUTO_TEST_CASE(DiamondVolumeBoundsCreation) {
                     halfX2);
   BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eHalfLengthX3),
                     halfX3);
-  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eLengthY1),
-                    halfY1);
-  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eLengthY2),
-                    halfY2);
+  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eLengthY1), halfY1);
+  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eLengthY2), halfY2);
   BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eHalfLengthZ),
                     halfZ);
 
@@ -74,8 +72,8 @@ BOOST_AUTO_TEST_CASE(DiamondVolumeBoundsInside) {
   double halfY2 = 10.0;
   double halfZ = 2.0;
 
-  DiamondVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1,
-                                          halfY2, halfZ);
+  DiamondVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1, halfY2,
+                                    halfZ);
 
   // Points inside
   BOOST_CHECK(polygonBounds.inside(Vector3::Zero(), 0.1));
@@ -102,8 +100,8 @@ BOOST_AUTO_TEST_CASE(DiamondBoundarySurfaces) {
   double halfY2 = 10.0;
   double halfZ = 2.0;
 
-  DiamondVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1,
-                                          halfY2, halfZ);
+  DiamondVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1, halfY2,
+                                    halfZ);
 
   Transform3 transform = Transform3::Identity();
 
