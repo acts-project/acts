@@ -125,9 +125,9 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Rotation of the surfaces around the y-axis
   const double rotationAngle = std::numbers::pi / 2.;
-  const Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  const Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   const Vector3 yPos(0., 1., 0.);
-  const Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  const Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
 
   // Construct builder
   CuboidVolumeBuilder cvb;

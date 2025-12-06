@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
       std::cout << "Test " << i + 1 << std::endl;
     }
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Construct random track parameters around origin
     BoundTrackParameters::ParametersVector paramVec;
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   // vertex after the update process
   for (unsigned int i = 0; i < nTests; ++i) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Construct random track parameters
     BoundTrackParameters::ParametersVector paramVec;

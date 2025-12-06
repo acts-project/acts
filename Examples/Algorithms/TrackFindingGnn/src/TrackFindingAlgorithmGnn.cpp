@@ -25,6 +25,10 @@
 
 #include "createFeatures.hpp"
 
+#ifdef ACTS_GNN_WITH_CUDA
+#include <cuda_runtime_api.h>
+#endif
+
 using namespace Acts;
 using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
@@ -87,6 +91,11 @@ ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
     throw std::invalid_argument(
         "Number of features mismatches number of scale parameters.");
   }
+
+// Reset error state to prevent failure due to previous runs
+#ifdef ACTS_GNN_WITH_CUDA
+  cudaGetLastError();
+#endif
 }
 
 /// Allow access to features with nice names

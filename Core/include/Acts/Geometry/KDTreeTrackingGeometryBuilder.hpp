@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/KDTree.hpp"
 #include "Acts/Utilities/Logger.hpp"

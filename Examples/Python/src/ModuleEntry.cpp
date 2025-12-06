@@ -39,27 +39,13 @@ void addGenerators(Context& ctx);
 void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
-void addTruthJet(Context& ctx);
 void addVertexing(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
 void addUtilities(Context& ctx);
 
-void addRootInput(Context& ctx);
-void addRootOutput(Context& ctx);
-
 // Plugins
 void addDigitization(Context& ctx);
-void addPythia8(Context& ctx);
-void addGeoModel(Context& ctx);
-void addJson(Context& ctx);
-void addHepMC3(Context& ctx);
-void addGnnTrackFinding(Context& ctx);
-void addSvg(Context& ctx);
 void addObj(Context& ctx);
-void addOnnx(Context& ctx);
-void addOnnxNeuralCalibrator(Context& ctx);
-void addTraccc(Context& ctx);
-void addHashing(Context& ctx);
 
 void addModuleEntry(Context& ctx) {
   addFramework(ctx);
@@ -75,26 +61,12 @@ void addModuleEntry(Context& ctx) {
   addTruthTracking(ctx);
   addTrackFitting(ctx);
   addTrackFinding(ctx);
-  addTruthJet(ctx);
   addVertexing(ctx);
   addAmbiguityResolution(ctx);
   addUtilities(ctx);
 
   addDigitization(ctx);
-  addPythia8(ctx);
-  addJson(ctx);
-  addGeoModel(ctx);
-  addHepMC3(ctx);
-  addGnnTrackFinding(ctx);
   addObj(ctx);
-  addSvg(ctx);
-  addOnnx(ctx);
-  addOnnxNeuralCalibrator(ctx);
-  addTraccc(ctx);
-  addHashing(ctx);
-
-  addRootInput(ctx);
-  addRootOutput(ctx);
 }
 
 }  // namespace ActsPython

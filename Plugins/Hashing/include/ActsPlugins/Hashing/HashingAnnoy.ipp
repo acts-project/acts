@@ -98,7 +98,7 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
       continue;
     }
 
-    double phi = atan2(y, x);
+    double phi = std::atan2(y, x);
 
     int binIndex = getBinIndex(z, phi);
     if (binIndex < 0 || static_cast<unsigned int>(binIndex) >= nBins) {

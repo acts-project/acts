@@ -129,7 +129,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
           std::abs(truthPhi - seedPhi) < std::numbers::pi_v<float>
               ? std::abs(truthPhi - seedPhi)
               : std::abs(truthPhi - seedPhi) - std::numbers::pi_v<float>;
-      truthDistance = sqrt(dPhi * dPhi + dEta * dEta);
+      truthDistance = std::sqrt(dPhi * dPhi + dEta * dEta);
       // If the seed is truth matched, check if it is the closest one for the
       // contributing particle
       if (goodSeed.contains(majorityParticleId)) {

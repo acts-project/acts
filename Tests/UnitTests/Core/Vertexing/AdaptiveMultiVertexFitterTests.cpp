@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   for (unsigned int iTrack = 0; iTrack < nTracksPerVtx * vtxPosVec.size();
        iTrack++) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Fill vector of track objects with simple covariance matrix
     Covariance covMat;
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   unsigned int nTracks = 4;
   for (unsigned int _ = 0; _ < nTracks; _++) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Track resolution
     double resD0 = resIPDist(gen);

@@ -304,5 +304,13 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   return {Surface::makeShared<PlaneSurface>(newTransform, newBounds),
           mergeShift < 0};
 }
+const std::shared_ptr<const PlanarBounds>& PlaneSurface::boundsPtr() const {
+  return m_bounds;
+}
+
+void PlaneSurface::assignSurfaceBounds(
+    std::shared_ptr<const PlanarBounds> newBounds) {
+  m_bounds = std::move(newBounds);
+}
 
 }  // namespace Acts

@@ -58,9 +58,9 @@ struct SurfaceHit {
   /// Pointer to the surface that was hit
   const Surface* surface = nullptr;
   /// Position where the surface was encountered
-  Vector3 position;
+  Vector3 position{};
   /// Direction of propagation when surface was encountered
-  Vector3 direction;
+  Vector3 direction{};
 };
 
 /// A Surface Collector struct

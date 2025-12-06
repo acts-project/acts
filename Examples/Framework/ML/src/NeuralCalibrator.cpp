@@ -14,6 +14,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/detail/EigenCompat.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
@@ -95,7 +96,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
   }
 
   NetworkBatchInput inputBatch(1, m_nInputs);
-  auto input = inputBatch(0, Eigen::all);
+  auto input = inputBatch(0, Acts::detail::EigenCompat::all);
 
   // TODO: Matrix size should be configurable perhaps?
   std::size_t matSize0 = 7u;

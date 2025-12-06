@@ -20,6 +20,7 @@ class CudaTrackBuilding final : public TrackBuildingBase {
   struct Config {
     bool useOneBlockImplementation = true;
     bool doJunctionRemoval = false;
+    std::size_t minCandidateSize = 3;
   };
 
   CudaTrackBuilding(const Config &cfg,

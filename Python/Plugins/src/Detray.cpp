@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Detector/Detector.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
-#include "ActsPlugins/Detray/DetrayConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -24,41 +22,10 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
-  using namespace Acts;
-  using namespace Acts::Experimental;
   using namespace ActsPlugins;
-  using namespace ActsPython;
 
   {
     py::class_<DetrayHostDetector, std::shared_ptr<DetrayHostDetector>>(
         detray, "detray_detector");
-  }
-
-  {
-    // This test function will convert an ACTS detector into a detray detector
-    // and write it to the corresponding json files.
-    //
-    // The memory resource and the detector are destroyed after the function
-    detray.def("writeToJson",
-               [](const GeometryContext& gctx, const Detector& detector) {
-                 auto memoryResource = vecmem::host_memory_resource();
-
-                 DetrayConverter::Options options;
-                 options.writeToJson = true;
-                 options.convertMaterial = false;
-                 options.convertSurfaceGrids = true;
-                 auto DetrayHostDetector = DetrayConverter().convert<>(
-                     gctx, detector, memoryResource, options);
-               });
-  }
-
-  {
-    auto converter = py::class_<DetrayConverter>(detray, "DetrayConverter");
-
-    auto options = py::class_<DetrayConverter::Options>(converter, "Options")
-                       .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(options, convertMaterial, convertSurfaceGrids,
-                       writeToJson);
   }
 }

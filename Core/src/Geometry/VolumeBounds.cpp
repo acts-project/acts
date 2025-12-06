@@ -34,6 +34,9 @@ std::ostream& Acts::operator<<(std::ostream& sl,
     case eTrapezoid:
       sl << "Trapezoid";
       break;
+    case eConvexPolygon:
+      sl << "ConvexPolygon";
+      break;
     case eOther:
       sl << "Other";
       break;

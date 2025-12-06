@@ -102,28 +102,6 @@ IntersectionMaterialAssigner::assignmentCandidates(
     }
   }
 
-  // Now deal with the volume intersections : detector volume
-  if (!m_cfg.detectorVolumes.empty()) {
-    for (auto& detectorVolume : m_cfg.detectorVolumes) {
-      // Collect the portals
-      auto portals = detectorVolume->portals();
-      std::vector<const Surface*> dSurfaces;
-      for (auto& portal : portals) {
-        dSurfaces.push_back(&(portal->surface()));
-      }
-      // Get the intersections
-      auto dIntersections =
-          forwardOrderedIntersections(gctx, position, direction, dSurfaces);
-      // Entry/exit exists in forward direction
-      if (dIntersections.size() == 2u) {
-        candidates.second.push_back(IAssignmentFinder::VolumeAssignment{
-            InteractionVolume(detectorVolume),
-            dIntersections[0u].intersection.position(),
-            dIntersections[1u].intersection.position()});
-      }
-    }
-  }
-
   ACTS_DEBUG("Found " << candidates.first.size() << " surface candidates and "
                       << candidates.second.size() << " volume candidates");
 

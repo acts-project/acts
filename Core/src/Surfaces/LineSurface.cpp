@@ -294,5 +294,12 @@ ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
 Vector3 LineSurface::lineDirection(const GeometryContext& gctx) const {
   return transform(gctx).linear().col(2);
 }
+const std::shared_ptr<const LineBounds>& LineSurface::boundsPtr() const {
+  return m_bounds;
+}
+void LineSurface::assignSurfaceBounds(
+    std::shared_ptr<const LineBounds> newBounds) {
+  m_bounds = std::move(newBounds);
+}
 
 }  // namespace Acts

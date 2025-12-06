@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <format>
@@ -170,7 +171,7 @@ int CompSpacePointAuxiliaries::strawSign(const Vector& pos, const Vector& dir,
   }
   const double dist = Acts::detail::LineHelper::signedDistance(
       pos, dir, strawSp.localPosition(), strawSp.sensorDirection());
-  return dist > 0. ? 1 : -1;
+  return copySign(1, dist);
 }
 template <CompositeSpacePointContainer StrawCont_t>
 std::vector<int> CompSpacePointAuxiliaries::strawSigns(

@@ -141,6 +141,11 @@ class ConeSurface : public RegularSurface {
   /// This method returns the ConeBounds by reference
   /// @return Reference to the cone bounds
   const ConeBounds& bounds() const final;
+  /// This method returns the shared_ptr to the ConeBounds
+  const std::shared_ptr<const ConeBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const ConeBounds> newBounds);
 
   /// Local to global transformation
   ///

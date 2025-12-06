@@ -354,7 +354,7 @@ def addSeeding(
     selectedParticles : str, "particles_selected"
         selected particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
-        the output folder for the Root output, None triggers no output
+        the output folder for ROOT output, None triggers no output
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     rnd : RandomNumbers, None
@@ -713,11 +713,11 @@ def addSpacePointsMaking(
         inputMeasurements="measurements",
         outputSpacePoints="spacepoints",
         trackingGeometry=trackingGeometry,
-        geometrySelection=acts.examples.readJsonGeometryList(
+        geometrySelection=acts.examples.json.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
         stripGeometrySelection=(
-            acts.examples.readJsonGeometryList(str(stripGeoSelectionConfigFile))
+            acts.examples.json.readJsonGeometryList(str(stripGeoSelectionConfigFile))
             if stripGeoSelectionConfigFile
             else []
         ),
@@ -1398,12 +1398,9 @@ def addGbtsSeeding(
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     ConnectorInputFileStr = str(ConnectorInputConfigFile)
-    seedFinderConfig = acts.SeedFinderGbtsConfig(
+    seedFinderConfig = acts.examples.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
-            sigmaScattering=seedFinderConfigArg.sigmaScattering,
-            minPt=seedFinderConfigArg.minPt,
-            ConnectorInputFile=ConnectorInputFileStr,
-            m_useClusterWidth=False,
+            minPt=seedFinderConfigArg.minPt, ConnectorInputFile=ConnectorInputFileStr
         ),
     )
     seedFinderOptions = acts.SeedFinderOptions(
@@ -1421,14 +1418,11 @@ def addGbtsSeeding(
 
     seedingAlg = acts.examples.GbtsSeedingAlgorithm(
         level=logLevel,
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         outputSeeds="seeds",
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile,
-        geometrySelection=acts.examples.readJsonGeometryList(
-            str(geoSelectionConfigFile)
-        ),
         trackingGeometry=trackingGeometry,
         fill_module_csv=False,
         inputClusters="clusters",
@@ -1455,7 +1449,7 @@ def addSeedPerformanceWriters(
         outputDirRoot.mkdir()
 
     sequence.addWriter(
-        acts.examples.RootTrackFinderPerformanceWriter(
+        acts.examples.root.RootTrackFinderPerformanceWriter(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=selectedParticles,
@@ -1467,7 +1461,7 @@ def addSeedPerformanceWriters(
     )
 
     sequence.addWriter(
-        acts.examples.RootTrackParameterWriter(
+        acts.examples.root.RootTrackParameterWriter(
             level=customLogLevel(),
             inputTrackParameters=outputTrackParameters,
             inputProtoTracks=prototracks,
@@ -1734,7 +1728,7 @@ def addCKFTracks(
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
-        the output folder for the Root output, None triggers no output
+        the output folder for ROOT output, None triggers no output
     trackSelectorConfig : TrackSelectorConfig(loc0, loc1, time, eta, absEta, pt, phi, minMeasurements)
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
@@ -1947,7 +1941,7 @@ def addTrackWriters(
             outputDirRoot.mkdir()
 
         if writeSummary:
-            trackSummaryWriter = acts.examples.RootTrackSummaryWriter(
+            trackSummaryWriter = acts.examples.root.RootTrackSummaryWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
@@ -1959,7 +1953,7 @@ def addTrackWriters(
             s.addWriter(trackSummaryWriter)
 
         if writeStates:
-            trackStatesWriter = acts.examples.RootTrackStatesWriter(
+            trackStatesWriter = acts.examples.root.RootTrackStatesWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
@@ -1972,8 +1966,8 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeFitterPerformance:
-            RootTrackFitterPerformanceWriter = (
-                acts.examples.RootTrackFitterPerformanceWriter(
+            trackFitterPerformanceWriter = (
+                acts.examples.root.RootTrackFitterPerformanceWriter(
                     level=customLogLevel(),
                     inputTracks=tracks,
                     inputParticles="particles_selected",
@@ -1981,10 +1975,10 @@ def addTrackWriters(
                     filePath=str(outputDirRoot / f"performance_fitting_{name}.root"),
                 )
             )
-            s.addWriter(RootTrackFitterPerformanceWriter)
+            s.addWriter(trackFitterPerformanceWriter)
 
         if writeFinderPerformance:
-            trackFinderPerfWriter = acts.examples.RootTrackFinderPerformanceWriter(
+            trackFinderPerfWriter = acts.examples.root.RootTrackFinderPerformanceWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="particles_selected",
@@ -2053,83 +2047,68 @@ GnnBackend = Enum("GnnBackend", "Torch Onnx")
 
 def addGnn(
     s: acts.examples.Sequencer,
-    trackingGeometry: acts.TrackingGeometry,
-    geometrySelection: Union[Path, str],
-    modelDir: Union[Path, str],
+    graphConstructor,
+    edgeClassifiers: list,
+    trackBuilder,
+    nodeFeatures: list,
+    featureScales: list,
+    inputSpacePoints: str = "spacepoints",
+    inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
-    backend: Optional[GnnBackend] = GnnBackend.Torch,
     logLevel: Optional[acts.logging.Level] = None,
-) -> None:
+) -> acts.examples.Sequencer:
+    """
+    Add GNN track finding with custom stage implementations.
+
+    This is a flexible low-level API that accepts pre-configured GNN stage components.
+    For examples of how to configure stages, see gnn_metric_learning.py and gnn_module_map.py.
+
+    Args:
+        s: Sequencer to add algorithms to
+        graphConstructor: Graph construction stage (TorchMetricLearning, ModuleMapCuda, etc.)
+        edgeClassifiers: List of edge classification stages (run sequentially)
+        trackBuilder: Track building stage (BoostTrackBuilding, CudaTrackBuilding, etc.)
+        nodeFeatures: List of node features to extract from spacepoints/clusters
+        featureScales: Scaling factors for each feature
+        trackingGeometry: Optional tracking geometry for creating spacepoints
+        geometrySelection: Optional geometry selection file for spacepoint creation
+        inputSpacePoints: Name of input spacepoint collection (default: "spacepoints")
+        inputClusters: Name of input cluster collection (default: "")
+        outputDirRoot: Optional output directory for performance ROOT files
+        logLevel: Logging level
+
+    Note:
+        The trackingGeometry parameter serves two distinct purposes depending on the workflow:
+        1. Spacepoint creation: When provided along with geometrySelection, creates spacepoints
+           from measurements using SpacePointMaker (typical for simulation workflows)
+        2. Module map usage: Some graph constructors (e.g., ModuleMapCuda) require
+           trackingGeometry to map module IDs even when using pre-existing spacepoints
+    """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Create space points
-    s.addAlgorithm(
-        acts.examples.SpacePointMaker(
-            level=customLogLevel(),
-            inputMeasurements="measurements",
-            outputSpacePoints="spacepoints",
-            trackingGeometry=trackingGeometry,
-            geometrySelection=acts.examples.readJsonGeometryList(
-                str(geometrySelection)
-            ),
+    # Validate that nodeFeatures and featureScales have matching lengths
+    if len(nodeFeatures) != len(featureScales):
+        raise ValueError(
+            f"nodeFeatures and featureScales must have the same length "
+            f"(got {len(nodeFeatures)} and {len(featureScales)})"
         )
-    )
 
-    metricLearningConfig = {
-        "level": customLogLevel(),
-        "embeddingDim": 8,
-        "rVal": 1.6,
-        "knnVal": 100,
-        "modelPath": str(modelDir / "embed.pt"),
-        "selectedFeatures": [0, 1, 2],
-    }
-
-    filterConfig = {
-        "level": customLogLevel(),
-        "cut": 0.01,
-    }
-
-    gnnConfig = {
-        "level": customLogLevel(),
-        "cut": 0.5,
-    }
-
-    if backend == GnnBackend.Torch:
-        filterConfig["modelPath"] = str(modelDir / "filter.pt")
-        filterConfig["selectedFeatures"] = [0, 1, 2]
-        gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
-        gnnConfig["undirected"] = True
-        gnnConfig["selectedFeatures"] = [0, 1, 2]
-
-        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
-        edgeClassifiers = [
-            acts.examples.TorchEdgeClassifier(**filterConfig),
-            acts.examples.TorchEdgeClassifier(**gnnConfig),
-        ]
-        trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
-    elif backend == GnnBackend.Onnx:
-        filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
-        gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
-
-        # There is currently no implementation of a Metric learning based fully on ONNX
-        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
-        edgeClassifiers = [
-            acts.examples.OnnxEdgeClassifier(**filterConfig),
-            acts.examples.OnnxEdgeClassifier(**gnnConfig),
-        ]
-        trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
-
-    findingAlg = acts.examples.TrackFindingAlgorithmGnn(
+    # GNN track finding algorithm
+    findingAlg = acts.examples.gnn.TrackFindingAlgorithmGnn(
         level=customLogLevel(),
-        inputSpacePoints="spacepoints",
+        inputSpacePoints=inputSpacePoints,
+        inputClusters=inputClusters,
         outputProtoTracks="gnn_prototracks",
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
         trackBuilder=trackBuilder,
+        nodeFeatures=nodeFeatures,
+        featureScales=featureScales,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
 
+    # Convert prototracks to tracks
     s.addAlgorithm(
         acts.examples.PrototracksToTracks(
             level=customLogLevel(),
@@ -2139,6 +2118,7 @@ def addGnn(
         )
     )
 
+    # Truth matching
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks="tracks",
@@ -2156,9 +2136,10 @@ def addGnn(
         "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
+    # Optional performance writer
     if outputDirRoot is not None:
         s.addWriter(
-            acts.examples.RootTrackFinderNTupleWriter(
+            acts.examples.root.RootTrackFinderNTupleWriter(
                 level=customLogLevel(),
                 inputTracks="tracks",
                 inputParticles="particles",
@@ -2423,7 +2404,7 @@ def addVertexFitting(
         addVertexFitting)
     field : magnetic field
     outputDirRoot : Path|str, path, None
-        the output folder for the Root output, None triggers no output
+        the output folder for ROOT output, None triggers no output
     outputDirCsv : Path|str, path, None
         the output folder for the CSV output, None triggers no output
     vertexFinder : VertexFinder, Truth
@@ -2447,9 +2428,9 @@ def addVertexFitting(
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
-        RootVertexNTupleWriter,
         CsvVertexWriter,
     )
+    from acts.examples.root import RootVertexNTupleWriter
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 

@@ -26,7 +26,6 @@ BOOST_AUTO_TEST_SUITE(EventDataSuite)
 BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
   using detail::Test::TestSourceLink;
 
-  TestSourceLink ts;
   Vector2 stddev(0.01, 0.1);
   SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
   TestSourceLink l1(eBoundLoc0, 0.1, cov(0, 0), GeometryIdentifier(0x999), 0);

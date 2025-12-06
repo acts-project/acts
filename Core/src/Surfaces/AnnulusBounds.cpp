@@ -214,7 +214,7 @@ bool AnnulusBounds::inside(const Vector2& lposition) const {
   // calculate R in MODULE SYSTEM to evaluate R-bounds
   // don't need R, can use R^2
   double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
-                  2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
+                  2 * m_shiftPC[0] * rLoc * std::cos(phiLoc - m_shiftPC[1]);
 
   if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
     return false;

@@ -34,7 +34,7 @@ namespace Acts {
 ///
 /// It resembles the method used in ATLAS for the track parameters estimated
 /// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
-/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
 ///
 /// @tparam spacepoint_iterator_t  The type of space point iterator
 ///
@@ -58,7 +58,7 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
 ///
 /// It resembles the method used in ATLAS for the track parameters estimated
 /// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
-/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
 ///
 /// @tparam spacepoint_iterator_t  The type of space point iterator
 ///
@@ -109,7 +109,7 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
 ///
 /// It resembles the method used in ATLAS for the track parameters estimated
 /// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
-/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
 ///
 /// @tparam spacepoint_iterator_t  The type of space point iterator
 ///

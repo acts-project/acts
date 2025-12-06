@@ -8,7 +8,6 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -79,32 +78,16 @@ void addPropagation(Context& ctx) {
       mex, "PropagatorInterface");
 
   // Eigen stepper based propagator
-  {
-    addPropagator<EigenStepper<>, Navigator>(prop, "Eigen");
-    addPropagator<EigenStepper<>, Experimental::DetectorNavigator>(
-        prop, "EigenDetector");
-  }
+  { addPropagator<EigenStepper<>, Navigator>(prop, "Eigen"); }
 
   // ATLAS stepper based propagator
-  {
-    addPropagator<AtlasStepper, Navigator>(prop, "Atlas");
-    addPropagator<AtlasStepper, Experimental::DetectorNavigator>(
-        prop, "AtlasDetector");
-  }
+  { addPropagator<AtlasStepper, Navigator>(prop, "Atlas"); }
 
   // Sympy stepper based propagator
-  {
-    addPropagator<SympyStepper, Navigator>(prop, "Sympy");
-    addPropagator<SympyStepper, Experimental::DetectorNavigator>(
-        prop, "SympyDetector");
-  }
+  { addPropagator<SympyStepper, Navigator>(prop, "Sympy"); }
 
   // Straight line stepper
-  {
-    addPropagator<StraightLineStepper, Navigator>(prop, "StraightLine");
-    addPropagator<StraightLineStepper, Experimental::DetectorNavigator>(
-        prop, "StraightLineDetector");
-  }
+  { addPropagator<StraightLineStepper, Navigator>(prop, "StraightLine"); }
 }
 
 }  // namespace ActsPython

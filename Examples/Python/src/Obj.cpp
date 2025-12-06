@@ -9,7 +9,6 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include <Acts/Definitions/Algebra.hpp>
-#include <Acts/Detector/DetectorVolume.hpp>
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Visualization/GeometryView3D.hpp>
@@ -47,39 +46,6 @@ void addObj(Context& ctx) {
               GeometryView3D view3D;
               ObjVisualization3D obj;
 
-              for (const auto& surface : surfaces) {
-                view3D.drawSurface(obj, *surface, viewContext,
-                                   Transform3::Identity(), viewConfig);
-              }
-              obj.write(fileName);
-            });
-    mex.def("writeVolumesObj",
-            [](const std::vector<std::shared_ptr<Experimental::DetectorVolume>>&
-                   Volumes,
-               const GeometryContext& viewContext, const ViewConfig& viewConfig,
-               const std::string& fileName) {
-              GeometryView3D view3D;
-              ObjVisualization3D obj;
-
-              for (const auto& volume : Volumes) {
-                view3D.drawDetectorVolume(obj, *volume, viewContext,
-                                          Transform3::Identity(), viewConfig);
-              }
-              obj.write(fileName);
-            });
-    mex.def("writeVolumesSurfacesObj",
-            [](const std::vector<std::shared_ptr<Surface>>& surfaces,
-               const std::vector<std::shared_ptr<Experimental::DetectorVolume>>&
-                   Volumes,
-               const GeometryContext& viewContext, const ViewConfig& viewConfig,
-               const std::string& fileName) {
-              GeometryView3D view3D;
-              ObjVisualization3D obj;
-
-              for (const auto& volume : Volumes) {
-                view3D.drawDetectorVolume(obj, *volume, viewContext,
-                                          Transform3::Identity(), viewConfig);
-              }
               for (const auto& surface : surfaces) {
                 view3D.drawSurface(obj, *surface, viewContext,
                                    Transform3::Identity(), viewConfig);

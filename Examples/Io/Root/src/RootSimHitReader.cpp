@@ -39,6 +39,12 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
 
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
+  // add file to the input chain
+  m_inputChain->Add(m_cfg.filePath.c_str());
+  m_inputChain->LoadTree(0);
+  ACTS_DEBUG("Adding File " << m_cfg.filePath << " to tree '" << m_cfg.treeName
+                            << "'.");
+
   // Set the branches
   auto setBranches = [&]<class T>(const auto& keys, T& columns) {
     using MappedType = typename std::remove_reference_t<T>::mapped_type;
@@ -56,10 +62,10 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   setBranches(m_uint64Keys, m_uint64Columns);
   setBranches(m_int32Keys, m_int32Columns);
 
-  if (m_inputChain->GetBranch("barcode") != nullptr) {
+  if (m_inputChain->FindBranch("barcode") != nullptr) {
     m_hasBarcodeVector = true;
-    m_barcodeVector = new std::vector<std::uint32_t>;
-    m_inputChain->SetBranchAddress("barcode", &m_barcodeVector);
+    m_barcodeVector.allocate();
+    m_inputChain->SetBranchAddress("barcode", &m_barcodeVector.get());
   } else {
     m_hasBarcodeVector = false;
     for (const auto* key : m_barcodeComponentKeys) {
@@ -69,12 +75,6 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
       m_inputChain->SetBranchAddress(key, &m_uint32Columns.at(key));
     }
   }
-
-  // add file to the input chain
-  m_inputChain->Add(m_cfg.filePath.c_str());
-  m_inputChain->LoadTree(0);
-  ACTS_DEBUG("Adding File " << m_cfg.filePath << " to tree '" << m_cfg.treeName
-                            << "'.");
 
   // Because each hit is stored in a single entry in the root file, we need to
   // scan the file first for the positions of the events in the file in order to
@@ -115,12 +115,6 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   m_inputChain->SetBranchStatus("*", true);
   ACTS_DEBUG("Event range: " << availableEvents().first << " - "
                              << availableEvents().second);
-}
-
-RootSimHitReader::~RootSimHitReader() {
-  if (m_barcodeVector != nullptr) {
-    delete m_barcodeVector;
-  }
 }
 
 std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
@@ -166,7 +160,7 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
 
     const Acts::GeometryIdentifier geoid{m_uint64Columns.at("geometry_id")};
     SimBarcode pid = SimBarcode::Invalid();
-    if (m_hasBarcodeVector && m_barcodeVector != nullptr) {
+    if (m_hasBarcodeVector && m_barcodeVector.hasValue()) {
       pid = SimBarcode().withData(*m_barcodeVector);
     } else {
       pid = SimBarcode()
@@ -217,5 +211,7 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
   // Return success flag
   return ProcessCode::SUCCESS;
 }
+
+RootSimHitReader::~RootSimHitReader() = default;
 
 }  // namespace ActsExamples

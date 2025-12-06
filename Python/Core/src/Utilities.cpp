@@ -11,6 +11,7 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 
 #include <type_traits>
 
@@ -232,6 +233,21 @@ void addUtilities(py::module_& m) {
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
         .def(py::init<AxisDirection, AxisBoundaryType, std::size_t>(),
              "bValue"_a, "bType"_a, "nbins"_a);
+  }
+
+  {
+    using RangeXDDim3 = RangeXD<3u, double>;
+
+    py::class_<RangeXDDim3>(m, "RangeXDDim3")
+        .def(py::init([](const std::array<double, 2u>& range0,
+                         const std::array<double, 2u>& range1,
+                         const std::array<double, 2u>& range2) {
+          RangeXDDim3 range;
+          range[0].shrink(range0[0], range0[1]);
+          range[1].shrink(range1[0], range1[1]);
+          range[2].shrink(range2[0], range2[1]);
+          return range;
+        }));
   }
 }
 

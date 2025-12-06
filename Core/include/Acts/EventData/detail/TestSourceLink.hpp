@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -41,8 +40,8 @@ struct TestSourceLink final {
   std::size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
-  Acts::Vector2 parameters;
-  Acts::ActsSquareMatrix<2> covariance;
+  Acts::Vector2 parameters{};
+  Acts::ActsSquareMatrix<2> covariance{};
 
   /// Construct a source link for a 1d measurement.
   TestSourceLink(BoundIndices idx, double val, double var,
@@ -100,19 +99,6 @@ struct TestSourceLinkSurfaceAccessor {
     return geometry.findSurface(testSourceLink.m_geometryId);
   }
 };
-
-namespace Experimental {
-
-struct TestSourceLinkSurfaceAccessor {
-  const Acts::Experimental::Detector& geometry;
-
-  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-    const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-    return geometry.findSurface(testSourceLink.m_geometryId);
-  }
-};
-
-}  // namespace Experimental
 
 inline std::ostream& operator<<(std::ostream& os,
                                 const TestSourceLink& sourceLink) {

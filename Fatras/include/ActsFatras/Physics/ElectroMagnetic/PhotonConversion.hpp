@@ -261,7 +261,7 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
   // Calculate the child momentum
   const double massChild = kElectronMass;
   const double momentum1 =
-      sqrt(childEnergy * childEnergy - massChild * massChild);
+      std::sqrt(childEnergy * childEnergy - massChild * massChild);
 
   // Use energy-momentum conservation for the other child
   const Acts::Vector3 vtmp =

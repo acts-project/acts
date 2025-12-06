@@ -132,9 +132,9 @@ class EigenStepper {
     /// @brief Storage of magnetic field and the sub steps during a RKN4 step
     struct {
       /// Magnetic field evaulations
-      Vector3 B_first, B_middle, B_last;
+      Vector3 B_first{}, B_middle{}, B_last{};
       /// k_i of the RKN4 algorithm
-      Vector3 k1, k2, k3, k4;
+      Vector3 k1{}, k2{}, k3{}, k4{};
       /// k_i elements of the momenta
       std::array<double, 4> kQoP{};
     } stepData;

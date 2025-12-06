@@ -103,13 +103,13 @@ std::vector<Surface*> CylindricalTrackingGeometry::surfacesCylinder(
     // The association transform
     double modulePhi = VectorHelpers::phi(mCenter);
     // Local z axis is the normal vector
-    Vector3 moduleLocalZ(cos(modulePhi + moduleTiltPhi),
-                         sin(modulePhi + moduleTiltPhi), 0.);
+    Vector3 moduleLocalZ(std::cos(modulePhi + moduleTiltPhi),
+                         std::sin(modulePhi + moduleTiltPhi), 0.);
     // Local y axis is the global z axis
     Vector3 moduleLocalY(0., 0., 1);
     // Local x axis the normal to local y,z
-    Vector3 moduleLocalX(-sin(modulePhi + moduleTiltPhi),
-                         cos(modulePhi + moduleTiltPhi), 0.);
+    Vector3 moduleLocalX(-std::sin(modulePhi + moduleTiltPhi),
+                         std::cos(modulePhi + moduleTiltPhi), 0.);
     // Create the RotationMatrix
     RotationMatrix3 moduleRotation;
     moduleRotation.col(0) = moduleLocalX;
@@ -152,8 +152,8 @@ std::vector<Vector3> CylindricalTrackingGeometry::modulePositionsCylinder(
          ++phiBin) {
       // calculate the current phi value
       double modulePhi = minPhi + phiBin * phiStep;
-      mPositions.push_back(
-          Vector3(moduleR * cos(modulePhi), moduleR * sin(modulePhi), moduleZ));
+      mPositions.push_back(Vector3(moduleR * std::cos(modulePhi),
+                                   moduleR * std::sin(modulePhi), moduleZ));
     }
   }
   return mPositions;

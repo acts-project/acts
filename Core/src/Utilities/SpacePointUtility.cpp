@@ -112,12 +112,14 @@ Vector2 SpacePointUtility::calcRhoZVars(
 
   // strip1 and strip2 are tilted at +/- theta/2
   double sigma = fastHypot(var1, var2);
-  double sigma_x = sigma / (2 * sin(theta * 0.5));
-  double sigma_y = sigma / (2 * cos(theta * 0.5));
+  double sigma_x = sigma / (2 * std::sin(theta * 0.5));
+  double sigma_y = sigma / (2 * std::cos(theta * 0.5));
 
   // projection to the surface with strip1.
-  double sig_x1 = sigma_x * cos(0.5 * theta) + sigma_y * sin(0.5 * theta);
-  double sig_y1 = sigma_y * cos(0.5 * theta) + sigma_x * sin(0.5 * theta);
+  double sig_x1 =
+      sigma_x * std::cos(0.5 * theta) + sigma_y * std::sin(0.5 * theta);
+  double sig_y1 =
+      sigma_y * std::cos(0.5 * theta) + sigma_x * std::sin(0.5 * theta);
   SquareMatrix2 lcov;
   lcov << sig_x1, 0, 0, sig_y1;
 

@@ -77,13 +77,13 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
         // create the association transform
         double modulePhi = phi(moduleCenter);
         // the local z axis is the normal vector
-        Acts::Vector3 moduleLocalZ(cos(modulePhi + modulePhiTilt),
-                                   sin(modulePhi + modulePhiTilt), 0.);
+        Acts::Vector3 moduleLocalZ(std::cos(modulePhi + modulePhiTilt),
+                                   std::sin(modulePhi + modulePhiTilt), 0.);
         // the local y axis is the global z axis
         Acts::Vector3 moduleLocalY(0., 0., 1);
         // the local x axis the normal to local y,z
-        Acts::Vector3 moduleLocalX(-sin(modulePhi + modulePhiTilt),
-                                   cos(modulePhi + modulePhiTilt), 0.);
+        Acts::Vector3 moduleLocalX(-std::sin(modulePhi + modulePhiTilt),
+                                   std::cos(modulePhi + modulePhiTilt), 0.);
         // create the RotationMatrix
         Acts::RotationMatrix3 moduleRotation;
         moduleRotation.col(0) = moduleLocalX;
@@ -233,7 +233,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
           Acts::Vector3 moduleCenter(ringModulePosition);
           moduleCenter.z() *= side;
           // the rotation matrix of the module
-          Acts::Vector3 moduleLocalY(cos(modulePhi), sin(modulePhi), 0.);
+          Acts::Vector3 moduleLocalY(std::cos(modulePhi), std::sin(modulePhi),
+                                     0.);
           // take different axis to have the same readout direction
           Acts::Vector3 moduleLocalZ(0., 0., side * 1.);
           Acts::Vector3 moduleLocalX = moduleLocalY.cross(moduleLocalZ);

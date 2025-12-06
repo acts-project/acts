@@ -171,8 +171,8 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
   detector_hist[1]->Divide(detector_hist[2]);
 }
 
-/// Plot the material as function of eta and phi for a given detector/sub-detector
-/// detectors : list of the ID of the volume constitutive of the detector/sub-detector
+/// Plot the material as function of eta and phi for a given Geometry/sub-detector
+/// detectors : list of the ID of the volume constitutive of the Geometry/sub-detector
 /// nbprocess : number of parameter to be processed.
 /// name : name of the output directory.
 

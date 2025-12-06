@@ -1,6 +1,6 @@
 # Geant4 plugin
 
-The Geant4 plugin allows to build {class}`Acts::TrackingGeometry` and {class}`Acts::Experimental::Detector` directly from Geant4 geometry input.
+The Geant4 plugin allows to build {class}`Acts::TrackingGeometry` directly from Geant4 geometry input.
 Both rely on the conversion of `G4VPhysicalVolume` into corresponding `Acts` objects.
 
 ## Object conversion

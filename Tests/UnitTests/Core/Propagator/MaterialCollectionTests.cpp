@@ -371,7 +371,7 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
 
   // define start parameters

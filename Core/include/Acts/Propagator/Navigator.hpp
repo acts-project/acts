@@ -796,8 +796,8 @@ class Navigator {
     NavigationArguments args;
     args.position = position;
     args.direction = direction;
-    state.currentVolume->initializeNavigationCandidates(args, appendOnly,
-                                                        logger());
+    state.currentVolume->initializeNavigationCandidates(
+        state.options.geoContext, args, appendOnly, logger());
 
     ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                                 << " navigation candidates.");

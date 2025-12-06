@@ -137,7 +137,7 @@ void addMaterial(py::module_& m) {
 
     auto c = py::class_<IntersectionMaterialAssigner::Config>(isma, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, surfaces, trackingVolumes, detectorVolumes);
+    ACTS_PYTHON_STRUCT(c, surfaces, trackingVolumes);
   }
 
   {

@@ -80,7 +80,6 @@ Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
 ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
                                      const Segment2D& segment) const {
   auto surfaceType = surface.type();
-  Segment2D clipped(segment);
 
   // Plane surface section -------------------
   if (surfaceType == Acts::Surface::Plane ||

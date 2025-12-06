@@ -8,21 +8,15 @@
 
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
 
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
 #include <cstddef>
-#include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
@@ -185,8 +179,8 @@ ActsExamples::RootTrackFitterPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
-    m_effPlotTool.fill(m_effPlotCache, particle.initialState(), minDeltaR,
-                       isReconstructed);
+    m_effPlotTool.fill(ctx.geoContext, m_effPlotCache, particle.initialState(),
+                       minDeltaR, isReconstructed);
   }
 
   return ProcessCode::SUCCESS;

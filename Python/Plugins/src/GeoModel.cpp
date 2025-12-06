@@ -13,13 +13,11 @@
 #include <GeoModelRead/ReadGeoModel.h>
 // clang-format on
 
-#include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "ActsPlugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElementITk.hpp"
@@ -150,8 +148,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
     auto convVol = py::class_<GeoModelDetectorObjectFactory::ConvertedGeoVol>(
         a, "ConvertedGeoVol");
 
-    ACTS_PYTHON_STRUCT(convVol, volume, gen2Volume, fullPhysVol, name,
-                       surfaces);
+    ACTS_PYTHON_STRUCT(convVol, volume, fullPhysVol, name, surfaces);
     py::class_<GeoModelDetectorObjectFactory::Cache>(a, "Cache")
         .def(py::init<>())
         .def_readwrite("sensitiveSurfaces",
@@ -163,53 +160,5 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
         .def(py::init<>())
         .def_readwrite("queries",
                        &GeoModelDetectorObjectFactory::Options::queries);
-  }
-
-  {
-    py::class_<GeoModelBlueprintCreater::Blueprint,
-               std::shared_ptr<GeoModelBlueprintCreater::Blueprint>>(
-        gm, "Blueprint")
-        .def("convertToBuilder", [](GeoModelBlueprintCreater::Blueprint& self,
-                                    Logging::Level level) {
-          // It's a container builder
-          return std::make_shared<Experimental::CylindricalContainerBuilder>(
-              self.node(), level);
-        });
-
-    auto bpc =
-        py::class_<GeoModelBlueprintCreater,
-                   std::shared_ptr<GeoModelBlueprintCreater>>(
-            gm, "GeoModelBlueprintCreater")
-            .def(py::init([](const GeoModelBlueprintCreater::Config& cfg,
-                             Logging::Level level) {
-              return std::make_shared<GeoModelBlueprintCreater>(
-                  cfg, getDefaultLogger("GeoModelBlueprintCreater", level));
-            }))
-            .def("create", &GeoModelBlueprintCreater::create);
-
-    py::class_<GeoModelBlueprintCreater::Config>(bpc, "Config")
-        .def(py::init<>())
-        .def_readwrite("detectorSurfaces",
-                       &GeoModelBlueprintCreater::Config::detectorSurfaces)
-        .def_readwrite("kdtBinning",
-                       &GeoModelBlueprintCreater::Config::kdtBinning);
-
-    py::class_<GeoModelBlueprintCreater::Options>(bpc, "Options")
-        .def(py::init<>())
-        .def_readwrite("topEntry", &GeoModelBlueprintCreater::Options::topEntry)
-        .def_readwrite("topBoundsOverride",
-                       &GeoModelBlueprintCreater::Options::topBoundsOverride)
-        .def_readwrite("table", &GeoModelBlueprintCreater::Options::table)
-        .def_readwrite("dotGraph", &GeoModelBlueprintCreater::Options::dotGraph)
-        .def_readwrite("projectedBinFilling",
-                       &GeoModelBlueprintCreater::Options::projectedBinFilling)
-        .def_readwrite("projectionDistance",
-                       &GeoModelBlueprintCreater::Options::projectionDistance)
-        .def_readwrite(
-            "projectionLuminousRegion",
-            &GeoModelBlueprintCreater::Options::projectionLuminousRegion)
-        .def_readwrite(
-            "minSurfacesForLayerStructure",
-            &GeoModelBlueprintCreater::Options::minSurfacesForLayerStructure);
   }
 }

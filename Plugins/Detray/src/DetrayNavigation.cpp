@@ -78,9 +78,14 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     return r.value();
   }();
 
-  const Surface& surface = *gridLookup->surfaceRepresentation();
+  const Surface* surface = gridLookup->surfaceRepresentation();
+  if (surface == nullptr) {
+    throw std::runtime_error(
+        "SurfaceArrayNavigationPolicy: The surface array does not provide a "
+        "surface representation. This is not currently convertible to detray");
+  }
 
-  const auto& transform = surface.transform(gctx);
+  const auto& transform = surface->transform(gctx);
 
   constexpr auto tolerance = s_onSurfaceTolerance;
 
@@ -108,7 +113,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
   std::vector binValues = gridLookup->binningValues();
   if (binValues.empty()) {
     // Fall back to default based on surface type
-    switch (surface.type()) {
+    switch (surface->type()) {
       using enum Surface::SurfaceType;
       case Cylinder:
         binValues = {AxisDirection::AxisPhi, AxisDirection::AxisZ};
@@ -129,7 +134,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
   DetraySurfaceGrid gridPayload;
 
   // Set up the grid link with appropriate acceleration structure type
-  detray::io::accel_id accelId = getDetrayAccelId(surface.type());
+  detray::io::accel_id accelId = getDetrayAccelId(surface->type());
   gridPayload.grid_link =
       detray::io::typed_link_payload<detray::io::accel_id>{accelId, 0u};
 

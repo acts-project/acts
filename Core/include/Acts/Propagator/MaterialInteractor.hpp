@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Detector/GeometryCompatibilityConcept.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -68,10 +67,6 @@ struct MaterialInteractor {
     if (!(multipleScattering || energyLoss || recordInteractions)) {
       return;
     }
-
-    static_assert(
-        Acts::NavigationCompatibleConcept<propagator_state_t, navigator_t>,
-        "Navigation does not fulfill geometry compatibility concept");
 
     // Handle surface material
 

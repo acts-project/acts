@@ -31,9 +31,9 @@ ActsTests::CubicTrackingGeometry::CubicTrackingGeometry(
     : geoContext(gctx) {
   // Construct the rotation
   double rotationAngle = 90_degree;
-  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;
@@ -72,8 +72,8 @@ ActsTests::CubicTrackingGeometry::operator()() {
   for (unsigned int i = 0; i < translations.size(); i++) {
     RotationMatrix3 rotation_strip;
     double angle = rotAngle[i];
-    Vector3 xPos(cos(angle), sin(angle), 0.);
-    Vector3 yPos(-sin(angle), cos(angle), 0.);
+    Vector3 xPos(std::cos(angle), std::sin(angle), 0.);
+    Vector3 yPos(-std::sin(angle), std::cos(angle), 0.);
     Vector3 zPos(0., 0., 1.);
     rotation_strip.col(0) = xPos;
     rotation_strip.col(1) = yPos;

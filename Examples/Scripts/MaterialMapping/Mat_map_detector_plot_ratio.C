@@ -81,7 +81,7 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, std::
 
 
 /// Plot the material ratio between the geantino scan and the map validation for each detector.
-/// detectors : list of the ID of the volume constitutive of the detector/sub-detector
+/// detectors : list of the ID of the volume constitutive of the Geometry/sub-detector
 /// nbprocess : number of parameter to be processed
 /// name : name of the output directory.
 /// name_prop : name of the output directory for the map valdation.

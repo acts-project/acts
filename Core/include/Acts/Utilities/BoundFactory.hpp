@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -41,6 +42,11 @@ concept ComparableBoundConcept = requires(const BoundsType_t& bounds) {
 template <detail::ComparableBoundConcept BoundsType_t>
 class BoundFactory {
  public:
+  /// @brief Abbreviation of the class return type. If the set is over const
+  ///        objects, the return type is const as well and non-const otherwise
+  template <typename T>
+  using BoundsRet_t =
+      std::conditional_t<std::is_const_v<BoundsType_t>, const T, T>;
   /// @brief Empty default constructor
   BoundFactory() = default;
   /// @brief Delete the copy constructor
@@ -53,12 +59,12 @@ class BoundFactory {
   /// @param bounds: Pointer to the bounds to deduplicated
   /// @return Pointer to an equivalent bound object
   template <typename BoundsImpl_t>
-  std::shared_ptr<BoundsImpl_t> insert(
+  std::shared_ptr<BoundsRet_t<BoundsImpl_t>> insert(
       const std::shared_ptr<BoundsImpl_t>& bounds)
     requires(std::is_base_of_v<BoundsType_t, BoundsImpl_t>)
   {
     assert(bounds);
-    return std::dynamic_pointer_cast<BoundsImpl_t>(
+    return std::dynamic_pointer_cast<BoundsRet_t<BoundsImpl_t>>(
         *m_boundSet.insert(bounds).first);
   }
   /// @brief Factory method to construct new bounds from the passed arguments
@@ -67,7 +73,7 @@ class BoundFactory {
   /// @return A pointer to the newly constructed bounds or to an already existing
   ///          equivalent bound object
   template <typename BoundsImpl_t, class... argList>
-  std::shared_ptr<BoundsImpl_t> makeBounds(argList... args)
+  std::shared_ptr<BoundsRet_t<BoundsImpl_t>> makeBounds(argList... args)
     requires(std::is_base_of_v<BoundsType_t, BoundsImpl_t>)
   {
     return insert(std::make_shared<BoundsImpl_t>(args...));
@@ -91,7 +97,7 @@ class BoundFactory {
       /// If we deal with two fundamental different bound sets, then just
       /// cast the type to int and return the comparison
       if (a->type() != b->type()) {
-        return static_cast<int>(a->type()) < static_cast<int>(b->type());
+        return toUnderlying(a->type()) < toUnderlying(b->type());
       }
       const std::vector<double> avalues{a->values()};
       const std::vector<double> bvalues{b->values()};
@@ -111,7 +117,7 @@ class BoundFactory {
 };
 
 /// @brief Abrivation for a factory to construct surface bounds
-using SurfaceBoundFactory = BoundFactory<SurfaceBounds>;
+using SurfaceBoundFactory = BoundFactory<const SurfaceBounds>;
 /// @brief Abrivation for a factory to construct volume bounds
 using VolumeBoundFactory = BoundFactory<VolumeBounds>;
 

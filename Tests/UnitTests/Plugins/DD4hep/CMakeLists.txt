@@ -41,10 +41,7 @@ if(NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
     # set test library dependencies
     set(unittest_extra_libraries Acts::TestsDD4hepFactories Acts::PluginDD4hep)
     set(dd4hep_tests
-        DD4hepCylinderLayerStructure
-        DD4hepCylindricalDetector
         DD4hepDetectorElement
-        DD4hepDiscLayerStructure
         DD4hepDetectorSurfaceFactory
         DD4hepCylindricalDetectorGen3
     )

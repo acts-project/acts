@@ -133,7 +133,7 @@ BOOST_DATA_TEST_CASE(
   (void)deltaPhi;
 
   PropagatorState pState;
-  pState.stepping.dir = Vector3(cos(phi), sin(phi), 0.);
+  pState.stepping.dir = Vector3(std::cos(phi), std::sin(phi), 0.);
   pState.stepping.p = 100_MeV;
 
   Stepper pStepper;
@@ -180,10 +180,10 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double p = pT / sin(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
 
   const double Bz = 2_T;

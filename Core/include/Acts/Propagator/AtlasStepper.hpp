@@ -1138,7 +1138,7 @@ class AtlasStepper {
       double R2 = RC * RC + RS * RS;
 
       // inverse radius
-      double Ri = 1. / sqrt(R2);
+      double Ri = 1. / std::sqrt(R2);
       MA[0] = (RC * Ax[0] + RS * Ay[0]) * Ri;
       MA[1] = (RC * Ax[1] + RS * Ay[1]) * Ri;
       MA[2] = (RC * Ax[2] + RS * Ay[2]) * Ri;

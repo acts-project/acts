@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(SplineInterpolationEigen) {
 
   for (double phi = 0; phi < 2 * std::numbers::pi;
        phi += std::numbers::pi / 4) {
-    inputs.push_back(Acts::Vector3(R * cos(phi), R * sin(phi), 0.));
+    inputs.push_back(Acts::Vector3(R * std::cos(phi), R * std::sin(phi), 0.));
   }
 
   // (0) - nothing happens

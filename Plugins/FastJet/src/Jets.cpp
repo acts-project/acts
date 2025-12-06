@@ -18,5 +18,5 @@ using TrackContainer =
 namespace ActsPlugins::FastJet {
 // Initiate a truth jet with 4-momentum
 Acts::Vector4 testVec4(10.0, 0.0, 10.0, 14.1421);
-TruthJet<TrackContainer> testJet(testVec4);
+TruthJet<TrackContainer> testJet(testVec4, JetLabel::Unknown);
 }  // namespace ActsPlugins::FastJet

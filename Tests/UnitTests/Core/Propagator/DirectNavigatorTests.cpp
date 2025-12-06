@@ -100,7 +100,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   }
 
   // Define start parameters from ranom input
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
       Vector4::Zero(), phi, theta, dcharge / p, std::nullopt,
       ParticleHypothesis::pion());

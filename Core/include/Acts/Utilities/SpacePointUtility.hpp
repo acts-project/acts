@@ -34,17 +34,17 @@ class SourceLink;
 /// points
 struct SpacePointParameters {
   /// Vector pointing from bottom to top end of first SDE
-  Vector3 firstBtmToTop;
+  Vector3 firstBtmToTop{};
   /// Vector pointing from bottom to top end of second SDE
-  Vector3 secondBtmToTop;
+  Vector3 secondBtmToTop{};
   /// Twice the vector pointing from vertex to to midpoint of first SDE
-  Vector3 vtxToFirstMid2;
+  Vector3 vtxToFirstMid2{};
   /// Twice the vector pointing from vertex to to midpoint of second SDE
-  Vector3 vtxToSecondMid2;
+  Vector3 vtxToSecondMid2{};
   /// Cross product between firstBtmToTop and vtxToFirstMid2
-  Vector3 firstBtmToTopXvtxToFirstMid2;
+  Vector3 firstBtmToTopXvtxToFirstMid2{};
   /// Cross product between secondBtmToTop and vtxToSecondMid2
-  Vector3 secondBtmToTopXvtxToSecondMid2;
+  Vector3 secondBtmToTopXvtxToSecondMid2{};
   /// Magnitude of SpacePointParameters::firstBtmToTop
   double mag_firstBtmToTop = 0.;
   /// Parameter that determines the hit position on the first SDE

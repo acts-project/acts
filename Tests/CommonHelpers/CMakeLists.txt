@@ -7,7 +7,6 @@ add_library(
     src/DataDirectory.cpp
     src/DetectorElementStub.cpp
     src/CubicTrackingGeometry.cpp
-    src/CylindricalDetector.cpp
     src/CylindricalTrackingGeometry.cpp
 )
 

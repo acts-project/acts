@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
-      DOXYGEN_VERSION: "1.9.8"
-      DOXYGEN_HASH: "dda773bdc62384b7d796fe8b6c5029daad72483e4c8ad4abf6ee9fb98b649388"
+      DOXYGEN_VERSION: "1.15.0"
+      DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
     steps:
       - uses: actions/checkout@v6
 
