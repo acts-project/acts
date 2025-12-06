@@ -8,9 +8,9 @@
 
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 
-#include "Acts/Geometry/ConvexPolygonPortalShell.hpp"
 #include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
+#include "Acts/Geometry/DiamondPortalShell.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -69,8 +69,8 @@ PortalShellBase& StaticBlueprintNode::connect(const BlueprintOptions& options,
   } else if (type == VolumeBounds::eTrapezoid) {
     m_shell = std::make_unique<SingleTrapezoidPortalShell>(*m_volume);
 
-  } else if (type == VolumeBounds::eConvexPolygon) {
-    m_shell = std::make_unique<SingleConvexPolygonPortalShell>(*m_volume);
+  } else if (type == VolumeBounds::eDiamond) {
+    m_shell = std::make_unique<SingleDiamondPortalShell>(*m_volume);
 
   } else {
     throw std::logic_error("Volume type is not supported");

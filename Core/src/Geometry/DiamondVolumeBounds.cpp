@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/ConvexPolygonVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -17,7 +17,7 @@
 
 namespace Acts {
 
-ConvexPolygonVolumeBounds::ConvexPolygonVolumeBounds(double x1, double x2,
+DiamondVolumeBounds::DiamondVolumeBounds(double x1, double x2,
                                                      double x3, double y1,
                                                      double y2, double halez)
     : VolumeBounds() {
@@ -34,11 +34,11 @@ ConvexPolygonVolumeBounds::ConvexPolygonVolumeBounds(double x1, double x2,
   buildSurfaceBounds();
 }
 
-std::vector<double> ConvexPolygonVolumeBounds::values() const {
+std::vector<double> DiamondVolumeBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
-std::vector<OrientedSurface> ConvexPolygonVolumeBounds::orientedSurfaces(
+std::vector<OrientedSurface> DiamondVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   std::vector<OrientedSurface> surfaces;
   surfaces.reserve(8);
@@ -117,7 +117,7 @@ std::vector<OrientedSurface> ConvexPolygonVolumeBounds::orientedSurfaces(
   return surfaces;
 };
 
-void ConvexPolygonVolumeBounds::buildSurfaceBounds() {
+void DiamondVolumeBounds::buildSurfaceBounds() {
   m_FaceXYBounds = std::make_shared<Acts::DiamondBounds>(
       get(eHalfLengthX1), get(eHalfLengthX2), get(eHalfLengthX3),
       get(eLengthY1), get(eLengthY2));
@@ -138,7 +138,7 @@ void ConvexPolygonVolumeBounds::buildSurfaceBounds() {
       get(eHalfLengthZ), get(eHalfLengthX1));
 }
 
-Volume::BoundingBox ConvexPolygonVolumeBounds::boundingBox(
+Volume::BoundingBox DiamondVolumeBounds::boundingBox(
     const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   double maxX =
@@ -171,7 +171,7 @@ Volume::BoundingBox ConvexPolygonVolumeBounds::boundingBox(
 
   return {entity, vmin - envelope, vmax + envelope};
 }
-bool ConvexPolygonVolumeBounds::inside(const Vector3& pos, double tol) const {
+bool DiamondVolumeBounds::inside(const Vector3& pos, double tol) const {
   if (std::abs(pos.z()) > get(eHalfLengthZ) + tol) {
     return false;
   }
@@ -185,32 +185,32 @@ bool ConvexPolygonVolumeBounds::inside(const Vector3& pos, double tol) const {
                                 BoundaryTolerance::AbsoluteEuclidean(tol));
 }
 
-void ConvexPolygonVolumeBounds::checkConsistency() noexcept(false) {
+void DiamondVolumeBounds::checkConsistency() noexcept(false) {
   if (get(eHalfLengthX1) <= 0. || get(eHalfLengthX2) <= 0. ||
       get(eHalfLengthX3) <= 0.) {
     throw std::invalid_argument(
-        "ConvexPolygonVolumeBounds: invalid polygon parameters in x.");
+        "DiamondVolumeBounds: invalid polygon parameters in x.");
   }
   if (get(eLengthY1) <= 0. || get(eLengthY2) <= 0.) {
     throw std::invalid_argument(
-        "ConvexPolygonVolumeBounds: invalid y extrusion.");
+        "DiamondVolumeBounds: invalid y extrusion.");
   }
   if (get(eHalfLengthZ) <= 0.) {
     throw std::invalid_argument(
-        "ConvexPolygonVolumeBounds: invalid z extrusion.");
+        "DiamondVolumeBounds: invalid z extrusion.");
   }
   // make sure this is a convex polygon - do not allow angles > 180 deg
   if (get(eHalfLengthX2) < get(eHalfLengthX1) ||
       get(eHalfLengthX2) < get(eHalfLengthX3)) {
     throw std::invalid_argument(
-        "ConvexPolygonVolumeBounds: invalid polygon shape - not convex.");
+        "DiamondVolumeBounds: invalid polygon shape - not convex.");
   }
 }
 
-std::ostream& ConvexPolygonVolumeBounds::toStream(std::ostream& os) const {
+std::ostream& DiamondVolumeBounds::toStream(std::ostream& os) const {
   os << std::setiosflags(std::ios::fixed);
   os << std::setprecision(5);
-  os << "ConvexPolygonVolumeBounds: (halfX1, halfX2, halfX3, halfY1, halfY2, "
+  os << "DiamondVolumeBounds: (halfX1, halfX2, halfX3, halfY1, halfY2, "
         "halfZ) = ";
   os << "(" << get(eHalfLengthX1) << ", " << get(eHalfLengthX2) << ", "
      << get(eHalfLengthX3) << ", " << get(eLengthY1) << ", " << get(eLengthY2)

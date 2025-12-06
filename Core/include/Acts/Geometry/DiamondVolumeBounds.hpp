@@ -24,7 +24,7 @@ namespace Acts {
 class RectangleBounds;
 class DiamondBounds;
 
-/// @class ConvexPolygonVolumeBounds
+/// @class DiamondVolumeBounds
 ///
 /// Bounds for a polygonal prism shaped Volume, the orientedSurface(...) method
 /// creates a vector of 8 surfaces:
@@ -51,7 +51,7 @@ class DiamondBounds;
 ///  - positiveYFaceZX   [7] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$ y \f$
 ///
-class ConvexPolygonVolumeBounds : public VolumeBounds {
+class DiamondVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for access / streaming
   enum BoundValues : unsigned int {
@@ -91,32 +91,32 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   /// @param y1 is the positive y extent
   /// @param y2 is the negative y extent
   /// @param halez is the half length in z
-  ConvexPolygonVolumeBounds(double x1, double x2, double x3, double y1,
+  DiamondVolumeBounds(double x1, double x2, double x3, double y1,
                             double y2, double halez) noexcept(false);
 
   /// Copy constructor
-  /// @param other The other ConvexPolygonVolumeBounds to copy from
-  ConvexPolygonVolumeBounds(const ConvexPolygonVolumeBounds& other) = default;
+  /// @param other The other DiamondVolumeBounds to copy from
+  DiamondVolumeBounds(const DiamondVolumeBounds& other) = default;
 
   /// Move constructor
-  /// @param other The other ConvexPolygonVolumeBounds to move from
-  ConvexPolygonVolumeBounds(ConvexPolygonVolumeBounds&& other) = default;
+  /// @param other The other DiamondVolumeBounds to move from
+  DiamondVolumeBounds(DiamondVolumeBounds&& other) = default;
 
   /// Copy constructor assignment
-  /// @param other The other ConvexPolygonVolumeBounds to copy from
-  ConvexPolygonVolumeBounds& operator=(const ConvexPolygonVolumeBounds& other) =
+  /// @param other The other DiamondVolumeBounds to copy from
+  DiamondVolumeBounds& operator=(const DiamondVolumeBounds& other) =
       default;
 
   /// Move constructor assignment
-  /// @param other The other ConvexPolygonVolumeBounds to move from
-  ConvexPolygonVolumeBounds& operator=(ConvexPolygonVolumeBounds&& other) =
+  /// @param other The other DiamondVolumeBounds to move from
+  DiamondVolumeBounds& operator=(DiamondVolumeBounds&& other) =
       default;
 
   /// Default destructor
-  ~ConvexPolygonVolumeBounds() override = default;
+  ~DiamondVolumeBounds() override = default;
 
   VolumeBounds::BoundsType type() const final {
-    return VolumeBounds::BoundsType::eConvexPolygon;
+    return VolumeBounds::BoundsType::eDiamond;
   }
 
   /// Return the bound values as dynamically sized vector
@@ -191,23 +191,23 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
 /// @cond
 /// @brief Streaming operator for the polygon volume surfaces
 inline std::ostream& operator<<(std::ostream& os,
-                                ConvexPolygonVolumeBounds::Face face) {
+                                DiamondVolumeBounds::Face face) {
   switch (face) {
-    case ConvexPolygonVolumeBounds::Face::NegativeZFaceXY:
+    case DiamondVolumeBounds::Face::NegativeZFaceXY:
       return os << "NegativeZFaceXY";
-    case ConvexPolygonVolumeBounds::Face::PositiveZFaceXY:
+    case DiamondVolumeBounds::Face::PositiveZFaceXY:
       return os << "PositiveZFaceXY";
-    case ConvexPolygonVolumeBounds::Face::NegativeXFaceYZ12:
+    case DiamondVolumeBounds::Face::NegativeXFaceYZ12:
       return os << "NegativeXFaceYZ12";
-    case ConvexPolygonVolumeBounds::Face::PositiveXFaceYZ12:
+    case DiamondVolumeBounds::Face::PositiveXFaceYZ12:
       return os << "PositiveXFaceYZ12";
-    case ConvexPolygonVolumeBounds::Face::NegativeXFaceYZ23:
+    case DiamondVolumeBounds::Face::NegativeXFaceYZ23:
       return os << "NegativeXFaceYZ23";
-    case ConvexPolygonVolumeBounds::Face::PositiveXFaceYZ23:
+    case DiamondVolumeBounds::Face::PositiveXFaceYZ23:
       return os << "PositiveXFaceYZ23";
-    case ConvexPolygonVolumeBounds::Face::NegativeYFaceZX:
+    case DiamondVolumeBounds::Face::NegativeYFaceZX:
       return os << "NegativeYFaceZX";
-    case ConvexPolygonVolumeBounds::Face::PositiveYFaceZX:
+    case DiamondVolumeBounds::Face::PositiveYFaceZX:
       return os << "PositiveYFaceZX";
     default:
       return os << "Unknown";
