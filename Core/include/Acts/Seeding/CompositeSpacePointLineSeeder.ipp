@@ -509,78 +509,19 @@ CompositeSpacePointLineSeeder::buildSeed(
   if (!passSeedCuts(seedPos, seedDir, newSolution, options)) {
     return std::nullopt;
   }
-  return std::nullopt;
+  return consructSegmentSeed(cctx, seedDir, options, std::move(newSolution));
 }
+
+template <
+    CompositeSpacePointContainer UncalibCont_t,
+    CompositeSpacePointContainer CalibCont_t,
+    detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t> Delegate_t>
+SegmentSeed<CalibCont_t> CompositeSpacePointLineSeeder::consructSegmentSeed(
+    const CalibrationContext& cctx, const Vector& seedDir,
+    SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options,
+    SeedSolution<UncalibCont_t, Delegate_t>&& newSolution) const;
+
 #ifdef STONJEK
-// seedPars.lineParams =
-// constructLine(seedPars.theta, seedPars.y0, options.patternParams);
-
-ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Found N seeds so far "
-                    << options.seenSolutions.size());
-// check if we have already seen this solution
-if (std::ranges::any_of(options.seenSolutions, [&seedPars](const auto& seen) {
-      const double deltaY = Acts::abs(seen.y0 - seedPars.y0);
-      const double limitY = Acts::fastHypot(seen.dY0, seedPars.dY0);
-      const double deltaTheta = Acts::abs(seen.theta - seedPars.theta);
-      const double limitTheta = Acts::fastHypot(seen.dTheta, seedPars.dTheta);
-      return deltaY < limitY && deltaTheta < limitTheta;
-    })) {
-  return std::nullopt;
-}
-ACTS_DEBUG("start looking for compatible hits ");
-// now we search for the uncalibrated hits that are compatible with the seed
-SeedSolution<Cont_t> seedSol(seedPars);
-for (const auto [layerNr, hitsInLayer] :
-     Acts::enumerate(options.splitter->strawHits())) {
-  bool hadGoodHit{false};
-  for (const auto& [hitNr, testMe] : Acts::enumerate(hitsInLayer)) {
-    const double distance = Acts::abs(Acts::detail::LineHelper::signedDistance(
-        testMe->localPosition(), testMe->sensorDirection(), posForCalib,
-        dirForCalib));
-    const double chi2 = detail::CompSpacePointAuxiliaries::chi2Term(
-        posForCalib, dirForCalib, *testMe);
-
-    ACTS_DEBUG("Hit in layer " << layerNr << " pull " << std::sqrt(chi2)
-                               << " distance " << distance << " drift radius "
-                               << testMe->driftRadius());
-    if (chi2 < Acts::pow(m_cfg.hitPullCut, 2u) &&
-        distance < options.strawRadius) {
-      hadGoodHit = true;
-      seedSol.seedHits.emplace_back(testMe);
-      seedSol.nStrawHits +=
-          options.selector.connected() && options.selector(*testMe);
-    } else if (hadGoodHit) {
-      break;
-    }
-  }
-}
-// check if we collected enough straw hits
-const double hitCut = std::max(1.0 * m_cfg.nStrawHitCut,
-                               m_cfg.nStrawLayHitCut* strawLayers.size());
-ACTS_DEBUG("Found " << seedSol.nStrawHits
-                    << " compatible straw hits. Hit cut is " << hitCut);
-if (seedSol.nStrawHits < hitCut) {
-  return std::nullopt;
-}
-
-if (m_cfg.overlapCorridor) {
-  seedSol.solutionSigns = detail::CompSpacePointAuxiliaries::strawSigns(
-      posForCalib, dirForCalib, seedSol.seedHits);
-  for (unsigned int a = options.startWithPattern;
-       a < options.seenSolutions.size(); ++a) {
-    const auto& acceptedSol = options.seenSolutions[a];
-    unsigned int nOverlap{0};
-    std::vector<int> corridor = detail::CompSpacePointAuxiliaries::strawSigns(
-        posForCalib, dirForCalib, acceptedSol.seedHits);
-    for (unsigned int l = 0; l < acceptedSol.seedHits.size(); ++l) {
-      nOverlap += (corridor[l] == acceptedSol.solutionSigns[l]);
-    }
-    if (nOverlap == corridor.size() &&
-        acceptedSol.seedHits.size() >= seedSol.seedHits.size()) {
-      return std::nullopt;
-    }
-  }
-}
 
 // Calibrate the seed hits to be returned
 auto finalSeedSol = std::make_optional(SeedSolution<CalibCont_t>(seedPars));

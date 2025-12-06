@@ -395,7 +395,6 @@ class CompositeSpacePointLineSeeder {
   void moveToNextCandidate(
       const Selector_t<UncalibCont_t>& selector,
       SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
-
   /// @brief Attempts to construct the next seed from the given configuration of
   ///        seed circles. The seed needs to contain a minimum number of other
   ///        straw hits and there must be no other previously constructed seed
@@ -411,16 +410,31 @@ class CompositeSpacePointLineSeeder {
   std::optional<SegmentSeed<CalibCont_t>> buildSeed(
       const CalibrationContext& cctx, const Selector_t<UncalibCont_t>& selector,
       SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
-
+  /// @brief Checks whether the new seed candidate passes the quality cuts on
+  ///        the number of good straw hits and whether it is not within the
+  ///        same overlap corridor as previously produced seeds
+  /// @param seedPos: Reference position of the seed line
+  /// @param seedDir: Direction of the seed line
+  /// @param newSolution: The new seed solution that's to be tested
+  /// @param options: The cache carrying the already produced solutions
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
   bool passSeedCuts(
       const Vector& seedPos, const Vector& seedDir,
-
       SeedSolution<UncalibCont_t, Delegate_t>& newSolution,
       SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
+
+  template <CompositeSpacePointContainer UncalibCont_t,
+            CompositeSpacePointContainer CalibCont_t,
+            detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
+                Delegate_t>
+  SegmentSeed<CalibCont_t> consructSegmentSeed(
+      const CalibrationContext& cctx, const Vector& seedDir,
+      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options,
+      SeedSolution<UncalibCont_t, Delegate_t>&& newSolution) const;
+
   /// @brief Construct the final seed parameters by combining the initial
   ///        pattern parameters with the parameter from two circle tangent
   /// @param parTheta: Theta angle of the two circle tangent solution
