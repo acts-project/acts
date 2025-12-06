@@ -8,6 +8,12 @@ import acts
 import acts.examples
 import acts.examples.gnn
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
+from acts.examples.gnn import (
+    TorchMetricLearning,
+    TorchEdgeClassifier,
+    BoostTrackBuilding,
+    NodeFeature,
+)
 from acts import UnitConstants as u
 
 from digitization import runDigitization
@@ -53,7 +59,7 @@ def runGnnMetricLearning(
         "knnVal": 100,
         "selectedFeatures": [0, 1, 2],  # R, Phi, Z
     }
-    graphConstructor = acts.examples.gnn.TorchMetricLearning(**graphConstructorConfig)
+    graphConstructor = TorchMetricLearning(**graphConstructorConfig)
 
     filterConfig = {
         "level": acts.logging.INFO,
@@ -70,7 +76,7 @@ def runGnnMetricLearning(
 
     if filterModelPath.suffix == ".pt":
         edgeClassifiers.append(
-            acts.examples.gnn.TorchEdgeClassifier(
+            TorchEdgeClassifier(
                 **filterConfig,
                 nChunks=5,
                 undirected=False,
@@ -78,13 +84,15 @@ def runGnnMetricLearning(
             )
         )
     elif filterModelPath.suffix == ".onnx":
-        edgeClassifiers.append(acts.examples.gnn.OnnxEdgeClassifier(**filterConfig))
+        from acts.examples.gnn import OnnxEdgeClassifier
+
+        edgeClassifiers.append(OnnxEdgeClassifier(**filterConfig))
     else:
         raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
 
     if gnnModelPath.suffix == ".pt":
         edgeClassifiers.append(
-            acts.examples.gnn.TorchEdgeClassifier(
+            TorchEdgeClassifier(
                 **gnnConfig,
                 undirected=True,
                 selectedFeatures=[0, 1, 2],
@@ -92,7 +100,7 @@ def runGnnMetricLearning(
         )
     elif gnnModelPath.suffix == ".onnx":
         edgeClassifiers.append(
-            acts.examples.gnn.OnnxEdgeClassifier(**gnnConfig),
+            OnnxEdgeClassifier(**gnnConfig),
         )
     else:
         raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
@@ -101,13 +109,13 @@ def runGnnMetricLearning(
     trackBuilderConfig = {
         "level": acts.logging.INFO,
     }
-    trackBuilder = acts.examples.gnn.BoostTrackBuilding(**trackBuilderConfig)
+    trackBuilder = BoostTrackBuilding(**trackBuilderConfig)
 
     # Node features: Standard 3 features (R, Phi, Z)
     nodeFeatures = [
-        acts.examples.gnn.NodeFeature.R,
-        acts.examples.gnn.NodeFeature.Phi,
-        acts.examples.gnn.NodeFeature.Z,
+        NodeFeature.R,
+        NodeFeature.Phi,
+        NodeFeature.Z,
     ]
     featureScales = [1.0, 1.0, 1.0]
 
