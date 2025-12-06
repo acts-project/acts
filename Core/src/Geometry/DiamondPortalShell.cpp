@@ -36,11 +36,9 @@ void DiamondPortalShell::fill(TrackingVolume& volume) {
   }
 }
 
-SingleDiamondPortalShell::SingleDiamondPortalShell(
-    TrackingVolume& volume)
+SingleDiamondPortalShell::SingleDiamondPortalShell(TrackingVolume& volume)
     : m_volume{&volume} {
-  if (m_volume->volumeBounds().type() !=
-      VolumeBounds::BoundsType::eDiamond) {
+  if (m_volume->volumeBounds().type() != VolumeBounds::BoundsType::eDiamond) {
     throw std::invalid_argument(
         "SingleDiamondPortalShell: Associated volume does not "
         "have DiamondVolumeBounds");
@@ -66,7 +64,7 @@ std::shared_ptr<Portal> SingleDiamondPortalShell::portalPtr(Face face) {
 }
 
 void SingleDiamondPortalShell::setPortal(std::shared_ptr<Portal> portal,
-                                               Face face) {
+                                         Face face) {
   assert(portal != nullptr);
   assert(portal->isValid());
   m_portals.at(toUnderlying(face)) = std::move(portal);

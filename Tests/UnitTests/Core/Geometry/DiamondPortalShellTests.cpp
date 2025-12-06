@@ -32,8 +32,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       Transform3::Identity(),
       std::make_shared<TrapezoidVolumeBounds>(20._cm, 10._cm, 10._cm, 5._cm));
 
-  BOOST_CHECK_THROW(SingleDiamondPortalShell{fVol},
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(SingleDiamondPortalShell{fVol}, std::invalid_argument);
 
   // conastruct a convex polygon tracking volume for which we are gonna build
   // the portal shell
@@ -191,8 +190,8 @@ BOOST_AUTO_TEST_CASE(Fill) {
   // create a volume to link to the portal to the other side
   TrackingVolume testVol2(
       Transform3::Identity() * Translation3(Vector3::UnitZ() * 24_cm),
-      std::make_shared<DiamondVolumeBounds>(20._cm, 25._cm, 15._cm,
-                                                  15._cm, 20._cm, 12._cm));
+      std::make_shared<DiamondVolumeBounds>(20._cm, 25._cm, 15._cm, 15._cm,
+                                            20._cm, 12._cm));
   polygShell.fill(testVol2);
 
   BOOST_CHECK_NE(polygShell.portalPtr(NegativeZFaceXY)

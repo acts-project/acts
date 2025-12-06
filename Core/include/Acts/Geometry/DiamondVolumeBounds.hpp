@@ -91,8 +91,8 @@ class DiamondVolumeBounds : public VolumeBounds {
   /// @param y1 is the positive y extent
   /// @param y2 is the negative y extent
   /// @param halez is the half length in z
-  DiamondVolumeBounds(double x1, double x2, double x3, double y1,
-                            double y2, double halez) noexcept(false);
+  DiamondVolumeBounds(double x1, double x2, double x3, double y1, double y2,
+                      double halez) noexcept(false);
 
   /// Copy constructor
   /// @param other The other DiamondVolumeBounds to copy from
@@ -104,13 +104,11 @@ class DiamondVolumeBounds : public VolumeBounds {
 
   /// Copy constructor assignment
   /// @param other The other DiamondVolumeBounds to copy from
-  DiamondVolumeBounds& operator=(const DiamondVolumeBounds& other) =
-      default;
+  DiamondVolumeBounds& operator=(const DiamondVolumeBounds& other) = default;
 
   /// Move constructor assignment
   /// @param other The other DiamondVolumeBounds to move from
-  DiamondVolumeBounds& operator=(DiamondVolumeBounds&& other) =
-      default;
+  DiamondVolumeBounds& operator=(DiamondVolumeBounds&& other) = default;
 
   /// Default destructor
   ~DiamondVolumeBounds() override = default;
