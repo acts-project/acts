@@ -8,15 +8,13 @@
 
 #pragma once
 
-#include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cassert>
+#include <cstdint>
 #include <system_error>
 #include <tuple>
 
@@ -25,20 +23,16 @@ namespace Acts {
 /// Kalman update step using the gain matrix formalism.
 class GainMatrixUpdater {
   struct InternalTrackState {
-    unsigned int calibratedSize;
+    std::uint32_t calibratedSize{};
     // This is used to build a covariance matrix view in the .cpp file
-    const double* calibrated;
-    const double* calibratedCovariance;
-    BoundSubspaceIndices projector;
+    const double* calibrated{};
+    const double* calibratedCovariance{};
+    BoundSubspaceIndices projector{};
 
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters predicted;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance predictedCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters filtered;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance filteredCovariance;
+    const double* predicted{};
+    const double* predictedCovariance{};
+    double* filtered{};
+    double* filteredCovariance{};
   };
 
  public:
@@ -74,20 +68,20 @@ class GainMatrixUpdater {
     // auto filtered = trackState.filtered();
     // auto filteredCovariance = trackState.filteredCovariance();
 
-    auto [chi2, error] = visitMeasurement(
-        InternalTrackState{
-            trackState.calibratedSize(),
-            // Note that we pass raw pointers here which are used in the correct
-            // shape later
-            trackState.effectiveCalibrated().data(),
-            trackState.effectiveCalibratedCovariance().data(),
-            trackState.projectorSubspaceIndices(),
-            trackState.predicted(),
-            trackState.predictedCovariance(),
-            trackState.filtered(),
-            trackState.filteredCovariance(),
-        },
-        logger);
+    const InternalTrackState internalTrackState{
+        trackState.calibratedSize(),
+        // Note that we pass raw pointers here which are used in the correct
+        // shape later
+        trackState.effectiveCalibrated().data(),
+        trackState.effectiveCalibratedCovariance().data(),
+        trackState.projectorSubspaceIndices(),
+        trackState.predicted().data(),
+        trackState.predictedCovariance().data(),
+        trackState.filtered().data(),
+        trackState.filteredCovariance().data(),
+    };
+
+    const auto [chi2, error] = visitMeasurement(internalTrackState, logger);
 
     trackState.chi2() = chi2;
 
@@ -96,11 +90,11 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      InternalTrackState trackState, const Logger& logger) const;
+      const InternalTrackState& trackState, const Logger& logger) const;
 
   template <std::size_t N>
   std::tuple<double, std::error_code> visitMeasurementImpl(
-      InternalTrackState trackState, const Logger& logger) const;
+      const InternalTrackState& trackState, const Logger& logger) const;
 };
 
 }  // namespace Acts
