@@ -9,6 +9,7 @@
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "Acts/Clusterization/InPlaceClusterization.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 
@@ -17,6 +18,8 @@
 #include <cstdlib>
 #include <limits>
 #include <map>
+#include <memory>
+#include <ranges>
 #include <stdexcept>
 
 namespace ActsExamples {
@@ -45,7 +48,12 @@ void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
 std::vector<std::pair<DigitizedParameters, std::set<ModuleClusters::simhit_t>>>
 ModuleClusters::digitizedParameters() {
   if (m_merge) {  // (re-)build the clusters
-    merge();
+    if (m_useInPlaceClusterization && !m_moduleValues.empty() &&
+        std::holds_alternative<Cluster::Cell>(m_moduleValues.front().value)) {
+      mergeWithInPlaceClusterization();
+    } else {
+      merge();
+    }
   }
   std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>> retv;
   for (ModuleValue& mval : m_moduleValues) {
@@ -108,6 +116,149 @@ std::vector<ModuleValue> ModuleClusters::createCellCollection() {
   }
   return cells;
 }
+void ModuleClusters::mergeWithInPlaceClusterization() {
+  if (m_moduleValues.size() < std::numeric_limits<std::uint16_t>::max()) {
+    mergeWithInPlaceClusterizationImpl<std::uint16_t, 0>();
+  } else {
+    mergeWithInPlaceClusterizationImpl<std::uint32_t, 0>();
+  }
+}
+
+// Helper to adapt an in-place clustered cell collection to imitate a
+// ModuleValue collection of a cluster cell_t must have an srcIndex member
+// which refers to a ModuleValue
+template <typename cell_t>
+struct ClusterModuleValues {
+  // iterator to iterate over the ModuleValues of a cluster
+  struct iterator {
+    ModuleValue& operator*() {
+      assert(m_moduleValues && m_iter->srcIndex < m_moduleValues->size());
+      return (*m_moduleValues)[m_iter->srcIndex];
+    }
+
+    // Test whether two iterators refer to the same ModuleValue
+    // Assumes that all ModuleValues belong to the same container, and
+    // that the underlying in-place clustered cell containers are the same.
+    bool operator==(const iterator& other) const {
+      assert(m_moduleValues == other.m_moduleValues);
+      return other.m_iter == m_iter;
+    }
+    iterator& operator++() {
+      ++m_iter;
+      return *this;
+    }
+
+    std::vector<ModuleValue>* m_moduleValues;
+    std::span<cell_t>::iterator m_iter;
+  };
+
+  // Iterator to refer to the first ModuleValue of a range
+  iterator begin() { return iterator{m_moduleValues, m_cells.begin()}; }
+  // Iterator to refer to the ModuleValue after the last one of a range
+  iterator end() { return iterator{m_moduleValues, m_cells.end()}; }
+
+  // Get the number of ModuleValues in the range
+  std::size_t size() const { return m_cells.size(); }
+
+  // Return true if the ModuleValue range is empty
+  bool empty() const { return m_cells.empty(); }
+  ModuleValue& operator[](unsigned int idx) {
+    assert(idx < m_cells.size() && m_moduleValues &&
+           m_cells[idx].srcIndex < m_moduleValues->size());
+    return (*m_moduleValues)[m_cells[idx].srcIndex];
+  }
+
+  // return the ModuleValue at a certain position in the range (range checked)
+  // @param idx the position in the range where 0 refers to the first element in the range
+  // May throw a range_error if idx is not a valid index in the range.
+  ModuleValue& at(unsigned int idx) {
+    assert(idx < m_cells.size() && m_moduleValues &&
+           m_cells[idx].srcIndex < m_moduleValues->size());
+    return (*m_moduleValues).at(m_cells[idx].srcIndex);
+  }
+
+  // return the ModuleValue at a certain position in the range (no range check)
+  // @param idx the position in the range where 0 refers to the first element in the range
+  const ModuleValue& operator[](unsigned int idx) const {
+    assert(idx < m_cells.size() && m_moduleValues &&
+           m_cells[idx].srcIndex < m_moduleValues->size());
+    return (*m_moduleValues)[m_cells[idx]];
+  }
+
+  std::vector<ModuleValue>* m_moduleValues;
+  std::span<cell_t> m_cells;  // A range of cells which refer to a ModuleValue
+                              // in the ModuleValue collection
+};
+
+template <typename index_t, unsigned int AXIS>
+void ModuleClusters::mergeWithInPlaceClusterizationImpl() {
+  // create a cell collection which contains the coordinates of the ModuleValues
+  // and which refer back to the source ModuleValue.
+  using Cell = Acts::InPlaceClusterization::Cell<std::int16_t, 2, index_t>;
+  std::vector<Cell> cells;
+  cells.reserve(m_moduleValues.size());
+  {
+    index_t idx = 0;
+    for (const ModuleValue& mval : m_moduleValues) {
+      if (std::holds_alternative<Cluster::Cell>(mval.value)) {
+        cells.push_back(Cell(
+            std::array<std::int16_t, 2>{
+                static_cast<std::int16_t>(
+                    std::get<ActsExamples::Cluster::Cell>(mval.value).bin[0]),
+                static_cast<std::int16_t>(
+                    std::get<ActsExamples::Cluster::Cell>(mval.value).bin[1])},
+            idx));
+      }
+      ++idx;
+    }
+  }
+  // Clusterize the cell collection in-place considering common corners and
+  // edges or just common edges.
+  if (m_commonCorner) {
+    namespace CL = Acts::InPlaceClusterization;
+    CL::clusterize<AXIS, index_t>(
+        cells,
+        CL::defaultConnectionHelper<CL::EConnectionType::CommonEdgeOrCorner>(
+            cells));
+
+  } else {
+    namespace CL = Acts::InPlaceClusterization;
+    CL::clusterize<AXIS, index_t>(
+        cells,
+        CL::defaultConnectionHelper<CL::EConnectionType::CommonEdge>(cells));
+  }
+
+  std::vector<ModuleValue> newVals;
+  newVals.reserve(m_moduleValues.size());
+  // Helper to create a cluster module value for the given cell range
+  // the ModuleValues the cell range refers to will be squashed and then
+  // added to a new Cluster.
+  auto addClusters = [this, &newVals](std::vector<Cell>& all_cells,
+                                      unsigned int idx_begin,
+                                      unsigned int idx_end) {
+    auto cluster_cells =
+        std::span(all_cells.begin() + idx_begin, all_cells.begin() + idx_end);
+    if (cluster_cells.size() == 1) {
+      // no need to merge parameters
+      ClusterModuleValues<Cell> temp{&m_moduleValues, cluster_cells};
+      newVals.push_back(squash(temp));
+    } else {
+      ClusterModuleValues<Cell> temp{&m_moduleValues, cluster_cells};
+      std::ranges::sort(cluster_cells, [](const Cell& a, const Cell& b) {
+        return Acts::InPlaceClusterization::traits::getCellCoordinate(a, AXIS) <
+               Acts::InPlaceClusterization::traits::getCellCoordinate(b, AXIS);
+      });
+
+      for (std::vector<ModuleValue>& remerged : mergeParameters(temp)) {
+        newVals.push_back(squash(remerged));
+      }
+    }
+  };
+
+  // Create ModuleValues for each cell range which forms a cluster.
+  for_each_cluster(cells, addClusters);
+  m_moduleValues = std::move(newVals);
+}
 
 void ModuleClusters::merge() {
   std::vector<ModuleValue> cells = createCellCollection();
@@ -129,7 +280,6 @@ void ModuleClusters::merge() {
       // only. Still have to check if they match based on the other
       // indices (a good example of this would a for a timing
       // detector).
-
       for (std::vector<ModuleValue>& remerged : mergeParameters(cellv)) {
         newVals.push_back(squash(remerged));
       }
@@ -146,7 +296,7 @@ void ModuleClusters::merge() {
 
 // ATTN: returns vector of index into `indices'
 std::vector<std::size_t> ModuleClusters::nonGeoEntries(
-    std::vector<Acts::BoundIndices>& indices) {
+    const std::vector<Acts::BoundIndices>& indices) const {
   std::vector<std::size_t> retv;
   for (std::size_t i = 0; i < indices.size(); i++) {
     auto idx = indices.at(i);
@@ -158,8 +308,9 @@ std::vector<std::size_t> ModuleClusters::nonGeoEntries(
 }
 
 // Merging based on parameters
+template <class cell_list_t>
 std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
-    std::vector<ModuleValue> values) {
+    cell_list_t& values) const {
   std::vector<std::vector<ModuleValue>> retv;
 
   std::vector<bool> used(values.size(), false);
@@ -193,7 +344,7 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
       // The cluster to be merged into can have more than one
       // associated value at this point, so we have to consider them
       // all
-      for (ModuleValue& thisval : thisvec) {
+      for (const ModuleValue& thisval : thisvec) {
         // Loop over non-geometric dimensions
         for (auto k : nonGeoEntries(thisval.paramIndices)) {
           double p_i = thisval.paramValues.at(k);
@@ -233,14 +384,15 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
   return retv;
 }
 
-ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
+template <class cell_list_t>
+ModuleValue ModuleClusters::squash(cell_list_t& values) const {
   ModuleValue mval;
   double tot = 0;
   double tot2 = 0;
   std::vector<double> weights;
 
   // First, start by computing cell weights
-  for (ModuleValue& other : values) {
+  for (const ModuleValue& other : values) {
     if (std::holds_alternative<Cluster::Cell>(other.value)) {
       weights.push_back(std::get<Cluster::Cell>(other.value).activation);
     } else {
@@ -252,7 +404,7 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
 
   // Now, go over the non-geometric indices
   for (std::size_t i = 0; i < values.size(); i++) {
-    ModuleValue& other = values.at(i);
+    const ModuleValue& other = values.at(i);
     for (std::size_t j = 0; j < other.paramIndices.size(); j++) {
       auto idx = other.paramIndices.at(j);
       if (!rangeContainsValue(m_geoIndices, idx)) {
@@ -284,7 +436,7 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   std::size_t b1max = 0;
 
   for (std::size_t i = 0; i < values.size(); i++) {
-    ModuleValue& other = values.at(i);
+    const ModuleValue& other = values.at(i);
     if (!std::holds_alternative<Cluster::Cell>(other.value)) {
       continue;
     }
