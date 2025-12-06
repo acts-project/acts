@@ -15,6 +15,7 @@ def runTruthTrackingGsf(
     digiConfigFile: Path,
     outputDir: Path,
     inputParticlePath: Optional[Path] = None,
+    inputSimHitsPath: Optional[Path] = None,
     decorators=[],
     s: acts.examples.Sequencer = None,
 ):
@@ -51,6 +52,7 @@ def runTruthTrackingGsf(
 
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
+    logger = acts.logging.getLogger("GSF Example")
 
     if inputParticlePath is None:
         addParticleGun(
@@ -67,9 +69,7 @@ def runTruthTrackingGsf(
             rnd=rnd,
         )
     else:
-        acts.logging.getLogger("GSF Example").info(
-            "Reading particles from %s", inputParticlePath.resolve()
-        )
+        logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
             RootParticleReader(
@@ -78,14 +78,26 @@ def runTruthTrackingGsf(
                 outputParticles="particles_generated",
             )
         )
+        s.addWhiteboardAlias("particles", "particles_generated")
 
-    addFatras(
-        s,
-        trackingGeometry,
-        field,
-        rnd=rnd,
-        enableInteractions=True,
-    )
+    if inputSimHitsPath is None:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            rnd=rnd,
+            enableInteractions=True,
+        )
+    else:
+        logger.info("Reading hits from %s", inputSimHitsPath.resolve())
+        s.addReader(
+            acts.examples.RootSimHitReader(
+                level=acts.logging.INFO,
+                filePath=str(inputSimHitsPath.resolve()),
+                outputSimHits="simhits",
+            )
+        )
+        s.addWhiteboardAlias("particles_simulated_selected", "particles_generated")
 
     addDigitization(
         s,
