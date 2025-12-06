@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/ConvexPolygonPortalShell.hpp"
+#include "Acts/Geometry/DiamondPortalShell.hpp"
 
-#include "Acts/Geometry/ConvexPolygonVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 
@@ -23,7 +23,7 @@
 
 namespace Acts {
 
-void ConvexPolygonPortalShell::fill(TrackingVolume& volume) {
+void DiamondPortalShell::fill(TrackingVolume& volume) {
   for (const auto face : {Face::NegativeZFaceXY, Face::PositiveZFaceXY,
                           Face::NegativeXFaceYZ12, Face::PositiveXFaceYZ12,
                           Face::NegativeXFaceYZ23, Face::PositiveXFaceYZ23,
@@ -36,18 +36,18 @@ void ConvexPolygonPortalShell::fill(TrackingVolume& volume) {
   }
 }
 
-SingleConvexPolygonPortalShell::SingleConvexPolygonPortalShell(
+SingleDiamondPortalShell::SingleDiamondPortalShell(
     TrackingVolume& volume)
     : m_volume{&volume} {
   if (m_volume->volumeBounds().type() !=
-      VolumeBounds::BoundsType::eConvexPolygon) {
+      VolumeBounds::BoundsType::eDiamond) {
     throw std::invalid_argument(
-        "SingleConvexPolygonPortalShell: Associated volume does not "
-        "have ConvexPolygonVolumeBounds");
+        "SingleDiamondPortalShell: Associated volume does not "
+        "have DiamondVolumeBounds");
   }
 
   const auto& bounds =
-      dynamic_cast<const ConvexPolygonVolumeBounds&>(m_volume->volumeBounds());
+      dynamic_cast<const DiamondVolumeBounds&>(m_volume->volumeBounds());
 
   // fill the protals from the oriented surfaces of the volume bounds
   const auto surfaces = bounds.orientedSurfaces(m_volume->transform());
@@ -61,23 +61,23 @@ SingleConvexPolygonPortalShell::SingleConvexPolygonPortalShell(
   }
 }
 
-std::shared_ptr<Portal> SingleConvexPolygonPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> SingleDiamondPortalShell::portalPtr(Face face) {
   return m_portals.at(toUnderlying(face));
 }
 
-void SingleConvexPolygonPortalShell::setPortal(std::shared_ptr<Portal> portal,
+void SingleDiamondPortalShell::setPortal(std::shared_ptr<Portal> portal,
                                                Face face) {
   assert(portal != nullptr);
   assert(portal->isValid());
   m_portals.at(toUnderlying(face)) = std::move(portal);
 }
 
-std::size_t SingleConvexPolygonPortalShell::size() const {
+std::size_t SingleDiamondPortalShell::size() const {
   return std::ranges::count_if(
       m_portals, [](const auto& portal) { return portal != nullptr; });
 }
 
-void SingleConvexPolygonPortalShell::applyToVolume() {
+void SingleDiamondPortalShell::applyToVolume() {
   for (std::size_t p = 0; p < m_portals.size(); ++p) {
     const auto& portal = m_portals.at(p);
     if (portal != nullptr) {
@@ -91,15 +91,15 @@ void SingleConvexPolygonPortalShell::applyToVolume() {
   }
 }
 
-bool SingleConvexPolygonPortalShell::isValid() const {
+bool SingleDiamondPortalShell::isValid() const {
   return std::ranges::all_of(m_portals, [](const auto& portal) {
     return portal == nullptr || portal->isValid();
   });
 }
 
-std::string SingleConvexPolygonPortalShell::label() const {
+std::string SingleDiamondPortalShell::label() const {
   std::stringstream ss;
-  ss << "Single ConvexPolygon Portal Shell for vol = " + m_volume->volumeName()
+  ss << "Single Diamond Portal Shell for vol = " + m_volume->volumeName()
      << " ";
   return ss.str();
 }
