@@ -231,10 +231,15 @@ bool CompositeSpacePointLineSeeder::nextLayer(
                             << " exceeds the boundary: " << boundary << ".");
       return false;
     }
-    if (hitVec.size() > m_cfg.busyLayerLimit) {
+    const std::size_t nHits =
+        !m_cfg.busyLimitCountGood
+            ? hitVec.size()
+            : std::ranges::count_if(
+                  hitVec, [&](const auto& hit) { return selector(*hit); });
+    if (nHits > m_cfg.busyLayerLimit) {
       ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": The layer "
                             << layerIndex.value()
-                            << " is too busy for seeding: " << hitVec.size()
+                            << " is too busy for seeding: " << nHits
                             << ". Limit: " << m_cfg.busyLayerLimit << ".");
       continue;
     }
@@ -284,7 +289,7 @@ CompositeSpacePointLineSeeder::nextSeed(
           options.patternParams, options.delegate->newContainer(cctx)};
 
       const auto [pos, dir] = makeLine(options.patternParams);
-      const double t0 = patternSeed.params[toUnderlying(FitParIdx::t0)];
+      const double t0 = patternSeed.params[toUnderlying(ParIdx::t0)];
 
       auto append = [&](StrawLayers_t<UncalibCont_t>& hitLayers) {
         for (const auto& layer : hitLayers) {
@@ -301,86 +306,28 @@ CompositeSpacePointLineSeeder::nextSeed(
     }
     /// No valid seed can be found
     if (!nextLayer(strawLayers, selector, strawLayers.size(),
-                   options.m_lowerLayer, options.m_lowerHitIndex, false) ||
+                   options.m_lowerLayer, options.m_lowerHitIndex, true) ||
         !nextLayer(strawLayers, selector, options.m_lowerHitIndex.value(),
-                   options.m_upperLayer, options.m_upperHitIndex, true)) {
+                   options.m_upperLayer, options.m_upperHitIndex, false)) {
       ACTS_DEBUG(__func__ << "() " << __LINE__
                           << ": No valid seed can be constructed. ");
       return false;
     }
   }
 
+  while (options.m_lowerHitIndex.value() < options.m_upperHitIndex.value()) {
+    moveToNextCandidate(selector, options);
+  }
+
   return std::nullopt;
 }
-
-#ifdef STONJEK
-
-template <CompositeSpacePointContainer Cont_t,
-          CompositeSpacePointSorter<Cont_t> Splitter_t,
-          CompositeSpacePointContainer CalibCont_t,
-          CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
-bool CompositeSpacePointLineSeeder::prepareSeedOptions(
-    SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options) const {
-  const auto& strawLayers{options.splitter->strawHits()};
-
-  if (strawLayers.empty()) {
-    ACTS_DEBUG(__func__ << "() " << __LINE__
-                        << ": No straw hits available for seeding.");
-    return false;
-  }
-  ACTS_DEBUG(__func__ << "():" << __LINE__ << " N straw layers "
-                      << strawLayers.size() << " and  N strip layer "
-                      << options.splitter->stripHits().size());
-
-  if (std::ranges::any_of(strawLayers, [this](const Cont_t& layerHits) {
-        return layerHits.size() > m_cfg.busyLayerLimit;
-      })) {
-    options.startWithPattern = false;
-  }
-
-  options.upperLayer = strawLayers.size() - 1;
-  for (uint i_layer{0}; i_layer < strawLayers.size(); ++i_layer) {
-    const Cont_t& layerHits = strawLayers[i_layer];
-    ACTS_DEBUG("Layer " << i_layer << " has " << layerHits.size()
-                        << " straw hits ");
-  }
-
-  while (options.lowerLayer < options.upperLayer) {
-    const Cont_t& lowerLayerHits =
-        options.splitter->strawHits()[options.lowerLayer];
-    if (lowerLayerHits.size() > m_cfg.busyLayerLimit ||
-        !firstGoodHit(lowerLayerHits, options.selector,
-                      options.lowerHitIndex)) {
-      ACTS_DEBUG("Skipping lower layer " << options.lowerLayer << " with "
-                                         << lowerLayerHits.size() << " hits ");
-      ++options.lowerLayer;
-    } else {
-      break;
-    }
-  }
-  while (options.lowerLayer < options.upperLayer) {
-    const Cont_t& upperLayerHits =
-        options.splitter->strawHits()[options.upperLayer];
-    if (upperLayerHits.size() > m_cfg.busyLayerLimit ||
-        !firstGoodHit(upperLayerHits, options.selector,
-                      options.upperHitIndex)) {
-      --options.upperLayer;
-    } else {
-      break;
-    }
-  }
-  return true;
-}
-
-template <CompositeSpacePointContainer Cont_t,
-          CompositeSpacePointSorter<Cont_t> Splitter_t,
-          CompositeSpacePointContainer CalibCont_t,
-          CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
+template <
+    CompositeSpacePointContainer UncalibCont_t,
+    CompositeSpacePointContainer CalibCont_t,
+    detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t> Delegate_t>
 void CompositeSpacePointLineSeeder::moveToNextCandidate(
-    SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options) const {
-  const Cont_t& lower = options.splitter->strawHits()[options.lowerLayer];
-  const Cont_t& upper = options.splitter->strawHits()[options.upperLayer];
-
+    const Selector_t<UncalibCont_t>& selector,
+    SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const {
   // Vary the left right solutions
   ++options.signComboIndex;
   if (options.signComboIndex < s_signCombo.size()) {
@@ -389,140 +336,42 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
   // All sign combos tested. Let's reset the signs combo and move on
   /// to the next hit inside the layer
   options.signComboIndex = 0;
+  const StrawLayers_t<UncalibCont_t>& strawLayers{
+      options.delegate->strawHits()};
 
-  // Move to the next hit in the lower layer
-  if (moveToNextHit(lower, options.selector, options.lowerHitIndex)) {
+  const UncalibCont_t& lower = strawLayers[options.m_lowerLayer.value()];
+  const UncalibCont_t& upper = strawLayers[options.m_upperLayer.value()];
+
+  /// Next good hit in the lower layer found
+  if (moveToNextHit(lower, selector, options.lowerHitIndex)) {
     return;
   }
-
-  // Reset to the first good hit in the lower layer
-  if (firstGoodHit(lower, options.selector, options.lowerHitIndex)) {
-    // --> so we can update to the next hit in the upper layer
-    if (moveToNextHit(upper, options.selector, options.upperHitIndex)) {
-      return;
-    }
-  }
-
-  // All combinations of hits & lines in both layers have been processed
-  // Switch to next lower layer but skip the busy ones according to the
-  // configuration
-  while (options.lowerLayer < options.upperLayer) {
-    const Cont_t& nextLower =
-        options.splitter->strawHits()[++options.lowerLayer];
-    // skip noisy layers
-    if (nextLower.size() > m_cfg.busyLayerLimit) {
-      continue;
-    }
-    // find first good hit in the new lower layer
-    if (firstGoodHit(nextLower, options.selector, options.lowerHitIndex)) {
-      break;
-    }
-  }
-
-  // If we found a new good lower layer, reset to the first good hit in the
-  // upper layer
-  if (options.lowerLayer < options.upperLayer) {
-    firstGoodHit(options.splitter->strawHits()[options.upperLayer],
-                 options.selector, options.upperHitIndex);
+  /// Reset the hit in the lower layer && move to the next hit
+  /// in the upper layer
+  if (firstGoodHit(lower, selector, options.lowerHitIndex) &&
+      moveToNextHit(upper, selector, options.upperHitIndex)) {
     return;
   }
+  /// All hit combinations in the two layers are tried -> move to next layer
+  auto& layerToStay{options.m_moveUpLayer ? options.m_lowerLayer
+                                          : options.m_upperLayer};
+  auto& layerToMove{options.m_moveUpLayer ? options.m_upperLayer
+                                          : options.m_lowerLayer};
+  auto& hitToStay{options.m_moveUpLayer ? options.lowerHitIndex
+                                        : options.upperHitIndex};
+  auto& hitToMove{options.m_moveUpLayer ? options.upperHitIndex
+                                        : options.lowerHitIndex};
 
-  // if we found a seed we would like to abort seeding after a certain lower
-  // layer index, e.g. the multilayer boundary
-  if (options.abortSelector.connected() &&
-      options.abortSelector(options.lowerLayer) && options.nGenSeeds) {
-    // Client requested to abort seeding at this layer index
-    options.lowerLayer = options.upperLayer;
+  /// Reset the hits in the layer that remains and go to the next layer on the
+  /// other side. Next time the otherside will stay and the former will move.
+  if (firstGoodHit(strawLayers[layerToStay.value()], selector, hitToStay) &&
+      nextLayer(strawLayers, selector, layerToStay.value(), layerToMove,
+                hitToMove, options.m_moveUpLayer)) {
+    options.m_moveUpLayer = !options.m_moveUpLayer;
     return;
-  }
-
-  // Since we did not find a good seed to now, we are just going to search for
-  // the first good hit in two layers as far apart as possible
-
-  options.lowerLayer = 0;
-
-  do {
-    const Cont_t& nextLower = options.splitter->strawHits()[options.lowerLayer];
-    if (nextLower.size() > m_cfg.busyLayerLimit) {
-      continue;
-    }
-    if (firstGoodHit(nextLower, options.selector, options.lowerHitIndex)) {
-      break;
-    }
-  } while (++options.lowerLayer < options.upperLayer);
-
-  while (options.lowerLayer < options.upperLayer) {
-    const Cont_t& nextUpper =
-        options.splitter->strawHits()[--options.upperLayer];
-    if (nextUpper.size() > m_cfg.busyLayerLimit) {
-      continue;
-    }
-    if (firstGoodHit(nextUpper, options.selector, options.upperHitIndex)) {
-      break;
-    }
   }
 }
-
-template <typename T>
-using SeedSolutionType =
-    std::optional<CompositeSpacePointLineSeeder::SeedSolution<T>>;
-
-template <CompositeSpacePointContainer Cont_t,
-          CompositeSpacePointSorter<Cont_t> Splitter_t,
-          CompositeSpacePointContainer CalibCont_t,
-          CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
-SeedSolutionType<CalibCont_t> CompositeSpacePointLineSeeder::nextSeed(
-    SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options) const {
-  std::optional<SeedSolution<Cont_t>> found{std::nullopt};
-  if (!options.nGenSeeds && options.startWithPattern) {
-    ++options.nGenSeeds;
-    found = std::make_optional(SeedSolution<CalibCont_t>());
-    found->lineParams = options.patternParams;
-    found->seedHits.reserve(options.splitter->strawHits().size() +
-                            options.splitter->stripHits().size());
-
-    Vector posForCalib =
-        Vector(found->lineParams[toUnderlying(ParIdx::x0)],
-               found->lineParams[toUnderlying(ParIdx::y0)], 0.);
-    Vector dirForCalib = makeDirectionFromPhiTheta(
-        found->lineParams[toUnderlying(ParIdx::phi)],
-        found->lineParams[toUnderlying(ParIdx::theta)]);
-    for (const auto& strawLayerHits : options.splitter->strawHits()) {
-      Cont_t tmpCalibHits = options.calibrator->calibrate(
-          *options.calibContext, posForCalib, dirForCalib,
-          options.patternParams[toUnderlying(ParIdx::t0)], strawLayerHits);
-      found->seedHits.insert(found->seedHits.end(),
-                             std::make_move_iterator(tmpCalibHits.begin()),
-                             std::make_move_iterator(tmpCalibHits.end()));
-    }
-
-    found->nStrawHits = found->seedHits.size();
-    for (const auto& stripLayerHits : options.splitter->stripHits()) {
-      Cont_t tmpCalibHits = options.calibrator->calibrate(
-          *options.calibContext, posForCalib, dirForCalib,
-          options.patternParams[toUnderlying(ParIdx::t0)], stripLayerHits);
-      found->seedHits.insert(found->seedHits.end(),
-                             std::make_move_iterator(tmpCalibHits.begin()),
-                             std::make_move_iterator(tmpCalibHits.end()));
-    }
-
-    found->y0 = options.patternParams[toUnderlying(ParIdx::y0)];
-    found->theta = options.patternParams[toUnderlying(ParIdx::theta)];
-    found->solutionSigns.resize(options.splitter->strawHits().size());
-    options.seenSolutions.push_back(*found);
-
-    return found;
-  }
-  ACTS_DEBUG("Will start looking for seeds now");
-  while (options.lowerLayer < options.upperLayer) {
-    found = buildSeed(options);
-    moveToNextCandidate(options);
-    if (found) {
-      return found;
-    }
-  }
-  return std::nullopt;
-}
+#ifdef STONJEK
 
 template <CompositeSpacePointContainer Cont_t,
           CompositeSpacePointSorter<Cont_t> Splitter_t,

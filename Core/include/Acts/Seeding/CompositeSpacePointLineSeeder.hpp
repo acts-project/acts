@@ -118,6 +118,9 @@ class CompositeSpacePointLineSeeder {
     double hitPullCut{5.};
     /// @brief How many drift circles may be on a layer to be used for seeding
     std::size_t busyLayerLimit{2};
+    /// @brief Layers may contain measurements with bad hits and hence the
+    bool busyLimitCountGood{false};
+
     /// @brief How many drift circle hits needs the seed to contain in order to be valid
     std::size_t nStrawHitCut{3};
     /// @brief Hit cut based on the fraction of collected tube layers.
@@ -263,8 +266,8 @@ class CompositeSpacePointLineSeeder {
   struct SegmentSeed {
     /// @brief Constructor taking the seed parameters &&
     ///        a new hit container
-    /// @param _pars:
-    /// @param _hits
+    /// @param _pars: The seed line parameter
+    /// @param _hits  A new empty container to be filled
     explicit SegmentSeed(SeedParam_t _pars, contType_t&& _hits) noexcept
         : parameters{std::move(_pars)}, hits{std::move(_hits)} {}
     /// @brief Seed line parameters
@@ -314,6 +317,8 @@ class CompositeSpacePointLineSeeder {
     std::size_t m_upperHitIndex{0ul};
     /// @brief  Index of the sign combination under consideration for the seeding
     std::size_t m_signComboIndex{0ul};
+    /// @brief Flag toggling whether the upper of the lower layer shall be moved
+    bool m_moveUpLayer{true};
   };
 
   template <CompositeSpacePointContainer UncalibCont_t,
@@ -367,6 +372,14 @@ class CompositeSpacePointLineSeeder {
                  const std::size_t boundary,
                  std::optional<std::size_t>& layerIndex, std::size_t& hitIdx,
                  bool moveForward) const;
+
+  template <CompositeSpacePointContainer UncalibCont_t,
+            CompositeSpacePointContainer CalibCont_t,
+            detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
+                Delegate_t>
+  void moveToNextCandidate(
+      const Selector_t<UncalibCont_t>& selector,
+      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
 #ifdef STONJEK
 
   template <CompositeSpacePointContainer Cont_t,
@@ -377,12 +390,6 @@ class CompositeSpacePointLineSeeder {
       SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
       const;
 
-  template <CompositeSpacePointContainer Cont_t,
-            CompositeSpacePointSorter<Cont_t> Splitter_t,
-            CompositeSpacePointContainer CalibCont_t,
-            CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
-  void moveToNextCandidate(SeedOptions<Cont_t, Splitter_t, CalibCont_t,
-                                       Calibrator_t>& options) const;
 #endif
   /// @brief Construct the final seed parameters by combining the initial
   ///        pattern parameters with the parameter from two circle tangent
