@@ -47,7 +47,7 @@ concept CompositeSpacePointSeedFiller =
       /// @brief Creates a new empty container to construct a new segment seed
       /// @param cctx: Calibration context in case that the container shall be
       ///              part of a predefined memory block
-      { filler.newContainer(cctx) } -> std::same_as<CalibCont_t&&>;
+      { filler.newContainer(cctx) } -> std::same_as<CalibCont_t>;
       /// @brief Appends the candidate candidate space point to the segment
       ///        seed container & optionally calibrates the parameters
       /// @param cctx: Reference to the calibration context to pipe
@@ -119,7 +119,7 @@ class CompositeSpacePointLineSeeder {
     /// @brief How many drift circles may be on a layer to be used for seeding
     std::size_t busyLayerLimit{2};
     /// @brief Layers may contain measurements with bad hits and hence the
-    bool busyLimitCountGood{false};
+    bool busyLimitCountGood{true};
 
     /// @brief How many drift circle hits needs the seed to contain in order to be valid
     std::size_t nStrawHitCut{3};
@@ -297,8 +297,10 @@ class CompositeSpacePointLineSeeder {
       opts.print(ostr);
       return ostr;
     }
-
-    std::size_t nGenSeeds() const;
+    /// @brief Return the number of generated seeds
+    std::size_t nGenSeeds() const {
+        return m_seenSolutions.size();
+    }
 
     friend CompositeSpacePointLineSeeder;
 
@@ -335,9 +337,16 @@ class CompositeSpacePointLineSeeder {
   /// @brief Abrivation of the selector delegate to skip invalid straw hits in the seed
   template <CompositeSpacePointContainer Cont_t>
   using Selector_t = Delegate<bool(ConstDeRef_t<typename Cont_t::value_type>)>;
-  /// @brief
+  /// @brief Abrivation of the split hit containers
   template <CompositeSpacePointContainer Cont_t>
   using StrawLayers_t = std::vector<Cont_t>;
+  /// @brief Counts the number of hits inside the container. Depending on whether
+  ///        the busyLimitCountGood flag is true, bad hits are not considered
+  /// @param container: Reference to the container which size is to be evaluated
+  /// @param selector: Delegate method to skip bad bad hits
+  template <CompositeSpacePointContainer Cont_t>
+  std::size_t countHits(const Cont_t& container,
+                        const Selector_t<Cont_t>& selector) const;
   /// @brief Moves to the hit index to the next good hit inside the layer.
   ///        The index is incremented until the underlying hit is accepted
   ///        by the selector or all hits in the container were tried
@@ -372,7 +381,12 @@ class CompositeSpacePointLineSeeder {
                  const std::size_t boundary,
                  std::optional<std::size_t>& layerIndex, std::size_t& hitIdx,
                  bool moveForward) const;
-
+  /// @brief Move the layer and hit indices inside the options towards the next candidate
+  ///        pair. First, the L-R ambiguities are incremented, then it is
+  ///        searched for the next pair inside the lower && upper layer pair.
+  ///        Finally, the indices are moved towards the next layer
+  /// @param selector: Delegate method to skip bad hits
+  /// @param options: Mutable reference to the SeedOptions object carring the state indices
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
@@ -380,17 +394,22 @@ class CompositeSpacePointLineSeeder {
   void moveToNextCandidate(
       const Selector_t<UncalibCont_t>& selector,
       SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
-#ifdef STONJEK
 
-  template <CompositeSpacePointContainer Cont_t,
-            CompositeSpacePointSorter<Cont_t> Splitter_t,
+  /// @brief Attempts to construct the next seed from the given configuration of
+  ///        seed circles. The seed needs to contain a minimum number of other
+  ///        straw hits and there must be no other previously constructed seed
+  ///        with the same Left-Right solution
+  /// @param cctx: Calibration context to be piped to the experiment's implementation
+  ///              such that conditions data access becomes possible
+  /// @param selector: Delegate method to skip bad hits
+  /// @param options: Mutable reference to the SeedOptions object carring the state indices
+  template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
-            CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
-  std::optional<SeedSolution<CalibCont_t>> buildSeed(
-      SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
-      const;
-
-#endif
+            detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
+                Delegate_t>
+  std::optional<SegmentSeed<CalibCont_t>> buildSeed(
+      const CalibrationContext& cctx, const Selector_t<UncalibCont_t>& selector,
+      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& option) const;
   /// @brief Construct the final seed parameters by combining the initial
   ///        pattern parameters with the parameter from two circle tangent
   /// @param parTheta: Theta angle of the two circle tangent solution

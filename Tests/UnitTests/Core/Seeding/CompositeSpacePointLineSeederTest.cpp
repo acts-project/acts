@@ -71,31 +71,27 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
     auto testTubes =
         MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
     nTruthStraws = testTubes.size();
-    std::unique_ptr<SpSorter> sorterPtr = std::make_unique<SpSorter>(testTubes);
+    auto sorterPtr = std::make_unique<SpSorter>(testTubes);
     auto calibrator = std::make_unique<SpCalibrator>();
 
     using SeedOptions_t =
-        Seeder::SeedOptions<Container_t, SpSorter, Container_t, SpCalibrator>;
+        Seeder::SeedOptions<Container_t, Container_t, SpSorter>;
     SeedOptions_t seedOpts{};
-    seedOpts.abortSelector.connect<&abortAfterHalfLayers>();
-    seedOpts.splitter = std::move(sorterPtr);
-    seedOpts.calibrator = calibrator.get();
-    seedOpts.selector.connect<&isGoodHit>();
+    // seedOpts.abortSelector.connect<&abortAfterHalfLayers>();
+    seedOpts.delegate = std::move(sorterPtr);
     seedOpts.strawRadius = 15._mm;
     ACTS_DEBUG(seedOpts);
-    ACTS_DEBUG("Preparing seed options ");
-    seeder.prepareSeedOptions(seedOpts);
-    ACTS_DEBUG(seedOpts);
     nSeeds = 0;
-    while (auto seed = seeder.nextSeed(seedOpts)) {
+    CalibrationContext cctx{};
+    while (auto seed = seeder.nextSeed(cctx, seedOpts)) {
       ACTS_DEBUG("Seed finder loop " << seedOpts);
       if (seed == std::nullopt)
         break;
-      recoY0.push_back(seed->y0);
-      recoTheta.push_back(seed->theta);
-      uncertY0.push_back(seed->dY0);
-      uncertTheta.push_back(seed->dTheta);
-      nStraws.push_back(seed->nStrawHits);
+      /// recoY0.push_back(seed->y0);
+      /// recoTheta.push_back(seed->theta);
+      /// uncertY0.push_back(seed->dY0);
+      /// uncertTheta.push_back(seed->dTheta);
+      /// nStraws.push_back(seed->nStrawHits);
       nSeeds++;
     }
     ACTS_DEBUG("======Event " << evt << " found " << nSeeds << " seeds.");
