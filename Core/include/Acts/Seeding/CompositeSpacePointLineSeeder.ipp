@@ -108,7 +108,7 @@ CompositeSpacePointLineSeeder::SeedSolution<UnCalibCont_t,
 CompositeSpacePointLineSeeder::SeedSolution<UnCalibCont_t, Splitter_t>::getHit(
     const std::size_t idx) const {
   const auto& [layIdx, hitIdx] = m_seedHits.at(idx);
-  const UnCalibCont_t& strawLayer = m_splitter->strawHits().at(layIdx);
+  const UnCalibCont_t& strawLayer = m_splitter.strawHits().at(layIdx);
   return *strawLayer.at(hitIdx);
 }
 template <CompositeSpacePointContainer UnCalibCont_t,
@@ -123,7 +123,7 @@ std::vector<int> CompositeSpacePointLineSeeder::SeedSolution<
       m_seedHits, std::back_inserter(result),
       [&](const std::pair<std::size_t, std::size_t>& indices) {
         const auto& [layIdx, hitIdx] = indices;
-        const UnCalibCont_t& strawLayer = m_splitter->strawHits().at(layIdx);
+        const UnCalibCont_t& strawLayer = m_splitter.strawHits().at(layIdx);
         return detail::CompSpacePointAuxiliaries::strawSign(
             seedPos, seedDir, *strawLayer.at(hitIdx));
       });
@@ -159,11 +159,11 @@ template <
     detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t> Delegate_t>
 void CompositeSpacePointLineSeeder::SeedOptions<
     UncalibCont_t, CalibCont_t, Delegate_t>::print(std::ostream& ostr) const {
-  const std::size_t nStraw = delegate->strawHits().size();
+  const std::size_t nStraw = this->strawHits().size();
 
   ostr << "Seed options:\n";
   ostr << "N strawLayers: " << nStraw
-       << " N strip layers: " << delegate->stripHits().size() << "\n";
+       << " N strip layers: " << this->stripHits().size() << "\n";
   ostr << "upperLayer " << m_upperLayer.value_or(nStraw - 1ul) << " lowerLayer "
        << m_lowerLayer.value_or(0u) << " upperHitIndex " << m_upperHitIndex
        << " lower layer hit index " << m_lowerHitIndex << " sign combo index "
@@ -171,15 +171,14 @@ void CompositeSpacePointLineSeeder::SeedOptions<
                                    s_signCombo[m_signComboIndex][1]))
        << "\n";
   ostr << " start with pattern " << startWithPattern << " nGenSeeds "
-       << nGenSeeds() << " nStrawCut " << nStrawCut << "\n";
+       << nGenSeeds() << " nStrawCut " << m_nStrawCut << "\n";
   if (nGenSeeds() > 0ul) {
     for (const auto& seen : m_seenSolutions) {
-        ostr<<"################################################"<<std::endl;
-        ostr<<seen<<std::endl;
-        ostr<<"################################################"<<std::endl;
+      ostr << "################################################" << std::endl;
+      ostr << seen << std::endl;
+      ostr << "################################################" << std::endl;
     }
   }
-  
 }
 
 template <CompositeSpacePointContainer UnCalibCont_t>
@@ -279,20 +278,15 @@ std::optional<CompositeSpacePointLineSeeder::SegmentSeed<CalibCont_t>>
 CompositeSpacePointLineSeeder::nextSeed(
     const CalibrationContext& cctx,
     SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const {
-  if (!options.delegate) {
-    throw std::invalid_argument(
-        "CompositeSpacePointLineSeeder::nextSeed() -  Please construct a "
-        "delegate");
-  }
-
-  const StrawLayers_t<UncalibCont_t>& strawLayers{
-      options.delegate->strawHits()};
+  const StrawLayers_t<UncalibCont_t>& strawLayers{options.strawHits()};
 
   Selector_t<UncalibCont_t> selector{};
-  selector.template connect<&Delegate_t::goodCandidate>(options.delegate.get());
+  selector.template connect<&Delegate_t::goodCandidate>(&options);
   /// The layer hast not yet been initialized
   if (!options.m_upperLayer || !options.m_lowerLayer) {
-    /// Check whether the seeding can start with the external pattern parameters
+    options.m_nStrawCut = m_cfg.nStrawHitCut;
+    /// Check whether the seeding can start with the external pattern
+    /// parameters
     if (options.startWithPattern &&
         std::ranges::any_of(strawLayers, [&](const UncalibCont_t& layerHits) {
           return countHits(layerHits, selector) > m_cfg.busyLayerLimit;
@@ -300,8 +294,8 @@ CompositeSpacePointLineSeeder::nextSeed(
       options.startWithPattern = false;
     }
     if (options.startWithPattern) {
-      SegmentSeed<CalibCont_t> patternSeed{
-          options.patternParams, options.delegate->newContainer(cctx)};
+      SegmentSeed<CalibCont_t> patternSeed{options.patternParams,
+                                           options.newContainer(cctx)};
 
       const auto [pos, dir] = makeLine(options.patternParams);
       const double t0 = patternSeed.parameters[toUnderlying(ParIdx::t0)];
@@ -309,13 +303,12 @@ CompositeSpacePointLineSeeder::nextSeed(
       auto append = [&](const StrawLayers_t<UncalibCont_t>& hitLayers) {
         for (const auto& layer : hitLayers) {
           for (const auto& hit : layer) {
-            options.delegate->append(cctx, pos, dir, t0, *hit,
-                                     patternSeed.hits);
+            options.append(cctx, pos, dir, t0, *hit, patternSeed.hits);
           }
         }
       };
       append(strawLayers);
-      append(options.delegate->stripHits());
+      append(options.stripHits());
       options.startWithPattern = false;
       return patternSeed;
     }
@@ -356,8 +349,7 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
   /// to the next hit inside the layer
   options.m_signComboIndex = 0;
 
-  const StrawLayers_t<UncalibCont_t>& strawLayers{
-      options.delegate->strawHits()};
+  const StrawLayers_t<UncalibCont_t>& strawLayers{options.strawHits()};
 
   const UncalibCont_t& lower = strawLayers[options.m_lowerLayer.value()];
   const UncalibCont_t& upper = strawLayers[options.m_upperLayer.value()];
@@ -391,6 +383,48 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
     return;
   }
 }
+
+template <
+    CompositeSpacePointContainer UncalibCont_t,
+    CompositeSpacePointContainer CalibCont_t,
+    detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t> Delegate_t>
+bool CompositeSpacePointLineSeeder::passSeedCuts(
+    const Vector& seedPos, const Vector& seedDir,
+    SeedSolution<UncalibCont_t, Delegate_t>& newSolution,
+    SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const {
+  // check if we collected enough straw hits
+  const double hitCut =
+      std::max(1.0 * options.m_nStrawCut,
+               m_cfg.nStrawLayHitCut * options.strawHits().size());
+  ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Found "
+                        << newSolution.nStrawHits
+                        << " compatible straw hits. Hit cut is " << hitCut);
+  if (newSolution.nStrawHits < hitCut) {
+    return false;
+  }
+  if (!m_cfg.overlapCorridor) {
+    return true;
+  }
+  newSolution.solutionSigns = newSolution.leftRightAmbiguity(seedPos, seedDir);
+  for (std::size_t a = 0ul; a < options.nGenSeeds(); ++a) {
+    const auto& acceptedSol = options.m_seenSolutions[a];
+    std::size_t nOverlap{0};
+    const std::vector<int> corridor =
+        acceptedSol.leftRightAmbiguity(seedPos, seedDir);
+    for (std::size_t l = 0; l < acceptedSol.size(); ++l) {
+      nOverlap += (corridor[l] == acceptedSol.solutionSigns[l]);
+    }
+    if (nOverlap == corridor.size() &&
+        acceptedSol.size() >= newSolution.size()) {
+      return false;
+    }
+  }
+  if (m_cfg.tightenHitCut) {
+    options.m_nStrawCut = std::max(options.m_nStrawCut, newSolution.nStrawHits);
+  }
+  return true;
+}
+
 template <
     CompositeSpacePointContainer UncalibCont_t,
     CompositeSpacePointContainer CalibCont_t,
@@ -399,17 +433,16 @@ std::optional<CompositeSpacePointLineSeeder::SegmentSeed<CalibCont_t>>
 CompositeSpacePointLineSeeder::buildSeed(
     const CalibrationContext& cctx, const Selector_t<UncalibCont_t>& selector,
     SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const {
-  const StrawLayers_t<UncalibCont_t>& strawLayers{
-      options.delegate->strawHits()};
+  const StrawLayers_t<UncalibCont_t>& strawLayers{options.strawHits()};
 
   ACTS_VERBOSE(__func__ << "() " << __LINE__
                         << " - Try to draw new seed from \n"
                         << options << ".");
   const auto& upperHit =
-      *strawLayers.at[options.m_upperLayer.value()].at(options.m_upperHitIndex);
+      *strawLayers.at(options.m_upperLayer.value()).at(options.m_upperHitIndex);
   const auto& lowerHit =
-      *strawLayers.at[options.m_lowerLayer.value()].at(options.m_lowerHitIndex);
-  const auto ambi{static_cast<TangentAmbi>(options.m_signComboIndex)}
+      *strawLayers.at(options.m_lowerLayer.value()).at(options.m_lowerHitIndex);
+  const auto ambi{static_cast<TangentAmbi>(options.m_signComboIndex)};
   ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - " << toString(ambi)
                         << "\n   Top seed hit: " << Acts::toString(upperHit)
                         << "\n   Bottom seed hit:" << Acts::toString(lowerHit)
@@ -420,8 +453,60 @@ CompositeSpacePointLineSeeder::buildSeed(
   ACTS_VERBOSE(__func__ << "() " << __LINE__
                         << " - Tangential parameters: " << seedPars);
   if (!isValidLine(seedPars)) {
-  ACTS_VERBOSE(__func__ << "() " << __LINE__<<" - Reject seed.");
-    
+    ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Reject seed.");
+    return std::nullopt;
+  }
+  // check if we have already seen this solution
+  if (std::ranges::any_of(
+          options.m_seenSolutions, [&seedPars](const auto& seen) {
+            const double deltaY = Acts::abs(seen.y0 - seedPars.y0);
+            const double limitY = Acts::fastHypot(seen.dY0, seedPars.dY0);
+            const double deltaTheta = Acts::abs(seen.theta - seedPars.theta);
+            const double limitTheta =
+                Acts::fastHypot(seen.dTheta, seedPars.dTheta);
+            return deltaY < limitY && deltaTheta < limitTheta;
+          })) {
+    ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Reject seed.");
+    return std::nullopt;
+  }
+  /// Continue to construct a new solution
+  const double t0 = options.patternParams[toUnderlying(ParIdx::t0)];
+  SeedSolution<UncalibCont_t, Delegate_t> newSolution{seedPars, options};
+
+  ACTS_DEBUG(__func__ << "() " << __LINE__
+                      << " - Start looking for compatible hits");
+
+  const Vector3 seedPos = seedPars.y0 * Vector3::UnitY();
+  const Vector3 seedDir = makeDirection(lowerHit, seedPars.theta);
+  for (const auto& [layerNr, hitsInLayer] :
+       Acts::enumerate(options.strawHits())) {
+    bool hadGoodHit{false};
+    for (const auto& [hitNr, testMe] : Acts::enumerate(hitsInLayer)) {
+      using namespace Acts::detail::LineHelper;
+      const double distance = Acts::abs(
+          signedDistance(testMe->localPosition(), testMe->sensorDirection(),
+                         seedPos, seedDir));
+      if (distance > options.strawRadius) {
+        ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - layer,hit = ("
+                              << layerNr << "," << hitNr
+                              << ") -> spacePoint: " << Acts::toString(*testMe)
+                              << " is too far away: " << distance);
+        if (hadGoodHit) {
+          break;
+        }
+        continue;
+      }
+      if (options.candidatePull(cctx, seedPos, seedDir, t0, *testMe) <
+          Acts::pow(m_cfg.hitPullCut, 2u)) {
+        hadGoodHit = true;
+        newSolution.append(layerNr, hitNr);
+        newSolution.nStrawHits += selector(*testMe);
+      } else if (hadGoodHit) {
+        break;
+      }
+    }
+  }
+  if (!passSeedCuts(seedPos, seedDir, newSolution, options)) {
     return std::nullopt;
   }
   return std::nullopt;
@@ -430,7 +515,8 @@ CompositeSpacePointLineSeeder::buildSeed(
 // seedPars.lineParams =
 // constructLine(seedPars.theta, seedPars.y0, options.patternParams);
 
-ACTS_DEBUG("Found N seeds so far " << options.seenSolutions.size());
+ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Found N seeds so far "
+                    << options.seenSolutions.size());
 // check if we have already seen this solution
 if (std::ranges::any_of(options.seenSolutions, [&seedPars](const auto& seen) {
       const double deltaY = Acts::abs(seen.y0 - seedPars.y0);
@@ -469,9 +555,8 @@ for (const auto [layerNr, hitsInLayer] :
   }
 }
 // check if we collected enough straw hits
-const double hitCut =
-    std::max(1.0 * m_cfg.nStrawHitCut,
-             m_cfg.nStrawLayHitCut* options.splitter->strawHits().size());
+const double hitCut = std::max(1.0 * m_cfg.nStrawHitCut,
+                               m_cfg.nStrawLayHitCut* strawLayers.size());
 ACTS_DEBUG("Found " << seedSol.nStrawHits
                     << " compatible straw hits. Hit cut is " << hitCut);
 if (seedSol.nStrawHits < hitCut) {

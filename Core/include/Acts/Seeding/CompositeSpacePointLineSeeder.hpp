@@ -225,7 +225,7 @@ class CompositeSpacePointLineSeeder {
     /// @param layerSorter: Pointer to the sorter object carrying a sorted
     ///                     collection of hits that are split per logical layer
     explicit SeedSolution(const TwoCircleTangentPars& pars,
-                          const Splitter_t* layerSorter)
+                          const Splitter_t& layerSorter)
         : TwoCircleTangentPars{pars}, m_splitter{layerSorter} {}
 
     /// @brief Abrivation of the underlying space point reference
@@ -246,11 +246,13 @@ class CompositeSpacePointLineSeeder {
     void append(const std::size_t layIdx, const std::size_t hitIdx);
     /// @brief Vector of the associate left-rignt ambiguities
     std::vector<int> solutionSigns{};
+    ///@brief Number of good straw measurements
+    std::size_t nStrawHits{0ul};
 
    private:
     /// @brief Pointer to the space point per layer splitter to gain access to the
     ///        input space point container
-    const Splitter_t* m_splitter{nullptr};
+    const Splitter_t& m_splitter;
     /// @brief Set of hits collected onto the seed. For each element
     ///        the first index represents the layer &
     ///        the second one the particular hit in that layer
@@ -280,17 +282,15 @@ class CompositeSpacePointLineSeeder {
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
-  struct SeedOptions {
-    /// @brief Splitter holding the straw and strip hits
-    std::unique_ptr<Delegate_t> delegate{};
+  struct SeedOptions : public Delegate_t {
+    /// @brief Take over the Delegate_t constructor
+    using Delegate_t::Delegate_t;
     /// @brief radius of the straw tubes used to reject hits outside the tube
     double strawRadius{15. * UnitConstants::mm};
     /// @brief Try at the first time the external seed parameters as candidate
     bool startWithPattern{false};
     /// @brief Estimated parameters from pattern
     SeedParam_t patternParams{};
-    /// @brief Number of generated seeds
-    std::size_t nStrawCut{0ul};
     /// @brief Stringstream output operator
     friend std::ostream& operator<<(std::ostream& ostr,
                                     const SeedOptions& opts) {
@@ -298,9 +298,7 @@ class CompositeSpacePointLineSeeder {
       return ostr;
     }
     /// @brief Return the number of generated seeds
-    std::size_t nGenSeeds() const {
-        return m_seenSolutions.size();
-    }
+    std::size_t nGenSeeds() const { return m_seenSolutions.size(); }
 
     friend CompositeSpacePointLineSeeder;
 
@@ -319,6 +317,9 @@ class CompositeSpacePointLineSeeder {
     std::size_t m_upperHitIndex{0ul};
     /// @brief  Index of the sign combination under consideration for the seeding
     std::size_t m_signComboIndex{0ul};
+    /// @brief Number of minimum straw hits a seed must have
+    std::size_t m_nStrawCut{0ul};
+
     /// @brief Flag toggling whether the upper of the lower layer shall be moved
     bool m_moveUpLayer{true};
   };
@@ -409,7 +410,17 @@ class CompositeSpacePointLineSeeder {
                 Delegate_t>
   std::optional<SegmentSeed<CalibCont_t>> buildSeed(
       const CalibrationContext& cctx, const Selector_t<UncalibCont_t>& selector,
-      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& option) const;
+      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
+
+  template <CompositeSpacePointContainer UncalibCont_t,
+            CompositeSpacePointContainer CalibCont_t,
+            detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
+                Delegate_t>
+  bool passSeedCuts(
+      const Vector& seedPos, const Vector& seedDir,
+
+      SeedSolution<UncalibCont_t, Delegate_t>& newSolution,
+      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
   /// @brief Construct the final seed parameters by combining the initial
   ///        pattern parameters with the parameter from two circle tangent
   /// @param parTheta: Theta angle of the two circle tangent solution
@@ -417,7 +428,6 @@ class CompositeSpacePointLineSeeder {
   /// @param patternParams: Parameter estimate from the hit pattern
   SeedParam_t constructLine(const double parTheta, const double parY0,
                             const SeedParam_t& patternParams) const;
-
   /// @brief Constructs a line from the parsed seed parameters. The
   ///        first element is the reference point && the second one
   ///        is the direction

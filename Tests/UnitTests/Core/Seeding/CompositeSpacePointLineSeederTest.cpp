@@ -71,14 +71,14 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
     auto testTubes =
         MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
     nTruthStraws = testTubes.size();
-    auto sorterPtr = std::make_unique<SpSorter>(testTubes);
+    // auto sorterPtr = std::make_unique<SpSorter>(testTubes);
     auto calibrator = std::make_unique<SpCalibrator>();
 
     using SeedOptions_t =
         Seeder::SeedOptions<Container_t, Container_t, SpSorter>;
-    SeedOptions_t seedOpts{};
+    SeedOptions_t seedOpts{testTubes};
     // seedOpts.abortSelector.connect<&abortAfterHalfLayers>();
-    seedOpts.delegate = std::move(sorterPtr);
+    // seedOpts.delegate = std::move(sorterPtr);
     seedOpts.strawRadius = 15._mm;
     ACTS_DEBUG(seedOpts);
     nSeeds = 0;
