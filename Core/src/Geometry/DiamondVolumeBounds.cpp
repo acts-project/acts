@@ -17,8 +17,14 @@
 
 namespace Acts {
 
+<<<<<<< HEAD
 DiamondVolumeBounds::DiamondVolumeBounds(double x1, double x2, double x3,
                                          double y1, double y2, double halez)
+=======
+DiamondVolumeBounds::DiamondVolumeBounds(double x1, double x2,
+                                                     double x3, double y1,
+                                                     double y2, double halez)
+>>>>>>> f0ccacfc4 (rename convex polygon volume bounds to diamond volume bounds)
     : VolumeBounds() {
   m_values[eHalfLengthX1] = x1;
   m_values[eHalfLengthX2] = x2;
@@ -191,10 +197,19 @@ void DiamondVolumeBounds::checkConsistency() noexcept(false) {
         "DiamondVolumeBounds: invalid polygon parameters in x.");
   }
   if (get(eLengthY1) <= 0. || get(eLengthY2) <= 0.) {
+<<<<<<< HEAD
     throw std::invalid_argument("DiamondVolumeBounds: invalid y extrusion.");
   }
   if (get(eHalfLengthZ) <= 0.) {
     throw std::invalid_argument("DiamondVolumeBounds: invalid z extrusion.");
+=======
+    throw std::invalid_argument(
+        "DiamondVolumeBounds: invalid y extrusion.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument(
+        "DiamondVolumeBounds: invalid z extrusion.");
+>>>>>>> f0ccacfc4 (rename convex polygon volume bounds to diamond volume bounds)
   }
   // make sure this is a convex polygon - do not allow angles > 180 deg
   if (get(eHalfLengthX2) < get(eHalfLengthX1) ||
