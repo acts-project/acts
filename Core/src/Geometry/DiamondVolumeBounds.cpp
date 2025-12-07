@@ -192,27 +192,12 @@ void DiamondVolumeBounds::checkConsistency() noexcept(false) {
         "DiamondVolumeBounds: invalid polygon parameters in x.");
   }
   if (get(eLengthY1) <= 0. || get(eLengthY2) <= 0.) {
-<<<<<<< HEAD
-<<<<<<< HEAD
     throw std::invalid_argument("DiamondVolumeBounds: invalid y extrusion.");
   }
   if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("DiamondVolumeBounds: invalid z extrusion.");
-=======
-    throw std::invalid_argument(
-        "DiamondVolumeBounds: invalid y extrusion.");
-  }
-  if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument(
-        "DiamondVolumeBounds: invalid z extrusion.");
->>>>>>> f0ccacfc4 (rename convex polygon volume bounds to diamond volume bounds)
-=======
     throw std::invalid_argument("DiamondVolumeBounds: invalid y extrusion.");
   }
-  if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("DiamondVolumeBounds: invalid z extrusion.");
->>>>>>> a2fb31987 (docs and lint)
-  }
+
   // make sure this is a convex polygon - do not allow angles > 180 deg
   if (get(eHalfLengthX2) < get(eHalfLengthX1) ||
       get(eHalfLengthX2) < get(eHalfLengthX3)) {
