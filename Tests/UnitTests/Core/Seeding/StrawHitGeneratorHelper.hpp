@@ -346,8 +346,33 @@ class SpSorter {
       }
     }
   }
-  const std::vector<Container_t>& strawHits() { return m_straws; }
-  const std::vector<Container_t>& stripHits() { return m_strips; }
+  const std::vector<Container_t>& strawHits() const { return m_straws; }
+  const std::vector<Container_t>& stripHits() const { return m_strips; }
+
+  bool goodCandidate(const FitTestSpacePoint& testPoint) const {
+    return testPoint.isGood();
+  }
+  /// @brief Calculates the pull of the space point w.r.t. to the
+  ///        candidate seed line. To improve the pull's precision
+  ///        the function may call the calibrator in the backend
+  /// @param cctx: Reference to the calibration context to pipe
+  ///              the hook for conditions access to the caller
+  /// @param pos: Position of the cancidate seed line
+  /// @param dir: Direction of the candidate seed line
+  /// @param t0: Offse in the time of arrival of the particle
+  /// @param testSp: Reference to the straw space point to test
+  double candidatePull(const CalibrationContext& /* cctx*/, const Vector3& pos,
+                       const Vector3& dir, const double /*t0*/,
+                       const FitTestSpacePoint& testSp) const {
+    return CompSpacePointAuxiliaries::chi2Term(pos, dir, testSp);
+  }
+  Container_t newContainer(const CalibrationContext& /*cctx*/) const {
+    return Container_t{};
+  }
+  void append(const CalibrationContext& cctx, const Vector3& pos,
+              const Vector3& dir, const double t0,
+              const FitTestSpacePoint& testSp,
+              Container_t& outContainer) const {}
 
  private:
   std::vector<Container_t> m_straws{};

@@ -70,6 +70,7 @@ concept CompositeSpacePointPtr =
 /// @brief A station space point container is any std::container over space points
 template <typename ContType_t>
 concept CompositeSpacePointContainer =
+    std::move_constructible<ContType_t> &&
     requires(ContType_t mCont, const ContType_t cCont) {
       { mCont.begin() } -> std::same_as<typename ContType_t::iterator>;
       { mCont.end() } -> std::same_as<typename ContType_t::iterator>;
