@@ -348,7 +348,6 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     std::this_thread::sleep_for(10ms);
   }
   {
-#ifdef LINK_TH1_LATER
     auto timeHisto = std::make_unique<TH1D>("TestTimings", "timings",
                                             timings.size(), 0, timings.size());
     int bin{1};
@@ -359,7 +358,6 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
       ++bin;
     }
     outFile->WriteObject(timeHisto.get(), timeHisto->GetName());
-#endif
   }
 }
 

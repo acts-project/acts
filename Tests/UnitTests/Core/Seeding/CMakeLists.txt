@@ -20,7 +20,7 @@ if(ACTS_BUILD_PLUGIN_ROOT)
     )
     target_link_libraries(
         ActsUnitTestStrawLineFitterTest
-        PRIVATE ROOT::Tree ROOT::RIO
+        PRIVATE ROOT::Tree ROOT::RIO ROOT::Hist
     )
     target_link_libraries(
         ActsUnitTestCompositeSpacePointLineSeederTest

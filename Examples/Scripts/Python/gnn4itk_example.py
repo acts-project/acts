@@ -16,6 +16,11 @@ import argparse
 import acts
 import acts.examples
 from acts.examples.reconstruction import addGnn
+from acts.examples.gnn import (
+    ModuleMapCuda,
+    CudaTrackBuilding,
+    NodeFeature,
+)
 
 u = acts.UnitConstants
 
@@ -91,7 +96,7 @@ def runGNN4ITk(
         "gpuBlocks": 512,
         "moreParallel": True,
     }
-    graphConstructor = acts.examples.ModuleMapCuda(**moduleMapConfig)
+    graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
     # Stage 2: Single-stage edge classification (auto-detect backend)
     gnnModel = Path(gnnModel)
@@ -103,11 +108,17 @@ def runGNN4ITk(
 
     if gnnModel.suffix == ".pt":
         edgeClassifierConfig["useEdgeFeatures"] = True
-        edgeClassifiers = [acts.examples.TorchEdgeClassifier(**edgeClassifierConfig)]
+        from acts.examples.gnn import TorchEdgeClassifier
+
+        edgeClassifiers = [TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
-        edgeClassifiers = [acts.examples.OnnxEdgeClassifier(**edgeClassifierConfig)]
+        from acts.examples.gnn import OnnxEdgeClassifier
+
+        edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
-        edgeClassifiers = [acts.examples.TensorRTEdgeClassifier(**edgeClassifierConfig)]
+        from acts.examples.gnn import TensorRTEdgeClassifier
+
+        edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:
         raise ValueError(f"Unsupported model format: {gnnModel.suffix}")
 
@@ -117,10 +128,10 @@ def runGNN4ITk(
         "useOneBlockImplementation": False,
         "doJunctionRemoval": True,
     }
-    trackBuilder = acts.examples.CudaTrackBuilding(**trackBuilderConfig)
+    trackBuilder = CudaTrackBuilding(**trackBuilderConfig)
 
     # Node features: ITk 12-feature configuration (spacepoint + 2 clusters)
-    e = acts.examples.NodeFeature
+    e = NodeFeature
     nodeFeatures = [
         e.R,
         e.Phi,

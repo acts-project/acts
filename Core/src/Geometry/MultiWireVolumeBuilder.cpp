@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 
+#include "Acts/Geometry/ConvexPolygonVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
@@ -39,9 +40,11 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
   auto boundsType = m_config.bounds ? m_config.bounds->type()
                                     : VolumeBounds::BoundsType::eOther;
   if (!(boundsType == VolumeBounds::BoundsType::eTrapezoid ||
-        boundsType == VolumeBounds::BoundsType::eCuboid)) {
+        boundsType == VolumeBounds::BoundsType::eCuboid ||
+        boundsType == VolumeBounds::BoundsType::eConvexPolygon)) {
     throw std::invalid_argument(
-        "MultiWireStructureBuilder: Only trapezoid or cuboid bounds are "
+        "MultiWireStructureBuilder: Only trapezoid cuboid or diamond bounds "
+        "are "
         "supported");
   }
 

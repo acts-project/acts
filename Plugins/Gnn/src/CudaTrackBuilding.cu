@@ -82,17 +82,40 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
       m_cfg.useOneBlockImplementation);
   auto t1 = std::chrono::high_resolution_clock::now();
   ACTS_DEBUG("Connected components took " << ms(t0, t1) << " ms");
+  ACTS_VERBOSE("Found " << numberLabels << " track candidates");
 
-  // TODO not sure why there is an issue that is not detected in the unit tests
-  numberLabels += 1;
+  // Postprocess labels
+  int* cudaSpacepointIDs{};
+  ACTS_CUDA_CHECK(cudaMallocAsync(&cudaSpacepointIDs,
+                                  spacepointIDs.size() * sizeof(int), stream));
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(cudaSpacepointIDs, spacepointIDs.data(),
+                                  spacepointIDs.size() * sizeof(int),
+                                  cudaMemcpyHostToDevice, stream));
 
-  std::vector<int> trackLabels(numSpacepoints);
-  ACTS_CUDA_CHECK(cudaMemcpyAsync(trackLabels.data(), cudaLabels,
-                                  numSpacepoints * sizeof(int),
+  // Allocate space for the bounds
+  int* cudaBounds{};
+  ACTS_CUDA_CHECK(
+      cudaMallocAsync(&cudaBounds, (numberLabels + 1) * sizeof(int), stream));
+
+  // Compute the bounds of the track candidates
+  detail::findTrackCandidateBounds(cudaLabels, cudaSpacepointIDs, cudaBounds,
+                                   numSpacepoints, numberLabels, stream);
+
+  // Copy the bounds to the host
+  std::vector<int> bounds(numberLabels + 1);
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(bounds.data(), cudaBounds,
+                                  (numberLabels + 1) * sizeof(int),
+                                  cudaMemcpyDeviceToHost, stream));
+
+  // Copy the sorted spacepoint IDs to the host
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(spacepointIDs.data(), cudaSpacepointIDs,
+                                  spacepointIDs.size() * sizeof(int),
                                   cudaMemcpyDeviceToHost, stream));
 
   // Free Memory
   ACTS_CUDA_CHECK(cudaFreeAsync(cudaLabels, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cudaSpacepointIDs, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cudaBounds, stream));
   if (m_cfg.doJunctionRemoval) {
     ACTS_CUDA_CHECK(cudaFreeAsync(cudaSrcPtr, stream));
   }
@@ -100,12 +123,29 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   ACTS_CUDA_CHECK(cudaGetLastError());
 
-  ACTS_VERBOSE("Found " << numberLabels << " track candidates");
+  ACTS_DEBUG("Bounds size: " << bounds.size());
+  ACTS_DEBUG("Bounds: " << bounds.at(0) << ", " << bounds.at(1) << ", "
+                        << bounds.at(2) << ", ..., "
+                        << bounds.at(numberLabels - 2) << ", "
+                        << bounds.at(numberLabels - 1) << ", "
+                        << bounds.at(numberLabels));
 
-  std::vector<std::vector<int>> trackCandidates(numberLabels);
+  std::vector<std::vector<int>> trackCandidates;
+  trackCandidates.reserve(numberLabels);
+  for (std::size_t label = 0ul; label < numberLabels; ++label) {
+    int start = bounds.at(label);
+    int end = bounds.at(label + 1);
 
-  for (const auto [label, id] : zip(trackLabels, spacepointIDs)) {
-    trackCandidates[label].push_back(id);
+    assert(start >= 0);
+    assert(end <= static_cast<int>(numSpacepoints));
+    assert(start <= end);
+
+    if (end - start < m_cfg.minCandidateSize) {
+      continue;
+    }
+
+    trackCandidates.emplace_back(spacepointIDs.begin() + start,
+                                 spacepointIDs.begin() + end);
   }
 
   return trackCandidates;

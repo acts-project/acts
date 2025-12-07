@@ -8,15 +8,12 @@
 
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
-#include <utility>
 
 namespace {
 
@@ -76,6 +73,10 @@ void ActsExamples::identifyContributingParticles(
     if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       return true;
     }
+    // skip outliers
+    if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+      return true;
+    }
     // register all particles that generated this hit
     IndexSourceLink sl =
         state.getUncalibratedSourceLink().template get<IndexSourceLink>();
@@ -98,6 +99,10 @@ void ActsExamples::identifyContributingParticles(
   for (const auto& state : track.trackStatesReversed()) {
     // no truth info with non-measurement state
     if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      continue;
+    }
+    // skip outliers
+    if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
       continue;
     }
     // register all particles that generated this hit
