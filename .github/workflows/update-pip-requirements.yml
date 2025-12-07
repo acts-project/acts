@@ -33,7 +33,7 @@ jobs:
           folder_list=(
             CI/clang_tidy
             CI/fpe_masks
-            docs
+            docs/old
             Examples/Python/tests
             Examples/Scripts
           )
