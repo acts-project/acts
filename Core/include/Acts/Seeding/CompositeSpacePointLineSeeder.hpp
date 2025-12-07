@@ -27,7 +27,8 @@ concept CompositeSpacePointSeedFiller =
     CompositeSpacePointContainer<CalibCont_t> &&
     requires(const SeedFiller_t& filler, const CalibrationContext& cctx,
              const Vector3& pos, const Vector3& dir, const double t0,
-             const UnCalibSp_t& testSp, CalibCont_t& seedContainer) {
+             const UnCalibSp_t& testSp, CalibCont_t& seedContainer,
+             const std::size_t lowerLayer, const std::size_t upperLayer) {
       /// @brief Utility function to choose the good straw space points
       ///        for seeding
       /// @param testSp: Reference to the straw-type measurement to test
@@ -61,6 +62,13 @@ concept CompositeSpacePointSeedFiller =
       {
         filler.append(cctx, pos, dir, t0, testSp, seedContainer)
       } -> std::same_as<void>;
+      /// @brief Helper method to send a stop signal to the line seeder, if for instance,
+      ///        the two layers are too close to each other. The method is
+      ///        called after every layer update. If true is returned no seeds
+      ///        are produced further
+      /// @param lowerLayer: Index of the current lower straw layer
+      /// @param upperLayer: Index of the current upper straw layer
+      { filler.stopSeeding(lowerLayer, upperLayer) } -> std::same_as<bool>;
     };
 /// @brief Define the concept of the space point measurement sorter. The sorter shall take a collection
 ///         of station space points and split them into straw && strip hits.

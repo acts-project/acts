@@ -380,6 +380,10 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
       nextLayer(strawLayers, selector, layerToStay.value(), layerToMove,
                 hitToMove, options.m_moveUpLayer)) {
     options.m_moveUpLayer = !options.m_moveUpLayer;
+    if (options.stopSeeding(options.m_lowerLayer.value(),
+                            options.m_upperLayer.value())) {
+      options.m_lowerLayer.value() = options.m_upperLayer.value() + 1ul;
+    }
     return;
   }
 }
