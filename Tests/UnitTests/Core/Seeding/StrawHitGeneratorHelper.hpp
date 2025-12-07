@@ -422,14 +422,23 @@ class SpSorter {
                        const FitTestSpacePoint& testSp) const {
     return CompSpacePointAuxiliaries::chi2Term(pos, dir, testSp);
   }
+  /// @brief Creates a new empty container
   Container_t newContainer(const CalibrationContext& /*cctx*/) const {
     return Container_t{};
   }
+  /// @brief Appends the space point to the container and calibrates it according to
+  ///        the seed parameters
+  ///
   void append(const CalibrationContext& cctx, const Vector3& pos,
               const Vector3& dir, const double t0,
               const FitTestSpacePoint& testSp,
               Container_t& outContainer) const {
     outContainer.push_back(m_calibrator->calibrate(cctx, pos, dir, t0, testSp));
+  }
+
+  bool stopSeeding(const std::size_t lowerLayer,
+                   const std::size_t upperLayer) const {
+    return lowerLayer >= upperLayer;
   }
 
  private:
