@@ -14,7 +14,7 @@ cramjam==2.11.0
     # via uproot
 execnet==2.1.2
     # via pytest-xdist
-fsspec==2025.10.0
+fsspec==2025.12.0
     # via
     #   awkward
     #   uproot
@@ -39,7 +39,7 @@ pygments==2.19.2
     # via pytest
 pyhepmc==2.15.1
     # via -r Examples/Python/tests/requirements.in
-pytest==9.0.1
+pytest==9.0.2
     # via
     #   -r Examples/Python/tests/requirements.in
     #   pytest-check
