@@ -139,7 +139,13 @@ class FitTestSpacePoint {
   /// @brief Check if the measurement is valid after calibration
   bool isGood() const { return m_isGood; }
   /// @brief Returns the layer index of the space point
-  std::size_t layer() const { return m_layer; }
+  std::size_t layer() const { return m_layer.value_or(0ul); }
+  /// @brief Sets the layer number of the space point
+  void setLayer(const std::size_t lay) {
+    if (!m_layer) {
+      m_layer = lay;
+    }
+  }
 
  private:
   Vector3 m_position{Vector3::Zero()};
@@ -152,7 +158,7 @@ class FitTestSpacePoint {
   bool m_measLoc0{false};
   bool m_measLoc1{false};
   bool m_isGood{true};
-  std::size_t m_layer{0ul};  // layer index starting from 0
+  std::optional<std::size_t> m_layer{};  // layer index starting from 0
 };
 
 static_assert(CompositeSpacePoint<FitTestSpacePoint>);
@@ -379,17 +385,11 @@ class SpSorter {
  public:
   SpSorter(Container_t& hits) {
     for (const auto& spPtr : hits) {
-      if (spPtr->isStraw()) {
-        while (spPtr->layer() >= m_straws.size()) {
-          m_straws.push_back(Container_t{});
-        }
-        m_straws[spPtr->layer()].push_back(spPtr);
-      } else {
-        while (spPtr->layer() >= m_strips.size()) {
-          m_strips.push_back(Container_t{});
-        }
-        m_strips[spPtr->layer()].push_back(spPtr);
+      auto& pushMe{spPtr->isStraw() ? m_straws : m_strips};
+      if (spPtr->layer() >= pushMe.size()) {
+        pushMe.resize(spPtr->layer() + 1);
       }
+      pushMe[spPtr->layer()].push_back(spPtr);
     }
   }
   const std::vector<Container_t>& strawHits() const { return m_straws; }
@@ -597,12 +597,15 @@ class MeasurementGenerator {
           ACTS_DEBUG("spawn() - Tube position: " << toString(tube)
                                                  << ", radius: " << rad);
 
+          auto twinUncert =
+              genCfg.twinStraw
+                  ? std::make_optional<double>(genCfg.twinStrawReso)
+                  : std::nullopt;
           auto& sp =
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   tube, smearedR, SpCalibrator::driftUncert(smearedR),
-                  genCfg.twinStraw
-                      ? std::make_optional<double>(genCfg.twinStrawReso)
-                      : std::nullopt));
+                  twinUncert));
+          sp->setLayer(i_layer);
           sp->updateTime(SpCalibrator::driftTime(sp->driftRadius()) + t0 +
                          calibrator.closestApproachDist(line.position(),
                                                         line.direction(), *sp) /
@@ -665,6 +668,7 @@ class MeasurementGenerator {
             measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                 extpPos, genCfg.stripDirLoc0.at(sL), genCfg.stripDirLoc1.at(sL),
                 stripCovLoc0, stripCovLoc1));
+            measurements.back()->setLayer(sL);
           } else {
             if (sL < genCfg.stripDirLoc0.size()) {
               const Vector3 extpPos{discretize(extp.position(), sL, false) +
@@ -673,12 +677,10 @@ class MeasurementGenerator {
                   extpPos, genCfg.stripDirLoc0.at(sL),
                   genCfg.stripDirLoc0.at(sL).cross(Vector3::UnitZ()),
                   stripCovLoc0, 0.));
-              const auto& nM{*measurements.back()};
-              ACTS_VERBOSE("spawn() - Created loc0 strip @"
-                           << toString(nM.localPosition())
-                           << ", dir: " << toString(nM.sensorDirection())
-                           << ", to-next:" << toString(nM.toNextSensor())
-                           << " -> covariance: " << nM.covariance()[0] << ".");
+              auto& nM{*measurements.back()};
+              nM.setLayer(sL);
+              ACTS_VERBOSE("spawn() - Created loc0 strip @" << toString(nM)
+                                                            << ".");
             }
             if (sL < genCfg.stripDirLoc1.size()) {
               const Vector3 extpPos{discretize(extp.position(), sL, true) +
@@ -686,13 +688,11 @@ class MeasurementGenerator {
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   extpPos, genCfg.stripDirLoc1.at(sL),
                   genCfg.stripDirLoc1.at(sL).cross(Vector3::UnitZ()), 0.,
-                  stripCovLoc1, sL));
-              const auto& nM{*measurements.back()};
-              ACTS_VERBOSE("spawn() - Created loc1 strip @"
-                           << toString(nM.localPosition())
-                           << ", dir: " << toString(nM.sensorDirection())
-                           << ", to-next:" << toString(nM.toNextSensor())
-                           << " -> covariance: " << nM.covariance()[1] << ".");
+                  stripCovLoc1));
+              auto& nM{*measurements.back()};
+              nM.setLayer(sL);
+              ACTS_VERBOSE("spawn() - Created loc1 strip @" << toString(nM)
+                                                            << ".");
             }
           }
         }
