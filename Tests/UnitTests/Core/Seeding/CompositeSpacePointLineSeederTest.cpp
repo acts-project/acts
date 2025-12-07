@@ -76,7 +76,7 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
 
     using SeedOptions_t =
         Seeder::SeedOptions<Container_t, Container_t, SpSorter>;
-    SeedOptions_t seedOpts{testTubes};
+    SeedOptions_t seedOpts{testTubes, calibrator.get()};
     // seedOpts.abortSelector.connect<&abortAfterHalfLayers>();
     // seedOpts.delegate = std::move(sorterPtr);
     seedOpts.strawRadius = 15._mm;
