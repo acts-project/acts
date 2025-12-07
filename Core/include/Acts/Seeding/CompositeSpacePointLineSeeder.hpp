@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/EventData/CompositeSpacePoint.hpp"
+#include "Acts/EventData/CompositeSpacePointCalibrator.hpp"
+#include "Acts/EventData/CompositeSpacePointSorter.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -472,6 +474,41 @@ class CompositeSpacePointLineSeeder {
   static constexpr std::array<std::array<int, 2>, 4> s_signCombo{
       std::array{1, 1}, std::array{1, -1}, std::array{-1, 1},
       std::array{-1, -1}};
+
+  template <CompositeSpacePointContainer UnCalibCont_t>
+  bool moveToNextHit(const UnCalibCont_t& hitVec,
+                     const Selector_t<SpacePoint_t<UnCalibCont_t>>& selector,
+                     std::size_t& hitIdx) const;
+
+  template <CompositeSpacePointContainer UnCalibCont_t>
+  bool firstGoodHit(const UnCalibCont_t& hitVec,
+                    const Selector_t<SpacePoint_t<UnCalibCont_t>>& selector,
+                    std::size_t& hitIdx) const;
+
+  template <CompositeSpacePointContainer Cont_t,
+            CompositeSpacePointSorter<Cont_t> Splitter_t,
+            CompositeSpacePointContainer CalibCont_t,
+            CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
+  void moveToNextCandidate(SeedOptions<Cont_t, Splitter_t, CalibCont_t,
+                                       Calibrator_t>& options) const;
+
+  template <CompositeSpacePointContainer Cont_t,
+            CompositeSpacePointSorter<Cont_t> Splitter_t,
+            CompositeSpacePointContainer CalibCont_t,
+            CompositeSpacePointCalibrator<Cont_t, CalibCont_t> Calibrator_t>
+  std::optional<SeedSolution<CalibCont_t>> buildSeed(
+      SeedOptions<Cont_t, Splitter_t, CalibCont_t, Calibrator_t>& options)
+      const;
+
+  SeedParam_t constructLine(const double theta, const double y0,
+                            SeedParam_t patternParams) const;
+
+  /// @brief check if the seed line is valid within the configured cuts
+  bool isValidLine(const SeedParameters& seedSol) const;
+
+  Config m_cfg{};
+  /// @brief Logger instance
+  std::unique_ptr<const Logger> m_logger{};
 };
 }  // namespace Acts::Experimental
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.ipp"
