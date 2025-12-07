@@ -147,6 +147,9 @@ class CompositeSpacePointLineSeeder {
   using Vector = detail::CompSpacePointAuxiliaries::Vector;
   /// @brief Vector containing the 5 straight segment line parameters
   using SeedParam_t = std::array<double, toUnderlying(ParIdx::nPars)>;
+  /// @brief Abrivation of the straight line. The first element is the
+  ///        reference position and the second element is the direction
+  using Line_t = std::pair<Vector, Vector>;
 
   /// @brief Enumeration to pick one of the four tangent lines to
   ///       the straw circle pair.
@@ -413,8 +416,8 @@ class CompositeSpacePointLineSeeder {
   /// @brief Checks whether the new seed candidate passes the quality cuts on
   ///        the number of good straw hits and whether it is not within the
   ///        same overlap corridor as previously produced seeds
-  /// @param seedPos: Reference position of the seed line
-  /// @param seedDir: Direction of the seed line
+  /// @param tangentSeed: Pair of reference position & direction constructed
+  ///                     from the two line tangent seed
   /// @param newSolution: The new seed solution that's to be tested
   /// @param options: The cache carrying the already produced solutions
   template <CompositeSpacePointContainer UncalibCont_t,
@@ -422,7 +425,7 @@ class CompositeSpacePointLineSeeder {
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
   bool passSeedCuts(
-      const Vector& seedPos, const Vector& seedDir,
+      const Line_t& tangentSeed,
       SeedSolution<UncalibCont_t, Delegate_t>& newSolution,
       SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
 
@@ -431,7 +434,7 @@ class CompositeSpacePointLineSeeder {
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
   SegmentSeed<CalibCont_t> consructSegmentSeed(
-      const CalibrationContext& cctx, const Vector& seedDir,
+      const CalibrationContext& cctx, const Line_t& tangentSeed,
       SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options,
       SeedSolution<UncalibCont_t, Delegate_t>&& newSolution) const;
 
@@ -440,13 +443,13 @@ class CompositeSpacePointLineSeeder {
   /// @param parTheta: Theta angle of the two circle tangent solution
   /// @param parY0: Intercept of the two circle tangent solution
   /// @param patternParams: Parameter estimate from the hit pattern
-  SeedParam_t constructLine(const double parTheta, const double parY0,
-                            const SeedParam_t& patternParams) const;
+  SeedParam_t combineWithPattern(const Line_t& tangentSeed,
+                                 const SeedParam_t& patternParams) const;
   /// @brief Constructs a line from the parsed seed parameters. The
   ///        first element is the reference point && the second one
   ///        is the direction
   /// @param pars: Reference to the line parameters from which the line is created
-  std::pair<Vector3, Vector3> makeLine(const SeedParam_t& pars) const;
+  Line_t makeLine(const SeedParam_t& pars) const;
   /// @brief Check whether the generated seed parameters are within the ranges defined by the used
   /// @param tangentPars: Reference to the seed parameters to check
   bool isValidLine(const TwoCircleTangentPars& tangentPars) const;

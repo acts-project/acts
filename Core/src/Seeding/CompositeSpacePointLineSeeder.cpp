@@ -70,7 +70,7 @@ std::string CompositeSpacePointLineSeeder::toString(const TangentAmbi ambi) {
   return "Undefined";
 }
 
-std::pair<Vector3, Vector3> CompositeSpacePointLineSeeder::makeLine(
+CompositeSpacePointLineSeeder::Line_t CompositeSpacePointLineSeeder::makeLine(
     const SeedParam_t& pars) const {
   using enum ParIdx;
   using Aux_t = detail::CompSpacePointAuxiliaries;
@@ -89,18 +89,16 @@ std::pair<Vector3, Vector3> CompositeSpacePointLineSeeder::makeLine(
                                 pars[toUnderlying(theta)]));
 }
 
-SeedParam_t CompositeSpacePointLineSeeder::constructLine(
-    const double parTheta, const double parY0,
-    const SeedParam_t& patternParams) const {
+SeedParam_t CompositeSpacePointLineSeeder::combineWithPattern(
+    const Line_t& tangentSeed, const SeedParam_t& patternParams) const {
   SeedParam_t result{patternParams};
   using enum ParIdx;
-  result[toUnderlying(y0)] = parY0;
-  const Vector3 patternDir{makeDirectionFromPhiTheta(
-      result[toUnderlying(phi)], result[toUnderlying(theta)])};
-
-  double patternTanAlpha = patternDir.x() / patternDir.z();
-  const Vector3 dir =
-      makeDirectionFromAxisTangents(patternTanAlpha, std::tan(parTheta));
+  const auto& [seedPos, seedDir] = tangentSeed;
+  result[toUnderlying(y0)] = seedPos.y();
+  const Vector patternDir = makeLine(result).second;
+  const double tanAlpha = patternDir.x() / patternDir.z();
+  const double tanBeta = seedDir.y() / seedDir.z();
+  const Vector3 dir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
   result[toUnderlying(phi)] = VectorHelpers::phi(dir);
   result[toUnderlying(theta)] = VectorHelpers::theta(dir);
   return result;

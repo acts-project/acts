@@ -389,10 +389,11 @@ template <
     CompositeSpacePointContainer CalibCont_t,
     detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t> Delegate_t>
 bool CompositeSpacePointLineSeeder::passSeedCuts(
-    const Vector& seedPos, const Vector& seedDir,
+    const Line_t& tangentSeed,
     SeedSolution<UncalibCont_t, Delegate_t>& newSolution,
     SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const {
   // check if we collected enough straw hits
+  const auto& [seedPos, seedDir] = tangentSeed;
   const double hitCut =
       std::max(1.0 * options.m_nStrawCut,
                m_cfg.nStrawLayHitCut * options.strawHits().size());
@@ -476,8 +477,9 @@ CompositeSpacePointLineSeeder::buildSeed(
   ACTS_DEBUG(__func__ << "() " << __LINE__
                       << " - Start looking for compatible hits");
 
-  const Vector3 seedPos = seedPars.y0 * Vector3::UnitY();
-  const Vector3 seedDir = makeDirection(lowerHit, seedPars.theta);
+  const Line_t tangentSeed{seedPars.y0 * Vector3::UnitY(),
+                           makeDirection(lowerHit, seedPars.theta)};
+  const auto& [seedPos, seedDir] = tangentSeed;
   for (const auto& [layerNr, hitsInLayer] :
        Acts::enumerate(options.strawHits())) {
     bool hadGoodHit{false};
@@ -506,20 +508,35 @@ CompositeSpacePointLineSeeder::buildSeed(
       }
     }
   }
-  if (!passSeedCuts(seedPos, seedDir, newSolution, options)) {
+  if (!passSeedCuts(tangentSeed, newSolution, options)) {
     return std::nullopt;
   }
-  return consructSegmentSeed(cctx, seedDir, options, std::move(newSolution));
+  return consructSegmentSeed(cctx, tangentSeed, options,
+                             std::move(newSolution));
 }
 
 template <
     CompositeSpacePointContainer UncalibCont_t,
     CompositeSpacePointContainer CalibCont_t,
     detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t> Delegate_t>
-SegmentSeed<CalibCont_t> CompositeSpacePointLineSeeder::consructSegmentSeed(
-    const CalibrationContext& cctx, const Vector& seedDir,
+CompositeSpacePointLineSeeder::SegmentSeed<CalibCont_t>
+CompositeSpacePointLineSeeder::consructSegmentSeed(
+    const CalibrationContext& cctx, const Line_t& tangentSeed,
     SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options,
-    SeedSolution<UncalibCont_t, Delegate_t>&& newSolution) const;
+    SeedSolution<UncalibCont_t, Delegate_t>&& newSolution) const {
+  
+  SegmentSeed<CalibCont_t> finalSeed{
+      combineWithPattern(tangentSeed, options.patternParams),
+      options.newContainer(cctx)};
+  const auto [seedPos, seedDir] = makeLine(finalSeed.parameters);
+  const double t0 = finalSeed.parameters[toUnderlying(ParIdx::t0)];
+  for (std::size_t s = 0 ; s < newSolution.size(); ++s) {
+     options.append(cctx, seedPos, seedDir, t0, newSolution.getHit(s), finalSeed.hits);
+  }
+
+  options.m_seenSolutions.push_back(std::move(newSolution));
+  return finalSeed;
+}
 
 #ifdef STONJEK
 
