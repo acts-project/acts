@@ -524,78 +524,54 @@ CompositeSpacePointLineSeeder::consructSegmentSeed(
     const CalibrationContext& cctx, const Line_t& tangentSeed,
     SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options,
     SeedSolution<UncalibCont_t, Delegate_t>&& newSolution) const {
-  
   SegmentSeed<CalibCont_t> finalSeed{
       combineWithPattern(tangentSeed, options.patternParams),
       options.newContainer(cctx)};
   const auto [seedPos, seedDir] = makeLine(finalSeed.parameters);
+  /// Append the collected straws to the seed
   const double t0 = finalSeed.parameters[toUnderlying(ParIdx::t0)];
-  for (std::size_t s = 0 ; s < newSolution.size(); ++s) {
-     options.append(cctx, seedPos, seedDir, t0, newSolution.getHit(s), finalSeed.hits);
+  for (std::size_t s = 0; s < newSolution.size(); ++s) {
+    options.append(cctx, seedPos, seedDir, t0, newSolution.getHit(s),
+                   finalSeed.hits);
   }
-
+  /// The solution object is no longer needed for this seed.
   options.m_seenSolutions.push_back(std::move(newSolution));
+
+  ACTS_DEBUG(__func__ << "() " << __LINE__
+                      << " - Associate the strip hits to the seed");
+  for (const auto& stripLayerHits : options.stripHits()) {
+    double bestChi2Loc0{m_cfg.hitPullCut};
+    double bestChi2Loc1{m_cfg.hitPullCut};
+    std::size_t bestIdxLoc0{stripLayerHits.size()};
+    std::size_t bestIdxLoc1{stripLayerHits.size()};
+    /// Find the hit with the lowest pull
+    for (const auto& [hitIdx, testMe] : Acts::enumerate(stripLayerHits)) {
+      const double chi2 =
+          options.candidatePull(cctx, seedPos, seedDir, t0, *testMe);
+      if (testMe->measuresLoc0() && chi2 < bestChi2Loc0) {
+        bestChi2Loc0 = chi2;
+        bestIdxLoc0 = hitIdx;
+      }
+      if (testMe->measuresLoc1() && chi2 < bestChi2Loc1) {
+        bestChi2Loc1 = chi2;
+        bestIdxLoc1 = hitIdx;
+      }
+    }
+    if (bestIdxLoc0 < stripLayerHits.size()) {
+      ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Append loc0 strip hit "
+                            << Acts::toString(*stripLayerHits.at(bestIdxLoc0))
+                            << ".");
+      options.append(cctx, seedPos, seedDir, t0,
+                     *stripLayerHits.at(bestIdxLoc0), finalSeed.hits);
+    }
+    if (bestIdxLoc1 != bestIdxLoc0 && bestIdxLoc1 < stripLayerHits.size()) {
+      ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Append loc1 strip hit "
+                            << Acts::toString(*stripLayerHits.at(bestIdxLoc1))
+                            << ".");
+      options.append(cctx, seedPos, seedDir, t0,
+                     *stripLayerHits.at(bestIdxLoc1), finalSeed.hits);
+    }
+  }
   return finalSeed;
 }
-
-#ifdef STONJEK
-
-// Calibrate the seed hits to be returned
-auto finalSeedSol = std::make_optional(SeedSolution<CalibCont_t>(seedPars));
-finalSeedSol->seedHits = options.calibrator->calibrate(
-    *ctx, posForCalib, dirForCalib,
-    options.patternParams[toUnderlying(ParIdx::t0)], seedSol.seedHits);
-finalSeedSol->nStrawHits = finalSeedSol->seedHits.size();
-
-// Keep track of the seed that
-options.seenSolutions.emplace_back(std::move(seedSol));
-/** If we found a long straw seed, then ensure that all
- *  subsequent seeds have at least the same amount of straw hits. */
-if (m_cfg.tightenHitCut) {
-  options.nStrawCut =
-      std::max(m_cfg.nStrawHitCut,
-               std::max(finalSeedSol->nStrawHits, options.nStrawCut));
-}
-
-++options.nGenSeeds;
-
-/** Associate strip hits to the seed */
-
-double bestChi2Loc0{std::numeric_limits<double>::max()},
-    bestChi2Loc1{std::numeric_limits<double>::max()};
-std::size_t bestIdxLoc0{0}, bestIdxLoc1{0};
-for (const auto& stripLayerHits : options.splitter->stripHits()) {
-  for (const auto& [hitIdx, testMe] : Acts::enumerate(stripLayerHits)) {
-    const double chi2 = detail::CompSpacePointAuxiliaries::chi2Term(
-        posForCalib, dirForCalib, *testMe);
-    if (testMe->measuresLoc0() && chi2 < bestChi2Loc0) {
-      bestChi2Loc0 = chi2;
-      bestIdxLoc0 = hitIdx;
-    }
-    if (testMe->measuresLoc1() && chi2 < bestChi2Loc1) {
-      bestChi2Loc1 = chi2;
-      bestIdxLoc1 = hitIdx;
-    }
-    std::vector<typename Cont_t::value_type> stripHitsToCalibrate{};
-    if (bestChi2Loc0 < Acts::pow(m_cfg.hitPullCut, 2)) {
-      stripHitsToCalibrate.emplace_back(stripLayerHits.at(bestIdxLoc0));
-    }
-    if (bestChi2Loc1 < Acts::pow(m_cfg.hitPullCut, 2) &&
-        bestIdxLoc1 != bestIdxLoc0) {
-      stripHitsToCalibrate.emplace_back(stripLayerHits.at(bestIdxLoc1));
-    }
-
-    auto calibratedStripHits = options.calibrator->calibrate(
-        *ctx, posForCalib, dirForCalib,
-        options.patternParams[toUnderlying(ParIdx::t0)], stripHitsToCalibrate);
-    finalSeedSol->seedHits.insert(
-        finalSeedSol->seedHits.end(),
-        std::make_move_iterator(calibratedStripHits.begin()),
-        std::make_move_iterator(calibratedStripHits.end()));
-  }
-}
-
-return finalSeedSol;
-}
-#endif
 }  // namespace Acts::Experimental

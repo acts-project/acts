@@ -326,7 +326,16 @@ class CompositeSpacePointLineSeeder {
     /// @brief Flag toggling whether the upper of the lower layer shall be moved
     bool m_moveUpLayer{true};
   };
-
+  /// @brief Main interface method provided by the SeederClass. The user instantiates
+  ///        a SeedOptions object containing all the straw hit candidates from
+  ///        which the seed shall be constructed. Then, the nextSeed() returns
+  ///        the next best seed candidate which can then be fitted. The user
+  ///        continues to call the method until a nullopt is returned.
+  /// @param cctx: Experiment specific calibration context to be piped back to the
+  ///              caller such that the space points may be calibrated during
+  ///              the seeding process.
+  /// @param options: Mutable reference to the SeedOptions object from which all the
+  ///                 segment seeds are constructed.
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
@@ -437,11 +446,10 @@ class CompositeSpacePointLineSeeder {
       const CalibrationContext& cctx, const Line_t& tangentSeed,
       SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options,
       SeedSolution<UncalibCont_t, Delegate_t>&& newSolution) const;
-
   /// @brief Construct the final seed parameters by combining the initial
   ///        pattern parameters with the parameter from two circle tangent
-  /// @param parTheta: Theta angle of the two circle tangent solution
-  /// @param parY0: Intercept of the two circle tangent solution
+  /// @param tangentSeed: Pair of reference position & direction constructed
+  ///                     from the two line tangent seed
   /// @param patternParams: Parameter estimate from the hit pattern
   SeedParam_t combineWithPattern(const Line_t& tangentSeed,
                                  const SeedParam_t& patternParams) const;
