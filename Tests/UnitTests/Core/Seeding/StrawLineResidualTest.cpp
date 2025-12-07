@@ -488,13 +488,13 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
     testResidual(line.parameters(),
                  FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(
                                                           rndEngine)*wireDir1,
-                                   wireDir1, R, dR, 0, uncertWire});
+                                   wireDir1, R, dR, uncertWire});
 
     isect = lineIntersect(line.position(), line.direction(), wirePos, wireDir2);
     testResidual(line.parameters(),
                  FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(
                                                           rndEngine)*wireDir2,
-                                   wireDir2, R, dR, 0, uncertWire});
+                                   wireDir2, R, dR, uncertWire});
   }
 }
 BOOST_AUTO_TEST_CASE(StripResidual) {
