@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
+#include "StepperBenchmarkCommons.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 using namespace Acts;
-using namespace Acts::Test;
+using namespace ActsTests;
 
 constexpr std::size_t nComponents = 72;  // 12 max components GSF, 6 material
 
