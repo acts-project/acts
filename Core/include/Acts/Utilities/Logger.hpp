@@ -25,10 +25,22 @@
 /// @addtogroup logging
 /// @{
 
-/// @brief macro to use a local Acts::Logger object
+/// @defgroup logging_macros Logging Macros
+/// @ingroup logging
+/// @brief Helper macros for logging with @ref Acts::Logger
+///
+/// When a logger accessible via the `logger()` method, see @ref logging_patterns,
+/// use these macros to perform the actual logging:
+///
+/// @snippet{trimleft} examples/logging.cpp Logging Macros
+///
+/// The macros support stream-style formatting with `<<` operators.
+/// @{
+
+/// @brief Macro to use a local Acts::Logger object
 ///
 /// @param log_object logger instance of type
-//         <tt>std::unique_ptr<const Acts::Logger></tt>
+//         `std::unique_ptr<const Acts::Logger>`
 ///
 /// @pre In the current scope, the symbol @c logger is not yet defined.
 /// @post The ownership of the given @c log_object is transferred and
@@ -37,15 +49,7 @@
 /// This macro allows to use a locally defined logging object with the ACTS_*
 /// logging macros. The envisaged usage is the following:
 ///
-/// @code{.cpp}
-/// void myFunction() {
-///    std::unique_ptr<const Acts::Logger> myLogger
-///        = /* .. your initialization .. */;
-///    ACTS_LOCAL_LOGGER(std::move(myLogger));
-///
-///    ACTS_VERBOSE("hello world!");
-/// }
-/// @endcode
+/// @snippet{trimleft} examples/logging.cpp Local logger macro
 #define ACTS_LOCAL_LOGGER(log_object)                                          \
   struct __local_acts_logger {                                                 \
     explicit __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger) \
@@ -136,6 +140,7 @@
 #define ACTS_FATAL(x) ACTS_LOG(Acts::Logging::FATAL, x)
 
 /// @}
+/// @}
 
 namespace Acts {
 
@@ -149,16 +154,16 @@ namespace Logging {
 /// All messages with a debug level equal or higher than the currently set
 /// debug output level will be printed.
 enum Level {
-  VERBOSE = 0,  ///< VERBOSE level
-  DEBUG,        ///< DEBUG level
-  INFO,         ///< INFO level
-  WARNING,      ///< WARNING level
-  ERROR,        ///< ERROR level
-  FATAL,        ///< FATAL level
-  MAX           ///< Must be kept above the maximum supported debug level
+  VERBOSE = 0,  ///< Detailed diagnostic trace information
+  DEBUG,        ///< Debug information during development
+  INFO,         ///< General information messages
+  WARNING,      ///< Non-critical error conditions
+  ERROR,        ///< Error conditions which require follow-up
+  FATAL,        ///< Unrecoverable error conditions
+  MAX           ///< Filler level
 };
 
-/// Get the string name for a logging level
+/// @brief Get the string name for a logging level
 /// @param level The logging level
 /// @return String representation of the logging level
 inline std::string_view levelName(Level level) {
@@ -181,6 +186,46 @@ inline std::string_view levelName(Level level) {
       throw std::invalid_argument{"Unknown level"};
   }
 }
+
+/// @defgroup logging_thresholds Logging Thresholds
+/// @ingroup logging
+/// @brief Functions and classes to manage logging failure thresholds
+///
+/// Generally, log levels in ACTS are only of informative value: even
+/// @ref Acts::Logging::Level::ERROR and @ref Acts::Logging::Level::FATAL will only print
+/// messages, **and not terminate execution**.
+///
+/// This is desirable in an experiment context, where jobs should not
+/// immediately terminate when ACTS encounters something that is logged as an
+/// error. In a test context, however, this behavior is not optimal: the tests
+/// should ensure in known configurations errors do not occur, or only in
+/// specific circumstances. To solve this, ACTS implements an optional log
+/// *threshold* mechanism.
+///
+/// The threshold mechanism is steered via two CMake options:
+/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and `ACTS_LOG_FAILURE_THRESHOLD`.
+/// Depending on their configuration, the logging can operate in three modes:
+///
+/// 1. **No log failure threshold** exists, log levels are informative only.
+/// This is
+///    the default behavior.
+/// 2. A **compile-time log failure threshold** is set. If
+///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and
+///    `ACTS_LOG_FAILURE_THRESHOLD=<LEVEL>` are set, the logger code will
+///    compile in a fixed check if the log level of a particular message exceeds
+///    `<LEVEL>`.
+///    If that is the case, an exception of type @ref Acts::Logging::ThresholdFailure is
+///    thrown.
+/// 3. A **runtime log failure threshold** is set. If only
+///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and no fixed threshold level is
+///    set, the logger code will compile in a check of a global runtime
+///    threshold variable.
+///
+/// @note If only `ACTS_LOG_FAILURE_THRESHOLD` is set,
+/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` will be set automatically, i.e. a
+/// compile-time threshold will be set.
+///
+/// @{
 
 #ifdef DOXYGEN
 /// @brief Get debug level above which an exception will be thrown after logging
@@ -251,6 +296,8 @@ class ScopedFailureThreshold {
  private:
   Level m_previousLevel{getFailureThreshold()};
 };
+
+/// @}
 
 /// @brief abstract base class for printing debug output
 ///

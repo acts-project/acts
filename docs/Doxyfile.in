@@ -661,7 +661,7 @@ SHOW_FILES             = NO
 # Folder Tree View (if specified).
 # The default value is: YES.
 
-SHOW_NAMESPACES        = NO
+SHOW_NAMESPACES        = YES
 
 # The FILE_VERSION_FILTER tag can be used to specify a program or script that
 # doxygen should invoke to get the current version for each file (typically from
@@ -773,9 +773,10 @@ WARN_LOGFILE           =
 
 INPUT                  = index.md \
                          getting_started.md \
-                         contribution \
-                         misc \
                          groups \
+                         examples \
+                         namespaces.hpp \
+                         experimental.md \
                          ../Core/include \
                          ../Fatras/include \
                          ../Plugins/ActSVG/include \
@@ -861,9 +862,19 @@ EXCLUDE_PATTERNS       = */detail/*
 EXCLUDE_SYMBOLS        = Acts::*detail* \
                          Acts::make_error_code \
                          ActsFatras::*detail* \
+                         ActsPlugins::*detail* \
                          dfe \
                          nlohmann \
-                         std
+                         std \
+                         dd4hep \
+                         edm4hep \
+                         CLHEP \
+                         HepGeom \
+                         nvinfer1 \
+                         Ort \
+                         podio \
+                         ActsTests \
+                         ActsPodioEdm \
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include

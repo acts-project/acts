@@ -1,4 +1,4 @@
-@page python_bindings Python Bindings for Examples
+# Python bindings for the Examples
 
 The examples part of ACTS ships with python bindings using the `pybind11`
 library. Building these bindings can be enabled via
@@ -12,7 +12,59 @@ modifies `$PYTHONPATH` so that you can import the `acts` module in python.
 Here is a minimal example of a python script using the example bindings, which
 sets up the particle propagation and runs a few events.
 
-@snippet{trimleft} examples/test_generic.py Basic propagation example with GenericDetector
+```python
+import os
+
+import acts
+import acts.examples
+
+detector = acts.examples.GenericDetector()
+trackingGeometry = detector.trackingGeometry()
+s = acts.examples.Sequencer(events=10)
+
+rnd = acts.examples.RandomNumbers(seed=42)
+
+nav = acts.Navigator(trackingGeometry=trackingGeometry)
+
+field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+stepper = acts.EigenStepper(field)
+
+prop = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
+
+alg = acts.examples.PropagationAlgorithm(
+    propagatorImpl=prop,
+    level=acts.logging.INFO,
+    randomNumberSvc=rnd,
+    ntests=1000,
+    sterileLogger=False,
+    outputSummaryCollection="propagation_summary",
+)
+
+s.addAlgorithm(alg)
+
+outputDir = "."
+objDir = outputDir + "/obj"
+if not os.path.exists(objDir):
+   os.mkdir(objDir)
+
+s.addWriter(
+    acts.examples.ObjPropagationStepsWriter(
+        level=acts.logging.INFO,
+        collection="propagation_summary",
+        outputDir=objDir,
+    )
+)
+
+s.addWriter(
+    acts.examples.RootPropagationStepsWriter(
+        level=acts.logging.INFO,
+        collection="propagation_summary",
+        filePath=outputDir + "/propagation_steps.root",
+    )
+)
+
+s.run()
+```
 
 ## Python based example scripts
 
@@ -37,8 +89,7 @@ to be installed. They can be installed via `pip install -r
 Examples/Python/tests/requirements.txt` from the repository root.  You can
 then simply run `pytest` from the repository root.
 
-> [!tip]
-> **python-virtualenv**
+> **Tip: python-virtualenv**
 >
 > It is **strongly recommended** to use a [virtual environment](https://realpython.com/python-virtual-environments-a-primer/) for
 > this purpose! For example, run
@@ -50,7 +101,7 @@ then simply run `pytest` from the repository root.
 >
 > to create a local virtual environment, and then run the `pip` command above.
 
-## ROOT file hash regression checks {#root_file_hashes}
+## ROOT file hash regression checks
 
 In a number of cases, the python based test suite will run hash based regression tests against ROOT files that are
 written by the test workloads. These tests use a custom hash algorithm written in python, which hashes each individual
@@ -72,25 +123,18 @@ test_ckf_tracks_example_truth_estimate__trackstates_ckf.root: ac4485c09a68fca3d0
 where the left side before the `:` indicates the test in which the check is performed and the name of the ROOT file
 that is checked. The right side is the reference hash.
 
-> [!note]
-> The file from which reference hashes are loaded can be changed by setting the
-> environment variable `ROOT_HASH_FILE` to the desired file.
+> **Note:** The file from which reference hashes are loaded can be changed by setting the environment variable `ROOT_HASH_FILE`
+> to the desired file.
 
 These checks have two purposes:
 
-1. Detect regressions in the algorithms: if an algorithm produces different
-   output, the test will catch it. This also means that if algorithmic changes
-   are made that intentionally change the output, the reference hashes also have
-   to be updated.
+1. Detect regressions in the algorithms: if an algorithm produces different output, the test will catch it. This also means that
+   if algorithmic changes are made that intentionally change the output, the reference hashes also have to be updated.
 
-   > [!warning]
-   > Please make sure to check the contents of a changed file are
-   > correct/reasonable before updating the reference hash!
+   > **Warning:** Please make sure to check the contents of a changed file are correct/reasonable before updating the reference hash!
 
-2. Detect potential reproducibility issues. Tests that run with multiple
-   threads should produce the same output every run, event ordering aside. If a
-   test workload has a thread-reproducibility issue, the output hash should also
-   change.
+2. Detect potential reproducibility issues. Tests that run with multiple threads should produce the same output every run,
+   event ordering aside. If a test workload has a thread-reproducibility issue, the output hash should also change.
 
 ### Running the hash checks locally and how to update the reference hashes
 
@@ -130,16 +174,12 @@ FAILED Examples/Python/tests/test_examples.py::test_ckf_tracks_example_truth_sme
 Here, we see that 7 hash checks have failed. The error output conveniently has the same format as the reference hashes found in `root_file_hashes.txt`.
 To update the reference hashes, simply replace the corresponding entries in `root_file_hashes.txt` with the output from the `pytest` run.
 
-> [!note]
-> CI runs the ROOT hash checks. However, we have observed the hashes to change
-> between different machines. This is believed to be due to differences in math
-> libraries producing slightly different outputs. As a consequence, locally
-> obtained file hashes might cause CI failures, as the CI hashes are different.
+> **Note:** The CI runs the ROOT hash checks. However, we have observed the hashes to change between different machines.
+> This is believed to be due to differences in math libraries producing slightly different outputs. As a consequence,
+> locally obtained file hashes might cause CI failures, as the CI hashes are different.
 >
-> For local testing, it is therefore advisable to use `ROOT_HASH_FILE` to use a
-> different file for the reference hashes and populated it with known-good
-> reference hashes from the `main` branch, before testing your developments.
+> For local testing, it is therefore advisable to use `ROOT_HASH_FILE` to use a different file for the reference hashes
+> and populated it with known-good reference hashes from the `main` branch, before testing your developments.
 >
-> To make the CI succeed if it obtains different hashes than you get locally:
-> make sure that the output is correct, and then update the central
-> `root_file_hashes.txt` with the hashes reported in the failed CI job.
+> To make the CI succeed if it obtains different hashes than you get locally: make sure that the output is correct, and then
+> update the central `root_file_hashes.txt` with the hashes reported in the failed CI job.

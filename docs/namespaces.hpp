@@ -1,0 +1,6 @@
+/// @namespace Acts The main namespace encompassing all ACTS code
+/// @namespace ActsFatras The ACTS Fatras fast simulation plugin
+/// @namespace ActsPlugins The ACTS plugins namespace: All plugins go here.
+/// @namespace Acts::Experimental
+/// @brief Contains code that is not considered stable yet and might change.
+/// @details Longer desc

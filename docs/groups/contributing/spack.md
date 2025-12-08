@@ -1,4 +1,8 @@
-# Building with Spack {#spack}
+@defgroup contribution_spack Building with Spack
+@brief Guide to building ACTS with Spack
+@ingroup contribution
+
+# Building with Spack
 
 [Spack](https://spack.io/) is a package manager designed to handle software
 used in scientific computing, including computing in high-energy physics. The

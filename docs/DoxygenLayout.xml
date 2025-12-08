@@ -4,19 +4,19 @@
   <!-- Navigation index tabs for HTML output -->
   <navindex>
     <tab type="mainpage" visible="yes" title=""/>
-    <!-- <tab type="pages" visible="yes" title="" intro=""/> -->
+    <tab type="pages" visible="yes" title="" intro=""/>
 
-    <tab type="usergroup" title="Contribution">
-      <!-- <tab type="user" url="@ref contribution_guide" visible="yes" title="Guide"/> -->
-      <tab type="user" url="@ref contribution_guide" visible="yes" title="Guide"/>
-      <tab type="user" url="@ref clang_tidy" visible="yes" title="Clang Tidy"/>
-      <tab type="user" url="@ref howto_release" visible="yes" title="Make a release"/>
-      <tab type="user" url="@ref howto_format" visible="yes" title="Code formatting"/>
-    </tab>
+    <!-- <tab type="usergroup" title="Contribution"> -->
+    <!-- <tab type="user" url="@ref contribution_guide" visible="yes" title="Guide"/> -->
+    <!--   <tab type="user" url="@ref contribution_guide" visible="yes" title="Guide"/> -->
+    <!--   <tab type="user" url="@ref clang_tidy" visible="yes" title="Clang Tidy"/> -->
+    <!--   <tab type="user" url="@ref howto_release" visible="yes" title="Make a release"/> -->
+    <!--   <tab type="user" url="@ref howto_format" visible="yes" title="Code formatting"/> -->
+    <!-- </tab> -->
 
-    <tab type="usergroup" title="Miscellaneous">
-      <tab type="user" url="@ref spack" visible="yes" title="Spack"/>
-    </tab>
+    <!-- <tab type="usergroup" title="Miscellaneous"> -->
+    <!--   <tab type="user" url="@ref spack" visible="yes" title="Spack"/> -->
+    <!-- </tab> -->
 
     <tab type="topics" visible="yes" title="" intro=""/>
 
@@ -25,32 +25,32 @@
     <!--   <tab type="modulelist" visible="yes" title="" intro=""/> -->
     <!--   <tab type="modulemembers" visible="yes" title="" intro=""/> -->
     <!-- </tab> -->
-    <!-- <tab type="namespaces" visible="yes" title=""> -->
-    <!--   <tab type="namespacelist" visible="yes" title="" intro=""/> -->
-    <!--   <tab type="namespacemembers" visible="yes" title="" intro=""/> -->
-    <!-- </tab> -->
-    <!-- <tab type="concepts" visible="yes" title=""> -->
-    <!-- </tab> -->
+    <tab type="namespaces" visible="yes" title="">
+      <tab type="namespacelist" visible="yes" title="" intro=""/>
+      <!-- <tab type="namespacemembers" visible="yes" title="" intro=""/> -->
+    </tab>
+    <tab type="concepts" visible="yes" title="">
+    </tab>
     <!-- <tab type="interfaces" visible="yes" title=""> -->
     <!--   <tab type="interfacelist" visible="yes" title="" intro=""/> -->
     <!--   <tab type="interfaceindex" visible="$ALPHABETICAL_INDEX" title=""/> -->
     <!--   <tab type="interfacehierarchy" visible="yes" title="" intro=""/> -->
     <!-- </tab> -->
-    <!-- <tab type="classes" visible="yes" title=""> -->
-    <!--   <tab type="classlist" visible="yes" title="" intro=""/> -->
-    <!--   <tab type="classindex" visible="$ALPHABETICAL_INDEX" title=""/> -->
-    <!--   <tab type="hierarchy" visible="yes" title="" intro=""/> -->
-    <!--   <tab type="classmembers" visible="yes" title="" intro=""/> -->
-    <!-- </tab> -->
-    <!-- <tab type="structs" visible="yes" title=""> -->
-    <!--   <tab type="structlist" visible="yes" title="" intro=""/> -->
-    <!--   <tab type="structindex" visible="$ALPHABETICAL_INDEX" title=""/> -->
-    <!-- </tab> -->
-    <!-- <tab type="exceptions" visible="yes" title=""> -->
-    <!--   <tab type="exceptionlist" visible="yes" title="" intro=""/> -->
-    <!--   <tab type="exceptionindex" visible="$ALPHABETICAL_INDEX" title=""/> -->
-    <!--   <tab type="exceptionhierarchy" visible="yes" title="" intro=""/> -->
-    <!-- </tab> -->
+    <tab type="classes" visible="yes" title="">
+      <tab type="classlist" visible="yes" title="" intro=""/>
+      <tab type="classindex" visible="$ALPHABETICAL_INDEX" title=""/>
+      <tab type="hierarchy" visible="yes" title="" intro=""/>
+      <tab type="classmembers" visible="yes" title="" intro=""/>
+    </tab>
+    <tab type="structs" visible="yes" title="">
+      <tab type="structlist" visible="yes" title="" intro=""/>
+      <tab type="structindex" visible="$ALPHABETICAL_INDEX" title=""/>
+    </tab>
+    <tab type="exceptions" visible="yes" title="">
+      <tab type="exceptionlist" visible="yes" title="" intro=""/>
+      <tab type="exceptionindex" visible="$ALPHABETICAL_INDEX" title=""/>
+      <tab type="exceptionhierarchy" visible="yes" title="" intro=""/>
+    </tab>
     <!-- <tab type="files" visible="yes" title=""> -->
     <!--   <tab type="filelist" visible="yes" title="" intro=""/> -->
     <!--   <tab type="globals" visible="yes" title="" intro=""/> -->

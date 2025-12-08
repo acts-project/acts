@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 
+/// @cond
 template <typename T>
 class CUDA_module_map_doublet;
 
@@ -22,6 +23,7 @@ using cudaStream_t = CUstream_st *;
 
 template <typename T>
 class CUDA_module_map_triplet;
+/// @endcond
 
 namespace ActsPlugins {
 

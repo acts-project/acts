@@ -22,14 +22,6 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 
-# def configure_logging(level: int):
-#     FORMAT = "%(message)s"
-#     # livereload.propagate = False
-#     # logging.basicConfig(
-#     #     level=level, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
-#     # )
-
-
 logger = logging.getLogger("docs.serve")
 
 app = typer.Typer()
@@ -120,6 +112,9 @@ def main(
         server.watch(str(layout_file), rebuild)
 
     server.watch(str(source_dir / "CONTRIBUTING.md"), rebuild)
+
+    server.watch(str(docs_dir / "examples/**/*.cpp"), rebuild)
+    server.watch(str(docs_dir / "examples/**/*.py"), rebuild)
 
     server.serve(root=str(output_dir), port=port)
 

@@ -20,3 +20,11 @@ doxygen_add_docs(
     COMMENT "Generating documentation using doxygen"
     CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 )
+
+# docs build is off by default
+set_target_properties(docs PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
+# docs examples are on by default
+add_library(docs-examples SHARED)
+target_sources(docs-examples PRIVATE examples/logging.cpp)
+target_link_libraries(docs-examples PRIVATE Acts::Core)
