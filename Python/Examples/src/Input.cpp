@@ -31,7 +31,6 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addInput(py::module& mex) {
-
   // Buffered reader
   ACTS_PYTHON_DECLARE_READER(BufferedReader, mex, "BufferedReader",
                              upstreamReader, selectionSeed, bufferSize);

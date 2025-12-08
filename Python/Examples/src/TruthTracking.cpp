@@ -33,7 +33,6 @@ using namespace Acts;
 namespace ActsPython {
 
 void addTruthTracking(py::module& mex) {
-
   ACTS_PYTHON_DECLARE_ALGORITHM(TruthTrackFinder, mex, "TruthTrackFinder",
                                 inputParticles, inputParticleMeasurementsMap,
                                 inputMeasurements, inputSimHits,

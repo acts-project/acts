@@ -44,7 +44,6 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 void addMaterialMapping(py::module& mex) {
-
   {
     using Alg = MaterialMapping;
 

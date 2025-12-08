@@ -77,7 +77,6 @@ void register_csv_bfield_writer_binding(pybind11::class_<CsvBFieldWriter>& w) {
 namespace ActsPython {
 
 void addOutput(py::module& mex) {
-
   {
     using Writer = ObjTrackingGeometryWriter;
     auto w =

@@ -31,7 +31,6 @@ using namespace Acts;
 namespace ActsPython {
 
 void addDigitization(py::module& mex) {
-
   {
     using Config = DigitizationAlgorithm::Config;
 

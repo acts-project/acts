@@ -24,7 +24,6 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addAmbiguityResolution(py::module& mex) {
-
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,
       "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,

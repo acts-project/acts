@@ -28,7 +28,6 @@ using namespace Acts;
 
 namespace ActsPython {
 void addObj(py::module& mex) {
-
   {
     /// Write a collection of surfaces to an '.obj' file
     ///

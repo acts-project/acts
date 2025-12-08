@@ -25,7 +25,6 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addAlignment(py::module& mex) {
-
   {
     auto ad =
         py::class_<AlignmentDecorator, IContextDecorator,
