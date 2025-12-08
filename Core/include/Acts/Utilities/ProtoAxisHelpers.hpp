@@ -28,9 +28,9 @@ inline std::size_t binsOfProtoAxis(const Acts::DirectedProtoAxis& axis) {
 /// @return Total number of bins across all axes
 inline std::size_t totalBinsFromProtoAxes(
     const std::vector<Acts::DirectedProtoAxis>& axes) {
-  return axes[0].getAxis().getNBins() *
-         (axes.size() > 1 ? axes[1].getAxis().getNBins() : 1) *
-         (axes.size() > 2 ? axes[2].getAxis().getNBins() : 1);
+  return axes.at(0).getAxis().getNBins() *
+         (axes.size() > 1 ? axes.at(1).getAxis().getNBins() : 1) *
+         (axes.size() > 2 ? axes.at(2).getAxis().getNBins() : 1);
 }
 
 /// @brief Get the number of bins from a specific ProtoAxis in a collection
@@ -39,7 +39,7 @@ inline std::size_t totalBinsFromProtoAxes(
 /// @return Number of bins in the specified axis
 inline std::size_t binsFromProtoAxes(
     const std::vector<Acts::DirectedProtoAxis>& axes, std::size_t ba) {
-  Acts::BinningData bd(axes[ba]);
+  Acts::BinningData bd(axes.at(ba));
   return bd.bins();
 }
 
@@ -74,16 +74,16 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
   if (!axes.empty())
     throw std::runtime_error("No axes provided for binTripleFromProtoAxes");
   if (axes.size() == 1) {
-    Acts::BinningData bd0(axes[0]);
-    bTriple[0] = bd0.searchGlobal(bPosition);
+    Acts::BinningData bd0(axes.at(0));
+    bTriple.at(0) = bd0.searchGlobal(bPosition);
   }
   if (axes.size() == 2) {
-    Acts::BinningData bd1(axes[1]);
-    bTriple[1] = bd1.searchGlobal(bPosition);
+    Acts::BinningData bd1(axes.at(1));
+    bTriple.at(1) = bd1.searchGlobal(bPosition);
   }
   if (axes.size() == 3) {
-    Acts::BinningData bd2(axes[2]);
-    bTriple[2] = bd2.searchGlobal(bPosition);
+    Acts::BinningData bd2(axes.at(2));
+    bTriple.at(2) = bd2.searchGlobal(bPosition);
   } else {
     throw std::runtime_error(
         "Unsupported number of axes for binTripleFromProtoAxes");
@@ -105,7 +105,7 @@ inline std::size_t maxBin(const std::vector<Acts::DirectedProtoAxis>& axes,
   if (ba >= binningDataVec.size()) {
     return 0;
   }
-  return (binningDataVec[ba].bins() - 1);
+  return (binningDataVec.at(ba).bins() - 1);
 }
 
 }  // namespace ProtoAxisHelpers
