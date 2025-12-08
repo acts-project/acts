@@ -10,9 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/IndexGridFiller.hpp"
+#include "Acts/Geometry/IndexGrid.hpp"
 #include "Acts/Geometry/ReferenceGenerators.hpp"
-#include "Acts/Navigation/IndexGridNavigation.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -59,7 +58,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
+  IndexGrid<decltype(gridXY)> indexedGridXY(
       std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
 
   // Create a single surface in the center
@@ -95,7 +94,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
+  IndexGrid<decltype(gridXY)> indexedGridXY(
       std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
 
   // Create a single surface in the center
@@ -132,7 +131,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
+  IndexGrid<decltype(gridXY)> indexedGridXY(
       std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
 
   // Create a single surface in the center
@@ -169,7 +168,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
+  IndexGrid<decltype(gridXY)> indexedGridXY(
       std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
 
   // Create a single surface in the center
@@ -206,7 +205,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
                 std::move(axisPhi));
 
   // Indexed Surface grid
-  IndexGridNavigation<decltype(gridZPhi)> indexedGridZPhi(
+  IndexGrid<decltype(gridZPhi)> indexedGridZPhi(
       std::move(gridZPhi), {AxisDirection::AxisZ, AxisDirection::AxisPhi});
 
   auto cBounds =
@@ -244,7 +243,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
                 std::move(axisPhi));
 
   // Indexed Surface grid
-  IndexGridNavigation<decltype(gridZPhi)> indexedGridZPhi(
+  IndexGrid<decltype(gridZPhi)> indexedGridZPhi(
       std::move(gridZPhi), {AxisDirection::AxisZ, AxisDirection::AxisPhi});
 
   auto cBounds =
