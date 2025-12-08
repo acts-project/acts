@@ -11,17 +11,23 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/detail/TrackingGeometryPrintVisitor.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include "GeoModelKernel/throwExcept.h"
-
+#include <format>
+#include <typeinfo>
 using namespace Acts::UnitLiterals;
+using namespace Acts::Experimental;
 
 namespace ActsExamples {
 
@@ -63,6 +69,11 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   }
 
   auto trackingGeometry = root.construct({}, gctx, *m_logger);
+  if (logger().doPrint(Acts::Logging::Level::DEBUG)) {
+    Acts::detail::TrackingGeometryPrintVisitor trkGeoPrinter{gctx};
+    trackingGeometry->apply(trkGeoPrinter);
+    ACTS_DEBUG(std::endl << trkGeoPrinter.stream().str());
+  }
 
   return trackingGeometry;
 }
@@ -91,8 +102,12 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     }
     commonStations[parent].push_back(box);
   }
-  // Create a vector to hold the chambers
+  // Create a vector to hold the chambers and inner volumes
   std::vector<std::unique_ptr<Acts::TrackingVolume>> volChambers;
+  std::vector<
+      std::vector<std::shared_ptr<Acts::Experimental::StaticBlueprintNode>>>
+      innerVolumesNodes;
+  innerVolumesNodes.resize(commonStations.size());
 
   if (commonStations.empty()) {
     throw std::invalid_argument("No barrel stations could be found.");
@@ -101,35 +116,101 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
   std::size_t stationNum = 1;
   double maxZ = std::numeric_limits<double>::lowest();
   for (const auto& [parentPhysVol, childrenTrkVols] : commonStations) {
-    std::shared_ptr<Acts::Volume> parentVolume = Acts::GeoModel::convertVolume(
-        Acts::GeoModel::volumePosInSpace(parentPhysVol),
-        parentPhysVol->getLogVol()->getShape(), boundFactory);
+    std::shared_ptr<Acts::Volume> parentVolume =
+        ActsPlugins::GeoModel::convertVolume(
+            ActsPlugins::GeoModel::volumePosInSpace(parentPhysVol),
+            parentPhysVol->getLogVol()->getShape(), boundFactory);
 
     auto chamberVolume = std::make_unique<Acts::TrackingVolume>(
-        *parentVolume, name + "Chamber_" + std::to_string(stationNum));
+        *parentVolume, std::format("{:}_Chamber_{:d}", name, stationNum));
     chamberVolume->assignGeometryId(geoId.withVolume(stationNum));
-    ++stationNum;
+
     ACTS_VERBOSE("Boundaries of the chamber volume: "
                  << chamberVolume->boundarySurfaces().size());
 
     std::size_t childVol = 1;
-    for (const auto& child : childrenTrkVols) {
-      auto trVol =
-          std::make_unique<Acts::TrackingVolume>(*child.volume, child.name);
-      trVol->assignGeometryId(geoId.withVolume(stationNum).withExtra(childVol));
-      ++childVol;
+    auto chamberId = chamberVolume->geometryId();
 
-      // add the sensitives (tubes) in the constructed tracking volume
-      for (const auto& surface : child.surfaces) {
-        trVol->addSurface(surface);
+    for (auto& child : childrenTrkVols) {
+      std::unique_ptr<Acts::TrackingVolume> trVol{nullptr};
+
+      // use dedicated builder for MDT multilayers
+      if (child.name.find("MDT") != std::string::npos) {
+        MultiWireVolumeBuilder::Config mwCfg;
+        auto vb = child.volume->volumeBoundsPtr();
+        double halfY{0};
+        double halfZ{0};
+        using LineBounds = Acts::LineBounds::BoundValues;
+
+        if (vb->type() == Acts::VolumeBounds::eTrapezoid) {
+          using BoundVal = Acts::TrapezoidVolumeBounds::BoundValues;
+
+          auto tzb = std::dynamic_pointer_cast<Acts::TrapezoidVolumeBounds>(vb);
+          mwCfg.bounds = boundFactory.insert(tzb);
+          halfY = tzb->get(BoundVal::eHalfLengthY);
+          halfZ = tzb->get(BoundVal::eHalfLengthZ);
+
+        } else if (vb->type() == Acts::VolumeBounds::eCuboid) {
+          using BoundVal = Acts::CuboidVolumeBounds::BoundValues;
+
+          auto cbb = std::dynamic_pointer_cast<Acts::CuboidVolumeBounds>(vb);
+          mwCfg.bounds = boundFactory.insert(cbb);
+
+          halfY = cbb->get(BoundVal::eHalfLengthY);
+          halfZ = cbb->get(BoundVal::eHalfLengthZ);
+
+        } else {
+          throw std::runtime_error(
+              "GeoModelMuonMockupBuilder::buildBarrelNode() - Not a trapezoid "
+              "or cuboid volume bounds");
+        }
+
+        mwCfg.name = child.name;
+        mwCfg.mlSurfaces = child.surfaces;
+        mwCfg.transform = child.volume->transform();
+        auto& sb = child.surfaces.front()->bounds();
+        auto lineBounds = dynamic_cast<const Acts::LineBounds*>(&sb);
+        if (lineBounds == nullptr) {
+          throw std::runtime_error(
+              "This MDT does not have tubes, what does it have?");
+        }
+        double tubeR = lineBounds->get(LineBounds::eR);
+        mwCfg.binning = {
+            {{Acts::AxisDirection::AxisY, Acts::AxisBoundaryType::Bound, -halfY,
+              halfY, static_cast<std::size_t>(std::lround(1. * halfY / tubeR))},
+             2},
+            {{Acts::AxisDirection::AxisZ, Acts::AxisBoundaryType::Bound, -halfZ,
+              halfZ, static_cast<std::size_t>(std::lround(1. * halfZ / tubeR))},
+             1}};
+
+        MultiWireVolumeBuilder mdtBuilder{mwCfg};
+        trVol = mdtBuilder.buildVolume();
+
+      } else {
+        trVol =
+            std::make_unique<Acts::TrackingVolume>(*child.volume, child.name);
+        trVol->assignGeometryId(chamberId.withExtra(childVol));
+
+        // add the sensitives (tubes) in the constructed tracking volume
+        for (const auto& surface : child.surfaces) {
+          trVol->addSurface(surface);
+        }
       }
 
-      chamberVolume->addVolume(std::move(trVol));
+      trVol->assignGeometryId(chamberId.withExtra(childVol));
+      ++childVol;
+
+      auto innerNode =
+          std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+              std::move(trVol));
+
+      innerVolumesNodes[stationNum - 1].push_back(std::move(innerNode));
     }
     volChambers.push_back(std::move(chamberVolume));
     maxZ = std::max(
         maxZ, volChambers.back()->center().z() +
                   volChambers.back()->volumeBounds().values()[eHalfLengthY]);
+    ++stationNum;
   }
 
   const Acts::Vector3& cent{volChambers.front()->center()};
@@ -147,14 +228,20 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
       std::make_unique<Acts::TrackingVolume>(
           Acts::Transform3::Identity(),
           std::make_shared<Acts::CylinderVolumeBounds>(rmincyl, rmaxcyl, halfZ),
-          name + "_Barrel"));
+          std::format("{:}_Barrel", name)));
 
   // create the bluprint nodes for the chambers and add them as children to the
   // cylinder barrel node
-  for (auto& chamber : volChambers) {
+  for (std::size_t chamberNum = 0; chamberNum < volChambers.size();
+       ++chamberNum) {
     auto chamberNode =
         std::make_shared<Acts::Experimental::StaticBlueprintNode>(
-            std::move(chamber));
+            std::move(volChambers[chamberNum]));
+
+    for (auto& innerVolNode : innerVolumesNodes[chamberNum]) {
+      chamberNode->addChild(std::move(innerVolNode));
+    }
+
     barrelNode->addChild(std::move(chamberNode));
   }
 

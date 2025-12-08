@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <cmath>
 #include <optional>
@@ -43,9 +43,11 @@ __attribute__((noinline)) void invalid2() {
 
 }  // namespace
 
-namespace Acts::Test {
+using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(FpeMonitorTest)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(FpeMonitoringSuite)
 
 BOOST_AUTO_TEST_CASE(Invalid) {
   FpeMonitor mon;
@@ -253,4 +255,4 @@ BOOST_AUTO_TEST_CASE(ScopedSuppression) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

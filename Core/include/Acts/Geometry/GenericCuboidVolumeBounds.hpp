@@ -26,6 +26,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @brief  This struct helps to symmetrize with the
   /// the other volume bounds classes
   struct BoundValues {
+    /// Number of boundary values for cuboid volume bounds
     static constexpr std::size_t eSize = 24;
   };
 
@@ -109,8 +110,8 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
             const Transform3& transform = Transform3::Identity()) const;
 
  private:
-  std::array<Vector3, 8> m_vertices;
-  std::array<Vector3, 6> m_normals;
+  std::array<Vector3, 8> m_vertices{};
+  std::array<Vector3, 6> m_normals{};
 
   /// Private helper method to construct the Volume bounds
   /// to be called by the constructors, from the ordered input vertices

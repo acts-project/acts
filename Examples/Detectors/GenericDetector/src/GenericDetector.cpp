@@ -8,7 +8,6 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
@@ -357,7 +356,7 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
       LayerType layerType,
       std::pair<std::size_t, std::size_t> bins = {0, 0}) const {
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
-    return Acts::NavigationPolicyFactory::make()
+    return Acts::NavigationPolicyFactory{}
         .add<Acts::TryAllNavigationPolicy>(
             Acts::TryAllNavigationPolicy::Config{.sensitives = false})
         .add<SrfArrayNavPol>(

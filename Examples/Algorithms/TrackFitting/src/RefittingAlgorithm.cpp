@@ -12,12 +12,10 @@
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -25,7 +23,6 @@
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
 #include <algorithm>
-#include <functional>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -33,10 +30,11 @@
 #include <utility>
 #include <vector>
 
-ActsExamples::RefittingAlgorithm::RefittingAlgorithm(Config config,
-                                                     Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("RefittingAlgorithm", level),
-      m_cfg(std::move(config)) {
+namespace ActsExamples {
+
+RefittingAlgorithm::RefittingAlgorithm(Config config,
+                                       Acts::Logging::Level level)
+    : IAlgorithm("RefittingAlgorithm", level), m_cfg(std::move(config)) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks collection");
   }
@@ -48,8 +46,7 @@ ActsExamples::RefittingAlgorithm::RefittingAlgorithm(Config config,
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   const auto& inputTracks = m_inputTracks(ctx);
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
@@ -75,14 +72,22 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
     }
 
     TrackFitterFunction::GeneralFitterOptions options{
-        ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+        ctx.geoContext,
+        ctx.magFieldContext,
+        ctx.calibContext,
         &track.referenceSurface(),
-        Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext)};
-    options.doRefit = true;
+        Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+        true};
 
-    const Acts::BoundTrackParameters initialParams(
+    Acts::BoundTrackParameters initialParams(
         track.referenceSurface().getSharedPtr(), track.parameters(),
         track.covariance(), track.particleHypothesis());
+
+    if (initialParams.covariance()) {
+      for (auto i = 0ul; i < m_cfg.initialVarInflation.size(); ++i) {
+        (*initialParams.covariance())(i, i) *= m_cfg.initialVarInflation.at(i);
+      }
+    }
 
     trackSourceLinks.clear();
     surfSequence.clear();
@@ -141,5 +146,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
           std::move(*trackStateContainer))};
 
   m_outputTracks(ctx, std::move(constTracks));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

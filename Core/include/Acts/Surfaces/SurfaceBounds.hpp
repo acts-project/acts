@@ -104,8 +104,35 @@ class SurfaceBounds {
   virtual bool inside(const Vector2& lposition,
                       const BoundaryTolerance& boundaryTolerance) const;
 
+  /// Calculate the center of the surface bounds in local coordinates
+  ///
+  /// This method returns a representative center point of the bounds region.
+  /// The exact definition varies by bounds type and coordinate system:
+  ///
+  /// **Cartesian bounds** (Rectangle, Diamond, Trapezoid):
+  /// - Returns the geometric center or center of symmetry
+  /// - For symmetric shapes: center of bounding box or origin (0,0)
+  ///
+  /// **Polar/Cylindrical bounds** (Radial, Cylinder, Cone):
+  /// - Returns (r, phi) where r is average radius, phi is average angle
+  /// - Coordinates are in the bounds' natural coordinate system
+  ///
+  /// **Complex bounds** (Annulus, ConvexPolygon):
+  /// - Annulus: Pre-calculated from corner vertices (accounts for coordinate
+  /// transforms)
+  /// - Polygon: Average of all vertices (vertex centroid, not area centroid)
+  ///
+  /// **Infinite bounds**: Returns conceptual center at (0,0)
+  ///
+  /// @note The returned point is guaranteed to be a reasonable representative
+  /// center, but may not be the true geometric centroid for all shapes.
+  ///
+  /// @return Vector2 representing the center position in local coordinates
+  virtual Vector2 center() const = 0;
+
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param os is the outstream in which the string dump is done
+  /// @return Modified ostream for chaining
   virtual std::ostream& toStream(std::ostream& os) const = 0;
 
   friend bool operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {

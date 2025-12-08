@@ -26,6 +26,8 @@ namespace Acts {
 /// Bounds for a double trapezoidal ("diamond"), planar Surface.
 class DiamondBounds : public PlanarBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues {
     eHalfLengthXnegY = 0,
     eHalfLengthXzeroY = 1,
@@ -83,6 +85,10 @@ class DiamondBounds : public PlanarBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For DiamondBounds: returns center of symmetry (0,0)
+  Vector2 center() const final;
+
   /// Return the vertices that describe this shape
   ///
   /// @param ignoredSegments is an ignored parameter only used for
@@ -97,10 +103,12 @@ class DiamondBounds : public PlanarBounds {
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream in which it is dumped
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

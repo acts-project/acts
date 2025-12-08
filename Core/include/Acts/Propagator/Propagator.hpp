@@ -8,11 +8,6 @@
 
 #pragma once
 
-// clang-format off
-// Workaround for building on clang+libstdc++. Must be the first include.
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-// clang-format on
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
@@ -123,14 +118,18 @@ class Propagator final
   /// Typedef the navigator state
   using NavigatorState = typename navigator_t::State;
 
+  /// Type alias for propagator state combining stepper and navigator states
   template <typename propagator_options_t, typename... extension_state_t>
   using State = PropagatorState<propagator_options_t, StepperState,
                                 NavigatorState, extension_state_t...>;
 
+  /// Type alias for stepper configuration options
   using StepperOptions = typename stepper_t::Options;
 
+  /// Type alias for navigator configuration options
   using NavigatorOptions = typename navigator_t::Options;
 
+  /// Type alias for propagator configuration options with actor list
   template <typename actor_list_t = ActorList<>>
   using Options =
       PropagatorOptions<StepperOptions, NavigatorOptions, actor_list_t>;
@@ -378,8 +377,12 @@ class Propagator final
   makeResult(propagator_state_t state, Result<void> result,
              const Surface& target, const propagator_options_t& options) const;
 
+  /// Access to the stepper instance
+  /// @return Const reference to the stepper
   const stepper_t& stepper() const { return m_stepper; }
 
+  /// Access to the navigator instance
+  /// @return Const reference to the navigator
   const navigator_t& navigator() const { return m_navigator; }
 
  private:

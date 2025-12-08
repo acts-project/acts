@@ -19,9 +19,11 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 const double minRadius = 7.2;
 const double maxRadius = 12.0;
@@ -272,6 +274,46 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsNegativeTolerance) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(AnnulusBoundsCenter) {
+  // Test annulus bounds center calculation
+  AnnulusBounds annulus(minRadius, maxRadius, minPhi, maxPhi, offset);
+  Vector2 center = annulus.center();
+
+  // The center should be inside the annulus bounds
+  BOOST_CHECK(annulus.inside(center));
+
+  // Test with symmetric annulus (no offset)
+  Vector2 noOffset(0., 0.);
+  AnnulusBounds symmetricAnnulus(minRadius, maxRadius, minPhi, maxPhi,
+                                 noOffset);
+  Vector2 symmetricCenter = symmetricAnnulus.center();
+
+  // For symmetric case, center should also be inside bounds
+  BOOST_CHECK(symmetricAnnulus.inside(symmetricCenter));
+
+  // The center should be in polar coordinates (r, phi) in strip system
+  // Verify that r component is reasonable (between min and max radius)
+  BOOST_CHECK(symmetricCenter.x() >= minRadius);
+  BOOST_CHECK(symmetricCenter.x() <= maxRadius);
+
+  // Verify that phi component is within phi range
+  BOOST_CHECK(symmetricCenter.y() >= minPhi);
+  BOOST_CHECK(symmetricCenter.y() <= maxPhi);
+
+  // Test with non-zero average phi to verify proper rotation handling
+  double avgPhi = 0.5;  // Non-zero average phi
+  AnnulusBounds rotatedAnnulus(minRadius, maxRadius, minPhi, maxPhi, noOffset,
+                               avgPhi);
+  Vector2 rotatedCenter = rotatedAnnulus.center();
+
+  // The center should still be inside the bounds after rotation
+  BOOST_CHECK(rotatedAnnulus.inside(rotatedCenter));
+
+  // Center should be in strip polar coordinates
+  BOOST_CHECK(rotatedCenter.x() >= minRadius);
+  BOOST_CHECK(rotatedCenter.x() <= maxRadius);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

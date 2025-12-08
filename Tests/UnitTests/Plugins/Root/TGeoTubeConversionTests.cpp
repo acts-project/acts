@@ -11,15 +11,15 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -37,7 +37,10 @@
 #include "TGeoVolume.h"
 #include "TView.h"
 
-namespace Acts::Test {
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
 
 GeometryContext tgContext = GeometryContext();
 
@@ -49,6 +52,8 @@ std::vector<std::string> allowedAxes = {"XY*", "Xy*", "xy*", "xY*",
                                         "YX*", "yx*", "yX*", "Yx*"};
 
 std::vector<std::string> notAllowedAxes = {"YZ*", "ZX*", "ZY*"};
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a TGeoTube into a CylinderSurface
 ///
@@ -247,4 +252,6 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

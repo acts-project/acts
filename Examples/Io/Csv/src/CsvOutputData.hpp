@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include <ActsExamples/EventData/Index.hpp>
 #include <ActsExamples/Io/Csv/CsvInputOutput.hpp>
 
@@ -17,7 +18,11 @@ namespace ActsExamples {
 
 struct ParticleData {
   /// Event-unique particle identifier a.k.a barcode.
-  std::uint64_t particle_id = 0;
+  std::uint32_t particle_id_pv = 0;
+  std::uint32_t particle_id_sv = 0;
+  std::uint32_t particle_id_part = 0;
+  std::uint32_t particle_id_gen = 0;
+  std::uint32_t particle_id_subpart = 0;
   /// Particle type number a.k.a. PDG particle number.
   std::int32_t particle_type = 0;
   /// Production process type. Not available in the TrackML datasets.
@@ -33,8 +38,16 @@ struct ParticleData {
   /// Charge in e.
   float q = 0;
 
-  DFE_NAMEDTUPLE(ParticleData, particle_id, particle_type, process, vx, vy, vz,
-                 vt, px, py, pz, m, q);
+  DFE_NAMEDTUPLE(ParticleData, particle_id_pv, particle_id_sv, particle_id_part,
+                 particle_id_gen, particle_id_subpart, particle_type, process,
+                 vx, vy, vz, vt, px, py, pz, m, q);
+};
+
+struct VertexData {
+  /// Position
+  float x = 0, y = 0, z = 0, T = 0;
+
+  DFE_NAMEDTUPLE(VertexData, x, y, z, T);
 };
 
 // Write out simhits before digitization (no hi_id associated)
@@ -42,7 +55,11 @@ struct SimHitData {
   /// Hit surface identifier. Not available in the TrackML datasets.
   std::uint64_t geometry_id = 0u;
   /// Event-unique particle identifier of the generating particle.
-  std::uint64_t particle_id = 0;
+  std::uint32_t particle_id_pv = 0;
+  std::uint32_t particle_id_sv = 0;
+  std::uint32_t particle_id_part = 0;
+  std::uint32_t particle_id_gen = 0;
+  std::uint32_t particle_id_subpart = 0;
   /// True global hit position components in mm.
   float tx = 0, ty = 0, tz = 0;
   // True global hit time in ns. Not available in the TrackML datasets.
@@ -61,8 +78,10 @@ struct SimHitData {
   // Hit index along the trajectory. Not available in the TrackML datasets.
   std::int32_t index = -1;
 
-  DFE_NAMEDTUPLE(SimHitData, particle_id, geometry_id, tx, ty, tz, tt, tpx, tpy,
-                 tpz, te, deltapx, deltapy, deltapz, deltae, index);
+  DFE_NAMEDTUPLE(SimHitData, particle_id_pv, particle_id_sv, particle_id_part,
+                 particle_id_gen, particle_id_subpart, geometry_id, tx, ty, tz,
+                 tt, tpx, tpy, tpz, te, deltapx, deltapy, deltapz, deltae,
+                 index);
 };
 
 // Write out muon simhits before digitization
@@ -120,15 +139,14 @@ struct MuonSpacePointData {
   float locSensorDirX{0.f};
   float locSensorDirY{0.f};
   float locSensorDirZ{0.f};
-  /// @brief Direction of the vector normal to the plane
-  float locPlaneNormX{0.f};
-  float locPlaneNormY{0.f};
-  float locPlaneNormZ{0.f};
+  /// @brief Direction vector normal pointing to the next sensor
+  float locToNextSensorX{0.f};
+  float locToNextSensorY{0.f};
+  float locToNextSensorZ{0.f};
   /// @brief Measurement covariance entries in the local x-y plane
-  float covXX{0.f};
-  float covXY{0.f};
-  float covYX{0.f};
-  float covYY{0.f};
+  float covX{0.f};
+  float covY{0.f};
+  float covT{0.f};
   /// @brief Drift radius
   float driftR{0.f};
   //// @brief Associated gasGap type
@@ -139,11 +157,13 @@ struct MuonSpacePointData {
   bool measuresEta{false};
   /// @brief Flag toggling whether the measurement is a non-precision one
   bool measuresPhi{false};
+  /// @brief Flag toggling whether the measurement provides a time coordinate
+  bool measuresTime{false};
   DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, locPositionX,
                  locPositionY, locPositionZ, locSensorDirX, locSensorDirY,
-                 locSensorDirZ, locPlaneNormX, locPlaneNormY, locPlaneNormZ,
-                 covXX, covXY, covYX, covYY, driftR, gasGap, primaryCh,
-                 measuresEta, measuresPhi);
+                 locSensorDirZ, locToNextSensorX, locToNextSensorY,
+                 locToNextSensorZ, covX, covY, covT, driftR, gasGap, primaryCh,
+                 measuresEta, measuresPhi, measuresTime);
 };
 
 struct TruthHitData {
@@ -154,7 +174,11 @@ struct TruthHitData {
   /// Hit surface identifier. Not available in the TrackML datasets.
   std::uint64_t geometry_id = 0u;
   /// Event-unique particle identifier of the generating particle.
-  std::uint64_t particle_id = 0;
+  std::uint32_t particle_id_pv = 0;
+  std::uint32_t particle_id_sv = 0;
+  std::uint32_t particle_id_part = 0;
+  std::uint32_t particle_id_gen = 0;
+  std::uint32_t particle_id_subpart = 0;
   /// True global hit position components in mm.
   float tx = 0, ty = 0, tz = 0;
   // True global hit time in ns. Not available in the TrackML datasets.
@@ -173,8 +197,10 @@ struct TruthHitData {
   // Hit index along the trajectory. Not available in the TrackML datasets.
   std::int32_t index = -1;
 
-  DFE_NAMEDTUPLE(TruthHitData, hit_id, particle_id, geometry_id, tx, ty, tz, tt,
-                 tpx, tpy, tpz, te, deltapx, deltapy, deltapz, deltae, index);
+  DFE_NAMEDTUPLE(TruthHitData, hit_id, particle_id_pv, particle_id_sv,
+                 particle_id_part, particle_id_gen, particle_id_subpart,
+                 geometry_id, tx, ty, tz, tt, tpx, tpy, tpz, te, deltapx,
+                 deltapy, deltapz, deltae, index);
 };
 
 struct HitData {
@@ -209,10 +235,11 @@ struct MeasurementData {
   float local0 = 0, local1 = 0, phi = 0, theta = 0, time = 0;
   float var_local0 = 0, var_local1 = 0, var_phi = 0, var_theta = 0,
         var_time = 0;
+  float global_x = 0, global_y = 0, global_z = 0;
 
   DFE_NAMEDTUPLE(MeasurementData, measurement_id, geometry_id, local_key,
                  local0, local1, phi, theta, time, var_local0, var_local1,
-                 var_phi, var_theta, var_time);
+                 var_phi, var_theta, var_time, global_x, global_y, global_z);
 };
 
 struct CellData {
@@ -316,13 +343,13 @@ struct SpacePointData {
   // half of the length of the bottom strip
   float sp_bottomHalfStripLength = 0;
   // direction of the top strip
-  Acts::Vector3 sp_topStripDirection;
+  Acts::Vector3 sp_topStripDirection{};
   // direction of the bottom strip
-  Acts::Vector3 sp_bottomStripDirection;
+  Acts::Vector3 sp_bottomStripDirection{};
   // distance between the center of the two strips
-  Acts::Vector3 sp_stripCenterDistance;
+  Acts::Vector3 sp_stripCenterDistance{};
   // position of the center of the bottom strip
-  Acts::Vector3 sp_topStripCenterPosition;
+  Acts::Vector3 sp_topStripCenterPosition{};
 
   DFE_NAMEDTUPLE(SpacePointData, measurement_id, sp_x, sp_y, sp_z, sp_radius,
                  sp_covr, sp_covz, sp_topHalfStripLength,
@@ -354,12 +381,12 @@ struct SurfaceGridData {
 };
 
 struct SpacepointData {
-  std::uint64_t measurement_id;
-  std::uint64_t geometry_id;
-  float x, y, z;
+  std::uint64_t measurement_id_1, measurement_id_2;
+  std::uint64_t geometry_id_1, geometry_id_2;
+  float x, y, z, t;
   float var_r, var_z;
-  DFE_NAMEDTUPLE(SpacepointData, measurement_id, geometry_id, x, y, z, var_r,
-                 var_z);
+  DFE_NAMEDTUPLE(SpacepointData, measurement_id_1, measurement_id_2,
+                 geometry_id_1, geometry_id_2, x, y, z, t, var_r, var_z);
 };
 
 struct TrackParameterData {

@@ -13,6 +13,7 @@ acts_add_library(
     src/GbtsSeedingAlgorithm.cpp
     src/TrackParamsLookupEstimation.cpp
     src/GridTripletSeedingAlgorithm.cpp
+    src/OrthogonalTripletSeedingAlgorithm.cpp
 )
 
 target_include_directories(
@@ -22,7 +23,7 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesTrackFinding
-    PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesMagneticField
+    PUBLIC Acts::ExamplesMagneticField
     PRIVATE ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
 

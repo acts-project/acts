@@ -6,10 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentDecorator.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentGenerator.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
@@ -17,21 +18,23 @@
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+
+using namespace Acts;
 using namespace ActsExamples;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addAlignment(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
   {
-    auto ad = py::class_<AlignmentDecorator, IContextDecorator,
-                         std::shared_ptr<AlignmentDecorator>>(
-                  mex, "AlignmentDecorator")
-                  .def(py::init<const AlignmentDecorator::Config&,
-                                Acts::Logging::Level>())
-                  .def("decorate", &AlignmentDecorator::decorate)
-                  .def("name", &AlignmentDecorator::name);
+    auto ad =
+        py::class_<AlignmentDecorator, IContextDecorator,
+                   std::shared_ptr<AlignmentDecorator>>(mex,
+                                                        "AlignmentDecorator")
+            .def(py::init<const AlignmentDecorator::Config&, Logging::Level>())
+            .def("decorate", &AlignmentDecorator::decorate)
+            .def("name", &AlignmentDecorator::name);
 
     auto c =
         py::class_<AlignmentDecorator::Config>(ad, "Config").def(py::init<>());
@@ -48,8 +51,8 @@ void addAlignment(Context& ctx) {
   {
     py::class_<GeoIdAlignmentStore, IAlignmentStore,
                std::shared_ptr<GeoIdAlignmentStore>>(mex, "GeoIdAlignmentStore")
-        .def(py::init<const std::unordered_map<Acts::GeometryIdentifier,
-                                               Acts::Transform3>&>());
+        .def(py::init<
+             const std::unordered_map<GeometryIdentifier, Transform3>&>());
   }
 
   {
@@ -101,4 +104,4 @@ void addAlignment(Context& ctx) {
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

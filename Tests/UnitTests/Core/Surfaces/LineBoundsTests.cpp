@@ -19,9 +19,11 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 /// Unit test for creating compliant/non-compliant LineBounds object
 BOOST_AUTO_TEST_CASE(LineBoundsConstruction) {
   const double radius = 0.5;
@@ -114,6 +116,18 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
       "Acts::LineBounds: (radius, halflengthInZ) = (0.5000000, 20.0000000)"));
 }
 
+BOOST_AUTO_TEST_CASE(LineBoundsCenter) {
+  const double radius = 2.5;
+  const double halfZ = 15.0;
+
+  LineBounds lineBounds(radius, halfZ);
+  Vector2 center = lineBounds.center();
+
+  // LineBounds should have centroid at origin since it's symmetric
+  BOOST_CHECK_EQUAL(center.x(), 0.0);
+  BOOST_CHECK_EQUAL(center.y(), 0.0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

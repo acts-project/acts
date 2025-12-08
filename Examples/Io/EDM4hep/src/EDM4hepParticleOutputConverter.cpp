@@ -20,8 +20,7 @@ namespace ActsExamples {
 
 EDM4hepParticleOutputConverter::EDM4hepParticleOutputConverter(
     const EDM4hepParticleOutputConverter::Config& cfg, Acts::Logging::Level lvl)
-    : EDM4hepOutputConverter("EDM4hepParticleOutputConverter", lvl),
-      m_cfg(cfg) {
+    : PodioOutputConverter("EDM4hepParticleOutputConverter", lvl), m_cfg(cfg) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
@@ -41,7 +40,7 @@ ProcessCode EDM4hepParticleOutputConverter::execute(
   edm4hep::MCParticleCollection mcParticleCollection;
 
   for (const auto& particle : particles) {
-    auto p = mcParticleCollection->create();
+    auto p = mcParticleCollection.create();
     EDM4hepUtil::writeParticle(particle, p);
   }
 

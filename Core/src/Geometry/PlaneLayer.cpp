@@ -12,10 +12,20 @@
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <vector>
 
 namespace Acts {
+
+std::shared_ptr<PlaneLayer> PlaneLayer::create(
+    const Transform3& transform, std::shared_ptr<const PlanarBounds> pbounds,
+    std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+    std::unique_ptr<ApproachDescriptor> ad, LayerType laytyp) {
+  return std::shared_ptr<PlaneLayer>(
+      new PlaneLayer(transform, pbounds, std::move(surfaceArray), thickness,
+                     std::move(ad), laytyp));
+}
 
 PlaneLayer::PlaneLayer(const Transform3& transform,
                        std::shared_ptr<const PlanarBounds>& pbounds,

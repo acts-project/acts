@@ -31,6 +31,8 @@ namespace Acts {
 /// be restricted to a phi-range around the center position.
 class EllipseBounds : public PlanarBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues {
     eInnerRx = 0,
     eInnerRy = 1,
@@ -83,6 +85,9 @@ class EllipseBounds : public PlanarBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  Vector2 center() const final;
+
   /// Return the vertices
   ///
   /// @param quarterSegments is the number of segments to approximate a quarter
@@ -97,10 +102,13 @@ class EllipseBounds : public PlanarBounds {
   const RectangleBounds& boundingBox() const final;
 
   /// Output Method for std::ostream
+  /// @param sl The output stream to write to
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

@@ -27,7 +27,9 @@ namespace Acts {
 template <typename G>
 struct MaterialMapper {
  public:
+  /// Type alias for material grid
   using Grid_t = G;
+  /// Dimensionality of the position space for material interpolation
   static constexpr std::size_t DIM_POS = Grid_t::DIM;
 
   /// @brief Struct representing smallest grid unit in material grid
@@ -154,7 +156,7 @@ struct MaterialMapper {
 
     // Loop through all corner points
     constexpr std::size_t nCorners = 1 << DIM_POS;
-    std::array<Material::ParametersVector, nCorners> neighbors;
+    std::array<Material::ParametersVector, nCorners> neighbors{};
     const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
 
     std::size_t i = 0;
@@ -330,11 +332,13 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   }
 
   /// Return the BinUtility
+  /// @return Const reference to the bin utility for the material map
   const BinUtility& binUtility() const { return m_binUtility; }
 
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
+  /// @return Reference to the output stream for method chaining
   std::ostream& toStream(std::ostream& sl) const override {
     sl << "Acts::InterpolatedMaterialMap : " << std::endl;
     sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1

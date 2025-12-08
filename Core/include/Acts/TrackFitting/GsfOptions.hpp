@@ -29,8 +29,11 @@ enum class ComponentMergeMethod { eMean, eMaxWeight };
 ///
 /// Encapsulates a component of a Gaussian mixture as used by the GSF
 struct GsfComponent {
+  /// Weight of this component in the Gaussian mixture
   double weight = 0;
+  /// Bound track parameters for this component
   BoundVector boundPars = BoundVector::Zero();
+  /// Covariance matrix for the bound track parameters
   BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
 };
 
@@ -48,18 +51,24 @@ constexpr std::string_view kFwdMaxMaterialXOverX0 =
 /// The extensions needed for the GSF
 template <typename traj_t>
 struct GsfExtensions {
+  /// Type alias for mutable track state proxy
   using TrackStateProxy = typename traj_t::TrackStateProxy;
+  /// Type alias for const track state proxy
   using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
 
+  /// Type alias for calibrator delegate function
   using Calibrator =
       Delegate<void(const GeometryContext &, const CalibrationContext &,
                     const SourceLink &, TrackStateProxy)>;
 
+  /// Type alias for updater delegate function
   using Updater = Delegate<Result<void>(const GeometryContext &,
                                         TrackStateProxy, const Logger &)>;
 
+  /// Type alias for outlier finder delegate function
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
+  /// Type alias for component reducer delegate function
   using ComponentReducer =
       Delegate<void(std::vector<GsfComponent> &, std::size_t, const Surface &)>;
 
@@ -111,6 +120,8 @@ struct GsfOptions {
   bool abortOnError = false;
 
   bool disableAllMaterialHandling = false;
+
+  double reverseFilteringCovarianceScaling = 1.0;
 
   /// Whether to use the external-surfaces mechanism of the navigator which
   /// switches off the boundary-check for measurement surfaces.

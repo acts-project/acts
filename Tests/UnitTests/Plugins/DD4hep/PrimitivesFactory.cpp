@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
 #include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Objects.h>
@@ -15,6 +15,9 @@
 #include "DD4hepTestsHelper.hpp"
 
 using namespace dd4hep;
+using namespace Acts;
+using namespace ActsPlugins;
+using namespace ActsTests;
 
 /// Standard create_cylinder(...) create a simple cylinder
 ///
@@ -36,8 +39,8 @@ static Ref_t create_cylinder(Detector &dd, xml_h xml,
   dd4hep::xml::setDetectorTypeFlag(xml, cylinderElement);
 
   std::string shapeName = x_det_tubs.nameStr();
-  double phiMin = Acts::getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
-  double phiMax = Acts::getAttrValueOr<double>(x_det_tubs, "phimax", 360.);
+  double phiMin = getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
+  double phiMax = getAttrValueOr<double>(x_det_tubs, "phimax", 360.);
   Tube tubeShape(shapeName, x_det_tubs.rmin(), x_det_tubs.rmax(),
                  x_det_tubs.dz(), phiMin, phiMax);
   Volume tubeVolume(detName, tubeShape, dd.material(x_det_tubs.materialStr()));
@@ -75,8 +78,8 @@ static Ref_t create_disc(Detector &dd, xml_h xml, SensitiveDetector /*sens*/) {
   dd4hep::xml::setDetectorTypeFlag(xml, discElement);
 
   std::string shapeName = x_det_tubs.nameStr();
-  double phiMin = Acts::getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
-  double phiMax = Acts::getAttrValueOr<double>(x_det_tubs, "phimax", 360.);
+  double phiMin = getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
+  double phiMax = getAttrValueOr<double>(x_det_tubs, "phimax", 360.);
 
   Tube discShape = Tube(shapeName, x_det_tubs.rmin(), x_det_tubs.rmax(),
                         x_det_tubs.dz(), phiMin, phiMax);

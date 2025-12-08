@@ -8,8 +8,9 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Table.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -20,12 +21,14 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <algorithm>
 #include <atomic>
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
+#include <format>
 #include <fstream>
 #include <functional>
 #include <iterator>
@@ -87,7 +90,7 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
   }
 
   if (m_cfg.trackFpes && !m_cfg.fpeMasks.empty() &&
-      !Acts::FpeMonitor::canSymbolize()) {
+      !ActsPlugins::FpeMonitor::canSymbolize()) {
     ACTS_ERROR("FPE monitoring is enabled but symbolization is not available");
     throw std::runtime_error(
         "FPE monitoring is enabled but symbolization is not available");
@@ -306,6 +309,62 @@ void storeTiming(const std::vector<std::string>& identifiers,
   }
   file << "\n";
 }
+
+// Convert duration to milliseconds
+double durationToMs(Duration duration) {
+  double ns = std::chrono::duration_cast<NanoSeconds>(duration).count();
+  return ns / 1e6;
+}
+
+void printTiming(const std::vector<std::string>& identifiers,
+                 const std::vector<Duration>& durations, std::size_t numEvents,
+                 const Acts::Logger& logger) {
+  if (identifiers.empty() || durations.empty()) {
+    return;
+  }
+
+  Acts::Table table;
+  using enum Acts::Table::Alignment;
+  table.addColumn("Algorithm", "{}", Left);
+  table.addColumn("Total Time (ms)", "{:.2f}", Right);
+  table.addColumn("Time/Event (ms)", "{:.2f}", Right);
+  table.addColumn("Fraction", "{:.1f}%", Right);
+
+  Duration totalTime =
+      std::accumulate(durations.begin(), durations.end(), Duration::zero());
+
+  // Create sorted indices based on total duration (descending)
+  std::vector<std::size_t> sortedIndices(identifiers.size());
+  std::iota(sortedIndices.begin(), sortedIndices.end(), 0);
+  std::sort(sortedIndices.begin(), sortedIndices.end(),
+            [&](std::size_t a, std::size_t b) {
+              return durations[a] > durations[b];
+            });
+
+  for (std::size_t idx : sortedIndices) {
+    double fraction =
+        totalTime > Duration::zero()
+            ? 100.0 *
+                  std::chrono::duration_cast<NanoSeconds>(durations[idx])
+                      .count() /
+                  std::chrono::duration_cast<NanoSeconds>(totalTime).count()
+            : 0.0;
+
+    double totalValue = durationToMs(durations[idx]);
+    double perEventValue =
+        numEvents > 0 ? durationToMs(durations[idx]) / numEvents : 0.0;
+
+    table.addRow(identifiers[idx], totalValue, perEventValue, fraction);
+  }
+
+  // Add summary row
+  double totalSummaryValue = durationToMs(totalTime);
+  double totalPerEventValue =
+      numEvents > 0 ? durationToMs(totalTime) / numEvents : 0.0;
+  table.addRow("TOTAL", totalSummaryValue, totalPerEventValue, 100.0);
+
+  ACTS_INFO("Timing breakdown:\n" << table);
+}
 }  // namespace
 
 int Sequencer::run() {
@@ -424,7 +483,7 @@ int Sequencer::run() {
             ACTS_VERBOSE("Execute sequence elements");
 
             for (auto& [alg, fpe] : m_sequenceElements) {
-              std::optional<Acts::FpeMonitor> mon;
+              std::optional<ActsPlugins::FpeMonitor> mon;
               if (m_cfg.trackFpes) {
                 mon.emplace();
                 context.fpeMonitor = &mon.value();
@@ -457,7 +516,7 @@ int Sequencer::run() {
                        << " exceeded configured per-event threshold of "
                        << nMasked << " (mask: " << maskLoc
                        << ") (seen: " << count << " FPEs)\n"
-                       << Acts::FpeMonitor::stackTraceToString(
+                       << ActsPlugins::FpeMonitor::stackTraceToString(
                               *st, m_cfg.fpeStackTraceLength);
 
                     m_nUnmaskedFpe += (count - nMasked);
@@ -529,6 +588,8 @@ int Sequencer::run() {
                     << perEvent(clocksAlgorithms[i], numEvents));
   }
 
+  printTiming(names, clocksAlgorithms, numEvents, logger());
+
   if (!m_cfg.outputDir.empty()) {
     storeTiming(names, clocksAlgorithms, numEvents,
                 joinPaths(m_cfg.outputDir, m_cfg.outputTimingFile));
@@ -548,7 +609,7 @@ void Sequencer::fpeReport() const {
 
   for (auto& [alg, fpe] : m_sequenceElements) {
     auto merged = std::accumulate(
-        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        fpe.begin(), fpe.end(), ActsPlugins::FpeMonitor::Result{},
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
     if (!merged.hasStackTraces()) {
       // no FPEs to report
@@ -558,7 +619,8 @@ void Sequencer::fpeReport() const {
     ACTS_INFO("FPE summary for " << alg->typeName() << ": " << alg->name());
     ACTS_INFO("-----------------------------------");
 
-    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+    std::vector<
+        std::reference_wrapper<const ActsPlugins::FpeMonitor::Result::FpeInfo>>
         sorted;
     std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
                    std::back_inserter(sorted),
@@ -566,7 +628,8 @@ void Sequencer::fpeReport() const {
     std::ranges::sort(sorted, std::greater{},
                       [](const auto& s) { return s.get().count; });
 
-    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+    std::vector<
+        std::reference_wrapper<const ActsPlugins::FpeMonitor::Result::FpeInfo>>
         remaining;
 
     for (const auto& el : sorted) {
@@ -577,7 +640,7 @@ void Sequencer::fpeReport() const {
                                            " per event by " + maskLoc + "]"
                                      : "")
                      << "\n"
-                     << Acts::FpeMonitor::stackTraceToString(
+                     << ActsPlugins::FpeMonitor::stackTraceToString(
                             *st, m_cfg.fpeStackTraceLength));
     }
   }
@@ -590,9 +653,9 @@ void Sequencer::fpeReport() const {
 }
 
 std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
-    const boost::stacktrace::stacktrace& st, Acts::FpeType type) const {
+    const boost::stacktrace::stacktrace& st, ActsPlugins::FpeType type) const {
   for (const auto& frame : st) {
-    std::string loc = Acts::FpeMonitor::getSourceLocation(frame);
+    std::string loc = ActsPlugins::FpeMonitor::getSourceLocation(frame);
     auto it = loc.find_last_of(':');
     std::string locFile = loc.substr(0, it);
     unsigned int locLine = std::stoi(loc.substr(it + 1));
@@ -610,11 +673,11 @@ std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
   return {"NONE", 0};
 }
 
-Acts::FpeMonitor::Result Sequencer::fpeResult() const {
-  Acts::FpeMonitor::Result merged;
+ActsPlugins::FpeMonitor::Result Sequencer::fpeResult() const {
+  ActsPlugins::FpeMonitor::Result merged;
   for (auto& [alg, fpe] : m_sequenceElements) {
     merged.merge(std::accumulate(
-        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        fpe.begin(), fpe.end(), ActsPlugins::FpeMonitor::Result{},
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); }));
   }
   return merged;

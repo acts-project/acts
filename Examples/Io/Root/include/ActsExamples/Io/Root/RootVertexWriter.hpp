@@ -87,12 +87,20 @@ class RootVertexWriter final : public WriterT<SimVertexContainer> {
   std::vector<float> m_vy;
   std::vector<float> m_vz;
   std::vector<float> m_vt;
-  /// Outgoing particles from the vertex.
-  std::vector<std::vector<std::uint64_t>> m_outgoingParticles;
+  std::vector<std::vector<std::uint32_t>> m_incomingParticlesVertexPrimary;
+  std::vector<std::vector<std::uint32_t>> m_incomingParticlesVertexSecondary;
+  std::vector<std::vector<std::uint32_t>> m_incomingParticlesParticle;
+  std::vector<std::vector<std::uint32_t>> m_incomingParticlesGeneration;
+  std::vector<std::vector<std::uint32_t>> m_incomingParticlesSubParticle;
+  std::vector<std::vector<std::uint32_t>> m_outgoingParticlesVertexPrimary;
+  std::vector<std::vector<std::uint32_t>> m_outgoingParticlesVertexSecondary;
+  std::vector<std::vector<std::uint32_t>> m_outgoingParticlesParticle;
+  std::vector<std::vector<std::uint32_t>> m_outgoingParticlesGeneration;
+  std::vector<std::vector<std::uint32_t>> m_outgoingParticlesSubParticle;
   // Decoded vertex identifier; see Barcode definition for details.
-  std::vector<std::uint32_t> m_vertexPrimary;
-  std::vector<std::uint32_t> m_vertexSecondary;
-  std::vector<std::uint32_t> m_generation;
+  std::vector<std::uint16_t> m_vertexPrimary;
+  std::vector<std::uint16_t> m_vertexSecondary;
+  std::vector<std::uint8_t> m_generation;
 };
 
 }  // namespace ActsExamples

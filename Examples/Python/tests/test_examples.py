@@ -18,7 +18,7 @@ from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
-    exatrkxEnabled,
+    gnnEnabled,
     onnxEnabled,
     hashingSeedingEnabled,
     AssertCollectionExistsAlg,
@@ -265,6 +265,8 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
     seq = Sequencer(events=10, numThreads=1)
 
+    rnd = acts.examples.RandomNumbers(seed=4242)
+
     root_files = [
         (
             "estimatedparams.root",
@@ -299,6 +301,7 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
         geoSelectionConfigFile=geoSelectionConfigFile,
         config=config,
         s=seq,
+        rnd=rnd,
     ).run()
 
     del seq
@@ -357,7 +360,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
         field,
         outputDir=str(tmp_path),
         s=seq,
-        seedingAlgorithm=SeedingAlgorithm.Orthogonal,
+        seedingAlgorithm=SeedingAlgorithm.OrthogonalTriplet,
     ).run()
 
     for fn, tn in root_files:
@@ -702,8 +705,8 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     assert not map_file.exists()
 
     odd_dir = getOpenDataDetectorDirectory()
-    config = acts.MaterialMapJsonConverter.Config()
-    materialDecorator = acts.JsonMaterialDecorator(
+    config = acts.json.MaterialMapJsonConverter.Config()
+    materialDecorator = acts.json.JsonMaterialDecorator(
         level=acts.logging.INFO,
         rConfig=config,
         jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
@@ -909,7 +912,7 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     ids=["smeared", "geometric", "odd-smeared", "odd-geometric"],
 )
 def test_digitization_example_input_parsing(digi_config_file):
-    from acts.examples import readDigiConfigFromJson
+    from acts.examples.json import readDigiConfigFromJson
 
     readDigiConfigFromJson(str(digi_config_file))
 
@@ -1223,43 +1226,36 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 
 @pytest.mark.parametrize("backend", ["onnx", "torch"])
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
-@pytest.mark.skipif(not exatrkxEnabled, reason="ExaTrkX environment not set up")
-def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
+@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+def test_gnn_metric_learning(
+    tmp_path, trk_geo, field, assert_root_hash, backend, hardware
+):
+    """Test GNN track finding with metric learning graph construction"""
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
-
-    if backend == "torch":
-        pytest.skip(
-            "Disabled torch support until replacement for torch-scatter is found"
-        )
 
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
-    # Extract both models, since we currently don't have a working implementation
-    # of metric learning with ONNX and we need to use torch here
-    onnx_url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
-    torch_url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
+    # Check if models exist using MODEL_STORAGE environment variable
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models = Path(model_storage)
 
-    for url in [onnx_url, torch_url]:
-        tarfile_name = tmp_path / "models.tar"
-        urllib.request.urlretrieve(url, tarfile_name)
-        tarfile.open(tarfile_name).extractall(tmp_path)
+    model_subdir = "torchscript_models" if backend == "torch" else "onnx_models"
+    model_ext = "pt" if backend == "torch" else "onnx"
+    filter_name = "filter" if backend == "torch" else "filtering"
 
-    shutil.copyfile(
-        tmp_path / "torchscript_models/embed.pt", tmp_path / "onnx_models/embed.pt"
-    )
+    assert (ci_models / "torchscript_models/embed.pt").exists()
+    assert (ci_models / f"{model_subdir}/{filter_name}.{model_ext}").exists()
+    assert (ci_models / f"{model_subdir}/gnn.{model_ext}").exists()
 
-    script = (
-        Path(__file__).parent.parent.parent.parent
-        / "Examples"
-        / "Scripts"
-        / "Python"
-        / "exatrkx.py"
-    )
+    repo_root = Path(__file__).parent.parent.parent.parent
+    script = repo_root / "Examples/Scripts/Python/gnn.py"
     assert script.exists()
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    env["MODEL_STORAGE"] = model_storage
 
     if hardware == "cpu":
         env["CUDA_VISIBLE_DEVICES"] = ""
@@ -1272,13 +1268,74 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
         raise
 
     rfp = tmp_path / root_file
     assert rfp.exists()
 
     assert_root_hash(root_file, rfp)
+
+
+@pytest.mark.odd
+@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+@pytest.mark.parametrize("backend", ["torch", "onnx"])
+@pytest.mark.parametrize("hardware", ["gpu"])
+def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
+    """Test GNN track finding with module map graph construction on ODD"""
+    from gnn_module_map_odd import runGnnModuleMap
+    from acts.examples.odd import getOpenDataDetector
+
+    # Get model storage from MODEL_STORAGE environment variable
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models = Path(model_storage)
+
+    # Map backend to file extension
+    model_ext = ".pt" if backend == "torch" else ".onnx"
+
+    # Dict of required files - used for checking and as kwargs
+    required_files = {
+        "moduleMapPath": str(ci_models / "module_map_odd_2k_events.1e-03.float"),
+        "gnnModel": str(ci_models / f"gnn_odd_module_map{model_ext}"),
+    }
+
+    repo_root = Path(__file__).parent.parent.parent.parent
+
+    # Check if all required files exist
+    assert Path(required_files["moduleMapPath"] + ".doublets.root").exists()
+    assert Path(required_files["moduleMapPath"] + ".triplets.root").exists()
+    assert Path(required_files["gnnModel"]).exists()
+
+    # Setup ODD detector
+    detector = getOpenDataDetector()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    seq = Sequencer(events=5, numThreads=1)
+
+    # Run GNN module map workflow
+    with detector:
+        runGnnModuleMap(
+            trackingGeometry=detector.trackingGeometry(),
+            field=field,
+            geometrySelection=str(
+                repo_root / "Examples/Configs/odd-seeding-config.json"
+            ),
+            stripGeometrySelection=str(
+                repo_root / "Examples/Configs/odd-strip-spacepoint-selection.json"
+            ),
+            digiConfigFile=str(
+                repo_root / "Examples/Configs/odd-digi-smearing-config.json"
+            ),
+            outputDir=tmp_path,
+            s=seq,
+            **required_files,
+        )
+
+    # Verify output
+    output_file = tmp_path / "performance_track_finding.root"
+    assert output_file.exists()
+    assert_root_hash("performance_track_finding.root", output_file)
 
 
 @pytest.mark.odd

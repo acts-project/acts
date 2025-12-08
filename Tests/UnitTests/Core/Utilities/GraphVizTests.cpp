@@ -11,14 +11,16 @@
 
 #include "Acts/Utilities/GraphViz.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(GraphViz)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(ApiTest) {
   std::stringstream ss;
 
-  using namespace Acts::GraphViz;
+  using namespace GraphViz;
 
   Node node1{.id = "node1",
              .label = "Node 1",
@@ -43,7 +45,7 @@ BOOST_AUTO_TEST_CASE(ApiTest) {
 
   ss << edge;
 
-  exp = R"(node1 -> node2 [style=dashed];
+  exp = R"("node1" -> "node2" [style=dashed];
 )";
 
   BOOST_CHECK_EQUAL(ss.str(), exp);
@@ -51,4 +53,4 @@ BOOST_AUTO_TEST_CASE(ApiTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -24,39 +24,38 @@ using namespace Acts::UnitLiterals;
 /// The random number generator used in the framework.
 using RandomEngine = std::mt19937;  ///< Mersenne Twister
 
-constexpr auto p_x0 = static_cast<std::size_t>(ParIndices::x0);
-constexpr auto p_y0 = static_cast<std::size_t>(ParIndices::y0);
-constexpr auto p_theta = static_cast<std::size_t>(ParIndices::theta);
-constexpr auto p_phi = static_cast<std::size_t>(ParIndices::phi);
-
 ParamVector makeTrack(RandomEngine& rndEngine) {
   ParamVector pars{};
-  pars[p_x0] =
-      static_cast<double>(rndEngine() % 1000) - 500;  // Random x0 in [-50, 50]
-  pars[p_y0] =
-      static_cast<double>(rndEngine() % 1000) - 500;  // Random y0 in [-50, 50]
-  pars[p_theta] = static_cast<double>(rndEngine() % 180) *
-                  1_degree;  // Random theta in [0, 180)
-  pars[p_phi] = static_cast<double>(rndEngine() % 360) *
-                1_degree;  // Random phi in [-180, 180)
+  pars[toUnderlying(ParIndices::x0)] =
+      std::uniform_real_distribution{-500., 500.}(rndEngine);
+  pars[toUnderlying(ParIndices::y0)] =
+      std::uniform_real_distribution{-500., 500.}(rndEngine);
+  pars[toUnderlying(ParIndices::theta)] =
+      std::uniform_real_distribution{0.1_degree, 179.9_degree}(rndEngine);
+  pars[toUnderlying(ParIndices::phi)] =
+      std::uniform_real_distribution{-180_degree, 180_degree}(rndEngine);
   return pars;
 }
 
-BOOST_AUTO_TEST_SUITE(LineWithPartialTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(lineParameterTest) {
-  Line_t newLine{};
   constexpr std::size_t trials = 1000;
   constexpr double tolerance = 1.e-12;
   RandomEngine rndEngine{3585};
   for (std::size_t i = 0; i < trials; ++i) {
     auto pars = makeTrack(rndEngine);
-    newLine.updateParameters(pars);
-    BOOST_CHECK_CLOSE(newLine.position()[Acts::eX], pars[p_x0], tolerance);
-    BOOST_CHECK_CLOSE(newLine.position()[Acts::eY], pars[p_y0], tolerance);
+    Line_t newLine{pars};
+    BOOST_CHECK_CLOSE(newLine.position()[Acts::eX],
+                      pars[toUnderlying(ParIndices::x0)], tolerance);
+    BOOST_CHECK_CLOSE(newLine.position()[Acts::eY],
+                      pars[toUnderlying(ParIndices::y0)], tolerance);
     BOOST_CHECK_LE(newLine.position()[Acts::eZ], tolerance);
     const Acts::Vector3 dir =
-        Acts::makeDirectionFromPhiTheta(pars[p_phi], pars[p_theta]);
+        Acts::makeDirectionFromPhiTheta(pars[toUnderlying(ParIndices::phi)],
+                                        pars[toUnderlying(ParIndices::theta)]);
     BOOST_CHECK_CLOSE(newLine.direction().dot(dir), 1., tolerance);
   }
 }
@@ -67,25 +66,34 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
   constexpr double tolerance = 1.e-7;
   for (std::size_t trial = 0; trial < trials; ++trial) {
     const ParamVector pars{makeTrack(rndEngine)};
-    std::cout << "lineGradientTest -- Generated parameters  x: " << pars[p_x0]
-              << ", y: " << pars[p_y0]
-              << ", theta: " << (pars[p_theta] / 1_degree)
-              << ", phi: " << (pars[p_phi] / 1_degree) << std::endl;
-    Line_t segLine{};
-    segLine.updateParameters(pars);
+    std::cout << "lineGradientTest -- Generated parameters  x: "
+              << pars[toUnderlying(ParIndices::x0)]
+              << ", y: " << pars[toUnderlying(ParIndices::y0)] << ", theta: "
+              << (pars[toUnderlying(ParIndices::theta)] / 1_degree)
+              << ", phi: " << (pars[toUnderlying(ParIndices::phi)] / 1_degree)
+              << std::endl;
+    Line_t segLine{pars};
 
     BOOST_CHECK_LE((segLine.gradient(ParIndices::x0) - Vector3::UnitX()).norm(),
                    tolerance);
     BOOST_CHECK_LE((segLine.gradient(ParIndices::y0) - Vector3::UnitY()).norm(),
                    tolerance);
+    /// check that the returned parameters correspond to the parsed one
+    const ParamVector parsFromL = segLine.parameters();
+    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::x0)],
+                      pars[toUnderlying(ParIndices::x0)], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::y0)],
+                      pars[toUnderlying(ParIndices::y0)], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::theta)],
+                      pars[toUnderlying(ParIndices::theta)], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::phi)],
+                      pars[toUnderlying(ParIndices::phi)], tolerance);
 
     for (const auto param : {ParIndices::theta, ParIndices::phi}) {
       ParamVector parsUp{pars}, parsDn{pars};
-      parsUp[static_cast<std::size_t>(param)] += h;
-      parsDn[static_cast<std::size_t>(param)] -= h;
-      Line_t segLineUp{}, segLineDn{};
-      segLineUp.updateParameters(parsUp);
-      segLineDn.updateParameters(parsDn);
+      parsUp[toUnderlying(param)] += h;
+      parsDn[toUnderlying(param)] -= h;
+      Line_t segLineUp{parsUp}, segLineDn{parsDn};
 
       const Vector3 numDeriv{(segLineUp.direction() - segLineDn.direction()) /
                              (2. * h)};
@@ -94,8 +102,8 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
       for (const auto param1 : {ParIndices::theta, ParIndices::phi,
                                 ParIndices::x0, ParIndices::y0}) {
         ParamVector parsUp1{pars}, parsDn1{pars};
-        parsUp1[static_cast<std::size_t>(param1)] += h;
-        parsDn1[static_cast<std::size_t>(param1)] -= h;
+        parsUp1[toUnderlying(param1)] += h;
+        parsDn1[toUnderlying(param1)] -= h;
 
         segLineUp.updateParameters(parsUp1);
         segLineDn.updateParameters(parsDn1);
@@ -109,3 +117,5 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
   }
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

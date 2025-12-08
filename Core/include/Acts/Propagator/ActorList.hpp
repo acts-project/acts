@@ -15,6 +15,7 @@ namespace Acts {
 /// @brief Extract the result type of an actor
 template <typename T>
 struct ActorResultTypeExtractor {
+  /// Type alias for the result type of an actor
   using type = typename T::result_type;
 };
 
@@ -51,18 +52,21 @@ struct ActorList {
   /// Default move constructor
   ///
   /// @param actors The source action list
-  ActorList(ActorList<actors_t...>&& actors) = default;
+  ActorList(ActorList<actors_t...>&& actors) noexcept = default;
 
   /// Default move assignment operator
   ///
   /// @param actors The source action list
+  /// @return Reference to this ActorList after copy assignment
   ActorList<actors_t...>& operator=(const ActorList<actors_t...>& actors) =
       default;
 
   /// Default move assignment operator
   ///
   /// @param actors The source action list
-  ActorList<actors_t...>& operator=(ActorList<actors_t...>&& actors) = default;
+  /// @return Reference to this ActorList after move assignment
+  ActorList<actors_t...>& operator=(ActorList<actors_t...>&& actors) noexcept =
+      default;
 
   /// Constructor from tuple
   ///
@@ -79,6 +83,7 @@ struct ActorList {
   /// Const retrieval of an actor of a specific type
   ///
   /// @tparam actor_t Type of the Actor to be retrieved
+  /// @return Const reference to the requested actor
   template <typename actor_t>
   const actor_t& get() const {
     return std::get<actor_t>(m_actors);
@@ -87,6 +92,7 @@ struct ActorList {
   /// Non-const retrieval of an actor of a specific type
   ///
   /// @tparam actor_t Type of the Actor to be retrieved
+  /// @return Reference to the requested actor
   template <typename actor_t>
   actor_t& get() {
     return std::get<actor_t>(m_actors);
@@ -134,6 +140,7 @@ struct ActorList {
   /// @param [in] stepper Stepper used for the propagation
   /// @param [in] navigator Navigator used for the propagation
   /// @param [in] args are the arguments to be passed to the aborters
+  /// @return True if propagation should be aborted, false otherwise
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,

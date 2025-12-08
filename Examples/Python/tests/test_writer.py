@@ -19,28 +19,34 @@ import acts
 from acts import UnitConstants as u
 from acts.examples import (
     ObjPropagationStepsWriter,
-    TrackFinderNTupleWriter,
-    RootPropagationStepsWriter,
-    RootParticleWriter,
-    RootTrackParameterWriter,
-    RootMaterialTrackWriter,
-    RootMaterialWriter,
-    RootSimHitWriter,
-    RootTrackStatesWriter,
-    RootTrackSummaryWriter,
-    VertexNTupleWriter,
-    RootMeasurementWriter,
     CsvParticleWriter,
     CsvSimHitWriter,
     CsvTrackParameterWriter,
     CsvTrackWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
-    JsonMaterialWriter,
-    JsonFormat,
     Sequencer,
     GenericDetector,
 )
+from acts.examples.json import (
+    JsonMaterialWriter,
+    JsonFormat,
+)
+
+from acts.examples.root import (
+    RootMaterialTrackWriter,
+    RootMaterialWriter,
+    RootMeasurementWriter,
+    RootPropagationStepsWriter,
+    RootParticleWriter,
+    RootSimHitWriter,
+    RootTrackParameterWriter,
+    RootTrackStatesWriter,
+    RootTrackSummaryWriter,
+    RootTrackFinderNTupleWriter,
+    RootVertexNTupleWriter,
+)
+
 from acts.examples.odd import getOpenDataDetectorDirectory
 
 
@@ -299,7 +305,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
     [
         RootPropagationStepsWriter,
         RootParticleWriter,
-        TrackFinderNTupleWriter,
+        RootTrackFinderNTupleWriter,
         RootTrackParameterWriter,
         RootMaterialTrackWriter,
         RootMeasurementWriter,
@@ -307,7 +313,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
         RootSimHitWriter,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
-        VertexNTupleWriter,
+        RootVertexNTupleWriter,
     ],
 )
 @pytest.mark.root

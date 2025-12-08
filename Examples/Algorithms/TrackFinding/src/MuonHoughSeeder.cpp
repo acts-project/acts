@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <format>
 #include <stdexcept>
 
 #include "TBox.h"
@@ -41,7 +42,7 @@ auto etaHoughParamDC_right = [](double tanAlpha, const MuonSpacePoint& DC) {
 auto houghWidth_fromDC = [](double, const MuonSpacePoint& DC) {
   // scale reported errors up to at least 1mm or 3 times the reported error as
   // drift circle calib not fully reliable at this stage
-  return std::min(std::sqrt(DC.covariance()(Acts::eY, Acts::eY)) * 3., 1.0);
+  return std::min(std::sqrt(DC.covariance()[Acts::eY]) * 3., 1.0);
 };
 
 /// strip solution
@@ -54,10 +55,10 @@ auto phiHoughParam_strip = [](double tanBeta, const MuonSpacePoint& strip) {
 
 /// @brief Strip uncertainty
 auto etaHoughWidth_strip = [](double, const MuonSpacePoint& strip) {
-  return std::sqrt(strip.covariance()(Acts::eY, Acts::eY)) * 3.;
+  return std::sqrt(strip.covariance()[Acts::eY]) * 3.;
 };
 auto phiHoughWidth_strip = [](double, const MuonSpacePoint& strip) {
-  return std::sqrt(strip.covariance()(Acts::eX, Acts::eX)) * 3.;
+  return std::sqrt(strip.covariance()[Acts::eX]) * 3.;
 };
 
 MuonHoughSeeder::MuonHoughSeeder(MuonHoughSeeder::Config cfg,
@@ -261,10 +262,11 @@ void MuonHoughSeeder::displayMaxima(const AlgorithmContext& ctx,
   TH2D houghHistoForPlot("houghHist", "HoughPlane;tan(#alpha);z0 [mm]",
                          plane.nBinsX(), axis.xMin, axis.xMax, plane.nBinsY(),
                          axis.yMin, axis.yMax);
-  houghHistoForPlot.SetTitle(Form("Station %s, side %s, sector %2d",
-                                  to_string(bucketId.msStation()).c_str(),
-                                  to_string(bucketId.side()).c_str(),
-                                  bucketId.sector()));
+  houghHistoForPlot.SetTitle(std::format("Station {:}, side {:}, sector {:2d}",
+                                         MuonId::toString(bucketId.msStation()),
+                                         MuonId::toString(bucketId.side()),
+                                         bucketId.sector())
+                                 .c_str());
 
   /** Copy the plane content into the histogram */
   for (int bx = 0; bx < houghHistoForPlot.GetNbinsX(); ++bx) {
@@ -324,6 +326,8 @@ void MuonHoughSeeder::displayMaxima(const AlgorithmContext& ctx,
       legend->AddEntry(box.get(), "Hough uncertainties");
       addedLeg = true;
     }
+    primitives.push_back(std::move(box));
+    primitives.push_back(std::move(marker));
   }
   primitives.emplace_back(std::move(legend));
   for (auto& prim : primitives) {

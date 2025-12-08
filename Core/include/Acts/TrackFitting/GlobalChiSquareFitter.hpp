@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -68,18 +65,25 @@ const Eigen::Matrix<double, eBoundSize, 2> phiThetaProjector = [] {
 /// Extension struct which holds delegates to customise the GX2F behaviour
 template <typename traj_t>
 struct Gx2FitterExtensions {
+  /// Type alias for mutable track state proxy from multi-trajectory
   using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
+  /// Type alias for const track state proxy from multi-trajectory
   using ConstTrackStateProxy =
       typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
+  /// Type alias for track parameters from track state proxy
   using Parameters = typename TrackStateProxy::Parameters;
 
+  /// Type alias for calibrator delegate to process measurements
   using Calibrator =
       Delegate<void(const GeometryContext&, const CalibrationContext&,
                     const SourceLink&, TrackStateProxy)>;
 
+  /// Type alias for updater delegate to incorporate measurements into track
+  /// parameters
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         const Logger&)>;
 
+  /// Type alias for outlier finder delegate to identify measurement outliers
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
   /// The Calibrator is a dedicated calibration algorithm that allows
@@ -99,10 +103,10 @@ struct Gx2FitterExtensions {
 
   /// Default constructor which connects the default void components
   Gx2FitterExtensions() {
-    calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
-    updater.template connect<&detail::voidFitterUpdater<traj_t>>();
-    outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
-    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
+    calibrator.template connect<&Acts::detail::voidFitterCalibrator<traj_t>>();
+    updater.template connect<&Acts::detail::voidFitterUpdater<traj_t>>();
+    outlierFinder.template connect<&Acts::detail::voidOutlierFinder<traj_t>>();
+    surfaceAccessor.connect<&Acts::detail::voidSurfaceAccessor>();
   }
 };
 
@@ -157,6 +161,7 @@ struct Gx2FitterOptions {
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
+  /// Extensions for calibration and outlier finding
   Gx2FitterExtensions<traj_t> extensions;
 
   /// The trivial propagator options
@@ -252,16 +257,20 @@ struct ScatteringProperties {
         m_invCovarianceMaterial(invCovarianceMaterial_),
         m_materialIsValid(materialIsValid_) {}
 
-  // Accessor for the scattering angles.
+  /// @brief Accessor for the scattering angles (const version)
+  /// @return Const reference to the vector of scattering angles
   const BoundVector& scatteringAngles() const { return m_scatteringAngles; }
 
-  // Accessor for a modifiable reference to the scattering angles
+  /// @brief Accessor for the scattering angles (mutable version)
+  /// @return Mutable reference to the vector of scattering angles for modification
   BoundVector& scatteringAngles() { return m_scatteringAngles; }
 
-  // Accessor for the inverse covariance of the material.
+  /// @brief Accessor for the inverse covariance of the material
+  /// @return Inverse covariance value computed from material properties (e.g., Highland formula)
   double invCovarianceMaterial() const { return m_invCovarianceMaterial; }
 
-  // Accessor for the material validity flag.
+  /// @brief Accessor for the material validity flag
+  /// @return True if material is valid for scattering calculations, false for vacuum or zero thickness
   bool materialIsValid() const { return m_materialIsValid; }
 
  private:
@@ -292,38 +301,51 @@ struct Gx2fSystem {
         m_aMatrix{Eigen::MatrixXd::Zero(nDims, nDims)},
         m_bVector{Eigen::VectorXd::Zero(nDims)} {}
 
-  // Accessor for nDims (const reference).
+  /// @brief Accessor for the number of dimensions of the extended system
+  /// @return Number of dimensions for the aMatrix and bVector (bound parameters + scattering angles)
   std::size_t nDims() const { return m_nDims; }
 
-  // Accessor for chi2
+  /// @brief Accessor for the accumulated chi-squared value (const version)
+  /// @return Current sum of chi-squared contributions from measurements and material
   double chi2() const { return m_chi2; }
 
-  // Modifier for chi2
+  /// @brief Accessor for the accumulated chi-squared value (mutable version)
+  /// @return Mutable reference to chi-squared sum for modification during fitting
   double& chi2() { return m_chi2; }
 
-  // Accessor for the matrix.
+  /// @brief Accessor for the extended system matrix (const version)
+  /// @return Const reference to the aMatrix containing measurement and material contributions
   const Eigen::MatrixXd& aMatrix() const { return m_aMatrix; }
 
-  // Accessor for a modifiable reference to the matrix.
+  /// @brief Accessor for the extended system matrix (mutable version)
+  /// @return Mutable reference to the aMatrix for adding measurement and material contributions
   Eigen::MatrixXd& aMatrix() { return m_aMatrix; }
 
-  // Accessor for the vector.
+  /// @brief Accessor for the extended system vector (const version)
+  /// @return Const reference to the bVector containing measurement and material contributions
   const Eigen::VectorXd& bVector() const { return m_bVector; }
 
-  // Accessor for a modifiable reference to the vector.
+  /// @brief Accessor for the extended system vector (mutable version)
+  /// @return Mutable reference to the bVector for adding measurement and material contributions
   Eigen::VectorXd& bVector() { return m_bVector; }
 
-  // Accessor for NDF
+  /// @brief Accessor for the number of degrees of freedom (const version)
+  /// @return Current number of degrees of freedom from processed measurements
   std::size_t ndf() const { return m_ndf; }
 
-  // Modifier for NDF
+  /// @brief Accessor for the number of degrees of freedom (mutable version)
+  /// @return Mutable reference to NDF counter for incrementing during measurement processing
   std::size_t& ndf() { return m_ndf; }
 
-  //  It automatically deduces if we want to fit e.g. q/p and adjusts itself
-  //  later. We have only 3 cases, because we always have l0, l1, phi, theta:
-  // - 4: no magnetic field -> q/p is empty
-  // - 5: no time measurement -> time is not fittable
-  // - 6: full fit
+  /// @brief Determines the minimum number of degrees of freedom required for the fit
+  ///
+  /// Automatically deduces the required NDF based on the system configuration.
+  /// We have only 3 cases, because we always have l0, l1, phi, theta:
+  /// - 4: no magnetic field -> q/p is empty
+  /// - 5: no time measurement -> time is not fittable
+  /// - 6: full fit with all parameters
+  ///
+  /// @return Required NDF based on which parameters can be fitted
   std::size_t findRequiredNdf() {
     std::size_t ndfSystem = 0;
     if (m_aMatrix(4, 4) == 0) {
@@ -337,6 +359,8 @@ struct Gx2fSystem {
     return ndfSystem;
   }
 
+  /// @brief Checks if the system has sufficient degrees of freedom for fitting
+  /// @return True if NDF exceeds the minimum required for the parameter configuration
   bool isWellDefined() { return m_ndf > findRequiredNdf(); }
 
  private:
@@ -683,6 +707,14 @@ class Gx2Fitter {
       std::is_same_v<Gx2fNavigator, DirectNavigator>;
 
  public:
+  /// @brief Constructor for the Global Chi-Square Fitter
+  ///
+  /// Initializes the fitter with a propagator and optional logger.
+  /// The fitter uses iterative fitting with a linear equation system
+  /// to minimize chi-squared including multiple scattering effects.
+  ///
+  /// @param pPropagator The propagator instance for track propagation
+  /// @param _logger Logger instance for debugging output (optional)
   explicit Gx2Fitter(propagator_t pPropagator,
                      std::unique_ptr<const Logger> _logger =
                          getDefaultLogger("Gx2Fitter", Logging::INFO))
@@ -821,8 +853,8 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          detail::PointwiseMaterialInteraction interaction(surface, state,
-                                                           stepper);
+          Acts::detail::PointwiseMaterialInteraction interaction(surface, state,
+                                                                 stepper);
           // We need to evaluate the material to create the correct slab
           const bool slabIsValid = interaction.evaluateMaterialSlab(
               state, navigator, MaterialUpdateStage::FullUpdate);
