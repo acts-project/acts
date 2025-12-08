@@ -139,7 +139,13 @@ class FitTestSpacePoint {
   /// @brief Check if the measurement is valid after calibration
   bool isGood() const { return m_isGood; }
   /// @brief Returns the layer index of the space point
-  std::size_t layer() const { return m_layer; }
+  std::size_t layer() const { return m_layer.value_or(0ul); }
+  /// @brief Sets the layer number of the space point
+  void setLayer(const std::size_t lay) {
+    if (!m_layer) {
+      m_layer = lay;
+    }
+  }
 
  private:
   Vector3 m_position{Vector3::Zero()};
@@ -152,7 +158,7 @@ class FitTestSpacePoint {
   bool m_measLoc0{false};
   bool m_measLoc1{false};
   bool m_isGood{true};
-  std::size_t m_layer{0ul};  // layer index starting from 0
+  std::optional<std::size_t> m_layer{};  // layer index starting from 0
 };
 
 static_assert(CompositeSpacePoint<FitTestSpacePoint>);
@@ -296,37 +302,46 @@ class SpCalibrator {
             .position();
     return (m_localToGlobal * closePointOnLine).norm();
   }
+  std::shared_ptr<FitTestSpacePoint> calibrate(
+      const Acts::CalibrationContext& /*cctx*/, const Vector3& trackPos,
+      const Vector3& trackDir, const double timeOffSet,
+      const FitTestSpacePoint& sp) const {
+    auto copySp = std::make_shared<FitTestSpacePoint>(sp);
+    if (!copySp->measuresLoc0() || !copySp->measuresLoc1()) {
+      /// Estimate the best position along the sensor
+      auto bestPos = lineIntersect(trackPos, trackDir, copySp->localPosition(),
+                                   copySp->sensorDirection());
+      copySp->updatePosition(bestPos.position());
+    }
+    if (copySp->isStraw()) {
+      const double driftTime{copySp->time() - timeOffSet -
+                             closestApproachDist(trackPos, trackDir, sp) /
+                                 PhysicalConstants::c};
+      if (driftTime < 0) {
+        copySp->updateStatus(false);
+        copySp->updateDriftR(0.);
+      } else {
+        copySp->updateStatus(true);
+        copySp->updateDriftR(Acts::abs(driftRadius(driftTime)));
+      }
+    }
+    return copySp;
+  }
   /// @brief Calibrate a set of straw measurements using the best known estimate on a straight line track
   /// @param ctx: Calibration context (Needed by conept interface)
   /// @param trackPos: Position of the track at z=0.
   /// @param trackDir: Direction of the track in the local frame
   /// @param timeOffSet: Offset in the time of arrival (To be implemented)
   /// @param uncalibCont: Uncalibrated composite space point container
-  Container_t calibrate(const Acts::CalibrationContext& /*ctx*/,
+  Container_t calibrate(const Acts::CalibrationContext& ctx,
                         const Vector3& trackPos, const Vector3& trackDir,
                         const double timeOffSet,
                         const Container_t& uncalibCont) const {
     Container_t calibMeas{};
-    for (const auto& sp : uncalibCont) {
-      if (!sp->measuresLoc0() || !sp->measuresLoc1()) {
-        /// Estimate the best position along the sensor
-        auto bestPos = lineIntersect(trackPos, trackDir, sp->localPosition(),
-                                     sp->sensorDirection());
-        sp->updatePosition(bestPos.position());
-      }
-      if (sp->isStraw()) {
-        const double driftTime{sp->time() - timeOffSet -
-                               closestApproachDist(trackPos, trackDir, *sp) /
-                                   PhysicalConstants::c};
-        if (driftTime < 0) {
-          sp->updateStatus(false);
-          sp->updateDriftR(0.);
-        } else {
-          sp->updateStatus(true);
-          sp->updateDriftR(Acts::abs(driftRadius(driftTime)));
-        }
-      }
-    }
+    std::ranges::transform(
+        uncalibCont, std::back_inserter(calibMeas), [&](const auto& calibMe) {
+          return calibrate(ctx, trackPos, trackDir, timeOffSet, *calibMe);
+        });
     return uncalibCont;
   }
   /// @brief Updates the sign of the Straw's drift radii indicating that they are on the left (-1)
@@ -377,19 +392,14 @@ static_assert(
 /// @brief Split the composite space point container into straw and strip measurements
 class SpSorter {
  public:
-  SpSorter(Container_t& hits) {
+  SpSorter(const Container_t& hits, const SpCalibrator* calibrator)
+      : m_calibrator{calibrator} {
     for (const auto& spPtr : hits) {
-      if (spPtr->isStraw()) {
-        while (spPtr->layer() >= m_straws.size()) {
-          m_straws.push_back(Container_t{});
-        }
-        m_straws[spPtr->layer()].push_back(spPtr);
-      } else {
-        while (spPtr->layer() >= m_strips.size()) {
-          m_strips.push_back(Container_t{});
-        }
-        m_strips[spPtr->layer()].push_back(spPtr);
+      auto& pushMe{spPtr->isStraw() ? m_straws : m_strips};
+      if (spPtr->layer() >= pushMe.size()) {
+        pushMe.resize(spPtr->layer() + 1);
       }
+      pushMe[spPtr->layer()].push_back(spPtr);
     }
   }
   const std::vector<Container_t>& strawHits() const { return m_straws; }
@@ -412,15 +422,27 @@ class SpSorter {
                        const FitTestSpacePoint& testSp) const {
     return CompSpacePointAuxiliaries::chi2Term(pos, dir, testSp);
   }
+  /// @brief Creates a new empty container
   Container_t newContainer(const CalibrationContext& /*cctx*/) const {
     return Container_t{};
   }
+  /// @brief Appends the space point to the container and calibrates it according to
+  ///        the seed parameters
+  ///
   void append(const CalibrationContext& cctx, const Vector3& pos,
               const Vector3& dir, const double t0,
               const FitTestSpacePoint& testSp,
-              Container_t& outContainer) const {}
+              Container_t& outContainer) const {
+    outContainer.push_back(m_calibrator->calibrate(cctx, pos, dir, t0, testSp));
+  }
+
+  bool stopSeeding(const std::size_t lowerLayer,
+                   const std::size_t upperLayer) const {
+    return lowerLayer >= upperLayer;
+  }
 
  private:
+  const SpCalibrator* m_calibrator{nullptr};
   std::vector<Container_t> m_straws{};
   std::vector<Container_t> m_strips{};
 };
@@ -597,12 +619,15 @@ class MeasurementGenerator {
           ACTS_DEBUG("spawn() - Tube position: " << toString(tube)
                                                  << ", radius: " << rad);
 
+          auto twinUncert =
+              genCfg.twinStraw
+                  ? std::make_optional<double>(genCfg.twinStrawReso)
+                  : std::nullopt;
           auto& sp =
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   tube, smearedR, SpCalibrator::driftUncert(smearedR),
-                  genCfg.twinStraw
-                      ? std::make_optional<double>(genCfg.twinStrawReso)
-                      : std::nullopt));
+                  twinUncert));
+          sp->setLayer(i_layer);
           sp->updateTime(SpCalibrator::driftTime(sp->driftRadius()) + t0 +
                          calibrator.closestApproachDist(line.position(),
                                                         line.direction(), *sp) /
@@ -665,6 +690,7 @@ class MeasurementGenerator {
             measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                 extpPos, genCfg.stripDirLoc0.at(sL), genCfg.stripDirLoc1.at(sL),
                 stripCovLoc0, stripCovLoc1));
+            measurements.back()->setLayer(sL);
           } else {
             if (sL < genCfg.stripDirLoc0.size()) {
               const Vector3 extpPos{discretize(extp.position(), sL, false) +
@@ -673,12 +699,10 @@ class MeasurementGenerator {
                   extpPos, genCfg.stripDirLoc0.at(sL),
                   genCfg.stripDirLoc0.at(sL).cross(Vector3::UnitZ()),
                   stripCovLoc0, 0.));
-              const auto& nM{*measurements.back()};
-              ACTS_VERBOSE("spawn() - Created loc0 strip @"
-                           << toString(nM.localPosition())
-                           << ", dir: " << toString(nM.sensorDirection())
-                           << ", to-next:" << toString(nM.toNextSensor())
-                           << " -> covariance: " << nM.covariance()[0] << ".");
+              auto& nM{*measurements.back()};
+              nM.setLayer(sL);
+              ACTS_VERBOSE("spawn() - Created loc0 strip @" << toString(nM)
+                                                            << ".");
             }
             if (sL < genCfg.stripDirLoc1.size()) {
               const Vector3 extpPos{discretize(extp.position(), sL, true) +
@@ -686,13 +710,11 @@ class MeasurementGenerator {
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   extpPos, genCfg.stripDirLoc1.at(sL),
                   genCfg.stripDirLoc1.at(sL).cross(Vector3::UnitZ()), 0.,
-                  stripCovLoc1, sL));
-              const auto& nM{*measurements.back()};
-              ACTS_VERBOSE("spawn() - Created loc1 strip @"
-                           << toString(nM.localPosition())
-                           << ", dir: " << toString(nM.sensorDirection())
-                           << ", to-next:" << toString(nM.toNextSensor())
-                           << " -> covariance: " << nM.covariance()[1] << ".");
+                  stripCovLoc1));
+              auto& nM{*measurements.back()};
+              nM.setLayer(sL);
+              ACTS_VERBOSE("spawn() - Created loc1 strip @" << toString(nM)
+                                                            << ".");
             }
           }
         }
