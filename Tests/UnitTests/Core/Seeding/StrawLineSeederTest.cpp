@@ -11,18 +11,99 @@
 #include <set>
 
 #include "StrawHitGeneratorHelper.hpp"
+#include "TFile.h"
+#include "TTree.h"
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 5;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
+#define DECLARE_BRANCH(dTYPE, NAME) \
+  dTYPE NAME{};                     \
+  outTree->Branch(#NAME, &NAME);
+
 namespace ActsTests {
+
+void testSeeder(RandomEngine& engine, TFile& outFile) {
+  auto outTree = std::make_unique<TTree>("StrawSeederTree", "StrawSeederTree");
+
+  DECLARE_BRANCH(double, trueY0);
+  DECLARE_BRANCH(double, trueTheta);
+  DECLARE_BRANCH(uint, nTruthStraws);
+  DECLARE_BRANCH(std::vector<double>, recoY0);
+  DECLARE_BRANCH(std::vector<double>, recoTheta);
+  DECLARE_BRANCH(std::vector<double>, uncertY0);
+  DECLARE_BRANCH(std::vector<double>, uncertTheta);
+  DECLARE_BRANCH(std::vector<uint>, nStraws);
+  DECLARE_BRANCH(std::vector<uint>, nStrips);
+  DECLARE_BRANCH(uint, nSeeds);
+
+  using GenCfg_t = MeasurementGenerator::Config;
+  GenCfg_t genCfg{};
+  genCfg.twinStraw = false;
+  genCfg.createStrips = false;
+
+  CompositeSpacePointLineSeeder::Config seederCfg{};
+  seederCfg.busyLayerLimit = 20;
+  CompositeSpacePointLineSeeder seeder{seederCfg};
+
+  for (std::size_t evt = 0; evt < nEvents; ++evt) {
+    if (evt % 100 == 0)
+      ACTS_INFO("Generating event " << evt);
+    const auto line = generateLine(engine, logger());
+    auto linePars = line.parameters();
+    trueY0 = linePars[toUnderlying(FitParIndex::y0)];
+    trueTheta = linePars[toUnderlying(FitParIndex::theta)];
+    auto testTubes =
+        MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
+    nTruthStraws = testTubes.size();
+    auto calibrator = std::make_unique<SpCalibrator>();
+
+    using SeedOptions_t =
+        CompositeSpacePointLineSeeder::SeedOptions<Container_t, Container_t,
+                                                   SpSorter>;
+    SeedOptions_t seedOpts{testTubes, calibrator.get()};
+    seedOpts.strawRadius = 15._mm;
+    ACTS_DEBUG(seedOpts);
+    nSeeds = 0;
+    CalibrationContext cctx{};
+    while (auto seed = seeder.nextSeed(cctx, seedOpts)) {
+      ACTS_DEBUG("Seed finder loop " << seedOpts);
+      if (seed == std::nullopt)
+        break;
+      /// recoY0.push_back(seed->y0);
+      /// recoTheta.push_back(seed->theta);
+      /// uncertY0.push_back(seed->dY0);
+      /// uncertTheta.push_back(seed->dTheta);
+      /// nStraws.push_back(seed->nStrawHits);
+      nSeeds++;
+    }
+    ACTS_DEBUG("======Event " << evt << " found " << nSeeds << " seeds.");
+
+    outTree->Fill();
+    recoY0.clear();
+    recoTheta.clear();
+    uncertY0.clear();
+    uncertTheta.clear();
+    nStraws.clear();
+    nStrips.clear();
+  }
+  outFile.WriteObject(outTree.get(), outTree->GetName());
+}
 
 using GenCfg_t = MeasurementGenerator::Config;
 
 BOOST_AUTO_TEST_SUITE(SeedingSuite)
+BOOST_AUTO_TEST_CASE(SeederTest) {
+  RandomEngine engine{1602};
+  std::unique_ptr<TFile> outFile{
+      TFile::Open("StrawLineSeedTest.root", "RECREATE")};
 
+  BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
+
+  testSeeder(engine, *outFile);
+}
 BOOST_AUTO_TEST_CASE(SeedTangents) {
   RandomEngine engine{117};
   constexpr double tolerance = 1.e-3;
