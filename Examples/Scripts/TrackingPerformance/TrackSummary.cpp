@@ -174,17 +174,17 @@ int main(int argc, char **argv) {
         iFiles, iTree, oFile, configInput, configOutput, nEntries, nPeakEntries,
         pullRange, nHistBins, nPhiBins, phiRange, nEtaBins, etaRange, ptBorders,
         residualPulls, auxiliaries)) {
-    case -1: {
-      std::cout << "*** Input file could not be opened, check name/path."
-                << std::endl;
-    } break;
-    case -2: {
-      std::cout << "*** Input tree could not be found, check name."
-                << std::endl;
-    } break;
-    default: {
-      std::cout << "*** Successful run." << std::endl;
-    };
+      case -1: {
+        std::cout << "*** Input file could not be opened, check name/path."
+                  << std::endl;
+      } break;
+      case -2: {
+        std::cout << "*** Input tree could not be found, check name."
+                  << std::endl;
+      } break;
+      default: {
+        std::cout << "*** Successful run." << std::endl;
+      };
     }
 
     if (tApp != nullptr) {
