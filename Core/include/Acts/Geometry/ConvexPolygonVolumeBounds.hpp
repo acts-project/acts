@@ -29,7 +29,7 @@ class DiamondBounds;
 /// Bounds for a polygonal prism shaped Volume, the orientedSurface(...) method
 /// creates a vector of 8 surfaces:
 /// 2 Diamond Shape Surfaces (see
-/// https://github.com/acts-project/acts/blob/main/docs/figures/doxygen/DiamondBounds.svg)
+/// https://github.com/acts-project/acts/blob/main/docs/old/figures/doxygen/DiamondBounds.svg)
 /// and 6 Rectangular Shape Surfaces.
 ///
 ///  BoundarySurfaceFace [index]:

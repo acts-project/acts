@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
@@ -41,7 +42,8 @@ struct APolicy : public INavigationPolicy {
   APolicy(const GeometryContext& /*gctx*/, const TrackingVolume& /*volume*/,
           const Logger& /*logger*/) {}
 
-  void initializeCandidates(const NavigationArguments& /*unused*/,
+  void initializeCandidates(const GeometryContext& /*unused*/,
+                            const NavigationArguments& /*unused*/,
                             AppendOnlyNavigationStream& /*unused*/,
                             const Logger& /*unused*/) const {
     const_cast<APolicy*>(this)->executed = true;
@@ -67,7 +69,8 @@ struct BPolicy : public INavigationPolicy {
     connectDefault<BPolicy>(delegate);
   }
 
-  void initializeCandidates(const NavigationArguments& /*unused*/,
+  void initializeCandidates(const GeometryContext& /*unused*/,
+                            const NavigationArguments& /*unused*/,
                             AppendOnlyNavigationStream& /*unused*/,
                             const Logger& /*unused*/) const {
     const_cast<BPolicy*>(this)->executed = true;
@@ -96,7 +99,8 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(NavigationArguments{.position = Vector3::Zero(),
+  delegate(gctx,
+           NavigationArguments{.position = Vector3::Zero(),
                                .direction = Vector3::Zero()},
            stream, *logger);
 
@@ -133,7 +137,8 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(NavigationArguments{.position = Vector3::Zero(),
+  delegate(gctx,
+           NavigationArguments{.position = Vector3::Zero(),
                                .direction = Vector3::Zero()},
            stream, *logger);
 
@@ -150,7 +155,8 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   NavigationDelegate delegate2;
   policyBase2->connect(delegate2);
 
-  delegate2(NavigationArguments{.position = Vector3::Zero(),
+  delegate2(gctx,
+            NavigationArguments{.position = Vector3::Zero(),
                                 .direction = Vector3::Zero()},
             stream, *logger);
 
@@ -180,7 +186,8 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(NavigationArguments{.position = Vector3::Zero(),
+  delegate(gctx,
+           NavigationArguments{.position = Vector3::Zero(),
                                .direction = Vector3::Zero()},
            stream, *logger);
 
@@ -203,7 +210,8 @@ struct CPolicySpecialized : public CPolicy {
     connectDefault<CPolicySpecialized<T>>(delegate);
   }
 
-  void initializeCandidates(const NavigationArguments& /*unused*/,
+  void initializeCandidates(const GeometryContext& /*unused*/,
+                            const NavigationArguments& /*unused*/,
                             AppendOnlyNavigationStream& /*stream*/,
                             const Logger& /*logger*/) const {
     auto* self = const_cast<CPolicySpecialized<int>*>(this);
@@ -249,7 +257,8 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(NavigationArguments{.position = Vector3::Zero(),
+  delegate(gctx,
+           NavigationArguments{.position = Vector3::Zero(),
                                .direction = Vector3::Zero()},
            stream, *logger);
 
@@ -278,7 +287,8 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   NavigationArguments args{.position = gpos, .direction = gdir};
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  tryAll.initializeCandidates(args, stream, logger);
+  GeometryContext gctx;
+  tryAll.initializeCandidates(gctx, args, stream, logger);
   main.initialize(gctx, {gpos, gdir}, BoundaryTolerance::None());
   std::vector<const Portal*> portals;
   for (auto& candidate : main.candidates()) {
@@ -359,8 +369,9 @@ std::vector<const Portal*> getSmart(const Vector3& position,
   Vector3 gdir = transform.linear() * direction;
   NavigationArguments args{.position = gpos, .direction = gdir};
   NavigationStream main;
+  GeometryContext gctx;
   AppendOnlyNavigationStream stream{main};
-  policy.initializeCandidates(args, stream, *logger);
+  policy.initializeCandidates(gctx, args, stream, *logger);
 
   std::vector<const Portal*> portals;
   // We don't filter here, because we want to test the candidates as they come

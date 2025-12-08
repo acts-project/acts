@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
@@ -21,7 +21,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
-#include <ios>
 #include <map>
 
 namespace Acts::detail {
@@ -62,12 +61,15 @@ struct GsfResult {
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
 
+  // Internal: bethe heitler approximation component cache
+  std::vector<BetheHeitlerApprox::Component> betheHeitlerCache;
+
   // Internal: component cache to avoid reallocation
   std::vector<GsfComponent> componentCache;
 };
 
 /// The actor carrying out the GSF algorithm
-template <typename bethe_heitler_approx_t, typename traj_t>
+template <typename traj_t>
 struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
@@ -87,7 +89,7 @@ struct GsfActor {
 
     /// Bethe Heitler Approximator pointer. The fitter holds the approximator
     /// instance TODO if we somehow could initialize a reference here...
-    const bethe_heitler_approx_t* bethe_heitler_approx = nullptr;
+    const BetheHeitlerApprox* bethe_heitler_approx = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -369,7 +371,7 @@ struct GsfActor {
                            const navigator_t& navigator,
                            const BoundTrackParameters& old_bound,
                            const double old_weight,
-                           std::vector<ComponentCache>& componentCaches,
+                           std::vector<ComponentCache>& componentCache,
                            result_type& result) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
@@ -398,7 +400,10 @@ struct GsfActor {
     }
 
     // Get the mixture
-    const auto mixture = m_cfg.bethe_heitler_approx->mixture(pathXOverX0);
+    result.betheHeitlerCache.resize(
+        m_cfg.bethe_heitler_approx->maxComponents());
+    const auto mixture = m_cfg.bethe_heitler_approx->mixture(
+        pathXOverX0, result.betheHeitlerCache);
 
     // Create all possible new components
     for (const auto& gaussian : mixture) {
@@ -449,7 +454,7 @@ struct GsfActor {
              "new cov not finite");
 
       // Set the remaining things and push to vector
-      componentCaches.push_back({new_weight, new_pars, new_cov});
+      componentCache.push_back({new_weight, new_pars, new_cov});
     }
 
     return pathXOverX0;

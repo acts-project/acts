@@ -32,11 +32,11 @@ jobs:
       - name: Install dependencies
         run: >
           pip3 install --upgrade pip
-          && pip install -r docs/requirements.txt
+          && pip install -r docs/old/requirements.txt
 
       - name: Build documentation
         run: >
-          cd docs
+          cd docs/old
           && sphinx-build
           -b html
           -d _build/doctrees/
@@ -53,4 +53,4 @@ jobs:
       - uses: actions/upload-artifact@v5
         with:
           name: acts-docs
-          path: docs/_build/html/
+          path: docs/old/_build/html/
