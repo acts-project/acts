@@ -129,7 +129,6 @@ void reduceMixtureWithKLDistanceNaive(std::vector<Acts::GsfComponent> &cmpCache,
       cmpCache[minI] =
           detail::mergeComponents(cmpCache[minI], cmpCache[minJ], proj, desc);
 
-
       /*std::cout << std::format("NAIVE: Merge with phi: {:.3f} + {:.3f} ->
          {:.3f}, weight: {:.3f} + {:.3f} -> {:.3f}",
                                prevCmpI.boundPars[eBoundPhi],
@@ -137,7 +136,6 @@ void reduceMixtureWithKLDistanceNaive(std::vector<Acts::GsfComponent> &cmpCache,
                                cmpCache[minI].boundPars[eBoundPhi],
                                prevCmpI.weight, prevCmpJ.weight,
                                cmpCache[minI].weight) << std::endl;*/
-
 
       // Remove the merged component immediately
       cmpCache.erase(cmpCache.begin() + minJ);
