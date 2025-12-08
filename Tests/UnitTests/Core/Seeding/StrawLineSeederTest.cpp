@@ -17,7 +17,7 @@
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 5;
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
+ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineSeederTest", logLvl));
 
 #define DECLARE_BRANCH(dTYPE, NAME) \
   dTYPE NAME{};                     \
@@ -30,14 +30,14 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
 
   DECLARE_BRANCH(double, trueY0);
   DECLARE_BRANCH(double, trueTheta);
-  DECLARE_BRANCH(uint, nTruthStraws);
+  DECLARE_BRANCH(std::size_t, nTruthStraws);
   DECLARE_BRANCH(std::vector<double>, recoY0);
   DECLARE_BRANCH(std::vector<double>, recoTheta);
   DECLARE_BRANCH(std::vector<double>, uncertY0);
   DECLARE_BRANCH(std::vector<double>, uncertTheta);
-  DECLARE_BRANCH(std::vector<uint>, nStraws);
-  DECLARE_BRANCH(std::vector<uint>, nStrips);
-  DECLARE_BRANCH(uint, nSeeds);
+  DECLARE_BRANCH(std::vector<std::size_t>, nStraws);
+  DECLARE_BRANCH(std::vector<std::size_t>, nStrips);
+  DECLARE_BRANCH(std::size_t, nSeeds);
 
   using GenCfg_t = MeasurementGenerator::Config;
   GenCfg_t genCfg{};
@@ -46,7 +46,8 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
 
   CompositeSpacePointLineSeeder::Config seederCfg{};
   seederCfg.busyLayerLimit = 20;
-  CompositeSpacePointLineSeeder seeder{seederCfg};
+  const CompositeSpacePointLineSeeder seeder{
+      seederCfg, getDefaultLogger("StrawLineSeederTest", logLvl)};
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     if (evt % 100 == 0)
@@ -60,10 +61,10 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
     nTruthStraws = testTubes.size();
     auto calibrator = std::make_unique<SpCalibrator>();
 
-    using SeedOptions_t =
-        CompositeSpacePointLineSeeder::SeedOptions<Container_t, Container_t,
-                                                   SpSorter>;
-    SeedOptions_t seedOpts{testTubes, calibrator.get()};
+    using SeedState_t =
+        CompositeSpacePointLineSeeder::SeedingState<Container_t, Container_t,
+                                                    SpSorter>;
+    SeedState_t seedOpts{testTubes, calibrator.get()};
     seedOpts.strawRadius = 15._mm;
     ACTS_DEBUG(seedOpts);
     nSeeds = 0;
@@ -74,8 +75,6 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
         break;
       /// recoY0.push_back(seed->y0);
       /// recoTheta.push_back(seed->theta);
-      /// uncertY0.push_back(seed->dY0);
-      /// uncertTheta.push_back(seed->dTheta);
       /// nStraws.push_back(seed->nStrawHits);
       nSeeds++;
     }

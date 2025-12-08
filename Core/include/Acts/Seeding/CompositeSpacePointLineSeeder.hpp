@@ -148,7 +148,8 @@ class CompositeSpacePointLineSeeder {
       const Config& cfg,
       std::unique_ptr<const Logger> logger = getDefaultLogger(
           "CompositeSpacePointLineSeeder", Logging::Level::INFO));
-
+  /// @brief Return the configuration object of the seeder
+  const Config& config() const { return m_cfg; }
   /// @brief Use the assignment of the parameter indices from the CompSpacePointAuxiliaries
   using ParIdx = detail::CompSpacePointAuxiliaries::FitParIndex;
   /// @brief Use the vector from the CompSpacePointAuxiliaires
@@ -248,7 +249,7 @@ class CompositeSpacePointLineSeeder {
     std::vector<int> leftRightAmbiguity(const Vector& seedPos,
                                         const Vector3& seedDir) const;
 
-    /// @brief Returns the number of hits cached in the seed
+    /// @brief Returns the number of hits cached by the seed
     std::size_t size() const { return m_seedHits.size(); }
     /// @brief Returns the i-th seed hit
     /// @param idx: Index of the hit to to return
@@ -274,7 +275,9 @@ class CompositeSpacePointLineSeeder {
   };
 
  public:
-  /// @brief Struct that represents a segment seed
+  /// @brief Helper struct to pack the parameters and the associated
+  ///        measurements into a common object. Returned by the
+  ///        central nextSeed method (cf. below)
   template <CompositeSpacePointContainer contType_t>
   struct SegmentSeed {
     /// @brief Constructor taking the seed parameters &&
@@ -289,28 +292,36 @@ class CompositeSpacePointLineSeeder {
     contType_t hits;
   };
 
+  /// @brief Central auxiliary struct to steer the seeding process.
+  ///        First, the user needs to implement the experiment specific
+  ///        CompSpacePointSeederDelegate over which the template of the
+  ///        SeedingState is then specified. The base class provides the
+  ///        straw hits split per logical layer and the SeedingState holds
+  ///        the indices to select iteratively a straw measurement each
+  ///        from the first and last layer. Also it keeps track of the
+  ///        previously constructed seeds.
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
-  struct SeedOptions : public Delegate_t {
-    /// @brief Take over the Delegate_t constructor
+  struct SeedingState : public Delegate_t {
+    /// @brief Use all constructors from the base class for this one as well
     using Delegate_t::Delegate_t;
     /// @brief radius of the straw tubes used to reject hits outside the tube
-    double strawRadius{15. * UnitConstants::mm};
+    double strawRadius{0.};
     /// @brief Try at the first time the external seed parameters as candidate
     bool startWithPattern{false};
     /// @brief Estimated parameters from pattern
     SeedParam_t patternParams{};
     /// @brief Stringstream output operator
     friend std::ostream& operator<<(std::ostream& ostr,
-                                    const SeedOptions& opts) {
+                                    const SeedingState& opts) {
       opts.print(ostr);
       return ostr;
     }
     /// @brief Return the number of generated seeds
     std::size_t nGenSeeds() const { return m_seenSolutions.size(); }
-
+    /// @brief Grant the embedding class access to the private members
     friend CompositeSpacePointLineSeeder;
 
    private:
@@ -330,27 +341,26 @@ class CompositeSpacePointLineSeeder {
     std::size_t m_signComboIndex{0ul};
     /// @brief Number of minimum straw hits a seed must have
     std::size_t m_nStrawCut{0ul};
-
     /// @brief Flag toggling whether the upper of the lower layer shall be moved
     bool m_moveUpLayer{true};
   };
   /// @brief Main interface method provided by the SeederClass. The user instantiates
-  ///        a SeedOptions object containing all the straw hit candidates from
+  ///        a SeedingState object containing all the straw hit candidates from
   ///        which the seed shall be constructed. Then, the nextSeed() returns
   ///        the next best seed candidate which can then be fitted. The user
   ///        continues to call the method until a nullopt is returned.
   /// @param cctx: Experiment specific calibration context to be piped back to the
   ///              caller such that the space points may be calibrated during
   ///              the seeding process.
-  /// @param options: Mutable reference to the SeedOptions object from which all the
-  ///                 segment seeds are constructed.
+  /// @param state: Mutable reference to the SeedingState object from which all the
+  ///               segment seeds are constructed.
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
   std::optional<SegmentSeed<CalibCont_t>> nextSeed(
       const CalibrationContext& cctx,
-      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
+      SeedingState<UncalibCont_t, CalibCont_t, Delegate_t>& state) const;
 
  private:
   /// @brief Reference to the logger object
@@ -402,19 +412,19 @@ class CompositeSpacePointLineSeeder {
                  const std::size_t boundary,
                  std::optional<std::size_t>& layerIndex, std::size_t& hitIdx,
                  bool moveForward) const;
-  /// @brief Move the layer and hit indices inside the options towards the next candidate
+  /// @brief Move the layer and hit indices inside the state towards the next candidate
   ///        pair. First, the L-R ambiguities are incremented, then it is
   ///        searched for the next pair inside the lower && upper layer pair.
   ///        Finally, the indices are moved towards the next layer
   /// @param selector: Delegate method to skip bad hits
-  /// @param options: Mutable reference to the SeedOptions object carring the state indices
+  /// @param state: Mutable reference to the SeedingState object carring the state indices
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
   void moveToNextCandidate(
       const Selector_t<UncalibCont_t>& selector,
-      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
+      SeedingState<UncalibCont_t, CalibCont_t, Delegate_t>& state) const;
   /// @brief Attempts to construct the next seed from the given configuration of
   ///        seed circles. The seed needs to contain a minimum number of other
   ///        straw hits and there must be no other previously constructed seed
@@ -422,21 +432,21 @@ class CompositeSpacePointLineSeeder {
   /// @param cctx: Calibration context to be piped to the experiment's implementation
   ///              such that conditions data access becomes possible
   /// @param selector: Delegate method to skip bad hits
-  /// @param options: Mutable reference to the SeedOptions object carring the state indices
+  /// @param state: Mutable reference to the SeedingState object carring the state indices
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
   std::optional<SegmentSeed<CalibCont_t>> buildSeed(
       const CalibrationContext& cctx, const Selector_t<UncalibCont_t>& selector,
-      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
+      SeedingState<UncalibCont_t, CalibCont_t, Delegate_t>& state) const;
   /// @brief Checks whether the new seed candidate passes the quality cuts on
   ///        the number of good straw hits and whether it is not within the
   ///        same overlap corridor as previously produced seeds
   /// @param tangentSeed: Pair of reference position & direction constructed
   ///                     from the two line tangent seed
   /// @param newSolution: The new seed solution that's to be tested
-  /// @param options: The cache carrying the already produced solutions
+  /// @param state: The cache carrying the already produced solutions
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
@@ -444,15 +454,24 @@ class CompositeSpacePointLineSeeder {
   bool passSeedCuts(
       const Line_t& tangentSeed,
       SeedSolution<UncalibCont_t, Delegate_t>& newSolution,
-      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options) const;
-
+      SeedingState<UncalibCont_t, CalibCont_t, Delegate_t>& state) const;
+  /// @brief Converts the accepted seed solution to the segment seed returned by
+  ///        nextSeed and adds the strip measurements to the seed. The solution
+  ///        is then appended to the state
+  /// @param cctx: Calibration context to be piped to the experiment's implementation
+  ///              such that conditions data access becomes possible
+  /// @param tangentSeed: Position and direction constructed from the current tangent seed
+  /// @param state: Mutable reference to the state from which the strip measurements are drawn
+  ///               and to which the newSolution is then appended
+  /// @param newSolution: Current tangent seed solution object holding the straw measurements
+  ///                     to be put onto the seed.
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
   SegmentSeed<CalibCont_t> consructSegmentSeed(
       const CalibrationContext& cctx, const Line_t& tangentSeed,
-      SeedOptions<UncalibCont_t, CalibCont_t, Delegate_t>& options,
+      SeedingState<UncalibCont_t, CalibCont_t, Delegate_t>& state,
       SeedSolution<UncalibCont_t, Delegate_t>&& newSolution) const;
   /// @brief Construct the final seed parameters by combining the initial
   ///        pattern parameters with the parameter from two circle tangent
