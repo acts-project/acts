@@ -64,8 +64,8 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
 
   if (m_inputChain->FindBranch("barcode") != nullptr) {
     m_hasBarcodeVector = true;
-    m_barcodeVector = new std::vector<std::uint32_t>;
-    m_inputChain->SetBranchAddress("barcode", &m_barcodeVector);
+    m_barcodeVector.allocate();
+    m_inputChain->SetBranchAddress("barcode", &m_barcodeVector.get());
   } else {
     m_hasBarcodeVector = false;
     for (const auto* key : m_barcodeComponentKeys) {
@@ -117,12 +117,6 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
                              << availableEvents().second);
 }
 
-RootSimHitReader::~RootSimHitReader() {
-  if (m_barcodeVector != nullptr) {
-    delete m_barcodeVector;
-  }
-}
-
 std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
   return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
 }
@@ -166,7 +160,7 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
 
     const Acts::GeometryIdentifier geoid{m_uint64Columns.at("geometry_id")};
     SimBarcode pid = SimBarcode::Invalid();
-    if (m_hasBarcodeVector && m_barcodeVector != nullptr) {
+    if (m_hasBarcodeVector && m_barcodeVector.hasValue()) {
       pid = SimBarcode().withData(*m_barcodeVector);
     } else {
       pid = SimBarcode()
@@ -217,5 +211,7 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
   // Return success flag
   return ProcessCode::SUCCESS;
 }
+
+RootSimHitReader::~RootSimHitReader() = default;
 
 }  // namespace ActsExamples
