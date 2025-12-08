@@ -41,17 +41,17 @@ std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
                                      std::size_t expand, std::size_t nBins,
                                      Acts::AxisBoundaryType type);
 
-
 template <typename queries_type, typename expansion_type, std::size_t kDIM>
-void expand(queries_type& gridQueries, const expansion_type& referenceExpansion) {
-
+void expand(queries_type& gridQueries,
+            const expansion_type& referenceExpansion) {
   queries_type copiedQueries = gridQueries;
   // Sort them for smaller bigger
   std::sort(copiedQueries.begin(), copiedQueries.end(),
             [](const auto& a, const auto& b) { return a[kDIM] < b[kDIM]; });
   // Get a mid point
-  auto midPoint = 0.5 * (copiedQueries.front()[kDIM] + copiedQueries.back()[kDIM]);
-  // Loop and correct the first cooridnate
+  auto midPoint =
+      0.5 * (copiedQueries.front()[kDIM] + copiedQueries.back()[kDIM]);
+  // Loop and correct the first coordinate
   for (auto& pq : gridQueries) {
     if (pq[kDIM] < midPoint) {
       pq[kDIM] -= referenceExpansion[kDIM];
@@ -63,8 +63,9 @@ void expand(queries_type& gridQueries, const expansion_type& referenceExpansion)
 
 /// Run the reference expansion
 template <typename grid_type>
-void applyReferenceExpansion(std::vector<typename grid_type::point_t>& gridQueries,
-                             const std::vector<double>& referenceExpansion) {
+void applyReferenceExpansion(
+    std::vector<typename grid_type::point_t>& gridQueries,
+    const std::vector<double>& referenceExpansion) {
   if (referenceExpansion.empty()) {
     return;
   }
@@ -291,11 +292,11 @@ struct IndexGridFiller {
                 iGrid.transform * ref, iGrid.casts));
       }
       ACTS_DEBUG(gridQueries.size() << " reference points generated.");
-      // These are now in the grid frame, can be expanded 
+      // These are now in the grid frame, can be expanded
       if (!referenceExpansion.empty()) {
         ACTS_DEBUG("Applying reference expansion.");
         applyReferenceExpansion<decltype(iGrid.grid)>(gridQueries,
-                                                     referenceExpansion);
+                                                      referenceExpansion);
       }
       // Now generate the local indices
       auto lIndices = localIndices<decltype(iGrid.grid)>(
