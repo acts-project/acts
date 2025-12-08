@@ -186,17 +186,17 @@ bool CompositeSpacePointLineSeeder::moveToNextHit(
     const UnCalibCont_t& hitVec, const Selector_t<UnCalibCont_t>& selector,
     std::size_t& hitIdx) const {
   ACTS_VERBOSE(__func__ << "() " << __LINE__
-                        << ": Moving to next good hit from index " << hitIdx
+                        << " - Moving to next good hit from index " << hitIdx
                         << " in straw layer with " << hitVec.size()
                         << " hits.");
-  while (hitIdx < hitVec.size()) {
-    ++hitIdx;
+  while (++hitIdx < hitVec.size()) {
     if (selector(*hitVec[hitIdx])) {
-      ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": Moved towards index "
+      ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Moved towards index "
                             << hitIdx);
       return true;
     }
   }
+  ACTS_VERBOSE(__func__ << "() " << __LINE__<<" - No good hit found.");
   return false;
 }
 
@@ -206,7 +206,7 @@ bool CompositeSpacePointLineSeeder::firstGoodHit(
     std::size_t& hitIdx) const {
   hitIdx = 0;
   if (hitVec.empty()) {
-    ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": Layer is empty.");
+    ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Layer is empty.");
     return false;
   }
   return selector(*hitVec[hitIdx]) || moveToNextHit(hitVec, selector, hitIdx);
@@ -227,13 +227,13 @@ bool CompositeSpacePointLineSeeder::nextLayer(
     const UnCalibCont_t& hitVec{strawLayers.at(layerIndex.value())};
     if (hitVec.size() <= m_cfg.busyLayerLimit &&
         firstGoodHit(hitVec, selector, hitIdx)) {
-      ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": Instantiated "
+      ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Instantiated "
                             << (moveForward ? "lower" : "upper") << " layer to "
                             << layerIndex.value() << ".");
       return true;
     }
   }
-  ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": Move "
+  ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Move "
                         << (moveForward ? "lower" : "upper") << " layer "
                         << layerIndex.value() << " to next value.");
   /// Increment or decrement the layer index
@@ -243,7 +243,7 @@ bool CompositeSpacePointLineSeeder::nextLayer(
     /// Check whether the layer index is still witihin the allow boundaries
     if ((moveForward && layerIndex.value() >= boundary) ||
         (!moveForward && layerIndex.value() <= boundary)) {
-      ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": The "
+      ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - The "
                             << (moveForward ? "lower" : "upper") << " index "
                             << layerIndex.value()
                             << " exceeds the boundary: " << boundary << ".");
@@ -251,7 +251,7 @@ bool CompositeSpacePointLineSeeder::nextLayer(
     }
     const std::size_t nHits = countHits(hitVec, selector);
     if (nHits > m_cfg.busyLayerLimit) {
-      ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": The layer "
+      ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - The layer "
                             << layerIndex.value()
                             << " is too busy for seeding: " << nHits
                             << ". Limit: " << m_cfg.busyLayerLimit << ".");
@@ -261,7 +261,7 @@ bool CompositeSpacePointLineSeeder::nextLayer(
     /// Check whether a good hit can be detected inside the layer
     if (firstGoodHit(strawLayers.at(layerIndex.value()), selector, hitIdx)) {
       ACTS_VERBOSE(__func__
-                   << "() " << __LINE__ << ": Loop over all hits in the  "
+                   << "() " << __LINE__ << " - Loop over all hits in the  "
                    << layerIndex.value() << (moveForward ? "lower" : "upper")
                    << " layer.");
       return true;
@@ -312,13 +312,15 @@ CompositeSpacePointLineSeeder::nextSeed(
       state.startWithPattern = false;
       return patternSeed;
     }
+     ACTS_DEBUG(__func__ << "() " << __LINE__
+                          << " - Instantiate layers. ");
     /// No valid seed can be found
     if (!nextLayer(strawLayers, selector, strawLayers.size(),
                    state.m_lowerLayer, state.m_lowerHitIndex, true) ||
         !nextLayer(strawLayers, selector, state.m_lowerLayer.value(),
                    state.m_upperLayer, state.m_upperHitIndex, false)) {
       ACTS_DEBUG(__func__ << "() " << __LINE__
-                          << ": No valid seed can be constructed. ");
+                          << " - No valid seed can be constructed. ");
       return std::nullopt;
     }
   }
@@ -355,11 +357,14 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
   const UncalibCont_t& upper = strawLayers[state.m_upperLayer.value()];
 
   /// Next good hit in the lower layer found
+  ACTS_VERBOSE(__func__<<"() "<<__LINE__<<" - Move to next lower hit.");
   if (moveToNextHit(lower, selector, state.m_lowerHitIndex)) {
     return;
   }
+
   /// Reset the hit in the lower layer && move to the next hit
   /// in the upper layer
+  ACTS_VERBOSE(__func__<<"() "<<__LINE__<<" - All lower hits were tried increment upper hit.");
   if (firstGoodHit(lower, selector, state.m_lowerHitIndex) &&
       moveToNextHit(upper, selector, state.m_upperHitIndex)) {
     return;
@@ -373,12 +378,13 @@ void CompositeSpacePointLineSeeder::moveToNextCandidate(
                                       : state.m_upperHitIndex};
   auto& hitToMove{state.m_moveUpLayer ? state.m_upperHitIndex
                                       : state.m_lowerHitIndex};
-
+  ACTS_VERBOSE(__func__<<"() "<<__LINE__<<" - Move towards the next "<<(state.m_moveUpLayer ? "upper" : "lower")
+  <<" layer. Current state: "<<layerToMove.value());
   /// Reset the hits in the layer that remains and go to the next layer on the
   /// other side. Next time the otherside will stay and the former will move.
   if (firstGoodHit(strawLayers[layerToStay.value()], selector, hitToStay) &&
       nextLayer(strawLayers, selector, layerToStay.value(), layerToMove,
-                hitToMove, state.m_moveUpLayer)) {
+                hitToMove, !state.m_moveUpLayer)) {
     state.m_moveUpLayer = !state.m_moveUpLayer;
     if (state.stopSeeding(state.m_lowerLayer.value(),
                           state.m_upperLayer.value())) {

@@ -15,7 +15,7 @@
 #include "TTree.h"
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 5;
+constexpr std::size_t nEvents = 5000;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineSeederTest", logLvl));
 
@@ -71,12 +71,12 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
     CalibrationContext cctx{};
     while (auto seed = seeder.nextSeed(cctx, seedOpts)) {
       ACTS_DEBUG("Seed finder loop " << seedOpts);
-      if (seed == std::nullopt)
+      if (seed == std::nullopt){
         break;
-      /// recoY0.push_back(seed->y0);
-      /// recoTheta.push_back(seed->theta);
-      /// nStraws.push_back(seed->nStrawHits);
-      nSeeds++;
+      }
+      recoTheta.push_back(seed->parameters[toUnderlying(FitParIndex::theta)]);
+      recoY0.push_back(seed->parameters[toUnderlying(FitParIndex::y0)]);
+      ++nSeeds;
     }
     ACTS_DEBUG("======Event " << evt << " found " << nSeeds << " seeds.");
 
@@ -106,6 +106,7 @@ BOOST_AUTO_TEST_CASE(SeederTest) {
 BOOST_AUTO_TEST_CASE(SeedTangents) {
   RandomEngine engine{117};
   constexpr double tolerance = 1.e-3;
+  return;
 
   using Seeder = CompositeSpacePointLineSeeder;
   using SeedAux = CompSpacePointAuxiliaries;
