@@ -25,6 +25,9 @@ class IndexGridNavigationConfig {
   /// The binning expansion for grid neighbor lookups
   std::vector<std::size_t> binExpansion = {0u, 0u};
 
+  /// The reference expansion 
+  std::vector<double> referenceExpansion = {};
+
   /// A potential lookup surface - this would be intersected first,
   /// assumption is always closest forward
   std::shared_ptr<Surface> surface = nullptr;
@@ -60,7 +63,8 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
                  << m_volume.volumeName());
 
     // Fill the grid with the surfaces from the volume
-    IndexGridFiller filler{m_cfg.binExpansion};
+    IndexGridFiller filler{m_cfg.binExpansion, m_cfg.referenceExpansion,
+                           getDefaultLogger("IndexGridFiller", logger.level())};
     const auto& surfaces = m_volume.surfaces();
     // Fill the grid with surfaces
     std::vector<std::shared_ptr<const Surface>> surfacePtrs = {};

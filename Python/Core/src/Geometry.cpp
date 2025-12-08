@@ -13,10 +13,12 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/IReferenceGenerator.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/Volume.hpp"
@@ -358,6 +360,29 @@ void addGeometry(py::module_& m) {
       .def("min", &ProtoLayer::min, "bval"_a, "addenv"_a = true)
       .def("max", &ProtoLayer::max, "bval"_a, "addenv"_a = true)
       .def_property_readonly("surfaces", &ProtoLayer::surfaces);
+
+  // Reference generators
+  {
+    py::class_<IReferenceGenerator, std::shared_ptr<IReferenceGenerator>>(
+        m, "IReferenceGenerator");
+
+    py::class_<CenterReferenceGenerator, IReferenceGenerator,
+               std::shared_ptr<CenterReferenceGenerator>>(
+        m, "CenterReferenceGenerator")
+        .def(py::init<>());
+
+    auto prg = py::class_<PolyhedronReferenceGenerator, IReferenceGenerator,
+                          std::shared_ptr<PolyhedronReferenceGenerator>>(
+                   m, "PolyhedronReferenceGenerator")
+                   .def(py::init<>());
+    ACTS_PYTHON_STRUCT(prg, addBarycenter, nSegements);
+
+    auto projrg = py::class_<ProjectedReferenceGenerator, IReferenceGenerator,
+                             std::shared_ptr<ProjectedReferenceGenerator>>(
+                      m, "ProjectedReferenceGenerator")
+                      .def(py::init<>());
+    ACTS_PYTHON_STRUCT(projrg, referenceSurface, nSegements);
+  }
 }
 
 }  // namespace ActsPython

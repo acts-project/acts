@@ -41,6 +41,50 @@ std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
                                      std::size_t expand, std::size_t nBins,
                                      Acts::AxisBoundaryType type);
 
+
+template <typename queries_type, typename expansion_type, std::size_t kDIM>
+void expand(queries_type& gridQueries, const expansion_type& referenceExpansion) {
+
+  queries_type copiedQueries = gridQueries;
+  // Sort them for smaller bigger
+  std::sort(copiedQueries.begin(), copiedQueries.end(),
+            [](const auto& a, const auto& b) { return a[kDIM] < b[kDIM]; });
+  // Get a mid point
+  auto midPoint = 0.5 * (copiedQueries.front()[kDIM] + copiedQueries.back()[kDIM]);
+  // Loop and correct the first cooridnate
+  for (auto& pq : gridQueries) {
+    if (pq[kDIM] < midPoint) {
+      pq[kDIM] -= referenceExpansion[kDIM];
+    } else {
+      pq[kDIM] += referenceExpansion[kDIM];
+    }
+  }
+}
+
+/// Run the reference expansion
+template <typename grid_type>
+void applyReferenceExpansion(std::vector<typename grid_type::point_t>& gridQueries,
+                             const std::vector<double>& referenceExpansion) {
+  if (referenceExpansion.empty()) {
+    return;
+  }
+  if (referenceExpansion.size() != grid_type::DIM) {
+    throw std::runtime_error(
+        "IndexedSurfaceGridFiller: wrong dimension of reference expansion "
+        "given.");
+  }
+  expand<decltype(gridQueries), decltype(referenceExpansion), 0u>(
+      gridQueries, referenceExpansion);
+  if constexpr (grid_type::DIM >= 2u) {
+    expand<decltype(gridQueries), decltype(referenceExpansion), 1u>(
+        gridQueries, referenceExpansion);
+  }
+  if constexpr (grid_type::DIM == 3u) {
+    expand<decltype(gridQueries), decltype(referenceExpansion), 2u>(
+        gridQueries, referenceExpansion);
+  }
+}
+
 /// @brief Helper method to fill local bins given a set of query points
 /// bin in between the extra points are filled, and a possible expansion
 /// of the bin window can be chosen
@@ -195,8 +239,11 @@ class IndexGrid {
 
 /// A helper class that fills surfaces into predefined grids
 struct IndexGridFiller {
-  /// Bin expansion where needed
+  /// Bin expansion where needed - in integer bins
   std::vector<std::size_t> binExpansion = {};
+
+  /// Reference expansion - is applied before bin expansion
+  std::vector<double> referenceExpansion = {};
 
   /// Screen output logger
   std::unique_ptr<const Logger> oLogger =
@@ -244,6 +291,13 @@ struct IndexGridFiller {
                 iGrid.transform * ref, iGrid.casts));
       }
       ACTS_DEBUG(gridQueries.size() << " reference points generated.");
+      // These are now in the grid frame, can be expanded 
+      if (!referenceExpansion.empty()) {
+        ACTS_DEBUG("Applying reference expansion.");
+        applyReferenceExpansion<decltype(iGrid.grid)>(gridQueries,
+                                                     referenceExpansion);
+      }
+      // Now generate the local indices
       auto lIndices = localIndices<decltype(iGrid.grid)>(
           iGrid.grid, gridQueries, binExpansion);
       ACTS_DEBUG(lIndices.size() << " indices assigned.");

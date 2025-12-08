@@ -71,9 +71,6 @@ struct PolyhedronReferenceGenerator : public IReferenceGenerator {
   /// @brief  The number of segments for the polyhedron approximation
   int nSegements = 1;
 
-  /// Absolute expansion value for the reference points
-  double expansionValue = 0.0;
-
   /// Helper to access the Center point of for filling the grid
   ///
   /// @param gctx the geometry context of this operation
@@ -93,9 +90,6 @@ struct ProjectedReferenceGenerator : public IReferenceGenerator {
 
   /// @brief  The number of segments for the polyhedron approximation
   int nSegements = 1;
-
-  /// Absolute expansion value for the reference points
-  double expansionValue = 0.0;
 
   /// Luminous region sampling points for the projection - beam spot
   std::vector<Vector3> luminousRegion = {Vector3(0., 0., -200.),

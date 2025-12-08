@@ -23,13 +23,6 @@ const std::vector<Acts::Vector3> Acts::PolyhedronReferenceGenerator::references(
   std::ranges::for_each(rPositions, [&](const auto& p) { bc += p; });
   bc *= 1. / rPositions.size();
 
-  // if an expansion is requested, calculate it for every vertex
-  if (expansionValue != 0.0) {
-    std::ranges::for_each(rPositions, [&](auto& p) {
-      p += expansionValue * Vector3(p - bc).normalized();
-    });
-  }
-
   // Add the barycenter if configured
   if (addBarycenter) {
     rPositions.push_back(bc);
@@ -68,13 +61,6 @@ const std::vector<Acts::Vector3> Acts::ProjectedReferenceGenerator::references(
 
   // Normalize center of gravity
   rCog /= rPositions.size();
-
-  // if an expansion is requested, calculate it for every vertex
-  if (expansionValue != 0.0) {
-    std::ranges::for_each(rPositions, [&](auto& p) {
-      p += expansionValue * Vector3(p - rCog).normalized();
-    });
-  }
 
   return rPositions;
 }
