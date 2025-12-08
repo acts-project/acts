@@ -24,8 +24,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addAlignment(Context& ctx) {
-  auto& mex = ctx.get("examples");
+void addAlignment(py::module& mex) {
 
   {
     auto ad =

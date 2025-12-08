@@ -6,25 +6,7 @@ set(_python_install_dir "python/acts")
 
 target_sources(
     ActsPythonBindings
-    PRIVATE
-        src/ModuleEntry.cpp
-        src/Framework.cpp
-        src/Alignment.cpp
-        src/Detector.cpp
-        src/Digitization.cpp
-        src/MaterialMapping.cpp
-        src/ExampleAlgorithms.cpp
-        src/Output.cpp
-        src/Input.cpp
-        src/Propagation.cpp
-        src/Generators.cpp
-        src/Obj.cpp
-        src/TruthTracking.cpp
-        src/TrackFitting.cpp
-        src/TrackFinding.cpp
-        src/Vertexing.cpp
-        src/AmbiguityResolution.cpp
-        src/Utilities.cpp
+    PRIVATE src/ModuleEntry.cpp src/Propagation.cpp
 )
 
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
@@ -43,22 +25,19 @@ target_link_libraries(
     PUBLIC
         Acts::PythonUtilities
         Acts::ExamplesFramework
-        Acts::ExamplesDetectorGeneric
         Acts::ExamplesIoCsv
         Acts::ExamplesIoObj
         Acts::ExamplesGenerators
         Acts::ExamplesPrinters
         Acts::ExamplesTrackFinding
         Acts::ExamplesTrackFitting
+        Acts::ExamplesTruthTracking
         Acts::ExamplesVertexing
         Acts::ExamplesFatras
-        Acts::ExamplesDetectorTelescope
+        Acts::ExamplesDigitization
         Acts::ExamplesUtilities
         Acts::ExamplesAmbiguityResolution
-        Acts::ExamplesTruthTracking
-        Acts::ExamplesDigitization
         Acts::ExamplesPropagation
-        Acts::ExamplesMaterialMapping
 )
 
 set(py_files

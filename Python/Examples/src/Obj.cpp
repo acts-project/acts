@@ -27,8 +27,7 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace ActsPython {
-void addObj(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+void addObj(py::module& mex) {
 
   {
     /// Write a collection of surfaces to an '.obj' file
@@ -53,8 +52,5 @@ void addObj(Context& ctx) {
               obj.write(fileName);
             });
   }
-
-  py::class_<ObjVisualization3D, IVisualization3D>(m, "ObjVisualization3D")
-      .def(py::init<>());
 }
 }  // namespace ActsPython
