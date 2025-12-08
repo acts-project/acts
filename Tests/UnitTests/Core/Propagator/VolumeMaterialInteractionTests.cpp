@@ -31,7 +31,7 @@ namespace ActsTests {
 /// @brief Simplified stepper state
 struct StepperState {
   ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
-  Vector3 pos, dir;
+  Vector3 pos{}, dir{};
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
   double absCharge = UnitConstants::e;

@@ -118,7 +118,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
       AppendOnlyNavigationStream navStream{main};
       currentVolume->initializeNavigationCandidates(
-          {.position = position, .direction = direction}, navStream, logger());
+          gctx, {.position = position, .direction = direction}, navStream,
+          logger());
 
       ACTS_VERBOSE(main.candidates().size() << " candidates");
 

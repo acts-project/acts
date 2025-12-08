@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include <ActsPlugins/Root/detail/RootBranchPtr.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -48,6 +49,7 @@ class RootSimHitReader : public IReader {
   /// @param config The Configuration struct
   RootSimHitReader(const Config &config, Acts::Logging::Level level);
 
+  /// Explicit destructor to enable forward declaration of TChain
   ~RootSimHitReader() override;
 
   /// Framework name() method
@@ -92,13 +94,15 @@ class RootSimHitReader : public IReader {
       "event_id", "volume_id",   "boundary_id",
       "layer_id", "approach_id", "sensitive_id"};
   constexpr static std::array<const char *, 1> m_int32Keys = {"index"};
-  constexpr static std::array<const char *, 1> m_vecUint32Keys = {"barcode"};
+  constexpr static std::array<const char *, 5> m_barcodeComponentKeys = {
+      "barcode_vertex_primary", "barcode_vertex_secondary", "barcode_particle",
+      "barcode_generation", "barcode_sub_particle"};
 
   std::unordered_map<std::string_view, float> m_floatColumns;
   std::unordered_map<std::string_view, std::uint32_t> m_uint32Columns;
   std::unordered_map<std::string_view, std::int32_t> m_int32Columns;
-  std::unordered_map<std::string_view, std::vector<std::uint32_t> *>
-      m_vecUint32Columns;
+  RootBranchPtr<std::vector<std::uint32_t>> m_barcodeVector{nullptr};
+  bool m_hasBarcodeVector = false;
 
   // For some reason I need to use here `unsigned long long` instead of
   // `std::uint64_t` to prevent an internal ROOT type mismatch...

@@ -175,13 +175,10 @@ class CylindricalSpacePointKDTreeBuilder {
   /// @param phi The azimuthal angle of the space point in radians
   /// @param r The radial distance of the space point from the origin
   /// @param z The z-coordinate of the space point
-  /// @return The index of the bin in which the space point was inserted, or
-  ///         `std::nullopt` if the space point is outside the grid bounds.
   void insert(SpacePointIndex index, float phi, float r, float z);
+
   /// Insert a space point into the grid.
   /// @param sp The space point to insert
-  /// @return The index of the bin in which the space point was inserted, or
-  ///         `std::nullopt` if the space point is outside the grid bounds.
   void insert(const ConstSpacePointProxy2& sp) {
     return insert(sp.index(), sp.phi(), sp.r(), sp.z());
   }

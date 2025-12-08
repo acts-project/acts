@@ -11,17 +11,23 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/detail/TrackingGeometryPrintVisitor.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <format>
+#include <typeinfo>
 using namespace Acts::UnitLiterals;
+using namespace Acts::Experimental;
 
 namespace ActsExamples {
 
@@ -125,20 +131,79 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     std::size_t childVol = 1;
     auto chamberId = chamberVolume->geometryId();
 
-    for (const auto& child : childrenTrkVols) {
-      auto trVol =
-          std::make_unique<Acts::TrackingVolume>(*child.volume, child.name);
+    for (auto& child : childrenTrkVols) {
+      std::unique_ptr<Acts::TrackingVolume> trVol{nullptr};
+
+      // use dedicated builder for MDT multilayers
+      if (child.name.find("MDT") != std::string::npos) {
+        MultiWireVolumeBuilder::Config mwCfg;
+        auto vb = child.volume->volumeBoundsPtr();
+        double halfY{0};
+        double halfZ{0};
+        using LineBounds = Acts::LineBounds::BoundValues;
+
+        if (vb->type() == Acts::VolumeBounds::eTrapezoid) {
+          using BoundVal = Acts::TrapezoidVolumeBounds::BoundValues;
+
+          auto tzb = std::dynamic_pointer_cast<Acts::TrapezoidVolumeBounds>(vb);
+          mwCfg.bounds = boundFactory.insert(tzb);
+          halfY = tzb->get(BoundVal::eHalfLengthY);
+          halfZ = tzb->get(BoundVal::eHalfLengthZ);
+
+        } else if (vb->type() == Acts::VolumeBounds::eCuboid) {
+          using BoundVal = Acts::CuboidVolumeBounds::BoundValues;
+
+          auto cbb = std::dynamic_pointer_cast<Acts::CuboidVolumeBounds>(vb);
+          mwCfg.bounds = boundFactory.insert(cbb);
+
+          halfY = cbb->get(BoundVal::eHalfLengthY);
+          halfZ = cbb->get(BoundVal::eHalfLengthZ);
+
+        } else {
+          throw std::runtime_error(
+              "GeoModelMuonMockupBuilder::buildBarrelNode() - Not a trapezoid "
+              "or cuboid volume bounds");
+        }
+
+        mwCfg.name = child.name;
+        mwCfg.mlSurfaces = child.surfaces;
+        mwCfg.transform = child.volume->transform();
+        auto& sb = child.surfaces.front()->bounds();
+        auto lineBounds = dynamic_cast<const Acts::LineBounds*>(&sb);
+        if (lineBounds == nullptr) {
+          throw std::runtime_error(
+              "This MDT does not have tubes, what does it have?");
+        }
+        double tubeR = lineBounds->get(LineBounds::eR);
+        mwCfg.binning = {
+            {{Acts::AxisDirection::AxisY, Acts::AxisBoundaryType::Bound, -halfY,
+              halfY, static_cast<std::size_t>(std::lround(1. * halfY / tubeR))},
+             2},
+            {{Acts::AxisDirection::AxisZ, Acts::AxisBoundaryType::Bound, -halfZ,
+              halfZ, static_cast<std::size_t>(std::lround(1. * halfZ / tubeR))},
+             1}};
+
+        MultiWireVolumeBuilder mdtBuilder{mwCfg};
+        trVol = mdtBuilder.buildVolume();
+
+      } else {
+        trVol =
+            std::make_unique<Acts::TrackingVolume>(*child.volume, child.name);
+        trVol->assignGeometryId(chamberId.withExtra(childVol));
+
+        // add the sensitives (tubes) in the constructed tracking volume
+        for (const auto& surface : child.surfaces) {
+          trVol->addSurface(surface);
+        }
+      }
+
       trVol->assignGeometryId(chamberId.withExtra(childVol));
       ++childVol;
 
-      // add the sensitives (tubes) in the constructed tracking volume
-      for (const auto& surface : child.surfaces) {
-        trVol->addSurface(surface);
-      }
-      // create static blueprint node for the inner volume
       auto innerNode =
           std::make_shared<Acts::Experimental::StaticBlueprintNode>(
               std::move(trVol));
+
       innerVolumesNodes[stationNum - 1].push_back(std::move(innerNode));
     }
     volChambers.push_back(std::move(chamberVolume));

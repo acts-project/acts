@@ -9,10 +9,13 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
+#include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/Polynomials.hpp"
 
 #include <random>
 #include <ranges>
@@ -30,31 +33,55 @@ using RandomEngine = std::mt19937;
 using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using normal_t = std::normal_distribution<double>;
+using uniform = std::uniform_real_distribution<double>;
 using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 class FitTestSpacePoint {
  public:
-  /// @brief Constructor for straw wires
+  /// @brief Constructor for standard straw wires
   /// @param pos: Position of the wire
   /// @param driftR: Straw drift radius
   /// @param driftRUncert: Uncertainty on the drift radius uncertainty
   /// @param twinUncert: Uncertainty on the measurement along the straw
   FitTestSpacePoint(const Vector3& pos, const double driftR,
                     const double driftRUncert,
-                    const std::optional<double> twnUncert = std::nullopt)
+                    const std::optional<double> twinUncert = std::nullopt)
       : m_position{pos},
         m_driftR{driftR},
-        m_measLoc0{twnUncert != std::nullopt} {
+        m_measLoc0{twinUncert != std::nullopt} {
     using enum ResidualIdx;
     m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
     m_covariance[toUnderlying(nonBending)] =
-        Acts::square(twnUncert.value_or(0.));
+        Acts::square(twinUncert.value_or(0.));
+  }
+  /// @brief Constructor for rotated straw wires
+  /// @param pos: Position of the wire
+  /// @param wire: Orientation of the wire
+  /// @param driftR: Drift radius of the measurement
+  /// @param driftRUncert: Associated uncertainty on the measurement
+  /// @param twinUncert: Uncertainty on the measurement along the straw
+  FitTestSpacePoint(const Vector3& pos, const Vector3& wire,
+                    const double driftR, const double driftRUncert,
+                    const std::optional<double> twinUncert = std::nullopt)
+      : m_position{pos},
+        m_sensorDir{wire},
+        m_driftR{driftR},
+        m_measLoc0{twinUncert != std::nullopt} {
+    using enum ResidualIdx;
+    m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
+    m_covariance[toUnderlying(nonBending)] =
+        Acts::square(twinUncert.value_or(0.));
   }
 
-  /// @brief Constructor for strip measurements
+  /// @brief Constructor for spatial strip measurements
+  /// @param stripPos: Position of the strip
+  /// @param stripDir: Direction along the strip
+  /// @param toNext: Vector pointing to the next strip inside the plane
+  /// @param uncertLoc0: Uncertainty of the measurement in the non bending direction
+  /// @param uncertLoc1: Uncertainty of the measurement in the bending direction
   FitTestSpacePoint(const Vector3& stripPos, const Vector3& stripDir,
                     const Vector3& toNext, const double uncertLoc0,
                     const double uncertLoc1)
@@ -67,6 +94,19 @@ class FitTestSpacePoint {
     m_covariance[toUnderlying(nonBending)] = Acts::square(uncertLoc0);
     m_covariance[toUnderlying(bending)] = Acts::square(uncertLoc1);
   }
+  /// @brief Constructor for strip measurements with time
+  FitTestSpacePoint(const Vector3& stripPos, const Vector3& stripDir,
+                    const Vector3& toNext, const double time,
+                    const std::array<double, 3>& cov)
+      : m_position{stripPos},
+        m_sensorDir{stripDir},
+        m_toNextSen{toNext},
+        m_time{time},
+        m_covariance{cov} {
+    m_measLoc0 = m_covariance[toUnderlying(ResidualIdx::nonBending)] > 0.;
+    m_measLoc1 = m_covariance[toUnderlying(ResidualIdx::bending)] > 0.;
+  }
+
   /// @brief Position of the space point
   const Vector3& localPosition() const { return m_position; }
   /// @brief Wire direction
@@ -125,28 +165,82 @@ class SpCalibrator {
   explicit SpCalibrator(const Acts::Transform3& localToGlobal)
       : m_localToGlobal{localToGlobal} {}
 
-  static constexpr double s_tolerance = 1.e-12;
-  inline static const double s_CoeffRtoT = 750._ns / std::pow(15._mm, 1. / 3.);
-  inline static const double s_CoeffTtoR = 1 / std::pow(s_CoeffRtoT, 3);
-  /// @brief t(r) relation. The coefficient are tuned for t(r = 15 mm) = 750 ns
-  static double driftTime(const double r) {
-    return s_CoeffRtoT * std::pow(r, 1. / 3.);
+  /// @brief Normalize input variable within a given range
+  static double normalize(const double value, const double min,
+                          const double max) {
+    return 2. * (std::clamp(value, min, max) - min) / (max - min) - 1.;
   }
-  /// @brief r(t) relation, defined as the inverted t(r) relation
+  /// @brief Drift time validity limits for the parametrized r(t) relation
+  static constexpr double s_minDriftTime = 0._ns;
+  static constexpr double s_maxDriftTime = 741.324 * 1._ns;
+  /// @brief Normalize input drift time for r(t) relation
+  static double normDriftTime(const double t) {
+    return normalize(t, s_minDriftTime, s_maxDriftTime);
+  }
+  /// @brief Multiplicative factor arising from the derivative of the normalization
+  static constexpr double s_timeNormFactor =
+      2.0 / (s_maxDriftTime - s_minDriftTime);
+  /// @brief Coefficients for the parametrized r(t) relation
+  static constexpr std::array<double, 9> s_TtoRcoeffs = {
+      9.0102,   6.7419,   -1.5829,   0.56475, -0.19245,
+      0.019055, 0.030006, -0.034591, 0.023517};
+  /// @brief Parametrized ATLAS r(t) relation
   static double driftRadius(const double t) {
-    return s_CoeffTtoR * std::pow(t, 3);
+    const double x = normDriftTime(t);
+    double r{0.0};
+    for (std::size_t n = 0; n < s_TtoRcoeffs.size(); ++n) {
+      r += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyTn(x, n);
+    }
+    return r;
   }
   /// @brief First derivative of r(t) relation
   static double driftVelocity(const double t) {
-    return 3 * s_CoeffTtoR * std::pow(t, 2);
+    const double x = normDriftTime(t);
+    double v{0.0};
+    for (std::size_t n = 1; n < s_TtoRcoeffs.size(); ++n) {
+      v += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyUn(x, n, 1u);
+    }
+    return v * s_timeNormFactor;
   }
   /// @brief Second derivative of r(t) relation
   static double driftAcceleration(const double t) {
-    return 6 * s_CoeffTtoR * t;
+    const double x = normDriftTime(t);
+    double a{0.0};
+    for (std::size_t n = 2; n < s_TtoRcoeffs.size(); ++n) {
+      a += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyUn(x, n, 2u);
+    }
+    return a * Acts::square(s_timeNormFactor);
   }
+  /// @brief Drift radius validity limits for the parametrized t(r) relation
+  static constexpr double s_minDriftRadius = 0.064502;
+  static constexpr double s_maxDriftRadius = 14.566;
+  /// @brief Normalize input drift radius for t(r) relation
+  static double normDriftRadius(const double r) {
+    return normalize(r, s_minDriftRadius, s_maxDriftRadius);
+  }
+  /// @brief Coefficients for the parametrized t(r) relation
+  static constexpr std::array<double, 5> s_RtoTcoeffs = {
+      256.476, 349.056, 118.349, 18.748, -6.4142};
+  /// @brief Parametrized t(r) relation
+  static double driftTime(const double r) {
+    const double x = normDriftRadius(r);
+    double t{0.0};
+    for (std::size_t n = 0; n < s_RtoTcoeffs.size(); ++n) {
+      t += s_RtoTcoeffs[n] * Acts::detail::legendrePoly(x, n);
+    }
+    return t * 1._ns;
+  }
+  /// @brief Coefficients for the uncertanty on the drift radius
+  static constexpr std::array<double, 4> s_driftRUncertCoeffs{
+      0.10826, -0.07182, 0.037597, -0.011712};
   /// @brief Compute the drift radius uncertanty
   static double driftUncert(const double r) {
-    return 0.2_mm / (1._mm + Acts::square(r)) + 0.1_mm;
+    const double x = normDriftRadius(r);
+    double s{0.0};
+    for (std::size_t n = 0; n < s_driftRUncertCoeffs.size(); ++n) {
+      s += s_driftRUncertCoeffs[n] * Acts::detail::chebychevPolyTn(x, n);
+    }
+    return s;
   }
   /// @brief Provide the calibrated drift radius given the straw measurement and time offset
   ///        Needed for the Fast Fitter.
@@ -192,8 +286,7 @@ class SpCalibrator {
   /// @param trackPos: Position of the track at z=0.
   /// @param trackDir: Direction of the track in the local frame
   /// @param measurement: Measurement
-  double closestApproachDist(const Acts::CalibrationContext& /*ctx*/,
-                             const Vector3& trackPos, const Vector3& trackDir,
+  double closestApproachDist(const Vector3& trackPos, const Vector3& trackDir,
                              const FitTestSpacePoint& measurement) const {
     const auto closeIsect =
         lineIntersect(measurement.localPosition(),
@@ -207,7 +300,7 @@ class SpCalibrator {
   /// @param trackDir: Direction of the track in the local frame
   /// @param timeOffSet: Offset in the time of arrival (To be implemented)
   /// @param uncalibCont: Uncalibrated composite space point container
-  Container_t calibrate(const Acts::CalibrationContext& ctx,
+  Container_t calibrate(const Acts::CalibrationContext& /*ctx*/,
                         const Vector3& trackPos, const Vector3& trackDir,
                         const double timeOffSet,
                         const Container_t& uncalibCont) const {
@@ -220,14 +313,14 @@ class SpCalibrator {
         sp->updatePosition(bestPos.position());
       }
       if (sp->isStraw()) {
-        const double driftTime{
-            sp->time() - timeOffSet -
-            closestApproachDist(ctx, trackPos, trackDir, *sp) /
-                PhysicalConstants::c};
+        const double driftTime{sp->time() - timeOffSet -
+                               closestApproachDist(trackPos, trackDir, *sp) /
+                                   PhysicalConstants::c};
         if (driftTime < 0) {
           sp->updateStatus(false);
           sp->updateDriftR(0.);
         } else {
+          sp->updateStatus(true);
           sp->updateDriftR(Acts::abs(driftRadius(driftTime)));
         }
       }
@@ -286,13 +379,11 @@ Line_t generateLine(RandomEngine& engine, const Logger& logger) {
   using ParIndex = Line_t::ParIndex;
   Line_t::ParamVector linePars{};
   linePars[toUnderlying(ParIndex::phi)] =
-      std::uniform_real_distribution{-120_degree, 120_degree}(engine);
-  linePars[toUnderlying(ParIndex::x0)] =
-      std::uniform_real_distribution{-5000., 5000.}(engine);
-  linePars[toUnderlying(ParIndex::y0)] =
-      std::uniform_real_distribution{-5000., 5000.}(engine);
+      uniform{-120_degree, 120_degree}(engine);
+  linePars[toUnderlying(ParIndex::x0)] = uniform{-500., 500.}(engine);
+  linePars[toUnderlying(ParIndex::y0)] = uniform{-500., 500.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
-      std::uniform_real_distribution{5_degree, 175_degree}(engine);
+      uniform{5_degree, 175_degree}(engine);
   if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
       3_degree) {
     return generateLine(engine, logger);
@@ -332,18 +423,16 @@ class MeasurementGenerator {
     bool discretizeStrips{false};
     /// @brief Combine the two strip measurements to a single space point
     bool combineSpacePoints{false};
-    /// @brief Create strip measurements constraining Loc0
-    bool createStripsLoc0{true};
-    /// @brief Create strip measurements constraining Loc1
-    bool createStripsLoc1{true};
     /// @brief Pitch between two loc0 strips
     double stripPitchLoc0{4._cm};
     /// @brief Pitch between two loc1 strips
     double stripPitchLoc1{3._cm};
     /// @brief Direction of the strip if it measures loc1
-    Vector3 stripDirLoc1{Vector3::UnitX()};
+    std::vector<Vector3> stripDirLoc1 =
+        std::vector<Vector3>(8, Vector3::UnitX());
     /// @brief Direction of the strip if it measures loc0
-    Vector3 stripDirLoc0{Vector3::UnitY()};
+    std::vector<Vector3> stripDirLoc0 =
+        std::vector<Vector3>(8, Vector3::UnitY());
     /// @brief Experiment specific calibration context
     Acts::CalibrationContext calibContext{};
     /// @brief Local to global transform
@@ -382,8 +471,6 @@ class MeasurementGenerator {
     constexpr double tubeStripDist = 30._cm;
     /// Distance between two strip layers
     constexpr double stripLayDist = 0.5_cm;
-    /// Number of strip layers on each side
-    constexpr std::size_t nStripLay = 8;
 
     std::array<Vector3, nTubeLayers> tubePositions{
         filledArray<Vector3, nTubeLayers>(chamberDistance * Vector3::UnitZ())};
@@ -425,7 +512,7 @@ class MeasurementGenerator {
         const auto dToFirstHigh = static_cast<int>(std::ceil(
             (planeExtpHigh.position().y() - stag.y()) / (2. * tubeRadius)));
         /// Does the track go from left to right or right to left?
-        const int dT = dToFirstHigh > dToFirstLow ? 1 : -1;
+        const int dT = copySign(1, dToFirstHigh - dToFirstLow);
         /// Loop over the candidate tubes and check each one whether the track
         /// actually crossed them. Then generate the circle and optionally smear
         /// the radius
@@ -462,8 +549,7 @@ class MeasurementGenerator {
                       ? std::make_optional<double>(genCfg.twinStrawReso)
                       : std::nullopt));
           sp->updateTime(SpCalibrator::driftTime(sp->driftRadius()) + t0 +
-                         calibrator.closestApproachDist(genCfg.calibContext,
-                                                        line.position(),
+                         calibrator.closestApproachDist(line.position(),
                                                         line.direction(), *sp) /
                              PhysicalConstants::c);
         }
@@ -476,13 +562,14 @@ class MeasurementGenerator {
       /// @param extPos: Extrapolated position of the straight line in the plane
       /// @param loc1: Boolean to fetch either the loc1 projection or the loc0 projection
       auto discretize = [&genCfg, &engine](const Vector3& extPos,
+                                           const std::size_t lay,
                                            const bool loc1) -> Vector3 {
         const double pitch =
             loc1 ? genCfg.stripPitchLoc1 : genCfg.stripPitchLoc0;
         assert(pitch > 0.);
 
         const Vector3& stripDir =
-            loc1 ? genCfg.stripDirLoc1 : genCfg.stripDirLoc0;
+            loc1 ? genCfg.stripDirLoc1.at(lay) : genCfg.stripDirLoc0.at(lay);
         const Vector3 stripNormal = stripDir.cross(Vector3::UnitZ());
         const double dist = stripNormal.dot(extPos);
         if (genCfg.smearStrips) {
@@ -501,7 +588,9 @@ class MeasurementGenerator {
       const double stripCovLoc1 =
           Acts::square(genCfg.stripPitchLoc1) / std::sqrt(12.);
 
-      for (std::size_t sL = 0; sL < nStripLay; ++sL) {
+      for (std::size_t sL = 0; sL < std::max(genCfg.stripDirLoc0.size(),
+                                             genCfg.stripDirLoc1.size());
+           ++sL) {
         const double distInZ = tubeStripDist + sL * stripLayDist;
         const double planeLow = tubePositions.front().z() - distInZ;
         const double planeHigh = tubePositions.back().z() + distInZ;
@@ -511,21 +600,24 @@ class MeasurementGenerator {
                                            Vector3::UnitZ(), plane);
           ACTS_VERBOSE("spawn() - Propagated line to "
                        << toString(extp.position()) << ".");
-          if (genCfg.combineSpacePoints) {
-            const Vector3 extpPos{discretize(extp.position(), false) +
-                                  discretize(extp.position(), true) +
+
+          if (genCfg.combineSpacePoints &&
+              sL < std::min(genCfg.stripDirLoc0.size(),
+                            genCfg.stripDirLoc1.size())) {
+            const Vector3 extpPos{discretize(extp.position(), sL, false) +
+                                  discretize(extp.position(), sL, true) +
                                   plane * Vector3::UnitZ()};
             measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                extpPos, genCfg.stripDirLoc0, genCfg.stripDirLoc1, stripCovLoc0,
-                stripCovLoc1));
+                extpPos, genCfg.stripDirLoc0.at(sL), genCfg.stripDirLoc1.at(sL),
+                stripCovLoc0, stripCovLoc1));
           } else {
-            if (genCfg.createStripsLoc0) {
-              const Vector3 extpPos{discretize(extp.position(), false) +
+            if (sL < genCfg.stripDirLoc0.size()) {
+              const Vector3 extpPos{discretize(extp.position(), sL, false) +
                                     plane * Vector3::UnitZ()};
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                  extpPos, genCfg.stripDirLoc0,
-                  genCfg.stripDirLoc0.cross(Vector3::UnitZ()), stripCovLoc0,
-                  0.));
+                  extpPos, genCfg.stripDirLoc0.at(sL),
+                  genCfg.stripDirLoc0.at(sL).cross(Vector3::UnitZ()),
+                  stripCovLoc0, 0.));
               const auto& nM{*measurements.back()};
               ACTS_VERBOSE("spawn() - Created loc0 strip @"
                            << toString(nM.localPosition())
@@ -533,12 +625,12 @@ class MeasurementGenerator {
                            << ", to-next:" << toString(nM.toNextSensor())
                            << " -> covariance: " << nM.covariance()[0] << ".");
             }
-            if (genCfg.createStripsLoc1) {
-              const Vector3 extpPos{discretize(extp.position(), true) +
+            if (sL < genCfg.stripDirLoc1.size()) {
+              const Vector3 extpPos{discretize(extp.position(), sL, true) +
                                     plane * Vector3::UnitZ()};
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                  extpPos, genCfg.stripDirLoc1,
-                  genCfg.stripDirLoc1.cross(Vector3::UnitZ()), 0.,
+                  extpPos, genCfg.stripDirLoc1.at(sL),
+                  genCfg.stripDirLoc1.at(sL).cross(Vector3::UnitZ()), 0.,
                   stripCovLoc1));
               const auto& nM{*measurements.back()};
               ACTS_VERBOSE("spawn() - Created loc1 strip @"
@@ -619,8 +711,8 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
           (**lastEta).localPosition().z() * tanBeta;
     }
   }
-
   const Vector3 seedDir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
+
   pars[toUnderlying(FitParIndex::theta)] = theta(seedDir);
   pars[toUnderlying(FitParIndex::phi)] = phi(seedDir);
   return pars;
@@ -630,4 +722,4 @@ bool isGoodHit(const FitTestSpacePoint& sp) {
   return !sp.isStraw() || sp.isGood();
 };
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -8,7 +8,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
-#include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -30,8 +29,6 @@ namespace ActsPython {
 
 void addExampleAlgorithms(Context& ctx) {
   auto& mex = ctx.get("examples");
-
-  mex.def("readJsonGeometryList", ActsExamples::readJsonGeometryList);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,
