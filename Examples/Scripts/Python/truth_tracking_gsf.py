@@ -5,6 +5,10 @@ from typing import Optional
 
 import acts
 import acts.examples
+from acts.examples.root import (
+    RootParticleReader,
+    RootSimHitReader,
+)
 
 u = acts.UnitConstants
 
@@ -91,7 +95,7 @@ def runTruthTrackingGsf(
     else:
         logger.info("Reading hits from %s", inputSimHitsPath.resolve())
         s.addReader(
-            acts.examples.RootSimHitReader(
+            RootSimHitReader(
                 level=acts.logging.INFO,
                 filePath=str(inputSimHitsPath.resolve()),
                 outputSimHits="simhits",

@@ -143,7 +143,8 @@ if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
     run_physmon_gen "Simulation" "simulation"
 fi
 if [[ "$mode" == "all" || "$mode" == "gsf" || "$mode" == "refit_gsf" ]]; then
-    run_physmon_gen "Geant4 Sim for GSF" "simulation_gsf"
+    # run_physmon_gen "Geant4 Sim for GSF" "simulation_gsf"
+    echo "blub"
 fi
 if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
     run_physmon_gen "Truth Tracking KF" "trackfitting_kf"
