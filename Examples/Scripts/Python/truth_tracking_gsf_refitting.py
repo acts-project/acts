@@ -20,6 +20,7 @@ def runRefittingGsf(
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
     outputDir: Path,
+    reverseFilteringCovarianceScaling=100.0,
     s: acts.examples.Sequencer = None,
 ):
     s = runTruthTrackingKalman(
@@ -27,8 +28,8 @@ def runRefittingGsf(
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
-        reverseFilteringMomThreshold=0.0,
-        reverseFilteringCovarianceScaling=1.0,
+        reverseFilteringMomThreshold=0 * u.GeV,
+        reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
         s=s,
     )
 
@@ -43,7 +44,7 @@ def runRefittingGsf(
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
-        "reverseFilteringCovarianceScaling": 100.0,
+        "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "level": acts.logging.INFO,
     }
 

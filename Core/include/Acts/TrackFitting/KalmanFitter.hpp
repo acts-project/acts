@@ -188,7 +188,7 @@ struct KalmanFitterOptions {
   /// scaled. This is only used in the backwardfiltering (if reversedFiltering
   /// is true or if the ReverseFilteringLogic return true for the track of
   /// interest)
-  double reversedFilteringCovarianceScaling = 1.0;
+  double reversedFilteringCovarianceScaling = 100.0;
 
   /// Whether to include non-linear correction during global to local
   /// transformation
