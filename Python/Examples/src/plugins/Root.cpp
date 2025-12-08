@@ -34,7 +34,6 @@
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -97,10 +96,27 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     // Bindings for the binning in e.g., TrackFinderPerformanceWriter
     {
       py::class_<PlotHelpers::Binning>(root, "Binning")
-          .def(py::init<std::string, int, double, double>(), "title"_a,
-               "bins"_a, "bMin"_a, "bMax"_a)
-          .def(py::init<std::string, std::vector<double>>(), "title"_a,
-               "bins"_a);
+          .def_static(
+              "uniform",
+              [](std::string title, int bins, double bMin, double bMax) {
+                return PlotHelpers::Binning::Uniform(std::move(title), bins,
+                                                     bMin, bMax);
+              },
+              "title"_a, "bins"_a, "bMin"_a, "bMax"_a)
+          .def_static(
+              "variable",
+              [](std::string title, std::vector<double> bins) {
+                return PlotHelpers::Binning::Variable(std::move(title),
+                                                      std::move(bins));
+              },
+              "title"_a, "bins"_a)
+          .def_static(
+              "logarithmic",
+              [](std::string title, int bins, double bMin, double bMax) {
+                return PlotHelpers::Binning::Logarithmic(std::move(title), bins,
+                                                         bMin, bMax);
+              },
+              "title"_a, "bins"_a, "bMin"_a, "bMax"_a);
 
       py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
           .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),

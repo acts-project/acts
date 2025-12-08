@@ -4,9 +4,6 @@ import argparse
 from acts import (
     logging,
     GeometryContext,
-    CylindricalContainerBuilder,
-    DetectorBuilder,
-    GeometryIdGenerator,
 )
 
 from acts.examples import (
