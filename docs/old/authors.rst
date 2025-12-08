@@ -1,7 +1,7 @@
 Authors
 =======
 
-.. include:: ../AUTHORS
+.. include:: ../../AUTHORS
 
 Detailed contributor information can also be found on the projects `Github contributors <https://github.com/acts-project/acts/graphs/contributors>`_ page.
 
