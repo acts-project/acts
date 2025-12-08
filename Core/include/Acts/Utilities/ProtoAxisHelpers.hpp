@@ -42,8 +42,11 @@ inline std::size_t totalBinsFromProtoAxes(
 /// @param ba Bin axis index
 /// @return Number of bins in the specified axis
 inline std::size_t binsFromProtoAxes(
-    const std::vector<Acts::DirectedProtoAxis>& axes, std::size_t ba) {
-  Acts::BinningData bd(axes.at(ba));
+    std::span<const Acts::DirectedProtoAxis> axes, std::size_t ba) {
+  if (axes.size() <= 0 || axes.size() > 3) {
+    throw std::runtime_error("Unsupported number of axes, must be 1-3");
+  }
+  Acts::BinningData bd(axes[ba]);
   return bd.bins();
 }
 
