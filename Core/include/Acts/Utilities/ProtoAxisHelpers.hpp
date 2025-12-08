@@ -14,12 +14,12 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
+namespace ProtoAxisHelpers {
 
 /// @brief Get the number of bins from a ProtoAxis
 /// @param axis DirectedProtoAxis object
 /// @return Number of bins in the axis
-inline std::size_t binsOfProtoAxis(const DirectedProtoAxis& axis) {
+inline std::size_t binsOfProtoAxis(const Acts::DirectedProtoAxis& axis) {
   return axis.getAxis().getNBins();
 }
 
@@ -27,7 +27,7 @@ inline std::size_t binsOfProtoAxis(const DirectedProtoAxis& axis) {
 /// @param axes Vector of DirectedProtoAxis objects
 /// @return Total number of bins across all axes
 inline std::size_t totalBinsFromProtoAxes(
-    const std::vector<DirectedProtoAxis>& axes) {
+    const std::vector<Acts::DirectedProtoAxis>& axes) {
   return axes[0].getAxis().getNBins() *
          (axes.size() > 1 ? axes[1].getAxis().getNBins() : 1) *
          (axes.size() > 2 ? axes[2].getAxis().getNBins() : 1);
@@ -37,9 +37,9 @@ inline std::size_t totalBinsFromProtoAxes(
 /// @param axes DirectedProtoAxis vector
 /// @param ba Bin axis index
 /// @return Number of bins in the specified axis
-inline std::size_t binsFromProtoAxes(const std::vector<DirectedProtoAxis>& axes,
-                                     std::size_t ba) {
-  BinningData bd(axes[ba]);
+inline std::size_t binsFromProtoAxes(
+    const std::vector<Acts::DirectedProtoAxis>& axes, std::size_t ba) {
+  Acts::BinningData bd(axes[ba]);
   return bd.bins();
 }
 
@@ -47,9 +47,9 @@ inline std::size_t binsFromProtoAxes(const std::vector<DirectedProtoAxis>& axes,
 /// @param axis DirectedProtoAxis object
 /// @param lp Local position vector
 /// @return Bin index corresponding to the local position
-inline std::size_t binFromProtoAxis(const DirectedProtoAxis& axis,
-                                    const Vector2& lp) {
-  BinningData bd(axis);
+inline std::size_t binFromProtoAxis(const Acts::DirectedProtoAxis& axis,
+                                    const Acts::Vector2& lp) {
+  Acts::BinningData bd(axis);
   return bd.searchLocal(lp);
 }
 
@@ -57,9 +57,9 @@ inline std::size_t binFromProtoAxis(const DirectedProtoAxis& axis,
 /// @param axis DirectedProtoAxis object
 /// @param gp Global position vector
 /// @return Bin index corresponding to the global position
-inline std::size_t binFromProtoAxis(const DirectedProtoAxis& axis,
-                                    const Vector3& gp) {
-  BinningData bd(axis);
+inline std::size_t binFromProtoAxis(const Acts::DirectedProtoAxis& axis,
+                                    const Acts::Vector3& gp) {
+  Acts::BinningData bd(axis);
   return bd.searchGlobal(gp);
 }
 
@@ -68,21 +68,21 @@ inline std::size_t binFromProtoAxis(const DirectedProtoAxis& axis,
 /// @param gp Global position vector
 /// @return Array of bin indices corresponding to the global position for each axis
 inline std::array<std::size_t, 3> binTripleFromProtoAxes(
-    const std::vector<DirectedProtoAxis>& axes, const Vector3& gp) {
-  const Vector3& bPosition = gp;
+    const std::vector<Acts::DirectedProtoAxis>& axes, const Acts::Vector3& gp) {
+  const Acts::Vector3& bPosition = gp;
   std::array<std::size_t, 3> bTriple = {0, 0, 0};
   if (!axes.empty())
     throw std::runtime_error("No axes provided for binTripleFromProtoAxes");
   if (axes.size() == 1) {
-    BinningData bd0(axes[0]);
+    Acts::BinningData bd0(axes[0]);
     bTriple[0] = bd0.searchGlobal(bPosition);
   }
   if (axes.size() == 2) {
-    BinningData bd1(axes[1]);
+    Acts::BinningData bd1(axes[1]);
     bTriple[1] = bd1.searchGlobal(bPosition);
   }
   if (axes.size() == 3) {
-    BinningData bd2(axes[2]);
+    Acts::BinningData bd2(axes[2]);
     bTriple[2] = bd2.searchGlobal(bPosition);
   } else {
     throw std::runtime_error(
@@ -95,12 +95,12 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
 /// @param axes DirectedProtoAxis vector
 /// @param ba Bin axis index
 /// @return Maximum bin index in the specified axis
-inline std::size_t maxBin(const std::vector<DirectedProtoAxis>& axes,
+inline std::size_t maxBin(const std::vector<Acts::DirectedProtoAxis>& axes,
                           std::size_t ba = 0) {
-  std::vector<BinningData> binningDataVec;
+  std::vector<Acts::BinningData> binningDataVec;
   binningDataVec.reserve(axes.size());
   for (const auto& axis : axes) {
-    binningDataVec.emplace_back(BinningData(axis));
+    binningDataVec.emplace_back(axis);
   }
   if (ba >= binningDataVec.size()) {
     return 0;
@@ -108,4 +108,4 @@ inline std::size_t maxBin(const std::vector<DirectedProtoAxis>& axes,
   return (binningDataVec[ba].bins() - 1);
 }
 
-}  // namespace Acts
+}  // namespace ProtoAxisHelpers
