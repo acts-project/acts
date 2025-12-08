@@ -288,8 +288,9 @@ BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
   std::uniform_real_distribution<double> weightDist(0.5, 1.5);
   std::uniform_real_distribution<double> loc0Dist(-10.0, 10.0);
   std::uniform_real_distribution<double> loc1Dist(-10.0, 10.0);
-  std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
-  std::uniform_real_distribution<double> thetaDist(0.0, M_PI);
+  std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                                 std::numbers::pi);
+  std::uniform_real_distribution<double> thetaDist(0.0, std::numbers::pi);
   std::uniform_real_distribution<double> qopDist(0.1, 5.0);
 
   std::vector<GsfComponent> cmps;
