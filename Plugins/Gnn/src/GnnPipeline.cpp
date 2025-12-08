@@ -8,8 +8,8 @@
 
 #include "ActsPlugins/Gnn/GnnPipeline.hpp"
 
-#include "ActsPlugins/Gnn/detail/NvtxUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Gnn/detail/NvtxUtils.hpp"
 
 #ifdef ACTS_GNN_WITH_CUDA
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"

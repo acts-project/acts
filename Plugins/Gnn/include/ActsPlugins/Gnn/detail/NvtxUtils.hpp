@@ -26,9 +26,9 @@ struct NvtxRange {
 
 }  // namespace ActsPlugins::detail
 
-#define ACTS_NVTX_START(name)                                \
+#define ACTS_NVTX_START(name)                                       \
   std::optional<ActsPlugins::detail::NvtxRange> _nvtx##name(#name); \
-  do {                                                       \
+  do {                                                              \
   } while (0)
 #define ACTS_NVTX_STOP(name) \
   _nvtx##name.reset();       \
