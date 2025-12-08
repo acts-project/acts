@@ -29,7 +29,7 @@ class DiamondBounds;
 /// Bounds for a polygonal prism shaped Volume, the orientedSurface(...) method
 /// creates a vector of 8 surfaces:
 /// 2 Diamond Shape Surfaces (see
-/// https://github.com/acts-project/acts/blob/main/docs/figures/doxygen/DiamondBounds.svg)
+/// https://github.com/acts-project/acts/blob/main/docs/old/figures/doxygen/DiamondBounds.svg)
 /// and 6 Rectangular Shape Surfaces.
 ///
 ///  BoundarySurfaceFace [index]:
@@ -187,5 +187,32 @@ class ConvexPolygonVolumeBounds : public VolumeBounds {
   // will throw a logic_exception if consistency is not given
   void checkConsistency() noexcept(false);
 };
+
+/// @cond
+/// @brief Streaming operator for the polygon volume surfaces
+inline std::ostream& operator<<(std::ostream& os,
+                                ConvexPolygonVolumeBounds::Face face) {
+  switch (face) {
+    case ConvexPolygonVolumeBounds::Face::NegativeZFaceXY:
+      return os << "NegativeZFaceXY";
+    case ConvexPolygonVolumeBounds::Face::PositiveZFaceXY:
+      return os << "PositiveZFaceXY";
+    case ConvexPolygonVolumeBounds::Face::NegativeXFaceYZ12:
+      return os << "NegativeXFaceYZ12";
+    case ConvexPolygonVolumeBounds::Face::PositiveXFaceYZ12:
+      return os << "PositiveXFaceYZ12";
+    case ConvexPolygonVolumeBounds::Face::NegativeXFaceYZ23:
+      return os << "NegativeXFaceYZ23";
+    case ConvexPolygonVolumeBounds::Face::PositiveXFaceYZ23:
+      return os << "PositiveXFaceYZ23";
+    case ConvexPolygonVolumeBounds::Face::NegativeYFaceZX:
+      return os << "NegativeYFaceZX";
+    case ConvexPolygonVolumeBounds::Face::PositiveYFaceZX:
+      return os << "PositiveYFaceZX";
+    default:
+      return os << "Unknown";
+  }
+}
+/// @endcond
 
 }  // namespace Acts

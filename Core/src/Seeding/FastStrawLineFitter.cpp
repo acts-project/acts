@@ -105,7 +105,7 @@ double FastStrawLineFitter::calcTimeGrad(const TrigonomHelper& angles,
 void FastStrawLineFitter::completeResult(const FitAuxiliaries& fitPars,
                                          const double thetaTwoPrime,
                                          FitResult& result) const {
-  result.dTheta = std::sqrt(1. / thetaTwoPrime);
+  result.dTheta = std::sqrt(1. / Acts::abs(thetaTwoPrime));
   const double tanTheta = std::tan(result.theta);
   const double secTheta = 1. / std::cos(result.theta);
   result.y0 =

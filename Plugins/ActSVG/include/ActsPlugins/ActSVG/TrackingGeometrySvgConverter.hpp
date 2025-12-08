@@ -23,6 +23,9 @@ class TrackingVolume;
 
 namespace ActsPlugins::Svg {
 
+using ProtoPortal = actsvg::proto::portal<std::vector<Acts::Vector3>>;
+using ProtoLink = ProtoPortal::link;
+
 namespace TrackingGeometryConverter {
 
 /// Nested Options struct for the writing configuration
