@@ -41,13 +41,20 @@ std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
                                      std::size_t expand, std::size_t nBins,
                                      Acts::AxisBoundaryType type);
 
+/// @brief Helper method to expand the grid queries along a given dimension
+/// @tparam queries_type the type of the grid queries
+/// @tparam expansion_type the type of the reference expansion
+/// @tparam kDIM the dimension to be expanded
+/// @param gridQueries the grid queries to be expanded
+/// @param referenceExpansion the reference expansion values
 template <typename queries_type, typename expansion_type, std::size_t kDIM>
 void expand(queries_type& gridQueries,
             const expansion_type& referenceExpansion) {
   queries_type copiedQueries = gridQueries;
   // Sort them for smaller bigger
-  std::sort(copiedQueries.begin(), copiedQueries.end(),
-            [](const auto& a, const auto& b) { return a[kDIM] < b[kDIM]; });
+  std::ranges::sort(copiedQueries, [](const auto& a, const auto& b) {
+    return a[kDIM] < b[kDIM];
+  });
   // Get a mid point
   auto midPoint =
       0.5 * (copiedQueries.front()[kDIM] + copiedQueries.back()[kDIM]);
@@ -62,6 +69,9 @@ void expand(queries_type& gridQueries,
 }
 
 /// Run the reference expansion
+/// @tparam grid_type the type of the grid
+/// @param gridQueries the grid queries to be expanded
+/// @param referenceExpansion the reference expansion values
 template <typename grid_type>
 void applyReferenceExpansion(
     std::vector<typename grid_type::point_t>& gridQueries,
