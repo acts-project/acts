@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 
+/// @cond
 namespace detray {
 
 using dindex = unsigned int;
@@ -51,6 +52,7 @@ enum class accel_id : unsigned int;
 
 }  // namespace io
 }  // namespace detray
+/// @endcond
 
 namespace Acts {
 class GeometryContext;

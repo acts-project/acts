@@ -8,6 +8,7 @@
 
 #pragma once
 
+/// @cond
 namespace Annoy {
 // Forward declarations for the Annoy classes we use.
 struct AngularEuclidean;  // Metric used
@@ -18,6 +19,7 @@ class AnnoyIndex;  // AnnoyIndex template class
 
 class AnnoyIndexSingleThreadedBuildPolicy;  // Build policy
 }  // namespace Annoy
+/// @endcond
 
 // Define commonly used Annoy types
 namespace ActsPlugins {

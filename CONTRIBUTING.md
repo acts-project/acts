@@ -70,7 +70,7 @@ request is reviewed, it can be merged in.
 To get started with git, please refer to the [short introduction](https://git-scm.com/docs/gittutorial) as well as the [full git documentation](https://git-scm.com/doc). Tutorials as well as explanations of concepts and
 workflows with git can also be found on [Atlassian](https://www.atlassian.com/git/).
 
-### Checklist for pull requests
+### ✔️ Checklist for pull requests
 
 - Your branch has been rebased on the target branch and can be
   integrated through a fast-forward merge.
@@ -83,7 +83,7 @@ workflows with git can also be found on [Atlassian](https://www.atlassian.com/gi
 - For bugfixes: a test case has been added to avoid the re-appearance
   of this bug in the future.
 
-### Workflow recommendations
+### 🔁 Workflow recommendations
 
 In the following a few recommendations are outlined which should help you to get
 familiar with development process in the Acts project.
@@ -165,6 +165,40 @@ familiar with development process in the Acts project.
    still valid after your changes. Perform updates where needed and
    ensure integrity between the code and its documentation.
 
+#### ℹ️ Example: Make a bugfix while working on a feature
+
+During the development of a new feature you discover a bug which needs
+to be fixed. In order to not mix bugfix and feature development, the
+bugfix should happen in a different branch. The recommended procedure
+for handling this situation is the following:
+
+1. Get into a clean state of your working directory on your feature
+   branch (either by committing open changes or by stashing them).
+2. Checkout the branch the bugfix should be merged into (either *main*
+   or *release/X.Y.Z*) and get the most recent version.
+3. Create a new branch for the bugfix.
+4. Fix the bug, write a test, update documentation etc.
+5. Open a pull request for the bug fix.
+6. Switch back to your feature branch.
+7. Merge your local bugfix branch into the feature branch. Continue your
+   feature development.
+8. Eventually, the bugfix will be merged into *main*. Then, you can
+   rebase your feature branch on main which will remove all duplicate
+   commits related to the bugfix.
+
+#### ℹ️ Example: Backporting a feature or bugfix
+
+Suppose you have a bugfix or feature branch that is eventually going to
+be merged in `main`. You might want to have the feature/bugfix
+available in a patch (say `0.25.1`) tag. To to that, find the
+corresponding release branch, for this example that would be
+`release/v0.25.X`. You must create a dedicated branch that **only**
+contains the commits that relate to your feature/bugfix, otherwise the
+PR will contain all other commits that were merged into main since the
+release was branched off. With that branch, open a PR to that branch,
+and make it clear that it is a backport, also linking to a potential
+equivalent PR that targets `main`.
+
 ### 💄 Coding style and guidelines
 
 The Acts project uses
@@ -196,40 +230,6 @@ For Doxygen documentation, please follow these recommendations:
 - Use `@remark` to specify pre-conditions.
 - Use `@note` to provide additional information.
 - Link other related entities (e.g. functions) using `@sa`.
-
-### Example: Make a bugfix while working on a feature
-
-During the development of a new feature you discover a bug which needs
-to be fixed. In order to not mix bugfix and feature development, the
-bugfix should happen in a different branch. The recommended procedure
-for handling this situation is the following:
-
-1. Get into a clean state of your working directory on your feature
-   branch (either by committing open changes or by stashing them).
-2. Checkout the branch the bugfix should be merged into (either *main*
-   or *release/X.Y.Z*) and get the most recent version.
-3. Create a new branch for the bugfix.
-4. Fix the bug, write a test, update documentation etc.
-5. Open a pull request for the bug fix.
-6. Switch back to your feature branch.
-7. Merge your local bugfix branch into the feature branch. Continue your
-   feature development.
-8. Eventually, the bugfix will be merged into *main*. Then, you can
-   rebase your feature branch on main which will remove all duplicate
-   commits related to the bugfix.
-
-### Example: Backporting a feature or bugfix
-
-Suppose you have a bugfix or feature branch that is eventually going to
-be merged in `main`. You might want to have the feature/bugfix
-available in a patch (say `0.25.1`) tag. To to that, find the
-corresponding release branch, for this example that would be
-`release/v0.25.X`. You must create a dedicated branch that **only**
-contains the commits that relate to your feature/bugfix, otherwise the
-PR will contain all other commits that were merged into main since the
-release was branched off. With that branch, open a PR to that branch,
-and make it clear that it is a backport, also linking to a potential
-equivalent PR that targets `main`.
 
 ### 💡 Tips for users migrating from GitLab
 

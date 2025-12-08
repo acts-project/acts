@@ -13,6 +13,7 @@
 
 #include <memory>
 
+/// @cond
 namespace torch::jit {
 class Module;
 }
@@ -20,6 +21,7 @@ class Module;
 namespace c10 {
 enum class DeviceType : std::int8_t;
 }
+/// @endcond
 
 namespace ActsPlugins {
 /// @addtogroup gnn_plugin

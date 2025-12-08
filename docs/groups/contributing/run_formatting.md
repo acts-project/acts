@@ -1,4 +1,6 @@
-# Source code formatting {#howto_format}
+@defgroup contribution_formatting Source code formatting
+@brief Guidelines and tools for source code formatting
+@ingroup contribution
 
 ## C++ formatting: `clang-format`
 
