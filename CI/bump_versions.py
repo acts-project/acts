@@ -431,7 +431,8 @@ def bump_spack(
     # Check if new version is same as all old versions
     if len(old_versions) == 1 and new_version in old_versions:
         console.print(
-            f"[yellow]Version is already {new_version}, no changes needed[/yellow]")
+            f"[yellow]Version is already {new_version}, no changes needed[/yellow]"
+        )
         raise typer.Exit(0)
 
     console.print(f"[dim]Will replace ALL versions with: {new_version}[/dim]")
