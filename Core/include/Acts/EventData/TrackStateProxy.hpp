@@ -459,9 +459,9 @@ class TrackStateProxy {
   /// Predicted track parameters vector
   /// @return The predicted parameters
   ConstParameters predicted() const {
-    assert(has<hashString("predicted")>());
+    assert(has<detail_tsp::kPredictedKey>());
     return m_traj->self().parameters(
-        component<IndexType, hashString("predicted")>());
+        component<IndexType, detail_tsp::kPredictedKey>());
   }
 
   /// Predicted track parameters vector (non-const version)
@@ -469,17 +469,17 @@ class TrackStateProxy {
   Parameters predicted()
     requires(!ReadOnly)
   {
-    assert(has<hashString("predicted")>());
+    assert(has<detail_tsp::kPredictedKey>());
     return m_traj->self().parameters(
-        component<IndexType, hashString("predicted")>());
+        component<IndexType, detail_tsp::kPredictedKey>());
   }
 
   /// Predicted track parameters covariance matrix.
   /// @return The predicted track parameter covariance
   ConstCovariance predictedCovariance() const {
-    assert(has<hashString("predicted")>());
+    assert(has<detail_tsp::kPredictedKey>());
     return m_traj->self().covariance(
-        component<IndexType, hashString("predicted")>());
+        component<IndexType, detail_tsp::kPredictedKey>());
   }
 
   /// Predicted track parameters covariance matrix (non-const version)
@@ -487,22 +487,22 @@ class TrackStateProxy {
   Covariance predictedCovariance()
     requires(!ReadOnly)
   {
-    assert(has<hashString("predicted")>());
+    assert(has<detail_tsp::kPredictedKey>());
     return m_traj->self().covariance(
-        component<IndexType, hashString("predicted")>());
+        component<IndexType, detail_tsp::kPredictedKey>());
   }
 
   /// Check whether the predicted parameters+covariance is set
   /// @return Whether it is set or not
-  bool hasPredicted() const { return has<hashString("predicted")>(); }
+  bool hasPredicted() const { return has<detail_tsp::kPredictedKey>(); }
 
   /// Filtered track parameters vector
   /// @return The filtered parameters
   /// @note Const version
   ConstParameters filtered() const {
-    assert(has<hashString("filtered")>());
+    assert(has<detail_tsp::kFilteredKey>());
     return m_traj->self().parameters(
-        component<IndexType, hashString("filtered")>());
+        component<IndexType, detail_tsp::kFilteredKey>());
   }
 
   /// Filtered track parameters vector
@@ -511,18 +511,18 @@ class TrackStateProxy {
   Parameters filtered()
     requires(!ReadOnly)
   {
-    assert(has<hashString("filtered")>());
+    assert(has<detail_tsp::kFilteredKey>());
     return m_traj->self().parameters(
-        component<IndexType, hashString("filtered")>());
+        component<IndexType, detail_tsp::kFilteredKey>());
   }
 
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
   /// @note Const version
   ConstCovariance filteredCovariance() const {
-    assert(has<hashString("filtered")>());
+    assert(has<detail_tsp::kFilteredKey>());
     return m_traj->self().covariance(
-        component<IndexType, hashString("filtered")>());
+        component<IndexType, detail_tsp::kFilteredKey>());
   }
 
   /// Filtered track parameters covariance matrix
@@ -531,22 +531,22 @@ class TrackStateProxy {
   Covariance filteredCovariance()
     requires(!ReadOnly)
   {
-    assert(has<hashString("filtered")>());
+    assert(has<detail_tsp::kFilteredKey>());
     return m_traj->self().covariance(
-        component<IndexType, hashString("filtered")>());
+        component<IndexType, detail_tsp::kFilteredKey>());
   }
 
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
-  bool hasFiltered() const { return has<hashString("filtered")>(); }
+  bool hasFiltered() const { return has<detail_tsp::kFilteredKey>(); }
 
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
   /// @note Const version
   ConstParameters smoothed() const {
-    assert(has<hashString("smoothed")>());
+    assert(has<detail_tsp::kSmoothedKey>());
     return m_traj->self().parameters(
-        component<IndexType, hashString("smoothed")>());
+        component<IndexType, detail_tsp::kSmoothedKey>());
   }
 
   /// Smoothed track parameters vector
@@ -555,18 +555,18 @@ class TrackStateProxy {
   Parameters smoothed()
     requires(!ReadOnly)
   {
-    assert(has<hashString("smoothed")>());
+    assert(has<detail_tsp::kSmoothedKey>());
     return m_traj->self().parameters(
-        component<IndexType, hashString("smoothed")>());
+        component<IndexType, detail_tsp::kSmoothedKey>());
   }
 
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
   /// @note Const version
   ConstCovariance smoothedCovariance() const {
-    assert(has<hashString("smoothed")>());
+    assert(has<detail_tsp::kSmoothedKey>());
     return m_traj->self().covariance(
-        component<IndexType, hashString("smoothed")>());
+        component<IndexType, detail_tsp::kSmoothedKey>());
   }
 
   /// Smoothed track parameters covariance matrix
@@ -575,20 +575,20 @@ class TrackStateProxy {
   Covariance smoothedCovariance()
     requires(!ReadOnly)
   {
-    assert(has<hashString("smoothed")>());
+    assert(has<detail_tsp::kSmoothedKey>());
     return m_traj->self().covariance(
-        component<IndexType, hashString("smoothed")>());
+        component<IndexType, detail_tsp::kSmoothedKey>());
   }
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
-  bool hasSmoothed() const { return has<hashString("smoothed")>(); }
+  bool hasSmoothed() const { return has<detail_tsp::kSmoothedKey>(); }
 
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
   /// @note Const version
   ConstCovariance jacobian() const {
-    assert(has<hashString("jacobian")>());
+    assert(has<detail_tsp::kJacobianKey>());
     return m_traj->self().jacobian(m_istate);
   }
 
@@ -598,13 +598,13 @@ class TrackStateProxy {
   Covariance jacobian()
     requires(!ReadOnly)
   {
-    assert(has<hashString("jacobian")>());
+    assert(has<detail_tsp::kJacobianKey>());
     return m_traj->self().jacobian(m_istate);
   }
 
   /// Returns whether a jacobian is set for this trackstate
   /// @return Whether it is set
-  bool hasJacobian() const { return has<hashString("jacobian")>(); }
+  bool hasJacobian() const { return has<detail_tsp::kJacobianKey>(); }
 
   /// @}
 
@@ -643,26 +643,26 @@ class TrackStateProxy {
              std::convertible_to<std::ranges::range_value_t<index_range_t>,
                                  std::uint8_t>)
   {
-    assert(has<hashString("projector")>());
+    assert(has<detail_tsp::kProjectorKey>());
     assert(subspaceIndices.size() <= eBoundSize);
     BoundSubspaceIndices boundSubspace{};
     std::transform(subspaceIndices.begin(), subspaceIndices.end(),
                    boundSubspace.begin(),
                    [](auto i) { return static_cast<std::uint8_t>(i); });
-    component<SerializedSubspaceIndices, hashString("projector")>() =
+    component<SerializedSubspaceIndices, detail_tsp::kProjectorKey>() =
         serializeSubspaceIndices(boundSubspace);
   }
 
   /// Returns whether a projector is set
   /// @return Whether it is set
-  bool hasProjector() const { return has<hashString("projector")>(); }
+  bool hasProjector() const { return has<detail_tsp::kProjectorKey>(); }
 
   /// Returns the projector subspace indices
   /// @return The projector subspace indices
   BoundSubspaceIndices projectorSubspaceIndices() const {
-    assert(has<hashString("projector")>());
+    assert(has<detail_tsp::kProjectorKey>());
     return deserializeSubspaceIndices<eBoundSize>(
-        component<SerializedSubspaceIndices, hashString("projector")>());
+        component<SerializedSubspaceIndices, detail_tsp::kProjectorKey>());
   }
 
   /// Returns the projector subspace indices
@@ -708,12 +708,12 @@ class TrackStateProxy {
   /// Check if the point has an associated uncalibrated measurement.
   /// @return Whether it is set
   bool hasUncalibratedSourceLink() const {
-    return has<hashString("uncalibratedSourceLink")>();
+    return has<detail_tsp::kUncalibratedKey>();
   }
 
   /// Check if the point has an associated calibrated measurement.
   /// @return Whether it is set
-  bool hasCalibrated() const { return has<hashString("calibrated")>(); }
+  bool hasCalibrated() const { return has<detail_tsp::kCalibratedKey>(); }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
   /// dimensions.
@@ -721,7 +721,7 @@ class TrackStateProxy {
   /// @note Const version
   template <std::size_t measdim>
   ConstCalibrated<measdim> calibrated() const {
-    assert(has<hashString("calibrated")>());
+    assert(has<detail_tsp::kCalibratedKey>());
     return m_traj->self().template calibrated<measdim>(m_istate);
   }
 
@@ -733,7 +733,7 @@ class TrackStateProxy {
   Calibrated<measdim> calibrated()
     requires(!ReadOnly)
   {
-    assert(has<hashString("calibrated")>());
+    assert(has<detail_tsp::kCalibratedKey>());
     return m_traj->self().template calibrated<measdim>(m_istate);
   }
 
@@ -742,7 +742,7 @@ class TrackStateProxy {
   /// @return The measurement covariance matrix
   template <std::size_t measdim>
   ConstCalibratedCovariance<measdim> calibratedCovariance() const {
-    assert(has<hashString("calibratedCov")>());
+    assert(has<detail_tsp::kCalibratedCovKey>());
     return m_traj->self().template calibratedCovariance<measdim>(m_istate);
   }
 
@@ -753,7 +753,7 @@ class TrackStateProxy {
   CalibratedCovariance<measdim> calibratedCovariance()
     requires(!ReadOnly)
   {
-    assert(has<hashString("calibratedCov")>());
+    assert(has<detail_tsp::kCalibratedCovKey>());
     return m_traj->self().template calibratedCovariance<measdim>(m_istate);
   }
 
@@ -763,7 +763,7 @@ class TrackStateProxy {
   EffectiveCalibrated effectiveCalibrated()
     requires(!ReadOnly)
   {
-    assert(has<hashString("calibrated")>());
+    assert(has<detail_tsp::kCalibratedKey>());
     return m_traj->self().effectiveCalibrated(m_istate);
   }
 
@@ -771,7 +771,7 @@ class TrackStateProxy {
   /// @warning The dynamic matrix has a runtime overhead!
   /// @return The effective calibrated measurement vector
   ConstEffectiveCalibrated effectiveCalibrated() const {
-    assert(has<hashString("calibrated")>());
+    assert(has<detail_tsp::kCalibratedKey>());
     return m_traj->self().effectiveCalibrated(m_istate);
   }
 
@@ -780,7 +780,7 @@ class TrackStateProxy {
   /// @warning The dynamic matrix has a runtime overhead!
   /// @return The effective calibrated covariance matrix
   EffectiveCalibratedCovariance effectiveCalibratedCovariance() {
-    assert(has<hashString("calibratedCov")>());
+    assert(has<detail_tsp::kCalibratedCovKey>());
     return m_traj->self().effectiveCalibratedCovariance(m_istate);
   }
 
@@ -789,7 +789,7 @@ class TrackStateProxy {
   /// @warning The dynamic matrix has a runtime overhead!
   /// @return The effective calibrated covariance matrix
   ConstEffectiveCalibratedCovariance effectiveCalibratedCovariance() const {
-    assert(has<hashString("calibratedCov")>());
+    assert(has<detail_tsp::kCalibratedCovKey>());
     return m_traj->self().effectiveCalibratedCovariance(m_istate);
   }
 
@@ -965,20 +965,22 @@ class TrackStateProxy {
       }
     } else {
       if (ACTS_CHECK_BIT(mask, PM::Predicted) &&
-          has<hashString("predicted")>() &&
-          other.template has<hashString("predicted")>()) {
+          has<detail_tsp::kPredictedKey>() &&
+          other.template has<detail_tsp::kPredictedKey>()) {
         predicted() = other.predicted();
         predictedCovariance() = other.predictedCovariance();
       }
 
-      if (ACTS_CHECK_BIT(mask, PM::Filtered) && has<hashString("filtered")>() &&
-          other.template has<hashString("filtered")>()) {
+      if (ACTS_CHECK_BIT(mask, PM::Filtered) &&
+          has<detail_tsp::kFilteredKey>() &&
+          other.template has<detail_tsp::kFilteredKey>()) {
         filtered() = other.filtered();
         filteredCovariance() = other.filteredCovariance();
       }
 
-      if (ACTS_CHECK_BIT(mask, PM::Smoothed) && has<hashString("smoothed")>() &&
-          other.template has<hashString("smoothed")>()) {
+      if (ACTS_CHECK_BIT(mask, PM::Smoothed) &&
+          has<detail_tsp::kSmoothedKey>() &&
+          other.template has<detail_tsp::kSmoothedKey>()) {
         smoothed() = other.smoothed();
         smoothedCovariance() = other.smoothedCovariance();
       }
@@ -987,15 +989,16 @@ class TrackStateProxy {
         setUncalibratedSourceLink(other.getUncalibratedSourceLink());
       }
 
-      if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
-          other.template has<hashString("jacobian")>()) {
+      if (ACTS_CHECK_BIT(mask, PM::Jacobian) &&
+          has<detail_tsp::kJacobianKey>() &&
+          other.template has<detail_tsp::kJacobianKey>()) {
         jacobian() = other.jacobian();
       }
 
       // NOTE: we should not check hasCalibrated on this, since it
       // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
-          other.template has<hashString("calibrated")>()) {
+          other.template has<detail_tsp::kCalibratedKey>()) {
         visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
           allocateCalibrated(
