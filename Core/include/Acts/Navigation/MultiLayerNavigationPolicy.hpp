@@ -8,10 +8,9 @@
 
 #pragma once
 
-#include "Acts/Geometry/IndexGridFiller.hpp"
+#include "Acts/Geometry/IndexGrid.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
-#include "Acts/Navigation/IndexGridNavigation.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/Grid.hpp"
@@ -27,8 +26,9 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   using GridType = Grid<std::vector<std::size_t>,
                         Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
                         Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
+
   /// Type alias for indexed surfaces navigation updater
-  using IndexedUpdatorType = IndexGridNavigation<GridType>;
+  using IndexedUpdatorType = IndexGrid<GridType>;
 
   struct Config {
     // The binning expansion for grid neighbor lookups
