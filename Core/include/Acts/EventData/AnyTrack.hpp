@@ -426,6 +426,8 @@ class AnyTrack {
     return component<unsigned int, detail_tp::kMeasurementsKey>();
   }
 
+  /// Get a mutable reference to the number of measurements
+  /// @return Mutable number of measurements
   unsigned int& nMeasurements()
     requires(!ReadOnly)
   {
@@ -438,6 +440,8 @@ class AnyTrack {
     return component<unsigned int, detail_tp::kHolesKey>();
   }
 
+  /// Get a mutable reference to the number of holes
+  /// @return Mutable number of holes
   unsigned int& nHoles()
     requires(!ReadOnly)
   {
@@ -450,6 +454,8 @@ class AnyTrack {
     return component<unsigned int, detail_tp::kOutliersKey>();
   }
 
+  /// Get a mutable reference to the number of outliers
+  /// @return Mutable number of outliers
   unsigned int& nOutliers()
     requires(!ReadOnly)
   {
@@ -462,6 +468,8 @@ class AnyTrack {
     return component<unsigned int, detail_tp::kSharedHitsKey>();
   }
 
+  /// Get a mutable reference to the number of shared hits
+  /// @return Mutable number of shared hits
   unsigned int& nSharedHits()
     requires(!ReadOnly)
   {
@@ -472,6 +480,8 @@ class AnyTrack {
   /// @return The chi2 value
   const float& chi2() const { return component<float, detail_tp::kChi2Key>(); }
 
+  /// Get a mutable reference to the chi2 value
+  /// @return Mutable chi2 value
   float& chi2()
     requires(!ReadOnly)
   {
@@ -484,6 +494,8 @@ class AnyTrack {
     return component<unsigned int, detail_tp::kNdfKey>();
   }
 
+  /// Get a mutable reference to the number of degrees of freedom
+  /// @return Mutable number of degrees of freedom
   unsigned int& nDoF()
     requires(!ReadOnly)
   {

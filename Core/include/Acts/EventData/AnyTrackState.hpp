@@ -353,6 +353,9 @@ class AnyTrackState {
 
   using ContainerPointer = std::conditional_t<ReadOnly, const void*, void*>;
 
+  /// Construct an `AnyTrackState` from a concrete track-state proxy.
+  /// @tparam track_state_proxy_t Proxy type satisfying the concept.
+  /// @param ts Proxy that supplies the trajectory backend and index.
   template <TrackStateProxyConcept track_state_proxy_t>
     requires(ReadOnly || !track_state_proxy_t::ReadOnly)
   explicit AnyTrackState(const track_state_proxy_t& ts)
@@ -367,44 +370,77 @@ class AnyTrackState {
     m_handler = &detail_anytstate::TrackStateHandler<trajectory_t>::instance();
   }
 
+  /// Get the index of the underlying track state.
+  /// @return Track state index within its container.
   TrackIndexType index() const { return m_index; }
 
+  /// Check if a compile-time keyed component exists on this track state.
+  /// @tparam key Component key encoded as a hashed string literal.
+  /// @return True if the component is available.
   template <HashedString key>
   bool has() const {
     return constHandler()->has(containerPtr(), m_index, key);
   }
 
+  /// Check if a hashed component exists on this track state.
+  /// @param key Component identifier.
+  /// @return True if the component is available.
   bool has(HashedString key) const {
     return constHandler()->has(containerPtr(), m_index, key);
   }
 
+  /// Check if a string-named component exists on this track state.
+  /// @param key Component identifier as a string.
+  /// @return True if the component is available.
   bool has(std::string_view key) const { return has(hashStringDynamic(key)); }
 
+  /// Check if the trajectory container exposes a column.
+  /// @param key Column identifier.
+  /// @return True if the column exists.
   bool hasColumn(HashedString key) const {
     return constHandler()->hasColumn(containerPtr(), key);
   }
 
+  /// Check if the trajectory container exposes a column.
+  /// @param key Column identifier as a string.
+  /// @return True if the column exists.
   bool hasColumn(std::string_view key) const {
     return hasColumn(hashStringDynamic(key));
   }
 
+  /// Access a const component through a compile-time key.
+  /// @tparam T Component type.
+  /// @tparam key Component key encoded as a hashed string literal.
+  /// @return Const reference to the requested component.
   template <typename T, HashedString key>
   const T& component() const {
     std::any result = constHandler()->component(containerPtr(), m_index, key);
     return *std::any_cast<const T*>(result);
   }
 
+  /// Access a const component by hashed key.
+  /// @tparam T Component type.
+  /// @param key Component identifier.
+  /// @return Const reference to the requested component.
   template <typename T>
   const T& component(HashedString key) const {
     std::any result = constHandler()->component(containerPtr(), m_index, key);
     return *std::any_cast<const T*>(result);
   }
 
+  /// Access a const component by string key.
+  /// @tparam T Component type.
+  /// @param key Component identifier as a string.
+  /// @return Const reference to the requested component.
   template <typename T>
   const T& component(std::string_view key) const {
     return component<T>(hashStringDynamic(key));
   }
 
+  /// Access a mutable component through a compile-time key.
+  /// @tparam T Component type.
+  /// @tparam key Component key encoded as a hashed string literal.
+  /// @return Mutable reference to the requested component.
   template <typename T, HashedString key>
   T& component()
     requires(!ReadOnly)
@@ -414,6 +450,10 @@ class AnyTrackState {
     return *std::any_cast<T*>(result);
   }
 
+  /// Access a mutable component by hashed key.
+  /// @tparam T Component type.
+  /// @param key Component identifier.
+  /// @return Mutable reference to the requested component.
   template <typename T>
   T& component(HashedString key)
     requires(!ReadOnly)
@@ -423,6 +463,10 @@ class AnyTrackState {
     return *std::any_cast<T*>(result);
   }
 
+  /// Access a mutable component by string key.
+  /// @tparam T Component type.
+  /// @param key Component identifier as a string.
+  /// @return Mutable reference to the requested component.
   template <typename T>
   T& component(std::string_view key)
     requires(!ReadOnly)
@@ -430,18 +474,26 @@ class AnyTrackState {
     return component<T>(hashStringDynamic(key));
   }
 
+  /// Retrieve the previous track state index in the linked trajectory.
+  /// @return Index of the previous state or `kTrackIndexInvalid`.
   TrackIndexType previous() const {
     return component<TrackIndexType, detail_tsp::kPreviousKey>();
   }
 
+  /// Retrieve a mutable reference to the previous track state index.
+  /// @return Mutable index of the previous state.
   TrackIndexType& previous()
     requires(!ReadOnly)
   {
     return component<TrackIndexType, detail_tsp::kPreviousKey>();
   }
 
+  /// Check whether this state links to a previous state.
+  /// @return True if the previous index is valid.
   bool hasPrevious() const { return previous() != kTrackIndexInvalid; }
 
+  /// Compute the property mask describing which components are present.
+  /// @return Bit mask of available properties.
   TrackStatePropMask getMask() const {
     using PM = TrackStatePropMask;
     PM mask = PM::None;
@@ -463,6 +515,8 @@ class AnyTrackState {
     return mask;
   }
 
+  /// Access the surface the state is referenced to.
+  /// @return Reference surface of the track state.
   const Surface& referenceSurface() const {
     assert(hasReferenceSurface());
     const Surface* surface =
@@ -471,10 +525,14 @@ class AnyTrackState {
     return *surface;
   }
 
+  /// Check whether a reference surface is attached.
+  /// @return True if a valid reference surface exists.
   bool hasReferenceSurface() const {
     return constHandler()->hasReferenceSurface(containerPtr(), m_index);
   }
 
+  /// Assign a new reference surface to the track state.
+  /// @param surface Surface that should be referenced.
   void setReferenceSurface(std::shared_ptr<const Surface> surface)
     requires(!ReadOnly)
   {
@@ -482,11 +540,15 @@ class AnyTrackState {
                                           std::move(surface));
   }
 
+  /// Retrieve the original, uncalibrated source link.
+  /// @return Copy of the stored source link.
   SourceLink getUncalibratedSourceLink() const {
     assert(has(detail_tsp::kUncalibratedKey));
     return constHandler()->getUncalibratedSourceLink(containerPtr(), m_index);
   }
 
+  /// Store an uncalibrated source link on this state.
+  /// @param sourceLink Source link to copy into the track state.
   void setUncalibratedSourceLink(SourceLink sourceLink)
     requires(!ReadOnly)
   {
@@ -494,22 +556,38 @@ class AnyTrackState {
                                                 std::move(sourceLink));
   }
 
+  /// Check for presence of predicted track parameters.
+  /// @return True if the predicted component exists.
   bool hasPredicted() const { return has(detail_tsp::kPredictedKey); }
 
+  /// Check for presence of filtered track parameters.
+  /// @return True if the filtered component exists.
   bool hasFiltered() const { return has(detail_tsp::kFilteredKey); }
 
+  /// Check for presence of smoothed track parameters.
+  /// @return True if the smoothed component exists.
   bool hasSmoothed() const { return has(detail_tsp::kSmoothedKey); }
 
+  /// Check for presence of a transport Jacobian.
+  /// @return True if a Jacobian is stored.
   bool hasJacobian() const { return has(detail_tsp::kJacobianKey); }
 
+  /// Check for presence of a measurement projector.
+  /// @return True if projector indices are stored.
   bool hasProjector() const { return has(detail_tsp::kProjectorKey); }
 
+  /// Check for presence of calibrated measurement data.
+  /// @return True if calibrated measurements exist.
   bool hasCalibrated() const { return has(detail_tsp::kCalibratedKey); }
 
+  /// Retrieve the measurement dimension of the calibrated data.
+  /// @return Number of calibrated measurement entries.
   TrackIndexType calibratedSize() const {
     return constHandler()->calibratedSize(containerPtr(), m_index);
   }
 
+  /// Allocate memory for runtime-dimension calibrated data.
+  /// @param measdim Number of measurement rows to reserve.
   void allocateCalibrated(std::size_t measdim)
     requires(!ReadOnly)
   {
@@ -519,6 +597,11 @@ class AnyTrackState {
         static_cast<TrackIndexType>(measdim);
   }
 
+  /// Allocate and initialize calibrated data from static-size Eigen objects.
+  /// @tparam val_t Eigen vector type holding calibrated values.
+  /// @tparam cov_t Eigen matrix type holding the covariance.
+  /// @param val Vector to copy into the calibrated storage.
+  /// @param cov Covariance matrix to copy into the calibrated storage.
   template <typename val_t, typename cov_t>
   void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov)
@@ -535,6 +618,8 @@ class AnyTrackState {
     calibratedCovariance<measdim>() = cov;
   }
 
+  /// Access the calibrated measurement values with runtime dimension.
+  /// @return Eigen map referencing the calibrated measurement vector.
   ConstEffectiveCalibratedMap effectiveCalibrated() const {
     const double* data =
         constHandler()->calibratedData(containerPtr(), m_index);
@@ -542,6 +627,8 @@ class AnyTrackState {
     return ConstEffectiveCalibratedMap(data, size);
   }
 
+  /// Access mutable calibrated measurement values with runtime dimension.
+  /// @return Eigen map referencing the calibrated measurement vector.
   MutableEffectiveCalibratedMap effectiveCalibrated()
     requires(!ReadOnly)
   {
@@ -551,6 +638,8 @@ class AnyTrackState {
     return MutableEffectiveCalibratedMap(data, size);
   }
 
+  /// Access the calibrated covariance with runtime dimension.
+  /// @return Eigen map referencing the measurement covariance matrix.
   ConstEffectiveCalibratedCovarianceMap effectiveCalibratedCovariance() const {
     const double* data =
         constHandler()->calibratedCovarianceData(containerPtr(), m_index);
@@ -558,6 +647,8 @@ class AnyTrackState {
     return ConstEffectiveCalibratedCovarianceMap(data, size, size);
   }
 
+  /// Access mutable calibrated covariance with runtime dimension.
+  /// @return Eigen map referencing the measurement covariance matrix.
   MutableEffectiveCalibratedCovarianceMap effectiveCalibratedCovariance()
     requires(!ReadOnly)
   {
@@ -567,6 +658,8 @@ class AnyTrackState {
     return MutableEffectiveCalibratedCovarianceMap(data, size, size);
   }
 
+  /// Decode the measurement projector indices.
+  /// @return Bound parameter indices used for projection.
   BoundSubspaceIndices projectorSubspaceIndices() const {
     assert(hasProjector());
     const auto& serialized =
@@ -574,6 +667,9 @@ class AnyTrackState {
     return deserializeSubspaceIndices<eBoundSize>(serialized);
   }
 
+  /// Store subspace indices describing the measurement projector.
+  /// @tparam index_range_t Range of indices to encode.
+  /// @param indices Collection of bound indices forming the projector rows.
   template <std::ranges::sized_range index_range_t>
     requires(!ReadOnly)
   void setProjectorSubspaceIndices(const index_range_t& indices) {
@@ -583,6 +679,8 @@ class AnyTrackState {
         static_cast<TrackIndexType>(indices.size());
   }
 
+  /// Access the best available parameters (smoothed, filtered, or predicted).
+  /// @return Bound parameter map for the state.
   ConstParametersMap parameters() const {
     if (hasSmoothed()) {
       return smoothed();
@@ -592,6 +690,8 @@ class AnyTrackState {
     return predicted();
   }
 
+  /// Access the best available covariance (smoothed, filtered, or predicted).
+  /// @return Bound covariance map for the state.
   ConstCovarianceMap covariance() const {
     if (hasSmoothed()) {
       return smoothedCovariance();
@@ -601,11 +701,15 @@ class AnyTrackState {
     return predictedCovariance();
   }
 
+  /// Access the transport Jacobian.
+  /// @return Const map referencing the Jacobian matrix.
   ConstCovarianceMap jacobian() const {
     assert(hasJacobian());
     return constHandler()->jacobian(containerPtr(), m_index);
   }
 
+  /// Access the transport Jacobian.
+  /// @return Mutable map referencing the Jacobian matrix.
   CovarianceMap jacobian()
     requires(!ReadOnly)
   {
@@ -613,88 +717,120 @@ class AnyTrackState {
     return mutableHandler()->jacobian(mutableContainerPtr(), m_index);
   }
 
+  /// Retrieve the accumulated path length.
+  /// @return Path length stored on the state.
   double pathLength() const {
     return component<double, detail_tsp::kPathLengthKey>();
   }
 
+  /// Retrieve a mutable reference to the accumulated path length.
+  /// @return Mutable path length.
   double& pathLength()
     requires(!ReadOnly)
   {
     return component<double, detail_tsp::kPathLengthKey>();
   }
 
+  /// Access the predicted parameter vector.
+  /// @return Bound parameter map for the predicted state.
   ConstParametersMap predicted() const {
     assert(hasPredicted());
     return parametersFromComponent(detail_tsp::kPredictedKey);
   }
 
+  /// Access the predicted parameter vector.
+  /// @return Mutable bound parameter map for the predicted state.
   ParametersMap predicted()
     requires(!ReadOnly)
   {
     return mutableParametersFromComponent(detail_tsp::kPredictedKey);
   }
 
+  /// Access the predicted covariance matrix.
+  /// @return Bound covariance map for the predicted state.
   ConstCovarianceMap predictedCovariance() const {
     assert(hasPredicted());
     return covarianceFromComponent(detail_tsp::kPredictedKey);
   }
 
+  /// Access the predicted covariance matrix.
+  /// @return Mutable bound covariance map for the predicted state.
   CovarianceMap predictedCovariance()
     requires(!ReadOnly)
   {
     return mutableCovarianceFromComponent(detail_tsp::kPredictedKey);
   }
 
+  /// Access the filtered parameter vector.
+  /// @return Bound parameter map for the filtered state.
   ConstParametersMap filtered() const {
     assert(hasFiltered());
     return parametersFromComponent(detail_tsp::kFilteredKey);
   }
 
+  /// Access the filtered parameter vector.
+  /// @return Mutable bound parameter map for the filtered state.
   ParametersMap filtered()
     requires(!ReadOnly)
   {
     return mutableParametersFromComponent(detail_tsp::kFilteredKey);
   }
 
+  /// Access the filtered covariance matrix.
+  /// @return Bound covariance map for the filtered state.
   ConstCovarianceMap filteredCovariance() const {
     assert(hasFiltered());
     return covarianceFromComponent(detail_tsp::kFilteredKey);
   }
 
+  /// Access the filtered covariance matrix.
+  /// @return Mutable bound covariance map for the filtered state.
   CovarianceMap filteredCovariance()
     requires(!ReadOnly)
   {
     return mutableCovarianceFromComponent(detail_tsp::kFilteredKey);
   }
 
+  /// Access the smoothed parameter vector.
+  /// @return Bound parameter map for the smoothed state.
   ConstParametersMap smoothed() const {
     assert(hasSmoothed());
     return parametersFromComponent(detail_tsp::kSmoothedKey);
   }
 
+  /// Access the smoothed parameter vector.
+  /// @return Mutable bound parameter map for the smoothed state.
   ParametersMap smoothed()
     requires(!ReadOnly)
   {
     return mutableParametersFromComponent(detail_tsp::kSmoothedKey);
   }
 
+  /// Access the smoothed covariance matrix.
+  /// @return Bound covariance map for the smoothed state.
   ConstCovarianceMap smoothedCovariance() const {
     assert(hasSmoothed());
     return covarianceFromComponent(detail_tsp::kSmoothedKey);
   }
 
+  /// Access the smoothed covariance matrix.
+  /// @return Mutable bound covariance map for the smoothed state.
   CovarianceMap smoothedCovariance()
     requires(!ReadOnly)
   {
     return mutableCovarianceFromComponent(detail_tsp::kSmoothedKey);
   }
 
+  /// Retrieve the track-state type flags.
+  /// @return Bit mask describing the state type.
   ConstTrackStateType typeFlags() const {
     const auto raw =
         component<TrackStateType::raw_type, detail_tsp::kTypeFlagsKey>();
     return ConstTrackStateType{raw};
   }
 
+  /// Retrieve mutable track-state type flags.
+  /// @return Mutable bit mask describing the state type.
   TrackStateType typeFlags()
     requires(!ReadOnly)
   {
@@ -703,14 +839,21 @@ class AnyTrackState {
     return TrackStateType{raw};
   }
 
+  /// Retrieve the local chi2 contribution.
+  /// @return Chi2 value associated with this state.
   float chi2() const { return component<float, detail_tsp::kChi2Key>(); }
 
+  /// Retrieve a mutable reference to the local chi2 contribution.
+  /// @return Mutable chi2 value.
   float& chi2()
     requires(!ReadOnly)
   {
     return component<float, detail_tsp::kChi2Key>();
   }
 
+  /// Access calibrated measurement data with compile-time dimension.
+  /// @tparam measdim Measurement dimension.
+  /// @return Eigen map referencing the calibrated measurement vector.
   template <std::size_t measdim>
   typename TrackStateTraits<measdim, true>::Calibrated calibrated() const {
     assert(calibratedSize() == static_cast<TrackIndexType>(measdim));
@@ -719,6 +862,9 @@ class AnyTrackState {
     return typename TrackStateTraits<measdim, true>::Calibrated(data);
   }
 
+  /// Access calibrated measurement data with compile-time dimension.
+  /// @tparam measdim Measurement dimension.
+  /// @return Mutable Eigen map referencing the calibrated measurement vector.
   template <std::size_t measdim>
   typename TrackStateTraits<measdim, false>::Calibrated calibrated()
     requires(!ReadOnly)
@@ -729,6 +875,9 @@ class AnyTrackState {
     return typename TrackStateTraits<measdim, false>::Calibrated(data);
   }
 
+  /// Access calibrated covariance data with compile-time dimension.
+  /// @tparam measdim Measurement dimension.
+  /// @return Eigen map referencing the covariance matrix.
   template <std::size_t measdim>
   typename TrackStateTraits<measdim, true>::CalibratedCovariance
   calibratedCovariance() const {
@@ -738,6 +887,9 @@ class AnyTrackState {
     return typename TrackStateTraits<measdim, true>::CalibratedCovariance(data);
   }
 
+  /// Access calibrated covariance data with compile-time dimension.
+  /// @tparam measdim Measurement dimension.
+  /// @return Mutable Eigen map referencing the covariance matrix.
   template <std::size_t measdim>
   typename TrackStateTraits<measdim, false>::CalibratedCovariance
   calibratedCovariance()
@@ -750,6 +902,8 @@ class AnyTrackState {
         typename TrackStateTraits<measdim, false>::CalibratedCovariance(data);
   }
 
+  /// Remove dynamic components according to a mask.
+  /// @param target Property mask describing which components to drop.
   void unset(TrackStatePropMask target)
     requires(!ReadOnly)
   {
