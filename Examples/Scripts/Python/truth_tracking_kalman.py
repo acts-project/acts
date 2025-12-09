@@ -36,6 +36,7 @@ def runTruthTrackingKalman(
 
     from acts.examples.root import (
         RootParticleReader,
+        RootSimHitReader,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
         RootTrackFitterPerformanceWriter,
