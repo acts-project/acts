@@ -23,6 +23,7 @@ void addExampleAlgorithms(py::module& mex);
 void addDetector(py::module& mex);
 void addDigitization(py::module& mex);
 void addMaterialMapping(py::module& mex);
+void addPropagation(py::module& mex);
 void addTrackFitting(py::module& mex);
 void addTrackFinding(py::module& mex);
 void addTruthTracking(py::module& mex);
@@ -46,6 +47,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
   addDetector(mex);
   addDigitization(mex);
   addMaterialMapping(mex);
+  addPropagation(mex);
   addTrackFitting(mex);
   addTrackFinding(mex);
   addTruthTracking(mex);
