@@ -277,10 +277,15 @@ class Navigator {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
-      /// Ensure that the 
+      /// Ensure that the free surfaces become available again
       std::ranges::for_each(freeCandidates, [&](NavigationTarget& target) {
-        // if (target.path)
-            // target.pathLength() = std::max(target.pathLength(), options.nearLimit + s_epsilon);
+        if (target.pathLength() > options.nearLimit) {
+          return;
+        }
+        Intersection<3> newIsect{
+            target.position(), options.nearLimit + s_epsilon, target.status()};
+        target = NavigationTarget{newIsect, target.intersectionIndex(),
+                                  target.surface(), target.boundaryTolerance()};
       });
     }
   };
@@ -847,7 +852,23 @@ class Navigator {
 
     state.currentVolume->initializeNavigationCandidates(
         state.options.geoContext, args, appendOnly, logger());
+    /// Add the external surfaces from the volume as extra candidates
+    if (!state.options.externalSurfaces.empty()) {
+      const auto volId = state.currentVolume->geometryId().volume();
 
+      std::ranges::for_each(state.options.externalSurfaces,
+                            [&](const GeometryIdentifier& extId) {
+                              if (extId.volume() != volId) {
+                                return;
+                              }
+                              const Surface* extSurface =
+                                  m_cfg.trackingGeometry->findSurface(extId);
+                              assert(extSurface != nullptr);
+
+                              appendOnly.addSurfaceCandidate(
+                                  *extSurface, BoundaryTolerance::Infinite());
+                            });
+    }
     ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                                 << " navigation candidates.");
 
@@ -915,7 +936,7 @@ class Navigator {
                                const Vector3& direction) const {
     std::ranges::for_each(state.freeCandidates, [&](NavigationTarget& target) {
       if (target.pathLength() < state.options.nearLimit) {
-          return;
+        return;
       }
       auto [intersection, intersectionIndex] =
           target.surface()

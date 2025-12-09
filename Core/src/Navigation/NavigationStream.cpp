@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
+#include <unordered_set>
 
 namespace Acts {
 
@@ -28,9 +29,15 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   // A container collecting additional candidates from multiple
   // valid intersections
   std::vector<NavigationTarget> additionalCandidates = {};
+  additionalCandidates.reserve(m_candidates.size());
+  std::unordered_set<GeometryIdentifier> processed{};
   for (auto& candidate : m_candidates) {
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
+    // Check whether the surface already has been processed
+    if (!processed.insert(surface.geometryId()).second) {
+      continue;
+    }
     // Intersect the surface
     auto multiIntersection = surface.intersect(gctx, position, direction,
                                                cTolerance, onSurfaceTolerance);
@@ -80,9 +87,6 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   m_candidates.insert(m_candidates.end(), additionalCandidates.begin(),
                       additionalCandidates.end());
 
-  // Sort the candidates by path length
-  std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
-
   // If we have duplicates, we expect them to be close by in path length, so we
   // don't need to re-sort Remove duplicates on basis of the surface pointer
   auto nonUniqueRange = std::ranges::unique(
@@ -91,6 +95,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
         return &a.surface() == &b.surface();
       });
   m_candidates.erase(nonUniqueRange.begin(), nonUniqueRange.end());
+
+  // Sort the candidates by path length
+  std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
 
   // The we find the first invalid candidate
   auto firstInvalid = std::ranges::find_if(
