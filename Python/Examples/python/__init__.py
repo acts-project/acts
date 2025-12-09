@@ -11,8 +11,10 @@ from acts._adapter import _patch_config
 
 _patch_config(ActsExamplesPythonBindings)
 
+_propagators = []
 _concrete_propagators = []
 for stepper in ("Eigen", "Atlas", "StraightLine", "Sympy"):
+    _propagators.append(getattr(acts, f"{stepper}Propagator"))
     _concrete_propagators.append(
         getattr(
             ActsExamplesPythonBindings,
