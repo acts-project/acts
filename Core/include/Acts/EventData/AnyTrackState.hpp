@@ -584,29 +584,10 @@ class AnyTrackState {
   template <std::ranges::sized_range index_range_t>
     requires(!ReadOnly)
   void setProjectorSubspaceIndices(const index_range_t& indices) {
-    storeProjectorIndices(encodeSubspaceIndices(indices),
-                          static_cast<std::size_t>(indices.size()));
-  }
-
-  template <typename Derived>
-  void setProjector(const Eigen::MatrixBase<Derived>& projector)
-    requires(!ReadOnly)
-  {
-    static_assert(Derived::ColsAtCompileTime == eBoundSize,
-                  "Projector must span the bound parameter dimension");
-    std::size_t measdim = static_cast<std::size_t>(projector.rows());
-    auto indices = projectorIndicesFromMatrix(projector.derived(), measdim);
-    storeProjectorIndices(indices, measdim);
-  }
-
-  void setProjectorBitset(ProjectorBitset bitset)
-    requires(!ReadOnly)
-  {
-    std::bitset<eBoundSize * eBoundSize> bs(bitset);
-    const auto matrix = bitsetToMatrix<ActsMatrix<eBoundSize, eBoundSize>>(bs);
-    std::size_t measdim = eBoundSize;
-    auto indices = projectorIndicesFromMatrix(matrix, measdim);
-    storeProjectorIndices(indices, measdim);
+    component<SerializedSubspaceIndices, detail_tsp::kProjectorKey>() =
+        serializeSubspaceIndices<eBoundSize>(indices);
+    component<TrackIndexType, detail_tsp::kMeasDimKey>() =
+        static_cast<TrackIndexType>(indices.size());
   }
 
   ConstParametersMap parameters() const {
@@ -739,8 +720,7 @@ class AnyTrackState {
 
   template <std::size_t measdim>
   typename TrackStateTraits<measdim, true>::Calibrated calibrated() const {
-    [[maybe_unused]] const auto size = calibratedSize();
-    assert(size == static_cast<TrackIndexType>(measdim));
+    assert(calibratedSize() == static_cast<TrackIndexType>(measdim));
     const double* data =
         constHandler()->calibratedData(containerPtr(), m_index);
     return typename TrackStateTraits<measdim, true>::Calibrated(data);
@@ -750,8 +730,7 @@ class AnyTrackState {
   typename TrackStateTraits<measdim, false>::Calibrated calibrated()
     requires(!ReadOnly)
   {
-    [[maybe_unused]] const auto size = calibratedSize();
-    assert(size == static_cast<TrackIndexType>(measdim));
+    assert(calibratedSize() == static_cast<TrackIndexType>(measdim));
     double* data =
         mutableHandler()->calibratedDataMutable(mutableContainerPtr(), m_index);
     return typename TrackStateTraits<measdim, false>::Calibrated(data);
@@ -760,8 +739,7 @@ class AnyTrackState {
   template <std::size_t measdim>
   typename TrackStateTraits<measdim, true>::CalibratedCovariance
   calibratedCovariance() const {
-    [[maybe_unused]] const auto size = calibratedSize();
-    assert(size == static_cast<TrackIndexType>(measdim));
+    assert(calibratedSize() == static_cast<TrackIndexType>(measdim));
     const double* data =
         constHandler()->calibratedCovarianceData(containerPtr(), m_index);
     return typename TrackStateTraits<measdim, true>::CalibratedCovariance(data);
@@ -772,8 +750,7 @@ class AnyTrackState {
   calibratedCovariance()
     requires(!ReadOnly)
   {
-    [[maybe_unused]] const auto size = calibratedSize();
-    assert(size == static_cast<TrackIndexType>(measdim));
+    assert(calibratedSize() == static_cast<TrackIndexType>(measdim));
     double* data = mutableHandler()->calibratedCovarianceDataMutable(
         mutableContainerPtr(), m_index);
     return
@@ -789,65 +766,6 @@ class AnyTrackState {
  private:
   template <bool>
   friend class AnyTrackState;
-
-  template <std::ranges::sized_range index_range_t>
-  BoundSubspaceIndices encodeSubspaceIndices(
-      const index_range_t& indices) const {
-    if (indices.size() > eBoundSize) {
-      throw std::out_of_range("Projector dimension exceeds bound parameters");
-    }
-    BoundSubspaceIndices bound = kBoundSubspaceIndicesInvalid;
-    std::size_t pos = 0;
-    for (auto index : indices) {
-      auto converted = static_cast<std::uint8_t>(index);
-      if (converted >= eBoundSize) {
-        throw std::out_of_range("Projector index out of range");
-      }
-      bound[pos++] = converted;
-    }
-    for (; pos < eBoundSize; ++pos) {
-      bound[pos] = static_cast<std::uint8_t>(eBoundSize);
-    }
-    return bound;
-  }
-
-  template <typename Derived>
-  BoundSubspaceIndices projectorIndicesFromMatrix(
-      const Eigen::MatrixBase<Derived>& projector, std::size_t& measdim) const {
-    BoundSubspaceIndices indices = kBoundSubspaceIndicesInvalid;
-    measdim = 0;
-    const auto rows = static_cast<std::size_t>(projector.rows());
-    for (std::size_t row = 0; row < rows; ++row) {
-      std::optional<std::uint8_t> chosen;
-      for (std::size_t col = 0;
-           col < static_cast<std::size_t>(projector.cols()); ++col) {
-        if (projector(row, col) != 0.) {
-          chosen = static_cast<std::uint8_t>(col);
-          break;
-        }
-      }
-      if (!chosen) {
-        throw std::invalid_argument(
-            "Projector matrix row does not define a subspace index");
-      }
-      indices[row] = *chosen;
-      ++measdim;
-    }
-    for (std::size_t row = rows; row < eBoundSize; ++row) {
-      indices[row] = static_cast<std::uint8_t>(eBoundSize);
-    }
-    return indices;
-  }
-
-  void storeProjectorIndices(const BoundSubspaceIndices& indices,
-                             std::size_t measdim)
-    requires(!ReadOnly)
-  {
-    component<SerializedSubspaceIndices, detail_tsp::kProjectorKey>() =
-        serializeSubspaceIndices<eBoundSize>(indices);
-    component<TrackIndexType, detail_tsp::kMeasDimKey>() =
-        static_cast<TrackIndexType>(measdim);
-  }
 
   TrackIndexType componentIndexValue(HashedString key) const {
     assert(has(key));
