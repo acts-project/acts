@@ -1,6 +1,5 @@
-@defgroup contribution_spack Building with Spack
+@page howto_spack Building with Spack
 @brief Guide to building ACTS with Spack
-@ingroup contribution
 
 # Building with Spack
 

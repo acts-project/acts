@@ -4,19 +4,19 @@
   <!-- Navigation index tabs for HTML output -->
   <navindex>
     <tab type="mainpage" visible="yes" title=""/>
-    <tab type="pages" visible="yes" title="" intro=""/>
+    <!-- <tab type="pages" visible="yes" title="" intro=""/> -->
 
-    <!-- <tab type="usergroup" title="Contribution"> -->
-    <!-- <tab type="user" url="@ref contribution_guide" visible="yes" title="Guide"/> -->
-    <!--   <tab type="user" url="@ref contribution_guide" visible="yes" title="Guide"/> -->
-    <!--   <tab type="user" url="@ref clang_tidy" visible="yes" title="Clang Tidy"/> -->
-    <!--   <tab type="user" url="@ref howto_release" visible="yes" title="Make a release"/> -->
-    <!--   <tab type="user" url="@ref howto_format" visible="yes" title="Code formatting"/> -->
-    <!-- </tab> -->
+    <tab type="usergroup" title="Contribution" url="[none]">
+      <tab type="user" url="@ref contribution_clang_tidy" visible="yes" title="Clang Tidy"/>
+      <tab type="user" url="@ref howto_profiling" visible="yes" title="Profiling"/>
+      <tab type="user" url="@ref howto_release" visible="yes" title="How to make a release"/>
+      <tab type="user" url="@ref formatting" visible="yes" title="Source code formatting"/>
+      <tab type="user" url="@ref howto_spack" visible="yes" title="Building with Spack"/>
+      <tab type="user" url="@ref physmon" visible="yes" title="Physics performance monitoring"/>
+    </tab>
 
-    <!-- <tab type="usergroup" title="Miscellaneous"> -->
-    <!--   <tab type="user" url="@ref spack" visible="yes" title="Spack"/> -->
-    <!-- </tab> -->
+    <tab type="usergroup" title="Examples" url="[none]">
+    </tab>
 
     <tab type="topics" visible="yes" title="" intro=""/>
 

@@ -1,5 +1,4 @@
-@defgroup contribution_release How to make a release
-@ingroup contribution
+@page howto_release How to make a release
 @brief Instructions on how to make a new ACTS release
 
 We use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) for all of our PRs. We use the common prefixes: `fix:`, `feat:`, `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`.

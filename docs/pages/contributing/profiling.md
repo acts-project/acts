@@ -1,6 +1,5 @@
-@defgroup howto_profiling Performance Profiling
+@page howto_profiling Performance Profiling
 @brief Guide on using `gperftools` and `pprof` for profiling ACTS
-@ingroup contribution
 
 Software profiling allows you to inspect the performance of a piece of software, seeing where the bottlenecks are and how they can be improved.
 gperftools is a software profiling package. It contains a CPU profiler, thread-caching malloc library, memory leak detection tool, memory allocation profiler and pprof (discussed later). More information about gperftools and its components can be found on the project's [GitHub](https://github.com/gperftools/gperftools) and [documentation page](https://gperftools.github.io/gperftools/).
