@@ -12,22 +12,19 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
-#include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
 #include <cassert>
 #include <cmath>
-#include <memory>
 #include <type_traits>
 
 namespace Acts {
 
 class Surface;
 
-namespace detail {
+namespace detail_anytrack {
 
 using ParametersMap = detail_tpc::ParametersMap;
 using ConstParametersMap = detail_tpc::ConstParametersMap;
@@ -186,7 +183,7 @@ class TrackHandler final : public TrackHandlerMutableBase {
   TrackHandler() = default;
 };
 
-}  // namespace detail
+}  // namespace detail_anytrack
 
 /// Type-erased track object
 /// This class provides a type-erased interface to track proxies without
@@ -219,20 +216,21 @@ class AnyTrack {
   using ConstTrackHandle = AnyTrack<true>;
   using ConstProxyType = AnyTrack<true>;
 
-  using ParametersMap = detail::ParametersMap;
-  using ConstParametersMap = detail::ConstParametersMap;
-  using CovarianceMap = detail::CovarianceMap;
-  using ConstCovarianceMap = detail::ConstCovarianceMap;
+  using ParametersMap = detail_anytrack::ParametersMap;
+  using ConstParametersMap = detail_anytrack::ConstParametersMap;
+  using CovarianceMap = detail_anytrack::CovarianceMap;
+  using ConstCovarianceMap = detail_anytrack::ConstCovarianceMap;
 
   using ContainerPointer = std::conditional_t<ReadOnly, const void*, void*>;
   using HandlerPointer =
-      std::conditional_t<ReadOnly, const detail::TrackHandlerConstBase*,
-                         const detail::TrackHandlerMutableBase*>;
+      std::conditional_t<ReadOnly,
+                         const detail_anytrack::TrackHandlerConstBase*,
+                         const detail_anytrack::TrackHandlerMutableBase*>;
 
   class ContainerView {
    public:
     ContainerView() = default;
-    ContainerView(const detail::TrackHandlerConstBase* handler,
+    ContainerView(const detail_anytrack::TrackHandlerConstBase* handler,
                   const void* container)
         : m_handler(handler), m_container(container) {}
 
@@ -242,7 +240,7 @@ class AnyTrack {
     }
 
    private:
-    const detail::TrackHandlerConstBase* m_handler = nullptr;
+    const detail_anytrack::TrackHandlerConstBase* m_handler = nullptr;
     const void* m_container = nullptr;
   };
 
@@ -299,7 +297,7 @@ class AnyTrack {
     } else {
       m_container = static_cast<void*>(containerPtr);
     }
-    m_handler = &detail::TrackHandler<container_t>::instance();
+    m_handler = &detail_anytrack::TrackHandler<container_t>::instance();
   }
 
   /// Check if the track is valid
@@ -630,20 +628,15 @@ class AnyTrack {
     return *std::any_cast<const T*>(result);
   }
 
-  // ContainerView container() const {
-  //   assert(isValid());
-  //   return ContainerView{constHandler(), containerPtr()};
-  // }
-
  private:
   template <bool R>
   friend class AnyTrack;
 
-  const detail::TrackHandlerConstBase* constHandler() const {
+  const detail_anytrack::TrackHandlerConstBase* constHandler() const {
     return m_handler;
   }
 
-  const detail::TrackHandlerMutableBase* mutableHandler() const
+  const detail_anytrack::TrackHandlerMutableBase* mutableHandler() const
     requires(!ReadOnly)
   {
     return m_handler;
