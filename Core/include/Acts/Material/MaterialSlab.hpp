@@ -115,10 +115,11 @@ class MaterialSlab {
                          [[maybe_unused]] bool dummy)
       : m_material(material),
         m_thickness(thickness),
-        m_thicknessInX0((eps < material.X0()) ? (thickness / material.X0())
-                                              : 0),
-        m_thicknessInL0((eps < material.L0()) ? (thickness / material.L0())
-                                              : 0) {}
+        m_thicknessInX0(0),
+        m_thicknessInL0(0) {
+    m_thicknessInX0 = (eps < material.X0()) ? (thickness / material.X0()) : 0;
+    m_thicknessInL0 = (eps < material.L0()) ? (thickness / material.L0()) : 0;
+  }
 
   /// @brief Check if two materials are exactly equal.
   ///
