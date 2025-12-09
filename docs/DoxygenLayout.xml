@@ -13,9 +13,13 @@
       <tab type="user" url="@ref formatting" visible="yes" title="Source code formatting"/>
       <tab type="user" url="@ref howto_spack" visible="yes" title="Building with Spack"/>
       <tab type="user" url="@ref physmon" visible="yes" title="Physics performance monitoring"/>
+      <tab type="user" url="@ref root_file_hashes" visible="yes" title="ROOT file hashes"/>
     </tab>
 
+    <tab type="user" url="@ref versioning" visible="yes" title="Versioning and public API"/>
+
     <tab type="usergroup" title="Examples" url="[none]">
+      <tab type="user" url="@ref python_bindings" visible="yes" title="Python bindings"/>
     </tab>
 
     <tab type="topics" visible="yes" title="" intro=""/>

@@ -1,2 +1,2 @@
-@defgroup fpemonitoring_plugin FpeMonitoring Plugin
+@defgroup fpemonitoring_plugin FPE Monitoring Plugin
 @ingroup plugins
