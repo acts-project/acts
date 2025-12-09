@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/AnyTrackState.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -70,20 +71,8 @@ class GainMatrixUpdater {
     // auto filtered = trackState.filtered();
     // auto filteredCovariance = trackState.filteredCovariance();
 
-    auto [chi2, error] = visitMeasurement(
-        InternalTrackState{
-            trackState.calibratedSize(),
-            // Note that we pass raw pointers here which are used in the correct
-            // shape later
-            trackState.effectiveCalibrated().data(),
-            trackState.effectiveCalibratedCovariance().data(),
-            trackState.projectorSubspaceIndices(),
-            trackState.predicted(),
-            trackState.predictedCovariance(),
-            trackState.filtered(),
-            trackState.filteredCovariance(),
-        },
-        logger);
+    auto [chi2, error] =
+        visitMeasurement(AnyMutableTrackState{trackState}, logger);
 
     trackState.chi2() = chi2;
 
@@ -92,11 +81,11 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      InternalTrackState trackState, const Logger& logger) const;
+      AnyMutableTrackState trackState, const Logger& logger) const;
 
   template <std::size_t N>
   std::tuple<double, std::error_code> visitMeasurementImpl(
-      InternalTrackState trackState, const Logger& logger) const;
+      AnyMutableTrackState trackState, const Logger& logger) const;
 };
 
 }  // namespace Acts

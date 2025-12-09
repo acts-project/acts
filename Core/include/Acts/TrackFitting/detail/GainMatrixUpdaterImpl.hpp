@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/AnyTrackState.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
@@ -20,25 +21,23 @@ namespace Acts {
 
 template <std::size_t N>
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
-    InternalTrackState trackState, const Logger& logger) const {
+    AnyMutableTrackState trackState, const Logger& logger) const {
   double chi2 = 0;
 
   constexpr std::size_t kMeasurementSize = N;
   using ParametersVector = ActsVector<kMeasurementSize>;
   using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
 
-  typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
-      trackState.calibrated};
-  typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
-      calibratedCovariance{trackState.calibratedCovariance};
+  auto calibrated = trackState.calibrated<kMeasurementSize>();
+  auto calibratedCovariance =
+      trackState.calibratedCovariance<kMeasurementSize>();
 
   ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
   ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
   ACTS_VERBOSE("Calibrated measurement covariance:\n" << calibratedCovariance);
 
-  std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
-      trackState.projector.begin(),
-      trackState.projector.begin() + kMeasurementSize);
+  const auto validSubspaceIndices = trackState.projectorSubspaceIndices();
+
   FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
       validSubspaceIndices);
 
@@ -47,8 +46,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 
   ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-  const auto K = (trackState.predictedCovariance * H.transpose() *
-                  (H * trackState.predictedCovariance * H.transpose() +
+  const auto K = (trackState.predictedCovariance() * H.transpose() *
+                  (H * trackState.predictedCovariance() * H.transpose() +
                    calibratedCovariance)
                       .inverse())
                      .eval();
@@ -60,17 +59,17 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
     return {0, KalmanFitterError::UpdateFailed};
   }
 
-  trackState.filtered =
-      trackState.predicted + K * (calibrated - H * trackState.predicted);
+  trackState.filtered() =
+      trackState.predicted() + K * (calibrated - H * trackState.predicted());
   // Normalize phi and theta
-  trackState.filtered = normalizeBoundParameters(trackState.filtered);
-  trackState.filteredCovariance =
-      (BoundSquareMatrix::Identity() - K * H) * trackState.predictedCovariance;
-  ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
-  ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
+  trackState.filtered() = normalizeBoundParameters(trackState.filtered());
+  trackState.filteredCovariance() = (BoundSquareMatrix::Identity() - K * H) *
+                                    trackState.predictedCovariance();
+  ACTS_VERBOSE("Filtered parameters: " << trackState.filtered().transpose());
+  ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance());
 
   ParametersVector residual;
-  residual = calibrated - H * trackState.filtered;
+  residual = calibrated - H * trackState.filtered();
   ACTS_VERBOSE("Residual: " << residual.transpose());
 
   CovarianceMatrix m =
@@ -85,9 +84,9 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 
 // Ensure thet the compiler does not implicitly instantiate the template
 
-#define _EXTERN(N)                                                          \
-  extern template std::tuple<double, std::error_code>                       \
-  GainMatrixUpdater::visitMeasurementImpl<N>(InternalTrackState trackState, \
+#define _EXTERN(N)                                                            \
+  extern template std::tuple<double, std::error_code>                         \
+  GainMatrixUpdater::visitMeasurementImpl<N>(AnyMutableTrackState trackState, \
                                              const Logger& logger) const
 
 _EXTERN(1);
