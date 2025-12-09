@@ -41,9 +41,8 @@ namespace Acts {
 ///      \text{radius} = - \frac{\text{momentum} }{ \text{charge} } / \text{field}
 ///   @f$
 ///
-///   With the chosen magnetic field unit the expression above stays the
-///   same and no additional conversion factors are necessary.
-/// - Amount of substance is expressed in mol.
+/// With the chosen magnetic field unit the expression above stays the
+/// same and no additional conversion factors are necessary.
 ///
 /// Depending on the context a physical quantity might not be given in the
 /// native units. In this case we need to convert to the native unit first
@@ -51,19 +50,7 @@ namespace Acts {
 /// in  @ref Acts::UnitConstants. Multiplying a value with the unit constant
 /// produces the equivalent value in the native unit, e.g.
 ///
-///  ```cpp
-///  double length = 1 * Acts::UnitConstants::m;       // length == 1000.0
-///  double momentum = 100 * Acts::UnitConstants::MeV; // momentum == 0.1
-///  ```
-///
-/// The conversion of a value in native units into the equivalent value in a
-/// specific other unit is computed by dividing with the relevant unit, e.g.
-///
-///
-/// ```cpp
-/// double length = 10.0;                               // native units mm
-/// double lengthInM = length / Acts::UnitConstants::m; // == 0.01;
-/// ```
+/// @snippet{trimleft} examples/units.cpp Using Unit Constants
 ///
 /// To further simplify the usage, physical quantities can also be expressed
 /// via [C++ user
@@ -71,14 +58,7 @@ namespace Acts {
 /// in @ref Acts::UnitLiterals. This allows us to express quantities in a
 /// concise way:
 ///
-/// ```cpp
-/// using namespace Acts::UnitLiterals;
-///
-/// double length = 1_m;                     // == 1000.0
-/// double momentum = 1.25_TeV;              // == 1250.0
-/// double lengthInUm = length / 1_um;       // == 1000000.0
-/// double momentumInMeV = momentum / 1_MeV; // == 1250000.0
-/// ```
+/// @snippet{trimleft} examples/units.cpp Using Unit Literals
 ///
 /// @warning Since using user-defined literals requires a namespace import of
 ///          @ref Acts::UnitLiterals it should not be used in headers since it
@@ -88,50 +68,15 @@ namespace Acts {
 /// To ensure consistent computations and results the following guidelines
 /// **must** be followed when handling physical quantities with units:
 ///
-/// - All unqualified numerical values, i.e. without a unit, are assumed to
-///   be expressed in the relevant native unit, e.g. mm for lengths or GeV
-///   for energy/momentum.
-/// - If a variable stores a physical quantity in a specific unit that is
-///   not the native unit, clearly mark this in the variable, i.e.
+/// @snippet{trimleft} examples/units.cpp Unit Best Practices
 ///
-/// ```cpp
-/// double momentum = 100.0; // momentum is stored as native unit GeV
-/// double momentumInMeV = 10.0; // would be 0.01 in native units
-/// ```
+/// Here's a comprehensive example showing various ways to work with units:
 ///
-/// - All input values must be given as ``numerical_value * unit_constant`` or
-///   equivalently using the unit literals as ``value_unit``. The resulting
-///   unqualified numerical value will be automatically converted to the
-///   native unit.
-/// - To output an unqualified numerical value in the native units as a
-///   numerical value in a specific unit divide by the unit constants as
-///   ``numerical_value / unit_constant`` or using the unit literals as
-///   ``value / 1_unit``.
+/// @snippet{trimleft} examples/units.cpp Comprehensive Units Example
 ///
-/// Examples:
+/// Converting output values from native units:
 ///
-/// ```cpp
-/// #include <Acts/include/Definitions/Units.hpp>
-/// using namespace Acts::UnitLiterals;
-///
-/// // define input values w/ units (via unit constants)
-/// double width    = 12 * Acts::UnitConstants::mm;
-/// double mmuon    = 105.7 * Acts::UnitConstants::MeV;
-/// // define input values w/ units (via unit user literals)
-/// double length   = 23_cm;
-/// double time     = 1214.2_ns;
-/// double angle    = 123_degree;
-/// double momentum = 2.5_TeV;
-/// double mass     = 511_keV;
-/// double velocity = 345_m / 1_s;
-/// double bfield   = 3.9_T;
-///
-/// // convert output values (via unit constants)
-/// double t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
-/// // convert output values (via unit user literals)
-/// double x_in_mm   = trackPars.position()[ePos0] / 1_mm;
-/// double p_in_TeV = trackPars.absoluteMomentum() / 1_TeV;
-/// ```
+/// @snippet{trimleft} examples/units.cpp Converting Output Values
 ///
 /// @note A helper script is available in
 ///   `Core/scripts/print_units_physical_constants.py` to validate some of the
@@ -233,6 +178,8 @@ constexpr double kGauss = 1e-1 * T;
 constexpr double mol = 1.0;
 }  // namespace UnitConstants
 
+/// @brief Namespace for user-defined literals for physical units. See @ref
+///        UnitConstants for details.
 namespace UnitLiterals {
 // define user literal functions for the given unit constant
 #define ACTS_DEFINE_UNIT_LITERAL(name)                       \
