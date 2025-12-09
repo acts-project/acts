@@ -103,9 +103,9 @@ formalism needs to store:
 3. smoothed parameter vector and covariance matrix
 
 In case of combinatorial track finding (see @ref track_finding), specifically
-@ref tracking_ckf), track hypothesis can start out with a common sequence
-of track states, and then branch out when multiple compatible measurements are
-encountered, as seen in the track state picture.
+@ref Acts::CombinatorialKalmanFilter, track hypothesis can start out with a
+common sequence of track states, and then branch out when multiple compatible
+measurements are encountered, as seen in the track state picture.
 
 The track state EDM allows allocating only the track parameters that
 are needed, and also allows sharing the same track parameters between multiple

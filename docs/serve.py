@@ -115,6 +115,7 @@ def main(
 
     server.watch(str(docs_dir / "examples/**/*.cpp"), rebuild)
     server.watch(str(docs_dir / "examples/**/*.py"), rebuild)
+    server.watch(str(docs_dir / "*.bib"), rebuild)
 
     server.serve(root=str(output_dir), port=port)
 
