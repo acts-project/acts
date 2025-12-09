@@ -600,10 +600,10 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     ACTS_INFO("Test 3: start in the middle with external surfaces");
 
     Navigator::Options options(tgContext);
-    options.insertExternalSurface(surfaceTop.geometryId());
+    options.insertExternalSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
-    Vector3 position = {0, 0, 0};
+    Vector3 position = Vector3::Zero();
     Vector3 direction = Vector3::UnitZ();
 
     Result<void> result =
@@ -622,7 +622,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     ACTS_INFO("Test 4: start from top with external surfaces");
 
     Navigator::Options options(tgContext);
-    options.insertExternalSurface(surfaceBottom.geometryId());
+    options.insertExternalSurface(surfaceBottom);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, 0.5_m, 0};
@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     ACTS_INFO("Test 5: start from bottom with external surfaces");
 
     Navigator::Options options(tgContext);
-    options.insertExternalSurface(surfaceTop.geometryId());
+    options.insertExternalSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, -0.5_m, 0};
@@ -680,12 +680,12 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   auto parentVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
                                                     parentBounds, "parent");
 
-  std::shared_ptr<const PlanarBounds> planarBounds =
-      std::make_shared<const RectangleBounds>(5., 10.);
+  auto planarBounds = std::make_shared<RectangleBounds>(5., 10.);
 
-  auto surface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
-                                                   std::move(planarBounds));
-
+  auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), planarBounds);
+  auto freeSurface = Surface::makeShared<PlaneSurface>(
+      Transform3{Translation3{0., 0., -500.}}, planarBounds);
   auto detElement =
       std::make_unique<DetectorElementStub>(Transform3::Identity());
 
@@ -726,14 +726,14 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   auto trackingGeometry = root.construct({}, tgContext, *logger);
 
   Navigator::Config navCfg;
-  navCfg.trackingGeometry =
-      std::shared_ptr<const TrackingGeometry>(std::move(trackingGeometry));
+  navCfg.trackingGeometry = std::move(trackingGeometry);
   navCfg.resolveSensitive = true;
   navCfg.resolveMaterial = true;
   navCfg.resolvePassive = false;
   Navigator navigator(navCfg, logger->clone("Navigator"));
 
   Navigator::Options options(tgContext);
+  options.insertExternalSurface(*freeSurface);
   Navigator::State state = navigator.makeState(options);
 
   Vector3 position{0., 0., -1000. + 0.5};
@@ -767,6 +767,15 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   targetGeoId = target.surface().geometryId();
   // portal of child1 volume as expected
   BOOST_CHECK(targetGeoId.volume() == 2 && targetGeoId.boundary() == 2);
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
+  // check that we end up in the expected volume (parent)
+  BOOST_CHECK(state.currentVolume->volumeName() == "parent");
+  // the next target should be the free surface
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
+  BOOST_CHECK_EQUAL(&target.surface(), freeSurface.get());
 
   step(position, direction, target);
   navigator.handleSurfaceReached(state, position, direction, target.surface());
