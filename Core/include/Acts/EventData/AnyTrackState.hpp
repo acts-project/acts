@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
@@ -69,13 +69,6 @@ class TrackStateHandlerConstBase {
   virtual TrackIndexType calibratedSize(const void* container,
                                         TrackIndexType index) const = 0;
 
-  virtual TrackStateConstEffectiveCalibratedMap effectiveCalibrated(
-      const void* container, TrackIndexType index) const = 0;
-
-  virtual TrackStateConstEffectiveCalibratedCovarianceMap
-  effectiveCalibratedCovariance(const void* container,
-                                TrackIndexType index) const = 0;
-
   virtual TrackStateConstParametersMap parameters(
       const void* container, TrackIndexType parametersIndex) const = 0;
 
@@ -112,12 +105,12 @@ class TrackStateHandlerConstBase {
 class TrackStateHandlerMutableBase : public TrackStateHandlerConstBase {
  public:
   using TrackStateHandlerConstBase::component;
-  using TrackStateHandlerConstBase::jacobian;
   using TrackStateHandlerConstBase::covariance;
+  using TrackStateHandlerConstBase::jacobian;
   using TrackStateHandlerConstBase::parameters;
 
-  virtual TrackStateParametersMap parameters(void* container,
-                                             TrackIndexType parametersIndex) const = 0;
+  virtual TrackStateParametersMap parameters(
+      void* container, TrackIndexType parametersIndex) const = 0;
 
   virtual TrackStateCovarianceMap covariance(
       void* container, TrackIndexType covarianceIndex) const = 0;
@@ -134,10 +127,6 @@ class TrackStateHandlerMutableBase : public TrackStateHandlerConstBase {
   virtual TrackStateCovarianceMap jacobian(void* container,
                                            TrackIndexType index) const = 0;
 
-  virtual void shareFrom(void* container, TrackIndexType self,
-                         TrackIndexType other, TrackStatePropMask shareSource,
-                         TrackStatePropMask shareTarget) const = 0;
-
   virtual void unset(void* container, TrackIndexType index,
                      TrackStatePropMask target) const = 0;
 
@@ -147,8 +136,9 @@ class TrackStateHandlerMutableBase : public TrackStateHandlerConstBase {
   virtual void setUncalibratedSourceLink(void* container, TrackIndexType index,
                                          SourceLink&& sourceLink) const = 0;
 
-  virtual void setReferenceSurface(void* container, TrackIndexType index,
-                                   std::shared_ptr<const Surface> surface) const = 0;
+  virtual void setReferenceSurface(
+      void* container, TrackIndexType index,
+      std::shared_ptr<const Surface> surface) const = 0;
 
   virtual void addTrackStateComponents(void* container, TrackIndexType index,
                                        TrackStatePropMask mask) const = 0;
@@ -173,20 +163,6 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->calibratedSize(index);
-  }
-
-  TrackStateConstEffectiveCalibratedMap effectiveCalibrated(
-      const void* container, TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
-    return traj->effectiveCalibrated(index);
-  }
-
-  TrackStateConstEffectiveCalibratedCovarianceMap effectiveCalibratedCovariance(
-      const void* container, TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
-    return traj->effectiveCalibratedCovariance(index);
   }
 
   TrackStateConstParametersMap parameters(const void* container,
@@ -305,14 +281,6 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
     return traj->self().component_impl(key, index);
   }
 
-  void shareFrom(void* container, TrackIndexType self, TrackIndexType other,
-                 TrackStatePropMask shareSource,
-                 TrackStatePropMask shareTarget) const override {
-    assert(container != nullptr);
-    auto* traj = static_cast<MultiTrajectoryType*>(container);
-    traj->shareFrom(self, other, shareSource, shareTarget);
-  }
-
   void unset(void* container, TrackIndexType index,
              TrackStatePropMask target) const override {
     assert(container != nullptr);
@@ -334,8 +302,9 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
     traj->setUncalibratedSourceLink(index, std::move(sourceLink));
   }
 
-  void setReferenceSurface(void* container, TrackIndexType index,
-                           std::shared_ptr<const Surface> surface) const override {
+  void setReferenceSurface(
+      void* container, TrackIndexType index,
+      std::shared_ptr<const Surface> surface) const override {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     traj->setReferenceSurface(index, std::move(surface));
@@ -390,27 +359,6 @@ class AnyTrackState {
 
   using ContainerPointer = std::conditional_t<ReadOnly, const void*, void*>;
 
-  class ContainerView {
-   public:
-    ContainerView() = default;
-    ContainerView(const detail::TrackStateHandlerConstBase* handler,
-                  const void* container)
-        : m_handler(handler), m_container(container) {}
-
-    bool hasColumn(HashedString key) const {
-      assert(m_handler != nullptr && m_container != nullptr);
-      return m_handler->hasColumn(m_container, key);
-    }
-
-   private:
-    friend class AnyTrackState;
-    const detail::TrackStateHandlerConstBase* m_handler = nullptr;
-    const void* m_container = nullptr;
-  };
-
-  AnyTrackState()
-      : m_container(nullptr), m_index(kTrackIndexInvalid), m_handler(nullptr) {}
-
   template <TrackStateProxyConcept track_state_proxy_t>
     requires(ReadOnly || !track_state_proxy_t::ReadOnly)
   explicit AnyTrackState(const track_state_proxy_t& ts)
@@ -425,35 +373,20 @@ class AnyTrackState {
     m_handler = &detail::TrackStateHandler<trajectory_t>::instance();
   }
 
-  bool isValid() const {
-    return m_container != nullptr && m_handler != nullptr &&
-           m_index != kTrackIndexInvalid;
-  }
-
-  explicit operator bool() const { return isValid(); }
-
-  TrackIndexType index() const {
-    assert(isValid());
-    return m_index;
-  }
+  TrackIndexType index() const { return m_index; }
 
   template <HashedString key>
   bool has() const {
-    assert(isValid());
     return constHandler()->has(containerPtr(), m_index, key);
   }
 
   bool has(HashedString key) const {
-    assert(isValid());
     return constHandler()->has(containerPtr(), m_index, key);
   }
 
-  bool has(std::string_view key) const {
-    return has(hashStringDynamic(key));
-  }
+  bool has(std::string_view key) const { return has(hashStringDynamic(key)); }
 
   bool hasColumn(HashedString key) const {
-    assert(isValid());
     return constHandler()->hasColumn(containerPtr(), key);
   }
 
@@ -463,14 +396,12 @@ class AnyTrackState {
 
   template <typename T, HashedString key>
   const T& component() const {
-    assert(isValid());
     std::any result = constHandler()->component(containerPtr(), m_index, key);
     return *std::any_cast<const T*>(result);
   }
 
   template <typename T>
   const T& component(HashedString key) const {
-    assert(isValid());
     std::any result = constHandler()->component(containerPtr(), m_index, key);
     return *std::any_cast<const T*>(result);
   }
@@ -484,7 +415,6 @@ class AnyTrackState {
   T& component()
     requires(!ReadOnly)
   {
-    assert(isValid());
     std::any result =
         mutableHandler()->component(mutableContainerPtr(), m_index, key);
     return *std::any_cast<T*>(result);
@@ -494,7 +424,6 @@ class AnyTrackState {
   T& component(HashedString key)
     requires(!ReadOnly)
   {
-    assert(isValid());
     std::any result =
         mutableHandler()->component(mutableContainerPtr(), m_index, key);
     return *std::any_cast<T*>(result);
@@ -507,20 +436,13 @@ class AnyTrackState {
     return component<T>(hashStringDynamic(key));
   }
 
-  ContainerView container() const {
-    assert(isValid());
-    return ContainerView{constHandler(), containerPtr()};
-  }
-
   TrackIndexType previous() const {
-    assert(isValid());
     return component<TrackIndexType, detail_tsp::kPreviousKey>();
   }
 
   TrackIndexType& previous()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<TrackIndexType, detail_tsp::kPreviousKey>();
   }
 
@@ -548,7 +470,6 @@ class AnyTrackState {
   }
 
   const Surface& referenceSurface() const {
-    assert(isValid());
     assert(hasReferenceSurface());
     const Surface* surface =
         constHandler()->referenceSurface(containerPtr(), m_index);
@@ -557,20 +478,17 @@ class AnyTrackState {
   }
 
   bool hasReferenceSurface() const {
-    assert(isValid());
     return constHandler()->hasReferenceSurface(containerPtr(), m_index);
   }
 
   void setReferenceSurface(std::shared_ptr<const Surface> surface)
     requires(!ReadOnly)
   {
-    assert(isValid());
     mutableHandler()->setReferenceSurface(mutableContainerPtr(), m_index,
                                           std::move(surface));
   }
 
   SourceLink getUncalibratedSourceLink() const {
-    assert(isValid());
     assert(has(detail_tsp::kUncalibratedKey));
     return constHandler()->getUncalibratedSourceLink(containerPtr(), m_index);
   }
@@ -578,7 +496,6 @@ class AnyTrackState {
   void setUncalibratedSourceLink(SourceLink sourceLink)
     requires(!ReadOnly)
   {
-    assert(isValid());
     mutableHandler()->setUncalibratedSourceLink(mutableContainerPtr(), m_index,
                                                 std::move(sourceLink));
   }
@@ -596,14 +513,12 @@ class AnyTrackState {
   bool hasCalibrated() const { return has(detail_tsp::kCalibratedKey); }
 
   TrackIndexType calibratedSize() const {
-    assert(isValid());
     return constHandler()->calibratedSize(containerPtr(), m_index);
   }
 
   void allocateCalibrated(std::size_t measdim)
     requires(!ReadOnly)
   {
-    assert(isValid());
     mutableHandler()->allocateCalibrated(mutableContainerPtr(), m_index,
                                          measdim);
     component<TrackIndexType, detail_tsp::kMeasDimKey>() =
@@ -615,7 +530,8 @@ class AnyTrackState {
                           const Eigen::DenseBase<cov_t>& cov)
     requires(!ReadOnly)
   {
-    constexpr std::size_t measdim = static_cast<std::size_t>(val_t::RowsAtCompileTime);
+    constexpr std::size_t measdim =
+        static_cast<std::size_t>(val_t::RowsAtCompileTime);
     static_assert(measdim > 0, "Measurement dimension must be static");
     static_assert(measdim <= eBoundSize,
                   "Measurement dimension exceeds bound parameters");
@@ -627,7 +543,6 @@ class AnyTrackState {
   }
 
   ConstEffectiveCalibratedMap effectiveCalibrated() const {
-    assert(isValid());
     const double* data =
         constHandler()->calibratedData(containerPtr(), m_index);
     const auto size = calibratedSize();
@@ -637,7 +552,6 @@ class AnyTrackState {
   MutableEffectiveCalibratedMap effectiveCalibrated()
     requires(!ReadOnly)
   {
-    assert(isValid());
     double* data =
         mutableHandler()->calibratedDataMutable(mutableContainerPtr(), m_index);
     const auto size = calibratedSize();
@@ -645,7 +559,6 @@ class AnyTrackState {
   }
 
   ConstEffectiveCalibratedCovarianceMap effectiveCalibratedCovariance() const {
-    assert(isValid());
     const double* data =
         constHandler()->calibratedCovarianceData(containerPtr(), m_index);
     const auto size = calibratedSize();
@@ -655,7 +568,6 @@ class AnyTrackState {
   MutableEffectiveCalibratedCovarianceMap effectiveCalibratedCovariance()
     requires(!ReadOnly)
   {
-    assert(isValid());
     double* data = mutableHandler()->calibratedCovarianceDataMutable(
         mutableContainerPtr(), m_index);
     const auto size = calibratedSize();
@@ -663,7 +575,6 @@ class AnyTrackState {
   }
 
   BoundSubspaceIndices projectorSubspaceIndices() const {
-    assert(isValid());
     assert(hasProjector());
     const auto& serialized =
         component<SerializedSubspaceIndices, detail_tsp::kProjectorKey>();
@@ -673,7 +584,6 @@ class AnyTrackState {
   template <std::ranges::sized_range index_range_t>
     requires(!ReadOnly)
   void setProjectorSubspaceIndices(const index_range_t& indices) {
-    assert(isValid());
     storeProjectorIndices(encodeSubspaceIndices(indices),
                           static_cast<std::size_t>(indices.size()));
   }
@@ -692,10 +602,8 @@ class AnyTrackState {
   void setProjectorBitset(ProjectorBitset bitset)
     requires(!ReadOnly)
   {
-    assert(isValid());
     std::bitset<eBoundSize * eBoundSize> bs(bitset);
-    const auto matrix =
-        bitsetToMatrix<ActsMatrix<eBoundSize, eBoundSize>>(bs);
+    const auto matrix = bitsetToMatrix<ActsMatrix<eBoundSize, eBoundSize>>(bs);
     std::size_t measdim = eBoundSize;
     auto indices = projectorIndicesFromMatrix(matrix, measdim);
     storeProjectorIndices(indices, measdim);
@@ -720,7 +628,6 @@ class AnyTrackState {
   }
 
   ConstCovarianceMap jacobian() const {
-    assert(isValid());
     assert(hasJacobian());
     return constHandler()->jacobian(containerPtr(), m_index);
   }
@@ -728,25 +635,21 @@ class AnyTrackState {
   CovarianceMap jacobian()
     requires(!ReadOnly)
   {
-    assert(isValid());
     assert(hasJacobian());
     return mutableHandler()->jacobian(mutableContainerPtr(), m_index);
   }
 
   double pathLength() const {
-    assert(isValid());
     return component<double, detail_tsp::kPathLengthKey>();
   }
 
   double& pathLength()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<double, detail_tsp::kPathLengthKey>();
   }
 
   ConstParametersMap predicted() const {
-    assert(isValid());
     assert(hasPredicted());
     return parametersFromComponent(detail_tsp::kPredictedKey);
   }
@@ -754,12 +657,10 @@ class AnyTrackState {
   ParametersMap predicted()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return mutableParametersFromComponent(detail_tsp::kPredictedKey);
   }
 
   ConstCovarianceMap predictedCovariance() const {
-    assert(isValid());
     assert(hasPredicted());
     return covarianceFromComponent(detail_tsp::kPredictedKey);
   }
@@ -767,12 +668,10 @@ class AnyTrackState {
   CovarianceMap predictedCovariance()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return mutableCovarianceFromComponent(detail_tsp::kPredictedKey);
   }
 
   ConstParametersMap filtered() const {
-    assert(isValid());
     assert(hasFiltered());
     return parametersFromComponent(detail_tsp::kFilteredKey);
   }
@@ -780,12 +679,10 @@ class AnyTrackState {
   ParametersMap filtered()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return mutableParametersFromComponent(detail_tsp::kFilteredKey);
   }
 
   ConstCovarianceMap filteredCovariance() const {
-    assert(isValid());
     assert(hasFiltered());
     return covarianceFromComponent(detail_tsp::kFilteredKey);
   }
@@ -793,12 +690,10 @@ class AnyTrackState {
   CovarianceMap filteredCovariance()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return mutableCovarianceFromComponent(detail_tsp::kFilteredKey);
   }
 
   ConstParametersMap smoothed() const {
-    assert(isValid());
     assert(hasSmoothed());
     return parametersFromComponent(detail_tsp::kSmoothedKey);
   }
@@ -806,12 +701,10 @@ class AnyTrackState {
   ParametersMap smoothed()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return mutableParametersFromComponent(detail_tsp::kSmoothedKey);
   }
 
   ConstCovarianceMap smoothedCovariance() const {
-    assert(isValid());
     assert(hasSmoothed());
     return covarianceFromComponent(detail_tsp::kSmoothedKey);
   }
@@ -819,12 +712,10 @@ class AnyTrackState {
   CovarianceMap smoothedCovariance()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return mutableCovarianceFromComponent(detail_tsp::kSmoothedKey);
   }
 
   ConstTrackStateType typeFlags() const {
-    assert(isValid());
     const auto raw =
         component<TrackStateType::raw_type, detail_tsp::kTypeFlagsKey>();
     return ConstTrackStateType{raw};
@@ -833,27 +724,21 @@ class AnyTrackState {
   TrackStateType typeFlags()
     requires(!ReadOnly)
   {
-    assert(isValid());
     auto& raw =
         component<TrackStateType::raw_type, detail_tsp::kTypeFlagsKey>();
     return TrackStateType{raw};
   }
 
-  float chi2() const {
-    assert(isValid());
-    return component<float, detail_tsp::kChi2Key>();
-  }
+  float chi2() const { return component<float, detail_tsp::kChi2Key>(); }
 
   float& chi2()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<float, detail_tsp::kChi2Key>();
   }
 
   template <std::size_t measdim>
   typename TrackStateTraits<measdim, true>::Calibrated calibrated() const {
-    assert(isValid());
     [[maybe_unused]] const auto size = calibratedSize();
     assert(size == static_cast<TrackIndexType>(measdim));
     const double* data =
@@ -865,7 +750,6 @@ class AnyTrackState {
   typename TrackStateTraits<measdim, false>::Calibrated calibrated()
     requires(!ReadOnly)
   {
-    assert(isValid());
     [[maybe_unused]] const auto size = calibratedSize();
     assert(size == static_cast<TrackIndexType>(measdim));
     double* data =
@@ -876,7 +760,6 @@ class AnyTrackState {
   template <std::size_t measdim>
   typename TrackStateTraits<measdim, true>::CalibratedCovariance
   calibratedCovariance() const {
-    assert(isValid());
     [[maybe_unused]] const auto size = calibratedSize();
     assert(size == static_cast<TrackIndexType>(measdim));
     const double* data =
@@ -889,7 +772,6 @@ class AnyTrackState {
   calibratedCovariance()
     requires(!ReadOnly)
   {
-    assert(isValid());
     [[maybe_unused]] const auto size = calibratedSize();
     assert(size == static_cast<TrackIndexType>(measdim));
     double* data = mutableHandler()->calibratedCovarianceDataMutable(
@@ -901,156 +783,7 @@ class AnyTrackState {
   void unset(TrackStatePropMask target)
     requires(!ReadOnly)
   {
-    assert(isValid());
     mutableHandler()->unset(mutableContainerPtr(), m_index, target);
-  }
-
-  void shareFrom(TrackStatePropMask shareSource, TrackStatePropMask shareTarget)
-    requires(!ReadOnly)
-  {
-    shareFrom(*this, shareSource, shareTarget);
-  }
-
-  void shareFrom(TrackStatePropMask component)
-    requires(!ReadOnly)
-  {
-    shareFrom(component, component);
-  }
-
-  template <bool otherReadOnly>
-  void shareFrom(const AnyTrackState<otherReadOnly>& other,
-                 TrackStatePropMask shareSource, TrackStatePropMask shareTarget)
-    requires(!ReadOnly)
-  {
-    assert(isValid());
-    assert(other.isValid());
-    if (m_handler != other.m_handler) {
-      throw std::invalid_argument(
-          "Cannot share components between incompatible handlers");
-    }
-    assert(containerPtr() == other.containerPtr() &&
-           "Cannot share components across MultiTrajectories");
-    mutableHandler()->shareFrom(mutableContainerPtr(), m_index, other.m_index,
-                                shareSource, shareTarget);
-  }
-
-  template <bool otherReadOnly>
-  void shareFrom(const AnyTrackState<otherReadOnly>& other,
-                 TrackStatePropMask component)
-    requires(!ReadOnly)
-  {
-    shareFrom(other, component, component);
-  }
-
-  template <TrackStateProxyConcept proxy_t>
-  void shareFrom(const proxy_t& other, TrackStatePropMask shareSource,
-                 TrackStatePropMask shareTarget)
-    requires(!ReadOnly)
-  {
-    AnyTrackState<true> otherAny(other);
-    shareFrom(otherAny, shareSource, shareTarget);
-  }
-
-  template <TrackStateProxyConcept proxy_t>
-  void shareFrom(const proxy_t& other, TrackStatePropMask component)
-    requires(!ReadOnly)
-  {
-    shareFrom(other, component, component);
-  }
-
-  template <bool otherReadOnly>
-  void copyFrom(const AnyTrackState<otherReadOnly>& other,
-                TrackStatePropMask mask = TrackStatePropMask::All,
-                bool onlyAllocated = true)
-    requires(!ReadOnly)
-  {
-    using PM = TrackStatePropMask;
-    assert(isValid());
-    assert(other.isValid());
-    if (m_handler != other.m_handler) {
-      throw std::invalid_argument(
-          "Cannot copy components between incompatible handlers");
-    }
-
-    auto src = other.getMask() & mask;
-    if (src == TrackStatePropMask::None || mask == TrackStatePropMask::None) {
-      // still propagate scalar quantities below
-    }
-
-    auto dest = getMask();
-    if (onlyAllocated) {
-      if (ACTS_CHECK_BIT(src, PM::Calibrated) && !hasCalibrated() &&
-          other.hasCalibrated()) {
-        allocateCalibrated(other.calibratedSize());
-        dest |= PM::Calibrated;
-      }
-
-      auto missing =
-          static_cast<std::underlying_type_t<PM>>((src ^ dest) & src);
-      if ((missing != 0 || dest == TrackStatePropMask::None ||
-           src == TrackStatePropMask::None) &&
-          mask != TrackStatePropMask::None) {
-        throw std::runtime_error(
-            "Attempt track state copy with incompatible allocations");
-      }
-    } else {
-      mutableHandler()->addTrackStateComponents(mutableContainerPtr(), m_index,
-                                                mask);
-    }
-
-    if (ACTS_CHECK_BIT(src, PM::Predicted)) {
-      predicted() = other.predicted();
-      predictedCovariance() = other.predictedCovariance();
-    }
-
-    if (ACTS_CHECK_BIT(src, PM::Filtered)) {
-      filtered() = other.filtered();
-      filteredCovariance() = other.filteredCovariance();
-    }
-
-    if (ACTS_CHECK_BIT(src, PM::Smoothed)) {
-      smoothed() = other.smoothed();
-      smoothedCovariance() = other.smoothedCovariance();
-    }
-
-    if (other.hasUncalibratedSourceLink()) {
-      setUncalibratedSourceLink(other.getUncalibratedSourceLink());
-    }
-
-    if (ACTS_CHECK_BIT(src, PM::Jacobian) && other.hasJacobian()) {
-      jacobian() = other.jacobian();
-    }
-
-    if (ACTS_CHECK_BIT(src, PM::Calibrated) && other.hasCalibrated()) {
-      auto* self = this;
-      visit_measurement(other.calibratedSize(), [&](auto N) {
-        constexpr std::size_t measdim = decltype(N)::value;
-        self->allocateCalibrated(
-            other.template calibrated<measdim>().eval(),
-            other.template calibratedCovariance<measdim>().eval());
-      });
-      setProjectorSubspaceIndices(other.projectorSubspaceIndices());
-    }
-
-    chi2() = other.chi2();
-    pathLength() = other.pathLength();
-    typeFlags() = other.typeFlags();
-
-    if (other.hasReferenceSurface()) {
-      setReferenceSurface(other.referenceSurface().getSharedPtr());
-    }
-
-    mutableHandler()->copyDynamicFrom(mutableContainerPtr(), m_index,
-                                      other.containerPtr(), other.m_index);
-  }
-
-  template <TrackStateProxyConcept proxy_t>
-  void copyFrom(const proxy_t& other, TrackStatePropMask mask = TrackStatePropMask::All,
-                bool onlyAllocated = true)
-    requires(!ReadOnly)
-  {
-    AnyTrackState<true> otherAny(other);
-    copyFrom(otherAny, mask, onlyAllocated);
   }
 
  private:
@@ -1086,8 +819,8 @@ class AnyTrackState {
     const auto rows = static_cast<std::size_t>(projector.rows());
     for (std::size_t row = 0; row < rows; ++row) {
       std::optional<std::uint8_t> chosen;
-      for (std::size_t col = 0; col < static_cast<std::size_t>(projector.cols());
-           ++col) {
+      for (std::size_t col = 0;
+           col < static_cast<std::size_t>(projector.cols()); ++col) {
         if (projector(row, col) != 0.) {
           chosen = static_cast<std::uint8_t>(col);
           break;
