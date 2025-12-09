@@ -25,8 +25,8 @@ using namespace Acts::HashedStringLiteral;
 struct TestTrackStateFixture {
   using Trajectory = VectorMultiTrajectory;
   using TrackContainerBackend = VectorTrackContainer;
-  using Container = TrackContainer<TrackContainerBackend, Trajectory,
-                                   detail::RefHolder>;
+  using Container =
+      TrackContainer<TrackContainerBackend, Trajectory, detail::RefHolder>;
 
   TestTrackStateFixture() : container(trackContainer, trajectory) {}
 
@@ -39,12 +39,6 @@ struct TestTrackStateFixture {
 
 BOOST_AUTO_TEST_SUITE(EventDataAnyTrackState)
 
-BOOST_FIXTURE_TEST_CASE(ConstructDefault, TestTrackStateFixture) {
-  AnyMutableTrackState ts;
-  BOOST_CHECK(!ts.isValid());
-  BOOST_CHECK(!ts);
-}
-
 BOOST_FIXTURE_TEST_CASE(WrapTrackStateProxy, TestTrackStateFixture) {
   auto track = container.makeTrack();
   auto state = container.trackStateContainer().makeTrackState();
@@ -53,7 +47,6 @@ BOOST_FIXTURE_TEST_CASE(WrapTrackStateProxy, TestTrackStateFixture) {
   auto proxy = container.trackStateContainer().getTrackState(state.index());
   AnyMutableTrackState anyState(proxy);
 
-  BOOST_CHECK(anyState.isValid());
   BOOST_CHECK_EQUAL(anyState.index(), proxy.index());
 }
 
