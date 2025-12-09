@@ -38,16 +38,13 @@ Examples/Python/tests/requirements.txt` from the repository root.  You can
 then simply run `pytest` from the repository root.
 
 > [!tip]
-> **python-virtualenv**
->
-> It is **strongly recommended** to use a [virtual environment](https://realpython.com/python-virtual-environments-a-primer/) for
-> this purpose! For example, run
->
+> It is **strongly recommended** to use a [virtual
+> environment](https://realpython.com/python-virtual-environments-a-primer/)
+> for this purpose! For example, run
 > ```console
 > python -m venv venv
 > source venv/bin/activate
 > ```
->
 > to create a local virtual environment, and then run the `pip` command above.
 
 ## ROOT file hash regression checks {#root_file_hashes}
@@ -69,8 +66,9 @@ test_ckf_tracks_example_truth_estimate__performance_seeding_trees.root: 5c0cf9e8
 test_ckf_tracks_example_truth_estimate__trackstates_ckf.root: ac4485c09a68fca3d056cb8d9adb81695e68d822629e48c71fd2b6d2bbd31f88
 ```
 
-where the left side before the `:` indicates the test in which the check is performed and the name of the ROOT file
-that is checked. The right side is the reference hash.
+where the left side before the `:` indicates the test in which the check is
+performed and the name of the ROOT file that is checked. The right side is the
+reference hash.
 
 > [!note]
 > The file from which reference hashes are loaded can be changed by setting the
