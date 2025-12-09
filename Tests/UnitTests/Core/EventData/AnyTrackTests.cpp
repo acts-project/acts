@@ -73,9 +73,7 @@ void fillTestTrack(typename track_container_t::TrackProxy track) {
 BOOST_AUTO_TEST_SUITE(EventDataAnyTrack)
 
 BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_ValueHolder) {
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
-                 detail::ValueHolder>
-      tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -90,8 +88,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_ValueHolder) {
 BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_SharedPtr) {
   auto vtc = std::make_shared<VectorTrackContainer>();
   auto mtj = std::make_shared<VectorMultiTrajectory>();
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, std::shared_ptr>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -106,8 +103,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_SharedPtr) {
 BOOST_AUTO_TEST_CASE(ConstructFromConstTrackProxy) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -124,8 +120,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromConstTrackProxy) {
 BOOST_AUTO_TEST_CASE(AccessIndices) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -143,8 +138,7 @@ BOOST_AUTO_TEST_CASE(AccessIndices) {
 BOOST_AUTO_TEST_CASE(AccessReferenceSurface) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   auto surface = Acts::Surface::makeShared<PerigeeSurface>(Vector3::Zero());
@@ -159,8 +153,7 @@ BOOST_AUTO_TEST_CASE(AccessReferenceSurface) {
 BOOST_AUTO_TEST_CASE(AccessParameters) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -193,8 +186,7 @@ BOOST_AUTO_TEST_CASE(AccessParameters) {
 BOOST_AUTO_TEST_CASE(AccessCovariance) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -220,8 +212,7 @@ BOOST_AUTO_TEST_CASE(AccessCovariance) {
 BOOST_AUTO_TEST_CASE(AccessParticleHypothesis) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -235,8 +226,7 @@ BOOST_AUTO_TEST_CASE(AccessParticleHypothesis) {
 BOOST_AUTO_TEST_CASE(AccessDerivedQuantities) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -261,8 +251,7 @@ BOOST_AUTO_TEST_CASE(AccessDerivedQuantities) {
 BOOST_AUTO_TEST_CASE(AccessStatistics) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -280,8 +269,7 @@ BOOST_AUTO_TEST_CASE(AccessStatistics) {
 BOOST_AUTO_TEST_CASE(AccessTrackStates) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -303,8 +291,7 @@ BOOST_AUTO_TEST_CASE(AccessTrackStates) {
 BOOST_AUTO_TEST_CASE(AccessDynamicColumns) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   // Add a dynamic column
   tc.addColumn<int>("customInt");
@@ -342,8 +329,7 @@ BOOST_AUTO_TEST_CASE(AccessDynamicColumns) {
 BOOST_AUTO_TEST_CASE(ProxyAccessorWithAnyTrack) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   tc.addColumn<float>("customFloat");
   auto track = tc.makeTrack();
@@ -368,17 +354,13 @@ BOOST_AUTO_TEST_CASE(TypeErasureHeterogeneousStorage) {
   // Create tracks with different holder types
   VectorTrackContainer vtc1;
   VectorMultiTrajectory mtj1;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc1{vtc1, mtj1};
+  TrackContainer tc1{vtc1, mtj1};
 
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
-                 detail::ValueHolder>
-      tc2{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  TrackContainer tc2{VectorTrackContainer{}, VectorMultiTrajectory{}};
 
   auto vtc3 = std::make_shared<VectorTrackContainer>();
   auto mtj3 = std::make_shared<VectorMultiTrajectory>();
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, std::shared_ptr>
-      tc3{vtc3, mtj3};
+  TrackContainer tc3{vtc3, mtj3};
 
   auto track1 = tc1.makeTrack();
   auto track2 = tc2.makeTrack();
@@ -417,8 +399,7 @@ BOOST_AUTO_TEST_CASE(CrossTalkWithTrackProxy) {
   // and vice versa (both reference the same underlying data)
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -480,8 +461,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectnessCrossTalk) {
   // and both see the same data
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
@@ -505,8 +485,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectnessRestrictions) {
   // Test const-correctness restrictions on constructor
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer tc{vtc, mtj};
 
   auto mutableTrack = tc.makeTrack();
   fillTestTrack<decltype(tc)>(mutableTrack);
