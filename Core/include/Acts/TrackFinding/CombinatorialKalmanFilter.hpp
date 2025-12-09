@@ -911,6 +911,9 @@ class CombinatorialKalmanFilter {
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
 
+    // make sure the right particle hypothesis is set on the root branch
+    rootBranch.setParticleHypothesis(initialParameters.particleHypothesis());
+
     r.activeBranches.push_back(rootBranch);
 
     auto propagationResult = m_propagator.propagate(propState);
