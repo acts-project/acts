@@ -227,27 +227,6 @@ class AnyTrack {
                          const detail_anytrack::TrackHandlerConstBase*,
                          const detail_anytrack::TrackHandlerMutableBase*>;
 
-  class ContainerView {
-   public:
-    ContainerView() = default;
-    ContainerView(const detail_anytrack::TrackHandlerConstBase* handler,
-                  const void* container)
-        : m_handler(handler), m_container(container) {}
-
-    bool hasColumn(HashedString key) const {
-      assert(m_handler != nullptr && m_container != nullptr);
-      return m_handler->hasColumn(m_container, key);
-    }
-
-   private:
-    const detail_anytrack::TrackHandlerConstBase* m_handler = nullptr;
-    const void* m_container = nullptr;
-  };
-
-  /// Default constructor creates an invalid track
-  AnyTrack()
-      : m_container(nullptr), m_index(kTrackIndexInvalid), m_handler(nullptr) {}
-
   /// Copy constructor: const to const or mutable to mutable
   /// @param other the other track
   AnyTrack(const AnyTrack& other) = default;
@@ -302,20 +281,9 @@ class AnyTrack {
     m_handler = &detail_anytrack::TrackHandler<container_t>::instance();
   }
 
-  /// Check if the track is valid
-  /// @return true if this points to a valid track
-  bool isValid() const {
-    return m_container != nullptr && m_handler != nullptr &&
-           m_index != kTrackIndexInvalid;
-  }
-
-  /// Explicit conversion to bool for validity checking
-  explicit operator bool() const { return isValid(); }
-
   /// Get the tip index of the track
   /// @return The tip index
   const TrackIndexType& tipIndex() const {
-    assert(isValid());
     return component<TrackIndexType, detail_tp::kTipIndexKey>();
   }
 
@@ -324,14 +292,12 @@ class AnyTrack {
   TrackIndexType& tipIndex()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<TrackIndexType, detail_tp::kTipIndexKey>();
   }
 
   /// Get the stem index of the track
   /// @return The stem index
   const TrackIndexType& stemIndex() const {
-    assert(isValid());
     return component<TrackIndexType, detail_tp::kStemIndexKey>();
   }
 
@@ -340,21 +306,16 @@ class AnyTrack {
   TrackIndexType& stemIndex()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<TrackIndexType, detail_tp::kStemIndexKey>();
   }
 
   /// Get the index of this track
   /// @return The track index
-  TrackIndexType index() const {
-    assert(isValid());
-    return m_index;
-  }
+  TrackIndexType index() const { return m_index; }
 
   /// Get the reference surface
   /// @return Reference to the reference surface
   const Surface& referenceSurface() const {
-    assert(isValid());
     const Surface* surface =
         constHandler()->referenceSurface(containerPtr(), m_index);
     assert(surface != nullptr);
@@ -364,20 +325,17 @@ class AnyTrack {
   /// Check if track has a reference surface
   /// @return true if a reference surface exists
   bool hasReferenceSurface() const {
-    assert(isValid());
     return constHandler()->hasReferenceSurface(containerPtr(), m_index);
   }
 
   /// Get the particle hypothesis
   /// @return The particle hypothesis
   ParticleHypothesis particleHypothesis() const {
-    assert(isValid());
     return constHandler()->particleHypothesis(containerPtr(), m_index);
   }
 
   /// Get the bound parameters map
   ConstParametersMap parameters() const {
-    assert(isValid());
     return constHandler()->parameters(containerPtr(), m_index);
   }
 
@@ -385,7 +343,6 @@ class AnyTrack {
   ParametersMap parameters()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return mutableHandler()->parameters(mutableContainerPtr(), m_index);
   }
 
@@ -406,7 +363,6 @@ class AnyTrack {
 
   /// Get the covariance map
   ConstCovarianceMap covariance() const {
-    assert(isValid());
     return constHandler()->covariance(containerPtr(), m_index);
   }
 
@@ -414,7 +370,6 @@ class AnyTrack {
   CovarianceMap covariance()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return mutableHandler()->covariance(mutableContainerPtr(), m_index);
   }
 
@@ -439,134 +394,105 @@ class AnyTrack {
 
   /// Get the theta parameter
   /// @return The theta value
-  double theta() const {
-    assert(isValid());
-    return parameters()[eBoundTheta];
-  }
+  double theta() const { return parameters()[eBoundTheta]; }
 
   /// Get the phi parameter
   /// @return The phi value
-  double phi() const {
-    assert(isValid());
-    return parameters()[eBoundPhi];
-  }
+  double phi() const { return parameters()[eBoundPhi]; }
 
   /// Get the q/p parameter
   /// @return The q/p value
-  double qOverP() const {
-    assert(isValid());
-    return parameters()[eBoundQOverP];
-  }
+  double qOverP() const { return parameters()[eBoundQOverP]; }
 
   /// Get the charge
   /// @return The charge value
-  double charge() const {
-    assert(isValid());
-    return particleHypothesis().extractCharge(qOverP());
-  }
+  double charge() const { return particleHypothesis().extractCharge(qOverP()); }
 
   /// Get the absolute momentum
   /// @return The absolute momentum value
   double absoluteMomentum() const {
-    assert(isValid());
     return particleHypothesis().extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum
   /// @return The transverse momentum value
   double transverseMomentum() const {
-    assert(isValid());
     return std::sin(theta()) * absoluteMomentum();
   }
 
   /// Get the number of measurements
   /// @return The number of measurements
   const unsigned int& nMeasurements() const {
-    assert(isValid());
     return component<unsigned int, detail_tp::kMeasurementsKey>();
   }
 
   unsigned int& nMeasurements()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<unsigned int, detail_tp::kMeasurementsKey>();
   }
 
   /// Get the number of holes
   /// @return The number of holes
   const unsigned int& nHoles() const {
-    assert(isValid());
     return component<unsigned int, detail_tp::kHolesKey>();
   }
 
   unsigned int& nHoles()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<unsigned int, detail_tp::kHolesKey>();
   }
 
   /// Get the number of outliers
   /// @return The number of outliers
   const unsigned int& nOutliers() const {
-    assert(isValid());
     return component<unsigned int, detail_tp::kOutliersKey>();
   }
 
   unsigned int& nOutliers()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<unsigned int, detail_tp::kOutliersKey>();
   }
 
   /// Get the number of shared hits
   /// @return The number of shared hits
   const unsigned int& nSharedHits() const {
-    assert(isValid());
     return component<unsigned int, detail_tp::kSharedHitsKey>();
   }
 
   unsigned int& nSharedHits()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<unsigned int, detail_tp::kSharedHitsKey>();
   }
 
   /// Get the chi2 value
   /// @return The chi2 value
-  const float& chi2() const {
-    assert(isValid());
-    return component<float, detail_tp::kChi2Key>();
-  }
+  const float& chi2() const { return component<float, detail_tp::kChi2Key>(); }
 
   float& chi2()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<float, detail_tp::kChi2Key>();
   }
 
   /// Get the number of degrees of freedom
   /// @return The number of degrees of freedom
   const unsigned int& nDoF() const {
-    assert(isValid());
     return component<unsigned int, detail_tp::kNdfKey>();
   }
 
   unsigned int& nDoF()
     requires(!ReadOnly)
   {
-    assert(isValid());
     return component<unsigned int, detail_tp::kNdfKey>();
   }
 
   /// Get the number of track states
   /// @return The number of track states
   unsigned int nTrackStates() const {
-    assert(isValid());
     return constHandler()->nTrackStates(containerPtr(), m_index);
   }
 
@@ -574,7 +500,6 @@ class AnyTrack {
   /// @param key The hashed column key
   /// @return true if the column exists
   bool hasColumn(HashedString key) const {
-    assert(isValid());
     return constHandler()->hasColumn(containerPtr(), key);
   }
 
@@ -587,7 +512,6 @@ class AnyTrack {
   T& component()
     requires(!ReadOnly)
   {
-    assert(isValid());
     std::any result =
         mutableHandler()->component(mutableContainerPtr(), m_index, key);
     return *std::any_cast<T*>(result);
@@ -602,7 +526,6 @@ class AnyTrack {
   T& component(HashedString key)
     requires(!ReadOnly)
   {
-    assert(isValid());
     std::any result =
         mutableHandler()->component(mutableContainerPtr(), m_index, key);
     return *std::any_cast<T*>(result);
@@ -614,7 +537,6 @@ class AnyTrack {
   /// @return Const reference to the component
   template <typename T, HashedString key>
   const T& component() const {
-    assert(isValid());
     std::any result = constHandler()->component(containerPtr(), m_index, key);
     return *std::any_cast<const T*>(result);
   }
@@ -625,7 +547,6 @@ class AnyTrack {
   /// @return Const reference to the component
   template <typename T>
   const T& component(HashedString key) const {
-    assert(isValid());
     std::any result = constHandler()->component(containerPtr(), m_index, key);
     return *std::any_cast<const T*>(result);
   }
