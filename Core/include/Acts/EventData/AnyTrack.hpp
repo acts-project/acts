@@ -19,6 +19,7 @@
 
 #include <any>
 #include <cassert>
+#include <cmath>
 #include <memory>
 #include <type_traits>
 
@@ -38,14 +39,6 @@ using ConstCovarianceMap = detail_tpc::ConstCovarianceMap;
 class TrackHandlerConstBase {
  public:
   virtual ~TrackHandlerConstBase() = default;
-
-  /// Get the tip index of the track
-  virtual const TrackIndexType& tipIndex(const void* container,
-                                         TrackIndexType index) const = 0;
-
-  /// Get the stem index of the track
-  virtual const TrackIndexType& stemIndex(const void* container,
-                                          TrackIndexType index) const = 0;
 
   /// Get the reference surface
   virtual const Surface* referenceSurface(const void* container,
@@ -67,50 +60,6 @@ class TrackHandlerConstBase {
   virtual ConstCovarianceMap covariance(const void* container,
                                         TrackIndexType index) const = 0;
 
-  /// Get theta parameter
-  virtual double theta(const void* container, TrackIndexType index) const = 0;
-
-  /// Get phi parameter
-  virtual double phi(const void* container, TrackIndexType index) const = 0;
-
-  /// Get qOverP parameter
-  virtual double qOverP(const void* container, TrackIndexType index) const = 0;
-
-  /// Get charge
-  virtual double charge(const void* container, TrackIndexType index) const = 0;
-
-  /// Get absolute momentum
-  virtual double absoluteMomentum(const void* container,
-                                  TrackIndexType index) const = 0;
-
-  /// Get transverse momentum
-  virtual double transverseMomentum(const void* container,
-                                    TrackIndexType index) const = 0;
-
-  /// Get number of measurements
-  virtual const unsigned int& nMeasurements(const void* container,
-                                            TrackIndexType index) const = 0;
-
-  /// Get number of holes
-  virtual const unsigned int& nHoles(const void* container,
-                                     TrackIndexType index) const = 0;
-
-  /// Get number of outliers
-  virtual const unsigned int& nOutliers(const void* container,
-                                        TrackIndexType index) const = 0;
-
-  /// Get number of shared hits
-  virtual const unsigned int& nSharedHits(const void* container,
-                                          TrackIndexType index) const = 0;
-
-  /// Get chi2
-  virtual const float& chi2(const void* container,
-                            TrackIndexType index) const = 0;
-
-  /// Get number of degrees of freedom
-  virtual const unsigned int& nDoF(const void* container,
-                                   TrackIndexType index) const = 0;
-
   /// Get number of track states
   virtual unsigned int nTrackStates(const void* container,
                                     TrackIndexType index) const = 0;
@@ -127,25 +76,9 @@ class TrackHandlerConstBase {
 /// Extends the const interface with mutable references to the data.
 class TrackHandlerMutableBase : public TrackHandlerConstBase {
  public:
-  using TrackHandlerConstBase::chi2;
   using TrackHandlerConstBase::component;
   using TrackHandlerConstBase::covariance;
-  using TrackHandlerConstBase::nDoF;
-  using TrackHandlerConstBase::nHoles;
-  using TrackHandlerConstBase::nMeasurements;
-  using TrackHandlerConstBase::nOutliers;
-  using TrackHandlerConstBase::nSharedHits;
   using TrackHandlerConstBase::parameters;
-  using TrackHandlerConstBase::stemIndex;
-  using TrackHandlerConstBase::tipIndex;
-
-  /// Get mutable tip index
-  virtual TrackIndexType& tipIndex(void* container,
-                                   TrackIndexType index) const = 0;
-
-  /// Get mutable stem index
-  virtual TrackIndexType& stemIndex(void* container,
-                                    TrackIndexType index) const = 0;
 
   /// Get mutable parameter vector
   virtual ParametersMap parameters(void* container,
@@ -154,27 +87,6 @@ class TrackHandlerMutableBase : public TrackHandlerConstBase {
   /// Get mutable covariance matrix
   virtual CovarianceMap covariance(void* container,
                                    TrackIndexType index) const = 0;
-
-  /// Get mutable number of measurements
-  virtual unsigned int& nMeasurements(void* container,
-                                      TrackIndexType index) const = 0;
-
-  /// Get mutable number of holes
-  virtual unsigned int& nHoles(void* container, TrackIndexType index) const = 0;
-
-  /// Get mutable number of outliers
-  virtual unsigned int& nOutliers(void* container,
-                                  TrackIndexType index) const = 0;
-
-  /// Get mutable number of shared hits
-  virtual unsigned int& nSharedHits(void* container,
-                                    TrackIndexType index) const = 0;
-
-  /// Get mutable chi2
-  virtual float& chi2(void* container, TrackIndexType index) const = 0;
-
-  /// Get mutable number of degrees of freedom
-  virtual unsigned int& nDoF(void* container, TrackIndexType index) const = 0;
 
   /// Get mutable dynamic column component (type-erased)
   virtual std::any component(void* container, TrackIndexType index,
@@ -192,35 +104,6 @@ class TrackHandler final : public TrackHandlerMutableBase {
   static const TrackHandler& instance() {
     static const TrackHandler s_instance;
     return s_instance;
-  }
-
-  const TrackIndexType& tipIndex(const void* container,
-                                 TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<TrackIndexType>(tc, index, detail_tp::kTipIndexKey);
-  }
-
-  TrackIndexType& tipIndex(void* container,
-                           TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<TrackIndexType>(tc, index, detail_tp::kTipIndexKey);
-  }
-
-  const TrackIndexType& stemIndex(const void* container,
-                                  TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<TrackIndexType>(tc, index, detail_tp::kStemIndexKey);
-  }
-
-  TrackIndexType& stemIndex(void* container,
-                            TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<TrackIndexType>(tc, index,
-                                            detail_tp::kStemIndexKey);
   }
 
   const Surface* referenceSurface(const void* container,
@@ -272,126 +155,6 @@ class TrackHandler final : public TrackHandlerMutableBase {
     return tc->getTrack(index).covariance();
   }
 
-  double theta(const void* container, TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return tc->getTrack(index).theta();
-  }
-
-  double phi(const void* container, TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return tc->getTrack(index).phi();
-  }
-
-  double qOverP(const void* container, TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return tc->getTrack(index).qOverP();
-  }
-
-  double charge(const void* container, TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return tc->getTrack(index).charge();
-  }
-
-  double absoluteMomentum(const void* container,
-                          TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return tc->getTrack(index).absoluteMomentum();
-  }
-
-  double transverseMomentum(const void* container,
-                            TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return tc->getTrack(index).transverseMomentum();
-  }
-
-  const unsigned int& nMeasurements(const void* container,
-                                    TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, detail_tp::kMeasurementsKey);
-  }
-
-  unsigned int& nMeasurements(void* container,
-                              TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index,
-                                          detail_tp::kMeasurementsKey);
-  }
-
-  const unsigned int& nHoles(const void* container,
-                             TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, detail_tp::kHolesKey);
-  }
-
-  unsigned int& nHoles(void* container, TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, detail_tp::kHolesKey);
-  }
-
-  const unsigned int& nOutliers(const void* container,
-                                TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, detail_tp::kOutliersKey);
-  }
-
-  unsigned int& nOutliers(void* container,
-                          TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, detail_tp::kOutliersKey);
-  }
-
-  const unsigned int& nSharedHits(const void* container,
-                                  TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, detail_tp::kSharedHitsKey);
-  }
-
-  unsigned int& nSharedHits(void* container,
-                            TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, detail_tp::kSharedHitsKey);
-  }
-
-  const float& chi2(const void* container,
-                    TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<float>(tc, index, detail_tp::kChi2Key);
-  }
-
-  float& chi2(void* container, TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<float>(tc, index, detail_tp::kChi2Key);
-  }
-
-  const unsigned int& nDoF(const void* container,
-                           TrackIndexType index) const override {
-    assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return getConstColumn<unsigned int>(tc, index, detail_tp::kNdfKey);
-  }
-
-  unsigned int& nDoF(void* container, TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
-    return getMutableColumn<unsigned int>(tc, index, detail_tp::kNdfKey);
-  }
-
   unsigned int nTrackStates(const void* container,
                             TrackIndexType index) const override {
     assert(container != nullptr);
@@ -420,20 +183,6 @@ class TrackHandler final : public TrackHandlerMutableBase {
   }
 
  private:
-  template <typename value_t>
-  static const value_t& getConstColumn(const container_t* tc,
-                                       TrackIndexType index, HashedString key) {
-    std::any result = tc->container().component_impl(key, index);
-    return *std::any_cast<const value_t*>(result);
-  }
-
-  template <typename value_t>
-  static value_t& getMutableColumn(container_t* tc, TrackIndexType index,
-                                   HashedString key) {
-    std::any result = tc->container().component_impl(key, index);
-    return *std::any_cast<value_t*>(result);
-  }
-
   TrackHandler() = default;
 };
 
@@ -567,7 +316,7 @@ class AnyTrack {
   /// @return The tip index
   const TrackIndexType& tipIndex() const {
     assert(isValid());
-    return constHandler()->tipIndex(containerPtr(), m_index);
+    return component<TrackIndexType, detail_tp::kTipIndexKey>();
   }
 
   /// Get a mutable reference to the tip index
@@ -576,14 +325,14 @@ class AnyTrack {
     requires(!ReadOnly)
   {
     assert(isValid());
-    return mutableHandler()->tipIndex(mutableContainerPtr(), m_index);
+    return component<TrackIndexType, detail_tp::kTipIndexKey>();
   }
 
   /// Get the stem index of the track
   /// @return The stem index
   const TrackIndexType& stemIndex() const {
     assert(isValid());
-    return constHandler()->stemIndex(containerPtr(), m_index);
+    return component<TrackIndexType, detail_tp::kStemIndexKey>();
   }
 
   /// Get a mutable reference to the stem index
@@ -592,7 +341,7 @@ class AnyTrack {
     requires(!ReadOnly)
   {
     assert(isValid());
-    return mutableHandler()->stemIndex(mutableContainerPtr(), m_index);
+    return component<TrackIndexType, detail_tp::kStemIndexKey>();
   }
 
   /// Get the index of this track
@@ -692,126 +441,126 @@ class AnyTrack {
   /// @return The theta value
   double theta() const {
     assert(isValid());
-    return constHandler()->theta(containerPtr(), m_index);
+    return parameters()[eBoundTheta];
   }
 
   /// Get the phi parameter
   /// @return The phi value
   double phi() const {
     assert(isValid());
-    return constHandler()->phi(containerPtr(), m_index);
+    return parameters()[eBoundPhi];
   }
 
   /// Get the q/p parameter
   /// @return The q/p value
   double qOverP() const {
     assert(isValid());
-    return constHandler()->qOverP(containerPtr(), m_index);
+    return parameters()[eBoundQOverP];
   }
 
   /// Get the charge
   /// @return The charge value
   double charge() const {
     assert(isValid());
-    return constHandler()->charge(containerPtr(), m_index);
+    return particleHypothesis().extractCharge(qOverP());
   }
 
   /// Get the absolute momentum
   /// @return The absolute momentum value
   double absoluteMomentum() const {
     assert(isValid());
-    return constHandler()->absoluteMomentum(containerPtr(), m_index);
+    return particleHypothesis().extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum
   /// @return The transverse momentum value
   double transverseMomentum() const {
     assert(isValid());
-    return constHandler()->transverseMomentum(containerPtr(), m_index);
+    return std::sin(theta()) * absoluteMomentum();
   }
 
   /// Get the number of measurements
   /// @return The number of measurements
   const unsigned int& nMeasurements() const {
     assert(isValid());
-    return constHandler()->nMeasurements(containerPtr(), m_index);
+    return component<unsigned int, detail_tp::kMeasurementsKey>();
   }
 
   unsigned int& nMeasurements()
     requires(!ReadOnly)
   {
     assert(isValid());
-    return mutableHandler()->nMeasurements(mutableContainerPtr(), m_index);
+    return component<unsigned int, detail_tp::kMeasurementsKey>();
   }
 
   /// Get the number of holes
   /// @return The number of holes
   const unsigned int& nHoles() const {
     assert(isValid());
-    return constHandler()->nHoles(containerPtr(), m_index);
+    return component<unsigned int, detail_tp::kHolesKey>();
   }
 
   unsigned int& nHoles()
     requires(!ReadOnly)
   {
     assert(isValid());
-    return mutableHandler()->nHoles(mutableContainerPtr(), m_index);
+    return component<unsigned int, detail_tp::kHolesKey>();
   }
 
   /// Get the number of outliers
   /// @return The number of outliers
   const unsigned int& nOutliers() const {
     assert(isValid());
-    return constHandler()->nOutliers(containerPtr(), m_index);
+    return component<unsigned int, detail_tp::kOutliersKey>();
   }
 
   unsigned int& nOutliers()
     requires(!ReadOnly)
   {
     assert(isValid());
-    return mutableHandler()->nOutliers(mutableContainerPtr(), m_index);
+    return component<unsigned int, detail_tp::kOutliersKey>();
   }
 
   /// Get the number of shared hits
   /// @return The number of shared hits
   const unsigned int& nSharedHits() const {
     assert(isValid());
-    return constHandler()->nSharedHits(containerPtr(), m_index);
+    return component<unsigned int, detail_tp::kSharedHitsKey>();
   }
 
   unsigned int& nSharedHits()
     requires(!ReadOnly)
   {
     assert(isValid());
-    return mutableHandler()->nSharedHits(mutableContainerPtr(), m_index);
+    return component<unsigned int, detail_tp::kSharedHitsKey>();
   }
 
   /// Get the chi2 value
   /// @return The chi2 value
   const float& chi2() const {
     assert(isValid());
-    return constHandler()->chi2(containerPtr(), m_index);
+    return component<float, detail_tp::kChi2Key>();
   }
 
   float& chi2()
     requires(!ReadOnly)
   {
     assert(isValid());
-    return mutableHandler()->chi2(mutableContainerPtr(), m_index);
+    return component<float, detail_tp::kChi2Key>();
   }
 
   /// Get the number of degrees of freedom
   /// @return The number of degrees of freedom
   const unsigned int& nDoF() const {
     assert(isValid());
-    return constHandler()->nDoF(containerPtr(), m_index);
+    return component<unsigned int, detail_tp::kNdfKey>();
   }
 
   unsigned int& nDoF()
     requires(!ReadOnly)
   {
     assert(isValid());
-    return mutableHandler()->nDoF(mutableContainerPtr(), m_index);
+    return component<unsigned int, detail_tp::kNdfKey>();
   }
 
   /// Get the number of track states
