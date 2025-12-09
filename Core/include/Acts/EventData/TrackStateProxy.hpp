@@ -805,7 +805,9 @@ class TrackStateProxy {
   /// @note This does not allocate if an allocation of the same size already exists
   /// @note This will zero-initialize the allocated storage
   /// @note This is an error if an existing allocation has different size
-  void allocateCalibrated(std::size_t measdim) {
+  void allocateCalibrated(std::size_t measdim)
+    requires(!ReadOnly)
+  {
     m_traj->allocateCalibrated(m_istate, measdim);
   }
 
@@ -820,7 +822,7 @@ class TrackStateProxy {
   template <typename val_t, typename cov_t>
   void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov)
-    requires(Concepts::eigen_base_is_fixed_size<val_t> &&
+    requires(!ReadOnly && Concepts::eigen_base_is_fixed_size<val_t> &&
              Concepts::eigen_bases_have_same_num_rows<val_t, cov_t> &&
              Concepts::eigen_base_is_square<cov_t> &&
              Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <=
