@@ -16,6 +16,15 @@
 #include <utility>
 #include <vector>
 
+// Tell the compiler to optimize the containing block assuming that
+// FP may trap.  This is sometimes needed with clang to avoid spurious FPEs
+// resulting from auto-vectorization.
+
+#if defined(__clang__) && defined(__x86_64__)
+#  pragma float_control(push)
+#  pragma float_control(except,on)
+#endif
+
 namespace Acts {
 
 /// Material description for an object with defined thickness.
@@ -157,3 +166,7 @@ using RecordedMaterialVolumePoint =
     std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3>>>;
 
 }  // namespace Acts
+
+#if defined(__clang__) && defined(__x86_64__)
+#  pragma float_control(pop)
+#endif
