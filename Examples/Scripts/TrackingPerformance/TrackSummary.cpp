@@ -27,8 +27,6 @@
 #include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
-// Boost >=1.72 can use this as a replacement
-#include <boost/timer/progress_display.hpp>
 
 using progress_display = boost::timer::progress_display;
 
