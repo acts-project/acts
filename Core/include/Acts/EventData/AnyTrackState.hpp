@@ -36,12 +36,7 @@ namespace Acts {
 template <bool read_only>
 class AnyTrackState;
 
-struct AnyTrackStateTrajectoryTag {
-  using ConstTrackStateProxy = AnyTrackState<true>;
-  using TrackStateProxy = AnyTrackState<false>;
-};
-
-namespace detail {
+namespace detail_anytstate {
 
 using TrackStateParametersMap =
     typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
@@ -332,7 +327,7 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
   TrackStateHandler() = default;
 };
 
-}  // namespace detail
+}  // namespace detail_anytstate
 
 template <bool read_only>
 class AnyTrackState {
@@ -342,20 +337,19 @@ class AnyTrackState {
   using MutableTrackState = AnyTrackState<false>;
   using ConstTrackState = AnyTrackState<true>;
   using ConstProxyType = AnyTrackState<true>;
-  using Trajectory = AnyTrackStateTrajectoryTag;
 
-  using ParametersMap = detail::TrackStateParametersMap;
-  using ConstParametersMap = detail::TrackStateConstParametersMap;
-  using CovarianceMap = detail::TrackStateCovarianceMap;
-  using ConstCovarianceMap = detail::TrackStateConstCovarianceMap;
+  using ParametersMap = detail_anytstate::TrackStateParametersMap;
+  using ConstParametersMap = detail_anytstate::TrackStateConstParametersMap;
+  using CovarianceMap = detail_anytstate::TrackStateCovarianceMap;
+  using ConstCovarianceMap = detail_anytstate::TrackStateConstCovarianceMap;
   using MutableEffectiveCalibratedMap =
-      detail::TrackStateEffectiveCalibratedMap;
+      detail_anytstate::TrackStateEffectiveCalibratedMap;
   using ConstEffectiveCalibratedMap =
-      detail::TrackStateConstEffectiveCalibratedMap;
+      detail_anytstate::TrackStateConstEffectiveCalibratedMap;
   using MutableEffectiveCalibratedCovarianceMap =
-      detail::TrackStateEffectiveCalibratedCovarianceMap;
+      detail_anytstate::TrackStateEffectiveCalibratedCovarianceMap;
   using ConstEffectiveCalibratedCovarianceMap =
-      detail::TrackStateConstEffectiveCalibratedCovarianceMap;
+      detail_anytstate::TrackStateConstEffectiveCalibratedCovarianceMap;
 
   using ContainerPointer = std::conditional_t<ReadOnly, const void*, void*>;
 
@@ -370,7 +364,7 @@ class AnyTrackState {
     } else {
       m_container = static_cast<void*>(containerPtr);
     }
-    m_handler = &detail::TrackStateHandler<trajectory_t>::instance();
+    m_handler = &detail_anytstate::TrackStateHandler<trajectory_t>::instance();
   }
 
   TrackIndexType index() const { return m_index; }
@@ -796,14 +790,15 @@ class AnyTrackState {
     return mutableHandler()->covariance(mutableContainerPtr(), covIndex);
   }
 
-  const detail::TrackStateHandlerConstBase* constHandler() const {
+  const detail_anytstate::TrackStateHandlerConstBase* constHandler() const {
     return m_handler;
   }
 
-  const detail::TrackStateHandlerMutableBase* mutableHandler() const
+  const detail_anytstate::TrackStateHandlerMutableBase* mutableHandler() const
     requires(!ReadOnly)
   {
-    return static_cast<const detail::TrackStateHandlerMutableBase*>(m_handler);
+    return static_cast<const detail_anytstate::TrackStateHandlerMutableBase*>(
+        m_handler);
   }
 
   const void* containerPtr() const {
@@ -822,7 +817,7 @@ class AnyTrackState {
 
   ContainerPointer m_container;
   TrackIndexType m_index;
-  const detail::TrackStateHandlerConstBase* m_handler;
+  const detail_anytstate::TrackStateHandlerConstBase* m_handler;
 };
 
 using AnyConstTrackState = AnyTrackState<true>;

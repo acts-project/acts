@@ -34,10 +34,10 @@ template <typename derived_t>
 class MultiTrajectory;
 class Surface;
 
-namespace detail {
+namespace detail_anytstate {
 template <typename trajectory_t>
 class TrackStateHandler;
-}  // namespace detail
+}  // namespace detail_anytstate
 
 namespace detail_lt {
 
@@ -178,7 +178,7 @@ class MultiTrajectory {
   template <bool R>
   friend class AnyTrackState;
   template <typename T>
-  friend class detail::TrackStateHandler;
+  friend class detail_anytstate::TrackStateHandler;
   template <typename T>
   friend class MultiTrajectory;
 
