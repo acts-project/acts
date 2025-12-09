@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/AnyTrack.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
@@ -73,32 +72,6 @@ void fillTestTrack(typename track_container_t::TrackProxy track) {
 
 BOOST_AUTO_TEST_SUITE(EventDataAnyTrack)
 
-BOOST_AUTO_TEST_CASE(ConstructDefault) {
-  // Default constructed track should be invalid
-  AnyMutableTrack track;
-  BOOST_CHECK(!track.isValid());
-  BOOST_CHECK(!track);
-}
-
-BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_RefHolder) {
-  VectorTrackContainer vtc;
-  VectorMultiTrajectory mtj;
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
-
-  auto track = tc.makeTrack();
-  fillTestTrack<decltype(tc)>(track);
-
-  // Construct from track proxy
-  AnyMutableTrack anyTrack(track);
-
-  BOOST_CHECK(anyTrack.isValid());
-  BOOST_CHECK(anyTrack);
-
-  // Verify index
-  BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
-}
-
 BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_ValueHolder) {
   TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
                  detail::ValueHolder>
@@ -109,9 +82,6 @@ BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_ValueHolder) {
 
   // Construct from track proxy
   AnyMutableTrack anyTrack(track);
-
-  BOOST_CHECK(anyTrack.isValid());
-  BOOST_CHECK(anyTrack);
 
   // Verify index
   BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
@@ -128,9 +98,6 @@ BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_SharedPtr) {
 
   // Construct from track proxy
   AnyMutableTrack anyTrack(track);
-
-  BOOST_CHECK(anyTrack.isValid());
-  BOOST_CHECK(anyTrack);
 
   // Verify index
   BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
@@ -151,7 +118,6 @@ BOOST_AUTO_TEST_CASE(ConstructFromConstTrackProxy) {
   // Construct from const track proxy
   AnyConstTrack anyTrack(constTrack);
 
-  BOOST_CHECK(anyTrack.isValid());
   BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
 }
 
@@ -550,15 +516,12 @@ BOOST_AUTO_TEST_CASE(ConstCorrectnessRestrictions) {
   // These should compile:
   // 1. AnyMutableTrack from mutable track proxy
   AnyMutableTrack anyMutable1(mutableTrack);
-  BOOST_CHECK(anyMutable1.isValid());
 
   // 2. AnyConstTrack from mutable track proxy
   AnyConstTrack anyConst1(mutableTrack);
-  BOOST_CHECK(anyConst1.isValid());
 
   // 3. AnyConstTrack from const track proxy
   AnyConstTrack anyConst2(constTrack);
-  BOOST_CHECK(anyConst2.isValid());
 
   // The following should NOT compile (uncomment to test):
   // AnyMutableTrack anyMutable2(constTrack);  // Error: cannot create mutable
