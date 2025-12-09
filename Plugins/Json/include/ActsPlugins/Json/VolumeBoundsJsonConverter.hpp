@@ -21,8 +21,6 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-// can not match our naming guidelines.
 namespace Acts {
 
 /// @addtogroup json_plugin
@@ -76,7 +74,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {VolumeBounds::BoundsType::eCylinder, "Cylinder"},
      {VolumeBounds::BoundsType::eGenericCuboid, "GenericCuboid"},
      {VolumeBounds::BoundsType::eTrapezoid, "Trapezoid"}})
-
 
 /// @}
 }  // namespace Acts

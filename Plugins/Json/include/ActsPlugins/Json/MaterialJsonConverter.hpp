@@ -16,8 +16,6 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-// can not match our naming guidelines.
 namespace Acts {
 
 /// @addtogroup json_plugin
@@ -118,7 +116,6 @@ nlohmann::json toJsonDetray(const Acts::BinUtility& binUtility,
                             const Acts::Surface& surface);
 
 }  // namespace MaterialJsonConverter
-
 
 /// @}
 }  // namespace Acts

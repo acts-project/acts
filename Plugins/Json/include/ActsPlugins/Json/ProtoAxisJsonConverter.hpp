@@ -13,12 +13,6 @@
 
 #include <nlohmann/json.hpp>
 
-/// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-/// can not match our naming guidelines.
-///
-/// This uses a custom API and nomenclature as it would
-/// otherwise require the ProtoAxis to have a default
-/// constructor which is deleted
 namespace Acts {
 
 /// @addtogroup json_plugin

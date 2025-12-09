@@ -19,8 +19,6 @@
 #include <tuple>
 #include <vector>
 
-// Custom Json encoder/decoders
-
 namespace Acts {
 
 class Surface;
