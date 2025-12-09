@@ -30,5 +30,3 @@ def ConcretePropagator(propagator):
 
 
 _patch_config(ActsPythonBindings._examples)
-
-

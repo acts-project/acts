@@ -11,16 +11,15 @@ from acts._adapter import _patch_config
 
 _patch_config(ActsExamplesPythonBindings)
 
-_propagators = []
 _concrete_propagators = []
 for stepper in ("Eigen", "Atlas", "StraightLine", "Sympy"):
-    _propagators.append(getattr(acts._propagator, f"{stepper}Propagator"))
     _concrete_propagators.append(
         getattr(
-            acts.examples,
+            ActsExamplesPythonBindings,
             f"{stepper}ConcretePropagator",
         )
     )
+
 
 def ConcretePropagator(propagator):
     for prop, prop_if in zip(_propagators, _concrete_propagators):
@@ -28,6 +27,7 @@ def ConcretePropagator(propagator):
             return prop_if(propagator)
 
     raise TypeError(f"Unknown propagator {type(propagator).__name__}")
+
 
 def NamedTypeArgs(**namedTypeArgs):
     """Decorator to move args of a named type (e.g. `namedtuple` or `Enum`) to kwargs based on type, so user doesn't need to specify the key name.
@@ -329,7 +329,9 @@ class Sequencer(ActsExamplesPythonBindings._Sequencer):
 
             return cls.fromDict(d)
 
-        _fpe_types_to_enum = {v.name: v for v in ActsExamplesPythonBindings.FpeType.values}
+        _fpe_types_to_enum = {
+            v.name: v for v in ActsExamplesPythonBindings.FpeType.values
+        }
 
         @staticmethod
         def toDict(

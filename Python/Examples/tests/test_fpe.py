@@ -278,10 +278,14 @@ def test_buffer_sufficient():
         failOnFirstFpe=False,
     )
 
-    s.addAlgorithm(FuncAlg("Invalid", lambda _: acts.examples.FpeMonitor._trigger_invalid()))
+    s.addAlgorithm(
+        FuncAlg("Invalid", lambda _: acts.examples.FpeMonitor._trigger_invalid())
+    )
     with pytest.raises(RuntimeError):
         s.run()
 
     res = s.fpeResult
     for x in acts.examples.FpeType.values:
-        assert res.count(x) == (s.config.events if x == acts.examples.FpeType.FLTINV else 0)
+        assert res.count(x) == (
+            s.config.events if x == acts.examples.FpeType.FLTINV else 0
+        )
