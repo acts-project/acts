@@ -3,7 +3,13 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(_python_install_dir "python/acts/examples")
-set(py_files)
+set(py_files
+    __init__.py
+    simulation.py
+    reconstruction.py
+    itk.py
+    odd.py
+)
 
 # Macro to add example bindings conditionally
 macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
@@ -84,6 +90,7 @@ target_sources(
         src/Detector.cpp
         src/Digitization.cpp
         src/MaterialMapping.cpp
+        src/Propagation.cpp
         src/TrackFinding.cpp
         src/TrackFitting.cpp
         src/TruthTracking.cpp
@@ -122,6 +129,7 @@ target_link_libraries(
         Acts::ExamplesUtilities
         Acts::ExamplesIoCsv
         Acts::ExamplesIoObj
+        Acts::ExamplesPropagation
         Acts::ExamplesTrackFinding
         Acts::ExamplesTrackFitting
         Acts::ExamplesTruthTracking
@@ -215,3 +223,5 @@ foreach(f ${py_files})
         DESTINATION ${_python_install_dir}/${_rel}
     )
 endforeach()
+
+# Finally copy the python files

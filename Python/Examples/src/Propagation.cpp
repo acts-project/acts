@@ -14,7 +14,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
@@ -68,19 +67,13 @@ void addPropagation(py::module& mex) {
       mex, "PropagatorInterface");
 
   // Eigen stepper based propagator
-  {
-    addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen");
-  }
+  { addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen"); }
 
   // ATLAS stepper based propagator
-  {
-    addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas");
-  }
+  { addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas"); }
 
   // Sympy stepper based propagator
-  {
-    addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy");
-  }
+  { addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy"); }
 
   // Straight line stepper
   {
