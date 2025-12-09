@@ -224,11 +224,11 @@ concept MutableTrackStateProxyConcept =
 
       { v.jacobian() } -> std::same_as<detail::Covariance>;
 
-      { v.setProjector(projector) };
+      requires requires(BoundSubspaceIndices m) {
+        v.setProjectorSubspaceIndices(m);
+      };
 
-      { v.setProjectorBitset(projectorBitset) };
-
-      { v.setUncalibratedSourceLink(sl) };
+      { v.setUncalibratedSourceLink(std::move(sl)) };
 
       { v.template calibrated<2>() } -> std::same_as<detail::Measurement>;
       {
