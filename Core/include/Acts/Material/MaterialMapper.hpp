@@ -26,12 +26,15 @@ namespace Acts {
 /// @ingroup material_mapping
 class MaterialMapper {
  public:
+  /// @deprecated Use @ref Acts::SurfaceMaterialMaps directly
   using SurfaceMaterialMap
       [[deprecated("Use Acts::SurfaceMaterialMaps directly")]] =
           SurfaceMaterialMaps;
+  /// @deprecated Use @ref Acts::VolumeMaterialMaps directly
   using VolumeMaterialMap
       [[deprecated("Use Acts::VolumeMaterialMaps directly")]] =
           VolumeMaterialMaps;
+  /// @deprecated Use @ref Acts::TrackingGeometryMaterial directly
   using DetectorMaterialMaps
       [[deprecated("Use Acts::TrackingGeometryMaterial directly")]] =
           TrackingGeometryMaterial;
