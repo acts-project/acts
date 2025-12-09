@@ -137,10 +137,6 @@ class TrackStateHandlerMutableBase : public TrackStateHandlerConstBase {
 
   virtual void addTrackStateComponents(void* container, TrackIndexType index,
                                        TrackStatePropMask mask) const = 0;
-
-  virtual void copyDynamicFrom(void* container, TrackIndexType self,
-                               const void* otherContainer,
-                               TrackIndexType other) const = 0;
 };
 
 template <typename trajectory_t>
@@ -310,17 +306,6 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     traj->addTrackStateComponents(index, mask);
-  }
-
-  void copyDynamicFrom(void* container, TrackIndexType self,
-                       const void* otherContainer,
-                       TrackIndexType other) const override {
-    assert(container != nullptr);
-    assert(otherContainer != nullptr);
-    auto* traj = static_cast<MultiTrajectoryType*>(container);
-    const auto* otherTraj =
-        static_cast<const MultiTrajectoryType*>(otherContainer);
-    traj->copyDynamicFrom(self, *otherTraj, other);
   }
 
  private:
