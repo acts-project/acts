@@ -257,6 +257,7 @@ class AnyTrack {
   /// @return reference to this track
   AnyTrack& operator=(const AnyTrack& other) = default;
 
+ private:
   /// Constructor from mutable track
   /// @note Only available if this is read-only
   /// @param other the other track
@@ -279,6 +280,7 @@ class AnyTrack {
     return *this;
   }
 
+ public:
   /// Construct from a concrete track proxy
   /// @tparam track_proxy_t The concrete track proxy type
   /// @param track The track proxy to wrap
