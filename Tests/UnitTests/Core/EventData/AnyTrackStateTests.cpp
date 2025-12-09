@@ -111,6 +111,55 @@ BOOST_FIXTURE_TEST_CASE(AccessCalibratedFixedSize, TestTrackStateFixture) {
   BOOST_CHECK_CLOSE(constCov(0, 0), 0.5, 1e-6);
 }
 
+BOOST_FIXTURE_TEST_CASE(AccessEffectiveCalibratedDynamic,
+                        TestTrackStateFixture) {
+  auto track = container.makeTrack();
+  auto state = container.trackStateContainer().makeTrackState();
+  track.tipIndex() = state.index();
+
+  constexpr std::size_t measdim = 3u;
+  state.allocateCalibrated(measdim);
+  {
+    auto dyn = state.effectiveCalibrated();
+    for (std::size_t i = 0; i < measdim; ++i) {
+      dyn[i] = 1. + static_cast<double>(i);
+    }
+  }
+  {
+    auto dynCov = state.effectiveCalibratedCovariance();
+    dynCov.setZero();
+    for (std::size_t i = 0; i < measdim; ++i) {
+      dynCov(i, i) = 0.1 * static_cast<double>(i + 1);
+    }
+  }
+
+  AnyMutableTrackState anyState(state);
+  BOOST_CHECK_EQUAL(anyState.calibratedSize(), measdim);
+  auto eff = anyState.effectiveCalibrated();
+  BOOST_CHECK_EQUAL(eff.size(), measdim);
+  BOOST_CHECK_CLOSE(eff[0], 1., 1e-6);
+  BOOST_CHECK_CLOSE(eff[2], 3., 1e-6);
+  eff[1] = 5.5;
+  BOOST_CHECK_CLOSE(state.effectiveCalibrated()[1], 5.5, 1e-6);
+
+  auto effCov = anyState.effectiveCalibratedCovariance();
+  BOOST_CHECK_EQUAL(effCov.rows(), measdim);
+  BOOST_CHECK_EQUAL(effCov.cols(), measdim);
+  BOOST_CHECK_CLOSE(effCov(0, 0), 0.1, 1e-6);
+  BOOST_CHECK_CLOSE(effCov(2, 2), 0.3, 1e-6);
+  effCov(1, 1) = 1.7;
+  BOOST_CHECK_CLOSE(state.effectiveCalibratedCovariance()(1, 1), 1.7, 1e-6);
+
+  AnyConstTrackState constState(state);
+  BOOST_CHECK_EQUAL(constState.calibratedSize(), measdim);
+  auto constEff = constState.effectiveCalibrated();
+  BOOST_CHECK_EQUAL(constEff.size(), measdim);
+  BOOST_CHECK_CLOSE(constEff[1], 5.5, 1e-6);
+  auto constEffCov = constState.effectiveCalibratedCovariance();
+  BOOST_CHECK_EQUAL(constEffCov.rows(), measdim);
+  BOOST_CHECK_CLOSE(constEffCov(1, 1), 1.7, 1e-6);
+}
+
 BOOST_FIXTURE_TEST_CASE(ProxyAccessorWithAnyTrackState, TestTrackStateFixture) {
   container.trackStateContainer().addColumn<float>("customFloat");
 
