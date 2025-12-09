@@ -528,15 +528,14 @@ class AnyTrackState {
   template <typename val_t, typename cov_t>
   void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov)
-    requires(!ReadOnly)
+    requires(!ReadOnly && Concepts::eigen_base_is_fixed_size<val_t> &&
+             Concepts::eigen_bases_have_same_num_rows<val_t, cov_t> &&
+             Concepts::eigen_base_is_square<cov_t> &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <=
+                 static_cast<std::underlying_type_t<BoundIndices>>(eBoundSize))
   {
     constexpr std::size_t measdim =
         static_cast<std::size_t>(val_t::RowsAtCompileTime);
-    static_assert(measdim > 0, "Measurement dimension must be static");
-    static_assert(measdim <= eBoundSize,
-                  "Measurement dimension exceeds bound parameters");
-    static_assert(cov_t::RowsAtCompileTime == val_t::RowsAtCompileTime);
-    static_assert(cov_t::ColsAtCompileTime == val_t::RowsAtCompileTime);
     allocateCalibrated(measdim);
     calibrated<measdim>() = val;
     calibratedCovariance<measdim>() = cov;
