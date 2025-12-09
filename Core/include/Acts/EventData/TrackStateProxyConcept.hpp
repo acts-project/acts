@@ -187,23 +187,6 @@ concept MutableTrackStateProxyConcept =
              Eigen::Matrix<double, 3, 6> projector,
              ProjectorBitset projectorBitset, SourceLink sl,
              std::size_t measdim) {
-      { v.shareFrom(mask, mask) };
-
-      {
-        v.shareFrom(
-            std::declval<typename T::Trajectory::ConstTrackStateProxy>(), mask)
-      };
-
-      { v.shareFrom(std::declval<T>(), mask) };
-
-      // Cannot verify copyFrom compatibility with other backend proxies
-      {
-        v.copyFrom(std::declval<typename T::Trajectory::ConstTrackStateProxy>(),
-                   mask)
-      };
-
-      { v.copyFrom(std::declval<T>(), mask) };
-
       { v.unset(mask) };
 
       // Cannot verify for all types, so just check int
