@@ -30,8 +30,9 @@ inline std::size_t binsOfProtoAxis(const Acts::DirectedProtoAxis& axis) {
 inline std::size_t totalBinsFromProtoAxes(
     std::span<const Acts::DirectedProtoAxis> axes) {
   if (axes.size() <= 0 || axes.size() > 3) {
-    throw std::runtime_error("Unsupported number of axes, must be 1-3, instead got " +
-                             std::to_string(axes.size()) + ")");
+    throw std::runtime_error(
+        "Unsupported number of axes, must be 1-3, instead got " +
+        std::to_string(axes.size()) + ")");
   }
   return axes[0].getAxis().getNBins() *
          (axes.size() > 1 ? axes[1].getAxis().getNBins() : 1) *
@@ -45,8 +46,9 @@ inline std::size_t totalBinsFromProtoAxes(
 inline std::size_t binsFromProtoAxes(
     std::span<const Acts::DirectedProtoAxis> axes, std::size_t ba) {
   if (axes.size() <= 0 || axes.size() > 3) {
-    throw std::runtime_error("Unsupported number of axes, must be 1-3, instead got " +
-                             std::to_string(axes.size()) + ")");
+    throw std::runtime_error(
+        "Unsupported number of axes, must be 1-3, instead got " +
+        std::to_string(axes.size()) + ")");
   }
   Acts::BinningData bd(axes[ba]);
   return bd.bins();
@@ -81,8 +83,9 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
   const Acts::Vector3& bPosition = gp;
   std::array<std::size_t, 3> bTriple = {0, 0, 0};
   if (axes.size() <= 0 || axes.size() > 3) {
-    throw std::runtime_error("Unsupported number of axes, must be 1-3, instead got " +
-                             std::to_string(axes.size()) + ")");
+    throw std::runtime_error(
+        "Unsupported number of axes, must be 1-3, instead got " +
+        std::to_string(axes.size()) + ")");
   }
   if (axes.size() == 1) {
     Acts::BinningData bd0(axes[0]);
@@ -109,8 +112,9 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
 inline std::size_t maxBin(std::span<const Acts::DirectedProtoAxis> axes,
                           std::size_t ba = 0) {
   if (axes.size() <= 0 || axes.size() > 3) {
-    throw std::runtime_error("Unsupported number of axes, must be 1-3, instead got " +
-                             std::to_string(axes.size()) + ")");
+    throw std::runtime_error(
+        "Unsupported number of axes, must be 1-3, instead got " +
+        std::to_string(axes.size()) + ")");
   }
   std::vector<Acts::BinningData> binningDataVec;
   binningDataVec.reserve(axes.size());
@@ -123,4 +127,4 @@ inline std::size_t maxBin(std::span<const Acts::DirectedProtoAxis> axes,
   return (binningDataVec.at(ba).bins() - 1);
 }
 
-}  // namespace ProtoAxisHelpers
+}  // namespace Acts::ProtoAxisHelpers
