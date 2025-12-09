@@ -223,12 +223,6 @@ struct SeedFinderConfig {
 
   /// Flag indicating whether configuration uses ACTS internal units
   bool isInInternalUnits = true;
-  /// Convert configuration to internal units (no-op as already in internal
-  /// units)
-  /// @deprecated SeedFinderConfig uses internal units
-  /// @return Copy of this configuration (already in internal units)
-  //[[deprecated("SeedFinderConfig uses internal units")]]
-  SeedFinderConfig toInternalUnits() const { return *this; }
 
   /// Calculate derived quantities from the current configuration
   /// @return A new configuration with derived quantities calculated
@@ -256,8 +250,6 @@ struct SeedFinderOptions {
   float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
 
   bool isInInternalUnits = true;
-  //[[deprecated("SeedFinderOptions uses internal units")]]
-  SeedFinderOptions toInternalUnits() const { return *this; }
 
   template <typename Config>
   SeedFinderOptions calculateDerivedQuantities(const Config& config) const {

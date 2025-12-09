@@ -84,8 +84,6 @@ struct CylindricalSpacePointGridConfig {
   std::vector<float> rBinEdges{};
 
   bool isInInternalUnits = true;
-  //[[deprecated("CylindricalSpacePointGridConfig uses internal units")]]
-  CylindricalSpacePointGridConfig toInternalUnits() const { return *this; }
 
   void checkConfig() const {
     if (phiMin < -std::numbers::pi_v<float> ||
@@ -116,8 +114,6 @@ struct CylindricalSpacePointGridOptions {
   float bFieldInZ = 0 * UnitConstants::T;
 
   bool isInInternalUnits = true;
-  //[[deprecated("CylindricalSpacePointGridOptions uses internal units")]]
-  CylindricalSpacePointGridOptions toInternalUnits() const { return *this; }
 };
 
 /// Instructions on how to create and fill this grid specialization

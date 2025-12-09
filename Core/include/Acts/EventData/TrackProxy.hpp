@@ -609,31 +609,6 @@ class TrackProxy {
     return ts;
   }
 
-  /// Copy the content of another track proxy into this one
-  /// @note Only available if the track proxy is not read-only
-  /// @tparam track_proxy_t the other track proxy's type
-  /// @param other The track proxy
-  /// @param copyTrackStates Copy the track state sequence from @p other
-  template <TrackProxyConcept track_proxy_t>
-  [[deprecated(
-      "copyFrom() with copyTrackStates == false is deprecated, use "
-      "copyFromWithoutStates()")]]
-  void copyFrom(const track_proxy_t& other, bool copyTrackStates)
-    requires(!ReadOnly)
-  {
-    if (copyTrackStates) {
-      copyFrom(other);
-    } else {
-      // Emulate previous behavior
-      auto prevTipIndex = tipIndex();
-      auto prevStemIndex = stemIndex();
-      copyFromWithoutStates(other);
-      // Reset to previous values
-      tipIndex() = prevTipIndex;
-      stemIndex() = prevStemIndex;
-    }
-  }
-
   /// Create a complete deep copy of another track, including all track states.
   /// This creates new track states in the destination trajectory and copies
   /// all data from the source track states. The track state sequence order
@@ -736,19 +711,6 @@ class TrackProxy {
 
     tipIndex() = kInvalid;
     stemIndex() = kInvalid;
-  }
-
-  /// Creates  a *shallow copy* of the track. Track states are not copied, but
-  /// the resulting track points at the same track states as the original.
-  /// @note Only available if the track proxy is not read-only
-  /// @return A shallow copy of this track proxy
-  [[deprecated("Use copyFromShallow() instead")]]
-  TrackProxy shallowCopy()
-    requires(!ReadOnly)
-  {
-    auto t = container().makeTrack();
-    t.copyFromShallow(*this);
-    return t;
   }
 
   /// Create a shallow copy from another track, sharing the same track states.
