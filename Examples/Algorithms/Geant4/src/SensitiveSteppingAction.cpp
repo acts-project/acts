@@ -29,14 +29,11 @@
 #include <G4RunManager.hh>
 #include <G4Step.hh>
 #include <G4StepPoint.hh>
-#include <G4StepStatus.hh>
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
 #include <G4VTouchable.hh>
 #include <boost/describe.hpp>
-
-class G4PrimaryParticle;
 
 BOOST_DESCRIBE_ENUM(G4StepStatus, fWorldBoundary, fGeomBoundary,
                     fAtRestDoItProc, fAlongStepDoItProc, fPostStepDoItProc,
