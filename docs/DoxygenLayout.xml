@@ -6,6 +6,8 @@
     <tab type="mainpage" visible="yes" title=""/>
     <!-- <tab type="pages" visible="yes" title="" intro=""/> -->
 
+    <tab type="user" url="@ref tracking" visible="yes" title="Tracking in a nutshell"/>
+
     <tab type="usergroup" title="Contribution" url="[none]">
       <tab type="user" url="@ref contribution_clang_tidy" visible="yes" title="Clang Tidy"/>
       <tab type="user" url="@ref howto_profiling" visible="yes" title="Profiling"/>
@@ -60,6 +62,8 @@
     <!--   <tab type="globals" visible="yes" title="" intro=""/> -->
     <!-- </tab> -->
     <!-- <tab type="examples" visible="yes" title="" intro=""/> -->
+
+    <tab type="user" url="@ref citelist" visible="yes" title="Bibliography"/>
 
   </navindex>
 

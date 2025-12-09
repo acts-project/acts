@@ -1,4 +1,6 @@
 @defgroup magnetic_field Magnetic Field
+@ingroup detector_descr
+@ingroup propagation
 @brief A description of magnetic field configurations for algorithms.
 
 The magnetic field component of ACTS provides functionality to describe
