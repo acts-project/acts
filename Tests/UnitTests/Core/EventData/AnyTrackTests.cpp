@@ -47,7 +47,7 @@ void fillTestTrack(typename track_container_t::TrackProxy track) {
   params[eBoundLoc1] = 2.0;
   params[eBoundTime] = 3.0;
   params[eBoundPhi] = 0.5;
-  params[eBoundTheta] = M_PI / 4.0;
+  params[eBoundTheta] = std::numbers::pi / 4.0;
   params[eBoundQOverP] = 0.1;
 
   // Set covariance
