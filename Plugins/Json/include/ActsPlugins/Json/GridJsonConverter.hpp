@@ -16,7 +16,6 @@
 
 #include <iostream>
 
-// Custom Json encoder/decoders.
 namespace Acts {
 
 /// @addtogroup json_plugin

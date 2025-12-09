@@ -20,7 +20,6 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders.
 namespace Acts {
 
 /// @addtogroup json_plugin
@@ -84,7 +83,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {SurfaceBounds::BoundsType::eAnnulus, "AnnulusBounds"},
      {SurfaceBounds::BoundsType::eBoundless, "Boundless"},
      {SurfaceBounds::BoundsType::eOther, "OtherBounds"}})
-
 
 /// @}
 }  // namespace Acts

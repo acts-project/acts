@@ -16,9 +16,6 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-// can not match our naming guidelines.
-
 namespace Acts {
 
 /// @addtogroup json_plugin
@@ -55,7 +52,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(AxisDirection,
                               {AxisDirection::AxisTheta, "AxisTheta"},
                               {AxisDirection::AxisEta, "AxisEta"},
                               {AxisDirection::AxisMag, "AxisMag"}})
-
 
 /// @}
 }  // namespace Acts
