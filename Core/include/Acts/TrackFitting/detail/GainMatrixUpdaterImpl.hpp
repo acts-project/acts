@@ -46,11 +46,16 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 
   ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-  const auto K = (trackState.predictedCovariance() * H.transpose() *
-                  (H * trackState.predictedCovariance() * H.transpose() +
-                   calibratedCovariance)
-                      .inverse())
-                     .eval();
+  auto filtered = trackState.filtered();
+  auto filteredCovariance = trackState.filteredCovariance();
+  const auto predicted = trackState.predicted();
+  const auto predictedCovariance = trackState.predictedCovariance();
+
+  const auto K =
+      (predictedCovariance * H.transpose() *
+       (H * predictedCovariance * H.transpose() + calibratedCovariance)
+           .inverse())
+          .eval();
 
   ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
@@ -59,17 +64,16 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
     return {0, KalmanFitterError::UpdateFailed};
   }
 
-  trackState.filtered() =
-      trackState.predicted() + K * (calibrated - H * trackState.predicted());
+  filtered = predicted + K * (calibrated - H * predicted);
   // Normalize phi and theta
-  trackState.filtered() = normalizeBoundParameters(trackState.filtered());
-  trackState.filteredCovariance() = (BoundSquareMatrix::Identity() - K * H) *
-                                    trackState.predictedCovariance();
-  ACTS_VERBOSE("Filtered parameters: " << trackState.filtered().transpose());
-  ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance());
+  filtered = normalizeBoundParameters(filtered);
+  filteredCovariance =
+      (BoundSquareMatrix::Identity() - K * H) * predictedCovariance;
+  ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
+  ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
 
   ParametersVector residual;
-  residual = calibrated - H * trackState.filtered();
+  residual = calibrated - H * filtered;
   ACTS_VERBOSE("Residual: " << residual.transpose());
 
   CovarianceMatrix m =
