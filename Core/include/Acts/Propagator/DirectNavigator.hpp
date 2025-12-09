@@ -293,21 +293,17 @@ class DirectNavigator {
 
     ACTS_VERBOSE("DirectNavigator::nextTarget");
 
-    // Establish & update the surface status
-    while (true) {
-      // Move the sequence to the next surface
-      state.nextSurface();
+    // Move the sequence to the next surface
+    state.nextSurface();
 
-      if (state.endOfSurfaces()) {
-        break;
-      }
-
+    while (!state.endOfSurfaces()) {
       ACTS_VERBOSE("Next surface candidate is "
                    << state.navSurface().geometryId() << ". "
                    << state.remainingSurfaces() << " out of "
                    << state.options.surfaces.size()
                    << " surfaces remain to try.");
 
+      // Establish & update the surface status
       // TODO we do not know the intersection index - passing the closer one
       const Surface& surface = state.navSurface();
       const double farLimit = std::numeric_limits<double>::max();
@@ -321,6 +317,7 @@ class DirectNavigator {
 
       ACTS_VERBOSE("No valid intersection found with surface "
                    << surface.geometryId() << ", trying next surface.");
+      state.nextSurface();
     }
 
     ACTS_VERBOSE("End of surfaces reached, navigation break.");
