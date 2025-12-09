@@ -1,1 +1,1 @@
-@defgroup contribution Contribution
+@page contribution Contribution

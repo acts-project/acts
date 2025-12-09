@@ -1,6 +1,5 @@
-@defgroup contribution_clang_tidy Clang Tidy
+@page contribution_clang_tidy Clang Tidy
 @brief Static analysis with clang-tidy
-@ingroup contribution
 
 [`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/) is a static analysis
 tool using the LLVM / clang tooling. It can detect a number of issues with C++

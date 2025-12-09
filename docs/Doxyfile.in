@@ -774,6 +774,7 @@ WARN_LOGFILE           =
 INPUT                  = index.md \
                          getting_started.md \
                          groups \
+                         pages \
                          examples \
                          namespaces.hpp \
                          experimental.md \
