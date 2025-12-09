@@ -83,7 +83,6 @@ target_sources(
     ActsExamplesPythonBindings
     PRIVATE
         src/Framework.cpp
-        src/Alignment.cpp
         src/ExampleAlgorithms.cpp
         src/Generators.cpp
         src/AmbiguityResolution.cpp
@@ -119,7 +118,6 @@ target_link_libraries(
         Acts::ExamplesFramework
         Acts::ExamplesFatras
         Acts::ExamplesAmbiguityResolution
-        Acts::ExamplesAlignment
         Acts::ExamplesDetectorsCommon
         Acts::ExamplesDetectorGeneric
         Acts::ExamplesDetectorTelescope
@@ -137,6 +135,14 @@ target_link_libraries(
         Acts::ExamplesPrinters
         Acts::PythonUtilities
 )
+
+if(ACTS_BUILD_ALIGNMENT)
+    target_sources(ActsExamplesPythonBindings PRIVATE src/Alignment.cpp)
+    target_link_libraries(
+        ActsExamplesPythonBindings
+        PUBLIC Acts::ExamplesAlignment
+    )
+endif()
 
 # Add all plugin related examples bindings conditionally to their build flag
 add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
