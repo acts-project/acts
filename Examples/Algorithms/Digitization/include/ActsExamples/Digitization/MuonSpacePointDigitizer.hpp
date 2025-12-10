@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MuonSpacePointCalibrator.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -32,6 +33,8 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     std::string inputParticles{"particles_simulated"};
     /// @brief Name of the output space points collection
     std::string outputSpacePoints{"MuonSpacePoints"};
+    /// @brief Output measurements collection.
+    std::string outputMeasurements = "measurements";
     /// @brief Random number generator service
     std::shared_ptr<const RandomNumbers> randomNumbers{};
     /// @brief Pointer to the muon calibrator to fetch the smearing constants
@@ -99,5 +102,7 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   /// @brief Data handle for the output space points
   WriteDataHandle<MuonSpacePointContainer> m_outputSpacePoints{this,
                                                                "SpacePoints"};
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
+      this, "OutputMeasurements"};
 };
 }  // namespace ActsExamples

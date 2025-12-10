@@ -110,12 +110,16 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
   if (m_cfg.outputSpacePoints.empty()) {
     throw std::invalid_argument("No output space points were defined");
   }
+  if (m_cfg.outputMeasurements.empty()) {
+    throw std::invalid_argument("Missing measurements output collection");
+  }
   ACTS_DEBUG("Retrieve sim hits and particles from "
              << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
   ACTS_DEBUG("Write produced space points to " << m_cfg.outputSpacePoints);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
 }
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
