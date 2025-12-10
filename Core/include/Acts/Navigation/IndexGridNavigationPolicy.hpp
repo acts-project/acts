@@ -25,7 +25,7 @@ class IndexGridNavigationConfig {
   /// The binning expansion for grid neighbor lookups
   std::vector<std::size_t> binExpansion = {0u, 0u};
 
-  /// The reference expansion 
+  /// The reference expansion
   std::vector<double> referenceExpansion = {};
 
   /// A potential lookup surface - this would be intersected first,
@@ -85,7 +85,7 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const {
     ACTS_VERBOSE(
-        "IndexGridNavigationPolicy: candidates initialization for volume '" 
+        "IndexGridNavigationPolicy: candidates initialization for volume '"
         << m_volume.volumeName() << "'");
 
     // Nominal or intersected position
@@ -144,14 +144,13 @@ using RegularRingIndexGrid =
 using RegularRingIndexGridNavigationPolicy =
     IndexGridNavigationPolicy<RegularRingIndexGrid>;
 
-
 // Regular disc is in r and phi
 using RegularDiscIndexGrid =
     Grid<std::vector<std::size_t>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Closed>>;
 using RegularDiscIndexGridNavigationPolicy =
-    IndexGridNavigationPolicy<RegularDiscIndexGrid>;    
+    IndexGridNavigationPolicy<RegularDiscIndexGrid>;
 
 static_assert(NavigationPolicyConcept<RegularDiscIndexGridNavigationPolicy>);
 
@@ -161,8 +160,7 @@ using RegularPlaneIndexGrid =
          Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
 using RegularPlaneIndexGridNavigationPolicy =
-    IndexGridNavigationPolicy<RegularPlaneIndexGrid>;   
-static_assert(
-    NavigationPolicyConcept<RegularPlaneIndexGridNavigationPolicy>);
+    IndexGridNavigationPolicy<RegularPlaneIndexGrid>;
+static_assert(NavigationPolicyConcept<RegularPlaneIndexGridNavigationPolicy>);
 
 }  // namespace Acts::Experimental

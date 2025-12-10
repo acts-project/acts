@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
 
 BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   // Most of the tests are covered by the plane grid, we can concentrate here on
-  // the phi periodicity & the projected referecne generator
+  // the phi periodicity & the projected reference generator
 
   // Test setup:
   // - We create a grid in z: -20 to 20 in 20 bins in z
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(RegularDiscIndexGridTests) {
                                               *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
   BOOST_CHECK(&nStream.currentCandidate().surface() == surface0.get());
-  // Check the neighboring bin, which shoudl not be filled by surface0 and
+  // Check the neighboring bin, which should not be filled by surface0 and
   // surface1
   nStream.reset();
   navArgs.position = Vector3(7.5 * std::cos(1.1 * std::numbers::pi / 5),
@@ -421,14 +421,14 @@ BOOST_AUTO_TEST_CASE(RegularRingIndexGridTests) {
   BOOST_CHECK_THROW(
       {
         Experimental::IndexGridNavigationPolicy<decltype(gridPhi)>
-            centerNavigationPolicyThrow(tContext, tVolume, *tLogger, centerConfig,
-                                   indexedGridPhi);
+            centerNavigationPolicyThrow(tContext, tVolume, *tLogger,
+                                        centerConfig, indexedGridPhi);
       },
       std::runtime_error);
 
   centerConfig.binExpansion = {1u};
 
-      Experimental::IndexGridNavigationPolicy<decltype(gridPhi)>
+  Experimental::IndexGridNavigationPolicy<decltype(gridPhi)>
       centerNavigationPolicy(tContext, tVolume, *tLogger, centerConfig,
                              indexedGridPhi);
   // Now initialize candidates at position (R,0,0) - should yield the surface
