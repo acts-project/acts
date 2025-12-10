@@ -39,12 +39,13 @@ class ModuleClusters {
 
   ModuleClusters(Acts::BinUtility segmentation,
                  std::vector<Acts::BoundIndices> geoIndices, bool merge,
-                 double nsigma, bool commonCorner)
+                 double nsigma, bool commonCorner, bool alt = false)
       : m_segmentation(std::move(segmentation)),
         m_geoIndices(std::move(geoIndices)),
         m_merge(merge),
         m_nsigma(nsigma),
-        m_commonCorner(commonCorner) {}
+        m_commonCorner(commonCorner),
+        m_useInPlaceClusterization(alt) {}
 
   void add(DigitizedParameters params, simhit_t simhit);
   std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>>
@@ -57,14 +58,21 @@ class ModuleClusters {
   bool m_merge;
   double m_nsigma;
   bool m_commonCorner;
+  bool m_useInPlaceClusterization;
 
   std::vector<ModuleValue> createCellCollection();
   void merge();
-  ModuleValue squash(std::vector<ModuleValue>& values);
+  void mergeWithInPlaceClusterization();
+  template <typename index_t, unsigned int AXIS>
+  void mergeWithInPlaceClusterizationImpl();
+
+  template <class cell_list_t>
+  ModuleValue squash(cell_list_t& values) const;
   std::vector<std::size_t> nonGeoEntries(
-      std::vector<Acts::BoundIndices>& indices);
+      const std::vector<Acts::BoundIndices>& indices) const;
+  template <class cell_list_t>
   std::vector<std::vector<ModuleValue>> mergeParameters(
-      std::vector<ModuleValue> values);
+      cell_list_t& values) const;
 };
 
 }  // namespace ActsExamples

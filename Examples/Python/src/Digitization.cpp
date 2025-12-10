@@ -52,7 +52,7 @@ void addDigitization(Context& ctx) {
         outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
         surfaceByIdentifier, randomNumbers, doOutputCells, doClusterization,
         doMerge, mergeCommonCorner, minEnergyDeposit, digitizationConfigs,
-        minMaxRetries);
+        minMaxRetries, useInPlaceClusterization);
 
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);
 
