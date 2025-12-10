@@ -44,17 +44,8 @@ using namespace ActsExamples;
 namespace {
 
 template <typename stepper_t, typename navigator_t>
-void addPropagator(py::module_& m, const std::string& prefix) {
+void addConcretePropagator(py::module_& m, const std::string& prefix) {
   using propagator_t = Propagator<stepper_t, navigator_t>;
-  py::class_<propagator_t>(m, (prefix + "Propagator").c_str())
-      .def(py::init<>([=](stepper_t stepper, navigator_t navigator,
-                          Logging::Level level = Logging::Level::INFO) {
-             return propagator_t{
-                 std::move(stepper), std::move(navigator),
-                 getDefaultLogger(prefix + "Propagator", level)};
-           }),
-           py::arg("stepper"), py::arg("navigator"),
-           py::arg("level") = Logging::INFO);
 
   using prop_if_t = ConcretePropagator<propagator_t>;
   py::class_<prop_if_t, PropagatorInterface, std::shared_ptr<prop_if_t>>(
@@ -65,9 +56,7 @@ void addPropagator(py::module_& m, const std::string& prefix) {
 }  // namespace
 
 namespace ActsPython {
-void addPropagation(Context& ctx) {
-  auto [prop, mex] = ctx.get("propagation", "examples");
-
+void addPropagation(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       PropagationAlgorithm, mex, "PropagationAlgorithm", propagatorImpl,
       sterileLogger, debugOutput, energyLoss, multipleScattering,
@@ -78,16 +67,18 @@ void addPropagation(Context& ctx) {
       mex, "PropagatorInterface");
 
   // Eigen stepper based propagator
-  { addPropagator<EigenStepper<>, Navigator>(prop, "Eigen"); }
+  { addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen"); }
 
   // ATLAS stepper based propagator
-  { addPropagator<AtlasStepper, Navigator>(prop, "Atlas"); }
+  { addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas"); }
 
   // Sympy stepper based propagator
-  { addPropagator<SympyStepper, Navigator>(prop, "Sympy"); }
+  { addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy"); }
 
   // Straight line stepper
-  { addPropagator<StraightLineStepper, Navigator>(prop, "StraightLine"); }
+  {
+    addConcretePropagator<StraightLineStepper, Navigator>(mex, "StraightLine");
+  }
 }
 
 }  // namespace ActsPython

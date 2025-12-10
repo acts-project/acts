@@ -26,9 +26,8 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addVertexing(Context& ctx) {
+void addVertexing(py::module& mex) {
   using Seeder = AdaptiveMultiVertexFinderAlgorithm::SeedFinder;
-  auto& mex = ctx.get("examples");
 
   py::enum_<Seeder>(mex, "VertexSeedFinder")
       .value("TruthSeeder", Seeder::TruthSeeder)
