@@ -191,7 +191,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
   // Prepare output containers
   // need list here for stable addresses
   MeasurementContainer measurements;
+  IndexMultimap<Index> measurementSimHitsMap;
   measurements.reserve(gotSimHits.size());
+  measurementSimHitsMap.reserve(gotSimHits.size());
 
   using MuonId_t = MuonSpacePoint::MuonId;
   auto rndEngine = m_cfg.randomNumbers->spawnGenerator(ctx);
@@ -217,6 +219,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
     // Iterate over all simHits in a single module
     for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
       const auto& simHit = *h;
+      const auto simHitIdx = gotSimHits.index_of(h);
 
       // Convert the hit trajectory into local coordinates
       const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
@@ -310,7 +313,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
               dParameters.values.push_back(smearedHit[ePos1]);
               dParameters.variances.push_back(cov[1]);
 
-              createMeasurement(measurements, moduleGeoId, dParameters);
+              auto measurement =
+                  createMeasurement(measurements, moduleGeoId, dParameters);
+              measurementSimHitsMap.emplace_hint(
+                  measurementSimHitsMap.end(), measurement.index(), simHitIdx);
 
               break;
             }
@@ -410,8 +416,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
           dParameters.values.push_back(smearedZ);
           dParameters.variances.push_back(cov[1]);
 
-          createMeasurement(measurements, moduleGeoId, dParameters);
-
+          auto measurement =
+              createMeasurement(measurements, moduleGeoId, dParameters);
+          measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                             measurement.index(), simHitIdx);
           break;
         }
         default:
@@ -447,6 +455,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
   m_outputMeasurements(ctx, std::move(measurements));
+  m_outputSimHitMeasurementsMap(ctx,
+                                invertIndexMultimap(measurementSimHitsMap));
+  m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
 
   return ProcessCode::SUCCESS;
 }
