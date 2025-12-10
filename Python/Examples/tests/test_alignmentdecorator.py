@@ -2,6 +2,7 @@ import acts
 import pytest
 
 from acts.examples import Sequencer
+from helpers import alignmentEnabled
 
 
 @pytest.mark.skipif(not alignmentEnabled, reason="Alignment module is not set up")
