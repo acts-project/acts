@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <format>
 #include <iostream>
@@ -96,9 +97,7 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   ///        along the chamber length (bending direction) and X along the
   ///        chamber width (tube direction)
   const GeoTrf::Transform3D ActsToGeomodelChamberFrame{
-      GeoTrf::GeoRotation(GeoTrf::getGeoRotationAngles(
-          GeoTrf::RotationMatrix3D{{0., 0., 1.}, {1., 0., 0.}, {0., 1., 0.}}))};
-
+      GeoTrf::GeoRotation{rot90deg, rot90deg, 0.}};
   for (MuonLayer layer :
        {MuonLayer::Inner, MuonLayer::Middle, MuonLayer::Outer}) {
     for (unsigned sector = 1; sector <= m_cfg.nSectors; ++sector) {

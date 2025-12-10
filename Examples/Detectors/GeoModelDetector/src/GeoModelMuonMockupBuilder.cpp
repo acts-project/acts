@@ -208,18 +208,16 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     }
     volChambers.push_back(std::move(chamberVolume));
     maxZ = std::max(
-        maxZ, Acts::abs(volChambers.back()->center().z()) +
+        maxZ, std::abs(volChambers.back()->center().z()) +
                   volChambers.back()->volumeBounds().values()[eHalfLengthY]);
     ++stationNum;
   }
 
   const Acts::Vector3& cent{volChambers.front()->center()};
-  double rmincyl =
-      Acts::fastHypot(cent.x(), cent.y()) -
-      volChambers.front()->volumeBounds().values()[eHalfLengthZ];
+  double rmincyl = Acts::fastHypot(cent.x(), cent.y()) -
+                   volChambers.front()->volumeBounds().values()[eHalfLengthZ];
   double rmaxcyl = Acts::fastHypot(
-      rmincyl +
-          2 * volChambers.front()->volumeBounds().values()[eHalfLengthZ],
+      rmincyl + 2 * volChambers.front()->volumeBounds().values()[eHalfLengthZ],
       volChambers.front()->volumeBounds().values()[eHalfLengthX]);
   double halfZ = maxZ;
 
