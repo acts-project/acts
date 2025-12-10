@@ -25,6 +25,12 @@
 
 namespace Acts::detail::Test {
 
+template <std::size_t measdim>
+using MeasDimHelper = std::integral_constant<std::size_t, measdim>;
+
+template <std::size_t measdim>
+constexpr MeasDimHelper<measdim> MeasDim{};
+
 template <typename factory_t>
 class MultiTrajectoryTestsCommon {
   using ParametersVector = BoundTrackParameters::ParametersVector;
@@ -764,6 +770,8 @@ class MultiTrajectoryTestsCommon {
                      ts2.template calibrated<measdim>());
       BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
                      ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() !=
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
@@ -796,6 +804,8 @@ class MultiTrajectoryTestsCommon {
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
                         ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() ==
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
@@ -824,6 +834,8 @@ class MultiTrajectoryTestsCommon {
                      ts2.template calibrated<measdim>());
       BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
                      ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() !=
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
@@ -849,6 +861,8 @@ class MultiTrajectoryTestsCommon {
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
                         ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() ==
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
