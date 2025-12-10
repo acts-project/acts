@@ -13,18 +13,22 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
 #include <memory>
 #include <utility>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(VolumeTest) {
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
   double eps = std::numeric_limits<double>::epsilon();
 
   // Build a translation
@@ -33,9 +37,9 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   // Build a translation
   SquareMatrix3 rotation = RotationMatrix3::Identity();
   double rotationAngle = 60_degree;
-  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;
@@ -77,7 +81,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
 }
 
 BOOST_AUTO_TEST_CASE(VolumeUpdateTest) {
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
   auto volBounds = std::make_shared<CuboidVolumeBounds>(4_mm, 5_mm, 6_mm);
   auto volBounds2 = std::make_shared<CuboidVolumeBounds>(4_mm, 5_mm, 8_mm);
 
@@ -97,4 +101,6 @@ BOOST_AUTO_TEST_CASE(VolumeUpdateTest) {
   BOOST_CHECK_EQUAL(volume.transform().matrix(), trf2.matrix());
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

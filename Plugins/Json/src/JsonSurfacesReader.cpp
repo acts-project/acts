@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/JsonSurfacesReader.hpp"
+#include "ActsPlugins/Json/JsonSurfacesReader.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
-#include "Acts/Plugins/Json/GeometryIdentifierJsonConverter.hpp"
-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsPlugins/Json/ActsJson.hpp"
+#include "ActsPlugins/Json/GeometryIdentifierJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
 #include <fstream>
 #include <iostream>

@@ -21,6 +21,7 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvVertexWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjSimHitWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
@@ -76,37 +77,7 @@ void register_csv_bfield_writer_binding(pybind11::class_<CsvBFieldWriter>& w) {
 namespace ActsPython {
 
 void addOutput(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-
-  ACTS_PYTHON_DECLARE_WRITER(ObjPropagationStepsWriter, mex,
-                             "ObjPropagationStepsWriter", collection, outputDir,
-                             outputScalor, outputPrecision);
-
-  ACTS_PYTHON_DECLARE_WRITER(
-      ObjSimHitWriter, mex, "ObjSimHitWriter", inputSimHits, outputDir,
-      outputStem, outputPrecision, drawConnections, momentumThreshold,
-      momentumThresholdTraj, nInterpolatedPoints, keepOriginalHits);
-
-  {
-    auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, visible, color, offset, lineThickness,
-                       surfaceThickness, quarterSegments, triangulate,
-                       outputName);
-
-    patchKwargsConstructor(c);
-
-    py::class_<Color>(m, "Color")
-        .def(py::init<>())
-        .def(py::init<int, int, int>())
-        .def(py::init<double, double, double>())
-        .def(py::init<std::string_view>())
-        .def_readonly("rgb", &Color::rgb);
-  }
-
-  py::class_<IVisualization3D>(m, "IVisualization3D")
-      .def("write", py::overload_cast<const std::filesystem::path&>(
-                        &IVisualization3D::write, py::const_));
+  auto& mex = ctx.get("examples");
 
   {
     using Writer = ObjTrackingGeometryWriter;
@@ -125,6 +96,15 @@ void addOutput(Context& ctx) {
                        containerView, volumeView, sensitiveView, passiveView,
                        gridView);
   }
+
+  ACTS_PYTHON_DECLARE_WRITER(ObjPropagationStepsWriter, mex,
+                             "ObjPropagationStepsWriter", collection, outputDir,
+                             outputScalor, outputPrecision);
+
+  ACTS_PYTHON_DECLARE_WRITER(
+      ObjSimHitWriter, mex, "ObjSimHitWriter", inputSimHits, outputDir,
+      outputStem, outputPrecision, drawConnections, momentumThreshold,
+      momentumThresholdTraj, nInterpolatedPoints, keepOriginalHits);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvParticleWriter, mex, "CsvParticleWriter",
                              inputParticles, outputDir, outputStem,
@@ -154,6 +134,10 @@ void addOutput(Context& ctx) {
                              inputTrackParameters, inputSimSeeds, inputSimHits,
                              inputMeasurementParticlesMap,
                              inputMeasurementSimHitsMap, fileName, outputDir);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvVertexWriter, mex,
+                             "CsvVertexWriter", inputVertices, outputDir,
+                             outputStem, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(
       CsvTrackingGeometryWriter, mex, "CsvTrackingGeometryWriter",

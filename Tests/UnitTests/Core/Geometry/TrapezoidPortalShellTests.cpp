@@ -20,9 +20,11 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
+
 GeometryContext gctx;
 
 std::size_t getVolumeIndex() {
@@ -38,9 +40,9 @@ auto makeVolume(auto&&... pars) {
   return vol;
 };
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-BOOST_AUTO_TEST_SUITE(TrapezoidPortalShellTests)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   // construct a trapezoid tracking volume from which we are gonna build the
@@ -238,4 +240,4 @@ BOOST_AUTO_TEST_CASE(ApplyToVolume) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

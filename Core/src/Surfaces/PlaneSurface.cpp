@@ -161,7 +161,7 @@ double PlaneSurface::pathCorrection(const GeometryContext& gctx,
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 
-SurfaceMultiIntersection PlaneSurface::intersect(
+MultiIntersection3D PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -182,11 +182,8 @@ SurfaceMultiIntersection PlaneSurface::intersect(
       status = IntersectionStatus::unreachable;
     }
   }
-  return {{Intersection3D(intersection.position(), intersection.pathLength(),
-                          status),
-           Intersection3D::invalid()},
-          *this,
-          boundaryTolerance};
+  return MultiIntersection3D(Intersection3D(intersection.position(),
+                                            intersection.pathLength(), status));
 }
 
 ActsMatrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
@@ -306,6 +303,14 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   Transform3 newTransform = *m_transform * Translation3{unitDir * newMidMerge};
   return {Surface::makeShared<PlaneSurface>(newTransform, newBounds),
           mergeShift < 0};
+}
+const std::shared_ptr<const PlanarBounds>& PlaneSurface::boundsPtr() const {
+  return m_bounds;
+}
+
+void PlaneSurface::assignSurfaceBounds(
+    std::shared_ptr<const PlanarBounds> newBounds) {
+  m_bounds = std::move(newBounds);
 }
 
 }  // namespace Acts

@@ -31,9 +31,9 @@ except ImportError:
         )
 
 try:
-    import acts
+    import acts.examples.geomodel
 
-    geomodelEnabled = hasattr(acts, "geomodel")
+    geomodelEnabled = True
 except ImportError:
     geomodelEnabled = False
 
@@ -74,16 +74,16 @@ except ImportError:
 
 
 try:
-    import acts.examples
+    import acts.examples.pythia8
 
-    pythia8Enabled = hasattr(acts.examples, "pythia8")
+    pythia8Enabled = True
 except ImportError:
     pythia8Enabled = False
 
 try:
-    import acts.examples
+    import acts.examples.hashing
 
-    hashingSeedingEnabled = hasattr(acts.examples, "hashing")
+    hashingSeedingEnabled = True
 except ImportError:
     hashingSeedingEnabled = False
 
@@ -91,7 +91,7 @@ except ImportError:
 gnnEnabled = shutil.which("nvidia-smi") is not None
 if gnnEnabled:
     try:
-        from acts.examples import TrackFindingAlgorithmGnn
+        from acts.examples.gnn import TrackFindingAlgorithmGnn
     except ImportError:
         gnnEnabled = False
 
@@ -105,11 +105,6 @@ except ImportError:
     podioEnabled = False
 
 isCI = os.environ.get("CI") is not None
-
-if isCI:
-    for k, v in dict(locals()).items():
-        if k.endswith("Enabled"):
-            locals()[k] = True
 
 
 class AssertCollectionExistsAlg(IAlgorithm):
@@ -142,7 +137,15 @@ class AssertCollectionExistsAlg(IAlgorithm):
             raise
 
 
-doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ
+doHashChecks = False
+_hashEnvVar = os.environ.get("ROOT_HASH_CHECKS")
+
+if _hashEnvVar is not None:
+    if _hashEnvVar.lower() not in ("off", "0", "false"):
+        doHashChecks = True
+else:
+    if "CI" in os.environ:
+        doHashChecks = True
 
 
 @contextlib.contextmanager

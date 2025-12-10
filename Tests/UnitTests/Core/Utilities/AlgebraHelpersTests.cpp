@@ -13,15 +13,17 @@
 
 #include <Eigen/Dense>
 
-Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
+using namespace Acts;
 
-namespace Acts::Test {
+Logging::Level logLevel = Logging::VERBOSE;
 
-BOOST_AUTO_TEST_SUITE(AlgebraHelpers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_SUITE(SafeInverse)
 
-ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("SafeInverse", logLevel))
+ACTS_LOCAL_LOGGER(getDefaultLogger("SafeInverse", logLevel))
 
 BOOST_AUTO_TEST_CASE(SafeInverseSmallMatrix) {
   Eigen::Matrix<double, 2, 2> m;
@@ -30,14 +32,14 @@ BOOST_AUTO_TEST_CASE(SafeInverseSmallMatrix) {
   Eigen::Matrix<double, 2, 2> mInvRef;
   mInvRef << -2, 1, 1.5, -0.5;
 
-  auto mInv = Acts::safeInverse(m);
+  auto mInv = safeInverse(m);
 
   BOOST_CHECK(mInv);
   BOOST_CHECK_EQUAL(*mInv, mInvRef);
 
   Eigen::Matrix<int, 2, 2> identityInt;
   identityInt << 1, 0, 0, 1;
-  auto identityIntInv = Acts::safeInverse(identityInt);
+  auto identityIntInv = safeInverse(identityInt);
 
   BOOST_CHECK(identityIntInv);
   BOOST_CHECK_EQUAL(*identityIntInv, identityInt);
@@ -45,7 +47,7 @@ BOOST_AUTO_TEST_CASE(SafeInverseSmallMatrix) {
 
 BOOST_AUTO_TEST_CASE(safeInverseLargeMatrix) {
   const Eigen::Matrix<double, 5, 5> identity{Eigen::MatrixXd::Identity(5, 5)};
-  auto identityInv = Acts::safeInverse(identity);
+  auto identityInv = safeInverse(identity);
 
   BOOST_CHECK(identityInv);
   BOOST_CHECK_EQUAL(*identityInv, identity);
@@ -54,7 +56,7 @@ BOOST_AUTO_TEST_CASE(safeInverseLargeMatrix) {
 BOOST_AUTO_TEST_CASE(safeInverseDynamicMatrix) {
   Eigen::MatrixXd identity{Eigen::MatrixXd::Identity(2, 2)};
 
-  auto identityInv = Acts::safeInverse(identity);
+  auto identityInv = safeInverse(identity);
 
   BOOST_CHECK(identityInv);
   BOOST_CHECK_EQUAL(*identityInv, identity);
@@ -64,14 +66,14 @@ BOOST_AUTO_TEST_CASE(SafeInverseBadSmallMatrix) {
   Eigen::Matrix<double, 2, 2> m;
   m << 1, 1, 2, 2;
 
-  auto mInv = Acts::safeInverse(m);
+  auto mInv = safeInverse(m);
 
   BOOST_CHECK(!mInv);
 }
 
 BOOST_AUTO_TEST_CASE(safeInverseBadLargeMatrix) {
   const Eigen::Matrix<double, 5, 5> m{Eigen::MatrixXd::Zero(5, 5)};
-  auto mInv = Acts::safeInverse(m);
+  auto mInv = safeInverse(m);
 
   BOOST_CHECK(!mInv);
 }
@@ -81,9 +83,9 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPESmallMatrix) {
       Eigen::MatrixXd::Identity(4, 4) * std::numeric_limits<std::size_t>::max();
   m(1, 1) = 1;
 
-  auto mInv = Acts::safeInverse(m);
+  auto mInv = safeInverse(m);
   BOOST_REQUIRE(mInv.has_value());
-  auto mInvInv = Acts::safeInverse(*mInv);
+  auto mInvInv = safeInverse(*mInv);
   BOOST_CHECK(!mInvInv);
 
   ACTS_VERBOSE("Test: SafeInverseFPESmallMatrix" << "\n"
@@ -98,7 +100,7 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
       Eigen::MatrixXd::Identity(5, 5) * std::numeric_limits<std::size_t>::max();
   m(1, 1) = 1;
 
-  auto mInv = Acts::safeInverse(m);
+  auto mInv = safeInverse(m);
 
   BOOST_CHECK(!mInv);
 
@@ -112,14 +114,14 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
 //   Eigen::Matrix<double, 2, 3> m;
 //   m << 1, 2, 3, 4, 5, 6;
 //
-//   auto mInv = Acts::safeInverse(m);
+//   auto mInv = safeInverse(m);
 // }
 
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(SafeExp)
 
-ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("SafeExp", logLevel))
+ACTS_LOCAL_LOGGER(getDefaultLogger("SafeExp", logLevel))
 
 BOOST_AUTO_TEST_CASE(safeExpDouble) {
   using FloatType = double;
@@ -162,7 +164,7 @@ bool testUnrolling()
   requires(N > 1)
 {
   /// Fill a test matrix with unique values
-  Acts::ActsSquareMatrix<N> testMatrix{Acts::ActsSquareMatrix<N>::Zero()};
+  ActsSquareMatrix<N> testMatrix{ActsSquareMatrix<N>::Zero()};
   std::size_t counter{N};
   for (std::size_t i = 0; i < N; ++i) {
     for (std::size_t j = 0; j <= i; ++j) {
@@ -178,24 +180,23 @@ bool testUnrolling()
     }
   }
 
-  if (vec.size() != Acts::sumUpToN(N)) {
-    std::cout << "Compressed vector size mismatch: expected "
-              << Acts::sumUpToN(N) << ", got " << vec.size() << std::endl;
+  if (vec.size() != sumUpToN(N)) {
+    std::cout << "Compressed vector size mismatch: expected " << sumUpToN(N)
+              << ", got " << vec.size() << std::endl;
     return false;
   }
   /// Next test whether the indices are correct
   for (std::size_t i = 0; i < N; ++i) {
     for (std::size_t j = 0; j <= i; ++j) {
-      const auto idx = Acts::vecIdxFromSymMat<N>(i, j);
+      const auto idx = vecIdxFromSymMat<N>(i, j);
       if (idx >= vec.size()) {
         std::cout << "Index out of bounds: " << idx << " for size "
                   << vec.size() << std::endl;
         return false;
       }
-      if (idx != Acts::vecIdxFromSymMat<N>(j, i)) {
-        std::cout << "Index mismatch: expected "
-                  << Acts::vecIdxFromSymMat<N>(i, j) << ", got " << idx
-                  << std::endl;
+      if (idx != vecIdxFromSymMat<N>(j, i)) {
+        std::cout << "Index mismatch: expected " << vecIdxFromSymMat<N>(i, j)
+                  << ", got " << idx << std::endl;
         return false;
       }
       if (vec[idx] != testMatrix(i, j)) {
@@ -204,7 +205,7 @@ bool testUnrolling()
         return false;
       }
       /// Finally, check whether the indices can be recovered
-      const auto [iBack, jBack] = Acts::symMatIndices<N>(idx);
+      const auto [iBack, jBack] = symMatIndices<N>(idx);
       if (iBack != i || jBack != j) {
         std::cout << "Index mismatch: expected (" << i << ", " << j
                   << "), got (" << iBack << ", " << jBack << ") for index "
@@ -226,4 +227,4 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

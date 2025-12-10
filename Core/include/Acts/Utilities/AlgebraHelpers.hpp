@@ -13,6 +13,7 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <bitset>
+#include <cassert>
 #include <optional>
 
 #include "Eigen/Dense"
@@ -254,6 +255,7 @@ constexpr T safeExp(T val) noexcept {
 ///        to an unrolled vector index.
 /// @param i The row index of the symmetric matrix
 /// @param k The column index of the symmetric matrix
+/// @return The corresponding vector index in the unrolled storage
 template <std::size_t N>
 constexpr std::size_t vecIdxFromSymMat(const std::size_t i, const std::size_t k)
   requires(N > 0)

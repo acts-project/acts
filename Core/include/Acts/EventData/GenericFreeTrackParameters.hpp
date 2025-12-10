@@ -33,11 +33,16 @@ namespace Acts {
 template <class particle_hypothesis_t>
 class GenericFreeTrackParameters {
  public:
+  /// Type alias for free track parameters vector
   using ParametersVector = FreeVector;
+  /// Type alias for free track covariance matrix
   using CovarianceMatrix = FreeSquareMatrix;
+  /// Type alias for particle hypothesis used in reconstruction
   using ParticleHypothesis = particle_hypothesis_t;
 
   /// Converts an unknown bound track parameter.
+  /// @param other The other track parameters to convert from
+  /// @return Free track parameters converted from the input parameters
   template <FreeTrackParametersConcept other_track_parameter_t>
   static GenericFreeTrackParameters create(
       const other_track_parameter_t& other) {
@@ -118,6 +123,7 @@ class GenericFreeTrackParameters {
   }
 
   /// Converts a free track parameter with a different hypothesis.
+  /// @param other The other free track parameters to convert from
   template <typename other_particle_hypothesis_t>
   explicit GenericFreeTrackParameters(
       const GenericFreeTrackParameters<other_particle_hypothesis_t>& other)
@@ -126,19 +132,23 @@ class GenericFreeTrackParameters {
                                    other.covariance()) {}
 
   /// Parameters vector.
+  /// @return Const reference to the free parameters vector
   const ParametersVector& parameters() const { return m_params; }
   /// Optional covariance matrix.
+  /// @return Const reference to the optional covariance matrix
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
 
   /// Access a single parameter value identified by its index.
   ///
   /// @tparam kIndex Track parameter index
+  /// @return The parameter value at the specified index
   template <FreeIndices kIndex>
   double get() const {
     return m_params[kIndex];
   }
 
   /// Space-time position four-vector.
+  /// @return Four-dimensional position vector (x, y, z, t)
   Vector4 fourPosition() const {
     Vector4 pos4;
     pos4[ePos0] = m_params[eFreePos0];
@@ -148,26 +158,34 @@ class GenericFreeTrackParameters {
     return pos4;
   }
   /// Spatial position three-vector.
+  /// @return Three-dimensional position vector (x, y, z)
   Vector3 position() const { return m_params.segment<3>(eFreePos0); }
   /// Time coordinate.
+  /// @return The time coordinate value
   double time() const { return m_params[eFreeTime]; }
 
   /// Phi direction.
+  /// @return The azimuthal angle phi in radians
   double phi() const { return VectorHelpers::phi(direction()); }
   /// Theta direction.
+  /// @return The polar angle theta in radians
   double theta() const { return VectorHelpers::theta(direction()); }
   /// Charge over momentum.
+  /// @return The charge over momentum ratio
   double qOverP() const { return m_params[eFreeQOverP]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
+  /// @return Normalized direction vector
   Vector3 direction() const {
     return m_params.segment<3>(eFreeDir0).normalized();
   }
   /// Absolute momentum.
+  /// @return The absolute momentum magnitude
   double absoluteMomentum() const {
     return m_particleHypothesis.extractMomentum(m_params[eFreeQOverP]);
   }
   /// Transverse momentum.
+  /// @return The transverse momentum magnitude
   double transverseMomentum() const {
     // direction vector w/ arbitrary normalization can be parametrized as
     //   [f*sin(theta)*cos(phi), f*sin(theta)*sin(phi), f*cos(theta)]
@@ -181,14 +199,17 @@ class GenericFreeTrackParameters {
     return std::sqrt(transverseMagnitude2 / magnitude2) * absoluteMomentum();
   }
   /// Momentum three-vector.
+  /// @return Three-dimensional momentum vector
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
+  /// @return The particle electric charge
   double charge() const {
     return m_particleHypothesis.extractCharge(get<eFreeQOverP>());
   }
 
   /// Particle hypothesis.
+  /// @return Reference to the particle hypothesis
   const ParticleHypothesis& particleHypothesis() const {
     return m_particleHypothesis;
   }
@@ -214,7 +235,7 @@ class GenericFreeTrackParameters {
   friend std::ostream& operator<<(std::ostream& os,
                                   const GenericFreeTrackParameters& tp) {
     detail::printFreeParameters(
-        os, tp.parameters(),
+        os, tp.particleHypothesis(), tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
     return os;
   }

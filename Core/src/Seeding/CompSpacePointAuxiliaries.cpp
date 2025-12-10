@@ -141,9 +141,9 @@ void CompSpacePointAuxiliaries::resetTime() {
   m_gradient[toUnderlying(FitParIndex::t0)].setZero();
   if (m_cfg.useHessian) {
     for (const auto partial : m_cfg.parsToUse) {
-      m_hessian[vecIdxFromSymMat<s_nPars>(toUnderlying(FitParIndex::t0),
-                                          toUnderlying(partial))]
-          .setZero();
+      const auto pIdx = vecIdxFromSymMat<s_nPars>(toUnderlying(FitParIndex::t0),
+                                                  toUnderlying(partial));
+      m_hessian[pIdx].setZero();
     }
   }
 }
@@ -610,7 +610,7 @@ void CompSpacePointAuxiliaries::updateTimeStripRes(
   constexpr auto timeIdx = toUnderlying(FitParIndex::t0);
 
   const double invDist = m_cfg.includeToF && globDist > s_tolerance
-                             ? PhysicalConstants::c / globDist
+                             ? 1. / (PhysicalConstants::c * globDist)
                              : 0.;
   for (const auto partial1 : m_cfg.parsToUse) {
     if (partial1 == FitParIndex::t0) {
@@ -658,14 +658,15 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
     const Line_t& line, const Vector& hitMinSeg, const Vector& wireDir,
     const double driftR, const double driftV, const double driftA) {
   using namespace Acts::detail::LineHelper;
+  using namespace Acts::UnitLiterals;
 
-  const double dSign = driftR > 0. ? 1 : -1;
+  const double dSign = std::copysign(1., driftR);
   // Only assign drift velocity and acceleration
   if (!m_cfg.includeToF) {
     resetTime();
     constexpr auto timeIdx = toUnderlying(FitParIndex::t0);
     constexpr auto hessIdx = vecIdxFromSymMat<s_nPars>(timeIdx, timeIdx);
-    m_gradient[timeIdx] = -dSign * driftV * Vector::Unit(bendingComp);
+    m_gradient[timeIdx] = dSign * driftV * Vector::Unit(bendingComp);
     m_hessian[hessIdx] = -dSign * driftA * Vector::Unit(bendingComp);
     return;
   }
@@ -680,7 +681,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
   const double distance = globApproach.norm();
   const double ToF = distance / PhysicalConstants::c;
   ACTS_VERBOSE("updateTimeStrawRes() - Distance from the global origin: "
-               << distance << " -> time of flight: " << ToF);
+               << distance << " -> time of flight: " << ToF / 1._ns);
   ACTS_VERBOSE("updateTimeStrawRes() - Drift radius: "
                << driftR << ", driftV: " << driftV << ", driftA: " << driftA);
 
@@ -704,17 +705,17 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
                         + m_wireProject  * m_projDirLenPartial[idx] * m_invProjDirLenSq * travDist  * line.direction();
       // clang-format on
     }
-    m_partialApproachDist[idx] = -dSign *
-                                 globApproach.dot(m_cfg.localToGlobal.linear() *
+    m_partialApproachDist[idx] = globApproach.dot(m_cfg.localToGlobal.linear() *
                                                   m_gradCloseApproach[idx]) *
                                  invDist;
     ACTS_VERBOSE("updateTimeStrawRes() - Correct the partial derivative w.r.t. "
                  << parName(partial) << " " << m_gradient[idx][bendingComp]
                  << " by " << toString(m_gradCloseApproach[idx])
                  << " dCoA: " << m_partialApproachDist[idx] * driftV << " -> "
-                 << (m_gradient[idx][bendingComp] -
-                     m_partialApproachDist[idx] * driftV));
-    m_gradient[idx][bendingComp] -= m_partialApproachDist[idx] * driftV;
+                 << (m_gradient[idx][bendingComp] +
+                     dSign * m_partialApproachDist[idx] * driftV));
+    m_gradient[idx][bendingComp] -=
+        -dSign * m_partialApproachDist[idx] * driftV;
   }
 
   if (!m_cfg.useHessian) {
@@ -733,7 +734,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
         if (partial2 == FitParIndex::t0) {
           m_hessian[hessIdx] = -dSign * driftA * Vector::Unit(bendingComp);
         } else {
-          m_hessian[hessIdx] = dSign * driftA * m_partialApproachDist[idx2] *
+          m_hessian[hessIdx] = -dSign * driftA * m_partialApproachDist[idx2] *
                                Vector::Unit(bendingComp);
         }
         ACTS_VERBOSE("updateTimeStrawRes() -"
@@ -781,14 +782,16 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
       // clang-format off
       const double partialCoA = m_gradCloseApproach[idx1].dot(m_gradCloseApproach[idx2]) * invDist +
                                 globApproach.dot(m_cfg.localToGlobal.linear()*hessCmp) * invDist -
-                                m_partialApproachDist[idx1] * m_partialApproachDist[idx2]* invDist;
+                                m_partialApproachDist[idx1] * m_partialApproachDist[idx2]* invDist * Acts::pow(PhysicalConstants::c,2);
       const double hessianR = driftA * m_partialApproachDist[idx1] * m_partialApproachDist[idx2]
                             - driftV * partialCoA;
       // clang-format on
       ACTS_VERBOSE(
-          "updateTimeStrawRes() - Calculate the second partial derivative "
-          << parName(partial1) << ", " << parName(partial2)
-          << ", hessianR: " << hessianR << ", partialCoA: " << partialCoA);
+          "updateTimeStrawRes() - Correct the second partial derivative w.r.t "
+          << parName(partial1) << ", " << parName(partial2) << " "
+          << m_hessian[hessIdx][bendingComp] << " by hessianR: " << hessianR
+          << ", partialCoA: " << partialCoA << " -> "
+          << m_hessian[hessIdx][bendingComp] - dSign * hessianR);
 
       m_hessian[hessIdx][bendingComp] -= dSign * hessianR;
     }

@@ -58,6 +58,10 @@ class Blueprint : public BlueprintNode {
     /// Determine how much envelope space to produce from the highest volume
     /// in the geometry hierarchy and the world volume.
     ExtentEnvelope envelope = ExtentEnvelope::Zero();
+    /// Apply a bound deduplication on the world volume. It ensures
+    /// that equivalent bounds are instantiated only once & recycled
+    /// across the geometry components
+    bool boundDeduplication{true};
   };
 
   /// Constructor from a config object
@@ -69,6 +73,7 @@ class Blueprint : public BlueprintNode {
   /// @param gctx The geometry context for construction. In almost all cases,
   ///             this should be the *nominal* geometry context
   /// @param logger The logger to use for output during construction
+  /// @return Unique pointer to the constructed tracking geometry
   std::unique_ptr<TrackingGeometry> construct(
       const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger());

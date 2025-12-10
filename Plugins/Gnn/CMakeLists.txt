@@ -6,7 +6,7 @@ acts_add_library(
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
     src/GraphStoreHook.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 if(ACTS_GNN_ENABLE_CUDA)
@@ -15,6 +15,8 @@ if(ACTS_GNN_ENABLE_CUDA)
         ActsPluginGnn
         PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
+    target_link_libraries(ActsPluginGnn PUBLIC CUDA::nvtx3)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_NVTX)
 endif()
 
 if(ACTS_GNN_ENABLE_MODULEMAP)
@@ -88,7 +90,10 @@ endif()
 
 if(ACTS_GNN_ENABLE_TORCH)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_TORCH_BACKEND)
-    target_link_libraries(ActsPluginGnn PRIVATE ${TORCH_LIBRARIES} frnn)
+    target_link_libraries(ActsPluginGnn PRIVATE ${TORCH_LIBRARIES})
+    if(ACTS_GNN_ENABLE_CUDA)
+        target_link_libraries(ActsPluginGnn PRIVATE frnn)
+    endif()
     find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)
         message(

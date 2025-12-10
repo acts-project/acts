@@ -25,9 +25,11 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 const double minHalfX = 1.;
 const double maxHalfX = 6.;
@@ -221,4 +223,4 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsCenter) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

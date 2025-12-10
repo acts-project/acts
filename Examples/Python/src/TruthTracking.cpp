@@ -25,10 +25,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace ActsExamples {
-class IAlgorithm;
-}  // namespace ActsExamples
-
 namespace py = pybind11;
 
 using namespace ActsExamples;
@@ -136,7 +132,8 @@ void addTruthTracking(Context& ctx) {
       TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm", inputParticles,
       inputParticleMeasurementsMap, inputSimHits, inputMeasurementSimHitsMap,
       inputSpacePoints, outputParticles, outputSeeds, outputProtoTracks,
-      deltaRMin, deltaRMax);
+      outputParticleHypotheses, particleHypothesis, deltaRMin, deltaRMax,
+      absDeltaZMin, absDeltaZMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HitSelector, mex, "HitSelector", inputHits,
                                 inputParticlesSelected, outputHits, minX, maxX,

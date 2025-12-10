@@ -9,12 +9,12 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Plugins/Root/RootMeasurementIo.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsPlugins/Root/RootMeasurementIo.hpp"
 
 #include <ios>
 #include <limits>
@@ -88,11 +88,16 @@ RootMeasurementWriter::RootMeasurementWriter(
 
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), "Measurements");
-  m_outputTree->Branch("particles", &m_particles);
+  m_outputTree->Branch("particles_vertex_primary", &m_particleVertexPrimary);
+  m_outputTree->Branch("particles_vertex_secondary",
+                       &m_particleVertexSecondary);
+  m_outputTree->Branch("particles_particle", &m_particleParticle);
+  m_outputTree->Branch("particles_generation", &m_particleGeneration);
+  m_outputTree->Branch("particles_sub_particle", &m_particleSubParticle);
 
-  Acts::RootMeasurementIo::Config treeCfg{m_cfg.boundIndices,
-                                          m_cfg.clusterIndices};
-  m_measurementIo = std::make_unique<Acts::RootMeasurementIo>(treeCfg);
+  ActsPlugins::RootMeasurementIo::Config treeCfg{m_cfg.boundIndices,
+                                                 m_cfg.clusterIndices};
+  m_measurementIo = std::make_unique<ActsPlugins::RootMeasurementIo>(treeCfg);
   m_measurementIo->connectForWrite(*m_outputTree);
 }
 
@@ -152,7 +157,12 @@ ProcessCode RootMeasurementWriter::writeT(
     std::pair<double, double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);
     for (auto [_, i] : indices) {
-      m_particles.push_back(simHits.nth(i)->particleId().value());
+      const auto barcode = simHits.nth(i)->particleId();
+      m_particleVertexPrimary.push_back(barcode.vertexPrimary());
+      m_particleVertexSecondary.push_back(barcode.vertexSecondary());
+      m_particleParticle.push_back(barcode.particle());
+      m_particleGeneration.push_back(barcode.generation());
+      m_particleSubParticle.push_back(barcode.subParticle());
     }
     m_measurementIo->fillTruthParameters(local, pos4, dir, angles);
 
@@ -168,7 +178,11 @@ ProcessCode RootMeasurementWriter::writeT(
     }
 
     m_outputTree->Fill();
-    m_particles.clear();
+    m_particleVertexPrimary.clear();
+    m_particleVertexSecondary.clear();
+    m_particleParticle.clear();
+    m_particleGeneration.clear();
+    m_particleSubParticle.clear();
     m_measurementIo->clear();
   }
 

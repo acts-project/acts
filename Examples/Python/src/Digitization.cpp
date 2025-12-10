@@ -12,7 +12,6 @@
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Digitization/DigitizationCoordinatesConverter.hpp"
 #include "ActsExamples/Digitization/MuonSpacePointDigitizer.hpp"
-#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -32,10 +31,7 @@ using namespace Acts;
 namespace ActsPython {
 
 void addDigitization(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-
-  mex.def("readDigiConfigFromJson", readDigiConfigFromJson);
-  mex.def("writeDigiConfigToJson", writeDigiConfigToJson);
+  auto& mex = ctx.get("examples");
 
   {
     using Config = DigitizationAlgorithm::Config;
@@ -55,10 +51,10 @@ void addDigitization(Context& ctx) {
         outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
         outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
         surfaceByIdentifier, randomNumbers, doOutputCells, doClusterization,
-        doMerge, minEnergyDeposit, digitizationConfigs, minMaxRetries);
+        doMerge, mergeCommonCorner, minEnergyDeposit, digitizationConfigs,
+        minMaxRetries);
 
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);
-    c.def_readonly("mergeCommonCorner", &Config::mergeCommonCorner);
 
     patchKwargsConstructor(c);
 

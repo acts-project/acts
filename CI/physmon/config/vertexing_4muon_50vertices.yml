@@ -113,3 +113,8 @@ extra_histograms:
 
 exclude:
   - event_nr
+  - trk_particleId_vertex_primary
+  - trk_particleId_vertex_secondary
+  - trk_particleId_particle
+  - trk_particleId_generation
+  - trk_particleId_sub_particle

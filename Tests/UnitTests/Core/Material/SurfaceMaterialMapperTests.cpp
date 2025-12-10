@@ -34,12 +34,13 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
+using namespace Acts;
+using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
 
 /// @brief create a small tracking geometry to map some dummy material on
 std::shared_ptr<const TrackingGeometry> trackingGeometry() {
-  using namespace Acts::UnitLiterals;
-
   BinUtility zbinned(8, -40, 40, open, AxisDirection::AxisZ);
   auto matProxy = std::make_shared<const ProtoSurfaceMaterial>(zbinned);
 
@@ -103,9 +104,7 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
 
 std::shared_ptr<const TrackingGeometry> tGeometry = trackingGeometry();
 
-}  // namespace Acts
-
-namespace Acts::Test {
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
@@ -130,4 +129,6 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3u);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

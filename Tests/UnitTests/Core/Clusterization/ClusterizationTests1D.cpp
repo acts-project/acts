@@ -20,7 +20,7 @@
 
 #include <boost/functional/hash.hpp>
 
-namespace Acts::Test {
+using namespace Acts;
 
 struct Cell1D {
   explicit Cell1D(int colv) : col(colv) {}
@@ -56,6 +56,10 @@ void hash(Cluster1D& cl) {
     boost::hash_combine(cl.hash, c.col);
   }
 }
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(ClusterizationSuite)
 
 BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
   using Cell = Cell1D;
@@ -107,7 +111,7 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
 
     std::shuffle(cells.begin(), cells.end(), rnd);
 
-    Acts::Ccl::ClusteringData data;
+    Ccl::ClusteringData data;
     ClusterC newCls;
     Ccl::createClusters<CellC, ClusterC, 1>(data, cells, newCls);
 
@@ -125,4 +129,22 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_CASE(Grid_1D_duplicate_cells) {
+  using Cell = Cell1D;
+  using CellC = std::vector<Cell>;
+  using Cluster = Cluster1D;
+  using ClusterC = std::vector<Cluster>;
+
+  CellC cells = {Cell(42), Cell(42)};
+  ClusterC clusters;
+
+  Ccl::ClusteringData data;
+
+  BOOST_CHECK_THROW(
+      (Ccl::createClusters<CellC, ClusterC, 1>(data, cells, clusters)),
+      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

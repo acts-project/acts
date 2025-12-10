@@ -12,11 +12,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include "edm4hep/TrackState.h"
 
@@ -67,10 +67,11 @@ void EDM4hepUtil::writeParticle(const SimParticle& from,
        static_cast<float>(from.finalState().fourMomentum().z())});
 }
 
-ActsFatras::Hit EDM4hepUtil::readSimHit(
-    const edm4hep::SimTrackerHit& from, const MapParticleIdFrom& particleMapper,
-    const MapGeometryIdFrom& geometryMapper) {
-  auto particle = Acts::EDM4hepUtil::getParticle(from);
+ActsFatras::Hit EDM4hepUtil::readSimHit(const edm4hep::SimTrackerHit& from,
+                                        const MapParticleIdFrom& particleMapper,
+                                        const MapGeometryIdFrom& geometryMapper,
+                                        std::uint32_t index) {
+  auto particle = ActsPlugins::EDM4hepUtil::getParticle(from);
   ActsFatras::Barcode particleId = particleMapper(particle);
 
   const auto mass = particle.getMass() * 1_GeV;
@@ -100,10 +101,6 @@ ActsFatras::Hit EDM4hepUtil::readSimHit(
 
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  // Can extract from time, but we need a complete picture of the trajectory
-  // first
-  std::int32_t index = -1;
-
   return ActsFatras::Hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
                          index);
 }
@@ -117,7 +114,8 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   const auto delta4 = from.momentum4After() - momentum4Before;
 
   if (particleMapper) {
-    Acts::EDM4hepUtil::setParticle(to, particleMapper(from.particleId()));
+    ActsPlugins::EDM4hepUtil::setParticle(to,
+                                          particleMapper(from.particleId()));
   }
 
   if (geometryMapper) {
@@ -194,7 +192,7 @@ void EDM4hepUtil::writeMeasurement(
 
   to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
 
-  to.setType(Acts::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
+  to.setType(ActsPlugins::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
   // TODO set uv (which are in global spherical coordinates with r=1)
   to.setPosition({parameters[Acts::eBoundLoc0], parameters[Acts::eBoundLoc1],
                   parameters[Acts::eBoundTime]});
@@ -247,9 +245,9 @@ void EDM4hepUtil::writeTrajectory(
     // Convert to LCIO track parametrization expected by EDM4hep
     // This will create an ad-hoc perigee surface if the input parameters are
     // not bound on a perigee surface already
-    Acts::EDM4hepUtil::detail::Parameters converted =
-        Acts::EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz,
-                                                                   parObj);
+    ActsPlugins::EDM4hepUtil::detail::Parameters converted =
+        ActsPlugins::EDM4hepUtil::detail::convertTrackParametersToEdm4hep(
+            gctx, Bz, parObj);
 
     trackState.D0 = converted.values[0];
     trackState.Z0 = converted.values[1];
@@ -271,12 +269,14 @@ void EDM4hepUtil::writeTrajectory(
       };
 
       // clang-format off
-      trackState.covMatrix = {c(0, 0),
-                              c(1, 0), c(1, 1),
-                              c(2, 0), c(2, 1), c(2, 2),
-                              c(3, 0), c(3, 1), c(3, 2), c(3, 3),
-                              c(4, 0), c(4, 1), c(4, 2), c(4, 3), c(4, 4),
-                              c(5, 0), c(5, 1), c(5, 2), c(5, 3), c(5, 4), c(5, 5)};
+      trackState.covMatrix = edm4hep::CovMatrix6f{
+        c(0, 0),
+        c(1, 0), c(1, 1),
+        c(2, 0), c(2, 1), c(2, 2),
+        c(3, 0), c(3, 1), c(3, 2), c(3, 3),
+        c(4, 0), c(4, 1), c(4, 2), c(4, 3), c(4, 4),
+        c(5, 0), c(5, 1), c(5, 2), c(5, 3), c(5, 4), c(5, 5)
+      };
       // clang-format on
     }
 

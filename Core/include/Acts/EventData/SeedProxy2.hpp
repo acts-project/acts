@@ -13,7 +13,7 @@
 
 #include <cassert>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class SeedContainer2;
 
@@ -25,8 +25,10 @@ class SeedProxy2 {
   /// modified
   static constexpr bool ReadOnly = read_only;
 
+  /// Type alias for seed index type
   using IndexType = SeedIndex2;
 
+  /// Type alias for container type (const if read-only)
   using ContainerType = const_if_t<ReadOnly, SeedContainer2>;
 
   /// Constructs a seed proxy for the given container and index.
@@ -233,6 +235,9 @@ class SeedProxy2 {
     std::span<const SpacePointIndex2> m_spacePointIndices;
   };
 
+  /// Get the space points associated with this seed.
+  /// @param spacePointContainer Container holding all space points
+  /// @return Range of space points for this seed
   SpacePointRange spacePoints(
       const SpacePointContainer2 &spacePointContainer) const noexcept {
     return SpacePointRange(spacePointContainer,
@@ -244,4 +249,4 @@ class SeedProxy2 {
   IndexType m_index{0};
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

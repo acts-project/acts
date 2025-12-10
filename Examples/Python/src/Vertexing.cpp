@@ -28,10 +28,9 @@ namespace ActsPython {
 
 void addVertexing(Context& ctx) {
   using Seeder = AdaptiveMultiVertexFinderAlgorithm::SeedFinder;
-  auto mex = ctx.get("examples");
-  auto& m = ctx.get("main");
+  auto& mex = ctx.get("examples");
 
-  py::enum_<Seeder>(m, "VertexSeedFinder")
+  py::enum_<Seeder>(mex, "VertexSeedFinder")
       .value("TruthSeeder", Seeder::TruthSeeder)
       .value("GaussianSeeder", Seeder::GaussianSeeder)
       .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder);
@@ -43,7 +42,7 @@ void addVertexing(Context& ctx) {
       outputVertices, seedFinder, bField, minWeight, doSmoothing, maxIterations,
       useTime, tracksMaxZinterval, initialVariances, doFullSplitting,
       tracksMaxSignificance, maxMergeVertexSignificance, spatialBinExtent,
-      temporalBinExtent);
+      temporalBinExtent, simultaneousSeeds);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(IterativeVertexFinderAlgorithm, mex,
                                 "IterativeVertexFinderAlgorithm",

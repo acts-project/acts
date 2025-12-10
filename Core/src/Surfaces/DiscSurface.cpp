@@ -90,8 +90,8 @@ Surface::SurfaceType DiscSurface::type() const {
 Vector3 DiscSurface::localToGlobal(const GeometryContext& gctx,
                                    const Vector2& lposition) const {
   // create the position in the local 3d frame
-  Vector3 loc3Dframe(lposition[0] * cos(lposition[1]),
-                     lposition[0] * sin(lposition[1]), 0.);
+  Vector3 loc3Dframe(lposition[0] * std::cos(lposition[1]),
+                     lposition[0] * std::sin(lposition[1]), 0.);
   // transform to globalframe
   return transform(gctx) * loc3Dframe;
 }
@@ -119,11 +119,12 @@ Vector2 DiscSurface::localPolarToLocalCartesian(const Vector2& locpol) const {
     Vector2 cartPos = localPolarToCartesian(locpol);
     Vector2 pos = cartPos - cartCenter;
 
-    Vector2 locPos(pos[0] * sin(phi) - pos[1] * cos(phi),
-                   pos[1] * sin(phi) + pos[0] * cos(phi));
+    Vector2 locPos(pos[0] * std::sin(phi) - pos[1] * std::cos(phi),
+                   pos[1] * std::sin(phi) + pos[0] * std::cos(phi));
     return Vector2(locPos[0], locPos[1]);
   }
-  return Vector2(locpol[0] * cos(locpol[1]), locpol[0] * sin(locpol[1]));
+  return Vector2(locpol[0] * std::cos(locpol[1]),
+                 locpol[0] * std::sin(locpol[1]));
 }
 
 Vector3 DiscSurface::localCartesianToGlobal(const GeometryContext& gctx,
@@ -192,7 +193,8 @@ Polyhedron DiscSurface::polyhedronRepresentation(
 }
 
 Vector2 DiscSurface::localPolarToCartesian(const Vector2& lpolar) const {
-  return Vector2(lpolar[0] * cos(lpolar[1]), lpolar[0] * sin(lpolar[1]));
+  return Vector2(lpolar[0] * std::cos(lpolar[1]),
+                 lpolar[0] * std::sin(lpolar[1]));
 }
 
 Vector2 DiscSurface::localCartesianToPolar(const Vector2& lcart) const {
@@ -268,7 +270,7 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
   return jacToLocal;
 }
 
-SurfaceMultiIntersection DiscSurface::intersect(
+MultiIntersection3D DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -279,13 +281,10 @@ SurfaceMultiIntersection DiscSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   IntersectionStatus status = intersection.status();
   if (status == IntersectionStatus::unreachable) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()},
-            *this,
-            boundaryTolerance};
+    return MultiIntersection3D(Intersection3D::Invalid());
   }
   if (m_bounds == nullptr || boundaryTolerance.isInfinite()) {
-    return {
-        {intersection, Intersection3D::invalid()}, *this, boundaryTolerance};
+    return MultiIntersection3D(intersection);
   }
   // Built-in local to global for speed reasons
   const auto& tMatrix = gctxTransform.matrix();
@@ -308,11 +307,8 @@ SurfaceMultiIntersection DiscSurface::intersect(
       status = IntersectionStatus::unreachable;
     }
   }
-  return {{Intersection3D(intersection.position(), intersection.pathLength(),
-                          status),
-           Intersection3D::invalid()},
-          *this,
-          boundaryTolerance};
+  return MultiIntersection3D(Intersection3D(intersection.position(),
+                                            intersection.pathLength(), status));
 }
 
 ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
@@ -551,6 +547,14 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
                                   "DiscSurface::merge: invalid direction " +
                                       axisDirectionName(direction));
   }
+}
+const std::shared_ptr<const DiscBounds>& DiscSurface::boundsPtr() const {
+  return m_bounds;
+}
+
+void DiscSurface::assignSurfaceBounds(
+    std::shared_ptr<const DiscBounds> newBounds) {
+  m_bounds = std::move(newBounds);
 }
 
 }  // namespace Acts

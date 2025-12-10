@@ -24,11 +24,14 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   explicit MultiNavigationPolicy(std::unique_ptr<Policies>... policies)
       : MultiNavigationPolicy{[](auto... args) {
           std::vector<std::unique_ptr<INavigationPolicy>> policyPtrs;
-          auto fill = [&policyPtrs](auto& policy) {
-            policyPtrs.push_back(std::move(policy));
-          };
 
-          (fill(args), ...);
+          if constexpr (sizeof...(args) > 0) {
+            auto fill = [&policyPtrs](auto& policy) {
+              policyPtrs.push_back(std::move(policy));
+            };
+
+            (fill(args), ...);
+          }
 
           return policyPtrs;
         }(std::move(policies)...)} {}
@@ -53,10 +56,12 @@ class MultiNavigationPolicy final : public INavigationPolicy {
 
  private:
   /// Initialize navigation candidates by calling all contained policies
+  /// @param gctx The geometry context
   /// @param args The navigation arguments
   /// @param stream The navigation stream to populate
   /// @param logger Logger for debug output
-  void initializeCandidates(const NavigationArguments& args,
+  void initializeCandidates(const GeometryContext& gctx,
+                            const NavigationArguments& args,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 

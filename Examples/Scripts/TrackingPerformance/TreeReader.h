@@ -32,6 +32,30 @@ struct ParticleInfo {
   UShort_t nHits = 0;
 };
 
+namespace {
+
+inline std::uint64_t hashBarcodeComponents(std::uint32_t vertexPrimary,
+                                           std::uint32_t vertexSecondary,
+                                           std::uint32_t particle,
+                                           std::uint32_t generation,
+                                           std::uint32_t subParticle) {
+  auto hashCombine = [](std::uint64_t seed, std::uint64_t value) {
+    constexpr std::uint64_t kMagic = 0x9e3779b97f4a7c15ull;
+    seed ^= value + kMagic + (seed << 6) + (seed >> 2);
+    return seed;
+  };
+
+  std::uint64_t hash = 0xcbf29ce484222325ull;
+  hash = hashCombine(hash, vertexPrimary);
+  hash = hashCombine(hash, vertexSecondary);
+  hash = hashCombine(hash, particle);
+  hash = hashCombine(hash, generation);
+  hash = hashCombine(hash, subParticle);
+  return hash;
+}
+
+}  // namespace
+
 /// Helper for reading tree
 ///
 struct TreeReader {
@@ -309,7 +333,28 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("outlierLayer", &outlierLayer);
     tree->SetBranchAddress("nMajorityHits", &nMajorityHits);
     tree->SetBranchAddress("nSharedHits", &nSharedHits);
-    tree->SetBranchAddress("majorityParticleId", &majorityParticleId);
+    if (tree->GetBranch("majorityParticleId") != nullptr) {
+      majorityParticleId =
+          new std::vector<std::vector<std::uint32_t>>;
+      tree->SetBranchAddress("majorityParticleId", &majorityParticleId);
+      hasCombinedMajorityParticleId = true;
+    } else {
+      majorityParticleVertexPrimary = new std::vector<std::uint32_t>;
+      majorityParticleVertexSecondary = new std::vector<std::uint32_t>;
+      majorityParticleParticle = new std::vector<std::uint32_t>;
+      majorityParticleGeneration = new std::vector<std::uint32_t>;
+      majorityParticleSubParticle = new std::vector<std::uint32_t>;
+      tree->SetBranchAddress("majorityParticleId_vertex_primary",
+                             &majorityParticleVertexPrimary);
+      tree->SetBranchAddress("majorityParticleId_vertex_secondary",
+                             &majorityParticleVertexSecondary);
+      tree->SetBranchAddress("majorityParticleId_particle",
+                             &majorityParticleParticle);
+      tree->SetBranchAddress("majorityParticleId_generation",
+                             &majorityParticleGeneration);
+      tree->SetBranchAddress("majorityParticleId_sub_particle",
+                             &majorityParticleSubParticle);
+    }
 
     tree->SetBranchAddress("hasFittedParams", &hasFittedParams);
 
@@ -370,8 +415,31 @@ struct TrackSummaryReader : public TreeReader {
   std::vector<std::vector<double>>* outlierLayer =
       new std::vector<std::vector<double>>;
   std::vector<unsigned int>* nMajorityHits = new std::vector<unsigned int>;
-  std::vector<std::uint64_t>* majorityParticleId =
-      new std::vector<std::uint64_t>;
+  std::vector<std::vector<std::uint32_t>>* majorityParticleId = nullptr;
+  std::vector<std::uint32_t>* majorityParticleVertexPrimary = nullptr;
+  std::vector<std::uint32_t>* majorityParticleVertexSecondary = nullptr;
+  std::vector<std::uint32_t>* majorityParticleParticle = nullptr;
+  std::vector<std::uint32_t>* majorityParticleGeneration = nullptr;
+  std::vector<std::uint32_t>* majorityParticleSubParticle = nullptr;
+  bool hasCombinedMajorityParticleId = false;
+
+  std::uint64_t majorityParticleHash(std::size_t idx) const {
+    if (hasCombinedMajorityParticleId && majorityParticleId != nullptr) {
+      const auto& components = majorityParticleId->at(idx);
+      auto comp = [&](std::size_t i) -> std::uint32_t {
+        return (components.size() > i) ? components[i] : 0u;
+      };
+      return hashBarcodeComponents(comp(0), comp(1), comp(2), comp(3), comp(4));
+    }
+    auto safeAt = [](const std::vector<std::uint32_t>* vec, std::size_t i) {
+      return (vec != nullptr && vec->size() > i) ? vec->at(i) : 0u;
+    };
+    return hashBarcodeComponents(safeAt(majorityParticleVertexPrimary, idx),
+                                 safeAt(majorityParticleVertexSecondary, idx),
+                                 safeAt(majorityParticleParticle, idx),
+                                 safeAt(majorityParticleGeneration, idx),
+                                 safeAt(majorityParticleSubParticle, idx));
+  }
 
   std::vector<bool>* hasFittedParams = new std::vector<bool>;
 
@@ -403,7 +471,7 @@ struct TrackSummaryReader : public TreeReader {
 };
 
 /// Struct used for reading particles written out by the
-/// TrackFinderNTupleWriter
+/// RootTrackFinderNTupleWriter
 ///
 struct ParticleReader : public TreeReader {
   // Delete the default constructor
@@ -412,7 +480,20 @@ struct ParticleReader : public TreeReader {
   // The constructor
   ParticleReader(TTree* tree_, bool sortEvents) : TreeReader(tree_) {
     tree->SetBranchAddress("event_id", &eventId);
-    tree->SetBranchAddress("particle_id", &particleId);
+    if (tree->GetBranch("particle_id") != nullptr) {
+      combinedParticleId = new std::vector<std::uint32_t>;
+      tree->SetBranchAddress("particle_id", &combinedParticleId);
+      hasCombinedParticleId = true;
+    } else {
+      tree->SetBranchAddress("particle_id_vertex_primary",
+                             &particleVertexPrimary);
+      tree->SetBranchAddress("particle_id_vertex_secondary",
+                             &particleVertexSecondary);
+      tree->SetBranchAddress("particle_id_particle", &particleParticle);
+      tree->SetBranchAddress("particle_id_generation", &particleGeneration);
+      tree->SetBranchAddress("particle_id_sub_particle",
+                             &particleSubParticle);
+    }
     tree->SetBranchAddress("particle_type", &particleType);
     tree->SetBranchAddress("vx", &vx);
     tree->SetBranchAddress("vy", &vy);
@@ -459,14 +540,40 @@ struct ParticleReader : public TreeReader {
       auto pt = std::hypot(px, py);
       auto p = std::hypot(pt, pz);
       auto eta = std::atanh(pz / p * 1.);
-      particles.push_back({particleId, eta, p, pt, nHits});
+
+      std::uint32_t vp = particleVertexPrimary;
+      std::uint32_t vs = particleVertexSecondary;
+      std::uint32_t particle = particleParticle;
+      std::uint32_t generation = particleGeneration;
+      std::uint32_t subParticle = particleSubParticle;
+      if (hasCombinedParticleId && combinedParticleId != nullptr) {
+        auto comp = [&](std::size_t idx) -> std::uint32_t {
+          return (combinedParticleId->size() > idx) ? combinedParticleId->at(idx)
+                                                    : 0u;
+        };
+        vp = comp(0);
+        vs = comp(1);
+        particle = comp(2);
+        generation = comp(3);
+        subParticle = comp(4);
+      }
+
+      const auto barcodeHash =
+          hashBarcodeComponents(vp, vs, particle, generation, subParticle);
+      particles.push_back({barcodeHash, eta, p, pt, nHits});
     }
     return particles;
   }
 
   // The variables
   ULong64_t eventId = 0;
-  ULong64_t particleId = 0;
+  std::vector<std::uint32_t>* combinedParticleId = nullptr;
+  bool hasCombinedParticleId = false;
+  std::uint32_t particleVertexPrimary = 0;
+  std::uint32_t particleVertexSecondary = 0;
+  std::uint32_t particleParticle = 0;
+  std::uint32_t particleGeneration = 0;
+  std::uint32_t particleSubParticle = 0;
   Int_t particleType = 0;
   float vx = 0, vy = 0, vz = 0;
   float vt = 0;

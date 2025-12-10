@@ -2,11 +2,14 @@ acts_add_library(
     PluginDetray
     SHARED
     src/DetrayConversionUtils.cpp
-    src/DetrayConverter.cpp
-    src/DetrayGeometryConverter.cpp
-    src/DetrayMaterialConverter.cpp
-    src/DetraySurfaceGridsConverter.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    #src/DetrayConverter.cpp
+    #src/DetrayGeometryConverter.cpp
+    #src/DetrayMaterialConverter.cpp
+    #src/DetraySurfaceGridsConverter.cpp
+    src/DetrayPayloadConverter.cpp
+    src/DetrayMaterial.cpp
+    src/DetrayNavigation.cpp
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 add_dependencies(ActsPluginDetray detray::core covfie::core vecmem::core)
@@ -27,5 +30,6 @@ target_link_libraries(
         detray::io
         detray::detectors
         detray::test_utils
+        detray::svgtools
         vecmem::core
 )
