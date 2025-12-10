@@ -14,7 +14,7 @@
 namespace Acts {
 
 /// Error codes for magnetic field operations
-/// @ingroup magnetic_field
+/// @ingroup errors
 enum class MagneticFieldError {
   /// The lookup position was outside of the validitiy domain of the underlying
   /// magnetic field instance.

@@ -15,20 +15,20 @@ class GeoFullPhysVol;
 
 namespace ActsPlugins {
 
-/// @addtogroup geomodel_plugin
-/// @{
-
+/// @ingroup errors
 enum class GeoModelConversionError {
   // ensure all values are non-zero
+  /// Wrong shape provided for this converter
   WrongShapeForConverter = 1,
+  /// Shape parameters can not be converted to Surface representation
   InvalidShapeParameters,
+  /// Unknown Shape provided, no converter available
   UnkownShape,
+  /// No logical volume found for the shape
   MissingLogicalVolume
 };
 
 std::error_code make_error_code(GeoModelConversionError e);
-
-/// @}
 
 }  // namespace ActsPlugins
 

@@ -13,8 +13,10 @@
 
 namespace ActsFatras::detail {
 
+/// @ingroup errors
 enum class SimulationError {
   // ensure all values are non-zero
+  /// Input particle id with non-zero generation or sub-particle
   InvalidInputParticleId = 1,
 };
 

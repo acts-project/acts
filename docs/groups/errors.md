@@ -1,0 +1,1 @@
+@defgroup errors Error definitions
