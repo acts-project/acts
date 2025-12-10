@@ -70,12 +70,4 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addPropagation(m);
   addSeeding(m);
   addTrackFinding(m);
-
-  // Legacy python modules
-  Context ctx;
-  ctx.modules["main"] = m;
-  auto mex = m.def_submodule("_examples");
-  ctx.modules["examples"] = mex;
-  auto prop = m.def_submodule("_propagator");
-  ctx.modules["propagation"] = prop;
 }
