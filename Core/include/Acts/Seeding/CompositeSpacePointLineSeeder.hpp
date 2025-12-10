@@ -305,7 +305,7 @@ class CompositeSpacePointLineSeeder {
     /// @param _pars: The seed line parameter
     /// @param _hits  A new empty container to be filled
     explicit SegmentSeed(SeedParam_t _pars, contType_t&& _hits) noexcept
-        : parameters{std::move(_pars)}, hits{std::move(_hits)} {}
+        : parameters{_pars}, hits{std::move(_hits)} {}
     /// @brief Seed line parameters
     SeedParam_t parameters;
     /// @brief Collection of hits
