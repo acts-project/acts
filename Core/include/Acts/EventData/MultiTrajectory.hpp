@@ -176,7 +176,7 @@ class MultiTrajectory {
   friend class TrackStateProxy<Derived, MeasurementSizeMax, true>;
   friend class TrackStateProxy<Derived, MeasurementSizeMax, false>;
   template <bool R>
-  friend class AnyTrackState;
+  friend class AnyTrackStateProxy;
   template <typename T>
   friend class detail_anytstate::TrackStateHandler;
   template <typename T>

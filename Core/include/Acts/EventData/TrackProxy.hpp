@@ -116,7 +116,7 @@ class TrackProxy {
   template <typename A, typename B, template <typename> class H, bool R>
   friend class TrackProxy;
   template <bool R>
-  friend class AnyTrack;
+  friend class AnyTrackProxy;
 #endif
 
   /// @anchor track_proxy_construct
