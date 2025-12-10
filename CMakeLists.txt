@@ -357,8 +357,6 @@ if(ACTS_SETUP_EIGEN3)
     )
 endif()
 
-find_package(Filesystem REQUIRED)
-
 # CUDA settings are collected here in a macro, so that they can be reused by different plugins
 macro(enable_cuda)
     enable_language(CUDA)
