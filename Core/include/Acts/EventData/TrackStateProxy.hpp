@@ -937,12 +937,9 @@ class TrackStateProxy {
       }
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-        // workaround for gcc8 bug:
-        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
-        auto* self = this;
-        visit_measurement(other.calibratedSize(), [&](auto N) {
+        visit_measurement(other.calibratedSize(), [this, &other](auto N) {
           constexpr int measdim = decltype(N)::value;
-          self->allocateCalibrated(
+          allocateCalibrated(
               other.template calibrated<measdim>().eval(),
               other.template calibratedCovariance<measdim>().eval());
         });
@@ -982,12 +979,9 @@ class TrackStateProxy {
       // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
           other.template has<hashString("calibrated")>()) {
-        // workaround for gcc8 bug:
-        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
-        auto* self = this;
-        visit_measurement(other.calibratedSize(), [&](auto N) {
+        visit_measurement(other.calibratedSize(), [this, &other](auto N) {
           constexpr int measdim = decltype(N)::value;
-          self->allocateCalibrated(
+          allocateCalibrated(
               other.template calibrated<measdim>().eval(),
               other.template calibratedCovariance<measdim>().eval());
         });
