@@ -49,8 +49,9 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
       seederCfg, getDefaultLogger("StrawLineSeederTest", logLvl)};
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
-    if (evt % 100 == 0)
+    if (evt % 100 == 0) {
       ACTS_INFO("Generating event " << evt);
+    }
     const auto line = generateLine(engine, logger());
     auto linePars = line.parameters();
     trueY0 = linePars[toUnderlying(FitParIndex::y0)];
@@ -112,7 +113,6 @@ BOOST_AUTO_TEST_CASE(SeederTest) {
 BOOST_AUTO_TEST_CASE(SeedTangents) {
   RandomEngine engine{117};
   constexpr double tolerance = 1.e-3;
-  return;
 
   using Seeder = CompositeSpacePointLineSeeder;
   using SeedAux = CompSpacePointAuxiliaries;
