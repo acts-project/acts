@@ -235,7 +235,7 @@ class GenericFreeTrackParameters {
   friend std::ostream& operator<<(std::ostream& os,
                                   const GenericFreeTrackParameters& tp) {
     detail::printFreeParameters(
-        os, tp.parameters(),
+        os, tp.particleHypothesis(), tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
     return os;
   }
