@@ -222,12 +222,9 @@ class BranchStopper {
       if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
           trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
         auto volumeId = trackState.referenceSurface().geometryId().volume();
-        if (std::find(m_cfg.pixelVolumeIds.begin(), m_cfg.pixelVolumeIds.end(),
-                      volumeId) != m_cfg.pixelVolumeIds.end()) {
+        if (Acts::rangeContainsValue(m_cfg.pixelVolumeIds, volumeId)) {
           ++branchState.nPixelHoles;
-        } else if (std::find(m_cfg.stripVolumeIds.begin(),
-                             m_cfg.stripVolumeIds.end(),
-                             volumeId) != m_cfg.stripVolumeIds.end()) {
+        } else if (Acts::rangeContainsValue(m_cfg.stripVolumeIds, volumeId)) {
           ++branchState.nStripHoles;
         }
       }
