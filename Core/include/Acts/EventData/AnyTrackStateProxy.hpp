@@ -29,7 +29,7 @@
 namespace Acts {
 
 template <bool read_only>
-class AnyTrackState;
+class AnyTrackStateProxy;
 
 namespace detail_anytstate {
 
@@ -310,13 +310,13 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
 }  // namespace detail_anytstate
 
 template <bool read_only>
-class AnyTrackState {
+class AnyTrackStateProxy {
  public:
   static constexpr bool ReadOnly = read_only;
 
-  using MutableTrackState = AnyTrackState<false>;
-  using ConstTrackState = AnyTrackState<true>;
-  using ConstProxyType = AnyTrackState<true>;
+  using MutableTrackState = AnyTrackStateProxy<false>;
+  using ConstTrackState = AnyTrackStateProxy<true>;
+  using ConstProxyType = AnyTrackStateProxy<true>;
 
   using ParametersMap = detail_anytstate::TrackStateParametersMap;
   using ConstParametersMap = detail_anytstate::TrackStateConstParametersMap;
@@ -333,12 +333,12 @@ class AnyTrackState {
 
   using ContainerPointer = std::conditional_t<ReadOnly, const void*, void*>;
 
-  /// Construct an `AnyTrackState` from a concrete track-state proxy.
+  /// Construct an `AnyTrackStateProxy` from a concrete track-state proxy.
   /// @tparam track_state_proxy_t Proxy type satisfying the concept.
   /// @param ts Proxy that supplies the trajectory backend and index.
   template <TrackStateProxyConcept track_state_proxy_t>
     requires(ReadOnly || !track_state_proxy_t::ReadOnly)
-  explicit AnyTrackState(const track_state_proxy_t& ts)
+  explicit AnyTrackStateProxy(const track_state_proxy_t& ts)
       : m_container(nullptr), m_index(ts.m_istate), m_handler(nullptr) {
     using trajectory_t = typename track_state_proxy_t::Trajectory;
     auto* containerPtr = ts.rawTrajectoryPtr();
@@ -927,7 +927,7 @@ class AnyTrackState {
 
  private:
   template <bool>
-  friend class AnyTrackState;
+  friend class AnyTrackStateProxy;
 
   TrackIndexType componentIndexValue(HashedString key) const {
     assert(has(key));
@@ -989,10 +989,10 @@ class AnyTrackState {
   const detail_anytstate::TrackStateHandlerConstBase* m_handler{};
 };
 
-using AnyConstTrackState = AnyTrackState<true>;
-using AnyMutableTrackState = AnyTrackState<false>;
+using AnyConstTrackStateProxy = AnyTrackStateProxy<true>;
+using AnyMutableTrackStateProxy = AnyTrackStateProxy<false>;
 
-static_assert(ConstTrackStateProxyConcept<AnyConstTrackState>);
-static_assert(MutableTrackStateProxyConcept<AnyMutableTrackState>);
+static_assert(ConstTrackStateProxyConcept<AnyConstTrackStateProxy>);
+static_assert(MutableTrackStateProxyConcept<AnyMutableTrackStateProxy>);
 
 }  // namespace Acts

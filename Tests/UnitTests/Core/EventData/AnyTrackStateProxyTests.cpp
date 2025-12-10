@@ -8,8 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/EventData/AnyTrackState.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
@@ -45,7 +44,7 @@ BOOST_FIXTURE_TEST_CASE(WrapTrackStateProxy, TestTrackStateFixture) {
   track.tipIndex() = state.index();
 
   auto proxy = container.trackStateContainer().getTrackState(state.index());
-  AnyMutableTrackState anyState(proxy);
+  AnyMutableTrackStateProxy anyState(proxy);
 
   BOOST_CHECK_EQUAL(anyState.index(), proxy.index());
 }
@@ -58,7 +57,7 @@ BOOST_FIXTURE_TEST_CASE(AccessFiltered, TestTrackStateFixture) {
   state.predicted() = ActsVector<eBoundSize>::Ones();
   state.filtered() = 2. * ActsVector<eBoundSize>::Ones();
 
-  AnyMutableTrackState anyState(state);
+  AnyMutableTrackStateProxy anyState(state);
 
   BOOST_CHECK_EQUAL(anyState.predicted()[eBoundLoc0], 1.);
   BOOST_CHECK_EQUAL(anyState.filtered()[eBoundLoc0], 2.);
@@ -82,7 +81,7 @@ BOOST_FIXTURE_TEST_CASE(AccessCalibratedFixedSize, TestTrackStateFixture) {
   calibratedCov(0, 0) = 0.1;
   calibratedCov(1, 1) = 0.2;
 
-  AnyMutableTrackState anyState(state);
+  AnyMutableTrackStateProxy anyState(state);
 
   auto view = anyState.calibrated<2>();
   BOOST_CHECK_CLOSE(view[0], 1.5, 1e-6);
@@ -97,7 +96,7 @@ BOOST_FIXTURE_TEST_CASE(AccessCalibratedFixedSize, TestTrackStateFixture) {
   covView(0, 0) = 0.5;
   BOOST_CHECK_CLOSE(state.calibratedCovariance<2>()(0, 0), 0.5, 1e-6);
 
-  AnyConstTrackState constState(state);
+  AnyConstTrackStateProxy constState(state);
   auto constView = constState.calibrated<2>();
   BOOST_CHECK_CLOSE(constView[0], 4.5, 1e-6);
   auto constCov = constState.calibratedCovariance<2>();
@@ -126,7 +125,7 @@ BOOST_FIXTURE_TEST_CASE(AccessEffectiveCalibratedDynamic,
     }
   }
 
-  AnyMutableTrackState anyState(state);
+  AnyMutableTrackStateProxy anyState(state);
   BOOST_CHECK_EQUAL(anyState.calibratedSize(), measdim);
   auto eff = anyState.effectiveCalibrated();
   BOOST_CHECK_EQUAL(eff.size(), measdim);
@@ -143,7 +142,7 @@ BOOST_FIXTURE_TEST_CASE(AccessEffectiveCalibratedDynamic,
   effCov(1, 1) = 1.7;
   BOOST_CHECK_CLOSE(state.effectiveCalibratedCovariance()(1, 1), 1.7, 1e-6);
 
-  AnyConstTrackState constState(state);
+  AnyConstTrackStateProxy constState(state);
   BOOST_CHECK_EQUAL(constState.calibratedSize(), measdim);
   auto constEff = constState.effectiveCalibrated();
   BOOST_CHECK_EQUAL(constEff.size(), measdim);
@@ -165,13 +164,13 @@ BOOST_FIXTURE_TEST_CASE(ProxyAccessorWithAnyTrackState, TestTrackStateFixture) {
   ProxyAccessor<float> mutableAccessor("customFloat");
   ConstProxyAccessor<float> constAccessor("customFloat");
 
-  AnyMutableTrackState anyState(state);
+  AnyMutableTrackStateProxy anyState(state);
   BOOST_CHECK_CLOSE(mutableAccessor(anyState), 0.25f, 1e-6);
   mutableAccessor(anyState) = 0.75f;
   BOOST_CHECK_CLOSE(state.template component<float>("customFloat"_hash), 0.75f,
                     1e-6);
 
-  AnyConstTrackState constState(state);
+  AnyConstTrackStateProxy constState(state);
   BOOST_CHECK_CLOSE(constAccessor(constState), 0.75f, 1e-6);
   BOOST_CHECK(constAccessor.hasColumn(constState));
 }
