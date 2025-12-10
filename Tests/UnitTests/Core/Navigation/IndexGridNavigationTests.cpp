@@ -78,9 +78,8 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
   centerConfig.referenceGenerator =
       std::make_shared<CenterReferenceGenerator>();
 
-  IndexGridNavigationPolicy<decltype(gridXY)>
-      centerNavigationPolicy(tContext, tVolume, *tLogger, centerConfig,
-                             indexedGridXY);
+  IndexGridNavigationPolicy<decltype(gridXY)> centerNavigationPolicy(
+      tContext, tVolume, *tLogger, centerConfig, indexedGridXY);
 
   // Now initialize candidates at position (0,0,0)
   NavigationArguments navArgs;
@@ -108,9 +107,8 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
       std::make_shared<CenterReferenceGenerator>();
   expandedConfig.binExpansion = {1u, 0u};
 
-  IndexGridNavigationPolicy<decltype(gridXY)>
-      expandedNavigationPolicy(tContext, tVolume, *tLogger, expandedConfig,
-                               indexedGridXY);
+  IndexGridNavigationPolicy<decltype(gridXY)> expandedNavigationPolicy(
+      tContext, tVolume, *tLogger, expandedConfig, indexedGridXY);
 
   nStream.reset();
 
@@ -133,9 +131,8 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
   polyConfig.referenceGenerator =
       std::make_shared<PolyhedronReferenceGenerator>();
 
-  IndexGridNavigationPolicy<decltype(gridXY)>
-      polyNavigationPolicy(tContext, tVolume, *tLogger, polyConfig,
-                           indexedGridXY);
+  IndexGridNavigationPolicy<decltype(gridXY)> polyNavigationPolicy(
+      tContext, tVolume, *tLogger, polyConfig, indexedGridXY);
   nStream.reset();
   // Address central posision
   navArgs.position = Vector3(0., 0., 0.);
@@ -172,9 +169,8 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
       std::make_shared<PolyhedronReferenceGenerator>();
   polyExpandedConfig.referenceExpansion = {12., 0.};
 
-  IndexGridNavigationPolicy<decltype(gridXY)>
-      polyExpandedNavigationPolicy(tContext, tVolume, *tLogger,
-                                   polyExpandedConfig, indexedGridXY);
+  IndexGridNavigationPolicy<decltype(gridXY)> polyExpandedNavigationPolicy(
+      tContext, tVolume, *tLogger, polyExpandedConfig, indexedGridXY);
   nStream.reset();
   // Address central posision - should still work
   navArgs.position = Vector3(0., 0., 0.);
@@ -254,9 +250,8 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   IndexGridNavigationConfig polyConfig;
   polyConfig.referenceGenerator =
       std::make_shared<PolyhedronReferenceGenerator>();
-  IndexGridNavigationPolicy<decltype(gridZPhi)>
-      polyNavigationPolicy(tContext, tVolume, *tLogger, polyConfig,
-                           indexedGridZPhi);
+  IndexGridNavigationPolicy<decltype(gridZPhi)> polyNavigationPolicy(
+      tContext, tVolume, *tLogger, polyConfig, indexedGridZPhi);
 
   // Now initialize candidates at position (R,0,0) - opposite should. not lead
   // to a candidate
@@ -307,9 +302,8 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   projectedReferenceGenerator->luminousRegion = {Vector3(0., 0., 0.)};
 
   projectedConfig.referenceGenerator = projectedReferenceGenerator;
-  IndexGridNavigationPolicy<decltype(gridZPhi)>
-      projectedNavigationPolicy(tContext, tVolume, *tLogger, projectedConfig,
-                                indexedGridZPhi);
+  IndexGridNavigationPolicy<decltype(gridZPhi)> projectedNavigationPolicy(
+      tContext, tVolume, *tLogger, projectedConfig, indexedGridZPhi);
 
   // A candidate a off in phi - still outside
   nStream.reset();
@@ -371,9 +365,8 @@ BOOST_AUTO_TEST_CASE(RegularDiscIndexGridTests) {
   IndexGridNavigationConfig centerConfig;
   centerConfig.referenceGenerator =
       std::make_shared<PolyhedronReferenceGenerator>();
-  IndexGridNavigationPolicy<decltype(gridRPhi)>
-      centerNavigationPolicy(tContext, tVolume, *tLogger, centerConfig,
-                             indexedGridRPhi);
+  IndexGridNavigationPolicy<decltype(gridRPhi)> centerNavigationPolicy(
+      tContext, tVolume, *tLogger, centerConfig, indexedGridRPhi);
 
   // Now initialize candidates at position (R,0,0) - should yield only surface0
   NavigationArguments navArgs;
@@ -428,9 +421,8 @@ BOOST_AUTO_TEST_CASE(RegularRingIndexGridTests) {
 
   centerConfig.binExpansion = {1u};
 
-  IndexGridNavigationPolicy<decltype(gridPhi)>
-      centerNavigationPolicy(tContext, tVolume, *tLogger, centerConfig,
-                             indexedGridPhi);
+  IndexGridNavigationPolicy<decltype(gridPhi)> centerNavigationPolicy(
+      tContext, tVolume, *tLogger, centerConfig, indexedGridPhi);
   // Now initialize candidates at position (R,0,0) - should yield the surface
   NavigationArguments navArgs;
   NavigationStream nStream;

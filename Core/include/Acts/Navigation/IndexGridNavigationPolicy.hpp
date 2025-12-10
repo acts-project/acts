@@ -163,4 +163,4 @@ using RegularPlaneIndexGridNavigationPolicy =
     IndexGridNavigationPolicy<RegularPlaneIndexGrid>;
 static_assert(NavigationPolicyConcept<RegularPlaneIndexGridNavigationPolicy>);
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
