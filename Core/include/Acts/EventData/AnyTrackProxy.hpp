@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/HashedString.hpp"
@@ -204,7 +205,9 @@ class TrackHandler final : public TrackHandlerMutableBase {
 /// std::cout << "Chi2: " << AnyTrackProxy.chi2() << std::endl;
 /// @endcode
 template <bool read_only = true>
-class AnyTrackProxy {
+class AnyTrackProxy
+    : public TrackProxyCommon<AnyTrackProxy<read_only>, TrackIndexType,
+                              read_only> {
  public:
   /// Indicates whether this track is read-only
   static constexpr bool ReadOnly = read_only;
@@ -279,34 +282,6 @@ class AnyTrackProxy {
       m_container = static_cast<void*>(containerPtr);
     }
     m_handler = &detail_anytrack::TrackHandler<container_t>::instance();
-  }
-
-  /// Get the tip index of the track
-  /// @return The tip index
-  const TrackIndexType& tipIndex() const {
-    return component<TrackIndexType, detail_tp::kTipIndexKey>();
-  }
-
-  /// Get a mutable reference to the tip index
-  /// @return The tip index reference
-  TrackIndexType& tipIndex()
-    requires(!ReadOnly)
-  {
-    return component<TrackIndexType, detail_tp::kTipIndexKey>();
-  }
-
-  /// Get the stem index of the track
-  /// @return The stem index
-  const TrackIndexType& stemIndex() const {
-    return component<TrackIndexType, detail_tp::kStemIndexKey>();
-  }
-
-  /// Get a mutable reference to the stem index
-  /// @return The stem index reference
-  TrackIndexType& stemIndex()
-    requires(!ReadOnly)
-  {
-    return component<TrackIndexType, detail_tp::kStemIndexKey>();
   }
 
   /// Get the index of this track
@@ -418,88 +393,6 @@ class AnyTrackProxy {
   /// @return The transverse momentum value
   double transverseMomentum() const {
     return std::sin(theta()) * absoluteMomentum();
-  }
-
-  /// Get the number of measurements
-  /// @return The number of measurements
-  const unsigned int& nMeasurements() const {
-    return component<unsigned int, detail_tp::kMeasurementsKey>();
-  }
-
-  /// Get a mutable reference to the number of measurements
-  /// @return Mutable number of measurements
-  unsigned int& nMeasurements()
-    requires(!ReadOnly)
-  {
-    return component<unsigned int, detail_tp::kMeasurementsKey>();
-  }
-
-  /// Get the number of holes
-  /// @return The number of holes
-  const unsigned int& nHoles() const {
-    return component<unsigned int, detail_tp::kHolesKey>();
-  }
-
-  /// Get a mutable reference to the number of holes
-  /// @return Mutable number of holes
-  unsigned int& nHoles()
-    requires(!ReadOnly)
-  {
-    return component<unsigned int, detail_tp::kHolesKey>();
-  }
-
-  /// Get the number of outliers
-  /// @return The number of outliers
-  const unsigned int& nOutliers() const {
-    return component<unsigned int, detail_tp::kOutliersKey>();
-  }
-
-  /// Get a mutable reference to the number of outliers
-  /// @return Mutable number of outliers
-  unsigned int& nOutliers()
-    requires(!ReadOnly)
-  {
-    return component<unsigned int, detail_tp::kOutliersKey>();
-  }
-
-  /// Get the number of shared hits
-  /// @return The number of shared hits
-  const unsigned int& nSharedHits() const {
-    return component<unsigned int, detail_tp::kSharedHitsKey>();
-  }
-
-  /// Get a mutable reference to the number of shared hits
-  /// @return Mutable number of shared hits
-  unsigned int& nSharedHits()
-    requires(!ReadOnly)
-  {
-    return component<unsigned int, detail_tp::kSharedHitsKey>();
-  }
-
-  /// Get the chi2 value
-  /// @return The chi2 value
-  const float& chi2() const { return component<float, detail_tp::kChi2Key>(); }
-
-  /// Get a mutable reference to the chi2 value
-  /// @return Mutable chi2 value
-  float& chi2()
-    requires(!ReadOnly)
-  {
-    return component<float, detail_tp::kChi2Key>();
-  }
-
-  /// Get the number of degrees of freedom
-  /// @return The number of degrees of freedom
-  const unsigned int& nDoF() const {
-    return component<unsigned int, detail_tp::kNdfKey>();
-  }
-
-  /// Get a mutable reference to the number of degrees of freedom
-  /// @return Mutable number of degrees of freedom
-  unsigned int& nDoF()
-    requires(!ReadOnly)
-  {
-    return component<unsigned int, detail_tp::kNdfKey>();
   }
 
   /// Get the number of track states
