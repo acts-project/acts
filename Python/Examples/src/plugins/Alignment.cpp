@@ -21,14 +21,13 @@ namespace py = pybind11;
 
 using namespace Acts;
 using namespace ActsExamples;
+using namespace ActsPython;
 
-namespace ActsPython {
-
-void addAlignment(py::module& mex) {
+PYBIND11_MODULE(ActsExamplesPythonBindingsDD4hep, m) {
   {
     auto ad =
         py::class_<AlignmentDecorator, IContextDecorator,
-                   std::shared_ptr<AlignmentDecorator>>(mex,
+                   std::shared_ptr<AlignmentDecorator>>(m,
                                                         "AlignmentDecorator")
             .def(py::init<const AlignmentDecorator::Config&, Logging::Level>())
             .def("decorate", &AlignmentDecorator::decorate)
@@ -43,24 +42,24 @@ void addAlignment(py::module& mex) {
 
   {
     py::class_<IAlignmentStore, std::shared_ptr<IAlignmentStore>>(
-        mex, "IAlignmentStore");
+        m, "IAlignmentStore");
   }
 
   {
     py::class_<GeoIdAlignmentStore, IAlignmentStore,
-               std::shared_ptr<GeoIdAlignmentStore>>(mex, "GeoIdAlignmentStore")
+               std::shared_ptr<GeoIdAlignmentStore>>(m, "GeoIdAlignmentStore")
         .def(py::init<
              const std::unordered_map<GeometryIdentifier, Transform3>&>());
   }
 
   {
-    py::class_<AlignmentGenerator::Nominal>(mex, "AlignmentGeneratorNominal")
+    py::class_<AlignmentGenerator::Nominal>(m, "AlignmentGeneratorNominal")
         .def(py::init<>())
         .def("__call__", &AlignmentGenerator::Nominal::operator());
   }
 
   {
-    py::class_<AlignmentGenerator::GlobalShift>(mex,
+    py::class_<AlignmentGenerator::GlobalShift>(m,
                                                 "AlignmentGeneratorGlobalShift")
         .def(py::init<>())
         .def_readwrite("shift", &AlignmentGenerator::GlobalShift::shift)
@@ -70,7 +69,7 @@ void addAlignment(py::module& mex) {
 
   {
     py::class_<AlignmentGenerator::GlobalRotation>(
-        mex, "AlignmentGeneratorGlobalRotation")
+        m, "AlignmentGeneratorGlobalRotation")
         .def(py::init<>())
         .def_readwrite("axis", &AlignmentGenerator::GlobalRotation::axis)
         .def_readwrite("angle", &AlignmentGenerator::GlobalRotation::angle)
@@ -81,7 +80,7 @@ void addAlignment(py::module& mex) {
 
   {
     py::class_<AlignmentGenerator::LocalRotation>(
-        mex, "AlignmentGeneratorLocalRotation")
+        m, "AlignmentGeneratorLocalRotation")
         .def(py::init<>())
         .def_readwrite("axis", &AlignmentGenerator::LocalRotation::axis)
         .def_readwrite("angle", &AlignmentGenerator::LocalRotation::angle)
@@ -91,7 +90,7 @@ void addAlignment(py::module& mex) {
   }
 
   {
-    py::class_<AlignmentGenerator::LocalShift>(mex,
+    py::class_<AlignmentGenerator::LocalShift>(m,
                                                "AlignmentGeneratorLocalShift")
         .def(py::init<>())
         .def_readwrite("axisDirection",
@@ -102,4 +101,3 @@ void addAlignment(py::module& mex) {
   }
 }
 
-}  // namespace ActsPython

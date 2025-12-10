@@ -136,15 +136,8 @@ target_link_libraries(
         Acts::PythonUtilities
 )
 
-if(ACTS_BUILD_ALIGNMENT)
-    target_sources(ActsExamplesPythonBindings PRIVATE src/Alignment.cpp)
-    target_link_libraries(
-        ActsExamplesPythonBindings
-        PUBLIC Acts::ExamplesAlignment
-    )
-endif()
-
 # Add all plugin related examples bindings conditionally to their build flag
+add_examples_binding_if(Alignment "Acts::ExamplesAlignment;Acts::ExamplesDetectorsCommon" ACTS_BUILD_ALIGNMENT TRUE)
 add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
 add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)
 add_examples_binding_if(Geant4
