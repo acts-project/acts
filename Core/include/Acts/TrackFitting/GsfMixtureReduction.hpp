@@ -18,6 +18,7 @@ namespace Acts {
 /// @param cmpCache the component collection
 /// @param maxCmpsAfterMerge the number of components we want to reach
 /// @param surface the surface type on which the components are (unused here)
+/// @ingroup track_fitting
 void reduceMixtureLargestWeights(std::vector<Acts::GsfComponent> &cmpCache,
                                  std::size_t maxCmpsAfterMerge,
                                  const Surface &surface);
@@ -28,6 +29,7 @@ void reduceMixtureLargestWeights(std::vector<Acts::GsfComponent> &cmpCache,
 /// @param cmpCache the component collection
 /// @param maxCmpsAfterMerge the number of components we want to reach
 /// @param surface the surface type on which the components are
+/// @ingroup track_fitting
 void reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
                                  std::size_t maxCmpsAfterMerge,
                                  const Surface &surface);
