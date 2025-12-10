@@ -3,7 +3,8 @@
 import os
 import acts
 import acts.examples
-from acts.examples import GenericDetector, StructureSelector, AlignmentDecorator
+from acts.examples import GenericDetector, StructureSelector
+from acts.examples.alignment import AlignmentDecorator
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,

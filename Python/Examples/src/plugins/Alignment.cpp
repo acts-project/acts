@@ -23,12 +23,11 @@ using namespace Acts;
 using namespace ActsExamples;
 using namespace ActsPython;
 
-PYBIND11_MODULE(ActsExamplesPythonBindingsDD4hep, m) {
+PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
   {
     auto ad =
         py::class_<AlignmentDecorator, IContextDecorator,
-                   std::shared_ptr<AlignmentDecorator>>(m,
-                                                        "AlignmentDecorator")
+                   std::shared_ptr<AlignmentDecorator>>(m, "AlignmentDecorator")
             .def(py::init<const AlignmentDecorator::Config&, Logging::Level>())
             .def("decorate", &AlignmentDecorator::decorate)
             .def("name", &AlignmentDecorator::name);
@@ -100,4 +99,3 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDD4hep, m) {
         .def("__call__", &AlignmentGenerator::LocalShift::operator());
   }
 }
-

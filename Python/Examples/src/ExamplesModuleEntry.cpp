@@ -16,7 +16,6 @@ namespace py = pybind11;
 namespace ActsPython {
 
 void addFramework(py::module& mex);
-void addAlignment(py::module& mex);
 void addAmbiguityResolution(py::module& mex);
 void addGenerators(py::module& mex);
 void addExampleAlgorithms(py::module& mex);
@@ -40,7 +39,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
   mex.doc() = "Acts Examples";
 
   addFramework(mex);
-  addAlignment(mex);
   addAmbiguityResolution(mex);
   addGenerators(mex);
   addExampleAlgorithms(mex);
