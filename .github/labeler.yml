@@ -33,7 +33,7 @@
   - changed-files:
     - any-glob-to-any-file:
       - CI/physmon/reference/**
-      - Examples/Python/tests/root_file_hashes.txt
+      - Python/Examples/tests/root_file_hashes.txt
 'Event Data Model':
   - changed-files:
     - any-glob-to-any-file:
