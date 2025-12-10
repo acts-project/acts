@@ -190,7 +190,6 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     world->exec(&writeGeoDB);  // visit all GeoModel nodes
     writeGeoDB.saveToDB(m_publisher.get());
   }
-  ACTS_INFO("Who votes to donate a razor to Claudio for all this DB work? \n"<<printVolume(world));
 
   m_publisher.reset();
   return outTree;
