@@ -98,9 +98,6 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
   if (axes.size() == 3) {
     Acts::BinningData bd2(axes[2]);
     bTriple[2] = bd2.searchGlobal(bPosition);
-  } else {
-    throw std::runtime_error(
-        "Unsupported number of axes for binTripleFromProtoAxes");
   }
   return bTriple;
 }
