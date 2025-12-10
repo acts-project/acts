@@ -131,13 +131,11 @@ def main():
         mockUpCfg.dbName = "ActsGeoMS.db"
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
-        mockUpCfg.buildEndcaps = True
+        mockUpCfg.buildEndcaps = False
         mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
             mockUpCfg, "GeoMockUpMS", logLevel
         )
-        gmBuilderConfig.stationNames = ["BI", "BM", "BO",
-                                        "EAI", "EAM", "EAO",
-                                        "ECI", "ECM", "ECO"]
+        gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
 
         gmTree = mockUpBuilder.constructMS()
     else:
@@ -151,7 +149,7 @@ def main():
         "SmallWheelGasGap",
     ]
     gmFactoryConfig.convertSubVolumes = True
-    gmFactoryConfig.convertBox = ["MDT", "RPC", "SmallWheel", "TGC"]
+    gmFactoryConfig.convertBox = ["MDT", "RPC"]
 
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options
@@ -166,13 +164,12 @@ def main():
 
     gmDetectorCfg = gm_ex.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
-    gmDetectorCfg.logLevel = logging.INFO
     detector = gm_ex.GeoModelDetector(gmDetectorCfg)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
     trackingGeometryBuilder = gm_ex.GeoModelMuonMockupBuilder(
-        gmBuilderConfig, "GeoModelMuonMockupBuilder", logging.VERBOSE
+        gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
     )
 
     trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)

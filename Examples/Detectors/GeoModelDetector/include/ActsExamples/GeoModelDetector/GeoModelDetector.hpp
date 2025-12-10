@@ -50,11 +50,10 @@ struct GeoModelDetector : public Detector {
       const Acts::GeometryContext& gctx,
       const Acts::ITrackingGeometryBuilder& builder) {
     if (!m_trackingGeometry) {
-      ACTS_DEBUG("Building TrackingGeometry from GeoModelDetector");
       m_trackingGeometry = builder.trackingGeometry(gctx);
     }
     return m_trackingGeometry;
-  } 
+  }
 
  private:
   Config m_cfg{};
