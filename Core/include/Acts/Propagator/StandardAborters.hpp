@@ -16,7 +16,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
-#include <ranges>
 
 namespace Acts {
 
