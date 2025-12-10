@@ -604,11 +604,11 @@ add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
 add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 
-# Python bindings infrastructure
-add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-
-# examples
+# Examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+
+# Python bindings
+add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
 
 # automated tests and benchmarks
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)

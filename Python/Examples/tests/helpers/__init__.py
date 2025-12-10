@@ -6,6 +6,15 @@ import contextlib
 import acts
 from acts.examples import IAlgorithm
 
+
+try:
+    import acts.examples.alignment
+
+    alignmentEnabled = True
+except ImportError:
+    alignmentEnabled = False
+
+
 geant4Enabled = (
     any(v.startswith("G4") for v in os.environ.keys())
     or "GEANT4_DATA_DIR" in os.environ

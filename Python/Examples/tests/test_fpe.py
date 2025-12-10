@@ -21,16 +21,16 @@ pytestmark = [
 
 
 _names = {
-    acts.FpeType.FLTDIV: "DivByZero",
-    acts.FpeType.FLTOVF: "Overflow",
-    acts.FpeType.FLTINV: "Invalid",
+    acts.examples.FpeType.FLTDIV: "DivByZero",
+    acts.examples.FpeType.FLTOVF: "Overflow",
+    acts.examples.FpeType.FLTINV: "Invalid",
 }
 
 
 _types = [
-    pytest.param(acts.FpeType.FLTDIV, id="FLTDIV"),
-    pytest.param(acts.FpeType.FLTOVF, id="FLTOVF"),
-    pytest.param(acts.FpeType.FLTINV, id="FLTINV"),
+    pytest.param(acts.examples.FpeType.FLTDIV, id="FLTDIV"),
+    pytest.param(acts.examples.FpeType.FLTOVF, id="FLTOVF"),
+    pytest.param(acts.examples.FpeType.FLTINV, id="FLTINV"),
 ]
 
 _src = (Path(__file__).parent / "../src/Framework.cpp").resolve()
@@ -53,11 +53,11 @@ class FpeMaker(acts.examples.IAlgorithm):
         i = context.eventNumber % 4
 
         if i == 0 or i == 1:
-            acts.FpeMonitor._trigger_divbyzero()
+            acts.examples.FpeMonitor._trigger_divbyzero()
         elif i == 2:
-            acts.FpeMonitor._trigger_overflow()
+            acts.examples.FpeMonitor._trigger_overflow()
         elif i == 3:
-            acts.FpeMonitor._trigger_invalid()
+            acts.examples.FpeMonitor._trigger_invalid()
 
         return acts.examples.ProcessCode.SUCCESS
 
@@ -91,7 +91,7 @@ def test_notrackfpe():
 
     res = s.fpeResult
 
-    for x in acts.FpeType.values:
+    for x in acts.examples.FpeType.values:
         assert res.count(x) == 0
 
 
@@ -110,7 +110,7 @@ def test_fpe_single_fail_at_end(fpe_type):
         FuncAlg(
             _names[fpe_type],
             lambda _: getattr(
-                acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}"
+                acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}"
             )(),
         )
     )
@@ -118,7 +118,7 @@ def test_fpe_single_fail_at_end(fpe_type):
         s.run()
     # fails, but will have run all 10 events
     res = s.fpeResult
-    for x in acts.FpeType.values:
+    for x in acts.examples.FpeType.values:
         assert res.count(x) == (s.config.events if x == fpe_type else 0)
 
 
@@ -133,16 +133,16 @@ def test_fpe_single_fail_immediately(fpe_type):
         FuncAlg(
             _names[fpe_type],
             lambda _: getattr(
-                acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}"
+                acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}"
             )(),
         )
     )
 
-    with pytest.raises(acts.FpeFailure):
+    with pytest.raises(acts.examples.FpeFailure):
         s.run()
 
     res = s.fpeResult
-    for x in acts.FpeType.values:
+    for x in acts.examples.FpeType.values:
         assert res.count(x) == (1 if x == fpe_type else 0)
 
 
@@ -165,7 +165,7 @@ def test_fpe_nocontext():
 
 
 def test_fpe_rearm(fpe_type):
-    trigger = getattr(acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
+    trigger = getattr(acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
 
     class Alg(acts.examples.IAlgorithm):
         def __init__(self):
@@ -188,12 +188,12 @@ def test_fpe_rearm(fpe_type):
         s.run()
 
     res = s.fpeResult
-    for x in acts.FpeType.values:
+    for x in acts.examples.FpeType.values:
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
 
 
 def test_fpe_masking_single(fpe_type):
-    trigger = getattr(acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
+    trigger = getattr(acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
 
     def func(context):
         trigger()
@@ -214,7 +214,7 @@ def test_fpe_masking_single(fpe_type):
 
     s.addAlgorithm(FuncAlg("Alg", func))
 
-    with pytest.raises(acts.FpeFailure):
+    with pytest.raises(acts.examples.FpeFailure):
         s.run()
 
     # Mask
@@ -233,7 +233,7 @@ def test_fpe_masking_single(fpe_type):
     s.run()
 
     res = s.fpeResult
-    for x in acts.FpeType.values:
+    for x in acts.examples.FpeType.values:
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
 
 
@@ -263,10 +263,10 @@ def test_masking_load_yaml(fpe_type, tmp_path, monkeypatch):
 
 
 def test_fpe_context(fpe_type):
-    trigger = getattr(acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
+    trigger = getattr(acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
     trigger()
 
-    with acts.FpeMonitor.context() as fpe:
+    with acts.examples.FpeMonitor.context() as fpe:
         trigger()
 
         print(fpe.result)
@@ -278,10 +278,14 @@ def test_buffer_sufficient():
         failOnFirstFpe=False,
     )
 
-    s.addAlgorithm(FuncAlg("Invalid", lambda _: acts.FpeMonitor._trigger_invalid()))
+    s.addAlgorithm(
+        FuncAlg("Invalid", lambda _: acts.examples.FpeMonitor._trigger_invalid())
+    )
     with pytest.raises(RuntimeError):
         s.run()
 
     res = s.fpeResult
-    for x in acts.FpeType.values:
-        assert res.count(x) == (s.config.events if x == acts.FpeType.FLTINV else 0)
+    for x in acts.examples.FpeType.values:
+        assert res.count(x) == (
+            s.config.events if x == acts.examples.FpeType.FLTINV else 0
+        )

@@ -599,7 +599,7 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         fpeMasks=[
             (
                 "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:197",
-                acts.FpeType.FLTUND,
+                acts.examples.FpeType.FLTUND,
                 1,
             ),
         ],
