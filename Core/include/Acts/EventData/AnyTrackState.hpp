@@ -984,9 +984,9 @@ class AnyTrackState {
     return m_container;
   }
 
-  ContainerPointer m_container;
-  TrackIndexType m_index;
-  const detail_anytstate::TrackStateHandlerConstBase* m_handler;
+  ContainerPointer m_container{};
+  TrackIndexType m_index{};
+  const detail_anytstate::TrackStateHandlerConstBase* m_handler{};
 };
 
 using AnyConstTrackState = AnyTrackState<true>;
