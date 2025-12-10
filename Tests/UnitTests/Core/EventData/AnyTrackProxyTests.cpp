@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/AnyTrack.hpp"
+#include "Acts/EventData/AnyTrackProxy.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_ValueHolder) {
   fillTestTrack<decltype(tc)>(track);
 
   // Construct from track proxy
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   // Verify index
   BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromTrackProxy_SharedPtr) {
   fillTestTrack<decltype(tc)>(track);
 
   // Construct from track proxy
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   // Verify index
   BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromConstTrackProxy) {
   auto constTrack = tc.getTrack(track.index());
 
   // Construct from const track proxy
-  AnyConstTrack anyTrack(constTrack);
+  AnyConstTrackProxy anyTrack(constTrack);
 
   BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
 }
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(AccessIndices) {
   track.tipIndex() = 42;
   track.stemIndex() = 7;
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   BOOST_CHECK_EQUAL(anyTrack.tipIndex(), 42u);
   BOOST_CHECK_EQUAL(anyTrack.stemIndex(), 7u);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(AccessReferenceSurface) {
   auto surface = Acts::Surface::makeShared<PerigeeSurface>(Vector3::Zero());
   track.setReferenceSurface(surface);
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   BOOST_CHECK(anyTrack.hasReferenceSurface());
   BOOST_CHECK_EQUAL(&anyTrack.referenceSurface(), surface.get());
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(AccessParameters) {
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   // Check individual parameters
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundLoc0), 1.0, 1e-6);
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(AccessParameters) {
   paramsView[eBoundLoc0] = 9.0;
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], 9.0, 1e-6);
 
-  AnyConstTrack constTrack(track);
+  AnyConstTrackProxy constTrack(track);
   auto constParamsView = constTrack.parameters();
   BOOST_CHECK_CLOSE(constParamsView[eBoundLoc0], 9.0, 1e-6);
 }
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(AccessCovariance) {
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   // Check covariance elements
   BOOST_CHECK_CLOSE(anyTrack.covariance(eBoundLoc0, eBoundLoc0), 0.01, 1e-6);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(AccessCovariance) {
   covView(eBoundLoc0, eBoundLoc1) = 0.5;
   BOOST_CHECK_CLOSE(track.covariance()(eBoundLoc0, eBoundLoc1), 0.5, 1e-6);
 
-  AnyConstTrack constTrack(track);
+  AnyConstTrackProxy constTrack(track);
   auto constCovView = constTrack.covariance();
   BOOST_CHECK_CLOSE(constCovView(eBoundLoc0, eBoundLoc1), 0.5, 1e-6);
 }
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(AccessParticleHypothesis) {
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   auto ph = anyTrack.particleHypothesis();
   BOOST_CHECK_EQUAL(ph, ParticleHypothesis::pion());
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(AccessDerivedQuantities) {
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   // Check charge
   double expectedCharge =
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(AccessStatistics) {
   auto track = tc.makeTrack();
   fillTestTrack<decltype(tc)>(track);
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   BOOST_CHECK_EQUAL(anyTrack.chi2(), 12.5f);
   BOOST_CHECK_EQUAL(anyTrack.nDoF(), 10u);
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(AccessTrackStates) {
 
   track.tipIndex() = ts3.index();
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   BOOST_CHECK_EQUAL(anyTrack.nTrackStates(), 3u);
 }
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(AccessDynamicColumns) {
   track.template component<int>("customInt") = 42;
   track.template component<float>("customFloat") = 3.14f;
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   // Check column existence
   BOOST_CHECK(anyTrack.hasColumn("customInt"_hash));
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(AccessDynamicColumns) {
   // Mutate via AnyTrack and observe through const handle
   anyTrack.component<int>("customInt"_hash) = 7;
   BOOST_CHECK_EQUAL(anyTrack.component<int>("customInt"_hash), 7);
-  AnyConstTrack constTrack(track);
+  AnyConstTrackProxy constTrack(track);
   BOOST_CHECK_EQUAL(constTrack.component<int>("customInt"_hash), 7);
 }
 
@@ -340,13 +340,13 @@ BOOST_AUTO_TEST_CASE(ProxyAccessorWithAnyTrack) {
   ProxyAccessor<float> mutableAccessor("customFloat");
   ConstProxyAccessor<float> constAccessor("customFloat");
 
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
   BOOST_CHECK_CLOSE(mutableAccessor(anyTrack), 1.5f, 1e-6);
   mutableAccessor(anyTrack) = 2.25f;
   BOOST_CHECK_CLOSE(track.template component<float>("customFloat"_hash), 2.25f,
                     1e-6);
 
-  AnyConstTrack constTrack(track);
+  AnyConstTrackProxy constTrack(track);
   BOOST_CHECK_CLOSE(constAccessor(constTrack), 2.25f, 1e-6);
   BOOST_CHECK(constAccessor.hasColumn(constTrack));
 }
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(TypeErasureHeterogeneousStorage) {
   track3.chi2() = 30.0f;
 
   // Store in a vector - all have the same type!
-  std::vector<AnyMutableTrack> anyTracks;
+  std::vector<AnyMutableTrackProxy> anyTracks;
   anyTracks.emplace_back(track1);
   anyTracks.emplace_back(track2);
   anyTracks.emplace_back(track3);
@@ -391,8 +391,8 @@ BOOST_AUTO_TEST_CASE(MemoryFootprint) {
   // Verify that AnyTrack is three pointers (container, handler, index)
   // index is TrackIndexType (std::uint32_t), so on 64-bit it's 2 pointers + 4
   // bytes which gets padded to 3 pointers
-  BOOST_CHECK_EQUAL(sizeof(AnyMutableTrack), 3 * sizeof(void*));
-  BOOST_CHECK_EQUAL(sizeof(AnyConstTrack), 3 * sizeof(void*));
+  BOOST_CHECK_EQUAL(sizeof(AnyMutableTrackProxy), 3 * sizeof(void*));
+  BOOST_CHECK_EQUAL(sizeof(AnyConstTrackProxy), 3 * sizeof(void*));
 }
 
 BOOST_AUTO_TEST_CASE(CrossTalkWithTrackProxy) {
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(CrossTalkWithTrackProxy) {
   fillTestTrack<decltype(tc)>(track);
 
   // Create AnyTrack from TrackProxy
-  AnyMutableTrack anyTrack(track);
+  AnyMutableTrackProxy anyTrack(track);
 
   // Initial values should match
   BOOST_CHECK_EQUAL(track.chi2(), 12.5f);
@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectnessCrossTalk) {
   track.chi2() = 25.0f;
 
   // Create const AnyTrack from mutable TrackProxy
-  AnyConstTrack constAnyTrack(track);
+  AnyConstTrackProxy constAnyTrack(track);
 
   // Both should see the same data
   BOOST_CHECK_EQUAL(track.chi2(), 25.0f);
@@ -494,18 +494,18 @@ BOOST_AUTO_TEST_CASE(ConstCorrectnessRestrictions) {
   auto constTrack = tc.getTrack(mutableTrack.index());
 
   // These should compile:
-  // 1. AnyMutableTrack from mutable track proxy
-  AnyMutableTrack anyMutable1(mutableTrack);
+  // 1. AnyMutableTrackProxy from mutable track proxy
+  AnyMutableTrackProxy anyMutable1(mutableTrack);
 
-  // 2. AnyConstTrack from mutable track proxy
-  AnyConstTrack anyConst1(mutableTrack);
+  // 2. AnyConstTrackProxy from mutable track proxy
+  AnyConstTrackProxy anyConst1(mutableTrack);
 
-  // 3. AnyConstTrack from const track proxy
-  AnyConstTrack anyConst2(constTrack);
+  // 3. AnyConstTrackProxy from const track proxy
+  AnyConstTrackProxy anyConst2(constTrack);
 
   // The following should NOT compile (uncomment to test):
-  // AnyMutableTrack anyMutable2(constTrack);  // Error: cannot create mutable
-  // from const
+  // AnyMutableTrackProxy anyMutable2(constTrack);  // Error: cannot create
+  // mutable from const
 
   // Verify all see the same data
   mutableTrack.chi2() = 77.0f;
