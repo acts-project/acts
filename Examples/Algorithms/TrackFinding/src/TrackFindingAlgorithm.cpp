@@ -224,7 +224,7 @@ class BranchStopper {
         auto volumeId = trackState.referenceSurface().geometryId().volume();
         if (Acts::rangeContainsValue(m_cfg.pixelVolumeIds, volumeId)) {
           ++branchState.nPixelHoles;
-        } else if (rangeContainsValue(m_cfg.stripVolumeIds, volumeId)) {
+        } else if (Acts::rangeContainsValue(m_cfg.stripVolumeIds, volumeId)) {
           ++branchState.nStripHoles;
         }
       }
