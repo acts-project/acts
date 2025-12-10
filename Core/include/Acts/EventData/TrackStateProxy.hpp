@@ -32,7 +32,7 @@ template <typename derived_t>
 class MultiTrajectory;
 
 template <bool read_only>
-class AnyTrackState;
+class AnyTrackStateProxy;
 
 namespace detail_tsp {
 inline constexpr HashedString kPreviousKey = hashString("previous");
@@ -84,7 +84,7 @@ class TransitiveConstPointer {
   template <typename U>
   friend class TransitiveConstPointer;
   template <bool R>
-  friend class Acts::AnyTrackState;
+  friend class Acts::AnyTrackStateProxy;
 
   const T& operator*() const { return *m_ptr; }
 
@@ -1111,7 +1111,7 @@ class TrackStateProxy {
   friend class TrackStateProxy<Trajectory, M, true>;
   friend class TrackStateProxy<Trajectory, M, false>;
   template <bool R>
-  friend class AnyTrackState;
+  friend class AnyTrackStateProxy;
 
   auto rawTrajectoryPtr() const { return m_traj.get(); }
 };
