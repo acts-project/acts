@@ -29,7 +29,7 @@ inline std::size_t binsOfProtoAxis(const Acts::DirectedProtoAxis& axis) {
 /// @return Total number of bins across all axes
 inline std::size_t totalBinsFromProtoAxes(
     std::span<const Acts::DirectedProtoAxis> axes) {
-  if (axes.size() <= 0 || axes.size() > 3) {
+  if (axes.empty() || axes.size() > 3) {
     throw std::runtime_error(
         "Unsupported number of axes, must be 1-3, instead got " +
         std::to_string(axes.size()) + ")");
@@ -45,7 +45,7 @@ inline std::size_t totalBinsFromProtoAxes(
 /// @return Number of bins in the specified axis
 inline std::size_t binsFromProtoAxes(
     std::span<const Acts::DirectedProtoAxis> axes, std::size_t ba) {
-  if (axes.size() <= 0 || axes.size() > 3) {
+  if (axes.empty() || axes.size() > 3) {
     throw std::runtime_error(
         "Unsupported number of axes, must be 1-3, instead got " +
         std::to_string(axes.size()) + ")");
@@ -82,7 +82,7 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
     std::span<const Acts::DirectedProtoAxis> axes, const Acts::Vector3& gp) {
   const Acts::Vector3& bPosition = gp;
   std::array<std::size_t, 3> bTriple = {0, 0, 0};
-  if (axes.size() <= 0 || axes.size() > 3) {
+  if (axes.empty() || axes.size() > 3) {
     throw std::runtime_error(
         "Unsupported number of axes, must be 1-3, instead got " +
         std::to_string(axes.size()) + ")");
@@ -111,7 +111,7 @@ inline std::array<std::size_t, 3> binTripleFromProtoAxes(
 /// @return Maximum bin index in the specified axis
 inline std::size_t maxBin(std::span<const Acts::DirectedProtoAxis> axes,
                           std::size_t ba = 0) {
-  if (axes.size() <= 0 || axes.size() > 3) {
+  if (axes.empty() || axes.size() > 3) {
     throw std::runtime_error(
         "Unsupported number of axes, must be 1-3, instead got " +
         std::to_string(axes.size()) + ")");
