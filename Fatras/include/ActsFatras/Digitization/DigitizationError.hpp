@@ -13,12 +13,18 @@
 
 namespace ActsFatras {
 
+/// @ingroup errors
 enum class DigitizationError {
   // ensure all values are non-zero
+  /// Smeared out of surface bounds.
   SmearingOutOfRange = 1,
+  /// Smearing error occurred.
   SmearingError,
+  /// Surface undefined for this operation.
   UndefinedSurface,
+  /// Surface mask could not be applied.
   MaskingError,
+  /// Maximum number of retries exceeded.
   MaximumRetriesExceeded,
 };
 

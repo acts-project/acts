@@ -14,10 +14,14 @@
 namespace Acts {
 
 /// Error codes for Eigen stepper operations
+/// @ingroup errors
 enum class EigenStepperError {
   // ensure all values are non-zero
+  /// Step size fell below minimum threshold
   StepSizeStalled = 1,
+  /// Step calculation was invalid
   StepInvalid,
+  /// Step size adjustment exceeds maximum trials
   StepSizeAdjustmentFailed,
 };
 

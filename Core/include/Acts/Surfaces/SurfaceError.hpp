@@ -14,8 +14,10 @@
 namespace Acts {
 
 /// Error codes for surface operations
+/// @ingroup errors
 enum class SurfaceError {
   // ensure all values are non-zero
+  /// Global to local transformation failed: position not on surface.
   GlobalPositionNotOnSurface = 1,
 };
 
