@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+from typing import Optional
 
 import acts
 import acts.examples
@@ -20,13 +21,23 @@ def runRefittingGsf(
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
     outputDir: Path,
+    inputParticlePath: Optional[Path] = None,
+    inputSimHitsPath: Optional[Path] = None,
+    decorators=[],
     s: acts.examples.Sequencer = None,
 ):
+    outputDir = Path(outputDir)
+
+    # Run Kalman tracking to produce initial tracks for refitting
     s = runTruthTrackingKalman(
         trackingGeometry,
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
+        inputParticlePath=inputParticlePath,
+        inputHitsPath=inputSimHitsPath,
+        decorators=decorators,
+        generatedParticleType=acts.PdgParticle.eElectron,
         reverseFilteringMomThreshold=0.0,
         reverseFilteringCovarianceScaling=1.0,
         s=s,
@@ -50,7 +61,7 @@ def runRefittingGsf(
     s.addAlgorithm(
         acts.examples.RefittingAlgorithm(
             acts.logging.INFO,
-            inputTracks="kf_tracks",
+            inputTracks="tracks",
             outputTracks="gsf_refit_tracks",
             initialVarInflation=6 * [100.0],
             fit=acts.examples.makeGsfFitterFunction(
