@@ -199,22 +199,22 @@ class TrackHandler final : public TrackHandlerMutableBase {
 /// @code
 /// TrackContainer tracks = ...;
 /// auto track = tracks.getTrack(0);
-/// AnyMutableTrack anyTrack(track);  // Mutable track
+/// AnyMutableTrack AnyTrackProxy(track);  // Mutable track
 /// AnyConstTrack constTrack(track);  // Read-only track
-/// std::cout << "Chi2: " << anyTrack.chi2() << std::endl;
+/// std::cout << "Chi2: " << AnyTrackProxy.chi2() << std::endl;
 /// @endcode
 template <bool read_only = true>
-class AnyTrack {
+class AnyTrackProxy {
  public:
   /// Indicates whether this track is read-only
   static constexpr bool ReadOnly = read_only;
 
   /// Alias for the mutable version
-  using MutableTrackHandle = AnyTrack<false>;
+  using MutableTrackHandle = AnyTrackProxy<false>;
 
   /// Alias for the const version
-  using ConstTrackHandle = AnyTrack<true>;
-  using ConstProxyType = AnyTrack<true>;
+  using ConstTrackHandle = AnyTrackProxy<true>;
+  using ConstProxyType = AnyTrackProxy<true>;
 
   using ParametersMap = detail_anytrack::ParametersMap;
   using ConstParametersMap = detail_anytrack::ConstParametersMap;
@@ -229,18 +229,18 @@ class AnyTrack {
 
   /// Copy constructor: const to const or mutable to mutable
   /// @param other the other track
-  AnyTrack(const AnyTrack& other) = default;
+  AnyTrackProxy(const AnyTrackProxy& other) = default;
 
   /// Copy assignment operator: const to const or mutable to mutable
   /// @param other the other track
   /// @return reference to this track
-  AnyTrack& operator=(const AnyTrack& other) = default;
+  AnyTrackProxy& operator=(const AnyTrackProxy& other) = default;
 
  private:
   /// Constructor from mutable track
   /// @note Only available if this is read-only
   /// @param other the other track
-  explicit AnyTrack(const MutableTrackHandle& other)
+  explicit AnyTrackProxy(const MutableTrackHandle& other)
     requires ReadOnly
       : m_container(other.m_container),
         m_index(other.m_index),
@@ -250,7 +250,7 @@ class AnyTrack {
   /// @note Only available if this is read-only
   /// @param other the other track
   /// @return reference to this track
-  AnyTrack& operator=(const MutableTrackHandle& other)
+  AnyTrackProxy& operator=(const MutableTrackHandle& other)
     requires ReadOnly
   {
     m_container = other.m_container;
@@ -268,7 +268,7 @@ class AnyTrack {
   ///       AnyMutableTrack can only be constructed from mutable track proxies.
   template <TrackProxyConcept track_proxy_t>
     requires(ReadOnly || !track_proxy_t::ReadOnly)
-  explicit AnyTrack(track_proxy_t track)
+  explicit AnyTrackProxy(track_proxy_t track)
       : m_container(nullptr), m_index(track.m_index), m_handler(nullptr) {
     using container_t = std::remove_const_t<
         std::remove_reference_t<decltype(*track.m_container)>>;
@@ -565,7 +565,7 @@ class AnyTrack {
 
  private:
   template <bool R>
-  friend class AnyTrack;
+  friend class AnyTrackProxy;
 
   const detail_anytrack::TrackHandlerConstBase* constHandler() const {
     return m_handler;
@@ -602,13 +602,13 @@ class AnyTrack {
 };
 
 /// Alias for read-only type-erased track
-using AnyConstTrack = AnyTrack<true>;
+using AnyConstTrackProxy = AnyTrackProxy<true>;
 
 /// Alias for mutable type-erased track (though currently all operations are
 /// const)
-using AnyMutableTrack = AnyTrack<false>;
+using AnyMutableTrackProxy = AnyTrackProxy<false>;
 
-static_assert(ConstTrackProxyConcept<AnyConstTrack>);
-static_assert(MutableTrackProxyConcept<AnyMutableTrack>);
+static_assert(ConstTrackProxyConcept<AnyConstTrackProxy>);
+static_assert(MutableTrackProxyConcept<AnyMutableTrackProxy>);
 
 }  // namespace Acts
