@@ -15,7 +15,7 @@ namespace ActsFatras::detail {
 
 enum class SimulationError {
   // ensure all values are non-zero
-  eInvalidInputParticleId = 1,
+  InvalidInputParticleId = 1,
 };
 
 /// Construct and error_code from the enum.
