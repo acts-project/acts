@@ -16,6 +16,7 @@
 #include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/IndexGridNavigationPolicy.hpp"
+#include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -80,6 +81,9 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
 
   IndexGridNavigationPolicy<decltype(gridXY)> centerNavigationPolicy(
       tContext, tVolume, *tLogger, centerConfig, indexedGridXY);
+
+  NavigationDelegate delegate;
+  BOOST_CHECK_NO_THROW(centerNavigationPolicy.connect(delegate));
 
   // Now initialize candidates at position (0,0,0)
   NavigationArguments navArgs;
@@ -253,6 +257,9 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   IndexGridNavigationPolicy<decltype(gridZPhi)> polyNavigationPolicy(
       tContext, tVolume, *tLogger, polyConfig, indexedGridZPhi);
 
+  NavigationDelegate delegate;
+  BOOST_CHECK_NO_THROW(polyNavigationPolicy.connect(delegate));
+
   // Now initialize candidates at position (R,0,0) - opposite should. not lead
   // to a candidate
   NavigationArguments navArgs;
@@ -320,6 +327,31 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   projectedNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
                                                  *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+
+  // Now reference generator that also carries the reference surface
+  IndexGridNavigationConfig projectedWithSurfaceConfig;
+  projectedWithSurfaceConfig.surface = referenceCylinder;
+  auto projectedWithSurfaceReferenceGenerator =
+      std::make_shared<ProjectedReferenceGenerator>();
+  projectedWithSurfaceReferenceGenerator->nSegements = 1;
+  projectedWithSurfaceReferenceGenerator->expansionValue = 0.0;
+  projectedWithSurfaceReferenceGenerator->referenceSurface = referenceCylinder;
+  projectedWithSurfaceReferenceGenerator->luminousRegion = {
+      Vector3(0., 0., 0.)};
+  projectedWithSurfaceConfig.referenceGenerator =
+      projectedWithSurfaceReferenceGenerator;
+  IndexGridNavigationPolicy<decltype(gridZPhi)>
+      projectedWithSurfaceNavigationPolicy(tContext, tVolume, *tLogger,
+                                           projectedWithSurfaceConfig,
+                                           indexedGridZPhi);
+  // A candidate a off in phi - we get the phi surface now as well
+  nStream.reset();
+  navArgs.position =
+      Vector3(cylinderRadius * std::cos(-std::numbers::pi + 0.8),
+              cylinderRadius * std::sin(-std::numbers::pi + 0.8), 0.);
+  projectedWithSurfaceNavigationPolicy.initializeCandidates(
+      tContext, navArgs, navStream, *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(RegularDiscIndexGridTests) {
@@ -367,6 +399,9 @@ BOOST_AUTO_TEST_CASE(RegularDiscIndexGridTests) {
       std::make_shared<PolyhedronReferenceGenerator>();
   IndexGridNavigationPolicy<decltype(gridRPhi)> centerNavigationPolicy(
       tContext, tVolume, *tLogger, centerConfig, indexedGridRPhi);
+
+  NavigationDelegate delegate;
+  BOOST_CHECK_NO_THROW(centerNavigationPolicy.connect(delegate));
 
   // Now initialize candidates at position (R,0,0) - should yield only surface0
   NavigationArguments navArgs;
@@ -423,6 +458,10 @@ BOOST_AUTO_TEST_CASE(RegularRingIndexGridTests) {
 
   IndexGridNavigationPolicy<decltype(gridPhi)> centerNavigationPolicy(
       tContext, tVolume, *tLogger, centerConfig, indexedGridPhi);
+
+  NavigationDelegate delegate;
+  BOOST_CHECK_NO_THROW(centerNavigationPolicy.connect(delegate));
+
   // Now initialize candidates at position (R,0,0) - should yield the surface
   NavigationArguments navArgs;
   NavigationStream nStream;
