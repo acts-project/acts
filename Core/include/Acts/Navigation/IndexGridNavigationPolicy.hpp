@@ -18,7 +18,7 @@
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class IndexGridNavigationConfig {
  public:

@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
   // Create a tracking volume and add the surface
 
   // (1a) Test with Center reference generator - no bin expansion
-  Experimental::IndexGridNavigationConfig centerConfig;
+  IndexGridNavigationConfig centerConfig;
   centerConfig.referenceGenerator =
       std::make_shared<CenterReferenceGenerator>();
 
-  Experimental::IndexGridNavigationPolicy<decltype(gridXY)>
+  IndexGridNavigationPolicy<decltype(gridXY)>
       centerNavigationPolicy(tContext, tVolume, *tLogger, centerConfig,
                              indexedGridXY);
 
@@ -103,12 +103,12 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
 
   // (1b) Test with Center reference generator - with bin expansion (1,0)
-  Experimental::IndexGridNavigationConfig expandedConfig;
+  IndexGridNavigationConfig expandedConfig;
   expandedConfig.referenceGenerator =
       std::make_shared<CenterReferenceGenerator>();
   expandedConfig.binExpansion = {1u, 0u};
 
-  Experimental::IndexGridNavigationPolicy<decltype(gridXY)>
+  IndexGridNavigationPolicy<decltype(gridXY)>
       expandedNavigationPolicy(tContext, tVolume, *tLogger, expandedConfig,
                                indexedGridXY);
 
@@ -129,11 +129,11 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
 
   // (2a) Test with Polyhedron reference generator - no bin expansion
-  Experimental::IndexGridNavigationConfig polyConfig;
+  IndexGridNavigationConfig polyConfig;
   polyConfig.referenceGenerator =
       std::make_shared<PolyhedronReferenceGenerator>();
 
-  Experimental::IndexGridNavigationPolicy<decltype(gridXY)>
+  IndexGridNavigationPolicy<decltype(gridXY)>
       polyNavigationPolicy(tContext, tVolume, *tLogger, polyConfig,
                            indexedGridXY);
   nStream.reset();
@@ -167,12 +167,12 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
 
   // (2b) Test with Polyhedron reference generator - with reference expansion
   // (12., 0.)
-  Experimental::IndexGridNavigationConfig polyExpandedConfig;
+  IndexGridNavigationConfig polyExpandedConfig;
   polyExpandedConfig.referenceGenerator =
       std::make_shared<PolyhedronReferenceGenerator>();
   polyExpandedConfig.referenceExpansion = {12., 0.};
 
-  Experimental::IndexGridNavigationPolicy<decltype(gridXY)>
+  IndexGridNavigationPolicy<decltype(gridXY)>
       polyExpandedNavigationPolicy(tContext, tVolume, *tLogger,
                                    polyExpandedConfig, indexedGridXY);
   nStream.reset();
@@ -251,10 +251,10 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   // (1a) - Index grid with polyhedron reference generator - no expansion
   IndexGrid<decltype(gridZPhi)> indexedGridZPhi(
       std::move(gridZPhi), {AxisDirection::AxisZ, AxisDirection::AxisPhi});
-  Experimental::IndexGridNavigationConfig polyConfig;
+  IndexGridNavigationConfig polyConfig;
   polyConfig.referenceGenerator =
       std::make_shared<PolyhedronReferenceGenerator>();
-  Experimental::IndexGridNavigationPolicy<decltype(gridZPhi)>
+  IndexGridNavigationPolicy<decltype(gridZPhi)>
       polyNavigationPolicy(tContext, tVolume, *tLogger, polyConfig,
                            indexedGridZPhi);
 
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
       Transform3::Identity(),
       std::make_shared<CylinderBounds>(referenceSurfaceRadius, 22.));
 
-  Experimental::IndexGridNavigationConfig projectedConfig;
+  IndexGridNavigationConfig projectedConfig;
   auto projectedReferenceGenerator =
       std::make_shared<ProjectedReferenceGenerator>();
   projectedReferenceGenerator->nSegements = 1;
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   projectedReferenceGenerator->luminousRegion = {Vector3(0., 0., 0.)};
 
   projectedConfig.referenceGenerator = projectedReferenceGenerator;
-  Experimental::IndexGridNavigationPolicy<decltype(gridZPhi)>
+  IndexGridNavigationPolicy<decltype(gridZPhi)>
       projectedNavigationPolicy(tContext, tVolume, *tLogger, projectedConfig,
                                 indexedGridZPhi);
 
@@ -368,10 +368,10 @@ BOOST_AUTO_TEST_CASE(RegularDiscIndexGridTests) {
   // (1a) - Index grid with center reference generator - no expansion
   IndexGrid<decltype(gridRPhi)> indexedGridRPhi(
       std::move(gridRPhi), {AxisDirection::AxisR, AxisDirection::AxisPhi});
-  Experimental::IndexGridNavigationConfig centerConfig;
+  IndexGridNavigationConfig centerConfig;
   centerConfig.referenceGenerator =
       std::make_shared<PolyhedronReferenceGenerator>();
-  Experimental::IndexGridNavigationPolicy<decltype(gridRPhi)>
+  IndexGridNavigationPolicy<decltype(gridRPhi)>
       centerNavigationPolicy(tContext, tVolume, *tLogger, centerConfig,
                              indexedGridRPhi);
 
@@ -415,12 +415,12 @@ BOOST_AUTO_TEST_CASE(RegularRingIndexGridTests) {
   // (1a) - Index grid with center reference generator - no expansion
   IndexGrid<decltype(gridPhi)> indexedGridPhi(std::move(gridPhi),
                                               {AxisDirection::AxisPhi});
-  Experimental::IndexGridNavigationConfig centerConfig;
+  IndexGridNavigationConfig centerConfig;
   centerConfig.referenceGenerator =
       std::make_shared<CenterReferenceGenerator>();
   BOOST_CHECK_THROW(
       {
-        Experimental::IndexGridNavigationPolicy<decltype(gridPhi)>
+        IndexGridNavigationPolicy<decltype(gridPhi)>
             centerNavigationPolicyThrow(tContext, tVolume, *tLogger,
                                         centerConfig, indexedGridPhi);
       },
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(RegularRingIndexGridTests) {
 
   centerConfig.binExpansion = {1u};
 
-  Experimental::IndexGridNavigationPolicy<decltype(gridPhi)>
+  IndexGridNavigationPolicy<decltype(gridPhi)>
       centerNavigationPolicy(tContext, tVolume, *tLogger, centerConfig,
                              indexedGridPhi);
   // Now initialize candidates at position (R,0,0) - should yield the surface
