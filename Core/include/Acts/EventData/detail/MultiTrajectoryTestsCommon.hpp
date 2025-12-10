@@ -764,6 +764,8 @@ class MultiTrajectoryTestsCommon {
                      ts2.template calibrated<measdim>());
       BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
                      ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() !=
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
@@ -796,6 +798,8 @@ class MultiTrajectoryTestsCommon {
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
                         ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() ==
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
@@ -824,6 +828,8 @@ class MultiTrajectoryTestsCommon {
                      ts2.template calibrated<measdim>());
       BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
                      ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() !=
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
@@ -849,6 +855,8 @@ class MultiTrajectoryTestsCommon {
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
                         ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() ==
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
