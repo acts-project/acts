@@ -480,6 +480,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const Acts::BoundTrackParameters& firstInitialParameters =
         initialParameters.at(iSeed);
+    ACTS_VERBOSE("Processing seed " << iSeed << " with initial parameters "
+                                    << firstInitialParameters);
 
     auto firstRootBranch = tracksTemp.makeTrack();
     auto firstResult = (*m_cfg.findTracks)(firstInitialParameters, firstOptions,
