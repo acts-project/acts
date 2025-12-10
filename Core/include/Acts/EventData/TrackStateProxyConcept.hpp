@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
@@ -110,6 +111,30 @@ concept TrackStateProxyConcept =
 
       { cv.hasProjector() } -> std::same_as<bool>;
       { v.hasProjector() } -> std::same_as<bool>;
+
+      { v.projectorSubspaceIndices() } -> std::same_as<BoundSubspaceIndices>;
+      { cv.projectorSubspaceIndices() } -> std::same_as<BoundSubspaceIndices>;
+
+      {
+        v.template projectorSubspaceIndices<4>()
+      } -> std::same_as<SubspaceIndices<4>>;
+      {
+        cv.template projectorSubspaceIndices<4>()
+      } -> std::same_as<SubspaceIndices<4>>;
+
+      {
+        v.projectorSubspaceHelper()
+      } -> std::same_as<VariableBoundSubspaceHelper>;
+      {
+        cv.projectorSubspaceHelper()
+      } -> std::same_as<VariableBoundSubspaceHelper>;
+
+      {
+        v.template projectorSubspaceHelper<4>()
+      } -> std::same_as<FixedBoundSubspaceHelper<4>>;
+      {
+        cv.template projectorSubspaceHelper<4>()
+      } -> std::same_as<FixedBoundSubspaceHelper<4>>;
 
       { cv.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
       { v.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
