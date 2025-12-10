@@ -26,13 +26,11 @@ if(ACTS_BUILD_EXAMPLES)
     target_link_libraries(
         ActsTestsCommonHelpers
         PUBLIC Acts::Core Acts::ExamplesFramework
-        PRIVATE std::filesystem
     )
 else()
     target_link_libraries(
         ActsTestsCommonHelpers
         PUBLIC ActsCore
-        PRIVATE std::filesystem
     )
 endif()
 
