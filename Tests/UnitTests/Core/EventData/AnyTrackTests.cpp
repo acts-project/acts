@@ -165,12 +165,13 @@ BOOST_AUTO_TEST_CASE(AccessParameters) {
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundLoc1), 2.0, 1e-6);
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundTime), 3.0, 1e-6);
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundPhi), 0.5, 1e-6);
-  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundTheta), M_PI / 4.0, 1e-6);
+  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundTheta), std::numbers::pi / 4.0,
+                    1e-6);
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundQOverP), 0.1, 1e-6);
 
   // Check convenience accessors
   BOOST_CHECK_CLOSE(anyTrack.phi(), 0.5, 1e-6);
-  BOOST_CHECK_CLOSE(anyTrack.theta(), M_PI / 4.0, 1e-6);
+  BOOST_CHECK_CLOSE(anyTrack.theta(), std::numbers::pi / 4.0, 1e-6);
   BOOST_CHECK_CLOSE(anyTrack.qOverP(), 0.1, 1e-6);
 
   // Verify parameters() map provides reference semantics
@@ -388,8 +389,8 @@ BOOST_AUTO_TEST_CASE(TypeErasureHeterogeneousStorage) {
 
 BOOST_AUTO_TEST_CASE(MemoryFootprint) {
   // Verify that AnyTrack is three pointers (container, handler, index)
-  // index is TrackIndexType (uint32_t), so on 64-bit it's 2 pointers + 4 bytes
-  // which gets padded to 3 pointers
+  // index is TrackIndexType (std::uint32_t), so on 64-bit it's 2 pointers + 4
+  // bytes which gets padded to 3 pointers
   BOOST_CHECK_EQUAL(sizeof(AnyMutableTrack), 3 * sizeof(void*));
   BOOST_CHECK_EQUAL(sizeof(AnyConstTrack), 3 * sizeof(void*));
 }
