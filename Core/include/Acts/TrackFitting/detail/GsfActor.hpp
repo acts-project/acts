@@ -434,6 +434,14 @@ struct GsfActor {
       }();
 
       assert(p_prev + delta_p > 0. && "new momentum must be > 0");
+      
+      // Apply pT cut here to avoid const of expansion and merging later
+      const auto pT = (p_prev + delta_p) * std::sin(new_pars[eBoundTheta]);
+      if (pT < m_cfg.minTransverseMomentum) {
+        ACTS_VERBOSE("Skip new component with pT=" << pT << " GeV");
+        continue;
+      }
+
       new_pars[eBoundQOverP] =
           particleHypothesis.qOverP(p_prev + delta_p, old_bound.charge());
 
@@ -582,6 +590,11 @@ struct GsfActor {
       }
 
       const auto& trackStateProxy = *trackStateProxyRes;
+
+      if( trackStateProxy.transverseMomentum() < m_cfg.minTransverseMomentum ) {
+        ACTS_VERBOSE("Skip component with pT=" << trackStateProxy.transverseMomentum() << " after Kalman update");
+        continue;
+      }
 
       // If at least one component is no outlier, we consider the whole thing
       // as a measurementState
