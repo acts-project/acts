@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/AnyTrackState.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
@@ -21,7 +21,7 @@ namespace Acts {
 
 template <std::size_t N>
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
-    AnyMutableTrackState trackState, const Logger& logger) const {
+    AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   double chi2 = 0;
 
   constexpr std::size_t kMeasurementSize = N;
@@ -89,10 +89,10 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 
 // Ensure thet the compiler does not implicitly instantiate the template
 
-#define _EXTERN(N)                                                            \
-  extern template std::tuple<double, std::error_code>                         \
-  GainMatrixUpdater::visitMeasurementImpl<N>(AnyMutableTrackState trackState, \
-                                             const Logger& logger) const
+#define _EXTERN(N)                                    \
+  extern template std::tuple<double, std::error_code> \
+  GainMatrixUpdater::visitMeasurementImpl<N>(         \
+      AnyMutableTrackStateProxy trackState, const Logger& logger) const
 
 _EXTERN(1);
 _EXTERN(2);

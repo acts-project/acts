@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/AnyTrackState.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -72,7 +71,7 @@ class GainMatrixUpdater {
     // auto filteredCovariance = trackState.filteredCovariance();
 
     auto [chi2, error] =
-        visitMeasurement(AnyMutableTrackState{trackState}, logger);
+        visitMeasurement(AnyMutableTrackStateProxy{trackState}, logger);
 
     trackState.chi2() = chi2;
 
@@ -81,11 +80,11 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      AnyMutableTrackState trackState, const Logger& logger) const;
+      AnyMutableTrackStateProxy trackState, const Logger& logger) const;
 
   template <std::size_t N>
   std::tuple<double, std::error_code> visitMeasurementImpl(
-      AnyMutableTrackState trackState, const Logger& logger) const;
+      AnyMutableTrackStateProxy trackState, const Logger& logger) const;
 };
 
 }  // namespace Acts

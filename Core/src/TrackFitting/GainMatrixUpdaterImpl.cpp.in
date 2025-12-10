@@ -8,13 +8,13 @@
 
 #include "Acts/TrackFitting/detail/GainMatrixUpdaterImpl.hpp"
 
-#include "Acts/EventData/AnyTrackState.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 
 // clang-format off
 namespace Acts {
 
 template std::tuple<double, std::error_code>
-GainMatrixUpdater::visitMeasurementImpl<@DIM@>(AnyMutableTrackState trackState,
+GainMatrixUpdater::visitMeasurementImpl<@DIM@>(AnyMutableTrackStateProxy trackState,
                                                 const Logger& logger) const;
 
 }  // namespace Acts

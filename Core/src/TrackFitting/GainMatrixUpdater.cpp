@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/AnyTrackState.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
@@ -24,7 +24,7 @@
 namespace Acts {
 
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
-    AnyMutableTrackState trackState, const Logger& logger) const {
+    AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
 
   return visit_measurement(
