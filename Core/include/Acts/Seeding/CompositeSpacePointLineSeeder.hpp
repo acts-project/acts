@@ -135,9 +135,9 @@ class CompositeSpacePointLineSeeder {
   ///        seeds with poor quality.
   struct Config {
     /// @brief Cut on the theta angle
-    std::array<double, 2> thetaRange{filledArray<double, 2>(0.)};
+    std::array<double, 2> thetaRange{0, 0};
     /// @brief Cut on the intercept range
-    std::array<double, 2> interceptRange{filledArray<double, 2>(0.)};
+    std::array<double, 2> interceptRange{0, 0};
 
     /// @brief Upper cut on the hit chi2 w.r.t. seed in order to be associated to the seed
     double hitPullCut{5.};
