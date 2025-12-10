@@ -25,6 +25,7 @@ namespace Acts {
 /// This implements not a single smoothing step, but the full backwards
 /// smoothing procedure for a filtered, forward trajectory using the stored
 /// linearization.
+/// @ingroup track_fitting
 class GainMatrixSmoother {
  public:
   /// Whether to check the covariance matrices if they are semi-positive and if

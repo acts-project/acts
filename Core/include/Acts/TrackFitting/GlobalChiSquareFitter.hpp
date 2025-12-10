@@ -44,6 +44,9 @@
 
 namespace Acts::Experimental {
 
+/// @addtogroup track_fitting
+/// @{
+
 namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
 
@@ -1662,5 +1665,7 @@ class Gx2Fitter {
     return track;
   }
 };
+
+/// @}
 
 }  // namespace Acts::Experimental
