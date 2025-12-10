@@ -42,6 +42,30 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
         std::make_shared<Acts::VolumeBoundFactory>();
   };
 
+  enum class StationIdx : uint8_t {
+    BI, BM, BO,
+    EAI, EAM, EAO,
+    ECI, ECM, ECO,
+    nStations
+  };
+
+  struct cylBounds {
+    double rMin{0.0};
+    double rMax{0.0};
+    double zMin{0.0};
+    double zMax{0.0};
+
+    void update(const double rMinIn, const double rMaxIn, const double zMinIn, const double zMaxIn) {
+      rMin = std::min(rMin, rMinIn);
+      rMax = std::max(rMax, rMaxIn);
+      zMin = std::min(zMin, zMinIn);
+      zMax = std::max(zMax, zMaxIn);
+    }
+  };
+
+  using Node_t =
+      std::shared_ptr<Acts::Experimental::StaticBlueprintNode>;
+
   explicit GeoModelMuonMockupBuilder(
       const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
@@ -55,10 +79,20 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
  private:
   Config m_cfg;
 
-  std::shared_ptr<Acts::Experimental::StaticBlueprintNode> buildBarrelNode(
-      const ConvertedVolList_t& boundingBoxes, const std::string& name,
+  Node_t processStation(
+      const std::span<ConvertedVolList_t::value_type> boundingBoxes,
+      const std::string& station, const bool isBarrel,
       Acts::VolumeBoundFactory& boundFactory,
       const Acts::GeometryIdentifier& geoId) const;
+  
+  std::unique_ptr<Acts::TrackingVolume> buildChildChamber(
+      const ConvertedVolList_t::value_type& box,
+      Acts::VolumeBoundFactory& boundFactory) const;
+
+  // Helper function returning the station idx from a box volume
+  StationIdx getStationIdx(const ConvertedVolList_t::value_type& box) const;
+  // Helper function converting the station idx to string
+  std::string stationIdxToString(StationIdx idx) const;
 
   /// Private access method to the logger
   const Acts::Logger& logger() const { return *m_logger; }

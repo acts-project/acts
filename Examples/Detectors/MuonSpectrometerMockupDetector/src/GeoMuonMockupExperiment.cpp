@@ -101,14 +101,16 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
         barrelEnvelope->add(
             makeTransform(GeoTrf::TranslateZ3D(z_displacement) *
                           GeoTrf::RotateZ3D(sector * m_sectorSize) *
-                          GeoTrf::TranslateX3D(radius)));
+                          GeoTrf::TranslateX3D(radius) * 
+                          s_ActsToGeomodelChamberFrame));
         barrelEnvelope->add(assembleBarrelStation(layer, sector, etaIdx));
         ///
         barrelEnvelope->add(
             makeTransform(GeoTrf::TranslateZ3D(-z_displacement) *
                           GeoTrf::RotateZ3D(sector * m_sectorSize) *
                           GeoTrf::TranslateX3D(radius) *
-                          GeoTrf::RotateX3D(180. * GeoModelKernelUnits::deg)));
+                          GeoTrf::RotateX3D(180. * GeoModelKernelUnits::deg) * 
+                          s_ActsToGeomodelChamberFrame));
         barrelEnvelope->add(
             assembleBarrelStation(layer, sector, -static_cast<int>(etaIdx)));
       }
@@ -188,6 +190,7 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     world->exec(&writeGeoDB);  // visit all GeoModel nodes
     writeGeoDB.saveToDB(m_publisher.get());
   }
+  ACTS_INFO("Who votes to donate a razor to Claudio for all this DB work? \n"<<printVolume(world));
 
   m_publisher.reset();
   return outTree;
@@ -385,52 +388,59 @@ void GeoMuonMockupExperiment::publishFPV(const PVLink& envelopeVol,
 PVLink GeoMuonMockupExperiment::assembleBarrelStation(const MuonLayer layer,
                                                       const unsigned sector,
                                                       const int etaIdx) {
+  /// We are working now in the ACTS chamber frame, where Z is along the thickness
+  /// of the chamber, Y along the chamber length (bending direction) and X along 
+  /// the chamber width (tube direction)
+  const GeoTrf::Transform3D s_ActsToGeomodelChamberFrameInv {
+    s_ActsToGeomodelChamberFrame.inverse()
+  };
   const double envelopeWidth =
       2. *
       (m_cfg.barrelRadii[toUnderlying(layer)] - 0.5 * m_stationHeightBarrel) *
       std::sin(0.5 * m_sectorSize);
 
   auto box = make_intrusive<GeoBox>(
-      0.5 * m_stationHeightBarrel, 0.5 * envelopeWidth,
-      0.5 * m_chamberLength + 0.1 * GeoModelKernelUnits::mm);
+      0.5 * envelopeWidth, 0.5 * m_chamberLength + 0.1 * GeoModelKernelUnits::mm, 
+      0.5 * m_stationHeightBarrel);
   auto logVol = make_intrusive<GeoLogVol>(
       "MuonBarrelLogVol", cacheShape(box),
       MaterialManager::getManager()->getMaterial("std::air"));
   auto envelopeVol = make_intrusive<GeoPhysVol>(cacheVolume(logVol));
 
   /// add the rpc at doubletR = 1
-  auto placeRpc = [&](const double currentX, unsigned dRIdx) {
-    const double stepdZ = m_chamberLength / m_cfg.nRpcAlongZ;
-    const double stepdY = envelopeWidth / m_cfg.nRpcAlongPhi;
+  auto placeRpc = [&](const double currentZ, unsigned dRIdx) {
+    const double stepdY = m_chamberLength / m_cfg.nRpcAlongZ;
+    const double stepdX = envelopeWidth / m_cfg.nRpcAlongPhi;
 
-    for (unsigned dZ = 0; dZ < m_cfg.nRpcAlongZ; ++dZ) {
-      for (unsigned dY = 0; dY < m_cfg.nRpcAlongPhi; ++dY) {
-        envelopeVol->add(makeTransform(GeoTrf::Translate3D(
-            currentX, -0.5 * envelopeWidth + stepdY * (dY + 0.5),
-            -0.5 * m_chamberLength + stepdZ * (dZ + 0.5))));
+    for (unsigned dY = 0; dY < m_cfg.nRpcAlongZ; ++dY) {
+      for (unsigned dX = 0; dX < m_cfg.nRpcAlongPhi; ++dX) {
+        envelopeVol->add(makeTransform(
+            s_ActsToGeomodelChamberFrameInv * GeoTrf::Translate3D(
+                -0.5 * envelopeWidth + stepdX * (dX + 0.5),
+                -0.5 * m_chamberLength + stepdY * (dY + 0.5), currentZ)));
         publishFPV(envelopeVol, assembleRpcChamber(envelopeWidth),
                    std::format("{:}_RPC_{:}_{:}_{:}_{:}_{:}", to_string(layer),
-                               etaIdx, sector, dRIdx, dY, dZ));
+                               etaIdx, sector, dRIdx, dX, dY));
       }
     }
   };
 
-  double currentX = -box->getXHalfLength();
-  currentX += 0.5 * m_rpcChamberHeight;
-  placeRpc(currentX, 1);
-  currentX += 0.5 * m_rpcChamberHeight + s_rpcMdtDistance;
-  currentX += 0.5 * m_multiLayerHeight;
-  envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
+  double currentZ = -box->getZHalfLength();
+  currentZ += 0.5 * m_rpcChamberHeight;
+  placeRpc(currentZ, 1);
+  currentZ += 0.5 * m_rpcChamberHeight + s_rpcMdtDistance + 0.5 * m_multiLayerHeight;
+  envelopeVol->add(makeTransform(
+    s_ActsToGeomodelChamberFrameInv * GeoTrf::TranslateZ3D(currentZ)));
   publishFPV(envelopeVol, assembleMultilayerBarrel(1, envelopeWidth),
              std::format("{}_BMDT_{}_{}_1", to_string(layer), etaIdx, sector));
-  currentX += 0.5 * m_multiLayerHeight + m_cfg.multiLayerSeparation +
+  currentZ += 0.5 * m_multiLayerHeight + m_cfg.multiLayerSeparation +
               0.5 * m_multiLayerHeight;
-  envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
+  envelopeVol->add(makeTransform(
+    s_ActsToGeomodelChamberFrameInv * GeoTrf::TranslateZ3D(currentZ)));
   publishFPV(envelopeVol, assembleMultilayerBarrel(2, envelopeWidth),
              std::format("{}_BMDT_{}_{}_2", to_string(layer), etaIdx, sector));
-  currentX += 0.5 * m_rpcChamberHeight + s_rpcMdtDistance;
-  currentX += 0.5 * m_multiLayerHeight;
-  placeRpc(currentX, 2);
+  currentZ += 0.5 * m_rpcChamberHeight + s_rpcMdtDistance + 0.5 * m_multiLayerHeight;
+  placeRpc(currentZ, 2);
   return envelopeVol;
 }
 
