@@ -937,7 +937,7 @@ class TrackStateProxy {
       }
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-        visit_measurement(other.calibratedSize(), [this, &other](auto N) {
+        visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
           allocateCalibrated(
               other.template calibrated<measdim>().eval(),
@@ -979,7 +979,7 @@ class TrackStateProxy {
       // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
           other.template has<hashString("calibrated")>()) {
-        visit_measurement(other.calibratedSize(), [this, &other](auto N) {
+        visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
           allocateCalibrated(
               other.template calibrated<measdim>().eval(),
