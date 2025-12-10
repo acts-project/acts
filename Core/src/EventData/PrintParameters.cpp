@@ -163,10 +163,10 @@ using CovarianceMap = Eigen::Map<const Acts::ActsDynamicMatrix>;
 
 }  // namespace
 
-void Acts::detail::printBoundParameters(std::ostream& os,
-                                        const Acts::Surface& surface,
-                                        const Acts::BoundVector& params,
-                                        const Acts::BoundSquareMatrix* cov) {
+void Acts::detail::printBoundParameters(
+    std::ostream& os, const Acts::Surface& surface,
+    const Acts::ParticleHypothesis& particleHypothesis,
+    const Acts::BoundVector& params, const Acts::BoundSquareMatrix* cov) {
   if (cov != nullptr) {
     printParametersCovariance(os, makeBoundNames(), kMonotonic, params, *cov);
   } else {
@@ -174,16 +174,18 @@ void Acts::detail::printBoundParameters(std::ostream& os,
   }
   os << "\non surface " << surface.geometryId() << " of type "
      << surface.name();
+  os << "\nwith " << particleHypothesis;
 }
 
-void Acts::detail::printFreeParameters(std::ostream& os,
-                                       const Acts::FreeVector& params,
-                                       const Acts::FreeMatrix* cov) {
+void Acts::detail::printFreeParameters(
+    std::ostream& os, const Acts::ParticleHypothesis& particleHypothesis,
+    const Acts::FreeVector& params, const Acts::FreeMatrix* cov) {
   if (cov != nullptr) {
     printParametersCovariance(os, makeFreeNames(), kMonotonic, params, *cov);
   } else {
     printParameters(os, makeFreeNames(), kMonotonic, params);
   }
+  os << "\nwith " << particleHypothesis;
 }
 
 void Acts::detail::printMeasurement(std::ostream& os, BoundIndices size,

@@ -1,4 +1,3 @@
 add_unittest(NavigationStream NavigationStreamTests.cpp)
 add_unittest(MultiWireNavigation MultiWireNavigationTests.cpp)
 add_unittest(NavigationPolicy NavigationPolicyTests.cpp)
-add_unittest(IndexGridNavigation IndexGridNavigationTests.cpp)

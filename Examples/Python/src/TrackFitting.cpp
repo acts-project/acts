@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <utility>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -58,9 +59,9 @@ void addTrackFitting(Context& ctx) {
            FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
            Logging::Level level) {
           return makeKalmanFitterFunction(
-              trackingGeometry, magneticField, multipleScattering, energyLoss,
-              reverseFilteringMomThreshold, reverseFilteringCovarianceScaling,
-              freeToBoundCorrection, chi2Cut,
+              std::move(trackingGeometry), std::move(magneticField),
+              multipleScattering, energyLoss, reverseFilteringMomThreshold,
+              reverseFilteringCovarianceScaling, freeToBoundCorrection, chi2Cut,
               *getDefaultLogger("Kalman", level));
         },
         "trackingGeometry"_a, "magneticField"_a, "multipleScattering"_a,
@@ -91,30 +92,36 @@ void addTrackFitting(Context& ctx) {
         .value("weightCut", MixtureReductionAlgorithm::weightCut)
         .value("KLDistance", MixtureReductionAlgorithm::KLDistance);
 
-    py::class_<BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
-        .def_static("loadFromFiles", &BetheHeitlerApprox::loadFromFiles,
-                    "lowParametersPath"_a, "highParametersPath"_a,
-                    "lowLimit"_a = 0.1, "highLimit"_a = 0.2,
-                    "clampToRange"_a = false)
+    py::class_<BetheHeitlerApprox, std::shared_ptr<BetheHeitlerApprox>>(
+        mex, "BetheHeitlerApprox");
+    py::class_<AtlasBetheHeitlerApprox, BetheHeitlerApprox,
+               std::shared_ptr<AtlasBetheHeitlerApprox>>(
+        mex, "AtlasBetheHeitlerApprox")
+        .def_static("loadFromFiles", &AtlasBetheHeitlerApprox::loadFromFiles,
+                    "lowParametersPath"_a, "highParametersPath"_a, "lowLimit"_a,
+                    "highLimit"_a, "clampToRange"_a, "noChangeLimit"_a,
+                    "singleGaussianLimit"_a)
         .def_static(
             "makeDefault",
             [](bool clampToRange) {
               return makeDefaultBetheHeitlerApprox(clampToRange);
             },
-            "clampToRange"_a = false);
+            "clampToRange"_a);
 
     mex.def(
         "makeGsfFitterFunction",
         [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
            std::shared_ptr<const MagneticFieldProvider> magneticField,
-           BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-           double weightCutoff, ComponentMergeMethod componentMergeMethod,
+           const std::shared_ptr<const BetheHeitlerApprox>& betheHeitlerApprox,
+           std::size_t maxComponents, double weightCutoff,
+           ComponentMergeMethod componentMergeMethod,
            MixtureReductionAlgorithm mixtureReductionAlgorithm,
            double reverseFilteringCovarianceScaling, Logging::Level level) {
           return makeGsfFitterFunction(
-              trackingGeometry, magneticField, betheHeitlerApprox,
-              maxComponents, weightCutoff, componentMergeMethod,
-              mixtureReductionAlgorithm, reverseFilteringCovarianceScaling,
+              std::move(trackingGeometry), std::move(magneticField),
+              betheHeitlerApprox, maxComponents, weightCutoff,
+              componentMergeMethod, mixtureReductionAlgorithm,
+              reverseFilteringCovarianceScaling,
               *getDefaultLogger("GSFFunc", level));
         },
         "trackingGeometry"_a, "magneticField"_a, "betheHeitlerApprox"_a,
@@ -130,9 +137,9 @@ void addTrackFitting(Context& ctx) {
            FreeToBoundCorrection freeToBoundCorrection, std::size_t nUpdateMax,
            double relChi2changeCutOff, Logging::Level level) {
           return makeGlobalChiSquareFitterFunction(
-              trackingGeometry, magneticField, multipleScattering, energyLoss,
-              freeToBoundCorrection, nUpdateMax, relChi2changeCutOff,
-              *getDefaultLogger("Gx2f", level));
+              std::move(trackingGeometry), std::move(magneticField),
+              multipleScattering, energyLoss, freeToBoundCorrection, nUpdateMax,
+              relChi2changeCutOff, *getDefaultLogger("Gx2f", level));
         },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("multipleScattering"), py::arg("energyLoss"),

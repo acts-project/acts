@@ -12,6 +12,7 @@ __version__ = "0.1.0"
 def run() -> None:
     doc_dir = Path(__file__).parent.parent
     api_index_target = doc_dir / "api/api.md"
+    api_index_target.parent.mkdir(parents=True, exist_ok=True)
 
     roles = [
         "class",
