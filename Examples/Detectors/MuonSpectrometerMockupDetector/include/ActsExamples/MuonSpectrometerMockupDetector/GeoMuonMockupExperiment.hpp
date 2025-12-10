@@ -274,14 +274,6 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   ///                      by the close-by tubes.
   FpvLink assembleRpcChamber(const double chamberWidth);
 
-  /// @brief Axis transformation from ACTS chamber frame to Geomodel chamber frame.
-  ///        This will be used for barrel boxes (cuboids) only. In the ACTS
-  ///        chamber frame the Z axis is along the thickness of the chamber, Y
-  ///        along the chamber length (bending direction) and X along the
-  ///        chamber width (tube direction)
-  const GeoTrf::Transform3D s_ActsToGeomodelChamberFrame{
-      GeoTrf::RotationMatrix3D{{0., 0., 1.}, {1., 0., 0.}, {0., 1., 0.}}};
-
   //// @brief list of published full physical volumes
   std::unique_ptr<GeoPublisher> m_publisher{std::make_unique<GeoPublisher>()};
   /// @brief Logger object
