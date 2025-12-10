@@ -28,10 +28,7 @@ if(ACTS_BUILD_EXAMPLES)
         PUBLIC Acts::Core Acts::ExamplesFramework
     )
 else()
-    target_link_libraries(
-        ActsTestsCommonHelpers
-        PUBLIC ActsCore
-    )
+    target_link_libraries(ActsTestsCommonHelpers PUBLIC ActsCore)
 endif()
 
 acts_compile_headers(TestsCommonHelpers GLOB "include/ActsTests/**/*.hpp")
