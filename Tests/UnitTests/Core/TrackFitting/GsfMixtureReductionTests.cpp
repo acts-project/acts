@@ -76,11 +76,6 @@ void testReductionEquivalence(const std::vector<GsfComponent> &cmps,
   BOOST_REQUIRE(cmpsOptimized.size() == targetSize);
   BOOST_REQUIRE(cmpsNaive.size() == targetSize);
 
-  // sort by weight
-  auto weightComparator = [](const GsfComponent &a, const GsfComponent &b) {
-    return a.weight < b.weight;
-  };
-
   // Compare components
   for (const auto &[opt, naiv] : Acts::zip(cmpsOptimized, cmpsNaive)) {
     BOOST_CHECK_CLOSE(opt.weight, naiv.weight, 1.e-8);
