@@ -92,7 +92,7 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
     Vector3 position = args.position;
     if (m_cfg.surface) {
       auto multiIntersection = m_cfg.surface->intersect(
-          gctx, args.position, args.direction, BoundaryTolerance::Infinite());
+          gctx, position, args.direction, BoundaryTolerance::Infinite());
       position = multiIntersection.closestForward().position();
     }
 
