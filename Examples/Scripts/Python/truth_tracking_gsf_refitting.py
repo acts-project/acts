@@ -21,6 +21,7 @@ def runRefittingGsf(
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
     outputDir: Path,
+    reverseFilteringCovarianceScaling=100.0,
     inputParticlePath: Optional[Path] = None,
     inputSimHitsPath: Optional[Path] = None,
     decorators=[],
@@ -38,8 +39,8 @@ def runRefittingGsf(
         inputHitsPath=inputSimHitsPath,
         decorators=decorators,
         generatedParticleType=acts.PdgParticle.eElectron,
-        reverseFilteringMomThreshold=0.0,
-        reverseFilteringCovarianceScaling=1.0,
+        reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
+        reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
         s=s,
     )
 
@@ -54,7 +55,7 @@ def runRefittingGsf(
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
-        "reverseFilteringCovarianceScaling": 100.0,
+        "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "level": acts.logging.INFO,
     }
 
