@@ -8,13 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/Zip.hpp"
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
 #include <array>
@@ -87,8 +87,8 @@ void testReductionEquivalence(const std::vector<GsfComponent> &cmps,
                       1.e-8);
     BOOST_CHECK_CLOSE(opt.boundPars[eBoundTheta], naiv.boundPars[eBoundTheta],
                       1.e-8);
-    BOOST_CHECK_CLOSE(opt.boundPars[eBoundQOverP],
-                      naiv.boundPars[eBoundQOverP], 1.e-8);
+    BOOST_CHECK_CLOSE(opt.boundPars[eBoundQOverP], naiv.boundPars[eBoundQOverP],
+                      1.e-8);
     BOOST_CHECK_CLOSE(opt.boundPars[eBoundTime], naiv.boundPars[eBoundTime],
                       1.e-8);
   }
