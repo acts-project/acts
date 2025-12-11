@@ -16,8 +16,8 @@
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Utilities/Iterator.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <any>
 #include <string>
@@ -68,18 +68,26 @@ class TrackContainer {
   using ConstTrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, true>;
 
+  /// Type alias for track container backend type
   using TrackContainerBackend = track_container_t;
+  /// Type alias for track state container backend type
   using TrackStateContainerBackend = traj_t;
 
+  /// Type alias for mutable track state proxy from multi-trajectory
   using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
+  /// Type alias for const track state proxy from multi-trajectory
   using ConstTrackStateProxy =
       typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
 
+  /// Type alias for size type of track container
   using size_type = IndexType;
+  /// Type alias for mutable iterator over tracks in container
   using iterator =
-      Acts::ContainerIndexIterator<TrackContainer, TrackProxy, false>;
+      detail::ContainerIterator<TrackContainer, TrackProxy, IndexType, false>;
+  /// Type alias for const iterator over tracks in container
   using const_iterator =
-      Acts::ContainerIndexIterator<TrackContainer, ConstTrackProxy, true>;
+      detail::ContainerIterator<TrackContainer, ConstTrackProxy, IndexType,
+                                true>;
 
 #ifndef DOXYGEN
   friend TrackProxy;
@@ -246,12 +254,14 @@ class TrackContainer {
 
   /// Check if this track container has a specific dynamic column
   /// @param key the key to check for
+  /// @return true if the column exists
   constexpr bool hasColumn(const std::string& key) const {
     return m_container->hasColumn_impl(hashStringDynamic(key));
   }
 
   /// Check if a this track container has a specific dynamic column
   /// @param key the key to check for
+  /// @return true if the column exists
   constexpr bool hasColumn(HashedString key) const {
     return m_container->hasColumn_impl(key);
   }
@@ -333,6 +343,11 @@ class TrackContainer {
   }
 
  protected:
+  /// @brief Get mutable reference to track component using compile-time key
+  /// @tparam T Component type to retrieve
+  /// @tparam key Hashed string key for the component
+  /// @param itrack Track index to get component for
+  /// @return Mutable reference to the component of type T
   template <typename T, HashedString key>
   constexpr T& component(IndexType itrack)
     requires(!ReadOnly)
@@ -340,6 +355,11 @@ class TrackContainer {
     return *std::any_cast<T*>(container().component_impl(key, itrack));
   }
 
+  /// @brief Get mutable reference to track component using runtime key
+  /// @tparam T Component type to retrieve
+  /// @param key Hashed string key for the component
+  /// @param itrack Track index to get component for
+  /// @return Mutable reference to the component of type T
   template <typename T>
   constexpr T& component(HashedString key, IndexType itrack)
     requires(!ReadOnly)
@@ -347,38 +367,63 @@ class TrackContainer {
     return *std::any_cast<T*>(container().component_impl(key, itrack));
   }
 
+  /// @brief Get const reference to track component using compile-time key
+  /// @tparam T Component type to retrieve
+  /// @tparam key Hashed string key for the component
+  /// @param itrack Track index to get component for
+  /// @return Const reference to the component of type T
   template <typename T, HashedString key>
   constexpr const T& component(IndexType itrack) const {
     return *std::any_cast<const T*>(container().component_impl(key, itrack));
   }
 
+  /// @brief Get const reference to track component using runtime key
+  /// @tparam T Component type to retrieve
+  /// @param key Hashed string key for the component
+  /// @param itrack Track index to get component for
+  /// @return Const reference to the component of type T
   template <typename T>
   constexpr const T& component(HashedString key, IndexType itrack) const {
     return *std::any_cast<const T*>(container().component_impl(key, itrack));
   }
 
+  /// Get mutable parameters for a track
+  /// @param itrack Track index to get parameters for
+  /// @return Mutable parameters object for the track
   constexpr typename TrackProxy::Parameters parameters(IndexType itrack)
     requires(!ReadOnly)
   {
     return container().parameters(itrack);
   }
 
+  /// Get const parameters for a track
+  /// @param itrack Track index to get parameters for
+  /// @return Const parameters object for the track
   constexpr typename ConstTrackProxy::ConstParameters parameters(
       IndexType itrack) const {
     return container().parameters(itrack);
   }
 
+  /// @brief Get mutable covariance matrix for a track
+  /// @param itrack Track index to get covariance for
+  /// @return Mutable covariance matrix for the track
   constexpr typename TrackProxy::Covariance covariance(IndexType itrack)
     requires(!ReadOnly)
   {
     return container().covariance(itrack);
   }
 
+  /// @brief Get const covariance matrix for a track
+  /// @param itrack Track index to get covariance for
+  /// @return Const covariance matrix for the track
   constexpr typename ConstTrackProxy::ConstCovariance covariance(
       IndexType itrack) const {
     return container().covariance(itrack);
   }
 
+  /// @brief Get mutable range for iterating track states in reverse order
+  /// @param itrack Track index to get state range for
+  /// @return Range object for reverse iteration over track states from tip to stem
   auto reverseTrackStateRange(IndexType itrack)
     requires(!ReadOnly)
   {
@@ -386,11 +431,18 @@ class TrackContainer {
     return m_traj->reverseTrackStateRange(tip);
   }
 
+  /// @brief Get const range for iterating track states in reverse order
+  /// @param itrack Track index to get state range for
+  /// @return Const range object for reverse iteration over track states from tip to stem
   auto reverseTrackStateRange(IndexType itrack) const {
     auto tip = component<IndexType, hashString("tipIndex")>(itrack);
     return m_traj->reverseTrackStateRange(tip);
   }
 
+  /// @brief Get mutable range for iterating track states in forward order
+  /// @param itrack Track index to get state range for
+  /// @return Range object for forward iteration over track states from stem to tip
+  /// @throws std::invalid_argument if track has no stem index
   auto forwardTrackStateRange(IndexType itrack)
     requires(!ReadOnly)
   {
@@ -401,6 +453,10 @@ class TrackContainer {
     return m_traj->forwardTrackStateRange(stem);
   }
 
+  /// @brief Get const range for iterating track states in forward order
+  /// @param itrack Track index to get state range for
+  /// @return Const range object for forward iteration over track states from stem to tip
+  /// @throws std::invalid_argument if track has no stem index
   auto forwardTrackStateRange(IndexType itrack) const {
     auto stem = component<IndexType, hashString("stemIndex")>(itrack);
     if (stem == kInvalid) {
@@ -425,14 +481,23 @@ class TrackContainer {
   const_if_t<ReadOnly, holder_t<traj_t>> m_traj;
 };
 
+/// Deduction guide for TrackContainer with lvalue references
+/// @param container Track container reference
+/// @param traj Trajectory reference
 template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
+/// Deduction guide for TrackContainer with const references
+/// @param container Const track container reference
+/// @param traj Const trajectory reference
 template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(const track_container_t& container, const traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ConstRefHolder>;
 
+/// Deduction guide for TrackContainer with rvalue references
+/// @param container Track container rvalue reference
+/// @param traj Trajectory rvalue reference
 template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;

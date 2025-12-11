@@ -7,20 +7,18 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <algorithm>
-#include <chrono>
 #include <fstream>
-#include <functional>
 #include <iostream>
 #include <random>
 #include <vector>
 
 using namespace Acts;
+using namespace ActsTests;
 
 int main(int /*argc*/, char** /*argv[]*/) {
   std::mt19937 rng(42);
@@ -55,26 +53,22 @@ int main(int /*argc*/, char** /*argv[]*/) {
   SquareMatrix2 cov;
   cov << 1.0, 0, 0, 0.05;
 
-  BoundaryTolerance bcAbs = BoundaryTolerance::None();
-  BoundaryTolerance bcTol0 = BoundaryTolerance::AbsoluteBound(1.0, 0.0);
-  BoundaryTolerance bcTol1 = BoundaryTolerance::AbsoluteBound(0.0, 0.2);
-  BoundaryTolerance bcTol01 = BoundaryTolerance::AbsoluteBound(1.0, 0.2);
-  BoundaryTolerance bcCov = BoundaryTolerance::Chi2Bound(cov, 1.0);
+  BoundaryTolerance btNone = BoundaryTolerance::None();
+  BoundaryTolerance btInf = BoundaryTolerance::Infinite();
+  BoundaryTolerance btAbs = BoundaryTolerance::AbsoluteEuclidean(1.0);
+  BoundaryTolerance btCov = BoundaryTolerance::Chi2Bound(cov, 1.0);
 
   // visualization to make sense of things
   for (std::size_t i = 0; i < 10000; i++) {
     const Vector2 loc{xDist(rng), yDist(rng)};
     auto locPC = toStripFrame(loc);
-    bool isInsideAbs = aBounds.inside(locPC, bcAbs);
-    bool isInsideTol0 = aBounds.inside(locPC, bcTol0);
-    bool isInsideTol1 = aBounds.inside(locPC, bcTol1);
-    bool isInsideTol01 = aBounds.inside(locPC, bcTol01);
+    bool isInsideNone = aBounds.inside(locPC, btNone);
+    bool isInsideInf = aBounds.inside(locPC, btInf);
+    bool isInsideAbs = aBounds.inside(locPC, btAbs);
+    bool isInsideCov = aBounds.inside(locPC, btCov);
 
-    bool isInsideCov = aBounds.inside(locPC, bcCov);
-
-    os << loc.x() << "," << loc.y() << "," << isInsideAbs << "," << isInsideTol0
-       << "," << isInsideTol1 << "," << isInsideTol01 << "," << isInsideCov
-       << std::endl;
+    os << loc.x() << "," << loc.y() << "," << isInsideNone << "," << isInsideInf
+       << "," << isInsideAbs << "," << isInsideCov << std::endl;
   }
 
   std::vector<std::tuple<Vector2, bool, std::string>> testPoints{{
@@ -113,20 +107,20 @@ int main(int /*argc*/, char** /*argv[]*/) {
     std::cout << check_name << ":" << std::endl;
   };
   auto print_bench_result = [](const std::string& bench_name,
-                               const Acts::Test::MicroBenchmarkResult& res) {
+                               const MicroBenchmarkResult& res) {
     std::cout << "- " << bench_name << ": " << res << std::endl;
   };
 
   // Benchmark runner
   auto run_bench = [&](auto&& iteration, int num_iters,
                        const std::string& bench_name) {
-    auto bench_result = Acts::Test::microBenchmark(iteration, num_iters);
+    auto bench_result = microBenchmark(iteration, num_iters);
     print_bench_result(bench_name, bench_result);
   };
 
   auto run_bench_with_inputs = [&](auto&& iterationWithArg, auto&& inputs,
                                    const std::string& bench_name) {
-    auto bench_result = Acts::Test::microBenchmark(iterationWithArg, inputs);
+    auto bench_result = microBenchmark(iterationWithArg, inputs);
     print_bench_result(bench_name, bench_result);
   };
   auto run_all_benches = [&](const BoundaryTolerance& check,
@@ -165,11 +159,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
   };
 
   // Benchmark scenarios
-  run_all_benches(bcAbs, "Absolute", Mode::FastOutside);
-  run_all_benches(bcTol0, "Tolerance 0", Mode::FastOutside);
-  run_all_benches(bcTol1, "Tolerance 1", Mode::FastOutside);
-  run_all_benches(bcTol01, "Tolerance 01", Mode::FastOutside);
-  run_all_benches(bcCov, "Covariance", Mode::SlowOutside);
+  run_all_benches(btNone, "None", Mode::FastOutside);
+  run_all_benches(btInf, "Infinite", Mode::FastOutside);
+  run_all_benches(btAbs, "Absolute", Mode::FastOutside);
+  run_all_benches(btCov, "Covariance", Mode::SlowOutside);
 
   return 0;
 }

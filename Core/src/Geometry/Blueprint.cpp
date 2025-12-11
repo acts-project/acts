@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/detail/BoundDeduplicator.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
@@ -260,8 +261,16 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   auto &shell = child.connect(options, gctx, logger);
 
+  // Composite of trivial will not be converted to grid like this
+  // Performance impact should be negligible since it's a rare case, but might
+  // want to change
   shell.fill(*world);
 
+  if (m_cfg.boundDeduplication) {
+    ACTS_DEBUG("Deduplicate equivalent bounds");
+    detail::BoundDeduplicator deduplicator{};
+    world->apply(deduplicator);
+  }
   child.finalize(options, gctx, *world, logger);
 
   std::set<std::string, std::less<>> volumeNames;

@@ -116,11 +116,15 @@ RootTrackParameterWriter::RootTrackParameterWriter(
 
   // The truth meta
   m_outputTree->Branch("truthMatched", &m_t_matched);
-  m_outputTree->Branch("particleId", &m_t_particleId);
+  m_outputTree->Branch("particleId_vertex_primary", &m_t_particleVertexPrimary);
+  m_outputTree->Branch("particleId_vertex_secondary",
+                       &m_t_particleVertexSecondary);
+  m_outputTree->Branch("particleId_particle", &m_t_particleParticle);
+  m_outputTree->Branch("particleId_generation", &m_t_particleGeneration);
+  m_outputTree->Branch("particleId_sub_particle", &m_t_particleSubParticle);
   m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
 
   // The truth track parameters
-  m_outputTree->Branch("particleId", &m_t_particleId);
   m_outputTree->Branch("t_loc0", &m_t_loc0);
   m_outputTree->Branch("t_loc1", &m_t_loc1);
   m_outputTree->Branch("t_phi", &m_t_phi);
@@ -232,7 +236,12 @@ ProcessCode RootTrackParameterWriter::writeT(
 
     if (particleHitCounts.size() == 1) {
       m_t_matched = true;
-      m_t_particleId = particleHitCounts.front().particleId.value();
+      const auto& matchedBarcode = particleHitCounts.front().particleId;
+      m_t_particleVertexPrimary = matchedBarcode.vertexPrimary();
+      m_t_particleVertexSecondary = matchedBarcode.vertexSecondary();
+      m_t_particleParticle = matchedBarcode.particle();
+      m_t_particleGeneration = matchedBarcode.generation();
+      m_t_particleSubParticle = matchedBarcode.subParticle();
       m_nMajorityHits = particleHitCounts.front().hitCount;
 
       // Get the index of the first space point
@@ -274,7 +283,7 @@ ProcessCode RootTrackParameterWriter::writeT(
           m_t_pt = perp(p);
         } else {
           ACTS_WARNING("Truth particle with barcode " << particleId << "="
-                                                      << particleId.value()
+                                                      << particleId.hash()
                                                       << " not found!");
         }
       }
@@ -302,7 +311,11 @@ ProcessCode RootTrackParameterWriter::writeT(
       m_pull_time = getPull(m_res_time, m_err_time);
     } else {
       m_t_matched = false;
-      m_t_particleId = 0;
+      m_t_particleVertexPrimary = 0;
+      m_t_particleVertexSecondary = 0;
+      m_t_particleParticle = 0;
+      m_t_particleGeneration = 0;
+      m_t_particleSubParticle = 0;
       m_nMajorityHits = 0;
 
       m_t_loc0 = NaNfloat;

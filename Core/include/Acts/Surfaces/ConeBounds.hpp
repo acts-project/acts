@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
@@ -33,6 +32,8 @@ namespace Acts {
 ///
 class ConeBounds : public SurfaceBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int {
     eAlpha = 0,
     eMinZ = 1,
@@ -71,24 +72,41 @@ class ConeBounds : public SurfaceBounds {
   /// @param values The parameter array
   explicit ConeBounds(const std::array<double, eSize>& values) noexcept(false);
 
-  BoundsType type() const final { return SurfaceBounds::eCone; }
+  /// @copydoc SurfaceBounds::type
+  BoundsType type() const final { return eCone; }
 
-  /// Return the bound values as dynamically sized vector
-  ///
-  /// @return this returns a copy of the internal values
+  /// @copydoc SurfaceBounds::isCartesian
+  bool isCartesian() const final { return true; }
+
+  /// @copydoc SurfaceBounds::boundToCartesianJacobian
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
+    (void)lposition;
+    return SquareMatrix2::Identity();
+  }
+
+  /// @copydoc SurfaceBounds::boundToCartesianMetric
+  SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
+    (void)lposition;
+    return SquareMatrix2::Identity();
+  }
+
+  /// @copydoc SurfaceBounds::values
   std::vector<double> values() const final;
 
-  /// inside method for local position
-  ///
-  /// @param lposition is the local position to be checked
-  /// @param boundaryTolerance is the boundary check directive
-  /// @return is a boolean indicating if the position is inside
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance =
-                  BoundaryTolerance::None()) const final;
+  /// @copydoc SurfaceBounds::inside
+  bool inside(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
+
+  /// @copydoc SurfaceBounds::center
+  /// @note For ConeBounds: returns (averagePhi, (minZ + maxZ)/2) in cone coordinates
+  Vector2 center() const final;
 
   /// Output Method for std::ostream
-  ///
   /// @param sl is the ostrea into which the dump is done
   /// @return is the input object
   std::ostream& toStream(std::ostream& sl) const final;
@@ -100,10 +118,12 @@ class ConeBounds : public SurfaceBounds {
   double r(double z) const { return std::abs(z * m_tanAlpha); }
 
   /// Return tangent of alpha (pre-computed)
+  /// @return Tangent of the cone half-angle
   double tanAlpha() const { return m_tanAlpha; }
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

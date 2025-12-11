@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <iostream>
 #include <stdexcept>
 
 #include <TChain.h>
@@ -40,11 +39,18 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
 
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
+  // add file to the input chain
+  m_inputChain->Add(m_cfg.filePath.c_str());
+  m_inputChain->LoadTree(0);
+  ACTS_DEBUG("Adding File " << m_cfg.filePath << " to tree '" << m_cfg.treeName
+                            << "'.");
+
   // Set the branches
-  int f = 0;
-  auto setBranches = [&](const auto& keys, auto& columns) {
+  auto setBranches = [&]<class T>(const auto& keys, T& columns) {
+    using MappedType = typename std::remove_reference_t<T>::mapped_type;
     for (auto key : keys) {
-      columns.insert({key, f++});
+      MappedType a{};  // 0 or nullptr
+      columns.emplace(key, a);
     }
     for (auto key : keys) {
       m_inputChain->SetBranchAddress(key, &columns.at(key));
@@ -56,11 +62,19 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   setBranches(m_uint64Keys, m_uint64Columns);
   setBranches(m_int32Keys, m_int32Columns);
 
-  // add file to the input chain
-  m_inputChain->Add(m_cfg.filePath.c_str());
-  m_inputChain->LoadTree(0);
-  ACTS_DEBUG("Adding File " << m_cfg.filePath << " to tree '" << m_cfg.treeName
-                            << "'.");
+  if (m_inputChain->FindBranch("barcode") != nullptr) {
+    m_hasBarcodeVector = true;
+    m_barcodeVector.allocate();
+    m_inputChain->SetBranchAddress("barcode", &m_barcodeVector.get());
+  } else {
+    m_hasBarcodeVector = false;
+    for (const auto* key : m_barcodeComponentKeys) {
+      if (!m_uint32Columns.contains(key)) {
+        m_uint32Columns.emplace(key, std::uint32_t{0});
+      }
+      m_inputChain->SetBranchAddress(key, &m_uint32Columns.at(key));
+    }
+  }
 
   // Because each hit is stored in a single entry in the root file, we need to
   // scan the file first for the positions of the events in the file in order to
@@ -102,8 +116,6 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   ACTS_DEBUG("Event range: " << availableEvents().first << " - "
                              << availableEvents().second);
 }
-
-RootSimHitReader::~RootSimHitReader() = default;
 
 std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
   return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
@@ -147,7 +159,22 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
     }
 
     const Acts::GeometryIdentifier geoid{m_uint64Columns.at("geometry_id")};
-    const SimBarcode pid{m_uint64Columns.at("particle_id")};
+    SimBarcode pid = SimBarcode::Invalid();
+    if (m_hasBarcodeVector && m_barcodeVector.hasValue()) {
+      pid = SimBarcode().withData(*m_barcodeVector);
+    } else {
+      pid = SimBarcode()
+                .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(
+                    m_uint32Columns.at("barcode_vertex_primary")))
+                .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                    m_uint32Columns.at("barcode_vertex_secondary")))
+                .withParticle(static_cast<SimBarcode::ParticleId>(
+                    m_uint32Columns.at("barcode_particle")))
+                .withGeneration(static_cast<SimBarcode::GenerationId>(
+                    m_uint32Columns.at("barcode_generation")))
+                .withSubParticle(static_cast<SimBarcode::SubParticleId>(
+                    m_uint32Columns.at("barcode_sub_particle")));
+    }
     const auto index = m_int32Columns.at("index");
 
     const Acts::Vector4 pos4 = {
@@ -184,5 +211,7 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
   // Return success flag
   return ProcessCode::SUCCESS;
 }
+
+RootSimHitReader::~RootSimHitReader() = default;
 
 }  // namespace ActsExamples

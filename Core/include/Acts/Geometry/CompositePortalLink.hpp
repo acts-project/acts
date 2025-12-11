@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
+#include "Acts/Utilities/TransformRange.hpp"
 
 #include <iosfwd>
 
@@ -74,6 +75,7 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @param gctx The geometry context
   /// @param position The 2D position
   /// @param tolerance The on-surface tolerance
+  /// @return Result containing the resolved tracking volume or error
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
       double tolerance = s_onSurfaceTolerance) const override;
@@ -83,6 +85,7 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @param gctx The geometry context
   /// @param position The 3D position
   /// @param tolerance The tolerance
+  /// @return Result containing the resolved tracking volume or error
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
       double tolerance = s_onSurfaceTolerance) const override;
@@ -105,6 +108,15 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @return The grid portal link
   std::unique_ptr<GridPortalLink> makeGrid(const GeometryContext& gctx,
                                            const Logger& logger) const;
+
+  /// Type alias for range of portal links with const dereferencing transform
+  using PortalLinkRange = detail::TransformRange<
+      detail::ConstDereference,
+      const boost::container::small_vector<std::unique_ptr<PortalLinkBase>, 4>>;
+
+  /// Get the range of children
+  /// @return The range of children
+  PortalLinkRange links() const;
 
  private:
   boost::container::small_vector<std::unique_ptr<PortalLinkBase>, 4>

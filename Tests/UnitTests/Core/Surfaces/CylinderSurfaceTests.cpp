@@ -21,30 +21,30 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <string>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 // Create a test context
 GeometryContext testContext = GeometryContext();
 
-BOOST_AUTO_TEST_SUITE(CylinderSurfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 /// Unit test for creating compliant/non-compliant CylinderSurface object
 BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
   /// Test default construction
@@ -203,7 +203,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   double pn = sfIntersection[0].pathLength();
   double pa = sfIntersection[1].pathLength();
   BOOST_CHECK_LT(std::abs(pn), std::abs(pa));
-  BOOST_CHECK_EQUAL(sfIntersection.object(), cylinderSurfaceObject.get());
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,
@@ -742,4 +741,4 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

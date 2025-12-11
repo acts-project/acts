@@ -12,48 +12,34 @@
 
 #include "Acts/EventData/SpacePointProxy2.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
-inline MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint(
-    std::span<const SourceLink> sourceLinks, float x, float y,
-    float z) noexcept {
-  m_x.push_back(x);
-  m_y.push_back(y);
-  m_z.push_back(z);
-  m_sourceLinkOffsets.push_back(m_sourceLinks.size());
-  m_sourceLinkCounts.push_back(static_cast<std::uint8_t>(sourceLinks.size()));
-  m_sourceLinks.insert(m_sourceLinks.end(), sourceLinks.begin(),
-                       sourceLinks.end());
-
-  for (auto &column : m_extraColumns) {
-    column->emplace_back();
+inline MutableSpacePointProxy2 SpacePointContainer2::at(Index index) {
+  if (index >= size()) {
+    throw std::out_of_range(
+        "Index out of range in SpacePointContainer2: " + std::to_string(index) +
+        " >= " + std::to_string(size()));
   }
-
-  return MutableProxyType(*this, size() - 1);
+  return MutableProxy(*this, index);
 }
 
-inline MutableSpacePointProxy2 SpacePointContainer2::at(IndexType index) {
+inline ConstSpacePointProxy2 SpacePointContainer2::at(Index index) const {
   if (index >= size()) {
-    throw std::out_of_range("Index out of range in SpacePointContainer2");
+    throw std::out_of_range(
+        "Index out of range in SpacePointContainer2: " + std::to_string(index) +
+        " >= " + std::to_string(size()));
   }
-  return MutableProxyType(*this, index);
-}
-
-inline ConstSpacePointProxy2 SpacePointContainer2::at(IndexType index) const {
-  if (index >= size()) {
-    throw std::out_of_range("Index out of range in SpacePointContainer2");
-  }
-  return ConstProxyType(*this, index);
+  return ConstProxy(*this, index);
 }
 
 inline MutableSpacePointProxy2 SpacePointContainer2::operator[](
-    IndexType index) noexcept {
-  return MutableProxyType(*this, index);
+    Index index) noexcept {
+  return MutableProxy(*this, index);
 }
 
 inline ConstSpacePointProxy2 SpacePointContainer2::operator[](
-    IndexType index) const noexcept {
-  return ConstProxyType(*this, index);
+    Index index) const noexcept {
+  return ConstProxy(*this, index);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

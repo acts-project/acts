@@ -72,6 +72,7 @@ class PlaneSurface : public RegularSurface {
   /// Assignment operator
   ///
   /// @param other The source PlaneSurface for assignment
+  /// @return Reference to this PlaneSurface after assignment
   PlaneSurface& operator=(const PlaneSurface& other);
 
   // Use overloads from `RegularSurface`
@@ -84,7 +85,7 @@ class PlaneSurface : public RegularSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position is ignored
   ///
-  /// return a Vector3 by value
+  /// @return Normal vector as Vector3 by value
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
 
@@ -112,10 +113,17 @@ class PlaneSurface : public RegularSurface {
                             AxisDirection aDir) const final;
 
   /// Return the surface type
+  /// @return Surface type identifier
   SurfaceType type() const override;
 
   /// Return method for bounds object of this surfrace
+  /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const override;
+  /// This method returns the shared_ptr to the DiscBounds
+  const std::shared_ptr<const PlanarBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const PlanarBounds> newBounds);
 
   /// Local to global transformation
   ///
@@ -180,8 +188,8 @@ class PlaneSurface : public RegularSurface {
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return the @c SurfaceMultiIntersection object
-  SurfaceMultiIntersection intersect(
+  /// @return the @c MultiIntersection3D object
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
@@ -202,6 +210,7 @@ class PlaneSurface : public RegularSurface {
       const GeometryContext& gctx, unsigned int quarterSegments) const override;
 
   /// Return properly formatted class name for screen output
+  /// @return String representation of the class name
   std::string name() const override;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.

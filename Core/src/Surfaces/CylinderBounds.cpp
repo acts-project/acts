@@ -8,8 +8,6 @@
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -35,17 +33,7 @@ Vector2 CylinderBounds::shifted(const Vector2& lposition) const {
           lposition[1]};
 }
 
-SquareMatrix2 CylinderBounds::jacobian() const {
-  SquareMatrix2 j;
-  j(0, 0) = 1 / get(eR);
-  j(0, 1) = 0;
-  j(1, 0) = 0;
-  j(1, 1) = 1;
-  return j;
-}
-
-bool CylinderBounds::inside(const Vector2& lposition,
-                            const BoundaryTolerance& boundaryTolerance) const {
+bool CylinderBounds::inside(const Vector2& lposition) const {
   double bevelMinZ = get(eBevelMinZ);
   double bevelMaxZ = get(eBevelMaxZ);
 
@@ -53,9 +41,9 @@ bool CylinderBounds::inside(const Vector2& lposition,
   double halfPhi = get(eHalfPhiSector);
 
   if (bevelMinZ == 0. || bevelMaxZ == 0.) {
-    return detail::insideAlignedBox(
-        Vector2(-halfPhi, -halfLengthZ), Vector2(halfPhi, halfLengthZ),
-        boundaryTolerance, shifted(lposition), jacobian());
+    return detail::VerticesHelper::isInsideRectangle(
+        shifted(lposition), Vector2(-halfPhi, -halfLengthZ),
+        Vector2(halfPhi, halfLengthZ));
   }
 
   double radius = get(eR);
@@ -85,11 +73,36 @@ bool CylinderBounds::inside(const Vector2& lposition,
   Vector2 upperRight = {radius, halfLengthZ};
   Vector2 middleRight = {0., (halfLengthZ + radius * std::tan(bevelMaxZ))};
   Vector2 lowerRight = {-radius, halfLengthZ};
+  std::array<Vector2, 6> vertices{lowerLeft,  middleLeft,  upperLeft,
+                                  upperRight, middleRight, lowerRight};
+
+  return detail::VerticesHelper::isInsidePolygon(lposition, vertices);
+}
+
+Vector2 CylinderBounds::closestPoint(const Vector2& lposition,
+                                     const SquareMatrix2& metric) const {
+  double bevelMinZ = get(eBevelMinZ);
+  double bevelMaxZ = get(eBevelMaxZ);
+  double halfLengthZ = get(eHalfLengthZ);
+  double radius = get(eR);
+
+  Vector2 lowerLeft = {-radius, -halfLengthZ};
+  Vector2 middleLeft = {0., -(halfLengthZ + radius * std::tan(bevelMinZ))};
+  Vector2 upperLeft = {radius, -halfLengthZ};
+  Vector2 upperRight = {radius, halfLengthZ};
+  Vector2 middleRight = {0., (halfLengthZ + radius * std::tan(bevelMaxZ))};
+  Vector2 lowerRight = {-radius, halfLengthZ};
   Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
                         upperRight, middleRight, lowerRight};
 
-  return detail::insidePolygon(vertices, boundaryTolerance, lposition,
-                               jacobian());
+  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
+                                                              vertices, metric);
+}
+
+Vector2 CylinderBounds::center() const {
+  // For cylinder bounds in local coordinates (rphi, z),
+  // centroid is at (averagePhi, 0) since z extends symmetrically
+  return Vector2(get(eAveragePhi), 0.0);
 }
 
 std::ostream& CylinderBounds::toStream(std::ostream& sl) const {

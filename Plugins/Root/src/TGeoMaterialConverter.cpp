@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoMaterialConverter.hpp"
+#include "ActsPlugins/Root/TGeoMaterialConverter.hpp"
 
 #include "Acts/Material/Material.hpp"
 
 #include "TGeoMaterial.h"
 
-Acts::MaterialSlab Acts::TGeoMaterialConverter::materialSlab(
+Acts::MaterialSlab ActsPlugins::TGeoMaterialConverter::materialSlab(
     const TGeoMaterial& tgMaterial, double thicknessIn, double thicknessOut,
     const Options& options) {
   // Scalable properties
@@ -25,12 +25,12 @@ Acts::MaterialSlab Acts::TGeoMaterialConverter::materialSlab(
   double uScalor = options.unitLengthScalor;
   double rScalar = options.unitMassScalor / pow(options.unitLengthScalor, 3);
 
-  auto material =
-      Material::fromMassDensity(static_cast<float>(matX0 * uScalor / cFactor),
-                                static_cast<float>(matL0 * uScalor / cFactor),
-                                static_cast<float>(tgMaterial.GetA()),
-                                static_cast<float>(tgMaterial.GetZ()),
-                                static_cast<float>(matRho * rScalar * cFactor));
+  auto material = Acts::Material::fromMassDensity(
+      static_cast<float>(matX0 * uScalor / cFactor),
+      static_cast<float>(matL0 * uScalor / cFactor),
+      static_cast<float>(tgMaterial.GetA()),
+      static_cast<float>(tgMaterial.GetZ()),
+      static_cast<float>(matRho * rScalar * cFactor));
 
-  return MaterialSlab(material, static_cast<float>(thicknessOut));
+  return Acts::MaterialSlab(material, static_cast<float>(thicknessOut));
 }

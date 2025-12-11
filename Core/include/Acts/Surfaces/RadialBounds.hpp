@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -28,6 +27,8 @@ namespace Acts {
 ///
 class RadialBounds : public DiscBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues {
     eMinR = 0,
     eMaxR = 1,
@@ -57,52 +58,75 @@ class RadialBounds : public DiscBounds {
     checkConsistency();
   }
 
-  BoundsType type() const final { return SurfaceBounds::eDisc; }
+  /// @copydoc SurfaceBounds::type
+  BoundsType type() const final { return eDisc; }
+
+  /// @copydoc SurfaceBounds::isCartesian
+  bool isCartesian() const final { return false; }
+
+  /// @copydoc SurfaceBounds::boundToCartesianJacobian
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::boundToCartesianMetric
+  SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final;
 
   /// Return the bound values as dynamically sized vector
-  ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
-  /// For disc surfaces the local position in (r,phi) is checked
-  ///
-  /// @param lposition local position to be checked
-  /// @param boundaryTolerance boundary check directive
-  ///
-  /// @return is a boolean indicating the operation success
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  /// @copydoc SurfaceBounds::inside
+  bool inside(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
+
+  /// @copydoc SurfaceBounds::center
+  /// @note For RadialBounds: returns ((rMin + rMax)/2, averagePhi) in polar coordinates
+  Vector2 center() const final;
 
   /// Outstream operator
   ///
   /// @param sl is the ostream to be dumped into
+  /// @return Reference to the output stream for chaining
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Return method for inner Radius
+  /// @return Minimum radius value of the bounds
   double rMin() const final { return get(eMinR); }
 
   /// Return method for outer Radius
+  /// @return Maximum radius value of the bounds
   double rMax() const final { return get(eMaxR); }
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The boundary value corresponding to the requested parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Returns true for full phi coverage
+  /// @return True if bounds cover full azimuthal range (2π), false otherwise
   bool coversFullAzimuth() const final {
     return (get(eHalfPhiSector) == std::numbers::pi);
   }
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
+  /// @param R Radius value to check
+  /// @param tolerance Tolerance for the boundary check
+  /// @return True if radius is within radial bounds considering tolerance
   bool insideRadialBounds(double R, double tolerance = 0.) const final {
     return (R + tolerance > get(eMinR) && R - tolerance < get(eMaxR));
   }
 
   /// Return a reference radius for binning
+  /// @return Average radius value used as binning reference
   double binningValueR() const final { return 0.5 * (get(eMinR) + get(eMaxR)); }
 
-  /// Return a reference radius for binning
+  /// Return a reference phi value for binning
+  /// @return Average phi value used as binning reference
   double binningValuePhi() const final { return get(eAveragePhi); }
 
  private:

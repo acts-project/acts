@@ -13,8 +13,9 @@
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/Iterator.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -147,11 +148,11 @@ class MeasurementContainer {
 
   const OrderedIndices& orderedIndices() const;
 
-  using iterator =
-      Acts::ContainerIndexIterator<MeasurementContainer, VariableProxy, false>;
+  using iterator = Acts::detail::ContainerIterator<MeasurementContainer,
+                                                   VariableProxy, Index, false>;
   using const_iterator =
-      Acts::ContainerIndexIterator<const MeasurementContainer,
-                                   ConstVariableProxy, true>;
+      Acts::detail::ContainerIterator<const MeasurementContainer,
+                                      ConstVariableProxy, Index, true>;
 
   iterator begin();
   iterator end();

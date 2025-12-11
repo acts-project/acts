@@ -9,8 +9,18 @@
 #include "Acts/Geometry/ConeLayer.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 namespace Acts {
+
+std::shared_ptr<ConeLayer> ConeLayer::create(
+    const Transform3& transform, std::shared_ptr<const ConeBounds> cbounds,
+    std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+    std::unique_ptr<ApproachDescriptor> ad, LayerType laytyp) {
+  return std::shared_ptr<ConeLayer>(
+      new ConeLayer(transform, std::move(cbounds), std::move(surfaceArray),
+                    thickness, std::move(ad), laytyp));
+}
 
 ConeLayer::ConeLayer(const Transform3& transform,
                      std::shared_ptr<const ConeBounds> cbounds,

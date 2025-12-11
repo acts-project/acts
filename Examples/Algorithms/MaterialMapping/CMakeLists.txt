@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesMaterialMapping
+acts_add_library(
+    ExamplesMaterialMapping
     SHARED
     src/CoreMaterialMapping.cpp
     src/MaterialValidation.cpp
@@ -12,12 +12,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesMaterialMapping
-    PUBLIC ActsCore ActsExamplesFramework
+    PUBLIC Acts::ExamplesFramework
 )
 
-acts_compile_headers(ActsExamplesMaterialMapping GLOB "include/**/*.hpp")
-
-install(
-    TARGETS ActsExamplesMaterialMapping
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+acts_compile_headers(ExamplesMaterialMapping GLOB "include/**/*.hpp")

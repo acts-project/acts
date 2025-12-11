@@ -30,11 +30,13 @@ class ITrackingGeometryVisitor {
  public:
   virtual ~ITrackingGeometryVisitor() = 0;
 
+  /// @param visitDepthFirst Flag to control visit order (depth-first vs breadth-first)
   explicit ITrackingGeometryVisitor(bool visitDepthFirst = false)
       : m_visitDepthFirst(visitDepthFirst) {}
 
   /// @brief indicate the order of visiting
   /// @note default is outermost --> innermost volume visiting
+  /// @return True if depth-first traversal is enabled, false for breadth-first
   bool visitDepthFirst() const { return m_visitDepthFirst; }
 
  private:
@@ -52,6 +54,7 @@ class ITrackingGeometryVisitor {
 class TrackingGeometryVisitor : public ITrackingGeometryVisitor {
  public:
   /// @brief Constructor from base class
+  /// @param visitDepthFirst Flag to control visit order (depth-first vs breadth-first)
   using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
   ~TrackingGeometryVisitor() override;
@@ -92,6 +95,7 @@ class TrackingGeometryVisitor : public ITrackingGeometryVisitor {
 class TrackingGeometryMutableVisitor : public ITrackingGeometryVisitor {
  public:
   /// @brief Constructor
+  /// @param visitDepthFirst Flag to control visit order (depth-first vs breadth-first)
   using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
   ~TrackingGeometryMutableVisitor() override;

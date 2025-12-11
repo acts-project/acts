@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -44,8 +41,10 @@ namespace Acts {
 /// @tparam track_container_t Type of the track container
 template <typename track_container_t>
 struct CombinatorialKalmanFilterOptions {
+  /// Type alias for track state container backend
   using TrackStateContainerBackend =
       typename track_container_t::TrackStateContainerBackend;
+  /// Type alias for track state proxy from the container
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
 
   /// PropagatorOptions with context
@@ -214,6 +213,21 @@ class CombinatorialKalmanFilter {
     /// Calibration context for the finding run
     const CalibrationContext* calibrationContextPtr{nullptr};
 
+    CombinatorialKalmanFilterExtensions<track_container_t> extensions;
+
+    /// End of world aborter
+    EndOfWorldReached endOfWorldReached;
+
+    /// Volume constraint aborter
+    VolumeConstraintAborter volumeConstraintAborter;
+
+    /// Actor logger instance
+    const Logger* actorLogger{nullptr};
+    /// Updater logger instance
+    const Logger* updaterLogger{nullptr};
+
+    const Logger& logger() const { return *actorLogger; }
+
     /// @brief CombinatorialKalmanFilter actor operation
     ///
     /// @tparam propagator_state_t Type of the Propagator state
@@ -228,21 +242,26 @@ class CombinatorialKalmanFilter {
     void act(propagator_state_t& state, const stepper_t& stepper,
              const navigator_t& navigator, result_type& result,
              const Logger& /*logger*/) const {
-      assert(result.trackStates && "No MultiTrajectory set");
+      ACTS_VERBOSE("CKF Actor called");
 
-      if (result.finished) {
-        return;
-      }
+      assert(result.trackStates && "No MultiTrajectory set");
 
       if (state.stage == PropagatorStage::prePropagation &&
           skipPrePropagationUpdate) {
         ACTS_VERBOSE("Skip pre-propagation update (first surface)");
         return;
       }
+      if (state.stage == PropagatorStage::postPropagation) {
+        ACTS_VERBOSE("Skip post-propagation action");
+        return;
+      }
 
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
       assert(!result.activeBranches.empty() && "No active branches");
+      assert(!result.finished && "Should never reach this when finished");
+      assert(result.lastError.ok() &&
+             "Should never reach this when `lastError` is set");
 
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
@@ -253,7 +272,7 @@ class CombinatorialKalmanFilter {
 
       // Update:
       // - Waiting for a current surface
-      if (auto surface = navigator.currentSurface(state.navigation);
+      if (const Surface* surface = navigator.currentSurface(state.navigation);
           surface != nullptr) {
         // There are three scenarios:
         // 1) The surface is in the measurement map
@@ -272,11 +291,12 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE("Perform filter step");
         auto res = filter(surface, state, stepper, navigator, result);
         if (!res.ok()) {
-          ACTS_ERROR("Error in filter: " << res.error());
+          ACTS_ERROR("Error in filter: " << res.error().message());
           result.lastError = res.error();
         }
 
-        if (result.finished) {
+        if (!result.lastError.ok() || result.finished) {
+          ACTS_VERBOSE("CKF Actor returns after filter step");
           return;
         }
       }
@@ -459,14 +479,13 @@ class CombinatorialKalmanFilter {
       auto currentBranch = result.activeBranches.back();
       TrackIndexType prevTip = currentBranch.tipIndex();
 
-      using TrackStatesResult =
-          Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
+      using TrackStatesResult = Result<CkfTypes::BranchVector<TrackIndexType>>;
       TrackStatesResult tsRes = TrackStatesResult::success({});
       if (isSensitive) {
         // extend trajectory with measurements associated to the current surface
         // which may create extra trajectory branches if more than one
         // measurement is selected.
-        tsRes = m_extensions.createTrackStates(
+        tsRes = extensions.createTrackStates(
             state.geoContext, *calibrationContextPtr, *surface, boundState,
             prevTip, result.trackStateCandidates, *result.trackStates,
             logger());
@@ -479,7 +498,7 @@ class CombinatorialKalmanFilter {
             processNewTrackStates(state.geoContext, newTrackStateList, result);
         if (!procRes.ok()) {
           ACTS_ERROR("Processing of selected track states failed: "
-                     << procRes.error());
+                     << procRes.error().message());
           return procRes.error();
         }
         unsigned int nBranchesOnSurface = *procRes;
@@ -528,7 +547,7 @@ class CombinatorialKalmanFilter {
         }
 
         BranchStopperResult branchStopperResult =
-            m_extensions.branchStopper(currentBranch, currentState);
+            extensions.branchStopper(currentBranch, currentState);
 
         // Check the branch
         if (branchStopperResult == BranchStopperResult::Continue) {
@@ -591,7 +610,7 @@ class CombinatorialKalmanFilter {
     /// @param result which contains among others the new states, and the list of active branches
     /// @return the number of newly added branches or an error
     Result<unsigned int> processNewTrackStates(
-        const Acts::GeometryContext& gctx,
+        const GeometryContext& gctx,
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList,
         result_type& result) const {
       using PM = TrackStatePropMask;
@@ -607,9 +626,13 @@ class CombinatorialKalmanFilter {
            ++it) {
         // Keep the root branch as the first branch, make a copy for the
         // others
-        auto newBranch = (it == newTrackStateList.rbegin())
-                             ? rootBranch
-                             : rootBranch.shallowCopy();
+        auto shallowCopy = [&] {
+          auto sc = rootBranch.container().makeTrack();
+          sc.copyFromShallow(rootBranch);
+          return sc;
+        };
+        auto newBranch =
+            (it == newTrackStateList.rbegin()) ? rootBranch : shallowCopy();
         newBranch.tipIndex() = *it;
         newBranches.push_back(newBranch);
       }
@@ -631,10 +654,9 @@ class CombinatorialKalmanFilter {
           newBranch.nOutliers()++;
         } else if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
           // Kalman update
-          auto updateRes =
-              m_extensions.updater(gctx, trackState, *updaterLogger);
+          auto updateRes = extensions.updater(gctx, trackState, *updaterLogger);
           if (!updateRes.ok()) {
-            ACTS_ERROR("Update step failed: " << updateRes.error());
+            ACTS_ERROR("Update step failed: " << updateRes.error().message());
             return updateRes.error();
           }
           ACTS_VERBOSE("Appended measurement track state with tip = "
@@ -653,7 +675,7 @@ class CombinatorialKalmanFilter {
         result.activeBranches.push_back(newBranch);
 
         BranchStopperResult branchStopperResult =
-            m_extensions.branchStopper(newBranch, trackState);
+            extensions.branchStopper(newBranch, trackState);
 
         // Check if need to stop this branch
         if (branchStopperResult == BranchStopperResult::Continue) {
@@ -801,21 +823,6 @@ class CombinatorialKalmanFilter {
 
       result.collectedTracks.push_back(currentBranch);
     }
-
-    CombinatorialKalmanFilterExtensions<track_container_t> m_extensions;
-
-    /// End of world aborter
-    EndOfWorldReached endOfWorldReached;
-
-    /// Volume constraint aborter
-    VolumeConstraintAborter volumeConstraintAborter;
-
-    /// Actor logger instance
-    const Logger* actorLogger{nullptr};
-    /// Updater logger instance
-    const Logger* updaterLogger{nullptr};
-
-    const Logger& logger() const { return *actorLogger; }
   };
 
   /// Void path limit reached aborter to replace the default since the path
@@ -883,7 +890,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();
 
     // copy delegates to calibrator, updater, branch stopper
-    combKalmanActor.m_extensions = tfOptions.extensions;
+    combKalmanActor.extensions = tfOptions.extensions;
 
     auto propState =
         m_propagator
@@ -903,6 +910,9 @@ class CombinatorialKalmanFilter {
             .template get<CombinatorialKalmanFilterResult<track_container_t>>();
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
+
+    // make sure the right particle hypothesis is set on the root branch
+    rootBranch.setParticleHypothesis(initialParameters.particleHypothesis());
 
     r.activeBranches.push_back(rootBranch);
 

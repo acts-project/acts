@@ -21,6 +21,7 @@ namespace Acts::HoughTransformUtils {
 /// this type is responsible for encoding the parameters of our hough space
 using CoordType = double;
 
+/// Type alias for hit count/weight values in Hough space
 // this type is used to encode hit counts.
 // Floating point to allow hit weights to be applied
 using YieldType = float;
@@ -39,9 +40,13 @@ using LineParametrisation =
 /// Disconnected from the hough plane binning to be able to re-use
 /// a plane with a given binning for several parameter ranges
 struct HoughAxisRanges {
+  /// Minimum value of the first hough coordinate
   CoordType xMin = 0.0f;  // minimum value of the first coordinate
+  /// Maximum value of the first hough coordinate
   CoordType xMax = 0.0f;  // maximum value of the first coordinate
+  /// Minimum value of the second hough coordinate
   CoordType yMin = 0.0f;  // minimum value of the second coordinate
+  /// Maximum value of the second hough coordinate
   CoordType yMax = 0.0f;  // maximum value of the second coordinate
 };
 
@@ -101,12 +106,16 @@ class HoughCell {
   void fill(const identifier_t& identifier, unsigned int layer,
             YieldType weight = 1.);
   /// @brief access the number of layers with hits compatible with this cell
+  /// @return The (weighted) number of layers with hits in this cell
   YieldType nLayers() const { return m_nLayers; }
   /// @brief access the number of unique hits compatible with this cell
+  /// @return The (weighted) number of unique hits in this cell
   YieldType nHits() const { return m_nHits; }
   /// @brief access the span of layers compatible with this cell
+  /// @return Span containing the layer indices with hits in this cell
   std::span<const unsigned, std::dynamic_extent> getLayers() const;
-  // /// @brief access the pan of unique hits compatible with this cell
+  /// Access the span of unique hits compatible with this cell.
+  /// @return Span containing the identifiers of hits in this cell
   std::span<const identifier_t, std::dynamic_extent> getHits() const;
 
   /// @brief reset this cell, removing any existing content.
@@ -139,7 +148,9 @@ class HoughCell {
 /// (sub) detectors of different dimensions if the bin number
 /// remains applicable
 struct HoughPlaneConfig {
+  /// Number of bins in the first hough coordinate
   std::size_t nBinsX = 0;  // number of bins in the first coordinate
+  /// Number of bins in the second hough coordinate
   std::size_t nBinsY = 0;  // number of bins in the second coordinate
 };
 
@@ -152,7 +163,9 @@ class HoughPlane {
   /// @brief hough histogram representation as a 2D-indexable vector of hough cells
   using Axis =
       Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>;
+  /// Type alias for Hough histogram grid
   using HoughHist = Grid<HoughCell<identifier_t>, Axis, Axis>;
+  /// Type alias for histogram index type
   using Index = typename HoughHist::index_t;
 
   /// @brief instantiate the (empty) hough plane
@@ -203,11 +216,20 @@ class HoughPlane {
   /// @brief get the identifiers of all hits in one cell of the histogram
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
-  /// @return the set of identifiers of the hits for this cell
-  std::unordered_set<identifier_t> hitIds(std::size_t xBin,
-                                          std::size_t yBin) const {
+  /// @return the list of identifiers of the hits for this cell
+  /// Can include duplicates if a hit was filled more than once
+  std::span<const identifier_t, std::dynamic_extent> hitIds(
+      std::size_t xBin, std::size_t yBin) const {
+    return m_houghHist.atLocalBins({xBin, yBin}).getHits();
+  }
+  /// @brief get the identifiers of all hits in one cell of the histogram
+  /// @param xBin: bin index in the first coordinate
+  /// @param yBin: bin index in the second coordinate
+  /// @return the list of identifiers of the hits for this cell
+  /// Guaranteed to not duplicate identifiers
+  std::unordered_set<const identifier_t> uniqueHitIds(std::size_t xBin,
+                                                      std::size_t yBin) const {
     const auto hits_span = m_houghHist.atLocalBins({xBin, yBin}).getHits();
-
     return std::unordered_set<identifier_t>(hits_span.begin(), hits_span.end());
   }
   /// @brief access the (weighted) number of hits in one cell of the histogram from bin's coordinates
@@ -226,43 +248,54 @@ class HoughPlane {
   }
 
   /// @brief get the number of bins on the first coordinate
+  /// @return Number of bins in the X direction
   std::size_t nBinsX() const { return m_cfg.nBinsX; }
   /// @brief get the number of bins on the second coordinate
+  /// @return Number of bins in the Y direction
   std::size_t nBinsY() const { return m_cfg.nBinsY; }
 
   /// @brief get the maximum number of (weighted) hits seen in a single
   /// cell across the entire histrogram.
+  /// @return Maximum number of hits found in any single cell
   YieldType maxHits() const { return m_maxHits; }
 
   /// @brief get the list of cells with non-zero content.
   /// Useful for peak-finders in sparse data
   /// to avoid looping over all cells
+  /// @return Reference to set of global bin indices with non-zero content
   const std::unordered_set<std::size_t>& getNonEmptyBins() const {
     return m_touchedBins;
   }
 
   /// @brief get the coordinates of the bin given the global bin index
+  /// @param globalBin Global bin index to convert to coordinates
+  /// @return Local bin coordinates (x,y) corresponding to global bin index
   Index axisBins(std::size_t globalBin) const {
     return m_houghHist.localBinsFromGlobalBin(globalBin);
   }
 
   /// @brief get the globalBin index given the coordinates of the bin
+  /// @param indexBin Bin coordinates to convert to global index
+  /// @return Global bin index corresponding to local bin coordinates
   std::size_t globalBin(Index indexBin) const {
     return m_houghHist.globalBinFromLocalBins(indexBin);
   }
 
   /// @brief get the bin indices of the cell containing the largest number
   /// of (weighted) hits across the entire histogram
+  /// @return Pair of (x,y) bin indices where maximum hits are found
   std::pair<std::size_t, std::size_t> locMaxHits() const {
     return m_maxLocHits;
   }
 
   /// @brief get the maximum number of (weighted) layers with hits  seen
   /// in a single cell across the entire histrogram.
+  /// @return Maximum number of layers found in any single cell
   YieldType maxLayers() const { return m_maxLayers; }
 
   /// @brief get the bin indices of the cell containing the largest number
   /// of (weighted) layers with hits across the entire histogram
+  /// @return Pair of (x,y) bin indices where maximum layers are found
   std::pair<std::size_t, std::size_t> locMaxLayers() const {
     return m_maxLocLayers;
   }
@@ -301,7 +334,9 @@ class HoughPlane {
 namespace PeakFinders {
 /// configuration for the LayerGuidedCombinatoric peak finder
 struct LayerGuidedCombinatoricConfig {
+  /// Minimum number of layers required to form a peak
   YieldType threshold = 3.0f;  // min number of layers to obtain a maximum
+  /// Size of window for local maximum detection
   int localMaxWindowSize = 0;  // Only create candidates from a local maximum
 };
 
@@ -317,6 +352,7 @@ class LayerGuidedCombinatoric {
   /// @brief data class representing the found maxima.
   /// Here, we just have a list of cluster identifiers
   struct Maximum {
+    /// Set of hit identifiers contributing to this peak
     std::unordered_set<identifier_t> hitIdentifiers =
         {};  // identifiers of contributing hits
   };
@@ -342,10 +378,13 @@ class LayerGuidedCombinatoric {
 };
 /// @brief Configuration for the IslandsAroundMax peak finder
 struct IslandsAroundMaxConfig {
+  /// Minimum number of weighted hits required for a peak
   YieldType threshold =
       3.0f;  // min number of weigted hits required in a maximum
+  /// Fraction of global maximum below which peaks are ignored
   YieldType fractionCutoff =
       0;  // Fraction of the global maximum at which to cut off maxima
+  /// Minimum spacing between peaks in parameter space
   std::pair<CoordType, CoordType> minSpacingBetweenPeaks = {
       0.0f, 0.0f};  // minimum distance of a new peak from existing peaks in
                     // parameter space
@@ -362,10 +401,15 @@ class IslandsAroundMax {
   /// @brief data struct representing a local maximum.
   /// Comes with a position estimate and a list of hits within the island
   struct Maximum {
-    CoordType x = 0;   // x value of the maximum
-    CoordType y = 0;   // y value of the maximum
-    CoordType wx = 0;  // x width of the maximum
-    CoordType wy = 0;  // y width of the maximum
+    /// X coordinate of the peak maximum
+    CoordType x = 0;
+    /// Y coordinate of the peak maximum
+    CoordType y = 0;
+    /// Width of the peak in X direction
+    CoordType wx = 0;
+    /// Width of the peak in Y direction
+    CoordType wy = 0;
+    /// Set of hit identifiers contributing to this peak
     std::unordered_set<identifier_t> hitIdentifiers =
         {};  // identifiers of contributing hits
   };

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -32,6 +31,8 @@ namespace Acts {
 /// be restricted to a phi-range around the center position.
 class EllipseBounds : public PlanarBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues {
     eInnerRx = 0,
     eInnerRy = 1,
@@ -67,24 +68,25 @@ class EllipseBounds : public PlanarBounds {
     checkConsistency();
   }
 
-  BoundsType type() const final { return SurfaceBounds::eEllipse; }
+  /// @copydoc SurfaceBounds::type
+  BoundsType type() const final { return eEllipse; }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
-  /// This method checks if the point given in the local coordinates is between
-  /// two ellipsoids if only tol0 is given and additional in the phi sector is
-  /// tol1 is given
-  ///
-  /// @warning This **only** works for tolerance-based checks
-  ///
-  /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param boundaryTolerance boundary check directive
-  /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  /// @copydoc SurfaceBounds::inside
+  bool inside(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
+
+  /// @copydoc SurfaceBounds::center
+  Vector2 center() const final;
 
   /// Return the vertices
   ///
@@ -100,10 +102,13 @@ class EllipseBounds : public PlanarBounds {
   const RectangleBounds& boundingBox() const final;
 
   /// Output Method for std::ostream
+  /// @param sl The output stream to write to
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

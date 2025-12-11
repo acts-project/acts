@@ -50,7 +50,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Copy move constructor
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterialT(ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
+  ProtoSurfaceMaterialT(ProtoSurfaceMaterialT<BinningType>&& smproxy) noexcept =
+      default;
 
   /// Destructor
   ~ProtoSurfaceMaterialT() override = default;
@@ -65,7 +66,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   ///
   /// @param smproxy The source proxy
   ProtoSurfaceMaterialT<BinningType>& operator=(
-      ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
+      ProtoSurfaceMaterialT<BinningType>&& smproxy) noexcept = default;
 
   /// Scale operation - dummy implementation
   ///
@@ -109,8 +110,12 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   MaterialSlab m_materialSlab = MaterialSlab::Nothing();
 };
 
+/// @brief Type alias for a prototype surface material using BinUtility
+/// @details A surface material implementation that uses BinUtility for binning
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
+/// @brief Type alias for a prototype surface material using a grid of ProtoAxis
+/// @details A surface material implementation that uses a vector of ProtoAxis for grid-based binning
 using ProtoGridSurfaceMaterial =
     ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
 

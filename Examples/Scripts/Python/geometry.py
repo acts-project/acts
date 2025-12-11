@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import os
+import json
 from pathlib import Path
 
 import acts
-from acts import MaterialMapJsonConverter
+from acts.json import MaterialMapJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
     WhiteBoard,
@@ -12,6 +13,9 @@ from acts.examples import (
     ProcessCode,
     CsvTrackingGeometryWriter,
     ObjTrackingGeometryWriter,
+)
+
+from acts.examples.json import (
     JsonSurfacesWriter,
     JsonMaterialWriter,
     JsonFormat,
@@ -40,8 +44,8 @@ def runGeometry(
                 raise RuntimeError("Failed to decorate event context")
 
         if outputCsv:
-            # if not os.path.isdir(outputDir + "/csv"):
-            #    os.makedirs(outputDir + "/csv")
+            # if not os.path.isdir(outputDir / "csv"):
+            #    os.makedirs(outputDir / "csv")
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -57,8 +61,8 @@ def runGeometry(
             writer.write(context, trackingGeometry)
 
         if outputJson:
-            # if not os.path.isdir(outputDir + "/json"):
-            #    os.makedirs(outputDir + "/json")
+            # if not os.path.isdir(outputDir / "json"):
+            #    os.makedirs(outputDir / "json")
             writer = JsonSurfacesWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -100,7 +104,7 @@ if "__main__" == __name__:
     # dd4hepIdGeoIdMap = acts.examples.dd4hep.createDD4hepIdGeoIdMap(trackingGeometry)
     # dd4hepIdGeoIdValueMap = {}
     # for key, value in dd4hepIdGeoIdMap.items():
-    #     dd4hepIdGeoIdValueMap[key] = value.value()
+    #     dd4hepIdGeoIdValueMap[key] = value.value
 
     # with open('odd-dd4hep-geoid-mapping.json', 'w') as outfile:
     #    json.dump(dd4hepIdGeoIdValueMap, outfile)

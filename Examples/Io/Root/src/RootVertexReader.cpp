@@ -41,16 +41,61 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
 
   // Set the branches
   m_inputChain->SetBranchAddress("event_id", &m_eventId);
-  m_inputChain->SetBranchAddress("vertex_id", &m_vertexId);
-  m_inputChain->SetBranchAddress("process", &m_process);
-  m_inputChain->SetBranchAddress("vx", &m_vx);
-  m_inputChain->SetBranchAddress("vy", &m_vy);
-  m_inputChain->SetBranchAddress("vz", &m_vz);
-  m_inputChain->SetBranchAddress("vt", &m_vt);
-  m_inputChain->SetBranchAddress("outgoing_particles", &m_outgoingParticles);
-  m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary);
-  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary);
-  m_inputChain->SetBranchAddress("generation", &m_generation);
+  m_inputChain->SetBranchAddress("process", &m_process.get());
+  m_inputChain->SetBranchAddress("vx", &m_vx.get());
+  m_inputChain->SetBranchAddress("vy", &m_vy.get());
+  m_inputChain->SetBranchAddress("vz", &m_vz.get());
+  m_inputChain->SetBranchAddress("vt", &m_vt.get());
+  if (m_inputChain->GetBranch("incoming_particles") != nullptr) {
+    m_hasCombinedIncoming = true;
+    m_incomingParticles.allocate();
+    m_inputChain->SetBranchAddress("incoming_particles",
+                                   &m_incomingParticles.get());
+  } else {
+    m_hasCombinedIncoming = false;
+    m_incomingParticlesVertexPrimary.allocate();
+    m_incomingParticlesVertexSecondary.allocate();
+    m_incomingParticlesParticle.allocate();
+    m_incomingParticlesGeneration.allocate();
+    m_incomingParticlesSubParticle.allocate();
+    m_inputChain->SetBranchAddress("incoming_particles_vertex_primary",
+                                   &m_incomingParticlesVertexPrimary.get());
+    m_inputChain->SetBranchAddress("incoming_particles_vertex_secondary",
+                                   &m_incomingParticlesVertexSecondary.get());
+    m_inputChain->SetBranchAddress("incoming_particles_particle",
+                                   &m_incomingParticlesParticle.get());
+    m_inputChain->SetBranchAddress("incoming_particles_generation",
+                                   &m_incomingParticlesGeneration.get());
+    m_inputChain->SetBranchAddress("incoming_particles_sub_particle",
+                                   &m_incomingParticlesSubParticle.get());
+  }
+
+  if (m_inputChain->GetBranch("outgoing_particles") != nullptr) {
+    m_hasCombinedOutgoing = true;
+    m_outgoingParticles.allocate();
+    m_inputChain->SetBranchAddress("outgoing_particles",
+                                   &m_outgoingParticles.get());
+  } else {
+    m_hasCombinedOutgoing = false;
+    m_outgoingParticlesVertexPrimary.allocate();
+    m_outgoingParticlesVertexSecondary.allocate();
+    m_outgoingParticlesParticle.allocate();
+    m_outgoingParticlesGeneration.allocate();
+    m_outgoingParticlesSubParticle.allocate();
+    m_inputChain->SetBranchAddress("outgoing_particles_vertex_primary",
+                                   &m_outgoingParticlesVertexPrimary.get());
+    m_inputChain->SetBranchAddress("outgoing_particles_vertex_secondary",
+                                   &m_outgoingParticlesVertexSecondary.get());
+    m_inputChain->SetBranchAddress("outgoing_particles_particle",
+                                   &m_outgoingParticlesParticle.get());
+    m_inputChain->SetBranchAddress("outgoing_particles_generation",
+                                   &m_outgoingParticlesGeneration.get());
+    m_inputChain->SetBranchAddress("outgoing_particles_sub_particle",
+                                   &m_outgoingParticlesSubParticle.get());
+  }
+  m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary.get());
+  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary.get());
+  m_inputChain->SetBranchAddress("generation", &m_generation.get());
 
   auto path = m_cfg.filePath;
 
@@ -78,19 +123,6 @@ std::pair<std::size_t, std::size_t> RootVertexReader::availableEvents() const {
   return {0u, m_events};
 }
 
-RootVertexReader::~RootVertexReader() {
-  delete m_vertexId;
-  delete m_process;
-  delete m_vx;
-  delete m_vy;
-  delete m_vz;
-  delete m_vt;
-  delete m_outgoingParticles;
-  delete m_vertexPrimary;
-  delete m_vertexSecondary;
-  delete m_generation;
-}
-
 ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded vertices.");
 
@@ -111,22 +143,76 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Reading event: " << context.eventNumber
                                << " stored as entry: " << entry);
 
-  unsigned int nVertices = m_vertexId->size();
+  unsigned int nVertices = m_vx->size();
 
   for (unsigned int i = 0; i < nVertices; i++) {
     SimVertex v;
 
-    v.id = SimVertexBarcode{(*m_vertexId)[i]};
+    v.id = SimVertexBarcode()
+               .withVertexPrimary((*m_vertexPrimary)[i])
+               .withVertexSecondary((*m_vertexSecondary)[i])
+               .withGeneration((*m_generation)[i]);
+
     v.process = static_cast<ActsFatras::ProcessType>((*m_process)[i]);
     v.position4 = Acts::Vector4((*m_vx)[i] * Acts::UnitConstants::mm,
                                 (*m_vy)[i] * Acts::UnitConstants::mm,
                                 (*m_vz)[i] * Acts::UnitConstants::mm,
                                 (*m_vt)[i] * Acts::UnitConstants::mm);
 
-    // TODO ingoing particles
+    // incoming particles
+    if (m_hasCombinedIncoming && m_incomingParticles.hasValue()) {
+      for (auto& barcodeComponents : (*m_incomingParticles)[i]) {
+        v.incoming.insert(SimBarcode().withData(barcodeComponents));
+      }
+    } else if (m_incomingParticlesVertexPrimary.hasValue()) {
+      const auto& incomingPrimaries = (*m_incomingParticlesVertexPrimary)[i];
+      const auto& incomingSecondaries =
+          (*m_incomingParticlesVertexSecondary)[i];
+      const auto& incomingParticles = (*m_incomingParticlesParticle)[i];
+      const auto& incomingGenerations = (*m_incomingParticlesGeneration)[i];
+      const auto& incomingSubParticles = (*m_incomingParticlesSubParticle)[i];
+      for (std::size_t j = 0; j < incomingPrimaries.size(); ++j) {
+        v.incoming.insert(
+            SimBarcode()
+                .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(
+                    incomingPrimaries[j]))
+                .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                    incomingSecondaries[j]))
+                .withParticle(
+                    static_cast<SimBarcode::ParticleId>(incomingParticles[j]))
+                .withGeneration(static_cast<SimBarcode::GenerationId>(
+                    incomingGenerations[j]))
+                .withSubParticle(static_cast<SimBarcode::SubParticleId>(
+                    incomingSubParticles[j])));
+      }
+    }
 
-    for (auto& id : (*m_outgoingParticles)[i]) {
-      v.outgoing.insert(SimBarcode{id});
+    // outgoing particles
+    if (m_hasCombinedOutgoing && m_outgoingParticles.hasValue()) {
+      for (auto& barcodeComponents : (*m_outgoingParticles)[i]) {
+        v.outgoing.insert(SimBarcode().withData(barcodeComponents));
+      }
+    } else if (m_outgoingParticlesVertexPrimary.hasValue()) {
+      const auto& outgoingPrimaries = (*m_outgoingParticlesVertexPrimary)[i];
+      const auto& outgoingSecondaries =
+          (*m_outgoingParticlesVertexSecondary)[i];
+      const auto& outgoingParticles = (*m_outgoingParticlesParticle)[i];
+      const auto& outgoingGenerations = (*m_outgoingParticlesGeneration)[i];
+      const auto& outgoingSubParticles = (*m_outgoingParticlesSubParticle)[i];
+      for (std::size_t j = 0; j < outgoingPrimaries.size(); ++j) {
+        v.outgoing.insert(
+            SimBarcode()
+                .withVertexPrimary(static_cast<SimBarcode::PrimaryVertexId>(
+                    outgoingPrimaries[j]))
+                .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                    outgoingSecondaries[j]))
+                .withParticle(
+                    static_cast<SimBarcode::ParticleId>(outgoingParticles[j]))
+                .withGeneration(static_cast<SimBarcode::GenerationId>(
+                    outgoingGenerations[j]))
+                .withSubParticle(static_cast<SimBarcode::SubParticleId>(
+                    outgoingSubParticles[j])));
+      }
     }
 
     vertices.insert(v);

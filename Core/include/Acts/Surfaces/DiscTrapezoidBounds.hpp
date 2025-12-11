@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -30,6 +29,8 @@ namespace Acts {
 ///
 class DiscTrapezoidBounds : public DiscBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int {
     eHalfLengthXminR = 0,
     eHalfLengthXmaxR = 1,
@@ -62,37 +63,54 @@ class DiscTrapezoidBounds : public DiscBounds {
     checkConsistency();
   }
 
-  BoundsType type() const final { return SurfaceBounds::eDiscTrapezoid; }
+  /// @copydoc SurfaceBounds::type
+  BoundsType type() const final { return eDiscTrapezoid; }
+
+  /// @copydoc SurfaceBounds::isCartesian
+  bool isCartesian() const final { return false; }
+
+  /// @copydoc SurfaceBounds::boundToCartesianJacobian
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::boundToCartesianMetric
+  SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final;
 
   /// Return the bound values as dynamically sized vector
-  ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
-  ///  This method checks if the radius given in the LocalPosition is inside
-  ///  [rMin,rMax]
-  /// if only tol0 is given and additional in the phi sector is tol1 is given
-  /// @param lposition is the local position to be checked (in polar
-  /// coordinates)
-  /// @param boundaryTolerance is the boundary check directive
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance =
-                  BoundaryTolerance::None()) const final;
+  /// @copydoc SurfaceBounds::inside
+  bool inside(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
+
+  /// @copydoc SurfaceBounds::center
+  Vector2 center() const final;
 
   /// Output Method for std::ostream
+  /// @param sl The output stream to write to
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// This method returns inner radius
+  /// @return Minimum radius of the disc trapezoid
   double rMin() const final { return get(eMinR); }
 
   /// This method returns outer radius
+  /// @return Maximum radius of the disc trapezoid
   double rMax() const final { return get(eMaxR); }
 
   /// This method returns the center radius
+  /// @return Center radius calculated from inner and outer bounds
   double rCenter() const {
     double rmin = get(eMinR);
     double rmax = get(eMaxR);
@@ -104,9 +122,11 @@ class DiscTrapezoidBounds : public DiscBounds {
   }
 
   /// This method returns the stereo angle
+  /// @return Stereo angle of the disc trapezoid
   double stereo() const { return get(eStereo); }
 
   /// This method returns the halfPhiSector which is covered by the disc
+  /// @return Half phi sector angle covered by the disc trapezoid
   double halfPhiSector() const {
     auto minHalfPhi = std::asin(get(eHalfLengthXminR) / get(eMinR));
     auto maxHalfPhi = std::asin(get(eHalfLengthXmaxR) / get(eMaxR));
@@ -114,6 +134,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   }
 
   /// This method returns the half length in Y (this is Rmax -Rmin)
+  /// @return Half length in Y direction calculated from radial bounds
   double halfLengthY() const {
     double rmin = get(eMinR);
     double rmax = get(eMaxR);
@@ -125,18 +146,24 @@ class DiscTrapezoidBounds : public DiscBounds {
   }
 
   /// Returns true for full phi coverage - obviously false here
+  /// @return Always false since disc trapezoids have limited phi coverage
   bool coversFullAzimuth() const final { return false; }
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
+  /// @param R The radius value to check
+  /// @param tolerance The tolerance for the check
+  /// @return True if radius is within bounds (plus tolerance), false otherwise
   bool insideRadialBounds(double R, double tolerance = 0.) const final {
     return (R + tolerance > get(eMinR) && R - tolerance < get(eMaxR));
   }
 
   /// Return a reference radius for binning
+  /// @return Average radius for binning purposes
   double binningValueR() const final { return 0.5 * (get(eMinR) + get(eMaxR)); }
 
   /// Return a reference phi for binning
+  /// @return Average phi angle for binning purposes
   double binningValuePhi() const final { return get(eAveragePhi); }
 
   /// This method returns the xy coordinates of the four corners of the
@@ -163,12 +190,6 @@ class DiscTrapezoidBounds : public DiscBounds {
   ///
   /// @param lposition The local position in polar coordinates
   Vector2 toLocalCartesian(const Vector2& lposition) const;
-
-  /// Jacobian
-  /// into its Cartesian representation
-  ///
-  /// @param lposition The local position in polar coordinates
-  SquareMatrix2 jacobianToLocalCartesian(const Vector2& lposition) const;
 };
 
 }  // namespace Acts

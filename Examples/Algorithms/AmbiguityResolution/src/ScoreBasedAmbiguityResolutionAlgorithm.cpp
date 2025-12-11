@@ -10,12 +10,12 @@
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/Plugins/Json/AmbiguityConfigJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsPlugins/Json/AmbiguityConfigJsonConverter.hpp"
 
 #include <fstream>
 
@@ -122,7 +122,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   for (auto iTrack : goodTracks) {
     auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(iTrack);
-    destProxy.copyFrom(srcProxy, false);
+    destProxy.copyFromWithoutStates(srcProxy);
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 

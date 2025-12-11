@@ -119,7 +119,7 @@ Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,
   // create the position in the local 3d frame
   double r = lposition[1] * bounds().tanAlpha();
   double phi = lposition[0] / r;
-  Vector3 loc3Dframe(r * cos(phi), r * sin(phi), lposition[1]);
+  Vector3 loc3Dframe(r * std::cos(phi), r * std::sin(phi), lposition[1]);
   return transform(gctx) * loc3Dframe;
 }
 
@@ -132,7 +132,7 @@ Result<Vector2> ConeSurface::globalToLocal(const GeometryContext& gctx,
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Vector2>::success(
-      Vector2(r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()));
+      Vector2(r * std::atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()));
 }
 
 double ConeSurface::pathCorrection(const GeometryContext& gctx,
@@ -141,11 +141,12 @@ double ConeSurface::pathCorrection(const GeometryContext& gctx,
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   Vector3 posLocal = transform(gctx).inverse() * position;
   double phi = VectorHelpers::phi(posLocal);
-  double sgn = posLocal.z() > 0. ? -1. : +1.;
+  double sgn = -std::copysign(1., posLocal.z());
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
-  Vector3 normalC(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
-  normalC = transform(gctx) * normalC;
+  Vector3 normalC(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
+                  sgn * sinAlpha);
+  normalC = transform(gctx).linear() * normalC;
   // Back to the global frame
   double cAlpha = normalC.dot(direction);
   return std::abs(1. / cAlpha);
@@ -159,10 +160,11 @@ Vector3 ConeSurface::normal(const GeometryContext& gctx,
                             const Vector2& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   double phi = lposition[0] / (bounds().r(lposition[1])),
-         sgn = lposition[1] > 0 ? -1. : +1.;
+         sgn = -std::copysign(1., lposition[1]);
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
-  Vector3 localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
+  Vector3 localNormal(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
+                      sgn * sinAlpha);
   return Vector3(transform(gctx).linear() * localNormal);
 }
 
@@ -278,7 +280,7 @@ detail::RealQuadraticEquation ConeSurface::intersectionSolver(
   return detail::RealQuadraticEquation(A, B, C);
 }
 
-SurfaceMultiIntersection ConeSurface::intersect(
+MultiIntersection3D ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -287,9 +289,8 @@ SurfaceMultiIntersection ConeSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()},
-            this,
-            boundaryTolerance};
+    return MultiIntersection3D(Intersection3D::Invalid(),
+                               Intersection3D::Invalid());
   }
 
   // Check the validity of the first solution
@@ -319,9 +320,9 @@ SurfaceMultiIntersection ConeSurface::intersect(
   Intersection3D second(tf * solution2, qe.second, status2);
   // Order based on path length
   if (first.pathLength() <= second.pathLength()) {
-    return {{first, second}, this, boundaryTolerance};
+    return MultiIntersection3D(first, second);
   }
-  return {{second, first}, this, boundaryTolerance};
+  return MultiIntersection3D(second, first);
 }
 
 AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
@@ -396,5 +397,11 @@ ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
-
+const std::shared_ptr<const ConeBounds>& ConeSurface::boundsPtr() const {
+  return m_bounds;
+}
+void ConeSurface::assignSurfaceBounds(
+    std::shared_ptr<const ConeBounds> newBounds) {
+  m_bounds = std::move(newBounds);
+}
 }  // namespace Acts

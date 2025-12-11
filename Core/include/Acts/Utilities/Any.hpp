@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/HashedString.hpp"
+
 #include <any>
 #include <array>
 #include <cassert>
@@ -77,6 +79,9 @@ static std::set<std::pair<std::type_index, void*>> _s_any_allocations;
     _s_any_allocations.erase(it);                                             \
   } while (0)
 
+// Do not make member functions noexcept in the debug case
+#define _ACTS_ANY_NOEXCEPT /*nothing*/
+
 struct _AnyAllocationReporter {
   static void checkAllocations() {
     std::lock_guard guard{_s_any_mutex};
@@ -100,6 +105,7 @@ static _AnyAllocationReporter s_reporter;
 #define _ACTS_ANY_TRACK_DEALLOCATION(T, heap) \
   do {                                        \
   } while (0)
+#define _ACTS_ANY_NOEXCEPT noexcept
 #endif
 
 class AnyBaseAll {};
@@ -110,6 +116,10 @@ class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
 
  public:
+  /// Construct with in-place type construction
+  /// @tparam T Type to construct
+  /// @tparam Args Constructor argument types
+  /// @param args Arguments to forward to T's constructor
   template <typename T, typename... Args>
   explicit AnyBase(std::in_place_type_t<T> /*unused*/, Args&&... args) {
     using U = std::decay_t<T>;
@@ -142,16 +152,23 @@ class AnyBase : public AnyBaseAll {
   AnyBase() = default;
 #endif
 
+  /// Construct from any value type
+  /// @tparam T Type of the value to store
+  /// @param value Value to store in the Any
   template <typename T>
-  explicit AnyBase(T&& value)
+  explicit AnyBase(T&& value) _ACTS_ANY_NOEXCEPT
     requires(!std::same_as<std::decay_t<T>, AnyBase<SIZE>>)
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
+  /// Get reference to stored value of specified type
+  /// @tparam T Type to retrieve (must be exact type, no const/ref)
+  /// @return Reference to the stored value
+  /// @throws std::bad_any_cast if stored type doesn't match T
   template <typename T>
   T& as() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (makeHandler<T>() != m_handler) {
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
       throw std::bad_any_cast{};
     }
 
@@ -161,11 +178,15 @@ class AnyBase : public AnyBaseAll {
     return *reinterpret_cast<T*>(dataPtr());
   }
 
+  /// Get const reference to stored value of specified type
+  /// @tparam T Type to retrieve (must be exact type, no const/ref)
+  /// @return Const reference to the stored value
+  /// @throws std::bad_any_cast if stored type doesn't match T
   template <typename T>
   const T& as() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (makeHandler<T>() != m_handler) {
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
       throw std::bad_any_cast{};
     }
 
@@ -176,7 +197,9 @@ class AnyBase : public AnyBaseAll {
 
   ~AnyBase() { destroy(); }
 
-  AnyBase(const AnyBase& other) {
+  /// Copy constructor
+  /// @param other The AnyBase to copy from
+  AnyBase(const AnyBase& other) _ACTS_ANY_NOEXCEPT {
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return;
@@ -189,7 +212,10 @@ class AnyBase : public AnyBaseAll {
     copyConstruct(other);
   }
 
-  AnyBase& operator=(const AnyBase& other) {
+  /// Copy assignment operator
+  /// @param other The AnyBase to copy from
+  /// @return Reference to this object
+  AnyBase& operator=(const AnyBase& other) _ACTS_ANY_NOEXCEPT {
     _ACTS_ANY_VERBOSE("Copy assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
 
@@ -213,7 +239,9 @@ class AnyBase : public AnyBaseAll {
     return *this;
   }
 
-  AnyBase(AnyBase&& other) noexcept {
+  /// Move constructor
+  /// @param other The AnyBase to move from
+  AnyBase(AnyBase&& other) _ACTS_ANY_NOEXCEPT {
     _ACTS_ANY_VERBOSE("Move construct (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -225,7 +253,10 @@ class AnyBase : public AnyBaseAll {
     moveConstruct(std::move(other));
   }
 
-  AnyBase& operator=(AnyBase&& other) {
+  /// Move assignment operator
+  /// @param other The AnyBase to move from
+  /// @return Reference to this object
+  AnyBase& operator=(AnyBase&& other) _ACTS_ANY_NOEXCEPT {
     _ACTS_ANY_VERBOSE("Move assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -249,6 +280,8 @@ class AnyBase : public AnyBaseAll {
     return *this;
   }
 
+  /// Check if the AnyBase contains a value
+  /// @return True if a value is stored, false if empty
   explicit operator bool() const { return m_handler != nullptr; }
 
  private:
@@ -270,6 +303,13 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
+  template <typename T>
+  static consteval std::uint64_t typeHash() {
+    // Technically, `__PRETTY_FUNCTION__` contains extra content, but should be
+    // unique per type, that's all we care about.
+    return detail::fnv1a_64(__PRETTY_FUNCTION__);
+  }
+
   struct Handler {
     void (*destroy)(void* ptr) = nullptr;
     void (*moveConstruct)(void* from, void* to) = nullptr;
@@ -277,6 +317,7 @@ class AnyBase : public AnyBaseAll {
     void* (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
     bool heapAllocated{false};
+    std::uint64_t typeHash{0};
   };
 
   template <typename T>
@@ -305,6 +346,8 @@ class AnyBase : public AnyBaseAll {
                     heapAllocated<T>()) {
         h.copy = &copyImpl<T>;
       }
+
+      h.typeHash = typeHash<T>();
 
       _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
       _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
@@ -509,6 +552,10 @@ class AnyBase : public AnyBaseAll {
   const Handler* m_handler{nullptr};
 };
 
+/// @brief A type-safe container for single values of any type
+/// @details This is a custom implementation similar to std::any but optimized for small types
+///          that can fit into a pointer-sized buffer. Values larger than a
+///          pointer are stored on the heap.
 using Any = AnyBase<sizeof(void*)>;
 
 #undef _ACTS_ANY_VERBOSE

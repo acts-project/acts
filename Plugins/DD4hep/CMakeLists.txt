@@ -1,19 +1,17 @@
 include(FetchContent)
 
-add_library(
-    ActsPluginDD4hep
+acts_add_library(
+    PluginDD4hep
     SHARED
     src/ConvertDD4hepDetector.cpp
-    src/DD4hepBlueprintFactory.cpp
     src/DD4hepBinningHelpers.cpp
-    src/DD4hepDetectorStructure.cpp
     src/DD4hepMaterialHelpers.cpp
     src/DD4hepDetectorElement.cpp
     src/DD4hepDetectorSurfaceFactory.cpp
     src/DD4hepLayerBuilder.cpp
-    src/DD4hepLayerStructure.cpp
     src/DD4hepVolumeBuilder.cpp
     src/DD4hepFieldAdapter.cpp
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 target_include_directories(
@@ -22,7 +20,7 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(ActsPluginDD4hep PUBLIC ActsCore ActsPluginRoot)
+target_link_libraries(ActsPluginDD4hep PUBLIC Acts::PluginRoot)
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
     target_include_directories(ActsPluginDD4hep PUBLIC ${DD4hep_INCLUDE_DIRS})
@@ -30,10 +28,3 @@ if(${DD4hep_VERSION} VERSION_LESS 1.11)
 else()
     target_link_libraries(ActsPluginDD4hep PUBLIC DD4hep::DDCore DD4hep::DDRec)
 endif()
-
-install(
-    TARGETS ActsPluginDD4hep
-    EXPORT ActsPluginDD4hepTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

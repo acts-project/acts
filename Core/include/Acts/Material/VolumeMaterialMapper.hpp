@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -20,7 +17,6 @@
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -32,7 +28,6 @@
 #include <map>
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace Acts {
 
@@ -66,6 +61,7 @@ class TrackingGeometry;
 
 class VolumeMaterialMapper {
  public:
+  /// Type alias for straight line propagator used in material mapping
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
   /// @struct Config
@@ -81,6 +77,8 @@ class VolumeMaterialMapper {
   /// Nested State struct which is used for the mapping prococess
   struct State {
     /// Constructor of the State with contexts
+    /// @param gctx Geometry context for volume material mapping
+    /// @param mctx Magnetic field context for volume material mapping
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
 
@@ -144,6 +142,7 @@ class VolumeMaterialMapper {
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
+  /// @return State object configured for volume material mapping
   State createState(const GeometryContext& gctx,
                     const MagneticFieldContext& mctx,
                     const TrackingGeometry& tGeometry) const;

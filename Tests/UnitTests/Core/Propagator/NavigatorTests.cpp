@@ -13,8 +13,13 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -22,21 +27,26 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <string>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -47,12 +57,13 @@ void step(Vector3& pos, const Vector3& dir, double stepSize) {
 }
 
 void step(Vector3& pos, const Vector3& dir, const Surface& surface) {
-  auto intersection = surface.intersect(tgContext, pos, dir).closestForward();
+  Intersection3D intersection =
+      surface.intersect(tgContext, pos, dir).closestForward();
   step(pos, dir, intersection.pathLength());
 }
 
 void step(Vector3& pos, const Vector3& dir, const NavigationTarget& target) {
-  step(pos, dir, *target.surface);
+  step(pos, dir, target.surface());
 }
 
 /// @brief Method for testing vectors in @c Navigator::State
@@ -110,6 +121,8 @@ const double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
 Logging::Level logLevel = Logging::INFO;
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
@@ -286,13 +299,14 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK_EQUAL(state.navLayerIndex.value(), 0);
   // Check the target is correct
-  BOOST_CHECK_EQUAL(target.surface, state.navLayer().first.object());
+  BOOST_CHECK_EQUAL(&target.surface(), &state.navLayer().surface());
   // Intersect the target
-  auto targetIntersection =
-      target.surface->intersect(tgContext, position, direction)
+  Intersection3D targetIntersection =
+      target.surface()
+          .intersect(tgContext, position, direction)
           .closestForward();
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navLayer().first.position());
+  double beamPipeR = perp(state.navLayer().position());
   // step size has been updated
   CHECK_CLOSE_ABS(targetIntersection.pathLength(), beamPipeR,
                   s_onSurfaceTolerance);
@@ -304,7 +318,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // (2) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // Check that the currentVolume is the still startVolume
   BOOST_CHECK_EQUAL(state.currentVolume, state.startVolume);
   // The layer number has not changed
@@ -323,7 +337,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // (3) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
 
   ACTS_INFO("<<< Test 1c >>> step to the Boundary at  " << toString(position));
 
@@ -331,7 +345,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(!target.isNone());
   // Intersect the target
-  targetIntersection = target.surface->intersect(tgContext, position, direction)
+  targetIntersection = target.surface()
+                           .intersect(tgContext, position, direction)
                            .closestForward();
 
   // positive return: do the step
@@ -339,7 +354,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // (4) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
 
   ACTS_INFO("<<< Test 1d >>> step to 1st layer at  " << toString(position));
 
@@ -352,7 +367,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     step(position, direction, target);
     // (5-9) re-entering navigator:
     // POST STEP
-    navigator.handleSurfaceReached(state, position, direction, *target.surface);
+    navigator.handleSurfaceReached(state, position, direction,
+                                   target.surface());
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
     BOOST_CHECK(!target.isNone());
@@ -365,7 +381,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   step(position, direction, target);
   // (10) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(!target.isNone());
@@ -377,7 +393,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     step(position, direction, target);
     // (11-15) re-entering navigator:
     // POST STEP
-    navigator.handleSurfaceReached(state, position, direction, *target.surface);
+    navigator.handleSurfaceReached(state, position, direction,
+                                   target.surface());
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
     BOOST_CHECK(!target.isNone());
@@ -390,7 +407,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   step(position, direction, target);
   // (16) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(!target.isNone());
@@ -402,7 +419,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     step(position, direction, target);
     // (17-19) re-entering navigator:
     // POST STEP
-    navigator.handleSurfaceReached(state, position, direction, *target.surface);
+    navigator.handleSurfaceReached(state, position, direction,
+                                   target.surface());
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
     BOOST_CHECK(!target.isNone());
@@ -415,7 +433,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   step(position, direction, target);
   // (20) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(!target.isNone());
@@ -427,7 +445,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     step(position, direction, target);
     // (21-23) re-entering navigator:
     // POST STEP
-    navigator.handleSurfaceReached(state, position, direction, *target.surface);
+    navigator.handleSurfaceReached(state, position, direction,
+                                   target.surface());
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
     BOOST_CHECK(!target.isNone());
@@ -440,7 +459,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   step(position, direction, target);
   // (24) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(target.isNone());
@@ -530,8 +549,8 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
 
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
-    BOOST_CHECK_NE(target.surface, surfaces.at(0));
-    BOOST_CHECK_NE(target.surface, surfaces.at(1));
+    BOOST_CHECK_NE(&target.surface(), surfaces.at(0));
+    BOOST_CHECK_NE(&target.surface(), surfaces.at(1));
   }
 
   // check if we find a target starting from the top without external surfaces
@@ -551,7 +570,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceTop);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
   // check if we find a target starting from the bottom without external
@@ -572,7 +591,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceBottom);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
   // check if we find the top surface starting from the middle with external
@@ -594,7 +613,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceTop);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
   // check if we find the bottom surface starting from the top with external
@@ -616,7 +635,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceBottom);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
   // check if we find the top surface starting from the bottom with external
@@ -638,8 +657,153 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceTop);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
+  auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+
+  Experimental::Blueprint::Config cfg;
+  cfg.envelope = ExtentEnvelope{{
+      .z = {20_mm, 20_mm},
+      .r = {0_mm, 20_mm},
+  }};
+
+  Experimental::Blueprint root{cfg};
+
+  auto& cubcontainer =
+      root.addCuboidContainer("CuboidContainer", AxisDirection::AxisZ);
+
+  auto parentBounds = std::make_shared<CuboidVolumeBounds>(1_m, 1_m, 1_m);
+
+  auto parentVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
+                                                    parentBounds, "parent");
+
+  std::shared_ptr<const PlanarBounds> planarBounds =
+      std::make_shared<const RectangleBounds>(5., 10.);
+
+  auto surface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
+                                                   std::move(planarBounds));
+
+  auto detElement =
+      std::make_unique<DetectorElementStub>(Transform3::Identity());
+
+  surface->assignDetectorElement(*detElement);
+
+  parentVol->assignGeometryId(GeometryIdentifier{}.withVolume(1));
+  parentVol->addSurface(surface);
+  auto parentNode =
+      std::make_shared<Experimental::StaticBlueprintNode>(std::move(parentVol));
+
+  // put two tracking volumes in the sides of the parent as children and a plane
+  // surface in the middle of the parent volume
+  double startZ1 = -1000. + 100. + 1.;
+  double startZ2 = 1000. - 100. - 1.;
+  Transform3 trf1 = Transform3(Translation3(0., 0., startZ1));
+  Transform3 trf2 = Transform3(Translation3(0., 0., startZ2));
+
+  auto childBounds = std::make_shared<CuboidVolumeBounds>(1_m, 1_m, 10_cm);
+  auto childVol1 =
+      std::make_unique<TrackingVolume>(trf1, childBounds, "child1");
+  childVol1->assignGeometryId(GeometryIdentifier{}.withVolume(2));
+
+  auto childNode1 =
+      std::make_shared<Experimental::StaticBlueprintNode>(std::move(childVol1));
+
+  auto childVol2 =
+      std::make_unique<TrackingVolume>(trf2, childBounds, "child2");
+  childVol2->assignGeometryId(GeometryIdentifier{}.withVolume(3));
+
+  auto childNode2 =
+      std::make_shared<Experimental::StaticBlueprintNode>(std::move(childVol2));
+
+  parentNode->addChild(childNode1);
+  parentNode->addChild(childNode2);
+
+  cubcontainer.addChild(std::move(parentNode));
+
+  auto trackingGeometry = root.construct({}, tgContext, *logger);
+
+  Navigator::Config navCfg;
+  navCfg.trackingGeometry =
+      std::shared_ptr<const TrackingGeometry>(std::move(trackingGeometry));
+  navCfg.resolveSensitive = true;
+  navCfg.resolveMaterial = true;
+  navCfg.resolvePassive = false;
+  Navigator navigator(navCfg, logger->clone("Navigator"));
+
+  Navigator::Options options(tgContext);
+  Navigator::State state = navigator.makeState(options);
+
+  Vector3 position{0., 0., -1000. + 0.5};
+  Vector3 direction = Vector3::UnitZ();
+
+  Result<void> result =
+      navigator.initialize(state, position, direction, Direction::Forward());
+  BOOST_CHECK(result.ok());
+  BOOST_CHECK(state.currentVolume != nullptr);
+  BOOST_CHECK(state.currentVolume->volumeName() == "parent");
+  BOOST_CHECK_EQUAL(state.currentSurface, nullptr);
+
+  // Do the chain simulating a straight line propagation
+  // and check if we end up to the expected elements
+
+  NavigationTarget target = navigator.nextTarget(state, position, direction);
+
+  // it is supposed to find the boundary of the next child volume
+  BOOST_CHECK(!target.isNone());
+  auto targetGeoId = target.surface().geometryId();
+  // portal of child1 volume as expected
+  BOOST_CHECK(targetGeoId.volume() == 2 && targetGeoId.boundary() == 1);
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
+  // check that we end up in the expected volume (child1)
+  BOOST_CHECK(state.currentVolume->volumeName() == "child1");
+
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
+  targetGeoId = target.surface().geometryId();
+  // portal of child1 volume as expected
+  BOOST_CHECK(targetGeoId.volume() == 2 && targetGeoId.boundary() == 2);
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
+  // check that we end up in the expected volume (parent)
+  BOOST_CHECK(state.currentVolume->volumeName() == "parent");
+  // the next target should be the plane surface inside the parent volume
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
+  BOOST_CHECK_EQUAL(&target.surface(), surface.get());
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
+  // check that we are still in the parent volume
+  BOOST_CHECK(state.currentVolume->volumeName() == "parent");
+
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
+  targetGeoId = target.surface().geometryId();
+  // portal of child2 volume as expected
+  BOOST_CHECK(targetGeoId.volume() == 3 && targetGeoId.boundary() == 1);
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
+  // check that we end up in the expected volume (child2)
+  BOOST_CHECK(state.currentVolume->volumeName() == "child2");
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
+  targetGeoId = target.surface().geometryId();
+  // portal of child2 volume as expected
+  BOOST_CHECK(targetGeoId.volume() == 3 && targetGeoId.boundary() == 2);
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
+  // check that we end up in the expected volume (parent)
+  BOOST_CHECK(state.currentVolume->volumeName() == "parent");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

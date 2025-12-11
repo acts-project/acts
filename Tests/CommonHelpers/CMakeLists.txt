@@ -5,8 +5,13 @@ add_library(
     ActsTestsCommonHelpers
     SHARED
     src/DataDirectory.cpp
-    src/CylindricalDetector.cpp
+    src/DetectorElementStub.cpp
+    src/CubicTrackingGeometry.cpp
+    src/CylindricalTrackingGeometry.cpp
 )
+
+add_library(Acts::TestsCommonHelpers ALIAS ActsTestsCommonHelpers)
+
 target_compile_definitions(
     ActsTestsCommonHelpers
     PRIVATE
@@ -17,10 +22,18 @@ target_include_directories(
     ActsTestsCommonHelpers
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
-target_link_libraries(
-    ActsTestsCommonHelpers
-    PUBLIC ActsCore ActsExamplesFramework
-    PRIVATE std::filesystem
-)
+if(ACTS_BUILD_EXAMPLES)
+    target_link_libraries(
+        ActsTestsCommonHelpers
+        PUBLIC Acts::Core Acts::ExamplesFramework
+        PRIVATE std::filesystem
+    )
+else()
+    target_link_libraries(
+        ActsTestsCommonHelpers
+        PUBLIC ActsCore
+        PRIVATE std::filesystem
+    )
+endif()
 
-acts_compile_headers(ActsTestsCommonHelpers GLOB "include/Acts/**/*.hpp")
+acts_compile_headers(TestsCommonHelpers GLOB "include/ActsTests/**/*.hpp")

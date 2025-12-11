@@ -11,9 +11,10 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 
 using namespace Acts;
-using namespace Acts::Experimental;
 
-BOOST_AUTO_TEST_SUITE(EventDataSeedContainer2)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Empty) {
   SeedContainer2 container;
@@ -31,7 +32,8 @@ BOOST_AUTO_TEST_CASE(Create) {
   container.reserve(1);
 
   {
-    auto seed = container.createSeed(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    auto seed = container.createSeed();
+    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
@@ -53,7 +55,8 @@ BOOST_AUTO_TEST_CASE(Iterate) {
   container.reserve(1);
 
   {
-    auto seed = container.createSeed(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    auto seed = container.createSeed();
+    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
@@ -70,7 +73,8 @@ BOOST_AUTO_TEST_CASE(CopyAndMove) {
   container.reserve(1);
 
   {
-    auto seed = container.createSeed(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    auto seed = container.createSeed();
+    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
@@ -95,7 +99,8 @@ BOOST_AUTO_TEST_CASE(Clear) {
   container.reserve(1);
 
   {
-    auto seed = container.createSeed(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    auto seed = container.createSeed();
+    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
@@ -110,3 +115,5 @@ BOOST_AUTO_TEST_CASE(Clear) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -66,6 +66,7 @@ struct associatedConstProxy<
 /// @tparam ReadOnly true if this is a const accessor
 template <typename T, bool ReadOnly>
 struct ProxyAccessorBase {
+  /// Hashed string key for data access
   HashedString key;
 
   /// Create the accessor from an already-hashed string key
@@ -107,10 +108,25 @@ struct ProxyAccessorBase {
       return cproxy.template component<T>(key);
     }
   }
+
+  /// Check if the stored key exists on the proxy given as an argument
+  /// @tparam proxy_t the type of the proxy
+  /// @param proxy the proxy object to check
+  /// @return true if the column exists, false otherwise
+  template <detail::ProxyType proxy_t>
+  bool hasColumn(proxy_t proxy) const {
+    return proxy.container().hasColumn(key);
+  }
 };
 
+/// @brief Type alias for a mutable proxy accessor
+/// @details Provides mutable access to track state components through a proxy pattern
+/// @tparam T The type of the component being accessed
 template <typename T>
 using ProxyAccessor = ProxyAccessorBase<T, false>;
+
+/// @brief Type alias for a const proxy accessor
+/// @details Provides read-only access to proxy data with const-qualified member functions
 template <typename T>
 using ConstProxyAccessor = ProxyAccessorBase<T, true>;
 }  // namespace Acts

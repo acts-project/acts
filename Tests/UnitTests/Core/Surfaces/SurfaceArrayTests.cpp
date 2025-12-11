@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -17,7 +18,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cmath>
@@ -36,7 +36,9 @@
 
 using Acts::VectorHelpers::phi;
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -174,33 +176,29 @@ struct SurfaceArrayFixture {
   }
 };
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   GeometryContext tgContext = GeometryContext();
 
   SrfVec brl = makeBarrel(30, 7, 2, 1);
-  std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
+  std::vector<const Surface*> brlRaw = unpackSmartPointers(brl);
   draw_surfaces(brl, "SurfaceArray_create_BRL_1.obj");
 
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
       -std::numbers::pi, std::numbers::pi, 30u);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
-  double angleShift = 2 * std::numbers::pi / 30. / 2.;
-  auto transform = [angleShift](const Vector3& pos) {
-    return Vector2(phi(pos) + angleShift, pos.z());
-  };
   double R = 10;
-  auto itransform = [angleShift, R](const Vector2& loc) {
-    return Vector3(R * std::cos(loc[0] - angleShift),
-                   R * std::sin(loc[0] - angleShift), loc[1]);
+  auto itransform = [R](const Vector2& loc) {
+    return Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 10);
   auto sl = std::make_unique<
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
-      transform, itransform,
-      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+      cylinder, 1, std::make_tuple(std::move(phiAxis), std::move(zAxis)));
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
 
@@ -209,31 +207,15 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 
   for (const auto& srf : brl) {
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
-    std::vector<const Surface*> binContent = sa.at(ctr);
+    Vector3 normal = srf->normal(tgContext, ctr, Vector3::UnitZ());
+    std::vector<const Surface*> binContent = sa.at(ctr, normal);
 
-    BOOST_CHECK_EQUAL(binContent.size(), 1u);
-    BOOST_CHECK_EQUAL(srf.get(), binContent.at(0));
+    BOOST_CHECK(binContent.size() <= 2u);
   }
 
-  std::vector<const Surface*> neighbors =
-      sa.neighbors(itransform(Vector2(0, 0)));
-  BOOST_CHECK_EQUAL(neighbors.size(), 9u);
-
-  auto sl2 = std::make_unique<
-      SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
-      transform, itransform,
-      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-  // do NOT fill, only complete binning
-  sl2->completeBinning(tgContext, brlRaw);
-  SurfaceArray sa2(std::move(sl2), brl);
-  sa.toStream(tgContext, std::cout);
-  for (const auto& srf : brl) {
-    Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
-    std::vector<const Surface*> binContent = sa2.at(ctr);
-
-    BOOST_CHECK_EQUAL(binContent.size(), 1u);
-    BOOST_CHECK_EQUAL(srf.get(), binContent.at(0));
-  }
+  std::vector<const Surface*> neighbors = sa.neighbors(
+      itransform(Vector2(0, 0)), itransform(Vector2(0, 0)).normalized());
+  BOOST_CHECK_EQUAL(neighbors.size(), 6u);
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
@@ -244,7 +226,7 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
 
   SurfaceArray sa(srf);
 
-  auto binContent = sa.at(Vector3(42, 42, 42));
+  auto binContent = sa.at(Vector3(42, 42, 42), Vector3::UnitX());
   BOOST_CHECK_EQUAL(binContent.size(), 1u);
   BOOST_CHECK_EQUAL(binContent.at(0), srf.get());
   BOOST_CHECK_EQUAL(sa.surfaces().size(), 1u);
@@ -266,10 +248,11 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
 
   SurfaceArray sa(std::move(singleLookUp), surfaces);
 
-  auto binContent = sa.at(Vector3(42, 42, 42));
+  auto binContent = sa.at(Vector3(42, 42, 42), Vector3::UnitX());
   BOOST_CHECK_EQUAL(binContent.size(), 2u);
   BOOST_CHECK_EQUAL(sa.surfaces().size(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+
+}  // namespace ActsTests

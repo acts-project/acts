@@ -9,24 +9,19 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/CurvilinearSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <array>
-#include <cmath>
-#include <functional>
-#include <iterator>
-#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-class Object {};
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 /// test of the intersection class
 BOOST_AUTO_TEST_CASE(IntersectionTest) {
@@ -125,60 +120,6 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   BOOST_CHECK_EQUAL(tfsznIntersections[3].pathLength(), 0.);
 }
 
-/// test of the object intersection class
-BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
-  std::shared_ptr<PlaneSurface> psf6 =
-      CurvilinearSurface(Vector3(6., 0., 0.), Vector3(1., 0., 0.))
-          .planeSurface();
-  std::shared_ptr<PlaneSurface> psf7 =
-      CurvilinearSurface(Vector3(7., 0., 0.), Vector3(1., 0., 0.))
-          .planeSurface();
-  std::shared_ptr<PlaneSurface> psf8 =
-      CurvilinearSurface(Vector3(8., 0., 0.), Vector3(1., 0., 0.))
-          .planeSurface();
-  std::shared_ptr<PlaneSurface> psf9 =
-      CurvilinearSurface(Vector3(9., 0., 0.), Vector3(1., 0., 0.))
-          .planeSurface();
-  std::shared_ptr<PlaneSurface> psf10 =
-      CurvilinearSurface(Vector3(10., 0., 0.), Vector3(1., 0., 0.))
-          .planeSurface();
-
-  using PlaneIntersection = ObjectIntersection<PlaneSurface>;
-
-  PlaneIntersection int6(
-      Intersection3D(Vector3(6., 0., 0.), 6., IntersectionStatus::reachable),
-      psf6.get());
-  PlaneIntersection int7(
-      Intersection3D(Vector3(7., 0., 0.), 7., IntersectionStatus::reachable),
-      psf7.get());
-  PlaneIntersection int8(
-      Intersection3D(Vector3(8., 0., 0.), 8., IntersectionStatus::reachable),
-      psf8.get());
-  PlaneIntersection int9a(
-      Intersection3D(Vector3(9., 0., 0.), 9., IntersectionStatus::reachable),
-      psf9.get());
-  PlaneIntersection int9b(
-      Intersection3D(Vector3(9., 1., 0.), std::hypot(9., 1.),
-                     IntersectionStatus::reachable),
-      psf9.get());
-  PlaneIntersection int10(
-      Intersection3D(Vector3(10., 0., 0.), 10., IntersectionStatus::reachable),
-      psf10.get());
-
-  std::vector<PlaneIntersection> firstSet = {int6, int7, int9b, int10};
-  std::vector<PlaneIntersection> secondSet = {int8, int9a, int9b, int10};
-  // result of the standard union set
-  std::vector<PlaneIntersection> unionSetStd = {};
-  // result of the custominzed union set
-  std::vector<PlaneIntersection> unionSetCst = {};
-
-  // This should give 6 different intersections
-  std::set_union(firstSet.begin(), firstSet.end(), secondSet.begin(),
-                 secondSet.end(), std::back_inserter(unionSetStd),
-                 PlaneIntersection::pathLengthOrder);
-  BOOST_CHECK_EQUAL(unionSetStd.size(), 6u);
-}
-
 BOOST_AUTO_TEST_CASE(IntersectionStatusPrinting) {
   std::array<IntersectionStatus, 4> status_values = {
       {IntersectionStatus::unreachable, IntersectionStatus::unreachable,
@@ -193,4 +134,6 @@ BOOST_AUTO_TEST_CASE(IntersectionStatusPrinting) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

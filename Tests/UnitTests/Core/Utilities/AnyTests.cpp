@@ -29,7 +29,9 @@ using namespace Acts;
   } while (0)
 #endif
 
-BOOST_AUTO_TEST_SUITE(AnyTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
   {
@@ -548,3 +550,5 @@ BOOST_AUTO_TEST_CASE(LifeCycleHeap) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

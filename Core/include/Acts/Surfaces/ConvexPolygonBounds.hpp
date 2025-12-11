@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -17,6 +16,7 @@
 #include <array>
 #include <cstddef>
 #include <iosfwd>
+#include <span>
 #include <vector>
 
 #include <boost/container/small_vector.hpp>
@@ -32,19 +32,31 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
  public:
   /// Output Method for std::ostream
   /// @param sl is the ostream to be written into
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
+  /// Return the bounds type of this bounds object.
+  /// @return The bounds type
+  BoundsType type() const final { return eConvexPolygon; }
+
   /// Return the bound values as dynamically sized vector
-  ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For ConvexPolygonBounds: returns average of all vertices (vertex
+  ///       centroid)
+  Vector2 center() const final;
+
+  /// Return a rectangle bounds object that encloses this polygon.
+  /// @return The rectangular bounds
+  ///
+  const RectangleBounds& boundingBox() const final;
+
  protected:
-  /// Return a rectangle bounds instance that encloses a set of vertices.
+  /// Creates a rectangle bounds instance that encloses a set of vertices.
   /// @param vertices A collection of vertices to enclose.
-  /// @return Enclosing rectangle.
-  template <typename coll_t>
-  static RectangleBounds makeBoundingBox(const coll_t& vertices);
+  void makeBoundingBox(std::span<const Vector2> vertices);
 
   /// Calculates whether a set of vertices forms a convex polygon. This is
   /// generic over the number of vertices, so it's factored out of the concrete
@@ -54,57 +66,64 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   template <typename coll_t>
     requires std::same_as<typename coll_t::value_type, Acts::Vector2>
   static void convex_impl(const coll_t& vertices) noexcept(false);
+
+  /// Calculate and cache the center point from vertices
+  /// @param vertices The vertices to calculate center from
+  void calculateCenter(std::span<const Vector2> vertices);
+
+  /// Return whether this bounds class is in fact convex
+  /// thorws a logic error if not
+  /// @param vertices The vertices to check for consistency
+  static void checkConsistency(std::span<const Vector2> vertices) noexcept(
+      false);
+
+ private:
+  /// Cached center position
+  Vector2 m_center{Vector2::Zero()};
+  RectangleBounds m_boundingBox{0, 0};
 };
 
+template <int N>
+concept isValidConvexPolygonSize = requires { requires(N >= 3 || N == -1); };
+
 /// This is the actual implementation of the bounds.
-/// It is templated on the number of vertices, but there is a specialization for
-/// *dynamic* number of vertices, where the underlying storage is then a vector.
+/// It is templated on the number of vertices, but there is a specialization
+/// for *dynamic* number of vertices, where the underlying storage is then a
+/// vector.
 ///
 /// @tparam N Number of vertices
 template <int N>
+  requires isValidConvexPolygonSize<N>
 class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
  public:
   /// Expose number of vertices given as template parameter.
-  ///
-  static constexpr std::size_t num_vertices = N;
-  /// Type that's used to store the vertices, in this case a fixed size array.
-  ///
-  using vertex_array = std::array<Vector2, num_vertices>;
-  /// Expose number of parameters as a template parameter
-  ///
-  static constexpr std::size_t eSize = 2 * N;
-  /// Type that's used to store the vertices, in this case a fixed size array.
-  ///
-  using value_array = std::array<double, eSize>;
+  static constexpr std::size_t nVertices = N;
 
-  static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
+  /// Expose number of parameters as a template parameter
+  /// @note The `eSize` name here emulates the size of the *bound values* in other
+  ///       bounds classes.
+  static constexpr std::size_t eSize = 2 * N;
 
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vector size does not match `num_vertices`.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
-  explicit ConvexPolygonBounds(const std::vector<Vector2>& vertices) noexcept(
+  explicit ConvexPolygonBounds(std::span<const Vector2> vertices) noexcept(
       false);
-
-  /// Constructor from a fixed size array of vertices.
-  /// This will throw if the vertices do not form a convex polygon.
-  /// @param vertices The vertices
-  explicit ConvexPolygonBounds(const vertex_array& vertices) noexcept(false);
 
   /// Constructor from a fixed size array of parameters
   /// This will throw if the vertices do not form a convex polygon.
   /// @param values The values to build up the vertices
-  explicit ConvexPolygonBounds(const value_array& values) noexcept(false);
+  explicit ConvexPolygonBounds(std::span<const double> values) noexcept(false);
 
-  BoundsType type() const final { return SurfaceBounds::eConvexPolygon; }
+  /// @copydoc SurfaceBounds::inside
+  bool inside(const Vector2& lposition) const final;
 
-  /// Return whether a local 2D point lies inside of the bounds defined by this
-  /// object.
-  /// @param lposition The local position to check
-  /// @param boundaryTolerance The `BoundaryTolerance` object handling tolerances.
-  /// @return Whether the points is inside
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
 
   /// Return the vertices
   ///
@@ -116,17 +135,8 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @return vector for vertices in 2D
   std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
-  /// Return a rectangle bounds object that encloses this polygon.
-  /// @return The rectangular bounds
-  const RectangleBounds& boundingBox() const final;
-
  private:
-  vertex_array m_vertices;
-  RectangleBounds m_boundingBox;
-
-  /// Return whether this bounds class is in fact convex
-  /// throws a log error if not
-  void checkConsistency() const noexcept(false);
+  std::array<Vector2, nVertices> m_vertices{};
 };
 
 /// Tag to trigger specialization of a dynamic polygon
@@ -138,24 +148,31 @@ constexpr int PolygonDynamic = -1;
 template <>
 class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
  public:
+  /// Expose number of vertices given as template parameter.
+  constexpr static int nVertices = PolygonDynamic;
+  /// Expose number of parameters as a template parameter
+  /// @note The `eSize` name here emulates the size of the *bound values* in other
+  ///       bounds classes.
   constexpr static int eSize = -1;
+
+  /// Constructor from a vector of vertices, to facilitate construction.
+  /// This will throw if the vertices do not form a convex polygon.
+  /// @param vertices The list of vertices.
+  explicit ConvexPolygonBounds(std::span<const Vector2> vertices);
 
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
   explicit ConvexPolygonBounds(const std::vector<Vector2>& vertices);
 
-  /// Return the bounds type of this bounds object.
-  /// @return The bounds type
-  BoundsType type() const final { return SurfaceBounds::eConvexPolygon; }
+  /// @copydoc SurfaceBounds::inside
+  bool inside(const Vector2& lposition) const final;
 
-  /// Return whether a local 2D point lies inside of the bounds defined by this
-  /// object.
-  /// @param lposition The local position to check
-  /// @param boundaryTolerance The `BoundaryTolerance` object handling tolerances.
-  /// @return Whether the points is inside
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
 
   /// Return the vertices
   ///
@@ -167,19 +184,8 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// @return vector for vertices in 2D
   std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
 
-  ///
-  /// Return a rectangle bounds object that encloses this polygon.
-  /// @return The rectangular bounds
-  ///
-  const RectangleBounds& boundingBox() const final;
-
  private:
-  boost::container::small_vector<Vector2, 10> m_vertices;
-  RectangleBounds m_boundingBox;
-
-  /// Return whether this bounds class is in fact convex
-  /// thorws a logic error if not
-  void checkConsistency() const noexcept(false);
+  boost::container::small_vector<Vector2, 10> m_vertices{};
 };
 
 }  // namespace Acts

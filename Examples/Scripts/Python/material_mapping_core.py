@@ -3,26 +3,35 @@
 import argparse
 
 import acts
+
+
 from acts import (
     MaterialMapper,
     IntersectionMaterialAssigner,
     BinnedSurfaceMaterialAccumulater,
-    MaterialMapJsonConverter,
     logging,
     GeometryContext,
     DetectorBuilder,
     GeometryIdGenerator,
 )
 
+from acts.json import MaterialMapJsonConverter
+
 from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
+    CoreMaterialMapping,
+)
+
+from acts.examples.root import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
-    CoreMaterialMapping,
-    JsonMaterialWriter,
     RootMaterialWriter,
+)
+
+from acts.examples.json import (
+    JsonMaterialWriter,
     JsonFormat,
 )
 

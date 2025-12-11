@@ -1,4 +1,9 @@
-add_library(ActsAlignment SHARED src/Kernel/detail/AlignmentEngine.cpp)
+acts_add_library(
+    Alignment
+    SHARED
+    src/Kernel/detail/AlignmentEngine.cpp
+    ACTS_INCLUDE_FOLDER include/ActsAlignment
+)
 
 target_include_directories(
     ActsAlignment
@@ -7,12 +12,5 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsAlignment PUBLIC ActsCore)
-
-install(
-    TARGETS ActsAlignment
-    EXPORT ActsAlignmentTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+target_link_libraries(ActsAlignment PUBLIC Acts::Core)
 install(DIRECTORY include/ActsAlignment DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

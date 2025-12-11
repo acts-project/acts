@@ -81,7 +81,7 @@ Vector3 CylinderSurface::referencePosition(const GeometryContext& gctx,
   if (aDir == AxisDirection::AxisR || aDir == AxisDirection::AxisRPhi) {
     double R = bounds().get(CylinderBounds::eR);
     double phi = bounds().get(CylinderBounds::eAveragePhi);
-    return localToGlobal(gctx, Vector2{phi * R, 0}, Vector3{});
+    return localToGlobal(gctx, Vector2{phi * R, 0});
   }
   // give the center as default for all of these binning types
   // AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ,
@@ -119,7 +119,7 @@ Vector3 CylinderSurface::localToGlobal(const GeometryContext& gctx,
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[0] / r;
-  Vector3 position(r * cos(phi), r * sin(phi), lposition[1]);
+  Vector3 position(r * std::cos(phi), r * std::sin(phi), lposition[1]);
   return transform(gctx) * position;
 }
 
@@ -152,7 +152,7 @@ std::string CylinderSurface::name() const {
 Vector3 CylinderSurface::normal(const GeometryContext& gctx,
                                 const Vector2& lposition) const {
   double phi = lposition[0] / m_bounds->get(CylinderBounds::eR);
-  Vector3 localNormal(cos(phi), sin(phi), 0.);
+  Vector3 localNormal(std::cos(phi), std::sin(phi), 0.);
   return transform(gctx).linear() * localNormal;
 }
 
@@ -218,7 +218,7 @@ detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   return detail::RealQuadraticEquation(a, b, c);
 }
 
-SurfaceMultiIntersection CylinderSurface::intersect(
+MultiIntersection3D CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -229,9 +229,8 @@ SurfaceMultiIntersection CylinderSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()},
-            this,
-            boundaryTolerance};
+    return MultiIntersection3D(Intersection3D::Invalid(),
+                               Intersection3D::Invalid());
   }
 
   // Check the validity of the first solution
@@ -247,17 +246,14 @@ SurfaceMultiIntersection CylinderSurface::intersect(
     if (boundaryTolerance.isInfinite()) {
       return status;
     }
-    const auto& cBounds = bounds();
-    if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
-        absoluteBound.has_value() && cBounds.coversFullAzimuth()) {
+    if (boundaryTolerance.isNone() && bounds().coversFullAzimuth()) {
       // Project out the current Z value via local z axis
       // Built-in local to global for speed reasons
       const auto& tMatrix = gctxTransform.matrix();
       // Create the reference vector in local
       const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
-      double modifiedTolerance = tolerance + absoluteBound->tolerance1;
-      double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
+      double hZ = bounds().get(CylinderBounds::eHalfLengthZ) + tolerance;
       return std::abs(cZ) < std::abs(hZ) ? status
                                          : IntersectionStatus::unreachable;
     }
@@ -270,7 +266,7 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
   if (qe.solutions == 1) {
-    return {{first, first}, this, boundaryTolerance};
+    return MultiIntersection3D(first, first);
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
@@ -282,9 +278,9 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   Intersection3D second(solution2, qe.second, status2);
   // Order based on path length
   if (first.pathLength() <= second.pathLength()) {
-    return {{first, second}, this, boundaryTolerance};
+    return MultiIntersection3D(first, second);
   }
-  return {{second, first}, this, boundaryTolerance};
+  return MultiIntersection3D(second, first);
 }
 
 AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
@@ -558,6 +554,15 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
                                   "CylinderSurface::merge: invalid direction " +
                                       axisDirectionName(direction));
   }
+}
+
+const std::shared_ptr<const CylinderBounds>& CylinderSurface::boundsPtr()
+    const {
+  return m_bounds;
+}
+void CylinderSurface::assignSurfaceBounds(
+    std::shared_ptr<const CylinderBounds> newBounds) {
+  m_bounds = std::move(newBounds);
 }
 
 }  // namespace Acts

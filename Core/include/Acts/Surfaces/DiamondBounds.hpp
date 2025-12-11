@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -27,6 +26,8 @@ namespace Acts {
 /// Bounds for a double trapezoidal ("diamond"), planar Surface.
 class DiamondBounds : public PlanarBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues {
     eHalfLengthXnegY = 0,
     eHalfLengthXzeroY = 1,
@@ -67,22 +68,26 @@ class DiamondBounds : public PlanarBounds {
             Vector2{*std::max_element(values.begin(), values.begin() + 2),
                     values[eHalfLengthYpos]}) {}
 
-  BoundsType type() const final { return SurfaceBounds::eDiamond; }
+  /// @copydoc SurfaceBounds::type
+  BoundsType type() const final { return eDiamond; }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
-  /// Inside check for the bounds object driven by the boundary check directive
-  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
-  /// the bounds  Inside can be called without/with tolerances.
-  ///
-  /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param boundaryTolerance boundary check directive
-  /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  /// @copydoc SurfaceBounds::inside
+  bool inside(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
+
+  /// @copydoc SurfaceBounds::center
+  /// @note For DiamondBounds: returns center of symmetry (0,0)
+  Vector2 center() const final;
 
   /// Return the vertices that describe this shape
   ///
@@ -98,10 +103,12 @@ class DiamondBounds : public PlanarBounds {
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream in which it is dumped
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

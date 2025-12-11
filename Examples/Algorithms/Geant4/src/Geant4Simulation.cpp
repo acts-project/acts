@@ -9,7 +9,6 @@
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -26,6 +25,7 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4/SteppingActionList.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <stdexcept>
 #include <utility>
@@ -43,7 +43,6 @@
 #include <G4VUserPhysicsList.hh>
 #include <G4Version.hh>
 #include <Randomize.hh>
-#include <boost/version.hpp>
 
 namespace ActsExamples {
 
@@ -126,7 +125,7 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   {
-    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
+    ActsPlugins::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
     // Start simulation. each track is simulated as a separate Geant4 event.
     runManager().BeamOn(1);
   }
@@ -308,16 +307,8 @@ ProcessCode Geant4Simulation::execute(const AlgorithmContext& ctx) const {
       ctx, SimParticleContainer(eventStore().particlesSimulated.begin(),
                                 eventStore().particlesSimulated.end()));
 
-#if BOOST_VERSION < 107800
-  SimHitContainer container;
-  for (const auto& hit : eventStore().hits) {
-    container.insert(hit);
-  }
-  m_outputSimHits(ctx, std::move(container));
-#else
   m_outputSimHits(
       ctx, SimHitContainer(eventStore().hits.begin(), eventStore().hits.end()));
-#endif
 
   // Output the propagation summaries if requested
   if (m_cfg.recordPropagationSummaries) {

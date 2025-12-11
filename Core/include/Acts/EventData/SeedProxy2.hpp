@@ -13,7 +13,7 @@
 
 #include <cassert>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class SeedContainer2;
 
@@ -25,8 +25,10 @@ class SeedProxy2 {
   /// modified
   static constexpr bool ReadOnly = read_only;
 
+  /// Type alias for seed index type
   using IndexType = SeedIndex2;
 
+  /// Type alias for container type (const if read-only)
   using ContainerType = const_if_t<ReadOnly, SeedContainer2>;
 
   /// Constructs a seed proxy for the given container and index.
@@ -58,6 +60,17 @@ class SeedProxy2 {
   /// Gets the index of the seed in the container.
   /// @return The index of the seed in the container.
   IndexType index() const noexcept { return m_index; }
+
+  /// Assigns space point indices to the seed at the given index.
+  /// @param spacePointIndices A span of space point indices to assign to the seed.
+  /// @throws std::out_of_range if the index is out of range.
+  /// @throws std::logic_error if space point indices are already assigned to the seed.
+  void assignSpacePointIndices(
+      std::span<const SpacePointIndex2> spacePointIndices)
+    requires(!ReadOnly)
+  {
+    m_container->assignSpacePointIndices(m_index, spacePointIndices);
+  }
 
   /// Returns the size of the seed, i.e., the number of space points
   /// associated with it.
@@ -109,9 +122,13 @@ class SeedProxy2 {
 
   class SpacePointIterator {
    public:
-    using iterator_category = std::forward_iterator_tag;
     using value_type = ConstSpacePointProxy2;
     using difference_type = std::ptrdiff_t;
+    using pointer = void;
+    using reference = void;
+
+    using iterator_category = std::random_access_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
 
     SpacePointIterator() = default;
     SpacePointIterator(const SpacePointContainer2 &spacePointContainer,
@@ -119,27 +136,71 @@ class SeedProxy2 {
         : m_spacePointContainer{&spacePointContainer},
           m_indexPointer{indexPointer} {}
 
-    SpacePointIterator &operator++() noexcept {
+    value_type operator*() const noexcept {
+      return (*m_spacePointContainer)[*m_indexPointer];
+    }
+    value_type operator[](difference_type n) const noexcept {
+      return (*m_spacePointContainer)[m_indexPointer[n]];
+    }
+
+    constexpr SpacePointIterator &operator++() noexcept {
       ++m_indexPointer;
       return *this;
     }
-
-    SpacePointIterator operator++(int) noexcept {
-      SpacePointIterator tmp = *this;
+    constexpr SpacePointIterator operator++(int) noexcept {
+      auto tmp = *this;
       ++(*this);
       return tmp;
     }
+    constexpr SpacePointIterator &operator--() noexcept {
+      --m_indexPointer;
+      return *this;
+    }
+    constexpr SpacePointIterator operator--(int) noexcept {
+      auto tmp = *this;
+      --(*this);
+      return tmp;
+    }
 
-    value_type operator*() const noexcept {
-      return (*m_spacePointContainer)[*m_indexPointer];
+    constexpr SpacePointIterator &operator+=(difference_type n) noexcept {
+      m_indexPointer += n;
+      return *this;
+    }
+    constexpr SpacePointIterator &operator-=(difference_type n) noexcept {
+      m_indexPointer -= n;
+      return *this;
     }
 
    private:
     const SpacePointContainer2 *m_spacePointContainer{nullptr};
     const SpacePointIndex2 *m_indexPointer{nullptr};
 
-    friend bool operator==(const SpacePointIterator &a,
-                           const SpacePointIterator &b) noexcept {
+    friend constexpr SpacePointIterator operator+(SpacePointIterator it,
+                                                  difference_type n) noexcept {
+      return it += n;
+    }
+
+    friend constexpr SpacePointIterator operator+(
+        difference_type n, SpacePointIterator it) noexcept {
+      return it += n;
+    }
+
+    friend constexpr SpacePointIterator operator-(SpacePointIterator it,
+                                                  difference_type n) noexcept {
+      return it -= n;
+    }
+
+    friend constexpr difference_type operator-(
+        const SpacePointIterator &lhs, const SpacePointIterator &rhs) noexcept {
+      return lhs.m_indexPointer - rhs.m_indexPointer;
+    }
+
+    friend constexpr auto operator<=>(const SpacePointIterator &a,
+                                      const SpacePointIterator &b) noexcept {
+      return a.m_indexPointer <=> b.m_indexPointer;
+    }
+    friend constexpr bool operator==(const SpacePointIterator &a,
+                                     const SpacePointIterator &b) noexcept {
       return a.m_indexPointer == b.m_indexPointer;
     }
   };
@@ -174,6 +235,9 @@ class SeedProxy2 {
     std::span<const SpacePointIndex2> m_spacePointIndices;
   };
 
+  /// Get the space points associated with this seed.
+  /// @param spacePointContainer Container holding all space points
+  /// @return Range of space points for this seed
   SpacePointRange spacePoints(
       const SpacePointContainer2 &spacePointContainer) const noexcept {
     return SpacePointRange(spacePointContainer,
@@ -185,4 +249,4 @@ class SeedProxy2 {
   IndexType m_index{0};
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

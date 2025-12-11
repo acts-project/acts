@@ -3,7 +3,8 @@
 import os
 import acts
 import acts.examples
-from acts.examples import GenericDetector, AlignedGenericDetector
+from acts.examples import GenericDetector, StructureSelector
+from acts.examples.alignment import AlignmentDecorator
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
@@ -11,6 +12,8 @@ from acts.examples.simulation import (
     ParticleConfig,
     MomentumConfig,
 )
+
+from acts.examples.root import RootPropagationSummaryWriter, RootPropagationStepsWriter
 
 u = acts.UnitConstants
 
@@ -58,16 +61,16 @@ def runPropagation(
     s.addAlgorithm(propagationAlgorithm)
 
     s.addWriter(
-        acts.examples.RootPropagationSummaryWriter(
+        RootPropagationSummaryWriter(
             level=acts.logging.INFO,
             inputSummaryCollection="propagation_summary",
             filePath=outputDir + "/propagation_summary.root",
         )
     )
 
-    if sterileLogger:
+    if sterileLogger is False:
         s.addWriter(
-            acts.examples.RootPropagationStepsWriter(
+            RootPropagationStepsWriter(
                 level=acts.logging.INFO,
                 collection="propagation_summary",
                 filePath=outputDir + "/propagation_steps.root",
@@ -79,11 +82,13 @@ def runPropagation(
 
 if "__main__" == __name__:
     matDeco = None
+    contextDecorators = []
     # matDeco = acts.IMaterialDecorator.fromFile("material.json")
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
     detector = GenericDetector(materialDecorator=matDeco)
+    trackingGeometry = detector.trackingGeometry()
 
     ## Alternative: Aligned Generic detector
     # detector = AlignedGenericDetector(materialDecorator=matDeco)
@@ -92,8 +97,33 @@ if "__main__" == __name__:
     # detector = getOpenDataDetector()
     # trackingGeometry = detector.trackingGeometry()
 
-    trackingGeometry = detector.trackingGeometry()
-    contextDecorators = detector.contextDecorators()
+    ## Alternative: Misaligned DD4hep detector
+    # detector = getOpenDataDetector(misaligned=True)
+    # trackingGeometry = detector.trackingGeometry()
+    # structureSelector = StructureSelector(trackingGeometry)
+    # pixelBarrelID = acts.GeometryIdentifier(volume=17)
+    # pixelBarrelTransforms = structureSelector.selectedTransforms(
+    #     acts.GeometryContext(), pixelBarrelID
+    # )
+    # alignDecoConfig = AlignmentDecorator.Config()
+    # alignDecoConfig.nominalStore = acts.examples.GeoIdAlignmentStore(
+    #     pixelBarrelTransforms
+    # )
+
+    # gRot = acts.examples.AlignmentGeneratorGlobalRotation()
+    # gRot.axis = acts.Vector3(0.0, 0.0, 1.0)
+    # gRot.angle = 0.05
+
+    # lShift = acts.examples.AlignmentGeneratorLocalShift()
+    # lShift.axisDirection = acts.AxisDirection.AxisZ
+    # lShift.shift = 3.0
+
+    # alignDecoConfig.iovGenerators = [((0, 25), lShift), ((25, 50), gRot)]
+    # alignDecoConfig.garbageCollection = True
+    # alignDecoConfig.gcInterval = 20
+
+    # alignDeco = AlignmentDecorator(alignDecoConfig, acts.logging.VERBOSE)
+    # contextDecorators = [alignDeco]
 
     ## Magnetic field setup: Default: constant 2T longitudinal field
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
@@ -118,9 +148,10 @@ if "__main__" == __name__:
     os.makedirs(os.getcwd() + "/propagation", exist_ok=True)
 
     runPropagation(
-        trackingGeometry,
-        field,
-        os.getcwd() + "/propagation",
+        trackingGeometry=trackingGeometry,
+        field=field,
+        outputDir=os.getcwd() + "/propagation",
+        s=None,
         decorators=contextDecorators,
         sterileLogger=True,
     ).run()

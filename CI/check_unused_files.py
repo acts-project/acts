@@ -60,6 +60,8 @@ def main():
         "lazy_autodoc.py",
         "codegen/src/codegen/sympy_common.py",
         "CompressedIO.h",
+        # Files for python binding generation
+        "tgeo_aux.py.in",
     )
 
     suffix_header = (
@@ -167,7 +169,7 @@ def main():
 
             elif filepath.suffix in suffix_python:
                 # Skip the python tests folder
-                if str(root).find("Examples/Python") != -1:
+                if str(root).find("Python/Examples") != -1:
                     continue
 
                 if not file_can_be_removed("import .*" + filepath.stem, dirs_base):
