@@ -100,9 +100,7 @@ void trigger_invalid() {
 }  // namespace
 
 namespace ActsPython {
-void addFramework(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-
+void addFramework(py::module& mex) {
   py::class_<IWriter, std::shared_ptr<IWriter>>(mex, "IWriter");
 
   py::class_<IReader, std::shared_ptr<IReader>>(mex, "IReader");
@@ -207,7 +205,7 @@ void addFramework(Context& ctx) {
     std::optional<FpeMonitor> mon;
   };
 
-  auto fpe = py::class_<FpeMonitor>(m, "FpeMonitor")
+  auto fpe = py::class_<FpeMonitor>(mex, "FpeMonitor")
                  .def_static("_trigger_divbyzero", &trigger_divbyzero)
                  .def_static("_trigger_overflow", &trigger_overflow)
                  .def_static("_trigger_invalid", &trigger_invalid)
@@ -227,7 +225,7 @@ void addFramework(Context& ctx) {
         return os.str();
       });
 
-  py::class_<FpeMonitorContext>(m, "_FpeMonitorContext")
+  py::class_<FpeMonitorContext>(mex, "_FpeMonitorContext")
       .def(py::init([]() { return std::make_unique<FpeMonitorContext>(); }))
       .def(
           "__enter__",
@@ -240,7 +238,7 @@ void addFramework(Context& ctx) {
                           py::object /*exc_value*/,
                           py::object /*traceback*/) { fm.mon.reset(); });
 
-  py::enum_<FpeType>(m, "FpeType")
+  py::enum_<FpeType>(mex, "FpeType")
       .value("INTDIV", FpeType::INTDIV)
       .value("INTOVF", FpeType::INTOVF)
       .value("FLTDIV", FpeType::FLTDIV)
@@ -259,18 +257,20 @@ void addFramework(Context& ctx) {
             return values;
           });
 
-  py::register_exception<FpeFailure>(m, "FpeFailure", PyExc_RuntimeError);
+  py::register_exception<FpeFailure>(mex, "FpeFailure", PyExc_RuntimeError);
 
   auto randomNumbers =
       py::class_<RandomNumbers, std::shared_ptr<RandomNumbers>>(mex,
                                                                 "RandomNumbers")
           .def(py::init<const RandomNumbers::Config&>());
 
-  py::class_<RandomEngine>(mex, "RandomEngine").def(py::init<>());
+  {
+    py::class_<RandomEngine>(mex, "RandomEngine").def(py::init<>());
 
-  py::class_<RandomNumbers::Config>(randomNumbers, "Config")
-      .def(py::init<>())
-      .def_readwrite("seed", &RandomNumbers::Config::seed);
+    py::class_<RandomNumbers::Config>(randomNumbers, "Config")
+        .def(py::init<>())
+        .def_readwrite("seed", &RandomNumbers::Config::seed);
+  }
 }
 
 }  // namespace ActsPython

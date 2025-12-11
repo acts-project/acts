@@ -1,12 +1,16 @@
 import acts
+import pytest
 
 from acts.examples import Sequencer
-from acts.examples import AlignmentDecorator
+from helpers import alignmentEnabled
 
 
+@pytest.mark.skipif(not alignmentEnabled, reason="Alignment module is not set up")
 def test_alignmentdecorator_io_mode(capfd):
     """This tests the alignment decorator in IO mode,
     i.e. with a given pre-defined alignment store"""
+
+    from acts.examples.alignment import AlignmentDecorator, GeoIdAlignmentStore
 
     alignDecoConfig = AlignmentDecorator.Config()
 
@@ -15,7 +19,7 @@ def test_alignmentdecorator_io_mode(capfd):
     trf = acts.Transform3(acts.Vector3(0.0, 0.0, 0.0))
     geoIdMap = {}
     geoIdMap[geoId] = trf
-    alignmentStore = acts.examples.GeoIdAlignmentStore(geoIdMap)
+    alignmentStore = GeoIdAlignmentStore(geoIdMap)
     alignDecoConfig.iovStores = [((10, 20), alignmentStore)]
     alignDecoConfig.garbageCollection = True
     alignDecoConfig.gcInterval = 20
@@ -42,7 +46,16 @@ def test_alignmentdecorator_io_mode(capfd):
         assert out.count("Garbage collection: removing alignment store") == 1
 
 
+@pytest.mark.skipif(not alignmentEnabled, reason="Alignment module is not set up")
 def test_alignmentdecorator_gen_mode(capfd):
+
+    from acts.examples.alignment import (
+        AlignmentDecorator,
+        AlignmentGeneratorGlobalShift,
+        AlignmentGeneratorGlobalRotation,
+        GeoIdAlignmentStore,
+    )
+
     """This tests the alignment decorator in generative mode"""
     alignDecoConfig = AlignmentDecorator.Config()
 
@@ -54,12 +67,12 @@ def test_alignmentdecorator_gen_mode(capfd):
     geoIdMap = {}
     geoIdMap[geoId0] = trf0
     geoIdMap[geoId1] = trf1
-    alignDecoConfig.nominalStore = acts.examples.GeoIdAlignmentStore(geoIdMap)
+    alignDecoConfig.nominalStore = GeoIdAlignmentStore(geoIdMap)
 
-    gShift = acts.examples.AlignmentGeneratorGlobalShift()
+    gShift = AlignmentGeneratorGlobalShift()
     gShift.shift = acts.Vector3(0.0, 0.0, 100.0)
 
-    gRot = acts.examples.AlignmentGeneratorGlobalRotation()
+    gRot = AlignmentGeneratorGlobalRotation()
     gRot.axis = acts.Vector3(1.0, 0.0, 0.0)
     gRot.angle = 0.15
 

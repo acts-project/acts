@@ -25,9 +25,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addUtilities(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+void addUtilities(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(TrajectoriesToPrototracks, mex,
                                 "TrajectoriesToPrototracks", inputTrajectories,
                                 outputProtoTracks);

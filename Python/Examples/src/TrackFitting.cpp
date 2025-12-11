@@ -33,9 +33,7 @@ using namespace py::literals;
 
 namespace ActsPython {
 
-void addTrackFitting(Context& ctx) {
-  auto mex = ctx.get("examples");
-
+void addTrackFitting(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackFittingAlgorithm, mex, "TrackFittingAlgorithm", inputMeasurements,
       inputProtoTracks, inputInitialTrackParameters, inputClusters,

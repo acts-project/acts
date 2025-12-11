@@ -35,9 +35,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addGenerators(Context& ctx) {
-  auto mex = ctx.get("examples");
-
+void addGenerators(py::module& mex) {
   {
     using Config = EventGenerator::Config;
     auto gen =
