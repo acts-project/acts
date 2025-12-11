@@ -18,6 +18,7 @@
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <format>
+#include <map>
 #include <ranges>
 #include <utility>
 
