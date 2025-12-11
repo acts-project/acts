@@ -105,10 +105,12 @@ void SurfaceArray::checkGrid(AnyGridConstView<SurfaceVector> grid) {
     std::ranges::set_difference(allSurfaces, seenSurface,
                                 std::inserter(diff, diff.begin()));
 
-    throw std::logic_error(
-        std::format("SurfaceArray grid does not contain all surfaces provided! "
-                    "{} surfaces not seen",
-                    diff.size()));
+  throw std::runtime_error(
+    "SurfaceArray grid does not contain all surfaces provided!");
+  //  throw std::logic_error(
+  //      fmt::format("SurfaceArray grid does not contain all surfaces provided! "
+  //                  "{} surfaces not seen",
+  //                  diff.size()));
   }
 }
 
