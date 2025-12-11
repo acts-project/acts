@@ -90,7 +90,7 @@ class GeoIdAlignmentStore : public IAlignmentStore {
     }
   }
 
- private:
+ protected:
   /// The geometry id map
   std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3> m_transformMap;
 };
