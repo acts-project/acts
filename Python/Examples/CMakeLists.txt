@@ -3,7 +3,13 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(_python_install_dir "python/acts/examples")
-set(py_files)
+set(py_files
+    __init__.py
+    simulation.py
+    reconstruction.py
+    itk.py
+    odd.py
+)
 
 # Macro to add example bindings conditionally
 macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
@@ -69,7 +75,69 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
     )
 endmacro()
 
+# Add the examples python binding
+pybind11_add_module(ActsExamplesPythonBindings src/ExamplesModuleEntry.cpp)
+
+# The PythonBindings for the examples
+target_sources(
+    ActsExamplesPythonBindings
+    PRIVATE
+        src/Framework.cpp
+        src/ExampleAlgorithms.cpp
+        src/Generators.cpp
+        src/AmbiguityResolution.cpp
+        src/Detector.cpp
+        src/Digitization.cpp
+        src/MaterialMapping.cpp
+        src/Propagation.cpp
+        src/TrackFinding.cpp
+        src/TrackFitting.cpp
+        src/TruthTracking.cpp
+        src/Vertexing.cpp
+        src/Input.cpp
+        src/Output.cpp
+        src/Obj.cpp
+        src/Utilities.cpp
+)
+
+install(TARGETS ActsExamplesPythonBindings DESTINATION ${_python_install_dir})
+
+set_target_properties(
+    ActsExamplesPythonBindings
+    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+)
+set_target_properties(
+    ActsExamplesPythonBindings
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+)
+
+target_link_libraries(
+    ActsExamplesPythonBindings
+    PUBLIC
+        Acts::Core
+        Acts::ExamplesFramework
+        Acts::ExamplesFatras
+        Acts::ExamplesAmbiguityResolution
+        Acts::ExamplesDetectorsCommon
+        Acts::ExamplesDetectorGeneric
+        Acts::ExamplesDetectorTelescope
+        Acts::ExamplesDigitization
+        Acts::ExamplesGenerators
+        Acts::ExamplesMaterialMapping
+        Acts::ExamplesUtilities
+        Acts::ExamplesIoCsv
+        Acts::ExamplesIoObj
+        Acts::ExamplesPropagation
+        Acts::ExamplesTrackFinding
+        Acts::ExamplesTrackFitting
+        Acts::ExamplesTruthTracking
+        Acts::ExamplesVertexing
+        Acts::ExamplesPrinters
+        Acts::PythonUtilities
+)
+
 # Add all plugin related examples bindings conditionally to their build flag
+add_examples_binding_if(Alignment "Acts::ExamplesAlignment;Acts::ExamplesDetectorsCommon" ACTS_BUILD_ALIGNMENT FALSE)
 add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
 add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)
 add_examples_binding_if(Geant4
@@ -154,3 +222,5 @@ foreach(f ${py_files})
         DESTINATION ${_python_install_dir}/${_rel}
     )
 endforeach()
+
+# Finally copy the python files

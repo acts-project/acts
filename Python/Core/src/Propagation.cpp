@@ -9,6 +9,7 @@
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -26,6 +27,20 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace ActsPython {
+
+template <typename stepper_t, typename navigator_t>
+void addPropagator(py::module_& m, const std::string& prefix) {
+  using propagator_t = Propagator<stepper_t, navigator_t>;
+  py::class_<propagator_t>(m, (prefix + "Propagator").c_str())
+      .def(py::init<>([=](stepper_t stepper, navigator_t navigator,
+                          Logging::Level level = Logging::Level::INFO) {
+             return propagator_t{
+                 std::move(stepper), std::move(navigator),
+                 getDefaultLogger(prefix + "Propagator", level)};
+           }),
+           py::arg("stepper"), py::arg("navigator"),
+           py::arg("level") = Logging::INFO);
+}
 
 /// @brief Bind propagation related functions to the Python module
 /// @param m The Python module to which the functions will be bound
@@ -49,18 +64,22 @@ void addPropagation(py::module_& m) {
   {
     auto stepper = py::class_<AtlasStepper>(m, "AtlasStepper");
     stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
+    addPropagator<AtlasStepper, Navigator>(m, "Atlas");
   }
   {
     auto stepper = py::class_<EigenStepper<>>(m, "EigenStepper");
     stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
+    addPropagator<EigenStepper<>, Navigator>(m, "Eigen");
   }
   {
     auto stepper = py::class_<StraightLineStepper>(m, "StraightLineStepper");
     stepper.def(py::init<>());
+    addPropagator<StraightLineStepper, Navigator>(m, "StraightLine");
   }
   {
     auto stepper = py::class_<SympyStepper>(m, "SympyStepper");
     stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
+    addPropagator<SympyStepper, Navigator>(m, "Sympy");
   }
 }
 
