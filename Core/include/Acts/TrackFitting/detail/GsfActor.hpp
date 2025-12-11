@@ -606,10 +606,11 @@ struct GsfActor {
 
       const auto& trackStateProxy = *trackStateProxyRes;
 
-      if (trackStateProxy.transverseMomentum() < m_cfg.transverseMomentumCut) {
-        ACTS_VERBOSE("Skip component with pT="
-                     << trackStateProxy.transverseMomentum()
-                     << " after Kalman update");
+      const auto &params = trackStateProxy.parameters();
+      const auto p = stepper.particleHypothesis(state.stepping).extractMomentum(params[eBoundQOverP]);
+      const auto pT = p * std::sin(params[eBoundTheta]);
+      if (pT < m_cfg.transverseMomentumCut) {
+        ACTS_VERBOSE("Skip component with pT=" << pT << " after Kalman update");
         continue;
       }
 
