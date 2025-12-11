@@ -28,7 +28,16 @@ namespace dd4hep {
 class DetElement;
 }  // namespace dd4hep
 
+namespace Acts {
+namespace Experimental {
+class CylinderContainerBlueprintNode;
+class CuboidContainerBlueprintNode;
+}  // namespace Experimental
+}  // namespace Acts
+
 namespace ActsPlugins::DD4hep {
+
+class PlaneLayerHelper;
 
 // @TODO: Flip this
 using GeometryAxes = ActsPlugins::TGeoAxes;
@@ -105,6 +114,80 @@ using SensorLayer = Acts::Experimental::SensorLayer<DD4hepBackend>;
 using BarrelEndcapAssembler =
     Acts::Experimental::BarrelEndcapAssembler<DD4hepBackend>;
 
+// plane
+class PlaneLayerHelper {
+ public:
+  using Customizer = LayerHelper::Customizer;
+
+  explicit PlaneLayerHelper(const BlueprintBuilder& builder)
+      : m_builder{&builder} {}
+
+  PlaneLayerHelper& setAxes(const std::string& axes) {
+    m_axes = axes;
+    return *this;
+  }
+
+  PlaneLayerHelper& setLayerAxes(const std::string& layerAxes) {
+    m_layerAxes = layerAxes;
+    return *this;
+  }
+
+  PlaneLayerHelper& setPattern(const std::string& pattern) {
+    return setPattern(std::regex{pattern});
+  }
+
+  PlaneLayerHelper& setPattern(const std::regex& pattern) {
+    m_pattern = pattern;
+    return *this;
+  }
+
+  PlaneLayerHelper& setContainer(const dd4hep::DetElement& container) {
+    m_container = container;
+    return *this;
+  }
+
+  PlaneLayerHelper& setContainer(const std::string& name);
+
+  PlaneLayerHelper& setEnvelope(const Acts::ExtentEnvelope& envelope) {
+    m_envelope = envelope;
+    return *this;
+  }
+
+  PlaneLayerHelper& setEmptyOk(bool emptyOk) {
+    m_emptyOk = emptyOk;
+    return *this;
+  }
+
+  PlaneLayerHelper& customize(Customizer customizer) {
+    m_customizer = std::move(customizer);
+    return *this;
+  }
+
+  auto& setAttachmentStrategy(
+      std::optional<Acts::VolumeAttachmentStrategy> strategy) {
+    m_attachmentStrategy = strategy;
+    return *this;
+  }
+
+  // cuboid node
+  std::shared_ptr<Acts::Experimental::CuboidContainerBlueprintNode> build()
+      const;
+
+  void addTo(Acts::Experimental::BlueprintNode& node) const;
+
+ private:
+  const BlueprintBuilder* m_builder;
+  std::optional<std::string> m_axes;
+  std::optional<std::string> m_layerAxes;
+  std::optional<std::regex> m_pattern;
+  std::optional<dd4hep::DetElement> m_container;
+  std::optional<Acts::ExtentEnvelope> m_envelope;
+  std::optional<Acts::VolumeAttachmentStrategy> m_attachmentStrategy;
+  bool m_emptyOk = false;
+
+  Customizer m_customizer;
+};
+
 }  // namespace ActsPlugins::DD4hep
 
 // Explicit instantiation: suppress implicit instantiation in TUs that include
@@ -112,10 +195,8 @@ using BarrelEndcapAssembler =
 // Placed at global scope so we open ::Acts::Experimental, not a nested Acts.
 namespace Acts::Experimental {
 extern template class BlueprintBuilder<ActsPlugins::DD4hep::DD4hepBackend>;
-extern template class ElementLayerAssembler<
-    ActsPlugins::DD4hep::DD4hepBackend>;
+extern template class ElementLayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
 extern template class SensorLayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
 extern template class SensorLayer<ActsPlugins::DD4hep::DD4hepBackend>;
-extern template class BarrelEndcapAssembler<
-    ActsPlugins::DD4hep::DD4hepBackend>;
+extern template class BarrelEndcapAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
 }  // namespace Acts::Experimental
