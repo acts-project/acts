@@ -1333,9 +1333,10 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
         )
 
     # Verify output
-    output_file = tmp_path / "performance_track_finding.root"
-    assert output_file.exists()
-    assert_root_hash("performance_track_finding.root", output_file)
+    for f in ["performance_finding_gnn.root", "track_finding_ntuple_gnn.root"]:
+        output_file = tmp_path / f
+        assert output_file.exists()
+        assert_root_hash(f, output_file)
 
 
 @pytest.mark.odd
