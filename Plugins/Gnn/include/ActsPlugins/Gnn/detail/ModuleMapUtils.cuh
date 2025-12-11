@@ -289,7 +289,7 @@ __device__ void doublet_cut_kernel(
   for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
     T z0, phi_slope, deta, dphi;
     hits_geometric_cuts<T>(z0, phi_slope, deta, dphi, R_SP1, z_SP1, eta_SP1,
-                           phi_SP1, R[l], phi[l], z[l], eta[l], detail::g_pi,
+                           phi_SP1, R[l], z[l], phi[l], eta[l], detail::g_pi,
                            epsilon);
 
     if (apply_geometric_cuts(doublet_idx, z0, phi_slope, deta, dphi, z0_min,
