@@ -97,6 +97,9 @@ struct GsfActor {
     /// When to discard components
     double weightCutoff = 1.0e-4;
 
+    /// Minimum transverse momentum (in GeV) for components
+    double transverseMomentumCut = 0.0;  // GeV, no cut by default
+
     /// When this option is enabled, material information on all surfaces is
     /// ignored. This disables the component convolution as well as the handling
     /// of energy. This may be useful for debugging.
@@ -271,6 +274,13 @@ struct GsfActor {
         return;
       }
 
+      // Check if all components were removed by momentum cut
+      if (tmpStates.tips.empty()) {
+        ACTS_VERBOSE("All components removed by transverse momentum cut");
+        stepper.clearComponents(state.stepping);
+        return;
+      }
+
       updateStepper(state, stepper, tmpStates);
     }
     // We have material, we thus need a component cache since we will
@@ -301,11 +311,9 @@ struct GsfActor {
                           result);
 
       if (componentCache.empty()) {
-        ACTS_WARNING(
-            "No components left after applying energy loss. "
-            "Is the weight cutoff "
-            << m_cfg.weightCutoff << " too high?");
-        ACTS_WARNING("Return to propagator without applying energy loss");
+        ACTS_VERBOSE(
+            "All components removed by cuts (weight or momentum cutoff)");
+        stepper.clearComponents(state.stepping);
         return;
       }
 
@@ -328,12 +336,19 @@ struct GsfActor {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, const result_type& result,
                   const Logger& /*logger*/) const {
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
       ACTS_VERBOSE("Stop navigation because all measurements are found");
+      return true;
+    }
+
+    // Stop if all components have been removed
+    if (stepper.numberComponents(state.stepping) == 0) {
+      ACTS_VERBOSE(
+          "Stop navigation because all components were removed by cuts");
       return true;
     }
 
@@ -434,10 +449,10 @@ struct GsfActor {
       }();
 
       assert(p_prev + delta_p > 0. && "new momentum must be > 0");
-      
+
       // Apply pT cut here to avoid const of expansion and merging later
       const auto pT = (p_prev + delta_p) * std::sin(new_pars[eBoundTheta]);
-      if (pT < m_cfg.minTransverseMomentum) {
+      if (pT < m_cfg.transverseMomentumCut) {
         ACTS_VERBOSE("Skip new component with pT=" << pT << " GeV");
         continue;
       }
@@ -591,8 +606,10 @@ struct GsfActor {
 
       const auto& trackStateProxy = *trackStateProxyRes;
 
-      if( trackStateProxy.transverseMomentum() < m_cfg.minTransverseMomentum ) {
-        ACTS_VERBOSE("Skip component with pT=" << trackStateProxy.transverseMomentum() << " after Kalman update");
+      if (trackStateProxy.transverseMomentum() < m_cfg.transverseMomentumCut) {
+        ACTS_VERBOSE("Skip component with pT="
+                     << trackStateProxy.transverseMomentum()
+                     << " after Kalman update");
         continue;
       }
 
@@ -814,6 +831,7 @@ struct GsfActor {
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
+    m_cfg.transverseMomentumCut = options.transverseMomentumCut;
     m_cfg.mergeMethod = options.componentMergeMethod;
     m_cfg.calibrationContext = &options.calibrationContext.get();
   }

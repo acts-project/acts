@@ -22,6 +22,7 @@ def runTruthTrackingGsf(
     inputSimHitsPath: Optional[Path] = None,
     decorators=[],
     s: acts.examples.Sequencer = None,
+    gsfLogLevel: Optional[acts.logging.Level] = None,
 ):
     from acts.examples.simulation import (
         addParticleGun,
@@ -48,7 +49,7 @@ def runTruthTrackingGsf(
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=100, numThreads=100, logLevel=acts.logging.INFO
     )
 
     for d in decorators:
@@ -159,6 +160,7 @@ def runTruthTrackingGsf(
         s,
         trackingGeometry,
         field,
+        logLevel=gsfLogLevel,
     )
 
     s.addAlgorithm(
@@ -210,6 +212,30 @@ def runTruthTrackingGsf(
 
 
 if "__main__" == __name__:
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Run truth tracking with GSF (Gaussian Sum Filter)"
+    )
+    parser.add_argument(
+        "-n", "--events", type=int, required=True, help="Number of events to process"
+    )
+    parser.add_argument(
+        "-s",
+        "--skip",
+        type=int,
+        default=0,
+        help="Number of events to skip (default: 0)",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output for addTruthTrackingGsf",
+    )
+
+    args = parser.parse_args()
+
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     # ODD
@@ -229,9 +255,23 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
+    s = acts.examples.Sequencer(
+        events=args.events, numThreads=1, skip=args.skip, logLevel=acts.logging.INFO
+    )
+
+    gsfLogLevel = acts.logging.VERBOSE if args.verbose else None
+
     runTruthTrackingGsf(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
         outputDir=Path.cwd(),
+        inputParticlePath=Path(
+            "/home/bhuth/actsdev/fix/gsf-efficiency/simulation_gsf/simulation/particles_simulation.root"
+        ),
+        inputSimHitsPath=Path(
+            "/home/bhuth/actsdev/fix/gsf-efficiency/simulation_gsf/simulation/hits.root"
+        ),
+        s=s,
+        gsfLogLevel=gsfLogLevel,
     ).run()
