@@ -31,7 +31,7 @@ def runRefittingKf(
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
-        reverseFilteringMomThreshold=0 * u.GeV,
+        reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
         reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
         s=s,
     )

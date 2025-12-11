@@ -39,7 +39,7 @@ def runRefittingGsf(
         inputHitsPath=inputSimHitsPath,
         decorators=decorators,
         generatedParticleType=acts.PdgParticle.eElectron,
-        reverseFilteringMomThreshold=0 * u.GeV,
+        reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
         reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
         s=s,
     )
