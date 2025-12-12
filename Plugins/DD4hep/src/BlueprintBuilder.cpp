@@ -115,7 +115,6 @@ std::vector<std::shared_ptr<Acts::Surface>> DD4hepBackend::makeSurfaces(
   }
 
   ACTS_DEBUG("Using " << sensitives.size() << " sensitive elements.");
-
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   surfaces.reserve(sensitives.size());
 
@@ -196,35 +195,6 @@ DD4hepBackend::makeBeampipe() const {
       std::move(volume));
 }
 
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-BlueprintBuilder::addLayers(const dd4hep::DetElement& container,
-                            const std::string& axes,
-                            Acts::AxisDirection direction,
-                            const std::regex& layerPattern,
-                            const Acts::ExtentEnvelope& envelope) {
-  ACTS_DEBUG("Adding layers to container " << container.name());
-  using enum Acts::AxisDirection;
-  using namespace Acts::UnitLiterals;
-  auto node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-          container.name(), direction);
-  const auto& layerElements =
-      findDetElementByNamePattern(container, layerPattern);
-
-  if (container.children().empty()) {
-    ACTS_WARNING("Container " << container.name()
-                              << " has no children, no layers added.");
-  }
-  for (const auto& element : layerElements) {
-    auto layer = makeLayer(element, axes);
-    layer->setEnvelope(envelope);
-
-    node->addChild(layer);
-  }
-
-  return node;
-}
-
 // container for plane
 PlaneLayerHelper& PlaneLayerHelper::setContainer(const std::string& name) {
   m_container = m_builder->findDetElementByName(name);
@@ -233,68 +203,6 @@ PlaneLayerHelper& PlaneLayerHelper::setContainer(const std::string& name) {
                              " in PlaneLayerHelper");
   }
   return *this;
-}
-
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-LayerHelper::build() const {
-  const auto& logger = m_builder->logger();
-
-  if (!m_layerType.has_value()) {
-    throw std::runtime_error("Layer type not set in LayerHelper");
-  }
-
-  if (!m_axes.has_value()) {
-    throw std::runtime_error("Axes not set in LayerHelper");
-  }
-
-  if (!m_pattern.has_value()) {
-    throw std::runtime_error("Pattern not set in LayerHelper");
-  }
-
-  if (!m_container.has_value()) {
-    throw std::runtime_error("Container not set in LayerHelper");
-  }
-
-  Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
-                                    ? Acts::AxisDirection::AxisR
-                                    : Acts::AxisDirection::AxisZ;
-
-  const auto& container = m_container.value();
-  auto node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-          container.name(), axisDir);
-
-  if (m_attachmentStrategy.has_value()) {
-    node->setAttachmentStrategy(m_attachmentStrategy.value());
-  }
-
-  const auto& layerElements =
-      m_builder->findDetElementByNamePattern(container, m_pattern.value());
-
-  if (layerElements.empty()) {
-    ACTS_LOG(m_emptyOk ? Acts::Logging::INFO : Acts::Logging::ERROR,
-             "No layers found in container " << container.name()
-                                             << " matching pattern");
-    if (!m_emptyOk) {
-      throw std::runtime_error(
-          std::format("No layers found in container {} matching pattern",
-                      container.name()));
-    }
-  }
-  for (const auto& element : layerElements) {
-    auto layer = m_builder->makeLayer(element, m_axes.value(), m_layerAxes);
-    if (m_envelope.has_value()) {
-      layer->setEnvelope(m_envelope.value());
-    }
-
-    if (m_customizer) {
-      layer = m_customizer(element, std::move(layer));
-    }
-
-    node->addChild(layer);
-  }
-
-  return node;
 }
 
 // plane builder
@@ -315,6 +223,7 @@ PlaneLayerHelper::build() const {
   }
 
   const auto& container = m_container.value();
+  ACTS_INFO("[PlaneHelper]: building plane container " << container.name());
 
   auto node =
       std::make_shared<Acts::Experimental::CuboidContainerBlueprintNode>(
@@ -339,7 +248,8 @@ PlaneLayerHelper::build() const {
   }
 
   for (const auto& element : layerElements) {
-    auto layer = m_builder->makeLayer(element, m_axes.value(), m_layerAxes);
+    auto layer =
+        m_builder->makeLayer(element, m_axes.value(), m_layerAxes, m_layerType);
     if (m_envelope.has_value()) {
       layer->setEnvelope(m_envelope.value());
     }
@@ -354,98 +264,6 @@ PlaneLayerHelper::build() const {
   return node;
 }  // plane builder
 
-void LayerHelper::addTo(Acts::Experimental::BlueprintNode& node) const {
-  node.addChild(build());
-}
-void PlaneLayerHelper::addTo(Acts::Experimental::BlueprintNode& node) const {
-  node.addChild(build());
-}
-
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-BarrelEndcapAssemblyHelper::build() const {
-  const auto& logger = m_builder->logger();
-
-  if (!m_assembly.has_value()) {
-    throw std::runtime_error(
-        "Assembly detector element not set in BarrelEndcapAssemblyHelper");
-  }
-
-  if (!m_barrelAxes.has_value()) {
-    throw std::runtime_error(
-        "Barrel axes not set in BarrelEndcapAssemblyHelper");
-  }
-
-  if (!m_endcapAxes.has_value()) {
-    throw std::runtime_error(
-        "Endcap axes not set in BarrelEndcapAssemblyHelper");
-  }
-
-  if (!m_layerPattern.has_value()) {
-    throw std::runtime_error(
-        "Layer pattern not set in BarrelEndcapAssemblyHelper");
-  }
-
-  const auto& assembly = m_assembly.value();
-
-  ACTS_INFO(
-      "Converting barrel-endcap assembly from element: " << assembly.name());
-  auto isTracker = [](auto& elem) {
-    return dd4hep::DetType{elem.typeFlag()}.is(dd4hep::DetType::TRACKER);
-  };
-
-  auto barrels = findDetElementsByType(assembly, dd4hep::DetType::BARREL) |
-                 std::views::filter(isTracker) | to<std::vector>;
-
-  ACTS_DEBUG("Have " << barrels.size() << " barrel elements in assembly "
-                     << assembly.name());
-  if (barrels.size() > 1) {
-    ACTS_ERROR("Expected exactly zero or one barrel in assembly "
-               << assembly.name() << ", found " << barrels.size());
-    throw std::runtime_error(std::format(
-        "Expected exactly zero or one barrel in assembly {}", assembly.name()));
-  }
-
-  auto endcaps = findDetElementsByType(assembly, dd4hep::DetType::ENDCAP) |
-                 std::views::filter(isTracker) | to<std::vector>;
-
-  ACTS_DEBUG("Have " << endcaps.size() << " endcap elements in assembly "
-                     << assembly.name());
-
-  std::shared_ptr node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-          assembly.name(), Acts::AxisDirection::AxisZ);
-
-  for (const auto& barrel : barrels) {
-    node->addChild(m_builder->layerHelper()
-                       .barrel()
-                       .setAxes(m_barrelAxes.value())
-                       .setPattern(m_layerPattern.value())
-                       .setContainer(barrel)
-                       .setAttachmentStrategy(m_barrelAttachmentStrategy)
-                       .customize(m_customizer)
-                       .build());
-  }
-
-  for (const auto& endcap : endcaps) {
-    node->addChild(m_builder->layerHelper()
-                       .endcap()
-                       .setAxes(m_endcapAxes.value())
-                       .setPattern(m_layerPattern.value())
-                       .setContainer(endcap)
-                       .setAttachmentStrategy(m_endcapAttachmentStrategy)
-                       .customize(m_customizer)
-                       .build());
-  }
-
-  return node;
-}
-
-void BarrelEndcapAssemblyHelper::addTo(
-    Acts::Experimental::BlueprintNode& node) const {
-  node.addChild(build());
-}
-
->>>>>>> 41e779c43 (clean up: add plane layer helper)
 }  // namespace ActsPlugins::DD4hep
 
 // Explicit template instantiation for DD4hepBackend. Ensures all template
