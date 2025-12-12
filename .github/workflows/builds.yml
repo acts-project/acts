@@ -449,7 +449,8 @@ jobs:
             done
             cd /work
             set -ue
-
+            export CMAKE_INSTALL_PREFIX=$HOME/prefix
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
             pushd EICrecon
             echo "::group::EICrecon configure phase"
             ccache -z && \
