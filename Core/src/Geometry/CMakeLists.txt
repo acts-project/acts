@@ -52,7 +52,7 @@ target_sources(
         BlueprintOptions.cpp
         StaticBlueprintNode.cpp
         LayerBlueprintNode.cpp
-        IndexGridFiller.cpp
+        IndexGrid.cpp
         MaterialDesignatorBlueprintNode.cpp
         VolumeAttachmentStrategy.cpp
         VolumeResizeStrategy.cpp
