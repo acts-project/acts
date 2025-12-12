@@ -446,6 +446,25 @@ class IslandsAroundMax {
       std::make_pair(-1, 0),  std::make_pair(1, 0),  std::make_pair(-1, 1),
       std::make_pair(0, 1),   std::make_pair(1, 1)};
 };
+
+
+struct SlidingWindowConfig {
+  size_t threshold=3;
+  size_t xWindowSize=2;
+  size_t yWindowSize=2;
+  bool recenter=true;
+  size_t xRecenterSize=3;
+  size_t yRecenterSize=3;
+};
+
+
+template<typename identifier_t>
+std::vector<class HoughPlane<identifier_t>::Index> slidingWindowPeaks(const HoughPlane<identifier_t>& plane, const SlidingWindowConfig& config );
+
+template<typename identifier_t>
+std::vector<unsigned char> hitsCountImage(const HoughPlane<identifier_t>& plane, typename HoughPlane<identifier_t>::Index index, size_t xSize, size_t ySize );
+
+
 }  // namespace PeakFinders
 }  // namespace Acts::HoughTransformUtils
 
