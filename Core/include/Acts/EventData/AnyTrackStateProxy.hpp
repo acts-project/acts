@@ -311,7 +311,12 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
 }  // namespace detail_anytstate
 
 template <bool read_only>
-class AnyTrackStateProxy {
+class AnyTrackStateProxy
+    : public detail_tsp::TrackStateProxyCommon<AnyTrackStateProxy<read_only>,
+                                               read_only> {
+  using Base = detail_tsp::TrackStateProxyCommon<AnyTrackStateProxy<read_only>,
+                                                 read_only>;
+
  public:
   static constexpr bool ReadOnly = read_only;
 

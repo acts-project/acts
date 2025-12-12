@@ -7,12 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
-
-#include "Acts/EventData/SubspaceHelpers.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <string_view>
@@ -36,61 +31,26 @@ inline constexpr HashedString kCalibratedCovKey = hashString("calibratedCov");
 inline constexpr HashedString kMeasDimKey = hashString("measdim");
 inline constexpr HashedString kNextKey = hashString("next");
 
-/// Either type T or const T depending on the boolean.
-template <typename T, bool select>
-using ConstIf = std::conditional_t<select, const T, T>;
+}  // namespace detail_tsp
 
-/// Type construction helper for fixed size coefficients and associated
-/// covariances.
-template <std::size_t Size, bool ReadOnlyMaps = true>
-struct FixedSizeTypes {
-  constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
+namespace detail_tsp {
 
-  // single items
-  using Coefficients = Eigen::Matrix<double, Size, 1, Flags>;
-  using Covariance = Eigen::Matrix<double, Size, Size, Flags>;
-  using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
-  using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
+template <typename Derived, bool read_only>
+class TrackStateProxyCommon {
+ protected:
+  using IndexType = Acts::TrackIndexType;
+  // using ConstParameters = const_parameters_t;
+  // using Parameters = parameters_t;
+  // using ConstCovariance = const_covariance_t;
+  // using Covariance = covariance_t;
+  //
+  // constexpr Derived& derived() { return static_cast<Derived&>(*this); }
+  // constexpr const Derived& derived() const {
+  //   return static_cast<const Derived&>(*this);
+  // }
 
-  using DynamicCoefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
-  using DynamicCovariance =
-      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
-  using DynamicCoefficientsMap =
-      Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
-  using DynamicCovarianceMap =
-      Eigen::Map<ConstIf<DynamicCovariance, ReadOnlyMaps>>;
-};
-
-// Type construction helper for dynamic sized coefficients and associated
-/// covariances.
-template <bool ReadOnlyMaps = true>
-struct DynamicSizeTypes {
-  constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
-
-  using Coefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
-  using Covariance =
-      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
-  using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
-  using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
+ public:
 };
 
 }  // namespace detail_tsp
-
-template <std::size_t M, bool ReadOnly = true>
-struct TrackStateTraits {
-  using Parameters =
-      typename detail_tsp::FixedSizeTypes<eBoundSize,
-                                          ReadOnly>::CoefficientsMap;
-  using Covariance =
-      typename detail_tsp::FixedSizeTypes<eBoundSize, ReadOnly>::CovarianceMap;
-  using Calibrated =
-      typename detail_tsp::FixedSizeTypes<M, ReadOnly>::CoefficientsMap;
-  using CalibratedCovariance =
-      typename detail_tsp::FixedSizeTypes<M, ReadOnly>::CovarianceMap;
-  using EffectiveCalibrated =
-      typename detail_tsp::DynamicSizeTypes<ReadOnly>::CoefficientsMap;
-  using EffectiveCalibratedCovariance =
-      typename detail_tsp::DynamicSizeTypes<ReadOnly>::CovarianceMap;
-};
-
 }  // namespace Acts

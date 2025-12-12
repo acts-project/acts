@@ -12,6 +12,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/TrackStateProxyCommon.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
@@ -33,24 +34,6 @@ class MultiTrajectory;
 
 template <bool read_only>
 class AnyTrackStateProxy;
-
-namespace detail_tsp {
-inline constexpr HashedString kPreviousKey = hashString("previous");
-inline constexpr HashedString kChi2Key = hashString("chi2");
-inline constexpr HashedString kPathLengthKey = hashString("pathLength");
-inline constexpr HashedString kTypeFlagsKey = hashString("typeFlags");
-inline constexpr HashedString kPredictedKey = hashString("predicted");
-inline constexpr HashedString kFilteredKey = hashString("filtered");
-inline constexpr HashedString kSmoothedKey = hashString("smoothed");
-inline constexpr HashedString kJacobianKey = hashString("jacobian");
-inline constexpr HashedString kProjectorKey = hashString("projector");
-inline constexpr HashedString kUncalibratedKey =
-    hashString("uncalibratedSourceLink");
-inline constexpr HashedString kCalibratedKey = hashString("calibrated");
-inline constexpr HashedString kCalibratedCovKey = hashString("calibratedCov");
-inline constexpr HashedString kMeasDimKey = hashString("measdim");
-inline constexpr HashedString kNextKey = hashString("next");
-}  // namespace detail_tsp
 
 namespace detail_lt {
 
