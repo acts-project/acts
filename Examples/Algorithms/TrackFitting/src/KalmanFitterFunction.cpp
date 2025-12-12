@@ -76,7 +76,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   Acts::GainMatrixUpdater kfUpdater;
   Acts::MbfSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
-  double reverseFilteringCovarianceScaling = 1.0;
+  double reverseFilteringCovarianceScaling = 100.0;
   SimpleOutlierFinder outlierFinder;
 
   bool multipleScattering = false;

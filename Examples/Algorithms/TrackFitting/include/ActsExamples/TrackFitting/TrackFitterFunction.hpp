@@ -76,7 +76,7 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering = true, bool energyLoss = true,
     double reverseFilteringMomThreshold = 0.0,
-    double reverseFilteringCovarianceScaling = 1.0,
+    double reverseFilteringCovarianceScaling = 100.0,
     Acts::FreeToBoundCorrection freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
     double chi2Cut = std::numeric_limits<double>::infinity(),

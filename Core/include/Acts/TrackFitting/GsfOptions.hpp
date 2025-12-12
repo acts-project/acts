@@ -121,7 +121,7 @@ struct GsfOptions {
 
   bool disableAllMaterialHandling = false;
 
-  double reverseFilteringCovarianceScaling = 1.0;
+  double reverseFilteringCovarianceScaling = 100.0;
 
   /// Whether to use the external-surfaces mechanism of the navigator which
   /// switches off the boundary-check for measurement surfaces.
