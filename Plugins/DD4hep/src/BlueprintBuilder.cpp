@@ -83,7 +83,7 @@ std::optional<dd4hep::DetElement> BlueprintBuilder::findDetElementByName(
 }
 
 std::string BlueprintBuilder::getPathToElementName(
-    const dd4hep::DetElement& elem) const {
+    const dd4hep::DetElement& elem, const std::string& separator) const {
   std::vector<std::string> names;
   names.emplace_back(elem.name());
   auto parent = elem.parent();
@@ -92,7 +92,7 @@ std::string BlueprintBuilder::getPathToElementName(
     parent = parent.parent();
   }
   std::ranges::reverse(names);
-  return boost::algorithm::join(names, "|");
+  return boost::algorithm::join(names, separator);
 }
 
 std::vector<dd4hep::DetElement> BlueprintBuilder::findDetElementByNamePattern(

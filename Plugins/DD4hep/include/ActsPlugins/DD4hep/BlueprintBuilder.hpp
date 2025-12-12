@@ -242,7 +242,8 @@ class BlueprintBuilder {
   std::optional<dd4hep::DetElement> findDetElementByName(
       const std::string& name) const;
 
-  std::string getPathToElementName(const dd4hep::DetElement& elem) const;
+  std::string getPathToElementName(const dd4hep::DetElement& elem,
+                                   const std::string& separator = "|") const;
 
   static std::vector<dd4hep::DetElement> findDetElementByNamePattern(
       const dd4hep::DetElement& parent, const std::regex& pattern);
