@@ -783,36 +783,6 @@ class AnyTrackStateProxy
   template <bool>
   friend class AnyTrackStateProxy;
 
-  TrackIndexType componentIndexValue(HashedString key) const {
-    assert(has(key));
-    const auto& ref = component<TrackIndexType>(key);
-    return ref;
-  }
-
-  ConstParametersMap parametersFromComponent(HashedString key) const {
-    const auto parIndex = componentIndexValue(key);
-    return constHandler()->parameters(containerPtr(), parIndex);
-  }
-
-  ParametersMap mutableParametersFromComponent(HashedString key) const
-    requires(!ReadOnly)
-  {
-    const auto parIndex = componentIndexValue(key);
-    return mutableHandler()->parameters(mutableContainerPtr(), parIndex);
-  }
-
-  ConstCovarianceMap covarianceFromComponent(HashedString key) const {
-    const auto covIndex = componentIndexValue(key);
-    return constHandler()->covariance(containerPtr(), covIndex);
-  }
-
-  CovarianceMap mutableCovarianceFromComponent(HashedString key) const
-    requires(!ReadOnly)
-  {
-    const auto covIndex = componentIndexValue(key);
-    return mutableHandler()->covariance(mutableContainerPtr(), covIndex);
-  }
-
   const detail_anytstate::TrackStateHandlerConstBase* constHandler() const {
     return m_handler;
   }
