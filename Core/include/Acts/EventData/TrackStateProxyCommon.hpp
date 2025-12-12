@@ -8,6 +8,7 @@
 
 #pragma once
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
@@ -230,6 +231,54 @@ class TrackStateProxyCommon {
     const auto covIndex =
         derived().template component<IndexType>(detail_tsp::kSmoothedKey);
     return derived().covarianceAtIndexMutable(covIndex);
+  }
+
+  /// Retrieve the accumulated path length.
+  /// @return Path length stored on the state.
+  double pathLength() const {
+    return derived().template component<double, detail_tsp::kPathLengthKey>();
+  }
+
+  /// Retrieve a mutable reference to the accumulated path length.
+  /// @return Mutable path length.
+  double& pathLength()
+    requires(!read_only)
+  {
+    return derived().template component<double, detail_tsp::kPathLengthKey>();
+  }
+
+  /// Retrieve the track-state type flags.
+  /// @return Bit mask describing the state type.
+  ConstTrackStateType typeFlags() const {
+    const auto raw = derived()
+                         .template component<TrackStateType::raw_type,
+                                             detail_tsp::kTypeFlagsKey>();
+    return ConstTrackStateType{raw};
+  }
+
+  /// Retrieve mutable track-state type flags.
+  /// @return Mutable bit mask describing the state type.
+  TrackStateType typeFlags()
+    requires(!read_only)
+  {
+    auto& raw = derived()
+                    .template component<TrackStateType::raw_type,
+                                        detail_tsp::kTypeFlagsKey>();
+    return TrackStateType{raw};
+  }
+
+  /// Retrieve the local chi2 contribution.
+  /// @return Chi2 value associated with this state.
+  float chi2() const {
+    return derived().template component<float, detail_tsp::kChi2Key>();
+  }
+
+  /// Retrieve a mutable reference to the local chi2 contribution.
+  /// @return Mutable chi2 value.
+  float& chi2()
+    requires(!read_only)
+  {
+    return derived().template component<float, detail_tsp::kChi2Key>();
   }
 
   /// Compute the property mask describing which components are present.

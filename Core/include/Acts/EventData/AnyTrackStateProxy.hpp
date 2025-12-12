@@ -689,56 +689,15 @@ class AnyTrackStateProxy
     return mutableHandler()->jacobian(mutableContainerPtr(), m_index);
   }
 
-  /// Retrieve the accumulated path length.
-  /// @return Path length stored on the state.
-  double pathLength() const {
-    return component<double, detail_tsp::kPathLengthKey>();
-  }
-
-  /// Retrieve a mutable reference to the accumulated path length.
-  /// @return Mutable path length.
-  double& pathLength()
-    requires(!ReadOnly)
-  {
-    return component<double, detail_tsp::kPathLengthKey>();
-  }
-
+  using Base::chi2;
   using Base::filtered;
   using Base::filteredCovariance;
+  using Base::pathLength;
   using Base::predicted;
   using Base::predictedCovariance;
   using Base::smoothed;
   using Base::smoothedCovariance;
-
-  /// Retrieve the track-state type flags.
-  /// @return Bit mask describing the state type.
-  ConstTrackStateType typeFlags() const {
-    const auto raw =
-        component<TrackStateType::raw_type, detail_tsp::kTypeFlagsKey>();
-    return ConstTrackStateType{raw};
-  }
-
-  /// Retrieve mutable track-state type flags.
-  /// @return Mutable bit mask describing the state type.
-  TrackStateType typeFlags()
-    requires(!ReadOnly)
-  {
-    auto& raw =
-        component<TrackStateType::raw_type, detail_tsp::kTypeFlagsKey>();
-    return TrackStateType{raw};
-  }
-
-  /// Retrieve the local chi2 contribution.
-  /// @return Chi2 value associated with this state.
-  float chi2() const { return component<float, detail_tsp::kChi2Key>(); }
-
-  /// Retrieve a mutable reference to the local chi2 contribution.
-  /// @return Mutable chi2 value.
-  float& chi2()
-    requires(!ReadOnly)
-  {
-    return component<float, detail_tsp::kChi2Key>();
-  }
+  using Base::typeFlags;
 
   /// Access calibrated measurement data with compile-time dimension.
   /// @tparam measdim Measurement dimension.
