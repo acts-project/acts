@@ -44,9 +44,10 @@ struct IsReadOnlyMultiTrajectory;
 
 namespace detail_vmt {
 
-using MultiTrajectoryTraits::IndexType;
-constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
-constexpr auto MeasurementSizeMax = MultiTrajectoryTraits::MeasurementSizeMax;
+using IndexType = TrackIndexType;
+
+constexpr auto kInvalid = kTrackIndexInvalid;
+constexpr auto MeasurementSizeMax = kMeasurementSizeMax;
 
 template <typename T>
 struct NonInitializingAllocator {
@@ -350,9 +351,9 @@ class VectorMultiTrajectoryBase {
       m_cov;
 
   std::vector<double, NonInitializingAllocator<double>> m_meas;
-  std::vector<MultiTrajectoryTraits::IndexType> m_measOffset;
+  std::vector<IndexType> m_measOffset;
   std::vector<double, NonInitializingAllocator<double>> m_measCov;
-  std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
+  std::vector<IndexType> m_measCovOffset;
 
   std::vector<typename detail_tsp::FixedSizeTypes<eBoundSize>::Covariance>
       m_jac;
