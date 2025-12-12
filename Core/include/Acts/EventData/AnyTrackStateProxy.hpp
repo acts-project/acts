@@ -707,36 +707,8 @@ class AnyTrackStateProxy
   using Base::filteredCovariance;
   using Base::predicted;
   using Base::predictedCovariance;
-
-  /// Access the smoothed parameter vector.
-  /// @return Bound parameter map for the smoothed state.
-  ConstParametersMap smoothed() const {
-    assert(hasSmoothed());
-    return parametersFromComponent(detail_tsp::kSmoothedKey);
-  }
-
-  /// Access the smoothed parameter vector.
-  /// @return Mutable bound parameter map for the smoothed state.
-  ParametersMap smoothed()
-    requires(!ReadOnly)
-  {
-    return mutableParametersFromComponent(detail_tsp::kSmoothedKey);
-  }
-
-  /// Access the smoothed covariance matrix.
-  /// @return Bound covariance map for the smoothed state.
-  ConstCovarianceMap smoothedCovariance() const {
-    assert(hasSmoothed());
-    return covarianceFromComponent(detail_tsp::kSmoothedKey);
-  }
-
-  /// Access the smoothed covariance matrix.
-  /// @return Mutable bound covariance map for the smoothed state.
-  CovarianceMap smoothedCovariance()
-    requires(!ReadOnly)
-  {
-    return mutableCovarianceFromComponent(detail_tsp::kSmoothedKey);
-  }
+  using Base::smoothed;
+  using Base::smoothedCovariance;
 
   /// Retrieve the track-state type flags.
   /// @return Bit mask describing the state type.

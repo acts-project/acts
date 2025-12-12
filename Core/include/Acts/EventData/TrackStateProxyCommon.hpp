@@ -192,6 +192,46 @@ class TrackStateProxyCommon {
     return derived().covarianceAtIndexMutable(covIndex);
   }
 
+  /// Access the smoothed parameter vector.
+  /// @return Bound parameter map for the smoothed state.
+  ConstParametersMap smoothed() const {
+    assert(hasSmoothed());
+    const auto parIndex =
+        derived().template component<IndexType>(detail_tsp::kSmoothedKey);
+    return derived().parametersAtIndex(parIndex);
+  }
+
+  /// Access the smoothed parameter vector.
+  /// @return Mutable bound parameter map for the smoothed state.
+  ParametersMap smoothed()
+    requires(!read_only)
+  {
+    assert(hasSmoothed());
+    const auto parIndex =
+        derived().template component<IndexType>(detail_tsp::kSmoothedKey);
+    return derived().parametersAtIndexMutable(parIndex);
+  }
+
+  /// Access the smoothed covariance matrix.
+  /// @return Bound covariance map for the smoothed state.
+  ConstCovarianceMap smoothedCovariance() const {
+    assert(hasSmoothed());
+    const auto covIndex =
+        derived().template component<IndexType>(detail_tsp::kSmoothedKey);
+    return derived().covarianceAtIndex(covIndex);
+  }
+
+  /// Access the smoothed covariance matrix.
+  /// @return Mutable bound covariance map for the smoothed state.
+  CovarianceMap smoothedCovariance()
+    requires(!read_only)
+  {
+    assert(hasSmoothed());
+    const auto covIndex =
+        derived().template component<IndexType>(detail_tsp::kSmoothedKey);
+    return derived().covarianceAtIndexMutable(covIndex);
+  }
+
   /// Compute the property mask describing which components are present.
   /// @return Bit mask of available properties.
   TrackStatePropMask getMask() const {
