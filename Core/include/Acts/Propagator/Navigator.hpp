@@ -25,6 +25,7 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <map>
 #include <optional>
 #include <sstream>
@@ -98,8 +99,6 @@ class Navigator {
   using NavigationCandidates =
       boost::container::small_vector<NavigationTarget, 10>;
 
-  using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
-
   /// Type alias for geometry version enumeration
   using GeometryVersion = TrackingGeometry::GeometryVersion;
 
@@ -141,13 +140,25 @@ class Navigator {
     double farLimit = std::numeric_limits<double>::max();
 
     /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces = {};
-
+    std::vector<GeometryIdentifier> externalSurfaces{};
+    /// Free surfaces not part of the tracking geometry but provided by the user
+    std::vector<const Surface*> freeSurfaces{};
+    /// Old way to declare external surfaces as navigation target
+    [[deprecated(
+        "Please parse the external surface directly by reference - Method will "
+        "be removed")]]
+    void insertExternalSurface(const GeometryIdentifier& geoId) {
+      externalSurfaces.push_back(geoId);
+    }
     /// Insert an external surface to be considered during navigation
-    /// @param geoid Geometry identifier of the surface to insert
-    void insertExternalSurface(GeometryIdentifier geoid) {
-      externalSurfaces.insert(
-          std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+    /// @param surface: Reference to the surface to insert
+    void insertExternalSurface(const Surface& surface) {
+      /// All geometry surfaces
+      if (surface.geometryId() != GeometryIdentifier{}) {
+        externalSurfaces.push_back(surface.geometryId());
+      } else {
+        freeSurfaces.push_back(&surface);
+      }
     }
 
     /// Set the plain navigation options
@@ -173,26 +184,27 @@ class Navigator {
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
     /// the current surface index of the navigation state
-    std::optional<std::size_t> navSurfaceIndex;
+    std::optional<std::size_t> navSurfaceIndex{std::nullopt};
 
     // Navigation on layer level
     /// the vector of navigation layers to work through
     NavigationLayers navLayers = {};
     /// the current layer index of the navigation state
-    std::optional<std::size_t> navLayerIndex;
+    std::optional<std::size_t> navLayerIndex{std::nullopt};
 
     // Navigation on volume level
     /// the vector of boundary surfaces to work through
     NavigationBoundaries navBoundaries = {};
     /// the current boundary index of the navigation state
-    std::optional<std::size_t> navBoundaryIndex;
+    std::optional<std::size_t> navBoundaryIndex{std::nullopt};
 
     // Navigation candidates(portals and surfaces together)
     /// the vector of navigation candidates to work through
     NavigationCandidates navCandidates = {};
     /// the current candidate index of the navigation state
-    std::optional<std::size_t> navCandidateIndex;
-
+    std::optional<std::size_t> navCandidateIndex{std::nullopt};
+    // Navigation on free surface level. Free surfaces are traversed
+    NavigationCandidates freeCandidates = {};
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
@@ -254,19 +266,27 @@ class Navigator {
       navBoundaryIndex.reset();
       navCandidates.clear();
       navCandidateIndex.reset();
-
       currentLayer = nullptr;
     }
 
     /// Completely reset navigation state to initial conditions
     void reset() {
       resetAfterVolumeSwitch();
-
       currentVolume = nullptr;
       currentSurface = nullptr;
 
       navigationBreak = false;
       navigationStage = Stage::initial;
+      /// Ensure that the free surfaces become available again
+      std::ranges::for_each(freeCandidates, [&](NavigationTarget& target) {
+        if (target.pathLength() > options.nearLimit) {
+          return;
+        }
+        Intersection<3> newIsect{
+            target.position(), options.nearLimit + s_epsilon, target.status()};
+        target = NavigationTarget{newIsect, target.intersectionIndex(),
+                                  target.surface(), target.boundaryTolerance()};
+      });
     }
   };
 
@@ -376,7 +396,6 @@ class Navigator {
                                 << printGeometryVersion(m_geometryVersion));
 
     state.reset();
-
     if (m_geometryVersion == GeometryVersion::Gen3) {
       // Empirical pre-allocation of candidates for the next navigation
       // iteration.
@@ -386,6 +405,29 @@ class Navigator {
 
     state.startSurface = state.options.startSurface;
     state.targetSurface = state.options.targetSurface;
+
+    /// If the state has free surfaces initialize the interactions
+    if (!state.options.freeSurfaces.empty()) {
+      state.freeCandidates.clear();
+      ACTS_VERBOSE(volInfo(state)
+                   << "Instantiate " << state.options.freeSurfaces.size()
+                   << " free surface intersections.");
+
+      std::ranges::transform(
+          state.options.freeSurfaces, std::back_inserter(state.freeCandidates),
+          [&](const Surface* freeSurf) {
+            auto [intersection, intersectionIndex] =
+                freeSurf
+                    ->intersect(state.options.geoContext, position, direction,
+                                BoundaryTolerance::Infinite())
+                    .closestWithIndex();
+            return NavigationTarget{intersection, intersectionIndex, *freeSurf,
+                                    BoundaryTolerance::Infinite()};
+          });
+      // Sort the candidates by path length
+      std::ranges::sort(state.freeCandidates,
+                        NavigationTarget::pathLengthOrder);
+    }
 
     // @TODO: Implement fast initialization with Gen3. This requires the volume lookup to work properly
 
@@ -665,19 +707,23 @@ class Navigator {
     if (state.navigationStage == Stage::surfaceTarget) {
       if (!state.navSurfaceIndex.has_value()) {
         // First time, resolve the surfaces
+        ACTS_VERBOSE(volInfo(state) << " Initialize surface candidates.");
         resolveSurfaces(state, position, direction);
         state.navSurfaceIndex = 0;
       } else {
         ++state.navSurfaceIndex.value();
+        ACTS_VERBOSE(volInfo(state) << " Increment navSurface index to "
+                                    << state.navSurfaceIndex.value() << "/"
+                                    << state.navSurfaces.size());
       }
       if (state.navSurfaceIndex.value() < state.navSurfaces.size()) {
-        ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
+        ACTS_VERBOSE(volInfo(state)
+                     << "Target set to next surface: " << state.navSurface());
         return state.navSurface();
-      } else {
-        // This was the last surface, switch to layers
-        ACTS_VERBOSE(volInfo(state) << "Target layers.");
-        state.navigationStage = Stage::layerTarget;
       }
+      // This was the last surface, switch to layers
+      ACTS_VERBOSE(volInfo(state) << "Target layers.");
+      state.navigationStage = Stage::layerTarget;
     }
 
     if (state.navigationStage == Stage::layerTarget) {
@@ -689,7 +735,8 @@ class Navigator {
         ++state.navLayerIndex.value();
       }
       if (state.navLayerIndex.value() < state.navLayers.size()) {
-        ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
+        ACTS_VERBOSE(volInfo(state)
+                     << "Target set to next layer " << state.navLayer());
         return state.navLayer();
       } else {
         // This was the last layer, switch to boundaries
@@ -707,7 +754,8 @@ class Navigator {
         ++state.navBoundaryIndex.value();
       }
       if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
-        ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
+        ACTS_VERBOSE(volInfo(state)
+                     << "Target set to next boundary " << state.navBoundary());
         return state.navBoundary();
       } else {
         // This was the last boundary, we have to leave the volume somehow,
@@ -732,19 +780,26 @@ class Navigator {
                                      const Vector3& direction) const {
     if (!state.navCandidateIndex.has_value()) {
       // first time, resolve the candidates
+      ACTS_VERBOSE(volInfo(state) << " Initialize the candidates");
       resolveCandidates(state, position, direction);
       state.navCandidateIndex = 0;
     } else {
       ++state.navCandidateIndex.value();
+      ACTS_VERBOSE(volInfo(state) << " Increment the navCandidateIndex to "
+                                  << state.navCandidateIndex.value() << "/"
+                                  << state.navCandidates.size() << ".");
     }
+    ACTS_VERBOSE(volInfo(state) << " Geometry surface candidate "
+                                << state.navCandidateIndex.value() << "/"
+                                << state.navCandidates.size());
+
     if (state.navCandidateIndex.value() < state.navCandidates.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next candidate.");
+      ACTS_VERBOSE(volInfo(state) << "Target set to next navigation candidate: "
+                                  << state.navCandidate());
       return state.navCandidate();
-    } else {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Candidate targets exhausted. Renavigate.");
-      return NavigationTarget::None();
     }
+    ACTS_VERBOSE(volInfo(state) << "Candidate targets exhausted. Renavigate.");
+    return NavigationTarget::None();
   }
 
   /// @brief NextTarget helper function
@@ -768,9 +823,7 @@ class Navigator {
 
     if (m_geometryVersion == GeometryVersion::Gen1) {
       return getNextTargetGen1(state, position, direction);
-
     } else {  // gen3 handling of the next target
-
       return getNextTargetGen3(state, position, direction);
     }
   }
@@ -796,9 +849,26 @@ class Navigator {
     NavigationArguments args;
     args.position = position;
     args.direction = direction;
+
     state.currentVolume->initializeNavigationCandidates(
         state.options.geoContext, args, appendOnly, logger());
+    /// Add the external surfaces from the volume as extra candidates
+    if (!state.options.externalSurfaces.empty()) {
+      const auto volId = state.currentVolume->geometryId().volume();
 
+      std::ranges::for_each(state.options.externalSurfaces,
+                            [&](const GeometryIdentifier& extId) {
+                              if (extId.volume() != volId) {
+                                return;
+                              }
+                              const Surface* extSurface =
+                                  m_cfg.trackingGeometry->findSurface(extId);
+                              assert(extSurface != nullptr);
+
+                              appendOnly.addSurfaceCandidate(
+                                  *extSurface, BoundaryTolerance::Infinite());
+                            });
+    }
     ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                                 << " navigation candidates.");
 
@@ -812,16 +882,32 @@ class Navigator {
 
     state.navCandidates.clear();
 
-    for (auto& candidate : state.stream.candidates()) {
-      if (!detail::checkPathLength(candidate.intersection().pathLength(),
-                                   state.options.nearLimit,
-                                   state.options.farLimit, logger())) {
-        continue;
-      }
-
-      state.navCandidates.emplace_back(candidate);
+    std::ranges::copy_if(
+        state.stream.candidates(), std::back_inserter(state.navCandidates),
+        [&](const NavigationTarget& candidate) {
+          return detail::checkPathLength(candidate.intersection().pathLength(),
+                                         state.options.nearLimit,
+                                         state.options.farLimit, logger());
+        });
+    if (!state.freeCandidates.empty()) {
+      updateFreeIntersections(state, position, direction);
+      double freeFarLimit{-std::numeric_limits<double>::max()};
+      std::ranges::for_each(
+          state.navCandidates,
+          [&freeFarLimit](const NavigationTarget& candidate) {
+            if (candidate.isPortalTarget()) {
+              freeFarLimit =
+                  std::max(freeFarLimit, candidate.intersection().pathLength());
+            }
+          });
+      std::ranges::copy_if(
+          state.freeCandidates, std::back_inserter(state.navCandidates),
+          [&](const NavigationTarget& candidate) {
+            return detail::checkPathLength(
+                candidate.intersection().pathLength(), state.options.nearLimit,
+                freeFarLimit, logger());
+          });
     }
-
     // Sort the candidates with the path length
     std::ranges::sort(state.navCandidates, [](const auto& a, const auto& b) {
       return a.intersection().pathLength() < b.intersection().pathLength();
@@ -841,7 +927,27 @@ class Navigator {
       logger().log(Logging::VERBOSE, os.str());
     }
   }
-
+  /// @brief  Update the intersections with the free surfaces of the navigation state.
+  ///         Selects the first free surface which is ahead of the track
+  /// @param state: The current navigation state
+  /// @param position: The current track position
+  /// @param direction: The current track direction
+  void updateFreeIntersections(State& state, const Vector3& position,
+                               const Vector3& direction) const {
+    std::ranges::for_each(state.freeCandidates, [&](NavigationTarget& target) {
+      if (target.pathLength() < state.options.nearLimit) {
+        return;
+      }
+      auto [intersection, intersectionIndex] =
+          target.surface()
+              .intersect(state.options.geoContext, position, direction,
+                         BoundaryTolerance::Infinite())
+              .closestWithIndex();
+      target =
+          NavigationTarget{intersection, intersectionIndex, target.surface(),
+                           BoundaryTolerance::Infinite()};
+    });
+  }
   /// @brief Resolve compatible surfaces
   ///
   /// This function resolves the compatible surfaces for the navigation.
@@ -870,22 +976,34 @@ class Navigator {
     navOpts.endObject = state.targetSurface;
     navOpts.nearLimit = state.options.nearLimit;
     navOpts.farLimit = state.options.farLimit;
-
+    // setup the surface candidates requested by the user
     if (!state.options.externalSurfaces.empty()) {
       auto layerId = layerSurface->geometryId().layer();
-      auto externalSurfaceRange =
-          state.options.externalSurfaces.equal_range(layerId);
-      navOpts.externalSurfaces.reserve(
-          state.options.externalSurfaces.count(layerId));
-      for (auto itSurface = externalSurfaceRange.first;
-           itSurface != externalSurfaceRange.second; itSurface++) {
-        navOpts.externalSurfaces.push_back(itSurface->second);
-      }
+      navOpts.externalSurfaces.reserve(state.options.externalSurfaces.size());
+      std::ranges::copy_if(state.options.externalSurfaces,
+                           std::back_inserter(navOpts.externalSurfaces),
+                           [layerId](const GeometryIdentifier& extId) {
+                             return extId.layer() == layerId;
+                           });
     }
 
     // Request the compatible surfaces
     state.navSurfaces = currentLayer->compatibleSurfaces(
         state.options.geoContext, position, direction, navOpts);
+    if (!state.freeCandidates.empty()) {
+      auto iSect = currentLayer->surfaceRepresentation()
+                       .intersect(state.options.geoContext, position, direction,
+                                  BoundaryTolerance::Infinite())
+                       .closestWithIndex()
+                       .first;
+      updateFreeIntersections(state, position, direction);
+      std::ranges::copy_if(
+          state.freeCandidates, std::back_inserter(state.navSurfaces),
+          [&](const NavigationTarget& cand) {
+            return std::abs(cand.pathLength() - iSect.pathLength()) <
+                   0.5 * currentLayer->thickness();
+          });
+    }
     // Sort the surfaces by path length.
     // Special care is taken for the external surfaces which should always
     // come first, so they are preferred to be targeted and hit first.

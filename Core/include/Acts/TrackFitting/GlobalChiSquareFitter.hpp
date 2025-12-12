@@ -546,7 +546,8 @@ void fillGx2fSystem(
   for (const auto& trackState : track.trackStates()) {
     // Get and store geoId for the current surface
     const GeometryIdentifier geoId = trackState.referenceSurface().geometryId();
-    ACTS_DEBUG("Start to investigate trackState on surface " << geoId);
+    ACTS_DEBUG("Start to investigate trackState on "
+               << trackState.referenceSurface().type() << " surface " << geoId);
     const auto typeFlags = trackState.typeFlags();
     const bool stateHasMeasurement =
         typeFlags.test(TrackStateFlag::MeasurementFlag);
@@ -752,7 +753,8 @@ class Gx2Fitter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
+    const std::unordered_map<const Surface*, SourceLink>* inputMeasurements =
+        nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = false;
@@ -834,11 +836,16 @@ class Gx2Fitter {
 
       ++result.surfaceCount;
       const GeometryIdentifier geoId = surface->geometryId();
-      ACTS_DEBUG("Surface " << geoId << " detected.");
 
       const bool surfaceIsSensitive =
-          (surface->associatedDetectorElement() != nullptr);
+          (surface->associatedDetectorElement() != nullptr) ||
+          inputMeasurements->count(surface);
       const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
+      ACTS_DEBUG(surface->type()
+                 << " Surface " << geoId << " detected. Is sensitive: "
+                 << (surfaceIsSensitive ? "yes" : "no")
+                 << ", has material: " << (surfaceHasMaterial ? "yes" : "no"));
+
       // First we figure out, if we would need to look into material surfaces at
       // all. Later, we also check, if the material slab is valid, otherwise we
       // modify this flag to ignore the material completely.
@@ -888,7 +895,7 @@ class Gx2Fitter {
       }
 
       // Here we handle all measurements
-      if (auto sourceLinkIt = inputMeasurements->find(geoId);
+      if (auto sourceLinkIt = inputMeasurements->find(surface);
           sourceLinkIt != inputMeasurements->end()) {
         ACTS_DEBUG("    The surface contains a measurement.");
 
@@ -1204,12 +1211,12 @@ class Gx2Fitter {
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Surface*, SourceLink> inputMeasurements;
 
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      auto geoId = gx2fOptions.extensions.surfaceAccessor(sl)->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      const Surface* surface = gx2fOptions.extensions.surfaceAccessor(sl);
+      inputMeasurements.try_emplace(surface, std::move(sl));
     }
 
     // Store, if we want to do multiple scattering. We still need to pass this
@@ -1267,8 +1274,8 @@ class Gx2Fitter {
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      for (const auto& [surfaceId, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1433,15 +1440,16 @@ class Gx2Fitter {
     /// Finish Fitting /////////////////////////////////////////////////////////
 
     /// Actual MATERIAL Fitting ////////////////////////////////////////////////
-    ACTS_DEBUG("Start to evaluate material");
     if (multipleScattering) {
+      ACTS_DEBUG("Start to evaluate material");
+
       // Setup the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      for (const auto& [surfaceId, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1567,20 +1575,22 @@ class Gx2Fitter {
       ACTS_VERBOSE("Updated parameters: " << params.parameters().transpose());
 
       updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
-    }
-    ACTS_DEBUG("Finished to evaluate material");
-    ACTS_VERBOSE(
-        "Final parameters after material: " << params.parameters().transpose());
-    /// Finish MATERIAL Fitting ////////////////////////////////////////////////
+      ACTS_DEBUG("Finished to evaluate material");
+      ACTS_VERBOSE("Final parameters after material: "
+                   << params.parameters().transpose());
 
-    ACTS_VERBOSE("Final scattering angles:");
-    for (const auto& [key, value] : scatteringMap) {
-      if (!value.materialIsValid()) {
-        continue;
+      /// Finish MATERIAL Fitting
+      /// ////////////////////////////////////////////////
+
+      ACTS_VERBOSE("Final scattering angles:");
+      for (const auto& [key, value] : scatteringMap) {
+        if (!value.materialIsValid()) {
+          continue;
+        }
+        const auto& angles = value.scatteringAngles();
+        ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | "
+                              << angles[eBoundPhi] << " )");
       }
-      const auto& angles = value.scatteringAngles();
-      ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | " << angles[eBoundPhi]
-                            << " )");
     }
 
     ACTS_VERBOSE("Final covariance:\n" << fullCovariancePredicted);
@@ -1597,6 +1607,13 @@ class Gx2Fitter {
 
       // set up the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
+
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(*surface);
+      }
+
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;
