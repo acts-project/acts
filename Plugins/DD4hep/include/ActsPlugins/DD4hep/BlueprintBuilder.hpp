@@ -132,6 +132,12 @@ class PlaneLayerHelper {
     return *this;
   }
 
+  PlaneLayerHelper& setLayerType(
+      Acts::Experimental::LayerBlueprintNode::LayerType layerType) {
+    m_layerType = layerType;
+    return *this;
+  }
+
   PlaneLayerHelper& setPattern(const std::string& pattern) {
     return setPattern(std::regex{pattern});
   }
@@ -184,6 +190,9 @@ class PlaneLayerHelper {
   std::optional<Acts::ExtentEnvelope> m_envelope;
   std::optional<Acts::VolumeAttachmentStrategy> m_attachmentStrategy;
   bool m_emptyOk = false;
+  // for LayerBlueprintNode - otherwise the default case is cylinder
+  Acts::Experimental::LayerBlueprintNode::LayerType m_layerType =
+      Acts::Experimental::LayerBlueprintNode::LayerType::Plane;
 
   Customizer m_customizer;
 };
