@@ -155,8 +155,7 @@ class MultiTrajectory {
 
   // Pull out type alias and re-expose them for ease of use.
   /// Maximum number of measurement dimensions supported by this trajectory
-  static constexpr unsigned int MeasurementSizeMax =
-      MultiTrajectoryTraits::MeasurementSizeMax;
+  static constexpr unsigned int MeasurementSizeMax = kMeasurementSizeMax;
 
   friend class TrackStateProxy<Derived, MeasurementSizeMax, true>;
   friend class TrackStateProxy<Derived, MeasurementSizeMax, false>;
@@ -174,10 +173,10 @@ class MultiTrajectory {
       Acts::TrackStateProxy<Derived, MeasurementSizeMax, false>;
 
   /// The index type of the track state container
-  using IndexType = typename TrackStateProxy::IndexType;
+  using IndexType = TrackIndexType;
 
   /// Sentinel value that indicates an invalid index
-  static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
  protected:
   MultiTrajectory() = default;  // pseudo abstract base class
@@ -288,7 +287,7 @@ class MultiTrajectory {
   void applyBackwards(IndexType iendpoint, F&& callable)
     requires(!ReadOnly) && detail_lt::VisitorConcept<F, TrackStateProxy>
   {
-    if (iendpoint == MultiTrajectoryTraits::kInvalid) {
+    if (iendpoint == kInvalid) {
       throw std::runtime_error(
           "Cannot apply backwards with kInvalid as endpoint");
     }

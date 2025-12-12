@@ -65,10 +65,10 @@ class TrackProxy {
   using Trajectory = trajectory_t;
 
   /// The index type of the track container
-  using IndexType = typename Container::IndexType;
+  using IndexType = TrackIndexType;
 
   /// Sentinel value that indicates an invalid index
-  static constexpr IndexType kInvalid = Container::kInvalid;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
   /// Alias for the mutable version of this track proxy, with the same backends
   using MutableTrackProxy =

@@ -16,6 +16,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
@@ -45,7 +46,7 @@ using namespace Acts;
 using namespace Acts::HashedStringLiteral;
 using namespace Acts::detail::Test;
 
-using MultiTrajectoryTraits::IndexType;
+using IndexType = TrackIndexType;
 
 const GeometryContext gctx;
 // fixed seed for reproducible tests
@@ -163,7 +164,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
     }
   };
 
-  auto ts1 = mkts(MultiTrajectoryTraits::kInvalid);
+  auto ts1 = mkts(kTrackIndexInvalid);
   auto ts2 = mkts(ts1);
   auto ts3 = mkts(ts2);
   auto ts4 = mkts(ts3);

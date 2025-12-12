@@ -10,6 +10,8 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 
+#include "Acts/EventData/Types.hpp"
+
 #include <type_traits>
 
 #include <Eigen/Core>
@@ -21,7 +23,7 @@ template <typename F>
 void MultiTrajectory<D>::visitBackwards(IndexType iendpoint, F&& callable) const
   requires detail_lt::VisitorConcept<F, ConstTrackStateProxy>
 {
-  if (iendpoint == MultiTrajectoryTraits::kInvalid) {
+  if (iendpoint == kTrackIndexInvalid) {
     throw std::runtime_error(
         "Cannot visit backwards with kInvalid as endpoint");
   }

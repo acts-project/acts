@@ -22,6 +22,9 @@ using TrackIndexType = std::uint32_t;
 static constexpr TrackIndexType kTrackIndexInvalid =
     std::numeric_limits<TrackIndexType>::max();
 
+/// Maximum size of measurement dimension supported
+static constexpr std::size_t kMeasurementSizeMax = eBoundSize;
+
 /// @brief Type alias for bitset representing parameter projections
 /// @details Used to store parameter projection information in a compact bit format
 using ProjectorBitset = std::uint64_t;

@@ -37,10 +37,8 @@ namespace detail_vtc {
 
 class VectorTrackContainerBase {
  public:
-  using IndexType = MultiTrajectoryTraits::IndexType;
-  static constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
-  static constexpr auto MeasurementSizeMax =
-      MultiTrajectoryTraits::MeasurementSizeMax;
+  using IndexType = TrackIndexType;
+  static constexpr auto kInvalid = kTrackIndexInvalid;
 
   using Parameters =
       typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
