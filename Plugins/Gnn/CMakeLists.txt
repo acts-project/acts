@@ -15,6 +15,8 @@ if(ACTS_GNN_ENABLE_CUDA)
         ActsPluginGnn
         PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
+    target_link_libraries(ActsPluginGnn PUBLIC CUDA::nvtx3)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_NVTX)
 endif()
 
 if(ACTS_GNN_ENABLE_MODULEMAP)
@@ -59,8 +61,6 @@ target_include_directories(
 )
 
 target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
-
-target_link_libraries(ActsPluginGnn PRIVATE std::filesystem)
 
 if(ACTS_GNN_ENABLE_CUDA)
     target_compile_features(ActsPluginGnn PUBLIC cuda_std_20)
