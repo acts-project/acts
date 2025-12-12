@@ -242,7 +242,7 @@ endif()
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_actsvg_version 0.4.56)
-set(_acts_boost_version 1.77.0) # first version with C++20 support
+set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
 set(_acts_edm4hep_version 0.10.5)
@@ -259,16 +259,12 @@ set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 2.13.1)
 set(_acts_detray_version 0.103.0)
-set(_acts_traccc_version 0.26.0)
+set(_acts_traccc_version 0.26.1)
 set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.21.0)
 set(_acts_algebraplugins_version 0.28.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
-
-# recommended dependency version. if there is an opportunity to reach
-# this version we will try so.
-set(_acts_boost_recommended_version 1.78.0)
 
 # Help with compiler flags discovery
 include(ActsFunctions)
@@ -296,13 +292,6 @@ if(ACTS_SETUP_BOOST)
         find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
     endif()
 
-    if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
-        message(
-            WARNING
-            "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}"
-        )
-    endif()
-
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
         set(_boost_version_severity WARNING)
         if(ACTS_BUILD_EXAMPLES)
@@ -317,10 +306,44 @@ endif()
 
 if(ACTS_SETUP_EIGEN3)
     if(ACTS_USE_SYSTEM_EIGEN3)
-        find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
+        find_package(Eigen3 REQUIRED CONFIG)
+
+        if(DEFINED Eigen3_VERSION)
+            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_version)
+                message(
+                    FATAL_ERROR
+                    "Eigen3 ${Eigen3_VERSION} is too old (need >= 3.4.0)"
+                )
+            endif()
+            if(Eigen3_VERSION VERSION_GREATER_EQUAL 6.0.0)
+                message(
+                    FATAL_ERROR
+                    "Eigen3 ${Eigen3_VERSION} is not supported (need < 6.0.0)"
+                )
+            endif()
+        else()
+            message(
+                WARNING
+                "Eigen3 version unknown - cannot verify version requirements"
+            )
+        endif()
     else()
         add_subdirectory(thirdparty/eigen3)
     endif()
+    # get the first include path so we can nicely print where we get eigen from
+    get_target_property(
+        _eigen3_include_dirs
+        Eigen3::Eigen
+        INTERFACE_INCLUDE_DIRECTORIES
+    )
+    if(_eigen3_include_dirs)
+        list(GET _eigen3_include_dirs 0 _eigen3_first_include_dir)
+    endif()
+
+    message(
+        STATUS
+        "Found Eigen3 at: ${_eigen3_first_include_dir} (${Eigen3_VERSION})"
+    )
 endif()
 
 find_package(Filesystem REQUIRED)
@@ -402,7 +425,7 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         ${_acts_root_version}
         REQUIRED
         CONFIG
-        COMPONENTS Geom Graf
+        COMPONENTS Geom Graf Tree RIO Hist
     )
     check_root_compatibility()
 endif()
@@ -581,11 +604,11 @@ add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
 add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 
-# Python bindings infrastructure
-add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-
-# examples
+# Examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+
+# Python bindings
+add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
 
 # automated tests and benchmarks
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)

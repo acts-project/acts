@@ -4,6 +4,11 @@ from pathlib import Path
 
 import acts
 import acts.examples
+from acts.examples.root import (
+    RootTrackStatesWriter,
+    RootTrackSummaryWriter,
+    RootTrackFitterPerformanceWriter,
+)
 
 from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -17,8 +22,8 @@ def runRefittingKf(
     outputDir: Path,
     multipleScattering: bool = True,
     energyLoss: bool = True,
-    reverseFilteringMomThreshold=0 * u.GeV,
-    reverseFilteringCovarianceScaling=1.0,
+    reverseFilteringMomThreshold=float("inf"),
+    reverseFilteringCovarianceScaling=100.0,
     s: acts.examples.Sequencer = None,
 ):
     s = runTruthTrackingKalman(
@@ -26,7 +31,7 @@ def runRefittingKf(
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
-        reverseFilteringMomThreshold=reverseFilteringMomThreshold,
+        reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
         reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
         s=s,
     )
@@ -65,7 +70,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
@@ -77,7 +82,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
@@ -87,7 +92,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackFitterPerformanceWriter(
+        RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",

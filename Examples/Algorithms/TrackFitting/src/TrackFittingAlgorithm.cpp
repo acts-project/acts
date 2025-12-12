@@ -95,8 +95,12 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                           clusters);
 
   TrackFitterFunction::GeneralFitterOptions options{
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, pSurface.get(),
-      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext)};
+      ctx.geoContext,
+      ctx.magFieldContext,
+      ctx.calibContext,
+      pSurface.get(),
+      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+      false};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
@@ -166,6 +170,8 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
                    << result.error().message());
     }
   }
+
+  ACTS_DEBUG("Fitted tracks: " << trackContainer->size());
 
   if (logger().doPrint(Acts::Logging::DEBUG)) {
     std::stringstream ss;

@@ -18,12 +18,17 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsPlugins/Gnn/GraphStoreHook.hpp"
 #include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
+#include "ActsPlugins/Gnn/detail/NvtxUtils.hpp"
 
 #include <algorithm>
 #include <chrono>
 #include <numeric>
 
 #include "createFeatures.hpp"
+
+#ifdef ACTS_GNN_WITH_CUDA
+#include <cuda_runtime_api.h>
+#endif
 
 using namespace Acts;
 using namespace ActsPlugins;
@@ -87,12 +92,19 @@ ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
     throw std::invalid_argument(
         "Number of features mismatches number of scale parameters.");
   }
+
+// Reset error state to prevent failure due to previous runs
+#ifdef ACTS_GNN_WITH_CUDA
+  cudaGetLastError();
+#endif
 }
 
 /// Allow access to features with nice names
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  ACTS_NVTX_START(data_preparation);
+
   using Clock = std::chrono::high_resolution_clock;
   using Duration = std::chrono::duration<double, std::milli>;
   auto t0 = Clock::now();
@@ -179,6 +191,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
   ACTS_DEBUG("Feature creation:        " << ms(t03, t1));
 
   // Run the pipeline
+  ACTS_NVTX_STOP(data_preparation);
   GnnTiming timing;
 #ifdef ACTS_GNN_CPUONLY
   Device device = {Device::Type::eCPU, 0};
@@ -187,6 +200,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
 #endif
   auto trackCandidates =
       m_pipeline.run(features, moduleIds, idxs, device, hook, &timing);
+  ACTS_NVTX_START(post_processing);
 
   auto t2 = Clock::now();
 
@@ -251,6 +265,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
     m_timing.fullTime(Duration(t3 - t0).count());
   }
 
+  ACTS_NVTX_STOP(post_processing);
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

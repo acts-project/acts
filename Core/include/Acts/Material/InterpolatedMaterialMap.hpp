@@ -156,7 +156,7 @@ struct MaterialMapper {
 
     // Loop through all corner points
     constexpr std::size_t nCorners = 1 << DIM_POS;
-    std::array<Material::ParametersVector, nCorners> neighbors;
+    std::array<Material::ParametersVector, nCorners> neighbors{};
     const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
 
     std::size_t i = 0;

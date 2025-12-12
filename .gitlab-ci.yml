@@ -9,7 +9,9 @@ variables:
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v17.0.0
+  DEPENDENCY_TAG: v18.0.0
+
+  MODEL_STORAGE: ${CI_PROJECT_DIR}/ci_models
 
 .ccache_base:
   cache:
@@ -221,10 +223,14 @@ test_gnn_python:
     - |
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
+    - CI/dependencies/download_models.sh
+    - ls ${MODEL_STORAGE}
+    - apt-get install tree
+    - tree ${MODEL_STORAGE}
     - source ../build/this_acts_withdeps.sh
-    - python3 -m pip install -r Examples/Python/tests/requirements.txt
+    - python3 -m pip install -r Python/Examples/tests/requirements.txt
     # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
-    - python3 -c "from acts.examples import ModuleMapCuda"
+    - python3 -c "from acts.examples.gnn import ModuleMapCuda"
     - pytest -rfExw -k torch -v --collect-only
     - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
 
@@ -509,7 +515,7 @@ linux_ubuntu_2404_clang19:
 
     # Install Python dependencies
     - source build/this_acts_withdeps.sh
-    - python3 -m pip install -r src/Examples/Python/tests/requirements.txt
+    - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
     - cd src
     - pytest -rfExw -k "not gnn" -v -n1
 
