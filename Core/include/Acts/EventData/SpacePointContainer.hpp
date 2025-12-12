@@ -24,8 +24,6 @@ struct SpacePointContainerConfig {
   bool useDetailedDoubleMeasurementInfo = false;
 
   bool isInInternalUnits = true;
-  //[[deprecated("SpacePointContainerConfig uses internal units")]]
-  SpacePointContainerConfig toInternalUnits() const { return *this; };
 };
 
 struct SpacePointContainerOptions {
@@ -35,8 +33,6 @@ struct SpacePointContainerOptions {
                         0 * Acts::UnitConstants::mm};
 
   bool isInInternalUnits = true;
-  //[[deprecated("SpacePointContainerOptions uses internal units")]]
-  SpacePointContainerOptions toInternalUnits() const { return *this; }
 };
 
 template <typename container_t, template <typename> class holder_t>
