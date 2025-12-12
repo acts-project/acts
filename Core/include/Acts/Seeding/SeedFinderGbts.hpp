@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -24,6 +25,7 @@ namespace Acts::Experimental {
 // defined the tuple template used to carry the spacepoint components
 using SPContainerComponentsType =
     std::tuple<SpacePointContainer2, SpacePointColumnProxy<int, true>,
+               SpacePointColumnProxy<float, true>,
                SpacePointColumnProxy<float, true>>;
 
 class SeedFinderGbts {
@@ -50,6 +52,10 @@ class SeedFinderGbts {
       std::vector<GNN_Edge>& edgeStorage) const;
 
   int runCCA(int nEdges, std::vector<GNN_Edge>& edgeStorage) const;
+
+  void extractSeedsFromTheGraph(
+      int, int, int, std::vector<GNN_Edge>&,
+      std::vector<std::tuple<float, int, std::vector<unsigned int>>>&) const;
 
  private:
   SeedFinderGbtsConfig m_config;

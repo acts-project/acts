@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <iostream>
 #include <numbers>
 namespace Acts::Experimental {
 
@@ -100,8 +101,37 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
         std::pair<float, unsigned int>(phi + 2 * std::numbers::pi, nIdx));
   }
 }
+GbtsDataStorage::GbtsDataStorage(const GbtsGeometry& g, std::string& lut,
+                                 bool useML)
+    : m_geo(g), m_LutInputFile(lut) {
+  // parse the look up table if useML is true
+  if (useML) {
+    if (m_LutInputFile.empty()) {
+      throw std::runtime_error("Cannot find ML predictor LUT file");
+    } else {
+      m_mlLUT.reserve(100);
+      std::ifstream ifs(std::string(m_LutInputFile).c_str());
 
-GbtsDataStorage::GbtsDataStorage(const GbtsGeometry& g) : m_geo(g) {
+      if (!ifs.is_open()) {
+        throw std::runtime_error("Failed to open LUT file");
+      }
+
+      float cl_width{}, min1{}, max1{}, min2{}, max2{};
+
+      while (ifs >> cl_width >> min1 >> max1 >> min2 >> max2) {
+        std::array<float, 5> lut_line = {cl_width, min1, max1, min2, max2};
+        m_mlLUT.emplace_back(lut_line);
+      }
+      if (!ifs.eof()) {
+        // ended if parse error present, not clean EOF
+
+        throw std::runtime_error("Stopped reading LUT file due to parse error");
+      }
+
+      ifs.close();
+    }
+  }
+
   m_etaBins.resize(g.num_bins());
 }
 
@@ -132,7 +162,7 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
     } else {
       if (useML) {
         float cluster_width = node.pixelClusterWidth();
-        if (cluster_width > 0.2) {
+        if (cluster_width > 0.35) {
           continue;
         }
       }
@@ -187,6 +217,9 @@ void GbtsDataStorage::sortByPhi() {
 void GbtsDataStorage::initializeNodes(bool useML) {
   for (auto& b : m_etaBins) {
     b.initializeNodes();
+    if (!b.m_vn.empty()) {
+      b.m_layerKey = m_geo.getGbtsLayerKeyByIndex((*b.m_vn.begin())->m_layer);
+    }
   }
 
   if (!useML) {
@@ -209,6 +242,10 @@ void GbtsDataStorage::initializeNodes(bool useML) {
       continue;
     }
 
+    // adjusting cuts on |cot(theta)| using pre-trained LUT loaded from file
+
+    int lutSize = m_mlLUT.size();
+
     int nBins = pL->m_bins.size();
 
     for (int b = 0; b < nBins; b++) {  // loop over eta-bins in Layer
@@ -221,13 +258,37 @@ void GbtsDataStorage::initializeNodes(bool useML) {
 
       for (unsigned int nIdx = 0; nIdx < B.m_vn.size(); nIdx++) {
         float cluster_width = B.m_vn[nIdx]->pixelClusterWidth();
-        // adjusting cuts using fitted boundaries of |cot(theta)| vs. cluster
-        // z-width distribution
-        float min_tau = 6.7 * (cluster_width - 0.2);  // linear fit
-        float max_tau =
-            1.6 + 0.15 / (cluster_width + 0.2) +
-            6.1 * (cluster_width -
-                   0.2);  // linear fit + correction for short clusters
+        float locPosY = B.m_vn[nIdx]->localPositionY();
+
+        int lutBinIdx = static_cast<int>(std::floor(20 * cluster_width)) -
+                        1;  // lut bin width is 0.05 mm, check if this is
+                            // actually what we want with float conversion
+
+        if (lutBinIdx >= lutSize) {
+          continue;
+        }
+        if (lutBinIdx < 0) {
+          continue;  // protect against negative index
+        }
+
+        const std::array<float, 5> lutBin = m_mlLUT[lutBinIdx];
+
+        float dist2border = 10.0 - std::abs(locPosY);
+
+        float min_tau = -100.0;
+        float max_tau = 100.0;
+
+        if (dist2border > 0.3f) {  // far enough from the edge
+          min_tau = lutBin[1];
+          max_tau = lutBin[2];
+        } else {  // possible cluster shortening at a module edge
+          min_tau = lutBin[3];
+          max_tau = lutBin[4];
+        }
+
+        if (max_tau < 0) {  // insufficient training data
+          max_tau = 100.0;  // use "no-cut" default
+        }
 
         B.m_params[nIdx][0] = min_tau;
         B.m_params[nIdx][1] = max_tau;

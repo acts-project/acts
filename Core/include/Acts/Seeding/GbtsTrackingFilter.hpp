@@ -52,7 +52,8 @@ struct GbtsEdgeState {
 class GbtsTrackingFilter {
  public:
   GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
-                     std::vector<GbtsEdge>& sb, SeedFinderGbtsConfig& config);
+                     std::vector<GbtsEdge>& sb,
+                     const SeedFinderGbtsConfig& config);
   ~GbtsTrackingFilter() = default;
 
   void followTrack(GbtsEdge* pS, GbtsEdgeState& output);
@@ -74,7 +75,7 @@ class GbtsTrackingFilter {
 
   int m_globalStateCounter{0};
 
-  SeedFinderGbtsConfig& m_config;
+  const SeedFinderGbtsConfig& m_config;
 };
 
 }  // namespace Acts::Experimental

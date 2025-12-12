@@ -19,7 +19,7 @@ from acts.examples.reconstruction import (
     TrackSelectorConfig,
 )
 
-ttbar_pu200 = True
+ttbar_pu200 = False
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
@@ -30,7 +30,7 @@ trackingGeometry = detector.trackingGeometry()
 field = acts.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=20, numThreads=8, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=10, numThreads=8, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
@@ -102,6 +102,7 @@ addSeeding(
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     layerMappingConfigFile=geo_dir / "itk-hgtd/GbtsMapping.csv",
     ConnectorInputConfigFile=geo_dir / "itk-hgtd/GbtsBinTable.txt",
+    LutInputConfigFile=geo_dir / "itk-hgtd/gbts_ml_pixel_barrel_loose.lut",
     outputDirRoot=outputDir,
 )
 

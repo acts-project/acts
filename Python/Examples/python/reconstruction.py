@@ -275,6 +275,7 @@ def addSeeding(
     stripGeoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
     ConnectorInputConfigFile: Optional[Union[Path, str]] = None,
+    LutInputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.GridTriplet,
     trackSmearingSigmas: TrackSmearingSigmas = TrackSmearingSigmas(),
     initialSigmas: Optional[list] = None,
@@ -463,6 +464,7 @@ def addSeeding(
                 layerMappingConfigFile,
                 geoSelectionConfigFile,
                 ConnectorInputConfigFile,
+                LutInputConfigFile,
             )
         elif seedingAlgorithm == SeedingAlgorithm.Hashing:
             logger.info("Using Hashing seeding")
@@ -1392,15 +1394,19 @@ def addGbtsSeeding(
     layerMappingConfigFile: Union[Path, str] = None,
     geoSelectionConfigFile: Union[Path, str] = None,
     ConnectorInputConfigFile: Union[Path, str] = None,
+    LutInputConfigFile: Optional[Union[Path, str]] = None,
 ):
     """Gbts seeding"""
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     ConnectorInputFileStr = str(ConnectorInputConfigFile)
+    LutInputConfigFileStr = str(LutInputConfigFile)
     seedFinderConfig = acts.examples.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
-            minPt=seedFinderConfigArg.minPt, ConnectorInputFile=ConnectorInputFileStr
+            minPt=seedFinderConfigArg.minPt,
+            ConnectorInputFile=ConnectorInputFileStr,
+            LutInputFile=LutInputConfigFileStr,
         ),
     )
     seedFinderOptions = acts.SeedFinderOptions(
