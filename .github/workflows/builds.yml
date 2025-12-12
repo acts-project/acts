@@ -396,10 +396,10 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
-      - name: Build
-        id: build
+      - name: Build ACTS
+        id: build-acts
         uses: addnab/docker-run-action@v3
-        continue-on-error: true
+        continue-on-error: false
         with:
           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
           options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
@@ -433,6 +433,23 @@ jobs:
             echo "::endgroup::"
             popd
 
+      - name: Build EICrecon
+        id: build-eicrecon
+        uses: addnab/docker-run-action@v3
+        continue-on-error: true
+        with:
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
+          shell: bash
+          run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            cd /work
+            set -ue
+
             pushd EICrecon
             echo "::group::EICrecon configure phase"
             ccache -z && \
@@ -447,17 +464,17 @@ jobs:
 
             ccache -s
 
-      - name: Create comment body
-        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+      - name: Create comment body header
+        if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
         run: |
           cat >comment-50-external-failure.md <<EOF
           # ❗️: Downstream build failure
 
-           - eic-shell (cc @acts-project/epic-contacts)
+          - eic-shell EICrecon (cc @acts-project/epic-contacts)
           EOF
 
       - name: Upload Artifact
-        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@v5
         with:
           name: comment-50-external-failure.md
