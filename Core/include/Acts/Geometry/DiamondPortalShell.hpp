@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/ConvexPolygonVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -17,15 +17,15 @@
 
 namespace Acts {
 
-/// @class ConvexPolygonPortalShell
+/// @class DiamondPortalShell
 /// Base class for convrrex polygon shaped portal shells, e.g
 /// single volumes with polygon shape or stacked (multiple) volumes (TODO)
 
-class ConvexPolygonPortalShell : public PortalShellBase {
+class DiamondPortalShell : public PortalShellBase {
  public:
-  using Face = ConvexPolygonVolumeBounds::Face;
+  using Face = DiamondVolumeBounds::Face;
 
-  using enum ConvexPolygonVolumeBounds::Face;
+  using enum DiamondVolumeBounds::Face;
 
   /// Retrieve a shared_ptr for the portal associated to the given face. Can be
   /// nullptr if unset.
@@ -49,20 +49,20 @@ class ConvexPolygonPortalShell : public PortalShellBase {
 /// @param os The output stream
 /// @param face The face to output
 /// @return The output stream
-std::ostream& operator<<(std::ostream& os, ConvexPolygonPortalShell::Face face);
+std::ostream& operator<<(std::ostream& os, DiamondPortalShell::Face face);
 
-/// @class SSingleConvexPolygonPortalShell
+/// @class SingleDiamondPortalShell
 /// Implementation of a portal shell class for a single convex polygon volume
-class SingleConvexPolygonPortalShell : public ConvexPolygonPortalShell {
+class SingleDiamondPortalShell : public DiamondPortalShell {
  public:
   /// Constructor of a convex polygon shape portal shell for the given volume
   /// @param volume The tracking volume this portal shell is associated with
-  explicit SingleConvexPolygonPortalShell(TrackingVolume& volume);
+  explicit SingleDiamondPortalShell(TrackingVolume& volume);
 
-  /// @copydoc ConvexPolygonPortalShell::portalPtr
+  /// @copydoc DiamondPortalShell::portalPtr
   std::shared_ptr<Portal> portalPtr(Face face) override;
 
-  /// @copydoc ConvexPolygonPortalShell::setPortal
+  /// @copydoc DiamondPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) override;
 
   /// @copydoc PortalShellBase::applyToVolume
@@ -77,7 +77,7 @@ class SingleConvexPolygonPortalShell : public ConvexPolygonPortalShell {
   /// @copydoc PortalShellBase::label
   std::string label() const override;
 
-  /// @copydoc ConvexPolygonPortalShell::transform
+  /// @copydoc DiamondPortalShell::transform
   const Transform3& transform() const override {
     return m_volume->transform();
   };
