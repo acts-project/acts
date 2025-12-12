@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <algorithm>
@@ -109,6 +110,7 @@ class TrackStateProxyCommon {
       typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
   using ConstCovarianceMap =
       typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
+
   using EffectiveCalibratedMap =
       typename detail_tsp::DynamicSizeTypes<false>::CoefficientsMap;
   using ConstEffectiveCalibratedMap =
@@ -288,8 +290,10 @@ class TrackStateProxyCommon {
   /// @return Bound parameter indices used for projection.
   BoundSubspaceIndices projectorSubspaceIndices() const {
     assert(hasProjector());
-    const auto& serialized = derived().template component<
-        SerializedSubspaceIndices, detail_tsp::kProjectorKey>();
+    const auto& serialized =
+        derived()
+            .template component<SerializedSubspaceIndices,
+                                detail_tsp::kProjectorKey>();
     return deserializeSubspaceIndices<eBoundSize>(serialized);
   }
 
@@ -337,8 +341,9 @@ class TrackStateProxyCommon {
     std::transform(subspaceIndices.begin(), subspaceIndices.end(),
                    boundSubspace.begin(),
                    [](auto i) { return static_cast<std::uint8_t>(i); });
-    derived().template component<SerializedSubspaceIndices,
-                                  detail_tsp::kProjectorKey>() =
+    derived()
+        .template component<SerializedSubspaceIndices,
+                            detail_tsp::kProjectorKey>() =
         serializeSubspaceIndices(boundSubspace);
   }
 
@@ -385,6 +390,110 @@ class TrackStateProxyCommon {
       return filteredCovariance();
     }
     return predictedCovariance();
+  }
+
+  /// Access the calibrated measurement values with runtime dimension.
+  /// @return Eigen map referencing the calibrated measurement vector.
+  ConstEffectiveCalibratedMap effectiveCalibrated() const {
+    const double* data = derived().calibratedData();
+    const auto size = derived().calibratedSize();
+    return ConstEffectiveCalibratedMap{data, size};
+  }
+
+  /// Access mutable calibrated measurement values with runtime dimension.
+  /// @return Eigen map referencing the calibrated measurement vector.
+  EffectiveCalibratedMap effectiveCalibrated()
+    requires(!read_only)
+  {
+    double* data = derived().calibratedDataMutable();
+    const auto size = derived().calibratedSize();
+    return EffectiveCalibratedMap{data, size};
+  }
+
+  /// Access the calibrated covariance with runtime dimension.
+  /// @return Eigen map referencing the measurement covariance matrix.
+  ConstEffectiveCalibratedCovarianceMap effectiveCalibratedCovariance() const {
+    const double* data = derived().calibratedCovarianceData();
+    const auto size = derived().calibratedSize();
+    return ConstEffectiveCalibratedCovarianceMap{data, size, size};
+  }
+
+  /// Access mutable calibrated covariance with runtime dimension.
+  /// @return Eigen map referencing the measurement covariance matrix.
+  EffectiveCalibratedCovarianceMap effectiveCalibratedCovariance()
+    requires(!read_only)
+  {
+    double* data = derived().calibratedCovarianceDataMutable();
+    const auto size = derived().calibratedSize();
+    return EffectiveCalibratedCovarianceMap{data, size, size};
+  }
+
+  /// Access calibrated measurement data with compile-time dimension.
+  /// @tparam measdim Measurement dimension.
+  /// @return Eigen map referencing the calibrated measurement vector.
+  template <std::size_t measdim>
+  typename TrackStateTraits<measdim, true>::Calibrated calibrated() const {
+    assert(derived().calibratedSize() == static_cast<TrackIndexType>(measdim));
+    const double* data = derived().calibratedData();
+    return typename TrackStateTraits<measdim, true>::Calibrated(data);
+  }
+
+  /// Access calibrated measurement data with compile-time dimension.
+  /// @tparam measdim Measurement dimension.
+  /// @return Mutable Eigen map referencing the calibrated measurement vector.
+  template <std::size_t measdim>
+  typename TrackStateTraits<measdim, false>::Calibrated calibrated()
+    requires(!read_only)
+  {
+    assert(derived().calibratedSize() == static_cast<TrackIndexType>(measdim));
+    double* data = derived().calibratedDataMutable();
+    return typename TrackStateTraits<measdim, false>::Calibrated(data);
+  }
+
+  /// Access calibrated covariance data with compile-time dimension.
+  /// @tparam measdim Measurement dimension.
+  /// @return Eigen map referencing the covariance matrix.
+  template <std::size_t measdim>
+  typename TrackStateTraits<measdim, true>::CalibratedCovariance
+  calibratedCovariance() const {
+    assert(derived().calibratedSize() == static_cast<TrackIndexType>(measdim));
+    const double* data = derived().calibratedCovarianceData();
+    return typename TrackStateTraits<measdim, true>::CalibratedCovariance(data);
+  }
+
+  /// Access calibrated covariance data with compile-time dimension.
+  /// @tparam measdim Measurement dimension.
+  /// @return Mutable Eigen map referencing the covariance matrix.
+  template <std::size_t measdim>
+  typename TrackStateTraits<measdim, false>::CalibratedCovariance
+  calibratedCovariance()
+    requires(!read_only)
+  {
+    assert(derived().calibratedSize() == static_cast<TrackIndexType>(measdim));
+    double* data = derived().calibratedCovarianceDataMutable();
+    return
+        typename TrackStateTraits<measdim, false>::CalibratedCovariance(data);
+  }
+
+  /// Allocate and initialize calibrated data from static-size Eigen objects.
+  /// @tparam val_t Eigen vector type holding calibrated values.
+  /// @tparam cov_t Eigen matrix type holding the covariance.
+  /// @param val Vector to copy into the calibrated storage.
+  /// @param cov Covariance matrix to copy into the calibrated storage.
+  template <typename val_t, typename cov_t>
+  void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
+                          const Eigen::DenseBase<cov_t>& cov)
+    requires(!read_only && Concepts::eigen_base_is_fixed_size<val_t> &&
+             Concepts::eigen_bases_have_same_num_rows<val_t, cov_t> &&
+             Concepts::eigen_base_is_square<cov_t> &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <=
+                 static_cast<std::underlying_type_t<BoundIndices>>(eBoundSize))
+  {
+    constexpr std::size_t measdim =
+        static_cast<std::size_t>(val_t::RowsAtCompileTime);
+    derived().allocateCalibrated(measdim);
+    calibrated<measdim>() = val;
+    calibratedCovariance<measdim>() = cov;
   }
 };
 
