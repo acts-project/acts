@@ -59,18 +59,18 @@ namespace ActsPlugins {
 class PodioTrackStateContainerBase {
  public:
   using Parameters =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               false>::CoefficientsMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                false>::CoefficientsMap;
   using Covariance =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               false>::CovarianceMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                false>::CovarianceMap;
 
   using ConstParameters =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               true>::CoefficientsMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                true>::CoefficientsMap;
   using ConstCovariance =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               true>::CovarianceMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                true>::CovarianceMap;
 
  protected:
   template <typename T>
