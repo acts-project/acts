@@ -13,6 +13,7 @@
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -164,13 +165,27 @@ std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
 BlueprintBuilder::makeLayer(const dd4hep::DetElement& detElement,
                             const std::string& axes,
                             std::optional<std::string> layerAxes) const {
-  ACTS_DEBUG("Adding layer from element: " << detElement.name());
+  return makeLayer(detElement, resolveSensitives(detElement), axes,
+                   std::nullopt, std::move(layerAxes));
+}
+
+std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+BlueprintBuilder::makeLayer(const dd4hep::DetElement& parent,
+                            std::span<const dd4hep::DetElement> sensitives,
+                            const std::string& axes,
+                            std::optional<std::string> layerName,
+                            std::optional<std::string> layerAxes) const {
+  ACTS_DEBUG("Adding layer from element: "
+             << getPathToElementName(parent, "/")
+             << (layerName.has_value()
+                     ? "(layerName: " + layerName.value() + ")"
+                     : ""));
+
+  const auto postfix = layerName.has_value() ? "|" + layerName.value() : "";
   auto node = std::make_shared<Acts::Experimental::LayerBlueprintNode>(
-      getPathToElementName(detElement));
+      getPathToElementName(parent) + postfix);
 
-  auto sensitives = resolveSensitives(detElement);
-  ACTS_DEBUG("  Found " << sensitives.size() << " sensitive elements.");
-
+  ACTS_DEBUG("Using " << sensitives.size() << " sensitive elements.");
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   surfaces.reserve(sensitives.size());
 
@@ -184,10 +199,10 @@ BlueprintBuilder::makeLayer(const dd4hep::DetElement& detElement,
   if (layerAxes.has_value()) {
     ACTS_DEBUG("Finding layer transform automatically using layer axes: "
                << layerAxes.value());
-    Acts::Transform3 layerTransform = convertTGeoTransform(
-        *detElement.placement().ptr()->GetVolume()->GetShape(),
-        detElement.nominal().worldTransformation(), layerAxes.value(),
-        m_cfg.lengthScale);
+    Acts::Transform3 layerTransform =
+        convertTGeoTransform(*parent.placement().ptr()->GetVolume()->GetShape(),
+                             parent.nominal().worldTransformation(),
+                             layerAxes.value(), m_cfg.lengthScale);
 
     ACTS_VERBOSE(" -> Layer transform:\n" << layerTransform.matrix());
     node->setTransform(layerTransform);

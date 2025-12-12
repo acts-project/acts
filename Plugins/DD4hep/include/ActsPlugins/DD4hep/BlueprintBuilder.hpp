@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <regex>
 #include <string>
 #include <utility>
@@ -217,6 +218,12 @@ class BlueprintBuilder {
 
   std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
       const dd4hep::DetElement& detElement, const std::string& axes,
+      std::optional<std::string> layerAxes = std::nullopt) const;
+
+  std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
+      const dd4hep::DetElement& parent,
+      std::span<const dd4hep::DetElement> sensitives, const std::string& axes,
+      std::optional<std::string> layerName = std::nullopt,
       std::optional<std::string> layerAxes = std::nullopt) const;
 
   std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeBeampipe() const;
