@@ -350,7 +350,7 @@ class AnyTrackStateProxy
   template <TrackStateProxyConcept track_state_proxy_t>
     requires(ReadOnly || !track_state_proxy_t::ReadOnly)
   explicit AnyTrackStateProxy(const track_state_proxy_t& ts)
-      : m_container(nullptr), m_index(ts.m_istate), m_handler(nullptr) {
+      : m_container(nullptr), m_index(ts.m_istate) {
     using trajectory_t = typename track_state_proxy_t::Trajectory;
     auto* containerPtr = ts.rawTrajectoryPtr();
     if constexpr (ReadOnly) {
