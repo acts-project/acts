@@ -242,7 +242,7 @@ endif()
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_actsvg_version 0.4.56)
-set(_acts_boost_version 1.77.0) # first version with C++20 support
+set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
 set(_acts_edm4hep_version 0.10.5)
@@ -265,10 +265,6 @@ set(_acts_vecmem_version 1.21.0)
 set(_acts_algebraplugins_version 0.28.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
-
-# recommended dependency version. if there is an opportunity to reach
-# this version we will try so.
-set(_acts_boost_recommended_version 1.78.0)
 
 # Help with compiler flags discovery
 include(ActsFunctions)
@@ -294,13 +290,6 @@ if(ACTS_SETUP_BOOST)
         )
     else()
         find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
-    endif()
-
-    if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
-        message(
-            WARNING
-            "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}"
-        )
     endif()
 
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
@@ -615,11 +604,11 @@ add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
 add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 
-# Python bindings infrastructure
-add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-
-# examples
+# Examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+
+# Python bindings
+add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
 
 # automated tests and benchmarks
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)

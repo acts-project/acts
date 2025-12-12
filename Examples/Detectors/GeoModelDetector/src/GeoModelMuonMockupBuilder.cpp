@@ -83,7 +83,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     const ConvertedVolList_t& boundingBoxes, const std::string& name,
     Acts::VolumeBoundFactory& boundFactory,
     const Acts::GeometryIdentifier& geoId) const {
-  using enum Acts::TrapezoidVolumeBounds::BoundValues;
+  using enum Acts::CuboidVolumeBounds::BoundValues;
 
   /** Assume a station paradigm. MDT multilayers and complementary strip
    * detectors are residing under a common parent node representing a muon
@@ -208,19 +208,17 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     }
     volChambers.push_back(std::move(chamberVolume));
     maxZ = std::max(
-        maxZ, volChambers.back()->center().z() +
+        maxZ, std::abs(volChambers.back()->center().z()) +
                   volChambers.back()->volumeBounds().values()[eHalfLengthY]);
     ++stationNum;
   }
 
   const Acts::Vector3& cent{volChambers.front()->center()};
-  double rmincyl =
-      Acts::fastHypot(cent.x(), cent.y()) -
-      volChambers.front()->volumeBounds().values()[eHalfLengthXnegY];
+  double rmincyl = Acts::fastHypot(cent.x(), cent.y()) -
+                   volChambers.front()->volumeBounds().values()[eHalfLengthZ];
   double rmaxcyl = Acts::fastHypot(
-      rmincyl +
-          2 * volChambers.front()->volumeBounds().values()[eHalfLengthXnegY],
-      volChambers.front()->volumeBounds().values()[eHalfLengthXposY]);
+      rmincyl + 2 * volChambers.front()->volumeBounds().values()[eHalfLengthZ],
+      volChambers.front()->volumeBounds().values()[eHalfLengthX]);
   double halfZ = maxZ;
 
   // Create the barrel node with the attached cylinder volume
