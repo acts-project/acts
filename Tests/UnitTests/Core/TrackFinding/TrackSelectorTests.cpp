@@ -73,12 +73,12 @@ struct MockTrack {
   double loc1() const { return m_loc1; }
   double time() const { return m_time; }
 
-  std::size_t nMeasurements() const { return m_nMeasurements; }
-  std::size_t nHoles() const { return m_nHoles; }
-  std::size_t nOutliers() const { return m_nOutliers; }
-  std::size_t nSharedHits() const { return m_nSharedHits; }
+  unsigned int nMeasurements() const { return m_nMeasurements; }
+  unsigned int nHoles() const { return m_nHoles; }
+  unsigned int nOutliers() const { return m_nOutliers; }
+  unsigned int nSharedHits() const { return m_nSharedHits; }
   float chi2() const { return m_chi2; }
-  std::size_t nDoF() const { return m_nDoF; }
+  unsigned int nDoF() const { return m_nDoF; }
 
   unsigned int nTrackStates() const { return 0u; }
 
@@ -155,10 +155,10 @@ struct MockTrack {
   double m_loc0 = 0.;
   double m_loc1 = 0.;
   double m_time = 0.;
-  std::size_t m_nMeasurements = 0;
-  std::size_t m_nHoles = 0;
-  std::size_t m_nOutliers = 0;
-  std::size_t m_nSharedHits = 0;
+  unsigned int m_nMeasurements = 0;
+  unsigned int m_nHoles = 0;
+  unsigned int m_nOutliers = 0;
+  unsigned int m_nSharedHits = 0;
   float m_chi2 = 0.F;
   unsigned int m_nDoF = 0;
   double m_qOverP = 1.;
