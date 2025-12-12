@@ -317,6 +317,11 @@ class AnyTrackStateProxy
   using Base = detail_tsp::TrackStateProxyCommon<AnyTrackStateProxy<read_only>,
                                                  read_only>;
 
+  friend class detail_tsp::TrackStateProxyCommon<AnyTrackStateProxy<read_only>,
+                                                 read_only>;
+
+  using IndexType = Acts::TrackIndexType;
+
  public:
   static constexpr bool ReadOnly = read_only;
 
@@ -460,46 +465,9 @@ class AnyTrackStateProxy
     return component<T>(hashStringDynamic(key));
   }
 
-  /// Retrieve the previous track state index in the linked trajectory.
-  /// @return Index of the previous state or `kTrackIndexInvalid`.
-  TrackIndexType previous() const {
-    return component<TrackIndexType, detail_tsp::kPreviousKey>();
-  }
-
-  /// Retrieve a mutable reference to the previous track state index.
-  /// @return Mutable index of the previous state.
-  TrackIndexType& previous()
-    requires(!ReadOnly)
-  {
-    return component<TrackIndexType, detail_tsp::kPreviousKey>();
-  }
-
-  /// Check whether this state links to a previous state.
-  /// @return True if the previous index is valid.
-  bool hasPrevious() const { return previous() != kTrackIndexInvalid; }
-
-  /// Compute the property mask describing which components are present.
-  /// @return Bit mask of available properties.
-  TrackStatePropMask getMask() const {
-    using PM = TrackStatePropMask;
-    PM mask = PM::None;
-    if (hasPredicted()) {
-      mask |= PM::Predicted;
-    }
-    if (hasFiltered()) {
-      mask |= PM::Filtered;
-    }
-    if (hasSmoothed()) {
-      mask |= PM::Smoothed;
-    }
-    if (hasJacobian()) {
-      mask |= PM::Jacobian;
-    }
-    if (hasCalibrated()) {
-      mask |= PM::Calibrated;
-    }
-    return mask;
-  }
+  using Base::getMask;
+  using Base::hasPrevious;
+  using Base::previous;
 
   /// Access the surface the state is referenced to.
   /// @return Reference surface of the track state.
@@ -542,29 +510,12 @@ class AnyTrackStateProxy
                                                 std::move(sourceLink));
   }
 
-  /// Check for presence of predicted track parameters.
-  /// @return True if the predicted component exists.
-  bool hasPredicted() const { return has(detail_tsp::kPredictedKey); }
-
-  /// Check for presence of filtered track parameters.
-  /// @return True if the filtered component exists.
-  bool hasFiltered() const { return has(detail_tsp::kFilteredKey); }
-
-  /// Check for presence of smoothed track parameters.
-  /// @return True if the smoothed component exists.
-  bool hasSmoothed() const { return has(detail_tsp::kSmoothedKey); }
-
-  /// Check for presence of a transport Jacobian.
-  /// @return True if a Jacobian is stored.
-  bool hasJacobian() const { return has(detail_tsp::kJacobianKey); }
-
-  /// Check for presence of a measurement projector.
-  /// @return True if projector indices are stored.
-  bool hasProjector() const { return has(detail_tsp::kProjectorKey); }
-
-  /// Check for presence of calibrated measurement data.
-  /// @return True if calibrated measurements exist.
-  bool hasCalibrated() const { return has(detail_tsp::kCalibratedKey); }
+  using Base::hasCalibrated;
+  using Base::hasFiltered;
+  using Base::hasJacobian;
+  using Base::hasPredicted;
+  using Base::hasProjector;
+  using Base::hasSmoothed;
 
   /// Retrieve the measurement dimension of the calibrated data.
   /// @return Number of calibrated measurement entries.
@@ -752,65 +703,10 @@ class AnyTrackStateProxy
     return component<double, detail_tsp::kPathLengthKey>();
   }
 
-  /// Access the predicted parameter vector.
-  /// @return Bound parameter map for the predicted state.
-  ConstParametersMap predicted() const {
-    assert(hasPredicted());
-    return parametersFromComponent(detail_tsp::kPredictedKey);
-  }
-
-  /// Access the predicted parameter vector.
-  /// @return Mutable bound parameter map for the predicted state.
-  ParametersMap predicted()
-    requires(!ReadOnly)
-  {
-    return mutableParametersFromComponent(detail_tsp::kPredictedKey);
-  }
-
-  /// Access the predicted covariance matrix.
-  /// @return Bound covariance map for the predicted state.
-  ConstCovarianceMap predictedCovariance() const {
-    assert(hasPredicted());
-    return covarianceFromComponent(detail_tsp::kPredictedKey);
-  }
-
-  /// Access the predicted covariance matrix.
-  /// @return Mutable bound covariance map for the predicted state.
-  CovarianceMap predictedCovariance()
-    requires(!ReadOnly)
-  {
-    return mutableCovarianceFromComponent(detail_tsp::kPredictedKey);
-  }
-
-  /// Access the filtered parameter vector.
-  /// @return Bound parameter map for the filtered state.
-  ConstParametersMap filtered() const {
-    assert(hasFiltered());
-    return parametersFromComponent(detail_tsp::kFilteredKey);
-  }
-
-  /// Access the filtered parameter vector.
-  /// @return Mutable bound parameter map for the filtered state.
-  ParametersMap filtered()
-    requires(!ReadOnly)
-  {
-    return mutableParametersFromComponent(detail_tsp::kFilteredKey);
-  }
-
-  /// Access the filtered covariance matrix.
-  /// @return Bound covariance map for the filtered state.
-  ConstCovarianceMap filteredCovariance() const {
-    assert(hasFiltered());
-    return covarianceFromComponent(detail_tsp::kFilteredKey);
-  }
-
-  /// Access the filtered covariance matrix.
-  /// @return Mutable bound covariance map for the filtered state.
-  CovarianceMap filteredCovariance()
-    requires(!ReadOnly)
-  {
-    return mutableCovarianceFromComponent(detail_tsp::kFilteredKey);
-  }
+  using Base::filtered;
+  using Base::filteredCovariance;
+  using Base::predicted;
+  using Base::predictedCovariance;
 
   /// Access the smoothed parameter vector.
   /// @return Bound parameter map for the smoothed state.
@@ -929,6 +825,27 @@ class AnyTrackStateProxy
     requires(!ReadOnly)
   {
     mutableHandler()->unset(mutableContainerPtr(), m_index, target);
+  }
+
+ protected:
+  ConstParametersMap parametersAtIndex(IndexType parIndex) const {
+    return constHandler()->parameters(containerPtr(), parIndex);
+  }
+
+  ParametersMap parametersAtIndexMutable(IndexType parIndex) const
+    requires(!ReadOnly)
+  {
+    return mutableHandler()->parameters(mutableContainerPtr(), parIndex);
+  }
+
+  ConstCovarianceMap covarianceAtIndex(IndexType covIndex) const {
+    return constHandler()->covariance(containerPtr(), covIndex);
+  }
+
+  CovarianceMap covarianceAtIndexMutable(IndexType covIndex) const
+    requires(!ReadOnly)
+  {
+    return mutableHandler()->covariance(mutableContainerPtr(), covIndex);
   }
 
  private:
