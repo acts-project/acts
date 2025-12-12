@@ -707,6 +707,28 @@ class AnyTrackStateProxy
     return mutableHandler()->covariance(mutableContainerPtr(), covIndex);
   }
 
+  double* calibratedDataMutable()
+    requires(!ReadOnly)
+  {
+    return mutableHandler()->calibratedDataMutable(mutableContainerPtr(),
+                                                   m_index);
+  }
+
+  const double* calibratedData() const {
+    return constHandler()->calibratedData(containerPtr(), m_index);
+  }
+
+  double* calibratedCovarianceDataMutable()
+    requires(!ReadOnly)
+  {
+    return mutableHandler()->calibratedCovarianceDataMutable(
+        mutableContainerPtr(), m_index);
+  }
+
+  const double* calibratedCovarianceData() const {
+    return constHandler()->calibratedCovarianceData(containerPtr(), m_index);
+  }
+
  private:
   template <bool>
   friend class AnyTrackStateProxy;
