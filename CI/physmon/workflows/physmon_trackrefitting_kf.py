@@ -24,7 +24,7 @@ with tempfile.TemporaryDirectory() as temp:
         field=setup.field,
         digiConfigFile=setup.digiConfig,
         outputDir=tp,
-        reverseFilteringMomThreshold=float("inf"),
+        reverseFilteringMomThreshold=float("inf"),  # use reverse kf smoothing
         reverseFilteringCovarianceScaling=100.0,
         s=s,
     )

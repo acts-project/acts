@@ -83,6 +83,10 @@ Not complete yet
 :::{doxygenclass} Acts::MultiNavigationPolicy
 :::
 
+:::{doxygenclass} Acts::IndexGridNavigationPolicy
+:::
+
+
 :::{doxygenclass} Acts::SurfaceArrayNavigationPolicy
 :::
 
