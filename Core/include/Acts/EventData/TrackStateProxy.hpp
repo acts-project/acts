@@ -101,14 +101,14 @@ class TrackStateProxy {
 
   /// Map-type for a bound parameter vector. This has reference semantics, i.e.
   /// points at a matrix by an internal pointer.
-  using Parameters = typename TrackStateTraits<M, ReadOnly>::Parameters;
+  using Parameters = typename TrackStateTraits<M, false>::Parameters;
 
   /// Same as @ref Parameters, but with const semantics
   using ConstParameters = typename TrackStateTraits<M, true>::Parameters;
 
   /// Map-type for a bound covariance. This has reference semantics, i.e.
   /// points at a matrix by an internal pointer.
-  using Covariance = typename TrackStateTraits<M, ReadOnly>::Covariance;
+  using Covariance = typename TrackStateTraits<M, false>::Covariance;
 
   /// Same as @ref Covariance, but with const semantics
   using ConstCovariance = typename TrackStateTraits<M, true>::Covariance;
@@ -116,7 +116,7 @@ class TrackStateProxy {
   /// Map-type for a calibrated measurement vector, where the local measurement
   /// dimension is variable.
   template <std::size_t N>
-  using Calibrated = typename TrackStateTraits<N, ReadOnly>::Calibrated;
+  using Calibrated = typename TrackStateTraits<N, false>::Calibrated;
 
   /// Same as @c Calibrated, but with const semantics
   template <std::size_t N>
@@ -126,7 +126,7 @@ class TrackStateProxy {
   /// measurement dimension is variable.
   template <std::size_t N>
   using CalibratedCovariance =
-      typename TrackStateTraits<N, ReadOnly>::CalibratedCovariance;
+      typename TrackStateTraits<N, false>::CalibratedCovariance;
 
   /// Same as @ref CalibratedCovariance, but with const semantics
   template <std::size_t N>
@@ -136,7 +136,7 @@ class TrackStateProxy {
   /// Map-type for a measurement vector, where the local measurement dimension
   /// is variable.
   using EffectiveCalibrated =
-      typename TrackStateTraits<M, ReadOnly>::EffectiveCalibrated;
+      typename TrackStateTraits<M, false>::EffectiveCalibrated;
 
   /// Same as @c EffectiveCalibrated, but with const semantics
   using ConstEffectiveCalibrated =
@@ -145,7 +145,7 @@ class TrackStateProxy {
   /// Map-type for a measurement covariance matrix, where the local measurement
   /// dimension is variable.
   using EffectiveCalibratedCovariance =
-      typename TrackStateTraits<M, ReadOnly>::EffectiveCalibratedCovariance;
+      typename TrackStateTraits<M, false>::EffectiveCalibratedCovariance;
 
   /// Same as @ref EffectiveCalibratedCovariance, but with const semantics
   using ConstEffectiveCalibratedCovariance =

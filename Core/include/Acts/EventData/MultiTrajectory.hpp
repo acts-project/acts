@@ -466,7 +466,8 @@ class MultiTrajectory {
     return self().parameters_impl(parIdx);
   }
 
-  typename ConstTrackStateProxy::Parameters parameters(IndexType parIdx) const {
+  typename ConstTrackStateProxy::ConstParameters parameters(
+      IndexType parIdx) const {
     return self().parameters_impl(parIdx);
   }
 
@@ -476,7 +477,8 @@ class MultiTrajectory {
     return self().covariance_impl(covIdx);
   }
 
-  typename ConstTrackStateProxy::Covariance covariance(IndexType covIdx) const {
+  typename ConstTrackStateProxy::ConstCovariance covariance(
+      IndexType covIdx) const {
     return self().covariance_impl(covIdx);
   }
 
@@ -492,7 +494,8 @@ class MultiTrajectory {
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
   /// @param istate The track state
   /// @return Const proxy
-  typename ConstTrackStateProxy::Covariance jacobian(IndexType istate) const {
+  typename ConstTrackStateProxy::ConstCovariance jacobian(
+      IndexType istate) const {
     return self().jacobian_impl(istate);
   }
 
@@ -515,7 +518,7 @@ class MultiTrajectory {
   /// @param istate The track state
   /// @return Const proxy
   template <std::size_t measdim>
-  typename ConstTrackStateProxy::template Calibrated<measdim> calibrated(
+  typename ConstTrackStateProxy::template ConstCalibrated<measdim> calibrated(
       IndexType istate) const {
     return self().template calibrated_impl<measdim>(istate);
   }
@@ -596,7 +599,7 @@ class MultiTrajectory {
   /// @param istate The track state
   /// @return Const proxy
   template <std::size_t measdim>
-  typename ConstTrackStateProxy::template CalibratedCovariance<measdim>
+  typename ConstTrackStateProxy::template ConstCalibratedCovariance<measdim>
   calibratedCovariance(IndexType istate) const {
     return self().template calibratedCovariance_impl<measdim>(istate);
   }

@@ -403,16 +403,18 @@ class VectorMultiTrajectory final
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Parameters parameters_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Parameters{m_params[parIdx].data()};
+  ConstTrackStateProxy::ConstParameters parameters_impl(
+      IndexType parIdx) const {
+    return ConstTrackStateProxy::ConstParameters{m_params[parIdx].data()};
   }
 
   TrackStateProxy::Covariance covariance_impl(IndexType parIdx) {
     return TrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance covariance_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Covariance{m_cov[parIdx].data()};
+  ConstTrackStateProxy::ConstCovariance covariance_impl(
+      IndexType parIdx) const {
+    return ConstTrackStateProxy::ConstCovariance{m_cov[parIdx].data()};
   }
 
   TrackStateProxy::Covariance jacobian_impl(IndexType istate) {
@@ -420,9 +422,9 @@ class VectorMultiTrajectory final
     return TrackStateProxy::Covariance{m_jac[jacIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance jacobian_impl(IndexType istate) const {
+  ConstTrackStateProxy::ConstCovariance jacobian_impl(IndexType istate) const {
     IndexType jacIdx = m_index[istate].ijacobian;
-    return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
+    return ConstTrackStateProxy::ConstCovariance{m_jac[jacIdx].data()};
   }
 
   template <std::size_t measdim>
@@ -432,10 +434,10 @@ class VectorMultiTrajectory final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
+  ConstTrackStateProxy::ConstCalibrated<measdim> calibrated_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
-    return ConstTrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
+    return ConstTrackStateProxy::ConstCalibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
@@ -446,10 +448,10 @@ class VectorMultiTrajectory final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
-      IndexType istate) const {
+  ConstTrackStateProxy::ConstCalibratedCovariance<measdim>
+  calibratedCovariance_impl(IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
-    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+    return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
 
@@ -586,31 +588,33 @@ class ConstVectorMultiTrajectory final
 
   // BEGIN INTERFACE
 
-  ConstTrackStateProxy::Parameters parameters_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Parameters{m_params[parIdx].data()};
+  ConstTrackStateProxy::ConstParameters parameters_impl(
+      IndexType parIdx) const {
+    return ConstTrackStateProxy::ConstParameters{m_params[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance covariance_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Covariance{m_cov[parIdx].data()};
+  ConstTrackStateProxy::ConstCovariance covariance_impl(
+      IndexType parIdx) const {
+    return ConstTrackStateProxy::ConstCovariance{m_cov[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance jacobian_impl(IndexType istate) const {
+  ConstTrackStateProxy::ConstCovariance jacobian_impl(IndexType istate) const {
     IndexType jacIdx = m_index[istate].ijacobian;
-    return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
+    return ConstTrackStateProxy::ConstCovariance{m_jac[jacIdx].data()};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
+  ConstTrackStateProxy::ConstCalibrated<measdim> calibrated_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
-    return ConstTrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
+    return ConstTrackStateProxy::ConstCalibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
-      IndexType istate) const {
+  ConstTrackStateProxy::ConstCalibratedCovariance<measdim>
+  calibratedCovariance_impl(IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
-    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+    return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
 
