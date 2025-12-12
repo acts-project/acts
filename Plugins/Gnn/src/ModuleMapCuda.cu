@@ -470,7 +470,6 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   if (m_cfg.moreParallel) {
-    dim3 grid_dim_sort = nb_doublets;
     dim3 block_dim_even_odd = 64;
     ACTS_DEBUG("Using block_odd_even_sort, grid_dim.x = "
                << nb_doublets << ", block_dim.x = " << block_dim_even_odd.x);
@@ -497,7 +496,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
       cuda_z0.data(), cuda_phi_slope.data(), cuda_deta.data(), cuda_dphi.data(),
       cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
       cuda_TThits.cuda_R(), cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(),
-      cuda_TThits.cuda_phi(), TMath::Pi(), nb_doublet_edges, m_cfg.epsilon);
+      cuda_TThits.cuda_phi(), TMath::Pi(), m_cfg.epsilon, nb_doublet_edges);
   ACTS_CUDA_CHECK(cudaGetLastError());
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
