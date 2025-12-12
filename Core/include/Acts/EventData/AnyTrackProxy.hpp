@@ -205,9 +205,11 @@ class TrackHandler final : public TrackHandlerMutableBase {
 /// std::cout << "Chi2: " << AnyTrackProxy.chi2() << std::endl;
 /// @endcode
 template <bool read_only = true>
-class AnyTrackProxy
-    : public TrackProxyCommon<AnyTrackProxy<read_only>, TrackIndexType,
-                              read_only> {
+class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
+                                              TrackIndexType, read_only> {
+  using Base =
+      TrackProxyCommon<AnyTrackProxy<read_only>, TrackIndexType, read_only>;
+
  public:
   /// Indicates whether this track is read-only
   static constexpr bool ReadOnly = read_only;
@@ -367,33 +369,16 @@ class AnyTrackProxy
     return cov(i, j);
   }
 
-  /// Get the theta parameter
-  /// @return The theta value
-  double theta() const { return parameters()[eBoundTheta]; }
-
-  /// Get the phi parameter
-  /// @return The phi value
-  double phi() const { return parameters()[eBoundPhi]; }
-
-  /// Get the q/p parameter
-  /// @return The q/p value
-  double qOverP() const { return parameters()[eBoundQOverP]; }
-
-  /// Get the charge
-  /// @return The charge value
-  double charge() const { return particleHypothesis().extractCharge(qOverP()); }
-
-  /// Get the absolute momentum
-  /// @return The absolute momentum value
-  double absoluteMomentum() const {
-    return particleHypothesis().extractMomentum(qOverP());
-  }
-
-  /// Get the transverse momentum
-  /// @return The transverse momentum value
-  double transverseMomentum() const {
-    return std::sin(theta()) * absoluteMomentum();
-  }
+  using Base::absoluteMomentum;
+  using Base::charge;
+  using Base::fourMomentum;
+  using Base::loc0;
+  using Base::loc1;
+  using Base::phi;
+  using Base::qOverP;
+  using Base::theta;
+  using Base::time;
+  using Base::transverseMomentum;
 
   /// Get the number of track states
   /// @return The number of track states
