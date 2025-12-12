@@ -303,6 +303,28 @@ class TrackStateProxyCommon {
     }
     return mask;
   }
+
+  /// Access the best available parameters (smoothed, filtered, or predicted).
+  /// @return Bound parameter map for the state.
+  ConstParametersMap parameters() const {
+    if (hasSmoothed()) {
+      return smoothed();
+    } else if (hasFiltered()) {
+      return filtered();
+    }
+    return predicted();
+  }
+
+  /// Access the best available covariance (smoothed, filtered, or predicted).
+  /// @return Bound covariance map for the state.
+  ConstCovarianceMap covariance() const {
+    if (hasSmoothed()) {
+      return smoothedCovariance();
+    } else if (hasFiltered()) {
+      return filteredCovariance();
+    }
+    return predictedCovariance();
+  }
 };
 
 }  // namespace detail_tsp
