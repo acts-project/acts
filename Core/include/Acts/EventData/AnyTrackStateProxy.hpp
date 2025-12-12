@@ -595,64 +595,11 @@ class AnyTrackStateProxy
     return MutableEffectiveCalibratedCovarianceMap(data, size, size);
   }
 
-  /// Decode the measurement projector indices.
-  /// @return Bound parameter indices used for projection.
-  BoundSubspaceIndices projectorSubspaceIndices() const {
-    assert(hasProjector());
-    const auto& serialized =
-        component<SerializedSubspaceIndices, detail_tsp::kProjectorKey>();
-    return deserializeSubspaceIndices<eBoundSize>(serialized);
-  }
-
-  /// Returns the projector subspace indices
-  /// @return The projector subspace indices
-  template <std::size_t measdim>
-  SubspaceIndices<measdim> projectorSubspaceIndices() const {
-    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
-    SubspaceIndices<measdim> subspace;
-    std::copy(boundSubspace.begin(), boundSubspace.begin() + measdim,
-              subspace.begin());
-    return subspace;
-  }
-
-  /// Creates a variable size subspace helper
-  /// @return The subspace helper
-  VariableBoundSubspaceHelper projectorSubspaceHelper() const {
-    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
-    std::span<std::uint8_t> validSubspaceIndices(
-        boundSubspace.begin(), boundSubspace.begin() + calibratedSize());
-    return VariableBoundSubspaceHelper(validSubspaceIndices);
-  }
-
-  /// Creates a fixed size subspace helper
-  /// @return The subspace helper
-  template <std::size_t measdim>
-  FixedBoundSubspaceHelper<measdim> projectorSubspaceHelper() const {
-    SubspaceIndices<measdim> subspace = projectorSubspaceIndices<measdim>();
-    return FixedBoundSubspaceHelper<measdim>(subspace);
-  }
-
-  /// Store subspace indices describing the measurement projector.
-  /// @tparam index_range_t Range of indices to encode.
-  /// @param indices Collection of bound indices forming the projector rows.
-  template <std::ranges::sized_range index_range_t>
-  void setProjectorSubspaceIndices(const index_range_t& subspaceIndices)
-    requires(!ReadOnly &&
-             std::convertible_to<std::ranges::range_value_t<index_range_t>,
-                                 std::uint8_t>)
-  {
-    assert(has<detail_tsp::kProjectorKey>());
-    assert(subspaceIndices.size() <= eBoundSize);
-    BoundSubspaceIndices boundSubspace{};
-    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
-                   boundSubspace.begin(),
-                   [](auto i) { return static_cast<std::uint8_t>(i); });
-    component<SerializedSubspaceIndices, detail_tsp::kProjectorKey>() =
-        serializeSubspaceIndices(boundSubspace);
-  }
-
   using Base::covariance;
   using Base::parameters;
+  using Base::projectorSubspaceHelper;
+  using Base::projectorSubspaceIndices;
+  using Base::setProjectorSubspaceIndices;
 
   /// Access the transport Jacobian.
   /// @return Const map referencing the Jacobian matrix.

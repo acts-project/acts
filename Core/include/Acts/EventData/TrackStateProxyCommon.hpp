@@ -7,11 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
+#include <algorithm>
+#include <ranges>
 #include <string_view>
 
 namespace Acts {
@@ -279,6 +282,64 @@ class TrackStateProxyCommon {
     requires(!read_only)
   {
     return derived().template component<float, detail_tsp::kChi2Key>();
+  }
+
+  /// Decode the measurement projector indices.
+  /// @return Bound parameter indices used for projection.
+  BoundSubspaceIndices projectorSubspaceIndices() const {
+    assert(hasProjector());
+    const auto& serialized = derived().template component<
+        SerializedSubspaceIndices, detail_tsp::kProjectorKey>();
+    return deserializeSubspaceIndices<eBoundSize>(serialized);
+  }
+
+  /// Returns the projector subspace indices
+  /// @return The projector subspace indices
+  template <std::size_t measdim>
+  SubspaceIndices<measdim> projectorSubspaceIndices() const {
+    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
+    SubspaceIndices<measdim> subspace;
+    std::copy(boundSubspace.begin(), boundSubspace.begin() + measdim,
+              subspace.begin());
+    return subspace;
+  }
+
+  /// Creates a variable size subspace helper
+  /// @return The subspace helper
+  VariableBoundSubspaceHelper projectorSubspaceHelper() const {
+    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
+    std::span<std::uint8_t> validSubspaceIndices(
+        boundSubspace.begin(),
+        boundSubspace.begin() + derived().calibratedSize());
+    return VariableBoundSubspaceHelper(validSubspaceIndices);
+  }
+
+  /// Creates a fixed size subspace helper
+  /// @return The subspace helper
+  template <std::size_t measdim>
+  FixedBoundSubspaceHelper<measdim> projectorSubspaceHelper() const {
+    SubspaceIndices<measdim> subspace = projectorSubspaceIndices<measdim>();
+    return FixedBoundSubspaceHelper<measdim>(subspace);
+  }
+
+  /// Store subspace indices describing the measurement projector.
+  /// @tparam index_range_t Range of indices to encode.
+  /// @param indices Collection of bound indices forming the projector rows.
+  template <std::ranges::sized_range index_range_t>
+  void setProjectorSubspaceIndices(const index_range_t& subspaceIndices)
+    requires(!read_only &&
+             std::convertible_to<std::ranges::range_value_t<index_range_t>,
+                                 std::uint8_t>)
+  {
+    assert(derived().template has<detail_tsp::kProjectorKey>());
+    assert(subspaceIndices.size() <= eBoundSize);
+    BoundSubspaceIndices boundSubspace{};
+    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
+                   boundSubspace.begin(),
+                   [](auto i) { return static_cast<std::uint8_t>(i); });
+    derived().template component<SerializedSubspaceIndices,
+                                  detail_tsp::kProjectorKey>() =
+        serializeSubspaceIndices(boundSubspace);
   }
 
   /// Compute the property mask describing which components are present.
