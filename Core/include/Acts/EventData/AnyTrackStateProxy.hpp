@@ -970,13 +970,7 @@ class AnyTrackStateProxy {
         m_handler);
   }
 
-  const void* containerPtr() const {
-    if constexpr (ReadOnly) {
-      return m_container;
-    } else {
-      return static_cast<const void*>(m_container);
-    }
-  }
+  const void* containerPtr() const { return m_container; }
 
   void* mutableContainerPtr() const
     requires(!ReadOnly)
