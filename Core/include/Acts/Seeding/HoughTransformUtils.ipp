@@ -451,7 +451,7 @@ slidingWindowRecenter(
   // window loop
   // this loop needs to be smarter to take care of wrapping
   using YieldType =
-      Acts::HoughTransformUtils::HoughPlane<identifier_t>::YieldType;
+      Acts::HoughTransformUtils::YieldType;
   YieldType xw = 0;
   YieldType yw = 0;
   YieldType tot = 0;

@@ -300,7 +300,6 @@ class HoughPlane {
     return m_maxLocLayers;
   }
 
- private:
   /// @brief Helper method to fill a bin of the hough histogram.
   /// Updates the internal helper data structures (maximum tracker etc).
   /// @param binX: bin number along x
@@ -311,6 +310,7 @@ class HoughPlane {
   void fillBin(std::size_t binX, std::size_t binY,
                const identifier_t& identifier, unsigned layer, double w = 1.0f);
 
+               private:
   YieldType m_maxHits = 0.0f;    // track the maximum number of hits seen
   YieldType m_maxLayers = 0.0f;  // track the maximum number of layers seen
 

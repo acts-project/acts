@@ -37,7 +37,6 @@ struct DriftCircle {
 BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
 BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
-  Logging::ScopedFailureThreshold ft{Logging::FATAL};
 
   // we are using the slope on yz plane with the y coordinate (hardcoded from
   // the csv MuonSimHit data)
@@ -121,6 +120,42 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
     }
   }
 }
+
+BOOST_AUTO_TEST_CASE(hough_transform_sliding_window) {
+  // Create a simple 10x10 Hough space and fill it with two triangular
+  // (pyramid-shaped) distributions. Each distribution has its maximum
+  // value at the specified bin coordinates and decreases linearly with
+  // Manhattan distance. When distributions overlap we take the maximum
+  // of the two contributions so that the global maximum remains the
+  // requested peak value.
+  const std::size_t nX = 10;
+  const std::size_t nY = 10;
+  HoughTransformUtils::HoughPlaneConfig config{nX, nY};
+  HoughTransformUtils::HoughPlane<int> plane(config);
+
+  auto addTriangular = [&](std::vector<std::array<std::size_t, 2>> peaks, HoughTransformUtils::YieldType peak) {
+    for (size_t x = 0; x < nX; ++x) {
+      for (size_t y = 0; y < nY; ++y) {
+        HoughTransformUtils::YieldType val = 0.0f;
+        for( auto [cx,cy] :  peaks) {
+          int dist =  (x >= cx ? x - cx : cx - x) + (y >= cy ? y - cy : cy -y); // Manhattan distance
+          val = std::max(val, peak - static_cast<HoughTransformUtils::YieldType>(dist));
+        }
+        plane.fillBin(x,y, x+y, x+y, val);
+      }
+    }
+  };
+
+  // Add two triangular peaks with maxima 4 at (4,4) and (4,5)
+  addTriangular({{4,4}, {4,5}}, 4.0f);
+  
+
+  // Verify that the maxima at the requested locations are exactly 4
+  BOOST_CHECK_EQUAL(plane.nHits(4,4), 4.0f);
+  BOOST_CHECK_EQUAL(plane.nHits(4,5), 4.0f);
+
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
