@@ -169,7 +169,7 @@ def main():
 
             elif filepath.suffix in suffix_python:
                 # Skip the python tests folder
-                if str(root).find("Examples/Python") != -1:
+                if str(root).find("Python/Examples") != -1:
                     continue
 
                 if not file_can_be_removed("import .*" + filepath.stem, dirs_base):
