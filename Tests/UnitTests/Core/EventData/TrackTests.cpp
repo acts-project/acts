@@ -117,6 +117,30 @@ using const_holder_types =
 
 namespace ActsTests {
 
+// Static assert ensuring concept conformity where we have relevant types
+// available
+static_assert(
+    ConstTrackProxyConcept<TrackProxy<
+        VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder, true>>);
+static_assert(ConstTrackProxyConcept<
+              TrackProxy<VectorTrackContainer, VectorMultiTrajectory,
+                         detail::RefHolder, false>>);
+static_assert(MutableTrackProxyConcept<
+              TrackProxy<VectorTrackContainer, VectorMultiTrajectory,
+                         detail::RefHolder, false>>);
+static_assert(
+    !MutableTrackProxyConcept<TrackProxy<
+        VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder, true>>);
+
+static_assert(ConstTrackStateProxyConcept<
+              TrackStateProxy<VectorMultiTrajectory, eBoundSize, true>>);
+static_assert(!ConstTrackStateProxyConcept<
+              TrackStateProxy<VectorMultiTrajectory, eBoundSize, false>>);
+static_assert(MutableTrackStateProxyConcept<
+              TrackStateProxy<VectorMultiTrajectory, eBoundSize, false>>);
+static_assert(!MutableTrackStateProxyConcept<
+              TrackStateProxy<VectorMultiTrajectory, eBoundSize, true>>);
+
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
