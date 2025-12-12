@@ -447,23 +447,58 @@ class IslandsAroundMax {
       std::make_pair(0, 1),   std::make_pair(1, 1)};
 };
 
+/// @brief Peak finder using sliding window algorithm.
+/// First it finds peaks by scanning all space for cells with number of hits
+/// above threshold/ Then applies sliding window logic to eliminate peaks when
+/// maxima are adjacent leaving only one of them in a window. The logic is that
+/// it applies is to check cells around the peak and require that none on the
+/// upper right corner are above threshold and none in bottom left corner is
+/// below or equal to the peak. It can be illustrated as follows for window size
+/// of 1:
+///
+///
+///  <= <= <=
+///   <  O <=
+///   <  <  <
+///
+/// Then the algorithm collects maxima in a window (possibly of different size)
+/// and calculates peak position using weighted average.
 
 struct SlidingWindowConfig {
-  size_t threshold=3;
-  size_t xWindowSize=2;
-  size_t yWindowSize=2;
-  bool recenter=true;
-  size_t xRecenterSize=3;
-  size_t yRecenterSize=3;
+  /// peak threshold, cell content is compared with it using >= operator
+  size_t threshold = 3;
+  /// size of the window in x direction for sliding window
+  size_t xWindowSize = 2;
+  /// size of the window in y direction for sliding window
+  size_t yWindowSize = 2;
+  /// perform recentering
+  bool recenter = true;
+  /// size of the window in x direction for recentering
+  size_t xRecenterSize = 3;
+  /// size of the window in y direction for recentering
+  size_t yRecenterSize = 3;
 };
 
+/// @brief Obtain peaks list in Hough space using Sliding Window algorithm
+/// @tparam identifier_t Hough plane content
+/// @param plane Hough plane to work on
+/// @param config algorithm configuration
+/// @return list of indices (pairs of numbers) 
+template <typename identifier_t>
+std::vector<class HoughPlane<identifier_t>::Index> slidingWindowPeaks(
+    const HoughPlane<identifier_t>& plane, const SlidingWindowConfig& config);
 
-template<typename identifier_t>
-std::vector<class HoughPlane<identifier_t>::Index> slidingWindowPeaks(const HoughPlane<identifier_t>& plane, const SlidingWindowConfig& config );
-
-template<typename identifier_t>
-std::vector<unsigned char> hitsCountImage(const HoughPlane<identifier_t>& plane, typename HoughPlane<identifier_t>::Index index, size_t xSize, size_t ySize );
-
+/// @brief Obtain an image around the peak
+/// @tparam identifier_t Hough plane content
+/// @param plane Hough plane to work on
+/// @param index peak center
+/// @param xSize number of cells around the peak in x direction
+/// @param ySize number of cells around the peak in y direction
+/// @return the vector with count of hits starting from lower left to upper right corner of rectangular window
+template <typename identifier_t>
+std::vector<unsigned char> hitsCountImage(
+    const HoughPlane<identifier_t>& plane,
+    typename HoughPlane<identifier_t>::Index index, size_t xSize, size_t ySize);
 
 }  // namespace PeakFinders
 }  // namespace Acts::HoughTransformUtils
