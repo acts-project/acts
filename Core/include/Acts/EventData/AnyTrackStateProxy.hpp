@@ -34,25 +34,25 @@ class AnyTrackStateProxy;
 
 namespace detail_anytstate {
 
-using TrackStateParametersMap =
-    typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
-using TrackStateConstParametersMap =
-    typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
-using TrackStateCovarianceMap =
-    typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
-using TrackStateConstCovarianceMap =
-    typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
-using TrackStateEffectiveCalibratedMap =
-    typename detail_tsp::DynamicSizeTypes<false>::CoefficientsMap;
-using TrackStateConstEffectiveCalibratedMap =
-    typename detail_tsp::DynamicSizeTypes<true>::CoefficientsMap;
-using TrackStateEffectiveCalibratedCovarianceMap =
-    typename detail_tsp::DynamicSizeTypes<false>::CovarianceMap;
-using TrackStateConstEffectiveCalibratedCovarianceMap =
-    typename detail_tsp::DynamicSizeTypes<true>::CovarianceMap;
-
 class TrackStateHandlerConstBase {
  public:
+  using ParametersMap =
+      typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
+  using ConstParametersMap =
+      typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
+  using CovarianceMap =
+      typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
+  using ConstCovarianceMap =
+      typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
+  using EffectiveCalibratedMap =
+      typename detail_tsp::DynamicSizeTypes<false>::CoefficientsMap;
+  using ConstEffectiveCalibratedMap =
+      typename detail_tsp::DynamicSizeTypes<true>::CoefficientsMap;
+  using EffectiveCalibratedCovarianceMap =
+      typename detail_tsp::DynamicSizeTypes<false>::CovarianceMap;
+  using ConstEffectiveCalibratedCovarianceMap =
+      typename detail_tsp::DynamicSizeTypes<true>::CovarianceMap;
+
   virtual ~TrackStateHandlerConstBase() = default;
 
   virtual TrackIndexType index(TrackIndexType state) const { return state; }
@@ -60,10 +60,10 @@ class TrackStateHandlerConstBase {
   virtual TrackIndexType calibratedSize(const void* container,
                                         TrackIndexType index) const = 0;
 
-  virtual TrackStateConstParametersMap parameters(
+  virtual ConstParametersMap parameters(
       const void* container, TrackIndexType parametersIndex) const = 0;
 
-  virtual TrackStateConstCovarianceMap covariance(
+  virtual ConstCovarianceMap covariance(
       const void* container, TrackIndexType covarianceIndex) const = 0;
 
   virtual const double* calibratedData(const void* container,
@@ -89,8 +89,8 @@ class TrackStateHandlerConstBase {
   virtual SourceLink getUncalibratedSourceLink(const void* container,
                                                TrackIndexType index) const = 0;
 
-  virtual TrackStateConstCovarianceMap jacobian(const void* container,
-                                                TrackIndexType index) const = 0;
+  virtual ConstCovarianceMap jacobian(const void* container,
+                                      TrackIndexType index) const = 0;
 };
 
 class TrackStateHandlerMutableBase : public TrackStateHandlerConstBase {
@@ -100,11 +100,11 @@ class TrackStateHandlerMutableBase : public TrackStateHandlerConstBase {
   using TrackStateHandlerConstBase::jacobian;
   using TrackStateHandlerConstBase::parameters;
 
-  virtual TrackStateParametersMap parameters(
-      void* container, TrackIndexType parametersIndex) const = 0;
+  virtual ParametersMap parameters(void* container,
+                                   TrackIndexType parametersIndex) const = 0;
 
-  virtual TrackStateCovarianceMap covariance(
-      void* container, TrackIndexType covarianceIndex) const = 0;
+  virtual CovarianceMap covariance(void* container,
+                                   TrackIndexType covarianceIndex) const = 0;
 
   virtual double* calibratedDataMutable(void* container,
                                         TrackIndexType index) const = 0;
@@ -115,8 +115,8 @@ class TrackStateHandlerMutableBase : public TrackStateHandlerConstBase {
   virtual std::any component(void* container, TrackIndexType index,
                              HashedString key) const = 0;
 
-  virtual TrackStateCovarianceMap jacobian(void* container,
-                                           TrackIndexType index) const = 0;
+  virtual CovarianceMap jacobian(void* container,
+                                 TrackIndexType index) const = 0;
 
   virtual void unset(void* container, TrackIndexType index,
                      TrackStatePropMask target) const = 0;
@@ -152,29 +152,29 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
     return traj->calibratedSize(index);
   }
 
-  TrackStateConstParametersMap parameters(const void* container,
-                                          TrackIndexType index) const override {
+  ConstParametersMap parameters(const void* container,
+                                TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->parameters(index);
   }
 
-  TrackStateParametersMap parameters(void* container,
-                                     TrackIndexType index) const override {
+  ParametersMap parameters(void* container,
+                           TrackIndexType index) const override {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     return traj->parameters(index);
   }
 
-  TrackStateConstCovarianceMap covariance(const void* container,
-                                          TrackIndexType index) const override {
+  ConstCovarianceMap covariance(const void* container,
+                                TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->covariance(index);
   }
 
-  TrackStateCovarianceMap covariance(void* container,
-                                     TrackIndexType index) const override {
+  CovarianceMap covariance(void* container,
+                           TrackIndexType index) const override {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     return traj->covariance(index);
@@ -227,15 +227,14 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
     return traj->getUncalibratedSourceLink(index);
   }
 
-  TrackStateConstCovarianceMap jacobian(const void* container,
-                                        TrackIndexType index) const override {
+  ConstCovarianceMap jacobian(const void* container,
+                              TrackIndexType index) const override {
     assert(container != nullptr);
     const auto* traj = static_cast<const MultiTrajectoryType*>(container);
     return traj->jacobian(index);
   }
 
-  TrackStateCovarianceMap jacobian(void* container,
-                                   TrackIndexType index) const override {
+  CovarianceMap jacobian(void* container, TrackIndexType index) const override {
     assert(container != nullptr);
     auto* traj = static_cast<MultiTrajectoryType*>(container);
     return traj->jacobian(index);
@@ -329,20 +328,53 @@ class AnyTrackStateProxy
   using ConstTrackState = AnyTrackStateProxy<true>;
   using ConstProxyType = AnyTrackStateProxy<true>;
 
-  using ParametersMap = detail_anytstate::TrackStateParametersMap;
-  using ConstParametersMap = detail_anytstate::TrackStateConstParametersMap;
-  using CovarianceMap = detail_anytstate::TrackStateCovarianceMap;
-  using ConstCovarianceMap = detail_anytstate::TrackStateConstCovarianceMap;
+  using ParametersMap =
+      detail_anytstate::TrackStateHandlerConstBase::ParametersMap;
+  using ConstParametersMap =
+      detail_anytstate::TrackStateHandlerConstBase::ConstParametersMap;
+  using CovarianceMap =
+      detail_anytstate::TrackStateHandlerConstBase::CovarianceMap;
+  using ConstCovarianceMap =
+      detail_anytstate::TrackStateHandlerConstBase::ConstCovarianceMap;
   using MutableEffectiveCalibratedMap =
-      detail_anytstate::TrackStateEffectiveCalibratedMap;
+      detail_anytstate::TrackStateHandlerConstBase::EffectiveCalibratedMap;
   using ConstEffectiveCalibratedMap =
-      detail_anytstate::TrackStateConstEffectiveCalibratedMap;
-  using MutableEffectiveCalibratedCovarianceMap =
-      detail_anytstate::TrackStateEffectiveCalibratedCovarianceMap;
-  using ConstEffectiveCalibratedCovarianceMap =
-      detail_anytstate::TrackStateConstEffectiveCalibratedCovarianceMap;
+      detail_anytstate::TrackStateHandlerConstBase::ConstEffectiveCalibratedMap;
+  using MutableEffectiveCalibratedCovarianceMap = detail_anytstate::
+      TrackStateHandlerConstBase::EffectiveCalibratedCovarianceMap;
+  using ConstEffectiveCalibratedCovarianceMap = detail_anytstate::
+      TrackStateHandlerConstBase::ConstEffectiveCalibratedCovarianceMap;
 
   using ContainerPointer = std::conditional_t<ReadOnly, const void*, void*>;
+
+  using Base::allocateCalibrated;
+  using Base::calibrated;
+  using Base::calibratedCovariance;
+  using Base::chi2;
+  using Base::covariance;
+  using Base::effectiveCalibrated;
+  using Base::effectiveCalibratedCovariance;
+  using Base::filtered;
+  using Base::filteredCovariance;
+  using Base::getMask;
+  using Base::hasCalibrated;
+  using Base::hasFiltered;
+  using Base::hasJacobian;
+  using Base::hasPredicted;
+  using Base::hasPrevious;
+  using Base::hasProjector;
+  using Base::hasSmoothed;
+  using Base::parameters;
+  using Base::pathLength;
+  using Base::predicted;
+  using Base::predictedCovariance;
+  using Base::previous;
+  using Base::projectorSubspaceHelper;
+  using Base::projectorSubspaceIndices;
+  using Base::setProjectorSubspaceIndices;
+  using Base::smoothed;
+  using Base::smoothedCovariance;
+  using Base::typeFlags;
 
   /// Construct an `AnyTrackStateProxy` from a concrete track-state proxy.
   /// @tparam track_state_proxy_t Proxy type satisfying the concept.
@@ -465,10 +497,6 @@ class AnyTrackStateProxy
     return component<T>(hashStringDynamic(key));
   }
 
-  using Base::getMask;
-  using Base::hasPrevious;
-  using Base::previous;
-
   /// Access the surface the state is referenced to.
   /// @return Reference surface of the track state.
   const Surface& referenceSurface() const {
@@ -510,13 +538,6 @@ class AnyTrackStateProxy
                                                 std::move(sourceLink));
   }
 
-  using Base::hasCalibrated;
-  using Base::hasFiltered;
-  using Base::hasJacobian;
-  using Base::hasPredicted;
-  using Base::hasProjector;
-  using Base::hasSmoothed;
-
   /// Retrieve the measurement dimension of the calibrated data.
   /// @return Number of calibrated measurement entries.
   TrackIndexType calibratedSize() const {
@@ -534,19 +555,6 @@ class AnyTrackStateProxy
         static_cast<TrackIndexType>(measdim);
   }
 
-  using Base::allocateCalibrated;
-  using Base::calibrated;
-  using Base::calibratedCovariance;
-
-  using Base::effectiveCalibrated;
-  using Base::effectiveCalibratedCovariance;
-
-  using Base::covariance;
-  using Base::parameters;
-  using Base::projectorSubspaceHelper;
-  using Base::projectorSubspaceIndices;
-  using Base::setProjectorSubspaceIndices;
-
   /// Access the transport Jacobian.
   /// @return Const map referencing the Jacobian matrix.
   ConstCovarianceMap jacobian() const {
@@ -562,16 +570,6 @@ class AnyTrackStateProxy
     assert(hasJacobian());
     return mutableHandler()->jacobian(mutableContainerPtr(), m_index);
   }
-
-  using Base::chi2;
-  using Base::filtered;
-  using Base::filteredCovariance;
-  using Base::pathLength;
-  using Base::predicted;
-  using Base::predictedCovariance;
-  using Base::smoothed;
-  using Base::smoothedCovariance;
-  using Base::typeFlags;
 
   /// Remove dynamic components according to a mask.
   /// @param target Property mask describing which components to drop.
