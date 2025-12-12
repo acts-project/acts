@@ -13,6 +13,7 @@
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
+#include "Acts/EventData/TrackStateProxyCommon.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -34,21 +35,21 @@ class AnyTrackStateProxy;
 namespace detail_anytstate {
 
 using TrackStateParametersMap =
-    typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
+    typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
 using TrackStateConstParametersMap =
-    typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
+    typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
 using TrackStateCovarianceMap =
-    typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
+    typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
 using TrackStateConstCovarianceMap =
-    typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
+    typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 using TrackStateEffectiveCalibratedMap =
-    typename detail_lt::DynamicSizeTypes<false>::CoefficientsMap;
+    typename detail_tsp::DynamicSizeTypes<false>::CoefficientsMap;
 using TrackStateConstEffectiveCalibratedMap =
-    typename detail_lt::DynamicSizeTypes<true>::CoefficientsMap;
+    typename detail_tsp::DynamicSizeTypes<true>::CoefficientsMap;
 using TrackStateEffectiveCalibratedCovarianceMap =
-    typename detail_lt::DynamicSizeTypes<false>::CovarianceMap;
+    typename detail_tsp::DynamicSizeTypes<false>::CovarianceMap;
 using TrackStateConstEffectiveCalibratedCovarianceMap =
-    typename detail_lt::DynamicSizeTypes<true>::CovarianceMap;
+    typename detail_tsp::DynamicSizeTypes<true>::CovarianceMap;
 
 class TrackStateHandlerConstBase {
  public:
