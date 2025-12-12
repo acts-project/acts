@@ -134,5 +134,4 @@ concept MutableMultiTrajectoryBackend =
 
       { v.copyDynamicFrom_impl(istate, key, std::declval<const std::any&>()) };
     };
-
 }  // namespace Acts
