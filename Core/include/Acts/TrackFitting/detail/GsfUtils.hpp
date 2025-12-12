@@ -181,10 +181,7 @@ void computePosteriorWeights(const traj_t &mt,
     const auto state = mt.getTrackState(tip);
     const double chi2 = state.chi2() - minChi2;
     const double detR = calculateDeterminant(
-        // This abuses an incorrectly sized vector / matrix to access the
-        // data pointer! This works (don't use the matrix as is!), but be
-        // careful!
-        state.template calibratedCovariance<kMeasurementSizeMax>().data(),
+        state.effectiveCalibratedCovariance().data(),
         state.predictedCovariance(), state.projectorSubspaceIndices(),
         state.calibratedSize());
 

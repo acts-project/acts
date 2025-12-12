@@ -255,9 +255,9 @@ class TrackStateProxyCommon {
   /// Retrieve the track-state type flags.
   /// @return Bit mask describing the state type.
   ConstTrackStateType typeFlags() const {
-    const auto raw = derived()
-                         .template component<TrackStateType::raw_type,
-                                             detail_tsp::kTypeFlagsKey>();
+    const auto& raw = derived()
+                          .template component<TrackStateType::raw_type,
+                                              detail_tsp::kTypeFlagsKey>();
     return ConstTrackStateType{raw};
   }
 
