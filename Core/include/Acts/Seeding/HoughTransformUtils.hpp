@@ -15,6 +15,7 @@
 #include <array>
 #include <span>
 #include <unordered_set>
+#include <stdexcept>
 
 namespace Acts::HoughTransformUtils {
 
@@ -200,8 +201,10 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the set of layer indices that have hits for this cell
+  /// @throws out of range if indices are not within plane limits
   std::unordered_set<unsigned> layers(std::size_t xBin,
                                       std::size_t yBin) const {
+    checkIndices(xBin, yBin);                                        
     return m_houghHist.atLocalBins({xBin, yBin}).layers();
   }
 
@@ -209,7 +212,9 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighed) number of layers that have hits for this cell
+  /// @throws out of range if indices are not within plane limits
   YieldType nLayers(std::size_t xBin, std::size_t yBin) const {
+    checkIndices(xBin, yBin);
     return m_houghHist.atLocalBins({xBin, yBin}).nLayers();
   }
 
@@ -218,8 +223,10 @@ class HoughPlane {
   /// @param yBin: bin index in the second coordinate
   /// @return the list of identifiers of the hits for this cell
   /// Can include duplicates if a hit was filled more than once
+  /// @throws out of range if indices are not within plane limits
   std::span<const identifier_t, std::dynamic_extent> hitIds(
       std::size_t xBin, std::size_t yBin) const {
+    checkIndices(xBin, yBin);
     return m_houghHist.atLocalBins({xBin, yBin}).getHits();
   }
   /// @brief get the identifiers of all hits in one cell of the histogram
@@ -227,8 +234,10 @@ class HoughPlane {
   /// @param yBin: bin index in the second coordinate
   /// @return the list of identifiers of the hits for this cell
   /// Guaranteed to not duplicate identifiers
+  /// @throws out of range if indices are not within plane limits
   std::unordered_set<const identifier_t> uniqueHitIds(std::size_t xBin,
                                                       std::size_t yBin) const {
+    checkIndices(xBin, yBin);                                                    
     const auto hits_span = m_houghHist.atLocalBins({xBin, yBin}).getHits();
     return std::unordered_set<identifier_t>(hits_span.begin(), hits_span.end());
   }
@@ -236,7 +245,9 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighted) number of hits for this cell
+  /// @throws out of range if indices are not within plane limits
   YieldType nHits(std::size_t xBin, std::size_t yBin) const {
+    checkIndices(xBin, yBin);
     return m_houghHist.atLocalBins({xBin, yBin}).nHits();
   }
 
@@ -310,7 +321,7 @@ class HoughPlane {
   void fillBin(std::size_t binX, std::size_t binY,
                const identifier_t& identifier, unsigned layer, double w = 1.0f);
 
-               private:
+ private:
   YieldType m_maxHits = 0.0f;    // track the maximum number of hits seen
   YieldType m_maxLayers = 0.0f;  // track the maximum number of layers seen
 
@@ -328,6 +339,10 @@ class HoughPlane {
 
   HoughPlaneConfig m_cfg;  // the configuration object
   HoughHist m_houghHist;   // the histogram data object
+
+  /// @brief check if indices are are valid
+  void checkIndices(size_t x, size_t y) const;
+
 };
 
 /// example peak finders.
@@ -495,8 +510,9 @@ std::vector<class HoughPlane<identifier_t>::Index> slidingWindowPeaks(
 /// @param xSize number of cells around the peak in x direction
 /// @param ySize number of cells around the peak in y direction
 /// @return the vector with count of hits starting from lower left to upper right corner of rectangular window
-template <typename identifier_t>
-std::vector<unsigned char> hitsCountImage(
+/// The "image" is always of the same size, if it would happen to be outside of Hough plane the content is padded with zeros
+template <typename identifier_t, typename pixel_value_t=unsigned char>
+std::vector<pixel_value_t> hitsCountImage(
     const HoughPlane<identifier_t>& plane,
     typename HoughPlane<identifier_t>::Index index, size_t xSize, size_t ySize);
 

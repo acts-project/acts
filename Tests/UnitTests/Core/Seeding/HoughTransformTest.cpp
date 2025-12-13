@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -147,15 +148,60 @@ BOOST_AUTO_TEST_CASE(hough_transform_sliding_window) {
   };
 
   // Add two triangular peaks with maxima 4 at (4,4) and (4,5)
-  addTriangular({{4,4}, {4,5}}, 4.0f);
+  std::vector<std::array<std::size_t, 2>> testPeaks({{4,4}, {4,5}, {2,6}});
+  addTriangular(testPeaks, 4.0f);
   
 
   // Verify that the maxima at the requested locations are exactly 4
   BOOST_CHECK_EQUAL(plane.nHits(4,4), 4.0f);
   BOOST_CHECK_EQUAL(plane.nHits(4,5), 4.0f);
 
-}
+  // config for unisolated max finding
+  HoughTransformUtils::PeakFinders::SlidingWindowConfig cfg1{4, 0, 0, false, 0, 0};
+  auto peaks1 = slidingWindowPeaks(plane, cfg1);
+  BOOST_CHECK_EQUAL(peaks1[0][0], 2);
+  BOOST_CHECK_EQUAL(peaks1[0][1], 6);
+  BOOST_CHECK_EQUAL(peaks1[1][0], 4);
+  BOOST_CHECK_EQUAL(peaks1[1][1], 4);
+  BOOST_CHECK_EQUAL(peaks1[2][0], 4);
+  BOOST_CHECK_EQUAL(peaks1[2][1], 5);
 
+
+  // config for removing duplicates, no recentering
+  HoughTransformUtils::PeakFinders::SlidingWindowConfig cfg2{4, 2, 2, false, 0, 0};
+  auto peaks2 = slidingWindowPeaks(plane, cfg2);
+  BOOST_CHECK_EQUAL(peaks2.size(), 1);
+  BOOST_CHECK_EQUAL(peaks2[0][0], 4);
+  BOOST_CHECK_EQUAL(peaks2[0][1], 4);
+
+  // config for removing duplicates, with recentering
+  HoughTransformUtils::PeakFinders::SlidingWindowConfig cfg3{4, 2, 2, true, 2, 2};
+  auto peaks3 = slidingWindowPeaks(plane, cfg3);
+  BOOST_CHECK_EQUAL(peaks3.size(), 1);
+  BOOST_CHECK_EQUAL(peaks3[0][0], 3);
+  BOOST_CHECK_EQUAL(peaks3[0][1], 5);
+
+  // test behaviour at the edge of the plane (safety check)
+  plane.reset();
+  addTriangular({{1,1},{5,5},{8,9}}, 4.0f);
+  peaks3 = slidingWindowPeaks(plane, cfg3);
+  BOOST_CHECK_EQUAL(peaks3.size(), 1);
+
+
+  auto img1 = HoughTransformUtils::PeakFinders::hitsCountImage(plane, {1,1}, 4, 4);
+  // the image should reflect this content (peak at 1, 1)
+  //      0 1 2 3 4 5 - indices
+  //   +--------+
+  //   |        |
+  // 0 |  2 3 2 |
+  // 1 |  3 4 3 |
+  // 2 |  2 3 2 |
+  //   +________+
+  // content outside of valid plane indices is padded with zeros
+  std::vector<unsigned char> expected({0,0,0,0, 0,2,3,2, 0,3,4,3, 0,2,3,2});
+  BOOST_CHECK_EQUAL(expected.size(), img1.size());
+  BOOST_CHECK_EQUAL_COLLECTIONS(img1.begin(), img1.end(), expected.begin(), expected.end());
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
