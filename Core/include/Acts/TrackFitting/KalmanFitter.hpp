@@ -919,7 +919,7 @@ class KalmanFitter {
                      << static_cast<int>(kfOptions.referenceSurfaceStrategy));
       }
 
-      typename propagator_t::Options extrapolationOptions(
+      typename propagator_t::template Options<> extrapolationOptions(
           kfOptions.geoContext, kfOptions.magFieldContext);
       auto extrapolationResult = extrapolateTrackToReferenceSurface(
           track, *kfOptions.referenceSurface, m_propagator,
