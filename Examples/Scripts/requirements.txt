@@ -24,7 +24,7 @@ cramjam==2.11.0
     # via uproot
 cycler==0.12.1
     # via matplotlib
-fonttools==4.61.0
+fonttools==4.61.1
     # via matplotlib
 fsspec==2025.12.0
     # via
@@ -38,7 +38,7 @@ kiwisolver==1.4.9
     # via matplotlib
 markdown-it-py==4.0.0
     # via rich
-matplotlib==3.10.7
+matplotlib==3.10.8
     # via
     #   -r Examples/Scripts/requirements.in
     #   mplhep
@@ -108,7 +108,7 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-tzdata==2025.2
+tzdata==2025.3
     # via pandas
 uhi==1.0.0
     # via

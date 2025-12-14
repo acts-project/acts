@@ -143,7 +143,7 @@ typing-inspection==0.4.2
     # via pydantic
 uritemplate==4.2.0
     # via gidgethub
-urllib3==2.6.0
+urllib3==2.6.2
     # via requests
 yarl==1.22.0
     # via aiohttp
