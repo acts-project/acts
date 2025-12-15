@@ -24,6 +24,7 @@
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <fstream>
+#include <numbers>
 
 #include <nlohmann/json.hpp>
 
@@ -58,8 +59,8 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridNavigationPolicyToJson) {
   }
 
   // Create the phi-z axes and grids
-  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(-M_PI, M_PI,
-                                                                36);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(
+      -std::numbers::pi, std::numbers::pi, 36);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisZ(-400., 400., 30);
   Grid gridPhiZ(Type<std::vector<std::size_t>>, std::move(axisPhi),
                 std::move(axisZ));
@@ -104,16 +105,16 @@ BOOST_AUTO_TEST_CASE(RegularDiscIndexGridNavigationPolicyToJson) {
   auto boundsOr = std::make_shared<TrapezoidBounds>(1.2, 2.3, 2.2);
 
   for (std::size_t is = 0; is < 12; ++is) {
-    double phiIr = -M_PI + is * (M_PI / 6.0);
-    AngleAxis3 rotationIr(phiIr - 0.5 * M_PI, Vector3::UnitZ());
+    double phiIr = -std::numbers::pi + is * (std::numbers::pi / 6.0);
+    AngleAxis3 rotationIr(phiIr - 0.5 * std::numbers::pi, Vector3::UnitZ());
     Transform3 transformIr(rotationIr);
     transformIr.translation() =
         Vector3(rIr * std::cos(phiIr), rIr * std::sin(phiIr), 0.);
     tVolume.addSurface(
         Surface::makeShared<PlaneSurface>(transformIr, boundsIr));
 
-    double phiOr = -M_PI + (is + 1) * (M_PI / 6.0);
-    AngleAxis3 rotationOr(phiOr - 0.5 * M_PI, Vector3::UnitZ());
+    double phiOr = -std::numbers::pi + (is + 1) * (std::numbers::pi / 6.0);
+    AngleAxis3 rotationOr(phiOr - 0.5 * std::numbers::pi, Vector3::UnitZ());
     Transform3 transformOr(rotationOr);
     transformOr.translation() =
         Vector3(rOr * std::cos(phiOr), rOr * std::sin(phiOr), 0.);
@@ -123,8 +124,8 @@ BOOST_AUTO_TEST_CASE(RegularDiscIndexGridNavigationPolicyToJson) {
 
   // Create the r-phi axes and grids
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisR(0.6, 8.6, 8);
-  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(-M_PI, M_PI,
-                                                                36);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(
+      -std::numbers::pi, std::numbers::pi, 36);
   Grid gridRPhi(Type<std::vector<std::size_t>>, std::move(axisR),
                 std::move(axisPhi));
 
@@ -165,8 +166,8 @@ BOOST_AUTO_TEST_CASE(RegularRingIndexGridNavigationPolicyToJson) {
                          "RingVolume");
   // Fill with a few disc surfaces
   for (std::size_t is = 0; is < 16; ++is) {
-    double phi = -M_PI + is * (M_PI / 8.0);
-    AngleAxis3 rotation(phi - 0.5 * M_PI, Vector3::UnitZ());
+    double phi = -std::numbers::pi + is * (std::numbers::pi / 8.0);
+    AngleAxis3 rotation(phi - 0.5 * std::numbers::pi, Vector3::UnitZ());
     Transform3 transform(rotation);
     transform.translation() =
         Vector3(10 * std::cos(phi), 10 * std::sin(phi), 0.);
@@ -175,7 +176,8 @@ BOOST_AUTO_TEST_CASE(RegularRingIndexGridNavigationPolicyToJson) {
   }
 
   // Create the r-z axes and grids
-  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(-M_PI, M_PI, 8);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(
+      -std::numbers::pi, std::numbers::pi, 8);
   Grid gridPhi(Type<std::vector<std::size_t>>, std::move(axisPhi));
 
   IndexGrid<decltype(gridPhi)> indexedGridPhi(std::move(gridPhi),
