@@ -19,6 +19,8 @@ namespace Acts {
 
 /// Type alias for track index values
 using TrackIndexType = std::uint32_t;
+
+/// Sentinel value for an invalid / unset track EDM related index
 static constexpr TrackIndexType kTrackIndexInvalid =
     std::numeric_limits<TrackIndexType>::max();
 
