@@ -145,7 +145,7 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::reset() {
 }
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughPlane<identifier_t>::checkIndices(
-    size_t xBin, size_t yBin) const {
+    std::size_t xBin, std::size_t yBin) const {
   if (xBin >= nBinsX())
     throw std::out_of_range("When accessing HoughPlane, X index " +
                             std::to_string(xBin) +
@@ -439,10 +439,10 @@ bool passWindow(
   YieldType max = plane.nHits(xmax, ymax);
   // window loop
   // this loop needs to be smarter to take care of wrapping
-  for (size_t x = xmax - config.xWindowSize; x <= xmax + config.xWindowSize;
-       ++x) {
-    for (size_t y = ymax - config.yWindowSize; y <= ymax + config.yWindowSize;
-         ++y) {
+  for (std::size_t x = xmax - config.xWindowSize;
+       x <= xmax + config.xWindowSize; ++x) {
+    for (std::size_t y = ymax - config.yWindowSize;
+         y <= ymax + config.yWindowSize; ++y) {
       const std::size_t xdist = x - xmax;
       const std::size_t ydist = y - ymax;
       const bool above = ydist > -xdist - 0.1;
@@ -468,9 +468,9 @@ slidingWindowRecenter(
   YieldType tot = 0;
   auto [xmax, ymax] = index;
   YieldType maxValue = plane.nHits(xmax, ymax);
-  for (size_t x = xmax - config.xRecenterSize; x <= xmax + config.xRecenterSize;
-       ++x) {
-    for (size_t y = ymax - config.yRecenterSize;
+  for (std::size_t x = xmax - config.xRecenterSize;
+       x <= xmax + config.xRecenterSize; ++x) {
+    for (std::size_t y = ymax - config.yRecenterSize;
          y <= ymax + config.yRecenterSize; ++y) {
       const YieldType noOfHits = plane.nHits(x, y);
       if (noOfHits >= maxValue) {
@@ -516,7 +516,7 @@ std::vector<pixel_value_t>
 Acts::HoughTransformUtils::PeakFinders::hitsCountImage(
     const Acts::HoughTransformUtils::HoughPlane<identifier_t>& plane,
     typename Acts::HoughTransformUtils::HoughPlane<identifier_t>::Index index,
-    size_t xSize, size_t ySize) {
+    std::size_t xSize, std::size_t ySize) {
   std::vector<pixel_value_t> output;
   output.reserve((xSize) * (ySize));
 
@@ -527,8 +527,8 @@ Acts::HoughTransformUtils::PeakFinders::hitsCountImage(
            y < static_cast<int>(plane.nBinsY());
   };
 
-  for (size_t x = 0; x < xSize; ++x) {
-    for (size_t y = 0; y < ySize; ++y) {
+  for (std::size_t x = 0; x < xSize; ++x) {
+    for (std::size_t y = 0; y < ySize; ++y) {
       int xPlaneCoord = x + xmax - xSize / 2;
       int yPlaneCoord = y + ymax - ySize / 2;
       output.push_back(isInside(xPlaneCoord, yPlaneCoord)

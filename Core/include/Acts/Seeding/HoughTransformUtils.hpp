@@ -341,7 +341,7 @@ class HoughPlane {
   HoughHist m_houghHist;   // the histogram data object
 
   /// @brief check if indices are are valid
-  void checkIndices(size_t x, size_t y) const;
+  void checkIndices(size_t x, std::size_t y) const;
 };
 
 /// example peak finders.
@@ -480,17 +480,17 @@ class IslandsAroundMax {
 
 struct SlidingWindowConfig {
   /// peak threshold, cell content is compared with it using >= operator
-  size_t threshold = 3;
+  std::size_t threshold = 3;
   /// size of the window in x direction for sliding window
-  size_t xWindowSize = 2;
+  std::size_t xWindowSize = 2;
   /// size of the window in y direction for sliding window
-  size_t yWindowSize = 2;
+  std::size_t yWindowSize = 2;
   /// perform recentering
   bool recenter = true;
   /// size of the window in x direction for recentering
-  size_t xRecenterSize = 3;
+  std::size_t xRecenterSize = 3;
   /// size of the window in y direction for recentering
-  size_t yRecenterSize = 3;
+  std::size_t yRecenterSize = 3;
 };
 
 /// @brief Obtain peaks list in Hough space using Sliding Window algorithm
@@ -514,7 +514,8 @@ std::vector<typename HoughPlane<identifier_t>::Index> slidingWindowPeaks(
 template <typename identifier_t, typename pixel_value_t = unsigned char>
 std::vector<pixel_value_t> hitsCountImage(
     const HoughPlane<identifier_t>& plane,
-    typename HoughPlane<identifier_t>::Index index, size_t xSize, size_t ySize);
+    typename HoughPlane<identifier_t>::Index index, std::size_t xSize,
+    std::size_t ySize);
 
 }  // namespace PeakFinders
 }  // namespace Acts::HoughTransformUtils
