@@ -62,7 +62,7 @@ target_link_libraries(
         Acts::ExamplesDigitization
         Acts::ExamplesPropagation
         Acts::ExamplesMaterialMapping
-        Acts::ExamplesAlignment  
+        Acts::ExamplesAlignment
 )
 
 set(py_files
