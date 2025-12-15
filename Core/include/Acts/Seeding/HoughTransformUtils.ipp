@@ -481,7 +481,8 @@ slidingWindowRecenter(
       }
     }
   }
-  return {static_cast<std::size_t>(xw / tot), static_cast<std::size_t>(yw / tot)};
+  return {static_cast<std::size_t>(xw / tot),
+          static_cast<std::size_t>(yw / tot)};
 }
 
 }  // namespace
