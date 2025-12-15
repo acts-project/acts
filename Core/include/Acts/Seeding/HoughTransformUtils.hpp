@@ -341,7 +341,7 @@ class HoughPlane {
   HoughHist m_houghHist;   // the histogram data object
 
   /// @brief check if indices are are valid
-  void checkIndices(size_t x, std::size_t y) const;
+  void checkIndices(std::size_t x, std::size_t y) const;
 };
 
 /// example peak finders.

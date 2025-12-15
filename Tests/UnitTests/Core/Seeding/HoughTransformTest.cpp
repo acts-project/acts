@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE(hough_transform_sliding_window) {
 
   auto addTriangular = [&](std::vector<std::array<std::size_t, 2>> peaks,
                            HoughTransformUtils::YieldType peak) {
-    for (size_t x = 0; x < nX; ++x) {
-      for (size_t y = 0; y < nY; ++y) {
+    for (std::size_t x = 0; x < nX; ++x) {
+      for (std::size_t y = 0; y < nY; ++y) {
         HoughTransformUtils::YieldType val = 0.0f;
         for (auto [cx, cy] : peaks) {
           int dist = (x >= cx ? x - cx : cx - x) +
