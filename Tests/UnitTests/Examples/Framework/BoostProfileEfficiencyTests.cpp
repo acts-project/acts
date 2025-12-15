@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "ActsExamples/Utilities/Helpers.hpp"
-#include "ActsExamples/Validation/BoostProfileEfficiency.hpp"
+#include "ActsExamples/Validation/BoostHistogramWrappers.hpp"
 
 #include <random>
 
