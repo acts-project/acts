@@ -65,10 +65,10 @@ class TrackProxy {
   using Trajectory = trajectory_t;
 
   /// The index type of the track container
-  using IndexType = typename Container::IndexType;
+  using IndexType = TrackIndexType;
 
   /// Sentinel value that indicates an invalid index
-  static constexpr IndexType kInvalid = Container::kInvalid;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
   /// Alias for the mutable version of this track proxy, with the same backends
   using MutableTrackProxy =
@@ -90,20 +90,20 @@ class TrackProxy {
   /// Map-type for a bound parameter vector. This has reference semantics, i.e.
   /// points at a matrix by an internal pointer.
   using Parameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
+      typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
 
   /// Same as @ref Parameters, but with const semantics
   using ConstParameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
+      typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
 
   /// Map-type for a bound covariance. This has reference semantics, i.e.
   /// points at a matrix by an internal pointer.
   using Covariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
+      typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
 
   /// Same as @ref Covariance, but with const semantics
   using ConstCovariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
+      typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 
 #ifndef DOXYGEN
   friend TrackContainer<Container, Trajectory, holder_t>;

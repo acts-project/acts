@@ -14,8 +14,7 @@ namespace Acts {
 
 template <typename D, std::size_t M, bool ReadOnly>
 inline TrackStateProxy<D, M, ReadOnly>::TrackStateProxy(
-    detail_lt::ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory,
-    IndexType istate)
+    const_if_t<ReadOnly, MultiTrajectory<D>>& trajectory, IndexType istate)
     : m_traj(&trajectory), m_istate(istate) {}
 
 template <typename D, std::size_t M, bool ReadOnly>
