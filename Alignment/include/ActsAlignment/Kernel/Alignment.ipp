@@ -46,11 +46,6 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
 
   // Perform the fit
   ACTS_DEBUG("Fitting track with " << sourceLinks.size() << " measurements");
-  for (std::size_t i = 0; i < std::min(sourceLinks.size(), std::size_t(50));
-       ++i) {
-    ACTS_DEBUG("  SourceLink " << i
-                               << ": geoId=" << sourceLinks[i].geometryId());
-  }
   auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
 
   if (!fitRes.ok()) {
