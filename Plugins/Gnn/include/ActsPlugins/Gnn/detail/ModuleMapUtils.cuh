@@ -185,8 +185,9 @@ __device__ void triplet_cuts_inner_loop_body(
   }
 
   if (!apply_geometric_cuts(i, z0[p], phi_slope[p], deta[p], dphi[p],
-                            MD12_z0_min, MD12_phi_slope_min,MD12_deta_min, MD12_dphi_min, 
-MD12_z0_max,      MD12_phi_slope_max,                        MD12_deta_max,                            MD12_dphi_max)) {
+                            MD12_z0_min, MD12_phi_slope_min, MD12_deta_min,
+                            MD12_dphi_min, MD12_z0_max, MD12_phi_slope_max,
+                            MD12_deta_max, MD12_dphi_max)) {
     return;
   }
 
@@ -196,10 +197,10 @@ MD12_z0_max,      MD12_phi_slope_max,                        MD12_deta_max,     
   bool new_elt = false;
   for (; l < ind23 && SP2 == M1_SP[l]; l++) {
     int SP3 = M2_SP[l];
-    if (!apply_geometric_cuts(
-            i, z0[l], phi_slope[l], deta[l], dphi[l], MD23_z0_min, MD23_phi_slope_min,MD23_deta_min, MD23_dphi_min, MD23_z0_max,
-           MD23_phi_slope_max, MD23_deta_max, 
-             MD23_dphi_max)) {
+    if (!apply_geometric_cuts(i, z0[l], phi_slope[l], deta[l], dphi[l],
+                              MD23_z0_min, MD23_phi_slope_min, MD23_deta_min,
+                              MD23_dphi_min, MD23_z0_max, MD23_phi_slope_max,
+                              MD23_deta_max, MD23_dphi_max)) {
       continue;
     }
 
@@ -291,8 +292,9 @@ __device__ void doublet_cut_kernel(
                            phi_SP1, R[l], z[l], eta[l], phi[l], detail::g_pi,
                            epsilon);
 
-    if (apply_geometric_cuts(doublet_idx, z0, phi_slope, deta, dphi, z0_min,phi_slope_min,deta_min,dphi_min, 
-                             z0_max,  phi_slope_max,deta_max, dphi_max)) {
+    if (apply_geometric_cuts(doublet_idx, z0, phi_slope, deta, dphi, z0_min,
+                             phi_slope_min, deta_min, dphi_min, z0_max,
+                             phi_slope_max, deta_max, dphi_max)) {
       function(k, l);
     }
   }
