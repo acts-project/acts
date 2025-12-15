@@ -311,13 +311,10 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
 
 template <bool read_only>
 class AnyTrackStateProxy
-    : public detail_tsp::TrackStateProxyCommon<AnyTrackStateProxy<read_only>,
-                                               read_only> {
-  using Base = detail_tsp::TrackStateProxyCommon<AnyTrackStateProxy<read_only>,
-                                                 read_only>;
+    : public TrackStateProxyCommon<AnyTrackStateProxy<read_only>, read_only> {
+  using Base = TrackStateProxyCommon<AnyTrackStateProxy<read_only>, read_only>;
 
-  friend class detail_tsp::TrackStateProxyCommon<AnyTrackStateProxy<read_only>,
-                                                 read_only>;
+  friend class TrackStateProxyCommon<AnyTrackStateProxy<read_only>, read_only>;
 
   using IndexType = Acts::TrackIndexType;
 

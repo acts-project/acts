@@ -91,12 +91,13 @@ class TransitiveConstPointer {
 /// @tparam read_only  true for read-only access to underlying storage
 template <typename trajectory_t, std::size_t M, bool read_only = true>
 class TrackStateProxy
-    : public detail_tsp::TrackStateProxyCommon<
-          TrackStateProxy<trajectory_t, M, read_only>, read_only> {
-  using Base = detail_tsp::TrackStateProxyCommon<
-      TrackStateProxy<trajectory_t, M, read_only>, read_only>;
+    : public TrackStateProxyCommon<TrackStateProxy<trajectory_t, M, read_only>,
+                                   read_only> {
+  using Base =
+      TrackStateProxyCommon<TrackStateProxy<trajectory_t, M, read_only>,
+                            read_only>;
 
-  friend class detail_tsp::TrackStateProxyCommon<
+  friend class TrackStateProxyCommon<
       TrackStateProxy<trajectory_t, M, read_only>, read_only>;
 
  public:

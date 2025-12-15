@@ -39,17 +39,11 @@ inline constexpr HashedString kNextKey = hashString("next");
 
 }  // namespace detail_tsp
 
-namespace detail_tsp {
-
 template <typename Derived, bool read_only>
 class TrackStateProxyCommon {
  protected:
   using IndexType = Acts::TrackIndexType;
-  // using ConstParameters = const_parameters_t;
-  // using Parameters = parameters_t;
-  // using ConstCovariance = const_covariance_t;
-  // using Covariance = covariance_t;
-  //
+
   constexpr Derived& derived() { return static_cast<Derived&>(*this); }
   constexpr const Derived& derived() const {
     return static_cast<const Derived&>(*this);
@@ -497,5 +491,4 @@ class TrackStateProxyCommon {
   }
 };
 
-}  // namespace detail_tsp
 }  // namespace Acts
