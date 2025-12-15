@@ -133,6 +133,7 @@ class ContainerBlueprintNode : public BlueprintNode {
 
   /// Accessor to the resize strategy
   /// @return The resize strategy
+  /// @deprecated Use @ref resizeStrategies instead
   [[deprecated("Use resizeStrategies() instead")]]
   VolumeResizeStrategy resizeStrategy() const;
 

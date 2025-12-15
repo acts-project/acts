@@ -14,6 +14,8 @@
 #include <memory>
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 class CudaTrackBuilding final : public TrackBuildingBase {
  public:
@@ -38,4 +40,5 @@ class CudaTrackBuilding final : public TrackBuildingBase {
   const auto &logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace ActsPlugins

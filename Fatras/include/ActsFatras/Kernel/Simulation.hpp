@@ -211,7 +211,7 @@ struct Simulation {
       // required to allow correct particle id numbering for secondaries later
       if ((inputParticle.particleId().generation() != 0u) ||
           (inputParticle.particleId().subParticle() != 0u)) {
-        return detail::SimulationError::eInvalidInputParticleId;
+        return detail::SimulationError::InvalidInputParticleId;
       }
 
       // Do a *depth-first* simulation of the particle and its secondaries,

@@ -11,6 +11,9 @@
 #include <cstdint>
 
 namespace ActsPlugins {
+/// @addtogroup hashing_plugin
+/// @{
+
 struct HashingAlgorithmConfig {
   /// Size of the buckets = number of spacepoints in the bucket
   std::uint32_t bucketSize = 10;
@@ -26,4 +29,5 @@ struct HashingAlgorithmConfig {
   double layerZMax = 550;
 };
 
+/// @}
 }  // namespace ActsPlugins

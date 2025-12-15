@@ -16,6 +16,8 @@ class TChain;
 class TTree;
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// Root space point reading and writing utility
 class RootSpacePointIo {
@@ -73,4 +75,5 @@ class RootSpacePointIo {
   float m_varR = 0;
 };
 
+/// @}
 }  // namespace ActsPlugins

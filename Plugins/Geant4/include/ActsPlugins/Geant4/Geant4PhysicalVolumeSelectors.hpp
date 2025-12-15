@@ -19,6 +19,8 @@
 class G4VPhysicalVolume;
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
 
 /// Interface class for selectors from physical volumes
 class IGeant4PhysicalVolumeSelector {
@@ -30,6 +32,7 @@ class IGeant4PhysicalVolumeSelector {
   virtual bool select(const G4VPhysicalVolume& g4Phys) const = 0;
 };
 
+/// @ingroup geant4_plugin
 namespace Geant4PhysicalVolumeSelectors {
 
 /// @brief  Struct that selects all G4VPhysicalVolume objects
@@ -84,4 +87,6 @@ struct PositionSelector : public IGeant4PhysicalVolumeSelector {
 };
 
 }  // namespace Geant4PhysicalVolumeSelectors
+
+/// @}
 }  // namespace ActsPlugins

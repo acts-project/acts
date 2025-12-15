@@ -15,6 +15,8 @@
 #include <onnxruntime_cxx_api.h>
 
 namespace ActsPlugins {
+/// @addtogroup onnx_plugin
+/// @{
 
 /// Onnx model implementation for seed scoring and selection
 class SeedClassifier {
@@ -89,4 +91,5 @@ class SeedClassifier {
   OnnxRuntimeBase m_duplicateClassifier;
 };
 
+/// @}
 }  // namespace ActsPlugins

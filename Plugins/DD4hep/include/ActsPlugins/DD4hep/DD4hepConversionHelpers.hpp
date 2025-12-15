@@ -17,6 +17,8 @@
 #include <DDRec/DetectorData.h>
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
 
 /// Helper function to extract a parameter value from a dd4hep detector element
 /// from VariantParameters
@@ -164,4 +166,5 @@ inline Acts::Transform3 extractTransform(
   return transform;
 }
 
+/// @}
 }  // namespace ActsPlugins

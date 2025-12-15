@@ -23,6 +23,8 @@ class TGeoNode;
 class TGeoVolume;
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @brief TGeoParser is a helper struct that
 /// walks recursively through a TGeometry and selects by
@@ -88,4 +90,5 @@ struct TGeoParser {
   static TGeoNode* findNodeRecursive(TGeoNode* currentNode,
                                      const char* volumeName);
 };
+/// @}
 }  // namespace ActsPlugins

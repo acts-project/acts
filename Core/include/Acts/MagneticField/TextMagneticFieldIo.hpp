@@ -20,6 +20,9 @@
 
 namespace Acts {
 
+/// @addtogroup magnetic_field
+/// @{
+
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of r,z to the
 /// global
@@ -112,5 +115,7 @@ makeMagneticFieldMapXyzFromText(
         localToGlobalBin,
     const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
     bool firstOctant = false, const std::string& delimiter = "");
+
+/// @}
 
 }  // namespace Acts

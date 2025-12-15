@@ -130,7 +130,7 @@ void VolumeMaterialMapper::checkAndInsert(State& mState,
     }
     // Second attempt: 2D binned material
     auto bmp2 = dynamic_cast<
-        const InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>*>(
+        const InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid2D>>*>(
         volumeMaterial);
     bu = (bmp2 != nullptr) ? (&bmp2->binUtility()) : nullptr;
     if (bu != nullptr) {
@@ -145,7 +145,7 @@ void VolumeMaterialMapper::checkAndInsert(State& mState,
     }
     // Third attempt: 3D binned material
     auto bmp3 = dynamic_cast<
-        const InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>*>(
+        const InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid3D>>*>(
         volumeMaterial);
     bu = (bmp3 != nullptr) ? (&bmp3->binUtility()) : nullptr;
     if (bu != nullptr) {
@@ -321,10 +321,10 @@ void VolumeMaterialMapper::finalizeMaps(State& mState) const {
       auto grid = mState.grid2D.find(matBin.first);
       if (grid != mState.grid2D.end()) {
         MaterialGrid2D matGrid = mapMaterialPoints(grid->second);
-        MaterialMapper<MaterialGrid2D> matMap(mState.transform2D[matBin.first],
-                                              matGrid);
+        MaterialMapLookup<MaterialGrid2D> matMap(
+            mState.transform2D[matBin.first], matGrid);
         mState.volumeMaterial[matBin.first] = std::make_unique<
-            InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>>(
+            InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid2D>>>(
             std::move(matMap), matBin.second);
       } else {
         throw std::domain_error("No grid 2D was found");
@@ -336,10 +336,10 @@ void VolumeMaterialMapper::finalizeMaps(State& mState) const {
       auto grid = mState.grid3D.find(matBin.first);
       if (grid != mState.grid3D.end()) {
         MaterialGrid3D matGrid = mapMaterialPoints(grid->second);
-        MaterialMapper<MaterialGrid3D> matMap(mState.transform3D[matBin.first],
-                                              matGrid);
+        MaterialMapLookup<MaterialGrid3D> matMap(
+            mState.transform3D[matBin.first], matGrid);
         mState.volumeMaterial[matBin.first] = std::make_unique<
-            InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
+            InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid3D>>>(
             std::move(matMap), matBin.second);
       } else {
         throw std::domain_error("No grid 3D was found");

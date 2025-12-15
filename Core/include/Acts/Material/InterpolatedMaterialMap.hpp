@@ -19,13 +19,16 @@
 
 namespace Acts {
 
+/// @addtogroup material
+/// @{
+
 /// @brief Struct for mapping global 3D positions to material values
 ///
 /// Global 3D positions are transformed into a @c DIM_POS Dimensional vector
 /// which is used to look up the material classification value in the
 /// underlying material map.
 template <typename G>
-struct MaterialMapper {
+struct MaterialMapLookup {
  public:
   /// Type alias for material grid
   using Grid_t = G;
@@ -112,7 +115,7 @@ struct MaterialMapper {
   /// @param [in] transformPos Mapping of global 3D coordinates (cartesian)
   /// onto grid space
   /// @param [in] grid Grid storing material classification values
-  MaterialMapper(
+  MaterialMapLookup(
       std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos,
       Grid_t grid)
       : m_transformPos(std::move(transformPos)), m_grid(std::move(grid)) {}
@@ -213,7 +216,6 @@ struct MaterialMapper {
   Grid_t m_grid;
 };
 
-/// @ingroup Material
 /// @brief Interpolate material classification values from material values on a
 /// given grid
 ///
@@ -369,4 +371,6 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
 
   BinUtility m_binUtility{};
 };
+
+/// @}
 }  // namespace Acts

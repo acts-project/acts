@@ -182,6 +182,8 @@ void mergeClusters(Acts::Ccl::ClusteringData& data, const CellCollection& cells,
 
 /// @brief createClusters
 /// Convenience function which runs both labelClusters and createClusters.
+/// @deprecated Use the alternative @ref createClusters overload that takes
+///             @ref ClusteringData
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim = 2,
           typename Connect =

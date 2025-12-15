@@ -15,6 +15,8 @@
 
 namespace Acts {
 
+/// @addtogroup track_finding
+/// @{
 namespace CkfTypes {
 
 /// expected max number of track states that are expected to be added by
@@ -102,4 +104,7 @@ struct CombinatorialKalmanFilterExtensions {
     return BranchStopperResult::Continue;
   }
 };
+
+/// @}
+
 }  // namespace Acts

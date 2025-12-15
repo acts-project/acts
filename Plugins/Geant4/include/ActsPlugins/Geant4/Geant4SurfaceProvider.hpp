@@ -16,6 +16,8 @@
 #include "G4VPhysicalVolume.hh"
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
 
 /// @brief A surface provider that extracts surfaces from a gdml file
 ///
@@ -156,4 +158,5 @@ class Geant4SurfaceProvider : public Acts::ISurfacesProvider {
   G4Transform3D m_g4ToWorld;
 };
 
+/// @}
 }  // namespace ActsPlugins

@@ -18,6 +18,8 @@
 class TGeoNode;
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 class TGeoDetectorElement;
 
@@ -72,4 +74,5 @@ class TGeoCylinderDiscSplitter : public ITGeoDetectorElementSplitter {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
+/// @}
 }  // namespace ActsPlugins

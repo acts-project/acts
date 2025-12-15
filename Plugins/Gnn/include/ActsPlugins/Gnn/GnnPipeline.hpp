@@ -18,6 +18,8 @@
 #include <boost/container/small_vector.hpp>
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 struct GnnTiming {
   using Duration = std::chrono::duration<float, std::milli>;
@@ -58,4 +60,5 @@ class GnnPipeline {
   const Acts::Logger &logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace ActsPlugins

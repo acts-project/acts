@@ -13,13 +13,12 @@
 
 #include <nlohmann/json.hpp>
 
-/// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-/// can not match our naming guidelines.
-///
-/// This uses a custom API and nomenclature as it would
-/// otherwise require the ProtoAxis to have a default
-/// constructor which is deleted
-namespace Acts::ProtoAxisJsonConverter {
+namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
+
+namespace ProtoAxisJsonConverter {
 
 /// Write the ProtoAxis to a json object
 ///
@@ -33,4 +32,8 @@ nlohmann::json toJson(const ProtoAxis& pa);
 /// @return ProtoAxis created from the JSON object
 Acts::ProtoAxis fromJson(const nlohmann::json& j);
 
-}  // namespace Acts::ProtoAxisJsonConverter
+}  // namespace ProtoAxisJsonConverter
+
+/// @}
+
+}  // namespace Acts

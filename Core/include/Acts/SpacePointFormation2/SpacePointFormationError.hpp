@@ -14,14 +14,22 @@
 namespace Acts {
 
 /// Error codes for space point formation operations
+/// @ingroup errors
 enum class SpacePointFormationError {
   // ensure all values are non-zero
+  /// Cluster pair distance exceeded
   ClusterPairDistanceExceeded = 1,
+  /// Cluster pair theta distance exceeded
   ClusterPairThetaDistanceExceeded = 2,
+  /// Cluster pair phi distance exceeded
   ClusterPairPhiDistanceExceeded = 3,
+  /// Cosmic tolerance not met
   CosmicToleranceNotMet = 4,
+  /// Outside limits
   OutsideLimits = 5,
+  /// Outside relaxed limits
   OutsideRelaxedLimits = 6,
+  /// No solution found
   NoSolutionFound = 7
 };
 

@@ -22,6 +22,8 @@ class GeometryIdentifier;
 }
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @brief Helper class to manage the I/O of measurements and associated clusters
 /// to and from ROOT files.
@@ -134,4 +136,5 @@ class RootMeasurementIo {
   MeasurementPayload m_measurementPayload;
   ClusterPayload m_clusterPayload;
 };
+/// @}
 }  // namespace ActsPlugins

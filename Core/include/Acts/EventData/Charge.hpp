@@ -17,6 +17,7 @@
 
 namespace Acts {
 
+/// @ingroup eventdata
 /// @defgroup eventdata-charge Charge interpretation for track parameters
 ///
 /// Track parameters store a single coefficient that describes charge and
@@ -52,6 +53,7 @@ namespace Acts {
 /// @{
 
 /// Charge and momentum interpretation for neutral particles.
+
 struct Neutral {
   constexpr Neutral() = default;
 

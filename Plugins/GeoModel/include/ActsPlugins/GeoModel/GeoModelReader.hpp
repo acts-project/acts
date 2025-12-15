@@ -15,11 +15,16 @@
 
 namespace ActsPlugins::GeoModelReader {
 
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @brief Read the GeoModel from the database
 ///
 /// @param dbPath path to the database
 ///
 /// @return world/top volume of the GeoModel tree in memory
 GeoModelTree readFromDb(const std::string& dbPath);
+
+/// @}
 
 }  // namespace ActsPlugins::GeoModelReader

@@ -626,6 +626,8 @@ class TrackProxy {
   /// @tparam track_proxy_t the other track proxy's type
   /// @param other The track proxy
   /// @param copyTrackStates Copy the track state sequence from @p other
+  /// @deprecated @ref copyFrom with copyTrackStates == false is deprecated,
+  ///             use @ref copyFromWithoutStates
   template <TrackProxyConcept track_proxy_t>
   [[deprecated(
       "copyFrom() with copyTrackStates == false is deprecated, use "
@@ -754,6 +756,7 @@ class TrackProxy {
   /// the resulting track points at the same track states as the original.
   /// @note Only available if the track proxy is not read-only
   /// @return A shallow copy of this track proxy
+  /// @deprecated Use @ref copyFromShallow instead
   [[deprecated("Use copyFromShallow() instead")]]
   TrackProxy shallowCopy()
     requires(!ReadOnly)

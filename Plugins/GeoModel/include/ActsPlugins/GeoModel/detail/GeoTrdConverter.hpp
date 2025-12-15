@@ -27,6 +27,8 @@ class Surface;
 
 namespace ActsPlugins::detail {
 
+/// @ingroup geomodel_plugin
+
 struct GeoTrdConverter {
   /// @brief Convert a GeoTrd to a detector element and surface
   ///

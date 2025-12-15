@@ -16,8 +16,10 @@
 
 #include <iostream>
 
-// Custom Json encoder/decoders.
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 
 /// @cond
 NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisBoundaryType,
@@ -28,7 +30,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisBoundaryType,
 NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisType,
                              {{Acts::AxisType::Equidistant, "Equidistant"},
                               {Acts::AxisType::Variable, "Variable"}})
-
 /// @endcond
 
 namespace AxisJsonConverter {
@@ -284,4 +285,6 @@ auto fromJson(const nlohmann::json& jGrid,
 }
 
 }  // namespace GridJsonConverter
+
+/// @}
 }  // namespace Acts

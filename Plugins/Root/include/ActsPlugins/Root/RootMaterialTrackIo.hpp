@@ -25,6 +25,8 @@ class TrackingVolume;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// Simple payload class that can be wrapped for reading
 /// and writing.
@@ -204,4 +206,5 @@ class RootMaterialTrackIo {
   MaterialVolumePayload m_volumePayload = {};
 };
 
+/// @}
 }  // namespace ActsPlugins

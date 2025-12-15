@@ -14,6 +14,8 @@
 #include <vector>
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 struct TGeoPrimitivesHelper {
   /// Helper method to create a transform from
@@ -48,4 +50,5 @@ struct TGeoPrimitivesHelper {
   /// @param second is the test string
   static bool match(const std::vector<std::string>& first, const char* second);
 };
+/// @}
 }  // namespace ActsPlugins

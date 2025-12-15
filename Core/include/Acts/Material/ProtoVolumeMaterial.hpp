@@ -19,6 +19,8 @@ namespace Acts {
 
 /// @class ProtoVolumeMaterial
 ///
+/// @ingroup material
+///
 /// @brief proxy to VolumeMaterial hand over BinUtility
 ///
 /// The ProtoVolumeMaterial class acts as a proxy to the VolumeMaterial

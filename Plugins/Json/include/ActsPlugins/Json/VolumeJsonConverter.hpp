@@ -19,9 +19,10 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-// can not match our naming guidelines.
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 class IVolumeMaterial;
 class TrackingVolume;
 
@@ -38,4 +39,5 @@ void to_json(
 /// @param volume Source TrackingVolume to convert
 void to_json(nlohmann::json& j, const Acts::TrackingVolume& volume);
 
+/// @}
 }  // namespace Acts

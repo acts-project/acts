@@ -23,6 +23,10 @@ class Surface;
 }
 
 namespace ActsPlugins {
+
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @class IGeoShapeConverter
 ///
 /// Interface for the conversion of GeoShapes to Acts surfaces
@@ -33,7 +37,7 @@ class IGeoShapeConverter {
 
   /// @brief Convert a GeoShape into a sensitive surface with associated
   ///        GeoModelDetectorElement
-  /// @param geoFPV The physical volume to convert
+  /// @param geoPV The physical volume to convert
   /// @param transform: Placement of the constructed detector element
   /// @param boundFactory: Reference to the bound factory to share equivalent bounds
   ///                      across multiple surfaces
@@ -43,7 +47,7 @@ class IGeoShapeConverter {
       Acts::SurfaceBoundFactory& boundFactory) const = 0;
 
   /// @brief Convert a GeoShape into a passive surface
-  /// @param geoFPV The physical volume to convert
+  /// @param geoPV The physical volume to convert
   /// @param transform: Placement of the constructed detector element
   /// @param boundFactory: Reference to the bound factory to share equivalent bounds
   ///                      across multiple surfaces
@@ -52,5 +56,7 @@ class IGeoShapeConverter {
       PVConstLink geoPV, const Acts::Transform3& transform,
       Acts::SurfaceBoundFactory& boundFactory) const = 0;
 };
+
+/// @}
 
 }  // namespace ActsPlugins

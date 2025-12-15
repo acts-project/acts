@@ -16,6 +16,8 @@ class Material;
 
 /// Accumulate and average volume-based material properties.
 ///
+/// @ingroup material_mapping
+///
 /// This class is intended to be used during the mapping process.
 class AccumulatedVolumeMaterial {
  public:

@@ -20,6 +20,8 @@
 
 namespace ActsPlugins::detail::GeoModelBinningHelper {
 
+/// @ingroup geomodel_plugin
+
 /// @brief Helper to transform binning string to AxisDirection enum
 ///
 /// @param binning the binning string

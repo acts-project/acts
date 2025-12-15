@@ -14,6 +14,8 @@
 class TGeoNode;
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @brief ITGeoIdentierProvider
 ///
@@ -32,4 +34,5 @@ class ITGeoIdentifierProvider {
       const Acts::GeometryContext& gctx, const TGeoNode& tgnode) const = 0;
 };
 
+/// @}
 }  // namespace ActsPlugins

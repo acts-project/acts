@@ -1,6 +1,6 @@
 # What is clang-tidy?
 
-[`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/) is a static analysis
+yyy [`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/) is a static analysis
 tool using the LLVM / clang tooling. It can detect a number of issues with C++
 code, like common readability problems, performance or memory safety issues.
 

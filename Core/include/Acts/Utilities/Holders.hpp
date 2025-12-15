@@ -12,6 +12,8 @@
 
 namespace Acts::detail {
 
+/// @todo: Holder should become public documented API
+
 /// Internal holder type for referencing a backend without ownership
 template <typename T>
 struct RefHolder {

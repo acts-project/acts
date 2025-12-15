@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 
+/// @cond
 namespace detray {
 
 using dindex = unsigned int;
@@ -51,6 +52,7 @@ enum class accel_id : unsigned int;
 
 }  // namespace io
 }  // namespace detray
+/// @endcond
 
 namespace Acts {
 class GeometryContext;
@@ -66,6 +68,7 @@ class ISurfaceMaterial;
 
 namespace ActsPlugins {
 
+/// @ingroup detray_plugin
 class DetrayPayloadConverter {
  public:
   using DetraySurfaceMaterial =
@@ -163,6 +166,7 @@ class DetrayPayloadConverter {
             convertProtoSurfaceMaterialBinUtility};
   };
 
+  /// @param bounds the surface bounds to convert
   /// @param forPortal detray special cases the local parametrization for portals for performance reasons
   static detray::io::mask_payload convertMask(const Acts::SurfaceBounds& bounds,
                                               bool forPortal);
@@ -238,6 +242,7 @@ class DetrayPayloadConverter {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
+/// @ingroup detray_plugin
 class DetrayUnsupportedMaterialException : public std::runtime_error {
  public:
   explicit DetrayUnsupportedMaterialException(std::string_view name);

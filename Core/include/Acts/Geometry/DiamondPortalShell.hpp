@@ -17,10 +17,8 @@
 
 namespace Acts {
 
-/// @class DiamondPortalShell
-/// Base class for convrrex polygon shaped portal shells, e.g
+/// Base class for diamond  shaped portal shells, e.g
 /// single volumes with polygon shape or stacked (multiple) volumes (TODO)
-
 class DiamondPortalShell : public PortalShellBase {
  public:
   using Face = DiamondVolumeBounds::Face;
@@ -51,7 +49,6 @@ class DiamondPortalShell : public PortalShellBase {
 /// @return The output stream
 std::ostream& operator<<(std::ostream& os, DiamondPortalShell::Face face);
 
-/// @class SingleDiamondPortalShell
 /// Implementation of a portal shell class for a single convex polygon volume
 class SingleDiamondPortalShell : public DiamondPortalShell {
  public:

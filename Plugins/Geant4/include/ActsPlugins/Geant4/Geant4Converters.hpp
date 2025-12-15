@@ -52,6 +52,8 @@ using G4RotationMatrix = CLHEP::HepRotation;
 using G4Transform3D = HepGeom::Transform3D;
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
 
 struct Geant4AlgebraConverter {
   // A potential scalar between Geant4 and ACTS
@@ -203,4 +205,5 @@ struct Geant4VolumeConverter {
       const G4Tubs& g4Tubs);
 };
 
+/// @}
 }  // namespace ActsPlugins

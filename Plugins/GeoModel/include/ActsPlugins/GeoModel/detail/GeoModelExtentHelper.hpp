@@ -19,6 +19,8 @@
 
 namespace ActsPlugins::detail::GeoModelExentHelper {
 
+/// @ingroup geomodel_plugin
+
 /// @brief Helper function to find out which ones are constraint from internal / external
 ///
 /// @param boundsEntry the bounds entry from the database
