@@ -341,8 +341,8 @@ struct GaussianSumFitter {
     const auto& fwdGsfResult =
         fwdResult->template get<typename GsfActor::result_type>();
 
-    if (!fwdGsfResult.result.ok()) {
-      return return_error_or_abort(fwdGsfResult.result.error());
+    if (!fwdGsfResult.result.ok() && fwdGsfResult.result.error() != GsfError::NoComponentsLeft) {
+        return return_error_or_abort(fwdGsfResult.result.error());
     }
 
     if (fwdGsfResult.measurementStates == 0) {

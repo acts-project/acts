@@ -14,6 +14,7 @@
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
@@ -157,8 +158,10 @@ struct GsfActor {
     assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
+    // This should not be a warning, because the also if we abort
+    // on error in checkAbort(...), act(...) is called once again
     if (!result.result.ok()) {
-      ACTS_WARNING("result.result not ok, return!");
+      ACTS_DEBUG("result.result not ok (" << result.result.error().message() << "), return");
       return;
     }
 
@@ -274,13 +277,6 @@ struct GsfActor {
         return;
       }
 
-      // Check if all components were removed by momentum cut
-      if (tmpStates.tips.empty()) {
-        ACTS_VERBOSE("All components removed by transverse momentum cut");
-        stepper.clearComponents(state.stepping);
-        return;
-      }
-
       updateStepper(state, stepper, tmpStates);
     }
     // We have material, we thus need a component cache since we will
@@ -311,9 +307,8 @@ struct GsfActor {
                           result);
 
       if (componentCache.empty()) {
-        ACTS_VERBOSE(
-            "All components removed by cuts (weight or momentum cutoff)");
         stepper.clearComponents(state.stepping);
+        setErrorOrAbort(GsfError::NoComponentsLeft);
         return;
       }
 
@@ -336,8 +331,8 @@ struct GsfActor {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, const result_type& result,
+  bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                  const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
@@ -345,10 +340,7 @@ struct GsfActor {
       return true;
     }
 
-    // Stop if all components have been removed
-    if (stepper.numberComponents(state.stepping) == 0) {
-      ACTS_VERBOSE(
-          "Stop navigation because all components were removed by cuts");
+    if (!result.result.ok()) {
       return true;
     }
 
@@ -606,8 +598,9 @@ struct GsfActor {
 
       const auto& trackStateProxy = *trackStateProxyRes;
 
-      const auto &params = trackStateProxy.parameters();
-      const auto p = stepper.particleHypothesis(state.stepping).extractMomentum(params[eBoundQOverP]);
+      const auto& params = trackStateProxy.parameters();
+      const auto p = stepper.particleHypothesis(state.stepping)
+                         .extractMomentum(params[eBoundQOverP]);
       const auto pT = p * std::sin(params[eBoundTheta]);
       if (pT < m_cfg.transverseMomentumCut) {
         ACTS_VERBOSE("Skip component with pT=" << pT << " after Kalman update");
@@ -622,6 +615,12 @@ struct GsfActor {
 
       tmpStates.tips.push_back(trackStateProxy.index());
       tmpStates.weights[tmpStates.tips.back()] = cmp.weight();
+    }
+
+    // If all components were removed, return error
+    if (tmpStates.tips.empty()) {
+      stepper.clearComponents(state.stepping);
+      return GsfError::NoComponentsLeft;
     }
 
     computePosteriorWeights(tmpStates.traj, tmpStates.tips, tmpStates.weights);

@@ -19,6 +19,7 @@ enum class GsfError {
   NoMeasurementStatesCreatedForward,
   NoMeasurementStatesCreatedBackward,
   NoMeasurementStatesCreatedFinal,
+  NoComponentsLeft
 };
 
 /// Create error code from @ref GsfError
