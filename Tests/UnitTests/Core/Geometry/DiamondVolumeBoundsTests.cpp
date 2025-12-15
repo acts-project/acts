@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/ConvexPolygonVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -22,8 +22,8 @@ namespace ActsTests {
 GeometryContext gctx = GeometryContext();
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
-BOOST_AUTO_TEST_CASE(ConvexPolygonVolumeBoundsCreation) {
-  // Create a ConvexPolygonVolumeBounds
+BOOST_AUTO_TEST_CASE(DiamondVolumeBoundsCreation) {
+  // Create a DiamondVolumeBounds
   double halfX1 = 10.0;
   double halfX2 = 12.0;
   double halfX3 = 12.0;
@@ -31,24 +31,22 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonVolumeBoundsCreation) {
   double halfY2 = 10.0;
   double halfZ = 2.0;
 
-  ConvexPolygonVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1,
-                                          halfY2, halfZ);
+  DiamondVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1, halfY2,
+                                    halfZ);
 
   // Test correct parameter return
-  BOOST_CHECK_EQUAL(polygonBounds.get(ConvexPolygonVolumeBounds::eHalfLengthX1),
+  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eHalfLengthX1),
                     halfX1);
-  BOOST_CHECK_EQUAL(polygonBounds.get(ConvexPolygonVolumeBounds::eHalfLengthX2),
+  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eHalfLengthX2),
                     halfX2);
-  BOOST_CHECK_EQUAL(polygonBounds.get(ConvexPolygonVolumeBounds::eHalfLengthX3),
+  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eHalfLengthX3),
                     halfX3);
-  BOOST_CHECK_EQUAL(polygonBounds.get(ConvexPolygonVolumeBounds::eLengthY1),
-                    halfY1);
-  BOOST_CHECK_EQUAL(polygonBounds.get(ConvexPolygonVolumeBounds::eLengthY2),
-                    halfY2);
-  BOOST_CHECK_EQUAL(polygonBounds.get(ConvexPolygonVolumeBounds::eHalfLengthZ),
+  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eLengthY1), halfY1);
+  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eLengthY2), halfY2);
+  BOOST_CHECK_EQUAL(polygonBounds.get(DiamondVolumeBounds::eHalfLengthZ),
                     halfZ);
 
-  BOOST_CHECK_EQUAL(polygonBounds.type(), VolumeBounds::eConvexPolygon);
+  BOOST_CHECK_EQUAL(polygonBounds.type(), VolumeBounds::eDiamond);
 
   // try to create a volume with this bounds and visualize it
 
@@ -57,16 +55,16 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonVolumeBoundsCreation) {
   transform.rotate(AngleAxis3(30._degree, Vector3::UnitZ()));
 
   auto trackingVolume = std::make_unique<TrackingVolume>(
-      transform, std::make_shared<ConvexPolygonVolumeBounds>(polygonBounds),
-      "TestConvexPolygonVolume");
+      transform, std::make_shared<DiamondVolumeBounds>(polygonBounds),
+      "TestDiamondVolume");
 
   Acts::ObjVisualization3D helper;
   trackingVolume->visualize(helper, gctx, {.visible = true}, {.visible = true},
                             {.visible = true});
   helper.write(trackingVolume->volumeName() + ".obj");
 }
-BOOST_AUTO_TEST_CASE(ConvexPolygonVolumeBoundsInside) {
-  // Create a ConvexPolygonVolumeBounds
+BOOST_AUTO_TEST_CASE(DiamondVolumeBoundsInside) {
+  // Create a DiamondVolumeBounds
   double halfX1 = 10.0;
   double halfX2 = 12.0;
   double halfX3 = 5.0;
@@ -74,8 +72,8 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonVolumeBoundsInside) {
   double halfY2 = 10.0;
   double halfZ = 2.0;
 
-  ConvexPolygonVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1,
-                                          halfY2, halfZ);
+  DiamondVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1, halfY2,
+                                    halfZ);
 
   // Points inside
   BOOST_CHECK(polygonBounds.inside(Vector3::Zero(), 0.1));
@@ -93,8 +91,8 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonVolumeBoundsInside) {
                                     0.0));  // check side inclided faces
 }
 
-BOOST_AUTO_TEST_CASE(ConvexPolygonBoundarySurfaces) {
-  // Create a ConvexPolygonVolumeBounds
+BOOST_AUTO_TEST_CASE(DiamondBoundarySurfaces) {
+  // Create a DiamondVolumeBounds
   double halfX1 = 10.0;
   double halfX2 = 12.0;
   double halfX3 = 8.0;
@@ -102,8 +100,8 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundarySurfaces) {
   double halfY2 = 10.0;
   double halfZ = 2.0;
 
-  ConvexPolygonVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1,
-                                          halfY2, halfZ);
+  DiamondVolumeBounds polygonBounds(halfX1, halfX2, halfX3, halfY1, halfY2,
+                                    halfZ);
 
   Transform3 transform = Transform3::Identity();
 
@@ -130,8 +128,8 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundarySurfaces) {
   const Vector3 yaxis = Vector3::UnitY();
   const Vector3 zaxis = Vector3::UnitZ();
 
-  using enum ConvexPolygonVolumeBounds::Face;
-  using enum ConvexPolygonVolumeBounds::BoundValues;
+  using enum DiamondVolumeBounds::Face;
+  using enum DiamondVolumeBounds::BoundValues;
 
   auto pFaceXY = surfaces[toUnderlying(PositiveZFaceXY)]
                      .surface->transform(gctx)
