@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/ConvexPolygonPortalShell.hpp"
+#include "Acts/Geometry/DiamondPortalShell.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
@@ -32,23 +32,22 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       Transform3::Identity(),
       std::make_shared<TrapezoidVolumeBounds>(20._cm, 10._cm, 10._cm, 5._cm));
 
-  BOOST_CHECK_THROW(SingleConvexPolygonPortalShell{fVol},
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(SingleDiamondPortalShell{fVol}, std::invalid_argument);
 
   // conastruct a convex polygon tracking volume for which we are gonna build
   // the portal shell
 
   TrackingVolume testVol(Transform3::Identity(),
-                         std::make_shared<ConvexPolygonVolumeBounds>(
+                         std::make_shared<DiamondVolumeBounds>(
                              20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
 
-  SingleConvexPolygonPortalShell polygShell{testVol};
+  SingleDiamondPortalShell polygShell{testVol};
 
   BOOST_CHECK(polygShell.isValid());
   BOOST_CHECK_EQUAL(polygShell.size(), 8);
 
   // check if the portals are correctly built from the faces
-  using enum ConvexPolygonVolumeBounds::Face;
+  using enum DiamondVolumeBounds::Face;
 
   const auto nXY = polygShell.portalPtr(NegativeZFaceXY);
   const auto pXY = polygShell.portalPtr(PositiveZFaceXY);
@@ -117,13 +116,13 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
 }
 
 BOOST_AUTO_TEST_CASE(PortalAssignment) {
-  using enum ConvexPolygonVolumeBounds::Face;
+  using enum DiamondVolumeBounds::Face;
 
   TrackingVolume polygVol(Transform3::Identity(),
-                          std::make_shared<ConvexPolygonVolumeBounds>(
+                          std::make_shared<DiamondVolumeBounds>(
                               20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
 
-  SingleConvexPolygonPortalShell polygShell{polygVol};
+  SingleDiamondPortalShell polygShell{polygVol};
 
   // get the portal faces
   const auto nXY = polygShell.portalPtr(NegativeZFaceXY);
@@ -173,12 +172,12 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 }
 
 BOOST_AUTO_TEST_CASE(Fill) {
-  using enum ConvexPolygonVolumeBounds::Face;
+  using enum DiamondVolumeBounds::Face;
 
   TrackingVolume testVol(Transform3::Identity(),
-                         std::make_shared<ConvexPolygonVolumeBounds>(
+                         std::make_shared<DiamondVolumeBounds>(
                              20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
-  SingleConvexPolygonPortalShell polygShell(testVol);
+  SingleDiamondPortalShell polygShell(testVol);
 
   // without filling the protal shell from a volume the portal link to this
   // direction shouldn't exist - but only the other direction
@@ -191,8 +190,8 @@ BOOST_AUTO_TEST_CASE(Fill) {
   // create a volume to link to the portal to the other side
   TrackingVolume testVol2(
       Transform3::Identity() * Translation3(Vector3::UnitZ() * 24_cm),
-      std::make_shared<ConvexPolygonVolumeBounds>(20._cm, 25._cm, 15._cm,
-                                                  15._cm, 20._cm, 12._cm));
+      std::make_shared<DiamondVolumeBounds>(20._cm, 25._cm, 15._cm, 15._cm,
+                                            20._cm, 12._cm));
   polygShell.fill(testVol2);
 
   BOOST_CHECK_NE(polygShell.portalPtr(NegativeZFaceXY)
@@ -203,9 +202,9 @@ BOOST_AUTO_TEST_CASE(Fill) {
 BOOST_AUTO_TEST_CASE(ApplyToVolume) {
   // test the volume's portals
   TrackingVolume testVol(Transform3::Identity(),
-                         std::make_shared<ConvexPolygonVolumeBounds>(
+                         std::make_shared<DiamondVolumeBounds>(
                              20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
-  SingleConvexPolygonPortalShell polygShell(testVol);
+  SingleDiamondPortalShell polygShell(testVol);
   // before apply to volueme called - the volume should have zero portals
   BOOST_CHECK_EQUAL(testVol.portals().size(), 0);
 
