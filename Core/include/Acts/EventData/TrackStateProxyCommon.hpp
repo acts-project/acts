@@ -39,6 +39,14 @@ inline constexpr HashedString kNextKey = hashString("next");
 
 }  // namespace detail_tsp
 
+/// Common CRTP implementation shared by track state proxy front-ends.
+/// This base class provides access to track state components including
+/// predicted, filtered, and smoothed parameters and covariances, as well as
+/// calibrated measurement data and various metadata. The derived proxy must
+/// expose the underlying storage access methods.
+///
+/// @tparam Derived The proxy implementation inheriting from this base
+/// @tparam read_only Whether the proxy provides mutable access
 template <typename Derived, bool read_only>
 class TrackStateProxyCommon {
  protected:
@@ -96,23 +104,36 @@ class TrackStateProxyCommon {
     return derived().has(detail_tsp::kCalibratedKey);
   }
 
+  /// @name Type aliases for parameter and covariance access
+  /// @{
+
+  /// Mutable Eigen map type for bound track parameters.
   using ParametersMap =
       typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
+  /// Const Eigen map type for bound track parameters.
   using ConstParametersMap =
       typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
+  /// Mutable Eigen map type for bound track parameter covariance.
   using CovarianceMap =
       typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
+  /// Const Eigen map type for bound track parameter covariance.
   using ConstCovarianceMap =
       typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 
+  /// Mutable Eigen map type for calibrated measurements (dynamic size).
   using EffectiveCalibratedMap =
       typename detail_tsp::DynamicSizeTypes<false>::CoefficientsMap;
+  /// Const Eigen map type for calibrated measurements (dynamic size).
   using ConstEffectiveCalibratedMap =
       typename detail_tsp::DynamicSizeTypes<true>::CoefficientsMap;
+  /// Mutable Eigen map type for calibrated measurement covariance (dynamic size).
   using EffectiveCalibratedCovarianceMap =
       typename detail_tsp::DynamicSizeTypes<false>::CovarianceMap;
+  /// Const Eigen map type for calibrated measurement covariance (dynamic size).
   using ConstEffectiveCalibratedCovarianceMap =
       typename detail_tsp::DynamicSizeTypes<true>::CovarianceMap;
+
+  /// @}
 
   /// Access the predicted parameter vector.
   /// @return Bound parameter map for the predicted state.

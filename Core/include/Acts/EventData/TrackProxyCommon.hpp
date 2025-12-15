@@ -42,6 +42,7 @@ class TrackProxyCommon {
   }
 
  public:
+  /// Index type used for referencing track states.
   using IndexType = index_t;
 
   /// Get the tip index, i.e. the entry point into the track state container.
