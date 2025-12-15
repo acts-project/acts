@@ -14,8 +14,8 @@
 
 #include <array>
 #include <span>
-#include <unordered_set>
 #include <stdexcept>
+#include <unordered_set>
 
 namespace Acts::HoughTransformUtils {
 
@@ -204,7 +204,7 @@ class HoughPlane {
   /// @throws out of range if indices are not within plane limits
   std::unordered_set<unsigned> layers(std::size_t xBin,
                                       std::size_t yBin) const {
-    checkIndices(xBin, yBin);                                        
+    checkIndices(xBin, yBin);
     return m_houghHist.atLocalBins({xBin, yBin}).layers();
   }
 
@@ -237,7 +237,7 @@ class HoughPlane {
   /// @throws out of range if indices are not within plane limits
   std::unordered_set<const identifier_t> uniqueHitIds(std::size_t xBin,
                                                       std::size_t yBin) const {
-    checkIndices(xBin, yBin);                                                    
+    checkIndices(xBin, yBin);
     const auto hits_span = m_houghHist.atLocalBins({xBin, yBin}).getHits();
     return std::unordered_set<identifier_t>(hits_span.begin(), hits_span.end());
   }
@@ -342,7 +342,6 @@ class HoughPlane {
 
   /// @brief check if indices are are valid
   void checkIndices(size_t x, size_t y) const;
-
 };
 
 /// example peak finders.
@@ -498,9 +497,9 @@ struct SlidingWindowConfig {
 /// @tparam identifier_t Hough plane content
 /// @param plane Hough plane to work on
 /// @param config algorithm configuration
-/// @return list of indices (pairs of numbers) 
+/// @return list of indices (pairs of numbers)
 template <typename identifier_t>
-std::vector<class HoughPlane<identifier_t>::Index> slidingWindowPeaks(
+std::vector<typename HoughPlane<identifier_t>::Index> slidingWindowPeaks(
     const HoughPlane<identifier_t>& plane, const SlidingWindowConfig& config);
 
 /// @brief Obtain an image around the peak
@@ -510,8 +509,9 @@ std::vector<class HoughPlane<identifier_t>::Index> slidingWindowPeaks(
 /// @param xSize number of cells around the peak in x direction
 /// @param ySize number of cells around the peak in y direction
 /// @return the vector with count of hits starting from lower left to upper right corner of rectangular window
-/// The "image" is always of the same size, if it would happen to be outside of Hough plane the content is padded with zeros
-template <typename identifier_t, typename pixel_value_t=unsigned char>
+/// The "image" is always of the same size, if it would happen to be outside of
+/// Hough plane the content is padded with zeros
+template <typename identifier_t, typename pixel_value_t = unsigned char>
 std::vector<pixel_value_t> hitsCountImage(
     const HoughPlane<identifier_t>& plane,
     typename HoughPlane<identifier_t>::Index index, size_t xSize, size_t ySize);

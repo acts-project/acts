@@ -144,14 +144,17 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::reset() {
   m_touchedBins.clear();
 }
 template <class identifier_t>
-void Acts::HoughTransformUtils::HoughPlane<identifier_t>::checkIndices(size_t xBin, size_t yBin) const {
-    if (xBin >= nBinsX()) throw std::out_of_range(
-          "When accessing HoughPlane, X index " + std::to_string(xBin) + " is >= " + std::to_string(nBinsX()));
-    if (yBin >= nBinsY()) throw std::out_of_range(
-          "When accessing HoughPlane, Y index " + std::to_string(yBin) + " is >= " + std::to_string(nBinsY()));
+void Acts::HoughTransformUtils::HoughPlane<identifier_t>::checkIndices(
+    size_t xBin, size_t yBin) const {
+  if (xBin >= nBinsX())
+    throw std::out_of_range("When accessing HoughPlane, X index " +
+                            std::to_string(xBin) +
+                            " is >= " + std::to_string(nBinsX()));
+  if (yBin >= nBinsY())
+    throw std::out_of_range("When accessing HoughPlane, Y index " +
+                            std::to_string(yBin) +
+                            " is >= " + std::to_string(nBinsY()));
 }
-
-
 
 template <class identifier_t>
 Acts::HoughTransformUtils::PeakFinders::LayerGuidedCombinatoric<identifier_t>::
