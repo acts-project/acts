@@ -68,6 +68,11 @@ class TrackContainer {
   using ConstTrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, true>;
 
+  static_assert(ConstTrackProxyConcept<ConstTrackProxy>,
+                "ConstTrackProxy must fulfill the TrackProxyConcept");
+  static_assert(ReadOnly || MutableTrackProxyConcept<TrackProxy>,
+                "TrackProxy must fulfill the TrackProxyConcept");
+
   /// Type alias for track container backend type
   using TrackContainerBackend = track_container_t;
   /// Type alias for track state container backend type
