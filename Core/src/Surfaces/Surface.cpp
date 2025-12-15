@@ -92,9 +92,9 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
   // The local frame rotation
   const auto& rotation = transform(gctx).rotation();
   // The axes of local frame
-  const auto& localXAxis = rotation.col(0);
-  const auto& localYAxis = rotation.col(1);
-  const auto& localZAxis = rotation.col(2);
+  // const auto& localXAxis = rotation.col(0);
+  // const auto& localYAxis = rotation.col(1);
+  // const auto& localZAxis = rotation.col(2);
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);

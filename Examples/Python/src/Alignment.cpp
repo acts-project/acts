@@ -166,7 +166,7 @@ void addAlignment(Context& ctx) {
             py::dict result;
             for (const auto& [iter, mask] : cfg.iterationState) {
               result[py::cast(iter)] =
-                  py::cast(static_cast<uint8_t>(mask.to_ulong()));
+                  py::cast(static_cast<std::uint8_t>(mask.to_ulong()));
             }
             return result;
           },
@@ -175,13 +175,13 @@ void addAlignment(Context& ctx) {
             for (auto item : d) {
               unsigned int iter = item.first.cast<unsigned int>();
 
-              uint8_t mask_value;
+              std::uint8_t mask_value;
               try {
                 auto mask_enum =
                     item.second.cast<ActsAlignment::AlignmentMask>();
-                mask_value = static_cast<uint8_t>(mask_enum);
+                mask_value = static_cast<std::uint8_t>(mask_enum);
               } catch (...) {
-                mask_value = item.second.cast<uint8_t>();
+                mask_value = item.second.cast<std::uint8_t>();
               }
 
               cfg.iterationState[iter] = std::bitset<6>(mask_value);
