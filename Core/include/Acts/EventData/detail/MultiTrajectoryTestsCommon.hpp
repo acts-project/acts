@@ -758,14 +758,6 @@ class MultiTrajectoryTestsCommon {
         ts1.getUncalibratedSourceLink().template get<TestSourceLink>(),
         ts2.getUncalibratedSourceLink().template get<TestSourceLink>());
 
-    visit_measurement(ts1.calibratedSize(), [&](auto N) {
-      constexpr std::size_t measdim = decltype(N)::value;
-      BOOST_CHECK_NE(ts1.template calibrated<measdim>(),
-                     ts2.template calibrated<measdim>());
-      BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
-                     ts2.template calibratedCovariance<measdim>());
-    });
-
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
     BOOST_CHECK(ts1.projectorSubspaceIndices() !=
                 ts2.projectorSubspaceIndices());
@@ -796,6 +788,8 @@ class MultiTrajectoryTestsCommon {
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
                         ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() ==
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
@@ -817,14 +811,6 @@ class MultiTrajectoryTestsCommon {
     // is different again
     BOOST_CHECK_NE(ts1.predicted(), ts2.predicted());
     BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
-
-    visit_measurement(ts1.calibratedSize(), [&](auto N) {
-      constexpr std::size_t measdim = decltype(N)::value;
-      BOOST_CHECK_NE(ts1.template calibrated<measdim>(),
-                     ts2.template calibrated<measdim>());
-      BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
-                     ts2.template calibratedCovariance<measdim>());
-    });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
     BOOST_CHECK(ts1.projectorSubspaceIndices() !=
@@ -849,6 +835,8 @@ class MultiTrajectoryTestsCommon {
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
                         ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() ==
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
