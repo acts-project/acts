@@ -28,11 +28,9 @@ from acts.examples.reconstruction import (
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
-# acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
 detector = acts.examples.itk.buildITkGeometry(geo_dir, logLevel=acts.logging.INFO)
 trackingGeometry = detector.trackingGeometry()
-# decorators = detector.contextDecorators()
 
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
@@ -46,16 +44,13 @@ addPythia8(
     s,
     hardProcess=["Top:qqbar2ttbar=on"],
     npileup=0,
-    # beam=acts.PdgParticle.eLead,
     cmsEnergy=5.0 * u.TeV,
     vtxGen=acts.examples.GaussianVertexGenerator(
-        # stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
         stddev=acts.Vector4(0.5 * u.mm, 0.5 * u.mm, 50. * u.mm, 0.0 * u.ns),
         mean=acts.Vector4(0, 0, 0, 0),
     ),
     rnd=rnd,
     outputDirRoot=outputDir,
-    # logLevel=acts.logging.VERBOSE,
 )
 
 addGenParticleSelection(
@@ -66,7 +61,6 @@ addGenParticleSelection(
         eta=(-4.0, 4.0),
         pt=(150 * u.MeV, None),
     ),
-    # logLevel=acts.logging.VERBOSE,
 )
 
 addFatras(
@@ -75,7 +69,6 @@ addFatras(
     field,
     rnd=rnd,
     outputDirRoot=outputDir,
-    # logLevel=acts.logging.VERBOSE,
 )
 
 addDigitization(
@@ -85,7 +78,6 @@ addDigitization(
     digiConfigFile=geo_dir / "itk-hgtd/itk-smearing-config.json",
     outputDirRoot=outputDir,
     rnd=rnd,
-    # logLevel=acts.logging.VERBOSE,
 )
 
 addDigiParticleSelection(
@@ -96,7 +88,6 @@ addDigiParticleSelection(
         measurements=(9, None),
         removeNeutral=True,
     ),
-    # logLevel=acts.logging.VERBOSE,
 )
 
 addSeeding(
@@ -124,7 +115,6 @@ addSeeding(
 
 addHoughVertexFinding(
     s,
-    # logLevel=acts.logging.VERBOSE,
     outputDirRoot=outputDir,
     outputVertices="fittedHoughVertices"
 )
@@ -168,7 +158,6 @@ addAmbiguityResolution(
 addVertexFitting(
     s,
     field,
-    # logLevel=acts.logging.VERBOSE,
     vertexFinder=VertexFinder.AMVF,
     outputDirRoot=outputDir,
 )

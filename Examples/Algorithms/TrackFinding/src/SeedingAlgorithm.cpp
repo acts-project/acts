@@ -15,7 +15,6 @@
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
-#include <chrono>
 #include <cmath>
 #include <csignal>
 #include <cstddef>
@@ -306,7 +305,6 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   static thread_local std::vector<seed_type> filtered_seeds;
   filtered_seeds.clear();
 
-  auto t1 = std::chrono::high_resolution_clock::now();
   for (auto& seed : seeds) {
     auto [a, b, c] = seed.sp();
     Acts::SquareMatrix3 mat;
@@ -334,7 +332,6 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       filtered_seeds.push_back(seed);
     }
   }
-  auto t2 = std::chrono::high_resolution_clock::now();
 
   ACTS_INFO("We have " << filtered_seeds.size() << " filtered track seeds");
   ACTS_INFO("Filtration took " << (t2 - t1).count() / 1e6 << " ms");
