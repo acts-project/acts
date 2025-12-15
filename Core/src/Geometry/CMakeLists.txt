@@ -32,7 +32,7 @@ target_sources(
         TrackingVolume.cpp
         TrackingVolumeArrayCreator.cpp
         TrapezoidVolumeBounds.cpp
-        ConvexPolygonVolumeBounds.cpp
+        DiamondVolumeBounds.cpp
         Volume.cpp
         VolumeBounds.cpp
         CylinderVolumeStack.cpp
@@ -59,7 +59,7 @@ target_sources(
         GeometryIdentifierBlueprintNode.cpp
         TrackingGeometryVisitor.cpp
         TrapezoidPortalShell.cpp
-        ConvexPolygonPortalShell.cpp
+        DiamondPortalShell.cpp
         VolumeStack.cpp
         ContainerBlueprintNode.cpp
         MultiWireVolumeBuilder.cpp
