@@ -1999,7 +1999,7 @@ def addTrackWriters(
                 inputTrackParticleMatching="track_particle_matching",
                 filePath=str(Path(outputDirRoot) / f"track_finding_ntuple_{name}.root"),
             )
-            s.addWriter(trackFinderNTupleWriter(trackFinderNTupleWriterr))
+            s.addWriter(trackFinderNTupleWriter(trackFinderNTupleWriter))
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
