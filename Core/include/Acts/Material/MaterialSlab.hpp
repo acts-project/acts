@@ -21,8 +21,8 @@
 // resulting from auto-vectorization.
 
 #if defined(__clang__) && defined(__x86_64__)
-#  pragma float_control(push)
-#  pragma float_control(except,on)
+#pragma float_control(push)
+#pragma float_control(except,on)
 #endif
 
 namespace Acts {
@@ -122,8 +122,7 @@ class MaterialSlab {
 
   constexpr MaterialSlab(const Material& material, float thickness,
                          [[maybe_unused]] bool dummy)
-      : m_material(material),
-        m_thickness(thickness) {
+      : m_material(material), m_thickness(thickness) {
     m_thicknessInX0 = (eps < material.X0()) ? (thickness / material.X0()) : 0;
     m_thicknessInL0 = (eps < material.L0()) ? (thickness / material.L0()) : 0;
   }
@@ -166,5 +165,5 @@ using RecordedMaterialVolumePoint =
 }  // namespace Acts
 
 #if defined(__clang__) && defined(__x86_64__)
-#  pragma float_control(pop)
+#pragma float_control(pop)
 #endif
