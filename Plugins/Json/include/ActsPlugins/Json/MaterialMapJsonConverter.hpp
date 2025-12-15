@@ -57,7 +57,6 @@ using TrackingVolumeAndMaterial =
 /// @brief read the material from Json
 class MaterialMapJsonConverter {
  public:
-
   /// @class Config
   /// Configuration of the Converter
   class Config {

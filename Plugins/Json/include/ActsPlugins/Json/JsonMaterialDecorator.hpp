@@ -29,7 +29,6 @@ namespace Acts {
 /// from a json file
 class JsonMaterialDecorator : public IMaterialDecorator {
  public:
-
   /// Constructor with configuration
   /// @param rConfig the configuration for the material map reader
   /// @param jFileName the json file name to read

@@ -25,7 +25,6 @@ namespace Acts {
 /// @brief material mapping procedure
 class MaterialMapper {
  public:
-
   /// @brief nested configuration struct
   struct Config {
     /// The assignment finder for material interaction assignments
