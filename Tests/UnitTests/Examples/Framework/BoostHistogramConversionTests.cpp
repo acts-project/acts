@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_UniformBinning) {
     boostHist.fill(dist(rng));
   }
 
-  TH1F* rootHist = BoostHistogramToRoot::toTH1F(boostHist);
+  TH1F* rootHist = BoostHistogramToRoot::toRoot(boostHist);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootHist->GetName()), "test_hist");
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_VariableBinning) {
   boostHist.fill(1.5);
   boostHist.fill(3.0);
 
-  TH1F* rootHist = BoostHistogramToRoot::toTH1F(boostHist);
+  TH1F* rootHist = BoostHistogramToRoot::toRoot(boostHist);
 
   BOOST_CHECK_EQUAL(rootHist->GetNbinsX(), 5);
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_LogarithmicBinning) {
     boostHist.fill(std::exp(logDist(rng)));
   }
 
-  TH1F* rootHist = BoostHistogramToRoot::toTH1F(boostHist);
+  TH1F* rootHist = BoostHistogramToRoot::toRoot(boostHist);
 
   BOOST_CHECK_EQUAL(rootHist->GetNbinsX(), 10);
 
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT) {
     boostHist.fill(etaDist(rng), resDist(rng));
   }
 
-  TH2F* rootHist = BoostHistogramToRoot::toTH2F(boostHist);
+  TH2F* rootHist = BoostHistogramToRoot::toRoot(boostHist);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootHist->GetName()), "res_vs_eta");
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT_VariableBinning) {
   boostHist.fill(-1.0, 7.0);
   boostHist.fill(2.0, 1.5);
 
-  TH2F* rootHist = BoostHistogramToRoot::toTH2F(boostHist);
+  TH2F* rootHist = BoostHistogramToRoot::toRoot(boostHist);
 
   BOOST_CHECK_EQUAL(rootHist->GetNbinsX(), 5);
   BOOST_CHECK_EQUAL(rootHist->GetNbinsY(), 4);
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(Conversion_EmptyHistogram) {
   auto binning = PlotHelpers::Binning::Uniform("x", 10, -10.0, 10.0);
   BoostHistogram1D boostHist("empty", "Empty Histogram", binning);
 
-  TH1F* rootHist = BoostHistogramToRoot::toTH1F(boostHist);
+  TH1F* rootHist = BoostHistogramToRoot::toRoot(boostHist);
 
   BOOST_CHECK_EQUAL(rootHist->GetNbinsX(), 10);
   for (int i = 1; i <= rootHist->GetNbinsX(); ++i) {
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(Conversion_MultipleFills) {
   boostHist.fill(5.0);
   boostHist.fill(5.0);
 
-  TH1F* rootHist = BoostHistogramToRoot::toTH1F(boostHist);
+  TH1F* rootHist = BoostHistogramToRoot::toRoot(boostHist);
 
   auto binIdx = boostHist.histogram().axis(0).index(5.0);
   BOOST_CHECK_CLOSE(rootHist->GetBinContent(binIdx + 1), 3.0, 1e-10);
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(Conversion_MetadataPreservation) {
 
   boostHist.fill(500.0);
 
-  TH1F* rootHist = BoostHistogramToRoot::toTH1F(boostHist);
+  TH1F* rootHist = BoostHistogramToRoot::toRoot(boostHist);
 
   BOOST_CHECK_EQUAL(std::string(rootHist->GetName()), "track_distance");
   BOOST_CHECK_EQUAL(std::string(rootHist->GetTitle()), "Track Distance");
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
   profile.fill(2.0, 9.0);
   profile.fill(2.0, 11.0);  // Mean = 10.0
 
-  TProfile* rootProfile = BoostHistogramToRoot::toTProfile(profile);
+  TProfile* rootProfile = BoostHistogramToRoot::toRoot(profile);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootProfile->GetName()), "res_mean_vs_eta");
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostEfficiency1D_to_TEfficiency) {
     eff.fill(-1.5, false);
   }
 
-  TEfficiency* rootEff = BoostHistogramToRoot::toTEfficiency(eff);
+  TEfficiency* rootEff = BoostHistogramToRoot::toRoot(eff);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootEff->GetName()), "eff_vs_eta");
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostEfficiency2D_to_TEfficiency) {
   eff.fill(-1.5, 1.5, false);
   eff.fill(-1.5, 1.5, false);
 
-  TEfficiency* rootEff = BoostHistogramToRoot::toTEfficiency(eff);
+  TEfficiency* rootEff = BoostHistogramToRoot::toRoot(eff);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootEff->GetName()), "eff_vs_eta_pt");

@@ -20,7 +20,7 @@
 
 namespace ActsExamples::BoostHistogramToRoot {
 
-TH1F* toTH1F(const BoostHistogram1D& boostHist) {
+TH1F* toRoot(const BoostHistogram1D& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& axis = bh.axis(0);
 
@@ -53,7 +53,7 @@ TH1F* toTH1F(const BoostHistogram1D& boostHist) {
   return rootHist;
 }
 
-TH2F* toTH2F(const BoostHistogram2D& boostHist) {
+TH2F* toRoot(const BoostHistogram2D& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& xAxis = bh.axis(0);
   const auto& yAxis = bh.axis(1);
@@ -99,7 +99,7 @@ TH2F* toTH2F(const BoostHistogram2D& boostHist) {
   return rootHist;
 }
 
-TProfile* toTProfile(const BoostProfileHistogram& boostProfile) {
+TProfile* toRoot(const BoostProfileHistogram& boostProfile) {
   const auto& bh = boostProfile.histogram();
   const auto& axis = bh.axis(0);
 
@@ -144,7 +144,7 @@ TProfile* toTProfile(const BoostProfileHistogram& boostProfile) {
   return rootProfile;
 }
 
-TEfficiency* toTEfficiency(const BoostEfficiency1D& boostEff) {
+TEfficiency* toRoot(const BoostEfficiency1D& boostEff) {
   const auto& passed = boostEff.passedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& axis = passed.axis(0);
@@ -188,7 +188,7 @@ TEfficiency* toTEfficiency(const BoostEfficiency1D& boostEff) {
   return rootEff;
 }
 
-TEfficiency* toTEfficiency(const BoostEfficiency2D& boostEff) {
+TEfficiency* toRoot(const BoostEfficiency2D& boostEff) {
   const auto& passed = boostEff.passedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& xAxis = passed.axis(0);

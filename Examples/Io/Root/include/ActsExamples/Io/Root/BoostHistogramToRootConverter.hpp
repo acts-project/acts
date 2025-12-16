@@ -25,7 +25,7 @@ namespace ActsExamples::BoostHistogramToRoot {
 ///
 /// @param boostHist The boost histogram to convert
 /// @return Raw pointer to new TH1F (caller owns and must delete)
-TH1F* toTH1F(const BoostHistogram1D& boostHist);
+TH1F* toRoot(const BoostHistogram1D& boostHist);
 
 /// Convert BoostHistogram2D to ROOT TH2F
 ///
@@ -35,7 +35,7 @@ TH1F* toTH1F(const BoostHistogram1D& boostHist);
 ///
 /// @param boostHist The boost histogram to convert
 /// @return Raw pointer to new TH2F (caller owns and must delete)
-TH2F* toTH2F(const BoostHistogram2D& boostHist);
+TH2F* toRoot(const BoostHistogram2D& boostHist);
 
 /// Convert BoostProfileHistogram to ROOT TProfile
 ///
@@ -44,7 +44,7 @@ TH2F* toTH2F(const BoostHistogram2D& boostHist);
 ///
 /// @param boostProfile The boost profile histogram to convert
 /// @return Raw pointer to new TProfile (caller owns and must delete)
-TProfile* toTProfile(const BoostProfileHistogram& boostProfile);
+TProfile* toRoot(const BoostProfileHistogram& boostProfile);
 
 /// Convert BoostEfficiency1D to ROOT TEfficiency
 ///
@@ -53,7 +53,7 @@ TProfile* toTProfile(const BoostProfileHistogram& boostProfile);
 ///
 /// @param boostEff The boost efficiency histogram to convert
 /// @return Raw pointer to new TEfficiency (caller owns and must delete)
-TEfficiency* toTEfficiency(const BoostEfficiency1D& boostEff);
+TEfficiency* toRoot(const BoostEfficiency1D& boostEff);
 
 /// Convert BoostEfficiency2D to ROOT TEfficiency
 ///
@@ -62,6 +62,6 @@ TEfficiency* toTEfficiency(const BoostEfficiency1D& boostEff);
 ///
 /// @param boostEff The boost 2D efficiency histogram to convert
 /// @return Raw pointer to new TEfficiency (caller owns and must delete)
-TEfficiency* toTEfficiency(const BoostEfficiency2D& boostEff);
+TEfficiency* toRoot(const BoostEfficiency2D& boostEff);
 
 }  // namespace ActsExamples::BoostHistogramToRoot
