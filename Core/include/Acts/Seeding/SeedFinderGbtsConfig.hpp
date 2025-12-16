@@ -22,9 +22,9 @@ struct SeedFinderGbtsConfig {
   bool BeamSpotCorrection = false;
 
   // Path to the connector configuration file that defines the layer connections
-  std::string ConnectorInputFile;
+  std::string connectorInputFile;
 
-  std::string LutInputFile;
+  std::string lutInputFile;
 
   // SeedFinderGbts option
   bool LRTmode = false;
@@ -70,6 +70,9 @@ struct SeedFinderGbtsConfig {
   // extractSeedsFromTheGraph()
   float edge_mask_min_eta = 1.5;
   float hit_share_threshold = 0.49;
+
+  //GbtsDataStorage
+  float max_endcap_clusterwidth = 0.35
 
   // 2 member functions
   SeedFinderGbtsConfig calculateDerivedQuantities() const {

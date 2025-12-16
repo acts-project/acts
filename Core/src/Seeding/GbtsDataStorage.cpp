@@ -101,16 +101,15 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
         std::pair<float, unsigned int>(phi + 2 * std::numbers::pi, nIdx));
   }
 }
-GbtsDataStorage::GbtsDataStorage(const GbtsGeometry& g, std::string& lut,
-                                 bool useML)
-    : m_geo(g), m_LutInputFile(lut) {
+GbtsDataStorage::GbtsDataStorage(const GbtsGeometry& geometry, const SeedFinderGbtsConfig& config)
+    : m_geo(geometry), m_config(config) {
   // parse the look up table if useML is true
-  if (useML) {
-    if (m_LutInputFile.empty()) {
+  if (m_config.useML) {
+    if (m_config.lutInputFile.empty()) {
       throw std::runtime_error("Cannot find ML predictor LUT file");
     } else {
       m_mlLUT.reserve(100);
-      std::ifstream ifs(std::string(m_LutInputFile).c_str());
+      std::ifstream ifs(std::string(m_config.lutInputFile).c_str());
 
       if (!ifs.is_open()) {
         throw std::runtime_error("Failed to open LUT file");
@@ -162,7 +161,7 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
     } else {
       if (useML) {
         float cluster_width = node.pixelClusterWidth();
-        if (cluster_width > 0.35) {
+        if (cluster_width > m_config.max_endcap_clusterwidth) {
           continue;
         }
       }

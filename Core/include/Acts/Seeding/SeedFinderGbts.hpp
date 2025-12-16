@@ -54,8 +54,8 @@ class SeedFinderGbts {
   int runCCA(int nEdges, std::vector<GNN_Edge>& edgeStorage) const;
 
   void extractSeedsFromTheGraph(
-      int, int, int, std::vector<GNN_Edge>&,
-      std::vector<std::tuple<float, int, std::vector<unsigned int>>>&) const;
+      int maxLevel, int nEdges, int nHits, std::vector<GNN_Edge>& edgeStorage,
+      std::vector<std::tuple<float, int, std::vector<unsigned int>>>& vSeedCandidates) const;
 
  private:
   SeedFinderGbtsConfig m_config;

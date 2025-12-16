@@ -22,7 +22,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <math.h>
+#include <cmath>
 
 ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
     ActsExamples::GbtsSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -43,7 +43,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 
   // parse connection file
   std::ifstream input_ifstream(
-      m_cfg.seedFinderConfig.ConnectorInputFile.c_str(), std::ifstream::in);
+      m_cfg.seedFinderConfig.connectorInputFile.c_str(), std::ifstream::in);
 
   if (input_ifstream.peek() == std::ifstream::traits_type::eof()) {
     ACTS_WARNING("Cannot find layer connections file ");
@@ -424,9 +424,9 @@ void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
 
   ACTS_DEBUG("BeamSpotCorrection: " << cfg.BeamSpotCorrection
                                     << " (default: false)");
-  ACTS_DEBUG("ConnectorInputFile: " << cfg.ConnectorInputFile
+  ACTS_DEBUG("connectorInputFile: " << cfg.connectorInputFile
                                     << " (default: empty string)");
-  ACTS_DEBUG("LutInputFile: " << cfg.LutInputFile
+  ACTS_DEBUG("lutInputFile: " << cfg.lutInputFile
                               << " (default: empty string)");
   ACTS_DEBUG("LRTmode: " << cfg.LRTmode << " (default: false)");
   ACTS_DEBUG("useML: " << cfg.useML << " (default: false)");
@@ -462,6 +462,7 @@ void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
                                    << " (default: 1.5)");
   ACTS_DEBUG("hit_share_threshold: " << cfg.hit_share_threshold
                                      << " (default: 0.49)");
+  ACTS_DEBUG("max_endcap_clusterwidth: " << cfg.max_endcap_clusterwidth <<" (default: 0.35)");
 
   ACTS_DEBUG("================================");
 }

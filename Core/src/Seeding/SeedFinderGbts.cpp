@@ -26,8 +26,7 @@ SeedFinderGbts::SeedFinderGbts(
     std::unique_ptr<const Acts::Logger> logger)
     : m_config(std::move(config)),
       m_geo(gbtsGeo),
-      m_storage(std::make_unique<GNN_DataStorage>(*m_geo, m_config.LutInputFile,
-                                                  m_config.useML)),
+      m_storage(std::make_unique<GNN_DataStorage>(*m_geo, config)),
       m_layerGeometry(layerGeometry),
       m_logger(std::move(logger)) {}
 
@@ -351,7 +350,7 @@ std::pair<int, int> SeedFinderGbts::buildTheGraph(
                 float tau2 = edgeStorage.at(n2_in_idx).m_p[0];
                 float tau_ratio = tau2 * uat_1 - 1.0f;
 
-                if (std::fabs(tau_ratio) >
+                if (std::abs(tau_ratio) >
                     m_config.tau_ratio_precut) {  // bad match
                   continue;
                 }
