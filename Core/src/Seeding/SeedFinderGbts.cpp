@@ -26,7 +26,7 @@ SeedFinderGbts::SeedFinderGbts(
     std::unique_ptr<const Acts::Logger> logger)
     : m_config(std::move(config)),
       m_geo(gbtsGeo),
-      m_storage(std::make_unique<GNN_DataStorage>(*m_geo, config)),
+      m_storage(std::make_unique<GNN_DataStorage>(*m_geo, m_config)),
       m_layerGeometry(layerGeometry),
       m_logger(std::move(logger)) {}
 
