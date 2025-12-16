@@ -36,6 +36,16 @@ concept ActorHasActWithoutResult = requires(
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
+concept ActorHasActWithoutResultOld = requires(
+    const actor_t& a, propagator_state_t& state, const stepper_t& stepper,
+    const navigator_t& navigator, Args&&... args) {
+  {
+    a.act(state, stepper, navigator, std::move<Args>(args)...)
+  } -> std::same_as<void>;
+};
+
+template <typename actor_t, typename propagator_state_t, typename stepper_t,
+          typename navigator_t, typename... Args>
 concept ActorHasActWithResult =
     ActorHasResult<actor_t> &&
     requires(const actor_t& a, propagator_state_t& state,
@@ -45,6 +55,19 @@ concept ActorHasActWithResult =
         a.act(state, stepper, navigator, result, std::move<Args>(args)...)
       } -> std::same_as<Result<void>>;
     };
+
+template <typename actor_t, typename propagator_state_t, typename stepper_t,
+          typename navigator_t, typename... Args>
+concept ActorHasActWithResultOld =
+    ActorHasResult<actor_t> &&
+    requires(const actor_t& a, propagator_state_t& state,
+             const stepper_t& stepper, const navigator_t& navigator,
+             typename actor_t::result_type& result, Args&&... args) {
+      {
+        a.act(state, stepper, navigator, result, std::move<Args>(args)...)
+      } -> std::same_as<void>;
+    };
+
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
@@ -88,7 +111,8 @@ concept ActorHasAbort =
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
 concept Actor =
-    ActorHasAct<actor_t, propagator_state_t, stepper_t, navigator_t, Args...> ||
-    ActorHasAbort<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>;
+    (ActorHasAct<actor_t, propagator_state_t, stepper_t, navigator_t, Args...> ||
+    ActorHasAbort<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>) && 
+    !(ActorHasActWithoutResultOld<actor_t, propagator_state_t, stepper_t, navigator_t, Args...> || ActorHasActWithResultOld<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>);
 
 }  // namespace Acts

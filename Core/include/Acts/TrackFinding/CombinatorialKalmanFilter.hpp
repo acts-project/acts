@@ -239,9 +239,9 @@ class CombinatorialKalmanFilter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void act(propagator_state_t& state, const stepper_t& stepper,
-             const navigator_t& navigator, result_type& result,
-             const Logger& /*logger*/) const {
+    Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                     const navigator_t& navigator, result_type& result,
+                     const Logger& /*logger*/) const {
       ACTS_VERBOSE("CKF Actor called");
 
       assert(result.trackStates && "No MultiTrajectory set");
@@ -249,11 +249,11 @@ class CombinatorialKalmanFilter {
       if (state.stage == PropagatorStage::prePropagation &&
           skipPrePropagationUpdate) {
         ACTS_VERBOSE("Skip pre-propagation update (first surface)");
-        return;
+        return Result<void>::success();
       }
       if (state.stage == PropagatorStage::postPropagation) {
         ACTS_VERBOSE("Skip post-propagation action");
-        return;
+        return Result<void>::success();
       }
 
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
@@ -297,7 +297,7 @@ class CombinatorialKalmanFilter {
 
         if (!result.lastError.ok() || result.finished) {
           ACTS_VERBOSE("CKF Actor returns after filter step");
-          return;
+          return Result<void>::success();
         }
       }
 
@@ -349,6 +349,8 @@ class CombinatorialKalmanFilter {
         // Reset propagation state to track state at next active branch
         reset(state, stepper, navigator, result);
       }
+
+      return Result<void>::success();
     }
 
     template <typename propagator_state_t, typename stepper_t,
