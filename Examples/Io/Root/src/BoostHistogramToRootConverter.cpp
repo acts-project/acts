@@ -27,7 +27,7 @@ TH1F* toRoot(const BoostHistogram1D& boostHist) {
   // Extract bin edges from boost histogram axis
   std::vector<double> edges;
   edges.reserve(axis.size() + 1);
-  for (std::size_t i = 0; i < axis.size(); ++i) {
+  for (int i = 0; i < axis.size(); ++i) {
     edges.push_back(axis.bin(i).lower());
   }
   edges.push_back(axis.bin(axis.size() - 1).upper());
@@ -61,7 +61,7 @@ TH2F* toRoot(const BoostHistogram2D& boostHist) {
   // Extract bin edges from X axis
   std::vector<double> xEdges;
   xEdges.reserve(xAxis.size() + 1);
-  for (std::size_t i = 0; i < xAxis.size(); ++i) {
+  for (int i = 0; i < xAxis.size(); ++i) {
     xEdges.push_back(xAxis.bin(i).lower());
   }
   xEdges.push_back(xAxis.bin(xAxis.size() - 1).upper());
@@ -69,7 +69,7 @@ TH2F* toRoot(const BoostHistogram2D& boostHist) {
   // Extract bin edges from Y axis
   std::vector<double> yEdges;
   yEdges.reserve(yAxis.size() + 1);
-  for (std::size_t i = 0; i < yAxis.size(); ++i) {
+  for (int i = 0; i < yAxis.size(); ++i) {
     yEdges.push_back(yAxis.bin(i).lower());
   }
   yEdges.push_back(yAxis.bin(yAxis.size() - 1).upper());
@@ -106,7 +106,7 @@ TProfile* toRoot(const BoostProfileHistogram& boostProfile) {
   // Extract bin edges from boost histogram axis
   std::vector<double> edges;
   edges.reserve(axis.size() + 1);
-  for (std::size_t i = 0; i < axis.size(); ++i) {
+  for (int i = 0; i < axis.size(); ++i) {
     edges.push_back(axis.bin(i).lower());
   }
   edges.push_back(axis.bin(axis.size() - 1).upper());
@@ -152,7 +152,7 @@ TEfficiency* toRoot(const BoostEfficiency1D& boostEff) {
   // Extract bin edges
   std::vector<double> edges;
   edges.reserve(axis.size() + 1);
-  for (std::size_t i = 0; i < axis.size(); ++i) {
+  for (int i = 0; i < axis.size(); ++i) {
     edges.push_back(axis.bin(i).lower());
   }
   edges.push_back(axis.bin(axis.size() - 1).upper());
@@ -167,12 +167,12 @@ TEfficiency* toRoot(const BoostEfficiency1D& boostEff) {
       static_cast<int>(axis.size()), edges.data());
 
   // Fill histograms with counts
-  for (std::size_t i = 0; i < axis.size(); ++i) {
+  for (int i = 0; i < axis.size(); ++i) {
     double passedCount = static_cast<double>(passed.at(i));
     double totalCount = static_cast<double>(total.at(i));
 
-    passedHist->SetBinContent(static_cast<int>(i + 1), passedCount);
-    totalHist->SetBinContent(static_cast<int>(i + 1), totalCount);
+    passedHist->SetBinContent(i + 1, passedCount);
+    totalHist->SetBinContent(i + 1, totalCount);
   }
 
   // Create TEfficiency from the two histograms
@@ -197,7 +197,7 @@ TEfficiency* toRoot(const BoostEfficiency2D& boostEff) {
   // Extract X bin edges
   std::vector<double> xEdges;
   xEdges.reserve(xAxis.size() + 1);
-  for (std::size_t i = 0; i < xAxis.size(); ++i) {
+  for (int i = 0; i < xAxis.size(); ++i) {
     xEdges.push_back(xAxis.bin(i).lower());
   }
   xEdges.push_back(xAxis.bin(xAxis.size() - 1).upper());
@@ -205,7 +205,7 @@ TEfficiency* toRoot(const BoostEfficiency2D& boostEff) {
   // Extract Y bin edges
   std::vector<double> yEdges;
   yEdges.reserve(yAxis.size() + 1);
-  for (std::size_t i = 0; i < yAxis.size(); ++i) {
+  for (int i = 0; i < yAxis.size(); ++i) {
     yEdges.push_back(yAxis.bin(i).lower());
   }
   yEdges.push_back(yAxis.bin(yAxis.size() - 1).upper());
@@ -222,15 +222,13 @@ TEfficiency* toRoot(const BoostEfficiency2D& boostEff) {
       static_cast<int>(yAxis.size()), yEdges.data());
 
   // Fill histograms with counts
-  for (std::size_t i = 0; i < xAxis.size(); ++i) {
-    for (std::size_t j = 0; j < yAxis.size(); ++j) {
+  for (int i = 0; i < xAxis.size(); ++i) {
+    for (int j = 0; j < yAxis.size(); ++j) {
       double passedCount = static_cast<double>(passed.at(i, j));
       double totalCount = static_cast<double>(total.at(i, j));
 
-      passedHist->SetBinContent(static_cast<int>(i + 1),
-                                static_cast<int>(j + 1), passedCount);
-      totalHist->SetBinContent(static_cast<int>(i + 1),
-                               static_cast<int>(j + 1), totalCount);
+      passedHist->SetBinContent(i + 1, j + 1, passedCount);
+      totalHist->SetBinContent(i + 1, j + 1, totalCount);
     }
   }
 
