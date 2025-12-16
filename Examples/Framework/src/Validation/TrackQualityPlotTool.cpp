@@ -9,9 +9,7 @@
 #include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
-
-#include <TEfficiency.h>
-#include <TProfile.h>
+#include "ActsExamples/Validation/BoostHistogramWriteHelpers.hpp"
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -29,47 +27,37 @@ void TrackQualityPlotTool::book(Cache& cache) const {
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
-  PlotHelpers::Binning bNum = m_cfg.varBinning.at("Num");
   ACTS_DEBUG("Initialize the histograms for completeness plots");
 
   // completeness vs pT
-  cache.completeness_vs_pT = PlotHelpers::bookProf(
-      "completeness_vs_pT", "Completeness;pT [GeV/c];Completeness", bPt, bNum);
+  cache.completeness_vs_pT = BoostProfileHistogram(
+      "completeness_vs_pT", "Completeness", bPt, "Completeness");
   // completeness vs eta
-  cache.completeness_vs_eta = PlotHelpers::bookProf(
-      "completeness_vs_eta", "Completeness;#eta;Completeness", bEta, bNum);
+  cache.completeness_vs_eta = BoostProfileHistogram(
+      "completeness_vs_eta", "Completeness", bEta, "Completeness");
   // completeness vs phi
-  cache.completeness_vs_phi = PlotHelpers::bookProf(
-      "completeness_vs_phi", "Completeness;#phi;Completeness", bPhi, bNum);
+  cache.completeness_vs_phi = BoostProfileHistogram(
+      "completeness_vs_phi", "Completeness", bPhi, "Completeness");
 
   // purity vs pT
-  cache.purity_vs_pT = PlotHelpers::bookProf(
-      "purity_vs_pT", "Purity;pT [GeV/c];Purity", bPt, bNum);
+  cache.purity_vs_pT = BoostProfileHistogram(
+      "purity_vs_pT", "Purity", bPt, "Purity");
   // purity vs eta
-  cache.purity_vs_eta =
-      PlotHelpers::bookProf("purity_vs_eta", "Purity;#eta;Purity", bEta, bNum);
+  cache.purity_vs_eta = BoostProfileHistogram(
+      "purity_vs_eta", "Purity", bEta, "Purity");
   // purity vs phi
-  cache.purity_vs_phi =
-      PlotHelpers::bookProf("purity_vs_phi", "Purity;#phi;Purity", bPhi, bNum);
-}
-
-void TrackQualityPlotTool::clear(Cache& cache) const {
-  delete cache.completeness_vs_pT;
-  delete cache.completeness_vs_eta;
-  delete cache.completeness_vs_phi;
-  delete cache.purity_vs_pT;
-  delete cache.purity_vs_eta;
-  delete cache.purity_vs_phi;
+  cache.purity_vs_phi = BoostProfileHistogram(
+      "purity_vs_phi", "Purity", bPhi, "Purity");
 }
 
 void TrackQualityPlotTool::write(const Cache& cache) const {
   ACTS_DEBUG("Write the plots to output file.");
-  cache.completeness_vs_pT->Write();
-  cache.completeness_vs_eta->Write();
-  cache.completeness_vs_phi->Write();
-  cache.purity_vs_pT->Write();
-  cache.purity_vs_eta->Write();
-  cache.purity_vs_phi->Write();
+  BoostHistogramWriteHelpers::write(cache.completeness_vs_pT);
+  BoostHistogramWriteHelpers::write(cache.completeness_vs_eta);
+  BoostHistogramWriteHelpers::write(cache.completeness_vs_phi);
+  BoostHistogramWriteHelpers::write(cache.purity_vs_pT);
+  BoostHistogramWriteHelpers::write(cache.purity_vs_eta);
+  BoostHistogramWriteHelpers::write(cache.purity_vs_phi);
 }
 
 void TrackQualityPlotTool::fill(
@@ -80,13 +68,13 @@ void TrackQualityPlotTool::fill(
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  PlotHelpers::fillProf(cache.completeness_vs_pT, fit_pT, completeness);
-  PlotHelpers::fillProf(cache.completeness_vs_eta, fit_eta, completeness);
-  PlotHelpers::fillProf(cache.completeness_vs_phi, fit_phi, completeness);
+  cache.completeness_vs_pT.fill(fit_pT, completeness);
+  cache.completeness_vs_eta.fill(fit_eta, completeness);
+  cache.completeness_vs_phi.fill(fit_phi, completeness);
 
-  PlotHelpers::fillProf(cache.purity_vs_pT, fit_pT, purity);
-  PlotHelpers::fillProf(cache.purity_vs_eta, fit_eta, purity);
-  PlotHelpers::fillProf(cache.purity_vs_phi, fit_phi, purity);
+  cache.purity_vs_pT.fill(fit_pT, purity);
+  cache.purity_vs_eta.fill(fit_eta, purity);
+  cache.purity_vs_phi.fill(fit_phi, purity);
 }
 
 }  // namespace ActsExamples

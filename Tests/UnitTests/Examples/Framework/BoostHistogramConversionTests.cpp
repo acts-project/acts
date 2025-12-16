@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "ActsExamples/Io/Root/BoostHistogramToRootConverter.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
+#include "ActsExamples/Validation/BoostHistogramToRootConverter.hpp"
 #include "ActsExamples/Validation/BoostHistogramWrappers.hpp"
 
 #include <TEfficiency.h>

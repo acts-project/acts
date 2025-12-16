@@ -11,13 +11,12 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
+#include "ActsExamples/Validation/BoostHistogramWrappers.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
-
-class TProfile;
 
 namespace ActsExamples {
 
@@ -35,12 +34,12 @@ class TrackQualityPlotTool {
 
   /// @brief Nested Cache struct
   struct Cache {
-    TProfile* completeness_vs_pT;
-    TProfile* completeness_vs_eta;
-    TProfile* completeness_vs_phi;
-    TProfile* purity_vs_pT;
-    TProfile* purity_vs_eta;
-    TProfile* purity_vs_phi;
+    BoostProfileHistogram completeness_vs_pT;
+    BoostProfileHistogram completeness_vs_eta;
+    BoostProfileHistogram completeness_vs_phi;
+    BoostProfileHistogram purity_vs_pT;
+    BoostProfileHistogram purity_vs_eta;
+    BoostProfileHistogram purity_vs_phi;
   };
 
   /// Constructor
@@ -67,11 +66,6 @@ class TrackQualityPlotTool {
   ///
   /// @param cache cache object for track quality plots
   void write(const Cache& cache) const;
-
-  /// @brief delete the track quality plots
-  ///
-  /// @param cache cache object for track quality plots
-  void clear(Cache& cache) const;
 
  private:
   /// The Config class

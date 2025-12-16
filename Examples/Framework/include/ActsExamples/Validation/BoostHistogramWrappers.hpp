@@ -129,6 +129,9 @@ class BoostHistogram2D {
 /// of Y values.
 class BoostProfileHistogram {
  public:
+  /// Default constructor
+  BoostProfileHistogram() = default;
+
   /// Construct profile histogram from X binning specification
   ///
   /// @param name Histogram name

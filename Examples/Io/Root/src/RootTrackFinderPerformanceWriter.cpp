@@ -100,7 +100,7 @@ RootTrackFinderPerformanceWriter::~RootTrackFinderPerformanceWriter() {
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
     m_trackSummaryPlotTool.clear(m_subDetectorSummaryCaches.at(key));
   }
-  m_trackQualityPlotTool.clear(m_trackQualityPlotCache);
+  // TrackQualityPlotTool uses RAII - no manual cleanup needed
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
