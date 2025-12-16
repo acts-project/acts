@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/Result.hpp"
+
 #include <concepts>
 #include <type_traits>
 #include <utility>
@@ -29,7 +31,7 @@ concept ActorHasActWithoutResult = requires(
     const navigator_t& navigator, Args&&... args) {
   {
     a.act(state, stepper, navigator, std::move<Args>(args)...)
-  } -> std::same_as<void>;
+  } -> std::same_as<Result<void>>;
 };
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
@@ -41,7 +43,7 @@ concept ActorHasActWithResult =
              typename actor_t::result_type& result, Args&&... args) {
       {
         a.act(state, stepper, navigator, result, std::move<Args>(args)...)
-      } -> std::same_as<void>;
+      } -> std::same_as<Result<void>>;
     };
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,

@@ -100,7 +100,7 @@ struct VolumeCollector {
   /// @param logger the logger object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
            const navigator_t& navigator, result_type& result,
            const Logger& logger) const {
     auto currentVolume = navigator.currentVolume(state.navigation);
@@ -127,6 +127,8 @@ struct VolumeCollector {
         ACTS_VERBOSE("Collect volume  " << currentVolume->geometryId());
       }
     }
+
+    return {};
   }
 };
 
