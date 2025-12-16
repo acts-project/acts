@@ -68,7 +68,6 @@ concept ActorHasActWithResultOld =
       } -> std::same_as<void>;
     };
 
-
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
 concept ActorHasAct =
@@ -111,8 +110,13 @@ concept ActorHasAbort =
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
 concept Actor =
-    (ActorHasAct<actor_t, propagator_state_t, stepper_t, navigator_t, Args...> ||
-    ActorHasAbort<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>) && 
-    !(ActorHasActWithoutResultOld<actor_t, propagator_state_t, stepper_t, navigator_t, Args...> || ActorHasActWithResultOld<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>);
+    (ActorHasAct<actor_t, propagator_state_t, stepper_t, navigator_t,
+                 Args...> ||
+     ActorHasAbort<actor_t, propagator_state_t, stepper_t, navigator_t,
+                   Args...>) &&
+    !(ActorHasActWithoutResultOld<actor_t, propagator_state_t, stepper_t,
+                                  navigator_t, Args...> ||
+      ActorHasActWithResultOld<actor_t, propagator_state_t, stepper_t,
+                               navigator_t, Args...>);
 
 }  // namespace Acts

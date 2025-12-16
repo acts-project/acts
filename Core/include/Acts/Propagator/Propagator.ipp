@@ -133,8 +133,9 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
       }
     }
 
-    Result<void> actResult = state.options.actorList.act(state, m_stepper, m_navigator, logger());
-    if( !actResult.ok() ) {
+    Result<void> actResult =
+        state.options.actorList.act(state, m_stepper, m_navigator, logger());
+    if (!actResult.ok()) {
       return actResult;
     }
 

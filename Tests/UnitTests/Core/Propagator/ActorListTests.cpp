@@ -14,19 +14,20 @@
 
 using namespace Acts;
 
-template<int N>
+template <int N>
 struct ActorResult {};
 
-template<int N>
+template <int N>
 struct FailingActor {
   bool fail{};
-  bool *called = nullptr;
+  bool* called = nullptr;
   using result_type = ActorResult<N>;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-           const navigator_t& /*navigator*/, result_type& /*result*/) const {
+                   const navigator_t& /*navigator*/,
+                   result_type& /*result*/) const {
     *called = true;
     if (fail) {
       return std::make_error_code(std::errc{});
@@ -36,14 +37,17 @@ struct FailingActor {
   }
 };
 
-void testResult(std::array<bool, 3> failing, std::array<bool, 3> expectedCalled, bool expectedSuccess) {
+void testResult(std::array<bool, 3> failing, std::array<bool, 3> expectedCalled,
+                bool expectedSuccess) {
   StraightLineStepper stepper{};
   VoidNavigator navigator{};
   Propagator propagator{stepper, navigator};
-  
+
   std::array<bool, 3> called{false, false, false};
-  using ActionList = ActorList<FailingActor<1>, FailingActor<2>, FailingActor<3>>;
-  Propagator<StraightLineStepper>::Options<ActionList> options{Acts::GeometryContext{}, Acts::MagneticFieldContext{}};
+  using ActionList =
+      ActorList<FailingActor<1>, FailingActor<2>, FailingActor<3>>;
+  Propagator<StraightLineStepper>::Options<ActionList> options{
+      Acts::GeometryContext{}, Acts::MagneticFieldContext{}};
 
   options.actorList.get<FailingActor<1>>().fail = failing[0];
   options.actorList.get<FailingActor<1>>().called = &called[0];

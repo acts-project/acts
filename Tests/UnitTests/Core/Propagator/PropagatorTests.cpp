@@ -96,8 +96,8 @@ struct SurfaceObserver {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& /*navigator*/, result_type& result,
-           const Logger& /*logger*/) const {
+                   const navigator_t& /*navigator*/, result_type& result,
+                   const Logger& /*logger*/) const {
     if (surface == nullptr || result.surfaces_passed != 0) {
       return Result<void>::success();
     }
