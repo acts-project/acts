@@ -12,8 +12,10 @@
 #include "ActsExamples/Utilities/Helpers.hpp"
 #include "ActsExamples/Validation/BoostHistogramWrappers.hpp"
 
+#include <TEfficiency.h>
 #include <TH1F.h>
 #include <TH2F.h>
+#include <TProfile.h>
 
 #include <cmath>
 #include <random>
@@ -213,6 +215,148 @@ BOOST_AUTO_TEST_CASE(Conversion_MetadataPreservation) {
                     "Distance [mm]");
 
   delete rootHist;
+}
+
+BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
+  auto xBinning = PlotHelpers::Binning::Uniform("eta", 10, -2.5, 2.5);
+  BoostProfileHistogram profile("res_mean_vs_eta", "Mean Residual vs Eta",
+                                xBinning, "residual [mm]");
+
+  // Fill with known values to check mean calculation
+  profile.fill(-2.0, 1.0);
+  profile.fill(-2.0, 3.0);  // Mean = 2.0
+  profile.fill(0.0, 5.0);
+  profile.fill(0.0, 7.0);  // Mean = 6.0
+  profile.fill(2.0, 9.0);
+  profile.fill(2.0, 11.0);  // Mean = 10.0
+
+  TProfile* rootProfile = BoostHistogramToRoot::toTProfile(profile);
+
+  // Verify metadata
+  BOOST_CHECK_EQUAL(std::string(rootProfile->GetName()), "res_mean_vs_eta");
+  BOOST_CHECK_EQUAL(std::string(rootProfile->GetTitle()),
+                    "Mean Residual vs Eta");
+  BOOST_CHECK_EQUAL(std::string(rootProfile->GetXaxis()->GetTitle()), "eta");
+  BOOST_CHECK_EQUAL(std::string(rootProfile->GetYaxis()->GetTitle()),
+                    "residual [mm]");
+
+  // Verify binning
+  BOOST_CHECK_EQUAL(rootProfile->GetNbinsX(), 10);
+
+  // Verify mean values in filled bins
+  const auto& bh = profile.histogram();
+  auto idx0 = bh.axis(0).index(-2.0);
+  auto idx2 = bh.axis(0).index(0.0);
+  auto idx4 = bh.axis(0).index(2.0);
+
+  BOOST_CHECK_CLOSE(rootProfile->GetBinContent(idx0 + 1),
+                    bh.at(idx0).value(), 1e-6);
+  BOOST_CHECK_CLOSE(rootProfile->GetBinContent(idx2 + 1),
+                    bh.at(idx2).value(), 1e-6);
+  BOOST_CHECK_CLOSE(rootProfile->GetBinContent(idx4 + 1),
+                    bh.at(idx4).value(), 1e-6);
+
+  delete rootProfile;
+}
+
+BOOST_AUTO_TEST_CASE(Conversion_BoostEfficiency1D_to_TEfficiency) {
+  auto binning = PlotHelpers::Binning::Uniform("eta", 10, -3.0, 3.0);
+  BoostEfficiency1D eff("eff_vs_eta", "Efficiency vs Eta", binning);
+
+  // Fill with known pass/fail patterns
+  // Bin at eta=0.5: 7 passed, 3 failed (70% efficiency)
+  for (int i = 0; i < 7; ++i) {
+    eff.fill(0.5, true);
+  }
+  for (int i = 0; i < 3; ++i) {
+    eff.fill(0.5, false);
+  }
+
+  // Bin at eta=-1.5: 5 passed, 5 failed (50% efficiency)
+  for (int i = 0; i < 5; ++i) {
+    eff.fill(-1.5, true);
+    eff.fill(-1.5, false);
+  }
+
+  TEfficiency* rootEff = BoostHistogramToRoot::toTEfficiency(eff);
+
+  // Verify metadata
+  BOOST_CHECK_EQUAL(std::string(rootEff->GetName()), "eff_vs_eta");
+  BOOST_CHECK_EQUAL(std::string(rootEff->GetTitle()), "Efficiency vs Eta");
+
+  // Verify binning
+  BOOST_CHECK_EQUAL(rootEff->GetTotalHistogram()->GetNbinsX(), 10);
+
+  // Verify efficiency values
+  const auto& passed = eff.passedHistogram();
+  const auto& total = eff.totalHistogram();
+
+  auto idx1 = passed.axis(0).index(0.5);
+  auto idx2 = passed.axis(0).index(-1.5);
+
+  double eff1 = static_cast<double>(passed.at(idx1)) /
+                static_cast<double>(total.at(idx1));
+  double eff2 = static_cast<double>(passed.at(idx2)) /
+                static_cast<double>(total.at(idx2));
+
+  BOOST_CHECK_CLOSE(rootEff->GetEfficiency(idx1 + 1), eff1, 1e-6);
+  BOOST_CHECK_CLOSE(rootEff->GetEfficiency(idx2 + 1), eff2, 1e-6);
+
+  delete rootEff;
+}
+
+BOOST_AUTO_TEST_CASE(Conversion_BoostEfficiency2D_to_TEfficiency) {
+  auto xBinning = PlotHelpers::Binning::Uniform("eta", 5, -2.5, 2.5);
+  auto yBinning = PlotHelpers::Binning::Uniform("pt", 5, 0.0, 5.0);
+  BoostEfficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", xBinning,
+                        yBinning);
+
+  // Fill bin (0.0, 2.5): 3 passed, 1 failed (75% efficiency)
+  eff.fill(0.0, 2.5, true);
+  eff.fill(0.0, 2.5, true);
+  eff.fill(0.0, 2.5, true);
+  eff.fill(0.0, 2.5, false);
+
+  // Fill bin (-1.5, 1.5): 2 passed, 2 failed (50% efficiency)
+  eff.fill(-1.5, 1.5, true);
+  eff.fill(-1.5, 1.5, true);
+  eff.fill(-1.5, 1.5, false);
+  eff.fill(-1.5, 1.5, false);
+
+  TEfficiency* rootEff = BoostHistogramToRoot::toTEfficiency(eff);
+
+  // Verify metadata
+  BOOST_CHECK_EQUAL(std::string(rootEff->GetName()), "eff_vs_eta_pt");
+  BOOST_CHECK_EQUAL(std::string(rootEff->GetTitle()),
+                    "Efficiency vs Eta and pT");
+
+  // Verify 2D binning
+  BOOST_CHECK_EQUAL(rootEff->GetTotalHistogram()->GetNbinsX(), 5);
+  BOOST_CHECK_EQUAL(rootEff->GetTotalHistogram()->GetNbinsY(), 5);
+
+  // Verify efficiency values
+  const auto& passed = eff.passedHistogram();
+  const auto& total = eff.totalHistogram();
+
+  auto xIdx1 = passed.axis(0).index(0.0);
+  auto yIdx1 = passed.axis(1).index(2.5);
+  auto xIdx2 = passed.axis(0).index(-1.5);
+  auto yIdx2 = passed.axis(1).index(1.5);
+
+  double eff1 = static_cast<double>(passed.at(xIdx1, yIdx1)) /
+                static_cast<double>(total.at(xIdx1, yIdx1));
+  double eff2 = static_cast<double>(passed.at(xIdx2, yIdx2)) /
+                static_cast<double>(total.at(xIdx2, yIdx2));
+
+  int globalBin1 =
+      rootEff->GetGlobalBin(static_cast<int>(xIdx1 + 1), static_cast<int>(yIdx1 + 1));
+  int globalBin2 =
+      rootEff->GetGlobalBin(static_cast<int>(xIdx2 + 1), static_cast<int>(yIdx2 + 1));
+
+  BOOST_CHECK_CLOSE(rootEff->GetEfficiency(globalBin1), eff1, 1e-6);
+  BOOST_CHECK_CLOSE(rootEff->GetEfficiency(globalBin2), eff2, 1e-6);
+
+  delete rootEff;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
