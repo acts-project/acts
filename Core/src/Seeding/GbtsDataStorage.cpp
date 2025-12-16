@@ -101,7 +101,8 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
         std::pair<float, unsigned int>(phi + 2 * std::numbers::pi, nIdx));
   }
 }
-GbtsDataStorage::GbtsDataStorage(const GbtsGeometry& geometry, const SeedFinderGbtsConfig& config)
+GbtsDataStorage::GbtsDataStorage(const GbtsGeometry& geometry,
+                                 const SeedFinderGbtsConfig& config)
     : m_geo(geometry), m_config(config) {
   // parse the look up table if useML is true
   if (m_config.useML) {

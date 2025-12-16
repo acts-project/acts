@@ -71,7 +71,7 @@ struct SeedFinderGbtsConfig {
   float edge_mask_min_eta = 1.5;
   float hit_share_threshold = 0.49;
 
-  //GbtsDataStorage
+  // GbtsDataStorage
   float max_endcap_clusterwidth = 0.35;
 
   // 2 member functions

@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -21,8 +22,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-
-#include <cmath>
 
 ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
     ActsExamples::GbtsSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -462,7 +461,8 @@ void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
                                    << " (default: 1.5)");
   ACTS_DEBUG("hit_share_threshold: " << cfg.hit_share_threshold
                                      << " (default: 0.49)");
-  ACTS_DEBUG("max_endcap_clusterwidth: " << cfg.max_endcap_clusterwidth <<" (default: 0.35)");
+  ACTS_DEBUG("max_endcap_clusterwidth: " << cfg.max_endcap_clusterwidth
+                                         << " (default: 0.35)");
 
   ACTS_DEBUG("================================");
 }

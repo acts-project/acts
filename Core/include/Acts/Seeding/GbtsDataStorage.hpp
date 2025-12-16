@@ -79,7 +79,8 @@ class GbtsEtaBin {
 
 class GbtsDataStorage {
  public:
-  explicit GbtsDataStorage(const GbtsGeometry& geometry, const SeedFinderGbtsConfig& config);
+  explicit GbtsDataStorage(const GbtsGeometry& geometry,
+                           const SeedFinderGbtsConfig& config);
   ~GbtsDataStorage();
 
   int loadPixelGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll,

@@ -40,6 +40,20 @@ class SeedFinderGbts {
   using GNN_DataStorage = GbtsDataStorage;
   using GNN_Edge = GbtsEdge;
 
+  struct seedProperties {
+    seedProperties(float quality, int clone, std::vector<unsigned int> sps)
+        : seedQuality(quality), isClone(clone), spacepoints(sps) {}
+
+    float seedQuality{};
+    int isClone{};
+    std::vector<unsigned int> spacepoints{};
+
+    bool operator<(seedProperties const& o) const {
+      return std::tie(seedQuality, isClone, spacepoints) <
+             std::tie(o.seedQuality, o.isClone, o.spacepoints);
+    }
+  };
+
   SeedContainer2 CreateSeeds(
       const RoiDescriptor& roi,
       const SPContainerComponentsType& SpContainerComponents, int max_layers);
@@ -55,7 +69,7 @@ class SeedFinderGbts {
 
   void extractSeedsFromTheGraph(
       int maxLevel, int nEdges, int nHits, std::vector<GNN_Edge>& edgeStorage,
-      std::vector<std::tuple<float, int, std::vector<unsigned int>>>& vSeedCandidates) const;
+      std::vector<seedProperties>& vSeedCandidates) const;
 
  private:
   SeedFinderGbtsConfig m_config;

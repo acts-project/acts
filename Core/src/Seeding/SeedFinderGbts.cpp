@@ -80,9 +80,9 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
 
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
-  std::vector<std::tuple<float, int, std::vector<unsigned int>>>
-      vSeedCandidates;
-
+  // std::vector<std::tuple<float, int, std::vector<unsigned int>>>
+  // vSeedCandidates;
+  std::vector<seedProperties> vSeedCandidates;
   extractSeedsFromTheGraph(maxLevel, graphStats.first,
                            std::get<0>(SpContainerComponents).size(),
                            edgeStorage, vSeedCandidates);
@@ -92,21 +92,21 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
   }
 
   for (const auto& seed : vSeedCandidates) {
-    if (std::get<1>(seed) != 0) {
+    if (seed.isClone != 0) {
       continue;
     }
 
     // add to seed container:
     std::vector<SpacePointIndex2> Sp_Indexes{};
-    Sp_Indexes.reserve(std::get<2>(seed).size());
+    Sp_Indexes.reserve(seed.spacepoints.size());
 
-    for (const auto& sp_idx : std::get<2>(seed)) {
+    for (const auto& sp_idx : seed.spacepoints) {
       Sp_Indexes.emplace_back(sp_idx);
     }
 
     auto newSeed = SeedContainer.createSeed();
     newSeed.assignSpacePointIndices(Sp_Indexes);
-    newSeed.quality() = std::get<0>(seed);
+    newSeed.quality() = seed.seedQuality;
   }
 
   ACTS_DEBUG("GBTS created " << SeedContainer.size() << " seeds");
@@ -506,8 +506,7 @@ int SeedFinderGbts::runCCA(int nEdges,
 
 void SeedFinderGbts::extractSeedsFromTheGraph(
     int maxLevel, int nEdges, int nHits, std::vector<GNN_Edge>& edgeStorage,
-    std::vector<std::tuple<float, int, std::vector<unsigned int>>>&
-        vSeedCandidates) const {
+    std::vector<seedProperties>& vSeedCandidates) const {
   vSeedCandidates.clear();
 
   int minLevel = 3;  // a triplet + 2 confirmation
@@ -610,7 +609,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   int seedIdx = 0;
 
   for (const auto& seed : vSeedCandidates) {
-    for (const auto& h : std::get<2>(seed)) {  // loop over spacepoints indices
+    for (const auto& h : seed.spacepoints) {  // loop over spacepoints indices
 
       unsigned int hit_id = h + 1;
 
@@ -628,12 +627,12 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
 
   for (unsigned int trackIdx = 0; trackIdx < vSeedCandidates.size();
        trackIdx++) {
-    int nTotal = std::get<2>(vSeedCandidates[trackIdx]).size();
+    int nTotal = vSeedCandidates[trackIdx].spacepoints.size();
     int nOther = 0;
 
     int trackId = vTrackIds[trackIdx];
 
-    for (const auto& h : std::get<2>(vSeedCandidates[trackIdx])) {
+    for (const auto& h : vSeedCandidates[trackIdx].spacepoints) {
       unsigned int hit_id = h + 1;
 
       int tid = H2T[hit_id];
@@ -644,7 +643,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
     }
 
     if (nOther > m_config.hit_share_threshold * nTotal) {
-      std::get<1>(vSeedCandidates[trackIdx]) = -1;  // reject
+      vSeedCandidates[trackIdx].isClone = -1;  // reject
     }
   }
 }
