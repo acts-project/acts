@@ -10,6 +10,7 @@
 
 // TODO: update to C++17 style
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 
 #include <array>
 #include <limits>

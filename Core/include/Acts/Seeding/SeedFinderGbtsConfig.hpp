@@ -72,7 +72,7 @@ struct SeedFinderGbtsConfig {
   float hit_share_threshold = 0.49;
 
   //GbtsDataStorage
-  float max_endcap_clusterwidth = 0.35
+  float max_endcap_clusterwidth = 0.35;
 
   // 2 member functions
   SeedFinderGbtsConfig calculateDerivedQuantities() const {

@@ -131,7 +131,7 @@ GbtsDataStorage::GbtsDataStorage(const GbtsGeometry& geometry, const SeedFinderG
     }
   }
 
-  m_etaBins.resize(g.num_bins());
+  m_etaBins.resize(geometry.num_bins());
 }
 
 GbtsDataStorage::~GbtsDataStorage() = default;
