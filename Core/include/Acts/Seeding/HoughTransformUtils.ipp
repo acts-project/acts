@@ -146,14 +146,16 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::reset() {
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughPlane<identifier_t>::checkIndices(
     std::size_t xBin, std::size_t yBin) const {
-  if (xBin >= nBinsX())
+  if (xBin >= nBinsX()) {
     throw std::out_of_range("When accessing HoughPlane, X index " +
                             std::to_string(xBin) +
                             " is >= " + std::to_string(nBinsX()));
-  if (yBin >= nBinsY())
+  }
+  if (yBin >= nBinsY()) {
     throw std::out_of_range("When accessing HoughPlane, Y index " +
                             std::to_string(yBin) +
                             " is >= " + std::to_string(nBinsY()));
+  }
 }
 
 template <class identifier_t>
