@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Root/BoostHistogramWriteHelpers.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
@@ -69,7 +70,7 @@ ActsExamples::RootTrackFitterPerformanceWriter::
     ~RootTrackFitterPerformanceWriter() {
   m_resPlotTool.clear(m_resPlotCache);
   m_effPlotTool.clear(m_effPlotCache);
-  m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
+  // TrackSummaryPlotTool uses RAII - no manual cleanup needed
 
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
@@ -85,7 +86,18 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
     m_outputFile->cd();
     m_resPlotTool.write(m_resPlotCache);
     m_effPlotTool.write(m_effPlotCache);
-    m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
+
+    // Convert and write TrackSummaryPlotTool histograms
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nStates_vs_eta);
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nMeasurements_vs_eta);
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nHoles_vs_eta);
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nOutliers_vs_eta);
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nSharedHits_vs_eta);
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nStates_vs_pt);
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nMeasurements_vs_pt);
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nHoles_vs_pt);
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nOutliers_vs_pt);
+    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nSharedHits_vs_pt);
 
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }

@@ -11,13 +11,12 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
+#include "ActsExamples/Validation/BoostHistogramWrappers.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
-
-class TProfile;
 
 namespace ActsExamples {
 
@@ -36,25 +35,25 @@ class TrackSummaryPlotTool {
   /// @brief Nested Cache struct
   struct Cache {
     /// Number of total states vs eta
-    TProfile* nStates_vs_eta;
+    BoostProfileHistogram nStates_vs_eta;
     /// Number of non-outlier measurements vs eta
-    TProfile* nMeasurements_vs_eta;
+    BoostProfileHistogram nMeasurements_vs_eta;
     /// Number of holes vs eta
-    TProfile* nHoles_vs_eta;
+    BoostProfileHistogram nHoles_vs_eta;
     /// Number of outliers vs eta
-    TProfile* nOutliers_vs_eta;
+    BoostProfileHistogram nOutliers_vs_eta;
     /// Number of Shared Hits vs eta
-    TProfile* nSharedHits_vs_eta;
+    BoostProfileHistogram nSharedHits_vs_eta;
     /// Number of total states vs pt
-    TProfile* nStates_vs_pt;
+    BoostProfileHistogram nStates_vs_pt;
     /// Number of non-outlier measurements vs pt
-    TProfile* nMeasurements_vs_pt;
+    BoostProfileHistogram nMeasurements_vs_pt;
     /// Number of holes vs pt
-    TProfile* nHoles_vs_pt;
+    BoostProfileHistogram nHoles_vs_pt;
     /// Number of outliers vs pt
-    TProfile* nOutliers_vs_pt;
+    BoostProfileHistogram nOutliers_vs_pt;
     /// Number of Shared Hits vs pt
-    TProfile* nSharedHits_vs_pt;
+    BoostProfileHistogram nSharedHits_vs_pt;
   };
 
   /// Constructor
@@ -81,16 +80,6 @@ class TrackSummaryPlotTool {
             std::size_t nStates, std::size_t nMeasurements,
             std::size_t Outliers, std::size_t nHoles,
             std::size_t nSharedHits) const;
-
-  /// @brief write the track info plots to file
-  ///
-  /// @param cache cache object for track info plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the track info plots
-  ///
-  /// @param cache cache object for track info plots
-  void clear(Cache& cache) const;
 
  private:
   /// The Config class
