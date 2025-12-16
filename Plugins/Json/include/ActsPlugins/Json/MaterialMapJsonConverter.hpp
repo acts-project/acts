@@ -57,16 +57,6 @@ using TrackingVolumeAndMaterial =
 /// @brief read the material from Json
 class MaterialMapJsonConverter {
  public:
-  using SurfaceMaterialMap
-      [[deprecated("Use Acts::SurfaceMaterialMaps directly")]] =
-          SurfaceMaterialMaps;
-  using VolumeMaterialMap
-      [[deprecated("Use Acts::VolumeMaterialMaps directly")]] =
-          VolumeMaterialMaps;
-  using DetectorMaterialMaps
-      [[deprecated("Use Acts::TrackingGeometryMaterial directly")]] =
-          TrackingGeometryMaterial;
-
   /// @class Config
   /// Configuration of the Converter
   class Config {
