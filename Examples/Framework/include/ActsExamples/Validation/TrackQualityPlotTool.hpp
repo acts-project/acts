@@ -62,11 +62,6 @@ class TrackQualityPlotTool {
   void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
             double completeness, double purity) const;
 
-  /// @brief write the track quality plots to file
-  ///
-  /// @param cache cache object for track quality plots
-  void write(const Cache& cache) const;
-
  private:
   /// The Config class
   Config m_cfg;

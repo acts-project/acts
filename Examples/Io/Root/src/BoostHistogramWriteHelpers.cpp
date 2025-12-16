@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Validation/BoostHistogramWriteHelpers.hpp"
+#include "ActsExamples/Io/Root/BoostHistogramWriteHelpers.hpp"
 
-#include "ActsExamples/Validation/BoostHistogramToRootConverter.hpp"
+#include "ActsExamples/Io/Root/BoostHistogramToRootConverter.hpp"
 #include "ActsExamples/Validation/BoostHistogramWrappers.hpp"
 
 #include <TEfficiency.h>

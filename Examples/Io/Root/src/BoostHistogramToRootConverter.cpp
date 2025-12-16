@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Validation/BoostHistogramToRootConverter.hpp"
+#include "ActsExamples/Io/Root/BoostHistogramToRootConverter.hpp"
 
 #include <TEfficiency.h>
 #include <TH1F.h>
@@ -117,6 +117,9 @@ TProfile* toRoot(const BoostProfileHistogram& boostProfile) {
       boostProfile.name().c_str(), boostProfile.title().c_str(),
       static_cast<int>(axis.size()), edges.data());
 
+  // Enable sum of weights squared storage
+  rootProfile->Sumw2();
+
   // Copy mean values from boost profile to ROOT profile
   for (auto&& x : boost::histogram::indexed(bh)) {
     const auto& acc = *x;  // Get the accumulator (weighted_mean)
@@ -134,6 +137,8 @@ TProfile* toRoot(const BoostProfileHistogram& boostProfile) {
       double sum = mean * count;
       rootProfile->SetBinContent(rootBinIndex, sum);
       rootProfile->SetBinEntries(rootBinIndex, count);
+      // Also set the error appropriately
+      rootProfile->SetBinError(rootBinIndex, 0.0);
     }
   }
 

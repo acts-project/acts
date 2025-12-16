@@ -9,7 +9,6 @@
 #include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/Validation/BoostHistogramWriteHelpers.hpp"
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -48,16 +47,6 @@ void TrackQualityPlotTool::book(Cache& cache) const {
   // purity vs phi
   cache.purity_vs_phi = BoostProfileHistogram(
       "purity_vs_phi", "Purity", bPhi, "Purity");
-}
-
-void TrackQualityPlotTool::write(const Cache& cache) const {
-  ACTS_DEBUG("Write the plots to output file.");
-  BoostHistogramWriteHelpers::write(cache.completeness_vs_pT);
-  BoostHistogramWriteHelpers::write(cache.completeness_vs_eta);
-  BoostHistogramWriteHelpers::write(cache.completeness_vs_phi);
-  BoostHistogramWriteHelpers::write(cache.purity_vs_pT);
-  BoostHistogramWriteHelpers::write(cache.purity_vs_eta);
-  BoostHistogramWriteHelpers::write(cache.purity_vs_phi);
 }
 
 void TrackQualityPlotTool::fill(

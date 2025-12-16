@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/Io/Root/BoostHistogramWriteHelpers.hpp"
 
 #include <cstddef>
 #include <map>
@@ -154,7 +155,12 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
       m_trackSummaryPlotTool.write(m_subDetectorSummaryCaches.at(key));
     }
-    m_trackQualityPlotTool.write(m_trackQualityPlotCache);
+    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.completeness_vs_pT);
+    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.completeness_vs_eta);
+    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.completeness_vs_phi);
+    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.purity_vs_pT);
+    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.purity_vs_eta);
+    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.purity_vs_phi);
 
     writeFloat(eff_tracks, "eff_tracks");
     writeFloat(fakeRatio_tracks, "fakeratio_tracks");
