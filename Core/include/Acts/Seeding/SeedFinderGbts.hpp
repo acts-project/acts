@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -42,7 +43,7 @@ class SeedFinderGbts {
 
   struct seedProperties {
     seedProperties(float quality, int clone, std::vector<unsigned int> sps)
-        : seedQuality(quality), isClone(clone), spacepoints(sps) {}
+        : seedQuality(quality), isClone(clone), spacepoints(std::move(sps)) {}
 
     float seedQuality{};
     int isClone{};
