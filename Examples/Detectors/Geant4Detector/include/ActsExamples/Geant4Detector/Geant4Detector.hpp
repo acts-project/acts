@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
@@ -26,7 +26,7 @@ namespace ActsExamples {
 struct Geant4Detector : public Detector {
   /// Nested configuration struct
   struct Config {
-    /// The detector/geometry name
+    /// The Geometry/geometry name
     std::string name = "";
     /// The Geant4 world volume
     const G4VPhysicalVolume* g4World = nullptr;

@@ -14,6 +14,10 @@ from acts.examples.reconstruction import (
     addVertexFitting,
     VertexFinder,
 )
+from acts.examples.root import (
+    RootParticleReader,
+    RootTrackSummaryReader,
+)
 
 u = acts.UnitConstants
 
@@ -41,7 +45,7 @@ def runVertexFitting(
         logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
-            acts.examples.RootParticleReader(
+            RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles=inputParticles,
@@ -84,7 +88,7 @@ def runVertexFitting(
         logger.info("Reading track summary from %s", inputTrackSummary.resolve())
         assert inputTrackSummary.exists()
         associatedParticles = "associatedTruthParticles"
-        trackSummaryReader = acts.examples.RootTrackSummaryReader(
+        trackSummaryReader = RootTrackSummaryReader(
             level=acts.logging.VERBOSE,
             outputTracks=trackParameters,
             outputParticles=associatedParticles,

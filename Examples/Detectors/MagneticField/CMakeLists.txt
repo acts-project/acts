@@ -8,7 +8,6 @@ target_link_libraries(
     # the ROOT libraries should be private, but if we do that then the linker
     # fails with some missing ROOT symbols.
     PUBLIC Acts::ExamplesFramework ROOT::Core ROOT::Tree
-    PRIVATE std::filesystem
 )
 
 acts_compile_headers(ExamplesMagneticField GLOB "include/**/*.hpp")

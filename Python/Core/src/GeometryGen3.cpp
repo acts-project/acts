@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
@@ -117,7 +118,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
       AppendOnlyNavigationStream navStream{main};
       currentVolume->initializeNavigationCandidates(
-          {.position = position, .direction = direction}, navStream, logger());
+          gctx, {.position = position, .direction = direction}, navStream,
+          logger());
 
       ACTS_VERBOSE(main.candidates().size() << " candidates");
 
@@ -225,6 +227,8 @@ void addGeometryGen3(py::module_& m) {
   using Experimental::LayerBlueprintNode;
   using Experimental::MaterialDesignatorBlueprintNode;
   using Experimental::StaticBlueprintNode;
+
+  py::class_<Portal>(m, "Portal");
 
   auto blueprintNode =
       py::class_<BlueprintNode, std::shared_ptr<BlueprintNode>>(

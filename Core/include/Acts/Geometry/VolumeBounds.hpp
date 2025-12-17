@@ -67,6 +67,7 @@ class VolumeBounds {
     eCylinder,
     eGenericCuboid,
     eTrapezoid,
+    eDiamond,
     eOther,
 
   };

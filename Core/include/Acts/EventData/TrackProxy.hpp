@@ -24,6 +24,18 @@
 
 namespace Acts {
 
+namespace detail_tp {
+inline constexpr HashedString kTipIndexKey = hashString("tipIndex");
+inline constexpr HashedString kStemIndexKey = hashString("stemIndex");
+inline constexpr HashedString kMeasurementsKey = hashString("nMeasurements");
+inline constexpr HashedString kHolesKey = hashString("nHoles");
+inline constexpr HashedString kOutliersKey = hashString("nOutliers");
+inline constexpr HashedString kSharedHitsKey = hashString("nSharedHits");
+inline constexpr HashedString kChi2Key = hashString("chi2");
+inline constexpr HashedString kNdfKey = hashString("ndf");
+inline constexpr HashedString kNextKey = hashString("next");
+}  // namespace detail_tp
+
 template <TrackContainerBackend track_container_t,
           CommonMultiTrajectoryBackend traj_t,
           template <typename> class holder_t>
@@ -164,7 +176,7 @@ class TrackProxy {
   /// Get the tip index, i.e. the entry point into the track state container
   /// @return the tip index by value
   IndexType tipIndex() const {
-    return component<IndexType>(hashString("tipIndex"));
+    return component<IndexType>(detail_tp::kTipIndexKey);
   }
 
   /// Index of the stem, i.e. the innermost track state of the track.
@@ -172,7 +184,7 @@ class TrackProxy {
   /// forward-linked.
   /// @return the stem index
   IndexType stemIndex() const {
-    return component<IndexType>(hashString("stemIndex"));
+    return component<IndexType>(detail_tp::kStemIndexKey);
   }
 
   /// Get a mutable reference to the tip index, i.e. the entry point into the
@@ -182,7 +194,7 @@ class TrackProxy {
   IndexType& tipIndex()
     requires(!ReadOnly)
   {
-    return component<IndexType>(hashString("tipIndex"));
+    return component<IndexType>(detail_tp::kTipIndexKey);
   }
 
   /// Index of the stem, i.e. the innermost track state of the track.
@@ -193,7 +205,7 @@ class TrackProxy {
   IndexType& stemIndex()
     requires(!ReadOnly)
   {
-    return component<IndexType>(hashString("stemIndex"));
+    return component<IndexType>(detail_tp::kStemIndexKey);
   }
 
   /// Get the reference surface of the track (e.g. the perigee)
@@ -297,7 +309,7 @@ class TrackProxy {
   /// Get the charge of the tack
   /// @note this depends on the charge hypothesis
   /// @return The absolute track momentum
-  double charge() const { return particleHypothesis().qFromQOP(qOverP()); }
+  double charge() const { return particleHypothesis().extractCharge(qOverP()); }
 
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
@@ -360,13 +372,13 @@ class TrackProxy {
   unsigned int& nMeasurements()
     requires(!ReadOnly)
   {
-    return component<unsigned int, hashString("nMeasurements")>();
+    return component<unsigned int, detail_tp::kMeasurementsKey>();
   }
 
   /// Return the number of measurements for the track. Const version
   /// @return The number of measurements
   unsigned int nMeasurements() const {
-    return component<unsigned int, hashString("nMeasurements")>();
+    return component<unsigned int, detail_tp::kMeasurementsKey>();
   }
 
   /// Return a mutable reference to the number of holes for the track.
@@ -376,13 +388,13 @@ class TrackProxy {
   unsigned int& nHoles()
     requires(!ReadOnly)
   {
-    return component<unsigned int, hashString("nHoles")>();
+    return component<unsigned int, detail_tp::kHolesKey>();
   }
 
   /// Return the number of measurements for the track. Const version
   /// @return The number of measurements
   unsigned int nHoles() const {
-    return component<unsigned int, hashString("nHoles")>();
+    return component<unsigned int, detail_tp::kHolesKey>();
   }
 
   /// Return a mutable reference to the number of outliers for the track.
@@ -392,13 +404,13 @@ class TrackProxy {
   unsigned int& nOutliers()
     requires(!ReadOnly)
   {
-    return component<unsigned int, hashString("nOutliers")>();
+    return component<unsigned int, detail_tp::kOutliersKey>();
   }
 
   /// Return the number of outliers for the track. Const version
   /// @return The number of outliers
   unsigned int nOutliers() const {
-    return component<unsigned int, hashString("nOutliers")>();
+    return component<unsigned int, detail_tp::kOutliersKey>();
   }
 
   /// Return a mutable reference to the number of shared hits for the track.
@@ -408,13 +420,13 @@ class TrackProxy {
   unsigned int& nSharedHits()
     requires(!ReadOnly)
   {
-    return component<unsigned int, hashString("nSharedHits")>();
+    return component<unsigned int, detail_tp::kSharedHitsKey>();
   }
 
   /// Return the number of shared hits for the track. Const version
   /// @return The number of shared hits
   unsigned int nSharedHits() const {
-    return component<unsigned int, hashString("nSharedHits")>();
+    return component<unsigned int, detail_tp::kSharedHitsKey>();
   }
 
   /// Return a mutable reference to the chi squared
@@ -424,12 +436,12 @@ class TrackProxy {
   float& chi2()
     requires(!ReadOnly)
   {
-    return component<float, hashString("chi2")>();
+    return component<float, detail_tp::kChi2Key>();
   }
 
   /// Return the chi squared for the track. Const version
   /// @return The chi squared
-  float chi2() const { return component<float, hashString("chi2")>(); }
+  float chi2() const { return component<float, detail_tp::kChi2Key>(); }
 
   /// Return a mutable reference to the number of degrees of freedom for the
   /// track. Mutable version
@@ -438,13 +450,13 @@ class TrackProxy {
   unsigned int& nDoF()
     requires(!ReadOnly)
   {
-    return component<unsigned int, hashString("ndf")>();
+    return component<unsigned int, detail_tp::kNdfKey>();
   }
 
   /// Return the number of degrees of freedom for the track. Const version
   /// @return The number of degrees of freedom
   unsigned int nDoF() const {
-    return component<unsigned int, hashString("ndf")>();
+    return component<unsigned int, detail_tp::kNdfKey>();
   }
 
   /// Return the index of this track in the track container
@@ -480,7 +492,7 @@ class TrackProxy {
     using proxy_t = decltype(m_container->trackStateContainer().getTrackState(
         std::declval<IndexType>()));
 
-    IndexType stem = component<IndexType, hashString("stemIndex")>();
+    IndexType stem = component<IndexType, detail_tp::kStemIndexKey>();
     if (stem == kInvalid) {
       return std::optional<proxy_t>{};
     } else {
@@ -499,7 +511,7 @@ class TrackProxy {
     using proxy_t = decltype(m_container->trackStateContainer().getTrackState(
         std::declval<IndexType>()));
 
-    IndexType stem = component<IndexType>(hashString("stemIndex"));
+    IndexType stem = component<IndexType>(detail_tp::kStemIndexKey);
     if (stem == kInvalid) {
       return std::optional<proxy_t>{};
     } else {
@@ -588,7 +600,7 @@ class TrackProxy {
   {
     IndexType last = kInvalid;
     for (auto ts : trackStatesReversed()) {
-      ts.template component<IndexType>(hashString("next")) = last;
+      ts.template component<IndexType>(detail_tp::kNextKey) = last;
       last = ts.index();
     }
     stemIndex() = last;
@@ -607,31 +619,6 @@ class TrackProxy {
     auto ts = tsc.makeTrackState(mask, tipIndex());
     tipIndex() = ts.index();
     return ts;
-  }
-
-  /// Copy the content of another track proxy into this one
-  /// @note Only available if the track proxy is not read-only
-  /// @tparam track_proxy_t the other track proxy's type
-  /// @param other The track proxy
-  /// @param copyTrackStates Copy the track state sequence from @p other
-  template <TrackProxyConcept track_proxy_t>
-  [[deprecated(
-      "copyFrom() with copyTrackStates == false is deprecated, use "
-      "copyFromWithoutStates()")]]
-  void copyFrom(const track_proxy_t& other, bool copyTrackStates)
-    requires(!ReadOnly)
-  {
-    if (copyTrackStates) {
-      copyFrom(other);
-    } else {
-      // Emulate previous behavior
-      auto prevTipIndex = tipIndex();
-      auto prevStemIndex = stemIndex();
-      copyFromWithoutStates(other);
-      // Reset to previous values
-      tipIndex() = prevTipIndex;
-      stemIndex() = prevStemIndex;
-    }
   }
 
   /// Create a complete deep copy of another track, including all track states.
@@ -738,19 +725,6 @@ class TrackProxy {
     stemIndex() = kInvalid;
   }
 
-  /// Creates  a *shallow copy* of the track. Track states are not copied, but
-  /// the resulting track points at the same track states as the original.
-  /// @note Only available if the track proxy is not read-only
-  /// @return A shallow copy of this track proxy
-  [[deprecated("Use copyFromShallow() instead")]]
-  TrackProxy shallowCopy()
-    requires(!ReadOnly)
-  {
-    auto t = container().makeTrack();
-    t.copyFromShallow(*this);
-    return t;
-  }
-
   /// Create a shallow copy from another track, sharing the same track states.
   /// This copies all track-level properties and makes the destination track
   /// point to the same track state sequence as the source. The track states
@@ -817,7 +791,7 @@ class TrackProxy {
     while (current != kInvalid) {
       auto ts = m_container->trackStateContainer().getTrackState(current);
       prev = ts.previous();
-      ts.template component<IndexType>(hashString("next")) = prev;
+      ts.template component<IndexType>(detail_tp::kNextKey) = prev;
       ts.previous() = next;
       if (invertJacobians) {
         if (next != kInvalid) {
@@ -894,6 +868,11 @@ class TrackProxy {
   constexpr const T& component() const {
     return m_container->template component<T, key>(m_index);
   }
+
+  /// Check whether a dynamic column exists
+  /// @param key String key for the component to check
+  /// @return whether the column exists
+  bool hasColumn(HashedString key) const { return m_container->hasColumn(key); }
 
   /// Retrieve a const reference to a component
   /// @tparam T The type of the component to access

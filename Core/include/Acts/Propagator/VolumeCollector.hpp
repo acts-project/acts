@@ -57,9 +57,9 @@ struct VolumeHit {
   /// Pointer to the tracking volume that was hit
   const TrackingVolume* volume = nullptr;
   /// Position where the volume was encountered
-  Vector3 position;
+  Vector3 position{};
   /// Direction of propagation when volume was encountered
-  Vector3 direction;
+  Vector3 direction{};
 };
 
 /// A Volume Collector struct

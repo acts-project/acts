@@ -13,7 +13,43 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+
+#include <format>
+
+namespace Acts {
+template <Experimental::CompositeSpacePoint SpacePoint_t>
+std::string toString(const SpacePoint_t& measurement) {
+  if constexpr (hasPrintOperator<SpacePoint_t>) {
+    std::ostringstream sstr{};
+    sstr << measurement;
+    return sstr.str();
+  } else {
+    using ResidualIdx =
+        Experimental::detail::CompSpacePointAuxiliaries::ResidualIdx;
+    if (measurement.isStraw()) {
+      return std::format(
+          "straw SP @ {:} with r: {:.3f}+-{:.3f} & wire : {:} ",
+          toString(measurement.localPosition()), measurement.driftRadius(),
+          std::sqrt(
+              measurement.covariance()[toUnderlying(ResidualIdx::bending)]),
+          toString(measurement.sensorDirection()));
+    } else {
+      return std::format(
+          "strip SP @ {:} with normal: {:}, strip dir: {:}, to next {:}, "
+          "measures loc0/loc1/time: {:}/{:}/{:}",
+          toString(measurement.localPosition()),
+          toString(measurement.planeNormal()),
+          toString(measurement.sensorDirection()),
+          toString(measurement.toNextSensor()),
+          measurement.measuresLoc0() ? "yes" : "no",
+          measurement.measuresLoc1() ? "yes" : "no",
+          measurement.hasTime() ? "yes" : "no");
+    }
+  }
+}
+}  // namespace Acts
 
 namespace Acts::Experimental::detail {
 
@@ -135,7 +171,7 @@ int CompSpacePointAuxiliaries::strawSign(const Vector& pos, const Vector& dir,
   }
   const double dist = Acts::detail::LineHelper::signedDistance(
       pos, dir, strawSp.localPosition(), strawSp.sensorDirection());
-  return dist > 0. ? 1 : -1;
+  return copySign(1, dist);
 }
 template <CompositeSpacePointContainer StrawCont_t>
 std::vector<int> CompSpacePointAuxiliaries::strawSigns(
@@ -155,6 +191,10 @@ std::vector<int> CompSpacePointAuxiliaries::strawSigns(
 template <CompositeSpacePoint Point_t>
 void CompSpacePointAuxiliaries::updateSpatialResidual(
     const Line_t& line, const Point_t& spacePoint) {
+  ACTS_DEBUG(__func__ << "() " << __LINE__ << " Update residual of "
+                      << toString(line.position()) << " + "
+                      << toString(line.direction()) << " w.r.t\n"
+                      << toString(spacePoint));
   if (spacePoint.isStraw()) {
     /// Fetch the hit position & direction
     const auto& wireDir{spacePoint.sensorDirection()};

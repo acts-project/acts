@@ -8,8 +8,9 @@
 
 #pragma once
 
+#include <cassert>
 #include <cmath>
-
+#include <type_traits>
 namespace Acts {
 
 /// @brief Returns the absolute of a number
@@ -18,12 +19,31 @@ namespace Acts {
 /// @return The absolute value of the input
 template <typename T>
 constexpr T abs(const T n) {
-  if constexpr (std::is_signed_v<T>) {
-    if (n < 0) {
-      return -n;
+  if (std::is_constant_evaluated()) {
+    if constexpr (std::is_signed_v<T>) {
+      if (n < 0) {
+        return -n;
+      }
     }
+    return n;
+  } else {
+    return std::abs(n);
   }
-  return n;
+}
+/// @brief Copies the sign of a signed variable onto the copyTo input object
+///        Return type & magnitude remain unaffected by this method which allows
+///        usage for Vectors & other types providing the - operator.
+///        By convention, the zero is assigned to a positive sign.
+/// @param copyTo: Variable to which the sign is copied to.
+/// @param sign: Variable from which the sign is taken.
+template <typename out_t, typename sign_t>
+constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
+  if constexpr (std::is_enum_v<sign_t>) {
+    return copySign(copyTo, static_cast<std::underlying_type_t<sign_t>>(sign));
+  } else {
+    constexpr sign_t zero = 0;
+    return sign >= zero ? copyTo : -copyTo;
+  }
 }
 
 /// @brief Calculates the ordinary power of the number x.
@@ -32,15 +52,19 @@ constexpr T abs(const T n) {
 /// @return x raised to the power p
 template <typename T, std::integral P>
 constexpr T pow(T x, P p) {
-  constexpr T one = 1;
-  if constexpr (std::is_signed_v<P>) {
-    if (p < 0 && abs(x) > std::numeric_limits<T>::epsilon()) {
-      x = one / x;
-      p = -p;
+  if (std::is_constant_evaluated()) {
+    constexpr T one = 1;
+    if constexpr (std::is_signed_v<P>) {
+      if (p < 0 && abs(x) > std::numeric_limits<T>::epsilon()) {
+        x = one / x;
+        p = -p;
+      }
     }
+    using unsigned_p = std::make_unsigned_t<P>;
+    return p == 0 ? one : x * pow(x, static_cast<unsigned_p>(p) - 1);
+  } else {
+    return static_cast<T>(std::pow(x, static_cast<T>(p)));
   }
-  using unsigned_p = std::make_unsigned_t<P>;
-  return p == 0 ? one : x * pow(x, static_cast<unsigned_p>(p) - 1);
 }
 
 /// @brief Returns the square of the passed number

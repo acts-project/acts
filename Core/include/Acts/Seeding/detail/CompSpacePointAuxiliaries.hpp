@@ -15,6 +15,15 @@
 
 #include <cstdint>
 
+namespace Acts {
+template <Experimental::CompositeSpacePoint SpacePoint_t>
+/// @brief Print the position, the drift radius & the sensor directions of a space point.
+///        If the space point is shipped with an ostream operator, this oone is
+///        used
+/// @param measurement: Reference to the space point to print
+std::string toString(const SpacePoint_t& measurement);
+}
+
 namespace Acts::Experimental::detail {
 /// @brief Helper class to calculate the residual between a straight line and
 ///        a CompositeSpacePoint measurement as well as the partial derivatives.
@@ -330,7 +339,6 @@ class CompSpacePointAuxiliaries {
   /// @param hitMinSeg: Difference of the straw position & the line reference point
   /// @param wireDir: The direction along the wire
   /// @param driftR: Current drift radius of the straw measurement
-
   /// @param driftV: Associated drift velocity given as the derivative of the r-t relation
   /// @param driftA: Associated drift acceleration given as the second derivative of the r-t relation
   void updateTimeStrawRes(const Line_t& line, const Vector& hitMinSeg,

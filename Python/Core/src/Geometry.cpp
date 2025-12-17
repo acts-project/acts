@@ -7,23 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/CuboidalContainerBuilder.hpp"
-#include "Acts/Detector/CylindricalContainerBuilder.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorBuilder.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/DetectorVolumeBuilder.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
-#include "Acts/Detector/KdtSurfacesProvider.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/VolumeStructureBuilder.hpp"
-#include "Acts/Detector/interface/IDetectorBuilder.hpp"
-#include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
-#include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
-#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -47,7 +30,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -55,6 +37,7 @@
 #include <memory>
 #include <numbers>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <boost/algorithm/string/join.hpp>
@@ -118,6 +101,12 @@ class PyTrackingGeometryVisitor : public TrackingGeometryMutableVisitor {
   void visitSurface(Surface& surface) override {
     _INVOKE(TrackingGeometryMutableVisitor::visitSurface, "visitSurface",
             surface);
+  }
+
+  void visitBoundarySurface(
+      Acts::BoundarySurfaceT<Acts::TrackingVolume>& boundary) override {
+    _INVOKE(Acts::TrackingGeometryMutableVisitor::visitBoundarySurface,
+            "visitBoundarySurface", boundary);
   }
 };
 
@@ -202,15 +191,17 @@ void addGeometry(py::module_& m) {
     auto trkGeo =
         py::class_<TrackingGeometry, std::shared_ptr<TrackingGeometry>>(
             m, "TrackingGeometry")
-            .def(py::init([](const MutableTrackingVolumePtr& volPtr,
-                             std::shared_ptr<const IMaterialDecorator> matDec,
-                             const GeometryIdentifierHook& hook,
-                             Logging::Level level) {
-              auto logger = getDefaultLogger("TrackingGeometry", level);
-              auto obj = std::make_shared<TrackingGeometry>(
-                  volPtr, matDec.get(), hook, *logger);
-              return obj;
-            }))
+            .def(py::init(
+                [](const MutableTrackingVolumePtr& volPtr,
+                   const std::shared_ptr<const IMaterialDecorator>& matDec,
+                   const GeometryIdentifierHook& hook,
+                   Acts::Logging::Level level) {
+                  auto logger =
+                      Acts::getDefaultLogger("TrackingGeometry", level);
+                  auto obj = std::make_shared<Acts::TrackingGeometry>(
+                      volPtr, matDec.get(), hook, *logger);
+                  return obj;
+                }))
             .def("visitSurfaces",
                  [](TrackingGeometry& self, py::function& func) {
                    self.visitSurfaces(func);
@@ -276,7 +267,7 @@ void addGeometry(py::module_& m) {
         m, "GeometryIdentifierHook")
         .def(py::init([](py::object callable) {
           auto hook = std::make_shared<GeometryIdentifierHookBinding>();
-          hook->callable = callable;
+          hook->callable = std::move(callable);
           return hook;
         }));
   }
