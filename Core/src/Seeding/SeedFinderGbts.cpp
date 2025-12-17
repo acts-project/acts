@@ -591,7 +591,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
       vSpIdx[k] = vN[k]->sp_idx();
     }
 
-    vSeedCandidates.emplace_back(-rs.m_J / vN.size(), 0, vSpIdx);
+    vSeedCandidates.emplace_back(-rs.m_J / vN.size(), 0, std::move(vSpIdx));
   }
 
   // clone removal code goes below ...
