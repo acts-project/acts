@@ -53,12 +53,74 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
       const Acts::GeometryContext& gctx) const override;
 
  private:
+  // Enum class for the station indices
+  enum class StationIdx : std::uint8_t {
+    BI,
+    BM,
+    BO,
+    EAI,
+    EAM,
+    EAO,
+    ECI,
+    ECM,
+    ECO,
+    nStations
+  };
+  // Enum class for the first level of container indices
+  enum class FirstContainerIdx : std::uint8_t {
+    Body,
+    BW_A,
+    BW_C,
+    nFirstContainers
+  };
+  // Enum class for the second level of container indices when the first is Body
+  enum class SecondContainerIdx : std::uint8_t {
+    Barrel,
+    NSWs,
+    nSecondContainers
+  };
+
   Config m_cfg;
 
-  std::shared_ptr<Acts::Experimental::StaticBlueprintNode> buildBarrelNode(
-      const ConvertedVolList_t& boundingBoxes, const std::string& name,
-      Acts::VolumeBoundFactory& boundFactory,
-      const Acts::GeometryIdentifier& geoId) const;
+  using Box_t = ConvertedVolList_t::value_type;
+  using Node_t = Acts::Experimental::StaticBlueprintNode;
+  using NodePtr_t = std::shared_ptr<Node_t>;
+
+  /// @brief Produce a station node from the provided converted volume boxes
+  NodePtr_t processStation(const std::span<Box_t> boundingBoxes,
+                           const std::string& station, const bool isBarrel,
+                           Acts::VolumeBoundFactory& boundFactory,
+                           const Acts::GeometryIdentifier& geoId) const;
+
+  /// @brief Build a child chamber volume from the provided converted volume box
+  std::unique_ptr<Acts::TrackingVolume> buildChildChamber(
+      const Box_t& box, Acts::VolumeBoundFactory& boundFactory) const;
+
+  /// @brief Cylindrical bounds structure, used to calculate the overall station bounds
+  struct cylBounds {
+    double rMin{0.0};
+    double rMax{0.0};
+    double zMin{0.0};
+    double zMax{0.0};
+
+    /// @brief Method to update the bounds
+    void update(const double rMinIn, const double rMaxIn, const double zMinIn,
+                const double zMaxIn) {
+      rMin = std::min(rMin, rMinIn);
+      rMax = std::max(rMax, rMaxIn);
+      zMin = std::min(zMin, zMinIn);
+      zMax = std::max(zMax, zMaxIn);
+    }
+  };
+
+  // Helper function returning the station idx from a box volume
+  StationIdx getStationIdx(const Box_t& box) const;
+  // Helper function returning the first-level container idx from a station idx
+  FirstContainerIdx getFirstContainerIdx(const StationIdx& stationIdx) const;
+  // Helper function converting the station idx to string
+  std::string stationIdxToString(StationIdx idx) const;
+  // Helper function converting the first-level container idx to string
+  std::string firstContainerIdxToString(FirstContainerIdx idx) const;
 
   /// Private access method to the logger
   const Acts::Logger& logger() const { return *m_logger; }
