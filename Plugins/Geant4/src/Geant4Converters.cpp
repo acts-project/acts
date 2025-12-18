@@ -24,13 +24,13 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <iterator>
 #include <numbers>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
@@ -148,9 +148,9 @@ std::shared_ptr<LineBounds> ActsPlugins::Geant4ShapeConverter::lineBounds(
 
 std::tuple<std::shared_ptr<RectangleBounds>, std::array<int, 2u>, double>
 ActsPlugins::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
-  std::vector<double> hG4XYZ = {static_cast<double>(g4Box.GetXHalfLength()),
-                                static_cast<double>(g4Box.GetYHalfLength()),
-                                static_cast<double>(g4Box.GetZHalfLength())};
+  std::array<double, 3> hG4XYZ = {static_cast<double>(g4Box.GetXHalfLength()),
+                                  static_cast<double>(g4Box.GetYHalfLength()),
+                                  static_cast<double>(g4Box.GetZHalfLength())};
 
   auto minAt = std::min_element(hG4XYZ.begin(), hG4XYZ.end());
   std::size_t minPos = std::distance(hG4XYZ.begin(), minAt);
@@ -188,7 +188,7 @@ ActsPlugins::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   double hlY1 = static_cast<double>(g4Trd.GetYHalfLength2());
   double hlZ = static_cast<double>(g4Trd.GetZHalfLength());
 
-  std::vector<double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
+  std::array<double, 3> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
 
   auto minAt = std::min_element(dXYZ.begin(), dXYZ.end());
   std::size_t minPos = std::distance(dXYZ.begin(), minAt);
@@ -251,7 +251,7 @@ ActsPlugins::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
   double hlY1 = y2 + 2 * z * std::tan(theta) * std::sin(phi);
   double hlZ = z;
 
-  std::vector<double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
+  std::array<double, 3> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
 
   auto minAt = std::ranges::min_element(dXYZ);
   std::size_t minPos = std::distance(dXYZ.begin(), minAt);
