@@ -304,7 +304,7 @@ def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
         plt.ylabel("R [mm]")
         plt.title("Volumes and Layers (no approach layers)")
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.savefig(output_folder + "/volumes_and_layers.png")
+        plt.savefig(output_folder + "/volumes_and_layers.png", bbox_inches="tight")
 
         # Plot each volume: layers + approach layers
         v_index = 0
