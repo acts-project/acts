@@ -197,6 +197,7 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     world->exec(&writeGeoDB);  // visit all GeoModel nodes
     writeGeoDB.saveToDB(m_publisher.get());
   }
+
   m_publisher.reset();
   return outTree;
 }
