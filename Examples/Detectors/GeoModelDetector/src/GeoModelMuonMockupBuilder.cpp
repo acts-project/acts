@@ -79,7 +79,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
                                  &configureContainer](
                                     FirstContainerIdx containerIdx) {
     auto& container = FirstContainers[static_cast<std::size_t>(containerIdx)];
-    if (!container) {
+    if (container == nullptr) {
       container =
           &cyl.addCylinderContainer(firstContainerIdxToString(containerIdx),
                                     (containerIdx == FirstContainerIdx::Body)
@@ -95,7 +95,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
                                   &configureContainer](bool isBarrel) {
     auto& container = SecondContainers[static_cast<std::size_t>(
         isBarrel ? SecondContainerIdx::Barrel : SecondContainerIdx::NSWs)];
-    if (!container) {
+    if (container == nullptr) {
       auto& bodyContainer =
           *FirstContainers[static_cast<std::size_t>(FirstContainerIdx::Body)];
       container = &bodyContainer.addCylinderContainer(
@@ -185,7 +185,7 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
   std::size_t volNum{1};
   for (const auto& box : boundingBoxes) {
     auto parent = box.fullPhysVol->getParent().get();
-    if (!parent) {
+    if (parent == nullptr) {
       throw std::domain_error("processStation() No parent found for chamber " +
                               box.name + " is station " + station);
     }
@@ -363,7 +363,7 @@ GeoModelMuonMockupBuilder::StationIdx GeoModelMuonMockupBuilder::getStationIdx(
   auto contains = [&name](std::string_view key) {
     return name.find(key) != std::string::npos;
   };
-  auto checkSide = [&name, &contains](const StationIdx& idx) {
+  auto checkSide = [&contains](const StationIdx& idx) {
     // Assume only stationEta can assume negative values
     return contains("-")
                ? static_cast<StationIdx>(static_cast<std::uint8_t>(idx) + 3)
