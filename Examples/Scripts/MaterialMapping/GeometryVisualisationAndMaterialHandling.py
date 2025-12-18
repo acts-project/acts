@@ -551,8 +551,9 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                                 "passiveDiscBinningPhi"
                             ]
                     else:
+                        surface_type = entry["value"]["type"]
                         print(
-                            f"WARNING: Processing surface with unknown type '{entry["value"]["type"]}. Only CylinderSurface and DiscSurface are considered."
+                            f"WARNING: Processing surface with unknown type '{surface_type}'. Only CylinderSurface and DiscSurface are considered."
                         )
                     if val["bins"] == 0:
                         print(
@@ -627,8 +628,9 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                     else:
                         material_layer_discs[vol - 1].append(extends)
                 else:
+                    surface_type = entry["value"]["type"]
                     print(
-                        f"WARNING: Processing surface with unknown type '{entry["value"]["type"]}'. Only CylinderSurface and DiscSurface are considered."
+                        f"WARNING: Processing surface with unknown type '{surface_type}'. Only CylinderSurface and DiscSurface are considered."
                     )
 
             if "boundary" in entry:
