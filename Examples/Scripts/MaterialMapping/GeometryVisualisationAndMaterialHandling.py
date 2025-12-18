@@ -140,8 +140,9 @@ def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
                 ]
                 index_to_extends_layers_discs[vol - 1].append(extends)
             else:
+                surface_type = entry["value"]["type"]
                 print(
-                    f"WARNING: Processing surface with unknown type '{entry["value"]["type"]}'. Only CylinderSurface and DiscSurface are considered."
+                    f"WARNING: Processing surface with unknown type '{surface_type}'. Only CylinderSurface and DiscSurface are considered."
                 )
 
         if "boundary" in entry:
