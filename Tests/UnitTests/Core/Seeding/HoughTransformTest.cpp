@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(hough_transform_sliding_window) {
   HoughTransformUtils::HoughPlaneConfig config{nX, nY};
   HoughTransformUtils::HoughPlane<int> plane(config);
 
-  auto addTriangular = [&](std::vector<std::array<std::size_t, 2>> peaks,
+  auto addTriangular = [&](const std::vector<std::array<std::size_t, 2>>& peaks,
                            HoughTransformUtils::YieldType peak) {
     for (std::size_t x = 0; x < nX; ++x) {
       for (std::size_t y = 0; y < nY; ++y) {
