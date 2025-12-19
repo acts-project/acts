@@ -84,7 +84,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         if: steps.dl-af.outputs.comment-artifacts-found
         with:
           pattern: comment-*.md
