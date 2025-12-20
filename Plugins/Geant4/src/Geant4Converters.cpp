@@ -329,10 +329,10 @@ Transform3 axesOriented(const Transform3& toGlobalOriginal,
   Vector3 colZ = colX.cross(colY);
 
   Transform3 orientedTransform = Transform3::Identity();
-  orientedTransform.matrix().block(0, 0, 3, 1) = colX;
-  orientedTransform.matrix().block(0, 1, 3, 1) = colY;
-  orientedTransform.matrix().block(0, 2, 3, 1) = colZ;
-  orientedTransform.matrix().block(0, 3, 3, 1) = toGlobalOriginal.translation();
+  orientedTransform.matrix().block<3, 1>(0, 0) = colX;
+  orientedTransform.matrix().block<3, 1>(0, 1) = colY;
+  orientedTransform.matrix().block<3, 1>(0, 2) = colZ;
+  orientedTransform.matrix().block<3, 1>(0, 3) = toGlobalOriginal.translation();
 
   return orientedTransform;
 }
