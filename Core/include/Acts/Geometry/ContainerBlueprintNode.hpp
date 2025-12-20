@@ -131,11 +131,6 @@ class ContainerBlueprintNode : public BlueprintNode {
   /// @return The attachment strategy
   VolumeAttachmentStrategy attachmentStrategy() const;
 
-  /// Accessor to the resize strategy
-  /// @return The resize strategy
-  [[deprecated("Use resizeStrategies() instead")]]
-  VolumeResizeStrategy resizeStrategy() const;
-
   /// Accessor to the resize strategies
   /// @return The resize strategies
   std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies()
