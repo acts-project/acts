@@ -10,6 +10,7 @@
 
 // TODO: update to C++17 style
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 
 #include <array>
 #include <limits>
@@ -32,13 +33,13 @@ struct GbtsNode {
   inline float r() const { return m_r; }
   inline unsigned short layer() const { return m_layer; }
   inline float pixelClusterWidth() const { return m_pcw; }
-
+  inline float localPositionY() const { return m_locPosY; }
   inline int sp_idx() const { return m_idx; }
 
   float m_x{}, m_y{}, m_z{}, m_r{}, m_phi{};
   unsigned short m_layer{10000};
   unsigned int m_idx{std::numeric_limits<unsigned int>::max()};
-  float m_pcw{};
+  float m_pcw{}, m_locPosY{};
 };
 
 class GbtsEtaBin {
@@ -63,20 +64,23 @@ class GbtsEtaBin {
   float getMaxBinRadius() const { return m_maxRadius; }
 
   std::vector<const GbtsNode*> m_vn;  // nodes of the graph
-  std::vector<std::pair<float, unsigned int> > m_vPhiNodes;
-  std::vector<std::vector<unsigned int> >
+  std::vector<std::pair<float, unsigned int>> m_vPhiNodes;
+  std::vector<std::vector<unsigned int>>
       m_in;  // vectors of incoming edges, stores indices of edges in the edge
              // vector
-  std::vector<std::array<float, 5> >
+  std::vector<std::array<float, 5>>
       m_params;  // node attributes: m_minCutOnTau, m_maxCutOnTau, m_phi, m_r,
                  // m_z;
 
   float m_minRadius{}, m_maxRadius{};
+
+  unsigned int m_layerKey{0};
 };
 
 class GbtsDataStorage {
  public:
-  explicit GbtsDataStorage(const GbtsGeometry& g);
+  explicit GbtsDataStorage(const GbtsGeometry& geometry,
+                           const SeedFinderGbtsConfig& config);
   ~GbtsDataStorage();
 
   int loadPixelGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll,
@@ -97,7 +101,8 @@ class GbtsDataStorage {
 
  protected:
   const GbtsGeometry& m_geo;
-
+  const SeedFinderGbtsConfig& m_config;
+  std::vector<std::array<float, 5>> m_mlLUT;
   std::vector<GbtsEtaBin> m_etaBins;
 };
 
