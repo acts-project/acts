@@ -79,7 +79,7 @@ void GbtsEdgeState::clone(const GbtsEdgeState& st) {
 
 GbtsTrackingFilter::GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
                                        std::vector<GbtsEdge>& sb,
-                                       SeedFinderGbtsConfig& config)
+                                       const SeedFinderGbtsConfig& config)
     : m_geo(g), m_segStore(sb), m_config(config) {}
 
 void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
@@ -188,19 +188,22 @@ bool GbtsTrackingFilter::update(GbtsEdge* pS, GbtsEdgeState& ts) {
 
   // add ms.
 
-  ts.m_Cx[2][2] += m_config.sigma_w * m_config.sigma_w;
-  ts.m_Cx[1][1] += m_config.sigma_t * m_config.sigma_t;
+  float tau2 = ts.m_Y[1] * ts.m_Y[1];
+  float invSin2 = 1 + tau2;
 
-  int type1 = getLayerType(pS->m_n2->layer());
+  int type1 = getLayerType(pS->m_n2->layer());  // 0 - barrel
 
-  float t2 = type1 == 0 ? 1.0 + ts.m_Y[1] * ts.m_Y[1]
-                        : 1.0 + 1.0 / (ts.m_Y[1] * ts.m_Y[1]);
-  float s1 = m_config.sigmaMS * t2;
-  float s2 = s1 * s1;
+  float lenCorr = type1 == 0 ? invSin2 : invSin2 / tau2;
 
-  s2 *= std::sqrt(t2);
+  float minPtFrac = std::abs(ts.m_X[2]) / m_config.max_curvature;
 
-  ts.m_Cy[1][1] += s2;
+  float corrMS = m_config.sigmaMS * minPtFrac;
+
+  float sigma2 = m_config.radLen * lenCorr * corrMS * corrMS;  // /invSin2;
+
+  ts.m_Cx[1][1] += sigma2;
+
+  ts.m_Cy[1][1] += sigma2;
 
   // extrapolation
 
@@ -290,8 +293,19 @@ bool GbtsTrackingFilter::update(GbtsEdge* pS, GbtsEdgeState& ts) {
   for (int i = 0; i < 3; i++) {
     ts.m_X[i] = X[i] + Kx[i] * resid_x;
   }
+
+  if (std::abs(ts.m_X[2]) > m_config.max_curvature) {
+    return false;
+  }
+
   for (int i = 0; i < 2; i++) {
     ts.m_Y[i] = Y[i] + Ky[i] * resid_y;
+  }
+
+  float z0 = ts.m_Y[0] - refY * ts.m_Y[1];
+
+  if (std::abs(z0) > m_config.max_z0) {
+    return false;
   }
 
   for (int i = 0; i < 3; i++) {
