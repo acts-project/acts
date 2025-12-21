@@ -237,11 +237,11 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
       surfaceTransform, std::make_shared<RectangleBounds>(2., 3.));
 
   // z-phi axes & Grid
-  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisZ(-20, 20, 20);
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(
       -std::numbers::pi, std::numbers::pi, 10);
-  Grid gridZPhi(Type<std::vector<std::size_t>>, std::move(axisZ),
-                std::move(axisPhi));
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisZ(-20, 20, 20);
+  Grid gridPhiZ(Type<std::vector<std::size_t>>, std::move(axisPhi),
+                std::move(axisZ));
 
   TrackingVolume tVolume(Transform3::Identity(),
                          std::make_shared<CylinderVolumeBounds>(0., 15., 22.),
@@ -249,13 +249,13 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   tVolume.addSurface(planeSurface);
 
   // (1a) - Index grid with polyhedron reference generator - no expansion
-  IndexGrid<decltype(gridZPhi)> indexedGridZPhi(
-      std::move(gridZPhi), {AxisDirection::AxisZ, AxisDirection::AxisPhi});
+  IndexGrid<decltype(gridPhiZ)> indexedgridPhiZ(
+      std::move(gridPhiZ), {AxisDirection::AxisPhi, AxisDirection::AxisZ});
   IndexGridNavigationConfig polyConfig;
   polyConfig.referenceGenerator =
       std::make_shared<PolyhedronReferenceGenerator>();
-  IndexGridNavigationPolicy<decltype(gridZPhi)> polyNavigationPolicy(
-      tContext, tVolume, *tLogger, polyConfig, indexedGridZPhi);
+  IndexGridNavigationPolicy<decltype(gridPhiZ)> polyNavigationPolicy(
+      tContext, tVolume, *tLogger, polyConfig, indexedgridPhiZ);
 
   NavigationDelegate delegate;
   BOOST_CHECK_NO_THROW(polyNavigationPolicy.connect(delegate));
@@ -309,8 +309,8 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   projectedReferenceGenerator->luminousRegion = {Vector3(0., 0., 0.)};
 
   projectedConfig.referenceGenerator = projectedReferenceGenerator;
-  IndexGridNavigationPolicy<decltype(gridZPhi)> projectedNavigationPolicy(
-      tContext, tVolume, *tLogger, projectedConfig, indexedGridZPhi);
+  IndexGridNavigationPolicy<decltype(gridPhiZ)> projectedNavigationPolicy(
+      tContext, tVolume, *tLogger, projectedConfig, indexedgridPhiZ);
 
   // A candidate a off in phi - still outside
   nStream.reset();
@@ -340,10 +340,10 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
       Vector3(0., 0., 0.)};
   projectedWithSurfaceConfig.referenceGenerator =
       projectedWithSurfaceReferenceGenerator;
-  IndexGridNavigationPolicy<decltype(gridZPhi)>
+  IndexGridNavigationPolicy<decltype(gridPhiZ)>
       projectedWithSurfaceNavigationPolicy(tContext, tVolume, *tLogger,
                                            projectedWithSurfaceConfig,
-                                           indexedGridZPhi);
+                                           indexedgridPhiZ);
   // A candidate a off in phi - we get the phi surface now as well
   nStream.reset();
   navArgs.position =
@@ -444,6 +444,7 @@ BOOST_AUTO_TEST_CASE(RegularRingIndexGridTests) {
   IndexGrid<decltype(gridPhi)> indexedGridPhi(std::move(gridPhi),
                                               {AxisDirection::AxisPhi});
   IndexGridNavigationConfig centerConfig;
+  centerConfig.binExpansion = {0u, 0u};
   centerConfig.referenceGenerator =
       std::make_shared<CenterReferenceGenerator>();
   BOOST_CHECK_THROW(

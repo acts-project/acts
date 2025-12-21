@@ -23,7 +23,7 @@ namespace Acts {
 class IndexGridNavigationConfig {
  public:
   /// The binning expansion for grid neighbor lookups
-  std::vector<std::size_t> binExpansion = {0u, 0u};
+  std::vector<std::size_t> binExpansion = {};
 
   /// The reference expansion
   std::vector<double> referenceExpansion = {};
@@ -126,11 +126,11 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
   IndexGridType m_indexGrid;
 };
 
-// Regular cylinder is in z and phi
+// Regular cylinder is in phi and z
 using RegularCylinderIndexGrid =
     Grid<std::vector<std::size_t>,
-         Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
-         Axis<AxisType::Equidistant, AxisBoundaryType::Closed>>;
+         Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
+         Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
 using RegularCylinderIndexGridNavigationPolicy =
     IndexGridNavigationPolicy<RegularCylinderIndexGrid>;
 
