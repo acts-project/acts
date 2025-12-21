@@ -950,9 +950,16 @@ class KalmanFitter {
 
       if (!hasMaterial) {
         // Screen out message
-        ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
-                                                        << " at update stage: "
-                                                        << updateStage);
+        // Note: surfaces without assigned geometry IDs (e.g., perigee surfaces)
+        // will have their ID printed as "undefined" which is expected behavior
+        const auto geoId = surface->geometryId();
+        if (geoId.value() != 0) {
+          ACTS_VERBOSE("No material effects on surface: "
+                       << geoId << " at update stage: " << updateStage);
+        } else {
+          ACTS_VERBOSE("No material effects on surface (no geometry ID)"
+                       << " at update stage: " << updateStage);
+        }
       }
     }
 
