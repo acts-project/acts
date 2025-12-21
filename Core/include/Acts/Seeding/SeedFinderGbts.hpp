@@ -17,6 +17,8 @@
 
 #include <memory>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -24,6 +26,7 @@ namespace Acts::Experimental {
 // defined the tuple template used to carry the spacepoint components
 using SPContainerComponentsType =
     std::tuple<SpacePointContainer2, SpacePointColumnProxy<int, true>,
+               SpacePointColumnProxy<float, true>,
                SpacePointColumnProxy<float, true>>;
 
 class SeedFinderGbts {
@@ -38,6 +41,20 @@ class SeedFinderGbts {
   using GNN_DataStorage = GbtsDataStorage;
   using GNN_Edge = GbtsEdge;
 
+  struct seedProperties {
+    seedProperties(float quality, int clone, std::vector<unsigned int> sps)
+        : seedQuality(quality), isClone(clone), spacepoints(std::move(sps)) {}
+
+    float seedQuality{};
+    int isClone{};
+    std::vector<unsigned int> spacepoints{};
+
+    bool operator<(seedProperties const& o) const {
+      return std::tie(seedQuality, isClone, spacepoints) <
+             std::tie(o.seedQuality, o.isClone, o.spacepoints);
+    }
+  };
+
   SeedContainer2 CreateSeeds(
       const RoiDescriptor& roi,
       const SPContainerComponentsType& SpContainerComponents, int max_layers);
@@ -50,6 +67,10 @@ class SeedFinderGbts {
       std::vector<GNN_Edge>& edgeStorage) const;
 
   int runCCA(int nEdges, std::vector<GNN_Edge>& edgeStorage) const;
+
+  void extractSeedsFromTheGraph(
+      int maxLevel, int nEdges, int nHits, std::vector<GNN_Edge>& edgeStorage,
+      std::vector<seedProperties>& vSeedCandidates) const;
 
  private:
   SeedFinderGbtsConfig m_config;

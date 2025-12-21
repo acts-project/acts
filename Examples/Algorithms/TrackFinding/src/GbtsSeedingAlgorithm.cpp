@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -41,7 +42,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 
   // parse connection file
   std::ifstream input_ifstream(
-      m_cfg.seedFinderConfig.ConnectorInputFile.c_str(), std::ifstream::in);
+      m_cfg.seedFinderConfig.connectorInputFile.c_str(), std::ifstream::in);
 
   if (input_ifstream.peek() == std::ifstream::traits_type::eof()) {
     ACTS_WARNING("Cannot find layer connections file ");
@@ -185,6 +186,8 @@ ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
   auto LayerColoumn = coreSpacePoints.createColumn<int>("LayerID");
   auto ClusterWidthColoumn =
       coreSpacePoints.createColumn<float>("Cluster_Width");
+  auto LocalPositionColoumn =
+      coreSpacePoints.createColumn<float>("LocalPositionY");
   coreSpacePoints.reserve(spacePoints.size());
 
   // for loop filling space
@@ -255,14 +258,16 @@ ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
     newSp.r() = spacePoint.r();
     newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
     newSp.extra(LayerColoumn) = std::get<2>(Find->second);
-    newSp.extra(ClusterWidthColoumn) =
-        0;  // false input as this is not available in examples
+    // false input as this is not available in examples
+    newSp.extra(ClusterWidthColoumn) = 0;
+    newSp.extra(LocalPositionColoumn) = 0;
   }
 
   ACTS_VERBOSE("Space point collection successfully assigned LayerID's");
 
   return std::make_tuple(std::move(coreSpacePoints), LayerColoumn.asConst(),
-                         ClusterWidthColoumn.asConst());
+                         ClusterWidthColoumn.asConst(),
+                         LocalPositionColoumn.asConst());
 }
 
 std::vector<Acts::Experimental::TrigInDetSiLayer>
@@ -418,14 +423,18 @@ void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
 
   ACTS_DEBUG("BeamSpotCorrection: " << cfg.BeamSpotCorrection
                                     << " (default: false)");
-  ACTS_DEBUG("ConnectorInputFile: " << cfg.ConnectorInputFile
+  ACTS_DEBUG("connectorInputFile: " << cfg.connectorInputFile
                                     << " (default: empty string)");
+  ACTS_DEBUG("lutInputFile: " << cfg.lutInputFile
+                              << " (default: empty string)");
   ACTS_DEBUG("LRTmode: " << cfg.LRTmode << " (default: false)");
   ACTS_DEBUG("useML: " << cfg.useML << " (default: false)");
   ACTS_DEBUG("matchBeforeCreate: " << cfg.matchBeforeCreate
                                    << " (default: false)");
   ACTS_DEBUG("useOldTunings: " << cfg.useOldTunings << " (default: false)");
   ACTS_DEBUG("tau_ratio_cut: " << cfg.tau_ratio_cut << " (default: 0.007)");
+  ACTS_DEBUG("tau_ratio_precut: " << cfg.tau_ratio_precut
+                                  << " (default: 0.009f)");
   ACTS_DEBUG("etaBinOverride: " << cfg.etaBinOverride << " (default: 0.0)");
   ACTS_DEBUG("nMaxPhiSlice: " << cfg.nMaxPhiSlice << " (default: 53)");
   ACTS_DEBUG("minPt: " << cfg.minPt
@@ -437,16 +446,23 @@ void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
   ACTS_DEBUG("doubletFilterRZ: " << cfg.doubletFilterRZ << " (default: true)");
   ACTS_DEBUG("nMaxEdges: " << cfg.nMaxEdges << " (default: 2000000)");
   ACTS_DEBUG("minDeltaRadius: " << cfg.minDeltaRadius << " (default: 2.0)");
-  ACTS_DEBUG("sigma_t: " << cfg.sigma_t << " (default: 0.0003)");
-  ACTS_DEBUG("sigma_w: " << cfg.sigma_w << " (default: 0.00009)");
   ACTS_DEBUG("sigmaMS: " << cfg.sigmaMS << " (default: 0.016)");
-  ACTS_DEBUG("sigma_x: " << cfg.sigma_x << " (default: 0.25)");
-  ACTS_DEBUG("sigma_y: " << cfg.sigma_y << " (default: 2.5)");
+  ACTS_DEBUG("radLen: " << cfg.radLen << " (default: 0.025)");
+  ACTS_DEBUG("sigma_x: " << cfg.sigma_x << " (default: 0.08)");
+  ACTS_DEBUG("sigma_y: " << cfg.sigma_y << " (default: 0.25)");
   ACTS_DEBUG("weight_x: " << cfg.weight_x << " (default: 0.5)");
   ACTS_DEBUG("weight_y: " << cfg.weight_y << " (default: 0.5)");
-  ACTS_DEBUG("maxDChi2_x: " << cfg.maxDChi2_x << " (default: 60.0)");
-  ACTS_DEBUG("maxDChi2_y: " << cfg.maxDChi2_y << " (default: 60.0)");
+  ACTS_DEBUG("maxDChi2_x: " << cfg.maxDChi2_x << " (default: 5.0)");
+  ACTS_DEBUG("maxDChi2_y: " << cfg.maxDChi2_y << " (default: 6.0)");
   ACTS_DEBUG("add_hit: " << cfg.add_hit << " (default: 14.0)");
+  ACTS_DEBUG("max_curvature: " << cfg.max_curvature << " (default: 1e-3f)");
+  ACTS_DEBUG("max_z0: " << cfg.max_z0 << " (default: 170.0)");
+  ACTS_DEBUG("edge_mask_min_eta: " << cfg.edge_mask_min_eta
+                                   << " (default: 1.5)");
+  ACTS_DEBUG("hit_share_threshold: " << cfg.hit_share_threshold
+                                     << " (default: 0.49)");
+  ACTS_DEBUG("max_endcap_clusterwidth: " << cfg.max_endcap_clusterwidth
+                                         << " (default: 0.35)");
 
   ACTS_DEBUG("================================");
 }
