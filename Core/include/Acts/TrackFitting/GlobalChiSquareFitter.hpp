@@ -232,8 +232,6 @@ struct Gx2FitterResult {
   // backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
-  Result<void> result{Result<void>::success()};
-
   // Count how many surfaces have been hit
   std::size_t surfaceCount = 0;
 };
@@ -801,9 +799,9 @@ class Gx2Fitter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void act(propagator_state_t& state, const stepper_t& stepper,
-             const navigator_t& navigator, result_type& result,
-             const Logger& /*logger*/) const {
+    Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                     const navigator_t& navigator, result_type& result,
+                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
       // Check if we can stop to propagate
@@ -816,20 +814,20 @@ class Gx2Fitter {
       }
 
       // End the propagation and return to the fitter
-      if (result.finished || !result.result.ok()) {
+      if (result.finished) {
         // Remove the missing surfaces that occur after the last measurement
         if (result.measurementStates > 0) {
           result.missedActiveSurfaces.resize(result.measurementHoles);
         }
 
-        return;
+        return Result<void>::success();
       }
 
       // We are only interested in surfaces. If we are not on a surface, we
       // continue the navigation
       auto surface = navigator.currentSurface(state.navigation);
       if (surface == nullptr) {
-        return;
+        return Result<void>::success();
       }
 
       ++result.surfaceCount;
@@ -914,8 +912,7 @@ class Gx2Fitter {
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
           if (!res.ok()) {
-            result.result = res.error();
-            return;
+            return res.error();
           }
           // Not const since, we might need to update with scattering angles
           auto& [boundParams, jacobian, pathLength] = *res;
@@ -984,7 +981,7 @@ class Gx2Fitter {
         // measurement
         result.measurementHoles = result.missedActiveSurfaces.size();
 
-        return;
+        return Result<void>::success();
       }
 
       if (doMaterial) {
@@ -1017,8 +1014,7 @@ class Gx2Fitter {
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
           if (!res.ok()) {
-            result.result = res.error();
-            return;
+            return res.error();
           }
           // Not const since, we might need to update with scattering angles
           auto& [boundParams, jacobian, pathLength] = *res;
@@ -1074,7 +1070,7 @@ class Gx2Fitter {
 
         ++result.processedStates;
 
-        return;
+        return Result<void>::success();
       }
 
       if (surfaceIsSensitive || surfaceHasMaterial) {
@@ -1098,7 +1094,7 @@ class Gx2Fitter {
           ACTS_DEBUG(
               "    Ignoring hole, because there are no preceding "
               "measurements.");
-          return;
+          return Result<void>::success();
         }
 
         auto& fittedStates = *result.fittedStates;
@@ -1118,8 +1114,7 @@ class Gx2Fitter {
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
           if (!res.ok()) {
-            result.result = res.error();
-            return;
+            return res.error();
           }
           const auto& [boundParams, jacobian, pathLength] = *res;
 
@@ -1151,11 +1146,11 @@ class Gx2Fitter {
 
         ++result.processedStates;
 
-        return;
+        return Result<void>::success();
       }
 
       ACTS_DEBUG("    The surface contains no measurement/material/hole.");
-      return;
+      return Result<void>::success();
     }
 
     template <typename propagator_state_t, typename stepper_t,
@@ -1163,7 +1158,7 @@ class Gx2Fitter {
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
-      if (!result.result.ok() || result.finished) {
+      if (result.finished) {
         return true;
       }
       return false;
@@ -1313,13 +1308,6 @@ class Gx2Fitter {
       // makeMeasurements
       auto& propRes = *result;
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
-
-      if (!gx2fResult.result.ok()) {
-        ACTS_INFO("GlobalChiSquareFitter failed in actor: "
-                  << gx2fResult.result.error() << ", "
-                  << gx2fResult.result.error().message());
-        return gx2fResult.result.error();
-      }
 
       auto track = trackContainerTemp.makeTrack();
       tipIndex = gx2fResult.lastMeasurementIndex;
@@ -1487,13 +1475,6 @@ class Gx2Fitter {
       auto& propRes = *result;
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
-      if (!gx2fResult.result.ok()) {
-        ACTS_INFO("GlobalChiSquareFitter failed in actor: "
-                  << gx2fResult.result.error() << ", "
-                  << gx2fResult.result.error().message());
-        return gx2fResult.result.error();
-      }
-
       auto track = trackContainerTemp.makeTrack();
       tipIndex = gx2fResult.lastMeasurementIndex;
 
@@ -1633,13 +1614,6 @@ class Gx2Fitter {
 
       auto& propRes = *result;
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
-
-      if (!gx2fResult.result.ok()) {
-        ACTS_INFO("GlobalChiSquareFitter failed in actor: "
-                  << gx2fResult.result.error() << ", "
-                  << gx2fResult.result.error().message());
-        return gx2fResult.result.error();
-      }
 
       if (tipIndex != gx2fResult.lastMeasurementIndex) {
         ACTS_INFO("Final fit used unreachable measurements.");

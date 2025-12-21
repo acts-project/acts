@@ -58,9 +58,6 @@ struct GsfResult {
   Updatable<double> maxPathXOverX0;
   Updatable<double> sumPathXOverX0;
 
-  // Propagate potential errors to the outside
-  Result<void> result{Result<void>::success()};
-
   // Internal: bethe heitler approximation component cache
   std::vector<BetheHeitlerApprox::Component> betheHeitlerCache;
 
@@ -148,25 +145,10 @@ struct GsfActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
-
-    // Return is we found an error earlier
-    if (!result.result.ok()) {
-      ACTS_WARNING("result.result not ok, return!");
-      return;
-    }
-
-    // Set error or abort utility
-    auto setErrorOrAbort = [&](auto error) {
-      if (m_cfg.abortOnError) {
-        std::abort();
-      } else {
-        result.result = error;
-      }
-    };
 
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
@@ -175,7 +157,7 @@ struct GsfActor {
 
     // We only need to do something if we are on a surface
     if (!navigator.currentSurface(state.navigation)) {
-      return;
+      return Result<void>::success();
     }
 
     const auto& surface = *navigator.currentSurface(state.navigation);
@@ -202,7 +184,7 @@ struct GsfActor {
 
     if (visited) {
       ACTS_VERBOSE("Already visited surface, return");
-      return;
+      return Result<void>::success();
     }
 
     result.visitedSurfaces.push_back(&surface);
@@ -230,7 +212,7 @@ struct GsfActor {
         TemporaryStates tmpStates;
         noMeasurementUpdate(state, stepper, navigator, result, tmpStates, true);
       }
-      return;
+      return Result<void>::success();
     }
 
     // Update the counters. Note that this should be done before potential
@@ -267,8 +249,10 @@ struct GsfActor {
                               foundSourceLink->second);
 
       if (!res.ok()) {
-        setErrorOrAbort(res.error());
-        return;
+        if (m_cfg.abortOnError) {
+          std::abort();
+        }
+        return res.error();
       }
 
       updateStepper(state, stepper, tmpStates);
@@ -289,8 +273,10 @@ struct GsfActor {
       }
 
       if (!res.ok()) {
-        setErrorOrAbort(res.error());
-        return;
+        if (m_cfg.abortOnError) {
+          std::abort();
+        }
+        return res.error();
       }
 
       // Reuse memory over all calls to the Actor in a single propagation
@@ -306,7 +292,7 @@ struct GsfActor {
             "Is the weight cutoff "
             << m_cfg.weightCutoff << " too high?");
         ACTS_WARNING("Return to propagator without applying energy loss");
-        return;
+        return Result<void>::success();
       }
 
       // reduce component number
@@ -324,6 +310,8 @@ struct GsfActor {
       applyMultipleScattering(state, stepper, navigator,
                               MaterialUpdateStage::PostUpdate);
     }
+
+    return Result<void>::success();
   }
 
   template <typename propagator_state_t, typename stepper_t,

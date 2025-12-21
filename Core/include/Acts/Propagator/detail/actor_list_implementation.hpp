@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Propagator/ActorConcepts.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <tuple>
 #include <utility>
@@ -20,23 +21,30 @@ namespace {
 struct actor_caller {
   template <typename actor_t, typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
-  static void act(const actor_t& actor, propagator_state_t& state,
-                  const stepper_t& stepper, const navigator_t& navigator,
-                  Args&&... args)
+  static void act(Result<void>& globalResult, const actor_t& actor,
+                  propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, Args&&... args)
     requires(
         Actor<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>)
   {
+    // Early return to not evaluate subsequent actors if one actor has failed
+    if (!globalResult.ok()) {
+      return;
+    }
+
     if constexpr (ActorHasActWithoutResult<actor_t, propagator_state_t,
                                            stepper_t, navigator_t, Args...>) {
-      actor.act(state, stepper, navigator, std::forward<Args>(args)...);
+      globalResult =
+          actor.act(state, stepper, navigator, std::forward<Args>(args)...);
       return;
     }
 
     if constexpr (ActorHasActWithResult<actor_t, propagator_state_t, stepper_t,
                                         navigator_t, Args...>) {
-      actor.act(state, stepper, navigator,
-                state.template get<typename actor_t::result_type>(),
-                std::forward<Args>(args)...);
+      globalResult =
+          actor.act(state, stepper, navigator,
+                    state.template get<typename actor_t::result_type>(),
+                    std::forward<Args>(args)...);
       return;
     }
   }
@@ -73,16 +81,19 @@ template <typename... actors_t>
 struct actor_list_impl {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
-  static void act(const std::tuple<actors_t...>& actor_tuple,
-                  propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, Args&&... args) {
+  static Result<void> act(const std::tuple<actors_t...>& actor_tuple,
+                          propagator_state_t& state, const stepper_t& stepper,
+                          const navigator_t& navigator, Args&&... args) {
+    Result<void> globalResult = Result<void>::success();
     std::apply(
         [&](const actors_t&... actor) {
-          (actor_caller::act(actor, state, stepper, navigator,
+          (actor_caller::act(globalResult, actor, state, stepper, navigator,
                              std::forward<Args>(args)...),
            ...);
         },
         actor_tuple);
+
+    return globalResult;
   }
 
   template <typename propagator_state_t, typename stepper_t,

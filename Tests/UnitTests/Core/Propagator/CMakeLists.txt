@@ -1,3 +1,4 @@
+add_unittest(ActorList ActorListTests.cpp)
 add_unittest(AtlasStepper AtlasStepperTests.cpp)
 add_unittest(ConstrainedStep ConstrainedStepTests.cpp)
 add_unittest(CovarianceEngine CovarianceEngineTests.cpp)

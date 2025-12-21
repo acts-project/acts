@@ -124,10 +124,11 @@ struct ActorList {
   /// @param [in] args The arguments to be passed to the actions
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, Args&&... args) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, Args&&... args) const {
     using impl = detail::actor_list_impl<actors_t...>;
-    impl::act(m_actors, state, stepper, navigator, std::forward<Args>(args)...);
+    return impl::act(m_actors, state, stepper, navigator,
+                     std::forward<Args>(args)...);
   }
 
   /// Check call which broadcasts the call to the tuple() members of the list
