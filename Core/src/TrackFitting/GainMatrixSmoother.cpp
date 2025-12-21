@@ -13,10 +13,6 @@
 #include "Acts/EventData/detail/CovarianceHelper.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
-#include <algorithm>
-#include <ostream>
-#include <utility>
-
 namespace Acts {
 
 Result<void> GainMatrixSmoother::calculate(

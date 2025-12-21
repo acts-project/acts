@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
