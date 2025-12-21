@@ -136,7 +136,7 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     assembleBigWheel(muonEnvelope, Outer, -outWheelZ);
     const double innerWheelZ = 0.8 * barrelZ;
     const double innerWheelR =
-        0.95 * m_cfg.barrelRadii[toUnderlying(MuonLayer::Inner)];
+        0.90 * m_cfg.barrelRadii[toUnderlying(MuonLayer::Inner)];
     assembleSmallWheel(muonEnvelope, innerWheelR, innerWheelZ);
     assembleSmallWheel(muonEnvelope, innerWheelR, -innerWheelZ);
   }
