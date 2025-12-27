@@ -519,7 +519,9 @@ std::vector<pixel_value_t>
 Acts::HoughTransformUtils::PeakFinders::hitsCountImage(
     const Acts::HoughTransformUtils::HoughPlane<identifier_t>& plane,
     typename Acts::HoughTransformUtils::HoughPlane<identifier_t>::Index index,
-    std::size_t xSize, std::size_t ySize) {
+    std::size_t xSize, std::size_t ySize,
+    const std::function<pixel_value_t(const HoughPlane<identifier_t>&, int,
+                                      int)>& summaryFunction) {
   std::vector<pixel_value_t> output;
   output.reserve((xSize) * (ySize));
 
@@ -535,8 +537,7 @@ Acts::HoughTransformUtils::PeakFinders::hitsCountImage(
       int xPlaneCoord = x + xmax - xSize / 2;
       int yPlaneCoord = y + ymax - ySize / 2;
       output.push_back(isInside(xPlaneCoord, yPlaneCoord)
-                           ? static_cast<pixel_value_t>(
-                                 plane.nHits(xPlaneCoord, yPlaneCoord))
+                           ? summaryFunction(plane, xPlaneCoord, yPlaneCoord)
                            : pixel_value_t{});
     }
   }

@@ -144,12 +144,12 @@ BOOST_AUTO_TEST_CASE(hough_transform_sliding_window) {
           val = std::max(
               val, peak - static_cast<HoughTransformUtils::YieldType>(dist));
         }
-        plane.fillBin(x, y, x + y, x + y, val);
+        plane.fillBin(x, y, x, y, val);
       }
     }
   };
 
-  // Add two triangular peaks with maxima 4 at (4,4) and (4,5)
+  // Add 3 triangular peaks with maxima 4 at specified locations
   std::vector<std::array<std::size_t, 2>> testPeaks({{4, 4}, {4, 5}, {2, 6}});
   addTriangular(testPeaks, 4.0f);
 
@@ -190,22 +190,53 @@ BOOST_AUTO_TEST_CASE(hough_transform_sliding_window) {
   peaks3 = slidingWindowPeaks(plane, cfg3);
   BOOST_CHECK_EQUAL(peaks3.size(), 1);
 
-  auto img1 =
-      HoughTransformUtils::PeakFinders::hitsCountImage(plane, {1, 1}, 4, 4);
-  // the image should reflect this content (peak at 1, 1)
-  //      0 1 2 3 4 5 - indices
-  //   +--------+
-  //   |        |
-  // 0 |  2 3 2 |
-  // 1 |  3 4 3 |
-  // 2 |  2 3 2 |
-  //   +________+
-  // content outside of valid plane indices is padded with zeros
-  std::vector<unsigned char> expected(
-      {0, 0, 0, 0, 0, 2, 3, 2, 0, 3, 4, 3, 0, 2, 3, 2});
-  BOOST_CHECK_EQUAL(expected.size(), img1.size());
-  BOOST_CHECK_EQUAL_COLLECTIONS(img1.begin(), img1.end(), expected.begin(),
-                                expected.end());
+  {
+    auto img1 =
+        HoughTransformUtils::PeakFinders::hitsCountImage(plane, {1, 1}, 4, 4);
+    // the image should reflect this content (peak at 1, 1)
+    //      0 1 2 3 4 5 - indices
+    //   +--------+
+    //   |        |
+    // 0 |  2 3 2 |
+    // 1 |  3 4 3 |
+    // 2 |  2 3 2 |
+    //   +________+
+    // content outside of valid plane indices is padded with zeros
+    std::vector<unsigned char> expected(
+        {0, 0, 0, 0, 0, 2, 3, 2, 0, 3, 4, 3, 0, 2, 3, 2});
+    BOOST_CHECK_EQUAL(expected.size(), img1.size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(img1.begin(), img1.end(), expected.begin(),
+                                  expected.end());
+  }
+  {
+    // customized summary function: gets layers bitmask
+    auto maskGetter = [](const HoughTransformUtils::HoughPlane<int>& p, int x,
+                         int y) -> unsigned {
+      unsigned mask = 0;
+      for (unsigned l : p.layers(x, y)) {
+        mask |= 1 << std::min(l, 16u);
+        std::cout << x << " " << y << " " << l << "\n";
+      }
+      return mask;
+    };
+
+    plane.reset();
+    plane.fillBin(1, 1, 0, 1, 1);
+    plane.fillBin(1, 1, 1, 2, 1);
+    plane.fillBin(1, 1, 2, 3, 1);
+    plane.fillBin(2, 2, 3, 3, 1);
+
+    auto img = HoughTransformUtils::PeakFinders::hitsCountImage<int, unsigned>(
+        plane, {1, 1}, 4, 4, maskGetter);
+
+    std::vector<unsigned char> expected({0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                         1 << 0x1 | 1 << 0x2 | 1 << 0x3, 0, 0,
+                                         0, 0, 1 << 0x3});
+
+    BOOST_CHECK_EQUAL(expected.size(), img.size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(img.begin(), img.end(), expected.begin(),
+                                  expected.end());
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

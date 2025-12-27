@@ -200,12 +200,12 @@ class HoughPlane {
   /// @brief get the layers with hits in one cell of the histogram
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
-  /// @return the set of layer indices that have hits for this cell
+  /// @return the layer indices that have hits for this cell
   /// @throws out of range if indices are not within plane limits
-  std::unordered_set<unsigned> layers(std::size_t xBin,
-                                      std::size_t yBin) const {
+  std::span<const unsigned, std::dynamic_extent> layers(
+      std::size_t xBin, std::size_t yBin) const {
     checkIndices(xBin, yBin);
-    return m_houghHist.atLocalBins({xBin, yBin}).layers();
+    return m_houghHist.atLocalBins({xBin, yBin}).getLayers();
   }
 
   /// @brief get the (weighted) number of layers  with hits in one cell of the histogram
@@ -463,12 +463,11 @@ class IslandsAroundMax {
 
 /// @brief Peak finder using sliding window algorithm.
 /// First it finds peaks by scanning all space for cells with number of hits
-/// above threshold/ Then applies sliding window logic to eliminate peaks when
-/// maxima are adjacent leaving only one of them in a window. The logic is that
-/// it applies is to check cells around the peak and require that none on the
-/// upper right corner are above threshold and none in bottom left corner is
-/// below or equal to the peak. It can be illustrated as follows for window size
-/// of 1:
+/// above threshold. Then applies sliding window (SW) logic to eliminate peaks
+/// when maxima are adjacent leaving only one of them in a window. This SW
+/// implementation requires that none on the upper right corner are above peak
+/// and none in bottom left corner is below or equal to the peak. It can be
+/// illustrated as follows for window size of 1:
 ///
 ///
 ///  <= <= <=
@@ -485,11 +484,13 @@ struct SlidingWindowConfig {
   std::size_t xWindowSize = 2;
   /// size of the window in y direction for sliding window
   std::size_t yWindowSize = 2;
-  /// perform recentering
+  /// perform re-centering
   bool recenter = true;
-  /// size of the window in x direction for recentering
+  /// size of the window in x direction for recentering, this should be
+  /// typically <= window size
   std::size_t xRecenterSize = 3;
-  /// size of the window in y direction for recentering
+  /// size of the window in y direction for recentering, this should be
+  /// typically <= window size
   std::size_t yRecenterSize = 3;
 };
 
@@ -508,6 +509,8 @@ std::vector<typename HoughPlane<identifier_t>::Index> slidingWindowPeaks(
 /// @param index peak center
 /// @param xSize number of cells around the peak in x direction
 /// @param ySize number of cells around the peak in y direction
+/// @param summaryFunction function constructing pixel content, default is just number of hits in cell
+///        Other implementations may take into account layers
 /// @return the vector with count of hits starting from lower left to upper right corner of rectangular window
 /// The "image" is always of the same size, if it would happen to be outside of
 /// Hough plane the content is padded with zeros
@@ -515,7 +518,12 @@ template <typename identifier_t, typename pixel_value_t = unsigned char>
 std::vector<pixel_value_t> hitsCountImage(
     const HoughPlane<identifier_t>& plane,
     typename HoughPlane<identifier_t>::Index index, std::size_t xSize,
-    std::size_t ySize);
+    std::size_t ySize,
+    const std::function<pixel_value_t(const HoughPlane<identifier_t>&, int,
+                                      int)>& summaryFunction =
+        [](const HoughPlane<identifier_t>& plane, int x, int y) {
+          return static_cast<pixel_value_t>(plane.nHits(x, y));
+        });
 
 }  // namespace PeakFinders
 }  // namespace Acts::HoughTransformUtils
