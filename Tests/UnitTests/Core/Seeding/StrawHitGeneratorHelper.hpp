@@ -391,7 +391,10 @@ static_assert(
 
 /// @brief Split the composite space point container into straw and strip measurements
 class SpSorter {
- public:
+ protected:
+  /// @brief Protected constructor to instantiate the SpSorter.
+  /// @param hits: List of space points to sort per layer
+  /// @param calibrator: Space point calibrator to recalibrate the hits
   SpSorter(const Container_t& hits, const SpCalibrator* calibrator)
       : m_calibrator{calibrator} {
     for (const auto& spPtr : hits) {
@@ -402,6 +405,8 @@ class SpSorter {
       pushMe[spPtr->layer()].push_back(spPtr);
     }
   }
+
+ public:
   const std::vector<Container_t>& strawHits() const { return m_straws; }
   const std::vector<Container_t>& stripHits() const { return m_strips; }
 
