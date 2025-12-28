@@ -14,6 +14,9 @@
 #include <iostream>
 #include <sstream>
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 /// Draw and save the histograms.
 
 void plot(std::vector<TH2F*> Map, const sinfo& surface_info, const std::string& name){
@@ -129,7 +132,7 @@ void Initialise_hist(std::vector<TH2F*>& surface_hist,
 /// Fill the histograms for each surfaces.
 
 void Fill(std::map<std::uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<std::uint64_t,sinfo>& surface_info,
-  const std::string& input_file, const int& nbprocess){
+  const std::string& input_file, const std::string& geometry_file, const int& nbprocess){
 
   std::map<std::string,std::string> surface_name;
 
@@ -146,12 +149,9 @@ void Fill(std::map<std::uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<st
   std::vector<float> *mat_step_length = 0;
 
   std::vector<std::uint64_t> *sur_id = 0;
-  std::vector<std::int32_t> *sur_type = 0;
   std::vector<float> *sur_x = 0;
   std::vector<float> *sur_y = 0;
   std::vector<float> *sur_z = 0;
-  std::vector<float> *sur_range_min = 0;
-  std::vector<float> *sur_range_max = 0;
 
   tree->SetBranchAddress("v_phi",&v_phi);
   tree->SetBranchAddress("v_eta",&v_eta);
@@ -160,15 +160,24 @@ void Fill(std::map<std::uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<st
   tree->SetBranchAddress("mat_step_length",&mat_step_length);
 
   tree->SetBranchAddress("sur_id",&sur_id);
-  tree->SetBranchAddress("sur_type",&sur_type);
   tree->SetBranchAddress("sur_x",&sur_x);
   tree->SetBranchAddress("sur_y",&sur_y);
   tree->SetBranchAddress("sur_z",&sur_z);
-  tree->SetBranchAddress("sur_range_min",&sur_range_min);
-  tree->SetBranchAddress("sur_range_max",&sur_range_max);
 
   int nentries = tree->GetEntries();
   if(nentries > nbprocess && nbprocess != -1) nentries = nbprocess;
+  json geom;
+  {
+    std::ifstream gj(geometry_file);
+    if (!gj.good()) {
+      std::cerr << "WARNING: " << geometry_file << " not found." << std::endl;
+    } else {
+      try { gj >> geom; } catch (...) {
+        std::cerr << "WARNING: Failed to parse " << geometry_file << "." << std::endl;
+      }
+    }
+  }
+
   // Loop over all the material tracks.
   for (Long64_t i=0;i<nentries; i++) {
     if(i%10000==0) std::cout << "processed " << i << " events out of " << nentries << std::endl;
@@ -181,19 +190,46 @@ void Fill(std::map<std::uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<st
     // loop over all the material hits to do initialisation and compute weight
     for(int j=0; j<mat_X0->size(); j++ ){
 
-      // Ignore surface of incorrect type
-      if(sur_type->at(j) == -1) continue;
       // If a surface was never encountered initialise the hist, info and weight
       if(surface_hist.find(sur_id->at(j))==surface_hist.end()){
+        int type = -1;
+        float range_min = 0.;
+        float range_max = 0.;
+        const auto &entries = geom["Surfaces"]["entries"];
+        for (const auto &entry : entries) {
+          std::uint64_t gid = entry["value"]["geo_id"].get<std::uint64_t>();
+          if (gid == sur_id->at(j)) {
+            std::string btype = entry["value"]["bounds"]["type"].get<std::string>();
+            const auto &bounds = entry["value"]["bounds"]["values"];
+            if (btype == "CylinderBounds") {
+              type = 1;
+              range_min = -bounds[1].get<float>();
+              range_max = bounds[1].get<float>();
+            } else if (btype == "RadialBounds") {
+              type = 2;
+              range_min = bounds[0].get<float>();
+              range_max = bounds[1].get<float>();
+            } else {
+              type = -1;
+            }
+            break;
+          }
+        }
+
         float pos;
-        if(sur_type->at(j) == 1){
+        if(type == 1){
           pos = sqrt(sur_x->at(j)*sur_x->at(j)+sur_y->at(j)*sur_y->at(j));
         }
-        if(sur_type->at(j) == 2 || sur_type->at(j) == 4){
+        if(type == 2 || type == 4){
           pos = sur_z->at(j);
         }
+
+        // Ignore surface of incorrect type
+        if(type == -1) continue;
+
         surface_weight[sur_id->at(j)] = 0;
-        Initialise_info(surface_info[sur_id->at(j)], surface_name, sur_id->at(j), sur_type->at(j), pos, sur_range_min->at(j), sur_range_max->at(j));
+        // Use type and new ranges in Initialise_info
+        Initialise_info(surface_info[sur_id->at(j)], surface_name, sur_id->at(j), type, pos, range_min, range_max);
         Initialise_hist(surface_hist[sur_id->at(j)], surface_info[sur_id->at(j)]);
       }
       // Weight for each surface = number of hit associated to it.
@@ -203,15 +239,17 @@ void Fill(std::map<std::uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<st
     // loop over all the material hit to fill the histogram
     for(int j=0; j<mat_X0->size(); j++ ){
 
-      // Ignore surface of incorrect type
-      if(sur_type->at(j) == -1) continue;
+      int type = surface_info[sur_id->at(j)].type;
 
-      if(sur_type->at(j) == 1){
+      // Ignore surface of incorrect type
+      if(type == -1) continue;
+
+      if(type == 1){
         surface_hist[sur_id->at(j)][0]->Fill(v_eta, v_phi, (mat_step_length->at(j)/mat_X0->at(j)));
         surface_hist[sur_id->at(j)][1]->Fill(v_eta, v_phi, (mat_step_length->at(j)/mat_L0->at(j)));
         surface_hist[sur_id->at(j)][2]->Fill(v_eta, v_phi, (1/surface_weight[sur_id->at(j)]));
       }
-      if(sur_type->at(j) == 2 || sur_type->at(j) == 4){
+      if(type == 2 || type == 4){
         surface_hist[sur_id->at(j)][0]->Fill(sur_x->at(j), sur_y->at(j), (mat_step_length->at(j)/mat_X0->at(j)));
         surface_hist[sur_id->at(j)][1]->Fill(sur_x->at(j), sur_y->at(j), (mat_step_length->at(j)/mat_L0->at(j)));
         surface_hist[sur_id->at(j)][2]->Fill(sur_x->at(j), sur_y->at(j), (1/surface_weight[sur_id->at(j)]));
@@ -229,7 +267,7 @@ void Fill(std::map<std::uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<st
 /// nbprocess : number of parameter to be processed.
 /// name : name of the output directory.
 
-void Mat_map_surface_plot(std::string input_file = "", int nbprocess = -1, std::string name = ""){
+void Mat_map_surface_plot(std::string input_file = "", int nbprocess = -1, std::string name = "", std::string geometry_file = "geometry-map.json"){
 
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
@@ -237,7 +275,7 @@ void Mat_map_surface_plot(std::string input_file = "", int nbprocess = -1, std::
   std::map<std::uint64_t,std::vector<TH2F*>> surface_hist;
   std::map<std::uint64_t,sinfo> surface_info;
 
-  Fill(surface_hist, surface_info, input_file, nbprocess);
+  Fill(surface_hist, surface_info, input_file, geometry_file, nbprocess);
   for (auto hist_it = surface_hist.begin(); hist_it != surface_hist.end(); hist_it++){
     plot(hist_it->second, surface_info[hist_it->first], name);
     for (auto hist : hist_it->second){

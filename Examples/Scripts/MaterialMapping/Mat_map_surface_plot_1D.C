@@ -160,7 +160,7 @@ void Initialise_hist(std::vector<TH1F*>& surface_hist,
   /// Fill the two 1D histograms for each surfaces.
 
 void Fill(std::map<std::uint64_t,std::vector<TH1F*>>& surface_hist,  std::map<std::uint64_t,sinfo>& surface_info,
-  const std::string& input_file, const int& nbprocess){
+  const std::string& input_file, const std::string& geometry_file, const int& nbprocess){
   std::map<std::string,std::string> surface_name;
   std::map<std::uint64_t,float> surface_weight;
 
@@ -262,7 +262,7 @@ void Fill(std::map<std::uint64_t,std::vector<TH1F*>>& surface_hist,  std::map<st
 /// nbprocess : number of parameter to be processed.
 /// name : name of the output directory.
 
-void Mat_map_surface_plot_1D(std::string input_file = "", int nbprocess = -1, std::string name = ""){
+void Mat_map_surface_plot_1D(std::string input_file = "", int nbprocess = -1, std::string name = "", std::string geometry_file = "geometry-map.json"){
 
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
@@ -270,7 +270,7 @@ void Mat_map_surface_plot_1D(std::string input_file = "", int nbprocess = -1, st
   std::map<std::uint64_t,std::vector<TH1F*>> surface_hist;
   std::map<std::uint64_t,sinfo> surface_info;
 
-  Fill(surface_hist, surface_info, input_file, nbprocess);
+  Fill(surface_hist, surface_info, input_file, geometry_file, nbprocess);
   for (auto hist_it = surface_hist.begin(); hist_it != surface_hist.end(); hist_it++){
     plot(hist_it->second, surface_info[hist_it->first], name);
     for (auto hist : hist_it->second){
