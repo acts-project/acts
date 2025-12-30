@@ -311,7 +311,7 @@ CompositeSpacePointLineSeeder::nextSeed(
       };
       append(strawLayers);
       append(state.stripHits());
-      state.startWithPattern = false;
+      state.m_patternSeedProduced = true;
       return patternSeed;
     }
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Instantiate layers. ");
