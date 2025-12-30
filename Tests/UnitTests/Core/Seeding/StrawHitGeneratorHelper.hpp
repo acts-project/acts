@@ -407,9 +407,12 @@ class SpSorter {
   }
 
  public:
+  /// @brief Return the sorted straw hits
   const std::vector<Container_t>& strawHits() const { return m_straws; }
+  /// @brief Returns the sorted strip hits
   const std::vector<Container_t>& stripHits() const { return m_strips; }
-
+  /// @brief Returns whether the candidate space point is a good hit or not
+  /// @param testPoint: Hit to test
   bool goodCandidate(const FitTestSpacePoint& testPoint) const {
     return testPoint.isGood();
   }

@@ -325,9 +325,11 @@ class CompositeSpacePointLineSeeder {
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>
                 Delegate_t>
   struct SeedingState : public Delegate_t {
-    /** @brief  */
+    /// @brief Declare the public constructor by explicitly forwarding the
+    ///        constructor arguments to the (protected) base class constructor
     template <typename... args_t>
-    SeedingState(args_t... args) : Delegate_t{std::forward<args_t>(args)...} {}
+    SeedingState(args_t&&... args)
+        : Delegate_t{std::forward<args_t>(args)...} {}
     /// @brief radius of the straw tubes used to reject hits outside the tube
     double strawRadius{0.};
     /// @brief Try at the first time the external seed parameters as candidate
