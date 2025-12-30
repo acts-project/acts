@@ -135,17 +135,17 @@ class CompositeSpacePointLineSeeder {
   ///        seeds with poor quality.
   struct Config {
     /// @brief Cut on the theta angle
-    std::array<double, 2> thetaRange{0, 0};
+    std::array<double, 2> thetaRange{0., 0.};
     /// @brief Cut on the intercept range
-    std::array<double, 2> interceptRange{0, 0};
-
+    std::array<double, 2> interceptRange{0., 0.};
     /// @brief Upper cut on the hit chi2 w.r.t. seed in order to be associated to the seed
     double hitPullCut{5.};
     /// @brief How many drift circles may be on a layer to be used for seeding
     std::size_t busyLayerLimit{2};
     /// @brief Layers may contain measurements with bad hits and hence the
     bool busyLimitCountGood{true};
-
+    /// @brief Try at the first time the external seed parameters as candidate
+    bool startWithPattern{false};
     /// @brief How many drift circle hits needs the seed to contain in order to be valid
     std::size_t nStrawHitCut{3};
     /// @brief Hit cut based on the fraction of collected tube layers.
@@ -332,8 +332,6 @@ class CompositeSpacePointLineSeeder {
         : Delegate_t{std::forward<args_t>(args)...} {}
     /// @brief radius of the straw tubes used to reject hits outside the tube
     double strawRadius{0.};
-    /// @brief Try at the first time the external seed parameters as candidate
-    bool startWithPattern{false};
     /// @brief Estimated parameters from pattern
     SeedParam_t patternParams{};
     /// @brief Stringstream output operator
@@ -364,6 +362,9 @@ class CompositeSpacePointLineSeeder {
     std::size_t m_nStrawCut{0ul};
     /// @brief Flag toggling whether the upper of the lower layer shall be moved
     bool m_moveUpLayer{true};
+    /// @brief Flag toggling whether the pattern parameters shall be returned as
+    ///        first seed
+    bool m_patternSeedProduced{false};
     /// @brief Prints the seed solution to the screen
     void print(std::ostream& ostr) const;
   };

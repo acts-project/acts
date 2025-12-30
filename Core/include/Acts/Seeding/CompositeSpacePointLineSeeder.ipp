@@ -288,13 +288,14 @@ CompositeSpacePointLineSeeder::nextSeed(
     state.m_nStrawCut = m_cfg.nStrawHitCut;
     /// Check whether the seeding can start with the external pattern
     /// parameters
-    if (state.startWithPattern &&
-        std::ranges::any_of(strawLayers, [&](const UncalibCont_t& layerHits) {
-          return countHits(layerHits, selector) > m_cfg.busyLayerLimit;
-        })) {
-      state.startWithPattern = false;
+    if (!state.m_patternSeedProduced &&
+        (!m_cfg.startWithPattern ||
+         std::ranges::any_of(strawLayers, [&](const UncalibCont_t& layerHits) {
+           return countHits(layerHits, selector) > m_cfg.busyLayerLimit;
+         }))) {
+      state.m_patternSeedProduced = true;
     }
-    if (state.startWithPattern) {
+    if (!state.m_patternSeedProduced) {
       SegmentSeed<CalibCont_t> patternSeed{state.patternParams,
                                            state.newContainer(cctx)};
 
