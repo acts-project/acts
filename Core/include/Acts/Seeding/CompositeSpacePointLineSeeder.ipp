@@ -170,8 +170,8 @@ void CompositeSpacePointLineSeeder::SeedingState<
        << toString(encodeAmbiguity(s_signCombo[m_signComboIndex][0],
                                    s_signCombo[m_signComboIndex][1]))
        << "\n";
-  ostr << " start with pattern " << startWithPattern << " nGenSeeds "
-       << nGenSeeds() << " nStrawCut " << m_nStrawCut << "\n";
+  ostr << "Number of seeds " << nGenSeeds() << " nStrawCut " << m_nStrawCut
+       << "\n";
   if (nGenSeeds() > 0ul) {
     for (const auto& seen : m_seenSolutions) {
       ostr << "################################################" << std::endl;
