@@ -492,7 +492,7 @@ CompositeSpacePointLineSeeder::buildSeed(
   const auto& [seedPos, seedDir] = tangentSeed;
   const double maxPullSq{Acts::square(m_cfg.hitPullCut)};
   constexpr auto covIdx = Acts::toUnderlying(CovIdx::bending);
- 
+
   for (const auto& [layerNr, hitsInLayer] :
        Acts::enumerate(state.strawHits())) {
     bool hadGoodHit{false};
@@ -506,8 +506,7 @@ CompositeSpacePointLineSeeder::buildSeed(
       // association
       const double rMax = state.strawRadius(*testMe);
       assert(rMax > Acts::s_epsilon);
-      assert(testMe->covariance()[covIdx] >
-             Acts::s_epsilon);
+      assert(testMe->covariance()[covIdx] > Acts::s_epsilon);
       if (distance < rMax) {
         const double pullSq =
             m_cfg.useSimpleStrawPull

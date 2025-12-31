@@ -343,7 +343,7 @@ class CompositeSpacePointLineSeeder {
     ///                     non-precision estimate)
     /// @param args: Arguments to be forwarded to the base class constructor
     template <typename... args_t>
-    SeedingState(const SeedParam_t& initialPars, args_t&&... args)
+    explicit SeedingState(const SeedParam_t& initialPars, args_t&&... args)
         : Delegate_t{std::forward<args_t>(args)...},
           m_initialPars{initialPars} {}
     /// @brief Stringstream output operator
