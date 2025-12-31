@@ -24,7 +24,6 @@ CompositeSpacePointLineSeeder::TwoCircleTangentPars
 CompositeSpacePointLineSeeder::constructTangentLine(const Sp_t& topHit,
                                                     const Sp_t& bottomHit,
                                                     const TangentAmbi ambi) {
-  using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
   using namespace Acts::UnitLiterals;
   using namespace Acts::detail;
   TwoCircleTangentPars result{};
