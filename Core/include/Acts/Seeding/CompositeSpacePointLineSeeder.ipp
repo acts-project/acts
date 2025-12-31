@@ -46,9 +46,9 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Sp_t& topHit,
   const double dZ = D.dot(eZ);
 
   const double thetaTubes = std::atan2(dY, dZ);
-  const double distTubes = Acts::fastHypot(dY, dZ);
+  const double distTubes = fastHypot(dY, dZ);
   assert(distTubes > 1._mm);
-  constexpr auto covIdx = Acts::toUnderlying(ResidualIdx::bending);
+  constexpr auto covIdx = toUnderlying(CovIdx::bending);
   const double combDriftUncert{topHit.covariance()[covIdx] +
                                bottomHit.covariance()[covIdx]};
   const double R =
@@ -296,10 +296,10 @@ CompositeSpacePointLineSeeder::nextSeed(
       state.m_patternSeedProduced = true;
     }
     if (!state.m_patternSeedProduced) {
-      SegmentSeed<CalibCont_t> patternSeed{state.patternParams,
+      SegmentSeed<CalibCont_t> patternSeed{state.initialParameters(),
                                            state.newContainer(cctx)};
 
-      const auto [pos, dir] = makeLine(state.patternParams);
+      const auto [pos, dir] = makeLine(state.initialParameters());
       const double t0 = patternSeed.parameters[toUnderlying(ParIdx::t0)];
 
       auto append = [&](const StrawLayers_t<UncalibCont_t>& hitLayers) {
@@ -451,10 +451,6 @@ CompositeSpacePointLineSeeder::buildSeed(
 
   ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Try to draw new seed from \n"
                       << state << ".");
-  if (state.strawRadius <= Acts::s_epsilon) {
-    throw std::invalid_argument(
-        "buildSeed() - Please configure the state's strawRadius");
-  }
   const auto& upperHit =
       *strawLayers.at(state.m_upperLayer.value()).at(state.m_upperHitIndex);
   const auto& lowerHit =
@@ -485,7 +481,7 @@ CompositeSpacePointLineSeeder::buildSeed(
     return std::nullopt;
   }
   /// Continue to construct a new solution
-  const double t0 = state.patternParams[toUnderlying(ParIdx::t0)];
+  const double t0 = state.initialParameters()[toUnderlying(ParIdx::t0)];
   SeedSolution<UncalibCont_t, Delegate_t> newSolution{seedPars, state};
 
   ACTS_DEBUG(__func__ << "() " << __LINE__
@@ -494,6 +490,9 @@ CompositeSpacePointLineSeeder::buildSeed(
   const Line_t tangentSeed{seedPars.y0 * Vector3::UnitY(),
                            makeDirection(lowerHit, seedPars.theta)};
   const auto& [seedPos, seedDir] = tangentSeed;
+  const double maxPullSq{Acts::square(m_cfg.hitPullCut)};
+  constexpr auto covIdx = Acts::toUnderlying(CovIdx::bending);
+ 
   for (const auto& [layerNr, hitsInLayer] :
        Acts::enumerate(state.strawHits())) {
     bool hadGoodHit{false};
@@ -505,17 +504,29 @@ CompositeSpacePointLineSeeder::buildSeed(
       // the hits are ordered in the layer so we assume that once we found good
       // hits we are moving away from the seed line so we can abort the hit
       // association
-      if (distance < state.strawRadius &&
-          state.candidatePull(cctx, seedPos, seedDir, t0, *testMe) <
-              Acts::pow(m_cfg.hitPullCut, 2u)) {
-        ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - layer,hit = ("
-                              << layerNr << "," << hitNr
-                              << ") -> spacePoint: " << Acts::toString(*testMe)
-                              << " is close enough: " << distance);
-        hadGoodHit = true;
-        newSolution.append(layerNr, hitNr);
-        newSolution.nStrawHits += selector(*testMe);
-        continue;
+      const double rMax = state.strawRadius(*testMe);
+      assert(rMax > Acts::s_epsilon);
+      assert(testMe->covariance()[covIdx] >
+             Acts::s_epsilon);
+      if (distance < rMax) {
+        const double pullSq =
+            m_cfg.useSimpleStrawPull
+                ? Acts::square(distance - Acts::abs(testMe->driftRadius())) /
+                      testMe->covariance()[covIdx]
+                : state.candidatePull(cctx, seedPos, seedDir, t0, *testMe);
+
+        if (pullSq < maxPullSq) {
+          ACTS_VERBOSE(__func__
+                       << "() " << __LINE__ << " - layer,hit = (" << layerNr
+                       << "," << hitNr
+                       << ") -> spacePoint: " << Acts::toString(*testMe)
+                       << " is close enough: " << distance
+                       << ", pull: " << std::sqrt(pullSq));
+          hadGoodHit = true;
+          newSolution.append(layerNr, hitNr);
+          newSolution.nStrawHits += selector(*testMe);
+          continue;
+        }
       }
       if (hadGoodHit) {
         break;
@@ -540,7 +551,7 @@ CompositeSpacePointLineSeeder::consructSegmentSeed(
   ACTS_DEBUG(__func__ << "() " << __LINE__ << " Construct new seed from \n"
                       << newSolution);
   SegmentSeed<CalibCont_t> finalSeed{
-      combineWithPattern(tangentSeed, state.patternParams),
+      combineWithPattern(tangentSeed, state.initialParameters()),
       state.newContainer(cctx)};
   const auto [seedPos, seedDir] = makeLine(finalSeed.parameters);
   /// Append the collected straws to the seed

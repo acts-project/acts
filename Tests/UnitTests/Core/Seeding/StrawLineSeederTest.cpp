@@ -67,13 +67,13 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
     using SeedState_t =
         CompositeSpacePointLineSeeder::SeedingState<Container_t, Container_t,
                                                     SpSorter>;
-    SeedState_t seedOpts{testTubes, calibrator.get()};
-    seedOpts.strawRadius = 15._mm;
-    ACTS_DEBUG(seedOpts);
+    SeedState_t seedState{startParameters(line, testTubes), testTubes,
+                          calibrator.get()};
+    ACTS_DEBUG(seedState);
     nSeeds = 0;
     CalibrationContext cctx{};
-    while (auto seed = seeder.nextSeed(cctx, seedOpts)) {
-      ACTS_DEBUG("Seed finder loop " << seedOpts);
+    while (auto seed = seeder.nextSeed(cctx, seedState)) {
+      ACTS_DEBUG("Seed finder loop " << seedState);
       if (seed == std::nullopt) {
         break;
       }

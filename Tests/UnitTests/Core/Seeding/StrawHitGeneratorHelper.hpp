@@ -448,6 +448,9 @@ class SpSorter {
                    const std::size_t upperLayer) const {
     return lowerLayer >= upperLayer;
   }
+  double strawRadius(const FitTestSpacePoint& /*testSp*/) const {
+    return 15._mm;
+  }
 
  private:
   const SpCalibrator* m_calibrator{nullptr};
