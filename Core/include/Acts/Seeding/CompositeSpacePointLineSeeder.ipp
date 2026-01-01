@@ -511,7 +511,7 @@ CompositeSpacePointLineSeeder::buildSeed(
             m_cfg.useSimpleStrawPull
                 ? Acts::square(distance - Acts::abs(testMe->driftRadius())) /
                       testMe->covariance()[covIdx]
-                : state.candidatePull(cctx, seedPos, seedDir, t0, *testMe);
+                : state.candidateChi2(cctx, seedPos, seedDir, t0, *testMe);
 
         if (pullSq < maxPullSq) {
           ACTS_VERBOSE(__func__
@@ -571,7 +571,7 @@ CompositeSpacePointLineSeeder::consructSegmentSeed(
     /// Find the hit with the lowest pull
     for (const auto& [hitIdx, testMe] : Acts::enumerate(stripLayerHits)) {
       const double chi2 =
-          state.candidatePull(cctx, seedPos, seedDir, t0, *testMe);
+          state.candidateChi2(cctx, seedPos, seedDir, t0, *testMe);
       if (testMe->measuresLoc0() && chi2 < bestChi2Loc0) {
         bestChi2Loc0 = chi2;
         bestIdxLoc0 = hitIdx;

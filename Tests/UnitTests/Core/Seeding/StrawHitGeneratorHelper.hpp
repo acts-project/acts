@@ -425,7 +425,7 @@ class SpSorter {
   /// @param dir: Direction of the candidate seed line
   /// @param t0: Offse in the time of arrival of the particle
   /// @param testSp: Reference to the straw space point to test
-  double candidatePull(const CalibrationContext& /* cctx*/, const Vector3& pos,
+  double candidateChi2(const CalibrationContext& /* cctx*/, const Vector3& pos,
                        const Vector3& dir, const double /*t0*/,
                        const FitTestSpacePoint& testSp) const {
     return CompSpacePointAuxiliaries::chi2Term(pos, dir, testSp);

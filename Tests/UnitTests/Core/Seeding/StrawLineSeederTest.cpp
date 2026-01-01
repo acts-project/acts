@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
             Seeder::constructTangentLine(topTube, bottomTube, trueAmbi);
         /// Construct line parameters
         ACTS_DEBUG(__func__
-                   << "() " << __LINE__ << " - Line tan theta: " << lineTanBeta
+                   << "() " << __LINE__ << " - Line tan beta: " << lineTanBeta
                    << ", reconstructed tan theta: " << std::tan(seedPars.theta)
                    << ", line y0: " << lineY0
                    << ", reconstructed y0: " << seedPars.y0);

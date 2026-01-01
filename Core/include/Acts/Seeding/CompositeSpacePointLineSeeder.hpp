@@ -43,7 +43,7 @@ concept CompositeSpacePointSeedFiller =
       /// @param t0: Offse in the time of arrival of the particle
       /// @param testSp: Reference to the straw space point to test
       {
-        filler.candidatePull(cctx, pos, dir, t0, testSp)
+        filler.candidateChi2(cctx, pos, dir, t0, testSp)
       } -> std::same_as<double>;
       /// @brief Returns the radius of the straw tube in which the space point
       ///        is recorded
