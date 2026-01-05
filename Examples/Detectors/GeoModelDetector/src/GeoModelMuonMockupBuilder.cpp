@@ -93,13 +93,13 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   };
 
   // Helper lambda to retrieve the second-level container
-  auto retrieveSecondContainer = [&FirstContainers, &SecondContainers,
+  auto retrieveSecondContainer = [&retrieveFirstContainer, &SecondContainers,
                                   &configureContainer](bool isBarrel) {
     auto& container = SecondContainers[Acts::toUnderlying(
         isBarrel ? SecondContainerIdx::Barrel : SecondContainerIdx::NSWs)];
     if (container == nullptr) {
       auto& bodyContainer =
-          *FirstContainers[Acts::toUnderlying(FirstContainerIdx::Body)];
+          *retrieveFirstContainer(FirstContainerIdx::Body);
       container = &bodyContainer.addCylinderContainer(
           isBarrel ? "BarrelContainer" : "NSWsContainer",
           isBarrel ? Acts::AxisDirection::AxisR : Acts::AxisDirection::AxisZ);
