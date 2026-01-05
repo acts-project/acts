@@ -830,10 +830,9 @@ class KalmanFitter {
     typename track_container_t::TrackStateProxy lastMeasurementState =
         trackContainer.trackStateContainer().getTrackState(
             findLastMeasurementState(forwardTrack).value().index());
-    lastMeasurementState.addComponents(TrackStatePropMask::Smoothed);
-    lastMeasurementState.smoothed() = lastMeasurementState.filtered();
-    lastMeasurementState.smoothedCovariance() =
-        lastMeasurementState.filteredCovariance();
+    lastMeasurementState.shareFrom(lastMeasurementState,
+                                   TrackStatePropMask::Filtered,
+                                   TrackStatePropMask::Smoothed);
 
     typename track_container_t::TrackProxy track = forwardTrack;
 
@@ -875,10 +874,9 @@ class KalmanFitter {
         return Result<typename track_container_t::TrackProxy>::failure(
             KalmanFitterError::InconsistentTrackStates);
       }
-      firstMeasurementState.addComponents(TrackStatePropMask::Smoothed);
-      firstMeasurementState.smoothed() = reverseLastMeasurementState.filtered();
-      firstMeasurementState.smoothedCovariance() =
-          reverseLastMeasurementState.filteredCovariance();
+      firstMeasurementState.shareFrom(reverseLastMeasurementState,
+                                      TrackStatePropMask::Filtered,
+                                      TrackStatePropMask::Smoothed);
 
       if (reverseTrack.hasReferenceSurface()) {
         track.parameters() = reverseTrack.parameters();
