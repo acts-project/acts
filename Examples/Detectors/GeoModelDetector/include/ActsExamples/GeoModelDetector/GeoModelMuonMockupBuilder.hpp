@@ -98,10 +98,10 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
 
   /// @brief Cylindrical bounds structure, used to calculate the overall station bounds
   struct cylBounds {
-    double rMin{0.0};
-    double rMax{0.0};
-    double zMin{0.0};
-    double zMax{0.0};
+    double rMin{std::numeric_limits<double>::max()};
+    double rMax{std::numeric_limits<double>::lowest()};
+    double zMin{std::numeric_limits<double>::max()};
+    double zMax{std::numeric_limits<double>::lowest()};
 
     /// @brief Method to update the bounds
     void update(const double rMinIn, const double rMaxIn, const double zMinIn,
@@ -118,9 +118,9 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   // Helper function returning the first-level container idx from a station idx
   FirstContainerIdx getFirstContainerIdx(const StationIdx& stationIdx) const;
   // Helper function converting the station idx to string
-  std::string stationIdxToString(StationIdx idx) const;
+  static std::string stationIdxToString(const StationIdx idx);
   // Helper function converting the first-level container idx to string
-  std::string firstContainerIdxToString(FirstContainerIdx idx) const;
+  static std::string firstContainerIdxToString(const FirstContainerIdx idx);
 
   /// Private access method to the logger
   const Acts::Logger& logger() const { return *m_logger; }

@@ -22,6 +22,7 @@
 #include "Acts/Geometry/detail/TrackingGeometryPrintVisitor.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <format>
@@ -66,19 +67,21 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   // First level: one container for the body of the MS (barrel plus NSWs) and
   // two for the Big Wheels (A and C side). These containers will be stacked in
   // Z.
-  std::vector<CylinderContainerBlueprintNode*> FirstContainers(
-      static_cast<std::size_t>(FirstContainerIdx::nFirstContainers), nullptr);
+  std::array<CylinderContainerBlueprintNode*,
+             Acts::toUnderlying(FirstContainerIdx::nFirstContainers)>
+      FirstContainers{};
 
   // Second level: one container for the barrel and one for the two NSWs. These
   // containers are attached to the body container and will be stacked in r.
-  std::vector<CylinderContainerBlueprintNode*> SecondContainers(
-      static_cast<std::size_t>(SecondContainerIdx::nSecondContainers), nullptr);
+  std::array<CylinderContainerBlueprintNode*,
+             Acts::toUnderlying(SecondContainerIdx::nSecondContainers)>
+      SecondContainers{};
 
   // Helper lambda to retrieve the first-level container
   auto retrieveFirstContainer = [this, &cyl, &FirstContainers,
                                  &configureContainer](
                                     FirstContainerIdx containerIdx) {
-    auto& container = FirstContainers[static_cast<std::size_t>(containerIdx)];
+    auto& container = FirstContainers[Acts::toUnderlying(containerIdx)];
     if (container == nullptr) {
       container =
           &cyl.addCylinderContainer(firstContainerIdxToString(containerIdx),
@@ -93,11 +96,11 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   // Helper lambda to retrieve the second-level container
   auto retrieveSecondContainer = [&FirstContainers, &SecondContainers,
                                   &configureContainer](bool isBarrel) {
-    auto& container = SecondContainers[static_cast<std::size_t>(
+    auto& container = SecondContainers[Acts::toUnderlying(
         isBarrel ? SecondContainerIdx::Barrel : SecondContainerIdx::NSWs)];
     if (container == nullptr) {
       auto& bodyContainer =
-          *FirstContainers[static_cast<std::size_t>(FirstContainerIdx::Body)];
+          *FirstContainers[Acts::toUnderlying(FirstContainerIdx::Body)];
       container = &bodyContainer.addCylinderContainer(
           isBarrel ? "BarrelContainer" : "NSWsContainer",
           isBarrel ? Acts::AxisDirection::AxisR : Acts::AxisDirection::AxisZ);
@@ -107,17 +110,18 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   };
 
   // Sorting the boxes by station
-  std::sort(boundingBoxes.begin(), boundingBoxes.end(),
-            [this](const auto& a, const auto& b) {
-              return getStationIdx(a) < getStationIdx(b);
-            });
+  std::ranges::sort(boundingBoxes, [this](const auto& a, const auto& b) {
+    return getStationIdx(a) < getStationIdx(b);
+  });
 
   auto it = boundingBoxes.begin();
   std::size_t layerId = 1;
   while (it != boundingBoxes.end()) {
     // Current station index
     StationIdx currentIdx = getStationIdx(*it);
-    bool isBarrel = (static_cast<int>(currentIdx) < 3);
+    const bool isBarrel =
+        (currentIdx == StationIdx ::BI || currentIdx == StationIdx ::BM ||
+         currentIdx == StationIdx ::BO);
 
     // Find the range of boxes for the current station
     auto rangeEnd = std::find_if(it, boundingBoxes.end(),
@@ -127,8 +131,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
 
     // Check we want to build this station
     const std::string station = stationIdxToString(currentIdx);
-    if (std::find(m_cfg.stationNames.begin(), m_cfg.stationNames.end(),
-                  station) == m_cfg.stationNames.end()) {
+    if (!Acts::rangeContainsValue(m_cfg.stationNames, station)) {
       ACTS_DEBUG("Skipping station "
                  << station << " as not in the configured station names.");
       it = rangeEnd;
@@ -178,22 +181,18 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
    * StaticBlueprintNode, which contains all its children*/
   std::map<const GeoVPhysVol*, std::pair<NodePtr_t, std::size_t>>
       chamberVolumes{};
-  cylBounds bounds{std::numeric_limits<double>::max(),
-                   std::numeric_limits<double>::lowest(),
-                   std::numeric_limits<double>::max(),
-                   std::numeric_limits<double>::lowest()};
+  cylBounds bounds{};
   std::size_t volNum{1};
   for (const auto& box : boundingBoxes) {
     auto parent = box.fullPhysVol->getParent().get();
     if (parent == nullptr) {
-      throw std::domain_error("processStation() No parent found for chamber " +
-                              box.name + " is station " + station);
+      throw std::domain_error(std::format(
+          "processStation() No parent found for chamber {} in station {}",
+          box.name, station));
     }
 
-    auto [it, inserted] = chamberVolumes.try_emplace(
-        parent, nullptr, 0);  // default NodePtr_t (nullptr, volNum=0) if new
-
-    if (inserted) {
+    auto it = chamberVolumes.find(parent);
+    if (it == chamberVolumes.end()) {
       // We create a new chamber node for this parent
       std::shared_ptr<Acts::Volume> parentVolume =
           ActsPlugins::GeoModel::convertVolume(
@@ -228,30 +227,34 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
                                volBounds[eHalfLengthX]);
         maxZ = Acts::abs(center.z()) + volBounds[eHalfLengthY];
       } else {
-        throw std::domain_error(
-            "processStation() -- Unsupported volume bounds type " +
+        throw std::domain_error(std::format(
+            "processStation() -- Unsupported volume bounds type {} for chamber "
+            "{}",
             std::to_string(
-                static_cast<int>(chamberVolume->volumeBounds().type())) +
-            " for chamber " + chamberVolume->volumeName());
+                static_cast<int>(chamberVolume->volumeBounds().type())),
+            chamberVolume->volumeName()));
       }
       bounds.update(minR, maxR, minZ, maxZ);
 
-      ACTS_INFO("New parent: "
-                << chamberVolume->volumeName() << " from box: " << box.name
-                << ", " << chamberVolume->geometryId() << " Center: " << center
-                << " Bounds: r " << minR << ", " << maxR << " z " << minZ
-                << ", " << maxZ
-                << ", bounds: " << chamberVolume->volumeBounds());
+      ACTS_VERBOSE("New parent: "
+                   << chamberVolume->volumeName() << " from box: " << box.name
+                   << ", " << chamberVolume->geometryId()
+                   << " Center: " << center << " Bounds: r " << minR << ", "
+                   << maxR << " z " << minZ << ", " << maxZ
+                   << ", bounds: " << chamberVolume->volumeBounds());
 
-      it->second = std::make_pair(
-          std::make_shared<Node_t>(std::move(chamberVolume)), volNum++);
+      it = chamberVolumes
+               .emplace(parent, std::make_pair(std::make_shared<Node_t>(
+                                                   std::move(chamberVolume)),
+                                               volNum++))
+               .first;
     }
     // We add the box to the parent node
     NodePtr_t& chamberNode = it->second.first;
     if (!chamberNode) {
-      throw std::logic_error(
-          "processStation() -- Found null chamber node for parent " +
-          parent->getLogVol()->getName());
+      throw std::logic_error(std::format(
+          "processStation() -- Found null chamber node for parent {}",
+          parent->getLogVol()->getName()));
     }
     auto trVol = buildChildChamber(box, boundFactory);
     trVol->assignGeometryId(geoId.withVolume(it->second.second)
@@ -348,7 +351,7 @@ GeoModelMuonMockupBuilder::buildChildChamber(
   } else {
     trVol = std::make_unique<Acts::TrackingVolume>(*box.volume, box.name);
 
-    // add the sensitives (tubes) in the constructed tracking volume
+    // add the sensitives in the constructed tracking volume
     for (const auto& surface : box.surfaces) {
       trVol->addSurface(surface);
     }
@@ -363,28 +366,42 @@ GeoModelMuonMockupBuilder::StationIdx GeoModelMuonMockupBuilder::getStationIdx(
   auto contains = [&name](std::string_view key) {
     return name.find(key) != std::string::npos;
   };
-  auto checkSide = [&contains](const StationIdx& idx) {
-    // Assume only stationEta can assume negative values
-    return contains("-")
-               ? static_cast<StationIdx>(static_cast<std::uint8_t>(idx) + 3)
-               : idx;
+  auto isPositiveSide = [&name]() {
+    // Assume stationEta is the first number following an underscore in the
+    // chamber name
+    std::size_t pos = name.find('_');
+    while (pos != std::string::npos && pos + 1 < name.size()) {
+      const char c = name[pos + 1];
+      if (std::isdigit(c)) {
+        // we found a digit right after underscore, so positive side
+        return true;
+      } else if (c == '-' && pos + 2 < name.size() &&
+                 std::isdigit(name[pos + 2])) {
+        // we found a negative digit right after underscore, so negative side
+        return false;
+      }
+      pos = name.find('_', pos + 1);
+    }
+    throw std::runtime_error("No stationEta found in name: " + name);
   };
   // Handle the inner stations
   if (contains("SmallWheel")) {
-    return checkSide(StationIdx::EAI);
+    return isPositiveSide() ? StationIdx::EAI : StationIdx::ECI;
   } else if (contains("Inner")) {
     return StationIdx::BI;
   }
   // Handle TGCs
   if (contains("TGC")) {
-    return checkSide(StationIdx::EAM);
+    return isPositiveSide() ? StationIdx::EAM : StationIdx::ECM;
   }
   // Handle MDTs and RPCs
   const bool isBarrel = contains("BMDT") || contains("RPC");
   if (contains("Middle")) {
-    return isBarrel ? StationIdx::BM : checkSide(StationIdx::EAM);
+    return isBarrel ? StationIdx::BM
+                    : (isPositiveSide() ? StationIdx::EAM : StationIdx::ECM);
   } else if (contains("Outer")) {
-    return isBarrel ? StationIdx::BO : checkSide(StationIdx::EAO);
+    return isBarrel ? StationIdx::BO
+                    : (isPositiveSide() ? StationIdx::EAO : StationIdx::ECO);
   } else {
     throw std::domain_error(
         "getStationIdx() -- Could not deduce station idx from volume name: " +
@@ -405,7 +422,7 @@ GeoModelMuonMockupBuilder::getFirstContainerIdx(
 }
 
 std::string GeoModelMuonMockupBuilder::stationIdxToString(
-    GeoModelMuonMockupBuilder::StationIdx idx) const {
+    const GeoModelMuonMockupBuilder::StationIdx idx) {
   switch (idx) {
     case StationIdx::BI:
       return "BI";
@@ -432,7 +449,7 @@ std::string GeoModelMuonMockupBuilder::stationIdxToString(
 }
 
 std::string GeoModelMuonMockupBuilder::firstContainerIdxToString(
-    GeoModelMuonMockupBuilder::FirstContainerIdx idx) const {
+    const GeoModelMuonMockupBuilder::FirstContainerIdx idx) {
   switch (idx) {
     case FirstContainerIdx::Body:
       return "BodyContainer";
