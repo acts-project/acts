@@ -1333,6 +1333,17 @@ class KalmanFitter {
 
     calculateTrackQuantities(track);
 
+    if (trackContainer.hasColumn(hashString("smoothed"))) {
+      track.template component<bool, hashString("smoothed")>() =
+          kalmanResult.smoothed;
+    }
+
+    if (trackContainer.hasColumn(hashString("reversed"))) {
+      track.template component<bool, hashString("reversed")>() =
+          kalmanResult.reversed;
+    }
+
+    // Return the converted Track
     return track;
   }
 };
