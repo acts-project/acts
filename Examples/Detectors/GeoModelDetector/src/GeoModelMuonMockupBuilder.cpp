@@ -98,8 +98,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
     auto& container = SecondContainers[Acts::toUnderlying(
         isBarrel ? SecondContainerIdx::Barrel : SecondContainerIdx::NSWs)];
     if (container == nullptr) {
-      auto& bodyContainer =
-          *retrieveFirstContainer(FirstContainerIdx::Body);
+      auto& bodyContainer = *retrieveFirstContainer(FirstContainerIdx::Body);
       container = &bodyContainer.addCylinderContainer(
           isBarrel ? "BarrelContainer" : "NSWsContainer",
           isBarrel ? Acts::AxisDirection::AxisR : Acts::AxisDirection::AxisZ);
