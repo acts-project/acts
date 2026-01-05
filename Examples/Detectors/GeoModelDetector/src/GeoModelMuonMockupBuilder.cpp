@@ -273,8 +273,8 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
   auto stationNode =
       std::make_shared<Node_t>(std::make_unique<Acts::TrackingVolume>(
           Acts::Transform3{Acts::Translation3(0., 0., translationZ)},
-          std::make_shared<Acts::CylinderVolumeBounds>(bounds.rMin, bounds.rMax,
-                                                       cylHalfLenght),
+          boundFactory.makeBounds<Acts::CylinderVolumeBounds>(
+              bounds.rMin, bounds.rMax, cylHalfLenght),
           std::format("{:}_StationVol", station)));
   ACTS_DEBUG("Created station volume: "
              << stationNode->name() << " with bounds r: " << bounds.rMin
