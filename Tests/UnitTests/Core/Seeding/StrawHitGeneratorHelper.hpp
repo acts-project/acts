@@ -391,7 +391,10 @@ static_assert(
 
 /// @brief Split the composite space point container into straw and strip measurements
 class SpSorter {
- public:
+ protected:
+  /// @brief Protected constructor to instantiate the SpSorter.
+  /// @param hits: List of space points to sort per layer
+  /// @param calibrator: Space point calibrator to recalibrate the hits
   SpSorter(const Container_t& hits, const SpCalibrator* calibrator)
       : m_calibrator{calibrator} {
     for (const auto& spPtr : hits) {
@@ -402,9 +405,14 @@ class SpSorter {
       pushMe[spPtr->layer()].push_back(spPtr);
     }
   }
-  const std::vector<Container_t>& strawHits() const { return m_straws; }
-  const std::vector<Container_t>& stripHits() const { return m_strips; }
 
+ public:
+  /// @brief Return the sorted straw hits
+  const std::vector<Container_t>& strawHits() const { return m_straws; }
+  /// @brief Returns the sorted strip hits
+  const std::vector<Container_t>& stripHits() const { return m_strips; }
+  /// @brief Returns whether the candidate space point is a good hit or not
+  /// @param testPoint: Hit to test
   bool goodCandidate(const FitTestSpacePoint& testPoint) const {
     return testPoint.isGood();
   }
@@ -417,7 +425,7 @@ class SpSorter {
   /// @param dir: Direction of the candidate seed line
   /// @param t0: Offse in the time of arrival of the particle
   /// @param testSp: Reference to the straw space point to test
-  double candidatePull(const CalibrationContext& /* cctx*/, const Vector3& pos,
+  double candidateChi2(const CalibrationContext& /* cctx*/, const Vector3& pos,
                        const Vector3& dir, const double /*t0*/,
                        const FitTestSpacePoint& testSp) const {
     return CompSpacePointAuxiliaries::chi2Term(pos, dir, testSp);
@@ -439,6 +447,9 @@ class SpSorter {
   bool stopSeeding(const std::size_t lowerLayer,
                    const std::size_t upperLayer) const {
     return lowerLayer >= upperLayer;
+  }
+  double strawRadius(const FitTestSpacePoint& /*testSp*/) const {
+    return 15._mm;
   }
 
  private:
