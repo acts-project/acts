@@ -78,8 +78,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
       SecondContainers{};
 
   // Helper lambda to retrieve the first-level container
-  auto retrieveFirstContainer = [this, &cyl, &FirstContainers,
-                                 &configureContainer](
+  auto retrieveFirstContainer = [&cyl, &FirstContainers, &configureContainer](
                                     FirstContainerIdx containerIdx) {
     auto& container = FirstContainers[Acts::toUnderlying(containerIdx)];
     if (container == nullptr) {
@@ -149,10 +148,9 @@ GeoModelMuonMockupBuilder::trackingGeometry(
     // Attach station node to the proper container
     const FirstContainerIdx firstContIdx = getFirstContainerIdx(currentIdx);
     CylinderContainerBlueprintNode* targetContainer =
-        retrieveFirstContainer(firstContIdx);
-    if (firstContIdx == FirstContainerIdx::Body) {
-      targetContainer = retrieveSecondContainer(isBarrel);
-    }
+        firstContIdx == FirstContainerIdx::Body
+            ? retrieveSecondContainer(isBarrel)
+            : retrieveFirstContainer(firstContIdx);
     targetContainer->addChild(std::move(stationNode));
 
     it = rangeEnd;
