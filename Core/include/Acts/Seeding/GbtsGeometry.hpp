@@ -73,6 +73,10 @@ class GbtsGeometry {
   const GbtsLayer* getGbtsLayerByKey(unsigned int key) const;
   const GbtsLayer* getGbtsLayerByIndex(int idx) const;
 
+  inline unsigned int getGbtsLayerKeyByIndex(int idx) const {
+    return m_layerKeys[idx];
+  }
+
   int num_bins() const { return m_nEtaBins; }
   unsigned int num_layers() const { return m_layArray.size(); }
   const std::vector<std::pair<int, std::vector<int> > >& bin_groups() const {
@@ -86,7 +90,7 @@ class GbtsGeometry {
 
   std::map<unsigned int, GbtsLayer*> m_layMap;
   std::vector<GbtsLayer*> m_layArray;
-
+  std::vector<unsigned int> m_layerKeys;
   int m_nEtaBins{};
 
   std::vector<std::pair<int, std::vector<int> > > m_binGroups;
