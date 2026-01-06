@@ -29,5 +29,6 @@ add_library(docs-examples SHARED)
 target_sources(docs-examples PRIVATE
   examples/logging.cpp
   examples/units.cpp
+  examples/errors.cpp
 )
 target_link_libraries(docs-examples PRIVATE Acts::Core)
