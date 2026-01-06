@@ -369,11 +369,11 @@ GeoModelMuonMockupBuilder::StationIdx GeoModelMuonMockupBuilder::getStationIdx(
     std::size_t pos = name.find('_');
     while (pos != std::string::npos && pos + 1 < name.size()) {
       const char c = name[pos + 1];
-      if (std::isdigit(c)) {
+      if (std::isdigit(c) != 0) {
         // we found a digit right after underscore, so positive side
         return true;
       } else if (c == '-' && pos + 2 < name.size() &&
-                 std::isdigit(name[pos + 2])) {
+                 std::isdigit(name[pos + 2]) != 0) {
         // we found a negative digit right after underscore, so negative side
         return false;
       }
