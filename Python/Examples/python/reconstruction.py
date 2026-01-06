@@ -1649,6 +1649,7 @@ def addTruthTrackingGsf(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     inputProtoTracks: str = "truth_particle_tracks",
+    transverseMomentumCut: float = 0.5,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1664,6 +1665,7 @@ def addTruthTrackingGsf(
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
+        "transverseMomentumCut": transverseMomentumCut,
         "reverseFilteringCovarianceScaling": 100.0,
         "level": customLogLevel(),
     }
