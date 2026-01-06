@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/Io/Root/BoostHistogramWriteHelpers.hpp"
 
 #include <cstddef>
 #include <map>
@@ -97,8 +96,11 @@ RootTrackFinderPerformanceWriter::~RootTrackFinderPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
   m_fakePlotTool.clear(m_fakePlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
-  // TrackSummaryPlotTool uses RAII - no manual cleanup needed
-  // TrackQualityPlotTool uses RAII - no manual cleanup needed
+  m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
+  for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
+    m_trackSummaryPlotTool.clear(m_subDetectorSummaryCaches.at(key));
+  }
+  m_trackQualityPlotTool.clear(m_trackQualityPlotCache);
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
@@ -148,48 +150,11 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     m_effPlotTool.write(m_effPlotCache);
     m_fakePlotTool.write(m_fakePlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
-
-    // Convert and write TrackSummaryPlotTool histograms
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nStates_vs_eta);
-    BoostHistogramWriteHelpers::write(
-        m_trackSummaryPlotCache.nMeasurements_vs_eta);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nHoles_vs_eta);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nOutliers_vs_eta);
-    BoostHistogramWriteHelpers::write(
-        m_trackSummaryPlotCache.nSharedHits_vs_eta);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nStates_vs_pt);
-    BoostHistogramWriteHelpers::write(
-        m_trackSummaryPlotCache.nMeasurements_vs_pt);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nHoles_vs_pt);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nOutliers_vs_pt);
-    BoostHistogramWriteHelpers::write(
-        m_trackSummaryPlotCache.nSharedHits_vs_pt);
-
-    // Convert and write subdetector TrackSummaryPlotTool histograms
+    m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
     for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
-      const auto& cache = m_subDetectorSummaryCaches.at(key);
-      BoostHistogramWriteHelpers::write(cache.nStates_vs_eta);
-      BoostHistogramWriteHelpers::write(cache.nMeasurements_vs_eta);
-      BoostHistogramWriteHelpers::write(cache.nHoles_vs_eta);
-      BoostHistogramWriteHelpers::write(cache.nOutliers_vs_eta);
-      BoostHistogramWriteHelpers::write(cache.nSharedHits_vs_eta);
-      BoostHistogramWriteHelpers::write(cache.nStates_vs_pt);
-      BoostHistogramWriteHelpers::write(cache.nMeasurements_vs_pt);
-      BoostHistogramWriteHelpers::write(cache.nHoles_vs_pt);
-      BoostHistogramWriteHelpers::write(cache.nOutliers_vs_pt);
-      BoostHistogramWriteHelpers::write(cache.nSharedHits_vs_pt);
+      m_trackSummaryPlotTool.write(m_subDetectorSummaryCaches.at(key));
     }
-
-    // Convert and write TrackQualityPlotTool histograms
-    BoostHistogramWriteHelpers::write(
-        m_trackQualityPlotCache.completeness_vs_pT);
-    BoostHistogramWriteHelpers::write(
-        m_trackQualityPlotCache.completeness_vs_eta);
-    BoostHistogramWriteHelpers::write(
-        m_trackQualityPlotCache.completeness_vs_phi);
-    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.purity_vs_pT);
-    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.purity_vs_eta);
-    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.purity_vs_phi);
+    m_trackQualityPlotTool.write(m_trackQualityPlotCache);
 
     writeFloat(eff_tracks, "eff_tracks");
     writeFloat(fakeRatio_tracks, "fakeratio_tracks");

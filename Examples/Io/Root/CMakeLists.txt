@@ -1,8 +1,6 @@
 acts_add_library(
     ExamplesIoRoot
     SHARED
-    src/BoostHistogramToRootConverter.cpp
-    src/BoostHistogramWriteHelpers.cpp
     src/RootMeasurementWriter.cpp
     src/RootMaterialWriter.cpp
     src/RootMaterialTrackReader.cpp

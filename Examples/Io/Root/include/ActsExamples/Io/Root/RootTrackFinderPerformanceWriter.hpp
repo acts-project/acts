@@ -110,7 +110,7 @@ class RootTrackFinderPerformanceWriter final
   std::map<std::string, TrackSummaryPlotTool::Cache> m_subDetectorSummaryCaches;
   /// Plot tool for track quality
   TrackQualityPlotTool m_trackQualityPlotTool;
-  TrackQualityPlotTool::Cache m_trackQualityPlotCache;
+  TrackQualityPlotTool::Cache m_trackQualityPlotCache{};
 
   /// For optional output of the matching details
   TTree* m_matchingTree{nullptr};

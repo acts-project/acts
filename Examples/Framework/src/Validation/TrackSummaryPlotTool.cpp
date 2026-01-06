@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <TProfile.h>
+
 namespace ActsExamples {
 
 TrackSummaryPlotTool::TrackSummaryPlotTool(
@@ -27,44 +29,71 @@ void TrackSummaryPlotTool::book(Cache& cache, const std::string& prefix) const {
     return prefix.empty() ? name : prefix + "_" + name;
   };
   // number of track states versus eta
-  cache.nStates_vs_eta = BoostProfileHistogram(
-      addPrefix("nStates_vs_eta"), "Number of total states vs. #eta", bEta,
-      bNum.title());
+  cache.nStates_vs_eta =
+      PlotHelpers::bookProf(addPrefix("nStates_vs_eta").c_str(),
+                            "Number of total states vs. #eta", bEta, bNum);
   // number of measurements versus eta
-  cache.nMeasurements_vs_eta = BoostProfileHistogram(
-      addPrefix("nMeasurements_vs_eta"), "Number of measurements vs. #eta",
-      bEta, bNum.title());
+  cache.nMeasurements_vs_eta =
+      PlotHelpers::bookProf(addPrefix("nMeasurements_vs_eta").c_str(),
+                            "Number of measurements vs. #eta", bEta, bNum);
   // number of holes versus eta
   cache.nHoles_vs_eta =
-      BoostProfileHistogram(addPrefix("nHoles_vs_eta"),
-                            "Number of holes vs. #eta", bEta, bNum.title());
+      PlotHelpers::bookProf(addPrefix("nHoles_vs_eta").c_str(),
+                            "Number of holes vs. #eta", bEta, bNum);
   // number of outliers versus eta
   cache.nOutliers_vs_eta =
-      BoostProfileHistogram(addPrefix("nOutliers_vs_eta"),
-                            "Number of outliers vs. #eta", bEta, bNum.title());
+      PlotHelpers::bookProf(addPrefix("nOutliers_vs_eta").c_str(),
+                            "Number of outliers vs. #eta", bEta, bNum);
   // number of Shared Hits versus eta
-  cache.nSharedHits_vs_eta = BoostProfileHistogram(
-      addPrefix("nSharedHits_vs_eta"), "Number of Shared Hits vs. #eta", bEta,
-      bNum.title());
+  cache.nSharedHits_vs_eta =
+      PlotHelpers::bookProf(addPrefix("nSharedHits_vs_eta").c_str(),
+                            "Number of Shared Hits vs. #eta", bEta, bNum);
   // number of track states versus pt
   cache.nStates_vs_pt =
-      BoostProfileHistogram(addPrefix("nStates_vs_pT"),
-                            "Number of total states vs. pT", bPt, bNum.title());
+      PlotHelpers::bookProf(addPrefix("nStates_vs_pT").c_str(),
+                            "Number of total states vs. pT", bPt, bNum);
   // number of measurements versus pt
   cache.nMeasurements_vs_pt =
-      BoostProfileHistogram(addPrefix("nMeasurements_vs_pT"),
-                            "Number of measurements vs. pT", bPt, bNum.title());
+      PlotHelpers::bookProf(addPrefix("nMeasurements_vs_pT").c_str(),
+                            "Number of measurements vs. pT", bPt, bNum);
   // number of holes versus pt
-  cache.nHoles_vs_pt = BoostProfileHistogram(
-      addPrefix("nHoles_vs_pT"), "Number of holes vs. pT", bPt, bNum.title());
+  cache.nHoles_vs_pt = PlotHelpers::bookProf(
+      addPrefix("nHoles_vs_pT").c_str(), "Number of holes vs. pT", bPt, bNum);
   // number of outliers versus pt
   cache.nOutliers_vs_pt =
-      BoostProfileHistogram(addPrefix("nOutliers_vs_pT"),
-                            "Number of outliers vs. pT", bPt, bNum.title());
+      PlotHelpers::bookProf(addPrefix("nOutliers_vs_pT").c_str(),
+                            "Number of outliers vs. pT", bPt, bNum);
   // number of Shared Hits versus pt
   cache.nSharedHits_vs_pt =
-      BoostProfileHistogram(addPrefix("nSharedHits_vs_pT"),
-                            "Number of Shared Hits vs. pT", bPt, bNum.title());
+      PlotHelpers::bookProf(addPrefix("nSharedHits_vs_pT").c_str(),
+                            "Number of Shared Hits vs. pT", bPt, bNum);
+}
+
+void TrackSummaryPlotTool::clear(Cache& cache) const {
+  delete cache.nStates_vs_eta;
+  delete cache.nMeasurements_vs_eta;
+  delete cache.nOutliers_vs_eta;
+  delete cache.nHoles_vs_eta;
+  delete cache.nSharedHits_vs_eta;
+  delete cache.nStates_vs_pt;
+  delete cache.nMeasurements_vs_pt;
+  delete cache.nOutliers_vs_pt;
+  delete cache.nHoles_vs_pt;
+  delete cache.nSharedHits_vs_pt;
+}
+
+void TrackSummaryPlotTool::write(const Cache& cache) const {
+  ACTS_DEBUG("Write the plots to output file.");
+  cache.nStates_vs_eta->Write();
+  cache.nMeasurements_vs_eta->Write();
+  cache.nOutliers_vs_eta->Write();
+  cache.nHoles_vs_eta->Write();
+  cache.nSharedHits_vs_eta->Write();
+  cache.nStates_vs_pt->Write();
+  cache.nMeasurements_vs_pt->Write();
+  cache.nOutliers_vs_pt->Write();
+  cache.nHoles_vs_pt->Write();
+  cache.nSharedHits_vs_pt->Write();
 }
 
 void TrackSummaryPlotTool::fill(
@@ -77,17 +106,17 @@ void TrackSummaryPlotTool::fill(
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  cache.nStates_vs_eta.fill(fit_eta, nStates);
-  cache.nMeasurements_vs_eta.fill(fit_eta, nMeasurements);
-  cache.nOutliers_vs_eta.fill(fit_eta, nOutliers);
-  cache.nHoles_vs_eta.fill(fit_eta, nHoles);
-  cache.nSharedHits_vs_eta.fill(fit_eta, nSharedHits);
+  PlotHelpers::fillProf(cache.nStates_vs_eta, fit_eta, nStates);
+  PlotHelpers::fillProf(cache.nMeasurements_vs_eta, fit_eta, nMeasurements);
+  PlotHelpers::fillProf(cache.nOutliers_vs_eta, fit_eta, nOutliers);
+  PlotHelpers::fillProf(cache.nHoles_vs_eta, fit_eta, nHoles);
+  PlotHelpers::fillProf(cache.nSharedHits_vs_eta, fit_eta, nSharedHits);
 
-  cache.nStates_vs_pt.fill(fit_pT, nStates);
-  cache.nMeasurements_vs_pt.fill(fit_pT, nMeasurements);
-  cache.nOutliers_vs_pt.fill(fit_pT, nOutliers);
-  cache.nHoles_vs_pt.fill(fit_pT, nHoles);
-  cache.nSharedHits_vs_pt.fill(fit_pT, nSharedHits);
+  PlotHelpers::fillProf(cache.nStates_vs_pt, fit_pT, nStates);
+  PlotHelpers::fillProf(cache.nMeasurements_vs_pt, fit_pT, nMeasurements);
+  PlotHelpers::fillProf(cache.nOutliers_vs_pt, fit_pT, nOutliers);
+  PlotHelpers::fillProf(cache.nHoles_vs_pt, fit_pT, nHoles);
+  PlotHelpers::fillProf(cache.nSharedHits_vs_pt, fit_pT, nSharedHits);
 }
 
 }  // namespace ActsExamples

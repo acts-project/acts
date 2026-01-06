@@ -23,7 +23,6 @@ acts_add_library(
     src/Utilities/Options.cpp
     src/Utilities/Helpers.cpp
     src/Utilities/ParametricParticleGenerator.cpp
-    src/Validation/BoostHistogramWrappers.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
     src/Validation/FakePlotTool.cpp
