@@ -8,12 +8,45 @@
 
 #pragma once
 
-#include "ActsExamples/Utilities/Helpers.hpp"
-
 #include <boost/histogram.hpp>
 #include <string>
+#include <vector>
 
-namespace ActsExamples {
+namespace Acts {
+namespace detail {
+using BoostVariableAxis = boost::histogram::axis::variable<double>;
+using BoostHist1D = decltype(
+    boost::histogram::make_histogram(std::declval<BoostVariableAxis>()));
+using BoostHist2D = decltype(boost::histogram::make_histogram(
+    std::declval<BoostVariableAxis>(), std::declval<BoostVariableAxis>()));
+using BoostProfileHist = decltype(boost::histogram::make_profile(
+    std::declval<BoostVariableAxis>()));
+}  // namespace detail
+
+
+/// @brief Nested binning struct for booking plots
+class HistBinning {
+ public:
+  static HistBinning Uniform(std::string title, std::size_t bins,
+                         double bMin, double bMax);
+  static HistBinning Variable(std::string title, std::vector<double> binEdges);
+  static HistBinning Logarithmic(std::string title, std::size_t bins,
+                             double bMin, double bMax);
+
+  HistBinning(std::string title, std::vector<double> binEdges)
+      : m_title(std::move(title)), m_binEdges(std::move(binEdges)) {}
+
+  const std::string& title() const { return m_title; }
+  std::size_t nBins() const { return m_binEdges.size() - 1; }
+  const std::vector<double> &binEdges() const { return m_binEdges; }
+  double low() const { return m_binEdges.front(); }
+  double high() const { return m_binEdges.back(); }
+
+ private:
+  std::string m_title;
+  std::vector<double> m_binEdges;
+};
+
 
 /// @brief 1D histogram wrapper using boost::histogram for data collection
 ///
@@ -23,15 +56,15 @@ namespace ActsExamples {
 ///
 /// The class provides minimal API - converters access the boost histogram
 /// directly via histogram() for iteration and bin content extraction.
-class BoostHistogram1D {
+class Histogram1D {
  public:
   /// Construct 1D histogram from binning specification
   ///
   /// @param name Histogram name (for identification and output)
   /// @param title Histogram title (for plotting)
   /// @param binning Binning specification (uniform, variable, or logarithmic)
-  BoostHistogram1D(std::string name, std::string title,
-                   const PlotHelpers::Binning& binning);
+  Histogram1D(std::string name, std::string title,
+                   const HistBinning& binning);
 
   /// Fill histogram with value
   ///
@@ -55,14 +88,7 @@ class BoostHistogram1D {
   std::string m_title;
   std::string m_axisTitle;
 
-  /// Boost histogram with variable axis and unlimited storage
-  ///
-  /// - axis::variable<double>: supports non-uniform binning
-  /// - unlimited_storage<>: tracks sum-of-weights and sum-of-weights-squared
-  ///   (equivalent to TH1F::Sumw2() behavior)
-  boost::histogram::histogram<
-      std::tuple<boost::histogram::axis::variable<double>>,
-      boost::histogram::unlimited_storage<>> m_hist;
+  detail::BoostHist1D m_hist;
 };
 
 /// @brief 2D histogram wrapper using boost::histogram for data collection
@@ -73,7 +99,7 @@ class BoostHistogram1D {
 ///
 /// The class provides minimal API - converters access the boost histogram
 /// directly via histogram(). Projections are handled by ROOT converters.
-class BoostHistogram2D {
+class Histogram2D {
  public:
   /// Construct 2D histogram from binning specifications
   ///
@@ -81,9 +107,9 @@ class BoostHistogram2D {
   /// @param title Histogram title (for plotting)
   /// @param xBinning X-axis binning specification
   /// @param yBinning Y-axis binning specification
-  BoostHistogram2D(std::string name, std::string title,
-                   const PlotHelpers::Binning& xBinning,
-                   const PlotHelpers::Binning& yBinning);
+  Histogram2D(std::string name, std::string title,
+                   const HistBinning& xBinning,
+                   const HistBinning& yBinning);
 
   /// Fill histogram with x, y values
   ///
@@ -112,14 +138,7 @@ class BoostHistogram2D {
   std::string m_xAxisTitle;
   std::string m_yAxisTitle;
 
-  /// Boost histogram with two variable axes and unlimited storage
-  ///
-  /// - Two axis::variable<double>: supports non-uniform binning on both axes
-  /// - unlimited_storage<>: tracks sum-of-weights and sum-of-weights-squared
-  boost::histogram::histogram<
-      std::tuple<boost::histogram::axis::variable<double>,
-                 boost::histogram::axis::variable<double>>,
-      boost::histogram::unlimited_storage<>> m_hist;
+  detail::BoostHist2D m_hist; 
 };
 
 /// @brief Profile histogram using boost::histogram
@@ -127,19 +146,16 @@ class BoostHistogram2D {
 /// This class wraps boost::histogram to provide a ROOT-independent profile
 /// histogram implementation. For each X bin, it tracks the mean (and variance)
 /// of Y values.
-class BoostProfileHistogram {
+class ProfileHistogram {
  public:
-  /// Default constructor
-  BoostProfileHistogram() = default;
-
   /// Construct profile histogram from X binning specification
   ///
   /// @param name Histogram name
   /// @param title Histogram title
   /// @param xBinning X-axis binning specification
   /// @param yAxisTitle Y-axis title
-  BoostProfileHistogram(std::string name, std::string title,
-                        const PlotHelpers::Binning& xBinning,
+  ProfileHistogram(std::string name, std::string title,
+                        const HistBinning& xBinning,
                         std::string yAxisTitle);
 
   /// Fill profile with (x, y) pair
@@ -169,9 +185,7 @@ class BoostProfileHistogram {
   std::string m_xAxisTitle;
   std::string m_yAxisTitle;
 
-  /// Boost profile histogram created with make_profile
-  decltype(boost::histogram::make_profile(
-      boost::histogram::axis::variable<double>{})) m_hist;
+  detail::BoostProfileHist m_hist; 
 };
 
 /// @brief 1D efficiency histogram using boost::histogram
@@ -179,15 +193,15 @@ class BoostProfileHistogram {
 /// This class tracks pass/total counts for efficiency calculation.
 /// It internally uses two simple histograms: one for passed events,
 /// one for total events.
-class BoostEfficiency1D {
+class Efficiency1D {
  public:
   /// Construct 1D efficiency histogram
   ///
   /// @param name Histogram name
   /// @param title Histogram title
   /// @param binning Binning specification
-  BoostEfficiency1D(std::string name, std::string title,
-                    const PlotHelpers::Binning& binning);
+  Efficiency1D(std::string name, std::string title,
+                    const HistBinning& binning);
 
   /// Fill efficiency histogram
   ///
@@ -215,23 +229,13 @@ class BoostEfficiency1D {
   std::string m_title;
   std::string m_axisTitle;
 
-  /// Histogram for passed events
-  boost::histogram::histogram<
-      std::tuple<boost::histogram::axis::variable<double>>,
-      boost::histogram::unlimited_storage<>>
-      m_passed;
-
-  /// Histogram for total events
-  boost::histogram::histogram<
-      std::tuple<boost::histogram::axis::variable<double>>,
-      boost::histogram::unlimited_storage<>>
-      m_total;
+  detail::BoostHist1D m_passed, m_total;
 };
 
 /// @brief 2D efficiency histogram using boost::histogram
 ///
 /// This class tracks pass/total counts for 2D efficiency calculation.
-class BoostEfficiency2D {
+class Efficiency2D {
  public:
   /// Construct 2D efficiency histogram
   ///
@@ -239,9 +243,9 @@ class BoostEfficiency2D {
   /// @param title Histogram title
   /// @param xBinning X-axis binning specification
   /// @param yBinning Y-axis binning specification
-  BoostEfficiency2D(std::string name, std::string title,
-                    const PlotHelpers::Binning& xBinning,
-                    const PlotHelpers::Binning& yBinning);
+  Efficiency2D(std::string name, std::string title,
+                    const HistBinning& xBinning,
+                    const HistBinning& yBinning);
 
   /// Fill efficiency histogram
   ///
@@ -274,19 +278,7 @@ class BoostEfficiency2D {
   std::string m_xAxisTitle;
   std::string m_yAxisTitle;
 
-  /// Histogram for passed events
-  boost::histogram::histogram<
-      std::tuple<boost::histogram::axis::variable<double>,
-                 boost::histogram::axis::variable<double>>,
-      boost::histogram::unlimited_storage<>>
-      m_passed;
-
-  /// Histogram for total events
-  boost::histogram::histogram<
-      std::tuple<boost::histogram::axis::variable<double>,
-                 boost::histogram::axis::variable<double>>,
-      boost::histogram::unlimited_storage<>>
-      m_total;
+  detail::BoostHist2D m_passed, m_total;
 };
 
 }  // namespace ActsExamples

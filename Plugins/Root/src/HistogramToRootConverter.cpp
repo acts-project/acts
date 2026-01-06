@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/BoostHistogramToRootConverter.hpp"
+#include "ActsPlugins/Root/HistogramToRootConverter.hpp"
 
 #include <TEfficiency.h>
 #include <TH1F.h>
@@ -18,9 +18,11 @@
 #include <cmath>
 #include <vector>
 
-namespace ActsExamples::BoostHistogramToRoot {
+using namespace Acts;
 
-TH1F* toRoot(const BoostHistogram1D& boostHist) {
+namespace ActsPlugins {
+
+TH1F* toRoot(const Histogram1D& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& axis = bh.axis(0);
 
@@ -53,7 +55,7 @@ TH1F* toRoot(const BoostHistogram1D& boostHist) {
   return rootHist;
 }
 
-TH2F* toRoot(const BoostHistogram2D& boostHist) {
+TH2F* toRoot(const Histogram2D& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& xAxis = bh.axis(0);
   const auto& yAxis = bh.axis(1);
@@ -99,7 +101,7 @@ TH2F* toRoot(const BoostHistogram2D& boostHist) {
   return rootHist;
 }
 
-TProfile* toRoot(const BoostProfileHistogram& boostProfile) {
+TProfile* toRoot(const ProfileHistogram& boostProfile) {
   const auto& bh = boostProfile.histogram();
   const auto& axis = bh.axis(0);
 
@@ -149,7 +151,7 @@ TProfile* toRoot(const BoostProfileHistogram& boostProfile) {
   return rootProfile;
 }
 
-TEfficiency* toRoot(const BoostEfficiency1D& boostEff) {
+TEfficiency* toRoot(const Efficiency1D& boostEff) {
   const auto& passed = boostEff.passedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& axis = passed.axis(0);
@@ -193,7 +195,7 @@ TEfficiency* toRoot(const BoostEfficiency1D& boostEff) {
   return rootEff;
 }
 
-TEfficiency* toRoot(const BoostEfficiency2D& boostEff) {
+TEfficiency* toRoot(const Efficiency2D& boostEff) {
   const auto& passed = boostEff.passedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& xAxis = passed.axis(0);
