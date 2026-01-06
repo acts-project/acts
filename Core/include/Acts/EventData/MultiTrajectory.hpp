@@ -128,7 +128,7 @@ concept VisitorConcept = requires(T& t, TS& ts) {
 namespace MultiTrajectoryTraits {
 
 /// Maximum number of measurement dimensions supported by trajectory
-/// @deprecated Use @ref kMeasurementSizeMax instead.
+/// @deprecated Use @ref Acts::kMeasurementSizeMax instead.
 [[deprecated("Use Acts::kMeasurementSizeMax instead.")]]
 constexpr unsigned int MeasurementSizeMax = kMeasurementSizeMax;
 
