@@ -8,15 +8,14 @@
 
 #include "ActsPlugins/Root/HistogramToRootConverter.hpp"
 
+#include <cmath>
+#include <vector>
+
 #include <TEfficiency.h>
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TProfile.h>
-
 #include <boost/histogram/accumulators/weighted_sum.hpp>
-
-#include <cmath>
-#include <vector>
 
 using namespace Acts;
 
@@ -35,8 +34,7 @@ TH1F* toRoot(const Histogram1D& boostHist) {
   edges.push_back(axis.bin(axis.size() - 1).upper());
 
   // Create ROOT histogram with variable binning
-  TH1F* rootHist = new TH1F(boostHist.name().c_str(),
-                            boostHist.title().c_str(),
+  TH1F* rootHist = new TH1F(boostHist.name().c_str(), boostHist.title().c_str(),
                             static_cast<int>(axis.size()), edges.data());
 
   // Copy bin contents from boost to ROOT
@@ -77,8 +75,7 @@ TH2F* toRoot(const Histogram2D& boostHist) {
   yEdges.push_back(yAxis.bin(yAxis.size() - 1).upper());
 
   // Create ROOT histogram with 2D variable binning
-  TH2F* rootHist = new TH2F(boostHist.name().c_str(),
-                            boostHist.title().c_str(),
+  TH2F* rootHist = new TH2F(boostHist.name().c_str(), boostHist.title().c_str(),
                             static_cast<int>(xAxis.size()), xEdges.data(),
                             static_cast<int>(yAxis.size()), yEdges.data());
 
@@ -115,9 +112,9 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
 
   // Create ROOT TProfile with variable binning
   // TProfile constructor: (name, title, nbins, edges)
-  TProfile* rootProfile = new TProfile(
-      boostProfile.name().c_str(), boostProfile.title().c_str(),
-      static_cast<int>(axis.size()), edges.data());
+  TProfile* rootProfile =
+      new TProfile(boostProfile.name().c_str(), boostProfile.title().c_str(),
+                   static_cast<int>(axis.size()), edges.data());
 
   // Enable sum of weights squared storage
   rootProfile->Sumw2();
@@ -165,13 +162,11 @@ TEfficiency* toRoot(const Efficiency1D& boostEff) {
   edges.push_back(axis.bin(axis.size() - 1).upper());
 
   // Create passed and total TH1F histograms
-  TH1F* passedHist = new TH1F(
-      (boostEff.name() + "_passed").c_str(), "Passed",
-      static_cast<int>(axis.size()), edges.data());
+  TH1F* passedHist = new TH1F((boostEff.name() + "_passed").c_str(), "Passed",
+                              static_cast<int>(axis.size()), edges.data());
 
-  TH1F* totalHist = new TH1F(
-      (boostEff.name() + "_total").c_str(), "Total",
-      static_cast<int>(axis.size()), edges.data());
+  TH1F* totalHist = new TH1F((boostEff.name() + "_total").c_str(), "Total",
+                             static_cast<int>(axis.size()), edges.data());
 
   // Fill histograms with counts
   for (int i = 0; i < axis.size(); ++i) {
@@ -218,15 +213,13 @@ TEfficiency* toRoot(const Efficiency2D& boostEff) {
   yEdges.push_back(yAxis.bin(yAxis.size() - 1).upper());
 
   // Create passed and total TH2F histograms
-  TH2F* passedHist = new TH2F(
-      (boostEff.name() + "_passed").c_str(), "Passed",
-      static_cast<int>(xAxis.size()), xEdges.data(),
-      static_cast<int>(yAxis.size()), yEdges.data());
+  TH2F* passedHist = new TH2F((boostEff.name() + "_passed").c_str(), "Passed",
+                              static_cast<int>(xAxis.size()), xEdges.data(),
+                              static_cast<int>(yAxis.size()), yEdges.data());
 
-  TH2F* totalHist = new TH2F(
-      (boostEff.name() + "_total").c_str(), "Total",
-      static_cast<int>(xAxis.size()), xEdges.data(),
-      static_cast<int>(yAxis.size()), yEdges.data());
+  TH2F* totalHist = new TH2F((boostEff.name() + "_total").c_str(), "Total",
+                             static_cast<int>(xAxis.size()), xEdges.data(),
+                             static_cast<int>(yAxis.size()), yEdges.data());
 
   // Fill histograms with counts
   for (int i = 0; i < xAxis.size(); ++i) {
@@ -252,4 +245,4 @@ TEfficiency* toRoot(const Efficiency2D& boostEff) {
   return rootEff;
 }
 
-}  // namespace ActsExamples::BoostHistogramToRoot
+}  // namespace ActsPlugins

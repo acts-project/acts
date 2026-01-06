@@ -14,7 +14,7 @@
 namespace Acts {
 
 HistBinning HistBinning::Uniform(std::string title, std::size_t bins,
-                                  double bMin, double bMax) {
+                                 double bMin, double bMax) {
   std::vector<double> binEdges(bins + 1);
   const double step = (bMax - bMin) / bins;
   std::generate(binEdges.begin(), binEdges.end(), [&, v = bMin]() mutable {
@@ -26,12 +26,12 @@ HistBinning HistBinning::Uniform(std::string title, std::size_t bins,
 }
 
 HistBinning HistBinning::Variable(std::string title,
-                                   std::vector<double> binEdges) {
+                                  std::vector<double> binEdges) {
   return HistBinning(std::move(title), std::move(binEdges));
 }
 
 HistBinning HistBinning::Logarithmic(std::string title, std::size_t bins,
-                                      double bMin, double bMax) {
+                                     double bMin, double bMax) {
   std::vector<double> binEdges(bins + 1);
   const double logMin = std::log10(bMin);
   const double logMax = std::log10(bMax);
@@ -43,59 +43,55 @@ HistBinning HistBinning::Logarithmic(std::string title, std::size_t bins,
 }
 
 Histogram1D::Histogram1D(std::string name, std::string title,
-                                   const HistBinning& binning)
+                         const HistBinning& binning)
     : m_name(std::move(name)),
       m_title(std::move(title)),
       m_axisTitle(binning.title()),
       m_hist(boost::histogram::make_histogram(
-          detail::BoostVariableAxis(binning.binEdges()))) {
-}
+          detail::BoostVariableAxis(binning.binEdges()))) {}
 
 void Histogram1D::fill(double value) {
   m_hist(value);
 }
 
 Histogram2D::Histogram2D(std::string name, std::string title,
-                                   const HistBinning& xBinning,
-                                   const HistBinning& yBinning)
+                         const HistBinning& xBinning,
+                         const HistBinning& yBinning)
     : m_name(std::move(name)),
       m_title(std::move(title)),
       m_xAxisTitle(xBinning.title()),
       m_yAxisTitle(yBinning.title()),
       m_hist(boost::histogram::make_histogram(
           detail::BoostVariableAxis(xBinning.binEdges()),
-          detail::BoostVariableAxis(yBinning.binEdges()))) {
-}
+          detail::BoostVariableAxis(yBinning.binEdges()))) {}
 
 void Histogram2D::fill(double xValue, double yValue) {
   m_hist(xValue, yValue);
 }
 
-ProfileHistogram::ProfileHistogram(
-    std::string name, std::string title,
-    const HistBinning& xBinning, std::string yAxisTitle)
+ProfileHistogram::ProfileHistogram(std::string name, std::string title,
+                                   const HistBinning& xBinning,
+                                   std::string yAxisTitle)
     : m_name(std::move(name)),
       m_title(std::move(title)),
       m_xAxisTitle(xBinning.title()),
       m_yAxisTitle(std::move(yAxisTitle)),
       m_hist(boost::histogram::make_profile(
-          detail::BoostVariableAxis(xBinning.binEdges()))) {
-}
+          detail::BoostVariableAxis(xBinning.binEdges()))) {}
 
 void ProfileHistogram::fill(double xValue, double yValue) {
   m_hist(xValue, boost::histogram::sample(yValue));
 }
 
 Efficiency1D::Efficiency1D(std::string name, std::string title,
-                                     const HistBinning& binning)
+                           const HistBinning& binning)
     : m_name(std::move(name)),
       m_title(std::move(title)),
       m_axisTitle(binning.title()),
       m_passed(boost::histogram::make_histogram(
           detail::BoostVariableAxis(binning.binEdges()))),
       m_total(boost::histogram::make_histogram(
-          detail::BoostVariableAxis(binning.binEdges()))) {
-}
+          detail::BoostVariableAxis(binning.binEdges()))) {}
 
 void Efficiency1D::fill(double value, bool passed) {
   m_total(value);
@@ -105,8 +101,8 @@ void Efficiency1D::fill(double value, bool passed) {
 }
 
 Efficiency2D::Efficiency2D(std::string name, std::string title,
-                                     const HistBinning& xBinning,
-                                     const HistBinning& yBinning)
+                           const HistBinning& xBinning,
+                           const HistBinning& yBinning)
     : m_name(std::move(name)),
       m_title(std::move(title)),
       m_xAxisTitle(xBinning.title()),
@@ -116,8 +112,7 @@ Efficiency2D::Efficiency2D(std::string name, std::string title,
           detail::BoostVariableAxis(yBinning.binEdges()))),
       m_total(boost::histogram::make_histogram(
           detail::BoostVariableAxis(xBinning.binEdges()),
-          detail::BoostVariableAxis(yBinning.binEdges()))) {
-}
+          detail::BoostVariableAxis(yBinning.binEdges()))) {}
 
 void Efficiency2D::fill(double xValue, double yValue, bool passed) {
   m_total(xValue, yValue);
@@ -126,4 +121,4 @@ void Efficiency2D::fill(double xValue, double yValue, bool passed) {
   }
 }
 
-}  // namespace ActsExamples
+}  // namespace Acts

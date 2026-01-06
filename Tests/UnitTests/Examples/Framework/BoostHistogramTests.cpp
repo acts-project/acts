@@ -152,9 +152,9 @@ BOOST_AUTO_TEST_CASE(BoostHistogram1D_UnderflowOverflow) {
   BoostHistogram1D hist("test_flow", "Test Flow", binning);
 
   // Fill values in range, underflow, and overflow
-  hist.fill(5.0);    // in range
-  hist.fill(-1.0);   // underflow
-  hist.fill(15.0);   // overflow
+  hist.fill(5.0);   // in range
+  hist.fill(-1.0);  // underflow
+  hist.fill(15.0);  // overflow
 
   const auto& bh = hist.histogram();
 

@@ -89,15 +89,19 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
 
     // Convert and write TrackSummaryPlotTool histograms
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nStates_vs_eta);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nMeasurements_vs_eta);
+    BoostHistogramWriteHelpers::write(
+        m_trackSummaryPlotCache.nMeasurements_vs_eta);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nHoles_vs_eta);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nOutliers_vs_eta);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nSharedHits_vs_eta);
+    BoostHistogramWriteHelpers::write(
+        m_trackSummaryPlotCache.nSharedHits_vs_eta);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nStates_vs_pt);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nMeasurements_vs_pt);
+    BoostHistogramWriteHelpers::write(
+        m_trackSummaryPlotCache.nMeasurements_vs_pt);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nHoles_vs_pt);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nOutliers_vs_pt);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nSharedHits_vs_pt);
+    BoostHistogramWriteHelpers::write(
+        m_trackSummaryPlotCache.nSharedHits_vs_pt);
 
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }

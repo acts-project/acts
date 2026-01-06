@@ -39,14 +39,14 @@ void TrackQualityPlotTool::book(Cache& cache) const {
       "completeness_vs_phi", "Completeness", bPhi, "Completeness");
 
   // purity vs pT
-  cache.purity_vs_pT = BoostProfileHistogram(
-      "purity_vs_pT", "Purity", bPt, "Purity");
+  cache.purity_vs_pT =
+      BoostProfileHistogram("purity_vs_pT", "Purity", bPt, "Purity");
   // purity vs eta
-  cache.purity_vs_eta = BoostProfileHistogram(
-      "purity_vs_eta", "Purity", bEta, "Purity");
+  cache.purity_vs_eta =
+      BoostProfileHistogram("purity_vs_eta", "Purity", bEta, "Purity");
   // purity vs phi
-  cache.purity_vs_phi = BoostProfileHistogram(
-      "purity_vs_phi", "Purity", bPhi, "Purity");
+  cache.purity_vs_phi =
+      BoostProfileHistogram("purity_vs_phi", "Purity", bPhi, "Purity");
 }
 
 void TrackQualityPlotTool::fill(

@@ -64,4 +64,4 @@ TEfficiency* toRoot(const Acts::Efficiency1D& boostEff);
 /// @return Raw pointer to new TEfficiency (caller owns and must delete)
 TEfficiency* toRoot(const Acts::Efficiency2D& boostEff);
 
-}  // namespace ActsExamples::BoostHistogramToRoot
+}  // namespace ActsPlugins

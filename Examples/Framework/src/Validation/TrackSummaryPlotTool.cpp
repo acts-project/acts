@@ -35,36 +35,36 @@ void TrackSummaryPlotTool::book(Cache& cache, const std::string& prefix) const {
       addPrefix("nMeasurements_vs_eta"), "Number of measurements vs. #eta",
       bEta, bNum.title());
   // number of holes versus eta
-  cache.nHoles_vs_eta = BoostProfileHistogram(
-      addPrefix("nHoles_vs_eta"), "Number of holes vs. #eta", bEta, bNum.title());
+  cache.nHoles_vs_eta =
+      BoostProfileHistogram(addPrefix("nHoles_vs_eta"),
+                            "Number of holes vs. #eta", bEta, bNum.title());
   // number of outliers versus eta
-  cache.nOutliers_vs_eta = BoostProfileHistogram(
-      addPrefix("nOutliers_vs_eta"), "Number of outliers vs. #eta", bEta,
-      bNum.title());
+  cache.nOutliers_vs_eta =
+      BoostProfileHistogram(addPrefix("nOutliers_vs_eta"),
+                            "Number of outliers vs. #eta", bEta, bNum.title());
   // number of Shared Hits versus eta
   cache.nSharedHits_vs_eta = BoostProfileHistogram(
       addPrefix("nSharedHits_vs_eta"), "Number of Shared Hits vs. #eta", bEta,
       bNum.title());
   // number of track states versus pt
-  cache.nStates_vs_pt = BoostProfileHistogram(
-      addPrefix("nStates_vs_pT"), "Number of total states vs. pT", bPt,
-      bNum.title());
+  cache.nStates_vs_pt =
+      BoostProfileHistogram(addPrefix("nStates_vs_pT"),
+                            "Number of total states vs. pT", bPt, bNum.title());
   // number of measurements versus pt
-  cache.nMeasurements_vs_pt = BoostProfileHistogram(
-      addPrefix("nMeasurements_vs_pT"), "Number of measurements vs. pT", bPt,
-      bNum.title());
+  cache.nMeasurements_vs_pt =
+      BoostProfileHistogram(addPrefix("nMeasurements_vs_pT"),
+                            "Number of measurements vs. pT", bPt, bNum.title());
   // number of holes versus pt
-  cache.nHoles_vs_pt = BoostProfileHistogram(addPrefix("nHoles_vs_pT"),
-                                              "Number of holes vs. pT", bPt,
-                                              bNum.title());
+  cache.nHoles_vs_pt = BoostProfileHistogram(
+      addPrefix("nHoles_vs_pT"), "Number of holes vs. pT", bPt, bNum.title());
   // number of outliers versus pt
-  cache.nOutliers_vs_pt = BoostProfileHistogram(
-      addPrefix("nOutliers_vs_pT"), "Number of outliers vs. pT", bPt,
-      bNum.title());
+  cache.nOutliers_vs_pt =
+      BoostProfileHistogram(addPrefix("nOutliers_vs_pT"),
+                            "Number of outliers vs. pT", bPt, bNum.title());
   // number of Shared Hits versus pt
-  cache.nSharedHits_vs_pt = BoostProfileHistogram(
-      addPrefix("nSharedHits_vs_pT"), "Number of Shared Hits vs. pT", bPt,
-      bNum.title());
+  cache.nSharedHits_vs_pt =
+      BoostProfileHistogram(addPrefix("nSharedHits_vs_pT"),
+                            "Number of Shared Hits vs. pT", bPt, bNum.title());
 }
 
 void TrackSummaryPlotTool::fill(

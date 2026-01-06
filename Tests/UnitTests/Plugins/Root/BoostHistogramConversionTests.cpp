@@ -10,15 +10,15 @@
 
 #include "ActsPlugins/Root/HistogramToRootConverter.hpp"
 
-#include <TEfficiency.h>
-#include <TH1F.h>
-#include <TH2F.h>
-#include <TProfile.h>
-
 #include <cmath>
 #include <random>
 #include <string>
 #include <vector>
+
+#include <TEfficiency.h>
+#include <TH1F.h>
+#include <TH2F.h>
+#include <TProfile.h>
 
 using namespace Acts;
 using namespace ActsPlugins;
@@ -33,7 +33,8 @@ void testHist1D(const HistBinning& binning, const Histogram1D& boostHist) {
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootHist->GetName()), boostHist.name());
   BOOST_CHECK_EQUAL(std::string(rootHist->GetTitle()), boostHist.title());
-  BOOST_CHECK_EQUAL(std::string(rootHist->GetXaxis()->GetTitle()), boostHist.axisTitle());
+  BOOST_CHECK_EQUAL(std::string(rootHist->GetXaxis()->GetTitle()),
+                    boostHist.axisTitle());
 
   // Verify number of bins
   BOOST_CHECK_EQUAL(rootHist->GetNbinsX(), static_cast<int>(binning.nBins()));
@@ -41,7 +42,8 @@ void testHist1D(const HistBinning& binning, const Histogram1D& boostHist) {
   // Verify bin contents match
   const auto& bh = boostHist.histogram();
   for (int i = 1; i <= rootHist->GetNbinsX(); ++i) {
-    BOOST_CHECK_CLOSE(rootHist->GetBinContent(i), static_cast<double>(bh.at(i - 1)), 1e-10);
+    BOOST_CHECK_CLOSE(rootHist->GetBinContent(i),
+                      static_cast<double>(bh.at(i - 1)), 1e-10);
   }
 
   delete rootHist;
@@ -55,8 +57,10 @@ void testHist2D(const HistBinning& xBinning, const HistBinning& yBinning,
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootHist->GetName()), boostHist.name());
   BOOST_CHECK_EQUAL(std::string(rootHist->GetTitle()), boostHist.title());
-  BOOST_CHECK_EQUAL(std::string(rootHist->GetXaxis()->GetTitle()), boostHist.xAxisTitle());
-  BOOST_CHECK_EQUAL(std::string(rootHist->GetYaxis()->GetTitle()), boostHist.yAxisTitle());
+  BOOST_CHECK_EQUAL(std::string(rootHist->GetXaxis()->GetTitle()),
+                    boostHist.xAxisTitle());
+  BOOST_CHECK_EQUAL(std::string(rootHist->GetYaxis()->GetTitle()),
+                    boostHist.yAxisTitle());
 
   // Verify number of bins
   BOOST_CHECK_EQUAL(rootHist->GetNbinsX(), static_cast<int>(xBinning.nBins()));
@@ -124,7 +128,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_LogarithmicBinning) {
   // Fill with 100 log-distributed values
   std::mt19937 rng(123);
   std::uniform_real_distribution<double> logDist(std::log(0.1),
-                                                  std::log(100.0));
+                                                 std::log(100.0));
   for (int i = 0; i < 100; ++i) {
     boostHist.fill(std::exp(logDist(rng)));
   }
@@ -135,8 +139,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_LogarithmicBinning) {
 BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT) {
   auto xBinning = HistBinning::Uniform("eta", 10, -2.5, 2.5);
   auto yBinning = HistBinning::Uniform("residual", 10, -5.0, 5.0);
-  Histogram2D boostHist("res_vs_eta", "Residual vs Eta", xBinning,
-                             yBinning);
+  Histogram2D boostHist("res_vs_eta", "Residual vs Eta", xBinning, yBinning);
 
   // Fill with 100 2D Gaussian values
   std::mt19937 rng(456);
@@ -155,8 +158,8 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT_VariableBinning) {
 
   auto xBinning = HistBinning::Variable("eta", etaEdges);
   auto yBinning = HistBinning::Variable("pT [GeV]", ptEdges);
-  Histogram2D boostHist("eff_vs_eta_pt", "Efficiency vs Eta and pT",
-                             xBinning, yBinning);
+  Histogram2D boostHist("eff_vs_eta_pt", "Efficiency vs Eta and pT", xBinning,
+                        yBinning);
 
   boostHist.fill(0.0, 3.0);
   boostHist.fill(-1.0, 7.0);
@@ -165,11 +168,10 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT_VariableBinning) {
   testHist2D(xBinning, yBinning, boostHist);
 }
 
-
 BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
   auto xBinning = HistBinning::Uniform("eta", 10, -2.5, 2.5);
-  ProfileHistogram profile("res_mean_vs_eta", "Mean Residual vs Eta",
-                                xBinning, "residual [mm]");
+  ProfileHistogram profile("res_mean_vs_eta", "Mean Residual vs Eta", xBinning,
+                           "residual [mm]");
 
   std::map<double, double> expectedMeans;
 
@@ -177,7 +179,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
   profile.fill(-2.0, 1.0);
   profile.fill(-2.0, 3.0);
   expectedMeans[-2.0] = 2.0;
-  
+
   profile.fill(0.0, 5.0);
   profile.fill(0.0, 7.0);
   expectedMeans[0.0] = 6.0;
@@ -203,7 +205,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
   // Verify mean values in filled bins
   const auto& bh = profile.histogram();
 
-  for(auto x : {-2.0, 0.0, 2.0}) {
+  for (auto x : {-2.0, 0.0, 2.0}) {
     auto binIdx = bh.axis(0).index(x);
     BOOST_CHECK_CLOSE(rootProfile->GetBinContent(binIdx + 1),
                       bh.at(binIdx).value(), 1e-6);
@@ -242,13 +244,13 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
   const auto& passed = eff.passedHistogram();
   const auto& total = eff.totalHistogram();
 
-  for(auto x : {0.5, -1.5}) {
+  for (auto x : {0.5, -1.5}) {
     auto binIdx = passed.axis(0).index(x);
     double expectedEff = static_cast<double>(passed.at(binIdx)) /
                          static_cast<double>(total.at(binIdx));
     BOOST_CHECK_CLOSE(rootEff->GetEfficiency(binIdx + 1), expectedEff, 1e-6);
   }
-  
+
   delete rootEff;
 }
 
@@ -256,7 +258,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
   auto xBinning = HistBinning::Uniform("eta", 5, -2.5, 2.5);
   auto yBinning = HistBinning::Uniform("pt", 5, 0.0, 5.0);
   Efficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", xBinning,
-                        yBinning);
+                   yBinning);
 
   // Fill bin (0.0, 2.5): 3 passed, 1 failed (75% efficiency)
   for (auto v : {true, true, true, false}) {
@@ -284,7 +286,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
   const auto& total = eff.totalHistogram();
 
   using P = std::pair<double, double>;
-  for(auto coords : {P{0.0, 2.5}, P{-1.5, 1.5}}) {
+  for (auto coords : {P{0.0, 2.5}, P{-1.5, 1.5}}) {
     auto xIdx = passed.axis(0).index(coords.first);
     auto yIdx = passed.axis(1).index(coords.second);
     double expectedEff = static_cast<double>(passed.at(xIdx, yIdx)) /

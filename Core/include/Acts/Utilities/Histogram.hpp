@@ -8,37 +8,37 @@
 
 #pragma once
 
-#include <boost/histogram.hpp>
 #include <string>
 #include <vector>
+
+#include <boost/histogram.hpp>
 
 namespace Acts {
 namespace detail {
 using BoostVariableAxis = boost::histogram::axis::variable<double>;
-using BoostHist1D = decltype(
-    boost::histogram::make_histogram(std::declval<BoostVariableAxis>()));
+using BoostHist1D = decltype(boost::histogram::make_histogram(
+    std::declval<BoostVariableAxis>()));
 using BoostHist2D = decltype(boost::histogram::make_histogram(
     std::declval<BoostVariableAxis>(), std::declval<BoostVariableAxis>()));
-using BoostProfileHist = decltype(boost::histogram::make_profile(
-    std::declval<BoostVariableAxis>()));
+using BoostProfileHist =
+    decltype(boost::histogram::make_profile(std::declval<BoostVariableAxis>()));
 }  // namespace detail
-
 
 /// @brief Nested binning struct for booking plots
 class HistBinning {
  public:
-  static HistBinning Uniform(std::string title, std::size_t bins,
-                         double bMin, double bMax);
+  static HistBinning Uniform(std::string title, std::size_t bins, double bMin,
+                             double bMax);
   static HistBinning Variable(std::string title, std::vector<double> binEdges);
   static HistBinning Logarithmic(std::string title, std::size_t bins,
-                             double bMin, double bMax);
+                                 double bMin, double bMax);
 
   HistBinning(std::string title, std::vector<double> binEdges)
       : m_title(std::move(title)), m_binEdges(std::move(binEdges)) {}
 
   const std::string& title() const { return m_title; }
   std::size_t nBins() const { return m_binEdges.size() - 1; }
-  const std::vector<double> &binEdges() const { return m_binEdges; }
+  const std::vector<double>& binEdges() const { return m_binEdges; }
   double low() const { return m_binEdges.front(); }
   double high() const { return m_binEdges.back(); }
 
@@ -46,7 +46,6 @@ class HistBinning {
   std::string m_title;
   std::vector<double> m_binEdges;
 };
-
 
 /// @brief 1D histogram wrapper using boost::histogram for data collection
 ///
@@ -63,8 +62,7 @@ class Histogram1D {
   /// @param name Histogram name (for identification and output)
   /// @param title Histogram title (for plotting)
   /// @param binning Binning specification (uniform, variable, or logarithmic)
-  Histogram1D(std::string name, std::string title,
-                   const HistBinning& binning);
+  Histogram1D(std::string name, std::string title, const HistBinning& binning);
 
   /// Fill histogram with value
   ///
@@ -107,9 +105,8 @@ class Histogram2D {
   /// @param title Histogram title (for plotting)
   /// @param xBinning X-axis binning specification
   /// @param yBinning Y-axis binning specification
-  Histogram2D(std::string name, std::string title,
-                   const HistBinning& xBinning,
-                   const HistBinning& yBinning);
+  Histogram2D(std::string name, std::string title, const HistBinning& xBinning,
+              const HistBinning& yBinning);
 
   /// Fill histogram with x, y values
   ///
@@ -138,7 +135,7 @@ class Histogram2D {
   std::string m_xAxisTitle;
   std::string m_yAxisTitle;
 
-  detail::BoostHist2D m_hist; 
+  detail::BoostHist2D m_hist;
 };
 
 /// @brief Profile histogram using boost::histogram
@@ -155,8 +152,7 @@ class ProfileHistogram {
   /// @param xBinning X-axis binning specification
   /// @param yAxisTitle Y-axis title
   ProfileHistogram(std::string name, std::string title,
-                        const HistBinning& xBinning,
-                        std::string yAxisTitle);
+                   const HistBinning& xBinning, std::string yAxisTitle);
 
   /// Fill profile with (x, y) pair
   ///
@@ -185,7 +181,7 @@ class ProfileHistogram {
   std::string m_xAxisTitle;
   std::string m_yAxisTitle;
 
-  detail::BoostProfileHist m_hist; 
+  detail::BoostProfileHist m_hist;
 };
 
 /// @brief 1D efficiency histogram using boost::histogram
@@ -200,8 +196,7 @@ class Efficiency1D {
   /// @param name Histogram name
   /// @param title Histogram title
   /// @param binning Binning specification
-  Efficiency1D(std::string name, std::string title,
-                    const HistBinning& binning);
+  Efficiency1D(std::string name, std::string title, const HistBinning& binning);
 
   /// Fill efficiency histogram
   ///
@@ -243,9 +238,8 @@ class Efficiency2D {
   /// @param title Histogram title
   /// @param xBinning X-axis binning specification
   /// @param yBinning Y-axis binning specification
-  Efficiency2D(std::string name, std::string title,
-                    const HistBinning& xBinning,
-                    const HistBinning& yBinning);
+  Efficiency2D(std::string name, std::string title, const HistBinning& xBinning,
+               const HistBinning& yBinning);
 
   /// Fill efficiency histogram
   ///
@@ -281,4 +275,4 @@ class Efficiency2D {
   detail::BoostHist2D m_passed, m_total;
 };
 
-}  // namespace ActsExamples
+}  // namespace Acts

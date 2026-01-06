@@ -23,7 +23,6 @@ class TProfile;
 
 namespace ActsExamples::PlotHelpers {
 
-
 /// @brief book a 1D histogram
 /// @param histName the name of histogram
 /// @param histTitle the title of histogram

@@ -151,15 +151,19 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
 
     // Convert and write TrackSummaryPlotTool histograms
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nStates_vs_eta);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nMeasurements_vs_eta);
+    BoostHistogramWriteHelpers::write(
+        m_trackSummaryPlotCache.nMeasurements_vs_eta);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nHoles_vs_eta);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nOutliers_vs_eta);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nSharedHits_vs_eta);
+    BoostHistogramWriteHelpers::write(
+        m_trackSummaryPlotCache.nSharedHits_vs_eta);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nStates_vs_pt);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nMeasurements_vs_pt);
+    BoostHistogramWriteHelpers::write(
+        m_trackSummaryPlotCache.nMeasurements_vs_pt);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nHoles_vs_pt);
     BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nOutliers_vs_pt);
-    BoostHistogramWriteHelpers::write(m_trackSummaryPlotCache.nSharedHits_vs_pt);
+    BoostHistogramWriteHelpers::write(
+        m_trackSummaryPlotCache.nSharedHits_vs_pt);
 
     // Convert and write subdetector TrackSummaryPlotTool histograms
     for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
@@ -177,9 +181,12 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     }
 
     // Convert and write TrackQualityPlotTool histograms
-    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.completeness_vs_pT);
-    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.completeness_vs_eta);
-    BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.completeness_vs_phi);
+    BoostHistogramWriteHelpers::write(
+        m_trackQualityPlotCache.completeness_vs_pT);
+    BoostHistogramWriteHelpers::write(
+        m_trackQualityPlotCache.completeness_vs_eta);
+    BoostHistogramWriteHelpers::write(
+        m_trackQualityPlotCache.completeness_vs_phi);
     BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.purity_vs_pT);
     BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.purity_vs_eta);
     BoostHistogramWriteHelpers::write(m_trackQualityPlotCache.purity_vs_phi);
