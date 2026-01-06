@@ -50,7 +50,7 @@ jobs:
           CI/check_smearing_config.py .
 
   missing_includes:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Install clang
