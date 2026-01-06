@@ -55,28 +55,29 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
  private:
   // Enum class for the station indices
   enum class StationIdx : std::uint8_t {
-    BI,
-    BM,
-    BO,
-    EAI,
-    EAM,
-    EAO,
-    ECI,
-    ECM,
-    ECO,
+    BI,   // Inner Barrel
+    BM,   // Middle Barrel
+    BO,   // Outer Barrel
+    EAI,  // Endcap Inner A-side
+    EAM,  // Endcap Middle A-side
+    EAO,  // Endcap Outer A-side
+    ECI,  // Endcap Inner C-side
+    ECM,  // Endcap Middle C-side
+    ECO,  // Endcap Outer C-side
     nStations
   };
   // Enum class for the first level of container indices
   enum class FirstContainerIdx : std::uint8_t {
-    Body,
-    BW_A,
-    BW_C,
+    Central,  // Central container for barrel & NSWs
+    BW_A,     // Big Wheel A-side
+    BW_C,     // Big Wheel C-side
     nFirstContainers
   };
-  // Enum class for the second level of container indices when the first is Body
+  // Enum class for the second level of container indices when the first is
+  // Central
   enum class SecondContainerIdx : std::uint8_t {
-    Barrel,
-    NSWs,
+    Barrel,  // Barrel container
+    NSWs,    // NSW container
     nSecondContainers
   };
 
@@ -96,22 +97,25 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   std::unique_ptr<Acts::TrackingVolume> buildChildChamber(
       const Box_t& box, Acts::VolumeBoundFactory& boundFactory) const;
 
-  /// @brief Cylindrical bounds structure, used to calculate the overall station bounds
+  /// @brief Helper struct to store cylinder bounds, used to compute the overall bounds
+  ///        of a station tracking volume from its component volumes
   struct cylBounds {
+    /// @brief Lowest radius
     double rMin{std::numeric_limits<double>::max()};
+    /// @brief Highest radius
     double rMax{std::numeric_limits<double>::lowest()};
+    /// @brief Lowest longitudinal coordinate
     double zMin{std::numeric_limits<double>::max()};
+    /// @brief Highest longitudinal coordinate
     double zMax{std::numeric_limits<double>::lowest()};
-
-    /// @brief Method to update the bounds
-    void update(const double rMinIn, const double rMaxIn, const double zMinIn,
-                const double zMaxIn) {
-      rMin = std::min(rMin, rMinIn);
-      rMax = std::max(rMax, rMaxIn);
-      zMin = std::min(zMin, zMinIn);
-      zMax = std::max(zMax, zMaxIn);
-    }
   };
+  /// @brief Helper function to update the cylinder bounds of each station across its component volumes (chambers)
+  /// @tparam VolBounds_t: The bounds type of the chamber volume
+  /// @param volume: The chamber volume to extract the bounds from
+  /// @param bounds: The cylBounds object to be updated
+  template <Acts::VolumeBounds::BoundsType VolBounds_t>
+  void updateBounds(const Acts::TrackingVolume& volume,
+                    cylBounds& bounds) const;
 
   // Helper function returning the station idx from a box volume
   StationIdx getStationIdx(const Box_t& box) const;

@@ -64,15 +64,15 @@ GeoModelMuonMockupBuilder::trackingGeometry(
                                         Acts::AxisDirection::AxisZ);
   configureContainer(cyl);
 
-  // First level: one container for the body of the MS (barrel plus NSWs) and
-  // two for the Big Wheels (A and C side). These containers will be stacked in
-  // Z.
+  // First level: one container for the central cylindrical part of the MS
+  // (barrel plus NSWs) and two for the Big Wheels (A and C side). These
+  // containers will be stacked in Z.
   std::array<CylinderContainerBlueprintNode*,
              Acts::toUnderlying(FirstContainerIdx::nFirstContainers)>
       FirstContainers{};
 
   // Second level: one container for the barrel and one for the two NSWs. These
-  // containers are attached to the body container and will be stacked in r.
+  // containers are attached to the Central container and will be stacked in r.
   std::array<CylinderContainerBlueprintNode*,
              Acts::toUnderlying(SecondContainerIdx::nSecondContainers)>
       SecondContainers{};
@@ -84,7 +84,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
     if (container == nullptr) {
       container =
           &cyl.addCylinderContainer(firstContainerIdxToString(containerIdx),
-                                    (containerIdx == FirstContainerIdx::Body)
+                                    (containerIdx == FirstContainerIdx::Central)
                                         ? Acts::AxisDirection::AxisR
                                         : Acts::AxisDirection::AxisZ);
       configureContainer(*container);
@@ -98,8 +98,9 @@ GeoModelMuonMockupBuilder::trackingGeometry(
     auto& container = SecondContainers[Acts::toUnderlying(
         isBarrel ? SecondContainerIdx::Barrel : SecondContainerIdx::NSWs)];
     if (container == nullptr) {
-      auto& bodyContainer = *retrieveFirstContainer(FirstContainerIdx::Body);
-      container = &bodyContainer.addCylinderContainer(
+      auto& centralContainer =
+          *retrieveFirstContainer(FirstContainerIdx::Central);
+      container = &centralContainer.addCylinderContainer(
           isBarrel ? "BarrelContainer" : "NSWsContainer",
           isBarrel ? Acts::AxisDirection::AxisR : Acts::AxisDirection::AxisZ);
       configureContainer(*container);
@@ -147,7 +148,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
     // Attach station node to the proper container
     const FirstContainerIdx firstContIdx = getFirstContainerIdx(currentIdx);
     CylinderContainerBlueprintNode* targetContainer =
-        firstContIdx == FirstContainerIdx::Body
+        firstContIdx == FirstContainerIdx::Central
             ? retrieveSecondContainer(isBarrel)
             : retrieveFirstContainer(firstContIdx);
     targetContainer->addChild(std::move(stationNode));
@@ -200,45 +201,36 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
           *parentVolume, std::format("{:}_Chamber_{:d}", station, volNum));
       chamberVolume->assignGeometryId(geoId.withVolume(volNum));
 
-      // update bounds
-      const Acts::Vector3& center{chamberVolume->center()};
-      const double rCenter = Acts::fastHypot(center.x(), center.y());
-      const auto volBounds{chamberVolume->volumeBounds().values()};
-      double minR{0.0};
-      double maxR{0.0};
-      double minZ{0.0};
-      double maxZ{0.0};
-      if (chamberVolume->volumeBounds().type() ==
-          Acts::VolumeBounds::eTrapezoid) {
-        using enum Acts::TrapezoidVolumeBounds::BoundValues;
-        minR = rCenter - volBounds[eHalfLengthY];
-        maxR = Acts::fastHypot(rCenter + volBounds[eHalfLengthY],
-                               volBounds[eHalfLengthXposY]);
-        minZ = center.z() - volBounds[eHalfLengthZ];
-        maxZ = center.z() + volBounds[eHalfLengthZ];
-      } else if (chamberVolume->volumeBounds().type() ==
-                 Acts::VolumeBounds::eCuboid) {
-        using enum Acts::CuboidVolumeBounds::BoundValues;
-        minR = rCenter - volBounds[eHalfLengthZ];
-        maxR = Acts::fastHypot(rCenter + volBounds[eHalfLengthZ],
-                               volBounds[eHalfLengthX]);
-        maxZ = Acts::abs(center.z()) + volBounds[eHalfLengthY];
-      } else {
-        throw std::domain_error(std::format(
-            "processStation() -- Unsupported volume bounds type {} for chamber "
-            "{}",
-            std::to_string(
-                static_cast<int>(chamberVolume->volumeBounds().type())),
-            chamberVolume->volumeName()));
-      }
-      bounds.update(minR, maxR, minZ, maxZ);
+      ACTS_VERBOSE("New parent: " << chamberVolume->volumeName()
+                                  << " from box: " << box.name
+                                  << ", Id: " << chamberVolume->geometryId()
+                                  << ", center: " << chamberVolume->center().x()
+                                  << ", " << chamberVolume->center().y() << ", "
+                                  << chamberVolume->center().z() << ", bounds: "
+                                  << chamberVolume->volumeBounds());
 
-      ACTS_VERBOSE("New parent: "
-                   << chamberVolume->volumeName() << " from box: " << box.name
-                   << ", " << chamberVolume->geometryId()
-                   << " Center: " << center << " Bounds: r " << minR << ", "
-                   << maxR << " z " << minZ << ", " << maxZ
-                   << ", bounds: " << chamberVolume->volumeBounds());
+      // update bounds
+      if (isBarrel) {
+        if (chamberVolume->volumeBounds().type() !=
+            Acts::VolumeBounds::eCuboid) {
+          throw std::runtime_error(std::format(
+              "processStation() -- Barrel chamber {} has bound type {} instead "
+              "of Cuboid",
+              chamberVolume->volumeName(),
+              static_cast<int>(chamberVolume->volumeBounds().type())));
+        }
+        updateBounds<Acts::VolumeBounds::eCuboid>(*chamberVolume, bounds);
+      } else {
+        if (chamberVolume->volumeBounds().type() !=
+            Acts::VolumeBounds::eTrapezoid) {
+          throw std::runtime_error(std::format(
+              "processStation() -- Endcap chamber {} has bound type {} instead "
+              "of Trapezoid",
+              chamberVolume->volumeName(),
+              static_cast<int>(chamberVolume->volumeBounds().type())));
+        }
+        updateBounds<Acts::VolumeBounds::eTrapezoid>(*chamberVolume, bounds);
+      }
 
       it = chamberVolumes
                .emplace(parent, std::make_pair(std::make_shared<Node_t>(
@@ -355,6 +347,45 @@ GeoModelMuonMockupBuilder::buildChildChamber(
   }
   return trVol;
 }
+template <Acts::VolumeBounds::BoundsType VolBounds_t>
+void GeoModelMuonMockupBuilder::updateBounds(const Acts::TrackingVolume& volume,
+                                             cylBounds& bounds) const {
+  const Acts::Vector3& center{volume.center()};
+  const double rCenter{Acts::fastHypot(center.x(), center.y())};
+  const auto volBounds{volume.volumeBounds().values()};
+  double rMin{0.0};
+  double rMax{0.0};
+  double zMin{0.0};
+  double zMax{0.0};
+
+  if constexpr (VolBounds_t == Acts::VolumeBounds::eTrapezoid) {
+    using enum Acts::TrapezoidVolumeBounds::BoundValues;
+    rMin = rCenter - volBounds[eHalfLengthY];
+    rMax = Acts::fastHypot(rCenter + volBounds[eHalfLengthY],
+                           volBounds[eHalfLengthXposY]);
+    zMin = center.z() - volBounds[eHalfLengthZ];
+    zMax = center.z() + volBounds[eHalfLengthZ];
+  } else if constexpr (VolBounds_t == Acts::VolumeBounds::eCuboid) {
+    using enum Acts::CuboidVolumeBounds::BoundValues;
+    rMin = rCenter - volBounds[eHalfLengthZ];
+    rMax = Acts::fastHypot(rCenter + volBounds[eHalfLengthZ],
+                           volBounds[eHalfLengthX]);
+    zMax = Acts::abs(center.z()) + volBounds[eHalfLengthY];
+  } else {
+    static_assert(VolBounds_t == Acts::VolumeBounds::eTrapezoid ||
+                      VolBounds_t == Acts::VolumeBounds::eCuboid,
+                  "Unsupported volume bounds type in cylBounds::update");
+  }
+
+  ACTS_VERBOSE("Computed cylindrical bounds: "
+               << "r: " << rMin << ", " << rMax << " "
+               << "z: " << zMin << ", " << zMax);
+
+  bounds.rMin = std::min(bounds.rMin, rMin);
+  bounds.rMax = std::max(bounds.rMax, rMax);
+  bounds.zMin = std::min(bounds.zMin, zMin);
+  bounds.zMax = std::max(bounds.zMax, zMax);
+}
 
 GeoModelMuonMockupBuilder::StationIdx GeoModelMuonMockupBuilder::getStationIdx(
     const Box_t& box) const {
@@ -414,7 +445,7 @@ GeoModelMuonMockupBuilder::getFirstContainerIdx(
   } else if (stationIdx == StationIdx::ECM || stationIdx == StationIdx::ECO) {
     return FirstContainerIdx::BW_C;
   } else {
-    return FirstContainerIdx::Body;
+    return FirstContainerIdx::Central;
   }
 }
 
@@ -448,8 +479,8 @@ std::string GeoModelMuonMockupBuilder::stationIdxToString(
 std::string GeoModelMuonMockupBuilder::firstContainerIdxToString(
     const GeoModelMuonMockupBuilder::FirstContainerIdx idx) {
   switch (idx) {
-    case FirstContainerIdx::Body:
-      return "BodyContainer";
+    case FirstContainerIdx::Central:
+      return "CentralContainer";
     case FirstContainerIdx::BW_A:
       return "BigWheelA_Container";
     case FirstContainerIdx::BW_C:
