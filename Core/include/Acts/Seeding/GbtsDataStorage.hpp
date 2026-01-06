@@ -79,8 +79,9 @@ class GbtsEtaBin {
 
 class GbtsDataStorage {
  public:
-  explicit GbtsDataStorage(const GbtsGeometry& geometry,
-                           const SeedFinderGbtsConfig& config);
+  explicit GbtsDataStorage(
+      const GbtsGeometry& geometry, const SeedFinderGbtsConfig& config,
+      const std::vector<std::array<float, 5>>& parsedLutFile);
   ~GbtsDataStorage();
 
   int loadPixelGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll,
@@ -102,7 +103,7 @@ class GbtsDataStorage {
  protected:
   const GbtsGeometry& m_geo;
   const SeedFinderGbtsConfig& m_config;
-  std::vector<std::array<float, 5>> m_mlLUT;
+  const std::vector<std::array<float, 5>>& m_mlLUT;
   std::vector<GbtsEtaBin> m_etaBins;
 };
 
