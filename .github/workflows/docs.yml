@@ -57,6 +57,7 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2404:83
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
       DOXYGEN_VERSION: "1.15.0"
