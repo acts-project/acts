@@ -313,16 +313,20 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   const Portal* negativeDisc = nullptr;
 
   for (const Portal* portal : portals) {
-    if (portal == shell.portal(CylinderVolumeBounds::Face::OuterCylinder)) {
+    if (portal ==
+        shell.portalPtr(CylinderVolumeBounds::Face::OuterCylinder).get()) {
       outerCylinder = portal;
     } else if (portal ==
-               shell.portal(CylinderVolumeBounds::Face::InnerCylinder)) {
+               shell.portalPtr(CylinderVolumeBounds::Face::InnerCylinder)
+                   .get()) {
       innerCylinder = portal;
     } else if (portal ==
-               shell.portal(CylinderVolumeBounds::Face::PositiveDisc)) {
+               shell.portalPtr(CylinderVolumeBounds::Face::PositiveDisc)
+                   .get()) {
       positiveDisc = portal;
     } else if (portal ==
-               shell.portal(CylinderVolumeBounds::Face::NegativeDisc)) {
+               shell.portalPtr(CylinderVolumeBounds::Face::NegativeDisc)
+                   .get()) {
       negativeDisc = portal;
     }
   }
@@ -386,16 +390,16 @@ void checkEqual(const std::vector<const Portal*>& exp,
                 const std::vector<const Portal*>& act,
                 SingleCylinderPortalShell& shell) {
   auto which = [&](const Portal* p) -> std::string {
-    if (p == shell.portal(CylinderVolumeBounds::Face::InnerCylinder)) {
+    if (p == shell.portalPtr(CylinderVolumeBounds::Face::InnerCylinder).get()) {
       return "InnerCylinder";
     }
-    if (p == shell.portal(CylinderVolumeBounds::Face::OuterCylinder)) {
+    if (p == shell.portalPtr(CylinderVolumeBounds::Face::OuterCylinder).get()) {
       return "OuterCylinder";
     }
-    if (p == shell.portal(CylinderVolumeBounds::Face::PositiveDisc)) {
+    if (p == shell.portalPtr(CylinderVolumeBounds::Face::PositiveDisc).get()) {
       return "PositiveDisc";
     }
-    if (p == shell.portal(CylinderVolumeBounds::Face::NegativeDisc)) {
+    if (p == shell.portalPtr(CylinderVolumeBounds::Face::NegativeDisc).get()) {
       return "NegativeDisc";
     }
     BOOST_FAIL("Unknown portal");
@@ -453,7 +457,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(PositiveDisc).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -468,7 +472,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(OuterCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -483,7 +487,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -498,7 +502,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(NegativeDisc).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -513,7 +517,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -528,7 +532,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -543,7 +547,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -558,7 +562,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(PositiveDisc).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -573,7 +577,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(NegativeDisc).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -591,7 +595,7 @@ BOOST_DATA_TEST_CASE(
                         *logger, false);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(OuterCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -609,7 +613,7 @@ BOOST_DATA_TEST_CASE(
                         *logger, false);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(OuterCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -627,7 +631,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portalPtr(OuterCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -645,7 +649,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK_EQUAL(exp.size(), 1);
-    BOOST_CHECK_EQUAL(exp.at(0), shell.portal(InnerCylinder));
+    BOOST_CHECK_EQUAL(exp.at(0), shell.portalPtr(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);

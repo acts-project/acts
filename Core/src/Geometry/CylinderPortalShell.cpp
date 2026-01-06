@@ -84,10 +84,6 @@ SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume)
   }
 }
 
-Portal* SingleCylinderPortalShell::portal(Face face) {
-  return portalPtr(face).get();
-}
-
 std::shared_ptr<Portal> SingleCylinderPortalShell::portalPtr(Face face) {
   return m_portals.at(toUnderlying(face));
 }
@@ -244,10 +240,6 @@ CylinderStackPortalShell::CylinderStackPortalShell(
 
 std::size_t CylinderStackPortalShell::size() const {
   return m_hasInnerCylinder ? 4 : 3;
-}
-
-Portal* CylinderStackPortalShell::portal(Face face) {
-  return portalPtr(face).get();
 }
 
 std::shared_ptr<Portal> CylinderStackPortalShell::portalPtr(Face face) {

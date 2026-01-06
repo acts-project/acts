@@ -29,11 +29,6 @@ class CuboidPortalShell : public PortalShellBase {
   /// Type alias for cuboid volume bounds face enumeration
   using Face = CuboidVolumeBounds::Face;
 
-  /// Retrieve the portal associated to the given face. Can be nullptr if unset.
-  /// @param face The face to retrieve the portal for
-  /// @return The portal associated to the face
-  virtual Portal* portal(Face face) = 0;
-
   /// Retrieve a shared_ptr for the portal associated to the given face. Can be
   /// nullptr if unset.
   /// @param face The face to retrieve the portal for
@@ -69,9 +64,6 @@ class SingleCuboidPortalShell : public CuboidPortalShell {
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const final;
-
-  /// @copydoc CuboidPortalShell::portal
-  Portal* portal(Face face) final;
 
   /// @copydoc CuboidPortalShell::portalPtr
   std::shared_ptr<Portal> portalPtr(Face face) final;
@@ -115,9 +107,6 @@ class CuboidStackPortalShell final : public CuboidPortalShell {
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const override;
-
-  /// @copydoc CuboidPortalShell::portal
-  Portal* portal(Face face) override;
 
   /// @copydoc CuboidPortalShell::portalPtr
   std::shared_ptr<Portal> portalPtr(Face face) override;

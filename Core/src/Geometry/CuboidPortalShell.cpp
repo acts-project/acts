@@ -67,10 +67,6 @@ SingleCuboidPortalShell::SingleCuboidPortalShell(TrackingVolume& volume)
   handle(PositiveYFace, positiveFaceZX);
 }
 
-Portal* SingleCuboidPortalShell::portal(Face face) {
-  return portalPtr(face).get();
-}
-
 std::shared_ptr<Portal> SingleCuboidPortalShell::portalPtr(Face face) {
   return m_portals.at(toUnderlying(face));
 }
@@ -238,10 +234,6 @@ CuboidStackPortalShell::CuboidStackPortalShell(
 
 std::size_t CuboidStackPortalShell::size() const {
   return 6;
-}
-
-Portal* CuboidStackPortalShell::portal(Face face) {
-  return portalPtr(face).get();
 }
 
 std::shared_ptr<Portal> CuboidStackPortalShell::portalPtr(Face face) {

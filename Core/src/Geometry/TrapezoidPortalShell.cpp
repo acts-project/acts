@@ -46,10 +46,6 @@ SingleTrapezoidPortalShell::SingleTrapezoidPortalShell(TrackingVolume& volume)
   }
 }
 
-Portal* SingleTrapezoidPortalShell::portal(Face face) {
-  return portalPtr(face).get();
-}
-
 std::shared_ptr<Portal> SingleTrapezoidPortalShell::portalPtr(Face face) {
   return m_portals.at(toUnderlying(face));
 }
