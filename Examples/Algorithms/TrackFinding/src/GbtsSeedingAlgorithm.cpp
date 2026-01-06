@@ -42,7 +42,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   /// parse connection and LUT files
 
   m_lutParser = std::make_unique<Acts::Experimental::GbtsLutParser>(
-      m_cfg.seedFinderConfig.lutInputFile);
+      m_cfg.seedFinderConfig.lutInputFile, m_cfg.seedFinderConfig.useML);
 
   // create the connection objects
   m_connector = std::make_unique<Acts::Experimental::GbtsConnector>(
