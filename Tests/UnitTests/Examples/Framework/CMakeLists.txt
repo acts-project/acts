@@ -1,5 +1,2 @@
 set(unittest_extra_libraries ActsExamplesFramework ActsExamplesIoRoot)
 add_unittest(DataHandle DataHandleTest.cpp)
-add_unittest(BoostHistogram BoostHistogramTests.cpp)
-add_unittest(BoostHistogramConversion BoostHistogramConversionTests.cpp)
-add_unittest(BoostProfileEfficiency BoostProfileEfficiencyTests.cpp)

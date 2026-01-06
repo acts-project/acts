@@ -8,18 +8,15 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "ActsExamples/Utilities/Helpers.hpp"
-#include "ActsExamples/Validation/BoostHistogramWrappers.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 
-#include <random>
+using namespace Acts;
 
-using namespace ActsExamples;
+BOOST_AUTO_TEST_SUITE(ProfileEfficiencySuite)
 
-BOOST_AUTO_TEST_SUITE(BoostProfileEfficiencySuite)
-
-BOOST_AUTO_TEST_CASE(BoostProfileHistogram_BasicFill) {
-  auto xBinning = PlotHelpers::Binning::Uniform("x", 10, 0.0, 10.0);
-  BoostProfileHistogram profile("test_prof", "Test Profile", xBinning,
+BOOST_AUTO_TEST_CASE(ProfileHistogram_BasicFill) {
+  auto xBinning = HistBinning::Uniform("x", 10, 0.0, 10.0);
+  ProfileHistogram profile("test_prof", "Test Profile", xBinning,
                                 "y value");
 
   BOOST_CHECK_EQUAL(profile.name(), "test_prof");
@@ -44,9 +41,9 @@ BOOST_AUTO_TEST_CASE(BoostProfileHistogram_BasicFill) {
   BOOST_CHECK_CLOSE(count, 3.0, 1e-10);
 }
 
-BOOST_AUTO_TEST_CASE(BoostProfileHistogram_MultipleBins) {
-  auto xBinning = PlotHelpers::Binning::Uniform("eta", 5, -2.5, 2.5);
-  BoostProfileHistogram profile("res_vs_eta", "Residual vs Eta", xBinning,
+BOOST_AUTO_TEST_CASE(ProfileHistogram_MultipleBins) {
+  auto xBinning = HistBinning::Uniform("eta", 5, -2.5, 2.5);
+  ProfileHistogram profile("res_vs_eta", "Residual vs Eta", xBinning,
                                 "residual");
 
   // Fill different eta bins with different mean values
@@ -72,9 +69,9 @@ BOOST_AUTO_TEST_CASE(BoostProfileHistogram_MultipleBins) {
   BOOST_CHECK_CLOSE(bh.at(idx4).value(), 10.0, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(BoostEfficiency1D_BasicFill) {
-  auto binning = PlotHelpers::Binning::Uniform("eta", 10, -3.0, 3.0);
-  BoostEfficiency1D eff("eff_vs_eta", "Efficiency vs Eta", binning);
+BOOST_AUTO_TEST_CASE(Efficiency1D_BasicFill) {
+  auto binning = HistBinning::Uniform("eta", 10, -3.0, 3.0);
+  Efficiency1D eff("eff_vs_eta", "Efficiency vs Eta", binning);
 
   BOOST_CHECK_EQUAL(eff.name(), "eff_vs_eta");
   BOOST_CHECK_EQUAL(eff.title(), "Efficiency vs Eta");
@@ -98,9 +95,9 @@ BOOST_AUTO_TEST_CASE(BoostEfficiency1D_BasicFill) {
   BOOST_CHECK_CLOSE(passed / total, 0.7, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(BoostEfficiency1D_MultipleBins) {
-  auto binning = PlotHelpers::Binning::Uniform("pt", 5, 0.0, 5.0);
-  BoostEfficiency1D eff("eff_vs_pt", "Efficiency vs pT", binning);
+BOOST_AUTO_TEST_CASE(Efficiency1D_MultipleBins) {
+  auto binning = HistBinning::Uniform("pt", 5, 0.0, 5.0);
+  Efficiency1D eff("eff_vs_pt", "Efficiency vs pT", binning);
 
   // Bin 0: 50% efficiency
   eff.fill(0.5, true);
@@ -138,10 +135,10 @@ BOOST_AUTO_TEST_CASE(BoostEfficiency1D_MultipleBins) {
                     1.0, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(BoostEfficiency2D_BasicFill) {
-  auto xBinning = PlotHelpers::Binning::Uniform("eta", 5, -2.5, 2.5);
-  auto yBinning = PlotHelpers::Binning::Uniform("pt", 5, 0.0, 5.0);
-  BoostEfficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", xBinning,
+BOOST_AUTO_TEST_CASE(Efficiency2D_BasicFill) {
+  auto xBinning = HistBinning::Uniform("eta", 5, -2.5, 2.5);
+  auto yBinning = HistBinning::Uniform("pt", 5, 0.0, 5.0);
+  Efficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", xBinning,
                         yBinning);
 
   BOOST_CHECK_EQUAL(eff.name(), "eff_vs_eta_pt");
