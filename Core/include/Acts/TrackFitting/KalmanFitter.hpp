@@ -233,9 +233,6 @@ struct KalmanFitterResult {
   /// Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
-  /// Last encountered error
-  Result<void> result{Result<void>::success()};
-
   /// Path limit aborter
   PathLimitReached pathLimitReached;
 };
@@ -347,13 +344,13 @@ class KalmanFitter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void act(propagator_state_t& state, const stepper_t& stepper,
-             const navigator_t& navigator, result_type& result,
-             const Logger& /*logger*/) const {
-      assert(result.fittedStates != nullptr && "No MultiTrajectory set");
+    Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                     const navigator_t& navigator, result_type& result,
+                     const Logger& /*logger*/) const {
+      assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
-        return;
+        return Result<void>::success();
       }
 
       ACTS_VERBOSE("KalmanFitter step at pos: "
@@ -385,7 +382,7 @@ class KalmanFitter {
         if (!res.ok()) {
           ACTS_ERROR("Error in " << state.options.direction
                                  << " filter: " << res.error());
-          result.result = res.error();
+          return res.error();
         }
       }
 
@@ -419,7 +416,7 @@ class KalmanFitter {
           if (!res.ok()) {
             ACTS_ERROR("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
-            result.result = res.error();
+            return res.error();
           } else {
             const auto& [boundParams, jacobian, pathLength] = *res;
             result.fittedParameters = boundParams;
@@ -428,6 +425,8 @@ class KalmanFitter {
 
         result.finished = true;
       }
+
+      return Result<void>::success();
     }
 
     template <typename propagator_state_t, typename stepper_t,
@@ -435,7 +434,7 @@ class KalmanFitter {
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_type& result,
                     const Logger& /*logger*/) const {
-      return !result.result.ok() || result.finished;
+      return result.finished;
     }
 
     /// @brief Kalman actor operation: update
@@ -759,17 +758,11 @@ class KalmanFitter {
       return result.error();
     }
 
-    // It could happen that the fit ends in zero measurement states.
-    // The result gets meaningless so such case is regarded as fit failure.
-    if (kalmanResult.result.ok() && !kalmanResult.measurementStates) {
-      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
-    }
-
-    if (!kalmanResult.result.ok()) {
-      ACTS_ERROR("KalmanFilter failed: "
-                 << kalmanResult.result.error() << ", "
-                 << kalmanResult.result.error().message());
-      return kalmanResult.result.error();
+    /// It could happen that the fit ends in zero measurement states.
+    /// The result gets meaningless so such case is regarded as fit failure.
+    if (!kalmanResult.measurementStates) {
+      ACTS_ERROR("KalmanFilter failed: No measurement states found");
+      return KalmanFitterError::NoMeasurementFound;
     }
 
     auto track = trackContainer.makeTrack();

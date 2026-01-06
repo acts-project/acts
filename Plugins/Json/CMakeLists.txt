@@ -5,6 +5,7 @@ acts_add_library(
     src/ExtentJsonConverter.cpp
     src/GridJsonConverter.cpp
     src/GeometryIdentifierJsonConverter.cpp
+    src/IndexGridNavigationJsonConverter.cpp
     src/JsonMaterialDecorator.cpp
     src/MaterialMapJsonConverter.cpp
     src/MaterialJsonConverter.cpp
