@@ -47,7 +47,6 @@ target_link_libraries(
         ROOT::Core
         ROOT::Hist
         HepMC3::HepMC3
-    PRIVATE std::filesystem
 )
 target_compile_definitions(
     ActsExamplesFramework

@@ -11,18 +11,105 @@
 #include <set>
 
 #include "StrawHitGeneratorHelper.hpp"
+#include "TFile.h"
+#include "TTree.h"
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 5;
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
+ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineSeederTest", logLvl));
+
+#define DECLARE_BRANCH(dTYPE, NAME) \
+  dTYPE NAME{};                     \
+  outTree->Branch(#NAME, &NAME);
 
 namespace ActsTests {
+
+void testSeeder(RandomEngine& engine, TFile& outFile) {
+  auto outTree = std::make_unique<TTree>("StrawSeederTree", "StrawSeederTree");
+
+  DECLARE_BRANCH(double, trueY0);
+  DECLARE_BRANCH(double, trueTheta);
+  DECLARE_BRANCH(std::size_t, nTruthStraws);
+  DECLARE_BRANCH(std::size_t, nTruthStrips);
+  DECLARE_BRANCH(std::vector<double>, recoY0);
+  DECLARE_BRANCH(std::vector<double>, recoTheta);
+  DECLARE_BRANCH(std::vector<std::size_t>, nStraws);
+  DECLARE_BRANCH(std::vector<std::size_t>, nStrips);
+  DECLARE_BRANCH(std::size_t, nSeeds);
+
+  using GenCfg_t = MeasurementGenerator::Config;
+  GenCfg_t genCfg{};
+  genCfg.twinStraw = false;
+  genCfg.createStrips = true;
+
+  CompositeSpacePointLineSeeder::Config seederCfg{};
+  seederCfg.busyLayerLimit = 20;
+  const CompositeSpacePointLineSeeder seeder{
+      seederCfg, getDefaultLogger("StrawLineSeederTest", logLvl)};
+
+  for (std::size_t evt = 0; evt < nEvents; ++evt) {
+    if (evt % 100 == 0) {
+      ACTS_INFO("Generating event " << evt);
+    }
+    const auto line = generateLine(engine, logger());
+    auto linePars = line.parameters();
+    trueY0 = linePars[toUnderlying(FitParIndex::y0)];
+    trueTheta = linePars[toUnderlying(FitParIndex::theta)];
+    auto testTubes =
+        MeasurementGenerator::spawn(line, 0._ns, engine, genCfg, logger());
+    nTruthStraws = static_cast<std::size_t>(std::ranges::count_if(
+        testTubes, [](const auto& testSp) { return testSp->isStraw(); }));
+    nTruthStrips = static_cast<std::size_t>(std::ranges::count_if(
+        testTubes, [](const auto& testSp) { return !testSp->isStraw(); }));
+    auto calibrator = std::make_unique<SpCalibrator>();
+
+    using SeedState_t =
+        CompositeSpacePointLineSeeder::SeedingState<Container_t, Container_t,
+                                                    SpSorter>;
+    SeedState_t seedState{startParameters(line, testTubes), testTubes,
+                          calibrator.get()};
+    ACTS_DEBUG(seedState);
+    nSeeds = 0;
+    CalibrationContext cctx{};
+    while (auto seed = seeder.nextSeed(cctx, seedState)) {
+      ACTS_DEBUG("Seed finder loop " << seedState);
+      if (seed == std::nullopt) {
+        break;
+      }
+      recoTheta.push_back(seed->parameters[toUnderlying(FitParIndex::theta)]);
+      recoY0.push_back(seed->parameters[toUnderlying(FitParIndex::y0)]);
+
+      const auto seedStraws = static_cast<std::size_t>(std::ranges::count_if(
+          seed->hits, [](const auto& testMe) { return testMe->isStraw(); }));
+      const auto seedStrips = seed->hits.size() - seedStraws;
+      nStraws.push_back(seedStraws);
+      nStrips.push_back(seedStrips);
+      ++nSeeds;
+    }
+    ACTS_DEBUG("======Event " << evt << " found " << nSeeds << " seeds.");
+
+    outTree->Fill();
+    recoY0.clear();
+    recoTheta.clear();
+    nStraws.clear();
+    nStrips.clear();
+  }
+  outFile.WriteObject(outTree.get(), outTree->GetName());
+}
 
 using GenCfg_t = MeasurementGenerator::Config;
 
 BOOST_AUTO_TEST_SUITE(SeedingSuite)
+BOOST_AUTO_TEST_CASE(SeederTest) {
+  RandomEngine engine{1602};
+  std::unique_ptr<TFile> outFile{
+      TFile::Open("StrawLineSeedTest.root", "RECREATE")};
 
+  BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
+
+  testSeeder(engine, *outFile);
+}
 BOOST_AUTO_TEST_CASE(SeedTangents) {
   RandomEngine engine{117};
   constexpr double tolerance = 1.e-3;
@@ -105,7 +192,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
             Seeder::constructTangentLine(topTube, bottomTube, trueAmbi);
         /// Construct line parameters
         ACTS_DEBUG(__func__
-                   << "() " << __LINE__ << " - Line tan theta: " << lineTanBeta
+                   << "() " << __LINE__ << " - Line tan beta: " << lineTanBeta
                    << ", reconstructed tan theta: " << std::tan(seedPars.theta)
                    << ", line y0: " << lineY0
                    << ", reconstructed y0: " << seedPars.y0);

@@ -14,19 +14,6 @@
 
 namespace ActsPython {
 
-struct Context {
-  std::unordered_map<std::string, pybind11::module_> modules;
-
-  pybind11::module_& get(const std::string& name) { return modules.at(name); }
-
-  template <typename... Args>
-  auto get(Args&&... args)
-    requires(sizeof...(Args) >= 2)
-  {
-    return std::make_tuple((modules.at(args))...);
-  }
-};
-
 /// This method calls the acts adapter to patch the classes with a config object
 ///
 /// @param m the module to patch
