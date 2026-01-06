@@ -66,13 +66,17 @@ GeoModelMuonMockupBuilder::trackingGeometry(
 
   // First level: one container for the central cylindrical part of the MS
   // (barrel plus NSWs) and two for the Big Wheels (A and C side). These
-  // containers will be stacked in Z.
+  // containers will be stacked in Z. The Central container will have internal
+  // stacking of volumes in R, while the Endcaps containers will stack station
+  // volumes in Z.
   std::array<CylinderContainerBlueprintNode*,
              Acts::toUnderlying(FirstContainerIdx::nFirstContainers)>
       FirstContainers{};
 
   // Second level: one container for the barrel and one for the two NSWs. These
-  // containers are attached to the Central container and will be stacked in r.
+  // containers are attached to the Central container and will be stacked in R.
+  // The Barrel container will have internal stacking of station volumes in R,
+  // while the NSWs container will stack them in Z.
   std::array<CylinderContainerBlueprintNode*,
              Acts::toUnderlying(SecondContainerIdx::nSecondContainers)>
       SecondContainers{};
