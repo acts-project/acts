@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docs:
+  docs-old:
     runs-on: ubuntu-latest
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
@@ -52,5 +52,52 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         with:
-          name: acts-docs
+          name: acts-docs-old
           path: docs/old/_build/html/
+
+  docs:
+    runs-on: ubuntu-latest
+    env:
+      DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
+      DOXYGEN_VERSION: "1.15.0"
+      DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install doxygen
+        run: |
+          curl -SL https://acts.web.cern.ch/ci/doxygen/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz -o doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          echo "${{ env.DOXYGEN_HASH }}  doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz" | sha256sum -c -
+          tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          --preset=github-ci
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_BUILD_PLUGIN_ONNX=ON
+
+      - name: Build documentation
+        run: >
+          cmake --build build --target docs
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: acts-docs
+          path: build/docs/html
