@@ -54,7 +54,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install clang
-        run: >
+        run: |
+          sudo apt-get update
           sudo apt-get install -y clang libeigen3-dev libboost-dev parallel
       - name: Check
         run: >
