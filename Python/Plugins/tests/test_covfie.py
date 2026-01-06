@@ -7,7 +7,8 @@ try:
     covfieEnabled = True
 except ImportError:
     covfieEnabled = False
-    
+
+
 @pytest.mark.skipif(not covfieEnabled, reason="Covfie plugin not available")
 def test_constant_field_conversion():
     from acts import covfie

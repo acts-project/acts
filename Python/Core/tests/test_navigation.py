@@ -2,6 +2,7 @@ import pytest
 
 import acts
 
+
 def test_navigation_policy_factory():
 
     policy = (
