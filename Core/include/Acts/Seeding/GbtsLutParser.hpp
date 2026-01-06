@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 
 #include <array>
 #include <fstream>
