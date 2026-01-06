@@ -16,16 +16,7 @@
 namespace Acts::Experimental {
 
 GbtsEtaBin::GbtsEtaBin() {
-  m_in.clear();
-  m_vn.clear();
-  m_params.clear();
   m_vn.reserve(1000);
-}
-
-GbtsEtaBin::~GbtsEtaBin() {
-  m_in.clear();
-  m_vn.clear();
-  m_params.clear();
 }
 
 void GbtsEtaBin::sortByPhi() {
@@ -110,13 +101,12 @@ GbtsDataStorage::GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
   m_etaBins.resize(m_geo->num_bins());
 }
 
-GbtsDataStorage::~GbtsDataStorage() = default;
-
 int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
-                                         const std::vector<GbtsNode>& coll,
+                                         const std::span<const GbtsNode> coll,
                                          bool useML) {
   int nLoaded = 0;
 
+  const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
   const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
 
   if (pL == nullptr) {
@@ -151,9 +141,10 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
 }
 
 int GbtsDataStorage::loadStripGraphNodes(short layerIndex,
-                                         const std::vector<GbtsNode>& coll) {
+                                         const std::span<const GbtsNode> coll) {
   int nLoaded = 0;
 
+  const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
   const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
 
   if (pL == nullptr) {
@@ -202,8 +193,10 @@ void GbtsDataStorage::initializeNodes(bool useML) {
   }
 
   unsigned int nL = m_geo->num_layers();
+  unsigned int nL = m_geo->num_layers();
 
   for (unsigned int layerIdx = 0; layerIdx < nL; layerIdx++) {
+    const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIdx);
     const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIdx);
 
     if (pL->m_layer.m_subdet <
