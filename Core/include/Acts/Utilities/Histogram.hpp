@@ -14,15 +14,22 @@
 #include <boost/histogram.hpp>
 
 namespace Acts {
+
 namespace detail {
+
 using BoostVariableAxis = boost::histogram::axis::variable<double>;
+
 using BoostHist1D = decltype(boost::histogram::make_histogram(
     std::declval<BoostVariableAxis>()));
+
 using BoostHist2D = decltype(boost::histogram::make_histogram(
     std::declval<BoostVariableAxis>(), std::declval<BoostVariableAxis>()));
+
 using BoostProfileHist =
     decltype(boost::histogram::make_profile(std::declval<BoostVariableAxis>()));
+
 }  // namespace detail
+
 
 /// @brief Nested binning struct for booking plots
 class HistBinning {
@@ -50,11 +57,7 @@ class HistBinning {
 /// @brief 1D histogram wrapper using boost::histogram for data collection
 ///
 /// This class wraps boost::histogram to provide a ROOT-independent histogram
-/// implementation. It supports variable binning (uniform, logarithmic, and
-/// custom bin edges) and weighted fills with proper error tracking.
-///
-/// The class provides minimal API - converters access the boost histogram
-/// directly via histogram() for iteration and bin content extraction.
+/// implementation.
 class Histogram1D {
  public:
   /// Construct 1D histogram from binning specification
@@ -82,6 +85,17 @@ class Histogram1D {
   const auto& histogram() const { return m_hist; }
 
  private:
+  friend class Histogram2D;
+
+  /// Construct 1D histogram from existing boost histogram
+  ///
+  /// @param name Histogram name (for identification and output)
+  /// @param title Histogram title (for plotting)
+  /// @param axisTitle Axis title
+  /// @param hist Boost histogram to wrap
+  Histogram1D(std::string name, std::string title, std::string axisTitle,
+              detail::BoostHist1D hist);
+
   std::string m_name;
   std::string m_title;
   std::string m_axisTitle;
@@ -92,11 +106,7 @@ class Histogram1D {
 /// @brief 2D histogram wrapper using boost::histogram for data collection
 ///
 /// This class wraps boost::histogram to provide a ROOT-independent 2D histogram
-/// implementation. It supports variable binning on both axes and weighted fills
-/// with proper error tracking.
-///
-/// The class provides minimal API - converters access the boost histogram
-/// directly via histogram(). Projections are handled by ROOT converters.
+/// implementation.
 class Histogram2D {
  public:
   /// Construct 2D histogram from binning specifications
@@ -126,6 +136,12 @@ class Histogram2D {
   /// Get Y-axis title
   const std::string& yAxisTitle() const { return m_yAxisTitle; }
 
+  /// Project the histogram onto x
+  Histogram1D projectionX() const;
+
+  /// Project the histogram onto y
+  Histogram1D projectionY() const;
+
   /// Direct access to boost::histogram (for converters and tests)
   const auto& histogram() const { return m_hist; }
 
@@ -141,7 +157,7 @@ class Histogram2D {
 /// @brief Profile histogram using boost::histogram
 ///
 /// This class wraps boost::histogram to provide a ROOT-independent profile
-/// histogram implementation. For each X bin, it tracks the mean (and variance)
+/// histogram implementation. For each X bin, it tracks the mean and variance
 /// of Y values.
 class ProfileHistogram {
  public:
@@ -187,7 +203,7 @@ class ProfileHistogram {
 /// @brief 1D efficiency histogram using boost::histogram
 ///
 /// This class tracks pass/total counts for efficiency calculation.
-/// It internally uses two simple histograms: one for passed events,
+/// It internally uses two 1D histograms: one for passed events,
 /// one for total events.
 class Efficiency1D {
  public:
@@ -230,6 +246,8 @@ class Efficiency1D {
 /// @brief 2D efficiency histogram using boost::histogram
 ///
 /// This class tracks pass/total counts for 2D efficiency calculation.
+/// It internally uses two 1D histograms: one for passed events,
+/// one for total events.
 class Efficiency2D {
  public:
   /// Construct 2D efficiency histogram

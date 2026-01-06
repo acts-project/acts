@@ -50,6 +50,13 @@ Histogram1D::Histogram1D(std::string name, std::string title,
       m_hist(boost::histogram::make_histogram(
           detail::BoostVariableAxis(binning.binEdges()))) {}
 
+Histogram1D::Histogram1D(std::string name, std::string title,
+                         std::string axisTitle, detail::BoostHist1D hist)
+    : m_name(std::move(name)),
+      m_title(std::move(title)),
+      m_axisTitle(std::move(axisTitle)),
+      m_hist(std::move(hist)) {}
+
 void Histogram1D::fill(double value) {
   m_hist(value);
 }
@@ -67,6 +74,20 @@ Histogram2D::Histogram2D(std::string name, std::string title,
 
 void Histogram2D::fill(double xValue, double yValue) {
   m_hist(xValue, yValue);
+}
+
+Histogram1D Histogram2D::projectionX() const {
+  auto projectedHist = boost::histogram::algorithm::project(
+      m_hist, std::integral_constant<unsigned, 0>{});
+  return Histogram1D(m_name + "_projX", m_title + " projection X",
+                     m_xAxisTitle, std::move(projectedHist));
+}
+
+Histogram1D Histogram2D::projectionY() const {
+  auto projectedHist = boost::histogram::algorithm::project(
+      m_hist, std::integral_constant<unsigned, 1>{});
+  return Histogram1D(m_name + "_projY", m_title + " projection Y",
+                     m_yAxisTitle, std::move(projectedHist));
 }
 
 ProfileHistogram::ProfileHistogram(std::string name, std::string title,
