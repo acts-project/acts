@@ -14,6 +14,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
@@ -195,14 +196,14 @@ struct Gx2FitterResult {
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This corresponds to the last measurement state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
-  // Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
-  std::size_t lastMeasurementIndex = Acts::MultiTrajectoryTraits::kInvalid;
+  // Acts::TrackTraits::kInvalid is the start of a trajectory.
+  std::size_t lastMeasurementIndex = Acts::kTrackIndexInvalid;
 
   // This is the index of the 'tip' of the states stored in multitrajectory.
   // This corresponds to the last state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
-  // Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
-  std::size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
+  // Acts::TrackTraits::kInvalid is the start of a trajectory.
+  std::size_t lastTrackIndex = Acts::kTrackIndexInvalid;
 
   // The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
@@ -703,6 +704,8 @@ class Gx2Fitter {
   /// The navigator has DirectNavigator type or not
   static constexpr bool isDirectNavigator =
       std::is_same_v<Gx2fNavigator, DirectNavigator>;
+
+  static constexpr auto kInvalid = kTrackIndexInvalid;
 
  public:
   /// @brief Constructor for the Global Chi-Square Fitter
@@ -1235,7 +1238,7 @@ class Gx2Fitter {
     // Create an index of the 'tip' of the track stored in multitrajectory. It
     // is needed outside the update loop. It will be updated with each iteration
     // and used for the final track
-    std::size_t tipIndex = Acts::MultiTrajectoryTraits::kInvalid;
+    std::size_t tipIndex = kInvalid;
 
     // The scatteringMap stores for each visited surface their scattering
     // properties
@@ -1315,7 +1318,7 @@ class Gx2Fitter {
       // It could happen, that no measurements were found. Then the track would
       // be empty and the following operations would be invalid. Usually, this
       // only happens during the first iteration, due to bad initial parameters.
-      if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+      if (tipIndex == kInvalid) {
         ACTS_INFO("Did not find any measurements in nUpdate "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
@@ -1481,7 +1484,7 @@ class Gx2Fitter {
       // It could happen, that no measurements were found. Then the track would
       // be empty and the following operations would be invalid. Usually, this
       // only happens during the first iteration, due to bad initial parameters.
-      if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+      if (tipIndex == kInvalid) {
         ACTS_INFO("Did not find any measurements in material fit.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
@@ -1621,7 +1624,7 @@ class Gx2Fitter {
 
         // It could happen, that no measurements were found. Then the track
         // would be empty and the following operations would be invalid.
-        if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+        if (tipIndex == kInvalid) {
           ACTS_INFO("Did not find any measurements in final propagation.");
           return Experimental::GlobalChiSquareFitterError::
               NotEnoughMeasurements;
