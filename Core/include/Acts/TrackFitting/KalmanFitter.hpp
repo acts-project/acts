@@ -150,8 +150,8 @@ struct KalmanFitterOptions {
         referenceSurface(tSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        reversedFiltering(rFiltering),
-        reversedFilteringCovarianceScaling(rfScaling),
+        reverseFiltering(rFiltering),
+        reverseFilteringCovarianceScaling(rfScaling),
         freeToBoundCorrection(freeToBoundCorrection_) {}
 
   /// Context object for the geometry
@@ -182,13 +182,15 @@ struct KalmanFitterOptions {
 
   /// Whether to run filtering in reversed direction overwrite the
   /// ReverseFilteringLogic
-  bool reversedFiltering = false;
+  bool reverseFiltering = false;
 
   /// Factor by which the covariance of the input of the reversed filtering is
-  /// scaled. This is only used in the backwardfiltering (if reversedFiltering
+  /// scaled. This is only used in the backward filtering (if reverseFiltering
   /// is true or if the ReverseFilteringLogic return true for the track of
-  /// interest)
-  double reversedFilteringCovarianceScaling = 100.0;
+  /// interest).
+  /// Note that the default value is not tuned and might need adjustment for
+  /// different use cases.
+  double reverseFilteringCovarianceScaling = 100.0;
 
   /// Whether to include non-linear correction during global to local
   /// transformation
@@ -830,7 +832,7 @@ class KalmanFitter {
     typename track_container_t::TrackProxy track = forwardTrack;
 
     const bool doReverseFilter =
-        kfOptions.reversedFiltering ||
+        kfOptions.reverseFiltering ||
         kfOptions.extensions.reverseFilteringLogic(
             typename traj_t::ConstTrackStateProxy(lastMeasurementState));
     if (doReverseFilter) {
@@ -839,7 +841,7 @@ class KalmanFitter {
       auto reverseStartParameters = forwardTrack.createParametersFromState(
           typename traj_t::ConstTrackStateProxy(lastMeasurementState));
       reverseStartParameters.covariance().value() *=
-          kfOptions.reversedFilteringCovarianceScaling;
+          kfOptions.reverseFilteringCovarianceScaling;
       auto reversePropagatorOptions = make_propagator_options(
           it, end, kfOptions, sSequence, kfOptions.referenceSurface, true);
       auto reverseFilterResult = filter_impl(

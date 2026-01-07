@@ -118,7 +118,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    kfOptions.reversedFilteringCovarianceScaling =
+    kfOptions.reverseFilteringCovarianceScaling =
         reverseFilteringCovarianceScaling;
 
     if (options.doRefit) {
