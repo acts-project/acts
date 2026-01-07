@@ -33,6 +33,5 @@ using ConfigPair =
 /// @param p Destination ConfigPair to populate
 void from_json(const nlohmann::json& j, ConfigPair& p);
 
-
 /// @}
 }  // namespace Acts

@@ -162,6 +162,5 @@ auto GeometryHierarchyMapJsonConverter<value_t, decorator_t>::fromJson(
   return Container(std::move(elements));
 }
 
-
 /// @}
 }  // namespace Acts

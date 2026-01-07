@@ -527,7 +527,7 @@ class TimedOutputDecorator final : public OutputDecorator {
     char buffer[20];
     time_t t{};
     std::time(&t);
-    struct tm tbuf{};
+    struct tm tbuf {};
     std::strftime(buffer, sizeof(buffer), m_format.c_str(),
                   localtime_r(&t, &tbuf));
     return buffer;

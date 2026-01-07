@@ -83,6 +83,9 @@ def main():
     suffix_doc = (
         ".md",
         ".rst",
+        ".dox",
+        ".html",
+        ".bib",
     )
     suffix_other = (
         "",
@@ -99,6 +102,7 @@ def main():
         ".toml",
         ".txt",
         ".yml",
+        ".xml",
     )
     suffix_allowed = (
         suffix_header

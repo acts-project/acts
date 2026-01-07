@@ -39,6 +39,5 @@ struct jsonKey {
   std::string maptype = "mappingType";
 };
 
-
 /// @}
 }  // namespace Acts

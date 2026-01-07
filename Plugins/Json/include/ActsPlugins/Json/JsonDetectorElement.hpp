@@ -50,6 +50,5 @@ class JsonDetectorElement : public DetectorElementBase {
   double m_thickness{};
 };
 
-
 /// @}
 }  // namespace Acts

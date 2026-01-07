@@ -166,6 +166,5 @@ class MaterialMapJsonConverter {
   const Logger& logger() const { return *m_logger; }
 };
 
-
 /// @}
 }  // namespace Acts

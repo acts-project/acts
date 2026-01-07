@@ -45,7 +45,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::PdgParticle,
 )
 
 /// @}
-}
+}  // namespace Acts
 
 #ifdef NLOHMANN_JSON_NAMESPACE_BEGIN
 NLOHMANN_JSON_NAMESPACE_BEGIN
