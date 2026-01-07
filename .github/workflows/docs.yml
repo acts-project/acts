@@ -57,7 +57,7 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    # container: ghcr.io/acts-project/ubuntu2404:83
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
       DOXYGEN_VERSION: "1.15.0"
@@ -74,8 +74,8 @@ jobs:
 
       - name: Install APT packages 
         run: |
-          apt-get update
-          apt-get install -y graphviz texlive-bibtex-extra
+          sudo apt-get update
+          sudo apt-get install -y graphviz texlive-bibtex-extra libeigen3-dev libboost-dev cmake
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -85,11 +85,7 @@ jobs:
 
       - name: Configure
         run: >
-          cmake -B build -S .
-          --preset=github-ci
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_BUILD_PLUGIN_ONNX=ON
-          -DACTS_BUILD_DOCS=ON
+          cmake -B build -S . -DACTS_BUILD_DOCS=ON
 
       - name: Build documentation
         run: >
