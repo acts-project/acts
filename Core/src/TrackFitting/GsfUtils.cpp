@@ -18,8 +18,7 @@
 
 namespace Acts::detail {
 
-using TrackStateTraits =
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>;
+using TrackStateTraits = TrackStateTraits<kMeasurementSizeMax, true>;
 
 double calculateDeterminant(const double* fullCalibratedCovariance,
                             TrackStateTraits::Covariance predictedCovariance,

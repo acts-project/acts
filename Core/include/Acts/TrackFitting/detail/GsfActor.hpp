@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
@@ -31,11 +32,10 @@ struct GsfResult {
   traj_t* fittedStates{nullptr};
 
   /// The current top index of the MultiTrajectory
-  MultiTrajectoryTraits::IndexType currentTip = MultiTrajectoryTraits::kInvalid;
+  TrackIndexType currentTip = kTrackIndexInvalid;
 
   /// The last tip referring to a measurement state in the MultiTrajectory
-  MultiTrajectoryTraits::IndexType lastMeasurementTip =
-      MultiTrajectoryTraits::kInvalid;
+  TrackIndexType lastMeasurementTip = kTrackIndexInvalid;
 
   /// The last multi-component measurement state. Used to initialize the
   /// backward pass.
@@ -128,8 +128,8 @@ struct GsfActor {
 
   struct TemporaryStates {
     traj_t traj;
-    std::vector<MultiTrajectoryTraits::IndexType> tips;
-    std::map<MultiTrajectoryTraits::IndexType, double> weights;
+    std::vector<TrackIndexType> tips;
+    std::map<TrackIndexType, double> weights;
   };
 
   using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
@@ -563,7 +563,7 @@ struct GsfActor {
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           *m_cfg.calibrationContext, singleState, singleStepper,
           m_cfg.extensions, surface, sourceLink, tmpStates.traj,
-          MultiTrajectoryTraits::kInvalid, false, logger());
+          kTrackIndexInvalid, false, logger());
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -641,7 +641,7 @@ struct GsfActor {
       // now until we measure this is significant
       auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
           singleState, singleStepper, surface, tmpStates.traj,
-          MultiTrajectoryTraits::kInvalid, doCovTransport, logger(),
+          kTrackIndexInvalid, doCovTransport, logger(),
           precedingMeasurementExists);
 
       if (!trackStateProxyRes.ok()) {
@@ -757,8 +757,7 @@ struct GsfActor {
       }
 
     } else {
-      assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
-              "tip not valid"));
+      assert((result.currentTip != kTrackIndexInvalid && "tip not valid"));
 
       result.fittedStates->applyBackwards(
           result.currentTip, [&](auto trackState) {
