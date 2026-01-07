@@ -119,15 +119,11 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
   rootProfile->Sumw2();
 
   // Copy data from boost profile to ROOT profile
-  //
-  // The boost histogram uses a weighted_mean accumulator that tracks:
   // - count(): number of fills
   // - value(): mean of y-values
   // - variance(): sample variance = sum((y - mean)^2) / (n - 1)
-  //
-  // ROOT TProfile needs different information for correct error calculation.
-  // We must reconstruct ROOT's internal arrays from the boost accumulator data.
-  using Accumulator = boost::histogram::accumulators::weighted_mean<double>;
+
+  using Accumulator = boost::histogram::accumulators::mean<double>;
 
   for (auto&& x : boost::histogram::indexed(bh)) {
     const Accumulator& acc = *x;

@@ -25,18 +25,8 @@ using BoostHist1D = decltype(boost::histogram::make_histogram(
 using BoostHist2D = decltype(boost::histogram::make_histogram(
     std::declval<BoostVariableAxis>(), std::declval<BoostVariableAxis>()));
 
-/// Profile histogram type using weighted_mean accumulator
-///
-/// We use make_weighted_profile instead of make_profile because:
-/// 1. make_profile uses the 'mean' accumulator which tracks count, sum, and
-///    variance but NOT sum of squares
-/// 2. make_weighted_profile uses 'weighted_mean' which additionally tracks
-///    sum_of_weights_squared, allowing us to reconstruct the sum of squares
-/// 3. ROOT TProfile needs sum of squares for proper error calculation
-/// 4. For unweighted profiles, we fill with weight=1.0, making weighted_mean
-///    behave identically to mean while providing the extra data we need
-using BoostProfileHist = decltype(boost::histogram::make_weighted_profile(
-    std::declval<BoostVariableAxis>()));
+using BoostProfileHist =
+    decltype(boost::histogram::make_profile(std::declval<BoostVariableAxis>()));
 
 }  // namespace detail
 
