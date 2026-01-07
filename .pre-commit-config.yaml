@@ -110,6 +110,7 @@ repos:
     - id: sync_citation_metadata
       name: sync citation metadata
       entry: CI/sync_citation_metadata.py
-      language: system
+      language: python
       files: ^(CITATION\.cff|\.zenodo\.json|AUTHORS)$
+      additional_dependencies: ["typer", "rich", "pyyaml"]
       pass_filenames: false
