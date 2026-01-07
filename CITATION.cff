@@ -3,95 +3,125 @@ message: If you use this software, please cite it using these metadata.
 title: 'A Common Tracking Software Project'
 doi: 10.5281/zenodo.5141419
 authors:
-- given-names: Andreas
-  family-names: Salzburger
-  affiliation: CERN
-- given-names: Paul
-  family-names: Gessinger
-  affiliation: CERN
-- given-names: Fabian
-  family-names: Klimpel
-  affiliation: CERN / TUM Muenchen
-- given-names: Moritz
-  family-names: Kiehn
-  affiliation: CERN
-- given-names: Bastian
-  family-names: Schlag
-  affiliation: CERN / JGU Mainz
-- given-names: Hadrien
-  family-names: Grasland
-  affiliation: Universite Paris-Saclay / CNRS/IN2P3
-- given-names: Robert
-  family-names: Langenberg
-- given-names: Corentin
-  family-names: Allaire
-  affiliation: CERN
 - given-names: Xiaocong
   family-names: Ai
-  affiliation: DESY Hamburg
-- given-names: Benjamin
-  family-names: Huth
-  affiliation: Universitaet Regensburg
-- given-names: Louis-Guillaume
-  family-names: Gagnon
-  affiliation: UC Berkeley
+  affiliation: Zhengzhou University
+- given-names: Tim
+  family-names: Adye
+  affiliation: Rutherford Appleton Laboratory
+- given-names: Guilherme
+  family-names: Almeida
+  orcid: https://orcid.org/0000-0002-4257-4278
+- given-names: Corentin
+  family-names: Allaire
+  affiliation: IJCLab
+- given-names: Dimitra
+  family-names: Amperiadou
+  affiliation: CERN, Aristotle University of Thessaloniki
+- given-names: Tomasz
+  family-names: Bold
+  affiliation: AGH University of Krakow
+- given-names: Pierfrancesco
+  family-names: Butti
+  affiliation: CERN
 - given-names: Noemi
   family-names: Calace
   affiliation: CERN
-- given-names: Attila
-  family-names: Krasznahorkay
+- given-names: Jeremy
+  family-names: Couthures
+  affiliation: Annecy LAPP
+- given-names: Lorenzo
+  family-names: Damenti
+  affiliation: CERN, University of Florence
+- given-names: Wouter
+  family-names: Deconinck
+  affiliation: University of Manitoba
+- given-names: Davide
+  family-names: Di Croce
   affiliation: CERN
-- given-names: Beomki
-  family-names: Yeo
+- given-names: Doga
+  family-names: Elitez
+  affiliation: CERN, JGU Mainz
+- given-names: Luis Falda
+  family-names: Coelho
+  affiliation: Brandeis University
+  orcid: https://orcid.org/0000-0002-2298-3605
+- given-names: Louis-Guillaume
+  family-names: Gagnon
   affiliation: UC Berkeley
-- given-names: Charles
-  family-names: Leggett
-  affiliation: LBNL
-- given-names: Czirkos
-  family-names: Angela
-  affiliation: Eotvos Lorand University
-- given-names: Tomohiro
-  family-names: Yamazaki
-  affiliation: UC Berkeley
-- given-names: Joana
-  family-names: Niermann
-  affiliation: CERN
-- given-names: Irina
-  family-names: Ene
-  affiliation: UC Berkeley
-- given-names: Joe
-  family-names: Osborn
-  affiliation: Oak Ridge National Laboratory
 - given-names: Rocky
   family-names: Garg
   name-particle: Bala
-  affiliation: Stanford University
-- given-names: Andreas
-  family-names: Stefl
-  affiliation: CERN / TU Wien
-- given-names: Luis Falda
-  family-names: Coelho
-  affiliation: CERN / University of Coimbra
-  orcid: https://orcid.org/0000-0002-2298-3605
+  affiliation: Standford
+- given-names: Paul
+  family-names: Gessinger
+  affiliation: CERN
+- given-names: Maximilian
+  family-names: Goblirsch-Kolb
+  affiliation: DESY
+- given-names: Hadrien
+  family-names: Grasland
+  affiliation: IJCLab
+- given-names: Heather
+  family-names: Gray
+  affiliation: LBNL
+- given-names: Christian
+  family-names: Gumpert
+- given-names: Matthew
+  family-names: Harris
+  affiliation: University of Massachusetts, Amherst
+- given-names: Julia
+  family-names: Hrdinka
+- given-names: Benjamin
+  family-names: Huth
+  affiliation: CERN
+- given-names: Johannes
+  family-names: Junggeburth
+  affiliation: CERN
+- given-names: Moritz
+  family-names: Kiehn
+- given-names: Fabian
+  family-names: Klimpel
+- given-names: Robert
+  family-names: Langenberg
+- given-names: Leonardo
+  family-names: Monaco
+  affiliation: CERN
+- given-names: Joana
+  family-names: Niermann
+  affiliation: CERN
+- given-names: Joe
+  family-names: Osborn
+  affiliation: BNL
 - given-names: Alexander J.
   family-names: Pfleger
-  affiliation: CERN / University of Graz
+  affiliation: CERN, University of Graz
   orcid: https://orcid.org/0000-0001-5524-7738
-- given-names: Guilherme
-  family-names: Almeida
-  affiliation: University of Lisbon
-  orcid: https://orcid.org/0000-0002-4257-4278
-- given-names: Stephen Nicholas
-  family-names: Swatman
-  affiliation: CERN / University of Amsterdam
-  orcid: https://orcid.org/0000-0002-3747-3229
 - given-names: Felix
   family-names: Russo
-  affiliation: CERN / TU Wien
   orcid: https://orcid.org/0009-0005-8975-2245
+- given-names: Andreas
+  family-names: Salzburger
+  affiliation: CERN
+- given-names: Bastian
+  family-names: Schlag
+  affiliation: Standford University
+- given-names: Patrick
+  family-names: Scholer
+  affiliation: Carleton University
+- given-names: Andreas
+  family-names: Stefl
+  affiliation: CERN
+- given-names: Stephen Nicholas
+  family-names: Swatman
+  affiliation: CERN, University of Amsterdam
+  orcid: https://orcid.org/0000-0002-3747-3229
+- given-names: Roman
+  family-names: Urmanov
+  affiliation: Weizmann Institute of Science
 - given-names: Carlo
   family-names: Varni
-  affiliation: UC Berkeley
+  affiliation: AGH University of Krakow
 version: v44.2.0
 date-released: 2025-11-14
 repository-code: https://github.com/acts-project/acts

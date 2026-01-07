@@ -1,127 +1,174 @@
 {
   "description": "Experiment-independent toolkit for (charged) particle track reconstruction in (high energy) physics experiments implemented in modern C++ ",
   "license": "MPL-2.0",
-  "title": "acts-project/acts: v11.0.0",
-  "version": "v11.0.0",
+  "title": "acts-project/acts: vv44.2.0",
+  "version": "v44.2.0",
   "upload_type": "software",
   "creators": [
     {
-      "affiliation": "CERN",
-      "name": "Andreas Salzburger"
-    },
-    {
-      "affiliation": "CERN",
-      "name": "Paul Gessinger"
-    },
-    {
-      "affiliation": "CERN / TUM Muenchen",
-      "name": "Fabian Klimpel"
-    },
-    {
-      "affiliation": "CERN",
-      "name": "Moritz Kiehn"
-    },
-    {
-      "affiliation": "CERN / JGU Mainz",
-      "name": "Bastian Schlag"
-    },
-    {
-      "affiliation": "Universite Paris-Saclay / CNRS/IN2P3",
-      "name": "Hadrien G."
-    },
-    {
-      "affiliation": "University of Massachussets",
-      "name": "Robert Langenberg"
-    },
-    {
-      "affiliation": "CERN",
-      "name": "Corentin Allaire"
-    },
-    {
-      "affiliation": "DESY Hamburg",
+      "affiliation": "Zhengzhou University",
       "name": "Xiaocong Ai"
     },
     {
-      "affiliation": "Universitaet Regensburg",
-      "name": "Benjamin Huth"
+      "affiliation": "Rutherford Appleton Laboratory",
+      "name": "Tim Adye"
     },
     {
-      "affiliation": "UC Berkeley",
-      "name": "Louis-Guillaume Gagnon"
+      "affiliation": "",
+      "name": "Guilherme Almeida",
+      "orcid": "0000-0002-4257-4278"
+    },
+    {
+      "affiliation": "IJCLab",
+      "name": "Corentin Allaire"
+    },
+    {
+      "affiliation": "CERN, Aristotle University of Thessaloniki",
+      "name": "Dimitra Amperiadou"
+    },
+    {
+      "affiliation": "AGH University of Krakow",
+      "name": "Tomasz Bold"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Pierfrancesco Butti"
     },
     {
       "affiliation": "CERN",
       "name": "Noemi Calace"
     },
     {
+      "affiliation": "Annecy LAPP",
+      "name": "Jeremy Couthures"
+    },
+    {
+      "affiliation": "CERN, University of Florence",
+      "name": "Lorenzo Damenti"
+    },
+    {
+      "affiliation": "University of Manitoba",
+      "name": "Wouter Deconinck"
+    },
+    {
       "affiliation": "CERN",
-      "name": "Attila Krasznahorkay"
+      "name": "Davide Di Croce"
+    },
+    {
+      "affiliation": "CERN, JGU Mainz",
+      "name": "Doga Elitez"
+    },
+    {
+      "affiliation": "Brandeis University",
+      "name": "Luis Falda Coelho",
+      "orcid": "0000-0002-2298-3605"
     },
     {
       "affiliation": "UC Berkeley",
-      "name": "Beomki Yeo"
+      "name": "Louis-Guillaume Gagnon"
+    },
+    {
+      "affiliation": "Standford",
+      "name": "Rocky Bala Garg"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Paul Gessinger"
+    },
+    {
+      "affiliation": "DESY",
+      "name": "Maximilian Goblirsch-Kolb"
+    },
+    {
+      "affiliation": "IJCLab",
+      "name": "Hadrien Grasland"
     },
     {
       "affiliation": "LBNL",
-      "name": "Charles Leggett"
+      "name": "Heather Gray"
     },
     {
-      "affiliation": "Eotvos Lorand University",
-      "name": "Czirkos Angela"
+      "affiliation": "",
+      "name": "Christian Gumpert"
     },
     {
-      "affiliation": "UC Berkeley",
-      "name": "Tomohiro Yamazaki"
+      "affiliation": "University of Massachusetts, Amherst",
+      "name": "Matthew Harris"
+    },
+    {
+      "affiliation": "",
+      "name": "Julia Hrdinka"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Benjamin Huth"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Johannes Junggeburth"
+    },
+    {
+      "affiliation": "",
+      "name": "Moritz Kiehn"
+    },
+    {
+      "affiliation": "",
+      "name": "Fabian Klimpel"
+    },
+    {
+      "affiliation": "",
+      "name": "Robert Langenberg"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Leonardo Monaco"
     },
     {
       "affiliation": "CERN",
       "name": "Joana Niermann"
     },
     {
-      "affiliation": "UC Berkeley",
-      "name": "Irina Ene"
-    },
-    {
-      "affiliation": "Oak Ridge National Laboratory",
+      "affiliation": "BNL",
       "name": "Joe Osborn"
     },
     {
-      "affiliation": "Stanford University",
-      "name": "Rocky Bala Garg"
-    },
-    {
-      "affiliation": "CERN / TU Wien",
-      "name": "Andreas Stefl"
-    },
-    {
-      "affiliation": "CERN / University of Coimbra",
-      "name": "Luis Falda Coelho",
-      "orcid": "0000-0002-2298-3605"
-    },
-    {
-      "affiliation": "CERN / University of Graz",
+      "affiliation": "CERN, University of Graz",
       "name": "Alexander J. Pfleger",
       "orcid": "0000-0001-5524-7738"
     },
     {
-      "affiliation": "University of Lisbon",
-      "name": "Guilherme Almeida",
-      "orcid": "0000-0002-4257-4278"
-    },
-    {
-      "affiliation": "CERN / University of Amsterdam",
-      "name": "Stephen Nicholas Swatman",
-      "orcid": "0000-0002-3747-3229"
-    },
-    {
-      "affiliation": "CERN / TU Wien",
+      "affiliation": "",
       "name": "Felix Russo",
       "orcid": "0009-0005-8975-2245"
     },
     {
-      "affiliation": "UC Berkeley",
-      "name": "Carlo Varni",
-      "orcid": "0000-0001-6733-4310"
+      "affiliation": "CERN",
+      "name": "Andreas Salzburger"
+    },
+    {
+      "affiliation": "Standford University",
+      "name": "Bastian Schlag"
+    },
+    {
+      "affiliation": "Carleton University",
+      "name": "Patrick Scholer"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Andreas Stefl"
+    },
+    {
+      "affiliation": "CERN, University of Amsterdam",
+      "name": "Stephen Nicholas Swatman",
+      "orcid": "0000-0002-3747-3229"
+    },
+    {
+      "affiliation": "Weizmann Institute of Science",
+      "name": "Roman Urmanov"
+    },
+    {
+      "affiliation": "AGH University of Krakow",
+      "name": "Carlo Varni"
     }
   ],
   "access_right": "open",
