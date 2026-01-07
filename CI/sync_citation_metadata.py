@@ -101,19 +101,43 @@ def cff_authors_to_authors_list(authors: list) -> str:
 
         - FirstName LastName, Affiliation
         - ...
+
+        Not associated with scientific/academic organisations:
+
+        - FirstName LastName
+        - ...
+
+        See also the contributors list on github:
+        https://github.com/acts-project/acts/graphs/contributors
     """
-    # Sort by family name
-    sorted_authors = sorted(authors, key=lambda a: a["family-names"])
+    # Separate authors with and without affiliations
+    affiliated = [a for a in authors if a.get("affiliation")]
+    unaffiliated = [a for a in authors if not a.get("affiliation")]
 
-    lines = ["The following people have contributed to the project (in alphabetical order):\n"]
+    # Sort each group by family name
+    affiliated.sort(key=lambda a: a["family-names"])
+    unaffiliated.sort(key=lambda a: a["family-names"])
 
-    for author in sorted_authors:
+    lines = [
+        "The following people have contributed to the project (in alphabetical order):\n"
+    ]
+
+    # Add affiliated authors
+    for author in affiliated:
         name = format_author_name(author)
-        affiliation = author.get("affiliation", "")
-        if affiliation:
-            lines.append(f"- {name}, {affiliation}")
-        else:
+        affiliation = author["affiliation"]
+        lines.append(f"- {name}, {affiliation}")
+
+    # Add unaffiliated section if there are any
+    if unaffiliated:
+        lines.append("\nNot associated with scientific/academic organisations:\n")
+        for author in unaffiliated:
+            name = format_author_name(author)
             lines.append(f"- {name}")
+
+    # Add footer
+    lines.append("\nSee also the contributors list on github:")
+    lines.append("https://github.com/acts-project/acts/graphs/contributors")
 
     return "\n".join(lines) + "\n"
 
@@ -142,17 +166,18 @@ def generate_zenodo_json(cff_data: dict, existing_zenodo: dict) -> dict:
 
 @app.command()
 def generate(
-    citation_file: Annotated[
-        Path, typer.Option(help="Path to CITATION.cff")
-    ] = Path("CITATION.cff"),
-    zenodo_file: Annotated[
-        Path, typer.Option(help="Path to .zenodo.json")
-    ] = Path(".zenodo.json"),
-    authors_file: Annotated[
-        Path, typer.Option(help="Path to AUTHORS")
-    ] = Path("AUTHORS"),
+    citation_file: Annotated[Path, typer.Option(help="Path to CITATION.cff")] = Path(
+        "CITATION.cff"
+    ),
+    zenodo_file: Annotated[Path, typer.Option(help="Path to .zenodo.json")] = Path(
+        ".zenodo.json"
+    ),
+    authors_file: Annotated[Path, typer.Option(help="Path to AUTHORS")] = Path(
+        "AUTHORS"
+    ),
     check: Annotated[
-        bool, typer.Option("--check", help="Check if files are in sync (for pre-commit)")
+        bool,
+        typer.Option("--check", help="Check if files are in sync (for pre-commit)"),
     ] = False,
 ):
     """
@@ -191,13 +216,15 @@ def generate(
             console.print(f"[red]Error parsing {zenodo_file}: {e}[/red]")
             raise typer.Exit(1)
     else:
-        console.print(f"[yellow]Warning: {zenodo_file} not found, will create new file[/yellow]")
+        console.print(
+            f"[yellow]Warning: {zenodo_file} not found, will create new file[/yellow]"
+        )
 
     # Generate new content
     new_zenodo_data = generate_zenodo_json(cff_data, existing_zenodo)
-    new_zenodo_content = json.dumps(
-        new_zenodo_data, indent=2, ensure_ascii=False
-    ) + "\n"
+    new_zenodo_content = (
+        json.dumps(new_zenodo_data, indent=2, ensure_ascii=False) + "\n"
+    )
 
     new_authors_content = cff_authors_to_authors_list(cff_data["authors"])
 
