@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(Efficiency1D_BasicFill) {
   BOOST_CHECK_EQUAL(eff.title(), "Efficiency vs Eta");
   BOOST_CHECK_EQUAL(eff.axisTitle(), "eta");
 
-  // Fill eta=0.5: 7 passed, 3 failed
+  // Fill eta=0.5: 7 accepted, 3 failed
   for (int i = 0; i < 7; ++i) {
     eff.fill(0.5, true);
   }
@@ -85,13 +85,13 @@ BOOST_AUTO_TEST_CASE(Efficiency1D_BasicFill) {
   }
 
   // Get efficiency for bin containing 0.5
-  auto binIdx = eff.passedHistogram().axis(0).index(0.5);
-  double passed = static_cast<double>(eff.passedHistogram().at(binIdx));
+  auto binIdx = eff.acceptedHistogram().axis(0).index(0.5);
+  double accepted = static_cast<double>(eff.acceptedHistogram().at(binIdx));
   double total = static_cast<double>(eff.totalHistogram().at(binIdx));
 
-  BOOST_CHECK_CLOSE(passed, 7.0, 1e-10);
+  BOOST_CHECK_CLOSE(accepted, 7.0, 1e-10);
   BOOST_CHECK_CLOSE(total, 10.0, 1e-10);
-  BOOST_CHECK_CLOSE(passed / total, 0.7, 1e-6);
+  BOOST_CHECK_CLOSE(accepted / total, 0.7, 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(Efficiency1D_MultipleBins) {
@@ -115,21 +115,21 @@ BOOST_AUTO_TEST_CASE(Efficiency1D_MultipleBins) {
     eff.fill(4.5, true);
   }
 
-  const auto& passed = eff.passedHistogram();
+  const auto& accepted = eff.acceptedHistogram();
   const auto& total = eff.totalHistogram();
 
-  auto idx0 = passed.axis(0).index(0.5);
-  BOOST_CHECK_CLOSE(static_cast<double>(passed.at(idx0)) /
+  auto idx0 = accepted.axis(0).index(0.5);
+  BOOST_CHECK_CLOSE(static_cast<double>(accepted.at(idx0)) /
                         static_cast<double>(total.at(idx0)),
                     0.5, 1e-6);
 
-  auto idx2 = passed.axis(0).index(2.5);
-  BOOST_CHECK_CLOSE(static_cast<double>(passed.at(idx2)) /
+  auto idx2 = accepted.axis(0).index(2.5);
+  BOOST_CHECK_CLOSE(static_cast<double>(accepted.at(idx2)) /
                         static_cast<double>(total.at(idx2)),
                     0.8, 1e-6);
 
-  auto idx4 = passed.axis(0).index(4.5);
-  BOOST_CHECK_CLOSE(static_cast<double>(passed.at(idx4)) /
+  auto idx4 = accepted.axis(0).index(4.5);
+  BOOST_CHECK_CLOSE(static_cast<double>(accepted.at(idx4)) /
                         static_cast<double>(total.at(idx4)),
                     1.0, 1e-6);
 }
@@ -145,24 +145,24 @@ BOOST_AUTO_TEST_CASE(Efficiency2D_BasicFill) {
   BOOST_CHECK_EQUAL(eff.xAxisTitle(), "eta");
   BOOST_CHECK_EQUAL(eff.yAxisTitle(), "pt");
 
-  // Fill (0.0, 2.5): 3 passed, 1 failed
+  // Fill (0.0, 2.5): 3 accepted, 1 failed
   eff.fill(0.0, 2.5, true);
   eff.fill(0.0, 2.5, true);
   eff.fill(0.0, 2.5, true);
   eff.fill(0.0, 2.5, false);
 
-  const auto& passed = eff.passedHistogram();
+  const auto& accepted = eff.acceptedHistogram();
   const auto& total = eff.totalHistogram();
 
-  auto xIdx = passed.axis(0).index(0.0);
-  auto yIdx = passed.axis(1).index(2.5);
+  auto xIdx = accepted.axis(0).index(0.0);
+  auto yIdx = accepted.axis(1).index(2.5);
 
-  double passedCount = static_cast<double>(passed.at(xIdx, yIdx));
+  double acceptedCount = static_cast<double>(accepted.at(xIdx, yIdx));
   double totalCount = static_cast<double>(total.at(xIdx, yIdx));
 
-  BOOST_CHECK_CLOSE(passedCount, 3.0, 1e-10);
+  BOOST_CHECK_CLOSE(acceptedCount, 3.0, 1e-10);
   BOOST_CHECK_CLOSE(totalCount, 4.0, 1e-10);
-  BOOST_CHECK_CLOSE(passedCount / totalCount, 0.75, 1e-6);
+  BOOST_CHECK_CLOSE(acceptedCount / totalCount, 0.75, 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

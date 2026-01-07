@@ -48,10 +48,10 @@ Histogram1D::Histogram1D(std::string name, std::string title,
       m_title(std::move(title)),
       m_axisTitle(binning.title()),
       m_hist(boost::histogram::make_histogram(
-          detail::BoostVariableAxis(binning.binEdges()))) {}
+          BoostVariableAxis(binning.binEdges()))) {}
 
 Histogram1D::Histogram1D(std::string name, std::string title,
-                         std::string axisTitle, detail::BoostHist1D hist)
+                         std::string axisTitle, BoostHist1D hist)
     : m_name(std::move(name)),
       m_title(std::move(title)),
       m_axisTitle(std::move(axisTitle)),
@@ -69,8 +69,8 @@ Histogram2D::Histogram2D(std::string name, std::string title,
       m_xAxisTitle(xBinning.title()),
       m_yAxisTitle(yBinning.title()),
       m_hist(boost::histogram::make_histogram(
-          detail::BoostVariableAxis(xBinning.binEdges()),
-          detail::BoostVariableAxis(yBinning.binEdges()))) {}
+          BoostVariableAxis(xBinning.binEdges()),
+          BoostVariableAxis(yBinning.binEdges()))) {}
 
 void Histogram2D::fill(double xValue, double yValue) {
   m_hist(xValue, yValue);
@@ -98,7 +98,7 @@ ProfileHistogram::ProfileHistogram(std::string name, std::string title,
       m_xAxisTitle(xBinning.title()),
       m_yAxisTitle(std::move(yAxisTitle)),
       m_hist(boost::histogram::make_profile(
-          detail::BoostVariableAxis(xBinning.binEdges()))) {}
+          BoostVariableAxis(xBinning.binEdges()))) {}
 
 void ProfileHistogram::fill(double xValue, double yValue) {
   m_hist(xValue, boost::histogram::sample(yValue));
@@ -109,15 +109,15 @@ Efficiency1D::Efficiency1D(std::string name, std::string title,
     : m_name(std::move(name)),
       m_title(std::move(title)),
       m_axisTitle(binning.title()),
-      m_passed(boost::histogram::make_histogram(
-          detail::BoostVariableAxis(binning.binEdges()))),
+      m_accepted(boost::histogram::make_histogram(
+          BoostVariableAxis(binning.binEdges()))),
       m_total(boost::histogram::make_histogram(
-          detail::BoostVariableAxis(binning.binEdges()))) {}
+          BoostVariableAxis(binning.binEdges()))) {}
 
-void Efficiency1D::fill(double value, bool passed) {
+void Efficiency1D::fill(double value, bool accepted) {
   m_total(value);
-  if (passed) {
-    m_passed(value);
+  if (accepted) {
+    m_accepted(value);
   }
 }
 
@@ -128,17 +128,17 @@ Efficiency2D::Efficiency2D(std::string name, std::string title,
       m_title(std::move(title)),
       m_xAxisTitle(xBinning.title()),
       m_yAxisTitle(yBinning.title()),
-      m_passed(boost::histogram::make_histogram(
-          detail::BoostVariableAxis(xBinning.binEdges()),
-          detail::BoostVariableAxis(yBinning.binEdges()))),
+      m_accepted(boost::histogram::make_histogram(
+          BoostVariableAxis(xBinning.binEdges()),
+          BoostVariableAxis(yBinning.binEdges()))),
       m_total(boost::histogram::make_histogram(
-          detail::BoostVariableAxis(xBinning.binEdges()),
-          detail::BoostVariableAxis(yBinning.binEdges()))) {}
+          BoostVariableAxis(xBinning.binEdges()),
+          BoostVariableAxis(yBinning.binEdges()))) {}
 
-void Efficiency2D::fill(double xValue, double yValue, bool passed) {
+void Efficiency2D::fill(double xValue, double yValue, bool accepted) {
   m_total(xValue, yValue);
-  if (passed) {
-    m_passed(xValue, yValue);
+  if (accepted) {
+    m_accepted(xValue, yValue);
   }
 }
 

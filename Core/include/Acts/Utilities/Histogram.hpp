@@ -15,20 +15,20 @@
 
 namespace Acts {
 
-namespace detail {
-
+/// @brief Boost axis type to use for histograms
 using BoostVariableAxis = boost::histogram::axis::variable<double>;
 
+/// @brief Underlying Boost type for Histogram1D
 using BoostHist1D = decltype(boost::histogram::make_histogram(
     std::declval<BoostVariableAxis>()));
 
+/// @brief Underlying Boost type for Histogram2D
 using BoostHist2D = decltype(boost::histogram::make_histogram(
     std::declval<BoostVariableAxis>(), std::declval<BoostVariableAxis>()));
 
+/// @brief Underlying Boost type for ProfileHistogram
 using BoostProfileHist =
     decltype(boost::histogram::make_profile(std::declval<BoostVariableAxis>()));
-
-}  // namespace detail
 
 /// @brief Nested binning struct for booking plots
 class HistBinning {
@@ -81,7 +81,7 @@ class Histogram1D {
   const std::string& axisTitle() const { return m_axisTitle; }
 
   /// Direct access to boost::histogram (for converters and tests)
-  const auto& histogram() const { return m_hist; }
+  const BoostHist1D& histogram() const { return m_hist; }
 
  private:
   friend class Histogram2D;
@@ -93,13 +93,13 @@ class Histogram1D {
   /// @param axisTitle Axis title
   /// @param hist Boost histogram to wrap
   Histogram1D(std::string name, std::string title, std::string axisTitle,
-              detail::BoostHist1D hist);
+              BoostHist1D hist);
 
   std::string m_name;
   std::string m_title;
   std::string m_axisTitle;
 
-  detail::BoostHist1D m_hist;
+  BoostHist1D m_hist;
 };
 
 /// @brief 2D histogram wrapper using boost::histogram for data collection
@@ -142,7 +142,7 @@ class Histogram2D {
   Histogram1D projectionY() const;
 
   /// Direct access to boost::histogram (for converters and tests)
-  const auto& histogram() const { return m_hist; }
+  const BoostHist2D& histogram() const { return m_hist; }
 
  private:
   std::string m_name;
@@ -150,7 +150,7 @@ class Histogram2D {
   std::string m_xAxisTitle;
   std::string m_yAxisTitle;
 
-  detail::BoostHist2D m_hist;
+  BoostHist2D m_hist;
 };
 
 /// @brief Profile histogram using boost::histogram
@@ -188,7 +188,7 @@ class ProfileHistogram {
   const std::string& yAxisTitle() const { return m_yAxisTitle; }
 
   /// Direct access to boost::histogram (for converters and tests)
-  const auto& histogram() const { return m_hist; }
+  const BoostProfileHist& histogram() const { return m_hist; }
 
  private:
   std::string m_name;
@@ -196,13 +196,13 @@ class ProfileHistogram {
   std::string m_xAxisTitle;
   std::string m_yAxisTitle;
 
-  detail::BoostProfileHist m_hist;
+  BoostProfileHist m_hist;
 };
 
 /// @brief 1D efficiency histogram using boost::histogram
 ///
 /// This class tracks pass/total counts for efficiency calculation.
-/// It internally uses two 1D histograms: one for passed events,
+/// It internally uses two 1D histograms: one for accepted events,
 /// one for total events.
 class Efficiency1D {
  public:
@@ -216,8 +216,8 @@ class Efficiency1D {
   /// Fill efficiency histogram
   ///
   /// @param value Value to fill
-  /// @param passed Whether the event passed selection
-  void fill(double value, bool passed);
+  /// @param accepted Whether the event accepted selection
+  void fill(double value, bool accepted);
 
   /// Get histogram name
   const std::string& name() const { return m_name; }
@@ -228,24 +228,25 @@ class Efficiency1D {
   /// Get axis title
   const std::string& axisTitle() const { return m_axisTitle; }
 
-  /// Access to passed histogram (for converters and tests)
-  const auto& passedHistogram() const { return m_passed; }
+  /// Access to accepted histogram (for converters and tests)
+  const BoostHist1D& acceptedHistogram() const { return m_accepted; }
 
   /// Access to total histogram (for converters and tests)
-  const auto& totalHistogram() const { return m_total; }
+  const BoostHist1D& totalHistogram() const { return m_total; }
 
  private:
   std::string m_name;
   std::string m_title;
   std::string m_axisTitle;
 
-  detail::BoostHist1D m_passed, m_total;
+  BoostHist1D m_accepted;
+  BoostHist1D m_total;
 };
 
 /// @brief 2D efficiency histogram using boost::histogram
 ///
 /// This class tracks pass/total counts for 2D efficiency calculation.
-/// It internally uses two 1D histograms: one for passed events,
+/// It internally uses two 1D histograms: one for accepted events,
 /// one for total events.
 class Efficiency2D {
  public:
@@ -262,8 +263,8 @@ class Efficiency2D {
   ///
   /// @param xValue X value
   /// @param yValue Y value
-  /// @param passed Whether the event passed selection
-  void fill(double xValue, double yValue, bool passed);
+  /// @param accepted Whether the event accepted selection
+  void fill(double xValue, double yValue, bool accepted);
 
   /// Get histogram name
   const std::string& name() const { return m_name; }
@@ -277,11 +278,11 @@ class Efficiency2D {
   /// Get Y-axis title
   const std::string& yAxisTitle() const { return m_yAxisTitle; }
 
-  /// Access to passed histogram (for converters and tests)
-  const auto& passedHistogram() const { return m_passed; }
+  /// Access to accepted histogram (for converters and tests)
+  const BoostHist2D& acceptedHistogram() const { return m_accepted; }
 
   /// Access to total histogram (for converters and tests)
-  const auto& totalHistogram() const { return m_total; }
+  const BoostHist2D& totalHistogram() const { return m_total; }
 
  private:
   std::string m_name;
@@ -289,7 +290,8 @@ class Efficiency2D {
   std::string m_xAxisTitle;
   std::string m_yAxisTitle;
 
-  detail::BoostHist2D m_passed, m_total;
+  BoostHist2D m_accepted;
+  BoostHist2D m_total;
 };
 
 }  // namespace Acts

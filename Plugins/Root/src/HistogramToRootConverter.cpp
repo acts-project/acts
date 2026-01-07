@@ -19,6 +19,20 @@
 
 using namespace Acts;
 
+namespace {
+
+std::vector<double> extractBinEdges(const Acts::BoostVariableAxis& axis) {
+  assert(axis.size() > 0 && "Axis must have at least one bin");
+  std::vector<double> edges(axis.size() + 1);
+  for (int i = 0; i < axis.size(); ++i) {
+    edges[i] = axis.bin(i).lower();
+  }
+  edges.back() = axis.bin(axis.size() - 1).upper();
+  return edges;
+}
+
+}  // namespace
+
 namespace ActsPlugins {
 
 TH1F* toRoot(const Histogram1D& boostHist) {
@@ -26,12 +40,7 @@ TH1F* toRoot(const Histogram1D& boostHist) {
   const auto& axis = bh.axis(0);
 
   // Extract bin edges from boost histogram axis
-  std::vector<double> edges;
-  edges.reserve(axis.size() + 1);
-  for (int i = 0; i < axis.size(); ++i) {
-    edges.push_back(axis.bin(i).lower());
-  }
-  edges.push_back(axis.bin(axis.size() - 1).upper());
+  std::vector<double> edges = extractBinEdges(axis);
 
   // Create ROOT histogram with variable binning
   TH1F* rootHist = new TH1F(boostHist.name().c_str(), boostHist.title().c_str(),
@@ -59,20 +68,10 @@ TH2F* toRoot(const Histogram2D& boostHist) {
   const auto& yAxis = bh.axis(1);
 
   // Extract bin edges from X axis
-  std::vector<double> xEdges;
-  xEdges.reserve(xAxis.size() + 1);
-  for (int i = 0; i < xAxis.size(); ++i) {
-    xEdges.push_back(xAxis.bin(i).lower());
-  }
-  xEdges.push_back(xAxis.bin(xAxis.size() - 1).upper());
+  std::vector<double> xEdges = extractBinEdges(xAxis);
 
   // Extract bin edges from Y axis
-  std::vector<double> yEdges;
-  yEdges.reserve(yAxis.size() + 1);
-  for (int i = 0; i < yAxis.size(); ++i) {
-    yEdges.push_back(yAxis.bin(i).lower());
-  }
-  yEdges.push_back(yAxis.bin(yAxis.size() - 1).upper());
+  std::vector<double> yEdges = extractBinEdges(yAxis);
 
   // Create ROOT histogram with 2D variable binning
   TH2F* rootHist = new TH2F(boostHist.name().c_str(), boostHist.title().c_str(),
@@ -103,12 +102,7 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
   const auto& axis = bh.axis(0);
 
   // Extract bin edges from boost histogram axis
-  std::vector<double> edges;
-  edges.reserve(axis.size() + 1);
-  for (int i = 0; i < axis.size(); ++i) {
-    edges.push_back(axis.bin(i).lower());
-  }
-  edges.push_back(axis.bin(axis.size() - 1).upper());
+  std::vector<double> edges = extractBinEdges(axis);
 
   // Create ROOT TProfile with variable binning
   TProfile* rootProfile =
@@ -178,9 +172,9 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
 }
 
 TEfficiency* toRoot(const Efficiency1D& boostEff) {
-  const auto& passed = boostEff.passedHistogram();
+  const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
-  const auto& axis = passed.axis(0);
+  const auto& axis = accepted.axis(0);
 
   // Extract bin edges
   std::vector<double> edges;
@@ -190,61 +184,53 @@ TEfficiency* toRoot(const Efficiency1D& boostEff) {
   }
   edges.push_back(axis.bin(axis.size() - 1).upper());
 
-  // Create passed and total TH1F histograms
-  TH1F* passedHist = new TH1F((boostEff.name() + "_passed").c_str(), "Passed",
-                              static_cast<int>(axis.size()), edges.data());
+  // Create accepted and total TH1F histograms
+  TH1F* acceptedHist =
+      new TH1F((boostEff.name() + "_accepted").c_str(), "Passed",
+               static_cast<int>(axis.size()), edges.data());
 
   TH1F* totalHist = new TH1F((boostEff.name() + "_total").c_str(), "Total",
                              static_cast<int>(axis.size()), edges.data());
 
   // Fill histograms with counts
   for (int i = 0; i < axis.size(); ++i) {
-    double passedCount = static_cast<double>(passed.at(i));
+    double acceptedCount = static_cast<double>(accepted.at(i));
     double totalCount = static_cast<double>(total.at(i));
 
-    passedHist->SetBinContent(i + 1, passedCount);
+    acceptedHist->SetBinContent(i + 1, acceptedCount);
     totalHist->SetBinContent(i + 1, totalCount);
   }
 
   // Create TEfficiency from the two histograms
   // TEfficiency takes ownership of the histograms
-  TEfficiency* rootEff = new TEfficiency(*passedHist, *totalHist);
+  TEfficiency* rootEff = new TEfficiency(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
 
   // Clean up temporary histograms (TEfficiency made copies)
-  delete passedHist;
+  delete acceptedHist;
   delete totalHist;
 
   return rootEff;
 }
 
 TEfficiency* toRoot(const Efficiency2D& boostEff) {
-  const auto& passed = boostEff.passedHistogram();
+  const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
-  const auto& xAxis = passed.axis(0);
-  const auto& yAxis = passed.axis(1);
+  const auto& xAxis = accepted.axis(0);
+  const auto& yAxis = accepted.axis(1);
 
   // Extract X bin edges
-  std::vector<double> xEdges;
-  xEdges.reserve(xAxis.size() + 1);
-  for (int i = 0; i < xAxis.size(); ++i) {
-    xEdges.push_back(xAxis.bin(i).lower());
-  }
-  xEdges.push_back(xAxis.bin(xAxis.size() - 1).upper());
+  std::vector<double> xEdges = extractBinEdges(xAxis);
 
   // Extract Y bin edges
-  std::vector<double> yEdges;
-  yEdges.reserve(yAxis.size() + 1);
-  for (int i = 0; i < yAxis.size(); ++i) {
-    yEdges.push_back(yAxis.bin(i).lower());
-  }
-  yEdges.push_back(yAxis.bin(yAxis.size() - 1).upper());
+  std::vector<double> yEdges = extractBinEdges(yAxis);
 
-  // Create passed and total TH2F histograms
-  TH2F* passedHist = new TH2F((boostEff.name() + "_passed").c_str(), "Passed",
-                              static_cast<int>(xAxis.size()), xEdges.data(),
-                              static_cast<int>(yAxis.size()), yEdges.data());
+  // Create accepted and total TH2F histograms
+  TH2F* acceptedHist =
+      new TH2F((boostEff.name() + "_accepted").c_str(), "Accepted",
+               static_cast<int>(xAxis.size()), xEdges.data(),
+               static_cast<int>(yAxis.size()), yEdges.data());
 
   TH2F* totalHist = new TH2F((boostEff.name() + "_total").c_str(), "Total",
                              static_cast<int>(xAxis.size()), xEdges.data(),
@@ -253,22 +239,22 @@ TEfficiency* toRoot(const Efficiency2D& boostEff) {
   // Fill histograms with counts
   for (int i = 0; i < xAxis.size(); ++i) {
     for (int j = 0; j < yAxis.size(); ++j) {
-      double passedCount = static_cast<double>(passed.at(i, j));
+      double acceptedCount = static_cast<double>(accepted.at(i, j));
       double totalCount = static_cast<double>(total.at(i, j));
 
-      passedHist->SetBinContent(i + 1, j + 1, passedCount);
+      acceptedHist->SetBinContent(i + 1, j + 1, acceptedCount);
       totalHist->SetBinContent(i + 1, j + 1, totalCount);
     }
   }
 
   // Create TEfficiency from the two histograms
   // TEfficiency takes ownership of the histograms
-  TEfficiency* rootEff = new TEfficiency(*passedHist, *totalHist);
+  TEfficiency* rootEff = new TEfficiency(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
 
   // Clean up temporary histograms (TEfficiency made copies)
-  delete passedHist;
+  delete acceptedHist;
   delete totalHist;
 
   return rootEff;

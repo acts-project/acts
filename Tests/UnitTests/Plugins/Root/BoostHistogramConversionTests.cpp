@@ -285,12 +285,12 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
   Efficiency1D eff("eff_vs_eta", "Efficiency vs Eta", binning);
 
   // Fill with known pass/fail patterns
-  // Bin at eta=0.5: 3 passed, 1 failed (75% efficiency)
+  // Bin at eta=0.5: 3 accepted, 1 failed (75% efficiency)
   for (auto v : {true, true, true, false}) {
     eff.fill(0.5, v);
   }
 
-  // Bin at eta=-1.5: 3 passed, 3 failed (50% efficiency)
+  // Bin at eta=-1.5: 3 accepted, 3 failed (50% efficiency)
   for (auto v : {true, true, true, false, false, false}) {
     eff.fill(-1.5, v);
   }
@@ -305,12 +305,12 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
   BOOST_CHECK_EQUAL(rootEff->GetTotalHistogram()->GetNbinsX(), 10);
 
   // Verify efficiency values
-  const auto& passed = eff.passedHistogram();
+  const auto& accepted = eff.acceptedHistogram();
   const auto& total = eff.totalHistogram();
 
   for (auto x : {0.5, -1.5}) {
-    auto binIdx = passed.axis(0).index(x);
-    double expectedEff = static_cast<double>(passed.at(binIdx)) /
+    auto binIdx = accepted.axis(0).index(x);
+    double expectedEff = static_cast<double>(accepted.at(binIdx)) /
                          static_cast<double>(total.at(binIdx));
     BOOST_CHECK_CLOSE(rootEff->GetEfficiency(binIdx + 1), expectedEff, 1e-6);
   }
@@ -324,12 +324,12 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
   Efficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", xBinning,
                    yBinning);
 
-  // Fill bin (0.0, 2.5): 3 passed, 1 failed (75% efficiency)
+  // Fill bin (0.0, 2.5): 3 accepted, 1 failed (75% efficiency)
   for (auto v : {true, true, true, false}) {
     eff.fill(0.0, 2.5, v);
   }
 
-  // Fill bin (-1.5, 1.5): 3 passed, 3 failed (50% efficiency)
+  // Fill bin (-1.5, 1.5): 3 accepted, 3 failed (50% efficiency)
   for (auto v : {true, true, true, false, false, false}) {
     eff.fill(-1.5, 1.5, v);
   }
@@ -346,14 +346,14 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
   BOOST_CHECK_EQUAL(rootEff->GetTotalHistogram()->GetNbinsY(), 5);
 
   // Verify efficiency values
-  const auto& passed = eff.passedHistogram();
+  const auto& accepted = eff.acceptedHistogram();
   const auto& total = eff.totalHistogram();
 
   using P = std::pair<double, double>;
   for (auto coords : {P{0.0, 2.5}, P{-1.5, 1.5}}) {
-    auto xIdx = passed.axis(0).index(coords.first);
-    auto yIdx = passed.axis(1).index(coords.second);
-    double expectedEff = static_cast<double>(passed.at(xIdx, yIdx)) /
+    auto xIdx = accepted.axis(0).index(coords.first);
+    auto yIdx = accepted.axis(1).index(coords.second);
+    double expectedEff = static_cast<double>(accepted.at(xIdx, yIdx)) /
                          static_cast<double>(total.at(xIdx, yIdx));
     int globalBin = rootEff->GetGlobalBin(static_cast<int>(xIdx + 1),
                                           static_cast<int>(yIdx + 1));
