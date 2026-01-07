@@ -117,7 +117,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   std::vector<Acts::Experimental::TrigInDetSiLayer> m_layerGeometry{};
 
   // actual seed finder algorithm
-  std::unique_ptr<Acts::Experimental::SeedFinderGbts> m_finder = nullptr;
+  std::unique_ptr<const Acts::Experimental::SeedFinderGbts> m_finder = nullptr;
 
   // used to assign LayerIds to the GbtsActsMap
   mutable std::map<int, int> m_LayeridMap{};

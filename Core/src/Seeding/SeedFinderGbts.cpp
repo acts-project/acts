@@ -22,14 +22,14 @@
 namespace Acts::Experimental {
 
 SeedFinderGbts::SeedFinderGbts(
-    SeedFinderGbtsConfig config, const GbtsGeometry* gbtsGeo,
+    SeedFinderGbtsConfig config, std::unique_ptr<GbtsGeometry> gbtsGeo,
     const std::vector<TrigInDetSiLayer>* layerGeometry,
-    const GbtsLutParser* gbtsLutParser,
+    std::unique_ptr<GbtsLutParser> gbtsLutParser,
     std::unique_ptr<const Acts::Logger> logger)
     : m_config(std::move(config)),
-      m_geo(gbtsGeo),
+      m_geo(std::move(gbtsGeo)),
       m_layerGeometry(layerGeometry),
-      m_lutParser(gbtsLutParser),
+      m_lutParser(std::move(gbtsLutParser)),
       m_logger(std::move(logger)) {
   m_config.phiSliceWidth = 2 * std::numbers::pi / m_config.nMaxPhiSlice;
 }
@@ -38,9 +38,8 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
     const RoiDescriptor& roi,
     const SPContainerComponentsType& SpContainerComponents,
     int max_layers) const {
-  auto& parsedLutFile = m_lutParser->getParsedLut();
   std::unique_ptr<GbtsDataStorage> storage =
-      std::make_unique<GbtsDataStorage>(*m_geo, m_config, parsedLutFile);
+      std::make_unique<GbtsDataStorage>(m_geo, m_config, m_lutParser);
 
   SeedContainer2 SeedContainer;
   std::vector<std::vector<GbtsNode>> node_storage =

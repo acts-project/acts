@@ -32,9 +32,10 @@ using SPContainerComponentsType =
 
 class SeedFinderGbts {
  public:
-  SeedFinderGbts(const SeedFinderGbtsConfig config, const GbtsGeometry* gbtsGeo,
+  SeedFinderGbts(const SeedFinderGbtsConfig config,
+                 std::unique_ptr<GbtsGeometry> gbtsGeo,
                  const std::vector<TrigInDetSiLayer>* layerGeometry,
-                 const GbtsLutParser* gbtsLutParser,
+                 std::unique_ptr<GbtsLutParser> gbtsLutParser,
                  std::unique_ptr<const Acts::Logger> logger =
                      Acts::getDefaultLogger("Finder",
                                             Acts::Logging::Level::INFO));
@@ -74,11 +75,11 @@ class SeedFinderGbts {
  private:
   SeedFinderGbtsConfig m_config;
 
-  const GbtsGeometry* m_geo;
+  const std::shared_ptr<const GbtsGeometry> m_geo;
 
   const std::vector<TrigInDetSiLayer>* m_layerGeometry;
 
-  const GbtsLutParser* m_lutParser;
+  const std::shared_ptr<const GbtsLutParser> m_lutParser;
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);

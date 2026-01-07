@@ -10,6 +10,7 @@
 
 // TODO: update to C++17 style
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLutParser.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 
 #include <array>
@@ -79,9 +80,9 @@ class GbtsEtaBin {
 
 class GbtsDataStorage {
  public:
-  explicit GbtsDataStorage(
-      const GbtsGeometry& geometry, const SeedFinderGbtsConfig& config,
-      const std::vector<std::array<float, 5>>& parsedLutFile);
+  explicit GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
+                           const SeedFinderGbtsConfig config,
+                           std::shared_ptr<const GbtsLutParser> lutParser);
   ~GbtsDataStorage();
 
   int loadPixelGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll,
@@ -101,9 +102,9 @@ class GbtsDataStorage {
   }
 
  protected:
-  const GbtsGeometry& m_geo;
-  const SeedFinderGbtsConfig& m_config;
-  const std::vector<std::array<float, 5>>& m_mlLUT;
+  std::shared_ptr<const GbtsGeometry> m_geo;
+  const SeedFinderGbtsConfig m_config;
+  std::shared_ptr<const GbtsLutParser> m_lutParser;
   std::vector<GbtsEtaBin> m_etaBins;
 };
 
