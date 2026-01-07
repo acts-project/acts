@@ -92,6 +92,11 @@ jobs:
           cmake --build build --target docs
 
       - uses: actions/upload-artifact@v6
+        id: artifact-upload-step
         with:
           name: acts-docs
           path: build/docs/html
+ 
+      - name: Documentation display
+        run: echo 'https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}/index.html'
+
