@@ -53,7 +53,6 @@ namespace Acts {
 /// @{
 
 /// Charge and momentum interpretation for neutral particles.
-
 struct Neutral {
   constexpr Neutral() = default;
 

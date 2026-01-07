@@ -25,7 +25,6 @@
 namespace Acts {
 
 /// @ingroup eventdata_measurement
-/// Source linik is a thing
 class SourceLink final {
   using any_type = AnyBase<ACTS_SOURCELINK_SBO_SIZE>;
 
