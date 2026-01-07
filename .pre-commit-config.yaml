@@ -106,3 +106,10 @@ repos:
       require_serial: true
       args: [--indent=4]
       exclude: ^.zenodo.json$
+
+    - id: sync_citation_metadata
+      name: sync citation metadata
+      entry: CI/sync_citation_metadata.py
+      language: system
+      files: ^(CITATION\.cff|\.zenodo\.json|AUTHORS)$
+      pass_filenames: false
