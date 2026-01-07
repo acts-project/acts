@@ -468,18 +468,17 @@ slidingWindowRecenter(
   YieldType xw = 0;
   YieldType yw = 0;
   YieldType tot = 0;
-  auto [xmax, ymax] = index;
-  YieldType maxValue = plane.nHits(xmax, ymax);
-  for (std::size_t x = xmax - config.xRecenterSize;
-       x <= xmax + config.xRecenterSize; ++x) {
-    for (std::size_t y = ymax - config.yRecenterSize;
-         y <= ymax + config.yRecenterSize; ++y) {
-      const YieldType noOfHits = plane.nHits(x, y);
-      if (noOfHits >= maxValue) {
-        // this needs to be smarter to take care of wrapping
-        xw += x * noOfHits;
-        yw += y * noOfHits;
-        tot += noOfHits;
+  auto [xcenter, ycenter] = index;
+  YieldType maxValue = plane.nHits(xcenter, ycenter);
+  for (std::size_t x = xcenter - config.xRecenterSize;
+       x <= xcenter + config.xRecenterSize; ++x) {
+    for (std::size_t y = ycenter - config.yRecenterSize;
+         y <= ycenter + config.yRecenterSize; ++y) {
+      const YieldType numOfHits = plane.nHits(x, y);
+      if (numOfHits >= maxValue) {
+        xw += x * numOfHits;
+        yw += y * numOfHits;
+        tot += numOfHits;
       }
     }
   }
@@ -525,7 +524,7 @@ Acts::HoughTransformUtils::PeakFinders::hitsCountImage(
   std::vector<pixel_value_t> output;
   output.reserve((xSize) * (ySize));
 
-  auto [xmax, ymax] = index;
+  auto [xcenter, ycenter] = index;
 
   auto isInside = [&plane](int x, int y) -> bool {
     return 0 <= x && x < static_cast<int>(plane.nBinsX()) && 0 <= y &&
@@ -534,8 +533,8 @@ Acts::HoughTransformUtils::PeakFinders::hitsCountImage(
 
   for (std::size_t x = 0; x < xSize; ++x) {
     for (std::size_t y = 0; y < ySize; ++y) {
-      int xPlaneCoord = x + xmax - xSize / 2;
-      int yPlaneCoord = y + ymax - ySize / 2;
+      int xPlaneCoord = x + xcenter - xSize / 2;
+      int yPlaneCoord = y + ycenter - ySize / 2;
       output.push_back(isInside(xPlaneCoord, yPlaneCoord)
                            ? summaryFunction(plane, xPlaneCoord, yPlaneCoord)
                            : pixel_value_t{});
