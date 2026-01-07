@@ -52,7 +52,7 @@ authors:
 - given-names: Rocky
   family-names: Garg
   name-particle: Bala
-  affiliation: Standford
+  affiliation: Stanford University
 - given-names: Paul
   family-names: Gessinger
   affiliation: CERN
@@ -105,7 +105,6 @@ authors:
   affiliation: CERN
 - given-names: Bastian
   family-names: Schlag
-  affiliation: Standford University
 - given-names: Patrick
   family-names: Scholer
   affiliation: Carleton University
@@ -114,7 +113,7 @@ authors:
   affiliation: CERN
 - given-names: Stephen Nicholas
   family-names: Swatman
-  affiliation: CERN, University of Amsterdam
+  affiliation: CERN
   orcid: https://orcid.org/0000-0002-3747-3229
 - given-names: Roman
   family-names: Urmanov
