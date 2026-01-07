@@ -171,10 +171,10 @@ def main():
                 # Skip the python tests folder
                 if str(root).find("Python/Core/tests") != -1:
                     continue
-                
+
                 if str(root).find("Python/Plugins/tests") != -1:
                     continue
-                
+
                 if str(root).find("Python/Examples/tests") != -1:
                     continue
 
