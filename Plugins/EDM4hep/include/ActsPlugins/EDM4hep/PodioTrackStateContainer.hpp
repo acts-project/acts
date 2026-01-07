@@ -59,24 +59,24 @@ namespace ActsPlugins {
 class PodioTrackStateContainerBase {
  public:
   using Parameters =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               false>::CoefficientsMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                false>::CoefficientsMap;
   using Covariance =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               false>::CovarianceMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                false>::CovarianceMap;
 
   using ConstParameters =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               true>::CoefficientsMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                true>::CoefficientsMap;
   using ConstCovariance =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               true>::CovarianceMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                true>::CovarianceMap;
 
  protected:
   template <typename T>
   static constexpr bool has_impl(T& instance, Acts::HashedString key,
                                  Acts::TrackIndexType istate) {
-    constexpr auto kInvalid = Acts::MultiTrajectoryTraits::kInvalid;
+    constexpr auto kInvalid = Acts::kTrackIndexInvalid;
     using namespace Acts::HashedStringLiteral;
     auto trackState = instance.m_collection->at(istate);
     const auto& data = trackState.getData();
@@ -328,8 +328,7 @@ class ConstPodioTrackStateContainer final
     return PodioTrackStateContainerBase::has_impl(*this, key, istate);
   }
 
-  Acts::MultiTrajectoryTraits::IndexType calibratedSize_impl(
-      IndexType istate) const {
+  Acts::TrackIndexType calibratedSize_impl(IndexType istate) const {
     return m_collection->at(istate).getData().measdim;
   }
 
@@ -677,8 +676,7 @@ class MutablePodioTrackStateContainer final
     m_surfaces.at(istate) = std::move(surface);
   }
 
-  Acts::MultiTrajectoryTraits::IndexType calibratedSize_impl(
-      IndexType istate) const {
+  Acts::TrackIndexType calibratedSize_impl(IndexType istate) const {
     return m_collection->at(istate).getData().measdim;
   }
 

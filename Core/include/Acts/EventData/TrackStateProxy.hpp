@@ -45,14 +45,11 @@ inline constexpr HashedString kUncalibratedKey =
     hashString("uncalibratedSourceLink");
 inline constexpr HashedString kCalibratedKey = hashString("calibrated");
 inline constexpr HashedString kCalibratedCovKey = hashString("calibratedCov");
+inline constexpr HashedString kMeasDimKey = hashString("measdim");
 inline constexpr HashedString kNextKey = hashString("next");
 }  // namespace detail_tsp
 
 namespace detail_lt {
-
-/// Either type T or const T depending on the boolean.
-template <typename T, bool select>
-using ConstIf = std::conditional_t<select, const T, T>;
 
 /// Helper type to make a member pointers constness transitive.
 template <typename T>
@@ -96,58 +93,7 @@ class TransitiveConstPointer {
   T* m_ptr{nullptr};
 };
 
-/// Type construction helper for fixed size coefficients and associated
-/// covariances.
-template <std::size_t Size, bool ReadOnlyMaps = true>
-struct FixedSizeTypes {
-  constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
-
-  // single items
-  using Coefficients = Eigen::Matrix<double, Size, 1, Flags>;
-  using Covariance = Eigen::Matrix<double, Size, Size, Flags>;
-  using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
-  using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
-
-  using DynamicCoefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
-  using DynamicCovariance =
-      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
-  using DynamicCoefficientsMap =
-      Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
-  using DynamicCovarianceMap =
-      Eigen::Map<ConstIf<DynamicCovariance, ReadOnlyMaps>>;
-};
-
-// Type construction helper for dynamic sized coefficients and associated
-/// covariances.
-template <bool ReadOnlyMaps = true>
-struct DynamicSizeTypes {
-  constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
-
-  using Coefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
-  using Covariance =
-      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
-  using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
-  using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
-};
-
 }  // namespace detail_lt
-
-// This is public
-template <std::size_t M, bool ReadOnly = true>
-struct TrackStateTraits {
-  using Parameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CoefficientsMap;
-  using Covariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CovarianceMap;
-  using Calibrated =
-      typename detail_lt::FixedSizeTypes<M, ReadOnly>::CoefficientsMap;
-  using CalibratedCovariance =
-      typename detail_lt::FixedSizeTypes<M, ReadOnly>::CovarianceMap;
-  using EffectiveCalibrated =
-      typename detail_lt::DynamicSizeTypes<ReadOnly>::CoefficientsMap;
-  using EffectiveCalibratedCovariance =
-      typename detail_lt::DynamicSizeTypes<ReadOnly>::CovarianceMap;
-};
 
 /// Proxy object to access a single point on the trajectory.
 ///
@@ -1147,12 +1093,11 @@ class TrackStateProxy {
 
  private:
   // Private since it can only be created by the trajectory.
-  TrackStateProxy(
-      detail_lt::ConstIf<MultiTrajectory<Trajectory>, ReadOnly>& trajectory,
-      IndexType istate);
+  TrackStateProxy(const_if_t<ReadOnly, MultiTrajectory<Trajectory>>& trajectory,
+                  IndexType istate);
 
   detail_lt::TransitiveConstPointer<
-      detail_lt::ConstIf<MultiTrajectory<Trajectory>, ReadOnly>>
+      const_if_t<ReadOnly, MultiTrajectory<Trajectory>>>
       m_traj;
   IndexType m_istate;
 
