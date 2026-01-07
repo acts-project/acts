@@ -245,9 +245,6 @@ struct KalmanFitterResult {
   /// Measurement surfaces handled in both forward and backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
-  /// Last encountered error
-  Result<void> result{Result<void>::success()};
-
   /// Path limit aborter
   PathLimitReached pathLimitReached;
 };
@@ -376,13 +373,13 @@ class KalmanFitter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void act(propagator_state_t& state, const stepper_t& stepper,
-             const navigator_t& navigator, result_type& result,
-             const Logger& /*logger*/) const {
+    Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                     const navigator_t& navigator, result_type& result,
+                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
-        return;
+        return Result<void>::success();
       }
 
       ACTS_VERBOSE("KalmanFitter step at pos: "
@@ -415,7 +412,7 @@ class KalmanFitter {
           if (!res.ok()) {
             ACTS_ERROR("Error in " << state.options.direction
                                    << " filter: " << res.error());
-            result.result = res.error();
+            return res.error();
           }
         }
         if (result.reversed) {
@@ -424,7 +421,7 @@ class KalmanFitter {
           if (!res.ok()) {
             ACTS_ERROR("Error in " << state.options.direction
                                    << " filter: " << res.error());
-            result.result = res.error();
+            return res.error();
           }
         }
       }
@@ -450,7 +447,7 @@ class KalmanFitter {
                 "No measurements were found on the track, cannot proceed "
                 "to smoothing or reversed filtering.");
             result.finished = true;
-            return;
+            return Result<void>::success();
           }
 
           // Remove the missing surfaces that occur after the last measurement
@@ -469,7 +466,7 @@ class KalmanFitter {
             auto res = reverse(state, stepper, navigator, result);
             if (!res.ok()) {
               ACTS_ERROR("Error in reversing navigation: " << res.error());
-              result.result = res.error();
+              return res.error();
             }
           } else {
             // --> Search the starting state to run the smoothing
@@ -479,7 +476,7 @@ class KalmanFitter {
             auto res = finalize(state, stepper, navigator, result);
             if (!res.ok()) {
               ACTS_ERROR("Error in finalize: " << res.error());
-              result.result = res.error();
+              return res.error();
             }
           }
         }
@@ -505,8 +502,7 @@ class KalmanFitter {
             ACTS_ERROR(
                 "The target surface needed for aborting reversed propagation "
                 "is not provided");
-            result.result =
-                Result<void>(KalmanFitterError::ReversePropagationFailed);
+            return KalmanFitterError::ReversePropagationFailed;
           } else {
             ACTS_VERBOSE(
                 "No target surface set. Completing without fitted track "
@@ -523,8 +519,7 @@ class KalmanFitter {
           if (!res.ok()) {
             ACTS_ERROR("Error in " << state.options.direction
                                    << " filter: " << res.error());
-            result.result = res.error();
-            return;
+            return res.error();
           }
           auto& fittedState = *res;
           // Assign the fitted parameters
@@ -551,6 +546,8 @@ class KalmanFitter {
           result.finished = true;
         }
       }
+
+      return Result<void>::success();
     }
 
     template <typename propagator_state_t, typename stepper_t,
@@ -558,7 +555,7 @@ class KalmanFitter {
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_type& result,
                     const Logger& /*logger*/) const {
-      return (!result.result.ok() || result.finished);
+      return result.finished;
     }
 
     /// @brief Kalman actor operation: reverse direction
@@ -1325,15 +1322,9 @@ class KalmanFitter {
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
-    if (kalmanResult.result.ok() && !kalmanResult.measurementStates) {
-      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
-    }
-
-    if (!kalmanResult.result.ok()) {
-      ACTS_ERROR("KalmanFilter failed: "
-                 << kalmanResult.result.error() << ", "
-                 << kalmanResult.result.error().message());
-      return kalmanResult.result.error();
+    if (!kalmanResult.measurementStates) {
+      ACTS_ERROR("KalmanFilter failed: No measurement states found");
+      return KalmanFitterError::NoMeasurementFound;
     }
 
     auto track = trackContainer.makeTrack();
