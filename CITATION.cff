@@ -92,7 +92,7 @@ authors:
 - given-names: Carlo
   family-names: Varni
   affiliation: UC Berkeley
-version: 10.0.0
-date-released: 2021-07-28
+version: v44.2.0
+date-released: 2025-11-14
 repository-code: https://github.com/acts-project/acts
 license: MPL-2.0
