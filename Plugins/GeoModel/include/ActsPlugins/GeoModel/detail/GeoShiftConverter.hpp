@@ -19,8 +19,6 @@
 
 namespace ActsPlugins::detail {
 
-/// @ingroup geomodel_plugin
-
 struct GeoShiftConverter {
   /// @brief Convert a GeoBox to a detector element and surface
   ///

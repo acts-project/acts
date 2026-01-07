@@ -12,7 +12,6 @@
 #include <cstdint>
 
 namespace ActsPlugins::detail {
-/// @ingroup gnn_plugin
 
 /// Class that encapsulates a cantor pair, which represents an edge of a graph
 /// By default ensures all edges are ordered, so the represented graph is

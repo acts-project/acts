@@ -18,8 +18,6 @@
 
 namespace ActsPlugins::detail {
 
-/// @ingroup geomodel_plugin
-
 template <typename Shape, typename Converter>
 struct GenericGeoShapeConverter : public IGeoShapeConverter {
   Acts::Result<GeoModelSensitiveSurface> toSensitiveSurface(

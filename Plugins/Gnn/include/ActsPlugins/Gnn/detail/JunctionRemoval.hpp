@@ -14,7 +14,6 @@
 #include <cuda_runtime_api.h>
 
 namespace ActsPlugins::detail {
-/// @ingroup gnn_plugin
 
 /// Function to perform the basic junction reomval algorithm on a graph with
 /// scored edges: In case a node has more than one in/out edge, only the

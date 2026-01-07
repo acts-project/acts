@@ -19,9 +19,6 @@
 #include <GeoModelKernel/GeoSimplePolygonBrep.h>
 
 namespace ActsPlugins::detail {
-
-/// @ingroup geomodel_plugin
-
 struct GeoPolygonConverter {
   /// @brief Convert a GeoBox to a detector element and surface
   ///

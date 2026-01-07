@@ -19,8 +19,6 @@ class GeoTube;
 
 namespace ActsPlugins::detail {
 
-/// @ingroup geomodel_plugin
-
 struct GeoTubeConverter {
   Acts::Surface::SurfaceType targetShape = Acts::Surface::SurfaceType::Straw;
 
