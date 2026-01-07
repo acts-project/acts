@@ -40,7 +40,6 @@ using BoostProfileHist = decltype(boost::histogram::make_weighted_profile(
 
 }  // namespace detail
 
-
 /// @brief Nested binning struct for booking plots
 class HistBinning {
  public:

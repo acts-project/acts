@@ -79,15 +79,15 @@ void Histogram2D::fill(double xValue, double yValue) {
 Histogram1D Histogram2D::projectionX() const {
   auto projectedHist = boost::histogram::algorithm::project(
       m_hist, std::integral_constant<unsigned, 0>{});
-  return Histogram1D(m_name + "_projX", m_title + " projection X",
-                     m_xAxisTitle, std::move(projectedHist));
+  return Histogram1D(m_name + "_projX", m_title + " projection X", m_xAxisTitle,
+                     std::move(projectedHist));
 }
 
 Histogram1D Histogram2D::projectionY() const {
   auto projectedHist = boost::histogram::algorithm::project(
       m_hist, std::integral_constant<unsigned, 1>{});
-  return Histogram1D(m_name + "_projY", m_title + " projection Y",
-                     m_yAxisTitle, std::move(projectedHist));
+  return Histogram1D(m_name + "_projY", m_title + " projection Y", m_yAxisTitle,
+                     std::move(projectedHist));
 }
 
 ProfileHistogram::ProfileHistogram(std::string name, std::string title,
@@ -101,11 +101,12 @@ ProfileHistogram::ProfileHistogram(std::string name, std::string title,
           detail::BoostVariableAxis(xBinning.binEdges()))) {}
 
 void ProfileHistogram::fill(double xValue, double yValue) {
-  // Fill with weight=1.0. This way, the weighted_mean accumulator behaves 
-  // identically to the regular mean accumulator for unweighted data, but 
+  // Fill with weight=1.0. This way, the weighted_mean accumulator behaves
+  // identically to the regular mean accumulator for unweighted data, but
   // additionally provides sum_of_weights_squared() which is needed for the
   // error calculation in ROOT.
-  m_hist(xValue, boost::histogram::weight(1.0), boost::histogram::sample(yValue));
+  m_hist(xValue, boost::histogram::weight(1.0),
+         boost::histogram::sample(yValue));
 }
 
 Efficiency1D::Efficiency1D(std::string name, std::string title,

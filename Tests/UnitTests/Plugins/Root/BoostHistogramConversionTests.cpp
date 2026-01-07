@@ -229,19 +229,19 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
   rootProfile.Sumw2();
 
   // Bin 1: mean=12, n=3
-  for( auto y : {10.0, 12.0, 14.0} ) {
+  for (auto y : {10.0, 12.0, 14.0}) {
     rootProfile.Fill(-2.0, y);
     actsProfile.fill(-2.0, y);
   }
 
   // Bin 2: mean=6, n=2
-  for( auto y : {5.0, 7.0} ) {
+  for (auto y : {5.0, 7.0}) {
     rootProfile.Fill(0.0, y);
     actsProfile.fill(0.0, y);
   }
 
   // Bin 3: mean=23, n=4
-  for( auto y : {20.0, 22.0, 24.0, 26.0} ) {
+  for (auto y : {20.0, 22.0, 24.0, 26.0}) {
     rootProfile.Fill(1.5, y);
     actsProfile.fill(1.5, y);
   }
@@ -258,12 +258,12 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
   for (int i = 0; i < axis.size(); ++i) {
     int rootBin = i + 1;
     const auto& acc = bh.at(i);
-   
+
     // Check count
     BOOST_CHECK_EQUAL(convertedProfile->GetBinEntries(rootBin),
-                        rootProfile.GetBinEntries(rootBin));
+                      rootProfile.GetBinEntries(rootBin));
     BOOST_CHECK_CLOSE(convertedProfile->GetBinEntries(rootBin), acc.count(),
-                        1e-10);
+                      1e-10);
 
     // Check mean value
     BOOST_CHECK_CLOSE(convertedProfile->GetBinContent(rootBin),

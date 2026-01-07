@@ -162,12 +162,12 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
 
     // Access internal arrays to set sum of squares for error calculation
     // This is necessary because ROOT has no public API to set these arrays
-    TArrayD* sumw2 = rootProfile->GetSumw2();      // fSumw2 array
+    TArrayD* sumw2 = rootProfile->GetSumw2();        // fSumw2 array
     TArrayD* binSumw2 = rootProfile->GetBinSumw2();  // fBinSumw2 array
 
     assert(sumw2 && "Sumw2 is null");
     assert(binSumw2 && "BinSumw2 is null");
-      
+
     // Set sum of (weight * value)^2 = sum of y^2 for unweighted data
     sumw2->fArray[rootBinIndex] = sum_of_squares;
     // Set sum of weights^2 = count for unweighted data (all weights = 1)

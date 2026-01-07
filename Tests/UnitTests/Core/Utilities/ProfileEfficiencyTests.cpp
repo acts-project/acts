@@ -16,8 +16,7 @@ BOOST_AUTO_TEST_SUITE(ProfileEfficiencySuite)
 
 BOOST_AUTO_TEST_CASE(ProfileHistogram_BasicFill) {
   auto xBinning = HistBinning::Uniform("x", 10, 0.0, 10.0);
-  ProfileHistogram profile("test_prof", "Test Profile", xBinning,
-                                "y value");
+  ProfileHistogram profile("test_prof", "Test Profile", xBinning, "y value");
 
   BOOST_CHECK_EQUAL(profile.name(), "test_prof");
   BOOST_CHECK_EQUAL(profile.title(), "Test Profile");
@@ -44,7 +43,7 @@ BOOST_AUTO_TEST_CASE(ProfileHistogram_BasicFill) {
 BOOST_AUTO_TEST_CASE(ProfileHistogram_MultipleBins) {
   auto xBinning = HistBinning::Uniform("eta", 5, -2.5, 2.5);
   ProfileHistogram profile("res_vs_eta", "Residual vs Eta", xBinning,
-                                "residual");
+                           "residual");
 
   // Fill different eta bins with different mean values
   profile.fill(-2.0, 1.0);  // bin 0
@@ -139,7 +138,7 @@ BOOST_AUTO_TEST_CASE(Efficiency2D_BasicFill) {
   auto xBinning = HistBinning::Uniform("eta", 5, -2.5, 2.5);
   auto yBinning = HistBinning::Uniform("pt", 5, 0.0, 5.0);
   Efficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", xBinning,
-                        yBinning);
+                   yBinning);
 
   BOOST_CHECK_EQUAL(eff.name(), "eff_vs_eta_pt");
   BOOST_CHECK_EQUAL(eff.title(), "Efficiency vs Eta and pT");
