@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
+
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/Geant4/Geant4DetectorElement.hpp"
 
@@ -34,7 +35,6 @@ Geant4Detector::Geant4Detector(const Config& cfg)
   m_nominalGeometryContext = Acts::GeometryContext();
 
   auto [surfaces, elements] = buildGeant4Volumes(cfg, logger());
-
 }
 
 std::tuple<std::vector<std::shared_ptr<Acts::Surface>>,
