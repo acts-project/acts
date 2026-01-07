@@ -23,7 +23,7 @@
 #include <map>
 
 using namespace Acts;
-using Acts::MultiTrajectoryTraits::IndexType;
+using IndexType = TrackIndexType;
 
 namespace ActsTests {
 

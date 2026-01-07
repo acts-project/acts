@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
@@ -31,11 +32,10 @@ struct GsfResult {
   traj_t* fittedStates{nullptr};
 
   /// The current top index of the MultiTrajectory
-  MultiTrajectoryTraits::IndexType currentTip = MultiTrajectoryTraits::kInvalid;
+  TrackIndexType currentTip = kTrackIndexInvalid;
 
   /// The last tip referring to a measurement state in the MultiTrajectory
-  MultiTrajectoryTraits::IndexType lastMeasurementTip =
-      MultiTrajectoryTraits::kInvalid;
+  TrackIndexType lastMeasurementTip = kTrackIndexInvalid;
 
   /// The last multi-component measurement state. Used to initialize the
   /// backward pass.
@@ -57,9 +57,6 @@ struct GsfResult {
   Updatable<std::size_t> nInvalidBetheHeitler;
   Updatable<double> maxPathXOverX0;
   Updatable<double> sumPathXOverX0;
-
-  // Propagate potential errors to the outside
-  Result<void> result{Result<void>::success()};
 
   // Internal: bethe heitler approximation component cache
   std::vector<BetheHeitlerApprox::Component> betheHeitlerCache;
@@ -131,8 +128,8 @@ struct GsfActor {
 
   struct TemporaryStates {
     traj_t traj;
-    std::vector<MultiTrajectoryTraits::IndexType> tips;
-    std::map<MultiTrajectoryTraits::IndexType, double> weights;
+    std::vector<TrackIndexType> tips;
+    std::map<TrackIndexType, double> weights;
   };
 
   using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
@@ -148,25 +145,10 @@ struct GsfActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
-
-    // Return is we found an error earlier
-    if (!result.result.ok()) {
-      ACTS_WARNING("result.result not ok, return!");
-      return;
-    }
-
-    // Set error or abort utility
-    auto setErrorOrAbort = [&](auto error) {
-      if (m_cfg.abortOnError) {
-        std::abort();
-      } else {
-        result.result = error;
-      }
-    };
 
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
@@ -175,7 +157,7 @@ struct GsfActor {
 
     // We only need to do something if we are on a surface
     if (!navigator.currentSurface(state.navigation)) {
-      return;
+      return Result<void>::success();
     }
 
     const auto& surface = *navigator.currentSurface(state.navigation);
@@ -202,7 +184,7 @@ struct GsfActor {
 
     if (visited) {
       ACTS_VERBOSE("Already visited surface, return");
-      return;
+      return Result<void>::success();
     }
 
     result.visitedSurfaces.push_back(&surface);
@@ -230,7 +212,7 @@ struct GsfActor {
         TemporaryStates tmpStates;
         noMeasurementUpdate(state, stepper, navigator, result, tmpStates, true);
       }
-      return;
+      return Result<void>::success();
     }
 
     // Update the counters. Note that this should be done before potential
@@ -267,8 +249,10 @@ struct GsfActor {
                               foundSourceLink->second);
 
       if (!res.ok()) {
-        setErrorOrAbort(res.error());
-        return;
+        if (m_cfg.abortOnError) {
+          std::abort();
+        }
+        return res.error();
       }
 
       updateStepper(state, stepper, tmpStates);
@@ -289,8 +273,10 @@ struct GsfActor {
       }
 
       if (!res.ok()) {
-        setErrorOrAbort(res.error());
-        return;
+        if (m_cfg.abortOnError) {
+          std::abort();
+        }
+        return res.error();
       }
 
       // Reuse memory over all calls to the Actor in a single propagation
@@ -306,7 +292,7 @@ struct GsfActor {
             "Is the weight cutoff "
             << m_cfg.weightCutoff << " too high?");
         ACTS_WARNING("Return to propagator without applying energy loss");
-        return;
+        return Result<void>::success();
       }
 
       // reduce component number
@@ -324,6 +310,8 @@ struct GsfActor {
       applyMultipleScattering(state, stepper, navigator,
                               MaterialUpdateStage::PostUpdate);
     }
+
+    return Result<void>::success();
   }
 
   template <typename propagator_state_t, typename stepper_t,
@@ -575,7 +563,7 @@ struct GsfActor {
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           *m_cfg.calibrationContext, singleState, singleStepper,
           m_cfg.extensions, surface, sourceLink, tmpStates.traj,
-          MultiTrajectoryTraits::kInvalid, false, logger());
+          kTrackIndexInvalid, false, logger());
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -653,7 +641,7 @@ struct GsfActor {
       // now until we measure this is significant
       auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
           singleState, singleStepper, surface, tmpStates.traj,
-          MultiTrajectoryTraits::kInvalid, doCovTransport, logger(),
+          kTrackIndexInvalid, doCovTransport, logger(),
           precedingMeasurementExists);
 
       if (!trackStateProxyRes.ok()) {
@@ -769,8 +757,7 @@ struct GsfActor {
       }
 
     } else {
-      assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
-              "tip not valid"));
+      assert((result.currentTip != kTrackIndexInvalid && "tip not valid"));
 
       result.fittedStates->applyBackwards(
           result.currentTip, [&](auto trackState) {

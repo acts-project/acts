@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
@@ -341,10 +342,6 @@ struct GaussianSumFitter {
     const auto& fwdGsfResult =
         fwdResult->template get<typename GsfActor::result_type>();
 
-    if (!fwdGsfResult.result.ok()) {
-      return return_error_or_abort(fwdGsfResult.result.error());
-    }
-
     if (fwdGsfResult.measurementStates == 0) {
       return return_error_or_abort(GsfError::NoMeasurementStatesCreatedForward);
     }
@@ -411,9 +408,8 @@ struct GaussianSumFitter {
         return ResultType::failure(initRes.error());
       }
 
-      assert(
-          (fwdGsfResult.lastMeasurementTip != MultiTrajectoryTraits::kInvalid &&
-           "tip is invalid"));
+      assert((fwdGsfResult.lastMeasurementTip != kTrackIndexInvalid &&
+              "tip is invalid"));
 
       auto proxy = trackContainer.trackStateContainer().getTrackState(
           fwdGsfResult.lastMeasurementTip);
@@ -440,10 +436,6 @@ struct GaussianSumFitter {
 
     auto& bwdGsfResult =
         bwdResult->template get<typename GsfActor::result_type>();
-
-    if (!bwdGsfResult.result.ok()) {
-      return return_error_or_abort(bwdGsfResult.result.error());
-    }
 
     if (bwdGsfResult.measurementStates == 0) {
       return return_error_or_abort(
