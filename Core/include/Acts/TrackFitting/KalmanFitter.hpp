@@ -268,8 +268,6 @@ class KalmanFitter {
   static constexpr bool isDirectNavigator =
       std::is_same_v<KalmanNavigator, DirectNavigator>;
 
-  static constexpr auto kInvalid = kTrackIndexInvalid;
-
  public:
   /// Constructor with propagator and logger
   /// @param pPropagator Propagator instance for track propagation
