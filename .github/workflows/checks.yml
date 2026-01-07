@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     env:
       PRE_COMMIT_HOME: '/tmp/pre-commit'
 
@@ -39,7 +39,7 @@ jobs:
         run: pre-commit run --all-files --show-diff-on-failure
 
   smearing_config:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -54,14 +54,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install clang
-        run: >
+        run: |
+          sudo apt-get update
           sudo apt-get install -y clang libeigen3-dev libboost-dev parallel
       - name: Check
         run: >
           CI/missing_include_check.sh
 
   fpe_masks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -75,7 +76,7 @@ jobs:
           CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}
 
   unused_files:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
