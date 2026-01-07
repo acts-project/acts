@@ -167,10 +167,10 @@ struct KalmanFitterOptions {
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
 
-  /// The target Surface
+  /// The reference surface
   const Surface* referenceSurface = nullptr;
 
-  /// Strategy to propagate to target surface
+  /// Strategy to propagate to reference surface
   KalmanFitterTargetSurfaceStrategy referenceSurfaceStrategy =
       KalmanFitterTargetSurfaceStrategy::firstOrLast;
 
