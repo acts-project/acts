@@ -58,7 +58,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(context);
 
-  std::unordered_map<Acts::MultiTrajectoryTraits::IndexType, TrackInfo> infoMap;
+  std::unordered_map<Acts::TrackIndexType, TrackInfo> infoMap;
 
   // Counter of truth-matched reco tracks
   using RecoTrackInfo = std::pair<TrackInfo, std::size_t>;

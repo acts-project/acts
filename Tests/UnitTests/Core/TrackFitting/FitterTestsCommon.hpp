@@ -36,6 +36,8 @@
 
 using namespace Acts::UnitLiterals;
 
+constexpr auto kInvalid = Acts::kTrackIndexInvalid;
+
 namespace ActsTests {
 
 /// Find outliers using plain distance for testing purposes.
@@ -204,7 +206,7 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       BOOST_CHECK(!track.hasReferenceSurface());
       BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
       BOOST_CHECK_EQUAL(track.nHoles(), 0u);
@@ -250,7 +252,7 @@ struct FitterTester {
     BOOST_REQUIRE(res.ok());
 
     const auto& track = res.value();
-    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(track.tipIndex(), kInvalid);
     BOOST_CHECK(track.hasReferenceSurface());
     BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
     BOOST_CHECK_EQUAL(track.nHoles(), 0u);
@@ -310,7 +312,7 @@ struct FitterTester {
     BOOST_CHECK(res.ok());
 
     const auto& track = res.value();
-    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(track.tipIndex(), kInvalid);
     BOOST_CHECK(track.hasReferenceSurface());
     BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
     BOOST_CHECK_EQUAL(track.nHoles(), 0u);
@@ -363,7 +365,7 @@ struct FitterTester {
     BOOST_REQUIRE(res.ok());
 
     const auto& track = res.value();
-    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(track.tipIndex(), kInvalid);
     BOOST_CHECK(track.hasReferenceSurface());
     BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
     BOOST_CHECK_EQUAL(track.nHoles(), 0u);
@@ -408,7 +410,7 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
       BOOST_REQUIRE(track.hasReferenceSurface());
       parameters = track.parameters();
@@ -429,7 +431,7 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       BOOST_REQUIRE(track.hasReferenceSurface());
       // check consistency w/ un-shuffled measurements
       CHECK_CLOSE_ABS(track.parameters(), parameters, 1e-5);
@@ -475,7 +477,7 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       BOOST_REQUIRE(!track.hasReferenceSurface());
       BOOST_CHECK_EQUAL(track.nMeasurements(), withHole.size());
       // check the output status flags
@@ -523,7 +525,7 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       // count the number of outliers
       std::size_t nOutliers = 0;
       for (const auto state : track.trackStatesReversed()) {

@@ -31,14 +31,11 @@ class GainMatrixUpdater {
     const double* calibratedCovariance;
     BoundSubspaceIndices projector;
 
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters predicted;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance predictedCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters filtered;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance filteredCovariance;
+    TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted;
+    TrackStateTraits<kMeasurementSizeMax, false>::Covariance
+        predictedCovariance;
+    TrackStateTraits<kMeasurementSizeMax, false>::Parameters filtered;
+    TrackStateTraits<kMeasurementSizeMax, false>::Covariance filteredCovariance;
   };
 
  public:
