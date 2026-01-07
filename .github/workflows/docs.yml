@@ -84,6 +84,7 @@ jobs:
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_PLUGIN_ONNX=ON
+          -DACTS_BUILD_DOCS=ON
 
       - name: Build documentation
         run: >
