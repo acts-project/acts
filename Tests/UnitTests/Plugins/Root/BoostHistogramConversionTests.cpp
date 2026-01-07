@@ -216,6 +216,70 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
   delete rootProfile;
 }
 
+BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
+  auto xBinning = HistBinning::Uniform("eta", 5, -2.5, 2.5);
+
+  // Create ACTS ProfileHistogram
+  ProfileHistogram actsProfile("profile_test", "Profile Test", xBinning,
+                               "value [units]");
+
+  // Create ROOT TProfile with identical binning for comparison
+  const auto& edges = xBinning.binEdges();
+  TProfile rootProfile("root_profile", "ROOT Profile", 5, edges.data());
+  rootProfile.Sumw2();
+
+  // Bin 1: mean=12, n=3
+  for( auto y : {10.0, 12.0, 14.0} ) {
+    rootProfile.Fill(-2.0, y);
+    actsProfile.fill(-2.0, y);
+  }
+
+  // Bin 2: mean=6, n=2
+  for( auto y : {5.0, 7.0} ) {
+    rootProfile.Fill(0.0, y);
+    actsProfile.fill(0.0, y);
+  }
+
+  // Bin 3: mean=23, n=4
+  for( auto y : {20.0, 22.0, 24.0, 26.0} ) {
+    rootProfile.Fill(1.5, y);
+    actsProfile.fill(1.5, y);
+  }
+
+  // Convert ACTS profile to ROOT
+  TProfile* convertedProfile = toRoot(actsProfile);
+
+  // Compare binning
+  BOOST_CHECK_EQUAL(convertedProfile->GetNbinsX(), rootProfile.GetNbinsX());
+
+  // Compare each filled bin
+  const auto& bh = actsProfile.histogram();
+  const auto& axis = bh.axis(0);
+  for (int i = 0; i < axis.size(); ++i) {
+    int rootBin = i + 1;
+    const auto& acc = bh.at(i);
+   
+    // Check count
+    BOOST_CHECK_EQUAL(convertedProfile->GetBinEntries(rootBin),
+                        rootProfile.GetBinEntries(rootBin));
+    BOOST_CHECK_CLOSE(convertedProfile->GetBinEntries(rootBin), acc.count(),
+                        1e-10);
+
+    // Check mean value
+    BOOST_CHECK_CLOSE(convertedProfile->GetBinContent(rootBin),
+                      rootProfile.GetBinContent(rootBin), 1e-6);
+    BOOST_CHECK_CLOSE(convertedProfile->GetBinContent(rootBin), acc.value(),
+                      1e-6);
+
+    // Check errors
+    double rootError = rootProfile.GetBinError(rootBin);
+    double convertedError = convertedProfile->GetBinError(rootBin);
+    BOOST_CHECK_CLOSE(convertedError, rootError, 1e-6);
+  }
+
+  delete convertedProfile;
+}
+
 BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
   auto binning = HistBinning::Uniform("eta", 10, -3.0, 3.0);
   Efficiency1D eff("eff_vs_eta", "Efficiency vs Eta", binning);

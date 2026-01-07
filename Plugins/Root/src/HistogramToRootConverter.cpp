@@ -111,34 +111,67 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
   edges.push_back(axis.bin(axis.size() - 1).upper());
 
   // Create ROOT TProfile with variable binning
-  // TProfile constructor: (name, title, nbins, edges)
   TProfile* rootProfile =
       new TProfile(boostProfile.name().c_str(), boostProfile.title().c_str(),
                    static_cast<int>(axis.size()), edges.data());
 
-  // Enable sum of weights squared storage
+  // Enable sum of weights squared storage for proper error calculation
   rootProfile->Sumw2();
 
-  // Copy mean values from boost profile to ROOT profile
-  for (auto&& x : boost::histogram::indexed(bh)) {
-    const auto& acc = *x;  // Get the accumulator (weighted_mean)
+  // Copy data from boost profile to ROOT profile
+  //
+  // The boost histogram uses a weighted_mean accumulator that tracks:
+  // - count(): number of fills
+  // - value(): mean of y-values
+  // - variance(): sample variance = sum((y - mean)^2) / (n - 1)
+  //
+  // ROOT TProfile needs different information for correct error calculation.
+  // We must reconstruct ROOT's internal arrays from the boost accumulator data.
+  using Accumulator = boost::histogram::accumulators::weighted_mean<double>;
 
-    // ROOT bin numbering starts at 1
+  for (auto&& x : boost::histogram::indexed(bh)) {
+    const Accumulator& acc = *x;
+
+    // ROOT bin numbering starts at 1 (bin 0 is underflow)
     int rootBinIndex = static_cast<int>(x.index(0)) + 1;
 
-    // Get mean value and count from accumulator
-    double mean = acc.value();
     double count = acc.count();
 
-    // TProfile stores sum and entries, then computes mean = sum / entries
-    // We need to reconstruct the sum from the mean
-    if (count > 0) {
-      double sum = mean * count;
-      rootProfile->SetBinContent(rootBinIndex, sum);
-      rootProfile->SetBinEntries(rootBinIndex, count);
-      // Also set the error appropriately
-      rootProfile->SetBinError(rootBinIndex, 0.0);
+    if (count == 0) {
+      continue;
     }
+    double mean = acc.value();
+    double variance = acc.variance();  // Sample variance from boost
+
+    // ROOT TProfile internally stores the following data (all weights=1):
+    // - fArray[bin]      = sum of (w*x)    = count * mean
+    // - fBinEntries[bin] = sum of w        = count
+    // - fSumw2[bin]      = sum of (w*x)^2  = sum of x^2
+    // - fBinSumw2[bin]   = sum of w^2      = count
+
+    double sum = mean * count;
+
+    // To compute sum of y^2 from sample variance s^2:
+    // s^2 = Sum((x - μ)^2) / (n-1) = (Sum(x^2) - n*µ^2) / (n-1)
+    // Sum(x^2) = (n-1) * s^2 + n*µ^2
+    double sum_of_squares = (count - 1.0) * variance + count * mean * mean;
+
+    // Set bin content (sum) and entries via public interface
+    rootProfile->SetBinContent(rootBinIndex, sum);
+    rootProfile->SetBinEntries(rootBinIndex, count);
+
+    // Access internal arrays to set sum of squares for error calculation
+    // This is necessary because ROOT has no public API to set these arrays
+    TArrayD* sumw2 = rootProfile->GetSumw2();      // fSumw2 array
+    TArrayD* binSumw2 = rootProfile->GetBinSumw2();  // fBinSumw2 array
+
+    assert(sumw2 && "Sumw2 is null");
+    assert(binSumw2 && "BinSumw2 is null");
+      
+    // Set sum of (weight * value)^2 = sum of y^2 for unweighted data
+    sumw2->fArray[rootBinIndex] = sum_of_squares;
+    // Set sum of weights^2 = count for unweighted data (all weights = 1)
+    binSumw2->fArray[rootBinIndex] = count;
   }
 
   // Set axis titles

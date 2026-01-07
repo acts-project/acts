@@ -97,11 +97,15 @@ ProfileHistogram::ProfileHistogram(std::string name, std::string title,
       m_title(std::move(title)),
       m_xAxisTitle(xBinning.title()),
       m_yAxisTitle(std::move(yAxisTitle)),
-      m_hist(boost::histogram::make_profile(
+      m_hist(boost::histogram::make_weighted_profile(
           detail::BoostVariableAxis(xBinning.binEdges()))) {}
 
 void ProfileHistogram::fill(double xValue, double yValue) {
-  m_hist(xValue, boost::histogram::sample(yValue));
+  // Fill with weight=1.0. This way, the weighted_mean accumulator behaves 
+  // identically to the regular mean accumulator for unweighted data, but 
+  // additionally provides sum_of_weights_squared() which is needed for the
+  // error calculation in ROOT.
+  m_hist(xValue, boost::histogram::weight(1.0), boost::histogram::sample(yValue));
 }
 
 Efficiency1D::Efficiency1D(std::string name, std::string title,
