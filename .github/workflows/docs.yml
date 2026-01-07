@@ -72,6 +72,11 @@ jobs:
           tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
           mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
 
+      - name: Install APT packages 
+        run: |
+          apt-get update
+          apt-get install -y graphviz texlive-bibtex-extra
+
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
