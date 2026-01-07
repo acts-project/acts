@@ -194,6 +194,11 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
 
+    /// Transformation to the common coordinate system of all space points
+    const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
+    /// Retrieve the bounds
+    const auto& bounds = hitSurf->bounds();
+
     // Iterate over all simHits in a single module
     for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
       const auto& simHit = *h;
@@ -203,7 +208,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
       const Vector3 locDir =
           surfLocToGlob.inverse().linear() * simHit.direction();
 
-      const auto& bounds = hitSurf->bounds();
       ACTS_DEBUG("Process hit: " << toString(locPos)
                                  << ", dir: " << toString(locDir)
                                  << " recorded in a " << hitSurf->type()
@@ -213,9 +217,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
       MuonSpacePoint newSp{};
       newSp.setGeometryId(moduleGeoId);
-
-      /// Transformation to the common coordinate system of all space points
-      const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
 
       const auto& calibCfg = calibrator().config();
       switch (hitSurf->type()) {
@@ -259,7 +260,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   break;
                 }
               }
-              /// Mark the
+              /// Mark that a new hit has been recorded at this position & time
+              /// Subsequent hits are rejected if they remain within the dead
+              /// time
               stripTimes.insert(std::make_pair(
                   moduleGeoId, std::array{smearedHit[ePos0], smearedHit[ePos1],
                                           simHit.time()}));
@@ -285,12 +288,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
             default:
               convertSp = false;
           }
-          /// Implement a dead time
+          /// Define the space point coordinates
           if (convertSp) {
             newSp.defineCoordinates(
                 Vector3{parentTrf * smearedHit},
-                Vector3{parentTrf.linear() * Vector3::UnitY()},
-                Vector3{parentTrf.linear() * Vector3::UnitX()});
+                Vector3{parentTrf.linear().col(Acts::ePosY)},
+                Vector3{parentTrf.linear().col(Acts::ePosX)});
             MuonId_t id{};
             /// @todo Refine me using the volume name
             id.setChamber(MuonId_t::StationName::BIS,
