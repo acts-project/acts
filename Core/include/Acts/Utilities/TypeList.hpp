@@ -106,7 +106,10 @@ struct filter<Pred> {
 
 template <typename T, typename... Ts, template <typename> typename Pred>
 struct filter<Pred, T, Ts...> {
+ private:
   using _next_type = typename filter<Pred, Ts...>::type;
+
+ public:
   using type =
       std::conditional_t<Pred<T>::value, push_front<_next_type, T>, _next_type>;
 };
