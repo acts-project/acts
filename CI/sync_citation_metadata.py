@@ -14,8 +14,8 @@ This script maintains CITATION.cff as the single source of truth for citation
 metadata and generates .zenodo.json and AUTHORS files from it.
 
 Usage:
-    sync_citation_metadata.py generate              # Update both files
-    sync_citation_metadata.py generate --check      # Check if files are in sync
+    sync_citation_metadata.py              # Update both files
+    sync_citation_metadata.py --check      # Check if files are in sync
 """
 
 import json
@@ -177,7 +177,7 @@ def generate(
     ),
     check: Annotated[
         bool,
-        typer.Option("--check", help="Check if files are in sync (for pre-commit)"),
+        typer.Option("--check", help="Check if files are in sync"),
     ] = False,
 ):
     """
