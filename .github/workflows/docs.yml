@@ -72,7 +72,7 @@ jobs:
           tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
           mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
 
-      - name: Install APT packages 
+      - name: Install APT packages
         run: |
           sudo apt-get update
           sudo apt-get install -y graphviz texlive-bibtex-extra libeigen3-dev libboost-dev cmake
@@ -90,7 +90,6 @@ jobs:
         with:
           name: acts-docs
           path: build/docs/html
- 
+
       - name: Documentation display
         run: echo 'https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}/index.html'
-

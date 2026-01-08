@@ -100,7 +100,7 @@ around the momentum vector @f$\vec p@f$, respectively.
 
 # Particle propagation {#particle-propagation}
 
-> [!tip] 
+> [!tip]
 > A dedicated description of the ACTS implementation of particle propagation
 > can be found @ref propagation "here".
 
@@ -584,7 +584,7 @@ transverse impact parameter and momentum can be estimated from the radius of
 the circle in the transverse plane like
 
 
-@f[  
+@f[
 d_0 = \sqrt{c_x^2 + c_y^2} - \rho,
 @f]
 
@@ -593,7 +593,7 @@ with the circle center @f$(c_x, c_y)@f$ and radius @f$\rho@f$. The
 transverse momentum can be related to available quantities like
 
 
-@f[  
+@f[
 p_\mathrm{T} \propto \cdot q B \rho
 @f]
 
@@ -638,7 +638,7 @@ deployed in e.g. the ATLAS tracking chain.
 
 ## Kalman formalism and Kalman track fitter {#kalman-formalism}
 
-> [!tip] 
+> [!tip]
 > See @ref Acts::KalmanFitter for documentation of the implementation of the
 > Kalman Filter in the core library.
 
@@ -811,7 +811,7 @@ subsequent step to the current one.
 
 ## Combinatorial Kalman Filter {#combinatorial-kalman-filter}
 
-> [!tip] 
+> [!tip]
 > See @ref Acts::CombinatorialKalmanFilter for information on the CKF
 > implementation found in the core library.
 
@@ -826,7 +826,7 @@ selected based on their compatibility with the current state estimate, by using
 their residuals. A predicted residual
 
 
-@f[ 
+@f[
   \vec r_k^{k-1} = \vec m_k - \mathbf H_k \vec x_k^{k-1},
 @f]
 
@@ -834,7 +834,7 @@ their residuals. A predicted residual
 and a filtered residual
 
 
-@f[  
+@f[
   \vec r_k = \vec m_k - \mathbf H_k \vec x_k,
 @f]
 
@@ -844,7 +844,7 @@ the measurement @f$\vec m_k@f$. Using the filtered residual, an effective
 @f$\chi^2@f$ increment
 
 
-@f[ 
+@f[
   \chi^2_+ = \vec r_k^\mathrm{T}
   \left[ \left( \mathbb 1 - \mathbf H_k  \mathbf K_k \right)  \mathbf V_k \right]^{-1}
   \vec r_k
@@ -902,7 +902,7 @@ for further aspects of reconstruction.
 
 # Vertex reconstruction {#vertex-reconstruction}
 
-> [!tip] 
+> [!tip]
 > See @ref vertexing for more information on the vertexing as implemented in ACTS.
 
 A vertex is a point within the detector, where an interaction or a
@@ -958,4 +958,3 @@ the @ref vertexing_flowchart "figure" below.
 @anchor vertexing_flowchart
 
 ![Simplified flowchart of multi-vertex reconstruction. From a set of seed tracks, we first compute a rough estimate of the vertex position, i.e., the vertex seed. Then, we evaluate the compatibility of all tracks with the latter. If a track is deemed compatible, it is assigned a weight and attached to the vertex seed. Next, the vertex seed and all previously found vertices that share tracks with it are (re-)fitted. Finally, after convergence of the fit, we check whether the vertex candidate is merged with other vertices and discard it if that is the case. For the next iteration, all tracks that were assigned to the vertex seed and that have a weight above a certain threshold are removed from the seed tracks.](tracking/vertexing_flowchart.svg)
-
