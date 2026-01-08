@@ -6,7 +6,7 @@ on:
       - main
 jobs:
   trigger_athena_job:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - run: >
           curl -X POST --fail

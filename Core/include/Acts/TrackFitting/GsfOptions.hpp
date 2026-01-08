@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -41,7 +41,7 @@ namespace GsfConstants {
 constexpr std::string_view kFinalMultiComponentStateColumn =
     "gsf-final-multi-component-state";
 using FinalMultiComponentState =
-    std::optional<Acts::MultiComponentBoundTrackParameters>;
+    std::optional<MultiComponentBoundTrackParameters>;
 constexpr std::string_view kFwdSumMaterialXOverX0 =
     "gsf-fwd-sum-material-x-over-x0";
 constexpr std::string_view kFwdMaxMaterialXOverX0 =
@@ -121,7 +121,10 @@ struct GsfOptions {
 
   bool disableAllMaterialHandling = false;
 
-  double reverseFilteringCovarianceScaling = 1.0;
+  /// Scaling factor for the covariance matrix before reverse filtering.
+  /// Note that the default value is not tuned and might need adjustment for
+  /// different use cases.
+  double reverseFilteringCovarianceScaling = 100.0;
 
   /// Whether to use the external-surfaces mechanism of the navigator which
   /// switches off the boundary-check for measurement surfaces.

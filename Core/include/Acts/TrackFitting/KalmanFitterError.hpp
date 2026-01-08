@@ -21,6 +21,7 @@ enum class KalmanFitterError {
   OutputConversionFailed,
   NoMeasurementFound,
   ReversePropagationFailed,
+  InconsistentTrackStates,
 };
 
 /// Create error code from @ref KalmanFitterError

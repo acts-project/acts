@@ -115,10 +115,9 @@ class MeasurementSelector {
 
   double calculateChi2(
       const double* fullCalibrated, const double* fullCalibratedCovariance,
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Parameters predicted,
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Covariance predictedCovariance,
+      TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted,
+      TrackStateTraits<kMeasurementSizeMax, false>::Covariance
+          predictedCovariance,
       BoundSubspaceIndices projector, unsigned int calibratedSize) const;
 
   InternalConfig m_config;
