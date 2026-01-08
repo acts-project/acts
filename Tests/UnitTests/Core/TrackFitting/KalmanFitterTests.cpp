@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
   // regular smoothing
-  kfOptions.reversedFiltering = false;
+  kfOptions.reverseFiltering = false;
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
@@ -124,8 +124,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
                                           true);
 
   // reverse filtering instead of smoothing
-  kfOptions.reversedFiltering = true;
-  kfOptions.reversedFilteringCovarianceScaling = 100.0;
+  kfOptions.reverseFiltering = true;
+  kfOptions.reverseFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
   // regular smoothing
-  kfOptions.reversedFiltering = false;
+  kfOptions.reverseFiltering = false;
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
@@ -146,8 +146,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
                                            true);
 
   // reverse filtering instead of smoothing
-  kfOptions.reversedFiltering = true;
-  kfOptions.reversedFilteringCovarianceScaling = 100.0;
+  kfOptions.reverseFiltering = true;
+  kfOptions.reverseFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
@@ -215,8 +215,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
         .connect<&TestReverseFilteringLogic::operator()<VectorMultiTrajectory>>(
             &trfl);
 
-    kfOptions.reversedFiltering = reverse;
-    kfOptions.reversedFilteringCovarianceScaling = 100.0;
+    kfOptions.reverseFiltering = reverse;
+    kfOptions.reverseFilteringCovarianceScaling = 100.0;
 
     tester.test_ZeroFieldWithReverseFiltering(kfZero, kfOptions, start, rng,
                                               expected_reversed,

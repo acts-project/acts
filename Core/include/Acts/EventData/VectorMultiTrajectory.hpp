@@ -44,9 +44,10 @@ struct IsReadOnlyMultiTrajectory;
 
 namespace detail_vmt {
 
-using MultiTrajectoryTraits::IndexType;
-constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
-constexpr auto MeasurementSizeMax = MultiTrajectoryTraits::MeasurementSizeMax;
+using IndexType = TrackIndexType;
+
+constexpr auto kInvalid = kTrackIndexInvalid;
+constexpr auto MeasurementSizeMax = kMeasurementSizeMax;
 
 template <typename T>
 struct NonInitializingAllocator {
@@ -344,16 +345,18 @@ class VectorMultiTrajectoryBase {
   std::vector<IndexData> m_index;
   std::vector<IndexType> m_previous;
   std::vector<IndexType> m_next;
-  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Coefficients>
+  std::vector<typename detail_tsp::FixedSizeTypes<eBoundSize>::Coefficients>
       m_params;
-  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
+  std::vector<typename detail_tsp::FixedSizeTypes<eBoundSize>::Covariance>
+      m_cov;
 
   std::vector<double, NonInitializingAllocator<double>> m_meas;
-  std::vector<MultiTrajectoryTraits::IndexType> m_measOffset;
+  std::vector<IndexType> m_measOffset;
   std::vector<double, NonInitializingAllocator<double>> m_measCov;
-  std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
+  std::vector<IndexType> m_measCovOffset;
 
-  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
+  std::vector<typename detail_tsp::FixedSizeTypes<eBoundSize>::Covariance>
+      m_jac;
   std::vector<std::optional<SourceLink>> m_sourceLinks;
   std::vector<SerializedSubspaceIndices> m_projectors;
 

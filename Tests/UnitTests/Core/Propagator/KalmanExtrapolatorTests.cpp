@@ -73,9 +73,9 @@ struct StepWiseActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = navigator.currentSurface(state.navigation);
     if (surface && surface->associatedDetectorElement()) {
@@ -93,6 +93,7 @@ struct StepWiseActor {
       // Remember that you finalized this
       result.finalized = true;
     }
+    return Result<void>::success();
   }
 };
 
