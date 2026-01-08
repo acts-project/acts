@@ -76,7 +76,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   Acts::GainMatrixUpdater kfUpdater;
   Acts::MbfSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
-  double reverseFilteringCovarianceScaling = 1.0;
+  double reverseFilteringCovarianceScaling = 100.0;
   SimpleOutlierFinder outlierFinder;
 
   bool multipleScattering = false;
@@ -118,7 +118,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    kfOptions.reversedFilteringCovarianceScaling =
+    kfOptions.reverseFilteringCovarianceScaling =
         reverseFilteringCovarianceScaling;
 
     if (options.doRefit) {
