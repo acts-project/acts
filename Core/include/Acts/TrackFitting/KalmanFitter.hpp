@@ -39,18 +39,6 @@
 
 namespace Acts {
 
-/// Strategy for selecting track states when reaching target surface in Kalman
-/// filter
-enum class KalmanFitterTargetSurfaceStrategy {
-  /// Use the first trackstate to reach target surface
-  first,
-  /// Use the last trackstate to reach target surface
-  last,
-  /// Use the first or last trackstate to reach target surface depending on the
-  /// distance
-  firstOrLast,
-};
-
 /// Extension struct which holds delegates to customise the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
@@ -171,8 +159,8 @@ struct KalmanFitterOptions {
   const Surface* referenceSurface = nullptr;
 
   /// Strategy to propagate to reference surface
-  KalmanFitterTargetSurfaceStrategy referenceSurfaceStrategy =
-      KalmanFitterTargetSurfaceStrategy::firstOrLast;
+  TrackExtrapolationStrategy referenceSurfaceStrategy =
+      TrackExtrapolationStrategy::firstOrLast;
 
   /// Whether to consider multiple scattering
   bool multipleScattering = true;
@@ -895,28 +883,11 @@ class KalmanFitter {
     }
 
     if (!track.hasReferenceSurface() && kfOptions.referenceSurface != nullptr) {
-      // TODO get rid of `KalmanFitterTargetSurfaceStrategy` enum
-      TrackExtrapolationStrategy strategy{};
-      switch (kfOptions.referenceSurfaceStrategy) {
-        case KalmanFitterTargetSurfaceStrategy::first:
-          strategy = TrackExtrapolationStrategy::first;
-          break;
-        case KalmanFitterTargetSurfaceStrategy::last:
-          strategy = TrackExtrapolationStrategy::last;
-          break;
-        case KalmanFitterTargetSurfaceStrategy::firstOrLast:
-          strategy = TrackExtrapolationStrategy::firstOrLast;
-          break;
-        default:
-          ACTS_ERROR("Unknown KalmanFitterTargetSurfaceStrategy: "
-                     << static_cast<int>(kfOptions.referenceSurfaceStrategy));
-      }
-
       typename propagator_t::template Options<> extrapolationOptions(
           kfOptions.geoContext, kfOptions.magFieldContext);
       auto extrapolationResult = extrapolateTrackToReferenceSurface(
           track, *kfOptions.referenceSurface, m_propagator,
-          extrapolationOptions, strategy, logger());
+          extrapolationOptions, kfOptions.referenceSurfaceStrategy, logger());
 
       if (!extrapolationResult.ok()) {
         ACTS_ERROR("Extrapolation to reference surface failed: "
