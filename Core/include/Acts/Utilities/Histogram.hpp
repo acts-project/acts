@@ -15,8 +15,8 @@
 
 namespace Acts {
 
-/// @brief Boost axis type to use for histograms
-using BoostVariableAxis = boost::histogram::axis::variable<double>;
+/// @brief Boost axis type to use for histograms with metadata support
+using BoostVariableAxis = boost::histogram::axis::variable<double, std::string>;
 
 /// @brief Underlying Boost type for Histogram1D
 using BoostHist1D = decltype(boost::histogram::make_histogram(
@@ -30,41 +30,18 @@ using BoostHist2D = decltype(boost::histogram::make_histogram(
 using BoostProfileHist =
     decltype(boost::histogram::make_profile(std::declval<BoostVariableAxis>()));
 
-/// @brief Nested binning struct for booking plots
-class HistBinning {
- public:
-  static HistBinning Uniform(std::string title, std::size_t bins, double bMin,
-                             double bMax);
-  static HistBinning Variable(std::string title, std::vector<double> binEdges);
-  static HistBinning Logarithmic(std::string title, std::size_t bins,
-                                 double bMin, double bMax);
-
-  HistBinning(std::string title, std::vector<double> binEdges)
-      : m_title(std::move(title)), m_binEdges(std::move(binEdges)) {}
-
-  const std::string& title() const { return m_title; }
-  std::size_t nBins() const { return m_binEdges.size() - 1; }
-  const std::vector<double>& binEdges() const { return m_binEdges; }
-  double low() const { return m_binEdges.front(); }
-  double high() const { return m_binEdges.back(); }
-
- private:
-  std::string m_title;
-  std::vector<double> m_binEdges;
-};
-
 /// @brief 1D histogram wrapper using boost::histogram for data collection
 ///
 /// This class wraps boost::histogram to provide a ROOT-independent histogram
 /// implementation.
 class Histogram1D {
  public:
-  /// Construct 1D histogram from binning specification
+  /// Construct 1D histogram from axis
   ///
   /// @param name Histogram name (for identification and output)
   /// @param title Histogram title (for plotting)
-  /// @param binning Binning specification (uniform, variable, or logarithmic)
-  Histogram1D(std::string name, std::string title, const HistBinning& binning);
+  /// @param axis Axis with binning and metadata
+  Histogram1D(std::string name, std::string title, BoostVariableAxis axis);
 
   /// Fill histogram with value
   ///
@@ -77,8 +54,8 @@ class Histogram1D {
   /// Get histogram title
   const std::string& title() const { return m_title; }
 
-  /// Get axis title
-  const std::string& axisTitle() const { return m_axisTitle; }
+  /// Get axis title from axis metadata
+  const std::string& axisTitle() const { return m_hist.axis(0).metadata(); }
 
   /// Direct access to boost::histogram (for converters and tests)
   const BoostHist1D& histogram() const { return m_hist; }
@@ -90,14 +67,11 @@ class Histogram1D {
   ///
   /// @param name Histogram name (for identification and output)
   /// @param title Histogram title (for plotting)
-  /// @param axisTitle Axis title
   /// @param hist Boost histogram to wrap
-  Histogram1D(std::string name, std::string title, std::string axisTitle,
-              BoostHist1D hist);
+  Histogram1D(std::string name, std::string title, BoostHist1D hist);
 
   std::string m_name;
   std::string m_title;
-  std::string m_axisTitle;
 
   BoostHist1D m_hist;
 };
@@ -108,14 +82,14 @@ class Histogram1D {
 /// implementation.
 class Histogram2D {
  public:
-  /// Construct 2D histogram from binning specifications
+  /// Construct 2D histogram from axes
   ///
   /// @param name Histogram name (for identification and output)
   /// @param title Histogram title (for plotting)
-  /// @param xBinning X-axis binning specification
-  /// @param yBinning Y-axis binning specification
-  Histogram2D(std::string name, std::string title, const HistBinning& xBinning,
-              const HistBinning& yBinning);
+  /// @param xAxis X-axis with binning and metadata
+  /// @param yAxis Y-axis with binning and metadata
+  Histogram2D(std::string name, std::string title, BoostVariableAxis xAxis,
+              BoostVariableAxis yAxis);
 
   /// Fill histogram with x, y values
   ///
@@ -129,11 +103,11 @@ class Histogram2D {
   /// Get histogram title
   const std::string& title() const { return m_title; }
 
-  /// Get X-axis title
-  const std::string& xAxisTitle() const { return m_xAxisTitle; }
+  /// Get X-axis title from axis metadata
+  const std::string& xAxisTitle() const { return m_hist.axis(0).metadata(); }
 
-  /// Get Y-axis title
-  const std::string& yAxisTitle() const { return m_yAxisTitle; }
+  /// Get Y-axis title from axis metadata
+  const std::string& yAxisTitle() const { return m_hist.axis(1).metadata(); }
 
   /// Project the histogram onto x
   Histogram1D projectionX() const;
@@ -147,8 +121,6 @@ class Histogram2D {
  private:
   std::string m_name;
   std::string m_title;
-  std::string m_xAxisTitle;
-  std::string m_yAxisTitle;
 
   BoostHist2D m_hist;
 };
@@ -160,14 +132,14 @@ class Histogram2D {
 /// of Y values.
 class ProfileHistogram {
  public:
-  /// Construct profile histogram from X binning specification
+  /// Construct profile histogram from X axis
   ///
   /// @param name Histogram name
   /// @param title Histogram title
-  /// @param xBinning X-axis binning specification
+  /// @param xAxis X-axis with binning and metadata
   /// @param yAxisTitle Y-axis title
-  ProfileHistogram(std::string name, std::string title,
-                   const HistBinning& xBinning, std::string yAxisTitle);
+  ProfileHistogram(std::string name, std::string title, BoostVariableAxis xAxis,
+                   std::string yAxisTitle);
 
   /// Fill profile with (x, y) pair
   ///
@@ -181,8 +153,8 @@ class ProfileHistogram {
   /// Get histogram title
   const std::string& title() const { return m_title; }
 
-  /// Get X-axis title
-  const std::string& xAxisTitle() const { return m_xAxisTitle; }
+  /// Get X-axis title from axis metadata
+  const std::string& xAxisTitle() const { return m_hist.axis(0).metadata(); }
 
   /// Get Y-axis title
   const std::string& yAxisTitle() const { return m_yAxisTitle; }
@@ -193,7 +165,6 @@ class ProfileHistogram {
  private:
   std::string m_name;
   std::string m_title;
-  std::string m_xAxisTitle;
   std::string m_yAxisTitle;
 
   BoostProfileHist m_hist;
@@ -210,8 +181,8 @@ class Efficiency1D {
   ///
   /// @param name Histogram name
   /// @param title Histogram title
-  /// @param binning Binning specification
-  Efficiency1D(std::string name, std::string title, const HistBinning& binning);
+  /// @param axis Axis with binning and metadata
+  Efficiency1D(std::string name, std::string title, BoostVariableAxis axis);
 
   /// Fill efficiency histogram
   ///
@@ -225,8 +196,8 @@ class Efficiency1D {
   /// Get histogram title
   const std::string& title() const { return m_title; }
 
-  /// Get axis title
-  const std::string& axisTitle() const { return m_axisTitle; }
+  /// Get axis title from axis metadata
+  const std::string& axisTitle() const { return m_accepted.axis(0).metadata(); }
 
   /// Access to accepted histogram (for converters and tests)
   const BoostHist1D& acceptedHistogram() const { return m_accepted; }
@@ -237,7 +208,6 @@ class Efficiency1D {
  private:
   std::string m_name;
   std::string m_title;
-  std::string m_axisTitle;
 
   BoostHist1D m_accepted;
   BoostHist1D m_total;
@@ -254,10 +224,10 @@ class Efficiency2D {
   ///
   /// @param name Histogram name
   /// @param title Histogram title
-  /// @param xBinning X-axis binning specification
-  /// @param yBinning Y-axis binning specification
-  Efficiency2D(std::string name, std::string title, const HistBinning& xBinning,
-               const HistBinning& yBinning);
+  /// @param xAxis X-axis with binning and metadata
+  /// @param yAxis Y-axis with binning and metadata
+  Efficiency2D(std::string name, std::string title, BoostVariableAxis xAxis,
+               BoostVariableAxis yAxis);
 
   /// Fill efficiency histogram
   ///
@@ -272,11 +242,15 @@ class Efficiency2D {
   /// Get histogram title
   const std::string& title() const { return m_title; }
 
-  /// Get X-axis title
-  const std::string& xAxisTitle() const { return m_xAxisTitle; }
+  /// Get X-axis title from axis metadata
+  const std::string& xAxisTitle() const {
+    return m_accepted.axis(0).metadata();
+  }
 
-  /// Get Y-axis title
-  const std::string& yAxisTitle() const { return m_yAxisTitle; }
+  /// Get Y-axis title from axis metadata
+  const std::string& yAxisTitle() const {
+    return m_accepted.axis(1).metadata();
+  }
 
   /// Access to accepted histogram (for converters and tests)
   const BoostHist2D& acceptedHistogram() const { return m_accepted; }
@@ -287,8 +261,6 @@ class Efficiency2D {
  private:
   std::string m_name;
   std::string m_title;
-  std::string m_xAxisTitle;
-  std::string m_yAxisTitle;
 
   BoostHist2D m_accepted;
   BoostHist2D m_total;

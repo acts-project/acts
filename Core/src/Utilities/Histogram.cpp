@@ -8,53 +8,17 @@
 
 #include "Acts/Utilities/Histogram.hpp"
 
-#include <cmath>
-#include <vector>
-
 namespace Acts {
 
-HistBinning HistBinning::Uniform(std::string title, std::size_t bins,
-                                 double bMin, double bMax) {
-  std::vector<double> binEdges(bins + 1);
-  const double step = (bMax - bMin) / bins;
-  std::generate(binEdges.begin(), binEdges.end(), [&, v = bMin]() mutable {
-    const double r = v;
-    v += step;
-    return r;
-  });
-  return HistBinning(std::move(title), std::move(binEdges));
-}
-
-HistBinning HistBinning::Variable(std::string title,
-                                  std::vector<double> binEdges) {
-  return HistBinning(std::move(title), std::move(binEdges));
-}
-
-HistBinning HistBinning::Logarithmic(std::string title, std::size_t bins,
-                                     double bMin, double bMax) {
-  std::vector<double> binEdges(bins + 1);
-  const double logMin = std::log10(bMin);
-  const double logMax = std::log10(bMax);
-  const double step = (logMax - logMin) / bins;
-  for (std::size_t i = 0; i <= bins; ++i) {
-    binEdges[i] = std::pow(10, logMin + i * step);
-  }
-  return HistBinning(std::move(title), std::move(binEdges));
-}
-
 Histogram1D::Histogram1D(std::string name, std::string title,
-                         const HistBinning& binning)
+                         BoostVariableAxis axis)
     : m_name(std::move(name)),
       m_title(std::move(title)),
-      m_axisTitle(binning.title()),
-      m_hist(boost::histogram::make_histogram(
-          BoostVariableAxis(binning.binEdges()))) {}
+      m_hist(boost::histogram::make_histogram(std::move(axis))) {}
 
-Histogram1D::Histogram1D(std::string name, std::string title,
-                         std::string axisTitle, BoostHist1D hist)
+Histogram1D::Histogram1D(std::string name, std::string title, BoostHist1D hist)
     : m_name(std::move(name)),
       m_title(std::move(title)),
-      m_axisTitle(std::move(axisTitle)),
       m_hist(std::move(hist)) {}
 
 void Histogram1D::fill(double value) {
@@ -62,15 +26,11 @@ void Histogram1D::fill(double value) {
 }
 
 Histogram2D::Histogram2D(std::string name, std::string title,
-                         const HistBinning& xBinning,
-                         const HistBinning& yBinning)
+                         BoostVariableAxis xAxis, BoostVariableAxis yAxis)
     : m_name(std::move(name)),
       m_title(std::move(title)),
-      m_xAxisTitle(xBinning.title()),
-      m_yAxisTitle(yBinning.title()),
-      m_hist(boost::histogram::make_histogram(
-          BoostVariableAxis(xBinning.binEdges()),
-          BoostVariableAxis(yBinning.binEdges()))) {}
+      m_hist(boost::histogram::make_histogram(std::move(xAxis),
+                                              std::move(yAxis))) {}
 
 void Histogram2D::fill(double xValue, double yValue) {
   m_hist(xValue, yValue);
@@ -79,40 +39,35 @@ void Histogram2D::fill(double xValue, double yValue) {
 Histogram1D Histogram2D::projectionX() const {
   auto projectedHist = boost::histogram::algorithm::project(
       m_hist, std::integral_constant<unsigned, 0>{});
-  return Histogram1D(m_name + "_projX", m_title + " projection X", m_xAxisTitle,
+  return Histogram1D(m_name + "_projX", m_title + " projection X",
                      std::move(projectedHist));
 }
 
 Histogram1D Histogram2D::projectionY() const {
   auto projectedHist = boost::histogram::algorithm::project(
       m_hist, std::integral_constant<unsigned, 1>{});
-  return Histogram1D(m_name + "_projY", m_title + " projection Y", m_yAxisTitle,
+  return Histogram1D(m_name + "_projY", m_title + " projection Y",
                      std::move(projectedHist));
 }
 
 ProfileHistogram::ProfileHistogram(std::string name, std::string title,
-                                   const HistBinning& xBinning,
+                                   BoostVariableAxis xAxis,
                                    std::string yAxisTitle)
     : m_name(std::move(name)),
       m_title(std::move(title)),
-      m_xAxisTitle(xBinning.title()),
       m_yAxisTitle(std::move(yAxisTitle)),
-      m_hist(boost::histogram::make_profile(
-          BoostVariableAxis(xBinning.binEdges()))) {}
+      m_hist(boost::histogram::make_profile(std::move(xAxis))) {}
 
 void ProfileHistogram::fill(double xValue, double yValue) {
   m_hist(xValue, boost::histogram::sample(yValue));
 }
 
 Efficiency1D::Efficiency1D(std::string name, std::string title,
-                           const HistBinning& binning)
+                           BoostVariableAxis axis)
     : m_name(std::move(name)),
       m_title(std::move(title)),
-      m_axisTitle(binning.title()),
-      m_accepted(boost::histogram::make_histogram(
-          BoostVariableAxis(binning.binEdges()))),
-      m_total(boost::histogram::make_histogram(
-          BoostVariableAxis(binning.binEdges()))) {}
+      m_accepted(boost::histogram::make_histogram(axis)),
+      m_total(boost::histogram::make_histogram(std::move(axis))) {}
 
 void Efficiency1D::fill(double value, bool accepted) {
   m_total(value);
@@ -122,18 +77,12 @@ void Efficiency1D::fill(double value, bool accepted) {
 }
 
 Efficiency2D::Efficiency2D(std::string name, std::string title,
-                           const HistBinning& xBinning,
-                           const HistBinning& yBinning)
+                           BoostVariableAxis xAxis, BoostVariableAxis yAxis)
     : m_name(std::move(name)),
       m_title(std::move(title)),
-      m_xAxisTitle(xBinning.title()),
-      m_yAxisTitle(yBinning.title()),
-      m_accepted(boost::histogram::make_histogram(
-          BoostVariableAxis(xBinning.binEdges()),
-          BoostVariableAxis(yBinning.binEdges()))),
-      m_total(boost::histogram::make_histogram(
-          BoostVariableAxis(xBinning.binEdges()),
-          BoostVariableAxis(yBinning.binEdges()))) {}
+      m_accepted(boost::histogram::make_histogram(xAxis, yAxis)),
+      m_total(boost::histogram::make_histogram(std::move(xAxis),
+                                               std::move(yAxis))) {}
 
 void Efficiency2D::fill(double xValue, double yValue, bool accepted) {
   m_total(xValue, yValue);

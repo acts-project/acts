@@ -9,14 +9,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Histogram.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 using namespace Acts;
 
 BOOST_AUTO_TEST_SUITE(ProfileEfficiencySuite)
 
 BOOST_AUTO_TEST_CASE(ProfileHistogram_BasicFill) {
-  auto xBinning = HistBinning::Uniform("x", 10, 0.0, 10.0);
-  ProfileHistogram profile("test_prof", "Test Profile", xBinning, "y value");
+  ProtoAxis protoAxis(AxisBoundaryType::Bound, 0.0, 10.0, 10);
+  auto xAxis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x");
+  ProfileHistogram profile("test_prof", "Test Profile", xAxis, "y value");
 
   BOOST_CHECK_EQUAL(profile.name(), "test_prof");
   BOOST_CHECK_EQUAL(profile.title(), "Test Profile");
@@ -41,9 +43,9 @@ BOOST_AUTO_TEST_CASE(ProfileHistogram_BasicFill) {
 }
 
 BOOST_AUTO_TEST_CASE(ProfileHistogram_MultipleBins) {
-  auto xBinning = HistBinning::Uniform("eta", 5, -2.5, 2.5);
-  ProfileHistogram profile("res_vs_eta", "Residual vs Eta", xBinning,
-                           "residual");
+  ProtoAxis protoAxis(AxisBoundaryType::Bound, -2.5, 2.5, 5);
+  auto xAxis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
+  ProfileHistogram profile("res_vs_eta", "Residual vs Eta", xAxis, "residual");
 
   // Fill different eta bins with different mean values
   profile.fill(-2.0, 1.0);  // bin 0
@@ -69,8 +71,9 @@ BOOST_AUTO_TEST_CASE(ProfileHistogram_MultipleBins) {
 }
 
 BOOST_AUTO_TEST_CASE(Efficiency1D_BasicFill) {
-  auto binning = HistBinning::Uniform("eta", 10, -3.0, 3.0);
-  Efficiency1D eff("eff_vs_eta", "Efficiency vs Eta", binning);
+  ProtoAxis protoAxis(AxisBoundaryType::Bound, -3.0, 3.0, 10);
+  auto axis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
+  Efficiency1D eff("eff_vs_eta", "Efficiency vs Eta", axis);
 
   BOOST_CHECK_EQUAL(eff.name(), "eff_vs_eta");
   BOOST_CHECK_EQUAL(eff.title(), "Efficiency vs Eta");
@@ -95,8 +98,9 @@ BOOST_AUTO_TEST_CASE(Efficiency1D_BasicFill) {
 }
 
 BOOST_AUTO_TEST_CASE(Efficiency1D_MultipleBins) {
-  auto binning = HistBinning::Uniform("pt", 5, 0.0, 5.0);
-  Efficiency1D eff("eff_vs_pt", "Efficiency vs pT", binning);
+  ProtoAxis protoAxis(AxisBoundaryType::Bound, 0.0, 5.0, 5);
+  auto axis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "pt");
+  Efficiency1D eff("eff_vs_pt", "Efficiency vs pT", axis);
 
   // Bin 0: 50% efficiency
   eff.fill(0.5, true);
@@ -135,10 +139,11 @@ BOOST_AUTO_TEST_CASE(Efficiency1D_MultipleBins) {
 }
 
 BOOST_AUTO_TEST_CASE(Efficiency2D_BasicFill) {
-  auto xBinning = HistBinning::Uniform("eta", 5, -2.5, 2.5);
-  auto yBinning = HistBinning::Uniform("pt", 5, 0.0, 5.0);
-  Efficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", xBinning,
-                   yBinning);
+  ProtoAxis protoX(AxisBoundaryType::Bound, -2.5, 2.5, 5);
+  ProtoAxis protoY(AxisBoundaryType::Bound, 0.0, 5.0, 5);
+  auto xAxis = BoostVariableAxis(protoX.getAxis().getBinEdges(), "eta");
+  auto yAxis = BoostVariableAxis(protoY.getAxis().getBinEdges(), "pt");
+  Efficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", xAxis, yAxis);
 
   BOOST_CHECK_EQUAL(eff.name(), "eff_vs_eta_pt");
   BOOST_CHECK_EQUAL(eff.title(), "Efficiency vs Eta and pT");
