@@ -1174,7 +1174,8 @@ HTML_EXTRA_STYLESHEET  = @AWESOME_CSS_DIR@/doxygen-awesome.css \
 
 HTML_EXTRA_FILES       = @AWESOME_CSS_DIR@/doxygen-awesome-darkmode-toggle.js \
                          @AWESOME_CSS_DIR@/doxygen-awesome-paragraph-link.js \
-                         @AWESOME_CSS_DIR@/doxygen-awesome-interactive-toc.js
+                         @AWESOME_CSS_DIR@/doxygen-awesome-interactive-toc.js \
+                         @CMAKE_CURRENT_SOURCE_DIR@/tex-mml-chtml.js
 
 
 HTML_COLORSTYLE        = LIGHT
