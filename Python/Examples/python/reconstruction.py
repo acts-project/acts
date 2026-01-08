@@ -1588,7 +1588,7 @@ def addKalmanTracks(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     reverseFilteringMomThreshold: float = 0 * u.GeV,
-    reverseFilteringCovarianceScaling: float = 1.0,
+    reverseFilteringCovarianceScaling: float = 100.0,
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
