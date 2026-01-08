@@ -13,12 +13,13 @@
 
 #include <nlohmann/json.hpp>
 
-namespace Acts {
+/// @namespace Acts::ProtoAxisJsonConverter
+/// @ingroup json_plugin
+
+namespace Acts::ProtoAxisJsonConverter {
 
 /// @addtogroup json_plugin
 /// @{
-
-namespace ProtoAxisJsonConverter {
 
 /// Write the ProtoAxis to a json object
 ///
@@ -32,8 +33,6 @@ nlohmann::json toJson(const ProtoAxis& pa);
 /// @return ProtoAxis created from the JSON object
 Acts::ProtoAxis fromJson(const nlohmann::json& j);
 
-}  // namespace ProtoAxisJsonConverter
+}  // namespace Acts::ProtoAxisJsonConverter
 
 /// @}
-
-}  // namespace Acts

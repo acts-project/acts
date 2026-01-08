@@ -24,10 +24,11 @@ class SurfaceArray;
 
 }  // namespace Acts
 
-namespace ActsPlugins {
-
+/// @namespace ActsPlugins::Svg::SurfaceArrayConverter
 /// @ingroup actsvg_plugin
-namespace Svg::SurfaceArrayConverter {
+/// Utilities to convert a surface array into proto objects for SVG output
+
+namespace ActsPlugins::Svg::SurfaceArrayConverter {
 
 /// @ingroup actsvg_plugin
 /// Nested options struct
@@ -39,6 +40,7 @@ struct Options {
 };
 
 /// Convert a surface array into needed constituents
+/// @ingroup actsvg_plugin
 ///
 /// @param gctx is the geometry context of the conversion call
 /// @param surfaceArray is the surface to convert
@@ -54,6 +56,4 @@ ProtoIndexedSurfaceGrid convert(const Acts::GeometryContext& gctx,
                                 const Acts::SurfaceArray& surfaceArray,
                                 const Options& cOptions = Options());
 
-}  // namespace Svg::SurfaceArrayConverter
-
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::Svg::SurfaceArrayConverter

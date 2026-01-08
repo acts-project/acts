@@ -64,6 +64,9 @@
     <!-- <tab type="examples" visible="yes" title="" intro=""/> -->
 
     <tab type="user" url="@ref citelist" visible="yes" title="Bibliography"/>
+    <tab type="user" url="@ref deprecated" visible="yes" title="Deprecated" />
+    <tab type="user" url="@ref todo" visible="yes" title="Todos" />
+    <tab type="user" url="@ref bug" visible="yes" title="Bugs" />
 
   </navindex>
 
