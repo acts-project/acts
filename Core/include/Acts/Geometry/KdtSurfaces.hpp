@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/ISurfacesProvider.hpp"
 #include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -152,43 +151,6 @@ class KdtSurfaces {
     std::ranges::for_each(c, [&](auto& v) { v *= weight; });
     return c;
   }
-};
-
-/// @brief Callable struct wrapper around the KDT surface structure
-///
-/// This allows to create small region based callable structs at
-/// configuration level that are then connected to an InternalStructureBuilder
-template <std::size_t kDIM = 2u, std::size_t bSize = 100u>
-class KdtSurfacesProvider : public ISurfacesProvider {
- public:
-  /// The prefilled surfaces in a KD tree structure, it is generally shared
-  /// amongst different providers
-  ///
-  /// @param kdts the prefilled KDTree structure
-  /// @param kregion the region where these are pulled from
-  KdtSurfacesProvider(std::shared_ptr<KdtSurfaces<kDIM, bSize>> kdts,
-                      const Extent& kregion)
-      : m_kdt(std::move(kdts)), m_region(kregion) {
-    /// Sanity check that the KDTree is not empty
-    if (m_kdt == nullptr) {
-      throw std::invalid_argument(
-          "KdtSurfacesProvider: no KDTree structure provided.");
-    }
-  }
-
-  /// The call to provide the surfaces
-  /// @param gctx Geometry context (not used in KDT provider)
-  /// @return Vector of surfaces from the KDT query
-  std::vector<std::shared_ptr<Surface>> surfaces(
-      [[maybe_unused]] const GeometryContext& gctx) const final {
-    return m_kdt->surfaces(m_region);
-  }
-
- private:
-  std::shared_ptr<KdtSurfaces<kDIM, bSize, reference_generator>> m_kdt =
-      nullptr;
-  /// The query region
-  Extent m_region;
 };
 
 }  // namespace Acts

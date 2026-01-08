@@ -11,7 +11,6 @@ target_sources(
         CylinderVolumeBuilder.cpp
         CylinderVolumeHelper.cpp
         Extent.cpp
-        KDTreeTrackingGeometryBuilder.cpp
         DiscLayer.cpp
         GenericApproachDescriptor.cpp
         GenericCuboidVolumeBounds.cpp
@@ -44,7 +43,6 @@ target_sources(
         CompositePortalLink.cpp
         PortalLinkBase.cpp
         PortalError.cpp
-        ProtoDetector.cpp
         CylinderPortalShell.cpp
         CuboidPortalShell.cpp
         BlueprintNode.cpp

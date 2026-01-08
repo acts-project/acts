@@ -32,6 +32,9 @@ class KalmanFitterErrorCategory : public std::error_category {
         return "No measurement detected during the propagation";
       case KalmanFitterError::ReversePropagationFailed:
         return "Reverse propagation failed";
+      case KalmanFitterError::InconsistentTrackStates:
+        return "Inconsistent reference surfaces between forward and reversed "
+               "filtered tracks";
       default:
         return "unknown";
     }
