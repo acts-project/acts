@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/ProtoAxis.hpp"
-#include "ActsPlugins/Root/HistogramToRootConverter.hpp"
+#include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cmath>
 #include <random>

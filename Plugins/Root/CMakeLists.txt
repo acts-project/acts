@@ -13,7 +13,7 @@ acts_add_library(
     src/TGeoParser.cpp
     src/TGeoPrimitivesHelper.cpp
     src/TGeoSurfaceConverter.cpp
-    src/HistogramToRootConverter.cpp
+    src/HistogramConverter.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsPlugins/Root/HistogramToRootConverter.hpp"
+#include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cmath>
 #include <vector>
@@ -56,8 +56,8 @@ TH1F* toRoot(const Histogram1D& boostHist) {
     rootHist->SetBinContent(rootBinIndex, content);
   }
 
-  // Set axis titles
-  rootHist->GetXaxis()->SetTitle(boostHist.axisTitle().c_str());
+  // Set axis titles from axis metadata
+  rootHist->GetXaxis()->SetTitle(axis.metadata().c_str());
 
   return rootHist;
 }
@@ -90,9 +90,9 @@ TH2F* toRoot(const Histogram2D& boostHist) {
     rootHist->SetBinContent(rootXBin, rootYBin, content);
   }
 
-  // Set axis titles
-  rootHist->GetXaxis()->SetTitle(boostHist.xAxisTitle().c_str());
-  rootHist->GetYaxis()->SetTitle(boostHist.yAxisTitle().c_str());
+  // Set axis titles from axis metadata
+  rootHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
+  rootHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
 
   return rootHist;
 }
@@ -164,8 +164,8 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
     binSumw2->fArray[rootBinIndex] = count;
   }
 
-  // Set axis titles
-  rootProfile->GetXaxis()->SetTitle(boostProfile.xAxisTitle().c_str());
+  // Set axis titles (X from axis metadata, Y from ProfileHistogram member)
+  rootProfile->GetXaxis()->SetTitle(axis.metadata().c_str());
   rootProfile->GetYaxis()->SetTitle(boostProfile.yAxisTitle().c_str());
 
   return rootProfile;
