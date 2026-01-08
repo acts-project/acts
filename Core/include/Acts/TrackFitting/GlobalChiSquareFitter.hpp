@@ -22,7 +22,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -746,7 +745,6 @@ class Gx2Fitter {
   ///
   /// The GX2F Actor does not rely on the measurements to be sorted along the
   /// track.
-  template <typename parameters_t>
   class Actor {
    public:
     /// Broadcast the result_type
@@ -786,7 +784,7 @@ class Gx2Fitter {
     const CalibrationContext* calibrationContext{nullptr};
 
     /// The particle hypothesis is needed for estimating scattering angles
-    const parameters_t* parametersWithHypothesis = nullptr;
+    const BoundTrackParameters* parametersWithHypothesis = nullptr;
 
     /// The scatteringMap stores for each visited surface their scattering
     /// properties
@@ -1175,8 +1173,6 @@ class Gx2Fitter {
   /// Fit implementation
   ///
   /// @tparam source_link_iterator_t Iterator type used to pass source links
-  /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam parameters_t Type of parameters used for local parameters
   /// @tparam track_container_t Type of the track container backend
   /// @tparam holder_t Type defining track container backend ownership
   ///
@@ -1190,12 +1186,11 @@ class Gx2Fitter {
   /// the fit.
   ///
   /// @return the output as an output track
-  template <typename source_link_iterator_t, typename start_parameters_t,
-            typename parameters_t = BoundTrackParameters,
+  template <typename source_link_iterator_t,
             TrackContainerFrontend track_container_t>
   Result<typename track_container_t::TrackProxy> fit(
       source_link_iterator_t it, source_link_iterator_t end,
-      const start_parameters_t& sParameters,
+      const BoundTrackParameters& sParameters,
       const Gx2FitterOptions<traj_t>& gx2fOptions,
       track_container_t& trackContainer) const
     requires(!isDirectNavigator)
@@ -1218,14 +1213,14 @@ class Gx2Fitter {
     const bool multipleScattering = gx2fOptions.multipleScattering;
 
     // Create the ActorList
-    using GX2FActor = Actor<parameters_t>;
+    using GX2FActor = Actor;
 
     using GX2FResult = typename GX2FActor::result_type;
     using Actors = Acts::ActorList<GX2FActor>;
 
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
-    start_parameters_t params = sParameters;
+    BoundTrackParameters params = sParameters;
     double chi2sum = 0;
     double oldChi2sum = std::numeric_limits<double>::max();
 
