@@ -171,23 +171,33 @@ class TrackStateTypeBase {
                                   const TrackStateTypeBase& t) {
     os << "TrackStateType[";
     bool first = true;
-#define PRINT_FLAG(NAME)                  \
-  if (t.test(TrackStateTypeBase::NAME)) { \
-    if (!first) {                         \
-      os << ",";                          \
-    }                                     \
-    os << #NAME;                          \
-    first = false;                        \
-  }
-    PRINT_FLAG(Parameter)
-    PRINT_FLAG(Material)
-    PRINT_FLAG(Measurement)
-    PRINT_FLAG(Outlier)
-    PRINT_FLAG(Hole)
-    PRINT_FLAG(SharedHit)
-    PRINT_FLAG(SplitHit)
-    PRINT_FLAG(NoExpectedHit)
-#undef PRINT_FLAG
+    const auto append = [&](const char* name, bool condition) {
+      if (condition) {
+        if (!first) {
+          os << ",";
+        }
+        os << name;
+        first = false;
+      }
+    };
+    append("HasParameters", t.hasParameters());
+    if (t.isMaterial()) {
+      append("IsMaterial", true);
+    } else {
+      append("HasMaterial", t.hasMaterial());
+    }
+    if (t.isMeasurement()) {
+      append("IsMeasurement", true);
+    } else if (t.isOutlier()) {
+      append("IsOutlier", true);
+    } else if (t.isHole()) {
+      append("IsHole", true);
+    } else {
+      append("HasMeasurement", t.hasMeasurement());
+    }
+    append("IsSharedHit", t.isSharedHit());
+    append("IsSplitHit", t.isSplitHit());
+    append("NoExpectedHit", t.hasNoExpectedHit());
     os << "]";
     return os;
   }
