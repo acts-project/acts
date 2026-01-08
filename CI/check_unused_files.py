@@ -64,6 +64,9 @@ def main():
         "tgeo_aux.py.in",
         "serve.py",
         "SNIPPETS.md",
+        "todo.md",
+        "bug.md",
+        "deprecated.md",
     )
 
     suffix_header = (

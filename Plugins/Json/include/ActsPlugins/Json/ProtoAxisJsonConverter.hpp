@@ -33,6 +33,6 @@ nlohmann::json toJson(const ProtoAxis& pa);
 /// @return ProtoAxis created from the JSON object
 Acts::ProtoAxis fromJson(const nlohmann::json& j);
 
-}  // namespace Acts::ProtoAxisJsonConverter
-
 /// @}
+
+}  // namespace Acts::ProtoAxisJsonConverter
