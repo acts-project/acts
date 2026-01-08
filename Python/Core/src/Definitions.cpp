@@ -34,6 +34,24 @@ void addDefinitions(py::module_& m) {
         v << a[0], a[1];
         return v;
       }))
+      .def("__add__",
+           [](const Vector2& self, const Vector2& other) {
+             return (self + other).eval();
+           })
+      .def("__sub__",
+           [](const Vector2& self, const Vector2& other) {
+             return (self - other).eval();
+           })
+      .def("__mul__", [](const Vector2& self,
+                         double scalar) { return (self * scalar).eval(); })
+      .def("__mul__",
+           [](double scalar, const Vector2& self) {
+             return (self * scalar).eval();
+           })
+      .def("__mul__",
+           [](const Vector2& self, const Vector2& other) {
+             return self.cwiseProduct(other).eval();
+           })
       .def("__getitem__",
            [](const Vector2& self, Eigen::Index i) { return self[i]; })
       .def("__str__", [](const Vector2& self) {
@@ -64,6 +82,12 @@ void addDefinitions(py::module_& m) {
            [](const Vector3& self, const Vector3& other) {
              return self.cwiseProduct(other).eval();
            })
+      .def("__mul__", [](const Vector3& self,
+                         double scalar) { return (self * scalar).eval(); })
+      .def("__mul__",
+           [](double scalar, const Vector3& self) {
+             return (self * scalar).eval();
+           })
       .def("cross",
            [](const Vector3& self, const Vector3& other) {
              return self.cross(other).eval();
@@ -92,6 +116,12 @@ void addDefinitions(py::module_& m) {
       .def("__mul__",
            [](const Vector4& self, const Vector4& other) {
              return self.cwiseProduct(other).eval();
+           })
+      .def("__mul__", [](const Vector4& self,
+                         double scalar) { return (self * scalar).eval(); })
+      .def("__mul__",
+           [](double scalar, const Vector4& self) {
+             return (self * scalar).eval();
            })
       .def("__getitem__",
            [](const Vector4& self, Eigen::Index i) { return self[i]; })

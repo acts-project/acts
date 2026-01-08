@@ -1,7 +1,12 @@
-import pathlib, acts, acts.examples
+import pathlib, acts
 import pytest
 
-from helpers import covfieEnabled
+try:
+    from acts import covfie
+
+    covfieEnabled = True
+except ImportError:
+    covfieEnabled = False
 
 
 @pytest.mark.skipif(not covfieEnabled, reason="Covfie plugin not available")

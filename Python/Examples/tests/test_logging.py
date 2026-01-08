@@ -1,5 +1,5 @@
-import acts
 import pytest
+import acts
 
 
 def test_logging_threshold():
