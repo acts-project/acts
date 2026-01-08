@@ -126,7 +126,8 @@ class TrackStateProxyCommon {
   /// Const Eigen map type for calibrated measurements (dynamic size).
   using ConstEffectiveCalibratedMap =
       typename detail_tsp::DynamicSizeTypes<true>::CoefficientsMap;
-  /// Mutable Eigen map type for calibrated measurement covariance (dynamic size).
+  /// Mutable Eigen map type for calibrated measurement covariance (dynamic
+  /// size).
   using EffectiveCalibratedCovarianceMap =
       typename detail_tsp::DynamicSizeTypes<false>::CovarianceMap;
   /// Const Eigen map type for calibrated measurement covariance (dynamic size).
@@ -343,7 +344,7 @@ class TrackStateProxyCommon {
 
   /// Store subspace indices describing the measurement projector.
   /// @tparam index_range_t Range of indices to encode.
-  /// @param indices Collection of bound indices forming the projector rows.
+  /// @param subspaceIndices Collection of bound indices forming the projector rows.
   template <std::ranges::sized_range index_range_t>
   void setProjectorSubspaceIndices(const index_range_t& subspaceIndices)
     requires(!read_only &&
