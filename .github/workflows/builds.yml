@@ -329,6 +329,9 @@ jobs:
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
 
+      - run: ls -al /Users/runner/work/acts/acts/dependencies/view/lib
+      - run: find /Users/runner/work/acts/acts/dependencies/view/lib -type l -name "libRIO.*"
+
       - name: Build
         run: cmake --build build
 
