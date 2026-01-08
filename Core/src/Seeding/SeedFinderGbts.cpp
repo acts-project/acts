@@ -34,7 +34,7 @@ SeedFinderGbts::SeedFinderGbts(
   m_config.phiSliceWidth = 2 * std::numbers::pi / m_config.nMaxPhiSlice;
 }
 
-SeedContainer2 SeedFinderGbts::CreateSeeds(
+SeedContainer2 SeedFinderGbts::createSeeds(
     const RoiDescriptor& roi,
     const SPContainerComponentsType& SpContainerComponents,
     int max_layers) const {
@@ -43,7 +43,7 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
 
   SeedContainer2 SeedContainer;
   std::vector<std::vector<GbtsNode>> node_storage =
-      CreateNodes(SpContainerComponents, max_layers);
+      createNodes(SpContainerComponents, max_layers);
   unsigned int nPixelLoaded = 0;
   unsigned int nStripLoaded = 0;
 
@@ -121,8 +121,8 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
   return SeedContainer;
 }
 
-std::vector<std::vector<GbtsNode>> SeedFinderGbts::CreateNodes(
-    const auto& container, int MaxLayers) const {
+std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
+    const SPContainerComponentsType& container, int MaxLayers) const {
   std::vector<std::vector<GbtsNode>> node_storage(MaxLayers);
   // reserve for better efficiency
 

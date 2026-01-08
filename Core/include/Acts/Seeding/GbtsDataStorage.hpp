@@ -81,7 +81,7 @@ class GbtsEtaBin {
 class GbtsDataStorage {
  public:
   explicit GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
-                           const SeedFinderGbtsConfig config,
+                           const SeedFinderGbtsConfig& config,
                            std::shared_ptr<const GbtsLutParser> lutParser);
   ~GbtsDataStorage();
 
@@ -103,7 +103,7 @@ class GbtsDataStorage {
 
  protected:
   std::shared_ptr<const GbtsGeometry> m_geo;
-  const SeedFinderGbtsConfig m_config;
+  SeedFinderGbtsConfig m_config;
   std::shared_ptr<const GbtsLutParser> m_lutParser;
   std::vector<GbtsEtaBin> m_etaBins;
 };

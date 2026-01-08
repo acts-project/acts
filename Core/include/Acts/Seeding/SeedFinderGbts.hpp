@@ -54,13 +54,13 @@ class SeedFinderGbts {
     }
   };
 
-  SeedContainer2 CreateSeeds(
+  SeedContainer2 createSeeds(
       const RoiDescriptor& roi,
       const SPContainerComponentsType& SpContainerComponents,
       int max_layers) const;
 
-  std::vector<std::vector<GbtsNode>> CreateNodes(const auto& container,
-                                                 int MaxLayers) const;
+  std::vector<std::vector<GbtsNode>> createNodes(
+      const SPContainerComponentsType& container, int MaxLayers) const;
 
   std::pair<int, int> buildTheGraph(
       const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,

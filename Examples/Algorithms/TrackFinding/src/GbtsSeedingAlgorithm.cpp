@@ -92,7 +92,7 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   // create the seeds
 
   Acts::SeedContainer2 seeds =
-      m_finder->CreateSeeds(internalRoi, SpContainerComponents, max_layers);
+      m_finder->createSeeds(internalRoi, SpContainerComponents, max_layers);
 
   // move seeds to simseedcontainer to be used down stream taking fist middle
   // and last sps currently as simseeds need to be hard types so only 3
