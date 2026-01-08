@@ -158,7 +158,7 @@ struct KalmanFitterOptions {
   /// The reference surface
   const Surface* referenceSurface = nullptr;
 
-  /// Strategy to propagate to target surface
+  /// Strategy to propagate to reference surface
   TrackExtrapolationStrategy referenceSurfaceStrategy =
       TrackExtrapolationStrategy::firstOrLast;
 
