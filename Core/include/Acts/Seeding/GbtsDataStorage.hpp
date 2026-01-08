@@ -10,7 +10,6 @@
 
 // TODO: update to C++17 style
 #include "Acts/Seeding/GbtsGeometry.hpp"
-#include "Acts/Seeding/GbtsLutParser.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 
 #include <array>
@@ -20,6 +19,8 @@ namespace Acts::Experimental {
 
 #define MAX_SEG_PER_NODE 1000  // was 30
 #define N_SEG_CONNS 6          // was 6
+
+using GbtsMLLookupTable = std::vector<std::array<float, 5>>;
 
 class GbtsGeometry;
 
@@ -82,7 +83,7 @@ class GbtsDataStorage {
  public:
   explicit GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
                            const SeedFinderGbtsConfig& config,
-                           std::shared_ptr<const GbtsLutParser> lutParser);
+                           const GbtsMLLookupTable& parseLutFile);
   ~GbtsDataStorage();
 
   int loadPixelGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll,
@@ -103,8 +104,11 @@ class GbtsDataStorage {
 
  protected:
   std::shared_ptr<const GbtsGeometry> m_geo;
+
   SeedFinderGbtsConfig m_config;
-  std::shared_ptr<const GbtsLutParser> m_lutParser;
+
+  GbtsMLLookupTable m_mlLUT;
+
   std::vector<GbtsEtaBin> m_etaBins;
 };
 

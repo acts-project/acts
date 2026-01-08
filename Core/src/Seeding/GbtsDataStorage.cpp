@@ -103,10 +103,8 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
 }
 GbtsDataStorage::GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
                                  const SeedFinderGbtsConfig& config,
-                                 std::shared_ptr<const GbtsLutParser> lutParser)
-    : m_geo(std::move(geometry)),
-      m_config(config),
-      m_lutParser(std::move(lutParser)) {
+                                 const GbtsMLLookupTable& parseLutFile)
+    : m_geo(std::move(geometry)), m_config(config), m_mlLUT(parseLutFile) {
   // parse the look up table if useML is true
 
   m_etaBins.resize(m_geo->num_bins());
@@ -220,8 +218,8 @@ void GbtsDataStorage::initializeNodes(bool useML) {
     }
 
     // adjusting cuts on |cot(theta)| using pre-trained LUT loaded from file
-    auto& mlLUT = m_lutParser->getParsedLut();
-    int lutSize = mlLUT.size();
+
+    int lutSize = m_mlLUT.size();
 
     int nBins = pL->m_bins.size();
 
@@ -248,7 +246,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
           continue;  // protect against negative index
         }
 
-        const std::array<float, 5> lutBin = mlLUT[lutBinIdx];
+        const std::array<float, 5> lutBin = m_mlLUT[lutBinIdx];
 
         float dist2border = 10.0 - std::abs(locPosY);
 

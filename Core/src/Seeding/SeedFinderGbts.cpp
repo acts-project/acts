@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <memory>
 #include <numbers>
 #include <numeric>
@@ -24,14 +25,14 @@ namespace Acts::Experimental {
 SeedFinderGbts::SeedFinderGbts(
     SeedFinderGbtsConfig config, std::unique_ptr<GbtsGeometry> gbtsGeo,
     const std::vector<TrigInDetSiLayer>* layerGeometry,
-    std::unique_ptr<GbtsLutParser> gbtsLutParser,
     std::unique_ptr<const Acts::Logger> logger)
     : m_config(std::move(config)),
       m_geo(std::move(gbtsGeo)),
       m_layerGeometry(layerGeometry),
-      m_lutParser(std::move(gbtsLutParser)),
       m_logger(std::move(logger)) {
   m_config.phiSliceWidth = 2 * std::numbers::pi / m_config.nMaxPhiSlice;
+
+  m_mlLut = parseGbtsMLLookupTable(m_config.lutInputFile);
 }
 
 SeedContainer2 SeedFinderGbts::createSeeds(
@@ -39,7 +40,7 @@ SeedContainer2 SeedFinderGbts::createSeeds(
     const SPContainerComponentsType& SpContainerComponents,
     int max_layers) const {
   std::unique_ptr<GbtsDataStorage> storage =
-      std::make_unique<GbtsDataStorage>(m_geo, m_config, m_lutParser);
+      std::make_unique<GbtsDataStorage>(m_geo, m_config, m_mlLut);
 
   SeedContainer2 SeedContainer;
   std::vector<std::vector<GbtsNode>> node_storage =
@@ -119,6 +120,38 @@ SeedContainer2 SeedFinderGbts::createSeeds(
   ACTS_DEBUG("GBTS created " << SeedContainer.size() << " seeds");
 
   return SeedContainer;
+}
+
+GbtsMLLookupTable SeedFinderGbts::parseGbtsMLLookupTable(
+    const std::string& lutInputFile) {
+  GbtsMLLookupTable mlLUT{};
+  if (m_config.useML) {
+    if (lutInputFile.empty()) {
+      throw std::runtime_error("Cannot find ML predictor LUT file");
+    } else {
+      mlLUT.reserve(100);
+      std::ifstream ifs(std::string(lutInputFile).c_str());
+
+      if (!ifs.is_open()) {
+        throw std::runtime_error("Failed to open LUT file");
+      }
+
+      float cl_width{}, min1{}, max1{}, min2{}, max2{};
+
+      while (ifs >> cl_width >> min1 >> max1 >> min2 >> max2) {
+        std::array<float, 5> lut_line = {cl_width, min1, max1, min2, max2};
+        mlLUT.emplace_back(lut_line);
+      }
+      if (!ifs.eof()) {
+        // ended if parse error present, not clean EOF
+
+        throw std::runtime_error("Stopped reading LUT file due to parse error");
+      }
+
+      ifs.close();
+    }
+  }
+  return mlLUT;
 }
 
 std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(

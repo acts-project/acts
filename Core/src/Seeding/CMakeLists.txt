@@ -4,7 +4,6 @@ target_sources(
         EstimateTrackParamsFromSeed.cpp
         CompSpacePointAuxiliaries.cpp
         CompositeSpacePointLineFitter.cpp
-        GbtsLutParser.cpp
         GbtsDataStorage.cpp
         GbtsGeometry.cpp
         GbtsTrackingFilter.cpp

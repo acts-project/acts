@@ -39,11 +39,6 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   // as well as a map that tracks there index in m_layerGeometry
   m_layerGeometry = LayerNumbering();
 
-  /// parse connection and LUT files
-
-  m_lutParser = std::make_unique<Acts::Experimental::GbtsLutParser>();
-  m_lutParser->parseLutFile(m_cfg.seedFinderConfig.lutInputFile,
-                            m_cfg.seedFinderConfig.useML);
   // create the connection objects
   m_connector = std::make_unique<Acts::Experimental::GbtsConnector>(
       m_cfg.seedFinderConfig.connectorInputFile,
@@ -65,7 +60,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 
   m_finder = std::make_unique<Acts::Experimental::SeedFinderGbts>(
       m_cfg.seedFinderConfig, std::move(m_gbtsGeo), &m_layerGeometry,
-      std::move(m_lutParser), logger().cloneWithSuffix("GbtsFinder"));
+      logger().cloneWithSuffix("GbtsFinder"));
 
   printSeedFinderGbtsConfig(m_cfg.seedFinderConfig);
 }

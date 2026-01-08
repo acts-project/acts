@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "Acts/Seeding/GbtsLutParser.hpp"
 #include "Acts/Seeding/SeedFinderGbts.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -104,9 +103,6 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
   // object that processes and holds connection table information
   std::unique_ptr<Acts::Experimental::GbtsConnector> m_connector = nullptr;
-
-  // object sued to parse the LUT ile
-  std::unique_ptr<Acts::Experimental::GbtsLutParser> m_lutParser = nullptr;
 
   // object that holds all geometry information after:
   // connection table has been processed
