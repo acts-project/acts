@@ -17,6 +17,8 @@
 #include "Acts/Utilities/detail/EigenCompat.hpp"
 #include "ActsAlignment/Kernel/AlignmentError.hpp"
 
+#include <queue>
+
 template <typename fitter_t>
 template <typename source_link_t, typename fit_options_t>
 Acts::Result<ActsAlignment::detail::TrackAlignmentState>
