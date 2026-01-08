@@ -1,12 +1,4 @@
 #!/usr/bin/env python
-
-# /// script
-# requires-python = ">=3.11"
-# dependencies = [
-#   "gcovr==8.3"
-# ]
-# ///
-
 import sys
 import os
 import subprocess

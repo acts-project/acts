@@ -65,14 +65,11 @@ jobs:
           du -sh build
           && find build -name *.o -delete
           && du -sh build
-
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v6
-
       - name: Coverage
-        run: |
-          cd build
-          uv run ../CI/test_coverage.py
+        run: >
+          pip3 install gcovr==7.2
+          && cd build
+          && /usr/bin/python3 ../CI/test_coverage.py
 
       - uses: actions/upload-artifact@v6
         with:
