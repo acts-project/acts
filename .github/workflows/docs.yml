@@ -85,6 +85,19 @@ jobs:
         run: >
           cmake --build build --target docs
 
+      - name: Generate PR metadata
+        if: github.event_name == 'pull_request'
+        run: |
+          cat > build/docs/html/pr.json <<EOF
+          {
+            "pr": ${{ github.event.pull_request.number }},
+            "branch": "${{ github.head_ref }}",
+            "title": $(echo '${{ github.event.pull_request.title }}' | jq -Rs .),
+            "url": "${{ github.event.pull_request.html_url }}"
+          }
+          EOF
+          echo "Created pr.json for PR #${{ github.event.pull_request.number }}"
+
       - uses: actions/upload-artifact@v6
         id: artifact-upload-step
         with:
