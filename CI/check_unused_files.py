@@ -65,7 +65,7 @@ def main():
         "serve.py",
         "SNIPPETS.md",
         "todo.md",
-        "bug.md",
+        "bugs.md",
         "deprecated.md",
     )
 
