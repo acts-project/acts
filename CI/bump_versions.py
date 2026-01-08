@@ -53,7 +53,7 @@ class VersionBumper:
         # 2. GitHub Actions: DEPENDENCY_TAG: ... default: 'v18.0.0'
         "dependency_tag": re.compile(
             r"(DEPENDENCY_TAG:(?:\s*['\"]?|(?:[^\n]|\n(?!\s{0,2}\w))*?default:\s*['\"]))(v\d+\.\d+\.\d+)(['\"]?)",
-            re.MULTILINE
+            re.MULTILINE,
         ),
     }
 
@@ -531,10 +531,11 @@ def bump_spack(
 
     # Check if new version is same as all old versions (both spack and dependency)
     new_dependency_version = f"v{new_version}"
-    spack_is_current = len(old_spack_versions) == 1 and new_version in old_spack_versions
-    dependency_is_current = (
-        len(old_dependency_versions) <= 1 and
-        (not old_dependency_versions or new_dependency_version in old_dependency_versions)
+    spack_is_current = (
+        len(old_spack_versions) == 1 and new_version in old_spack_versions
+    )
+    dependency_is_current = len(old_dependency_versions) <= 1 and (
+        not old_dependency_versions or new_dependency_version in old_dependency_versions
     )
 
     if spack_is_current and dependency_is_current:
