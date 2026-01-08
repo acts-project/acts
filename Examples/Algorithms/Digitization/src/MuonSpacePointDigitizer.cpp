@@ -292,8 +292,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
           if (convertSp) {
             newSp.defineCoordinates(
                 Vector3{parentTrf * smearedHit},
-                Vector3{parentTrf.linear().col(Acts::ePosY)},
-                Vector3{parentTrf.linear().col(Acts::ePosX)});
+                Vector3{parentTrf.linear().col(Acts::ePos1)},
+                Vector3{parentTrf.linear().col(Acts::ePos0)});
             MuonId_t id{};
             /// @todo Refine me using the volume name
             id.setChamber(MuonId_t::StationName::BIS,
