@@ -9,10 +9,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
@@ -20,7 +18,6 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <stdexcept>
 
@@ -117,7 +114,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 
   for (const auto& state : track.trackStatesReversed()) {
     auto typeFlags = state.typeFlags();
-    if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!typeFlags.hasMeasurement()) {
       continue;
     }
 
@@ -235,7 +232,7 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
     auto params = unpack(trackState);
 
     auto ts = track.appendTrackState(mask);
-    ts.typeFlags().set(MeasurementFlag);
+    ts.typeFlags().setIsMeasurement();
 
     auto converted = detail::convertTrackParametersFromEdm4hep(Bz, params);
 

@@ -81,9 +81,9 @@ auto kalmanHandleMeasurement(
   // Get and set the type flags
   {
     auto typeFlags = trackStateProxy.typeFlags();
-    typeFlags.set(TrackStateFlag::ParameterFlag);
+    typeFlags.setHasParameters();
     if (surface.surfaceMaterial() != nullptr) {
-      typeFlags.set(TrackStateFlag::MaterialFlag);
+      typeFlags.setHasMaterial();
     }
 
     // Check if the state is an outlier.
@@ -101,13 +101,13 @@ auto kalmanHandleMeasurement(
         return updateRes.error();
       }
       // Set the measurement type flag
-      typeFlags.set(TrackStateFlag::MeasurementFlag);
+      typeFlags.setIsMeasurement();
     } else {
       ACTS_VERBOSE(
           "Filtering step successful. But measurement is determined "
           "to be an outlier. Stepping state is not updated.");
       // Set the outlier type flag
-      typeFlags.set(TrackStateFlag::OutlierFlag);
+      typeFlags.setIsOutlier();
       trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
                                 TrackStatePropMask::Filtered);
     }
@@ -175,16 +175,16 @@ auto kalmanHandleNoMeasurement(
   const bool surfaceIsSensitive =
       surface.associatedDetectorElement() != nullptr;
   auto typeFlags = trackStateProxy.typeFlags();
-  typeFlags.set(TrackStateFlag::ParameterFlag);
+  typeFlags.setHasParameters();
 
   if (surfaceHasMaterial) {
-    typeFlags.set(TrackStateFlag::MaterialFlag);
+    typeFlags.setHasMaterial();
   }
 
   if (surfaceIsSensitive && precedingMeasurementExists) {
     ACTS_VERBOSE("Detected hole on " << surface.geometryId());
     // If the surface is sensitive, set the hole type flag
-    typeFlags.set(TrackStateFlag::HoleFlag);
+    typeFlags.setIsHole();
   } else if (surfaceIsSensitive) {
     ACTS_VERBOSE("Skip hole (no preceding measurements) on surface "
                  << surface.geometryId());

@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
+
 #include <bitset>
 #include <cassert>
 #include <cstddef>
@@ -18,155 +21,263 @@
 
 namespace Acts {
 
-/// @enum TrackStateFlag
-///
-/// This enum describes the type of TrackState
-enum TrackStateFlag {
-  MeasurementFlag = 0,
-  ParameterFlag = 1,
-  OutlierFlag = 2,
-  HoleFlag = 3,
-  MaterialFlag = 4,
-  SharedHitFlag = 5,
-  SplitHitFlag = 6,
-  NoExpectedHitFlag = 7,
-  NumTrackStateFlags = 8,
+enum class TrackStateFlag {
+  Parameter = 0,
+  Material = 1,
+  Measurement = 2,
+  Outlier = 3,
+  Hole = 4,
+  SharedHit = 5,
+  SplitHit = 6,
+  NoExpectedHit = 7,
+  NumFlags = 8
 };
 
-class ConstTrackStateType;
-
-/// View type over a bitset stored in a 64 bit integer
-/// This view allows modifications.
-class TrackStateType {
+template <typename Derived, bool ReadOnly = false>
+class TrackStateTypeBase {
  public:
   /// Type alias for underlying raw data type
   using raw_type = std::uint64_t;
   /// Number of bits available in the raw storage type
   static constexpr std::size_t kRawBits =
       std::numeric_limits<std::make_unsigned_t<raw_type>>::digits;
+  /// Type alias for bitset representation
+  using bitset_type = std::bitset<kRawBits>;
 
-  // Delete default constructor
-  TrackStateType() = delete;
+  using enum TrackStateFlag;
 
-  /// Constructor from a reference to the underlying value container
-  /// @param raw the value container
-  explicit TrackStateType(raw_type& raw) : m_raw{&raw} {
-    assert(m_raw != nullptr);
+  template <typename DerivedOther, bool ReadOnlyOther>
+  Derived operator=(
+      const TrackStateTypeBase<DerivedOther, ReadOnlyOther>& other)
+    requires(!ReadOnly)
+  {
+    self().raw() = static_cast<const DerivedOther&>(other).raw();
+    return self();
   }
 
-  // Delete copy constructor
-  TrackStateType(const TrackStateType&) = delete;
+  bool hasParameters() const { return test(Parameter); }
+  bool hasMaterial() const { return test(Material); }
+  bool hasMeasurement() const { return test(Measurement); }
+  bool isMaterial() const { return test(Material) && !test(Measurement); }
+  bool isMeasurement() const { return test(Measurement) && !test(Outlier); }
+  bool isOutlier() const { return test(Outlier); }
+  bool isHole() const { return test(Hole); }
+  bool isSharedHit() const { return test(SharedHit); }
+  bool isSplitHit() const { return test(SplitHit); }
+  bool hasNoExpectedHit() const { return test(NoExpectedHit); }
 
-  // Delete move constructor
-  TrackStateType(TrackStateType&&) = delete;
+  Derived& setHasParameters(bool value = true)
+    requires(!ReadOnly)
+  {
+    setUnchecked(Parameter, value);
+    validate();
+    return self();
+  }
+  Derived& setHasMaterial(bool value = true)
+    requires(!ReadOnly)
+  {
+    setUnchecked(Material, value);
+    validate();
+    return self();
+  }
+  Derived& setHasMeasurement(bool value = true)
+    requires(!ReadOnly)
+  {
+    setUnchecked(Measurement, value);
+    validate();
+    return self();
+  }
+  Derived& setIsMaterial()
+    requires(!ReadOnly)
+  {
+    setUnchecked(Measurement, false);
+    setUnchecked(Outlier, false);
+    setUnchecked(Hole, false);
+    setUnchecked(SharedHit, false);
+    setUnchecked(SplitHit, false);
+    setUnchecked(NoExpectedHit, false);
+    setUnchecked(Material, true);
+    validate();
+    return self();
+  }
+  Derived& setIsMeasurement()
+    requires(!ReadOnly)
+  {
+    setUnchecked(Outlier, false);
+    setUnchecked(Hole, false);
+    setUnchecked(NoExpectedHit, false);
+    setUnchecked(Measurement, true);
+    validate();
+    return self();
+  }
+  Derived& setIsOutlier()
+    requires(!ReadOnly)
+  {
+    setUnchecked(Measurement, true);
+    setUnchecked(Hole, false);
+    setUnchecked(NoExpectedHit, false);
+    setUnchecked(Outlier, true);
+    validate();
+    return self();
+  }
+  Derived& setIsHole()
+    requires(!ReadOnly)
+  {
+    setUnchecked(Measurement, false);
+    setUnchecked(Outlier, false);
+    setUnchecked(NoExpectedHit, false);
+    setUnchecked(Hole, true);
+    validate();
+    return self();
+  }
+  Derived& setIsSharedHit()
+    requires(!ReadOnly)
+  {
+    setUnchecked(Measurement, true);
+    setUnchecked(NoExpectedHit, false);
+    setUnchecked(SharedHit, true);
+    validate();
+    return self();
+  }
+  Derived& setIsSplitHit()
+    requires(!ReadOnly)
+  {
+    setUnchecked(Measurement, true);
+    setUnchecked(NoExpectedHit, false);
+    setUnchecked(SplitHit, true);
+    validate();
+    return self();
+  }
+  Derived& setHasNoExpectedHit()
+    requires(!ReadOnly)
+  {
+    setUnchecked(Measurement, false);
+    setUnchecked(Outlier, false);
+    setUnchecked(Hole, false);
+    setUnchecked(SharedHit, false);
+    setUnchecked(SplitHit, false);
+    setUnchecked(NoExpectedHit, true);
+    validate();
+    return self();
+  }
 
-  // Disable assignment
-  TrackStateType& operator=(const TrackStateType&) = delete;
+  void reset()
+    requires(!ReadOnly)
+  {
+    Derived::raw() = 0;
+  }
 
-  // Disable move assignment
-  TrackStateType& operator=(TrackStateType&&) = delete;
-
-  /// Assign the value from another set of flags
-  /// @param other the other set of flags to assign
-  /// @return this object
-  TrackStateType& operator=(const ConstTrackStateType& other);
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const TrackStateTypeBase& t) {
+    os << "TrackStateType[";
+    bool first = true;
+#define PRINT_FLAG(NAME)                  \
+  if (t.test(TrackStateTypeBase::NAME)) { \
+    if (!first) {                         \
+      os << ",";                          \
+    }                                     \
+    os << #NAME;                          \
+    first = false;                        \
+  }
+    PRINT_FLAG(Parameter)
+    PRINT_FLAG(Material)
+    PRINT_FLAG(Measurement)
+    PRINT_FLAG(Outlier)
+    PRINT_FLAG(Hole)
+    PRINT_FLAG(SharedHit)
+    PRINT_FLAG(SplitHit)
+    PRINT_FLAG(NoExpectedHit)
+#undef PRINT_FLAG
+    os << "]";
+    return os;
+  }
 
   /// Return if the bit at position @p pos is 1
-  /// @param pos the bit position
+  /// @param pos the position of the bit to test
   /// @return if the bit at @p pos is one or not
-  bool test(std::size_t pos) const {
-    std::bitset<kRawBits> bs{*m_raw};
-    return bs.test(pos);
-  }
+  bool test(std::size_t pos) const { return bits().test(pos); }
+
+  bool test(TrackStateFlag flag) const { return test(toUnderlying(flag)); }
 
   /// Change the value of the bit at position @p pos to @p value.
   /// @param pos the position of the bit to change
   /// @param value the value to change the bit to
-  void set(std::size_t pos, bool value = true) {
-    std::bitset<kRawBits> bs{*m_raw};
-    bs.set(pos, value);
-    *m_raw = bs.to_ullong();
+  void setUnchecked(std::size_t pos, bool value = true)
+    requires(!ReadOnly)
+  {
+    self().raw() = bits().set(pos, value).to_ullong();
   }
 
-  /// Change the value of the bit at position at @p pos to @c false
-  /// @param pos the position of the bit to change
-  void reset(std::size_t pos) { set(pos, false); }
-
-  friend std::ostream& operator<<(std::ostream& os, const TrackStateType& t) {
-    std::bitset<kRawBits> bs{*t.m_raw};
-    std::bitset<TrackStateFlag::NumTrackStateFlags> trunc;
-    for (std::size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
-      trunc[i] = bs[i];
-    }
-    // SharedhitMaterialHoleOutlierParameterMeasurement
-    os << "SMHOPM=" << trunc;
-    return os;
+  void setUnchecked(TrackStateFlag flag, bool value = true)
+    requires(!ReadOnly)
+  {
+    setUnchecked(toUnderlying(flag), value);
   }
 
- private:
-  raw_type* m_raw{nullptr};
+ protected:
+  Derived& self() { return static_cast<Derived&>(*this); }
+  const Derived& self() const { return static_cast<const Derived&>(*this); }
+
+  bitset_type bits() const { return bitset_type(self().raw()); }
+
+  void validate() const {
+    assert(!(test(NoExpectedHit) &&
+             (test(Measurement) || test(Outlier) || test(Hole) ||
+              test(SharedHit) || test(SplitHit))) &&
+           "TrackStateType - NoExpectedHit cannot be set with other "
+           "measurement flags");
+    assert(!(test(Outlier) && test(Hole)) &&
+           "TrackStateType - Outlier and Hole cannot be set simultaneously");
+    assert(
+        !(test(Hole) && test(Measurement)) &&
+        "TrackStateType - Hole and Measurement cannot be set simultaneously");
+    assert(!(test(Outlier) && !test(Measurement)) &&
+           "TrackStateType - Outlier flag requires Measurement flag to be set");
+  }
 };
 
-/// View type over a bitset stored in a 64 bit integer
-/// This view does not allow modifications
-class ConstTrackStateType {
+class TrackStateType : public TrackStateTypeBase<TrackStateType> {
  public:
-  /// Type alias for underlying raw storage type (64-bit unsigned integer)
-  using raw_type = std::uint64_t;
-  /// Number of bits available in the raw storage type
-  static constexpr std::size_t kRawBits =
-      std::numeric_limits<std::make_unsigned_t<raw_type>>::digits;
+  using Base = TrackStateTypeBase<TrackStateType>;
 
-  // Delete default constructor
-  ConstTrackStateType() = delete;
+  TrackStateType() = default;
+  explicit TrackStateType(raw_type raw) : m_raw{raw} { Base::validate(); }
 
-  /// Constructor from a reference to the underlying value container
-  /// @param raw the value container
-  explicit ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {
-    assert(m_raw != nullptr);
-  }
+  using Base::operator=;
 
-  // Disable copy constructor
-  ConstTrackStateType(const ConstTrackStateType& other) = delete;
-
-  // Delete move constructor
-  ConstTrackStateType(ConstTrackStateType&& other) = delete;
-
-  // Disable assignment
-  ConstTrackStateType& operator=(const ConstTrackStateType&) = delete;
-
-  // Disable move assignment
-  ConstTrackStateType& operator=(ConstTrackStateType&&) = delete;
-
-  /// Return if the bit at position @p pos is 1
-  /// @param pos the bit position
-  /// @return if the bit at @p pos is one or not
-  bool test(std::size_t pos) const {
-    std::bitset<kRawBits> bs{*m_raw};
-    return bs.test(pos);
-  }
-
-  friend std::ostream& operator<<(std::ostream& os,
-                                  const ConstTrackStateType& t) {
-    std::bitset<kRawBits> bs{*t.m_raw};
-    std::bitset<TrackStateFlag::NumTrackStateFlags> trunc;
-    for (std::size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
-      trunc[i] = bs[i];
-    }
-    // SharedhitMaterialHoleOutlierParameterMeasurement
-    os << "SMHOPM=" << trunc;
-    return os;
-  }
+  raw_type& raw() { return m_raw; }
+  const raw_type& raw() const { return m_raw; }
 
  private:
-  friend class TrackStateType;
-  const raw_type* m_raw{nullptr};
+  raw_type m_raw{0};
 };
 
-inline TrackStateType& TrackStateType::operator=(
-    const ConstTrackStateType& other) {
-  *m_raw = *other.m_raw;
-  return *this;
-}
+template <bool ReadOnly>
+class TrackStateTypeMap
+    : public TrackStateTypeBase<TrackStateTypeMap<ReadOnly>, ReadOnly> {
+ public:
+  using Base = TrackStateTypeBase<TrackStateTypeMap<ReadOnly>, ReadOnly>;
+  using raw_type = const_if_t<ReadOnly, typename Base::raw_type>;
+
+  explicit TrackStateTypeMap(raw_type& raw_ref) : m_raw_ptr{&raw_ref} {
+    assert(m_raw_ptr != nullptr && "TrackStateTypeMap - raw reference is null");
+    Base::validate();
+  }
+
+  using Base::operator=;
+
+  raw_type& raw()
+    requires(!ReadOnly)
+  {
+    return *m_raw_ptr;
+  }
+  const raw_type& raw() const { return *m_raw_ptr; }
+
+ private:
+  raw_type* m_raw_ptr{nullptr};
+};
+
+using MutableTrackStateTypeMap = TrackStateTypeMap<false>;
+using ConstTrackStateTypeMap = TrackStateTypeMap<true>;
 
 }  // namespace Acts

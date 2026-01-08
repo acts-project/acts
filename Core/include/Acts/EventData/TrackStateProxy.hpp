@@ -369,17 +369,17 @@ class TrackStateProxy {
   /// This overloaded is only enabled if not read-only, and returns a mutable
   /// reference.
   /// @return reference to the type flags.
-  TrackStateType typeFlags()
+  MutableTrackStateTypeMap typeFlags()
     requires(!ReadOnly)
   {
-    return TrackStateType{
+    return MutableTrackStateTypeMap{
         component<TrackStateType::raw_type, detail_tsp::kTypeFlagsKey>()};
   }
 
   /// Getter for the type flags. Returns a copy of the type flags value.
   /// @return The type flags of this track state
-  ConstTrackStateType typeFlags() const {
-    return ConstTrackStateType{
+  ConstTrackStateTypeMap typeFlags() const {
+    return ConstTrackStateTypeMap{
         component<TrackStateType::raw_type, detail_tsp::kTypeFlagsKey>()};
   }
 

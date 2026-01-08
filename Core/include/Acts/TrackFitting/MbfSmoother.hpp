@@ -74,7 +74,7 @@ class MbfSmoother {
       }
 
       // Update the lambdas depending on the type of track state
-      if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+      if (ts.typeFlags().isMeasurement()) {
         visitMeasurement(internalTrackState, bigLambdaHat, smallLambdaHat);
       } else {
         visitNonMeasurement(internalTrackState, bigLambdaHat, smallLambdaHat);
@@ -130,7 +130,7 @@ class MbfSmoother {
           filteredCovariance(ts.filteredCovariance()),
           smoothed(ts.smoothed()),
           smoothedCovariance(ts.smoothedCovariance()),
-          measurement(ts.typeFlags().test(TrackStateFlag::MeasurementFlag)
+          measurement(ts.typeFlags().isMeasurement()
                           ? std::optional<Measurement>(ts)
                           : std::nullopt) {}
   };

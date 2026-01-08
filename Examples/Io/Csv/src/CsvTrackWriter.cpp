@@ -8,24 +8,17 @@
 
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <map>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -33,7 +26,7 @@
 #include <unordered_set>
 #include <utility>
 
-using namespace ActsExamples;
+namespace ActsExamples {
 
 CsvTrackWriter::CsvTrackWriter(const CsvTrackWriter::Config& config,
                                Acts::Logging::Level level)
@@ -132,7 +125,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     toAdd.trackType = "unknown";
 
     for (const auto& state : track.trackStatesReversed()) {
-      if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (state.typeFlags().hasMeasurement()) {
         auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         auto hitIndex = sl.index();
@@ -215,3 +208,5 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
