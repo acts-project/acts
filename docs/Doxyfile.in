@@ -776,7 +776,7 @@ INPUT                  = index.md \
                          groups \
                          pages \
                          examples \
-                         namespaces.hpp \
+                         namespaces.dox \
                          experimental.md \
                          ../Core/include \
                          ../Fatras/include \

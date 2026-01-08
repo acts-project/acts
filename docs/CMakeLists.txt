@@ -26,9 +26,8 @@ set_target_properties(docs PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 # docs examples are on by default
 add_library(docs-examples SHARED)
-target_sources(docs-examples PRIVATE
-  examples/logging.cpp
-  examples/units.cpp
-  examples/errors.cpp
+target_sources(
+    docs-examples
+    PRIVATE examples/logging.cpp examples/units.cpp examples/errors.cpp
 )
 target_link_libraries(docs-examples PRIVATE Acts::Core)

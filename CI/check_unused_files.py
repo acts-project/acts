@@ -62,6 +62,8 @@ def main():
         "CompressedIO.h",
         # Files for python binding generation
         "tgeo_aux.py.in",
+        "docs/serve.py",
+        "docs/SNIPPETS.md",
     )
 
     suffix_header = (
