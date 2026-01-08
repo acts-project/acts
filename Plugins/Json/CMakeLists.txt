@@ -24,9 +24,6 @@ acts_add_library(
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
-# temporarily until clients updated
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
 target_include_directories(
     ActsPluginJson
     PUBLIC
