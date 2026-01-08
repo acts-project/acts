@@ -485,7 +485,7 @@ class MultiTrajectory {
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
   /// @param istate The track state
   /// @return Mutable proxy
-  typename TrackStateProxy::Covariance jacobian(IndexType istate)
+  typename TrackStateProxy::Jacobian jacobian(IndexType istate)
     requires(!ReadOnly)
   {
     return self().jacobian_impl(istate);
@@ -494,7 +494,7 @@ class MultiTrajectory {
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
   /// @param istate The track state
   /// @return Const proxy
-  typename ConstTrackStateProxy::ConstCovariance jacobian(
+  typename ConstTrackStateProxy::ConstJacobian jacobian(
       IndexType istate) const {
     return self().jacobian_impl(istate);
   }

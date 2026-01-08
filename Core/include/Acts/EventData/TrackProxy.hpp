@@ -251,15 +251,23 @@ class TrackProxy
 
   using Base::absoluteMomentum;
   using Base::charge;
+  using Base::chi2;
   using Base::direction;
   using Base::fourMomentum;
   using Base::loc0;
   using Base::loc1;
   using Base::momentum;
+  using Base::nDoF;
+  using Base::nHoles;
+  using Base::nMeasurements;
+  using Base::nOutliers;
+  using Base::nSharedHits;
   using Base::phi;
   using Base::qOverP;
+  using Base::stemIndex;
   using Base::theta;
   using Base::time;
+  using Base::tipIndex;
   using Base::transverseMomentum;
 
   /// Return the number of track states associated to this track
@@ -270,7 +278,7 @@ class TrackProxy
   unsigned int nTrackStates() const {
     // @TODO: This should probably be cached, distance is expensive
     //        without random access
-    if (this->tipIndex() == kInvalid) {
+    if (tipIndex() == kInvalid) {
       // no tip index -> no track states
       return 0;
     }
@@ -293,7 +301,7 @@ class TrackProxy
   /// Return a const track state proxy to the outermost track state
   /// @return The outermost track state proxy
   ConstTrackStateProxy outermostTrackState() const {
-    return m_container->trackStateContainer().getTrackState(this->tipIndex());
+    return m_container->trackStateContainer().getTrackState(tipIndex());
   }
 
   /// Return a mutable track state proxy to the outermost track state
@@ -301,7 +309,7 @@ class TrackProxy
   TrackStateProxy outermostTrackState()
     requires(!ReadOnly)
   {
-    return m_container->trackStateContainer().getTrackState(this->tipIndex());
+    return m_container->trackStateContainer().getTrackState(tipIndex());
   }
 
   /// Return a const track state proxy to the innermost track state
@@ -422,7 +430,7 @@ class TrackProxy
       ts.template component<IndexType>(detail_tp::kNextKey) = last;
       last = ts.index();
     }
-    this->stemIndex() = last;
+    stemIndex() = last;
   }
 
   /// Append a track state to this track.
@@ -435,8 +443,8 @@ class TrackProxy
     requires(!ReadOnly)
   {
     auto& tsc = m_container->trackStateContainer();
-    auto ts = tsc.makeTrackState(mask, this->tipIndex());
-    this->tipIndex() = ts.index();
+    auto ts = tsc.makeTrackState(mask, tipIndex());
+    tipIndex() = ts.index();
     return ts;
   }
 
@@ -461,11 +469,11 @@ class TrackProxy
   ///
   /// **Result:**
   /// - The destination track will have newly created track states
-  /// - this->tipIndex() and this->stemIndex() will point to the new track
+  /// - tipIndex() and stemIndex() will point to the new track
   /// states
   /// - Track state indices will be different from the source
   /// - All track state data will be identical to the source
-  /// - The track will be forward-linked (this->stemIndex() will be valid)
+  /// - The track will be forward-linked (stemIndex() will be valid)
   ///
   /// @note Only available if the track proxy is not read-only
   /// @note Both track containers must have compatible dynamic columns
@@ -507,7 +515,7 @@ class TrackProxy
   ///
   /// **Result:**
   /// - All track-level properties are updated to match the source
-  /// - this->tipIndex() and this->stemIndex() are set to kInvalid (track states
+  /// - tipIndex() and stemIndex() are set to kInvalid (track states
   /// become inaccessible)
   /// - Existing track states remain in the container but are no longer linked
   /// to this track
@@ -531,18 +539,18 @@ class TrackProxy
       setReferenceSurface(nullptr);
     }
 
-    this->nMeasurements() = other.nMeasurements();
-    this->nHoles() = other.nHoles();
-    this->nOutliers() = other.nOutliers();
-    this->nSharedHits() = other.nSharedHits();
-    this->chi2() = other.chi2();
-    this->nDoF() = other.nDoF();
+    nMeasurements() = other.nMeasurements();
+    nHoles() = other.nHoles();
+    nOutliers() = other.nOutliers();
+    nSharedHits() = other.nSharedHits();
+    chi2() = other.chi2();
+    nDoF() = other.nDoF();
 
     m_container->copyDynamicFrom(m_index, other.m_container->container(),
                                  other.m_index);
 
-    this->tipIndex() = kInvalid;
-    this->stemIndex() = kInvalid;
+    tipIndex() = kInvalid;
+    stemIndex() = kInvalid;
   }
 
   /// Create a shallow copy from another track, sharing the same track states.
@@ -557,7 +565,7 @@ class TrackProxy
   /// - Reference surface (shared pointer is copied)
   /// - Track summary data (nMeasurements, nHoles, chi2, etc.)
   /// - All dynamic track columns
-  /// - this->tipIndex() and this->stemIndex() (track state linking information)
+  /// - tipIndex() and stemIndex() (track state linking information)
   ///
   /// **What gets shared (not duplicated):**
   /// - Track states (both tracks reference the same track state objects)
@@ -585,8 +593,8 @@ class TrackProxy
     requires(!ReadOnly)
   {
     copyFromWithoutStates(other);
-    this->tipIndex() = other.tipIndex();
-    this->stemIndex() = other.stemIndex();
+    tipIndex() = other.tipIndex();
+    stemIndex() = other.stemIndex();
   }
 
   /// Reverse the ordering of track states for this track
@@ -599,11 +607,11 @@ class TrackProxy
   void reverseTrackStates(bool invertJacobians = false)
     requires(!ReadOnly)
   {
-    IndexType current = this->tipIndex();
+    IndexType current = tipIndex();
     IndexType next = kInvalid;
     IndexType prev = kInvalid;
 
-    this->stemIndex() = this->tipIndex();
+    stemIndex() = tipIndex();
 
     // @TODO: Maybe refactor to not need this variable if invertJacobians == false
     BoundMatrix nextJacobian;
@@ -624,7 +632,7 @@ class TrackProxy
         }
       }
       next = current;
-      this->tipIndex() = current;
+      tipIndex() = current;
       current = prev;
     }
   }

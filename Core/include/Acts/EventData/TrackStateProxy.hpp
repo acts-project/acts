@@ -67,7 +67,7 @@ class TransitiveConstPointer {
   template <typename U>
   friend class TransitiveConstPointer;
   template <bool R>
-  friend class Acts::AnyTrackStateProxy;
+  friend class AnyTrackStateProxy;
 
   const T& operator*() const { return *m_ptr; }
 
@@ -119,8 +119,14 @@ class TrackStateProxy
   /// points at a matrix by an internal pointer.
   using Covariance = typename TrackStateTraits<M, false>::Covariance;
 
+  /// Jacobian shape is identical to @ref Covariance
+  using Jacobian = typename TrackStateTraits<M, false>::Covariance;
+
   /// Same as @ref Covariance, but with const semantics
   using ConstCovariance = typename TrackStateTraits<M, true>::Covariance;
+
+  /// Jacobian shape is identical to @ref Covariance
+  using ConstJacobian = typename TrackStateTraits<M, true>::Covariance;
 
   /// Map-type for a calibrated measurement vector, where the local measurement
   /// dimension is variable.
@@ -752,24 +758,20 @@ class TrackStateProxy
   double* calibratedDataMutable()
     requires(!ReadOnly)
   {
-    // @FIXME: This is a workaround
     return m_traj->template calibrated<M>(m_istate).data();
   }
 
   const double* calibratedData() const {
-    // @FIXME: This is a workaround
     return m_traj->template calibrated<M>(m_istate).data();
   }
 
   double* calibratedCovarianceDataMutable()
     requires(!ReadOnly)
   {
-    // @FIXME: This is a workaround
     return m_traj->template calibratedCovariance<M>(m_istate).data();
   }
 
   const double* calibratedCovarianceData() const {
-    // @FIXME: This is a workaround
     return m_traj->template calibratedCovariance<M>(m_istate).data();
   }
 
