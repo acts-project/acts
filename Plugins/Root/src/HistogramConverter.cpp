@@ -25,9 +25,10 @@ std::vector<double> extractBinEdges(const Acts::BoostVariableAxis& axis) {
   assert(axis.size() > 0 && "Axis must have at least one bin");
   std::vector<double> edges(axis.size() + 1);
   for (int i = 0; i < axis.size(); ++i) {
-    edges[i] = axis.bin(i).lower();
+    edges.at(i) = axis.bin(i).lower();
   }
-  edges.back() = axis.bin(axis.size() - 1).upper();
+  edges.back() = axis.bin(axis.size()-1).upper();
+
   return edges;
 }
 
@@ -37,7 +38,7 @@ namespace ActsPlugins {
 
 TH1F* toRoot(const Histogram1D& boostHist) {
   const auto& bh = boostHist.histogram();
-  const auto& axis = bh.axis(0);
+  const auto& axis = bh.axis<0>();
 
   // Extract bin edges from boost histogram axis
   std::vector<double> edges = extractBinEdges(axis);
@@ -64,8 +65,8 @@ TH1F* toRoot(const Histogram1D& boostHist) {
 
 TH2F* toRoot(const Histogram2D& boostHist) {
   const auto& bh = boostHist.histogram();
-  const auto& xAxis = bh.axis(0);
-  const auto& yAxis = bh.axis(1);
+  const auto& xAxis = bh.axis<0>();
+  const auto& yAxis = bh.axis<1>();
 
   // Extract bin edges from X axis
   std::vector<double> xEdges = extractBinEdges(xAxis);
@@ -99,7 +100,7 @@ TH2F* toRoot(const Histogram2D& boostHist) {
 
 TProfile* toRoot(const ProfileHistogram& boostProfile) {
   const auto& bh = boostProfile.histogram();
-  const auto& axis = bh.axis(0);
+  const auto& axis = bh.axis<0>();
 
   // Extract bin edges from boost histogram axis
   std::vector<double> edges = extractBinEdges(axis);
@@ -174,7 +175,7 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
 TEfficiency* toRoot(const Efficiency1D& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
-  const auto& axis = accepted.axis(0);
+  const auto& axis = accepted.axis<0>();
 
   // Extract bin edges
   std::vector<double> edges;
@@ -217,8 +218,8 @@ TEfficiency* toRoot(const Efficiency1D& boostEff) {
 TEfficiency* toRoot(const Efficiency2D& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
-  const auto& xAxis = accepted.axis(0);
-  const auto& yAxis = accepted.axis(1);
+  const auto& xAxis = accepted.axis<0>();
+  const auto& yAxis = accepted.axis<1>();
 
   // Extract X bin edges
   std::vector<double> xEdges = extractBinEdges(xAxis);
