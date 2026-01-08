@@ -23,6 +23,9 @@
 
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// @brief Material decorator from Json format
 ///
 /// This reads in material maps for surfaces and volumes
@@ -67,4 +70,6 @@ class JsonMaterialDecorator : public IMaterialDecorator {
 
   const Logger& logger() const { return *m_logger; }
 };
+
+/// @}
 }  // namespace Acts

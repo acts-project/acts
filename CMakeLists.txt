@@ -591,7 +591,6 @@ endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
     find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
-    find_package(Sphinx REQUIRED)
 endif()
 
 # core library, core plugins, and other components

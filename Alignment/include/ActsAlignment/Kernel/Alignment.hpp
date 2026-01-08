@@ -21,6 +21,7 @@
 #include <vector>
 
 namespace ActsAlignment {
+
 using AlignedTransformUpdater =
     std::function<bool(Acts::DetectorElementBase*, const Acts::GeometryContext&,
                        const Acts::Transform3&)>;
@@ -28,7 +29,6 @@ using AlignedTransformUpdater =
 /// @brief Options for align() call
 ///
 /// @tparam fit_options_t The fit options type
-///
 template <typename fit_options_t>
 struct AlignmentOptions {
   /// Deleted default constructor

@@ -22,7 +22,8 @@
 #include <vector>
 
 namespace Acts {
-/// @brief material mapping procedure
+/// Class that implements the material mapping procedure
+/// @ingroup material_mapping
 class MaterialMapper {
  public:
   /// @brief nested configuration struct

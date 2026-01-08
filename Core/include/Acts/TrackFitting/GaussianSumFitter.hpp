@@ -41,7 +41,9 @@ struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters>
 }  // namespace detail
 
 /// Gaussian Sum Fitter implementation.
-/// @tparam propagator_t The propagator type on which the algorithm is built on
+/// @ingroup track_fitting
+/// @tparam propagator_t The propagator type on which the algorithm is built
+///         on, usually an instance of @ref Acts::Propagator
 /// @tparam traj_t The MultiTrajectory type (backend)
 ///
 /// @note This GSF implementation tries to be as compatible to the KalmanFitter
