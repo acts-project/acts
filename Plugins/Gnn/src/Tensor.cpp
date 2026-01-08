@@ -13,6 +13,8 @@
 #endif
 
 #include <cstring>
+#include <format>
+#include <fstream>
 #include <numeric>
 #include <span>
 
@@ -220,6 +222,44 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
 
   return {std::move(newEdgeIndexTensor.value()),
           std::move(newEdgeFeatureTensor)};
+}
+
+void detail::dumpNpy(const std::string &filename, const std::string &type,
+                     std::span<const std::byte> data,
+                     const std::array<std::size_t, 2> &shape) {
+  // Simple NPY header for 2D array
+  std::ofstream ofs(filename, std::ios::binary);
+  if (!ofs.is_open()) {
+    throw std::runtime_error("Could not open file for writing: " + filename);
+  }
+
+  // NPY header for version 1.0
+  const char vMajor = 1;
+  const char vMinor = 0;
+  const std::array<char, 8> magicString = {'\x93', 'N', 'U',    'M',
+                                           'P',    'Y', vMajor, vMinor};
+  ofs.write(magicString.data(), magicString.size());
+
+  // Construct the dictionary
+  std::string dict = std::format(
+      "{{'descr': '{}', 'fortran_order': False, 'shape': ({}, {}), }}", type,
+      shape[0], shape[1]);
+
+  // Pad the dictionary to be 16-byte aligned
+  std::size_t padding = 16 - (10 + dict.size()) % 16;
+  dict.append(padding, ' ');
+  dict.push_back('\n');
+
+  // Write the length of the dictionary
+  static_assert(std::endian::native == std::endian::little);
+  std::uint16_t dictLen = static_cast<std::uint16_t>(dict.size());
+  ofs.write(reinterpret_cast<const char *>(&dictLen), sizeof(dictLen));
+
+  // Write the dictionary
+  ofs.write(dict.data(), dict.size());
+
+  // Write the data
+  ofs.write(reinterpret_cast<const char *>(data.data()), data.size());
 }
 
 }  // namespace ActsPlugins
