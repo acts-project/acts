@@ -247,7 +247,7 @@ class TrackContainer {
   /// manage the dynamic columns.
   /// @{
 
-  /// Add a dymanic column to the track container
+  /// Add a dynamic column to the track container
   /// @note Only available if the track container is not read-only
   /// @param key the name of the column to be added
   template <typename T>

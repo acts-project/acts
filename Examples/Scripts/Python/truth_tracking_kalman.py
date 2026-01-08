@@ -133,7 +133,7 @@ def runTruthTrackingKalman(
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         trackSmearingSigmas=TrackSmearingSigmas(
-            # zero eveything so the KF has a chance to find the measurements
+            # zero everything so the KF has a chance to find the measurements
             loc0=0,
             loc0PtA=0,
             loc0PtB=0,

@@ -21,7 +21,7 @@ class Surface;
 ///
 /// @ingroup material
 ///
-/// It acts as a switch between detctor and tracking volume
+/// It acts as a switch between detector and tracking volume
 /// as long as those co-exist alongside
 struct InteractionVolume {
   /// The tracking volume

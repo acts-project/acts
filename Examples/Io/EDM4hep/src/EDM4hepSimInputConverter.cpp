@@ -583,7 +583,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     // We will (ab)use the sim hit index to store the association with the
     // incoming edm4hep simhit. The reason is that we will not have the final
     // sim hit index in the collection that's sorted by geometry id, so we can't
-    // otherwise build an assotiation map. The index will later be overwritten
+    // otherwise build an association map. The index will later be overwritten
     // based
     //
     // This index will be across the input collections,

@@ -95,7 +95,7 @@ call-sites give you easy access to a logger.
 ### `getDefaultLogger` Factory Function
 
 Use this function to create standalone loggers with standard formatting
-(timestamp, component name, log level). Note that the loggers retuned by this
+(timestamp, component name, log level). Note that the loggers returned by this
 function will always look to standard output streams (e.g. `std::cout`).
 
 ## Advanced Topics

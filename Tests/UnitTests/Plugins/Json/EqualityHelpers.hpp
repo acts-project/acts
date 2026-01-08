@@ -86,7 +86,7 @@ inline static bool isEqual(const Acts::BinUtility& ba,
 /// @param eb the second extent object
 /// @param tolerance the tolerance parameter
 ///
-/// @return bool for euqal
+/// @return bool for equal
 inline static bool isEqual(const Acts::Extent& ea, const Acts::Extent& eb,
                            double tolerance = 0.) {
   bool equalConstrains = true;

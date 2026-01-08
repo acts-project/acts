@@ -119,7 +119,7 @@ class AtlasStepper {
     /// Jacobian matrix storage for parameter derivatives
     double jacobian[eBoundSize * eBoundSize] = {};
 
-    // accummulated path length cache
+    // accumulated path length cache
     /// Accumulated path length during propagation
     double pathAccumulated = 0.;
 

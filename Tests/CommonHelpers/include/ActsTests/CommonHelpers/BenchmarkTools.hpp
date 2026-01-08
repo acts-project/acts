@@ -77,7 +77,7 @@ namespace ActsTests {
 // The current implementation has limitations that you should bear in mind:
 //
 // - "clobber" data which resides in CPU registers must be flushed to memory
-//   and reloaded from memory afterwards if re-used. This will increase memory
+//   and reloaded from memory afterwards if reused. This will increase memory
 //   traffic and cache footprint in a potentially unrealistic fashion.
 // - Putting this optimization barrier on every iteration of a loop will
 //   prevent compiler loop optimizations like autovectorization, which is

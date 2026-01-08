@@ -71,7 +71,7 @@ struct RiddersPropagatorOptions
 /// of the covariance to a certain point in space.
 ///
 /// The algorithm is based on the small deviations of the start parameters based
-/// on their uncertainty at the beginning of the propgation. This deviation is
+/// on their uncertainty at the beginning of the propagation. This deviation is
 /// represented here by a vector of relative deviations of these parameters and
 /// fix for all parameters. So, a common choice has to be found that is able to
 /// actually fit into the order of magnitude of the uncertainty of each

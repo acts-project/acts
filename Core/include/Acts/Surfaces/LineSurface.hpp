@@ -190,7 +190,7 @@ class LineSurface : public Surface {
   ///
   /// <b>Mathematical motivation:</b>
   ///
-  /// Given two lines in parameteric form:<br>
+  /// Given two lines in parametric form:<br>
   ///
   /// @f$ \vec l_{a}(u) = \vec m_a + u \cdot \vec e_{a} @f$
   ///

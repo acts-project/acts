@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_root) {
       },
       fileName, fieldName, 1_mm, 1_T, false);
 
-  // Check that the bfield is two dimenstional
+  // Check that the bfield is two dimensional
   auto nBins = rzField.getNBins();
   BOOST_CHECK_EQUAL(nBins.size(), 2u);
 

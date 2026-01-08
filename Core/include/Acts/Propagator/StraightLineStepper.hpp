@@ -101,7 +101,7 @@ class StraightLineStepper {
     /// Additional free parameter covariance matrix
     std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
-    /// accummulated path length state
+    /// accumulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps

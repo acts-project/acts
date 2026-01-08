@@ -220,7 +220,7 @@ will require different histogram ranges, these will be automatically determined.
 
 However, this process is relatively slow and makes comparisons between runs difficult,
 thus the range configuration can be written out by specifying a ``--config-output`` JSON file,
-and successively re-using it with a ``--config-input`` flag in future analysis runs.
+and successively reusing it with a ``--config-input`` flag in future analysis runs.
 
 For very large files, the number of entries used for range calculation (peak entries) can be set
 using the ``--peak-events`` option.

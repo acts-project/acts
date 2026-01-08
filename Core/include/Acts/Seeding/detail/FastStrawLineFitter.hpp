@@ -193,7 +193,7 @@ class FastStrawLineFitter {
     double T_rz{0.};
     ///@brief Expectation value of T_{y} * r
     double T_ry{0.};
-    ///@brief Prediced y0 given as the expectation value of the radii
+    ///@brief Predicted y0 given as the expectation value of the radii
     ///         divided by the inverse covariance sum.
     double fitY0{0.};
     /// @brief Number of degrees of freedom

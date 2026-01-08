@@ -55,7 +55,7 @@ class GeometryObject {
   /// Force a binning position method
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param aDir is the value for which the reference position is requesed
+  /// @param aDir is the value for which the reference position is requested
   ///
   /// @return vector 3D used for the binning schema
   virtual Vector3 referencePosition(const GeometryContext& gctx,

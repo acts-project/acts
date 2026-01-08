@@ -23,7 +23,7 @@ class SurfaceArray;
 
 /// @class ConeLayer
 ///
-/// Class to describe a conical detector layer for tracking, it inhertis from
+/// Class to describe a conical detector layer for tracking, it inherits from
 /// both, Layer base class and ConeSurface class
 class ConeLayer : virtual public ConeSurface, public Layer {
  public:

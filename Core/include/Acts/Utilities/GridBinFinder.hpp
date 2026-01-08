@@ -40,7 +40,7 @@ class GridBinFinder {
   ///
   /// @param [in] vals The input parameters that define how many neighbours we need to find
   ///
-  /// @pre The provided paramers must be of type 'int', 'std::pair<int, int>' or 'std::vector<std::pair<int, int>>'
+  /// @pre The provided parameters must be of type 'int', 'std::pair<int, int>' or 'std::vector<std::pair<int, int>>'
   /// no other type is allowed. The order of these parameters must correspond to
   /// the same ordering of the axes in the grid
   template <typename... args>

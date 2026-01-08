@@ -168,7 +168,7 @@ struct Geant4PhysicalVolumeConverter {
   /// Optionally allow to foce a type, throws exception if not possible
   Acts::Surface::SurfaceType forcedType = Acts::Surface::SurfaceType::Other;
 
-  /// @brief Convert a Geant4 phsyical volume to a surface
+  /// @brief Convert a Geant4 physical volume to a surface
   ///
   /// @param g4PhysVol the physical volume to be constructed
   /// @param toGlobal the global transformation before the volume

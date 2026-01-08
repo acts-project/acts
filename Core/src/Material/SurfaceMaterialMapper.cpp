@@ -145,7 +145,7 @@ void SurfaceMaterialMapper::checkAndInsert(State& mState,
     // Second attempt: binned material
     auto bmp = dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
     bu = (bmp != nullptr) ? (&bmp->binUtility()) : nullptr;
-    // Creaete a binned type of material
+    // Create a binned type of material
     if (bu != nullptr) {
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - binning is " << *bu);

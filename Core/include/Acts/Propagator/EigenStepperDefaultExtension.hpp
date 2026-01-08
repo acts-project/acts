@@ -168,7 +168,7 @@ struct EigenStepperDefaultExtension {
 
     double half_h = h * 0.5;
     // This sets the reference to the sub matrices
-    // dFdx is already initialised as (3x3) idendity
+    // dFdx is already initialised as (3x3) identity
     auto dFdT = D.block<3, 3>(0, 4);
     auto dFdL = D.block<3, 1>(0, 7);
     // dGdx is already initialised as (3x3) zero
