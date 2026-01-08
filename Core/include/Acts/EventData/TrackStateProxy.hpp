@@ -74,11 +74,11 @@ class TransitiveConstPointer {
   T& operator*() { return *m_ptr; }
 
   explicit operator bool() const { return m_ptr != nullptr; }
-  T* get() const { return m_ptr; }
+
+  const T* ptr() const { return m_ptr; }
+  T* ptr() { return m_ptr; }
 
  private:
-  T* ptr() const { return m_ptr; }
-
   T* m_ptr{nullptr};
 };
 
@@ -791,7 +791,8 @@ class TrackStateProxy
   template <bool R>
   friend class AnyTrackStateProxy;
 
-  auto rawTrajectoryPtr() const { return m_traj.get(); }
+  const auto* rawTrajectoryPtr() const { return m_traj.ptr(); }
+  auto* rawTrajectoryPtr() { return m_traj.ptr(); }
 };
 }  // namespace Acts
 

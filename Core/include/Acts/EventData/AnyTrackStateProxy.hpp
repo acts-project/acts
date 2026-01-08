@@ -378,7 +378,7 @@ class AnyTrackStateProxy
   /// @param ts Proxy that supplies the trajectory backend and index.
   template <TrackStateProxyConcept track_state_proxy_t>
     requires(ReadOnly || !track_state_proxy_t::ReadOnly)
-  explicit AnyTrackStateProxy(const track_state_proxy_t& ts)
+  explicit AnyTrackStateProxy(track_state_proxy_t& ts)
       : m_container(nullptr), m_index(ts.m_istate) {
     using trajectory_t = typename track_state_proxy_t::Trajectory;
     auto* containerPtr = ts.rawTrajectoryPtr();
