@@ -9,21 +9,15 @@
 #pragma once
 
 #include "Acts/Definitions/Alignment.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsAlignment/Kernel/AlignmentError.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 
 #include <limits>
 #include <map>
-#include <queue>
 #include <vector>
 
 namespace ActsAlignment {
@@ -146,7 +140,6 @@ struct Alignment {
   ///
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
-  /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam fit_options_t The fit options type
   ///
   /// @param gctx The current geometry context object
@@ -158,12 +151,12 @@ struct Alignment {
   /// moment)
   ///
   /// @result The alignment state for a single track
-  template <typename source_link_t, typename start_parameters_t,
-            typename fit_options_t>
+  template <typename source_link_t, typename fit_options_t>
   Acts::Result<detail::TrackAlignmentState> evaluateTrackAlignmentState(
       const Acts::GeometryContext& gctx,
       const std::vector<source_link_t>& sourceLinks,
-      const start_parameters_t& sParameters, const fit_options_t& fitOptions,
+      const Acts::BoundTrackParameters& sParameters,
+      const fit_options_t& fitOptions,
       const std::unordered_map<const Acts::Surface*, std::size_t>&
           idxedAlignSurfaces,
       const AlignmentMask& alignMask) const;
@@ -171,7 +164,7 @@ struct Alignment {
   /// @brief calculate the alignment parameters delta
   ///
   /// @tparam trajectory_container_t The trajectories container type
-  /// @tparam start_parameters_t The initial parameters container type
+  /// @tparam start_parameters_container_t The initial parameters container type
   /// @tparam fit_options_t The fit options type
   ///
   /// @param trajectoryCollection The collection of trajectories as input of
@@ -204,7 +197,7 @@ struct Alignment {
   /// @brief Alignment implementation
   ///
   /// @tparam trajectory_container_t The trajectories container type
-  /// @tparam start_parameters_t The initial parameters container type
+  /// @tparam start_parameters_container_t The initial parameters container type
   /// @tparam fit_options_t The fit options type
   ///
   /// @param trajectoryCollection The collection of trajectories as input of

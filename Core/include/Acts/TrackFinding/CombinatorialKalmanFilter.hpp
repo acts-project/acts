@@ -845,9 +845,6 @@ class CombinatorialKalmanFilter {
  public:
   /// Combinatorial Kalman Filter implementation, calls the Kalman filter
   ///
-  /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam parameters_t Type of parameters used for local parameters
-  ///
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
@@ -860,9 +857,8 @@ class CombinatorialKalmanFilter {
   ///
   /// @return a container of track finding result for all the initial track
   /// parameters
-  template <typename start_parameters_t>
   auto findTracks(
-      const start_parameters_t& initialParameters,
+      const BoundTrackParameters& initialParameters,
       const CombinatorialKalmanFilterOptions<track_container_t>& tfOptions,
       track_container_t& trackContainer,
       typename track_container_t::TrackProxy rootBranch) const
@@ -901,7 +897,7 @@ class CombinatorialKalmanFilter {
                 propOptions);
 
     auto initResult = m_propagator.template initialize<
-        decltype(propState), start_parameters_t, StubPathLimitReached>(
+        decltype(propState), BoundTrackParameters, StubPathLimitReached>(
         propState, initialParameters);
     if (!initResult.ok()) {
       ACTS_ERROR("Propagation initialization failed: " << initResult.error());
@@ -953,9 +949,6 @@ class CombinatorialKalmanFilter {
 
   /// Combinatorial Kalman Filter implementation, calls the Kalman filter
   ///
-  /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam parameters_t Type of parameters used for local parameters
-  ///
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
@@ -966,10 +959,8 @@ class CombinatorialKalmanFilter {
   ///
   /// @return a container of track finding result for all the initial track
   /// parameters
-  template <typename start_parameters_t,
-            typename parameters_t = BoundTrackParameters>
   auto findTracks(
-      const start_parameters_t& initialParameters,
+      const BoundTrackParameters& initialParameters,
       const CombinatorialKalmanFilterOptions<track_container_t>& tfOptions,
       track_container_t& trackContainer) const
       -> Result<std::vector<
