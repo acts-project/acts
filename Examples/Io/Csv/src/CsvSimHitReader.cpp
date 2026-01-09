@@ -17,14 +17,14 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
-#include <array>
 #include <stdexcept>
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvSimHitReader::CsvSimHitReader(
-    const ActsExamples::CsvSimHitReader::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvSimHitReader::CsvSimHitReader(const Config& config,
+                                 Acts::Logging::Level level)
     : m_cfg(config),
       // TODO check that all files (hits,cells,truth) exists
       m_eventsRange(
@@ -40,21 +40,19 @@ ActsExamples::CsvSimHitReader::CsvSimHitReader(
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 }
 
-std::string ActsExamples::CsvSimHitReader::CsvSimHitReader::name() const {
+std::string CsvSimHitReader::CsvSimHitReader::name() const {
   return "CsvSimHitReader";
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::CsvSimHitReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> CsvSimHitReader::availableEvents() const {
   return m_eventsRange;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
-    const ActsExamples::AlgorithmContext& ctx) {
+ProcessCode CsvSimHitReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
 
-  ActsExamples::NamedTupleCsvReader<SimHitData> reader(path);
+  NamedTupleCsvReader<SimHitData> reader(path);
 
   SimHitContainer::sequence_type unordered;
   SimHitData data;
@@ -101,5 +99,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   simHits.insert(unordered.begin(), unordered.end());
   m_outputSimHits(ctx, std::move(simHits));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
