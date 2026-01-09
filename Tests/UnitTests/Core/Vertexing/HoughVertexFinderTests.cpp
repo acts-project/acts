@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
         // add some smearing to the layers
         // layers are (9-11), (19-21), and (29-31)
         double r = rIndx * 10 + getRndDouble(gen, -1., 1.);
-        // intersection of the layer and the straigh line
+        // intersection of the layer and the straight line
         double x1 =
             (D * dirY + part * sgn * dirX * std::sqrt(r * r * dirR2 - D * D)) /
             dirR2;

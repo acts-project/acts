@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/// This file implements the tools for a hough transform.
-
 #pragma once
 
 #include "Acts/Utilities/Grid.hpp"
@@ -38,7 +36,7 @@ using LineParametrisation =
 
 /// @brief struct to define the ranges of the hough histogram.
 /// Used to move between parameter and bin index coordinates.
-/// Disconnected from the hough plane binning to be able to re-use
+/// Disconnected from the hough plane binning to be able to reuse
 /// a plane with a given binning for several parameter ranges
 struct HoughAxisRanges {
   /// Minimum value of the first hough coordinate
@@ -145,7 +143,7 @@ class HoughCell {
 
 /// @brief Configuration - number of bins in each axis.
 /// The Hough plane is agnostic of how the bins map to
-/// coordinates, allowing to re-use a plane for several
+/// coordinates, allowing to reuse a plane for several
 /// (sub) detectors of different dimensions if the bin number
 /// remains applicable
 struct HoughPlaneConfig {
@@ -446,7 +444,7 @@ class IslandsAroundMax {
   /// @param inMaximum: List of cells found in the island. Incrementally populated by calls to the method
   /// @param toExplore: List of the global Bin indices of neighbour cell candidates left to explore. Method will not do anything once this is empty
   /// @param threshold: the threshold to apply to check if a cell should be added to an island
-  /// @param yieldMap: A map of the hit content of above-threshold cells. Used cells will be set to empty content to avoid re-use by subsequent calls
+  /// @param yieldMap: A map of the hit content of above-threshold cells. Used cells will be set to empty content to avoid reuse by subsequent calls
   void extendMaximum(const HoughPlane<identifier_t>& houghPlane,
                      std::vector<std::array<std::size_t, 2>>& inMaximum,
                      std::vector<std::size_t>& toExplore, YieldType threshold,

@@ -14,15 +14,16 @@
 
 namespace Acts {
 
-/// @ingroup MagneticField
+/// @ingroup magnetic_field
 ///
-/// This class implements a simple constant magnetic field. The
-/// magnetic field value has to be set at creation time, but can
-/// be updated later on.
+/// The simplest magnetic field implementation is a constant field, which
+/// returns the same field values at every queried location.
 class ConstantBField final : public MagneticFieldProvider {
  public:
+  /// Cache object for constant magnetic field
   struct Cache {
-    /// @brief constructor with context
+    /// Constructor with context
+    /// @note For the constant field, the cache is empty.
     explicit Cache(const MagneticFieldContext& /*mcfg*/) {}
   };
 

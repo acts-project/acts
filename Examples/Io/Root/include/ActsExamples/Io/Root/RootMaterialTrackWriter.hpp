@@ -63,9 +63,9 @@ class RootMaterialTrackWriter
     bool recalculateTotals = false;
     /// Write aut pre and post step (for G4), otherwise central step position
     bool prePostStep = false;
-    /// Write the surface to which the material step correpond
+    /// Write the surface to which the material step correspond
     bool storeSurface = false;
-    /// Write the volume to which the material step correpond
+    /// Write the volume to which the material step correspond
     bool storeVolume = false;
     /// Collapse consecutive interactions of a single surface into a single
     /// interaction

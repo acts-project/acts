@@ -39,6 +39,9 @@
 
 namespace Acts {
 
+/// @addtogroup track_fitting
+/// @{
+
 /// Extension struct which holds delegates to customise the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
@@ -229,7 +232,8 @@ struct KalmanFitterResult {
 
 /// Kalman fitter implementation.
 ///
-/// @tparam propagator_t Type of the propagation class
+/// @tparam propagator_t Type of the propagation class, usually an instance of
+///         @ref Acts::Propagator
 ///
 /// The Kalman filter contains an Actor and a Sequencer sub-class.
 /// The Sequencer has to be part of the Navigator of the Propagator
@@ -905,5 +909,7 @@ class KalmanFitter {
     return track;
   }
 };
+
+/// @}
 
 }  // namespace Acts

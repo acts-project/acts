@@ -23,7 +23,7 @@ class SurfaceArray;
 
 /// @class CylinderLayer
 ///
-/// Class to describe a cylindrical detector layer for tracking, it inhertis
+/// Class to describe a cylindrical detector layer for tracking, it inherits
 /// from both, Layer base class and CylinderSurface class
 ///
 class CylinderLayer : public CylinderSurface, public Layer {

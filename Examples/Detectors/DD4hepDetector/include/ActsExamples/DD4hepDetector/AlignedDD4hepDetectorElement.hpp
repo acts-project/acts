@@ -16,9 +16,11 @@
 #include <memory>
 #include <string>
 
+/// @cond
 namespace dd4hep {
 class DetElement;
 }  // namespace dd4hep
+/// @endcond
 
 namespace ActsExamples {
 /// Define the aligned DD4hep detector element and factory type

@@ -16,6 +16,9 @@
 #include <nlohmann/json.hpp>
 
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 NLOHMANN_JSON_SERIALIZE_ENUM(Acts::PdgParticle,
 
                              {{Acts::PdgParticle::eInvalid, "Invalid"},
@@ -40,7 +43,9 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::PdgParticle,
                               {Acts::PdgParticle::eLead, "Lead"}}
 
 )
-}
+
+/// @}
+}  // namespace Acts
 
 #ifdef NLOHMANN_JSON_NAMESPACE_BEGIN
 NLOHMANN_JSON_NAMESPACE_BEGIN

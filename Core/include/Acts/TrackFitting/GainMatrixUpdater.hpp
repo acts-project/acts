@@ -21,6 +21,7 @@
 namespace Acts {
 
 /// Kalman update step using the gain matrix formalism.
+/// @ingroup track_fitting
 class GainMatrixUpdater {
   struct InternalTrackState {
     unsigned int calibratedSize;
