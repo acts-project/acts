@@ -71,13 +71,13 @@ BOOST_AUTO_TEST_CASE(CalculateQuantities) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = createTestTrack(tc, std::vector<std::vector<TrackStateFlag>>{
                                    {Measurement},
-                                   {Outlier},
+                                   {Measurement, Outlier},
                                    {Measurement, SharedHit},
                                    {Hole},
-                                   {Outlier},
+                                   {Measurement, Outlier},
                                    {Hole},
                                    {Measurement, SharedHit},
-                                   {Outlier},
+                                   {Measurement, Outlier},
                                });
 
   calculateTrackQuantities(t);
@@ -94,13 +94,13 @@ BOOST_AUTO_TEST_CASE(TrimTrack) {
                                    {},
                                    {Hole},
                                    {Measurement},
-                                   {Outlier},
+                                   {Measurement, Outlier},
                                    {Measurement, SharedHit},
                                    {Hole},
-                                   {Outlier},
+                                   {Measurement, Outlier},
                                    {Hole},
                                    {Measurement},
-                                   {Outlier},
+                                   {Measurement, Outlier},
                                    {},
                                });
 

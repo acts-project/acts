@@ -316,18 +316,15 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
       double crit = r(rng);
       if (crit < 0.1) {
         ts.typeFlags().setIsHole();
-        continue;
       } else if (crit < 0.2) {
         ts.typeFlags().setIsOutlier();
-        continue;
       } else if (crit < 0.3) {
         ts.typeFlags().setIsSharedHit();
       } else if (crit < 0.4) {
         ts.typeFlags().setIsMaterial();
-        continue;
+      } else {
+        ts.typeFlags().setIsMeasurement();
       }
-
-      ts.typeFlags().setHasMeasurement();
 
       auto [par, cov] = genParams();
       ts.smoothed() = par;

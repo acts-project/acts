@@ -80,13 +80,13 @@ BOOST_FIXTURE_TEST_CASE(ComputeInitialStateTest, Fixture) {
 
   auto t = createTestTrack(mutTc, std::vector<std::vector<TrackStateFlag>>{
                                       {Measurement},
-                                      {Outlier},
+                                      {Measurement, Outlier},
                                       {Measurement, SharedHit},
                                       {Hole},
-                                      {Outlier},
+                                      {Measurement, Outlier},
                                       {Hole},
                                       {Measurement, SharedHit},
-                                      {Outlier},
+                                      {Measurement, Outlier},
                                   });
 
   BOOST_CHECK_EQUAL(t.nHoles(), 2);
@@ -129,13 +129,13 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
 
   auto t = createTestTrack(mutTc, std::vector<std::vector<TrackStateFlag>>{
                                       {Measurement},
-                                      {Outlier},
+                                      {Measurement, Outlier},
                                       {Measurement, SharedHit},
                                       {Hole},
-                                      {Outlier},
+                                      {Measurement, Outlier},
                                       {Hole},
                                       {Measurement, SharedHit},
-                                      {Outlier},
+                                      {Measurement, Outlier},
                                   });
 
   BOOST_CHECK_EQUAL(t.nHoles(), 2);

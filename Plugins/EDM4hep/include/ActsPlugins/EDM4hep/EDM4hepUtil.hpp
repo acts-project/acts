@@ -114,7 +114,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 
   for (const auto& state : track.trackStatesReversed()) {
     auto typeFlags = state.typeFlags();
-    if (!typeFlags.hasMeasurement()) {
+    if (!typeFlags.isMeasurement()) {
       continue;
     }
 
