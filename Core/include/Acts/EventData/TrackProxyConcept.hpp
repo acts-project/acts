@@ -43,6 +43,9 @@ concept TrackProxyConcept = requires(const T& cv, HashedString key) {
 
   { cv.particleHypothesis() } -> std::same_as<ParticleHypothesis>;
 
+  { cv.loc0() } -> std::same_as<double>;
+  { cv.loc1() } -> std::same_as<double>;
+  { cv.time() } -> std::same_as<double>;
   { cv.theta() } -> std::same_as<double>;
   { cv.phi() } -> std::same_as<double>;
   { cv.qOverP() } -> std::same_as<double>;
