@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesIoPodio
-    SHARED
     src/PodioWriter.cpp
     src/PodioReader.cpp
     src/CollectionBaseWriteHandle.cpp
