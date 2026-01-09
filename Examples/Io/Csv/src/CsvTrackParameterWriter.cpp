@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -20,9 +19,10 @@
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvTrackParameterWriter::CsvTrackParameterWriter(
-    const ActsExamples::CsvTrackParameterWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvTrackParameterWriter::CsvTrackParameterWriter(const Config& config,
+                                                 Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("CsvTrackParameterWriter", level)) {
   if (m_cfg.inputTracks.empty()) {
@@ -32,26 +32,24 @@ ActsExamples::CsvTrackParameterWriter::CsvTrackParameterWriter(
   m_inputTracks.initialize(m_cfg.inputTracks);
 }
 
-ActsExamples::CsvTrackParameterWriter::~CsvTrackParameterWriter() = default;
+CsvTrackParameterWriter::~CsvTrackParameterWriter() = default;
 
-std::string ActsExamples::CsvTrackParameterWriter::name() const {
+std::string CsvTrackParameterWriter::name() const {
   return "CsvTrackParameterWriter";
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::finalize() {
+ProcessCode CsvTrackParameterWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
-    const AlgorithmContext& ctx) {
+ProcessCode CsvTrackParameterWriter::write(const AlgorithmContext& ctx) {
   const auto& inputTracks = m_inputTracks(ctx);
 
   std::string path = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  ActsExamples::NamedTupleCsvWriter<TrackParameterData> writer(
-      path, m_cfg.outputPrecision);
+  NamedTupleCsvWriter<TrackParameterData> writer(path, m_cfg.outputPrecision);
 
   TrackParameterData data{};
   for (const auto& track : inputTracks) {
@@ -103,5 +101,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
     writer.append(data);
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

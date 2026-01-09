@@ -34,6 +34,11 @@ template <typename derived_t>
 class MultiTrajectory;
 class Surface;
 
+namespace detail_anytstate {
+template <typename trajectory_t>
+class TrackStateHandler;
+}  // namespace detail_anytstate
+
 namespace detail_lt {
 
 /// Helper type that wraps two iterators
@@ -170,6 +175,10 @@ class MultiTrajectory {
 
   friend class TrackStateProxy<Derived, MeasurementSizeMax, true>;
   friend class TrackStateProxy<Derived, MeasurementSizeMax, false>;
+  template <bool R>
+  friend class AnyTrackStateProxy;
+  template <typename T>
+  friend class detail_anytstate::TrackStateHandler;
   template <typename T>
   friend class MultiTrajectory;
 
@@ -451,42 +460,32 @@ class MultiTrajectory {
     return self().has_impl(key, istate);
   }
 
-  /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param parIdx Index into the parameter column
-  /// @return Mutable proxy
   typename TrackStateProxy::Parameters parameters(IndexType parIdx)
     requires(!ReadOnly)
   {
     return self().parameters_impl(parIdx);
   }
 
-  /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param parIdx Index into the parameter column
-  /// @return Const proxy
-  typename ConstTrackStateProxy::Parameters parameters(IndexType parIdx) const {
+  typename ConstTrackStateProxy::ConstParameters parameters(
+      IndexType parIdx) const {
     return self().parameters_impl(parIdx);
   }
 
-  /// Retrieve a covariance proxy instance for a covariance at a given index
-  /// @param covIdx Index into the covariance column
-  /// @return Mutable proxy
   typename TrackStateProxy::Covariance covariance(IndexType covIdx)
     requires(!ReadOnly)
   {
     return self().covariance_impl(covIdx);
   }
 
-  /// Retrieve a covariance proxy instance for a covariance at a given index
-  /// @param covIdx Index into the covariance column
-  /// @return Const proxy
-  typename ConstTrackStateProxy::Covariance covariance(IndexType covIdx) const {
+  typename ConstTrackStateProxy::ConstCovariance covariance(
+      IndexType covIdx) const {
     return self().covariance_impl(covIdx);
   }
 
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
   /// @param istate The track state
   /// @return Mutable proxy
-  typename TrackStateProxy::Covariance jacobian(IndexType istate)
+  typename TrackStateProxy::Jacobian jacobian(IndexType istate)
     requires(!ReadOnly)
   {
     return self().jacobian_impl(istate);
@@ -495,7 +494,8 @@ class MultiTrajectory {
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
   /// @param istate The track state
   /// @return Const proxy
-  typename ConstTrackStateProxy::Covariance jacobian(IndexType istate) const {
+  typename ConstTrackStateProxy::ConstJacobian jacobian(
+      IndexType istate) const {
     return self().jacobian_impl(istate);
   }
 
@@ -518,7 +518,7 @@ class MultiTrajectory {
   /// @param istate The track state
   /// @return Const proxy
   template <std::size_t measdim>
-  typename ConstTrackStateProxy::template Calibrated<measdim> calibrated(
+  typename ConstTrackStateProxy::template ConstCalibrated<measdim> calibrated(
       IndexType istate) const {
     return self().template calibrated_impl<measdim>(istate);
   }
@@ -599,7 +599,7 @@ class MultiTrajectory {
   /// @param istate The track state
   /// @return Const proxy
   template <std::size_t measdim>
-  typename ConstTrackStateProxy::template CalibratedCovariance<measdim>
+  typename ConstTrackStateProxy::template ConstCalibratedCovariance<measdim>
   calibratedCovariance(IndexType istate) const {
     return self().template calibratedCovariance_impl<measdim>(istate);
   }
