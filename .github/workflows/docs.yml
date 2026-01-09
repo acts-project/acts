@@ -112,4 +112,4 @@ jobs:
 u         echo "**📚 Documentation preview available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
           # prime cache
-          (curl -L -m1 "$link" "$base_link/pr.json" 2>&1 > /dev/null) || true
+          (curl -L -m1 "$link" "$base_link/pr.json" > /dev/null 2>&1) || true
