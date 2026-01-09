@@ -8,47 +8,46 @@
 
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
 #include <cstdint>
 
 namespace Acts {
 
-void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
+void MbfSmoother::calculateSmoothed(AnyMutableTrackStateProxy& ts,
                                     const BoundMatrix& bigLambdaHat,
                                     const BoundVector& smallLambdaHat) const {
-  ts.smoothedCovariance = ts.filteredCovariance - ts.filteredCovariance *
-                                                      bigLambdaHat *
-                                                      ts.filteredCovariance;
-  ts.smoothed = ts.filtered - ts.filteredCovariance * smallLambdaHat;
+  auto filteredCovariance = ts.filteredCovariance();
+  auto smoothed = ts.smoothed();
+  ts.smoothedCovariance() = filteredCovariance - filteredCovariance *
+                                                     bigLambdaHat *
+                                                     filteredCovariance;
+  smoothed = ts.filtered() - filteredCovariance * smallLambdaHat;
   // Normalize phi and theta
-  ts.smoothed = normalizeBoundParameters(ts.smoothed);
+  smoothed = normalizeBoundParameters(smoothed);
 }
 
-void MbfSmoother::visitNonMeasurement(const InternalTrackState& ts,
-                                      BoundMatrix& bigLambdaHat,
-                                      BoundVector& smallLambdaHat) const {
-  const InternalTrackState::Jacobian F = ts.jacobian;
+void MbfSmoother::visitNonMeasurement(
+    const AnyConstTrackStateProxy::ConstCovarianceMap& jacobian,
+    BoundMatrix& bigLambdaHat, BoundVector& smallLambdaHat) const {
+  const auto F = jacobian;
 
   bigLambdaHat = F.transpose() * bigLambdaHat * F;
   smallLambdaHat = F.transpose() * smallLambdaHat;
 }
 
-void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
+void MbfSmoother::visitMeasurement(const AnyConstTrackStateProxy& ts,
                                    BoundMatrix& bigLambdaHat,
                                    BoundVector& smallLambdaHat) const {
   assert(ts.measurement.has_value());
 
-  const InternalTrackState::Measurement& measurement = ts.measurement.value();
-  const InternalTrackState::Jacobian F = ts.jacobian;
+  const auto F = ts.jacobian();
 
-  visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
+  visit_measurement(ts.calibratedSize(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
-    std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
-        measurement.projector.begin(),
-        measurement.projector.begin() + kMeasurementSize);
-    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
-        validSubspaceIndices);
+
+    const auto subspaceHelper = ts.projectorSubspaceHelper<kMeasurementSize>();
 
     using ProjectorMatrix = Eigen::Matrix<double, kMeasurementSize, eBoundSize>;
     using CovarianceMatrix =
@@ -57,26 +56,29 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
         Eigen::Matrix<double, eBoundSize, kMeasurementSize>;
 
     typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
-        measurement.calibrated};
+        ts.calibrated<kMeasurementSize>()};
     typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
-        calibratedCovariance{measurement.calibratedCovariance};
+        calibratedCovariance{ts.calibratedCovariance<kMeasurementSize>()};
 
     // Projector matrix
     const ProjectorMatrix H = subspaceHelper.projector();
 
+    // Predicted parameter covariance
+    const auto predictedCovariance = ts.predictedCovariance();
+
     // Residual covariance
     const CovarianceMatrix S =
-        (H * ts.predictedCovariance * H.transpose() + calibratedCovariance);
+        (H * predictedCovariance * H.transpose() + calibratedCovariance);
     // TODO Sinv could be cached by the filter step
     const CovarianceMatrix SInv = S.inverse();
 
     // Kalman gain
     // TODO K could be cached by the filter step
-    const KalmanGainMatrix K = (ts.predictedCovariance * H.transpose() * SInv);
+    const KalmanGainMatrix K = (predictedCovariance * H.transpose() * SInv);
 
     const Acts::BoundMatrix CHat = (Acts::BoundMatrix::Identity() - K * H);
     const Eigen::Matrix<double, kMeasurementSize, 1> y =
-        (calibrated - H * ts.predicted);
+        (calibrated - H * ts.predicted());
 
     const Acts::BoundMatrix bigLambdaTilde =
         (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat);

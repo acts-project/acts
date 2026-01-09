@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -16,6 +17,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <utility>
 
 namespace Acts {
 
@@ -65,7 +67,7 @@ class MbfSmoother {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
 
-      InternalTrackState internalTrackState(ts);
+      AnyMutableTrackStateProxy internalTrackState(ts);
 
       // Smoothe the current state
       calculateSmoothed(internalTrackState, bigLambdaHat, smallLambdaHat);
@@ -77,9 +79,11 @@ class MbfSmoother {
 
       // Update the lambdas depending on the type of track state
       if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
-        visitMeasurement(internalTrackState, bigLambdaHat, smallLambdaHat);
+        visitMeasurement(AnyConstTrackStateProxy{ts}, bigLambdaHat,
+                         smallLambdaHat);
       } else {
-        visitNonMeasurement(internalTrackState, bigLambdaHat, smallLambdaHat);
+        visitNonMeasurement(std::as_const(ts).jacobian(), bigLambdaHat,
+                            smallLambdaHat);
       }
     });
 
@@ -138,17 +142,18 @@ class MbfSmoother {
   };
 
   /// Calculate the smoothed parameters and covariance.
-  void calculateSmoothed(InternalTrackState& ts,
+  void calculateSmoothed(AnyMutableTrackStateProxy& ts,
                          const BoundMatrix& bigLambdaHat,
                          const BoundVector& smallLambdaHat) const;
 
   /// Visit a non-measurement track state and update the lambdas.
-  void visitNonMeasurement(const InternalTrackState& ts,
-                           BoundMatrix& bigLambdaHat,
-                           BoundVector& smallLambdaHat) const;
+  void visitNonMeasurement(
+      const AnyConstTrackStateProxy::ConstCovarianceMap& jacobian,
+      BoundMatrix& bigLambdaHat, BoundVector& smallLambdaHat) const;
 
   /// Visit a measurement track state and update the lambdas.
-  void visitMeasurement(const InternalTrackState& ts, BoundMatrix& bigLambdaHat,
+  void visitMeasurement(const AnyConstTrackStateProxy& ts,
+                        BoundMatrix& bigLambdaHat,
                         BoundVector& smallLambdaHat) const;
 };
 
