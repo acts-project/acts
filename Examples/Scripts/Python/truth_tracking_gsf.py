@@ -129,7 +129,7 @@ def runTruthTrackingGsf(
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         trackSmearingSigmas=TrackSmearingSigmas(
-            # zero eveything so the GSF has a chance to find the measurements
+            # zero everything so the GSF has a chance to find the measurements
             loc0=0,
             loc0PtA=0,
             loc0PtB=0,

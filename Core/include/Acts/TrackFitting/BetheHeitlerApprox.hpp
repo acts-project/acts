@@ -48,6 +48,10 @@ inline GaussianComponent inverseTransformComponent(
 
 }  // namespace detail
 
+/// @addtogroup track_fitting
+/// @{
+
+/// @ingroup material
 class BetheHeitlerApprox {
  public:
   using Component = detail::GaussianComponent;
@@ -65,6 +69,7 @@ class BetheHeitlerApprox {
 /// This class approximates the Bethe-Heitler with only one component. This is
 /// mainly inside @ref AtlasBetheHeitlerApprox, but can also be used as the
 /// only component approximation (then probably for debugging)
+/// @ingroup material
 class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
  public:
   /// Returns the number of components the returned mixture will have
@@ -104,6 +109,7 @@ class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
 /// @todo This class is rather inflexible: It forces two data representations,
 /// making it a bit awkward to add a single parameterization. It would be good
 /// to generalize this at some point.
+/// @ingroup material
 class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
  public:
   struct PolyData {
@@ -207,7 +213,10 @@ class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
 /// the GSF without the need to load files
 /// @param clampToRange Whether to clamp values to the valid range
 /// @return AtlasBetheHeitlerApprox with default ATLAS configuration parameters
+/// @ingroup material
 AtlasBetheHeitlerApprox makeDefaultBetheHeitlerApprox(
     bool clampToRange = false);
+
+/// @}
 
 }  // namespace Acts

@@ -12,6 +12,8 @@
 #include "ActsPlugins/Hashing/HashingAlgorithmConfig.hpp"
 
 namespace ActsPlugins {
+/// @addtogroup hashing_plugin
+/// @{
 
 template <typename external_spacepoint_t, typename SpacePointContainer>
 class HashingAlgorithm {
@@ -33,6 +35,7 @@ class HashingAlgorithm {
   Config m_cfg;
 };
 
+/// @}
 }  // namespace ActsPlugins
 
 #include "ActsPlugins/Hashing/HashingAlgorithm.ipp"

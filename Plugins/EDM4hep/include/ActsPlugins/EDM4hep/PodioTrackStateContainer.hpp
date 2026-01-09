@@ -38,6 +38,8 @@
 #include <podio/Frame.h>
 
 namespace ActsPlugins {
+/// @addtogroup edm4hep_plugin
+/// @{
 
 class MutablePodioTrackStateContainer;
 class ConstPodioTrackStateContainer;
@@ -759,4 +761,5 @@ inline ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
   }
 }
 
+/// @}
 }  // namespace ActsPlugins

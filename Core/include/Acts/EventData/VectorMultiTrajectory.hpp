@@ -379,12 +379,13 @@ class VectorMultiTrajectory;
 template <>
 struct IsReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
 
+/// In-memory transient multi-trajectory implementation using @c std::vector as
+/// backend
+/// @ingroup eventdata_tracks
 class VectorMultiTrajectory final
     : public detail_vmt::VectorMultiTrajectoryBase,
       public MultiTrajectory<VectorMultiTrajectory> {
-#ifndef DOXYGEN
-  friend MultiTrajectory<VectorMultiTrajectory>;
-#endif
+  friend class MultiTrajectory<VectorMultiTrajectory>;
 
  public:
   VectorMultiTrajectory() = default;
@@ -561,6 +562,8 @@ template <>
 struct IsReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
 };
 
+/// Const version of @ref VectorMultiTrajectory
+/// @ingroup eventdata_tracks
 class ConstVectorMultiTrajectory final
     : public detail_vmt::VectorMultiTrajectoryBase,
       public MultiTrajectory<ConstVectorMultiTrajectory> {
