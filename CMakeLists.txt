@@ -221,7 +221,7 @@ endif()
 
 if(ACTS_BUILD_WITH_SKBUILD)
     # Set installation paths for proper python package creation
-    set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR})  # Don't install binaries/scripts right now
+    set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts right now
     set(CMAKE_INSTALL_LIBDIR "${SKBUILD_PLATLIB_DIR}/acts")
     set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
     set(CMAKE_INSTALL_DATAROOTDIR ${SKBUILD_DATA_DIR})

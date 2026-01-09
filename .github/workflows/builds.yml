@@ -591,4 +591,3 @@ jobs:
 
       - name: Test
         run: python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"
-
