@@ -22,15 +22,26 @@
 namespace Acts {
 
 enum class TrackStateFlag {
-  MeasurementFlag [[deprecated("Use HasMeasurement instead")]] = 0,
-  ParameterFlag [[deprecated("Use HasParameters instead")]] = 1,
-  OutlierFlag [[deprecated("Use IsOutlier instead")]] = 2,
-  HoleFlag [[deprecated("Use IsHole instead")]] = 3,
-  MaterialFlag [[deprecated("Use HasMaterial instead")]] = 4,
-  SharedHitFlag [[deprecated("Use IsSharedHit instead")]] = 5,
-  SplitHitFlag [[deprecated("Use IsSplitHit instead")]] = 6,
-  NoExpectedHitFlag [[deprecated("Use HasNoExpectedHit instead")]] = 7,
-  NumTrackStateFlags [[deprecated("Use NumFlags instead")]] = 8,
+  MeasurementFlag
+  [[deprecated("Replaced by HasMeasurement; but you may want to use "
+               "isMeasurement()/setIsMeasurement() instead")]] = 0,
+  ParameterFlag
+  [[deprecated("Replaced by HasParameters; but you may want to use "
+               "hasParameters()/setHasParameters() instead")]] = 1,
+  OutlierFlag [[deprecated("Replaced by IsOutlier; but you may want to use "
+                           "isOutlier()/setIsOutlier() instead")]] = 2,
+  HoleFlag [[deprecated("Replaced by IsHole; but you may want to use "
+                        "isHole()/setIsHole() instead")]] = 3,
+  MaterialFlag [[deprecated("Replaced by HasMaterial; but you may want to use "
+                            "hasMaterial()/setHasMaterial() instead")]] = 4,
+  SharedHitFlag [[deprecated("Replaced by IsSharedHit; but you may want to use "
+                             "isSharedHit()/setIsSharedHit() instead")]] = 5,
+  SplitHitFlag [[deprecated("Replaced by IsSplitHit; but you may want to use "
+                            "isSplitHit()/setIsSplitHit() instead")]] = 6,
+  NoExpectedHitFlag
+  [[deprecated("Replaced by HasNoExpectedHit; but you may want to use "
+               "hasNoExpectedHit()/setHasNoExpectedHit() instead")]] = 7,
+  NumTrackStateFlags [[deprecated("Replaced by NumFlags")]] = 8,
 
   HasMeasurement = 0,
   HasParameters = 1,
