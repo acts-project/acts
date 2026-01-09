@@ -106,7 +106,11 @@ jobs:
 
       - name: Documentation display
         run: |
-          base_link='https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}/index.html'
+          base_link='https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}'
+          link="$base_link/index.html"
           echo "📚 Docs preview available at: $link"
 u         echo "**📚 Documentation preview available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
+          # prime cache
+          curl -L "$link"
+          curl -L "$base_link/pr.json"
