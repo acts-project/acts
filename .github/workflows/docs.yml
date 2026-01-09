@@ -56,8 +56,8 @@ jobs:
           path: docs/old/_build/html/
 
   docs:
-    runs-on: ubuntu-latest
-    # container: ghcr.io/acts-project/ubuntu2404:83
+    runs-on: ubuntu-slim
+    container: ghcr.io/acts-project/ubuntu2404_docs:main@sha256:1383f1123777349c8ce881fdb9db6f22de1ad4b38beba979b9da990234786ded
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
       DOXYGEN_VERSION: "1.15.0"
@@ -72,10 +72,10 @@ jobs:
           tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
           mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
 
-      - name: Install APT packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y graphviz texlive-bibtex-extra libeigen3-dev libboost-dev cmake
+      # - name: Install APT packages
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y graphviz texlive-bibtex-extra libeigen3-dev libboost-dev cmake
 
       - name: Configure
         run: >
