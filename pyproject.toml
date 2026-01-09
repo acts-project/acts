@@ -1,0 +1,14 @@
+[build-system]
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "acts"
+version = "0.0.1"
+
+[tool.scikit-build]
+wheel.packages = [] # Manage installation with cmake
+build-dir = "build/{wheel_tag}"
+build.verbose = true
+logging.level = "DEBUG"
+cmake.args = ["--preset=python"]

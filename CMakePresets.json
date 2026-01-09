@@ -170,6 +170,20 @@
                 "ACTS_GNN_ENABLE_TENSORRT": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "OFF"
             }
+        },
+        {
+            "name": "python",
+            "displayName": "pip install acts",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS": "-w",
+                "CMAKE_CUDA_FLAGS": "-w",
+                "ACTS_BUILD_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_EXAMPLES": "ON"
+            }
         }
     ]
 }

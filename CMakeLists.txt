@@ -170,7 +170,6 @@ set_option_if(
     ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
 )
 # core plugins might be required by examples or depend on each other
-
 set_option_if(
     ACTS_BUILD_PLUGIN_DD4HEP
     ACTS_BUILD_EXAMPLES_DD4HEP
@@ -207,6 +206,42 @@ set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 # feature tests
 include(CheckCXXSourceCompiles)
 
+# additional configuration and tools
+if("${SKBUILD}" STREQUAL "2")
+    message(
+        STATUS
+        "Build with skbuild as ${SKBUILD_PROJECT_NAME},${SKBUILD_PROJECT_VERSION_FULL} (${SKBUILD_STATE})"
+    )
+    set(ACTS_BUILD_WITH_SKBUILD TRUE)
+    set(BUILD_SHARED_LIBS FALSE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+else()
+    set(ACTS_BUILD_WITH_SKBUILD FALSE)
+endif()
+
+if(ACTS_BUILD_WITH_SKBUILD)
+    # Set installation paths for proper python package creation
+    set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR})  # Don't install binaries/scripts right now
+    set(CMAKE_INSTALL_LIBDIR "${SKBUILD_PLATLIB_DIR}/acts")
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
+    set(CMAKE_INSTALL_DATAROOTDIR ${SKBUILD_DATA_DIR})
+    set(CMAKE_INSTALL_DATADIR ${SKBUILD_DATA_DIR})
+else()
+    # GNU-like installation paths, e.g. lib/, include/, ...
+    include(GNUInstallDirs)
+endif()
+message("CMAKE_INSTALL_BINDIR: ${CMAKE_INSTALL_BINDIR}")
+message("CMAKE_INSTALL_LIBDIR: ${CMAKE_INSTALL_LIBDIR}")
+message("CMAKE_INSTALL_INCLUDEDIR: ${CMAKE_INSTALL_INCLUDEDIR}")
+message("CMAKE_INSTALL_DATAROOTDIR: ${CMAKE_INSTALL_DATAROOTDIR}")
+message("CMAKE_INSTALL_DATADIR: ${CMAKE_INSTALL_DATADIR}")
+
+#message(FATAL_ERROR "Testing cmake configuration")
+
+include(ActsCompilerOptions) # default compile options
+include(ActsComponentsHelpers) # handle components via add_..._if commands
+include(ActsStaticAnalysis)
+
 # function that tests if the root installation is compatible
 function(check_root_compatibility)
     get_target_property(
@@ -221,12 +256,6 @@ function(check_root_compatibility)
     #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
     #endif()
 endfunction()
-
-# additional configuration and tools
-include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
-include(ActsCompilerOptions) # default compile options
-include(ActsComponentsHelpers) # handle components via add_..._if commands
-include(ActsStaticAnalysis)
 
 # place build products in `<build>/bin` and `<build>/lib` for simple use
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY

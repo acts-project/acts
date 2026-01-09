@@ -550,3 +550,45 @@ jobs:
           name: comment-51-key4hep-external-failure.md
           path: comment-51-key4hep-external-failure.md
           retention-days: 5
+
+
+  # To be replaced with manylinux build once ROOT dependencies are removed
+  linux_ubuntu_pip_install:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2404:83
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Virtual environment
+        run: python3 -m venv venv && source ./venv/bin/activate
+
+      - name: Build with pip
+        run: ccache -z && pip install -v .
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Test
+        run: python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"
+

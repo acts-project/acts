@@ -3,6 +3,7 @@
 # and used to populate the __init__.py file automatically.
 macro(add_plugin_binding_if _name _dependency _flag)
     string(TOLOWER ${_name} _name_lower)
+    set(_python_install_dir "${ACTS_PYTHON_INSTALL_PREFIX}/acts")
 
     if(${_flag})
         # automatically populate the init file with actually built modules
