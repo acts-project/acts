@@ -95,12 +95,15 @@ option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
+# python related options
+option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
+option(ACTS_BUILD_EXAMPLES "Build basic examples components" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
@@ -108,7 +111,7 @@ option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "[Deprecated] Build python bindings and enables the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
@@ -141,6 +144,14 @@ option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
 
+# Preserve previous behaviour of ACTS_BUILD_PYTHON_BINDINGS but mark as deprecated
+if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+    message(
+        DEPRECATION
+        "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS is deprecated. Enable ACTS_BUILD_EXAMPLES and ACTS_BUILD_PYTHON_BINDINGS to achieve the same effect."
+    )
+    set(ACTS_BUILD_PYTHON_BINDINGS ON)
+endif()
 # any examples component activates the general examples option
 set_option_if(
     ACTS_BUILD_EXAMPLES
@@ -559,7 +570,7 @@ if(ACTS_BUILD_EXAMPLES)
         )
         check_root_compatibility()
     endif()
-    if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+    if(ACTS_BUILD_PYTHON_BINDINGS)
         find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
         if(ACTS_USE_SYSTEM_PYBIND11)
             find_package(pybind11 CONFIG REQUIRED)
@@ -605,7 +616,7 @@ add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 
 # Python bindings
-add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+add_subdirectory_if(Python ACTS_BUILD_PYTHON_BINDINGS)
 
 # automated tests and benchmarks
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
