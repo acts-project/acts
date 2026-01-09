@@ -12,10 +12,9 @@
 
 class ActsVersionManager {
   constructor() {
-    this.siteRoot = this.calculateSiteRoot();
+    this.siteRoot = null; // Will be set during discovery
     this.prMetadata = null;
     console.log('[ACTS] Version manager initialized');
-    console.log('[ACTS] Site root:', this.siteRoot);
   }
 
   /**
@@ -41,6 +40,53 @@ class ActsVersionManager {
     } else {
       return '../'.repeat(depth).slice(0, -1); // Remove trailing slash
     }
+  }
+
+  /**
+   * Discover the actual docs root by trying to find index.html at different levels
+   * This handles cases where docs are deployed at nested paths (e.g., PR previews)
+   * @returns {Promise<string>} Path to docs root
+   */
+  async discoverDocsRoot() {
+    const pathname = window.location.pathname;
+
+    // Special case: if we're already on index.html, we're at the root
+    if (pathname.endsWith('/index.html') || pathname.endsWith('/')) {
+      console.log('[ACTS] Already at docs root (index.html)');
+      return '.';
+    }
+
+    const cleanPath = pathname.replace(/^\/+|\/+$/g, '');
+    const parts = cleanPath.split('/');
+    const maxDepth = parts.length - 1; // Don't include the filename
+
+    // Try each level from current directory up to domain root
+    for (let depth = 0; depth <= maxDepth; depth++) {
+      const path = depth === 0 ? '.' : '../'.repeat(depth).slice(0, -1);
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 500);
+
+        const response = await fetch(`${path}/index.html`, {
+          method: 'HEAD', // Just check existence, don't download
+          signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (response.ok) {
+          console.log(`[ACTS] Discovered docs root at: ${path}`);
+          return path;
+        }
+      } catch (error) {
+        // Continue searching
+      }
+    }
+
+    // Fallback to calculated site root if discovery fails
+    console.warn('[ACTS] Could not discover docs root, using calculated path');
+    return this.calculateSiteRoot();
   }
 
   /**
@@ -189,6 +235,10 @@ class ActsVersionManager {
    * Main initialization
    */
   async init() {
+    // Discover the actual docs root (handles nested deployments)
+    this.siteRoot = await this.discoverDocsRoot();
+    console.log('[ACTS] Using docs root:', this.siteRoot);
+
     // Check for PR build
     this.prMetadata = await this.checkForPRBuild();
 
