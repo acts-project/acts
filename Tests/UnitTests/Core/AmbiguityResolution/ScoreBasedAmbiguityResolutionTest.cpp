@@ -79,14 +79,14 @@ BOOST_FIXTURE_TEST_CASE(ComputeInitialStateTest, Fixture) {
   static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
 
   auto t = createTestTrack(mutTc, std::vector<std::vector<TrackStateFlag>>{
-                                      {Measurement},
-                                      {Measurement, Outlier},
-                                      {Measurement, SharedHit},
-                                      {Hole},
-                                      {Measurement, Outlier},
-                                      {Hole},
-                                      {Measurement, SharedHit},
-                                      {Measurement, Outlier},
+                                      {HasMeasurement},
+                                      {HasMeasurement, IsOutlier},
+                                      {HasMeasurement, IsSharedHit},
+                                      {IsHole},
+                                      {HasMeasurement, IsOutlier},
+                                      {IsHole},
+                                      {HasMeasurement, IsSharedHit},
+                                      {HasMeasurement, IsOutlier},
                                   });
 
   BOOST_CHECK_EQUAL(t.nHoles(), 2);
@@ -128,14 +128,14 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
 
   auto t = createTestTrack(mutTc, std::vector<std::vector<TrackStateFlag>>{
-                                      {Measurement},
-                                      {Measurement, Outlier},
-                                      {Measurement, SharedHit},
-                                      {Hole},
-                                      {Measurement, Outlier},
-                                      {Hole},
-                                      {Measurement, SharedHit},
-                                      {Measurement, Outlier},
+                                      {HasMeasurement},
+                                      {HasMeasurement, IsOutlier},
+                                      {HasMeasurement, IsSharedHit},
+                                      {IsHole},
+                                      {HasMeasurement, IsOutlier},
+                                      {IsHole},
+                                      {HasMeasurement, IsSharedHit},
+                                      {HasMeasurement, IsOutlier},
                                   });
 
   BOOST_CHECK_EQUAL(t.nHoles(), 2);

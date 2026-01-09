@@ -22,14 +22,14 @@
 namespace Acts {
 
 enum class TrackStateFlag {
-  Parameter = 0,
-  Material = 1,
-  Measurement = 2,
-  Outlier = 3,
-  Hole = 4,
-  SharedHit = 5,
-  SplitHit = 6,
-  NoExpectedHit = 7,
+  HasParameters = 0,
+  HasMaterial = 1,
+  HasMeasurement = 2,
+  IsOutlier = 3,
+  IsHole = 4,
+  IsSharedHit = 5,
+  IsSplitHit = 6,
+  HasNoExpectedHit = 7,
   NumFlags = 8
 };
 
@@ -55,108 +55,109 @@ class TrackStateTypeBase {
     return self();
   }
 
-  bool hasParameters() const { return test(Parameter); }
-  bool hasMaterial() const { return test(Material); }
-  bool hasMeasurement() const { return test(Measurement); }
-  bool isMaterial() const { return test(Material) && !test(Measurement); }
-  bool isMeasurement() const { return test(Measurement) && !test(Outlier); }
-  bool isOutlier() const { return test(Outlier); }
-  bool isHole() const { return test(Hole); }
-  bool isSharedHit() const { return test(SharedHit); }
-  bool isSplitHit() const { return test(SplitHit); }
-  bool hasNoExpectedHit() const { return test(NoExpectedHit); }
-
+  bool hasParameters() const { return test(HasParameters); }
+  bool hasMaterial() const { return test(HasMaterial); }
+  bool hasMeasurement() const { return test(HasMeasurement); }
+  bool isMaterial() const { return test(HasMaterial) && !test(HasMeasurement); }
+  bool isMeasurement() const {
+    return test(HasMeasurement) && !test(IsOutlier);
+  }
+  bool isOutlier() const { return test(IsOutlier); }
+  bool isHole() const { return test(IsHole); }
+  bool isSharedHit() const { return test(IsSharedHit); }
+  bool isSplitHit() const { return test(IsSplitHit); }
+  bool hasNoExpectedHit() const { return test(HasNoExpectedHit); }
   Derived& setHasParameters(bool value = true)
     requires(!ReadOnly)
   {
-    setUnchecked(Parameter, value);
+    setUnchecked(HasParameters, value);
     validate();
     return self();
   }
   Derived& setHasMaterial(bool value = true)
     requires(!ReadOnly)
   {
-    setUnchecked(Material, value);
+    setUnchecked(HasMaterial, value);
     validate();
     return self();
   }
   Derived& setHasMeasurement(bool value = true)
     requires(!ReadOnly)
   {
-    setUnchecked(Measurement, value);
+    setUnchecked(HasMeasurement, value);
     validate();
     return self();
   }
   Derived& setIsMaterial()
     requires(!ReadOnly)
   {
-    setUnchecked(Measurement, false);
-    setUnchecked(Outlier, false);
-    setUnchecked(Hole, false);
-    setUnchecked(SharedHit, false);
-    setUnchecked(SplitHit, false);
-    setUnchecked(NoExpectedHit, false);
-    setUnchecked(Material, true);
+    setUnchecked(HasMeasurement, false);
+    setUnchecked(IsOutlier, false);
+    setUnchecked(IsHole, false);
+    setUnchecked(IsSharedHit, false);
+    setUnchecked(IsSplitHit, false);
+    setUnchecked(HasNoExpectedHit, false);
+    setUnchecked(HasMaterial, true);
     validate();
     return self();
   }
   Derived& setIsMeasurement()
     requires(!ReadOnly)
   {
-    setUnchecked(Outlier, false);
-    setUnchecked(Hole, false);
-    setUnchecked(NoExpectedHit, false);
-    setUnchecked(Measurement, true);
+    setUnchecked(IsOutlier, false);
+    setUnchecked(IsHole, false);
+    setUnchecked(HasNoExpectedHit, false);
+    setUnchecked(HasMeasurement, true);
     validate();
     return self();
   }
   Derived& setIsOutlier()
     requires(!ReadOnly)
   {
-    setUnchecked(Measurement, true);
-    setUnchecked(Hole, false);
-    setUnchecked(NoExpectedHit, false);
-    setUnchecked(Outlier, true);
+    setUnchecked(HasMeasurement, true);
+    setUnchecked(IsHole, false);
+    setUnchecked(HasNoExpectedHit, false);
+    setUnchecked(IsOutlier, true);
     validate();
     return self();
   }
   Derived& setIsHole()
     requires(!ReadOnly)
   {
-    setUnchecked(Measurement, false);
-    setUnchecked(Outlier, false);
-    setUnchecked(NoExpectedHit, false);
-    setUnchecked(Hole, true);
+    setUnchecked(HasMeasurement, false);
+    setUnchecked(IsOutlier, false);
+    setUnchecked(HasNoExpectedHit, false);
+    setUnchecked(IsHole, true);
     validate();
     return self();
   }
   Derived& setIsSharedHit()
     requires(!ReadOnly)
   {
-    setUnchecked(Measurement, true);
-    setUnchecked(NoExpectedHit, false);
-    setUnchecked(SharedHit, true);
+    setUnchecked(HasMeasurement, true);
+    setUnchecked(HasNoExpectedHit, false);
+    setUnchecked(IsSharedHit, true);
     validate();
     return self();
   }
   Derived& setIsSplitHit()
     requires(!ReadOnly)
   {
-    setUnchecked(Measurement, true);
-    setUnchecked(NoExpectedHit, false);
-    setUnchecked(SplitHit, true);
+    setUnchecked(HasMeasurement, true);
+    setUnchecked(HasNoExpectedHit, false);
+    setUnchecked(IsSplitHit, true);
     validate();
     return self();
   }
   Derived& setHasNoExpectedHit()
     requires(!ReadOnly)
   {
-    setUnchecked(Measurement, false);
-    setUnchecked(Outlier, false);
-    setUnchecked(Hole, false);
-    setUnchecked(SharedHit, false);
-    setUnchecked(SplitHit, false);
-    setUnchecked(NoExpectedHit, true);
+    setUnchecked(HasMeasurement, false);
+    setUnchecked(IsOutlier, false);
+    setUnchecked(IsHole, false);
+    setUnchecked(IsSharedHit, false);
+    setUnchecked(IsSplitHit, false);
+    setUnchecked(HasNoExpectedHit, true);
     validate();
     return self();
   }
@@ -231,17 +232,17 @@ class TrackStateTypeBase {
   bitset_type bits() const { return bitset_type(self().raw()); }
 
   void validate() const {
-    assert(!(test(NoExpectedHit) &&
-             (test(Measurement) || test(Outlier) || test(Hole) ||
-              test(SharedHit) || test(SplitHit))) &&
+    assert(!(test(HasNoExpectedHit) &&
+             (test(HasMeasurement) || test(IsOutlier) || test(IsHole) ||
+              test(IsSharedHit) || test(IsSplitHit))) &&
            "TrackStateType - NoExpectedHit cannot be set with other "
            "measurement flags");
-    assert(!(test(Outlier) && test(Hole)) &&
+    assert(!(test(IsOutlier) && test(IsHole)) &&
            "TrackStateType - Outlier and Hole cannot be set simultaneously");
     assert(
-        !(test(Hole) && test(Measurement)) &&
+        !(test(IsHole) && test(HasMeasurement)) &&
         "TrackStateType - Hole and Measurement cannot be set simultaneously");
-    assert(!(test(Outlier) && !test(Measurement)) &&
+    assert(!(test(IsOutlier) && !test(HasMeasurement)) &&
            "TrackStateType - Outlier flag requires Measurement flag to be set");
   }
 };

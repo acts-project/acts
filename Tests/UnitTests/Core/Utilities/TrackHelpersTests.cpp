@@ -70,14 +70,14 @@ BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 BOOST_AUTO_TEST_CASE(CalculateQuantities) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = createTestTrack(tc, std::vector<std::vector<TrackStateFlag>>{
-                                   {Measurement},
-                                   {Measurement, Outlier},
-                                   {Measurement, SharedHit},
-                                   {Hole},
-                                   {Measurement, Outlier},
-                                   {Hole},
-                                   {Measurement, SharedHit},
-                                   {Measurement, Outlier},
+                                   {HasMeasurement},
+                                   {HasMeasurement, IsOutlier},
+                                   {HasMeasurement, IsSharedHit},
+                                   {IsHole},
+                                   {HasMeasurement, IsOutlier},
+                                   {IsHole},
+                                   {HasMeasurement, IsSharedHit},
+                                   {HasMeasurement, IsOutlier},
                                });
 
   calculateTrackQuantities(t);
@@ -92,15 +92,15 @@ BOOST_AUTO_TEST_CASE(TrimTrack) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = createTestTrack(tc, std::vector<std::vector<TrackStateFlag>>{
                                    {},
-                                   {Hole},
-                                   {Measurement},
-                                   {Measurement, Outlier},
-                                   {Measurement, SharedHit},
-                                   {Hole},
-                                   {Measurement, Outlier},
-                                   {Hole},
-                                   {Measurement},
-                                   {Measurement, Outlier},
+                                   {IsHole},
+                                   {HasMeasurement},
+                                   {HasMeasurement, IsOutlier},
+                                   {HasMeasurement, IsSharedHit},
+                                   {IsHole},
+                                   {HasMeasurement, IsOutlier},
+                                   {IsHole},
+                                   {HasMeasurement},
+                                   {HasMeasurement, IsOutlier},
                                    {},
                                });
 

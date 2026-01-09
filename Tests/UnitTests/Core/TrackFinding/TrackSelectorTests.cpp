@@ -714,11 +714,11 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
   };
 
   auto addMeasurement = [&](auto& track, const auto& surface) {
-    return addTrackState(track, surface, TrackStateFlag::Measurement);
+    return addTrackState(track, surface, TrackStateFlag::HasMeasurement);
   };
 
   auto addMaterial = [&](auto& track, const auto& surface) {
-    return addTrackState(track, surface, TrackStateFlag::Material);
+    return addTrackState(track, surface, TrackStateFlag::HasMaterial);
   };
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
