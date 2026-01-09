@@ -22,11 +22,21 @@
 namespace Acts {
 
 enum class TrackStateFlag {
-  HasParameters = 0,
-  HasMaterial = 1,
-  HasMeasurement = 2,
-  IsOutlier = 3,
-  IsHole = 4,
+  MeasurementFlag [[deprecated("Use HasMeasurement instead")]] = 0,
+  ParameterFlag [[deprecated("Use HasParameters instead")]] = 1,
+  OutlierFlag [[deprecated("Use IsOutlier instead")]] = 2,
+  HoleFlag [[deprecated("Use IsHole instead")]] = 3,
+  MaterialFlag [[deprecated("Use HasMaterial instead")]] = 4,
+  SharedHitFlag [[deprecated("Use IsSharedHit instead")]] = 5,
+  SplitHitFlag [[deprecated("Use IsSplitHit instead")]] = 6,
+  NoExpectedHitFlag [[deprecated("Use HasNoExpectedHit instead")]] = 7,
+  NumTrackStateFlags [[deprecated("Use NumFlags instead")]] = 8,
+
+  HasMeasurement = 0,
+  HasParameters = 1,
+  IsOutlier = 2,
+  IsHole = 3,
+  HasMaterial = 4,
   IsSharedHit = 5,
   IsSplitHit = 6,
   HasNoExpectedHit = 7,
@@ -71,21 +81,21 @@ class TrackStateTypeBase {
     requires(!ReadOnly)
   {
     setUnchecked(HasParameters, value);
-    validate();
+    assertConsistency();
     return self();
   }
   Derived& setHasMaterial(bool value = true)
     requires(!ReadOnly)
   {
     setUnchecked(HasMaterial, value);
-    validate();
+    assertConsistency();
     return self();
   }
   Derived& setHasMeasurement(bool value = true)
     requires(!ReadOnly)
   {
     setUnchecked(HasMeasurement, value);
-    validate();
+    assertConsistency();
     return self();
   }
   Derived& setIsMaterial()
@@ -98,7 +108,7 @@ class TrackStateTypeBase {
     setUnchecked(IsSplitHit, false);
     setUnchecked(HasNoExpectedHit, false);
     setUnchecked(HasMaterial, true);
-    validate();
+    assertConsistency();
     return self();
   }
   Derived& setIsMeasurement()
@@ -108,7 +118,7 @@ class TrackStateTypeBase {
     setUnchecked(IsHole, false);
     setUnchecked(HasNoExpectedHit, false);
     setUnchecked(HasMeasurement, true);
-    validate();
+    assertConsistency();
     return self();
   }
   Derived& setIsOutlier()
@@ -118,7 +128,7 @@ class TrackStateTypeBase {
     setUnchecked(IsHole, false);
     setUnchecked(HasNoExpectedHit, false);
     setUnchecked(IsOutlier, true);
-    validate();
+    assertConsistency();
     return self();
   }
   Derived& setIsHole()
@@ -128,7 +138,7 @@ class TrackStateTypeBase {
     setUnchecked(IsOutlier, false);
     setUnchecked(HasNoExpectedHit, false);
     setUnchecked(IsHole, true);
-    validate();
+    assertConsistency();
     return self();
   }
   Derived& setIsSharedHit()
@@ -137,7 +147,7 @@ class TrackStateTypeBase {
     setUnchecked(HasMeasurement, true);
     setUnchecked(HasNoExpectedHit, false);
     setUnchecked(IsSharedHit, true);
-    validate();
+    assertConsistency();
     return self();
   }
   Derived& setIsSplitHit()
@@ -146,7 +156,7 @@ class TrackStateTypeBase {
     setUnchecked(HasMeasurement, true);
     setUnchecked(HasNoExpectedHit, false);
     setUnchecked(IsSplitHit, true);
-    validate();
+    assertConsistency();
     return self();
   }
   Derived& setHasNoExpectedHit()
@@ -158,7 +168,7 @@ class TrackStateTypeBase {
     setUnchecked(IsSharedHit, false);
     setUnchecked(IsSplitHit, false);
     setUnchecked(HasNoExpectedHit, true);
-    validate();
+    assertConsistency();
     return self();
   }
 
@@ -170,7 +180,6 @@ class TrackStateTypeBase {
 
   friend std::ostream& operator<<(std::ostream& os,
                                   const TrackStateTypeBase& t) {
-    os << "TrackStateType[";
     bool first = true;
     const auto append = [&](const char* name, bool condition) {
       if (condition) {
@@ -181,25 +190,24 @@ class TrackStateTypeBase {
         first = false;
       }
     };
-    append("HasParameters", t.hasParameters());
+    append("HasParams", t.hasParameters());
     if (t.isMaterial()) {
-      append("IsMaterial", true);
+      append("IsMat", true);
     } else {
-      append("HasMaterial", t.hasMaterial());
+      append("HasMat", t.hasMaterial());
     }
     if (t.isMeasurement()) {
-      append("IsMeasurement", true);
+      append("IsMeas", true);
     } else if (t.isOutlier()) {
       append("IsOutlier", true);
     } else if (t.isHole()) {
       append("IsHole", true);
     } else {
-      append("HasMeasurement", t.hasMeasurement());
+      append("HasMeas", t.hasMeasurement());
     }
     append("IsSharedHit", t.isSharedHit());
     append("IsSplitHit", t.isSplitHit());
     append("NoExpectedHit", t.hasNoExpectedHit());
-    os << "]";
     return os;
   }
 
@@ -231,7 +239,7 @@ class TrackStateTypeBase {
 
   bitset_type bits() const { return bitset_type(self().raw()); }
 
-  void validate() const {
+  void assertConsistency() const {
     assert(!(test(HasNoExpectedHit) &&
              (test(HasMeasurement) || test(IsOutlier) || test(IsHole) ||
               test(IsSharedHit) || test(IsSplitHit))) &&
@@ -252,7 +260,9 @@ class TrackStateType : public TrackStateTypeBase<TrackStateType> {
   using Base = TrackStateTypeBase<TrackStateType>;
 
   TrackStateType() = default;
-  explicit TrackStateType(raw_type raw) : m_raw{raw} { Base::validate(); }
+  explicit TrackStateType(raw_type raw) : m_raw{raw} {
+    Base::assertConsistency();
+  }
 
   using Base::operator=;
 
@@ -272,7 +282,7 @@ class TrackStateTypeMap
 
   explicit TrackStateTypeMap(raw_type& raw_ref) : m_raw_ptr{&raw_ref} {
     assert(m_raw_ptr != nullptr && "TrackStateTypeMap - raw reference is null");
-    Base::validate();
+    Base::assertConsistency();
   }
 
   using Base::operator=;
