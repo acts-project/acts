@@ -56,7 +56,7 @@ jobs:
           path: docs/old/_build/html/
 
   docs:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404_docs:main@sha256:1383f1123777349c8ce881fdb9db6f22de1ad4b38beba979b9da990234786ded
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
