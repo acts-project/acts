@@ -38,6 +38,8 @@
 #include <podio/Frame.h>
 
 namespace ActsPlugins {
+/// @addtogroup edm4hep_plugin
+/// @{
 
 class MutablePodioTrackStateContainer;
 class ConstPodioTrackStateContainer;
@@ -300,16 +302,16 @@ class ConstPodioTrackStateContainer final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
+  ConstTrackStateProxy::ConstCalibrated<measdim> calibrated_impl(
       IndexType index) const {
-    return ConstTrackStateProxy::Calibrated<measdim>{
+    return ConstTrackStateProxy::ConstCalibrated<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
-      IndexType index) const {
-    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+  ConstTrackStateProxy::ConstCalibratedCovariance<measdim>
+  calibratedCovariance_impl(IndexType index) const {
+    return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
 
@@ -407,9 +409,9 @@ class MutablePodioTrackStateContainer final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
+  ConstTrackStateProxy::ConstCalibrated<measdim> calibrated_impl(
       IndexType index) const {
-    return ConstTrackStateProxy::Calibrated<measdim>{
+    return ConstTrackStateProxy::ConstCalibrated<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
@@ -420,9 +422,9 @@ class MutablePodioTrackStateContainer final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
-      IndexType index) const {
-    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+  ConstTrackStateProxy::ConstCalibratedCovariance<measdim>
+  calibratedCovariance_impl(IndexType index) const {
+    return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
 
@@ -759,4 +761,5 @@ inline ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
   }
 }
 
+/// @}
 }  // namespace ActsPlugins

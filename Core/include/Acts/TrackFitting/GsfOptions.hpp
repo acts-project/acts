@@ -20,6 +20,9 @@
 
 namespace Acts {
 
+/// @addtogroup track_fitting
+/// @{
+
 /// @enum ComponentMergeMethod
 ///
 /// Available reduction methods for the reduction of a Gaussian mixture
@@ -142,5 +145,7 @@ struct GsfOptions {
         calibrationContext(calibCtxt),
         propagatorPlainOptions(geoCtxt, magFieldCtxt) {}
 };
+
+/// @}
 
 }  // namespace Acts

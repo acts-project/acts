@@ -42,8 +42,11 @@ enum class TrackExtrapolationStrategy {
 };
 
 /// Error codes for track extrapolation operations
+/// @ingroup errors
 enum class TrackExtrapolationError {
+  /// Did not find a compatible track state
   CompatibleTrackStateNotFound = 1,
+  /// Provided reference surface is unreachable
   ReferenceSurfaceUnreachable = 2,
 };
 

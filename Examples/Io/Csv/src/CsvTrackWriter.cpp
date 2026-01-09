@@ -28,8 +28,7 @@
 
 namespace ActsExamples {
 
-CsvTrackWriter::CsvTrackWriter(const CsvTrackWriter::Config& config,
-                               Acts::Logging::Level level)
+CsvTrackWriter::CsvTrackWriter(const Config& config, Acts::Logging::Level level)
     : WriterT<ConstTrackContainer>(config.inputTracks, "CsvTrackWriter", level),
       m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {

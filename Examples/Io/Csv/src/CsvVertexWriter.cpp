@@ -17,8 +17,9 @@
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvVertexWriter::CsvVertexWriter(
-    const ActsExamples::CsvVertexWriter::Config& cfg, Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+CsvVertexWriter::CsvVertexWriter(const Config& cfg, Acts::Logging::Level lvl)
     : WriterT(cfg.inputVertices, "CsvVertexWriter", lvl), m_cfg(cfg) {
   // inputVertices is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
@@ -26,13 +27,11 @@ ActsExamples::CsvVertexWriter::CsvVertexWriter(
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvVertexWriter::writeT(
-    const ActsExamples::AlgorithmContext& ctx,
-    const SimVertexContainerV& vertices) {
+ProcessCode CsvVertexWriter::writeT(const AlgorithmContext& ctx,
+                                    const SimVertexContainerV& vertices) {
   auto pathVertices = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
-  ActsExamples::NamedTupleCsvWriter<VertexData> writer(pathVertices,
-                                                       m_cfg.outputPrecision);
+  NamedTupleCsvWriter<VertexData> writer(pathVertices, m_cfg.outputPrecision);
 
   // Iterate over the vertices, and write out the 4 positions
   VertexData data;
@@ -47,3 +46,5 @@ ActsExamples::ProcessCode ActsExamples::CsvVertexWriter::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

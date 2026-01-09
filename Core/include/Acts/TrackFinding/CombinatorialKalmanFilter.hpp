@@ -35,6 +35,9 @@
 
 namespace Acts {
 
+/// @addtogroup track_finding
+/// @{
+
 /// Combined options for the combinatorial Kalman filter.
 ///
 /// @tparam source_link_iterator_t Type of the source link iterator
@@ -969,5 +972,7 @@ class CombinatorialKalmanFilter {
     return findTracks(initialParameters, tfOptions, trackContainer, rootBranch);
   }
 };
+
+/// @}
 
 }  // namespace Acts

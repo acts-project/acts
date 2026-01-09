@@ -89,7 +89,7 @@ class SympyStepper {
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
-    /// Accummulated path length state
+    /// Accumulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps

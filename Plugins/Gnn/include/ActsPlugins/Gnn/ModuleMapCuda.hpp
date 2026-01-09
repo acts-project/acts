@@ -14,18 +14,21 @@
 #include <memory>
 #include <string>
 
+/// @cond
 template <typename T>
 class CUDA_module_map_doublet;
 
 struct CUstream_st;
-typedef CUstream_st *cudaStream_t;
+using cudaStream_t = CUstream_st *;
 
 template <typename T>
 class CUDA_module_map_triplet;
+/// @endcond
 
 namespace ActsPlugins {
 
 namespace detail {
+
 class GraphCreatorWrapperBase;
 
 template <typename T>
@@ -56,6 +59,9 @@ struct CUDA_edge_data {
 };
 
 }  // namespace detail
+
+/// @addtogroup gnn_plugin
+/// @{
 
 class ModuleMapCuda : public GraphConstructionBase {
  public:
@@ -103,4 +109,5 @@ class ModuleMapCuda : public GraphConstructionBase {
                              const ExecutionContext &execContext = {}) override;
 };
 
+/// @}
 }  // namespace ActsPlugins
