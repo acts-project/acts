@@ -23,20 +23,6 @@ namespace Acts {
 /// Kalman update step using the gain matrix formalism.
 /// @ingroup track_fitting
 class GainMatrixUpdater {
-  struct InternalTrackState {
-    unsigned int calibratedSize;
-    // This is used to build a covariance matrix view in the .cpp file
-    const double* calibrated;
-    const double* calibratedCovariance;
-    BoundSubspaceIndices projector;
-
-    TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted;
-    TrackStateTraits<kMeasurementSizeMax, false>::Covariance
-        predictedCovariance;
-    TrackStateTraits<kMeasurementSizeMax, false>::Parameters filtered;
-    TrackStateTraits<kMeasurementSizeMax, false>::Covariance filteredCovariance;
-  };
-
  public:
   /// Run the Kalman update step for a single trajectory state.
   ///
