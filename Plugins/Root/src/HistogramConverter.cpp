@@ -27,7 +27,7 @@ std::vector<double> extractBinEdges(const Acts::BoostVariableAxis& axis) {
   for (int i = 0; i < axis.size(); ++i) {
     edges.at(i) = axis.bin(i).lower();
   }
-  edges.back() = axis.bin(axis.size()-1).upper();
+  edges.back() = axis.bin(axis.size() - 1).upper();
 
   return edges;
 }
