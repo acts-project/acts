@@ -294,7 +294,7 @@ class KalmanFitter {
     SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
 
     /// Allows retrieving measurements for a surface
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Surface*, SourceLink> inputMeasurements;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -453,7 +453,7 @@ class KalmanFitter {
       const bool surfaceHasMaterial = surface->surfaceMaterial() != nullptr;
 
       // Try to find the surface in the measurement surfaces
-      const auto sourceLinkIt = inputMeasurements.find(surface->geometryId());
+      const auto sourceLinkIt = inputMeasurements.find(&surface);
       if (sourceLinkIt != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
@@ -673,13 +673,11 @@ class KalmanFitter {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << nMeasurements << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Surface*, SourceLink> inputMeasurements;
     for (; it != end; ++it) {
       SourceLink sl = *it;
       const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
-      // @TODO: This can probably change over to surface pointers as keys
-      auto geoId = surface->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      inputMeasurements.emplace(surface, std::move(sl));
     }
 
     // Create relevant options for the propagation options
@@ -696,8 +694,8 @@ class KalmanFitter {
     if constexpr (!isDirectNavigator) {
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      for (const auto& [surfaceId, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(surface->geometryId());
       }
     } else {
       assert(sSequence != nullptr &&
