@@ -20,6 +20,8 @@ namespace Acts::Experimental {
 #define MAX_SEG_PER_NODE 1000  // was 30
 #define N_SEG_CONNS 6          // was 6
 
+using GbtsMLLookupTable = std::vector<std::array<float, 5>>;
+
 class GbtsGeometry;
 
 struct GbtsNode {
@@ -79,8 +81,9 @@ class GbtsEtaBin {
 
 class GbtsDataStorage {
  public:
-  explicit GbtsDataStorage(const GbtsGeometry& geometry,
-                           const SeedFinderGbtsConfig& config);
+  explicit GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
+                           const SeedFinderGbtsConfig& config,
+                           const GbtsMLLookupTable& parseLutFile);
   ~GbtsDataStorage();
 
   int loadPixelGraphNodes(short layerIndex, const std::vector<GbtsNode>& coll,
@@ -100,9 +103,12 @@ class GbtsDataStorage {
   }
 
  protected:
-  const GbtsGeometry& m_geo;
-  const SeedFinderGbtsConfig& m_config;
-  std::vector<std::array<float, 5>> m_mlLUT;
+  std::shared_ptr<const GbtsGeometry> m_geo;
+
+  SeedFinderGbtsConfig m_config;
+
+  GbtsMLLookupTable m_mlLUT;
+
   std::vector<GbtsEtaBin> m_etaBins;
 };
 

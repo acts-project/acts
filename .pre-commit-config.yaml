@@ -83,6 +83,7 @@ repos:
       name: Leftover conflict markers
       language: system
       entry: git --no-pager diff --staged --check
+      exclude: \.(diff|patch)$
 
     - id: math_macros
       name: math_macros
