@@ -14,13 +14,13 @@ cramjam==2.11.0
     # via uproot
 execnet==2.1.2
     # via pytest-xdist
-fsspec==2025.12.0
+fsspec==2026.1.0
     # via
     #   awkward
     #   uproot
 iniconfig==2.3.0
     # via pytest
-numpy==2.4.0
+numpy==2.4.1
     # via
     #   -r Python/Examples/tests/requirements.in
     #   awkward
