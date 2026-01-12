@@ -17,11 +17,11 @@
 #include <TProfile.h>
 #include <boost/histogram/accumulators/weighted_sum.hpp>
 
-using namespace Acts;
+using namespace Acts::Experimental;
 
 namespace {
 
-std::vector<double> extractBinEdges(const Acts::BoostVariableAxis& axis) {
+std::vector<double> extractBinEdges(const AxisVariant& axis) {
   assert(axis.size() > 0 && "Axis must have at least one bin");
   std::vector<double> edges(axis.size() + 1);
   for (int i = 0; i < axis.size(); ++i) {
@@ -38,7 +38,7 @@ namespace ActsPlugins {
 
 TH1F* toRoot(const Histogram1D& boostHist) {
   const auto& bh = boostHist.histogram();
-  const auto& axis = bh.axis<0>();
+  const auto& axis = bh.axis(0);
 
   // Extract bin edges from boost histogram axis
   std::vector<double> edges = extractBinEdges(axis);
@@ -65,8 +65,8 @@ TH1F* toRoot(const Histogram1D& boostHist) {
 
 TH2F* toRoot(const Histogram2D& boostHist) {
   const auto& bh = boostHist.histogram();
-  const auto& xAxis = bh.axis<0>();
-  const auto& yAxis = bh.axis<1>();
+  const auto& xAxis = bh.axis(0);
+  const auto& yAxis = bh.axis(1);
 
   // Extract bin edges from X axis
   std::vector<double> xEdges = extractBinEdges(xAxis);
@@ -98,9 +98,9 @@ TH2F* toRoot(const Histogram2D& boostHist) {
   return rootHist;
 }
 
-TProfile* toRoot(const ProfileHistogram& boostProfile) {
+TProfile* toRoot(const ProfileHistogram1D& boostProfile) {
   const auto& bh = boostProfile.histogram();
-  const auto& axis = bh.axis<0>();
+  const auto& axis = bh.axis(0);
 
   // Extract bin edges from boost histogram axis
   std::vector<double> edges = extractBinEdges(axis);
@@ -165,9 +165,10 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
     binSumw2->fArray[rootBinIndex] = count;
   }
 
-  // Set axis titles (X from axis metadata, Y from ProfileHistogram member)
+  // Set X axis title from axis metadata
   rootProfile->GetXaxis()->SetTitle(axis.metadata().c_str());
-  rootProfile->GetYaxis()->SetTitle(boostProfile.yAxisTitle().c_str());
+  // Set Y axis title from sampleAxisTitle member
+  rootProfile->GetYaxis()->SetTitle(boostProfile.sampleAxisTitle().c_str());
 
   return rootProfile;
 }
@@ -175,15 +176,10 @@ TProfile* toRoot(const ProfileHistogram& boostProfile) {
 TEfficiency* toRoot(const Efficiency1D& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
-  const auto& axis = accepted.axis<0>();
+  const auto& axis = accepted.axis(0);
 
   // Extract bin edges
-  std::vector<double> edges;
-  edges.reserve(axis.size() + 1);
-  for (int i = 0; i < axis.size(); ++i) {
-    edges.push_back(axis.bin(i).lower());
-  }
-  edges.push_back(axis.bin(axis.size() - 1).upper());
+  std::vector<double> edges = extractBinEdges(axis);
 
   // Create accepted and total TH1F histograms
   TH1F* acceptedHist =
@@ -218,8 +214,8 @@ TEfficiency* toRoot(const Efficiency1D& boostEff) {
 TEfficiency* toRoot(const Efficiency2D& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
-  const auto& xAxis = accepted.axis<0>();
-  const auto& yAxis = accepted.axis<1>();
+  const auto& xAxis = accepted.axis(0);
+  const auto& yAxis = accepted.axis(1);
 
   // Extract X bin edges
   std::vector<double> xEdges = extractBinEdges(xAxis);

@@ -20,40 +20,38 @@ namespace ActsPlugins {
 /// Convert Histogram1D to ROOT TH1F
 ///
 /// Creates a new ROOT TH1F histogram with the same binning, content, and
-/// errors as the input boost histogram. The histogram uses Sumw2() for proper
-/// error tracking with weighted fills.
+/// errors as the input boost histogram.
 ///
-/// @param boostHist The boost histogram to convert
+/// @param boostHist The boost 1D histogram to convert
 /// @return Raw pointer to new TH1F (caller owns and must delete)
-TH1F* toRoot(const Acts::Histogram1D& boostHist);
+TH1F* toRoot(const Acts::Experimental::Histogram1D& boostHist);
 
 /// Convert Histogram2D to ROOT TH2F
 ///
 /// Creates a new ROOT TH2F histogram with the same binning, content, and
-/// errors as the input boost histogram. The histogram uses Sumw2() for proper
-/// error tracking with weighted fills.
+/// errors as the input boost histogram.
 ///
-/// @param boostHist The boost histogram to convert
+/// @param boostHist The boost 2D histogram to convert
 /// @return Raw pointer to new TH2F (caller owns and must delete)
-TH2F* toRoot(const Acts::Histogram2D& boostHist);
+TH2F* toRoot(const Acts::Experimental::Histogram2D& boostHist);
 
-/// Convert ProfileHistogram to ROOT TProfile
+/// Convert ProfileHistogram1D to ROOT TProfile
 ///
 /// Creates a new ROOT TProfile histogram with the same binning and mean values
 /// as the input boost profile histogram.
 ///
 /// @param boostProfile The boost profile histogram to convert
 /// @return Raw pointer to new TProfile (caller owns and must delete)
-TProfile* toRoot(const Acts::ProfileHistogram& boostProfile);
+TProfile* toRoot(const Acts::Experimental::ProfileHistogram1D& boostProfile);
 
 /// Convert Efficiency1D to ROOT TEfficiency
 ///
 /// Creates a new ROOT TEfficiency object with the same binning, passed counts,
 /// and total counts as the input boost efficiency histogram.
 ///
-/// @param boostEff The boost efficiency histogram to convert
+/// @param boostEff The boost 1D efficiency histogram to convert
 /// @return Raw pointer to new TEfficiency (caller owns and must delete)
-TEfficiency* toRoot(const Acts::Efficiency1D& boostEff);
+TEfficiency* toRoot(const Acts::Experimental::Efficiency1D& boostEff);
 
 /// Convert Efficiency2D to ROOT TEfficiency
 ///
@@ -62,6 +60,6 @@ TEfficiency* toRoot(const Acts::Efficiency1D& boostEff);
 ///
 /// @param boostEff The boost 2D efficiency histogram to convert
 /// @return Raw pointer to new TEfficiency (caller owns and must delete)
-TEfficiency* toRoot(const Acts::Efficiency2D& boostEff);
+TEfficiency* toRoot(const Acts::Experimental::Efficiency2D& boostEff);
 
 }  // namespace ActsPlugins

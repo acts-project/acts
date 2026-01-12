@@ -8,94 +8,60 @@
 
 #pragma once
 
+#include <array>
 #include <string>
-#include <vector>
+#include <tuple>
 
 #include <boost/histogram.hpp>
 
-namespace Acts {
+namespace Acts::Experimental {
 
-/// @brief Boost axis type to use for histograms with metadata support
 using BoostVariableAxis = boost::histogram::axis::variable<double, std::string>;
+using BoostRegularAxis =
+    boost::histogram::axis::regular<double, boost::histogram::use_default,
+                                    std::string>;
 
-/// @brief Underlying Boost type for Histogram1D
-using BoostHist1D = decltype(boost::histogram::make_histogram(
-    std::declval<BoostVariableAxis>()));
+/// @brief Boost axis variant supporting both variable and regular axes with metadata
+/// NOTE: It seems not to be possible to combine compile-time fixed number of
+/// axes with boost::histogram::axis::variant. Therefore we use
+/// std::vector<AxisVariant> internally.
+using AxisVariant =
+    boost::histogram::axis::variant<BoostVariableAxis, BoostRegularAxis>;
 
-/// @brief Underlying Boost type for Histogram2D
-using BoostHist2D = decltype(boost::histogram::make_histogram(
-    std::declval<BoostVariableAxis>(), std::declval<BoostVariableAxis>()));
+/// @brief Underlying Boost type for histograms
+using BoostHist = decltype(boost::histogram::make_histogram(
+    std::declval<std::vector<AxisVariant>>()));
 
 /// @brief Underlying Boost type for ProfileHistogram
-using BoostProfileHist =
-    decltype(boost::histogram::make_profile(std::declval<BoostVariableAxis>()));
+using BoostProfileHist = decltype(boost::histogram::make_profile(
+    std::declval<std::vector<AxisVariant>>()));
 
-/// @brief 1D histogram wrapper using boost::histogram for data collection
+/// @brief Multi-dimensional histogram wrapper using boost::histogram for data collection
 ///
 /// This class wraps boost::histogram to provide a ROOT-independent histogram
-/// implementation.
-class Histogram1D {
- public:
-  /// Construct 1D histogram from axis
-  ///
-  /// @param name Histogram name (for identification and output)
-  /// @param title Histogram title (for plotting)
-  /// @param axis Axis with binning and metadata
-  Histogram1D(std::string name, std::string title, BoostVariableAxis axis);
-
-  /// Fill histogram with value
-  ///
-  /// @param value Value to fill
-  void fill(double value);
-
-  /// Get histogram name
-  const std::string& name() const { return m_name; }
-
-  /// Get histogram title
-  const std::string& title() const { return m_title; }
-
-  /// Get axis title from axis metadata
-  const std::string& axisTitle() const { return m_hist.axis(0).metadata(); }
-
-  /// Direct access to boost::histogram (for converters and tests)
-  const BoostHist1D& histogram() const { return m_hist; }
-
- private:
-  friend class Histogram2D;
-
-  /// Construct 1D histogram from existing boost histogram
-  ///
-  /// @param name Histogram name (for identification and output)
-  /// @param title Histogram title (for plotting)
-  /// @param hist Boost histogram to wrap
-  Histogram1D(std::string name, std::string title, BoostHist1D hist);
-
-  std::string m_name;
-  std::string m_title;
-
-  BoostHist1D m_hist;
-};
-
-/// @brief 2D histogram wrapper using boost::histogram for data collection
+/// implementation with compile-time dimensionality.
 ///
-/// This class wraps boost::histogram to provide a ROOT-independent 2D histogram
-/// implementation.
-class Histogram2D {
+/// @tparam Dim Number of dimensions
+template <std::size_t Dim>
+class Histogram {
  public:
-  /// Construct 2D histogram from axes
+  /// Construct multi-dimensional histogram from axes
   ///
   /// @param name Histogram name (for identification and output)
   /// @param title Histogram title (for plotting)
-  /// @param xAxis X-axis with binning and metadata
-  /// @param yAxis Y-axis with binning and metadata
-  Histogram2D(std::string name, std::string title, BoostVariableAxis xAxis,
-              BoostVariableAxis yAxis);
+  /// @param axes Array of axes with binning and metadata
+  Histogram(std::string name, std::string title,
+            std::array<AxisVariant, Dim> axes)
+      : m_name(std::move(name)),
+        m_title(std::move(title)),
+        m_hist(boost::histogram::make_histogram(axes.begin(), axes.end())) {}
 
-  /// Fill histogram with x, y values
+  /// Fill histogram with values
   ///
-  /// @param xValue X-axis value to fill
-  /// @param yValue Y-axis value to fill
-  void fill(double xValue, double yValue);
+  /// @param values Values to fill (one per axis)
+  void fill(const std::array<double, Dim>& values) {
+    std::apply([this](auto... v) { m_hist(v...); }, std::tuple_cat(values));
+  }
 
   /// Get histogram name
   const std::string& name() const { return m_name; }
@@ -103,49 +69,56 @@ class Histogram2D {
   /// Get histogram title
   const std::string& title() const { return m_title; }
 
-  /// Get X-axis title from axis metadata
-  const std::string& xAxisTitle() const { return m_hist.axis(0).metadata(); }
-
-  /// Get Y-axis title from axis metadata
-  const std::string& yAxisTitle() const { return m_hist.axis(1).metadata(); }
-
-  /// Project the histogram onto x
-  Histogram1D projectionX() const;
-
-  /// Project the histogram onto y
-  Histogram1D projectionY() const;
+  /// Get number of dimensions (compile-time constant)
+  static constexpr std::size_t rank() { return Dim; }
 
   /// Direct access to boost::histogram (for converters and tests)
-  const BoostHist2D& histogram() const { return m_hist; }
+  const BoostHist& histogram() const { return m_hist; }
 
  private:
   std::string m_name;
   std::string m_title;
 
-  BoostHist2D m_hist;
+  BoostHist m_hist;
 };
 
-/// @brief Profile histogram using boost::histogram
+/// Type aliases for common dimensions
+using Histogram1D = Histogram<1>;
+using Histogram2D = Histogram<2>;
+
+/// @brief Multi-dimensional profile histogram using boost::histogram
 ///
 /// This class wraps boost::histogram to provide a ROOT-independent profile
-/// histogram implementation. For each X bin, it tracks the mean and variance
-/// of Y values.
+/// histogram implementation with compile-time dimensionality. For each bin,
+/// it tracks the mean and variance of sample values.
+///
+/// @tparam Dim Number of dimensions
+template <std::size_t Dim>
 class ProfileHistogram {
  public:
-  /// Construct profile histogram from X axis
+  /// Construct multi-dimensional profile histogram from axes
   ///
-  /// @param name Histogram name
-  /// @param title Histogram title
-  /// @param xAxis X-axis with binning and metadata
-  /// @param yAxisTitle Y-axis title
-  ProfileHistogram(std::string name, std::string title, BoostVariableAxis xAxis,
-                   std::string yAxisTitle);
+  /// @param name Histogram name (for identification and output)
+  /// @param title Histogram title (for plotting)
+  /// @param axes Array of axes with binning and metadata
+  /// @param sampleAxisTitle Title for the sampled axis (profiled quantity)
+  ProfileHistogram(std::string name, std::string title,
+                   std::array<AxisVariant, Dim> axes,
+                   std::string sampleAxisTitle)
+      : m_name(std::move(name)),
+        m_title(std::move(title)),
+        m_sampleAxisTitle(std::move(sampleAxisTitle)),
+        m_hist(boost::histogram::make_profile(axes.begin(), axes.end())) {}
 
-  /// Fill profile with (x, y) pair
+  /// Fill profile with values and sample
   ///
-  /// @param xValue X value (bin coordinate)
-  /// @param yValue Y value (profiled quantity)
-  void fill(double xValue, double yValue);
+  /// @param values Bin coordinate values (one per axis)
+  /// @param sample Sample value (profiled quantity)
+  void fill(std::array<double, Dim> values, double sample) {
+    std::apply(
+        [&](auto... v) { m_hist(v..., boost::histogram::sample(sample)); },
+        std::tuple_cat(values));
+  }
 
   /// Get histogram name
   const std::string& name() const { return m_name; }
@@ -153,11 +126,11 @@ class ProfileHistogram {
   /// Get histogram title
   const std::string& title() const { return m_title; }
 
-  /// Get X-axis title from axis metadata
-  const std::string& xAxisTitle() const { return m_hist.axis(0).metadata(); }
+  /// Get number of dimensions (compile-time constant)
+  static constexpr std::size_t rank() { return Dim; }
 
-  /// Get Y-axis title
-  const std::string& yAxisTitle() const { return m_yAxisTitle; }
+  /// Get title of the sample axis
+  const std::string& sampleAxisTitle() const { return m_sampleAxisTitle; }
 
   /// Direct access to boost::histogram (for converters and tests)
   const BoostProfileHist& histogram() const { return m_hist; }
@@ -165,76 +138,50 @@ class ProfileHistogram {
  private:
   std::string m_name;
   std::string m_title;
-  std::string m_yAxisTitle;
+  std::string m_sampleAxisTitle;
 
   BoostProfileHist m_hist;
 };
 
-/// @brief 1D efficiency histogram using boost::histogram
+/// Type aliases for common dimensions
+using ProfileHistogram1D = ProfileHistogram<1>;
+
+/// @brief Multi-dimensional efficiency histogram using boost::histogram
 ///
 /// This class tracks pass/total counts for efficiency calculation.
-/// It internally uses two 1D histograms: one for accepted events,
-/// one for total events.
-class Efficiency1D {
- public:
-  /// Construct 1D efficiency histogram
-  ///
-  /// @param name Histogram name
-  /// @param title Histogram title
-  /// @param axis Axis with binning and metadata
-  Efficiency1D(std::string name, std::string title, BoostVariableAxis axis);
-
-  /// Fill efficiency histogram
-  ///
-  /// @param value Value to fill
-  /// @param accepted Whether the event accepted selection
-  void fill(double value, bool accepted);
-
-  /// Get histogram name
-  const std::string& name() const { return m_name; }
-
-  /// Get histogram title
-  const std::string& title() const { return m_title; }
-
-  /// Get axis title from axis metadata
-  const std::string& axisTitle() const { return m_accepted.axis(0).metadata(); }
-
-  /// Access to accepted histogram (for converters and tests)
-  const BoostHist1D& acceptedHistogram() const { return m_accepted; }
-
-  /// Access to total histogram (for converters and tests)
-  const BoostHist1D& totalHistogram() const { return m_total; }
-
- private:
-  std::string m_name;
-  std::string m_title;
-
-  BoostHist1D m_accepted;
-  BoostHist1D m_total;
-};
-
-/// @brief 2D efficiency histogram using boost::histogram
+/// It internally uses two multi-dimensional histograms: one for accepted
+/// events, one for total events.
 ///
-/// This class tracks pass/total counts for 2D efficiency calculation.
-/// It internally uses two 1D histograms: one for accepted events,
-/// one for total events.
-class Efficiency2D {
+/// @tparam Dim Number of dimensions
+template <std::size_t Dim>
+class Efficiency {
  public:
-  /// Construct 2D efficiency histogram
+  /// Construct multi-dimensional efficiency histogram
   ///
   /// @param name Histogram name
   /// @param title Histogram title
-  /// @param xAxis X-axis with binning and metadata
-  /// @param yAxis Y-axis with binning and metadata
-  Efficiency2D(std::string name, std::string title, BoostVariableAxis xAxis,
-               BoostVariableAxis yAxis);
+  /// @param axes Array of axes with binning and metadata
+  Efficiency(std::string name, std::string title,
+             std::array<AxisVariant, Dim> axes)
+      : m_name(std::move(name)),
+        m_title(std::move(title)),
+        m_accepted(boost::histogram::make_histogram(axes.begin(), axes.end())),
+        m_total(boost::histogram::make_histogram(axes.begin(), axes.end())) {}
 
   /// Fill efficiency histogram
   ///
-  /// @param xValue X value
-  /// @param yValue Y value
-  /// @param accepted Whether the event accepted selection
-  void fill(double xValue, double yValue, bool accepted);
+  /// @param values Values to fill (one per axis)
+  /// @param accepted Whether the event passed selection
+  void fill(std::array<double, Dim> values, bool accepted) {
+    std::apply(
+        [&](auto... v) {
+          m_total(v...);
+          if (accepted) {
+            m_accepted(v...);
+          }
+        },
+        std::tuple_cat(values));
+  }
 
   /// Get histogram name
   const std::string& name() const { return m_name; }
@@ -242,28 +189,37 @@ class Efficiency2D {
   /// Get histogram title
   const std::string& title() const { return m_title; }
 
-  /// Get X-axis title from axis metadata
-  const std::string& xAxisTitle() const {
-    return m_accepted.axis(0).metadata();
-  }
-
-  /// Get Y-axis title from axis metadata
-  const std::string& yAxisTitle() const {
-    return m_accepted.axis(1).metadata();
-  }
+  /// Get number of dimensions (compile-time constant)
+  static constexpr std::size_t rank() { return Dim; }
 
   /// Access to accepted histogram (for converters and tests)
-  const BoostHist2D& acceptedHistogram() const { return m_accepted; }
+  const BoostHist& acceptedHistogram() const { return m_accepted; }
 
   /// Access to total histogram (for converters and tests)
-  const BoostHist2D& totalHistogram() const { return m_total; }
+  const BoostHist& totalHistogram() const { return m_total; }
 
  private:
   std::string m_name;
   std::string m_title;
 
-  BoostHist2D m_accepted;
-  BoostHist2D m_total;
+  BoostHist m_accepted;
+  BoostHist m_total;
 };
 
-}  // namespace Acts
+/// Type aliases for common dimensions
+using Efficiency1D = Efficiency<1>;
+using Efficiency2D = Efficiency<2>;
+
+/// Project a 2D histogram onto the X axis (axis 0)
+///
+/// @param hist2d The 2D histogram to project
+/// @return A 1D histogram containing the projection
+Histogram1D projectionX(const Histogram2D& hist2d);
+
+/// Project a 2D histogram onto the Y axis (axis 1)
+///
+/// @param hist2d The 2D histogram to project
+/// @return A 1D histogram containing the projection
+Histogram1D projectionY(const Histogram2D& hist2d);
+
+}  // namespace Acts::Experimental

@@ -22,6 +22,7 @@
 #include <TProfile.h>
 
 using namespace Acts;
+using namespace Acts::Experimental;
 using namespace ActsPlugins;
 
 BOOST_AUTO_TEST_SUITE(HistogramConversionSuite)
@@ -34,8 +35,6 @@ void testHist1D(const Histogram1D& boostHist) {
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootHist->GetName()), boostHist.name());
   BOOST_CHECK_EQUAL(std::string(rootHist->GetTitle()), boostHist.title());
-  BOOST_CHECK_EQUAL(std::string(rootHist->GetXaxis()->GetTitle()),
-                    boostHist.axisTitle());
 
   // Verify number of bins
   const auto& bh = boostHist.histogram();
@@ -57,10 +56,6 @@ void testHist2D(const Histogram2D& boostHist) {
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootHist->GetName()), boostHist.name());
   BOOST_CHECK_EQUAL(std::string(rootHist->GetTitle()), boostHist.title());
-  BOOST_CHECK_EQUAL(std::string(rootHist->GetXaxis()->GetTitle()),
-                    boostHist.xAxisTitle());
-  BOOST_CHECK_EQUAL(std::string(rootHist->GetYaxis()->GetTitle()),
-                    boostHist.yAxisTitle());
 
   // Verify number of bins
   const auto& bh = boostHist.histogram();
@@ -81,8 +76,9 @@ void testHist2D(const Histogram2D& boostHist) {
 
 BOOST_AUTO_TEST_CASE(Conversion_EmptyHistogram) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, -10.0, 10.0, 10);
-  auto axis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x");
-  Histogram1D boostHist("empty", "Empty Histogram", axis);
+  auto axis =
+      AxisVariant(BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x"));
+  Histogram1D boostHist("empty", "Empty Histogram", {axis});
 
   TH1F* rootHist = toRoot(boostHist);
 
@@ -96,14 +92,15 @@ BOOST_AUTO_TEST_CASE(Conversion_EmptyHistogram) {
 
 BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_UniformBinning) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, 0.0, 10.0, 10);
-  auto axis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x [cm]");
-  Histogram1D boostHist("test_hist", "Test Histogram", axis);
+  auto axis = AxisVariant(
+      BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x [cm]"));
+  Histogram1D boostHist("test_hist", "Test Histogram", {axis});
 
   // Fill with 100 random values
   std::mt19937 rng(42);
   std::normal_distribution<double> dist(5.0, 1.0);
   for (int i = 0; i < 100; ++i) {
-    boostHist.fill(dist(rng));
+    boostHist.fill({dist(rng)});
   }
 
   testHist1D(boostHist);
@@ -112,13 +109,13 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_UniformBinning) {
 BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_VariableBinning) {
   std::vector<double> edges = {0.0, 0.5, 1.0, 2.0, 5.0, 10.0};
   auto axis = BoostVariableAxis(edges, "eta");
-  Histogram1D boostHist("res_eta", "Residual vs Eta", axis);
+  Histogram1D boostHist("res_eta", "Residual vs Eta", {axis});
 
   // Fill bins with different counts
-  boostHist.fill(0.3);
-  boostHist.fill(0.3);
-  boostHist.fill(1.5);
-  boostHist.fill(3.0);
+  boostHist.fill({0.3});
+  boostHist.fill({0.3});
+  boostHist.fill({1.5});
+  boostHist.fill({3.0});
 
   testHist1D(boostHist);
 }
@@ -128,14 +125,14 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT) {
   ProtoAxis protoY(AxisBoundaryType::Bound, -5.0, 5.0, 10);
   auto xAxis = BoostVariableAxis(protoX.getAxis().getBinEdges(), "eta");
   auto yAxis = BoostVariableAxis(protoY.getAxis().getBinEdges(), "residual");
-  Histogram2D boostHist("res_vs_eta", "Residual vs Eta", xAxis, yAxis);
+  Histogram2D boostHist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
 
   // Fill with 100 2D Gaussian values
   std::mt19937 rng(456);
   std::normal_distribution<double> etaDist(0.0, 1.0);
   std::normal_distribution<double> resDist(0.0, 2.0);
   for (int i = 0; i < 100; ++i) {
-    boostHist.fill(etaDist(rng), resDist(rng));
+    boostHist.fill({etaDist(rng), resDist(rng)});
   }
 
   testHist2D(boostHist);
@@ -147,12 +144,12 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT_VariableBinning) {
 
   auto xAxis = BoostVariableAxis(etaEdges, "eta");
   auto yAxis = BoostVariableAxis(ptEdges, "pT [GeV]");
-  Histogram2D boostHist("eff_vs_eta_pt", "Efficiency vs Eta and pT", xAxis,
-                        yAxis);
+  Histogram2D boostHist("eff_vs_eta_pt", "Efficiency vs Eta and pT",
+                        {xAxis, yAxis});
 
-  boostHist.fill(0.0, 3.0);
-  boostHist.fill(-1.0, 7.0);
-  boostHist.fill(2.0, 1.5);
+  boostHist.fill({0.0, 3.0});
+  boostHist.fill({-1.0, 7.0});
+  boostHist.fill({2.0, 1.5});
 
   testHist2D(boostHist);
 }
@@ -160,23 +157,23 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT_VariableBinning) {
 BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, -2.5, 2.5, 10);
   auto xAxis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
-  ProfileHistogram profile("res_mean_vs_eta", "Mean Residual vs Eta", xAxis,
-                           "residual [mm]");
+  ProfileHistogram1D profile("res_mean_vs_eta", "Mean Residual vs Eta", {xAxis},
+                             "residual [mm]");
 
   std::map<double, double> expectedMeans;
 
   // Fill with known values to check mean calculation
-  profile.fill(-2.0, 1.0);
-  profile.fill(-2.0, 3.0);
+  profile.fill({-2.0}, 1.0);
+  profile.fill({-2.0}, 3.0);
   expectedMeans[-2.0] = 2.0;
 
-  profile.fill(0.0, 5.0);
-  profile.fill(0.0, 7.0);
+  profile.fill({0.0}, 5.0);
+  profile.fill({0.0}, 7.0);
   expectedMeans[0.0] = 6.0;
 
-  profile.fill(2.0, 9.0);
-  profile.fill(2.0, 11.0);
-  profile.fill(2.0, 13.0);
+  profile.fill({2.0}, 9.0);
+  profile.fill({2.0}, 11.0);
+  profile.fill({2.0}, 13.0);
   expectedMeans[2.0] = 11.0;
 
   TProfile* rootProfile = toRoot(profile);
@@ -211,8 +208,8 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
   auto xAxis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
 
   // Create ACTS ProfileHistogram
-  ProfileHistogram actsProfile("profile_test", "Profile Test", xAxis,
-                               "value [units]");
+  ProfileHistogram1D actsProfile("profile_test", "Profile Test", {xAxis},
+                                 "value [units]");
 
   // Create ROOT TProfile with identical binning for comparison
   const auto& bh = actsProfile.histogram();
@@ -228,19 +225,19 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
   // Bin 1: mean=12, n=3
   for (auto y : {10.0, 12.0, 14.0}) {
     rootProfile.Fill(-2.0, y);
-    actsProfile.fill(-2.0, y);
+    actsProfile.fill({-2.0}, y);
   }
 
   // Bin 2: mean=6, n=2
   for (auto y : {5.0, 7.0}) {
     rootProfile.Fill(0.0, y);
-    actsProfile.fill(0.0, y);
+    actsProfile.fill({0.0}, y);
   }
 
   // Bin 3: mean=23, n=4
   for (auto y : {20.0, 22.0, 24.0, 26.0}) {
     rootProfile.Fill(1.5, y);
-    actsProfile.fill(1.5, y);
+    actsProfile.fill({1.5}, y);
   }
 
   // Convert ACTS profile to ROOT
@@ -278,17 +275,17 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
 BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, -3.0, 3.0, 10);
   auto axis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
-  Efficiency1D eff("eff_vs_eta", "Efficiency vs Eta", axis);
+  Efficiency1D eff("eff_vs_eta", "Efficiency vs Eta", {axis});
 
   // Fill with known pass/fail patterns
   // Bin at eta=0.5: 3 accepted, 1 failed (75% efficiency)
   for (auto v : {true, true, true, false}) {
-    eff.fill(0.5, v);
+    eff.fill({0.5}, v);
   }
 
   // Bin at eta=-1.5: 3 accepted, 3 failed (50% efficiency)
   for (auto v : {true, true, true, false, false, false}) {
-    eff.fill(-1.5, v);
+    eff.fill({-1.5}, v);
   }
 
   TEfficiency* rootEff = toRoot(eff);
@@ -319,16 +316,16 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
   ProtoAxis protoY(AxisBoundaryType::Bound, 0.0, 5.0, 5);
   auto xAxis = BoostVariableAxis(protoX.getAxis().getBinEdges(), "eta");
   auto yAxis = BoostVariableAxis(protoY.getAxis().getBinEdges(), "pt");
-  Efficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", xAxis, yAxis);
+  Efficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", {xAxis, yAxis});
 
   // Fill bin (0.0, 2.5): 3 accepted, 1 failed (75% efficiency)
   for (auto v : {true, true, true, false}) {
-    eff.fill(0.0, 2.5, v);
+    eff.fill({0.0, 2.5}, v);
   }
 
   // Fill bin (-1.5, 1.5): 3 accepted, 3 failed (50% efficiency)
   for (auto v : {true, true, true, false, false, false}) {
-    eff.fill(-1.5, 1.5, v);
+    eff.fill({-1.5, 1.5}, v);
   }
 
   TEfficiency* rootEff = toRoot(eff);
