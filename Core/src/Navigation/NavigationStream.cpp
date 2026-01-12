@@ -92,6 +92,8 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // If we have duplicates, we expect them to be close by in path length, so we
   // don't need to re-sort Remove duplicates on basis of the surface pointer
+
+  /// But but but... What about the surfaces with multiple intersections?
   auto nonUniqueRange = std::ranges::unique(
       m_candidates.begin(), m_candidates.end(),
       [](const NavigationTarget& a, const NavigationTarget& b) {

@@ -58,8 +58,6 @@ struct NavigationOptions {
 
   /// External surface identifier for which the boundary check is ignored
   std::vector<GeometryIdentifier> externalSurfaces = {};
-  /// Free surfaces are not part of the tracking geometry
-  std::unordered_map<const object_t*, GeometryIdentifier> freeSurfaces = {};
 
   /// The minimum distance for a surface to be considered
   double nearLimit = 0;
@@ -145,12 +143,16 @@ class Navigator {
 
     /// Externally provided surfaces - these are tried to be hit
     ExternalSurfaces externalSurfaces = {};
+    /// Free surfaces that are not part of the tracking geometry
+    std::vector<const Surface*> freeSurfaces{};
 
     /// Insert an external surface to be considered during navigation
     /// @param surface Surface that's appended to the navigation stream
     void insertExternalSurface(const Surface& surface) {
       if (surface.geometryId() != GeometryIdentifier{}) {
         externalSurfaces.push_back(surface.geometryId());
+      } else {
+        freeSurfaces.push_back(&surface);
       }
     }
 
@@ -693,7 +695,8 @@ class Navigator {
         ++state.navLayerIndex.value();
       }
       if (state.navLayerIndex.value() < state.navLayers.size()) {
-        ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
+        ACTS_VERBOSE(volInfo(state)
+                     << "Target set to next layer " << state.navLayer() << ".");
         return state.navLayer();
       } else {
         // This was the last layer, switch to boundaries
@@ -711,7 +714,8 @@ class Navigator {
         ++state.navBoundaryIndex.value();
       }
       if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
-        ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
+        ACTS_VERBOSE(volInfo(state) << "Target set to next boundary "
+                                    << state.navBoundary() << ".");
         return state.navBoundary();
       } else {
         // This was the last boundary, we have to leave the volume somehow,
@@ -742,7 +746,8 @@ class Navigator {
       ++state.navCandidateIndex.value();
     }
     if (state.navCandidateIndex.value() < state.navCandidates.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next candidate.");
+      ACTS_VERBOSE(volInfo(state) << "Target set to next candidate "
+                                  << state.navCandidate() << ".");
       return state.navCandidate();
     } else {
       ACTS_VERBOSE(volInfo(state)
@@ -793,7 +798,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "No volume to resolve candidates.");
       return;
     }
-    ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates.");
+    ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates");
 
     state.stream.reset();
     AppendOnlyNavigationStream appendOnly{state.stream};
@@ -802,6 +807,28 @@ class Navigator {
     args.direction = direction;
     state.currentVolume->initializeNavigationCandidates(
         state.options.geoContext, args, appendOnly, logger());
+
+    // Add external surfaces from the volume as extra candidates
+    if (!state.options.externalSurfaces.empty()) {
+      /// @todo How do we resolve multiple subvolumes with the same
+      ///       volume field but different extra fields?
+      const auto volId = state.currentVolume->geometryId().volume();
+      std::ranges::for_each(
+          state.options.externalSurfaces, [&](const GeometryIdentifier& extId) {
+            if (extId.volume() != volId) {
+              return;
+            }
+            const Surface* extSurface =
+                m_cfg.trackingGeometry->findSurface(extId);
+            assert(extSurface != nullptr);
+
+            ACTS_VERBOSE(volInfo(state)
+                         << " Add external surface candidate " << extId);
+
+            appendOnly.addSurfaceCandidate(*extSurface,
+                                           BoundaryTolerance::Infinite());
+          });
+    }
 
     ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                                 << " navigation candidates.");
@@ -812,7 +839,7 @@ class Navigator {
 
     ACTS_VERBOSE(volInfo(state)
                  << "Now " << state.stream.candidates().size()
-                 << " navigation candidates after initialization");
+                 << " navigation candidates after initialization.");
 
     state.navCandidates.clear();
 
@@ -820,17 +847,16 @@ class Navigator {
       if (!detail::checkPathLength(candidate.intersection().pathLength(),
                                    state.options.nearLimit,
                                    state.options.farLimit, logger())) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Skip candidate " << candidate
+                     << " as it's outside the user defined path limits.");
         continue;
       }
-
-      state.navCandidates.emplace_back(candidate);
+      ACTS_VERBOSE(volInfo(state)
+                   << " Add new candidate from stream " << candidate << ".");
+      state.navCandidates.emplace_back(std::move(candidate));
     }
-
-    // Sort the candidates with the path length
-    std::ranges::sort(state.navCandidates, [](const auto& a, const auto& b) {
-      return a.intersection().pathLength() < b.intersection().pathLength();
-    });
-
+    state.stream.candidates().clear();
     // Print the navigation candidates
 
     if (logger().doPrint(Logging::VERBOSE)) {
@@ -1048,9 +1074,13 @@ class Navigator {
  private:
   template <typename propagator_state_t>
   std::string volInfo(const propagator_state_t& state) const {
-    return (state.currentVolume != nullptr ? state.currentVolume->volumeName()
-                                           : "No Volume") +
-           " | ";
+    if (state.currentVolume == nullptr) {
+      return "No volume |";
+    }
+    std::stringstream sstr{};
+    sstr << state.currentVolume->volumeName() << " ("
+         << state.currentVolume->geometryId() << ") | ";
+    return sstr.str();
   }
 
   const Logger& logger() const { return *m_logger; }
