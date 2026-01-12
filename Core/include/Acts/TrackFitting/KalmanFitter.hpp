@@ -453,7 +453,7 @@ class KalmanFitter {
       const bool surfaceHasMaterial = surface->surfaceMaterial() != nullptr;
 
       // Try to find the surface in the measurement surfaces
-      const auto sourceLinkIt = inputMeasurements.find(&surface);
+      const auto sourceLinkIt = inputMeasurements.find(surface);
       if (sourceLinkIt != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
@@ -695,7 +695,7 @@ class KalmanFitter {
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surface->geometryId());
+        propagatorOptions.navigation.insertExternalSurface(*surface);
       }
     } else {
       assert(sSequence != nullptr &&
