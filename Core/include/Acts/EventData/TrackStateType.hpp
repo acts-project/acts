@@ -21,6 +21,12 @@
 
 namespace Acts {
 
+/// Enumeration of track state flags.
+///
+/// The values define the bit positions in the underlying storage. The user may
+/// define custom flags starting from bit position `NumFlags` but it is
+/// recommended to start from bit position 16 or in reverse from 63 to avoid
+/// conflicts with future additions.
 enum class TrackStateFlag {
   MeasurementFlag
   [[deprecated("Replaced by HasMeasurement; but you may want to use "
@@ -43,18 +49,31 @@ enum class TrackStateFlag {
                "hasNoExpectedHit()/setHasNoExpectedHit() instead")]] = 7,
   NumTrackStateFlags [[deprecated("Replaced by NumFlags")]] = 8,
 
+  /// Indicates that the track state has an associated measurement.
+  /// Note that an outlier also has a measurement.
   HasMeasurement = 0,
+  /// Indicates that the track state has associated parameters.
   HasParameters = 1,
+  /// Indicates that the track state has an outlier measurement.
   IsOutlier = 2,
+  /// Indicates that the track state has a hole (missing measurement).
   IsHole = 3,
+  /// Indicates that the track state has associated material.
   HasMaterial = 4,
+  /// Indicates that the track state has a shared hit measurement.
   IsSharedHit = 5,
+  /// Indicates that the track state has a split hit measurement.
   IsSplitHit = 6,
+  /// Indicates that the track state has no expected hit.
   HasNoExpectedHit = 7,
+  /// Number of defined flags.
   NumFlags = 8
 };
 
-template <typename Derived, bool ReadOnly = false>
+/// CRTP base class for @c TrackStateType and @c TrackStateTypeMap
+/// @tparam Derived The derived class
+/// @tparam ReadOnly Whether the derived class is read-only
+template <typename Derived, bool ReadOnly>
 class TrackStateTypeBase {
  public:
   /// Type alias for underlying raw data type
@@ -67,6 +86,7 @@ class TrackStateTypeBase {
 
   using enum TrackStateFlag;
 
+  /// Assigns the flags from another TrackStateTypeBase
   template <typename DerivedOther, bool ReadOnlyOther>
   Derived operator=(
       const TrackStateTypeBase<DerivedOther, ReadOnlyOther>& other)
@@ -76,18 +96,45 @@ class TrackStateTypeBase {
     return self();
   }
 
+  /// Checks if the track state has parameters
+  /// @return true if parameters are present
   bool hasParameters() const { return test(HasParameters); }
+  /// Checks if the track state has material
+  /// @note use isMaterial() to check for a pure material state
+  /// @return true if material is present
   bool hasMaterial() const { return test(HasMaterial); }
+  /// Checks if the track state **has** a measurement
+  /// @note use isMeasurement() to check for a pure measurement state
+  /// @return true if a measurement is present
   bool hasMeasurement() const { return test(HasMeasurement); }
+  /// Checks if the track state **is** a pure material state
+  /// @note use hasMaterial() to check for the presence of material
+  /// @return true if it is a pure material state
   bool isMaterial() const { return test(HasMaterial) && !test(HasMeasurement); }
+  /// Checks if the track state **is** a pure measurement state
+  /// @note use hasMeasurement() to check for the presence of a measurement
+  /// @return true if it is a pure measurement state
   bool isMeasurement() const {
     return test(HasMeasurement) && !test(IsOutlier);
   }
+  /// Checks if the track state is an outlier
+  /// @return true if it is an outlier
   bool isOutlier() const { return test(IsOutlier); }
+  /// Checks if the track state is a hole
+  /// @return true if it is a hole
   bool isHole() const { return test(IsHole); }
+  /// Checks if the track state has a shared hit
+  /// @return true if it has a shared hit
   bool isSharedHit() const { return test(IsSharedHit); }
+  /// Checks if the track state has a split hit
+  /// @return true if it has a split hit
   bool isSplitHit() const { return test(IsSplitHit); }
+  /// Checks if the track state has no expected hit
+  /// @return true if it has no expected hit
   bool hasNoExpectedHit() const { return test(HasNoExpectedHit); }
+  /// Sets whether the track state has parameters
+  /// @param value the value to set
+  /// @return self-reference for chaining
   Derived& setHasParameters(bool value = true)
     requires(!ReadOnly)
   {
@@ -95,6 +142,9 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+  /// Sets whether the track state has material
+  /// @param value the value to set
+  /// @return self-reference for chaining
   Derived& setHasMaterial(bool value = true)
     requires(!ReadOnly)
   {
@@ -102,6 +152,9 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+  /// Sets whether the track state has a measurement
+  /// @param value the value to set
+  /// @return self-reference for chaining
   Derived& setHasMeasurement(bool value = true)
     requires(!ReadOnly)
   {
@@ -109,6 +162,8 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+  /// Sets the track state to be a pure material state
+  /// @return self-reference for chaining
   Derived& setIsMaterial()
     requires(!ReadOnly)
   {
@@ -122,6 +177,8 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+  /// Sets the track state to be a pure measurement state
+  /// @return self-reference for chaining
   Derived& setIsMeasurement()
     requires(!ReadOnly)
   {
@@ -132,6 +189,8 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+  /// Sets the track state to be an outlier
+  /// @return self-reference for chaining
   Derived& setIsOutlier()
     requires(!ReadOnly)
   {
@@ -142,6 +201,8 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+  /// Sets the track state to be a hole
+  /// @return self-reference for chaining
   Derived& setIsHole()
     requires(!ReadOnly)
   {
@@ -152,6 +213,8 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+  /// Sets the track state to be a shared hit
+  /// @return self-reference for chaining
   Derived& setIsSharedHit()
     requires(!ReadOnly)
   {
@@ -161,6 +224,8 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+  /// Sets the track state to be a split hit
+  /// @return self-reference for chaining
   Derived& setIsSplitHit()
     requires(!ReadOnly)
   {
@@ -170,6 +235,8 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+  /// Sets the track state to have no expected hit
+  /// @return self-reference for chaining
   Derived& setHasNoExpectedHit()
     requires(!ReadOnly)
   {
@@ -183,6 +250,7 @@ class TrackStateTypeBase {
     return self();
   }
 
+  /// Resets all flags to zero
   void reset()
     requires(!ReadOnly)
   {
@@ -222,11 +290,14 @@ class TrackStateTypeBase {
     return os;
   }
 
-  /// Return if the bit at position @p pos is 1
+  /// Return if the bit at position @p pos is set
   /// @param pos the position of the bit to test
   /// @return if the bit at @p pos is one or not
   bool test(std::size_t pos) const { return bits().test(pos); }
 
+  /// Return if the bit for @p flag is set
+  /// @param flag the flag to test
+  /// @return if the bit for @p flag is one or not
   bool test(TrackStateFlag flag) const { return test(toUnderlying(flag)); }
 
   /// Change the value of the bit at position @p pos to @p value.
@@ -238,6 +309,9 @@ class TrackStateTypeBase {
     self().raw() = bits().set(pos, value).to_ullong();
   }
 
+  /// Change the value of the bit for @p flag to @p value.
+  /// @param flag the flag to change
+  /// @param value the value to change the bit to
   void setUnchecked(TrackStateFlag flag, bool value = true)
     requires(!ReadOnly)
   {
@@ -248,8 +322,11 @@ class TrackStateTypeBase {
   Derived& self() { return static_cast<Derived&>(*this); }
   const Derived& self() const { return static_cast<const Derived&>(*this); }
 
+  /// Returns the bitset representation of the underlying raw data
+  /// @return the bitset representation
   bitset_type bits() const { return bitset_type(self().raw()); }
 
+  /// Asserts the consistency of the current flag combination
   void assertConsistency() const {
     assert(!(test(HasNoExpectedHit) &&
              (test(HasMeasurement) || test(IsOutlier) || test(IsHole) ||
@@ -266,9 +343,10 @@ class TrackStateTypeBase {
   }
 };
 
-class TrackStateType : public TrackStateTypeBase<TrackStateType> {
+/// @c TrackStateTypeBase captured by value.
+class TrackStateType : public TrackStateTypeBase<TrackStateType, false> {
  public:
-  using Base = TrackStateTypeBase<TrackStateType>;
+  using Base = TrackStateTypeBase<TrackStateType, false>;
 
   TrackStateType() = default;
   explicit TrackStateType(raw_type raw) : m_raw{raw} {
@@ -284,6 +362,8 @@ class TrackStateType : public TrackStateTypeBase<TrackStateType> {
   raw_type m_raw{0};
 };
 
+/// @c TrackStateTypeBase mapped to external storage.
+/// @tparam ReadOnly Whether the mapped storage is read-only
 template <bool ReadOnly>
 class TrackStateTypeMap
     : public TrackStateTypeBase<TrackStateTypeMap<ReadOnly>, ReadOnly> {
