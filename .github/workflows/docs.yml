@@ -108,7 +108,33 @@ jobs:
           base_link='https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}'
           link="$base_link/index.html"
           echo "📚 Docs preview available at: $link"
-u         echo "**📚 Documentation preview available [here]($link)**" >> $GITHUB_STEP_SUMMARY
+          echo "**📚 Documentation preview available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
           # prime cache
           (curl -L -m1 "$link" "$base_link/pr.json" > /dev/null 2>&1) || true
+
+      - name: Repository Dispatch
+        # Dispatch only if on a tag or on the main branch
+        if: >-
+          ${{
+            github.event_name == 'push' &&
+            (
+              github.ref_type == 'tag' ||
+              (github.ref_type == 'branch' && github.ref_name == 'main')
+            )
+          }}
+        uses: peter-evans/repository-dispatch@v4
+        with:
+          token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
+          repository: acts-project/acts-project.github.io
+          event-type: deploy_docs
+          client-payload: >-
+            {
+              "source_repo": "${{ github.repository }}",
+              "run_id": "${{ github.run_id }}",
+              "artifact_id": "${{ steps.artifact-upload-step.outputs.artifact-id }}",
+              "ref": "${{ github.ref }}",
+              "ref_type": "${{ github.ref_type }}",
+              "ref_name": "${{ github.ref_name }}",
+              "sha": "${{ github.sha }}"
+            }
