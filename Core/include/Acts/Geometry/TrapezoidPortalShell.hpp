@@ -31,7 +31,7 @@ class TrapezoidPortalShell : public PortalShellBase {
   /// nullptr if unset.
   /// @param face The face to retrieve the portal for
   /// @return The portal associated to the face
-  virtual std::shared_ptr<Portal> portalPtr(Face face) = 0;
+  virtual std::shared_ptr<Portal> portal(Face face) = 0;
 
   /// Set the portal associated to the given face.
   /// @param portal The portal to set
@@ -63,8 +63,8 @@ class SingleTrapezoidPortalShell : public TrapezoidPortalShell {
   /// @copydoc PortalShellBase::size
   std::size_t size() const override;
 
-  /// @copydoc TrapezoidPortalShell::portalPtr
-  std::shared_ptr<Portal> portalPtr(Face face) override;
+  /// @copydoc TrapezoidPortalShell::portal
+  std::shared_ptr<Portal> portal(Face face) override;
 
   /// @copydoc TrapezoidPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) override;

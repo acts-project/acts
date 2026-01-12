@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
 
   using enum CylinderVolumeBounds::Face;
 
-  const auto* pDisc = shell1.portalPtr(PositiveDisc).get();
+  const auto* pDisc = shell1.portal(PositiveDisc).get();
   BOOST_REQUIRE_NE(pDisc, nullptr);
   BOOST_CHECK_EQUAL(
       pDisc
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto* nDisc = shell1.portalPtr(NegativeDisc).get();
+  const auto* nDisc = shell1.portal(NegativeDisc).get();
   BOOST_REQUIRE_NE(nDisc, nullptr);
   BOOST_CHECK_EQUAL(nDisc
                         ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       &cyl1);
 
-  const auto* oCyl = shell1.portalPtr(OuterCylinder).get();
+  const auto* oCyl = shell1.portal(OuterCylinder).get();
   BOOST_REQUIRE_NE(oCyl, nullptr);
   BOOST_CHECK_EQUAL(
       oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX())
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       &cyl1);
 
-  const auto* iCyl = shell1.portalPtr(InnerCylinder).get();
+  const auto* iCyl = shell1.portal(InnerCylinder).get();
   BOOST_REQUIRE_NE(iCyl, nullptr);
   BOOST_CHECK_EQUAL(
       iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, Vector3::UnitX())
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   SingleCylinderPortalShell shell2{cyl2};
   BOOST_CHECK_EQUAL(shell2.size(), 3);
 
-  pDisc = shell2.portalPtr(PositiveDisc).get();
+  pDisc = shell2.portal(PositiveDisc).get();
   BOOST_REQUIRE_NE(pDisc, nullptr);
   BOOST_CHECK_EQUAL(
       pDisc
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  nDisc = shell2.portalPtr(NegativeDisc).get();
+  nDisc = shell2.portal(NegativeDisc).get();
   BOOST_REQUIRE_NE(nDisc, nullptr);
   BOOST_CHECK_EQUAL(nDisc
                         ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       &cyl2);
 
-  oCyl = shell2.portalPtr(OuterCylinder).get();
+  oCyl = shell2.portal(OuterCylinder).get();
   BOOST_REQUIRE_NE(oCyl, nullptr);
   BOOST_CHECK_EQUAL(
       oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX())
@@ -157,13 +157,13 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       &cyl2);
 
-  iCyl = shell2.portalPtr(InnerCylinder).get();
+  iCyl = shell2.portal(InnerCylinder).get();
   BOOST_CHECK_EQUAL(iCyl, nullptr);
 
   SingleCylinderPortalShell shell3{cyl3};
   BOOST_CHECK_EQUAL(shell3.size(), 6);
 
-  pDisc = shell3.portalPtr(PositiveDisc).get();
+  pDisc = shell3.portal(PositiveDisc).get();
   BOOST_REQUIRE_NE(pDisc, nullptr);
   BOOST_CHECK_EQUAL(
       pDisc
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  nDisc = shell3.portalPtr(NegativeDisc).get();
+  nDisc = shell3.portal(NegativeDisc).get();
   BOOST_REQUIRE_NE(nDisc, nullptr);
   BOOST_CHECK_EQUAL(nDisc
                         ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       &cyl3);
 
-  oCyl = shell3.portalPtr(OuterCylinder).get();
+  oCyl = shell3.portal(OuterCylinder).get();
   BOOST_REQUIRE_NE(oCyl, nullptr);
   BOOST_CHECK_EQUAL(
       oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX())
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       &cyl3);
 
-  iCyl = shell3.portalPtr(InnerCylinder).get();
+  iCyl = shell3.portal(InnerCylinder).get();
   BOOST_REQUIRE_NE(iCyl, nullptr);
   BOOST_CHECK_EQUAL(
       iCyl->resolveVolume(gctx, Vector3{30_mm, 0_mm, 10_mm}, Vector3::UnitX())
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
     return Vector3{r * std::cos(angle), r * std::sin(angle), z};
   };
 
-  const auto* nPhi = shell3.portalPtr(NegativePhiPlane).get();
+  const auto* nPhi = shell3.portal(NegativePhiPlane).get();
   BOOST_REQUIRE_NE(nPhi, nullptr);
   Vector3 point = anglePoint(-45_degree, 35_mm, 10_mm);
   Vector3 dir = Vector3::UnitZ().cross(point).normalized();
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, dir).value(), nullptr);
   BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, idir).value(), &cyl3);
 
-  const auto* pPhi = shell3.portalPtr(PositivePhiPlane).get();
+  const auto* pPhi = shell3.portal(PositivePhiPlane).get();
   BOOST_REQUIRE_NE(pPhi, nullptr);
   point = anglePoint(45_degree, 35_mm, 10_mm);
   dir = Vector3::UnitZ().cross(point).normalized();
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   SingleCylinderPortalShell shell4{cyl4};
   BOOST_CHECK_EQUAL(shell4.size(), 5);
 
-  pDisc = shell4.portalPtr(PositiveDisc).get();
+  pDisc = shell4.portal(PositiveDisc).get();
   BOOST_REQUIRE_NE(pDisc, nullptr);
   BOOST_CHECK_EQUAL(
       pDisc
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  nDisc = shell4.portalPtr(NegativeDisc).get();
+  nDisc = shell4.portal(NegativeDisc).get();
   BOOST_REQUIRE_NE(nDisc, nullptr);
   BOOST_CHECK_EQUAL(nDisc
                         ->resolveVolume(gctx, Vector3{35_mm, 0_mm, -100_mm},
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       &cyl4);
 
-  oCyl = shell4.portalPtr(OuterCylinder).get();
+  oCyl = shell4.portal(OuterCylinder).get();
   BOOST_REQUIRE_NE(oCyl, nullptr);
   BOOST_CHECK_EQUAL(
       oCyl->resolveVolume(gctx, Vector3{40_mm, 0_mm, 10_mm}, Vector3::UnitX())
@@ -269,10 +269,10 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       &cyl4);
 
-  iCyl = shell4.portalPtr(InnerCylinder).get();
+  iCyl = shell4.portal(InnerCylinder).get();
   BOOST_CHECK_EQUAL(iCyl, nullptr);
 
-  nPhi = shell4.portalPtr(NegativePhiPlane).get();
+  nPhi = shell4.portal(NegativePhiPlane).get();
   BOOST_REQUIRE_NE(nPhi, nullptr);
   point = anglePoint(-45_degree, 35_mm, 10_mm);
   dir = Vector3::UnitZ().cross(point).normalized();
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, dir).value(), nullptr);
   BOOST_CHECK_EQUAL(nPhi->resolveVolume(gctx, point, idir).value(), &cyl4);
 
-  pPhi = shell4.portalPtr(PositivePhiPlane).get();
+  pPhi = shell4.portal(PositivePhiPlane).get();
   BOOST_REQUIRE_NE(pPhi, nullptr);
   point = anglePoint(45_degree, 35_mm, 10_mm);
   dir = Vector3::UnitZ().cross(point).normalized();
@@ -307,10 +307,10 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 
   SingleCylinderPortalShell shell{vol};
 
-  const auto iCyl = shell.portalPtr(InnerCylinder);
-  const auto pDisc = shell.portalPtr(PositiveDisc);
-  auto oCyl = shell.portalPtr(OuterCylinder);
-  auto nDisc = shell.portalPtr(NegativeDisc);
+  const auto iCyl = shell.portal(InnerCylinder);
+  const auto pDisc = shell.portal(PositiveDisc);
+  auto oCyl = shell.portal(OuterCylinder);
+  auto nDisc = shell.portal(NegativeDisc);
 
   // Setting new outer cylinder
   BOOST_REQUIRE_NE(oCyl, nullptr);
@@ -323,12 +323,12 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   auto portal2 =
       std::make_shared<Portal>(Direction::OppositeNormal(), std::move(grid));
   shell.setPortal(portal2, OuterCylinder);
-  BOOST_CHECK_EQUAL(shell.portalPtr(OuterCylinder), portal2);
+  BOOST_CHECK_EQUAL(shell.portal(OuterCylinder), portal2);
 
   // Other portals should stay the same
-  BOOST_CHECK_EQUAL(shell.portalPtr(InnerCylinder), iCyl);
-  BOOST_CHECK_EQUAL(shell.portalPtr(PositiveDisc), pDisc);
-  BOOST_CHECK_EQUAL(shell.portalPtr(NegativeDisc), nDisc);
+  BOOST_CHECK_EQUAL(shell.portal(InnerCylinder), iCyl);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveDisc), pDisc);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeDisc), nDisc);
 
   // Setting new negative disc
   BOOST_REQUIRE_NE(nDisc, nullptr);
@@ -341,12 +341,12 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   auto portal3 =
       std::make_shared<Portal>(Direction::AlongNormal(), std::move(grid));
   shell.setPortal(portal3, NegativeDisc);
-  BOOST_CHECK_EQUAL(shell.portalPtr(NegativeDisc), portal3);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeDisc), portal3);
 
   // Other portals should stay the same
-  BOOST_CHECK_EQUAL(shell.portalPtr(OuterCylinder), portal2);
-  BOOST_CHECK_EQUAL(shell.portalPtr(InnerCylinder), iCyl);
-  BOOST_CHECK_EQUAL(shell.portalPtr(PositiveDisc), pDisc);
+  BOOST_CHECK_EQUAL(shell.portal(OuterCylinder), portal2);
+  BOOST_CHECK_EQUAL(shell.portal(InnerCylinder), iCyl);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveDisc), pDisc);
 }
 
 BOOST_AUTO_TEST_SUITE(CylinderStack)
@@ -364,34 +364,30 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     SingleCylinderPortalShell shell1{vol1};
     SingleCylinderPortalShell shell2{vol2};
 
-    BOOST_CHECK_NE(shell1.portalPtr(PositiveDisc),
-                   shell2.portalPtr(NegativeDisc));
+    BOOST_CHECK_NE(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
 
     CylinderStackPortalShell stack{
         gctx, {&shell1, &shell2}, AxisDirection::AxisZ};
     BOOST_CHECK_EQUAL(stack.size(), 4);
 
-    const auto iCyl = stack.portalPtr(InnerCylinder);
-    BOOST_CHECK_EQUAL(shell1.portalPtr(InnerCylinder), iCyl);
-    BOOST_CHECK_EQUAL(shell2.portalPtr(InnerCylinder), iCyl);
+    const auto iCyl = stack.portal(InnerCylinder);
+    BOOST_CHECK_EQUAL(shell1.portal(InnerCylinder), iCyl);
+    BOOST_CHECK_EQUAL(shell2.portal(InnerCylinder), iCyl);
 
-    const auto oCyl = stack.portalPtr(OuterCylinder);
-    BOOST_CHECK_EQUAL(shell1.portalPtr(OuterCylinder), oCyl);
-    BOOST_CHECK_EQUAL(shell2.portalPtr(OuterCylinder), oCyl);
+    const auto oCyl = stack.portal(OuterCylinder);
+    BOOST_CHECK_EQUAL(shell1.portal(OuterCylinder), oCyl);
+    BOOST_CHECK_EQUAL(shell2.portal(OuterCylinder), oCyl);
 
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositiveDisc),
-                      shell2.portalPtr(PositiveDisc));
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativeDisc),
-                      shell1.portalPtr(NegativeDisc));
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativePhiPlane), nullptr);
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(PositiveDisc), shell2.portal(PositiveDisc));
+    BOOST_CHECK_EQUAL(stack.portal(NegativeDisc), shell1.portal(NegativeDisc));
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
 
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositivePhiPlane), nullptr);
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositivePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
 
     // Disc portals have been fused
-    BOOST_CHECK_EQUAL(shell1.portalPtr(PositiveDisc),
-                      shell2.portalPtr(NegativeDisc));
+    BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
 
@@ -412,37 +408,33 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     SingleCylinderPortalShell shell1{vol1};
     SingleCylinderPortalShell shell2{vol2};
 
-    BOOST_CHECK_EQUAL(shell1.portalPtr(InnerCylinder), nullptr);
-    BOOST_CHECK_EQUAL(shell2.portalPtr(InnerCylinder), nullptr);
+    BOOST_CHECK_EQUAL(shell1.portal(InnerCylinder), nullptr);
+    BOOST_CHECK_EQUAL(shell2.portal(InnerCylinder), nullptr);
 
-    BOOST_CHECK_NE(shell1.portalPtr(PositiveDisc),
-                   shell2.portalPtr(NegativeDisc));
+    BOOST_CHECK_NE(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
 
     CylinderStackPortalShell stack{
         gctx, {&shell1, &shell2}, AxisDirection::AxisZ};
     BOOST_CHECK_EQUAL(stack.size(), 3);
 
     // Disc portals have been fused
-    BOOST_CHECK_EQUAL(shell1.portalPtr(PositiveDisc),
-                      shell2.portalPtr(NegativeDisc));
+    BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
 
-    const auto iCyl = stack.portalPtr(InnerCylinder);
+    const auto iCyl = stack.portal(InnerCylinder);
     BOOST_CHECK_EQUAL(iCyl, nullptr);
 
-    const auto oCyl = stack.portalPtr(OuterCylinder);
-    BOOST_CHECK_EQUAL(shell1.portalPtr(OuterCylinder), oCyl);
-    BOOST_CHECK_EQUAL(shell2.portalPtr(OuterCylinder), oCyl);
+    const auto oCyl = stack.portal(OuterCylinder);
+    BOOST_CHECK_EQUAL(shell1.portal(OuterCylinder), oCyl);
+    BOOST_CHECK_EQUAL(shell2.portal(OuterCylinder), oCyl);
 
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositiveDisc),
-                      shell2.portalPtr(PositiveDisc));
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativeDisc),
-                      shell1.portalPtr(NegativeDisc));
+    BOOST_CHECK_EQUAL(stack.portal(PositiveDisc), shell2.portal(PositiveDisc));
+    BOOST_CHECK_EQUAL(stack.portal(NegativeDisc), shell1.portal(NegativeDisc));
 
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativePhiPlane), nullptr);
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
 
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositivePhiPlane), nullptr);
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositivePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
 
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
@@ -467,33 +459,32 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     SingleCylinderPortalShell shell1{vol1};
     SingleCylinderPortalShell shell2{vol2};
 
-    BOOST_CHECK_NE(shell1.portalPtr(OuterCylinder),
-                   shell2.portalPtr(InnerCylinder));
+    BOOST_CHECK_NE(shell1.portal(OuterCylinder), shell2.portal(InnerCylinder));
 
     CylinderStackPortalShell stack{
         gctx, {&shell1, &shell2}, AxisDirection::AxisR};
     BOOST_CHECK_EQUAL(stack.size(), 4);
 
     // Internal cylinder portals have been fused
-    BOOST_CHECK_EQUAL(shell1.portalPtr(OuterCylinder),
-                      shell2.portalPtr(InnerCylinder));
+    BOOST_CHECK_EQUAL(shell1.portal(OuterCylinder),
+                      shell2.portal(InnerCylinder));
 
-    const auto nDisc = stack.portalPtr(NegativeDisc);
-    const auto pDisc = stack.portalPtr(PositiveDisc);
+    const auto nDisc = stack.portal(NegativeDisc);
+    const auto pDisc = stack.portal(PositiveDisc);
 
-    BOOST_CHECK_EQUAL(shell1.portalPtr(NegativeDisc), nDisc);
-    BOOST_CHECK_EQUAL(shell2.portalPtr(NegativeDisc), nDisc);
-    BOOST_CHECK_EQUAL(shell1.portalPtr(PositiveDisc), pDisc);
-    BOOST_CHECK_EQUAL(shell2.portalPtr(PositiveDisc), pDisc);
-    BOOST_CHECK_EQUAL(stack.portalPtr(InnerCylinder),
-                      shell1.portalPtr(InnerCylinder));
-    BOOST_CHECK_EQUAL(stack.portalPtr(OuterCylinder),
-                      shell2.portalPtr(OuterCylinder));
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativePhiPlane), nullptr);
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(shell1.portal(NegativeDisc), nDisc);
+    BOOST_CHECK_EQUAL(shell2.portal(NegativeDisc), nDisc);
+    BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), pDisc);
+    BOOST_CHECK_EQUAL(shell2.portal(PositiveDisc), pDisc);
+    BOOST_CHECK_EQUAL(stack.portal(InnerCylinder),
+                      shell1.portal(InnerCylinder));
+    BOOST_CHECK_EQUAL(stack.portal(OuterCylinder),
+                      shell2.portal(OuterCylinder));
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
 
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositivePhiPlane), nullptr);
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositivePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
 
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
@@ -515,33 +506,32 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     SingleCylinderPortalShell shell1{vol1};
     SingleCylinderPortalShell shell2{vol2};
 
-    BOOST_CHECK_EQUAL(shell1.portalPtr(InnerCylinder), nullptr);
-    BOOST_CHECK_NE(shell1.portalPtr(OuterCylinder),
-                   shell2.portalPtr(InnerCylinder));
+    BOOST_CHECK_EQUAL(shell1.portal(InnerCylinder), nullptr);
+    BOOST_CHECK_NE(shell1.portal(OuterCylinder), shell2.portal(InnerCylinder));
 
     CylinderStackPortalShell stack{
         gctx, {&shell1, &shell2}, AxisDirection::AxisR};
     BOOST_CHECK_EQUAL(stack.size(), 4);
 
     // Internal cylinder portals have been fused
-    BOOST_CHECK_EQUAL(shell1.portalPtr(OuterCylinder),
-                      shell2.portalPtr(InnerCylinder));
+    BOOST_CHECK_EQUAL(shell1.portal(OuterCylinder),
+                      shell2.portal(InnerCylinder));
 
-    const auto nDisc = stack.portalPtr(NegativeDisc);
-    const auto pDisc = stack.portalPtr(PositiveDisc);
-    BOOST_CHECK_EQUAL(shell1.portalPtr(NegativeDisc), nDisc);
-    BOOST_CHECK_EQUAL(shell2.portalPtr(NegativeDisc), nDisc);
-    BOOST_CHECK_EQUAL(shell1.portalPtr(PositiveDisc), pDisc);
-    BOOST_CHECK_EQUAL(shell2.portalPtr(PositiveDisc), pDisc);
-    BOOST_CHECK_EQUAL(stack.portalPtr(InnerCylinder), nullptr);
-    BOOST_CHECK_EQUAL(stack.portalPtr(OuterCylinder),
-                      shell2.portalPtr(OuterCylinder));
+    const auto nDisc = stack.portal(NegativeDisc);
+    const auto pDisc = stack.portal(PositiveDisc);
+    BOOST_CHECK_EQUAL(shell1.portal(NegativeDisc), nDisc);
+    BOOST_CHECK_EQUAL(shell2.portal(NegativeDisc), nDisc);
+    BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), pDisc);
+    BOOST_CHECK_EQUAL(shell2.portal(PositiveDisc), pDisc);
+    BOOST_CHECK_EQUAL(stack.portal(InnerCylinder), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(OuterCylinder),
+                      shell2.portal(OuterCylinder));
 
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativePhiPlane), nullptr);
-    BOOST_CHECK_EQUAL(stack.portalPtr(NegativePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(NegativePhiPlane), nullptr);
 
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositivePhiPlane), nullptr);
-    BOOST_CHECK_EQUAL(stack.portalPtr(PositivePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
+    BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
 
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
@@ -620,7 +610,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
   auto lookup = [](auto& shell, CylinderPortalShell::Face face,
                    Vector3 position,
                    Vector3 direction) -> const TrackingVolume* {
-    const auto portal = shell.portalPtr(face);
+    const auto portal = shell.portal(face);
     BOOST_REQUIRE_NE(portal, nullptr);
     return portal->resolveVolume(gctx, position, direction).value();
   };
@@ -733,31 +723,27 @@ BOOST_AUTO_TEST_CASE(Fill) {
 
   using enum CylinderVolumeBounds::Face;
   BOOST_CHECK_EQUAL(
-      shell.portalPtr(OuterCylinder)->getLink(Direction::AlongNormal()),
+      shell.portal(OuterCylinder)->getLink(Direction::AlongNormal()), nullptr);
+  BOOST_CHECK_EQUAL(
+      shell.portal(InnerCylinder)->getLink(Direction::OppositeNormal()),
       nullptr);
   BOOST_CHECK_EQUAL(
-      shell.portalPtr(InnerCylinder)->getLink(Direction::OppositeNormal()),
-      nullptr);
+      shell.portal(PositiveDisc)->getLink(Direction::AlongNormal()), nullptr);
   BOOST_CHECK_EQUAL(
-      shell.portalPtr(PositiveDisc)->getLink(Direction::AlongNormal()),
-      nullptr);
-  BOOST_CHECK_EQUAL(
-      shell.portalPtr(NegativeDisc)->getLink(Direction::OppositeNormal()),
+      shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal()),
       nullptr);
 
   shell.fill(cyl2);
 
+  BOOST_CHECK_NE(shell.portal(OuterCylinder)->getLink(Direction::AlongNormal()),
+                 nullptr);
   BOOST_CHECK_NE(
-      shell.portalPtr(OuterCylinder)->getLink(Direction::AlongNormal()),
+      shell.portal(InnerCylinder)->getLink(Direction::OppositeNormal()),
       nullptr);
+  BOOST_CHECK_NE(shell.portal(PositiveDisc)->getLink(Direction::AlongNormal()),
+                 nullptr);
   BOOST_CHECK_NE(
-      shell.portalPtr(InnerCylinder)->getLink(Direction::OppositeNormal()),
-      nullptr);
-  BOOST_CHECK_NE(
-      shell.portalPtr(PositiveDisc)->getLink(Direction::AlongNormal()),
-      nullptr);
-  BOOST_CHECK_NE(
-      shell.portalPtr(NegativeDisc)->getLink(Direction::OppositeNormal()),
+      shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal()),
       nullptr);
 }
 

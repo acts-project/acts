@@ -25,7 +25,7 @@ namespace Acts {
 void CylinderPortalShell::fill(TrackingVolume& volume) {
   for (Face face : {PositiveDisc, NegativeDisc, OuterCylinder, InnerCylinder,
                     NegativePhiPlane, PositivePhiPlane}) {
-    const auto& portalAtFace = portalPtr(face);
+    const auto& portalAtFace = portal(face);
     if (portalAtFace != nullptr) {
       portalAtFace->fill(volume);
       volume.addPortal(portalAtFace);
@@ -84,7 +84,7 @@ SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume)
   }
 }
 
-std::shared_ptr<Portal> SingleCylinderPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> SingleCylinderPortalShell::portal(Face face) {
   return m_portals.at(toUnderlying(face));
 }
 
@@ -151,9 +151,8 @@ CylinderStackPortalShell::CylinderStackPortalShell(
 
   auto merge = [&](Face face) {
     std::vector<std::shared_ptr<Portal>> portals;
-    std::ranges::transform(
-        m_shells, std::back_inserter(portals),
-        [face](auto* shell) { return shell->portalPtr(face); });
+    std::ranges::transform(m_shells, std::back_inserter(portals),
+                           [face](auto* shell) { return shell->portal(face); });
 
     auto merged = std::accumulate(
         std::next(portals.begin()), portals.end(), portals.front(),
@@ -182,7 +181,7 @@ CylinderStackPortalShell::CylinderStackPortalShell(
       ACTS_VERBOSE("Fusing " << shellA->label() << " and " << shellB->label());
 
       auto fused = std::make_shared<Portal>(Portal::fuse(
-          gctx, *shellA->portalPtr(faceA), *shellB->portalPtr(faceB), logger));
+          gctx, *shellA->portal(faceA), *shellB->portal(faceB), logger));
 
       assert(fused != nullptr && "Invalid fused portal");
       assert(fused->isValid() && "Fused portal is invalid");
@@ -242,17 +241,17 @@ std::size_t CylinderStackPortalShell::size() const {
   return m_hasInnerCylinder ? 4 : 3;
 }
 
-std::shared_ptr<Portal> CylinderStackPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> CylinderStackPortalShell::portal(Face face) {
   if (m_direction == AxisDirection::AxisR) {
     switch (face) {
       case NegativeDisc:
-        return m_shells.front()->portalPtr(NegativeDisc);
+        return m_shells.front()->portal(NegativeDisc);
       case PositiveDisc:
-        return m_shells.front()->portalPtr(PositiveDisc);
+        return m_shells.front()->portal(PositiveDisc);
       case OuterCylinder:
-        return m_shells.back()->portalPtr(OuterCylinder);
+        return m_shells.back()->portal(OuterCylinder);
       case InnerCylinder:
-        return m_shells.front()->portalPtr(InnerCylinder);
+        return m_shells.front()->portal(InnerCylinder);
       case NegativePhiPlane:
         [[fallthrough]];
       case PositivePhiPlane:
@@ -266,13 +265,13 @@ std::shared_ptr<Portal> CylinderStackPortalShell::portalPtr(Face face) {
   } else {
     switch (face) {
       case NegativeDisc:
-        return m_shells.front()->portalPtr(NegativeDisc);
+        return m_shells.front()->portal(NegativeDisc);
       case PositiveDisc:
-        return m_shells.back()->portalPtr(PositiveDisc);
+        return m_shells.back()->portal(PositiveDisc);
       case OuterCylinder:
         [[fallthrough]];
       case InnerCylinder:
-        return m_shells.front()->portalPtr(face);
+        return m_shells.front()->portal(face);
       case NegativePhiPlane:
         [[fallthrough]];
       case PositivePhiPlane:

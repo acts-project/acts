@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   using enum CuboidVolumeBounds::Face;
 
   // XY plane
-  const auto pXY = shell1.portalPtr(PositiveZFace);
+  const auto pXY = shell1.portal(PositiveZFace);
   BOOST_REQUIRE_NE(pXY, nullptr);
   BOOST_CHECK_EQUAL(
       pXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, 50_mm}, -Vector3::UnitZ())
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto nXY = shell1.portalPtr(NegativeZFace);
+  const auto nXY = shell1.portal(NegativeZFace);
   BOOST_REQUIRE_NE(nXY, nullptr);
   BOOST_CHECK_EQUAL(
       nXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, -50_mm}, -Vector3::UnitZ())
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       &cube);
 
   // YZ plane
-  const auto pYZ = shell1.portalPtr(PositiveXFace);
+  const auto pYZ = shell1.portal(PositiveXFace);
   BOOST_REQUIRE_NE(pYZ, nullptr);
   BOOST_CHECK_EQUAL(
       pYZ->resolveVolume(gctx, Vector3{30_mm, 10_mm, 30_mm}, -Vector3::UnitX())
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto nYZ = shell1.portalPtr(NegativeXFace);
+  const auto nYZ = shell1.portal(NegativeXFace);
   BOOST_REQUIRE_NE(nYZ, nullptr);
   BOOST_CHECK_EQUAL(
       nYZ->resolveVolume(gctx, Vector3{-30_mm, 10_mm, 30_mm}, -Vector3::UnitX())
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       &cube);
 
   // ZX plane
-  const auto pZX = shell1.portalPtr(PositiveYFace);
+  const auto pZX = shell1.portal(PositiveYFace);
   BOOST_REQUIRE_NE(pZX, nullptr);
   BOOST_CHECK_EQUAL(
       pZX->resolveVolume(gctx, Vector3{15_mm, 40_mm, -10_mm}, -Vector3::UnitY())
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto nZX = shell1.portalPtr(NegativeYFace);
+  const auto nZX = shell1.portal(NegativeYFace);
   BOOST_REQUIRE_NE(nZX, nullptr);
   BOOST_CHECK_EQUAL(nZX->resolveVolume(gctx, Vector3{15_mm, -40_mm, -10_mm},
                                        -Vector3::UnitY())
@@ -144,12 +144,12 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 
   SingleCuboidPortalShell shell{vol};
 
-  const auto pXY = shell.portalPtr(PositiveZFace);
-  const auto nXY = shell.portalPtr(NegativeZFace);
-  const auto nYZ = shell.portalPtr(NegativeXFace);
-  const auto pZX = shell.portalPtr(PositiveYFace);
-  auto pYZ = shell.portalPtr(PositiveXFace);
-  auto nZX = shell.portalPtr(NegativeYFace);
+  const auto pXY = shell.portal(PositiveZFace);
+  const auto nXY = shell.portal(NegativeZFace);
+  const auto nYZ = shell.portal(NegativeXFace);
+  const auto pZX = shell.portal(PositiveYFace);
+  auto pYZ = shell.portal(PositiveXFace);
+  auto nZX = shell.portal(NegativeYFace);
 
   // Setting new pYZ
   BOOST_REQUIRE_NE(pYZ, nullptr);
@@ -162,14 +162,14 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   auto portal2 =
       std::make_shared<Portal>(Direction::OppositeNormal(), std::move(grid));
   shell.setPortal(portal2, PositiveXFace);
-  BOOST_CHECK_EQUAL(shell.portalPtr(PositiveXFace), portal2);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveXFace), portal2);
 
   // Other portals should stay the same
-  BOOST_CHECK_EQUAL(shell.portalPtr(PositiveZFace), pXY);
-  BOOST_CHECK_EQUAL(shell.portalPtr(NegativeZFace), nXY);
-  BOOST_CHECK_EQUAL(shell.portalPtr(NegativeXFace), nYZ);
-  BOOST_CHECK_EQUAL(shell.portalPtr(PositiveYFace), pZX);
-  BOOST_CHECK_EQUAL(shell.portalPtr(NegativeYFace), nZX);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveZFace), pXY);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeZFace), nXY);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeXFace), nYZ);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveYFace), pZX);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeYFace), nZX);
 
   // Setting new nZX
   BOOST_REQUIRE_NE(nZX, nullptr);
@@ -182,14 +182,14 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   auto portal3 =
       std::make_shared<Portal>(Direction::AlongNormal(), std::move(grid));
   shell.setPortal(portal3, NegativeYFace);
-  BOOST_CHECK_EQUAL(shell.portalPtr(NegativeYFace), portal3);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeYFace), portal3);
 
   // Other portals should stay the same
-  BOOST_CHECK_EQUAL(shell.portalPtr(PositiveZFace), pXY);
-  BOOST_CHECK_EQUAL(shell.portalPtr(NegativeZFace), nXY);
-  BOOST_CHECK_EQUAL(shell.portalPtr(NegativeXFace), nYZ);
-  BOOST_CHECK_EQUAL(shell.portalPtr(PositiveYFace), pZX);
-  BOOST_CHECK_EQUAL(shell.portalPtr(PositiveXFace), portal2);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveZFace), pXY);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeZFace), nXY);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeXFace), nYZ);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveYFace), pZX);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveXFace), portal2);
 }
 
 BOOST_AUTO_TEST_SUITE(CuboidStack)
@@ -270,35 +270,35 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         break;
     }
 
-    const auto center1 = shell1.portalPtr(face)->surface().center(gctx);
-    const auto center2 = shell2.portalPtr(face)->surface().center(gctx);
+    const auto center1 = shell1.portal(face)->surface().center(gctx);
+    const auto center2 = shell2.portal(face)->surface().center(gctx);
 
     centers1[face] = center1;
     centers2[face] = center2;
 
     BOOST_CHECK_EQUAL(
-        shell1.portalPtr(face)->resolveVolume(gctx, center1, normal).value(),
+        shell1.portal(face)->resolveVolume(gctx, center1, normal).value(),
         &vol1);
     BOOST_CHECK_EQUAL(
-        shell1.portalPtr(face)->resolveVolume(gctx, center1, -normal).value(),
+        shell1.portal(face)->resolveVolume(gctx, center1, -normal).value(),
         nullptr);
 
     BOOST_CHECK_EQUAL(
-        shell2.portalPtr(face)->resolveVolume(gctx, center2, normal).value(),
+        shell2.portal(face)->resolveVolume(gctx, center2, normal).value(),
         &vol2);
     BOOST_CHECK_EQUAL(
-        shell2.portalPtr(face)->resolveVolume(gctx, center2, -normal).value(),
+        shell2.portal(face)->resolveVolume(gctx, center2, -normal).value(),
         nullptr);
   }
 
-  BOOST_CHECK_NE(shell1.portalPtr(backFace), shell2.portalPtr(frontFace));
+  BOOST_CHECK_NE(shell1.portal(backFace), shell2.portal(frontFace));
 
   CuboidStackPortalShell stack(gctx, {&shell1, &shell2}, dir, *logger);
   BOOST_CHECK_EQUAL(stack.size(), 6);
 
-  BOOST_CHECK_EQUAL(shell1.portalPtr(frontFace), stack.portalPtr(frontFace));
-  BOOST_CHECK_EQUAL(shell1.portalPtr(backFace), shell2.portalPtr(frontFace));
-  BOOST_CHECK_EQUAL(shell2.portalPtr(backFace), stack.portalPtr(backFace));
+  BOOST_CHECK_EQUAL(shell1.portal(frontFace), stack.portal(frontFace));
+  BOOST_CHECK_EQUAL(shell1.portal(backFace), shell2.portal(frontFace));
+  BOOST_CHECK_EQUAL(shell2.portal(backFace), stack.portal(backFace));
 
   for (const auto& face : sideFaces) {
     Vector3 normal{};
@@ -323,24 +323,24 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         break;
     }
 
-    BOOST_CHECK_EQUAL(shell1.portalPtr(face), stack.portalPtr(face));
-    BOOST_CHECK_EQUAL(shell2.portalPtr(face), stack.portalPtr(face));
+    BOOST_CHECK_EQUAL(shell1.portal(face), stack.portal(face));
+    BOOST_CHECK_EQUAL(shell2.portal(face), stack.portal(face));
 
     const auto& center1 = centers1.at(face);
     const auto& center2 = centers2.at(face);
 
     BOOST_CHECK_EQUAL(
-        shell1.portalPtr(face)->resolveVolume(gctx, center1, normal).value(),
+        shell1.portal(face)->resolveVolume(gctx, center1, normal).value(),
         &vol1);
     BOOST_CHECK_EQUAL(
-        shell1.portalPtr(face)->resolveVolume(gctx, center1, -normal).value(),
+        shell1.portal(face)->resolveVolume(gctx, center1, -normal).value(),
         nullptr);
 
     BOOST_CHECK_EQUAL(
-        shell2.portalPtr(face)->resolveVolume(gctx, center2, normal).value(),
+        shell2.portal(face)->resolveVolume(gctx, center2, normal).value(),
         &vol2);
     BOOST_CHECK_EQUAL(
-        shell2.portalPtr(face)->resolveVolume(gctx, center2, -normal).value(),
+        shell2.portal(face)->resolveVolume(gctx, center2, -normal).value(),
         nullptr);
   }
 
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
 
   auto lookup = [](auto& shell, CuboidPortalShell::Face face, Vector3 position,
                    Vector3 direction) -> const TrackingVolume* {
-    const auto portal = shell.portalPtr(face);
+    const auto portal = shell.portal(face);
     BOOST_REQUIRE_NE(portal, nullptr);
     return portal->resolveVolume(gctx, position, direction).value();
   };
@@ -758,14 +758,12 @@ BOOST_AUTO_TEST_CASE(Fill) {
   using enum CuboidVolumeBounds::Face;
 
   BOOST_CHECK_EQUAL(
-      shell.portalPtr(PositiveZFace)->getLink(Direction::AlongNormal()),
-      nullptr);
+      shell.portal(PositiveZFace)->getLink(Direction::AlongNormal()), nullptr);
 
   shell.fill(vol2);
 
-  BOOST_CHECK_NE(
-      shell.portalPtr(PositiveZFace)->getLink(Direction::AlongNormal()),
-      nullptr);
+  BOOST_CHECK_NE(shell.portal(PositiveZFace)->getLink(Direction::AlongNormal()),
+                 nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(RegisterInto) {
