@@ -24,6 +24,8 @@ class ISurfaceMaterial;
 
 /// @class AccumulatedSurfaceMaterial
 ///
+/// @ingroup material_mapping
+///
 /// This class is used by the SurfaceMaterialMapper in order to
 /// accumulate/collect material information during the mapping process.
 ///

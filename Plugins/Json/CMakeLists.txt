@@ -1,10 +1,10 @@
 acts_add_library(
     PluginJson
-    SHARED
     src/AlgebraJsonConverter.cpp
     src/ExtentJsonConverter.cpp
     src/GridJsonConverter.cpp
     src/GeometryIdentifierJsonConverter.cpp
+    src/IndexGridNavigationJsonConverter.cpp
     src/JsonMaterialDecorator.cpp
     src/MaterialMapJsonConverter.cpp
     src/MaterialJsonConverter.cpp
@@ -22,9 +22,6 @@ acts_add_library(
     src/Seeding2ConfigJsonConverter.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
-
-# temporarily until clients updated
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 target_include_directories(
     ActsPluginJson

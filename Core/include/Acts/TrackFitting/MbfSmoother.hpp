@@ -22,6 +22,8 @@ namespace Acts {
 /// Kalman trajectory smoother based on the Modified Bryson–Frazier (mBF)
 /// smoother.
 ///
+/// @ingroup track_fitting
+///
 /// The benefit of the mBF smoother is that it does not require the inverse of
 /// the full covariance matrix, but only the inverse of the residual covariance
 /// matrix which can be cached by the filter step. The same holds for the
@@ -89,14 +91,11 @@ class MbfSmoother {
   /// @note This allows us to move parts of the implementation into the .cpp
   struct InternalTrackState final {
     using Jacobian =
-        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                                  false>::Covariance;
+        typename TrackStateTraits<kMeasurementSizeMax, false>::Covariance;
     using Parameters =
-        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                                  false>::Parameters;
+        typename TrackStateTraits<kMeasurementSizeMax, false>::Parameters;
     using Covariance =
-        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                                  false>::Covariance;
+        typename TrackStateTraits<kMeasurementSizeMax, false>::Covariance;
 
     struct Measurement final {
       unsigned int calibratedSize{0};

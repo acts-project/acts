@@ -28,6 +28,8 @@
 class TFile;
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @class RootMaterialDecorator
 ///
@@ -114,4 +116,5 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace ActsPlugins

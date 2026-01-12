@@ -14,8 +14,9 @@
 
 namespace Acts {
 
-/// @ingroup MagneticField
-/// @brief Null bfield which returns 0 always
+/// Null bfield which returns 0 always
+///
+/// @ingroup magnetic_field
 class NullBField final : public MagneticFieldProvider {
  public:
   struct Cache {
