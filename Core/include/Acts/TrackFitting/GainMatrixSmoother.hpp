@@ -25,6 +25,7 @@ namespace Acts {
 /// This implements not a single smoothing step, but the full backwards
 /// smoothing procedure for a filtered, forward trajectory using the stored
 /// linearization.
+/// @ingroup track_fitting
 class GainMatrixSmoother {
  public:
   /// Whether to check the covariance matrices if they are semi-positive and if
@@ -134,12 +135,12 @@ class GainMatrixSmoother {
 
   /// Type alias for delegate to get track state parameters
   using GetParameters =
-      Acts::Delegate<TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                                      false>::Parameters(void*)>;
+      Acts::Delegate<TrackStateTraits<kMeasurementSizeMax, false>::Parameters(
+          void*)>;
   /// Type alias for delegate to get track state covariance matrix
   using GetCovariance =
-      Acts::Delegate<TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                                      false>::Covariance(void*)>;
+      Acts::Delegate<TrackStateTraits<kMeasurementSizeMax, false>::Covariance(
+          void*)>;
 
   /// Calculate smoothed parameters for a single track state using gain matrix
   /// formalism.

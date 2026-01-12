@@ -91,11 +91,6 @@ void addDetector(py::module& mex) {
     ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness,
                        surfaceType, binValue, materialDecorator, logLevel);
   }
-
-  {
-    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
-        mex, "DetectorElementBase");
-  }
 }
 
 }  // namespace ActsPython

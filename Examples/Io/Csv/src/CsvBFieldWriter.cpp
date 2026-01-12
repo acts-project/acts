@@ -23,6 +23,7 @@
 #include <vector>
 
 namespace ActsExamples {
+
 template <CsvBFieldWriter::CoordinateType Coord, bool Grid>
 void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
                           Acts::Logging::Level level) {
@@ -242,4 +243,5 @@ template void CsvBFieldWriter::run<CsvBFieldWriter::CoordinateType::XYZ, false>(
     const Config<CoordinateType::XYZ, false>&, Acts::Logging::Level);
 template void CsvBFieldWriter::run<CsvBFieldWriter::CoordinateType::RZ, false>(
     const Config<CoordinateType::RZ, false>&, Acts::Logging::Level);
+
 }  // namespace ActsExamples

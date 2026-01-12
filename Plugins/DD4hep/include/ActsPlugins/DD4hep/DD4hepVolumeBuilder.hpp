@@ -31,6 +31,8 @@ using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 class TGeoMatrix;
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
 
 /// @brief build confined TrackingVolumes of one cylinder setup from DD4hep
 /// input.
@@ -109,4 +111,5 @@ inline DD4hepVolumeBuilder::Config DD4hepVolumeBuilder::getConfiguration()
   return m_cfg;
 }
 
+/// @}
 }  // namespace ActsPlugins

@@ -22,6 +22,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -110,6 +111,9 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
   // collection of geometry objects used by GBTS
   std::vector<Acts::Experimental::TrigInDetSiLayer> m_layerGeometry{};
+
+  // actual seed finder algorithm
+  std::unique_ptr<const Acts::Experimental::SeedFinderGbts> m_finder = nullptr;
 
   // used to assign LayerIds to the GbtsActsMap
   mutable std::map<int, int> m_LayeridMap{};

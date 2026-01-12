@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/Csv/CsvSpacePointWriter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -20,31 +21,30 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <string>
-#include <vector>
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvSpacePointWriter::CsvSpacePointWriter(
-    const ActsExamples::CsvSpacePointWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvSpacePointWriter::CsvSpacePointWriter(const Config& config,
+                                         Acts::Logging::Level level)
     : WriterT(config.inputSpacepoints, "CsvSpacePointWriter", level),
       m_cfg(config) {}
 
-ActsExamples::CsvSpacePointWriter::~CsvSpacePointWriter() = default;
+CsvSpacePointWriter::~CsvSpacePointWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::CsvSpacePointWriter::finalize() {
+ProcessCode CsvSpacePointWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvSpacePointWriter::writeT(
+ProcessCode CsvSpacePointWriter::writeT(
     const AlgorithmContext& ctx, const SimSpacePointContainer& spacepoints) {
   // Open per-event file for all components
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
 
-  ActsExamples::NamedTupleCsvWriter<SpacepointData> writerSP(
-      pathSP, m_cfg.outputPrecision);
+  NamedTupleCsvWriter<SpacepointData> writerSP(pathSP, m_cfg.outputPrecision);
 
   SpacepointData spData{};
   for (const auto& sp : spacepoints) {
@@ -68,5 +68,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointWriter::writeT(
     spData.var_z = sp.varianceZ() / Acts::UnitConstants::mm;
     writerSP.append(spData);
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

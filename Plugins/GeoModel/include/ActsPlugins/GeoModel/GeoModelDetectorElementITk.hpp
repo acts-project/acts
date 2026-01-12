@@ -13,6 +13,9 @@
 
 namespace ActsPlugins {
 
+/// @addtogroup geomodel_plugin
+/// @{
+
 class ITkIdentifier {
   Acts::MultiIndex<std::size_t, 1, 2, 20, 1, 19, 20, 1> m_identifier{};
 
@@ -76,5 +79,7 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
  private:
   ITkIdentifier m_identifier;
 };
+
+/// @}
 
 }  // namespace ActsPlugins

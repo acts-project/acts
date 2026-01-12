@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
@@ -288,7 +289,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   BOOST_REQUIRE(res.ok());
 
   const auto& track = *res;
-  BOOST_CHECK_EQUAL(track.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(track.tipIndex(), kTrackIndexInvalid);
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities

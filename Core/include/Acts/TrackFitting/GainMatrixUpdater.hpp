@@ -8,11 +8,9 @@
 
 #pragma once
 
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -23,6 +21,7 @@
 namespace Acts {
 
 /// Kalman update step using the gain matrix formalism.
+/// @ingroup track_fitting
 class GainMatrixUpdater {
   struct InternalTrackState {
     unsigned int calibratedSize;
@@ -31,14 +30,11 @@ class GainMatrixUpdater {
     const double* calibratedCovariance;
     BoundSubspaceIndices projector;
 
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters predicted;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance predictedCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters filtered;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance filteredCovariance;
+    TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted;
+    TrackStateTraits<kMeasurementSizeMax, false>::Covariance
+        predictedCovariance;
+    TrackStateTraits<kMeasurementSizeMax, false>::Parameters filtered;
+    TrackStateTraits<kMeasurementSizeMax, false>::Covariance filteredCovariance;
   };
 
  public:

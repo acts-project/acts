@@ -15,8 +15,6 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <array>
-#include <fstream>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -25,9 +23,10 @@
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvSpacePointReader::CsvSpacePointReader(
-    const ActsExamples::CsvSpacePointReader::Config& cfg,
-    Acts::Logging::Level lvl) {
+namespace ActsExamples {
+
+CsvSpacePointReader::CsvSpacePointReader(const Config& cfg,
+                                         Acts::Logging::Level lvl) {
   m_cfg = cfg;
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
@@ -41,18 +40,16 @@ ActsExamples::CsvSpacePointReader::CsvSpacePointReader(
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
 }
 
-std::string ActsExamples::CsvSpacePointReader::CsvSpacePointReader::name()
-    const {
+std::string CsvSpacePointReader::CsvSpacePointReader::name() const {
   return "CsvSpacePointReader";
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::CsvSpacePointReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> CsvSpacePointReader::availableEvents()
+    const {
   return m_eventsRange;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
-    const ActsExamples::AlgorithmContext& ctx) {
+ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
   SimSpacePointContainer spacePoints;
 
   const auto& filename = m_cfg.inputCollection.empty()
@@ -61,7 +58,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
   const auto& path =
       perEventFilepath(m_cfg.inputDir, filename + ".csv", ctx.eventNumber);
 
-  ActsExamples::NamedTupleCsvReader<SpacePointData> reader(path);
+  NamedTupleCsvReader<SpacePointData> reader(path);
   SpacePointData data;
 
   while (reader.read(data)) {
@@ -109,3 +106,5 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
