@@ -27,15 +27,11 @@ void addMaterial(py::module_& m);
 void addSurfaces(py::module_& m);
 void addGeometry(py::module_& m);
 void addGeometryGen1(py::module_& m);
-void addGeometryGen2(py::module_& m);
 void addGeometryGen3(py::module_& m);
 void addNavigation(py::module_& m);
 void addPropagation(py::module_& m);
 void addSeeding(py::module_& mt);
 void addTrackFinding(py::module_& m);
-
-/// Legacy python modules
-void addModuleEntry(Context& ctx);
 
 }  // namespace ActsPython
 
@@ -69,20 +65,9 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addSurfaces(m);
   addGeometry(m);
   addGeometryGen1(m);
-  addGeometryGen2(m);
   addGeometryGen3(m);
   addNavigation(m);
   addPropagation(m);
   addSeeding(m);
   addTrackFinding(m);
-
-  // Legacy python modules
-  Context ctx;
-  ctx.modules["main"] = m;
-  auto mex = m.def_submodule("_examples");
-  ctx.modules["examples"] = mex;
-  auto prop = m.def_submodule("_propagator");
-  ctx.modules["propagation"] = prop;
-
-  addModuleEntry(ctx);
 }

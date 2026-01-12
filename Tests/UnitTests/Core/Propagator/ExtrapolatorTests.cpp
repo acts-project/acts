@@ -95,7 +95,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
   (void)index;
 
@@ -142,7 +142,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
   (void)index;
 
@@ -192,7 +192,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
   (void)index;
 
@@ -258,7 +258,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
   (void)index;
 
@@ -305,7 +305,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
   (void)index;
 

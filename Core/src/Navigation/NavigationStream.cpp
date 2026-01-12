@@ -8,7 +8,6 @@
 
 #include "Acts/Navigation/NavigationStream.hpp"
 
-#include "Acts/Detector/Portal.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -159,23 +158,9 @@ void NavigationStream::addSurfaceCandidates(
   });
 }
 
-void NavigationStream::addPortalCandidate(const Experimental::Portal& portal) {
-  m_candidates.emplace_back(Intersection3D::Invalid(), 0, portal,
-                            BoundaryTolerance::None());
-}
-
 void NavigationStream::addPortalCandidate(const Portal& portal) {
   m_candidates.emplace_back(Intersection3D::Invalid(), 0, portal,
                             BoundaryTolerance::None());
-}
-
-void NavigationStream::addPortalCandidates(
-    std::span<const Experimental::Portal*> portals) {
-  m_candidates.reserve(m_candidates.size() + portals.size());
-  std::ranges::for_each(portals, [&](const auto& portal) {
-    m_candidates.emplace_back(Intersection3D::Invalid(), 0, *portal,
-                              BoundaryTolerance::None());
-  });
 }
 
 AppendOnlyNavigationStream::AppendOnlyNavigationStream(NavigationStream& stream)

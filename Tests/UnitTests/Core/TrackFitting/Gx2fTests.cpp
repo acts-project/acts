@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
@@ -125,9 +126,9 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Rotation of the surfaces around the y-axis
   const double rotationAngle = std::numbers::pi / 2.;
-  const Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  const Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   const Vector3 yPos(0., 1., 0.);
-  const Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  const Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
 
   // Construct builder
   CuboidVolumeBuilder cvb;
@@ -288,7 +289,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   BOOST_REQUIRE(res.ok());
 
   const auto& track = *res;
-  BOOST_CHECK_EQUAL(track.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(track.tipIndex(), kTrackIndexInvalid);
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities

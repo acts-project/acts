@@ -12,7 +12,9 @@ namespace Acts::Experimental {
 
 CompositeSpacePointLineFitter::CompositeSpacePointLineFitter(
     const Config& cfg, std::unique_ptr<const Logger> logger)
-    : m_cfg{cfg}, m_logger{std::move(logger)} {}
+    : m_cfg{cfg}, m_logger{std::move(logger)} {
+  std::ranges::sort(m_cfg.parsToUse);
+}
 
 detail::FastStrawLineFitter::Config
 CompositeSpacePointLineFitter::fastFitterCfg() const {
@@ -25,6 +27,9 @@ CompositeSpacePointLineFitter::fastFitterCfg() const {
 std::vector<CompositeSpacePointLineFitter::FitParIndex>
 CompositeSpacePointLineFitter::extractFitablePars(
     const DoFcounts& hitCounts) const {
+  if (!m_cfg.parsToUse.empty()) {
+    return m_cfg.parsToUse;
+  }
   std::vector<FitParIndex> pars{};
   using enum FitParIndex;
   if (hitCounts.nonBending > 1) {
@@ -40,6 +45,30 @@ CompositeSpacePointLineFitter::extractFitablePars(
   }
   std::ranges::sort(pars);
   return pars;
+}
+
+bool CompositeSpacePointLineFitter::withinRange(
+    const double parValue, const FitParIndex fitPar) const {
+  const auto p = toUnderlying(fitPar);
+  /// The parameter is unbound
+  if (m_cfg.ranges[p][0] >= m_cfg.ranges[p][1]) {
+    return true;
+  }
+  if (parValue < m_cfg.ranges[p][0] || parValue > m_cfg.ranges[p][1]) {
+    ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": The parameter "
+                          << detail::CompSpacePointAuxiliaries::parName(fitPar)
+                          << " " << parValue << " is out range ["
+                          << m_cfg.ranges[p][0] << ";" << m_cfg.ranges[p][1]
+                          << "]");
+    return false;
+  }
+  return true;
+}
+bool CompositeSpacePointLineFitter::withinRange(
+    const ParamVec_t& pars, const std::vector<FitParIndex>& parsToUse) const {
+  return std::ranges::all_of(parsToUse, [&](const FitParIndex par) {
+    return withinRange(pars[toUnderlying(par)], par);
+  });
 }
 
 void CompositeSpacePointLineFitter::FitParameters::print(

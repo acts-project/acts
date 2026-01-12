@@ -1,6 +1,5 @@
 acts_add_library(
     PluginRoot
-    SHARED
     src/RootMaterialDecorator.cpp
     src/RootMaterialMapIo.cpp
     src/RootMaterialTrackIo.cpp

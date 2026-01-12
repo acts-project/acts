@@ -55,7 +55,7 @@ struct EventDataView3D {
     // Calculate the eigen values w.r.t reference frame
     double lambda0 = (c00 + c11) / 2. + std::sqrt(cdsq + cosq);
     double lambda1 = (c00 + c11) / 2. - std::sqrt(cdsq + cosq);
-    double theta = atan2(lambda0 - c00, c01);
+    double theta = std::atan2(lambda0 - c00, c01);
 
     return {lambda0, lambda1, theta};
   }

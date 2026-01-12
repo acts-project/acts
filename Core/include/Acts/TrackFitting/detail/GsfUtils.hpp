@@ -153,8 +153,7 @@ class ScopedGsfInfoPrinterAndChecker {
 
 double calculateDeterminant(
     const double *fullCalibratedCovariance,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     true>::Covariance predictedCovariance,
+    TrackStateTraits<kMeasurementSizeMax, true>::Covariance predictedCovariance,
     BoundSubspaceIndices projector, unsigned int calibratedSize);
 
 /// Reweight the components according to `R. Frühwirth, "Track fitting
@@ -162,9 +161,9 @@ double calculateDeterminant(
 /// PosteriorWeightsCalculator.cxx
 /// @note The weights are not renormalized!
 template <typename traj_t>
-void computePosteriorWeights(
-    const traj_t &mt, const std::vector<MultiTrajectoryTraits::IndexType> &tips,
-    std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
+void computePosteriorWeights(const traj_t &mt,
+                             const std::vector<TrackIndexType> &tips,
+                             std::map<TrackIndexType, double> &weights) {
   // Helper Function to compute detR
 
   // Find minChi2, this can be used to factor some things later in the
@@ -182,13 +181,7 @@ void computePosteriorWeights(
     const auto state = mt.getTrackState(tip);
     const double chi2 = state.chi2() - minChi2;
     const double detR = calculateDeterminant(
-        // This abuses an incorrectly sized vector / matrix to access the
-        // data pointer! This works (don't use the matrix as is!), but be
-        // careful!
-        state
-            .template calibratedCovariance<
-                MultiTrajectoryTraits::MeasurementSizeMax>()
-            .data(),
+        state.effectiveCalibratedCovariance().data(),
         state.predictedCovariance(), state.projectorSubspaceIndices(),
         state.calibratedSize());
 
@@ -224,9 +217,9 @@ inline std::ostream &operator<<(std::ostream &os, StatesType type) {
 template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
   const traj_t &mt;
-  const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
+  const std::map<TrackIndexType, double> &weights;
 
-  auto operator()(MultiTrajectoryTraits::IndexType idx) const {
+  auto operator()(TrackIndexType idx) const {
     const auto proxy = mt.getTrackState(idx);
     switch (type) {
       case StatesType::ePredicted:

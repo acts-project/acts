@@ -125,7 +125,7 @@ class HoughVertexFinder {
   /// Configuration instance
   const Config m_cfg;
 
-  /// @brief Returns the positions of the peak along Z axis in the pojection of the Hough plane
+  /// @brief Returns the positions of the peak along Z axis in the projection of the Hough plane
   /// @param spacepoints Set of all spacepoints within the event
   /// @param vtxOld Previous position of the vertex
   /// @param rangeZ Range in along Z around vtxOld_z to consider when looking for the new vertex

@@ -11,8 +11,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Geometry/IndexGrid.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
@@ -36,7 +35,9 @@ using ProtoAssociations = std::vector<std::vector<std::size_t>>;
 using ProtoIndexedSurfaceGrid =
     std::tuple<ProtoSurfaces, ProtoGrid, ProtoAssociations>;
 
+/// @ingroup actsvg_plugin
 namespace IndexedSurfacesConverter {
+/// @ingroup actsvg_plugin
 /// Nested options struct
 struct Options {
   /// Hierarchy map of styles
@@ -49,7 +50,7 @@ struct Options {
 ///
 /// @note actual conversion implementation, bottom of unrolling loop
 ///
-/// @param gtcx is the geometry context of the conversion call
+/// @param gctx is the geometry context of the conversion call
 /// @param surfaces the container of surfaces
 /// @param indexGrid the indexGrid delegate
 /// @param cOptions the conversion options
@@ -174,89 +175,9 @@ ProtoIndexedSurfaceGrid convertImpl(const Acts::GeometryContext& gctx,
   return {pSurfaces, pGrid, highlightIndices};
 }
 
-/// @brief Convert the single delegate if it is of the type of the reference
-///
-/// @note It will do nothing if the type does not match
-///
-/// @tparam surface_container the surfaces to be drawn
-/// @tparam instance_type the reference instance type
-///
-/// @param gctx The Geometry context of this operation
-/// @param surfaces The surfaces to be converted
-/// @param cOptions the conversion options
-/// @param sgi [in,out] the proto indexed grid to be converted
-/// @param delegate the delegate to be translated
-/// @param refInstance the reference input type from the reference Axes
-template <typename surface_container, typename instance_type>
-void convert(const Acts::GeometryContext& gctx,
-             const surface_container& surfaces, const Options& cOptions,
-             ProtoIndexedSurfaceGrid& sgi,
-             const Acts::Experimental::InternalNavigationDelegate& delegate,
-             [[maybe_unused]] const instance_type& refInstance) {
-  using GridType =
-      typename instance_type::template grid_type<std::vector<std::size_t>>;
-  // Defining a Delegate type
-  using DelegateType = Acts::Experimental::IndexedSurfacesAllPortalsNavigation<
-      GridType, Acts::Experimental::IndexedSurfacesNavigation>;
-  using SubDelegateType =
-      Acts::Experimental::IndexedSurfacesNavigation<GridType>;
-
-  // Get the instance
-  const auto* instance = delegate.instance();
-  auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
-  if (castedDelegate != nullptr) {
-    // Get the surface updator
-    auto indexedSurfaces = std::get<SubDelegateType>(castedDelegate->updators);
-    auto [pSurfaces, pGrid, pIndices] =
-        convertImpl(gctx, surfaces, indexedSurfaces, cOptions);
-    std::get<0u>(sgi) = pSurfaces;
-    std::get<1u>(sgi) = pGrid;
-    std::get<2u>(sgi) = pIndices;
-  }
-}
-
-/// @brief Unrolling function for catching the right instance
-///
-/// @note parameters are as of the `convertImpl` method
-template <typename surface_container, typename... Args>
-void unrollConvert(
-    const Acts::GeometryContext& gctx, const surface_container& surfaces,
-    const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
-    const Acts::Experimental::InternalNavigationDelegate& delegate,
-    Acts::TypeList<Args...> /*unused*/) {
-  (convert(gctx, surfaces, cOptions, sgi, delegate, Args{}), ...);
-}
-
-/// Convert a surface array into needed constituents
-///
-/// @param gtcx is the geometry context of the conversion call
-/// @param surfaces the container of surfaces
-/// @param indexGrid the indexGrid delegate
-/// @param cOptions the conversion options
-///
-/// @note this is the entry point of the conversion, i.e. top of the
-/// unrolling loop
-///
-/// @return a collection of proto surface object and a grid, and associations
-template <typename surface_container>
-ProtoIndexedSurfaceGrid convert(
-    const Acts::GeometryContext& gctx, const surface_container& surfaces,
-    const Acts::Experimental::InternalNavigationDelegate& delegate,
-    const Options& cOptions) {
-  // Prep work what is to be filled
-  ProtoSurfaces pSurfaces;
-  ProtoGrid pGrid;
-  ProtoAssociations indices;
-  ProtoIndexedSurfaceGrid sgi = {pSurfaces, pGrid, indices};
-  // Convert if dynamic cast happens to work
-  unrollConvert(gctx, surfaces, cOptions, sgi, delegate,
-                Acts::GridAxisGenerators::PossibleAxes{});
-  // Return the newly filled ones
-  return sgi;
-}
-
 }  // namespace IndexedSurfacesConverter
 
+/// @ingroup actsvg_plugin
 namespace View {
 
 /// Convert into an ActsPlugins::Svg::object with an XY view

@@ -6,7 +6,8 @@ import argparse
 
 import acts
 from acts import UnitConstants as u
-from acts.examples import GenericDetector, RootParticleReader
+from acts.examples import GenericDetector
+from acts.examples.root import RootParticleReader
 
 
 def getArgumentParser():
@@ -194,7 +195,7 @@ def runCKFTracks(
         trackingGeometry,
         field,
         TrackSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
-            # zero eveything so the CKF has a chance to find the measurements
+            # zero everything so the CKF has a chance to find the measurements
             loc0=0,
             loc0PtA=0,
             loc0PtB=0,

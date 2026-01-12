@@ -55,9 +55,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     // Rotation of the surfaces
     double rotationAngle = std::numbers::pi / 2.;
-    Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
-    Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
     cfg.rotation.col(0) = xPos;
     cfg.rotation.col(1) = yPos;
     cfg.rotation.col(2) = zPos;
@@ -180,9 +180,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     // Rotation of the surfaces
     double rotationAngle = std::numbers::pi / 2.;
-    Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
-    Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
     cfg.rotation.col(0) = xPos;
     cfg.rotation.col(1) = yPos;
     cfg.rotation.col(2) = zPos;

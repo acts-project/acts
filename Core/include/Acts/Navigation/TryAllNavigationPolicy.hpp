@@ -44,10 +44,12 @@ class TryAllNavigationPolicy final : public INavigationPolicy {
                          const TrackingVolume& volume, const Logger& logger);
 
   /// Add all candidates to the stream
+  /// @param gctx is the geometry context
   /// @param args are the navigation arguments
   /// @param stream is the navigation stream to update
   /// @param logger is the logger
-  void initializeCandidates(const NavigationArguments& args,
+  void initializeCandidates(const GeometryContext& gctx,
+                            const NavigationArguments& args,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 

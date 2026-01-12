@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     // Vector to store track objects used for vertex fit
     for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
       // Construct positive or negative charge randomly
-      double q = qDist(gen) < 0 ? -1. : 1.;
+      double q = std::copysign(1., qDist(gen));
 
       // Construct random track parameters
       BoundVector paramVec = BoundVector::Zero();
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Vector to store track objects used for vertex fit
     for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
       // Construct positive or negative charge randomly
-      double q = qDist(gen) < 0 ? -1. : 1.;
+      double q = std::copysign(1., qDist(gen));
 
       // Construct random track parameters
       BoundVector paramVec;

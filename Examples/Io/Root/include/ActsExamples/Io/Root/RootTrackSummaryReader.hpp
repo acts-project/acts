@@ -16,6 +16,7 @@
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
+#include <ActsPlugins/Root/detail/RootBranchPtr.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -52,9 +53,6 @@ class RootTrackSummaryReader : public IReader {
   /// @param level The log level
   RootTrackSummaryReader(const Config& config, Acts::Logging::Level level);
 
-  /// Destructor
-  ~RootTrackSummaryReader() override;
-
   /// Framework name() method
   std::string name() const override { return "RootTrackSummaryReader"; }
 
@@ -75,6 +73,12 @@ class RootTrackSummaryReader : public IReader {
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
+
+  /// Helper aliases for ROOT branch containers
+  template <typename T>
+  using BranchVector = RootBranchPtr<std::vector<T>>;
+  template <typename T>
+  using BranchJaggedVector = RootBranchPtr<std::vector<std::vector<T>>>;
 
   /// The config class
   Config m_cfg;
@@ -97,108 +101,102 @@ class RootTrackSummaryReader : public IReader {
   /// the event number
   std::uint32_t m_eventNr{0};
   /// the multi-trajectory number
-  std::vector<std::uint32_t>* m_multiTrajNr = new std::vector<std::uint32_t>;
+  BranchVector<std::uint32_t> m_multiTrajNr;
   /// the multi-trajectory sub-trajectory number
-  std::vector<unsigned int>* m_subTrajNr = new std::vector<unsigned int>;
+  BranchVector<unsigned int> m_subTrajNr;
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
   /// The number of states
-  std::vector<unsigned int>* m_nStates = new std::vector<unsigned int>;
+  BranchVector<unsigned int> m_nStates;
   /// The number of measurements
-  std::vector<unsigned int>* m_nMeasurements = new std::vector<unsigned int>;
+  BranchVector<unsigned int> m_nMeasurements;
   /// The number of outliers
-  std::vector<unsigned int>* m_nOutliers = new std::vector<unsigned int>;
+  BranchVector<unsigned int> m_nOutliers;
   /// The number of holes
-  std::vector<unsigned int>* m_nHoles = new std::vector<unsigned int>;
+  BranchVector<unsigned int> m_nHoles;
   /// The total chi2
-  std::vector<float>* m_chi2Sum = new std::vector<float>;
+  BranchVector<float> m_chi2Sum;
   /// The number of ndf of the measurements+outliers
-  std::vector<unsigned int>* m_NDF = new std::vector<unsigned int>;
+  BranchVector<unsigned int> m_NDF;
   /// The chi2 on all measurement states
-  std::vector<std::vector<double>>* m_measurementChi2 =
-      new std::vector<std::vector<double>>;
+  BranchJaggedVector<double> m_measurementChi2;
   /// The chi2 on all outlier states
-  std::vector<std::vector<double>>* m_outlierChi2 =
-      new std::vector<std::vector<double>>;
+  BranchJaggedVector<double> m_outlierChi2;
   /// The volume id of the measurements
-  std::vector<std::vector<std::uint32_t>>* m_measurementVolume =
-      new std::vector<std::vector<std::uint32_t>>;
+  BranchJaggedVector<std::uint32_t> m_measurementVolume;
   /// The layer id of the measurements
-  std::vector<std::vector<std::uint32_t>>* m_measurementLayer =
-      new std::vector<std::vector<std::uint32_t>>;
+  BranchJaggedVector<std::uint32_t> m_measurementLayer;
   /// The volume id of the outliers
-  std::vector<std::vector<std::uint32_t>>* m_outlierVolume =
-      new std::vector<std::vector<std::uint32_t>>;
+  BranchJaggedVector<std::uint32_t> m_outlierVolume;
   /// The layer id of the outliers
-  std::vector<std::vector<std::uint32_t>>* m_outlierLayer =
-      new std::vector<std::vector<std::uint32_t>>;
+  BranchJaggedVector<std::uint32_t> m_outlierLayer;
 
   // The majority truth particle info
   /// The number of hits from majority particle
-  std::vector<unsigned int>* m_nMajorityHits = new std::vector<unsigned int>;
+  BranchVector<unsigned int> m_nMajorityHits;
   /// Combined barcode vector (legacy)
-  std::vector<std::vector<std::uint32_t>>* m_majorityParticleId = nullptr;
+  BranchJaggedVector<std::uint32_t> m_majorityParticleId{nullptr};
   /// Decoded barcode components for the majority particle
-  std::vector<std::uint32_t>* m_majorityParticleVertexPrimary = nullptr;
-  std::vector<std::uint32_t>* m_majorityParticleVertexSecondary = nullptr;
-  std::vector<std::uint32_t>* m_majorityParticleParticle = nullptr;
-  std::vector<std::uint32_t>* m_majorityParticleGeneration = nullptr;
-  std::vector<std::uint32_t>* m_majorityParticleSubParticle = nullptr;
+  BranchVector<std::uint32_t> m_majorityParticleVertexPrimary{nullptr};
+  BranchVector<std::uint32_t> m_majorityParticleVertexSecondary{nullptr};
+  BranchVector<std::uint32_t> m_majorityParticleParticle{nullptr};
+  BranchVector<std::uint32_t> m_majorityParticleGeneration{nullptr};
+  BranchVector<std::uint32_t> m_majorityParticleSubParticle{nullptr};
   bool m_hasCombinedMajorityParticleId = false;
   /// Charge of majority particle
-  std::vector<int>* m_t_charge = new std::vector<int>;
+  BranchVector<int> m_t_charge;
   /// Time of majority particle
-  std::vector<float>* m_t_time = new std::vector<float>;
+  BranchVector<float> m_t_time;
   /// Vertex x positions of majority particle
-  std::vector<float>* m_t_vx = new std::vector<float>;
+  BranchVector<float> m_t_vx;
   /// Vertex y positions of majority particle
-  std::vector<float>* m_t_vy = new std::vector<float>;
+  BranchVector<float> m_t_vy;
   /// Vertex z positions of majority particle
-  std::vector<float>* m_t_vz = new std::vector<float>;
+  BranchVector<float> m_t_vz;
   /// Initial momenta px of majority particle
-  std::vector<float>* m_t_px = new std::vector<float>;
+  BranchVector<float> m_t_px;
   /// Initial momenta py of majority particle
-  std::vector<float>* m_t_py = new std::vector<float>;
+  BranchVector<float> m_t_py;
   /// Initial momenta pz of majority particle
-  std::vector<float>* m_t_pz = new std::vector<float>;
+  BranchVector<float> m_t_pz;
   /// Initial momenta theta of majority particle
-  std::vector<float>* m_t_theta = new std::vector<float>;
+  BranchVector<float> m_t_theta;
   /// Initial momenta phi of majority particle
-  std::vector<float>* m_t_phi = new std::vector<float>;
+  BranchVector<float> m_t_phi;
   /// Initial momenta pT of majority particle
-  std::vector<float>* m_t_pT = new std::vector<float>;
+  BranchVector<float> m_t_pT;
   /// Initial momenta eta of majority particle
-  std::vector<float>* m_t_eta = new std::vector<float>;
+  BranchVector<float> m_t_eta;
 
   /// If the track has fitted parameter
-  std::vector<bool>* m_hasFittedParams = new std::vector<bool>;
+  BranchVector<bool> m_hasFittedParams;
   /// Fitted parameters eBoundLoc0 of track
-  std::vector<float>* m_eLOC0_fit = new std::vector<float>;
+  BranchVector<float> m_eLOC0_fit;
   /// Fitted parameters eBoundLoc1 of track
-  std::vector<float>* m_eLOC1_fit = new std::vector<float>;
+  BranchVector<float> m_eLOC1_fit;
   /// Fitted parameters ePHI of track
-  std::vector<float>* m_ePHI_fit = new std::vector<float>;
+  BranchVector<float> m_ePHI_fit;
   /// Fitted parameters eTHETA of track
-  std::vector<float>* m_eTHETA_fit = new std::vector<float>;
+  BranchVector<float> m_eTHETA_fit;
   /// Fitted parameters eQOP of track
-  std::vector<float>* m_eQOP_fit = new std::vector<float>;
+  BranchVector<float> m_eQOP_fit;
   /// Fitted parameters eT of track
-  std::vector<float>* m_eT_fit = new std::vector<float>;
+  BranchVector<float> m_eT_fit;
   /// Fitted parameters eLOC err of track
-  std::vector<float>* m_err_eLOC0_fit = new std::vector<float>;
+  BranchVector<float> m_err_eLOC0_fit;
   /// Fitted parameters eBoundLoc1 err of track
-  std::vector<float>* m_err_eLOC1_fit = new std::vector<float>;
+  BranchVector<float> m_err_eLOC1_fit;
   /// Fitted parameters ePHI err of track
-  std::vector<float>* m_err_ePHI_fit = new std::vector<float>;
+  BranchVector<float> m_err_ePHI_fit;
   /// Fitted parameters eTHETA err of track
-  std::vector<float>* m_err_eTHETA_fit = new std::vector<float>;
+  BranchVector<float> m_err_eTHETA_fit;
   /// Fitted parameters eQOP err of track
-  std::vector<float>* m_err_eQOP_fit = new std::vector<float>;
+  BranchVector<float> m_err_eQOP_fit;
   /// Fitted parameters eT err of track
-  std::vector<float>* m_err_eT_fit = new std::vector<float>;
+  BranchVector<float> m_err_eT_fit;
 };
 
 }  // namespace ActsExamples

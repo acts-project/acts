@@ -201,7 +201,7 @@ void ResPlotTool::fill(
     if (fittedParamters.covariance().has_value()) {
       auto covariance = *fittedParamters.covariance();
       if (covariance(parID, parID) > 0) {
-        float pull = residual / sqrt(covariance(parID, parID));
+        float pull = residual / std::sqrt(covariance(parID, parID));
         PlotHelpers::fillHisto(cache.pull[parName], pull);
         PlotHelpers::fillHisto(cache.pull_vs_eta.at(parName), truthEta, pull);
         PlotHelpers::fillHisto(cache.pull_vs_pT.at(parName), truthPt, pull);

@@ -135,11 +135,12 @@ struct StepCollector {
   /// @param [out] result Struct which is filled with the data
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& /*navigator*/, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& /*navigator*/, result_type& result,
+                   const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping));
+    return Result<void>::success();
   }
 
   template <typename propagator_state_t, typename stepper_t,
@@ -902,9 +903,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 // valid in this case.
 BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   double rotationAngle = std::numbers::pi / 2.;
-  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
   MaterialSlab matProp(makeBeryllium(), 0.5_mm);
 
   CuboidVolumeBuilder cvb;

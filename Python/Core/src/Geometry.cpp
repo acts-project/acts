@@ -7,23 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/CuboidalContainerBuilder.hpp"
-#include "Acts/Detector/CylindricalContainerBuilder.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorBuilder.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/DetectorVolumeBuilder.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
-#include "Acts/Detector/KdtSurfacesProvider.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/VolumeStructureBuilder.hpp"
-#include "Acts/Detector/interface/IDetectorBuilder.hpp"
-#include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
-#include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
-#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -47,7 +30,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -192,6 +174,11 @@ void addGeometry(py::module_& m) {
           ss << self;
           return ss.str();
         });
+  }
+
+  {
+    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
+        m, "DetectorElementBase");
   }
 
   {

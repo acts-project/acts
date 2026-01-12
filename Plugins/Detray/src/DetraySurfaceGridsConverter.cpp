@@ -115,8 +115,8 @@ DetraySurfaceGridsConverter::convert(
   // Defining a Delegate type
   using ConversionDelegateType =
       Experimental::IndexedSurfacesAllPortalsNavigation<
-          GridType, Experimental::IndexedSurfacesNavigation>;
-  using SubDelegateType = Experimental::IndexedSurfacesNavigation<GridType>;
+          GridType, Experimental::IndexGridNavigation>;
+  using SubDelegateType = Experimental::IndexGrid<GridType>;
 
   // Get the instance
   const auto* instance = delegate.instance();

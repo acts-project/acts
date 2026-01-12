@@ -296,26 +296,33 @@ class DirectNavigator {
     // Move the sequence to the next surface
     state.nextSurface();
 
-    if (!state.endOfSurfaces()) {
-      ACTS_VERBOSE("Next surface candidate is  "
+    while (!state.endOfSurfaces()) {
+      ACTS_VERBOSE("Next surface candidate is "
                    << state.navSurface().geometryId() << ". "
                    << state.remainingSurfaces() << " out of "
                    << state.options.surfaces.size()
                    << " surfaces remain to try.");
-    } else {
-      ACTS_VERBOSE("End of surfaces reached, navigation break.");
-      state.navigationBreak = true;
-      return NavigationTarget::None();
+
+      // Establish & update the surface status
+      // TODO we do not know the intersection index - passing the closer one
+      const Surface& surface = state.navSurface();
+      const double farLimit = std::numeric_limits<double>::max();
+      const NavigationTarget target = chooseIntersection(
+          state.options.geoContext, surface, position, direction,
+          BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
+          state.options.surfaceTolerance);
+      if (target.isValid()) {
+        return target;
+      }
+
+      ACTS_VERBOSE("No valid intersection found with surface "
+                   << surface.geometryId() << ", trying next surface.");
+      state.nextSurface();
     }
 
-    // Establish & update the surface status
-    // TODO we do not know the intersection index - passing the closer one
-    const Surface& surface = state.navSurface();
-    const double farLimit = std::numeric_limits<double>::max();
-    return chooseIntersection(state.options.geoContext, surface, position,
-                              direction, BoundaryTolerance::Infinite(),
-                              state.options.nearLimit, farLimit,
-                              state.options.surfaceTolerance);
+    ACTS_VERBOSE("End of surfaces reached, navigation break.");
+    state.navigationBreak = true;
+    return NavigationTarget::None();
   }
 
   /// @brief Check if the current target is still valid
@@ -361,7 +368,7 @@ class DirectNavigator {
 
     // Set the current surface
     state.currentSurface = &state.navSurface();
-    ACTS_VERBOSE("Current surface set to  "
+    ACTS_VERBOSE("Current surface set to "
                  << state.currentSurface->geometryId());
   }
 
@@ -376,7 +383,8 @@ class DirectNavigator {
 
     for (auto [intersectionIndex, intersection] :
          Acts::enumerate(intersections)) {
-      if (detail::checkPathLength(intersection.pathLength(), nearLimit,
+      if (intersection.isValid() &&
+          detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger())) {
         return NavigationTarget(intersection, intersectionIndex, surface,
                                 boundaryTolerance);

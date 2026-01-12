@@ -123,7 +123,11 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t>
   std::optional<FitResult> fit(const StrawCont_t& measurements,
                                const std::vector<int>& signs) const;
-
+  /// @brief Fit a straight line to a set of strip measurements and return the associated
+  ///        angle & intercept. As strips are assumed to measure bending &
+  ///        non-bending coordinates the fitting plane needs to be specified
+  /// @param measurements: List of measurements that are supposed to be fitted
+  /// @param projection: Specificitation of the plane (nonBending / bending)
   template <CompositeSpacePointContainer StripCont_t>
   std::optional<FitResult> fit(const StripCont_t& measurements,
                                const ResidualIdx projection) const;
@@ -189,7 +193,7 @@ class FastStrawLineFitter {
     double T_rz{0.};
     ///@brief Expectation value of T_{y} * r
     double T_ry{0.};
-    ///@brief Prediced y0 given as the expectation value of the radii
+    ///@brief Predicted y0 given as the expectation value of the radii
     ///         divided by the inverse covariance sum.
     double fitY0{0.};
     /// @brief Number of degrees of freedom
@@ -300,7 +304,7 @@ class FastStrawLineFitter {
   void completeResult(const FitAuxiliaries& fitPars, const double thetaTwoPrime,
                       FitResult& result) const;
   /// @brief Enumeration to describe the outcome of the fit iteration
-  enum class UpdateStatus {
+  enum class UpdateStatus : std::uint8_t {
     Converged,  ///< The fit converged
     Exceeded,   ////< Maximum number of iterations exceeded
     GoodStep,   ///< The fit did not converge yet
@@ -312,7 +316,7 @@ class FastStrawLineFitter {
   ///                   step was successful
   UpdateStatus updateIteration(const FitAuxiliariesWithT0& fitPars,
                                FitResultT0& fitResult) const;
-  ///  @brief Calculate the extension of the fit constants needed for the simultaneous theta - t0 fit
+  /// @brief Calculate the extension of the fit constants needed for the simultaneous theta - t0 fit
   /// @param ctx: Reference to the experiment specific calibration context to
   ///             calculate the updated straw drift radius, velocity &
   ///             acceleration

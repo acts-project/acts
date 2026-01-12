@@ -32,14 +32,12 @@
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
 #include <memory>
 #include <optional>
 #include <random>
 #include <string>
-#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -73,12 +71,11 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using BetheHeitlerApprox = AtlasBetheHeitlerApprox<6, 5>;
-using GSF =
-    GaussianSumFitter<Propagator, BetheHeitlerApprox, VectorMultiTrajectory>;
+using GSF = GaussianSumFitter<Propagator, VectorMultiTrajectory>;
 
-const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
-                  makeDefaultBetheHeitlerApprox());
+const GSF gsfZero(
+    makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
+    std::make_shared<AtlasBetheHeitlerApprox>(makeDefaultBetheHeitlerApprox()));
 
 std::default_random_engine rng(42);
 

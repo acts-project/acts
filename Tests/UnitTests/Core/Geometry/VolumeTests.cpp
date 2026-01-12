@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   // Build a translation
   SquareMatrix3 rotation = RotationMatrix3::Identity();
   double rotationAngle = 60_degree;
-  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;

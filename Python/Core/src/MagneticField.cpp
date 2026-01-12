@@ -15,7 +15,6 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/MagneticField/TextMagneticFieldIo.hpp"
-#include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -125,8 +124,8 @@ void addMagneticField(py::module_& m) {
 
   m.def(
       "MagneticFieldMapXyz",
-      [](const std::string& filename, const std::string& tree,
-         double lengthUnit, double BFieldUnit, bool firstOctant) {
+      [](const std::string& filename, double lengthUnit, double BFieldUnit,
+         bool firstOctant) {
         const std::filesystem::path file = filename;
 
         auto mapBins = [](std::array<std::size_t, 3> bins,
@@ -135,12 +134,7 @@ void addMagneticField(py::module_& m) {
                   bins[2]);
         };
 
-        if (file.extension() == ".root") {
-          auto map = ActsPlugins::makeMagneticFieldMapXyzFromRoot(
-              std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
-              firstOctant);
-          return std::make_shared<decltype(map)>(std::move(map));
-        } else if (file.extension() == ".txt") {
+        if (file.extension() == ".txt") {
           auto map = makeMagneticFieldMapXyzFromText(std::move(mapBins),
                                                      file.native(), lengthUnit,
                                                      BFieldUnit, firstOctant);
@@ -149,14 +143,13 @@ void addMagneticField(py::module_& m) {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }
       },
-      py::arg("file"), py::arg("tree") = "bField",
-      py::arg("lengthUnit") = UnitConstants::mm,
+      py::arg("file"), py::arg("lengthUnit") = UnitConstants::mm,
       py::arg("BFieldUnit") = UnitConstants::T, py::arg("firstOctant") = false);
 
   m.def(
       "MagneticFieldMapRz",
-      [](const std::string& filename, const std::string& tree,
-         double lengthUnit, double BFieldUnit, bool firstQuadrant) {
+      [](const std::string& filename, double lengthUnit, double BFieldUnit,
+         bool firstQuadrant) {
         const std::filesystem::path file = filename;
 
         auto mapBins = [](std::array<std::size_t, 2> bins,
@@ -164,12 +157,7 @@ void addMagneticField(py::module_& m) {
           return (bins[1] * sizes[0] + bins[0]);
         };
 
-        if (file.extension() == ".root") {
-          auto map = ActsPlugins::makeMagneticFieldMapRzFromRoot(
-              std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
-              firstQuadrant);
-          return std::make_shared<decltype(map)>(std::move(map));
-        } else if (file.extension() == ".txt") {
+        if (file.extension() == ".txt") {
           auto map = makeMagneticFieldMapRzFromText(std::move(mapBins),
                                                     file.native(), lengthUnit,
                                                     BFieldUnit, firstQuadrant);
@@ -178,8 +166,7 @@ void addMagneticField(py::module_& m) {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }
       },
-      py::arg("file"), py::arg("tree") = "bField",
-      py::arg("lengthUnit") = UnitConstants::mm,
+      py::arg("file"), py::arg("lengthUnit") = UnitConstants::mm,
       py::arg("BFieldUnit") = UnitConstants::T,
       py::arg("firstQuadrant") = false);
 }

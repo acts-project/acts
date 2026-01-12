@@ -60,7 +60,8 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   // Build a start vector
   Vector3 position{1., 2., 3.};
   double time = 4.;
-  Vector3 direction{sqrt(5. / 22.), 3. * sqrt(2. / 55.), 7. / sqrt(110.)};
+  Vector3 direction{std::sqrt(5. / 22.), 3. * std::sqrt(2. / 55.),
+                    7. / std::sqrt(110.)};
   double qop = 0.125;
   FreeVector parameters, startParameters;
   parameters << position[0], position[1], position[2], time, direction[0],
@@ -87,8 +88,9 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   BOOST_CHECK_EQUAL(transportJacobian, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(derivatives, FreeVector::Zero());
   BOOST_CHECK_NE(boundToFreeJacobian, 4. * BoundToFreeMatrix::Identity());
-  BOOST_CHECK_EQUAL(
-      direction, Vector3(sqrt(5. / 22.), 3. * sqrt(2. / 55.), 7. / sqrt(110.)));
+  BOOST_CHECK_EQUAL(direction,
+                    Vector3(std::sqrt(5. / 22.), 3. * std::sqrt(2. / 55.),
+                            7. / std::sqrt(110.)));
 
   // Reset
   covariance = Covariance::Identity();

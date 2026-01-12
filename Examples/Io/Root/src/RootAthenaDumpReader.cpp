@@ -91,7 +91,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   // Cluster features
   m_inputchain->SetBranchAddress("nCL", &nCL);
   m_inputchain->SetBranchAddress("CLindex", CLindex);
-  m_inputchain->SetBranchAddress("CLhardware", &CLhardware);
+  m_inputchain->SetBranchAddress("CLhardware", &CLhardware.get());
   m_inputchain->SetBranchAddress("CLx", CLx);
   m_inputchain->SetBranchAddress("CLy", CLy);
   m_inputchain->SetBranchAddress("CLz", CLz);
@@ -101,9 +101,9 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLphi_module", CLphi_module);
   m_inputchain->SetBranchAddress("CLside", CLside);
   m_inputchain->SetBranchAddress("CLmoduleID", CLmoduleID);
-  m_inputchain->SetBranchAddress("CLphis", &CLphis);
-  m_inputchain->SetBranchAddress("CLetas", &CLetas);
-  m_inputchain->SetBranchAddress("CLtots", &CLtots);
+  m_inputchain->SetBranchAddress("CLphis", &CLphis.get());
+  m_inputchain->SetBranchAddress("CLetas", &CLetas.get());
+  m_inputchain->SetBranchAddress("CLtots", &CLtots.get());
   m_inputchain->SetBranchAddress("CLloc_direction1", CLloc_direction1);
   m_inputchain->SetBranchAddress("CLloc_direction2", CLloc_direction2);
   m_inputchain->SetBranchAddress("CLloc_direction3", CLloc_direction3);
@@ -121,14 +121,15 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLnorm_x", CLnorm_x);
   m_inputchain->SetBranchAddress("CLnorm_y", CLnorm_y);
   m_inputchain->SetBranchAddress("CLnorm_z", CLnorm_z);
-  m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov);
+  m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov.get());
   if (!m_cfg.noTruth) {
     m_inputchain->SetBranchAddress("CLparticleLink_eventIndex",
-                                   &CLparticleLink_eventIndex);
+                                   &CLparticleLink_eventIndex.get());
     m_inputchain->SetBranchAddress("CLparticleLink_barcode",
-                                   &CLparticleLink_barcode);
-    m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked);
-    m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge);
+                                   &CLparticleLink_barcode.get());
+    m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked.get());
+    m_inputchain->SetBranchAddress("CLparticle_charge",
+                                   &CLparticle_charge.get());
   }
 
   // Particle features
@@ -153,8 +154,9 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_inputchain->SetBranchAddress("Part_vProdNout", Part_vProdNout);
     m_inputchain->SetBranchAddress("Part_vProdStatus", Part_vProdStatus);
     m_inputchain->SetBranchAddress("Part_vProdBarcode", Part_vProdBarcode);
-    m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID);
-    m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode);
+    m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID.get());
+    m_inputchain->SetBranchAddress("Part_vParentBarcode",
+                                   &Part_vParentBarcode.get());
   }
 
   // Spacepoint features
@@ -172,13 +174,14 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_inputchain->SetBranchAddress("SPcovz", SPcovz);
     m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
     m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
-    m_inputchain->SetBranchAddress("SPtopStripDirection", &SPtopStripDirection);
+    m_inputchain->SetBranchAddress("SPtopStripDirection",
+                                   &SPtopStripDirection.get());
     m_inputchain->SetBranchAddress("SPbottomStripDirection",
-                                   &SPbottomStripDirection);
+                                   &SPbottomStripDirection.get());
     m_inputchain->SetBranchAddress("SPstripCenterDistance",
-                                   &SPstripCenterDistance);
+                                   &SPstripCenterDistance.get());
     m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
-                                   &SPtopStripCenterPosition);
+                                   &SPtopStripCenterPosition.get());
   }
 
   // These quantities are not used currently and thus commented out

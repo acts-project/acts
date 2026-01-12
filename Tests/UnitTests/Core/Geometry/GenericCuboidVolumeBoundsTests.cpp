@@ -39,7 +39,7 @@ GeometryContext gctx = GeometryContext();
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(construction_test) {
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(construction_test) {
 }
 
 BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
 }
 
 BOOST_AUTO_TEST_CASE(ply_test) {
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(ply_test) {
 
 BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   float tol = 1e-4;
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0.4},
                {2, 1, 0.4},
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
 }
 
 BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {4, 0, 0},
                {4, 2, 0},

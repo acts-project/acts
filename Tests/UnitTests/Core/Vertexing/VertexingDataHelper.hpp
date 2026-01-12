@@ -29,9 +29,9 @@ enum VertexCsvData { BeamSpotData, VerticesData, TracksData };
 /// @brief Helper struct to store reference vertex related information
 struct VertexInfo {
   // The position
-  Vector3 position;
+  Vector3 position{};
   // The covariance
-  SquareMatrix3 covariance;
+  SquareMatrix3 covariance{};
   // Number of tracks
   int nTracks = 0;
   // Weight of first track

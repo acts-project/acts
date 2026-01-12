@@ -826,8 +826,7 @@ void CylinderVolumeHelper::glueTrackingVolumes(
       // (1) create the Boundary CylinderSurface
       auto cBounds =
           std::make_shared<CylinderBounds>(rGlueMin, 0.5 * (zMax - zMin));
-      std::shared_ptr<const RegularSurface> cSurface =
-          Surface::makeShared<CylinderSurface>(transform, cBounds);
+      auto cSurface = Surface::makeShared<CylinderSurface>(transform, cBounds);
       ACTS_VERBOSE(
           "             creating a new cylindrical boundary surface "
           "with bounds = "
@@ -851,8 +850,7 @@ void CylinderVolumeHelper::glueTrackingVolumes(
 
       // (2) create the BoundaryDiscSurface, in that case the zMin/zMax provided
       // are both the position of the disk in question
-      std::shared_ptr<const RegularSurface> dSurface =
-          Surface::makeShared<DiscSurface>(transform, rMin, rMax);
+      auto dSurface = Surface::makeShared<DiscSurface>(transform, rMin, rMax);
       ACTS_VERBOSE(
           "             creating a new disc-like boundary surface "
           "with bounds = "

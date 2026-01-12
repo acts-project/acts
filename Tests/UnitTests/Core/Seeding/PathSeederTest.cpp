@@ -8,14 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/detail/CuboidalDetectorHelper.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CuboidalDetectorHelper.hpp"
+#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdGenerator.hpp"
+#include "Acts/Geometry/PortalGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Seeding/PathSeeder.hpp"
@@ -113,7 +113,7 @@ class PathWidthProvider {
 // and the direction at the first hit
 class TrackEstimator {
  public:
-  Vector3 m_ip;
+  Vector3 m_ip{};
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
   std::pair<BoundTrackParameters, BoundTrackParameters> operator()(
@@ -177,9 +177,9 @@ struct ConstructSourceLinkGrid {
 std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
   RotationMatrix3 rotation;
   double angle = 90_degree;
-  Vector3 xPos(cos(angle), 0., sin(angle));
+  Vector3 xPos(std::cos(angle), 0., std::sin(angle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-sin(angle), 0., cos(angle));
+  Vector3 zPos(-std::sin(angle), 0., std::cos(angle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;

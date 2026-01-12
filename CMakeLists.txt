@@ -95,12 +95,15 @@ option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
+# python related options
+option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
+option(ACTS_BUILD_EXAMPLES "Build basic examples components" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
@@ -108,7 +111,7 @@ option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "[Deprecated] Build python bindings and enables the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
@@ -141,6 +144,14 @@ option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
 
+# Preserve previous behaviour of ACTS_BUILD_PYTHON_BINDINGS but mark as deprecated
+if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+    message(
+        DEPRECATION
+        "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS is deprecated. Enable ACTS_BUILD_EXAMPLES and ACTS_BUILD_PYTHON_BINDINGS to achieve the same effect."
+    )
+    set(ACTS_BUILD_PYTHON_BINDINGS ON)
+endif()
 # any examples component activates the general examples option
 set_option_if(
     ACTS_BUILD_EXAMPLES
@@ -242,7 +253,7 @@ endif()
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_actsvg_version 0.4.56)
-set(_acts_boost_version 1.77.0) # first version with C++20 support
+set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
 set(_acts_edm4hep_version 0.10.5)
@@ -259,16 +270,12 @@ set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 2.13.1)
 set(_acts_detray_version 0.103.0)
-set(_acts_traccc_version 0.26.0)
+set(_acts_traccc_version 0.26.1)
 set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.21.0)
 set(_acts_algebraplugins_version 0.28.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
-
-# recommended dependency version. if there is an opportunity to reach
-# this version we will try so.
-set(_acts_boost_recommended_version 1.78.0)
 
 # Help with compiler flags discovery
 include(ActsFunctions)
@@ -296,13 +303,6 @@ if(ACTS_SETUP_BOOST)
         find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
     endif()
 
-    if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
-        message(
-            WARNING
-            "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}"
-        )
-    endif()
-
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
         set(_boost_version_severity WARNING)
         if(ACTS_BUILD_EXAMPLES)
@@ -317,13 +317,45 @@ endif()
 
 if(ACTS_SETUP_EIGEN3)
     if(ACTS_USE_SYSTEM_EIGEN3)
-        find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
+        find_package(Eigen3 REQUIRED CONFIG)
+
+        if(DEFINED Eigen3_VERSION)
+            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_version)
+                message(
+                    FATAL_ERROR
+                    "Eigen3 ${Eigen3_VERSION} is too old (need >= 3.4.0)"
+                )
+            endif()
+            if(Eigen3_VERSION VERSION_GREATER_EQUAL 6.0.0)
+                message(
+                    FATAL_ERROR
+                    "Eigen3 ${Eigen3_VERSION} is not supported (need < 6.0.0)"
+                )
+            endif()
+        else()
+            message(
+                WARNING
+                "Eigen3 version unknown - cannot verify version requirements"
+            )
+        endif()
     else()
         add_subdirectory(thirdparty/eigen3)
     endif()
-endif()
+    # get the first include path so we can nicely print where we get eigen from
+    get_target_property(
+        _eigen3_include_dirs
+        Eigen3::Eigen
+        INTERFACE_INCLUDE_DIRECTORIES
+    )
+    if(_eigen3_include_dirs)
+        list(GET _eigen3_include_dirs 0 _eigen3_first_include_dir)
+    endif()
 
-find_package(Filesystem REQUIRED)
+    message(
+        STATUS
+        "Found Eigen3 at: ${_eigen3_first_include_dir} (${Eigen3_VERSION})"
+    )
+endif()
 
 # CUDA settings are collected here in a macro, so that they can be reused by different plugins
 macro(enable_cuda)
@@ -402,7 +434,7 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         ${_acts_root_version}
         REQUIRED
         CONFIG
-        COMPONENTS Geom Graf Tree RIO
+        COMPONENTS Geom Graf Tree RIO Hist
     )
     check_root_compatibility()
 endif()
@@ -538,7 +570,7 @@ if(ACTS_BUILD_EXAMPLES)
         )
         check_root_compatibility()
     endif()
-    if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+    if(ACTS_BUILD_PYTHON_BINDINGS)
         find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
         if(ACTS_USE_SYSTEM_PYBIND11)
             find_package(pybind11 CONFIG REQUIRED)
@@ -570,7 +602,6 @@ endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
     find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
-    find_package(Sphinx REQUIRED)
 endif()
 
 # core library, core plugins, and other components
@@ -581,11 +612,11 @@ add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
 add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 
-# Python bindings infrastructure
-add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-
-# examples
+# Examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+
+# Python bindings
+add_subdirectory_if(Python ACTS_BUILD_PYTHON_BINDINGS)
 
 # automated tests and benchmarks
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)

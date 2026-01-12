@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
@@ -28,6 +27,9 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsPlugins {
+
+/// @addtogroup geomodel_plugin
+/// @{
 
 /// @brief Factory class to convert GeoModel objects into Acts volumes and surfaces. The surface conversion
 ///        process constructs surfaces from GeoTrd, GeoBox, GeoTube,
@@ -51,8 +53,6 @@ class GeoModelDetectorObjectFactory {
   struct ConvertedGeoVol {
     /// @brief Pointer to the envelope volume
     std::shared_ptr<Acts::Volume> volume{};
-    /// @brief Pointer to the converted Gen-2 volume
-    std::shared_ptr<Acts::Experimental::DetectorVolume> gen2Volume{};
     /// @brief Pointer to the full physical volume from which the
     ///        Volumes have been built
     FpvConstLink fullPhysVol{};
@@ -152,4 +152,7 @@ class GeoModelDetectorObjectFactory {
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
+
+/// @}
+
 }  // namespace ActsPlugins

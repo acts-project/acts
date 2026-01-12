@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import acts
+import acts.examples
 from acts.json import MaterialMapJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
@@ -13,6 +14,9 @@ from acts.examples import (
     ProcessCode,
     CsvTrackingGeometryWriter,
     ObjTrackingGeometryWriter,
+)
+
+from acts.examples.json import (
     JsonSurfacesWriter,
     JsonMaterialWriter,
     JsonFormat,
@@ -90,7 +94,7 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    # detector = GenericDetector()
+    # detector = acts.examples.GenericDetector()
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()

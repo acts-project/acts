@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/HashedString.hpp"
+
 #include <any>
 #include <array>
 #include <cassert>
@@ -106,9 +108,13 @@ static _AnyAllocationReporter s_reporter;
 #define _ACTS_ANY_NOEXCEPT noexcept
 #endif
 
+/// @addtogroup utilities
+/// @{
+
+/// Base class for all instances of @ref AnyBase regarfless of SBO size
 class AnyBaseAll {};
 
-/// Small opaque cache type which uses small buffer optimization
+/// Small opaque cache type with configurable small buffer optimization
 template <std::size_t SIZE>
 class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
@@ -166,7 +172,7 @@ class AnyBase : public AnyBaseAll {
   T& as() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (makeHandler<T>() != m_handler) {
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
       throw std::bad_any_cast{};
     }
 
@@ -184,7 +190,7 @@ class AnyBase : public AnyBaseAll {
   const T& as() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (makeHandler<T>() != m_handler) {
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
       throw std::bad_any_cast{};
     }
 
@@ -301,6 +307,13 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
+  template <typename T>
+  static consteval std::uint64_t typeHash() {
+    // Technically, `__PRETTY_FUNCTION__` contains extra content, but should be
+    // unique per type, that's all we care about.
+    return detail::fnv1a_64(__PRETTY_FUNCTION__);
+  }
+
   struct Handler {
     void (*destroy)(void* ptr) = nullptr;
     void (*moveConstruct)(void* from, void* to) = nullptr;
@@ -308,6 +321,7 @@ class AnyBase : public AnyBaseAll {
     void* (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
     bool heapAllocated{false};
+    std::uint64_t typeHash{0};
   };
 
   template <typename T>
@@ -336,6 +350,8 @@ class AnyBase : public AnyBaseAll {
                     heapAllocated<T>()) {
         h.copy = &copyImpl<T>;
       }
+
+      h.typeHash = typeHash<T>();
 
       _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
       _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
@@ -541,10 +557,12 @@ class AnyBase : public AnyBaseAll {
 };
 
 /// @brief A type-safe container for single values of any type
-/// @details This is a custom implementation similar to std::any but optimized for small types
+/// @details This is a custom implementation similar to `std::any` but optimized for small types
 ///          that can fit into a pointer-sized buffer. Values larger than a
 ///          pointer are stored on the heap.
 using Any = AnyBase<sizeof(void*)>;
+
+/// @}
 
 #undef _ACTS_ANY_VERBOSE
 #undef _ACTS_ANY_VERBOSE_BUFFER

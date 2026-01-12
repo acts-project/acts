@@ -11,6 +11,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -38,6 +39,19 @@ class TrackFitterFunction {
     const Acts::Surface* referenceSurface = nullptr;
     Acts::PropagatorPlainOptions propOptions;
     bool doRefit = false;
+
+    GeneralFitterOptions(const Acts::GeometryContext& gCtx,
+                         const Acts::MagneticFieldContext& mCtx,
+                         const Acts::CalibrationContext& cCtx,
+                         const Acts::Surface* refSurface,
+                         const Acts::PropagatorPlainOptions& pOptions,
+                         bool refit)
+        : geoContext(gCtx),
+          magFieldContext(mCtx),
+          calibrationContext(cCtx),
+          referenceSurface(refSurface),
+          propOptions(pOptions),
+          doRefit(refit) {}
   };
 
   virtual ~TrackFitterFunction() = default;
@@ -63,16 +77,12 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering = true, bool energyLoss = true,
     double reverseFilteringMomThreshold = 0.0,
-    double reverseFilteringCovarianceScaling = 1.0,
+    double reverseFilteringCovarianceScaling = 100.0,
     Acts::FreeToBoundCorrection freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
     double chi2Cut = std::numeric_limits<double>::infinity(),
     const Acts::Logger& logger = *Acts::getDefaultLogger("Kalman",
                                                          Acts::Logging::INFO));
-
-/// This type is used in the Examples framework for the Bethe-Heitler
-/// approximation
-using BetheHeitlerApprox = Acts::AtlasBetheHeitlerApprox<6, 5>;
 
 /// Available algorithms for the mixture reduction
 enum class MixtureReductionAlgorithm { weightCut, KLDistance };
@@ -94,8 +104,9 @@ enum class MixtureReductionAlgorithm { weightCut, KLDistance };
 std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
+    const std::shared_ptr<const Acts::BetheHeitlerApprox>& betheHeitlerApprox,
+    std::size_t maxComponents, double weightCutoff,
+    Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
     double reverseFilteringCovarianceScaling, const Acts::Logger& logger);
 

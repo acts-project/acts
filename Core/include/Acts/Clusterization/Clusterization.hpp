@@ -181,18 +181,7 @@ void mergeClusters(Acts::Ccl::ClusteringData& data, const CellCollection& cells,
                    ClusterCollection& outv);
 
 /// @brief createClusters
-/// Convenience function which runs both labelClusters and createClusters.
-template <typename CellCollection, typename ClusterCollection,
-          std::size_t GridDim = 2,
-          typename Connect =
-              DefaultConnect<typename CellCollection::value_type, GridDim>>
-[[deprecated]]
-ClusterCollection createClusters(CellCollection& cells,
-                                 Connect&& connect = Connect());
-
-/// @brief createClusters
-/// Alternative convenience function which runs both labelClusters and
-/// createClusters.
+/// Convenience function which runs both labelClusters and mergeClusters.
 ///
 /// @throws std::invalid_argument if the input contains duplicate cells.
 template <typename CellCollection, typename ClusterCollection,

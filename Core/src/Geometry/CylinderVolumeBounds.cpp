@@ -223,7 +223,7 @@ bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   double ros = perp(pos);
-  bool insidePhi = cos(phi(pos)) >= cos(get(eHalfPhiSector)) - tol;
+  bool insidePhi = std::cos(phi(pos)) >= std::cos(get(eHalfPhiSector)) - tol;
   bool insideR = insidePhi
                      ? ((ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol))
                      : false;

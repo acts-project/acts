@@ -269,12 +269,14 @@ void EDM4hepUtil::writeTrajectory(
       };
 
       // clang-format off
-      trackState.covMatrix = {c(0, 0),
-                              c(1, 0), c(1, 1),
-                              c(2, 0), c(2, 1), c(2, 2),
-                              c(3, 0), c(3, 1), c(3, 2), c(3, 3),
-                              c(4, 0), c(4, 1), c(4, 2), c(4, 3), c(4, 4),
-                              c(5, 0), c(5, 1), c(5, 2), c(5, 3), c(5, 4), c(5, 5)};
+      trackState.covMatrix = edm4hep::CovMatrix6f{
+        c(0, 0),
+        c(1, 0), c(1, 1),
+        c(2, 0), c(2, 1), c(2, 2),
+        c(3, 0), c(3, 1), c(3, 2), c(3, 3),
+        c(4, 0), c(4, 1), c(4, 2), c(4, 3), c(4, 4),
+        c(5, 0), c(5, 1), c(5, 2), c(5, 3), c(5, 4), c(5, 5)
+      };
       // clang-format on
     }
 

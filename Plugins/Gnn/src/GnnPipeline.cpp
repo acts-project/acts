@@ -9,6 +9,7 @@
 #include "ActsPlugins/Gnn/GnnPipeline.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Gnn/detail/NvtxUtils.hpp"
 
 #ifdef ACTS_GNN_WITH_CUDA
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
@@ -66,8 +67,10 @@ std::vector<std::vector<int>> GnnPipeline::run(
 
   try {
     auto t0 = std::chrono::high_resolution_clock::now();
+    ACTS_NVTX_START(graph_construction);
     auto tensors =
         (*m_graphConstructor)(features, spacepointIDs.size(), moduleIds, ctx);
+    ACTS_NVTX_STOP(graph_construction);
     auto t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {
@@ -82,7 +85,9 @@ std::vector<std::vector<int>> GnnPipeline::run(
 
     for (const auto &edgeClassifier : m_edgeClassifiers) {
       t0 = std::chrono::high_resolution_clock::now();
+      ACTS_NVTX_START(edge_classifier);
       tensors = (*edgeClassifier)(std::move(tensors), ctx);
+      ACTS_NVTX_STOP(edge_classifier);
       t1 = std::chrono::high_resolution_clock::now();
 
       if (timing != nullptr) {
@@ -93,7 +98,9 @@ std::vector<std::vector<int>> GnnPipeline::run(
     }
 
     t0 = std::chrono::high_resolution_clock::now();
+    ACTS_NVTX_START(track_building);
     auto res = (*m_trackBuilder)(std::move(tensors), spacepointIDs, ctx);
+    ACTS_NVTX_STOP(track_building);
     t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {

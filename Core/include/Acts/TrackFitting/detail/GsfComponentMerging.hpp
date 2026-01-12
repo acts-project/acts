@@ -160,40 +160,36 @@ auto gaussianMixtureMeanCov(const components_t components,
     return RetType{beginPars / beginWeight, beginCov / beginWeight};
   }
 
-  // Zero initialized values for aggregation
-  ActsVector<D> mean = ActsVector<D>::Zero();
+  // Do the (circular) mean with complex arithmetic.
+  // For normal values, just keep the real values. For angles, use the complex
+  // phase. Weighting then transparently happens by multiplying a real-valued
+  // weight.
+  using CVec = Eigen::Matrix<std::complex<double>, D, 1>;
+  CVec cMean = CVec::Zero();
   WeightType sumOfWeights{0.0};
 
   for (const auto &cmp : components) {
     const auto &[weight_l, pars_l, cov_l] = projector(cmp);
 
-    sumOfWeights += weight_l;
-    mean += weight_l * pars_l;
+    CVec pars_l_c = pars_l;
 
-    // Apply corrections for cyclic coordinates
-    auto handleCyclicMean = [&ref = beginPars, &pars = pars_l,
-                             &weight = weight_l, &mean = mean](auto desc) {
-      const auto delta = (ref[desc.idx] - pars[desc.idx]) / desc.constant;
-
-      if (delta > std::numbers::pi) {
-        mean[desc.idx] += 2. * std::numbers::pi * weight * desc.constant;
-      } else if (delta < -std::numbers::pi) {
-        mean[desc.idx] -= 2. * std::numbers::pi * weight * desc.constant;
-      }
+    auto setPolar = [&](auto desc) {
+      pars_l_c[desc.idx] = std::polar(1.0, pars_l[desc.idx] / desc.constant);
     };
+    std::apply([&](auto... dsc) { (setPolar(dsc), ...); }, angleDesc);
 
-    std::apply([&](auto... dsc) { (handleCyclicMean(dsc), ...); }, angleDesc);
+    sumOfWeights += weight_l;
+    cMean += weight_l * pars_l_c;
   }
 
-  mean /= sumOfWeights;
+  cMean /= sumOfWeights;
 
-  auto wrap = [&](auto desc) {
-    mean[desc.idx] = wrap_periodic(mean[desc.idx] / desc.constant,
-                                   -std::numbers::pi, 2 * std::numbers::pi) *
-                     desc.constant;
+  ActsVector<D> mean = cMean.real();
+
+  auto getArg = [&](auto desc) {
+    mean[desc.idx] = desc.constant * std::arg(cMean[desc.idx]);
   };
-
-  std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
+  std::apply([&](auto... dsc) { (getArg(dsc), ...); }, angleDesc);
 
   // MARK: fpeMaskBegin(FLTUND, 1, #2347)
   const auto cov =

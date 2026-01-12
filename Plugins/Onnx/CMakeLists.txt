@@ -1,6 +1,5 @@
 acts_add_library(
     PluginOnnx
-    SHARED
     # source files
     src/OnnxRuntimeBase.cpp
     src/MLTrackClassifier.cpp

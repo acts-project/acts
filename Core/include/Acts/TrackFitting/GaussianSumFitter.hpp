@@ -8,12 +8,14 @@
 
 #pragma once
 
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
@@ -39,8 +41,9 @@ struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters>
 }  // namespace detail
 
 /// Gaussian Sum Fitter implementation.
-/// @tparam propagator_t The propagator type on which the algorithm is built on
-/// @tparam bethe_heitler_approx_t The type of the Bethe-Heitler-Approximation
+/// @ingroup track_fitting
+/// @tparam propagator_t The propagator type on which the algorithm is built
+///         on, usually an instance of @ref Acts::Propagator
 /// @tparam traj_t The MultiTrajectory type (backend)
 ///
 /// @note This GSF implementation tries to be as compatible to the KalmanFitter
@@ -49,14 +52,14 @@ struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters>
 /// individual components from the GSF, the only information returned in the
 /// MultiTrajectory are the means of the states. Therefore, also NO dedicated
 /// component smoothing is performed as described e.g. by R. Fruewirth.
-template <typename propagator_t, typename bethe_heitler_approx_t,
-          typename traj_t>
+template <typename propagator_t, typename traj_t>
 struct GaussianSumFitter {
   /// Constructor with propagator, Bethe-Heitler approximation, and logger
   /// @param propagator Propagator for track propagation
   /// @param bha Bethe-Heitler approximation for energy loss modeling
   /// @param _logger Logger for diagnostic output
-  GaussianSumFitter(propagator_t&& propagator, bethe_heitler_approx_t&& bha,
+  GaussianSumFitter(propagator_t&& propagator,
+                    std::shared_ptr<const BetheHeitlerApprox> bha,
                     std::unique_ptr<const Logger> _logger =
                         getDefaultLogger("GSF", Logging::INFO))
       : m_propagator(std::move(propagator)),
@@ -68,7 +71,7 @@ struct GaussianSumFitter {
   propagator_t m_propagator;
 
   /// The fitter holds the instance of the bethe heitler approx
-  bethe_heitler_approx_t m_betheHeitlerApproximation;
+  std::shared_ptr<const BetheHeitlerApprox> m_betheHeitlerApproximation;
 
   /// The logger
   std::unique_ptr<const Logger> m_logger;
@@ -83,7 +86,7 @@ struct GaussianSumFitter {
   using GsfNavigator = typename propagator_t::Navigator;
 
   /// The actor type
-  using GsfActor = detail::GsfActor<bethe_heitler_approx_t, traj_t>;
+  using GsfActor = detail::GsfActor<traj_t>;
 
   /// @brief The fit function for the Direct navigator
   /// @param begin Iterator to the start of source links
@@ -115,7 +118,7 @@ struct GaussianSumFitter {
 
       propOptions.navigation.surfaces = sSequence;
       propOptions.actorList.template get<GsfActor>()
-          .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
+          .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
       return propOptions;
     };
@@ -131,7 +134,7 @@ struct GaussianSumFitter {
 
       propOptions.navigation.surfaces = sSequence;
       propOptions.actorList.template get<GsfActor>()
-          .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
+          .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
       return propOptions;
     };
@@ -174,7 +177,7 @@ struct GaussianSumFitter {
       }
 
       propOptions.actorList.template get<GsfActor>()
-          .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
+          .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
       return propOptions;
     };
@@ -197,7 +200,7 @@ struct GaussianSumFitter {
       }
 
       propOptions.actorList.template get<GsfActor>()
-          .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
+          .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
       return propOptions;
     };
@@ -341,10 +344,6 @@ struct GaussianSumFitter {
     const auto& fwdGsfResult =
         fwdResult->template get<typename GsfActor::result_type>();
 
-    if (!fwdGsfResult.result.ok()) {
-      return return_error_or_abort(fwdGsfResult.result.error());
-    }
-
     if (fwdGsfResult.measurementStates == 0) {
       return return_error_or_abort(GsfError::NoMeasurementStatesCreatedForward);
     }
@@ -411,9 +410,8 @@ struct GaussianSumFitter {
         return ResultType::failure(initRes.error());
       }
 
-      assert(
-          (fwdGsfResult.lastMeasurementTip != MultiTrajectoryTraits::kInvalid &&
-           "tip is invalid"));
+      assert((fwdGsfResult.lastMeasurementTip != kTrackIndexInvalid &&
+              "tip is invalid"));
 
       auto proxy = trackContainer.trackStateContainer().getTrackState(
           fwdGsfResult.lastMeasurementTip);
@@ -440,10 +438,6 @@ struct GaussianSumFitter {
 
     auto& bwdGsfResult =
         bwdResult->template get<typename GsfActor::result_type>();
-
-    if (!bwdGsfResult.result.ok()) {
-      return return_error_or_abort(bwdGsfResult.result.error());
-    }
 
     if (bwdGsfResult.measurementStates == 0) {
       return return_error_or_abort(

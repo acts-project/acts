@@ -45,7 +45,6 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   CovarianceMatrix covTrk;
   covTrk.setIdentity();
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 1;
-  BoundVector parValues;
 
   std::size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(ts_idx);

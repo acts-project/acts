@@ -8,10 +8,7 @@ add_unittest(BinningData BinningDataTests.cpp)
 add_unittest(BinUtility BinUtilityTests.cpp)
 add_unittest(PointerConcept PointerConceptTest.cpp)
 add_unittest(LineWithPartialTest LineWithPartialTests.cpp)
-
 add_unittest(BoundingBox BoundingBoxTest.cpp)
-target_link_libraries(ActsUnitTestBoundingBox PRIVATE std::filesystem)
-
 add_unittest(DBScan DBScanTests.cpp)
 add_unittest(Extendable ExtendableTests.cpp)
 add_unittest(FiniteStateMachine FiniteStateMachineTests.cpp)

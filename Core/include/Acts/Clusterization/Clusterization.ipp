@@ -263,17 +263,6 @@ void labelClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
 
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim, typename Connect>
-ClusterCollection createClusters(CellCollection& cells, Connect&& connect) {
-  ClusterCollection clusters;
-  Acts::Ccl::ClusteringData data;
-  Acts::Ccl::createClusters<CellCollection, ClusterCollection, GridDim,
-                            Connect>(data, cells, clusters,
-                                     std::forward<Connect>(connect));
-  return clusters;
-}
-
-template <typename CellCollection, typename ClusterCollection,
-          std::size_t GridDim, typename Connect>
   requires(GridDim == 1 || GridDim == 2)
 void createClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
                     ClusterCollection& clusters, Connect&& connect) {

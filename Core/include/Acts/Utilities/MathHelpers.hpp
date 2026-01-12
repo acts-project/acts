@@ -8,8 +8,9 @@
 
 #pragma once
 
+#include <cassert>
 #include <cmath>
-
+#include <type_traits>
 namespace Acts {
 
 /// @brief Returns the absolute of a number
@@ -27,6 +28,21 @@ constexpr T abs(const T n) {
     return n;
   } else {
     return std::abs(n);
+  }
+}
+/// @brief Copies the sign of a signed variable onto the copyTo input object
+///        Return type & magnitude remain unaffected by this method which allows
+///        usage for Vectors & other types providing the - operator.
+///        By convention, the zero is assigned to a positive sign.
+/// @param copyTo: Variable to which the sign is copied to.
+/// @param sign: Variable from which the sign is taken.
+template <typename out_t, typename sign_t>
+constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
+  if constexpr (std::is_enum_v<sign_t>) {
+    return copySign(copyTo, static_cast<std::underlying_type_t<sign_t>>(sign));
+  } else {
+    constexpr sign_t zero = 0;
+    return sign >= zero ? copyTo : -copyTo;
   }
 }
 

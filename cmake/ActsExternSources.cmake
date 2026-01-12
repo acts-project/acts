@@ -34,7 +34,7 @@ set(ACTS_DETRAY_SOURCE
 mark_as_advanced(ACTS_DETRAY_SOURCE)
 
 set(ACTS_TRACCC_SOURCE
-    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=cee2d24ebd8dc99fd906fc41ee6e2dac0ce9f9b2c63eff4c06dc57f14365c3b5"
+    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=d2dd856a83503ab452936f79ebb2496ce59e2f63984b0e9403d1c881546b8872"
     CACHE STRING
     "Source to take TRACCC from"
 )
@@ -80,5 +80,11 @@ set(ACTS_ODD_SOURCE
     CACHE STRING
     "Source to take OpenDataDetector from"
 )
-
 mark_as_advanced(ACTS_ODD_SOURCE)
+
+set(ACTS_MODULEMAPGRAPH_SOURCE
+    "GIT_REPOSITORY;https://gitlab.cern.ch/gnn4itkteam/ModuleMapGraph;GIT_TAG;1.1.14"
+    CACHE STRING
+    "Source to take ModuleMapGraph from"
+)
+mark_as_advanced(ACTS_MODULEMAPGRAPH_SOURCE)

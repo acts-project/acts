@@ -8,7 +8,6 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
@@ -135,7 +134,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   LayerBuilder::Config plbConfig;
   plbConfig.layerCreator = layerCreator;
   plbConfig.layerIdentification = "Pixel";
-  // material concentration alsways outside the modules
+  // material concentration always outside the modules
   plbConfig.centralProtoLayers = pplCreator.centralProtoLayers(gctx);
   plbConfig.centralLayerMaterialConcentration = {1, 1, 1, 1};
   plbConfig.centralLayerMaterial = {

@@ -23,8 +23,13 @@ class TrackingVolume;
 
 namespace ActsPlugins::Svg {
 
+using ProtoPortal = actsvg::proto::portal<std::vector<Acts::Vector3>>;
+using ProtoLink = ProtoPortal::link;
+
+/// @ingroup actsvg_plugin
 namespace TrackingGeometryConverter {
 
+/// @ingroup actsvg_plugin
 /// Nested Options struct for the writing configuration
 struct Options {
   /// Prefix the output names
@@ -33,6 +38,7 @@ struct Options {
   Acts::GeometryHierarchyMap<LayerConverter::Options> layerOptions;
 };
 
+/// @ingroup actsvg_plugin
 /// State object to collect geometry-wise information
 struct State {
   std::vector<actsvg::svg::object> xyCrossSection;
@@ -65,8 +71,10 @@ void convert(const Acts::GeometryContext& gctx,
 
 }  // namespace TrackingGeometryConverter
 
+/// @ingroup actsvg_plugin
 namespace TrackingGeometryProjections {
 
+/// @ingroup actsvg_plugin
 struct Options {
   std::string prefix = "";
 
@@ -79,7 +87,7 @@ struct Options {
 /// Convert into xy and zr projections only
 ///
 /// @param gctx the geometry context
-/// @param tVolume the tracking volume
+/// @param tGeometry the tracking volume
 /// @param cOptions the conversion options
 ///
 /// @note best performant if configured with options

@@ -68,6 +68,11 @@ class TrackContainer {
   using ConstTrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, true>;
 
+  static_assert(ConstTrackProxyConcept<ConstTrackProxy>,
+                "ConstTrackProxy must fulfill the TrackProxyConcept");
+  static_assert(ReadOnly || MutableTrackProxyConcept<TrackProxy>,
+                "TrackProxy must fulfill the TrackProxyConcept");
+
   /// Type alias for track container backend type
   using TrackContainerBackend = track_container_t;
   /// Type alias for track state container backend type
@@ -242,7 +247,7 @@ class TrackContainer {
   /// manage the dynamic columns.
   /// @{
 
-  /// Add a dymanic column to the track container
+  /// Add a dynamic column to the track container
   /// @note Only available if the track container is not read-only
   /// @param key the name of the column to be added
   template <typename T>

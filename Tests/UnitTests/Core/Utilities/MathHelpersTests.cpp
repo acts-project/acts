@@ -43,6 +43,40 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
   CHECK_CLOSE_REL(stdDouble, fastDouble, 1e-6);
 }
 
+BOOST_AUTO_TEST_CASE(CopySign) {
+  BOOST_CHECK_EQUAL(Acts::copySign(5, -10), -5);
+  BOOST_CHECK_EQUAL(Acts::copySign(5, 0), 5);
+  BOOST_CHECK_EQUAL(Acts::copySign(5, 55), 5);
+
+  static_assert(Acts::copySign(5, -10) == -5);
+  static_assert(Acts::copySign(5, 0) == 5);
+  static_assert(Acts::copySign(5, 55) == 5);
+
+  BOOST_CHECK_EQUAL(Acts::copySign(5, -std::numeric_limits<double>::infinity()),
+                    -5);
+  BOOST_CHECK_EQUAL(Acts::copySign(5, std::numeric_limits<double>::infinity()),
+                    5);
+
+  static_assert(Acts::copySign(5., -std::numeric_limits<double>::infinity()) ==
+                -5.);
+  static_assert(Acts::copySign(5., 0) == 5);
+  static_assert(Acts::copySign(5., std::numeric_limits<double>::infinity()) ==
+                5.);
+
+  BOOST_CHECK_EQUAL(Acts::copySign(5., -10.), -5.);
+  BOOST_CHECK_EQUAL(Acts::copySign(5., 0.), 5.);
+  BOOST_CHECK_EQUAL(Acts::copySign(5., 55.), 5.);
+
+  enum class CopyEnum : int { b = 1, a = -1, c = 0 };
+  BOOST_CHECK_EQUAL(Acts::copySign(5, CopyEnum::a), -5);
+  BOOST_CHECK_EQUAL(Acts::copySign(5, CopyEnum::b), 5);
+  BOOST_CHECK_EQUAL(Acts::copySign(5, CopyEnum::c), 5);
+
+  const Acts::Vector3 v{Acts::Vector3::UnitZ()};
+  CHECK_CLOSE_ABS(Acts::copySign(v, -1).dot(v), -1., 1.e-7);
+  CHECK_CLOSE_ABS(Acts::copySign(v, 1).dot(v), 1., 1.e-7);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTetsts

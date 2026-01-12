@@ -8,7 +8,6 @@
 
 #include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
-#include "Acts/Detector/detail/ProtoMaterialHelper.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ActsPlugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
@@ -19,7 +18,6 @@
 #include "DD4hep/DetElement.h"
 
 using namespace Acts;
-using namespace Acts::Experimental;
 using namespace Acts::detail;
 
 namespace ActsPlugins {
@@ -148,7 +146,7 @@ DD4hepDetectorSurfaceFactory::constructPassiveComponents(
 }
 
 void DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
-    const GeometryContext& gctx, const std::string& prefix,
+    const GeometryContext& /*gctx*/, const std::string& prefix,
     const dd4hep::DetElement& dd4hepElement, Surface& surface, double thickness,
     const Options& options) const {
   // Bool proto material overrules converted material
@@ -162,10 +160,6 @@ void DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
     for (const auto& [dpAxis, bins] : materialBinning) {
       pmBinning.emplace_back(dpAxis);
     }
-    ACTS_VERBOSE(" - converted binning is " << pmBinning);
-    Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
-        gctx, surface, pmBinning);
-
   } else if (options.convertMaterial) {
     ACTS_VERBOSE(" - direct conversion of DD4hep material triggered.");
     // Extract the material

@@ -15,6 +15,7 @@
 
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
+#include <thrust/sort.h>
 
 namespace ActsPlugins::detail {
 
@@ -258,6 +259,58 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   return nLabels;
+}
+
+/// Kernel to compute the bounds for each label in the labels array.
+/// assume we have labels
+/// 0, 0, 0, 1, 1, 2, 2, 2, 2
+/// subtract the previous label
+/// 0, 0, 0, 1, 0, 1, 0, 0, 0
+/// set the bounds
+/// 0, 3, 5
+template <typename TLabel>
+__global__ void setBounds(const TLabel *labels, TLabel *bounds,
+                          std::size_t size, std::size_t numLabels) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx >= size) {
+    return;
+  } else if (idx == 0) {
+    bounds[0] = 0;
+    return;
+  }
+
+  if (idx == size - 1) {
+    bounds[numLabels] = size;
+  }
+
+  auto diff = labels[idx] - labels[idx - 1];
+  if (diff != 0) {
+    //printf("idx %d, diff %d, labels[idx] %d\n", idx, diff, labels[idx]);
+    bounds[labels[idx]] = idx;
+  }
+}
+
+/// Function to find the bounds for each label in the labels array.
+/// @param labels The array of labels (size: numSpacepoints)
+/// @param spacepointIds The array of spacepoint IDs (size: numSpacepoints)
+/// @param bounds The array to store the bounds for each label (size: numLabels)
+/// @param numSpacepoints The number of spacepoints
+/// @param numLabels The number of unique labels
+/// @param stream The CUDA stream to use for the operation
+template <typename TLabel, typename TSpacepointId>
+void findTrackCandidateBounds(TLabel *labels, TSpacepointId *spacepointIds,
+                              TLabel *bounds, std::size_t numSpacepoints,
+                              std::size_t numLabels, cudaStream_t stream) {
+  // Sort the labels and spacepoint IDs by labels
+  thrust::sort_by_key(thrust::device.on(stream), labels,
+                      labels + numSpacepoints, spacepointIds);
+
+  // Set the bounds for each label
+  dim3 blockSize = 1024;
+  dim3 gridSize = (numSpacepoints + blockSize.x - 1) / blockSize.x;
+  setBounds<<<gridSize, blockSize, 0, stream>>>(labels, bounds, numSpacepoints,
+                                                numLabels);
+  ACTS_CUDA_CHECK(cudaGetLastError());
 }
 
 }  // namespace ActsPlugins::detail

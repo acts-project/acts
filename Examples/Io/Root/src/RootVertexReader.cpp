@@ -41,67 +41,61 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
 
   // Set the branches
   m_inputChain->SetBranchAddress("event_id", &m_eventId);
-  m_inputChain->SetBranchAddress("process", &m_process);
-  m_inputChain->SetBranchAddress("vx", &m_vx);
-  m_inputChain->SetBranchAddress("vy", &m_vy);
-  m_inputChain->SetBranchAddress("vz", &m_vz);
-  m_inputChain->SetBranchAddress("vt", &m_vt);
+  m_inputChain->SetBranchAddress("process", &m_process.get());
+  m_inputChain->SetBranchAddress("vx", &m_vx.get());
+  m_inputChain->SetBranchAddress("vy", &m_vy.get());
+  m_inputChain->SetBranchAddress("vz", &m_vz.get());
+  m_inputChain->SetBranchAddress("vt", &m_vt.get());
   if (m_inputChain->GetBranch("incoming_particles") != nullptr) {
     m_hasCombinedIncoming = true;
-    m_incomingParticles =
-        new std::vector<std::vector<std::vector<std::uint32_t>>>;
-    m_inputChain->SetBranchAddress("incoming_particles", &m_incomingParticles);
+    m_incomingParticles.allocate();
+    m_inputChain->SetBranchAddress("incoming_particles",
+                                   &m_incomingParticles.get());
   } else {
     m_hasCombinedIncoming = false;
-    m_incomingParticlesVertexPrimary =
-        new std::vector<std::vector<std::uint32_t>>;
-    m_incomingParticlesVertexSecondary =
-        new std::vector<std::vector<std::uint32_t>>;
-    m_incomingParticlesParticle = new std::vector<std::vector<std::uint32_t>>;
-    m_incomingParticlesGeneration = new std::vector<std::vector<std::uint32_t>>;
-    m_incomingParticlesSubParticle =
-        new std::vector<std::vector<std::uint32_t>>;
+    m_incomingParticlesVertexPrimary.allocate();
+    m_incomingParticlesVertexSecondary.allocate();
+    m_incomingParticlesParticle.allocate();
+    m_incomingParticlesGeneration.allocate();
+    m_incomingParticlesSubParticle.allocate();
     m_inputChain->SetBranchAddress("incoming_particles_vertex_primary",
-                                   &m_incomingParticlesVertexPrimary);
+                                   &m_incomingParticlesVertexPrimary.get());
     m_inputChain->SetBranchAddress("incoming_particles_vertex_secondary",
-                                   &m_incomingParticlesVertexSecondary);
+                                   &m_incomingParticlesVertexSecondary.get());
     m_inputChain->SetBranchAddress("incoming_particles_particle",
-                                   &m_incomingParticlesParticle);
+                                   &m_incomingParticlesParticle.get());
     m_inputChain->SetBranchAddress("incoming_particles_generation",
-                                   &m_incomingParticlesGeneration);
+                                   &m_incomingParticlesGeneration.get());
     m_inputChain->SetBranchAddress("incoming_particles_sub_particle",
-                                   &m_incomingParticlesSubParticle);
+                                   &m_incomingParticlesSubParticle.get());
   }
 
   if (m_inputChain->GetBranch("outgoing_particles") != nullptr) {
     m_hasCombinedOutgoing = true;
-    m_outgoingParticles =
-        new std::vector<std::vector<std::vector<std::uint32_t>>>;
-    m_inputChain->SetBranchAddress("outgoing_particles", &m_outgoingParticles);
+    m_outgoingParticles.allocate();
+    m_inputChain->SetBranchAddress("outgoing_particles",
+                                   &m_outgoingParticles.get());
   } else {
     m_hasCombinedOutgoing = false;
-    m_outgoingParticlesVertexPrimary =
-        new std::vector<std::vector<std::uint32_t>>;
-    m_outgoingParticlesVertexSecondary =
-        new std::vector<std::vector<std::uint32_t>>;
-    m_outgoingParticlesParticle = new std::vector<std::vector<std::uint32_t>>;
-    m_outgoingParticlesGeneration = new std::vector<std::vector<std::uint32_t>>;
-    m_outgoingParticlesSubParticle =
-        new std::vector<std::vector<std::uint32_t>>;
+    m_outgoingParticlesVertexPrimary.allocate();
+    m_outgoingParticlesVertexSecondary.allocate();
+    m_outgoingParticlesParticle.allocate();
+    m_outgoingParticlesGeneration.allocate();
+    m_outgoingParticlesSubParticle.allocate();
     m_inputChain->SetBranchAddress("outgoing_particles_vertex_primary",
-                                   &m_outgoingParticlesVertexPrimary);
+                                   &m_outgoingParticlesVertexPrimary.get());
     m_inputChain->SetBranchAddress("outgoing_particles_vertex_secondary",
-                                   &m_outgoingParticlesVertexSecondary);
+                                   &m_outgoingParticlesVertexSecondary.get());
     m_inputChain->SetBranchAddress("outgoing_particles_particle",
-                                   &m_outgoingParticlesParticle);
+                                   &m_outgoingParticlesParticle.get());
     m_inputChain->SetBranchAddress("outgoing_particles_generation",
-                                   &m_outgoingParticlesGeneration);
+                                   &m_outgoingParticlesGeneration.get());
     m_inputChain->SetBranchAddress("outgoing_particles_sub_particle",
-                                   &m_outgoingParticlesSubParticle);
+                                   &m_outgoingParticlesSubParticle.get());
   }
-  m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary);
-  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary);
-  m_inputChain->SetBranchAddress("generation", &m_generation);
+  m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary.get());
+  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary.get());
+  m_inputChain->SetBranchAddress("generation", &m_generation.get());
 
   auto path = m_cfg.filePath;
 
@@ -127,29 +121,6 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
 
 std::pair<std::size_t, std::size_t> RootVertexReader::availableEvents() const {
   return {0u, m_events};
-}
-
-RootVertexReader::~RootVertexReader() {
-  delete m_process;
-  delete m_vx;
-  delete m_vy;
-  delete m_vz;
-  delete m_vt;
-  delete m_incomingParticles;
-  delete m_outgoingParticles;
-  delete m_incomingParticlesVertexPrimary;
-  delete m_incomingParticlesVertexSecondary;
-  delete m_incomingParticlesParticle;
-  delete m_incomingParticlesGeneration;
-  delete m_incomingParticlesSubParticle;
-  delete m_outgoingParticlesVertexPrimary;
-  delete m_outgoingParticlesVertexSecondary;
-  delete m_outgoingParticlesParticle;
-  delete m_outgoingParticlesGeneration;
-  delete m_outgoingParticlesSubParticle;
-  delete m_vertexPrimary;
-  delete m_vertexSecondary;
-  delete m_generation;
 }
 
 ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
@@ -189,11 +160,11 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
                                 (*m_vt)[i] * Acts::UnitConstants::mm);
 
     // incoming particles
-    if (m_hasCombinedIncoming && m_incomingParticles != nullptr) {
+    if (m_hasCombinedIncoming && m_incomingParticles.hasValue()) {
       for (auto& barcodeComponents : (*m_incomingParticles)[i]) {
         v.incoming.insert(SimBarcode().withData(barcodeComponents));
       }
-    } else if (m_incomingParticlesVertexPrimary != nullptr) {
+    } else if (m_incomingParticlesVertexPrimary.hasValue()) {
       const auto& incomingPrimaries = (*m_incomingParticlesVertexPrimary)[i];
       const auto& incomingSecondaries =
           (*m_incomingParticlesVertexSecondary)[i];
@@ -217,11 +188,11 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
     }
 
     // outgoing particles
-    if (m_hasCombinedOutgoing && m_outgoingParticles != nullptr) {
+    if (m_hasCombinedOutgoing && m_outgoingParticles.hasValue()) {
       for (auto& barcodeComponents : (*m_outgoingParticles)[i]) {
         v.outgoing.insert(SimBarcode().withData(barcodeComponents));
       }
-    } else if (m_outgoingParticlesVertexPrimary != nullptr) {
+    } else if (m_outgoingParticlesVertexPrimary.hasValue()) {
       const auto& outgoingPrimaries = (*m_outgoingParticlesVertexPrimary)[i];
       const auto& outgoingSecondaries =
           (*m_outgoingParticlesVertexSecondary)[i];

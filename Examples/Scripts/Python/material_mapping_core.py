@@ -21,11 +21,17 @@ from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
+    CoreMaterialMapping,
+)
+
+from acts.examples.root import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
-    CoreMaterialMapping,
-    JsonMaterialWriter,
     RootMaterialWriter,
+)
+
+from acts.examples.json import (
+    JsonMaterialWriter,
     JsonFormat,
 )
 

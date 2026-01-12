@@ -1,6 +1,6 @@
-# Getting started
+@page building_acts Building ACTS
 
-## Quick start
+# Quick start
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
 the core library requires a C++20 compatible compiler,
@@ -19,11 +19,11 @@ For a full list of dependencies, including specific versions, see the
 additional components are described in the [Build options](#build-options)
 section.
 
-## Prerequisites
+# Prerequisites {#prerequisites}
 
 The following dependencies are required to build the ACTS core library:
 
-- A C++17 compatible compiler (recent versions of either gcc and clang should work)
+- A C++20 compatible compiler (recent versions of either gcc and clang should work)
 - [CMake](https://cmake.org) >= 3.14
 - [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
 - [Eigen](https://eigen.tuxfamily.org) >= 3.3.7
@@ -56,9 +56,9 @@ For convenience, it is possible to build the required boost and eigen3 dependenc
 Other options are also
 available and are discussed in the [Building ACTS](#building-acts) section.
 
-[Profiling](contribution/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
+[Profiling](#howto_profiling) details the prerequisites for profiling the ACTS project with gperftools.
 
-## Building ACTS
+# Building ACTS {#building-acts}
 
 ACTS uses [CMake](https://cmake.org) to configure, build, and install the
 software. After checking out the repository code into a `<source>` directory,
@@ -96,7 +96,7 @@ The build commands are the same regardless of where you are building the
 software. Depending on your build environment, there are different ways how to
 make the dependencies available.
 
-### With a LCG release on CVMFS
+## With a LCG release on CVMFS
 
 If you have access to a machine running [CVMFS](https://cernvm.cern.ch/fs/),
 e.g. CERNs lxplus login machines, the dependencies can be easily satisfied
@@ -111,26 +111,25 @@ source /cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>/setup.sh
 
 After sourcing the setup script, you can build ACTS as described above.
 
-### In a container
+## In a container
 
 A set of container images is available through the [ACTS container
 registry][acts_containers]. These images are built using the configuration that is used in CI,
 and they contain all the dependencies required to build ACTS.
 
-.. note::
-   Most containers are only build for the `x86_64` platform. If you are on an
-   `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2404`
-   container, which is built for `aarch64` and `x86_64`!
+> [!note]
+> Most containers are only build for the `x86_64` platform. If you are on an
+> `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2404`
+> container, which is built for `aarch64` and `x86_64`!
 
 Furthermore, we are also testing on, but do not provide the corresponding containers:
 
 - `alma9` (HEP-specific software from LCG 106 or 107 and various clang versions)
 - `macOS-10.15`
 
-:::{attention}
-We stopped producing fully-contained LCG containers in favor of running LCG
-based tests directly from CVMFS.
-:::
+> [!warning]
+> We stopped producing fully-contained LCG containers in favor of running LCG
+> based tests directly from CVMFS.
 
 To use these locally, you first need to pull the relevant images from the
 registry. Stable versions are tagged as `vX` where `X` is the version number.
@@ -176,18 +175,16 @@ container $ cmake --build build
 
 [acts_containers]: https://github.com/acts-project/ci-dependencies/pkgs/container/spack-container
 
-### On your local machine
+## On your local machine
 
 Building and running ACTS on your local machine is not officially supported.
 However, if you have the necessary prerequisites installed it is possible to
 use it locally. ACTS developers regularly use different Linux distributions and
 macOS to build and develop ACTS. It is possible to use Spack to more easily
-install ACTS' dependencies; see the [building with Spack](misc/spack.md) page for
+install ACTS' dependencies; see the [building with Spack](#howto_spack) page for
 more information.
 
-(build_docs)=
-
-## Building the documentation
+# Building the documentation
 
 The documentation uses [Doxygen][doxygen] to extract the source code
 documentation and [Sphinx][sphinx] with the [Breathe][breathe] extension to
@@ -201,18 +198,17 @@ cd <source>
 pip install -r docs/requirements.txt
 ```
 
-:::{tip}
-It is **strongly recommended** to use a [virtual
-environment](https://realpython.com/python-virtual-environments-a-primer/) for
-this purpose! For example, run
-
-```console
-python -m venv docvenv
-source docvenv/bin/activate
-```
-
-to create a local virtual environment, and then run the `pip` command above.
-:::
+> [!tip]
+> It is **strongly recommended** to use a [virtual
+>environment](https://realpython.com/python-virtual-environments-a-primer/) for
+>this purpose! For example, run
+>
+> ```console
+> python -m venv docvenv
+> source docvenv/bin/activate
+> ```
+>
+> to create a local virtual environment, and then run the `pip` command above.
 
 To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
 
@@ -236,7 +232,7 @@ of errors you will need to manually pull in symbols to be documented.
 [sphinx]: https://www.sphinx-doc.org
 [breathe]: https://breathe.readthedocs.io
 
-## Build options
+# Build options {#build-options}
 
 CMake options can be set by adding `-D<OPTION>=<VALUE>` to the configuration
 command. The following command would e.g. enable the unit tests
@@ -290,9 +286,11 @@ components.
 | ACTS_BUILD_PLUGIN_ROOT              | Build ROOT plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_SETUP_ANNOY                    | Explicitly set up Annoy for the project<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_PLUGIN_HASHING           | Build Hashing plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
+| ACTS_BUILD_PYTHON_BINDINGS          | Build python bindings for all enabled<br>components<br> type: `bool`, default: `OFF`                                                                                                                                               |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_FATRAS_GEANT4            | Build Geant4 Fatras package<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_ALIGNMENT                | Build Alignment package<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
+| ACTS_BUILD_EXAMPLES                 | Build basic examples components<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PODIO           | Build Podio-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
@@ -300,7 +298,7 @@ components.
 | ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_HASHING         | Build Hashing-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
-| ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
+| ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | [Deprecated] Build python bindings and<br>enables the examples<br> type: `bool`, default: `OFF`                                                                                                                                    |
 | ACTS_BUILD_EXAMPLES_ROOT            | Build modules based on ROOT I/O<br> type: `bool`, default: `ON`                                                                                                                                                                    |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
@@ -359,7 +357,11 @@ The following environment variables might be useful.
 | HepMC3_DIR           | Search path for the HepMC3 installation  |
 | Pythia8_DIR          | Search path for the Pythia8 installation |
 
-## The OpenDataDetector
+> [!tip]
+> Even though these individual environment variables can be used to make CMake locate dependency,
+> it is usually preferable to use `CMAKE_PREFIX_PATH` to point to the root installation directory of the dependencies.
+
+# The OpenDataDetector
 
 ACTS comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map.
 When configuring with `ACTS_BUILD_ODD=ON`, the detector is fetched automatically via CMake's `ExternalProject_Add`. This step requires network access during the first build to clone the upstream repository.
@@ -369,16 +371,9 @@ To use it, build ACTS with the `ACTS_BUILD_ODD` option and then point either `LD
 
 You can now use the ODD in the python binding by using:
 
-```python
-from acts.examples.odd import getOpenDataDetectorDirectory
-odd_dir = getOpenDataDetectorDirectory()
-oddMaterialDeco = acts.IMaterialDecorator.fromFile(odd_dir / "data/odd-material-maps.root")
-detector = getOpenDataDetector(oddMaterialDeco)
-trackingGeometry = detector.trackingGeometry()
-decorators = detector.contextDecorators()
-```
+@snippet{trimleft} examples/test_odd.py Basic ODD construction
 
-## Using ACTS
+# Using ACTS in downstream code
 
 When using ACTS in your own CMake-based project, you need to include the
 following lines in your `CMakeLists.txt` file:

@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   // Test Global To Local transform
   Vector3 pos(1., 2., 3.);
 
-  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[1], atan2(2, 1), 1e-4);
+  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[1], std::atan2(2, 1), 1e-4);
   CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[0], 3, 1e-4);
 
   // Test Grid
@@ -324,8 +324,8 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   // Test Global To Local transform
   Vector3 pos(1., 2., 3.);
 
-  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[0], sqrt(5), 1e-4);
-  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[1], atan2(2, 1), 1e-4);
+  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[0], std::sqrt(5), 1e-4);
+  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[1], std::atan2(2, 1), 1e-4);
   CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[2], 3, 1e-4);
 
   // Test Grid

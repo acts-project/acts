@@ -18,7 +18,6 @@ def createStripSpacepoints(
     inputParticlePath: Optional[Path] = None,
     inputHitsPath: Optional[Path] = None,
     decorators=[],
-    reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
@@ -29,6 +28,12 @@ def createStripSpacepoints(
         MomentumConfig,
         addFatras,
         addDigitization,
+    )
+
+    from acts.examples.root import (
+        RootParticleReader,
+        RootSimHitReader,
+        RootSpacepointWriter,
     )
 
     s = s or acts.examples.Sequencer(
@@ -62,7 +67,7 @@ def createStripSpacepoints(
         logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
-            acts.examples.RootParticleReader(
+            RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles="particles_generated",
@@ -82,7 +87,7 @@ def createStripSpacepoints(
         logger.info("Reading hits from %s", inputHitsPath.resolve())
         assert inputHitsPath.exists()
         s.addReader(
-            acts.examples.RootSimHitReader(
+            RootSimHitReader(
                 level=acts.logging.INFO,
                 filePath=str(inputHitsPath.resolve()),
                 outputSimHits="simhits",
@@ -104,14 +109,14 @@ def createStripSpacepoints(
             trackingGeometry=trackingGeometry,
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
-            stripGeometrySelection=acts.examples.readJsonGeometryList(
+            stripGeometrySelection=acts.examples.json.readJsonGeometryList(
                 str(geoSelection)
             ),
         )
     )
 
     s.addWriter(
-        acts.examples.RootSpacepointWriter(
+        RootSpacepointWriter(
             level=acts.logging.INFO,
             inputSpacepoints="spacepoints",
             inputMeasurementParticlesMap="measurement_particles_map",

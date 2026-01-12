@@ -2,20 +2,23 @@
 from pathlib import Path
 import argparse
 
+import acts
+import acts.examples
+from acts.json import MaterialMapJsonConverter
+
 from acts.examples import (
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
     CsvTrackingGeometryWriter,
     ObjTrackingGeometryWriter,
+)
+
+from acts.examples.json import (
     JsonSurfacesWriter,
     JsonMaterialWriter,
     JsonFormat,
 )
-
-import acts
-
-from acts.json import MaterialMapJsonConverter
 
 
 def runITk(

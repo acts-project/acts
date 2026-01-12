@@ -42,7 +42,7 @@ struct Fixture {
   GeometryContext geoCtx;
   // local and global track parameters
   BoundVector boundParams;
-  FreeVector freeParams;
+  FreeVector freeParams{};
   // hit information
   Hit hit;
 

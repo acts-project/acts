@@ -28,6 +28,14 @@ def runTruthTrackingGx2f(
         ParticleSelectorConfig,
         addDigiParticleSelection,
     )
+
+    from acts.examples.root import (
+        RootParticleReader,
+        RootTrackStatesWriter,
+        RootTrackSummaryWriter,
+        RootTrackFitterPerformanceWriter,
+    )
+
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
@@ -63,7 +71,7 @@ def runTruthTrackingGx2f(
         )
         assert inputParticlePath.exists()
         s.addReader(
-            acts.examples.RootParticleReader(
+            RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles="particles_generated",
@@ -104,7 +112,7 @@ def runTruthTrackingGx2f(
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         trackSmearingSigmas=TrackSmearingSigmas(
-            # zero eveything so the GX2F has a chance to find the measurements
+            # zero everything so the GX2F has a chance to find the measurements
             loc0=0,
             loc0PtA=0,
             loc0PtB=0,
@@ -152,7 +160,7 @@ def runTruthTrackingGx2f(
     s.addWhiteboardAlias("tracks", "selected-tracks")
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -164,7 +172,7 @@ def runTruthTrackingGx2f(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -175,7 +183,7 @@ def runTruthTrackingGx2f(
     )
 
     s.addWriter(
-        acts.examples.RootTrackFitterPerformanceWriter(
+        RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",

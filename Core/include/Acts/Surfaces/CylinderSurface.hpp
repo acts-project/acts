@@ -158,6 +158,12 @@ class CylinderSurface : public RegularSurface {
   /// @return Reference to the cylinder bounds
   const CylinderBounds& bounds() const final;
 
+  /// This method returns the shared_ptr to the CylinderBounds
+  const std::shared_ptr<const CylinderBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const CylinderBounds> newBounds);
+
   /// Local to global transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
