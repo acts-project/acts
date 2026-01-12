@@ -38,8 +38,6 @@
 
 namespace Acts {
 
-using namespace Acts::UnitLiterals;
-
 namespace detail {
 
 struct MaxMomentumComponent {

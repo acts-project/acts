@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docs:
+  docs-old:
     runs-on: ubuntu-latest
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
@@ -52,5 +52,44 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         with:
-          name: acts-docs
+          name: acts-docs-old
           path: docs/old/_build/html/
+
+  docs:
+    runs-on: ubuntu-latest
+    # container: ghcr.io/acts-project/ubuntu2404:83
+    env:
+      DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
+      DOXYGEN_VERSION: "1.15.0"
+      DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install doxygen
+        run: |
+          curl -SL https://acts.web.cern.ch/ci/doxygen/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz -o doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          echo "${{ env.DOXYGEN_HASH }}  doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz" | sha256sum -c -
+          tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
+
+      - name: Install APT packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz texlive-bibtex-extra libeigen3-dev libboost-dev cmake
+
+      - name: Configure
+        run: >
+          cmake -B build -S . -DACTS_BUILD_DOCS=ON
+
+      - name: Build documentation
+        run: >
+          cmake --build build --target docs
+
+      - uses: actions/upload-artifact@v6
+        id: artifact-upload-step
+        with:
+          name: acts-docs
+          path: build/docs/html
+
+      - name: Documentation display
+        run: echo 'https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}/index.html'

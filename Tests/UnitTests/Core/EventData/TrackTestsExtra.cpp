@@ -22,7 +22,8 @@
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
-using MultiTrajectoryTraits::IndexType;
+using IndexType = TrackIndexType;
+constexpr auto kInvalid = kTrackIndexInvalid;
 using namespace Acts::UnitLiterals;
 
 template <typename track_container_t, typename traj_t,
@@ -321,7 +322,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     auto t3 = tc3.makeTrack();
     t3.copyFrom(t);  // this should work
 
-    BOOST_CHECK_NE(t3.tipIndex(), MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(t3.tipIndex(), kInvalid);
     BOOST_CHECK_GT(t3.nTrackStates(), 0);
     BOOST_REQUIRE_EQUAL(t.nTrackStates(), t3.nTrackStates());
 
@@ -365,7 +366,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     auto t5 = tc5.makeTrack();
     t5.copyFrom(t4);  // this should work
 
-    BOOST_CHECK_NE(t5.tipIndex(), MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(t5.tipIndex(), kInvalid);
     BOOST_CHECK_GT(t5.nTrackStates(), 0);
     BOOST_REQUIRE_EQUAL(t4.nTrackStates(), t5.nTrackStates());
 
@@ -582,8 +583,8 @@ BOOST_AUTO_TEST_CASE(CopyFromWithoutStatesInvalidatesIndices) {
   sourceTrack.linkForward();
 
   // Verify source track has valid indices
-  BOOST_CHECK_NE(sourceTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_NE(sourceTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(sourceTrack.tipIndex(), kInvalid);
+  BOOST_CHECK_NE(sourceTrack.stemIndex(), kInvalid);
   BOOST_CHECK_EQUAL(sourceTrack.nTrackStates(), 3);
 
   // Set some track properties
@@ -598,16 +599,16 @@ BOOST_AUTO_TEST_CASE(CopyFromWithoutStatesInvalidatesIndices) {
   destTrack.linkForward();
 
   // Verify destination has valid indices before copy
-  BOOST_CHECK_NE(destTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_NE(destTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(destTrack.tipIndex(), kInvalid);
+  BOOST_CHECK_NE(destTrack.stemIndex(), kInvalid);
   BOOST_CHECK_EQUAL(destTrack.nTrackStates(), 2);
 
   // Copy without states
   destTrack.copyFromWithoutStates(sourceTrack);
 
   // Verify that tip and stem indices are now invalid
-  BOOST_CHECK_EQUAL(destTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_EQUAL(destTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(destTrack.tipIndex(), kInvalid);
+  BOOST_CHECK_EQUAL(destTrack.stemIndex(), kInvalid);
 
   // Verify that track properties were copied
   BOOST_CHECK_EQUAL(destTrack.nMeasurements(), 42);
@@ -620,7 +621,7 @@ BOOST_AUTO_TEST_CASE(CopyFromWithoutStatesInvalidatesIndices) {
   // Verify that the original track states are still in the container
   // but not accessible through the destination track
   BOOST_CHECK_EQUAL(sourceTrack.nTrackStates(), 3);
-  BOOST_CHECK_NE(sourceTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(sourceTrack.tipIndex(), kInvalid);
 }
 
 BOOST_AUTO_TEST_CASE(CopyFromDeepCopyFunctionality) {
@@ -664,8 +665,8 @@ BOOST_AUTO_TEST_CASE(CopyFromDeepCopyFunctionality) {
 
   // Verify track state structure
   BOOST_CHECK_EQUAL(destTrack.nTrackStates(), 3);
-  BOOST_CHECK_NE(destTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_NE(destTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(destTrack.tipIndex(), kInvalid);
+  BOOST_CHECK_NE(destTrack.stemIndex(), kInvalid);
 
   // Verify track is forward-linked (can iterate forward)
   BOOST_CHECK(destTrack.innermostTrackState().has_value());

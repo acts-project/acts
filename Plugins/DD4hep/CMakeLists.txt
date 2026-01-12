@@ -2,7 +2,6 @@ include(FetchContent)
 
 acts_add_library(
     PluginDD4hep
-    SHARED
     src/ConvertDD4hepDetector.cpp
     src/DD4hepBinningHelpers.cpp
     src/DD4hepMaterialHelpers.cpp

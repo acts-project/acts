@@ -13,6 +13,9 @@
 
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// A implementation of a detector element, that is constructed from a
 /// JSON description of a surface. The idea behind this is that it helps
 /// importing whole tracking geometries from JSON files. In some parts of
@@ -47,4 +50,5 @@ class JsonDetectorElement : public DetectorElementBase {
   double m_thickness{};
 };
 
+/// @}
 }  // namespace Acts

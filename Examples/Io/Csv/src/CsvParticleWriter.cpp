@@ -11,8 +11,6 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 #include <Acts/Definitions/Units.hpp>
 
 #include <stdexcept>
@@ -20,9 +18,10 @@
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvParticleWriter::CsvParticleWriter(
-    const ActsExamples::CsvParticleWriter::Config& cfg,
-    Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+CsvParticleWriter::CsvParticleWriter(const Config& cfg,
+                                     Acts::Logging::Level lvl)
     : WriterT(cfg.inputParticles, "CsvParticleWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
@@ -30,13 +29,12 @@ ActsExamples::CsvParticleWriter::CsvParticleWriter(
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvParticleWriter::writeT(
-    const ActsExamples::AlgorithmContext& ctx,
-    const SimParticleContainer& particles) {
+ProcessCode CsvParticleWriter::writeT(const AlgorithmContext& ctx,
+                                      const SimParticleContainer& particles) {
   auto pathParticles = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
-  ActsExamples::NamedTupleCsvWriter<ParticleData> writer(pathParticles,
-                                                         m_cfg.outputPrecision);
+  NamedTupleCsvWriter<ParticleData> writer(pathParticles,
+                                           m_cfg.outputPrecision);
 
   ParticleData data;
   for (const auto& particle : particles) {
@@ -63,3 +61,5 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleWriter::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

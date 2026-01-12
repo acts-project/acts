@@ -29,6 +29,8 @@ namespace Acts {
 
 /// Material description for an object with defined thickness.
 ///
+/// @ingroup material
+///
 /// This is intended to describe concrete surface materials.
 ///
 /// @see Material for a description of the available parameters.
