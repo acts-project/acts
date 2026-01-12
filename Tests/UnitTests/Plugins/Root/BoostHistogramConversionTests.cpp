@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_SUITE(HistogramConversionSuite)
 
 namespace {
 /// Helper function to test 1D histogram conversion
-void testHist1D(const Histogram1D& boostHist) {
+void testHist1D(const Histogram1& boostHist) {
   TH1F* rootHist = toRoot(boostHist);
 
   // Verify metadata
@@ -50,7 +50,7 @@ void testHist1D(const Histogram1D& boostHist) {
 }
 
 /// Helper function to test 2D histogram conversion
-void testHist2D(const Histogram2D& boostHist) {
+void testHist2D(const Histogram2& boostHist) {
   TH2F* rootHist = toRoot(boostHist);
 
   // Verify metadata
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(Conversion_EmptyHistogram) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, -10.0, 10.0, 10);
   auto axis =
       AxisVariant(BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x"));
-  Histogram1D boostHist("empty", "Empty Histogram", {axis});
+  Histogram1 boostHist("empty", "Empty Histogram", {axis});
 
   TH1F* rootHist = toRoot(boostHist);
 
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_UniformBinning) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, 0.0, 10.0, 10);
   auto axis = AxisVariant(
       BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x [cm]"));
-  Histogram1D boostHist("test_hist", "Test Histogram", {axis});
+  Histogram1 boostHist("test_hist", "Test Histogram", {axis});
 
   // Fill with 100 random values
   std::mt19937 rng(42);
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_UniformBinning) {
 BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_VariableBinning) {
   std::vector<double> edges = {0.0, 0.5, 1.0, 2.0, 5.0, 10.0};
   auto axis = BoostVariableAxis(edges, "eta");
-  Histogram1D boostHist("res_eta", "Residual vs Eta", {axis});
+  Histogram1 boostHist("res_eta", "Residual vs Eta", {axis});
 
   // Fill bins with different counts
   boostHist.fill({0.3});
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT) {
   ProtoAxis protoY(AxisBoundaryType::Bound, -5.0, 5.0, 10);
   auto xAxis = BoostVariableAxis(protoX.getAxis().getBinEdges(), "eta");
   auto yAxis = BoostVariableAxis(protoY.getAxis().getBinEdges(), "residual");
-  Histogram2D boostHist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
+  Histogram2 boostHist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
 
   // Fill with 100 2D Gaussian values
   std::mt19937 rng(456);
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT_VariableBinning) {
 
   auto xAxis = BoostVariableAxis(etaEdges, "eta");
   auto yAxis = BoostVariableAxis(ptEdges, "pT [GeV]");
-  Histogram2D boostHist("eff_vs_eta_pt", "Efficiency vs Eta and pT",
-                        {xAxis, yAxis});
+  Histogram2 boostHist("eff_vs_eta_pt", "Efficiency vs Eta and pT",
+                       {xAxis, yAxis});
 
   boostHist.fill({0.0, 3.0});
   boostHist.fill({-1.0, 7.0});
@@ -157,8 +157,8 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT_VariableBinning) {
 BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, -2.5, 2.5, 10);
   auto xAxis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
-  ProfileHistogram1D profile("res_mean_vs_eta", "Mean Residual vs Eta", {xAxis},
-                             "residual [mm]");
+  ProfileHistogram1 profile("res_mean_vs_eta", "Mean Residual vs Eta", {xAxis},
+                            "residual [mm]");
 
   std::map<double, double> expectedMeans;
 
@@ -208,8 +208,8 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
   auto xAxis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
 
   // Create ACTS ProfileHistogram
-  ProfileHistogram1D actsProfile("profile_test", "Profile Test", {xAxis},
-                                 "value [units]");
+  ProfileHistogram1 actsProfile("profile_test", "Profile Test", {xAxis},
+                                "value [units]");
 
   // Create ROOT TProfile with identical binning for comparison
   const auto& bh = actsProfile.histogram();
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
 BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, -3.0, 3.0, 10);
   auto axis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
-  Efficiency1D eff("eff_vs_eta", "Efficiency vs Eta", {axis});
+  Efficiency1 eff("eff_vs_eta", "Efficiency vs Eta", {axis});
 
   // Fill with known pass/fail patterns
   // Bin at eta=0.5: 3 accepted, 1 failed (75% efficiency)
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
   ProtoAxis protoY(AxisBoundaryType::Bound, 0.0, 5.0, 5);
   auto xAxis = BoostVariableAxis(protoX.getAxis().getBinEdges(), "eta");
   auto yAxis = BoostVariableAxis(protoY.getAxis().getBinEdges(), "pt");
-  Efficiency2D eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", {xAxis, yAxis});
+  Efficiency2 eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", {xAxis, yAxis});
 
   // Fill bin (0.0, 2.5): 3 accepted, 1 failed (75% efficiency)
   for (auto v : {true, true, true, false}) {

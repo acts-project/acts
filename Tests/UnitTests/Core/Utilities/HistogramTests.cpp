@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(Histogram1D_UniformBinning) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, 0.0, 10.0, 10);
   auto axis =
       AxisVariant(BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x"));
-  Histogram1D hist("test", "Test Histogram", {axis});
+  Histogram1 hist("test", "Test Histogram", {axis});
 
   BOOST_CHECK_EQUAL(hist.name(), "test");
   BOOST_CHECK_EQUAL(hist.title(), "Test Histogram");
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(Histogram1D_VariableBinning) {
   // Create histogram with variable binning
   std::vector<double> edges = {0.0, 1.0, 3.0, 7.0, 10.0};
   auto axis = AxisVariant(BoostVariableAxis(edges, "x"));
-  Histogram1D hist("test_var", "Test Variable Binning", {axis});
+  Histogram1 hist("test_var", "Test Variable Binning", {axis});
 
   // Fill value that falls in bin [1, 3)
   hist.fill({2.0});
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(Histogram2D_FillAndAccess) {
       AxisVariant(BoostVariableAxis(protoX.getAxis().getBinEdges(), "x"));
   auto yAxis =
       AxisVariant(BoostVariableAxis(protoY.getAxis().getBinEdges(), "y"));
-  Histogram2D hist("test_2d", "Test 2D Histogram", {xAxis, yAxis});
+  Histogram2 hist("test_2d", "Test 2D Histogram", {xAxis, yAxis});
 
   BOOST_CHECK_EQUAL(hist.name(), "test_2d");
   BOOST_CHECK_EQUAL(hist.title(), "Test 2D Histogram");
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(Histogram2D_VariableBinning) {
   std::vector<double> yEdges = {-2.0, -1.0, 0.0, 1.0, 2.0};
   auto xAxis = AxisVariant(BoostVariableAxis(xEdges, "eta"));
   auto yAxis = AxisVariant(BoostVariableAxis(yEdges, "res"));
-  Histogram2D hist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
+  Histogram2 hist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
 
   // Fill multiple entries
   hist.fill({2.0, 0.5});
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(Histogram1D_UnderflowOverflow) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, 0.0, 10.0, 10);
   auto axis =
       AxisVariant(BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x"));
-  Histogram1D hist("test_flow", "Test Flow", {axis});
+  Histogram1 hist("test_flow", "Test Flow", {axis});
 
   // Fill values in range, underflow, and overflow
   hist.fill({5.0});   // in range
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(Histogram1D_EmptyHistogram) {
   ProtoAxis protoAxis(AxisBoundaryType::Bound, -5.0, 5.0, 10);
   auto axis =
       AxisVariant(BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x"));
-  Histogram1D hist("empty", "Empty Histogram", {axis});
+  Histogram1 hist("empty", "Empty Histogram", {axis});
 
   const auto& bh = hist.histogram();
   for (int i = 0; i < bh.axis(0).size(); ++i) {

@@ -36,7 +36,7 @@ std::vector<double> extractBinEdges(const AxisVariant& axis) {
 
 namespace ActsPlugins {
 
-TH1F* toRoot(const Histogram1D& boostHist) {
+TH1F* toRoot(const Histogram1& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& axis = bh.axis(0);
 
@@ -63,7 +63,7 @@ TH1F* toRoot(const Histogram1D& boostHist) {
   return rootHist;
 }
 
-TH2F* toRoot(const Histogram2D& boostHist) {
+TH2F* toRoot(const Histogram2& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& xAxis = bh.axis(0);
   const auto& yAxis = bh.axis(1);
@@ -98,7 +98,7 @@ TH2F* toRoot(const Histogram2D& boostHist) {
   return rootHist;
 }
 
-TProfile* toRoot(const ProfileHistogram1D& boostProfile) {
+TProfile* toRoot(const ProfileHistogram1& boostProfile) {
   const auto& bh = boostProfile.histogram();
   const auto& axis = bh.axis(0);
 
@@ -145,7 +145,7 @@ TProfile* toRoot(const ProfileHistogram1D& boostProfile) {
     // To compute sum of y^2 from sample variance s^2:
     // s^2 = Sum((x - μ)^2) / (n-1) = (Sum(x^2) - n*µ^2) / (n-1)
     // Sum(x^2) = (n-1) * s^2 + n*µ^2
-    double sum_of_squares = (count - 1.0) * variance + count * mean * mean;
+    double sumOfSquares = (count - 1.0) * variance + count * mean * mean;
 
     // Set bin content (sum) and entries via public interface
     rootProfile->SetBinContent(rootBinIndex, sum);
@@ -160,7 +160,7 @@ TProfile* toRoot(const ProfileHistogram1D& boostProfile) {
     assert(binSumw2 && "BinSumw2 is null");
 
     // Set sum of (weight * value)^2 = sum of y^2 for unweighted data
-    sumw2->fArray[rootBinIndex] = sum_of_squares;
+    sumw2->fArray[rootBinIndex] = sumOfSquares;
     // Set sum of weights^2 = count for unweighted data (all weights = 1)
     binSumw2->fArray[rootBinIndex] = count;
   }
@@ -173,7 +173,7 @@ TProfile* toRoot(const ProfileHistogram1D& boostProfile) {
   return rootProfile;
 }
 
-TEfficiency* toRoot(const Efficiency1D& boostEff) {
+TEfficiency* toRoot(const Efficiency1& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& axis = accepted.axis(0);
@@ -211,7 +211,7 @@ TEfficiency* toRoot(const Efficiency1D& boostEff) {
   return rootEff;
 }
 
-TEfficiency* toRoot(const Efficiency2D& boostEff) {
+TEfficiency* toRoot(const Efficiency2& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& xAxis = accepted.axis(0);

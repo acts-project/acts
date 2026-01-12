@@ -11,26 +11,26 @@
 namespace Acts::Experimental {
 
 // Projection free functions
-Histogram1D projectionX(const Histogram2D& hist2d) {
+Histogram1 projectionX(const Histogram2& hist2d) {
   auto projectedHist = boost::histogram::algorithm::project(
       hist2d.histogram(), std::integral_constant<unsigned, 0>{});
 
   // Extract single axis from projected histogram
   std::array<AxisVariant, 1> axes = {projectedHist.axis(0)};
 
-  return Histogram1D(hist2d.name() + "_projX", hist2d.title() + " projection X",
-                     axes);
+  return Histogram1(hist2d.name() + "_projX", hist2d.title() + " projection X",
+                    axes);
 }
 
-Histogram1D projectionY(const Histogram2D& hist2d) {
+Histogram1 projectionY(const Histogram2& hist2d) {
   auto projectedHist = boost::histogram::algorithm::project(
       hist2d.histogram(), std::integral_constant<unsigned, 1>{});
 
   // Extract single axis from projected histogram
   std::array<AxisVariant, 1> axes = {projectedHist.axis(0)};
 
-  return Histogram1D(hist2d.name() + "_projY", hist2d.title() + " projection Y",
-                     axes);
+  return Histogram1(hist2d.name() + "_projY", hist2d.title() + " projection Y",
+                    axes);
 }
 
 }  // namespace Acts::Experimental

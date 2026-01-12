@@ -83,8 +83,8 @@ class Histogram {
 };
 
 /// Type aliases for common dimensions
-using Histogram1D = Histogram<1>;
-using Histogram2D = Histogram<2>;
+using Histogram1 = Histogram<1>;
+using Histogram2 = Histogram<2>;
 
 /// @brief Multi-dimensional profile histogram using boost::histogram
 ///
@@ -144,7 +144,7 @@ class ProfileHistogram {
 };
 
 /// Type aliases for common dimensions
-using ProfileHistogram1D = ProfileHistogram<1>;
+using ProfileHistogram1 = ProfileHistogram<1>;
 
 /// @brief Multi-dimensional efficiency histogram using boost::histogram
 ///
@@ -207,19 +207,19 @@ class Efficiency {
 };
 
 /// Type aliases for common dimensions
-using Efficiency1D = Efficiency<1>;
-using Efficiency2D = Efficiency<2>;
+using Efficiency1 = Efficiency<1>;
+using Efficiency2 = Efficiency<2>;
 
 /// Project a 2D histogram onto the X axis (axis 0)
 ///
 /// @param hist2d The 2D histogram to project
 /// @return A 1D histogram containing the projection
-Histogram1D projectionX(const Histogram2D& hist2d);
+Histogram1 projectionX(const Histogram2& hist2d);
 
 /// Project a 2D histogram onto the Y axis (axis 1)
 ///
 /// @param hist2d The 2D histogram to project
 /// @return A 1D histogram containing the projection
-Histogram1D projectionY(const Histogram2D& hist2d);
+Histogram1 projectionY(const Histogram2& hist2d);
 
 }  // namespace Acts::Experimental
