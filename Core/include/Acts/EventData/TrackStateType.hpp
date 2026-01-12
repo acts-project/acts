@@ -28,24 +28,24 @@ namespace Acts {
 /// recommended to start from bit position 16 or in reverse from 63 to avoid
 /// conflicts with future additions.
 enum class TrackStateFlag {
-  MeasurementFlag
-  [[deprecated("Replaced by HasMeasurement; but you may want to use "
-               "isMeasurement()/setIsMeasurement() instead")]] = 0,
-  ParameterFlag
-  [[deprecated("Replaced by HasParameters; but you may want to use "
-               "hasParameters()/setHasParameters() instead")]] = 1,
-  OutlierFlag [[deprecated("Replaced by IsOutlier; but you may want to use "
+  MeasurementFlag [[deprecated("Replaced by HasMeasurement; consider to use "
+                               "isMeasurement()/setIsMeasurement() instead")]] =
+      0,
+  ParameterFlag [[deprecated("Replaced by HasParameters; consider to use "
+                             "hasParameters()/setHasParameters() instead")]] =
+      1,
+  OutlierFlag [[deprecated("Replaced by IsOutlier; consider to use "
                            "isOutlier()/setIsOutlier() instead")]] = 2,
-  HoleFlag [[deprecated("Replaced by IsHole; but you may want to use "
+  HoleFlag [[deprecated("Replaced by IsHole; consider to use "
                         "isHole()/setIsHole() instead")]] = 3,
-  MaterialFlag [[deprecated("Replaced by HasMaterial; but you may want to use "
+  MaterialFlag [[deprecated("Replaced by HasMaterial; consider to use "
                             "hasMaterial()/setHasMaterial() instead")]] = 4,
-  SharedHitFlag [[deprecated("Replaced by IsSharedHit; but you may want to use "
+  SharedHitFlag [[deprecated("Replaced by IsSharedHit; consider to use "
                              "isSharedHit()/setIsSharedHit() instead")]] = 5,
-  SplitHitFlag [[deprecated("Replaced by IsSplitHit; but you may want to use "
+  SplitHitFlag [[deprecated("Replaced by IsSplitHit; consider to use "
                             "isSplitHit()/setIsSplitHit() instead")]] = 6,
   NoExpectedHitFlag
-  [[deprecated("Replaced by HasNoExpectedHit; but you may want to use "
+  [[deprecated("Replaced by HasNoExpectedHit; consider to use "
                "hasNoExpectedHit()/setHasNoExpectedHit() instead")]] = 7,
   NumTrackStateFlags [[deprecated("Replaced by NumFlags")]] = 8,
 
@@ -190,62 +190,77 @@ class TrackStateTypeBase {
     return self();
   }
   /// Sets the track state to be an outlier
+  /// @param value the value to set
   /// @return self-reference for chaining
-  Derived& setIsOutlier()
+  Derived& setIsOutlier(bool value = true)
     requires(!ReadOnly)
   {
-    setUnchecked(HasMeasurement, true);
-    setUnchecked(IsHole, false);
-    setUnchecked(HasNoExpectedHit, false);
-    setUnchecked(IsOutlier, true);
+    if (value) {
+      setUnchecked(HasMeasurement, true);
+      setUnchecked(IsHole, false);
+      setUnchecked(HasNoExpectedHit, false);
+    }
+    setUnchecked(IsOutlier, value);
     assertConsistency();
     return self();
   }
   /// Sets the track state to be a hole
+  /// @param value the value to set
   /// @return self-reference for chaining
-  Derived& setIsHole()
+  Derived& setIsHole(bool value = true)
     requires(!ReadOnly)
   {
-    setUnchecked(HasMeasurement, false);
-    setUnchecked(IsOutlier, false);
-    setUnchecked(HasNoExpectedHit, false);
-    setUnchecked(IsHole, true);
+    if (value) {
+      setUnchecked(HasMeasurement, false);
+      setUnchecked(IsOutlier, false);
+      setUnchecked(HasNoExpectedHit, false);
+    }
+    setUnchecked(IsHole, value);
     assertConsistency();
     return self();
   }
   /// Sets the track state to be a shared hit
+  /// @param value the value to set
   /// @return self-reference for chaining
-  Derived& setIsSharedHit()
+  Derived& setIsSharedHit(bool value = true)
     requires(!ReadOnly)
   {
-    setUnchecked(HasMeasurement, true);
-    setUnchecked(HasNoExpectedHit, false);
-    setUnchecked(IsSharedHit, true);
+    if (value) {
+      setUnchecked(HasMeasurement, true);
+      setUnchecked(HasNoExpectedHit, false);
+    }
+    setUnchecked(IsSharedHit, value);
     assertConsistency();
     return self();
   }
   /// Sets the track state to be a split hit
+  /// @param value the value to set
   /// @return self-reference for chaining
-  Derived& setIsSplitHit()
+  Derived& setIsSplitHit(bool value = true)
     requires(!ReadOnly)
   {
-    setUnchecked(HasMeasurement, true);
-    setUnchecked(HasNoExpectedHit, false);
-    setUnchecked(IsSplitHit, true);
+    if (value) {
+      setUnchecked(HasMeasurement, true);
+      setUnchecked(HasNoExpectedHit, false);
+    }
+    setUnchecked(IsSplitHit, value);
     assertConsistency();
     return self();
   }
   /// Sets the track state to have no expected hit
+  /// @param value the value to set
   /// @return self-reference for chaining
-  Derived& setHasNoExpectedHit()
+  Derived& setHasNoExpectedHit(bool value = true)
     requires(!ReadOnly)
   {
-    setUnchecked(HasMeasurement, false);
-    setUnchecked(IsOutlier, false);
-    setUnchecked(IsHole, false);
-    setUnchecked(IsSharedHit, false);
-    setUnchecked(IsSplitHit, false);
-    setUnchecked(HasNoExpectedHit, true);
+    if (value) {
+      setUnchecked(HasMeasurement, false);
+      setUnchecked(IsOutlier, false);
+      setUnchecked(IsHole, false);
+      setUnchecked(IsSharedHit, false);
+      setUnchecked(IsSplitHit, false);
+    }
+    setUnchecked(HasNoExpectedHit, value);
     assertConsistency();
     return self();
   }
