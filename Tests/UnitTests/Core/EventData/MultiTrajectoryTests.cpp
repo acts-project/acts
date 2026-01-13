@@ -49,7 +49,7 @@ using ParametersVector = BoundTrackParameters::ParametersVector;
 using CovarianceMatrix = BoundTrackParameters::CovarianceMatrix;
 using Jacobian = BoundMatrix;
 
-const GeometryContext gctx;
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 // fixed seed for reproducible tests
 std::default_random_engine rng(31415);
 

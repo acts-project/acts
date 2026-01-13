@@ -34,7 +34,7 @@ DD4hepDetectorBase::DD4hepDetectorBase(const Config& cfg)
     throw std::invalid_argument("Missing DD4hep XML filenames");
   }
 
-  m_nominalGeometryContext = GeometryContext();
+  m_nominalGeometryContext = GeometryContext::dangerouslyDefaultConstruct();
 
   m_detector = buildDD4hepGeometry(cfg);
 

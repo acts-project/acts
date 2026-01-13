@@ -31,7 +31,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
 void checkParameters(const BoundTrackParameters& params, double phi,

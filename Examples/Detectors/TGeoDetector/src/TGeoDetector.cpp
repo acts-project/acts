@@ -363,7 +363,7 @@ void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
 
 TGeoDetector::TGeoDetector(const Config& cfg)
     : Detector(getDefaultLogger("TGeoDetector", cfg.logLevel)), m_cfg(cfg) {
-  m_nominalGeometryContext = GeometryContext();
+  m_nominalGeometryContext = GeometryContext::dangerouslyDefaultConstruct();
 
   m_trackingGeometry =
       buildTGeoDetector(m_cfg, m_nominalGeometryContext, m_detectorStore,

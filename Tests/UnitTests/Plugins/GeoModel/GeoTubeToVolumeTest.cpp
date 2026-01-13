@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   // create pars for conversion
   GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"Tube"};
-  GeometryContext gContext;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
   GeoModelDetectorObjectFactory::Cache gmCache;
 
   // create factory instance

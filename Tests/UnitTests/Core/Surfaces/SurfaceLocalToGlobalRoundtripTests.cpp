@@ -38,7 +38,7 @@ namespace bdata = boost::unit_test::data;
 using namespace Acts;
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
 void runTest(const Surface& surface, double l0, double l1, double phi,
              double theta) {

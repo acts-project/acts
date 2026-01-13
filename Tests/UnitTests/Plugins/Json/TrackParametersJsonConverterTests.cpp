@@ -25,7 +25,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(TrackParametersJsonIO) {
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   // Track parameters
   Vector4 position(1., 2., 3., 4.);

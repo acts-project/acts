@@ -270,7 +270,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     auto ACTS_lay_id = geoid.layer();
     auto mod_id = geoid.sensitive();
     auto bounds_vect = surface->bounds().values();
-    auto center = surface->center(Acts::GeometryContext());
+    auto center = surface->center(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
     // make bounds global
     Acts::Vector3 globalFakeMom(1, 1, 1);
@@ -279,9 +279,9 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     Acts::Vector2 max_bound_local =
         Acts::Vector2(bounds_vect[2], bounds_vect[3]);
     Acts::Vector3 min_bound_global = surface->localToGlobal(
-        Acts::GeometryContext(), min_bound_local, globalFakeMom);
+        Acts::GeometryContext::dangerouslyDefaultConstruct(), min_bound_local, globalFakeMom);
     Acts::Vector3 max_bound_global = surface->localToGlobal(
-        Acts::GeometryContext(), max_bound_local, globalFakeMom);
+        Acts::GeometryContext::dangerouslyDefaultConstruct(), max_bound_local, globalFakeMom);
 
     if (min_bound_global(0) >
         max_bound_global(0)) {  // checking that not wrong way round

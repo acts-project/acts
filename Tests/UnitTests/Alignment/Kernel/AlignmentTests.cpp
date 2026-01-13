@@ -65,7 +65,7 @@ KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
 
 // Create a test context
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 const CalibrationContext calCtx;
 

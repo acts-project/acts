@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 
   double Bz = 2_T;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
 
   double Bz = 2_T;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, planePar);
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
 
   double Bz = 2_T;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
 
   double Bz = 2_T;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   edm4hep::TrackCollection edm4hepTracks;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   double Bz = 3_T;
 

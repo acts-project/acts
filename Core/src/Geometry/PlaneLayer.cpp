@@ -57,7 +57,7 @@ PlaneSurface& PlaneLayer::surfaceRepresentation() {
 }
 
 void PlaneLayer::buildApproachDescriptor() {
-  const GeometryContext gctx{};
+  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   // delete it
   m_approachDescriptor.reset(nullptr);
   // delete the surfaces

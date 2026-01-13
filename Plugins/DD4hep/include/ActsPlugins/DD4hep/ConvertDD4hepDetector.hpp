@@ -118,7 +118,7 @@ std::unique_ptr<const Acts::TrackingGeometry> convertDD4hepDetector(
     double defaultLayerThickness = Acts::UnitConstants::fm,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors = sortDetElementsByID,
-    const Acts::GeometryContext& gctx = Acts::GeometryContext(),
+    const Acts::GeometryContext& gctx = Acts::GeometryContext::dangerouslyDefaultConstruct(),
     std::shared_ptr<const Acts::IMaterialDecorator> matDecorator = nullptr,
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<Acts::GeometryIdentifierHook>(),

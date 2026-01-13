@@ -48,7 +48,7 @@ using namespace Acts::detail::Test;
 
 using IndexType = TrackIndexType;
 
-const GeometryContext gctx;
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 // fixed seed for reproducible tests
 std::default_random_engine rng(31415);
 

@@ -10,7 +10,7 @@
 
 ActsExamples::AlignedGenericDetector::AlignedGenericDetector(const Config& cfg)
     : GenericDetector(cfg, GenericDetector::NoBuildTag{}) {
-  m_nominalGeometryContext = Acts::GeometryContext();
+  m_nominalGeometryContext = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   // Set the detector element factory
   auto alignedDetectorElementFactory =

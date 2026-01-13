@@ -34,7 +34,7 @@ using namespace Acts;
 
 namespace ActsTests {
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(TrackFindingSuite)
 

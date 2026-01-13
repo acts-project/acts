@@ -132,7 +132,7 @@ void addNavigation(py::module_& m) {
         vol1->addSurface(std::move(surface));
 
         std::unique_ptr<INavigationPolicy> result =
-            self->build(GeometryContext{}, *vol1,
+            self->build(GeometryContext::dangerouslyDefaultConstruct(), *vol1,
                         *getDefaultLogger("Test", Logging::VERBOSE));
       });
 

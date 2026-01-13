@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
 }
 
 BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   // Create a transform with translation and rotation
   Transform3 transform = Transform3::Identity();
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
 }
 
 BOOST_AUTO_TEST_CASE(DetrayPortalConversionTests) {
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   // Create a transform with translation and rotation
   Transform3 transform = Transform3::Identity();
@@ -575,7 +575,7 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
 // }  // namespace
 
 BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   auto geoLogger = getDefaultLogger("Geo", Logging::VERBOSE);
 
   CylindricalTrackingGeometry cGeometry(gctx, true);

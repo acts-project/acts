@@ -32,7 +32,7 @@ Geant4Detector::Geant4Detector(const Config& cfg)
             << m_cfg.name << "' from the Geant4PhysVolume '"
             << m_cfg.g4World->GetName() << "'");
 
-  m_nominalGeometryContext = Acts::GeometryContext();
+  m_nominalGeometryContext = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   auto [surfaces, elements] = buildGeant4Volumes(cfg, logger());
 }

@@ -37,7 +37,7 @@ using namespace Acts;
 namespace {
 std::ofstream out;
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 }  // namespace
 
 namespace ActsTests {

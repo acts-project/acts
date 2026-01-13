@@ -34,7 +34,7 @@ namespace Acts::VolumeView3DTest {
 
 static inline std::string run(IVisualization3D& helper, bool triangulate,
                               const std::string& tag) {
-  auto gctx = GeometryContext();
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   auto identity = Transform3::Identity();
   std::stringstream cStream;
 

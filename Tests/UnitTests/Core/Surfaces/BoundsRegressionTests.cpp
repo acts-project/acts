@@ -26,7 +26,7 @@ using namespace Acts;
 
 namespace ActsTests {
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 std::size_t matrixResolution = 80;
 

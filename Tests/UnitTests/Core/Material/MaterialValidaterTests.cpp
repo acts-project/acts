@@ -27,7 +27,7 @@ using namespace Acts;
 
 namespace ActsTests {
 
-auto tContext = GeometryContext();
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 /// @brief Interface for the material mapping that seeks the possible
 /// assignment candidates for the material interactiosn

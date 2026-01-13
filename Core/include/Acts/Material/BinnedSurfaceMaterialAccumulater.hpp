@@ -26,7 +26,7 @@ class BinnedSurfaceMaterialAccumulater final
   /// @brief Nested config struct
   struct Config {
     /// Geometry context for coordinate transformations
-    GeometryContext geoContext;
+    GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 
     /// Correct for empty bins (recommended)
     bool emptyBinCorrection = true;

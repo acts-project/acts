@@ -19,7 +19,7 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
-GeometryContext gctx = GeometryContext();
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 BOOST_AUTO_TEST_CASE(DiamondVolumeBoundsCreation) {

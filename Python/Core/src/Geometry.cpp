@@ -126,7 +126,7 @@ void addGeometry(py::module_& m) {
           auto warnings = py::module_::import("warnings");
           auto builtins = py::module_::import("builtins");
           warnings.attr("warn")(
-              "GeometryContext() is deprecated. Use "
+              "GeometryContext::dangerouslyDefaultConstruct() is deprecated. Use "
               "GeometryContext.dangerouslyDefaultConstruct() instead to "
               "make empty context construction explicit.",
               builtins.attr("DeprecationWarning"));
