@@ -107,7 +107,8 @@ constexpr T sumUpToN(const T N) {
 template <std::integral T>
 constexpr T factorial(const T upperN, const T lowerN = 1) {
   constexpr T one = 1;
-  const T& limit = std::max(one, lowerN);
+  constexpr T two = 2;
+  const T limit = std::max(two, lowerN);
   return upperN >= limit ? upperN * factorial(upperN - 1, limit) : one;
 }
 /// @brief Calculate the binomial coefficient
