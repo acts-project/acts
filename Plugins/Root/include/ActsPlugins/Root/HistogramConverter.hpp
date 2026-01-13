@@ -10,12 +10,23 @@
 
 #include "Acts/Utilities/Histogram.hpp"
 
+#include <vector>
+
 class TEfficiency;
 class TH1F;
 class TH2F;
 class TProfile;
 
 namespace ActsPlugins {
+
+/// Extract bin edges from an AxisVariant
+///
+/// Works with all axis types (regular, variable, log) in the variant by
+/// accessing the generic axis interface.
+///
+/// @param axis The axis variant to extract edges from
+/// @return Vector of bin edges (size = nBins + 1)
+std::vector<double> extractBinEdges(const Acts::Experimental::AxisVariant& axis);
 
 /// Convert Histogram1 to ROOT TH1F
 ///
