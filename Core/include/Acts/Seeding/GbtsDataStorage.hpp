@@ -146,12 +146,14 @@ class GbtsEdge {
   const GbtsNode* m_n1{nullptr};
   const GbtsNode* m_n2{nullptr};
 
-  std::int8_t m_level{-1}, m_next{-1};
+  std::int8_t m_level{-1};
+  std::int8_t m_next{-1};
 
   std::int8_t m_nNei{0};
   std::array<float, 3> m_p{};
 
-  std::uint32_t m_vNei[N_SEG_CONNS]{};  // global indices of the connected edges
+  // global indices of the connected edges
+  std::array<std::uint32_t, N_SEG_CONNS> m_vNei{};
 };
 
 }  // namespace Acts::Experimental
