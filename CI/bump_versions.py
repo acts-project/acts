@@ -48,6 +48,13 @@ class VersionBumper:
         "spack_container": re.compile(
             r"(ghcr\.io/acts-project/spack-container):(\d+\.\d+\.\d+)(_[a-z0-9._-]+)"
         ),
+        # Matches DEPENDENCY_TAG in two formats:
+        # 1. GitLab CI: DEPENDENCY_TAG: v18.0.0
+        # 2. GitHub Actions: DEPENDENCY_TAG: ... default: 'v18.0.0'
+        "dependency_tag": re.compile(
+            r"(DEPENDENCY_TAG:(?:\s*['\"]?|(?:[^\n]|\n(?!\s{0,2}\w))*?default:\s*['\"]))(v\d+\.\d+\.\d+)(['\"]?)",
+            re.MULTILINE,
+        ),
     }
 
     # File patterns to search
@@ -55,6 +62,7 @@ class VersionBumper:
         ".gitlab-ci.yml",
         ".github/workflows/*.yml",
         ".github/workflows/*.yaml",
+        ".github/actions/**/action.yml",
         ".devcontainer/Dockerfile",
         "CI/**/*.sh",
         "docs/**/*.md",
@@ -87,6 +95,9 @@ class VersionBumper:
         elif pattern_name == "spack_container":
             # Return full version strings
             return {match[1] for match in matches}
+        elif pattern_name == "dependency_tag":
+            # Return full version strings (e.g., v18.0.0)
+            return {match[1] for match in matches}
 
         return set()
 
@@ -95,8 +106,10 @@ class VersionBumper:
         versions = {
             "docker_tags": set(),
             "spack_container_versions": set(),
+            "dependency_tags": set(),
             "files_with_docker_tags": [],
             "files_with_spack_container": [],
+            "files_with_dependency_tags": [],
         }
 
         files = self.find_files()
@@ -117,6 +130,12 @@ class VersionBumper:
                 if spack_versions:
                     versions["spack_container_versions"].update(spack_versions)
                     versions["files_with_spack_container"].append(file_path)
+
+                # Check for dependency tags
+                dependency_tags = self.find_versions(content, "dependency_tag")
+                if dependency_tags:
+                    versions["dependency_tags"].update(dependency_tags)
+                    versions["files_with_dependency_tags"].append(file_path)
 
             except Exception as e:
                 console.print(
@@ -203,6 +222,45 @@ class VersionBumper:
 
         return replacements, content, new_content
 
+    def bump_dependency_tag(
+        self,
+        file_path: Path,
+        old_versions: set[str],
+        new_version: str,
+        dry_run: bool = False,
+        show_diff: bool = False,
+    ) -> tuple[int, str, str]:
+        """Bump dependency tag in a file. Returns (replacements, old_content, new_content)."""
+        content = file_path.read_text()
+        pattern = self.PATTERNS["dependency_tag"]
+
+        replacements = 0
+
+        def replace_version(match):
+            nonlocal replacements
+            old_version = match.group(2)
+            if old_version in old_versions and old_version != new_version:
+                replacements += 1
+                return f"{match.group(1)}{new_version}{match.group(3)}"
+            return match.group(0)
+
+        new_content = pattern.sub(replace_version, content)
+
+        if replacements > 0:
+            if not dry_run:
+                file_path.write_text(new_content)
+
+            prefix = "[dim][DRY RUN][/dim] " if dry_run else ""
+            rel_path = file_path.relative_to(self.repo_root)
+            console.print(
+                f"{prefix}[green]✓[/green] Updated {replacements} occurrence(s) in [cyan]{rel_path}[/cyan]"
+            )
+
+            if show_diff:
+                self._show_diff(file_path, content, new_content)
+
+        return replacements, content, new_content
+
     def _show_diff(self, file_path: Path, old_content: str, new_content: str):
         """Display a unified diff of the changes."""
         rel_path = file_path.relative_to(self.repo_root)
@@ -265,6 +323,28 @@ class VersionBumper:
 
         return total_replacements
 
+    def bump_all_dependency_tags(
+        self,
+        old_versions: set[str],
+        new_version: str,
+        dry_run: bool = False,
+        show_diff: bool = False,
+    ) -> int:
+        """Bump all dependency tags across the repository."""
+        files = self.find_files()
+        total_replacements = 0
+
+        for file_path in files:
+            try:
+                replacements, _, _ = self.bump_dependency_tag(
+                    file_path, old_versions, new_version, dry_run, show_diff
+                )
+                total_replacements += replacements
+            except Exception as e:
+                console.print(f"[red]Error processing {file_path}: {e}[/red]")
+
+        return total_replacements
+
 
 @app.command()
 def scan(
@@ -308,6 +388,19 @@ def scan(
         console.print(
             "[bold]Spack-container versions:[/bold] [yellow]none found[/yellow]"
         )
+
+    console.print()
+
+    # Dependency tags
+    if versions["dependency_tags"]:
+        console.print("[bold]Dependency tags:[/bold]")
+        for version in sorted(versions["dependency_tags"]):
+            console.print(f"  [cyan]{version}[/cyan]")
+        console.print(
+            f"[dim]  Found in {len(versions['files_with_dependency_tags'])} file(s)[/dim]"
+        )
+    else:
+        console.print("[bold]Dependency tags:[/bold] [yellow]none found[/yellow]")
 
 
 @app.command()
@@ -398,14 +491,15 @@ def bump_spack(
         bool, typer.Option("--dry-run", help="Preview changes without modifying files")
     ] = False,
     show_diff: Annotated[
-        bool, typer.Option("--diff", help="Show diff of changes")
+        bool, typer.Option("--diff/--no-diff", help="Show diff of changes")
     ] = True,
 ):
     """
-    Bump spack-container version across the repository.
+    Bump spack-container version and DEPENDENCY_TAG across the repository.
 
     This command updates the spack-container image version used in
-    .devcontainer/Dockerfile and other configuration files. It replaces
+    .devcontainer/Dockerfile and other configuration files, as well as
+    the DEPENDENCY_TAG in GitHub Actions and GitLab CI. It replaces
     all found versions with the new version.
 
     Example:
@@ -422,16 +516,31 @@ def bump_spack(
         )
         raise typer.Exit(1)
 
-    # Replace ALL found versions
-    old_versions = versions["spack_container_versions"]
+    # Replace ALL found spack-container versions
+    old_spack_versions = versions["spack_container_versions"]
     console.print(
-        f"[dim]Found spack-container versions: {', '.join(sorted(old_versions))}[/dim]"
+        f"[dim]Found spack-container versions: {', '.join(sorted(old_spack_versions))}[/dim]"
     )
 
-    # Check if new version is same as all old versions
-    if len(old_versions) == 1 and new_version in old_versions:
+    # Also check for dependency tags
+    old_dependency_versions = versions.get("dependency_tags", set())
+    if old_dependency_versions:
         console.print(
-            f"[yellow]Version is already {new_version}, no changes needed[/yellow]"
+            f"[dim]Found dependency tags: {', '.join(sorted(old_dependency_versions))}[/dim]"
+        )
+
+    # Check if new version is same as all old versions (both spack and dependency)
+    new_dependency_version = f"v{new_version}"
+    spack_is_current = (
+        len(old_spack_versions) == 1 and new_version in old_spack_versions
+    )
+    dependency_is_current = len(old_dependency_versions) <= 1 and (
+        not old_dependency_versions or new_dependency_version in old_dependency_versions
+    )
+
+    if spack_is_current and dependency_is_current:
+        console.print(
+            f"[yellow]All versions are already {new_version} (DEPENDENCY_TAG: {new_dependency_version}), no changes needed[/yellow]"
         )
         raise typer.Exit(0)
 
@@ -441,33 +550,48 @@ def bump_spack(
     if dry_run:
         console.print(
             Panel(
-                f"[bold]DRY RUN:[/bold] Bumping spack-container [cyan]{', '.join(sorted(old_versions))}[/cyan] → [cyan]{new_version}[/cyan]",
+                f"[bold]DRY RUN:[/bold] Bumping spack-container and DEPENDENCY_TAG [cyan]{', '.join(sorted(old_spack_versions))}[/cyan] → [cyan]{new_version}[/cyan]",
                 border_style="yellow",
             )
         )
     else:
         console.print(
             Panel(
-                f"Bumping spack-container [cyan]{', '.join(sorted(old_versions))}[/cyan] → [cyan]{new_version}[/cyan]",
+                f"Bumping spack-container and DEPENDENCY_TAG [cyan]{', '.join(sorted(old_spack_versions))}[/cyan] → [cyan]{new_version}[/cyan]",
                 border_style="green",
             )
         )
 
     console.print()
-    total = bumper.bump_all_spack_containers(
-        old_versions, new_version, dry_run, show_diff
+
+    # Bump spack-container versions
+    console.print("[bold]Updating spack-container versions:[/bold]")
+    total_spack = bumper.bump_all_spack_containers(
+        old_spack_versions, new_version, dry_run, show_diff
     )
 
+    # Bump dependency tags with "v" prefix
+    if old_dependency_versions:
+        console.print()
+        console.print("[bold]Updating DEPENDENCY_TAG:[/bold]")
+        new_dependency_version = f"v{new_version}"
+        total_dependency = bumper.bump_all_dependency_tags(
+            old_dependency_versions, new_dependency_version, dry_run, show_diff
+        )
+    else:
+        total_dependency = 0
+
     console.print()
+    total = total_spack + total_dependency
     if total > 0:
         if dry_run:
             console.print(
-                f"[green]✓[/green] Would update [bold]{total}[/bold] occurrence(s)"
+                f"[green]✓[/green] Would update [bold]{total}[/bold] occurrence(s) ([bold]{total_spack}[/bold] spack-container, [bold]{total_dependency}[/bold] DEPENDENCY_TAG)"
             )
             console.print("[dim]Run without --dry-run to apply changes[/dim]")
         else:
             console.print(
-                f"[green]✓[/green] Updated [bold]{total}[/bold] occurrence(s)"
+                f"[green]✓[/green] Updated [bold]{total}[/bold] occurrence(s) ([bold]{total_spack}[/bold] spack-container, [bold]{total_dependency}[/bold] DEPENDENCY_TAG)"
             )
     else:
         console.print(f"[yellow]No occurrences found[/yellow]")
