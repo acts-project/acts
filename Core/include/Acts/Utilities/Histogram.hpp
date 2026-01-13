@@ -51,7 +51,7 @@ class Histogram {
   /// @param title Histogram title (for plotting)
   /// @param axes Array of axes with binning and metadata
   Histogram(std::string name, std::string title,
-            std::array<AxisVariant, Dim> axes)
+            const std::array<AxisVariant, Dim>& axes)
       : m_name(std::move(name)),
         m_title(std::move(title)),
         m_hist(boost::histogram::make_histogram(axes.begin(), axes.end())) {}
@@ -103,7 +103,7 @@ class ProfileHistogram {
   /// @param axes Array of axes with binning and metadata
   /// @param sampleAxisTitle Title for the sampled axis (profiled quantity)
   ProfileHistogram(std::string name, std::string title,
-                   std::array<AxisVariant, Dim> axes,
+                   const std::array<AxisVariant, Dim>& axes,
                    std::string sampleAxisTitle)
       : m_name(std::move(name)),
         m_title(std::move(title)),
@@ -114,7 +114,7 @@ class ProfileHistogram {
   ///
   /// @param values Bin coordinate values (one per axis)
   /// @param sample Sample value (profiled quantity)
-  void fill(std::array<double, Dim> values, double sample) {
+  void fill(const std::array<double, Dim>& values, double sample) {
     std::apply(
         [&](auto... v) { m_hist(v..., boost::histogram::sample(sample)); },
         std::tuple_cat(values));
@@ -162,7 +162,7 @@ class Efficiency {
   /// @param title Histogram title
   /// @param axes Array of axes with binning and metadata
   Efficiency(std::string name, std::string title,
-             std::array<AxisVariant, Dim> axes)
+             const std::array<AxisVariant, Dim>& axes)
       : m_name(std::move(name)),
         m_title(std::move(title)),
         m_accepted(boost::histogram::make_histogram(axes.begin(), axes.end())),
@@ -172,7 +172,7 @@ class Efficiency {
   ///
   /// @param values Values to fill (one per axis)
   /// @param accepted Whether the event passed selection
-  void fill(std::array<double, Dim> values, bool accepted) {
+  void fill(const std::array<double, Dim>& values, bool accepted) {
     std::apply(
         [&](auto... v) {
           m_total(v...);
