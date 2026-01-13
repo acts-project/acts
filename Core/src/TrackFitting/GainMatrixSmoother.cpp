@@ -74,7 +74,7 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
   // And the smoothed covariance
   smoothedCovariance =
       filteredCovariance +
-      G * (smoothedCovariance - prevPredictedCovariance) * G.transpose();
+      G * (prevSmoothedCovariance - prevPredictedCovariance) * G.transpose();
 
   if (doCovCheckAndAttemptFix) {
     // Check if the covariance matrix is semi-positive definite.
