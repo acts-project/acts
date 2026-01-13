@@ -96,7 +96,7 @@ class GbtsDataStorage {
  public:
   explicit GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
                            const SeedFinderGbtsConfig& config,
-                           const GbtsMLLookupTable& parseLutFile);
+                           GbtsMLLookupTable mlLUT);
 
   int loadPixelGraphNodes(short layerIndex,
                           const std::span<const GbtsNode> coll, bool useML);

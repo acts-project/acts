@@ -94,8 +94,8 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
 }
 GbtsDataStorage::GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
                                  const SeedFinderGbtsConfig& config,
-                                 const GbtsMLLookupTable& parseLutFile)
-    : m_geo(std::move(geometry)), m_config(config), m_mlLUT(parseLutFile) {
+                                 GbtsMLLookupTable mlLUT)
+    : m_geo(std::move(geometry)), m_config(config), m_mlLUT(std::move(mlLUT)) {
   // parse the look up table if useML is true
 
   m_etaBins.resize(m_geo->num_bins());
