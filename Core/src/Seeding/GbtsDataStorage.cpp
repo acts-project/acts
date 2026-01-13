@@ -107,7 +107,6 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
   int nLoaded = 0;
 
   const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
-  const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
 
   if (pL == nullptr) {
     return -1;
@@ -144,7 +143,6 @@ int GbtsDataStorage::loadStripGraphNodes(short layerIndex,
                                          const std::span<const GbtsNode> coll) {
   int nLoaded = 0;
 
-  const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
   const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
 
   if (pL == nullptr) {
@@ -184,7 +182,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
   for (auto& b : m_etaBins) {
     b.initializeNodes();
     if (!b.m_vn.empty()) {
-      b.m_layerKey = m_geo->getGbtsLayerKeyByIndex((*b.m_vn.begin())->m_layer);
+      b.m_layerKey = m_geo->getGbtsLayerKeyByIndex((*b.m_vn.begin())->layer());
     }
   }
 
@@ -193,10 +191,8 @@ void GbtsDataStorage::initializeNodes(bool useML) {
   }
 
   unsigned int nL = m_geo->num_layers();
-  unsigned int nL = m_geo->num_layers();
 
   for (unsigned int layerIdx = 0; layerIdx < nL; layerIdx++) {
-    const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIdx);
     const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIdx);
 
     if (pL->m_layer.m_subdet <

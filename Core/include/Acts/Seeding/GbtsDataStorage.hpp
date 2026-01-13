@@ -23,6 +23,8 @@ constexpr int N_SEG_CONNS = 6;
 
 class GbtsGeometry;
 
+using GbtsMLLookupTable = std::vector<std::array<float, 5>>;
+
 class GbtsNode {
  public:
   explicit GbtsNode(std::uint16_t l) : m_layer(l) {};
@@ -95,7 +97,6 @@ class GbtsDataStorage {
   explicit GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
                            const SeedFinderGbtsConfig& config,
                            const GbtsMLLookupTable& parseLutFile);
-  ~GbtsDataStorage();
 
   int loadPixelGraphNodes(short layerIndex,
                           const std::span<const GbtsNode> coll, bool useML);
