@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(TrackParametersJsonIO) {
   BOOST_CHECK_EQUAL(ctp.covariance().value(), ctpRead.covariance().value());
   BOOST_CHECK_EQUAL(ctp.particleHypothesis(), ctpRead.particleHypothesis());
 
-  BOOST_CHECK(ctp.referenceSurface().transform(gctx).isApprox(
-      ctpRead.referenceSurface().transform(gctx)));
+  BOOST_CHECK(ctp.referenceSurface().localToGlobal(gctx).isApprox(
+      ctpRead.referenceSurface().localToGlobal(gctx)));
   BOOST_CHECK_EQUAL(ctp.referenceSurface().geometryId(),
                     ctpRead.referenceSurface().geometryId());
   BOOST_CHECK_EQUAL(ctp.referenceSurface().bounds(),
@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE(TrackParametersJsonIO) {
   BOOST_CHECK_EQUAL(btp.covariance().value(), btpRead.covariance().value());
   BOOST_CHECK_EQUAL(btp.particleHypothesis(), btpRead.particleHypothesis());
 
-  BOOST_CHECK(btp.referenceSurface().transform(gctx).isApprox(
-      btpRead.referenceSurface().transform(gctx)));
+  BOOST_CHECK(btp.referenceSurface().localToGlobal(gctx).isApprox(
+      btpRead.referenceSurface().localToGlobal(gctx)));
   BOOST_CHECK_EQUAL(btp.referenceSurface().geometryId(),
                     btpRead.referenceSurface().geometryId());
   BOOST_CHECK_EQUAL(btp.referenceSurface().bounds(),

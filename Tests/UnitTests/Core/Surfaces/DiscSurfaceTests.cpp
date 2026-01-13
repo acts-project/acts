@@ -553,14 +553,15 @@ BOOST_DATA_TEST_CASE(RDirection,
   BOOST_CHECK_EQUAL(bounds->get(RadialBounds::eMaxR), 150_mm);
 
   // Disc did not move
-  BOOST_CHECK_EQUAL(base.matrix(), disc3->transform(tgContext).matrix());
+  BOOST_CHECK_EQUAL(base.matrix(), disc3->localToGlobal(tgContext).matrix());
 
   // Rotation in z depends on the ordering, the left side "wins"
   Transform3 expected12 = base;
-  BOOST_CHECK_EQUAL(expected12.matrix(), disc3->transform(tgContext).matrix());
+  BOOST_CHECK_EQUAL(expected12.matrix(),
+                    disc3->localToGlobal(tgContext).matrix());
 
   Transform3 expected21 = base * AngleAxis3(14_degree, Vector3::UnitZ());
-  CHECK_CLOSE_OR_SMALL(disc3Reversed->transform(tgContext).matrix(),
+  CHECK_CLOSE_OR_SMALL(disc3Reversed->localToGlobal(tgContext).matrix(),
                        expected21.matrix(), 1e-6, 1e-10);
 
   // Test r merging with phi sectors (matching)
@@ -647,7 +648,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     auto [disc3, reversed] =
         disc->mergedWith(*disc2, Acts::AxisDirection::AxisPhi, false, *logger);
     BOOST_REQUIRE_NE(disc3, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), disc3->transform(tgContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(), disc3->localToGlobal(tgContext).matrix());
     BOOST_CHECK(reversed);
 
     auto [disc3Reversed, reversed2] =
@@ -671,7 +672,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     auto [disc45, reversed45] =
         disc4->mergedWith(*disc5, Acts::AxisDirection::AxisPhi, false, *logger);
     BOOST_REQUIRE_NE(disc45, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), disc45->transform(tgContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(), disc45->localToGlobal(tgContext).matrix());
     BOOST_CHECK(reversed45);
 
     auto [disc54, reversed54] =
@@ -697,8 +698,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     auto [disc67, reversed67] =
         disc6->mergedWith(*disc7, Acts::AxisDirection::AxisPhi, false, *logger);
     BOOST_REQUIRE_NE(disc67, nullptr);
-    CHECK_CLOSE_OR_SMALL(disc67->transform(tgContext).matrix(), base.matrix(),
-                         1e-6, 1e-10);
+    CHECK_CLOSE_OR_SMALL(disc67->localToGlobal(tgContext).matrix(),
+                         base.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(!reversed67);
 
     auto [disc76, reversed76] =
@@ -709,8 +710,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     // bounds are different because of avg phi
     BOOST_CHECK_NE(disc76->bounds(), disc67->bounds());
     // transforms should be the same
-    BOOST_CHECK_EQUAL(disc76->transform(tgContext).matrix(),
-                      disc67->transform(tgContext).matrix());
+    BOOST_CHECK_EQUAL(disc76->localToGlobal(tgContext).matrix(),
+                      disc67->localToGlobal(tgContext).matrix());
     // not reversed either because you get the ordering you put in
     BOOST_CHECK(!reversed76);
 
@@ -735,7 +736,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_REQUIRE_NE(disc3, nullptr);
     Transform3 trfExpected12 =
         base * AngleAxis3(a(85_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(disc3->transform(tgContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(disc3->localToGlobal(tgContext).matrix(),
                          trfExpected12.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(reversed);
 
@@ -761,7 +762,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_REQUIRE_NE(disc45, nullptr);
     Transform3 trfExpected45 =
         base * AngleAxis3(a(180_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(disc45->transform(tgContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(disc45->localToGlobal(tgContext).matrix(),
                          trfExpected45.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(reversed45);
 
@@ -788,7 +789,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_REQUIRE_NE(disc67, nullptr);
     Transform3 trfExpected67 =
         base * AngleAxis3(a(90_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(disc67->transform(tgContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(disc67->localToGlobal(tgContext).matrix(),
                          trfExpected67.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(!reversed67);
 
@@ -797,8 +798,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_REQUIRE_NE(disc76, nullptr);
     // surfaces are not equal due to different transforms
     BOOST_CHECK(*disc76 != *disc67);
-    BOOST_CHECK_NE(disc76->transform(tgContext).matrix(),
-                   disc67->transform(tgContext).matrix());
+    BOOST_CHECK_NE(disc76->localToGlobal(tgContext).matrix(),
+                   disc67->localToGlobal(tgContext).matrix());
     // bounds should be equal however
     BOOST_CHECK_EQUAL(disc76->bounds(), disc67->bounds());
 

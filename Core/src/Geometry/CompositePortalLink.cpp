@@ -223,19 +223,19 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
     std::vector<double> edges;
     edges.reserve(m_children.size() + 1);
 
-    const Transform3& groupTransform = m_surface->transform(gctx);
+    const Transform3& groupTransform = m_surface->localToGlobal(gctx);
     Transform3 itransform = groupTransform.inverse();
 
-    std::ranges::sort(
-        trivialLinks, [&itransform, &gctx](const auto& a, const auto& b) {
-          return (itransform * a.surface().transform(gctx)).translation()[eZ] <
-                 (itransform * b.surface().transform(gctx)).translation()[eZ];
-        });
+    std::ranges::sort(trivialLinks, [&itransform, &gctx](const auto& a,
+                                                         const auto& b) {
+      return (itransform * a.surface().localToGlobal(gctx)).translation()[eZ] <
+             (itransform * b.surface().localToGlobal(gctx)).translation()[eZ];
+    });
 
     for (const auto& [i, child] : enumerate(trivialLinks)) {
       const auto& bounds =
           dynamic_cast<const CylinderBounds&>(child.surface().bounds());
-      Transform3 ltransform = itransform * child.surface().transform(gctx);
+      Transform3 ltransform = itransform * child.surface().localToGlobal(gctx);
       double hlZ = bounds.get(CylinderBounds::eHalfLengthZ);
       double minZ = ltransform.translation()[eZ] - hlZ;
       double maxZ = ltransform.translation()[eZ] + hlZ;
@@ -311,22 +311,22 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
     std::vector<double> edges;
     edges.reserve(m_children.size() + 1);
 
-    const Transform3& groupTransform = m_surface->transform(gctx);
+    const Transform3& groupTransform = m_surface->localToGlobal(gctx);
     Transform3 itransform = groupTransform.inverse();
 
     std::size_t sortingDir = dirX ? eX : eY;
     std::ranges::sort(trivialLinks, [&itransform, &gctx, sortingDir](
                                         const auto& a, const auto& b) {
-      return (itransform * a.surface().transform(gctx))
+      return (itransform * a.surface().localToGlobal(gctx))
                  .translation()[sortingDir] <
-             (itransform * b.surface().transform(gctx))
+             (itransform * b.surface().localToGlobal(gctx))
                  .translation()[sortingDir];
     });
 
     for (const auto& [i, child] : enumerate(trivialLinks)) {
       const auto& bounds =
           dynamic_cast<const RectangleBounds&>(child.surface().bounds());
-      Transform3 ltransform = itransform * child.surface().transform(gctx);
+      Transform3 ltransform = itransform * child.surface().localToGlobal(gctx);
       double half = dirX ? bounds.halfLengthX() : bounds.halfLengthY();
       double min = ltransform.translation()[sortingDir] - half;
       double max = ltransform.translation()[sortingDir] + half;

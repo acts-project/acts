@@ -201,7 +201,7 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
   detray::io::surface_payload payload;
 
   payload.transform =
-      DetrayConversionUtils::convertTransform(surface.transform(gctx));
+      DetrayConversionUtils::convertTransform(surface.localToGlobal(gctx));
   payload.source = surface.geometryId().value();
   payload.barcode = std::nullopt;
 

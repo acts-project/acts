@@ -173,7 +173,7 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
   for (const auto& [surface, index] : alignResult.idxedAlignSurfaces) {
     // 1. The original transform
     const Acts::Vector3& oldCenter = surface->center(gctx);
-    const Acts::Transform3& oldTransform = surface->transform(gctx);
+    const Acts::Transform3& oldTransform = surface->localToGlobal(gctx);
 
     // 2. The delta transform
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(

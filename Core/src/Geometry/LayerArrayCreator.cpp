@@ -228,7 +228,7 @@ std::shared_ptr<Surface> LayerArrayCreator::createNavigationSurface(
     auto cylinderBounds =
         std::make_shared<CylinderBounds>(navigationR, halflengthZ);
     navigationSurface = Surface::makeShared<CylinderSurface>(
-        layerSurface.transform(gctx), cylinderBounds);
+        layerSurface.localToGlobal(gctx), cylinderBounds);
   } else {
     ACTS_WARNING("Not implemented.");
   }

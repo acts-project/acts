@@ -78,6 +78,8 @@ class LineSurface : public Surface {
                        const Transform3& shift);
 
  public:
+  /// Reuse the transform definition from the surface
+  using Surface::localToGlobal;
   /// Assignment operator
   ///
   /// @param other is the source surface dor copying

@@ -93,14 +93,14 @@ Vector3 DiscSurface::localToGlobal(const GeometryContext& gctx,
   Vector3 loc3Dframe(lposition[0] * std::cos(lposition[1]),
                      lposition[0] * std::sin(lposition[1]), 0.);
   // transform to globalframe
-  return transform(gctx) * loc3Dframe;
+  return localToGlobal(gctx) * loc3Dframe;
 }
 
 Result<Vector2> DiscSurface::globalToLocal(const GeometryContext& gctx,
                                            const Vector3& position,
                                            double tolerance) const {
   // transport it to the globalframe
-  Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
+  Vector3 loc3Dframe = (localToGlobal(gctx).inverse()) * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
@@ -130,13 +130,13 @@ Vector2 DiscSurface::localPolarToLocalCartesian(const Vector2& locpol) const {
 Vector3 DiscSurface::localCartesianToGlobal(const GeometryContext& gctx,
                                             const Vector2& lposition) const {
   Vector3 loc3Dframe(lposition[0], lposition[1], 0.);
-  return transform(gctx) * loc3Dframe;
+  return localToGlobal(gctx) * loc3Dframe;
 }
 
 Vector2 DiscSurface::globalToLocalCartesian(const GeometryContext& gctx,
                                             const Vector3& position,
                                             double /*direction*/) const {
-  Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
+  Vector3 loc3Dframe = (localToGlobal(gctx).inverse()) * position;
   return Vector2(loc3Dframe.x(), loc3Dframe.y());
 }
 
@@ -166,7 +166,7 @@ Polyhedron DiscSurface::polyhedronRepresentation(
     vertices.reserve(vertices2D.size() + 1);
     Vector3 wCenter(0., 0., 0);
     for (const auto& v2D : vertices2D) {
-      vertices.push_back(transform(gctx) * Vector3(v2D.x(), v2D.y(), 0.));
+      vertices.push_back(localToGlobal(gctx) * Vector3(v2D.x(), v2D.y(), 0.));
       wCenter += (*vertices.rbegin());
     }
     // These are convex shapes, use the helper method
@@ -211,7 +211,7 @@ BoundToFreeMatrix DiscSurface::boundToFreeJacobian(
       referenceFrame(gctx, position, direction).transpose();
 
   // calculate the transformation to local coordinates
-  const Vector3 posLoc = transform(gctx).inverse() * position;
+  const Vector3 posLoc = localToGlobal(gctx).inverse() * position;
   const double lr = perp(posLoc);
   const double lphi = phi(posLoc);
   const double lcphi = std::cos(lphi);
@@ -247,7 +247,7 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
       referenceFrame(gctx, position, direction).transpose();
 
   // calculate the transformation to local coordinates
-  const Vector3 posLoc = transform(gctx).inverse() * position;
+  const Vector3 posLoc = localToGlobal(gctx).inverse() * position;
   const double lr = perp(posLoc);
   const double lphi = phi(posLoc);
   const double lcphi = std::cos(lphi);
@@ -275,7 +275,7 @@ MultiIntersection3D DiscSurface::intersect(
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
   // Get the contextual transform
-  const Transform3& gctxTransform = transform(gctx);
+  const Transform3& gctxTransform = localToGlobal(gctx);
   // Use the intersection helper for planar surfaces
   const Intersection3D intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
@@ -316,7 +316,7 @@ ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
-  const auto& sTransform = transform(gctx);
+  const auto& sTransform = localToGlobal(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
@@ -341,7 +341,7 @@ Vector3 DiscSurface::normal(const GeometryContext& gctx,
 
 Vector3 DiscSurface::normal(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not rotation())
-  const auto& tMatrix = transform(gctx).matrix();
+  const auto& tMatrix = localToGlobal(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 

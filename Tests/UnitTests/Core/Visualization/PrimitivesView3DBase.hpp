@@ -82,7 +82,7 @@ static inline std::string run(IVisualization3D& helper) {
 
   Vector2 lcentered{0., 0.};
   Acts::EventDataView3D::drawCovarianceCartesian(
-      helper, lcentered, cov, plane->transform(gctx), 1.0, errorVis);
+      helper, lcentered, cov, plane->localToGlobal(gctx), 1.0, errorVis);
 
   helper.write("Primitives_CartesianError");
   helper.write(ss);

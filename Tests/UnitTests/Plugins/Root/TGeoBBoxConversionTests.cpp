@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   CHECK_CLOSE_ABS(maxY - minY, 2 * dY, s_epsilon);
 
   // Check if the surface is the (negative) identity
-  auto transform_XYZ = plane_XYZ->transform(tgContext);
+  auto transform_XYZ = plane_XYZ->localToGlobal(tgContext);
   auto rotation_XYZ = transform_XYZ.rotation();
   BOOST_CHECK(transform_XYZ.isApprox(Transform3::Identity()));
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ->bounds()));
   BOOST_REQUIRE_NE(bounds_xyz, nullptr);
   BOOST_CHECK_EQUAL(bounds_xyz, bounds_XYZ);
-  auto transform_xyz = plane_xyz->transform(tgContext);
+  auto transform_xyz = plane_xyz->localToGlobal(tgContext);
   auto rotation_xyz = transform_xyz.rotation();
   BOOST_CHECK(rotation_xyz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
   BOOST_CHECK(rotation_xyz.col(1).isApprox(-1 * rotation_XYZ.col(1)));
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
       dynamic_cast<const RectangleBounds *>(&(plane_xYz->bounds()));
   BOOST_CHECK_NE(bounds_xYz, nullptr);
   BOOST_CHECK_EQUAL(bounds_xYz, bounds_xYz);
-  auto transform_xYz = plane_xYz->transform(tgContext);
+  auto transform_xYz = plane_xYz->localToGlobal(tgContext);
   auto rotation_xYz = transform_xYz.rotation();
   BOOST_CHECK(rotation_xYz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
   BOOST_CHECK(rotation_xYz.col(1).isApprox(rotation_XYZ.col(1)));
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   CHECK_CLOSE_ABS(maxX - minX, 2 * dY, s_epsilon);
   CHECK_CLOSE_ABS(maxY - minY, 2 * dX, s_epsilon);
 
-  auto transform_YXz = plane_YXz->transform(tgContext);
+  auto transform_YXz = plane_YXz->localToGlobal(tgContext);
   auto rotation_YXz = transform_YXz.rotation();
   BOOST_CHECK(rotation_YXz.col(0).isApprox(rotation_XYZ.col(1)));
   BOOST_CHECK(rotation_YXz.col(1).isApprox(rotation_XYZ.col(0)));

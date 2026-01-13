@@ -162,7 +162,7 @@ std::string DD4hepTestsHelper::surfaceToXML(const GeometryContext& gctx,
   }
 
   // Unwind the placement you have already
-  auto relTransform = ref * surface.transform(gctx);
+  auto relTransform = ref * surface.localToGlobal(gctx);
   sxml << transformToXML(relTransform, axes);
   sxml << " material=\"Air\"";
   sxml << " sensitive=\"true\"/>";

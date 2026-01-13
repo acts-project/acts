@@ -78,7 +78,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   data.cy = center.y() / Acts::UnitConstants::mm;
   data.cz = center.z() / Acts::UnitConstants::mm;
   // rotation matrix components are unit-less
-  auto transform = surface.transform(geoCtx);
+  auto transform = surface.localToGlobal(geoCtx);
   data.rot_xu = transform(0, 0);
   data.rot_xv = transform(0, 1);
   data.rot_xw = transform(0, 2);

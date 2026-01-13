@@ -238,20 +238,20 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
                                           const GeometryContext& gctx) {
   if (auto b = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
       b != nullptr) {
-    return adjustBinUtility(bu, *b, surface.transform(gctx));
+    return adjustBinUtility(bu, *b, surface.localToGlobal(gctx));
   }
   if (auto b = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
       b != nullptr) {
-    return adjustBinUtility(bu, *b, surface.transform(gctx));
+    return adjustBinUtility(bu, *b, surface.localToGlobal(gctx));
   }
   if (surface.type() == Surface::Plane) {
     if (auto b = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
         b != nullptr) {
-      return adjustBinUtility(bu, *b, surface.transform(gctx));
+      return adjustBinUtility(bu, *b, surface.localToGlobal(gctx));
     }
     if (auto b = dynamic_cast<const TrapezoidBounds*>(&(surface.bounds()));
         b != nullptr) {
-      return adjustBinUtility(bu, *b, surface.transform(gctx));
+      return adjustBinUtility(bu, *b, surface.localToGlobal(gctx));
     }
   }
 

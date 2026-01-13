@@ -46,7 +46,7 @@ ActsPlugins::DetrayGeometryConverter::convertSurface(
   detray::io::surface_payload surfacePayload;
 
   surfacePayload.transform =
-      DetrayConversionUtils::convertTransform(surface.transform(gctx));
+      DetrayConversionUtils::convertTransform(surface.localToGlobal(gctx));
   surfacePayload.source = surface.geometryId().value();
   surfacePayload.barcode = std::nullopt;
   surfacePayload.type = static_cast<detray::surface_id>(
@@ -76,7 +76,7 @@ ActsPlugins::DetrayGeometryConverter::convertPortal(
   // for planar surfaces that's easy
   if (surface.type() != Surface::SurfaceType::Cylinder) {
     // Get the two volume center
-    const auto volumeCenter = volume.transform(gctx).translation();
+    const auto volumeCenter = volume.localToGlobal(gctx).translation();
     const auto surfaceCenter = surface.center(gctx);
     const auto surfaceNormal = surface.normal(gctx, surfaceCenter);
     // Get the direction from the volume to the surface, correct link
@@ -224,7 +224,7 @@ ActsPlugins::DetrayGeometryConverter::convertPortal(
             subBoundValues[RadialBounds::BoundValues::eMaxR] = b;
             auto subBounds = std::make_shared<RadialBounds>(subBoundValues);
             auto subSurface = Surface::makeShared<DiscSurface>(
-                portal.surface().transform(gctx), subBounds);
+                portal.surface().localToGlobal(gctx), subBounds);
 
             subSurface->assignGeometryId(surface.geometryId());
             auto portalPayload = convertSurface(gctx, *subSurface, true);
@@ -261,7 +261,7 @@ detray::io::volume_payload ActsPlugins::DetrayGeometryConverter::convertVolume(
   volumePayload.name = volume.name();
   volumePayload.index.link = volumeIndex;
   volumePayload.transform =
-      DetrayConversionUtils::convertTransform(volume.transform(gctx));
+      DetrayConversionUtils::convertTransform(volume.localToGlobal(gctx));
 
   // Remember the link
   cCache.volumeLinks[volume.geometryId()] = volumePayload.index.link;
@@ -283,7 +283,7 @@ detray::io::volume_payload ActsPlugins::DetrayGeometryConverter::convertVolume(
   }
 
   auto orientedSurfaces =
-      volume.volumeBounds().orientedSurfaces(volume.transform(gctx));
+      volume.volumeBounds().orientedSurfaces(volume.localToGlobal(gctx));
 
   // Iterate over portals
   int portalCounter = 0;

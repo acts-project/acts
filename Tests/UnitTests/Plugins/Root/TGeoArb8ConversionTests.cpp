@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
     BOOST_CHECK_NE(bounds, nullptr);
 
     // Check if the surface is the (negative) identity
-    auto transform = plane->transform(tgContext);
+    auto transform = plane->localToGlobal(tgContext);
     auto rotation = transform.rotation();
     GeometryView3D::drawSurface(objVis, *plane, tgContext);
     const Vector3 center = plane->center(tgContext);

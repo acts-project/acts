@@ -131,10 +131,10 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
 
   auto trapezoidBounds =
       boundFactory.makeBounds<TrapezoidBounds>(hlxpy, hlxny, halfLengthY);
-
+  const GeometryContext gctx{};
   // Create transform from the transform of surfaceA and translate it in y
   // direction using the half length
-  auto transform = surfaceA->transform({});
+  auto transform = surfaceA->localToGlobal(gctx);
   transform.translate(Vector3{
       0.f, boundsA.values()[TrapezoidBounds::eHalfLengthY] - halfLengthY, 0.f});
 

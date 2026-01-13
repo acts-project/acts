@@ -397,7 +397,7 @@ RootAthenaDumpReader::readMeasurements(
 
       if (!inside) {
         const Acts::Vector3 v =
-            surface->transform(gctx).inverse() * cluster.globalPosition;
+            surface->localToGlobal(gctx).inverse() * cluster.globalPosition;
         ACTS_WARNING("Projected position is not in surface bounds for "
                      << surface->geometryId() << ", skip hit");
         ACTS_WARNING("Position in local coordinates: " << v.transpose());
@@ -410,7 +410,7 @@ RootAthenaDumpReader::readMeasurements(
 
       if (!loc.ok()) {
         const Acts::Vector3 v =
-            surface->transform(gctx).inverse() * cluster.globalPosition;
+            surface->localToGlobal(gctx).inverse() * cluster.globalPosition;
         ACTS_WARNING("Global-to-local fit failed on "
                      << geoId << " (z dist: " << v[2]
                      << ", projected on surface: " << std::boolalpha << inside

@@ -170,7 +170,7 @@ struct EventDataView3D {
       const auto& covariance = *parameters.covariance();
       drawCovarianceCartesian(helper, lposition,
                               covariance.template block<2, 2>(0, 0),
-                              parameters.referenceSurface().transform(gctx),
+                              parameters.referenceSurface().localToGlobal(gctx),
                               locErrorScale, covConfig);
 
       drawCovarianceAngular(
@@ -265,8 +265,8 @@ struct EventDataView3D {
         const SquareMatrix2 covariance =
             state.template calibratedCovariance<2>();
         drawMeasurement(helper, lposition, covariance,
-                        state.referenceSurface().transform(gctx), locErrorScale,
-                        measurementConfig);
+                        state.referenceSurface().localToGlobal(gctx),
+                        locErrorScale, measurementConfig);
       }
 
       // Last, if necessary and present, draw the track parameters

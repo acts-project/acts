@@ -269,7 +269,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
       Acts::Vector3 boundsCentroidGlobal{boundsCentroidSurfaceFrame[0],
                                          boundsCentroidSurfaceFrame[1], 0.0};
       boundsCentroidGlobal =
-          candidateSurface->transform(gctx) * boundsCentroidGlobal;
+          candidateSurface->localToGlobal(gctx) * boundsCentroidGlobal;
 
       const auto boundsCentroidG4Frame =
           localG4ToGlobal.inverse() * boundsCentroidGlobal;

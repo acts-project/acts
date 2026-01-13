@@ -488,11 +488,12 @@ BOOST_DATA_TEST_CASE(ZDirection,
 
   // Rotation in z depends on the ordering, the left side "wins"
   Transform3 expected12 = base * Translation3{Vector3::UnitZ() * 100_mm};
-  BOOST_CHECK_EQUAL(expected12.matrix(), cyl3->transform(testContext).matrix());
+  BOOST_CHECK_EQUAL(expected12.matrix(),
+                    cyl3->localToGlobal(testContext).matrix());
 
   Transform3 expected21 = base * AngleAxis3(14_degree, Vector3::UnitZ()) *
                           Translation3{Vector3::UnitZ() * 100_mm};
-  CHECK_CLOSE_OR_SMALL(cyl3Reversed->transform(testContext).matrix(),
+  CHECK_CLOSE_OR_SMALL(cyl3Reversed->localToGlobal(testContext).matrix(),
                        expected21.matrix(), 1e-6, 1e-10);
 
   auto cylPhi1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
@@ -587,7 +588,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     auto [cyl3, reversed] =
         cyl->mergedWith(*cyl2, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl3, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), cyl3->transform(testContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(), cyl3->localToGlobal(testContext).matrix());
     BOOST_CHECK(reversed);
 
     auto [cyl3Reversed, reversed2] =
@@ -612,7 +613,8 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     auto [cyl45, reversed45] =
         cyl4->mergedWith(*cyl5, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl45, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), cyl45->transform(testContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(),
+                      cyl45->localToGlobal(testContext).matrix());
     BOOST_CHECK(reversed45);
 
     auto [cyl54, reversed54] =
@@ -637,12 +639,14 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     auto [cyl67, reversed67] =
         cyl6->mergedWith(*cyl7, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl67, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), cyl67->transform(testContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(),
+                      cyl67->localToGlobal(testContext).matrix());
 
     auto [cyl76, reversed76] =
         cyl7->mergedWith(*cyl6, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl76, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), cyl76->transform(testContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(),
+                      cyl76->localToGlobal(testContext).matrix());
 
     // The ordering in this case is effectively arbitrary, you get the ordering
     // you put in
@@ -672,7 +676,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     BOOST_REQUIRE_NE(cyl3, nullptr);
     Transform3 trfExpected12 =
         base * AngleAxis3(a(85_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(cyl3->transform(testContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(cyl3->localToGlobal(testContext).matrix(),
                          trfExpected12.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(reversed);
 
@@ -691,7 +695,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     BOOST_REQUIRE_NE(cyl45, nullptr);
     Transform3 trfExpected45 =
         base * AngleAxis3(a(180_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(cyl45->transform(testContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(cyl45->localToGlobal(testContext).matrix(),
                          trfExpected45.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(reversed45);
 
@@ -717,14 +721,14 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
         cyl6->mergedWith(*cyl7, Acts::AxisDirection::AxisRPhi, true, *logger);
     BOOST_REQUIRE_NE(cyl67, nullptr);
     Transform3 expected67 = trf6 * AngleAxis3(90_degree, Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(cyl67->transform(testContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(cyl67->localToGlobal(testContext).matrix(),
                          expected67.matrix(), 1e-6, 1e-10);
 
     auto [cyl76, reversed76] =
         cyl7->mergedWith(*cyl6, Acts::AxisDirection::AxisRPhi, true, *logger);
     BOOST_REQUIRE_NE(cyl76, nullptr);
     Transform3 expected76 = trf7 * AngleAxis3(90_degree, Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(cyl76->transform(testContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(cyl76->localToGlobal(testContext).matrix(),
                          expected76.matrix(), 1e-6, 1e-10);
 
     // The ordering in this case is effectively arbitrary, you get the ordering

@@ -65,7 +65,7 @@ Polyhedron PerigeeSurface::polyhedronRepresentation(
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
 
-  const Transform3& ctransform = transform(gctx);
+  const Transform3& ctransform = localToGlobal(gctx);
   Vector3 left(0, 0, -100.);
   Vector3 right(0, 0, 100.);
 

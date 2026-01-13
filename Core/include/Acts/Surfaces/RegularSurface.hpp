@@ -20,6 +20,8 @@ class RegularSurface : public Surface {
  public:
   // Reuse all constructors from the base class
   using Surface::Surface;
+  // Reuse the transform definition from the base class
+  using Surface::localToGlobal;
 
   /// Calculate the normal vector of the surface
   /// This overload requires an on-surface local position

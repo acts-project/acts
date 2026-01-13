@@ -168,7 +168,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
       castPush(m_globalPosZ, globPos.z());
 
       const auto& bounds{surface->bounds()};
-      const auto& trf{surface->transform(gctx)};
+      const auto& trf{surface->localToGlobal(gctx)};
       Acts::Vector3 lowEdge{Vector3::Zero()};
       Acts::Vector3 highEdge{Vector3::Zero()};
       switch (bounds.type()) {

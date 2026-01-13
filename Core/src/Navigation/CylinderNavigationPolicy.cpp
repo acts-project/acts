@@ -106,8 +106,8 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
     if (const auto* radBounds =
             dynamic_cast<const RadialBounds*>(&portal.surface().bounds());
         radBounds != nullptr) {
-      Transform3 localTransform =
-          m_volume->transform().inverse() * portal.surface().transform(gctx);
+      Transform3 localTransform = m_volume->transform().inverse() *
+                                  portal.surface().localToGlobal(gctx);
       Vector3 localPosition = localTransform.translation();
       double localZ = localPosition.z();
       if (std::abs(localZ - m_halfLengthZ) < s_onSurfaceTolerance) {

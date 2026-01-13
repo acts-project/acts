@@ -66,7 +66,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
     for (const auto& vtxloc : bounds->vertices()) {
       Vector3 vtx =
-          srf->transform(tgContext) * Vector3(vtxloc.x(), vtxloc.y(), 0);
+          srf->localToGlobal(tgContext) * Vector3(vtxloc.x(), vtxloc.y(), 0);
       os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
     }
 

@@ -85,7 +85,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
         "surface representation. This is not currently convertible to detray");
   }
 
-  const auto& transform = surface->transform(gctx);
+  const auto& transform = surface->localToGlobal(gctx);
 
   constexpr auto tolerance = s_onSurfaceTolerance;
 
