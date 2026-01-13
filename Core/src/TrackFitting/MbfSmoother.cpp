@@ -40,7 +40,7 @@ void MbfSmoother::visitNonMeasurement(
 void MbfSmoother::visitMeasurement(const AnyConstTrackStateProxy& ts,
                                    BoundMatrix& bigLambdaHat,
                                    BoundVector& smallLambdaHat) const {
-  assert(ts.measurement.has_value());
+  assert(ts.hasCalibrated());
 
   const auto F = ts.jacobian();
 
