@@ -677,7 +677,7 @@ class KalmanFitter {
     for (; it != end; ++it) {
       SourceLink sl = *it;
       const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
-      inputMeasurements.emplace(surface, std::move(sl));
+      inputMeasurements.try_emplace(surface, std::move(sl));
     }
 
     // Create relevant options for the propagation options

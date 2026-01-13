@@ -1203,7 +1203,7 @@ class Gx2Fitter {
     std::unordered_map<const Surface*, SourceLink> inputMeasurements{};
 
     for (; it != end; ++it) {
-      inputMeasurements.emplace(gx2fOptions.extensions.surfaceAccessor(*it),
+      inputMeasurements.try_emplace(gx2fOptions.extensions.surfaceAccessor(*it),
                                 *it);
     }
 
