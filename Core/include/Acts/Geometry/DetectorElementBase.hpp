@@ -52,7 +52,7 @@ class DetectorElementBase {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-    return localToGlobal(gctx);
+    return transform(gctx);
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #elif defined(__GNUC__)
