@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Histogram.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <vector>
 
@@ -19,9 +18,7 @@ using namespace Acts::Experimental;
 BOOST_AUTO_TEST_SUITE(HistogramSuite)
 
 BOOST_AUTO_TEST_CASE(Histogram1D_UniformBinning) {
-  ProtoAxis protoAxis(AxisBoundaryType::Bound, 0.0, 10.0, 10);
-  auto axis =
-      AxisVariant(BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x"));
+  auto axis = AxisVariant(BoostRegularAxis(10, 0.0, 10.0, "x"));
   Histogram1 hist("test", "Test Histogram", {axis});
 
   BOOST_CHECK_EQUAL(hist.name(), "test");
@@ -69,12 +66,8 @@ BOOST_AUTO_TEST_CASE(Histogram1D_VariableBinning) {
 }
 
 BOOST_AUTO_TEST_CASE(Histogram2D_FillAndAccess) {
-  ProtoAxis protoX(AxisBoundaryType::Bound, 0.0, 10.0, 10);
-  ProtoAxis protoY(AxisBoundaryType::Bound, -5.0, 5.0, 10);
-  auto xAxis =
-      AxisVariant(BoostVariableAxis(protoX.getAxis().getBinEdges(), "x"));
-  auto yAxis =
-      AxisVariant(BoostVariableAxis(protoY.getAxis().getBinEdges(), "y"));
+  auto xAxis = AxisVariant(BoostRegularAxis(10, 0.0, 10.0, "x"));
+  auto yAxis = AxisVariant(BoostRegularAxis(10, -5.0, 5.0, "y"));
   Histogram2 hist("test_2d", "Test 2D Histogram", {xAxis, yAxis});
 
   BOOST_CHECK_EQUAL(hist.name(), "test_2d");
@@ -122,9 +115,7 @@ BOOST_AUTO_TEST_CASE(Histogram2D_VariableBinning) {
 
 BOOST_AUTO_TEST_CASE(Histogram1D_UnderflowOverflow) {
   // Create histogram to test underflow/overflow handling
-  ProtoAxis protoAxis(AxisBoundaryType::Bound, 0.0, 10.0, 10);
-  auto axis =
-      AxisVariant(BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x"));
+  auto axis = AxisVariant(BoostRegularAxis(10, 0.0, 10.0, "x"));
   Histogram1 hist("test_flow", "Test Flow", {axis});
 
   // Fill values in range, underflow, and overflow
@@ -145,9 +136,7 @@ BOOST_AUTO_TEST_CASE(Histogram1D_UnderflowOverflow) {
 }
 
 BOOST_AUTO_TEST_CASE(Histogram1D_EmptyHistogram) {
-  ProtoAxis protoAxis(AxisBoundaryType::Bound, -5.0, 5.0, 10);
-  auto axis =
-      AxisVariant(BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x"));
+  auto axis = AxisVariant(BoostRegularAxis(10, -5.0, 5.0, "x"));
   Histogram1 hist("empty", "Empty Histogram", {axis});
 
   const auto& bh = hist.histogram();

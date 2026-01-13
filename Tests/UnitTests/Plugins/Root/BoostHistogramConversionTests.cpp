@@ -8,7 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cmath>
@@ -75,9 +74,7 @@ void testHist2D(const Histogram2& boostHist) {
 }  // namespace
 
 BOOST_AUTO_TEST_CASE(Conversion_EmptyHistogram) {
-  ProtoAxis protoAxis(AxisBoundaryType::Bound, -10.0, 10.0, 10);
-  auto axis =
-      AxisVariant(BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x"));
+  auto axis = AxisVariant(BoostRegularAxis(10, -10.0, 10.0, "x"));
   Histogram1 boostHist("empty", "Empty Histogram", {axis});
 
   TH1F* rootHist = toRoot(boostHist);
@@ -91,9 +88,7 @@ BOOST_AUTO_TEST_CASE(Conversion_EmptyHistogram) {
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_UniformBinning) {
-  ProtoAxis protoAxis(AxisBoundaryType::Bound, 0.0, 10.0, 10);
-  auto axis = AxisVariant(
-      BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "x [cm]"));
+  auto axis = AxisVariant(BoostRegularAxis(10, 0.0, 10.0, "x [cm]"));
   Histogram1 boostHist("test_hist", "Test Histogram", {axis});
 
   // Fill with 100 random values
@@ -121,10 +116,8 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_VariableBinning) {
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT) {
-  ProtoAxis protoX(AxisBoundaryType::Bound, -2.5, 2.5, 10);
-  ProtoAxis protoY(AxisBoundaryType::Bound, -5.0, 5.0, 10);
-  auto xAxis = BoostVariableAxis(protoX.getAxis().getBinEdges(), "eta");
-  auto yAxis = BoostVariableAxis(protoY.getAxis().getBinEdges(), "residual");
+  auto xAxis = BoostRegularAxis(10, -2.5, 2.5, "eta");
+  auto yAxis = BoostRegularAxis(10, -5.0, 5.0, "residual");
   Histogram2 boostHist("res_vs_eta", "Residual vs Eta", {xAxis, yAxis});
 
   // Fill with 100 2D Gaussian values
@@ -155,8 +148,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Boost2D_to_ROOT_VariableBinning) {
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
-  ProtoAxis protoAxis(AxisBoundaryType::Bound, -2.5, 2.5, 10);
-  auto xAxis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
+  auto xAxis = BoostRegularAxis(10, -2.5, 2.5, "eta");
   ProfileHistogram1 profile("res_mean_vs_eta", "Mean Residual vs Eta", {xAxis},
                             "residual [mm]");
 
@@ -204,8 +196,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
-  ProtoAxis protoAxis(AxisBoundaryType::Bound, -2.5, 2.5, 5);
-  auto xAxis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
+  auto xAxis = BoostRegularAxis(5, -2.5, 2.5, "eta");
 
   // Create ACTS ProfileHistogram
   ProfileHistogram1 actsProfile("profile_test", "Profile Test", {xAxis},
@@ -273,8 +264,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
-  ProtoAxis protoAxis(AxisBoundaryType::Bound, -3.0, 3.0, 10);
-  auto axis = BoostVariableAxis(protoAxis.getAxis().getBinEdges(), "eta");
+  auto axis = BoostRegularAxis(10, -3.0, 3.0, "eta");
   Efficiency1 eff("eff_vs_eta", "Efficiency vs Eta", {axis});
 
   // Fill with known pass/fail patterns
@@ -312,10 +302,8 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
-  ProtoAxis protoX(AxisBoundaryType::Bound, -2.5, 2.5, 5);
-  ProtoAxis protoY(AxisBoundaryType::Bound, 0.0, 5.0, 5);
-  auto xAxis = BoostVariableAxis(protoX.getAxis().getBinEdges(), "eta");
-  auto yAxis = BoostVariableAxis(protoY.getAxis().getBinEdges(), "pt");
+  auto xAxis = BoostRegularAxis(5, -2.5, 2.5, "eta");
+  auto yAxis = BoostRegularAxis(5, 0.0, 5.0, "pt");
   Efficiency2 eff("eff_vs_eta_pt", "Efficiency vs Eta and pT", {xAxis, yAxis});
 
   // Fill bin (0.0, 2.5): 3 accepted, 1 failed (75% efficiency)
