@@ -110,7 +110,7 @@ constexpr T factorial(const T upperN, const T lowerN = 1) {
   if (upperN < one) {
     return one;
   }
-  const T limit = lowerN < one ? one : lowerN;
+  const T& limit = std::max(lowerN, one);
   return upperN >= limit ? upperN * factorial(upperN - one, limit) : one;
 }
 /// @brief Calculate the binomial coefficient
