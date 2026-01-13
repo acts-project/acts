@@ -128,13 +128,4 @@ jobs:
           token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
           repository: acts-project/acts-project.github.io
           event-type: deploy_docs
-          client-payload: >-
-            {
-              "source_repo": "${{ github.repository }}",
-              "run_id": "${{ github.run_id }}",
-              "artifact_id": "${{ steps.artifact-upload-step.outputs.artifact-id }}",
-              "ref": "${{ github.ref }}",
-              "ref_type": "${{ github.ref_type }}",
-              "ref_name": "${{ github.ref_name }}",
-              "sha": "${{ github.sha }}"
-            }
+          client-payload: ${{ format('{{"source_repo":{0},"run_id":{1},"artifact_id":{2},"ref":{3},"ref_type":{4},"ref_name":{5},"sha":{6}}}', toJson(github.repository), toJson(github.run_id), toJson(steps.artifact-upload-step.outputs.artifact-id), toJson(github.ref), toJson(github.ref_type), toJson(github.ref_name), toJson(github.sha)) }}
