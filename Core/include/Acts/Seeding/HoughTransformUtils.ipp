@@ -439,17 +439,16 @@ bool passWindow(
   using YieldType = Acts::HoughTransformUtils::YieldType;
   auto [xmax, ymax] = index;
   const YieldType max = plane.nHits(xmax, ymax);
-  // window loop
+  // window loopdefininf 
   // this loop needs to be smarter to take care of wrapping
-  int iter = 0;
   for (std::size_t x = xmax - config.xWindowSize;
        x <= xmax + config.xWindowSize; ++x) {
     for (std::size_t y = ymax - config.yWindowSize;
          y <= ymax + config.yWindowSize; ++y) {
-      iter++;
-      const float xdist = static_cast<float>(x) - static_cast<float>(xmax);
+
+          const float xdist = static_cast<float>(x) - static_cast<float>(xmax);
       const float ydist = static_cast<float>(y) - static_cast<float>(ymax);
-      const bool above = ydist + 0.1 > xdist;
+      const bool above = ydist + 0.1 > xdist; // upper right corner
       const YieldType numOfHits = plane.nHits(x, y);
 
       if (above && numOfHits > max) {
