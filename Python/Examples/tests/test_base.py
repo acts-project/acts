@@ -90,3 +90,22 @@ def test_constructors():
     print(s1)
     s2 = acts.examples.Sequencer()
     print(s2)
+
+
+def test_geometry_context_factory():
+    """Test that GeometryContext factory method works without warnings"""
+    import warnings
+
+    # New factory method should not produce warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+        assert gctx is not None
+
+
+def test_geometry_context_deprecated_constructor():
+    """Test that GeometryContext default constructor produces deprecation warning"""
+    # Old constructor should produce a deprecation warning
+    with pytest.warns(DeprecationWarning, match="GeometryContext.*deprecated"):
+        gctx = acts.GeometryContext()
+        assert gctx is not None
