@@ -113,9 +113,9 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
     VectorTrackContainer vtc{};
     TrackContainer tc{std::move(vtc), std::move(mtj)};
     static_assert(
-        std::is_same_v<decltype(tc), TrackContainer<VectorTrackContainer,
-                                                    VectorMultiTrajectory,
-                                                    ValueHolder>>,
+        std::is_same_v<decltype(tc),
+                       TrackContainer<VectorTrackContainer,
+                                      VectorMultiTrajectory, ValueHolder>>,
         "Incorrect deduced type");
     std::decay_t<decltype(tc)> copy = tc;
     BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
@@ -125,9 +125,9 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
     TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
 
     static_assert(
-        std::is_same_v<decltype(tc), TrackContainer<VectorTrackContainer,
-                                                    VectorMultiTrajectory,
-                                                    ValueHolder>>,
+        std::is_same_v<decltype(tc),
+                       TrackContainer<VectorTrackContainer,
+                                      VectorMultiTrajectory, ValueHolder>>,
         "Incorrect deduced type");
     tc.addTrack();
     std::decay_t<decltype(tc)> copy = tc;
@@ -139,8 +139,8 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
 BOOST_AUTO_TEST_CASE(BuildRefHolder) {
   VectorMultiTrajectory mtj{};
   VectorTrackContainer vtc{};
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, RefHolder>
-      tc{vtc, mtj};
+  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, RefHolder> tc{
+      vtc, mtj};
 
   static_assert(
       std::is_same_v<decltype(tc),
