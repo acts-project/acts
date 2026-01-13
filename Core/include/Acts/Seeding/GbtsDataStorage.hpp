@@ -53,10 +53,15 @@ class GbtsNode {
   void setLocalPositionY(float v) noexcept { m_locPosY = v; }
 
  private:
-  float m_x{}, m_y{}, m_z{}, m_r{}, m_phi{};
+  float m_x{};
+  float m_y{};
+  float m_z{};
+  float m_r{};
+  float m_phi{};
   std::uint16_t m_layer{10000};
   std::uint32_t m_idx{std::numeric_limits<unsigned int>::max()};
-  float m_pcw{}, m_locPosY{};
+  float m_pcw{};
+  float m_locPosY{};
 };
 
 class GbtsEtaBin {
