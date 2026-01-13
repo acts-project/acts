@@ -229,7 +229,7 @@ interactive testing with one-off configuration specified by command-line options
 
 
 def full_chain(args):
-    import acts
+    import acts, acts.root
 
     # keep these in memory after we return the sequence
     global detector, trackingGeometry, decorators, field, rnd
@@ -349,7 +349,7 @@ def full_chain(args):
         field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
     else:
         logger.info("Create magnetic field map from %s" % str(bFieldFile))
-        field = acts.MagneticFieldMapXyz(str(bFieldFile))
+        field = acts.root.MagneticFieldMapXyz(str(bFieldFile))
     rnd = acts.examples.RandomNumbers(seed=42)
 
     from acts.examples.simulation import (
