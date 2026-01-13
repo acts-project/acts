@@ -555,6 +555,7 @@ jobs:
   # To be replaced with manylinux build once ROOT dependencies are removed
   linux_ubuntu_pip_install:
     runs-on: ubuntu-latest
+    needs: [linux_ubuntu]
     container: ghcr.io/acts-project/ubuntu2404:83
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -579,9 +580,6 @@ jobs:
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-
-      - name: Virtual environment
-        run: python3 -m venv venv && source ./venv/bin/activate
 
       - name: Build with pip
         run: ccache -z && pip install -v .
