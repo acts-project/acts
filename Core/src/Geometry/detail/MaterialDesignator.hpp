@@ -90,7 +90,7 @@ class CylinderProtoDesignator : public DesignatorBase {
     using enum CylinderVolumeBounds::Face;
 
     for (const auto& [face, loc0, loc1] : m_binning) {
-      auto* portal = cylShell->portal(face);
+      auto* portal = cylShell->portal(face).get();
       if (portal == nullptr) {
         ACTS_ERROR(prefix << "Portal is nullptr");
         throw std::runtime_error("Portal is nullptr");
@@ -197,7 +197,7 @@ class CuboidProtoDesignator : public DesignatorBase {
     using enum CuboidVolumeBounds::Face;
 
     for (const auto& [face, loc0, loc1] : m_binning) {
-      auto* portal = cuboidShell->portal(face);
+      auto* portal = cuboidShell->portal(face).get();
       if (portal == nullptr) {
         ACTS_ERROR(prefix << "Portal is nullptr");
         throw std::runtime_error("Portal is nullptr");
@@ -287,7 +287,7 @@ class ISurfaceMaterialDesignator : public DesignatorBase {
     }
 
     for (const auto& [face, material] : m_materials) {
-      auto* portal = concreteShell->portal(face);
+      auto* portal = concreteShell->portal(face).get();
       if (portal == nullptr) {
         ACTS_ERROR(prefix << "Portal is nullptr");
         throw std::runtime_error("Portal is nullptr");
