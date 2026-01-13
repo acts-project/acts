@@ -86,15 +86,20 @@ jobs:
 
       - name: Generate PR metadata
         if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.head_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
           jq -n \
-            --arg pr "${{ github.event.pull_request.number }}" \
-            --arg branch "${{ github.head_ref }}" \
-            --arg title "${{ github.event.pull_request.title }}" \
-            --arg url "${{ github.event.pull_request.html_url }}" \
+            --arg pr "$PR_NUMBER" \
+            --arg branch "$PR_BRANCH" \
+            --arg title "$PR_TITLE" \
+            --arg url "$PR_URL" \
             '{pr: ($pr | tonumber), branch: $branch, title: $title, url: $url}' \
             > build/docs/html/pr.json
-          echo "Created pr.json for PR #${{ github.event.pull_request.number }}"
+          echo "Created pr.json for PR #$PR_NUMBER"
           cat build/docs/html/pr.json
 
       - uses: actions/upload-artifact@v6
