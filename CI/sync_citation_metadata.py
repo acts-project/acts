@@ -61,9 +61,9 @@ def extract_orcid_id(orcid: str) -> str:
     - https://orcid.org/0000-0002-2298-3605 -> 0000-0002-2298-3605
     - 0000-0002-2298-3605 -> 0000-0002-2298-3605
     """
-    if orcid.startswith("https://orcid.org/"):
-        return orcid.replace("https://orcid.org/", "")
-    return orcid
+    if not orcid.startswith("https://orcid.org/"):
+        raise ValueError(f"Invalid ORCID format: {orcid}")
+    return orcid.replace("https://orcid.org/", "")
 
 
 def cff_author_to_zenodo_creator(author: dict) -> dict:
