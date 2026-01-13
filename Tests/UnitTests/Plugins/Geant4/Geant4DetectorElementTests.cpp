@@ -46,8 +46,8 @@ BOOST_AUTO_TEST_CASE(Geant4DetectorElement_construction) {
   BOOST_CHECK_EQUAL(g4DetElement.thickness(), 0.1);
   BOOST_CHECK_EQUAL(&g4DetElement.surface(), rSurface.get());
   BOOST_CHECK_EQUAL(&g4DetElement.g4PhysicalVolume(), g4physVol.get());
-  BOOST_CHECK(
-      g4DetElement.transform(tContext).isApprox(rSurface->transform(tContext)));
+  BOOST_CHECK(g4DetElement.localToGlobal(tContext).isApprox(
+      rSurface->localToGlobal(tContext)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

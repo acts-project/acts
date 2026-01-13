@@ -315,7 +315,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
       const auto& transform =
-          det->transform(alignOptions.fitOptions.geoContext);
+          det->localToGlobal(alignOptions.fitOptions.geoContext);
       // write it to the result
       alignResult.alignedParameters.emplace(det, transform);
       const auto& translation = transform.translation();

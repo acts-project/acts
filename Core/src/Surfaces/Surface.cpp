@@ -246,7 +246,7 @@ const Transform3& Surface::transform(const GeometryContext& gctx) const {
 
 const Transform3& Surface::localToGlobal(const GeometryContext& gctx) const {
   if (m_associatedDetElement != nullptr) {
-    return m_associatedDetElement->transform(gctx);
+    return m_associatedDetElement->localToGlobal(gctx);
   }
   return *m_transform;
 }

@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   CHECK_CLOSE_ABS(rBoundsXY->halfLengthY(), 200, 1e-6);
 
   // Check the transform -> should be identity transform
-  const Transform3& transformXY = surfaceXY->transform(tContext);
+  const Transform3& transformXY = surfaceXY->localToGlobal(tContext);
   BOOST_CHECK(transformXY.isApprox(idTransform));
 
   // (BOX object) - YZ
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   CHECK_CLOSE_ABS(rBoundsYZ->halfLengthY(), 300, 1e-6);
 
   // Check the transform -> should be cyclic permutation of the identity
-  const Transform3& transformYZ = surfaceYZ->transform(tContext);
+  const Transform3& transformYZ = surfaceYZ->localToGlobal(tContext);
 
   RotationMatrix3 rotationYZ = transformYZ.rotation();
   BOOST_CHECK(rotationYZ.col(0).isApprox(idRotation.col(1)));
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   CHECK_CLOSE_ABS(rBoundsXZ->halfLengthY(), 400, 1e-6);
 
   // Check the transform -> should be cyclic permutation of the identity
-  const Transform3& transformXZ = surfaceXZ->transform(tContext);
+  const Transform3& transformXZ = surfaceXZ->localToGlobal(tContext);
 
   RotationMatrix3 rotationXZ = transformXZ.rotation();
   BOOST_CHECK(rotationXZ.col(0).isApprox(idRotation.col(2)));

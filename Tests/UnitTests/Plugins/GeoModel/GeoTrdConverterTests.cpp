@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
                   60, 1e-6);
 
   // Check the transform -> should be cyclic permutation of the identity
-  const Transform3& transformYZ = surfaceYZ->transform(tContext);
+  const Transform3& transformYZ = surfaceYZ->localToGlobal(tContext);
 
   RotationMatrix3 rotationYZ = transformYZ.rotation();
   BOOST_CHECK(rotationYZ.col(0).isApprox(idRotation.col(1)));
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
                   60, 1e-6);
 
   // Check the transform -> should be cyclic permutation of the identity
-  const Transform3& transformYZs = surfaceYZs->transform(tContext);
+  const Transform3& transformYZs = surfaceYZs->localToGlobal(tContext);
 
   RotationMatrix3 rotationYZs = transformYZs.rotation();
   BOOST_CHECK(rotationYZs.col(0).isApprox(idRotation.col(1)));
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
                   60, 1e-6);
 
   // Check the transform -> cyclic permuttation not possible
-  const Transform3& transformXZ = surfaceXZ->transform(tContext);
+  const Transform3& transformXZ = surfaceXZ->localToGlobal(tContext);
 
   RotationMatrix3 rotationXZ = transformXZ.rotation();
   BOOST_CHECK(rotationXZ.col(0).isApprox(idRotation.col(0)));
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
                   60, 1e-6);
 
   // Check the transform -> cyclic permuttation not possible
-  const Transform3& transformXZs = surfaceXZs->transform(tContext);
+  const Transform3& transformXZs = surfaceXZs->localToGlobal(tContext);
 
   RotationMatrix3 rotationXZs = transformXZs.rotation();
   BOOST_CHECK(rotationXZs.col(0).isApprox(idRotation.col(0)));
