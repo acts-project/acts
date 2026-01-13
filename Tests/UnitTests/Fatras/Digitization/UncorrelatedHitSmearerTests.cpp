@@ -78,7 +78,7 @@ struct Fixture {
   Barcode pid;
   // geometry information
   std::shared_ptr<Surface> surface;
-  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  GeometryContext geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   // local and global track parameters
   BoundVector boundParams;
   FreeVector freeParams{};

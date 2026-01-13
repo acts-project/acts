@@ -67,7 +67,7 @@ struct MultiStepperTester {
   using SingleState = typename SingleStepper::State;
 
   const MagneticFieldContext magCtx;
-  const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  const GeometryContext geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   const double defaultStepSize = 123.;
   const Direction defaultNDir = Direction::Backward();

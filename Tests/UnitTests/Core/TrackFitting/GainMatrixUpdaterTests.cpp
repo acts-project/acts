@@ -37,7 +37,8 @@ using CovarianceMatrix = Acts::BoundSquareMatrix;
 using Jacobian = Acts::BoundMatrix;
 
 constexpr double tol = 1e-6;
-const Acts::GeometryContext tgContext;
+const Acts::GeometryContext tgContext =
+    Acts::GeometryContext::dangerouslyDefaultConstruct();
 
 }  // namespace
 

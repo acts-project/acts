@@ -48,7 +48,19 @@ class GeometryContext : public ContextType {
   /// @note Use this when you need a default context for testing or
   ///       simple applications without alignment/conditions data
   static GeometryContext dangerouslyDefaultConstruct() {
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     return GeometryContext();
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
   }
 
   /// Default constructor

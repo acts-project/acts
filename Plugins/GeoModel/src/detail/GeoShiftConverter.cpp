@@ -32,7 +32,7 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
                                       const Transform3& absTransform,
                                       SurfaceBoundFactory& boundFactory,
                                       bool sensitive) {
-  const GeometryContext gctx{};
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
   auto trd = dynamic_cast<const ContainedShape*>(geoShift.getOp());
 
   if (trd == nullptr) {
@@ -62,7 +62,7 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
   }
 
   auto newEl = GeoModelDetectorElement::createDetectorElement<Surface>(
-      el->physicalVolume(), sharedBounds, el->transform({}), el->thickness());
+      el->physicalVolume(), sharedBounds, el->transform(gctx), el->thickness());
   auto newSurface = newEl->surface().getSharedPtr();
   return std::make_tuple(newEl, newSurface);
 }
