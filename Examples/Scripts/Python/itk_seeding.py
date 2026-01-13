@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+
 import os
 import argparse
 import tempfile
 
-import pathlib, acts
+import pathlib, acts, acts.root
 
 from acts.examples import (
     CsvSpacePointReader,
@@ -149,6 +150,6 @@ if "__main__" == __name__:
 
     detector = acts.examples.itk.buildITkGeometry(geo_dir)
     trackingGeometry = detector.trackingGeometry()
-    field = acts.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
+    field = acts.root.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 
     runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir)
