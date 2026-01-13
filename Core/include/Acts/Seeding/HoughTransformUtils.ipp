@@ -438,18 +438,25 @@ bool passWindow(
     const Acts::HoughTransformUtils::PeakFinders::SlidingWindowConfig& config) {
   using YieldType = Acts::HoughTransformUtils::YieldType;
   auto [xmax, ymax] = index;
-  YieldType max = plane.nHits(xmax, ymax);
+  const YieldType max = plane.nHits(xmax, ymax);
   // window loop
   // this loop needs to be smarter to take care of wrapping
+  int iter = 0;
   for (std::size_t x = xmax - config.xWindowSize;
        x <= xmax + config.xWindowSize; ++x) {
     for (std::size_t y = ymax - config.yWindowSize;
          y <= ymax + config.yWindowSize; ++y) {
-      const std::size_t xdist = x - xmax;
-      const std::size_t ydist = y - ymax;
-      const bool above = ydist > -xdist - 0.1;
-      const YieldType noOfHits = plane.nHits(x, y);
-      if ((above && noOfHits > max) || (!above && noOfHits >= max)) {
+      iter++;
+      const float xdist = static_cast<float>(x) - static_cast<float>(xmax);
+      const float ydist = static_cast<float>(y) - static_cast<float>(ymax);
+      const bool above = ydist + 0.1 > xdist;
+      const YieldType numOfHits = plane.nHits(x, y);
+
+      if (above && numOfHits > max) {
+        return false;
+      }
+
+      if (!above && numOfHits >= max) {
         return false;
       }
     }
