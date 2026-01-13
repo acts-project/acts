@@ -53,7 +53,7 @@ using Jacobian = BoundMatrix;
 /// the numerical correctness is performed in the integration tests.
 BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   auto particleHypothesis = ParticleHypothesis::pion();
 

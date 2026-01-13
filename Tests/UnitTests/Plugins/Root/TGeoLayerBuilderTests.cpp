@@ -47,7 +47,7 @@ struct RootGeometry {
 
 RootGeometry rGeometry = RootGeometry();
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(RootSuite)
 

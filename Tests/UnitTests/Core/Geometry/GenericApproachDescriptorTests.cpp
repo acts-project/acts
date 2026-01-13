@@ -32,7 +32,7 @@ using namespace Acts;
 namespace ActsTests {
 
 // Build a default context for testing
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
   GenericApproachDescriptor gad(approachSurface);
 
   auto sfIntersection =
-      gad.approachSurface(GeometryContext(), origin, direction,
+      gad.approachSurface(GeometryContext::dangerouslyDefaultConstruct(), origin, direction,
                           boundaryTolerance, nearLimit, farLimit);
 
   // No overstepping allowed, the preferred solution should be the forward one

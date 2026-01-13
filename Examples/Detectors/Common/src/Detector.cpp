@@ -31,7 +31,7 @@ Detector::buildGeant4DetectorConstruction(
   throw std::runtime_error("Geant4 detector construction is not available.");
 }
 
-const Acts::GeometryContext& Detector::nominalGeometryContext() const {
+const Acts::GeometryContext& Detector::nominalGeometryContext::dangerouslyDefaultConstruct() const {
   return m_nominalGeometryContext;
 }
 

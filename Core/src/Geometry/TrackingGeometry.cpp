@@ -158,7 +158,7 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
   void visitSurface(const Surface& surface) override {
     if (surface.geometryId() == GeometryIdentifier{}) {
       std::cout << "Surface has no geometry ID: "
-                << surface.toStream(GeometryContext()) << std::endl;
+                << surface.toStream(GeometryContext::dangerouslyDefaultConstruct()) << std::endl;
       throw std::invalid_argument("Surface has no geometry ID");
     }
 
