@@ -125,7 +125,9 @@ class TrackContainer {
   /// @param container the track container backend
   /// @param traj the track state container backend
   TrackContainer(auto& container, auto& traj)
-    requires(detail::is_same_template<holder_t, RefHolder>::value)
+    requires(std::same_as<holder_t<track_container_t>,
+                          RefHolder<track_container_t>> &&
+             std::same_as<holder_t<traj_t>, RefHolder<traj_t>>)
       : m_container{&container}, m_traj{&traj} {}
 
   /// Constructor from const references to a track container backend and to a
@@ -135,7 +137,9 @@ class TrackContainer {
   /// @param container the track container backend
   /// @param traj the track state container backend
   TrackContainer(const auto& container, const auto& traj)
-    requires(detail::is_same_template<holder_t, ConstRefHolder>::value &&
+    requires(std::same_as<holder_t<track_container_t>,
+                          ConstRefHolder<track_container_t>> &&
+             std::same_as<holder_t<traj_t>, ConstRefHolder<traj_t>> &&
              ReadOnly && TrackStateReadOnly)
       : m_container{&container}, m_traj{&traj} {}
 
