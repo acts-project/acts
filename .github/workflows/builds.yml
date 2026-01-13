@@ -582,7 +582,7 @@ jobs:
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Build with pip
-        run: ccache -z && pip install -v .
+        run: ccache -z && pip install . -v --config-settings=ninja.make-fallback=false
 
       - name: ccache stats
         run: ccache -s
