@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core", "pybind11"]
+requires = ["scikit-build-core"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -8,7 +8,9 @@ version = "0.0.1"
 
 [tool.scikit-build]
 wheel.packages = [] # Manage installation with cmake
+wheel.exclude = ["**.a", "**.sh", "**.cmake"]
+wheel.license-files = ["LICENSE"]
 build-dir = "build/{wheel_tag}"
 build.verbose = true
-logging.level = "DEBUG"
 cmake.args = ["--preset=python"]
+logging.level = "DEBUG"

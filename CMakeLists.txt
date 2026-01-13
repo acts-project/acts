@@ -206,37 +206,33 @@ set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 # feature tests
 include(CheckCXXSourceCompiles)
 
-# additional configuration and tools
+# Set flags dependent whether we build ACTS in the default configuration or for deployment in pip with scikit-build-core
 if("${SKBUILD}" STREQUAL "2")
     message(
         STATUS
         "Build with skbuild as ${SKBUILD_PROJECT_NAME},${SKBUILD_PROJECT_VERSION_FULL} (${SKBUILD_STATE})"
     )
     set(ACTS_BUILD_WITH_SKBUILD TRUE)
+
+    # For deployment with pip, we build static libs
     set(BUILD_SHARED_LIBS FALSE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+    # Set installation paths for proper python package creation
+    # CMAKE_PREFIX_PATH should be site-packages/acts
+    set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
+    set(CMAKE_INSTALL_LIBDIR "acts")
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
+    set(CMAKE_INSTALL_DATAROOTDIR "acts/share")
+    set(CMAKE_INSTALL_DATADIR "acts/share")
+    set(ACTS_PYTHON_INSTALL_DIR "acts")
 else()
     set(ACTS_BUILD_WITH_SKBUILD FALSE)
-endif()
 
-if(ACTS_BUILD_WITH_SKBUILD)
-    # Set installation paths for proper python package creation
-    set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts right now
-    set(CMAKE_INSTALL_LIBDIR "${SKBUILD_PLATLIB_DIR}/acts")
-    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
-    set(CMAKE_INSTALL_DATAROOTDIR ${SKBUILD_DATA_DIR})
-    set(CMAKE_INSTALL_DATADIR ${SKBUILD_DATA_DIR})
-else()
     # GNU-like installation paths, e.g. lib/, include/, ...
     include(GNUInstallDirs)
+    set(ACTS_PYTHON_INSTALL_DIR "python")
 endif()
-message("CMAKE_INSTALL_BINDIR: ${CMAKE_INSTALL_BINDIR}")
-message("CMAKE_INSTALL_LIBDIR: ${CMAKE_INSTALL_LIBDIR}")
-message("CMAKE_INSTALL_INCLUDEDIR: ${CMAKE_INSTALL_INCLUDEDIR}")
-message("CMAKE_INSTALL_DATAROOTDIR: ${CMAKE_INSTALL_DATAROOTDIR}")
-message("CMAKE_INSTALL_DATADIR: ${CMAKE_INSTALL_DATADIR}")
-
-#message(FATAL_ERROR "Testing cmake configuration")
 
 include(ActsCompilerOptions) # default compile options
 include(ActsComponentsHelpers) # handle components via add_..._if commands

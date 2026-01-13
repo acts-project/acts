@@ -2,7 +2,6 @@
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
-set(_python_install_dir "${ACTS_PYTHON_INSTALL_PREFIX}/acts")
 
 set(py_files __init__.py _adapter.py)
 
@@ -26,7 +25,7 @@ target_sources(
         src/Visualization.cpp
 )
 
-install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
+install(TARGETS ActsPythonBindings DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
 
 set_target_properties(
     ActsPythonBindings
@@ -43,9 +42,7 @@ target_link_libraries(
 )
 
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
-if(NOT ACTS_BUILD_WITH_SKBUILD)
-    install(FILES ${_python_dir}/setup.sh DESTINATION "python")
-endif()
+install(FILES ${_python_dir}/setup.sh DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
 
 foreach(f ${py_files})
     set(_target ${_python_dir}/acts/${f})
@@ -61,6 +58,6 @@ foreach(f ${py_files})
 
     install(
         FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${_python_install_dir}/${_rel}
+        DESTINATION ${ACTS_PYTHON_INSTALL_DIR}/${_rel}
     )
 endforeach()

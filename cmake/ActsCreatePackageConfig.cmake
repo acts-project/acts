@@ -59,7 +59,7 @@ if(_acts_is_git_repo)
         endif()
 
         # Read the installed ActsConfig.cmake
-        set(_config_file \"${install_package_config_dir}/ActsConfig.cmake\")
+        set(_config_file \"\${CMAKE_INSTALL_PREFIX}/${install_package_config_dir}/ActsConfig.cmake\")
         file(READ \"\${_config_file}\" _config_content)
 
         # Replace the commit hash lines
