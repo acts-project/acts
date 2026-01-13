@@ -182,7 +182,8 @@
                 "CMAKE_CXX_FLAGS": "-w",
                 "CMAKE_CUDA_FLAGS": "-w",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
-                "ACTS_BUILD_EXAMPLES": "ON"
+                "ACTS_BUILD_EXAMPLES": "ON",
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
             }
         }
     ]
