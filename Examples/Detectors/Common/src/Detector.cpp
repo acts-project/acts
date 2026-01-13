@@ -16,7 +16,9 @@
 namespace ActsExamples {
 
 Detector::Detector(std::unique_ptr<const Acts::Logger> logger)
-    : m_logger(std::move(logger)) {}
+    : m_logger(std::move(logger)),
+      m_nominalGeometryContext(
+          Acts::GeometryContext::dangerouslyDefaultConstruct()) {}
 
 Detector::~Detector() = default;
 
@@ -31,7 +33,7 @@ Detector::buildGeant4DetectorConstruction(
   throw std::runtime_error("Geant4 detector construction is not available.");
 }
 
-const Acts::GeometryContext& Detector::nominalGeometryContext::dangerouslyDefaultConstruct() const {
+const Acts::GeometryContext& Detector::nominalGeometryContext() const {
   return m_nominalGeometryContext;
 }
 

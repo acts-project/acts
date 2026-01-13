@@ -40,7 +40,7 @@ namespace bdata = boost::unit_test::data;
 
 namespace Acts::Test {
 
-Acts::GeometryContext gctx;
+const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 Acts::MagneticFieldContext mctx;
 
 using namespace Acts::UnitLiterals;

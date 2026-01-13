@@ -150,7 +150,7 @@ struct MockNavigator {
 struct MockPropagatorState {
   MockNavigatorState navigation;
   MockStepperState stepping;
-  auto geoContext = GeometryContext::dangerouslyDefaultConstruct();
+  GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
   PropagatorStage stage = PropagatorStage::invalid;
 
   struct {

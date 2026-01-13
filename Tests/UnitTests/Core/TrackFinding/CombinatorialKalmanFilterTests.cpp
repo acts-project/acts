@@ -157,7 +157,7 @@ struct Fixture {
   KalmanUpdater kfUpdater;
   KalmanSmoother kfSmoother;
 
-  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  GeometryContext geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext magCtx;
   CalibrationContext calCtx;
 

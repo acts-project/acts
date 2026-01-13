@@ -236,7 +236,7 @@ void SpacePointMaker::initializeStripPartners() {
 
   // We need to use a default geometry context here to access the center
   // coordinates of modules.
-  Acts::GeometryContext gctx;
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   // Build strip partner map, i.e., which modules are stereo partners
   // As a heuristic we assume that the stereo partners are the modules

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -39,7 +40,7 @@ struct Fixture {
   Barcode pid;
   // geometry information
   std::shared_ptr<Surface> surface;
-  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  GeometryContext geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   // local and global track parameters
   BoundVector boundParams;
   FreeVector freeParams{};

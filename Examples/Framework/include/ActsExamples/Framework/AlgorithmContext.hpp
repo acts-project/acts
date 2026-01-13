@@ -33,6 +33,7 @@ struct AlgorithmContext {
       : algorithmNumber(alg),
         eventNumber(event),
         eventStore(store),
+        geoContext(Acts::GeometryContext::dangerouslyDefaultConstruct()),
         threadId{thread} {}
 
   /// @brief ++operator overload to increase the algorithm number
