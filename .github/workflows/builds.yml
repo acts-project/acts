@@ -587,5 +587,12 @@ jobs:
       - name: ccache stats
         run: ccache -s
 
+      - name: Save ccache
+        uses: actions/cache/save@v5
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
       - name: Test
         run: python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"

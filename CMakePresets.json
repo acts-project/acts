@@ -184,7 +184,6 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
-                "ACTS_BUILD_BENCHMARKS": "ON",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_EXAMPLES": "ON",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
