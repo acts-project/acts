@@ -44,50 +44,54 @@ void MbfSmoother::visitMeasurement(const AnyConstTrackStateProxy& ts,
 
   const auto F = ts.jacobian();
 
-  visit_measurement(ts.calibratedSize(), [&](auto N) -> void {
-    constexpr std::size_t kMeasurementSize = decltype(N)::value;
+  visit_measurement(
+      ts.calibratedSize(),
+      [&]<std::size_t N>(std::integral_constant<std::size_t, N> /*unused*/) {
+        constexpr std::size_t kMeasurementSize = N;
 
-    const auto subspaceHelper = ts.projectorSubspaceHelper<kMeasurementSize>();
+        const auto subspaceHelper =
+            ts.projectorSubspaceHelper<kMeasurementSize>();
 
-    using ProjectorMatrix = Eigen::Matrix<double, kMeasurementSize, eBoundSize>;
-    using CovarianceMatrix =
-        Eigen::Matrix<double, kMeasurementSize, kMeasurementSize>;
-    using KalmanGainMatrix =
-        Eigen::Matrix<double, eBoundSize, kMeasurementSize>;
+        using ProjectorMatrix =
+            Eigen::Matrix<double, kMeasurementSize, eBoundSize>;
+        using CovarianceMatrix =
+            Eigen::Matrix<double, kMeasurementSize, kMeasurementSize>;
+        using KalmanGainMatrix =
+            Eigen::Matrix<double, eBoundSize, kMeasurementSize>;
 
-    typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
-        ts.calibrated<kMeasurementSize>()};
-    typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
-        calibratedCovariance{ts.calibratedCovariance<kMeasurementSize>()};
+        typename TrackStateTraits<kMeasurementSize, true>::Calibrated
+            calibrated{ts.calibrated<kMeasurementSize>()};
+        typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
+            calibratedCovariance{ts.calibratedCovariance<kMeasurementSize>()};
 
-    // Projector matrix
-    const ProjectorMatrix H = subspaceHelper.projector();
+        // Projector matrix
+        const ProjectorMatrix H = subspaceHelper.projector();
 
-    // Predicted parameter covariance
-    const auto predictedCovariance = ts.predictedCovariance();
+        // Predicted parameter covariance
+        const auto predictedCovariance = ts.predictedCovariance();
 
-    // Residual covariance
-    const CovarianceMatrix S =
-        (H * predictedCovariance * H.transpose() + calibratedCovariance);
-    // TODO Sinv could be cached by the filter step
-    const CovarianceMatrix SInv = S.inverse();
+        // Residual covariance
+        const CovarianceMatrix S =
+            (H * predictedCovariance * H.transpose() + calibratedCovariance);
+        // TODO Sinv could be cached by the filter step
+        const CovarianceMatrix SInv = S.inverse();
 
-    // Kalman gain
-    // TODO K could be cached by the filter step
-    const KalmanGainMatrix K = (predictedCovariance * H.transpose() * SInv);
+        // Kalman gain
+        // TODO K could be cached by the filter step
+        const KalmanGainMatrix K = (predictedCovariance * H.transpose() * SInv);
 
-    const Acts::BoundMatrix CHat = (Acts::BoundMatrix::Identity() - K * H);
-    const Eigen::Matrix<double, kMeasurementSize, 1> y =
-        (calibrated - H * ts.predicted());
+        const Acts::BoundMatrix CHat = (Acts::BoundMatrix::Identity() - K * H);
+        const Eigen::Matrix<double, kMeasurementSize, 1> y =
+            (calibrated - H * ts.predicted());
 
-    const Acts::BoundMatrix bigLambdaTilde =
-        (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat);
-    const Eigen::Matrix<double, eBoundSize, 1> smallLambdaTilde =
-        (-H.transpose() * SInv * y + CHat.transpose() * smallLambdaHat);
+        const Acts::BoundMatrix bigLambdaTilde =
+            (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat);
+        const Eigen::Matrix<double, eBoundSize, 1> smallLambdaTilde =
+            (-H.transpose() * SInv * y + CHat.transpose() * smallLambdaHat);
 
-    bigLambdaHat = F.transpose() * bigLambdaTilde * F;
-    smallLambdaHat = F.transpose() * smallLambdaTilde;
-  });
+        bigLambdaHat = F.transpose() * bigLambdaTilde * F;
+        smallLambdaHat = F.transpose() * smallLambdaTilde;
+      });
 }
 
 }  // namespace Acts
