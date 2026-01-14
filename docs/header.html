@@ -31,9 +31,7 @@ MathJax = {
   },
 };
 </script>
-<script id="MathJax-script" async
-          src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js">
-</script>
+<script id="MathJax-script" async src="$relpath^tex-mml-chtml.js"></script>
 <!-- $mathjax -->
 $darkmode
 <link href="$relpath^$stylesheet" rel="stylesheet" type="text/css" />
@@ -46,6 +44,9 @@ $extrastylesheet
     DoxygenAwesomeParagraphLink.init()
     DoxygenAwesomeInteractiveToc.init()
 </script>
+<!-- ACTS Version Manager -->
+<link href="$relpath^acts-version-manager.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="$relpath^acts-version-manager.js"></script>
 </head>
 <body>
 <!--BEGIN DISABLE_INDEX-->

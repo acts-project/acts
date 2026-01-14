@@ -39,7 +39,7 @@ repos:
         "-I", "./CI/codespell_ignore.txt",
         "-w"
       ]
-      exclude: ^CI/.*$
+      exclude: ^CI/.*|docs/tex-mml-chtml.js$
 
   - repo: local
     hooks:
