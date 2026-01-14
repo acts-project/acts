@@ -91,56 +91,6 @@ class MbfSmoother {
   }
 
  private:
-  /// Internal track state representation for the smoother.
-  /// @note This allows us to move parts of the implementation into the .cpp
-  struct InternalTrackState final {
-    using Jacobian =
-        typename TrackStateTraits<kMeasurementSizeMax, false>::Covariance;
-    using Parameters =
-        typename TrackStateTraits<kMeasurementSizeMax, false>::Parameters;
-    using Covariance =
-        typename TrackStateTraits<kMeasurementSizeMax, false>::Covariance;
-
-    struct Measurement final {
-      unsigned int calibratedSize{0};
-      // This is used to build a covariance matrix view in the .cpp file
-      const double* calibrated{nullptr};
-      const double* calibratedCovariance{nullptr};
-      BoundSubspaceIndices projector;
-
-      template <typename TrackStateProxy>
-      explicit Measurement(TrackStateProxy ts)
-          : calibratedSize(ts.calibratedSize()),
-            calibrated(ts.effectiveCalibrated().data()),
-            calibratedCovariance(ts.effectiveCalibratedCovariance().data()),
-            projector(ts.projectorSubspaceIndices()) {}
-    };
-
-    Jacobian jacobian;
-
-    Parameters predicted;
-    Covariance predictedCovariance;
-    Parameters filtered;
-    Covariance filteredCovariance;
-    Parameters smoothed;
-    Covariance smoothedCovariance;
-
-    std::optional<Measurement> measurement;
-
-    template <typename TrackStateProxy>
-    explicit InternalTrackState(TrackStateProxy ts)
-        : jacobian(ts.jacobian()),
-          predicted(ts.predicted()),
-          predictedCovariance(ts.predictedCovariance()),
-          filtered(ts.filtered()),
-          filteredCovariance(ts.filteredCovariance()),
-          smoothed(ts.smoothed()),
-          smoothedCovariance(ts.smoothedCovariance()),
-          measurement(ts.typeFlags().test(TrackStateFlag::MeasurementFlag)
-                          ? std::optional<Measurement>(ts)
-                          : std::nullopt) {}
-  };
-
   /// Calculate the smoothed parameters and covariance.
   void calculateSmoothed(AnyMutableTrackStateProxy& ts,
                          const BoundMatrix& bigLambdaHat,
