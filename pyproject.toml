@@ -12,7 +12,7 @@ wheel.exclude = ["**.a", "**.sh", "**.cmake"]
 wheel.license-files = ["LICENSE"]
 build-dir = "build/{wheel_tag}"
 build.verbose = true
-cmake.args = ["--preset=python"]
+cmake.args = ["--preset=python-wheel"]
 logging.level = "DEBUG"
 
 # Get version from file dynamically
