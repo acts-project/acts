@@ -8,15 +8,22 @@
 
 #pragma once
 
+#include "Acts/Utilities/PointerTraits.hpp"
+
+#include <concepts>
+#include <type_traits>
 #include <utility>
 
-namespace Acts::detail {
+namespace Acts {
 
-/// @todo: Holder should become public documented API
-
-/// Internal holder type for referencing a backend without ownership
+/// @brief Non-owning holder for referencing a backend.
+/// @tparam T Backend type.
+///
+/// The referenced backend must outlive the holder.
 template <typename T>
 struct RefHolder {
+  using element_type = T;
+
   T* ptr;
 
   explicit RefHolder(T* _ptr) : ptr{_ptr} {}
@@ -27,12 +34,18 @@ struct RefHolder {
 
   const T* operator->() const { return ptr; }
   T* operator->() { return ptr; }
+
+  explicit operator bool() const { return ptr != nullptr; }
 };
 
-/// Internal holder type for referencing a backend without ownership that is
-/// const
+/// @brief Non-owning holder for referencing a backend with const access.
+/// @tparam T Backend type.
+///
+/// The referenced backend must outlive the holder.
 template <typename T>
 struct ConstRefHolder {
+  using element_type = std::add_const_t<T>;
+
   const T* ptr;
 
   explicit ConstRefHolder(const T* _ptr) : ptr{_ptr} {}
@@ -41,11 +54,18 @@ struct ConstRefHolder {
   const T& operator*() const { return *ptr; }
 
   const T* operator->() const { return ptr; }
+
+  explicit operator bool() const { return ptr != nullptr; }
 };
 
-/// Internal holder type holding a backend container by value
+/// @brief Owning holder that stores a backend by value.
+/// @tparam T Backend type.
+///
+/// The backend is moved into the holder and owned for its lifetime.
 template <typename T>
 struct ValueHolder {
+  using element_type = T;
+
   T val;
 
   // Let's be clear with the user that we take the ownership
@@ -63,6 +83,29 @@ struct ValueHolder {
 
   const T* operator->() const { return &val; }
   T* operator->() { return &val; }
+
+  explicit operator bool() const { return true; }
 };
 
+/// @brief Concept for holder templates that provide pointer-like access.
+/// @tparam Holder Holder template to instantiate.
+/// @tparam T Backend type.
+///
+/// This concept is satisfied by RefHolder, ConstRefHolder, ValueHolder, and
+/// smart pointers such as std::shared_ptr and std::unique_ptr.
+template <template <typename> class Holder, typename T>
+concept HolderFor =
+    std::move_constructible<Holder<T>> && PointerConcept<Holder<T>>;
+
+}  // namespace Acts
+
+namespace Acts::detail {
+template <typename T>
+using RefHolder = Acts::RefHolder<T>;
+
+template <typename T>
+using ConstRefHolder = Acts::ConstRefHolder<T>;
+
+template <typename T>
+using ValueHolder = Acts::ValueHolder<T>;
 }  // namespace Acts::detail
