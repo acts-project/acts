@@ -40,17 +40,14 @@ class GbtsNode {
   std::uint32_t sp_idx() const noexcept { return m_idx; }
 
   // writeable accessor
-  void setX(float v) noexcept { m_x = v; }
-  void setY(float v) noexcept { m_y = v; }
-  void setZ(float v) noexcept { m_z = v; }
-  void setR(float v) noexcept { m_r = v; }
-  void setPhi(float v) noexcept { m_phi = v; }
-
-  void setLayer(std::uint16_t v) noexcept { m_layer = v; }
-  void setSpIdx(std::uint32_t v) noexcept { m_idx = v; }
-
-  void setPixelClusterWidth(float v) noexcept { m_pcw = v; }
-  void setLocalPositionY(float v) noexcept { m_locPosY = v; }
+  float& x() noexcept { return m_x; }
+  float& y() noexcept { return m_y; }
+  float& phi() noexcept { return m_phi; }
+  float& z() noexcept { return m_z; }
+  float& r() noexcept { return m_r; }
+  float& pixelClusterWidth() noexcept { return m_pcw; }
+  float& localPositionY() noexcept { return m_locPosY; }
+  std::uint32_t& sp_idx() noexcept { return m_idx; }
 
  private:
   float m_x{};
@@ -103,10 +100,9 @@ class GbtsDataStorage {
                            const SeedFinderGbtsConfig& config,
                            GbtsMLLookupTable mlLUT);
 
-  int loadPixelGraphNodes(short layerIndex,
-                          const std::span<const GbtsNode> coll, bool useML);
-  int loadStripGraphNodes(short layerIndex,
-                          const std::span<const GbtsNode> coll);
+  int loadPixelGraphNodes(short layerIndex, std::span<const GbtsNode> coll,
+                          bool useML);
+  int loadStripGraphNodes(short layerIndex, std::span<const GbtsNode> coll);
 
   unsigned int numberOfNodes() const;
   void sortByPhi();
@@ -154,7 +150,7 @@ class GbtsEdge {
   std::int8_t m_level{-1};
   std::int8_t m_next{-1};
 
-  std::int8_t m_nNei{0};
+  std::uint8_t m_nNei{0};
   std::array<float, 3> m_p{};
 
   // global indices of the connected edges

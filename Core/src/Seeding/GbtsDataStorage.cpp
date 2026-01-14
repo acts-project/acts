@@ -102,7 +102,7 @@ GbtsDataStorage::GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
 }
 
 int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
-                                         const std::span<const GbtsNode> coll,
+                                         std::span<const GbtsNode> coll,
                                          bool useML) {
   int nLoaded = 0;
 
@@ -140,7 +140,7 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
 }
 
 int GbtsDataStorage::loadStripGraphNodes(short layerIndex,
-                                         const std::span<const GbtsNode> coll) {
+                                         std::span<const GbtsNode> coll) {
   int nLoaded = 0;
 
   const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);

@@ -173,14 +173,14 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
 
     // fill the node with spacepoint variables
 
-    node.setX(sp.x());
-    node.setY(sp.y());
-    node.setZ(sp.z());
-    node.setR(sp.r());
-    node.setPhi(sp.phi());
-    node.setSpIdx(sp.index());
-    node.setPixelClusterWidth(sp.extra(std::get<2>(container)));
-    node.setLocalPositionY(sp.extra(std::get<3>(container)));
+    node.x() = sp.x();
+    node.y() = sp.y();
+    node.z() = sp.z();
+
+    node.phi() = sp.phi();
+    node.sp_idx() = sp.index();
+    node.pixelClusterWidth() = sp.extra(std::get<2>(container));
+    node.localPositionY() = sp.extra(std::get<3>(container));
   }
 
   return node_storage;
