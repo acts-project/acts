@@ -9,17 +9,15 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
-
-class TEfficiency;
-class TH2F;
 
 namespace ActsExamples {
 
@@ -31,33 +29,33 @@ class FakePlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning::Uniform("#eta", 40, -4, 4)},
-        {"Phi", PlotHelpers::Binning::Uniform("#phi", 100, -3.15, 3.15)},
-        {"Pt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 100)},
-        {"Num", PlotHelpers::Binning::Uniform("N", 30, -0.5, 29.5)}};
+    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
   /// @brief Nested Cache struct
   struct Cache {
     /// Number of reco tracks vs pT scatter plot
-    TH2F* nReco_vs_pT;
+    std::optional<Acts::Experimental::Histogram2> nReco_vs_pT;
     /// Number of truth-matched reco tracks vs pT scatter plot
-    TH2F* nTruthMatched_vs_pT;
+    std::optional<Acts::Experimental::Histogram2> nTruthMatched_vs_pT;
     /// Number of fake (truth-unmatched) tracks vs pT scatter plot
-    TH2F* nFake_vs_pT;
+    std::optional<Acts::Experimental::Histogram2> nFake_vs_pT;
     /// Number of reco tracks vs eta scatter plot
-    TH2F* nReco_vs_eta;
+    std::optional<Acts::Experimental::Histogram2> nReco_vs_eta;
     /// Number of truth-matched reco tracks vs eta scatter plot
-    TH2F* nTruthMatched_vs_eta;
+    std::optional<Acts::Experimental::Histogram2> nTruthMatched_vs_eta;
     /// Number of fake (truth-unmatched) tracks vs eta scatter plot
-    TH2F* nFake_vs_eta;
+    std::optional<Acts::Experimental::Histogram2> nFake_vs_eta;
     /// Tracking fake ratio vs pT
-    TEfficiency* fakeRatio_vs_pT;
+    std::optional<Acts::Experimental::Efficiency1> fakeRatio_vs_pT;
     /// Tracking fake ratio vs eta
-    TEfficiency* fakeRatio_vs_eta;
+    std::optional<Acts::Experimental::Efficiency1> fakeRatio_vs_eta;
     /// Tracking fake ratio vs phi
-    TEfficiency* fakeRatio_vs_phi;
+    std::optional<Acts::Experimental::Efficiency1> fakeRatio_vs_phi;
   };
 
   /// Constructor
@@ -88,16 +86,6 @@ class FakePlotTool {
   /// @param nFakeTracks the number of fake tracks
   void fill(Cache& cache, const SimParticleState& truthParticle,
             std::size_t nTruthMatchedTracks, std::size_t nFakeTracks) const;
-
-  /// @brief write the fake ratio plots to file
-  ///
-  /// @param cache cache object for fake ratio plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the fake ratio plots
-  ///
-  /// @param cache cache object for fake ratio plots
-  void clear(Cache& cache) const;
 
  private:
   /// The Config class

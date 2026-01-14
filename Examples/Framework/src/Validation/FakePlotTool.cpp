@@ -10,13 +10,9 @@
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <TEfficiency.h>
-#include <TH2.h>
-
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
-using Acts::VectorHelpers::theta;
 
 namespace ActsExamples {
 
@@ -25,70 +21,56 @@ FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("FakePlotTool", lvl)) {}
 
 void FakePlotTool::book(Cache& cache) const {
-  PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
-  PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
-  PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
-  PlotHelpers::Binning bNum = m_cfg.varBinning.at("Num");
+  const auto& ptAxis = m_cfg.varBinning.at("Pt");
+  const auto& etaAxis = m_cfg.varBinning.at("Eta");
+  const auto& phiAxis = m_cfg.varBinning.at("Phi");
+  const auto& numAxis = m_cfg.varBinning.at("Num");
   ACTS_DEBUG("Initialize the histograms for fake ratio plots");
 
   // number of reco tracks vs pT scatter plots
-  cache.nReco_vs_pT = PlotHelpers::bookHisto(
-      "nRecoTracks_vs_pT", "Number of reconstructed track candidates", bPt,
-      bNum);
+  cache.nReco_vs_pT.emplace("nRecoTracks_vs_pT",
+                            "Number of reconstructed track candidates",
+                            std::array{ptAxis, numAxis});
+
   // number of truth-matched tracks vs pT scatter plots
-  cache.nTruthMatched_vs_pT = PlotHelpers::bookHisto(
+  cache.nTruthMatched_vs_pT.emplace(
       "nTruthMatchedTracks_vs_pT", "Number of truth-matched track candidates",
-      bPt, bNum);
+      std::array{ptAxis, numAxis});
+
   // number of fake tracks vs pT scatter plots
-  cache.nFake_vs_pT = PlotHelpers::bookHisto(
-      "nFakeTracks_vs_pT", "Number of fake track candidates", bPt, bNum);
+  cache.nFake_vs_pT.emplace("nFakeTracks_vs_pT",
+                            "Number of fake track candidates",
+                            std::array{ptAxis, numAxis});
 
   // number of reco tracks vs eta scatter plots
-  cache.nReco_vs_eta = PlotHelpers::bookHisto(
-      "nRecoTracks_vs_eta", "Number of reconstructed track candidates", bEta,
-      bNum);
+  cache.nReco_vs_eta.emplace("nRecoTracks_vs_eta",
+                             "Number of reconstructed track candidates",
+                             std::array{etaAxis, numAxis});
+
   // number of truth-matched tracks vs eta scatter plots
-  cache.nTruthMatched_vs_eta = PlotHelpers::bookHisto(
+  cache.nTruthMatched_vs_eta.emplace(
       "nTruthMatchedTracks_vs_eta", "Number of truth-matched track candidates",
-      bEta, bNum);
+      std::array{etaAxis, numAxis});
+
   // number of fake tracks vs eta scatter plots
-  cache.nFake_vs_eta = PlotHelpers::bookHisto(
-      "nFakeTracks_vs_eta", "Number of fake track candidates", bEta, bNum);
+  cache.nFake_vs_eta.emplace("nFakeTracks_vs_eta",
+                             "Number of fake track candidates",
+                             std::array{etaAxis, numAxis});
 
   // fake ratio vs pT
-  cache.fakeRatio_vs_pT = PlotHelpers::bookEff(
-      "fakeRatio_vs_pT", "Tracking fake ratio;pT [GeV/c];Fake ratio", bPt);
+  cache.fakeRatio_vs_pT.emplace("fakeRatio_vs_pT",
+                                "Tracking fake ratio;pT [GeV/c];Fake ratio",
+                                std::array{ptAxis});
+
   // fake ratio vs eta
-  cache.fakeRatio_vs_eta = PlotHelpers::bookEff(
-      "fakeRatio_vs_eta", "Tracking fake ratio;#eta;Fake ratio", bEta);
+  cache.fakeRatio_vs_eta.emplace("fakeRatio_vs_eta",
+                                 "Tracking fake ratio;#eta;Fake ratio",
+                                 std::array{etaAxis});
+
   // fake ratio vs phi
-  cache.fakeRatio_vs_phi = PlotHelpers::bookEff(
-      "fakeRatio_vs_phi", "Tracking fake ratio;#phi;Fake ratio", bPhi);
-}
-
-void FakePlotTool::clear(Cache& cache) const {
-  delete cache.nReco_vs_pT;
-  delete cache.nTruthMatched_vs_pT;
-  delete cache.nFake_vs_pT;
-  delete cache.nReco_vs_eta;
-  delete cache.nTruthMatched_vs_eta;
-  delete cache.nFake_vs_eta;
-  delete cache.fakeRatio_vs_pT;
-  delete cache.fakeRatio_vs_eta;
-  delete cache.fakeRatio_vs_phi;
-}
-
-void FakePlotTool::write(const Cache& cache) const {
-  ACTS_DEBUG("Write the plots to output file.");
-  cache.nReco_vs_pT->Write();
-  cache.nTruthMatched_vs_pT->Write();
-  cache.nFake_vs_pT->Write();
-  cache.nReco_vs_eta->Write();
-  cache.nTruthMatched_vs_eta->Write();
-  cache.nFake_vs_eta->Write();
-  cache.fakeRatio_vs_pT->Write();
-  cache.fakeRatio_vs_eta->Write();
-  cache.fakeRatio_vs_phi->Write();
+  cache.fakeRatio_vs_phi.emplace("fakeRatio_vs_phi",
+                                 "Tracking fake ratio;#phi;Fake ratio",
+                                 std::array{phiAxis});
 }
 
 void FakePlotTool::fill(Cache& cache,
@@ -99,9 +81,9 @@ void FakePlotTool::fill(Cache& cache,
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  PlotHelpers::fillEff(cache.fakeRatio_vs_pT, fit_pT, status);
-  PlotHelpers::fillEff(cache.fakeRatio_vs_eta, fit_eta, status);
-  PlotHelpers::fillEff(cache.fakeRatio_vs_phi, fit_phi, status);
+  cache.fakeRatio_vs_pT->fill({fit_pT}, status);
+  cache.fakeRatio_vs_eta->fill({fit_eta}, status);
+  cache.fakeRatio_vs_phi->fill({fit_phi}, status);
 }
 
 void FakePlotTool::fill(Cache& cache, const SimParticleState& truthParticle,
@@ -110,16 +92,17 @@ void FakePlotTool::fill(Cache& cache, const SimParticleState& truthParticle,
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
-  PlotHelpers::fillHisto(cache.nReco_vs_pT, t_pT,
-                         nTruthMatchedTracks + nFakeTracks);
-  PlotHelpers::fillHisto(cache.nTruthMatched_vs_pT, t_pT, nTruthMatchedTracks);
-  PlotHelpers::fillHisto(cache.nFake_vs_pT, t_pT, nFakeTracks);
+  cache.nReco_vs_pT->fill(
+      {t_pT, static_cast<double>(nTruthMatchedTracks + nFakeTracks)});
+  cache.nTruthMatched_vs_pT->fill(
+      {t_pT, static_cast<double>(nTruthMatchedTracks)});
+  cache.nFake_vs_pT->fill({t_pT, static_cast<double>(nFakeTracks)});
 
-  PlotHelpers::fillHisto(cache.nReco_vs_eta, t_eta,
-                         nTruthMatchedTracks + nFakeTracks);
-  PlotHelpers::fillHisto(cache.nTruthMatched_vs_eta, t_eta,
-                         nTruthMatchedTracks);
-  PlotHelpers::fillHisto(cache.nFake_vs_eta, t_eta, nFakeTracks);
+  cache.nReco_vs_eta->fill(
+      {t_eta, static_cast<double>(nTruthMatchedTracks + nFakeTracks)});
+  cache.nTruthMatched_vs_eta->fill(
+      {t_eta, static_cast<double>(nTruthMatchedTracks)});
+  cache.nFake_vs_eta->fill({t_eta, static_cast<double>(nFakeTracks)});
 }
 
 }  // namespace ActsExamples
