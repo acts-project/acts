@@ -9,15 +9,14 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
-
-class TProfile;
 
 namespace ActsExamples {
 
@@ -26,21 +25,21 @@ class TrackQualityPlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning::Uniform("#eta", 40, -4, 4)},
-        {"Phi", PlotHelpers::Binning::Uniform("#phi", 100, -3.15, 3.15)},
-        {"Pt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 100)},
-        {"Num", PlotHelpers::Binning::Uniform("N", 30, -0.5, 29.5)}};
+    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
   /// @brief Nested Cache struct
   struct Cache {
-    TProfile* completeness_vs_pT;
-    TProfile* completeness_vs_eta;
-    TProfile* completeness_vs_phi;
-    TProfile* purity_vs_pT;
-    TProfile* purity_vs_eta;
-    TProfile* purity_vs_phi;
+    std::optional<Acts::Experimental::ProfileHistogram1> completeness_vs_pT;
+    std::optional<Acts::Experimental::ProfileHistogram1> completeness_vs_eta;
+    std::optional<Acts::Experimental::ProfileHistogram1> completeness_vs_phi;
+    std::optional<Acts::Experimental::ProfileHistogram1> purity_vs_pT;
+    std::optional<Acts::Experimental::ProfileHistogram1> purity_vs_eta;
+    std::optional<Acts::Experimental::ProfileHistogram1> purity_vs_phi;
   };
 
   /// Constructor
@@ -62,16 +61,6 @@ class TrackQualityPlotTool {
   /// @param purity purity of the track
   void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
             double completeness, double purity) const;
-
-  /// @brief write the track quality plots to file
-  ///
-  /// @param cache cache object for track quality plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the track quality plots
-  ///
-  /// @param cache cache object for track quality plots
-  void clear(Cache& cache) const;
 
  private:
   /// The Config class
