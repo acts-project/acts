@@ -96,6 +96,7 @@ option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
 # python related options
+option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
 option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
@@ -202,24 +203,28 @@ set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_HASHING ACTS_BUILD_EXAMPLES_HASHING)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
-
+set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 # feature tests
 include(CheckCXXSourceCompiles)
 
 # Set flags dependent whether we build ACTS in the default configuration or for deployment in pip with scikit-build-core
-if("${SKBUILD}" STREQUAL "2")
-    message(
-        STATUS
-        "Build with skbuild as ${SKBUILD_PROJECT_NAME},${SKBUILD_PROJECT_VERSION_FULL} (${SKBUILD_STATE})"
-    )
-    set(ACTS_BUILD_WITH_SKBUILD TRUE)
+if(ACTS_BUILD_PYTHON_WHEEL)
+    # Check if skbuild is running
+    if("${SKBUILD}" STREQUAL "2")
+        message(
+            STATUS
+            "Build with skbuild as ${SKBUILD_PROJECT_NAME},${SKBUILD_PROJECT_VERSION_FULL} (${SKBUILD_STATE})"
+        )
+    else()
+        message(WARNING "scikit-build-core not detected for building wheel")
+    endif()
 
     # For deployment with pip, we build static libs
     set(BUILD_SHARED_LIBS FALSE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
     # Set installation paths for proper python package creation
-    # CMAKE_PREFIX_PATH should be site-packages/acts
+    # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
     set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
     set(CMAKE_INSTALL_LIBDIR "acts")
     set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
@@ -227,8 +232,6 @@ if("${SKBUILD}" STREQUAL "2")
     set(CMAKE_INSTALL_DATADIR "acts/share")
     set(ACTS_PYTHON_INSTALL_DIR "acts")
 else()
-    set(ACTS_BUILD_WITH_SKBUILD FALSE)
-
     # GNU-like installation paths, e.g. lib/, include/, ...
     include(GNUInstallDirs)
     set(ACTS_PYTHON_INSTALL_DIR "python")

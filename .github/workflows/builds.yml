@@ -557,14 +557,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [linux_ubuntu]
     container: ghcr.io/acts-project/ubuntu2404:83
-    env:
-      INSTALL_DIR: ${{ github.workspace }}/install
-      ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
       - uses: actions/checkout@v6
-        with:
-          lfs: true
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -581,8 +576,11 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
+      - name: Reset ccache
+        run: ccache -z
+
       - name: Build with pip
-        run: ccache -z && pip install . -v --config-settings=ninja.make-fallback=false
+        run: pip install . -v --config-settings=ninja.make-fallback=false
 
       - name: ccache stats
         run: ccache -s
