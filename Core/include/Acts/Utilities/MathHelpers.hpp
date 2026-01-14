@@ -99,17 +99,33 @@ template <std::integral T>
 constexpr T sumUpToN(const T N) {
   return N * (N + 1) / 2;
 }
+
 /// @brief Calculates the factorial of a number
-///        N!= N*(N-1)....*3*2*1
-/// @param upperN: Upper factor until which the factorial is calculated
-/// @param lowerN: Optional argument to remove the first factors from the calculation
+///        n!= n*(n-1)*...*3*2*1
+/// @param n: Factor until which the factorial is calculated
 /// @return Factorial result
-template <std::integral T>
-constexpr T factorial(const T upperN, const T lowerN = 1) {
-  constexpr T one = 1;
-  const T& limit = std::max(one, lowerN);
-  return upperN >= limit ? upperN * factorial(upperN - 1, limit) : one;
+template <std::unsigned_integral T>
+constexpr T factorial(const T n) {
+  constexpr unsigned bits = std::numeric_limits<T>::digits;
+
+  // max n such that n! fits in T
+  constexpr unsigned max_n = bits >= 64   ? 20
+                             : bits >= 32 ? 12
+                             : bits >= 16 ? 8
+                             : bits >= 8  ? 5
+                                          : 0;
+
+  if (n > max_n) {
+    throw std::overflow_error("factorial overflow");
+  }
+
+  T r = 1;
+  for (T i = 2; i <= n; i++) {
+    r *= i;
+  }
+  return r;
 }
+
 /// @brief Calculate the binomial coefficient
 ///              n        n!
 ///                 =  --------
@@ -117,9 +133,13 @@ constexpr T factorial(const T upperN, const T lowerN = 1) {
 /// @param n Upper value in binomial coefficient
 /// @param k Lower value in binomial coefficient
 /// @return Binomial coefficient n choose k
-template <std::integral T>
+template <std::unsigned_integral T>
 constexpr T binomial(const T n, const T k) {
-  return factorial<T>(n, n - k + 1) / factorial<T>(k);
+  if (k > n) {
+    throw std::invalid_argument("k must be <= n");
+  }
+
+  return factorial<T>(n) / factorial<T>(k) / factorial<T>(n - k);
 }
 
 }  // namespace Acts

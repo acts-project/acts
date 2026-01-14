@@ -43,6 +43,61 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
   CHECK_CLOSE_REL(stdDouble, fastDouble, 1e-6);
 }
 
+BOOST_AUTO_TEST_CASE(Factorial) {
+  static_assert(Acts::factorial(0u) == 1u);
+  static_assert(Acts::factorial(1u) == 1u);
+  static_assert(Acts::factorial(2u) == 2u);
+  static_assert(Acts::factorial(5u) == 5u * Acts::factorial(4u));
+
+  // These tests should fail at compile time
+  // static_assert(Acts::factorial(static_cast<std::uint8_t>(6)));
+  // static_assert(Acts::factorial(static_cast<std::uint16_t>(9)));
+  // static_assert(Acts::factorial(static_cast<std::uint32_t>(13)));
+  // static_assert(Acts::factorial(static_cast<std::uint64_t>(21)));
+
+  BOOST_CHECK_THROW(Acts::factorial(static_cast<std::uint8_t>(6)),
+                    std::overflow_error);
+  BOOST_CHECK_THROW(Acts::factorial(static_cast<std::uint16_t>(9)),
+                    std::overflow_error);
+  BOOST_CHECK_THROW(Acts::factorial(static_cast<std::uint32_t>(13)),
+                    std::overflow_error);
+  BOOST_CHECK_THROW(Acts::factorial(static_cast<std::uint64_t>(21)),
+                    std::overflow_error);
+
+  for (std::size_t k = 1; k <= 20; ++k) {
+    BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - 1u));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(Binomial) {
+  static_assert(Acts::binomial(0u, 0u) == 1u);
+
+  static_assert(Acts::binomial(5u, 0u) == 1u);
+  static_assert(Acts::binomial(5u, 1u) == 5u);
+  static_assert(Acts::binomial(5u, 2u) == 10u);
+  static_assert(Acts::binomial(5u, 3u) == 10u);
+  static_assert(Acts::binomial(5u, 4u) == 5u);
+  static_assert(Acts::binomial(5u, 5u) == 1u);
+
+  static_assert(Acts::binomial(10u, 3u) == 120u);
+  static_assert(Acts::binomial(10u, 7u) == 120u);
+  static_assert(Acts::binomial(20ull, 10ull) == 184756ull);
+
+  // This test should fail at compile time
+  // static_assert(Acts::binomial(4u, 5u));
+
+  for (unsigned n = 2; n <= 10; ++n) {
+    // Check that the binomial of (n choose 1 is always n)
+    BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
+    for (unsigned k = 1; k < n; ++k) {
+      // Use recursive formula C(n, k) = C(n-1, k-1) + C(n-1, k)
+      BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n - 1, k - 1) +
+                                                  Acts::binomial(n - 1, k));
+      BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n, n - k));
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(CopySign) {
   BOOST_CHECK_EQUAL(Acts::copySign(5, -10), -5);
   BOOST_CHECK_EQUAL(Acts::copySign(5, 0), 5);

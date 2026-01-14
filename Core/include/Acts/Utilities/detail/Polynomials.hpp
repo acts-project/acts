@@ -29,7 +29,7 @@ constexpr std::array<double, N - D> derivativeCoefficients(
   }
   std::array<double, N - D> newCoeffs{filledArray<double, N - D>(0.)};
   for (std::size_t i = 0; i < N - D; ++i) {
-    newCoeffs[i] = factorial(i + D, i + 1) * coeffs[i + D];
+    newCoeffs[i] = factorial(i + D) / factorial(i) * coeffs[i + D];
   }
   return newCoeffs;
 }
@@ -105,7 +105,7 @@ constexpr double evaluate(const double x, const unsigned l, unsigned d = 0u) {
   double sum{0.};
   for (unsigned k = l % 2; k + d <= l; k += 2u) {
     sum += pow(x, k - d) * coeff(l, k) *
-           (d > 0u ? factorial(k - d, k - d + 1u) : 1u);
+           (d > 0u ? factorial(k - d) / factorial(k - d) : 1u);
   }
   return sum;
 }
@@ -149,7 +149,7 @@ constexpr double evalFirstKind(const double x, const unsigned n,
   double result{0.};
   for (unsigned k = 0u; 2u * k + d <= n; ++k) {
     result += coeffTn(n, k) * pow(x, n - 2u * k - d) *
-              (d > 0 ? factorial(n - 2u * k, n - 2u * k - d + 1u) : 1);
+              (d > 0 ? factorial(n - 2u * k) / factorial(n - 2u * k - d) : 1);
   }
   return result;
 }
@@ -186,7 +186,7 @@ constexpr double evalSecondKind(const double x, const unsigned n,
   double result{0.};
   for (unsigned k = 0u; 2u * k + d <= n; ++k) {
     result += coeffUn(n, k) * pow(x, n - 2u * k - d) *
-              (d > 0u ? factorial(n - 2u * k, n - 2u * k - d + 1u) : 1u);
+              (d > 0u ? factorial(n - 2u * k) / factorial(n - 2u * k - d) : 1u);
   }
   return result;
 }
