@@ -91,12 +91,23 @@ class TrackHandlerMutableBase : public TrackHandlerConstBase {
                              HashedString key) const = 0;
 };
 
+template <typename container_t>
+struct TrackHandlerTraits {
+  using Container = std::remove_const_t<container_t>;
+  static constexpr bool ReadOnly =
+      std::is_const_v<container_t> || Container::ReadOnly;
+};
+
 /// Concrete handler for a specific track container type
 /// This templated class provides static instances that implement the virtual
 /// interface for a specific track container type. The static instance approach
 /// avoids heap allocation per handle.
+template <typename container_t,
+          bool read_only = TrackHandlerTraits<container_t>::ReadOnly>
+class TrackHandler;
+
 template <typename container_t>
-class TrackHandler final : public TrackHandlerMutableBase {
+class TrackHandler<container_t, true> final : public TrackHandlerConstBase {
  public:
   /// Get the singleton instance for this track container type
   static const TrackHandler& instance() {
@@ -107,76 +118,160 @@ class TrackHandler final : public TrackHandlerMutableBase {
   const Surface* referenceSurface(const void* container,
                                   TrackIndexType index) const override {
     assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
     return &tc->getTrack(index).referenceSurface();
   }
 
   bool hasReferenceSurface(const void* container,
                            TrackIndexType index) const override {
     assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
     return tc->getTrack(index).hasReferenceSurface();
   }
 
   ParticleHypothesis particleHypothesis(const void* container,
                                         TrackIndexType index) const override {
     assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
     return tc->getTrack(index).particleHypothesis();
   }
 
   ConstParametersMap parameters(const void* container,
                                 TrackIndexType index) const override {
     assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return tc->getTrack(index).parameters();
-  }
-
-  ParametersMap parameters(void* container,
-                           TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
     return tc->getTrack(index).parameters();
   }
 
   ConstCovarianceMap covariance(const void* container,
                                 TrackIndexType index) const override {
     assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
-    return tc->getTrack(index).covariance();
-  }
-
-  CovarianceMap covariance(void* container,
-                           TrackIndexType index) const override {
-    assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
     return tc->getTrack(index).covariance();
   }
 
   unsigned int nTrackStates(const void* container,
                             TrackIndexType index) const override {
     assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
     return tc->getTrack(index).nTrackStates();
   }
 
   bool hasColumn(const void* container, HashedString key) const override {
     assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
     return tc->hasColumn(key);
   }
 
   std::any component(const void* container, TrackIndexType index,
                      HashedString key) const override {
     assert(container != nullptr);
-    const auto* tc = static_cast<const container_t*>(container);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
+    return tc->container().component_impl(key, index);
+  }
+
+ private:
+  TrackHandler() = default;
+};
+
+template <typename container_t>
+class TrackHandler<container_t, false> final : public TrackHandlerMutableBase {
+ public:
+  /// Get the singleton instance for this track container type
+  static const TrackHandler& instance() {
+    static const TrackHandler s_instance;
+    return s_instance;
+  }
+
+  const Surface* referenceSurface(const void* container,
+                                  TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
+    return &tc->getTrack(index).referenceSurface();
+  }
+
+  bool hasReferenceSurface(const void* container,
+                           TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
+    return tc->getTrack(index).hasReferenceSurface();
+  }
+
+  ParticleHypothesis particleHypothesis(const void* container,
+                                        TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
+    return tc->getTrack(index).particleHypothesis();
+  }
+
+  ConstParametersMap parameters(const void* container,
+                                TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
+    return tc->getTrack(index).parameters();
+  }
+
+  ParametersMap parameters(void* container,
+                           TrackIndexType index) const override {
+    assert(container != nullptr);
+    auto* tc = static_cast<std::remove_const_t<container_t>*>(container);
+    return tc->getTrack(index).parameters();
+  }
+
+  ConstCovarianceMap covariance(const void* container,
+                                TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
+    return tc->getTrack(index).covariance();
+  }
+
+  CovarianceMap covariance(void* container,
+                           TrackIndexType index) const override {
+    assert(container != nullptr);
+    auto* tc = static_cast<std::remove_const_t<container_t>*>(container);
+    return tc->getTrack(index).covariance();
+  }
+
+  unsigned int nTrackStates(const void* container,
+                            TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
+    return tc->getTrack(index).nTrackStates();
+  }
+
+  bool hasColumn(const void* container, HashedString key) const override {
+    assert(container != nullptr);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
+    return tc->hasColumn(key);
+  }
+
+  std::any component(const void* container, TrackIndexType index,
+                     HashedString key) const override {
+    assert(container != nullptr);
+    const auto* tc =
+        static_cast<const std::remove_const_t<container_t>*>(container);
     return tc->container().component_impl(key, index);
   }
 
   std::any component(void* container, TrackIndexType index,
                      HashedString key) const override {
     assert(container != nullptr);
-    auto* tc = static_cast<container_t*>(container);
+    auto* tc = static_cast<std::remove_const_t<container_t>*>(container);
     return tc->container().component_impl(key, index);
   }
 
@@ -275,8 +370,7 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
     requires(ReadOnly || !track_proxy_t::ReadOnly)
   explicit AnyTrackProxy(track_proxy_t track)
       : m_container(nullptr), m_index(track.m_index), m_handler(nullptr) {
-    using container_t = std::remove_const_t<
-        std::remove_reference_t<decltype(*track.m_container)>>;
+    using container_t = std::remove_reference_t<decltype(*track.m_container)>;
     auto* containerPtr = &(*track.m_container);
     if constexpr (ReadOnly) {
       m_container = static_cast<const void*>(containerPtr);
