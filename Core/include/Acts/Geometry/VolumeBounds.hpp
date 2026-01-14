@@ -26,6 +26,7 @@ namespace Acts {
 class Surface;
 class VolumeBounds;
 class Direction;
+class Volume;
 
 struct OrientedSurface {
   std::shared_ptr<RegularSurface> surface;
@@ -113,6 +114,8 @@ class VolumeBounds {
   virtual std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const = 0;
 
+  virtual std::vector<OrientedSurface> orientedSurfaces(Volume& parentVolume) const = 0;
+  
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max
