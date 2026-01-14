@@ -62,6 +62,13 @@ def main():
         "CompressedIO.h",
         # Files for python binding generation
         "tgeo_aux.py.in",
+        "serve.py",
+        "SNIPPETS.md",
+        "todo.md",
+        "bugs.md",
+        "deprecated.md",
+        "acts-version-manager.js",
+        "tex-mml-chtml.js",
     )
 
     suffix_header = (
@@ -83,6 +90,9 @@ def main():
     suffix_doc = (
         ".md",
         ".rst",
+        ".dox",
+        ".html",
+        ".bib",
     )
     suffix_other = (
         "",
@@ -99,6 +109,7 @@ def main():
         ".toml",
         ".txt",
         ".yml",
+        ".xml",
     )
     suffix_allowed = (
         suffix_header

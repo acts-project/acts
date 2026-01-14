@@ -1,24 +1,48 @@
 The following people have contributed to the project (in alphabetical order):
 
-- Xiaocong Ai, DESY
-- Corentin Allaire, CERN
-- Guilherme Almeida, University of Lisbon
+- Xiaocong Ai, Zhengzhou University
+- Tim Adye, Rutherford Appleton Laboratory
+- Dimitra Amperiadou, CERN, Aristotle University of Thessaloniki
+- Corentin Allaire, IJCLab
+- Tomasz Bold, AGH University of Krakow
+- Pierfrancesco Butti, CERN
 - Noemi Calace, CERN
-- Luis Falda Coelho, CERN, University of Coimbra
-- Paul Gessinger, JGU Mainz
-- Hadrien Grasland, CNRS
+- Jeremy Couthures, Annecy LAPP
+- Lorenzo Damenti, CERN, University of Florence
+- Wouter Deconinck, University of Manitoba
+- Davide Di Croce, CERN
+- Doga Elitez, CERN, JGU Mainz
+- Luis Falda Coelho, Brandeis University
+- Louis-Guillaume Gagnon, UC Berkeley
+- Rocky Bala Garg, Standford
+- Paul Gessinger, CERN
+- Maximilian Goblirsch-Kolb, DESY
+- Hadrien Grasland, IJCLab
 - Heather Gray, LBNL
+- Matthew Harris, University of Massachusetts, Amherst
+- Benjamin Huth, CERN
+- Johannes Junggeburth, CERN
+- Joana Niermann, CERN
+- Leonardo Monaco, CERN
+- Alexander J. Pfleger, CERN, University of Graz
+- Andreas Salzburger, CERN
+- Bastian Schlag, Standford University
+- Patrick Scholer, Carleton University
+- Andreas Stefl, CERN
+- Stephen Nicholas Swatman, CERN, University of Amsterdam
+- Joe Osborn, BNL
+- Roman Urmanov, Weizmann Institute of Science
+- Carlo Varni, AGH University of Krakow
+
+Not associated with scientific/academic organisations:
+
+- Guilherme Almeida
 - Christian Gumpert
 - Julia Hrdinka
-- Benjamin Huth, University of Regensburg
-- Moritz Kiehn, CERN
-- Fabian Klimpel, CERN
-- Robert Langenberg, UMass
-- Alexander J. Pfleger, CERN, University of Graz
-- Felix Russo, CERN, TU Wien
-- Andreas Salzburger, CERN
-- Bastian Schlag, CERN, JGU Mainz
-- Andreas Stefl, CERN, TU Wien
-- Stephen Nicholas Swatman, CERN, University of Amsterdam
-- Roman Urmanov, Weizmann Institute of Science
-- Carlo Varni, UC Berkeley
+- Moritz Kiehn
+- Fabian Klimpel
+- Robert Langenberg
+- Felix Russo
+
+See also the contributors list on github:
+https://github.com/acts-project/acts/graphs/contributors

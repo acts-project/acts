@@ -130,9 +130,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         ACTS_DEBUG("No refitted parameters for track " << itrack);
       }
     } else {
-      ACTS_WARNING("Fit failed for track "
-                   << itrack << " with error: " << result.error() << ", "
-                   << result.error().message());
+      ACTS_WARNING("Fit failed for event "
+                   << ctx.eventNumber << " track " << itrack << " with error: "
+                   << result.error() << ", " << result.error().message());
     }
     ++itrack;
   }

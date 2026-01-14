@@ -384,7 +384,7 @@ class Surface : public virtual GeometryObject,
                                                 const Vector3& position,
                                                 const Vector3& direction) const;
 
-  /// Calucation of the path correction for incident
+  /// Calculation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position

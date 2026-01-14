@@ -14,8 +14,9 @@
                 "ACTS_BUILD_ODD": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
                 "ACTS_BUILD_INTEGRATIONTESTS": "ON",
+                "ACTS_BUILD_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_EXAMPLES": "ON",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "ON",
-                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_UNITTESTS": "ON"
             }
@@ -91,8 +92,8 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_CXX_FLAGS": "-Werror --coverage -g -gz -g1",
                 "ACTS_BUILD_ODD": "OFF",
+                "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "OFF",
-                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "OFF",
                 "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
                 "ACTS_BUILD_EXAMPLES_UNITTESTS": "OFF",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "OFF",
@@ -118,7 +119,7 @@
             "inherits": "ci-common",
             "cacheVariables": {
                 "ACTS_BUILD_ODD": "OFF",
-                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "OFF",
+                "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
                 "ACTS_RUN_CLANG_TIDY": "ON"
             }
         },
@@ -143,13 +144,14 @@
                 "TORCH_CUDA_ARCH_LIST": "8.6",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
+                "ACTS_BUILD_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_PLUGIN_GNN": "ON",
+                "ACTS_BUILD_EXAMPLES": "ON",
                 "ACTS_BUILD_EXAMPLES_GNN": "ON",
                 "ACTS_GNN_ENABLE_TORCH": "ON",
                 "ACTS_GNN_ENABLE_ONNX": "ON",
                 "ACTS_GNN_ENABLE_CUDA": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "ON",
-                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
             }
         },

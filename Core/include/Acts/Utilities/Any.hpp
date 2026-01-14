@@ -108,9 +108,13 @@ static _AnyAllocationReporter s_reporter;
 #define _ACTS_ANY_NOEXCEPT noexcept
 #endif
 
+/// @addtogroup utilities
+/// @{
+
+/// Base class for all instances of @ref AnyBase regarfless of SBO size
 class AnyBaseAll {};
 
-/// Small opaque cache type which uses small buffer optimization
+/// Small opaque cache type with configurable small buffer optimization
 template <std::size_t SIZE>
 class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
@@ -553,10 +557,12 @@ class AnyBase : public AnyBaseAll {
 };
 
 /// @brief A type-safe container for single values of any type
-/// @details This is a custom implementation similar to std::any but optimized for small types
+/// @details This is a custom implementation similar to `std::any` but optimized for small types
 ///          that can fit into a pointer-sized buffer. Values larger than a
 ///          pointer are stored on the heap.
 using Any = AnyBase<sizeof(void*)>;
+
+/// @}
 
 #undef _ACTS_ANY_VERBOSE
 #undef _ACTS_ANY_VERBOSE_BUFFER

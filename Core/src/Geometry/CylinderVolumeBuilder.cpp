@@ -65,7 +65,7 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
   // -----------------------------------------------------------------------------
   MutableTrackingVolumePtr volume = nullptr;
 
-  // now analyize the layers that are provided
+  // now analyze the layers that are provided
   // -----------------------------------------------------
   ACTS_DEBUG("-> Building layers");
   LayerVector negativeLayers;

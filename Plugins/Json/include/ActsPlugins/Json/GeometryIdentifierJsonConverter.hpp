@@ -13,9 +13,10 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-// can not match our naming guidelines.
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 
 namespace GeometryIdentifierJsonConverter {
 /// Encode the geometry identifier
@@ -77,4 +78,5 @@ void to_json(nlohmann::json& j, const GeometryIdentifier& geoId);
 /// @param geoId  GeometryIdentifier to fill
 void from_json(const nlohmann::json& j, GeometryIdentifier& geoId);
 
+/// @}
 }  // namespace Acts

@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.2
+aiohttp==3.13.3
     # via -r docs/old/requirements.in
 aiosignal==1.4.0
     # via aiohttp
@@ -20,7 +20,7 @@ babel==2.17.0
     # via sphinx
 breathe==4.36.0
     # via -r docs/old/requirements.in
-certifi==2025.11.12
+certifi==2026.1.4
     # via requests
 cffi==2.0.0
     # via cryptography
@@ -40,7 +40,7 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2025.12.0
+fsspec==2026.1.0
     # via -r docs/old/requirements.in
 gidgethub==5.4.0
     # via -r docs/old/requirements.in
@@ -131,7 +131,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 toml==0.10.2
     # via -r docs/old/requirements.in
-typer==0.20.0
+typer==0.21.1
     # via -r docs/old/requirements.in
 typing-extensions==4.15.0
     # via
@@ -143,7 +143,7 @@ typing-inspection==0.4.2
     # via pydantic
 uritemplate==4.2.0
     # via gidgethub
-urllib3==2.6.2
+urllib3==2.6.3
     # via requests
 yarl==1.22.0
     # via aiohttp

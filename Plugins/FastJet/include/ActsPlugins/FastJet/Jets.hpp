@@ -20,6 +20,8 @@
 #include <fastjet/PseudoJet.hh>
 
 namespace ActsPlugins::FastJet {
+/// @addtogroup fastjet_plugin
+/// @{
 
 /// Jet labeling enum
 
@@ -146,4 +148,5 @@ class TrackJet : public Jet {
   std::vector<typename TrackContainer::TrackProxy> m_constituents;
 };
 
+/// @}
 }  // namespace ActsPlugins::FastJet
