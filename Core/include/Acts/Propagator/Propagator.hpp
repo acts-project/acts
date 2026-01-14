@@ -380,8 +380,9 @@ class Propagator final
 
   const Logger& logger() const { return *m_logger; }
 
-  template <typename propagator_state_t, typename result_t>
-  void moveStateToResult(propagator_state_t& state, result_t& result) const;
+  template <typename propagator_state_t, typename propagator_result_t>
+  void moveStateToResult(propagator_state_t& state,
+                         propagator_result_t& result) const;
 };
 
 }  // namespace Acts

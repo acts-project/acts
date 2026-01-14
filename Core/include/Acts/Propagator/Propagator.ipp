@@ -417,9 +417,9 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
 }
 
 template <typename S, typename N>
-template <typename propagator_state_t, typename result_t>
+template <typename propagator_state_t, typename propagator_result_t>
 void Propagator<S, N>::moveStateToResult(propagator_state_t& state,
-                                         result_t& result) const {
+                                         propagator_result_t& result) const {
   result.tuple() = std::move(state.tuple());
 
   result.steps = state.steps;
