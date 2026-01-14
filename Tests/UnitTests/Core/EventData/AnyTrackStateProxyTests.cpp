@@ -59,7 +59,7 @@ BOOST_FIXTURE_TEST_CASE(ConstructFromReadOnlyTrackStateProxy,
   state.predicted() = ActsVector<eBoundSize>::Ones();
 
   TrackContainer constContainer{ConstVectorTrackContainer{trackContainer},
-                               ConstVectorMultiTrajectory{trajectory}};
+                                ConstVectorMultiTrajectory{trajectory}};
 
   auto constState =
       constContainer.trackStateContainer().getTrackState(state.index());

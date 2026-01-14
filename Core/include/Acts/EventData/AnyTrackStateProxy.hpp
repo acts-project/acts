@@ -144,9 +144,8 @@ struct TrackStateHandlerTraits {
       std::is_const_v<trajectory_t> || MultiTrajectoryType::ReadOnly;
 };
 
-template <typename trajectory_t, bool read_only =
-                                    TrackStateHandlerTraits<trajectory_t>::
-                                        ReadOnly>
+template <typename trajectory_t,
+          bool read_only = TrackStateHandlerTraits<trajectory_t>::ReadOnly>
 class TrackStateHandler;
 
 template <typename trajectory_t>
