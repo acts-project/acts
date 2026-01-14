@@ -580,7 +580,7 @@ jobs:
         run: ccache -z
 
       - name: Build with pip
-        run: pip install . -v --config-settings=ninja.make-fallback=false
+        run: pip install . -v
 
       - name: ccache stats
         run: ccache -s
