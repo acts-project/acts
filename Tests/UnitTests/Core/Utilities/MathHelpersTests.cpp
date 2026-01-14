@@ -45,19 +45,15 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
 
 BOOST_AUTO_TEST_CASE(Factorial) {
   static_assert(Acts::factorial(0u) == 1u);
-  static_assert(Acts::factorial(0) == 1);
-
   static_assert(Acts::factorial(1u) == 1u);
-  static_assert(Acts::factorial(1) == 1);
-
   static_assert(Acts::factorial(2u) == 2u);
-  static_assert(Acts::factorial(2) == 2);
 
-  for (unsigned k = 3; k <= 20; ++k) {
+  for (std::size_t k = 3; k <= 20; ++k) {
     BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - 1u));
-  }
-  for (int k = -20; k <= 0; ++k) {
-    BOOST_CHECK_EQUAL(Acts::factorial(k), 1);
+    for (std::size_t j = 1; j <= k; ++j) {
+      BOOST_CHECK_EQUAL(Acts::factorial(k, j),
+                        Acts::factorial(k) / Acts::factorial(j - 1));
+    }
   }
 }
 

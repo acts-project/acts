@@ -104,7 +104,7 @@ constexpr T sumUpToN(const T N) {
 /// @param upperN: Upper factor until which the factorial is calculated
 /// @param lowerN: Optional argument to remove the first factors from the calculation
 /// @return Factorial result
-template <std::integral T>
+template <std::unsigned_integral T>
 constexpr T factorial(const T upperN, const T lowerN = 1) {
   constexpr T one = 1;
   constexpr T two = 2;
