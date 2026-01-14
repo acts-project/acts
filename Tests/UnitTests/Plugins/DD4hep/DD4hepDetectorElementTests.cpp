@@ -119,7 +119,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementCylinder) {
 
   const auto& surface = cylindricalElement->surface();
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Cylinder);
-  BOOST_CHECK(surface.localToGlobal(tContext).isApprox(Transform3::Identity()));
+  BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
+      Transform3::Identity()));
   auto boundValues = surface.bounds().values();
   CHECK_CLOSE_ABS(boundValues[0u], 105., 1e-10);
   CHECK_CLOSE_ABS(boundValues[1u], 1000., 1e-10);
@@ -152,7 +153,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralCylinder) {
 
   const auto& surface = cylindricalElement->surface();
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Cylinder);
-  BOOST_CHECK(surface.localToGlobal(tContext).isApprox(Transform3::Identity()));
+  BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
+      Transform3::Identity()));
   auto boundValues = surface.bounds().values();
   CHECK_CLOSE_ABS(boundValues[0u], 105., 1e-10);
   CHECK_CLOSE_ABS(boundValues[1u], 1000., 1e-10);
@@ -186,7 +188,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementDisc) {
 
   const auto& surface = discElement->surface();
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Disc);
-  BOOST_CHECK(surface.localToGlobal(tContext).isApprox(Transform3::Identity()));
+  BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
+      Transform3::Identity()));
   auto boundValues = surface.bounds().values();
   CHECK_CLOSE_ABS(boundValues[0u], 100., 1e-10);
   CHECK_CLOSE_ABS(boundValues[1u], 900., 1e-10);
@@ -218,7 +221,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralDisc) {
 
   const auto& surface = discElement->surface();
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Disc);
-  BOOST_CHECK(surface.localToGlobal(tContext).isApprox(Transform3::Identity()));
+  BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
+      Transform3::Identity()));
   auto boundValues = surface.bounds().values();
 
   CHECK_CLOSE_ABS(boundValues[0u], 100., 1e-10);
@@ -256,7 +260,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
   surface.assignGeometryId(GeometryIdentifier().withVolume(1).withLayer(2));
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Plane);
 
-  auto sTransform = surface.localToGlobal(tContext);
+  auto sTransform = surface.localToGlobalTransform(tContext);
   BOOST_CHECK(sTransform.translation().isApprox(Vector3(10., 20., 30.)));
 
   const auto& sBounds = surface.bounds();
@@ -300,7 +304,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
   const auto& surface = trapezoidElement->surface();
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Plane);
 
-  auto sTransform = surface.localToGlobal(tContext);
+  auto sTransform = surface.localToGlobalTransform(tContext);
   BOOST_CHECK(sTransform.translation().isApprox(Vector3(20., 30., 40.)));
 
   const auto& sBounds = surface.bounds();

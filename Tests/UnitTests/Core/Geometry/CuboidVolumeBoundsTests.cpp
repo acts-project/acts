@@ -151,42 +151,42 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
 
   // Test the orientation of the boundary surfaces
   auto nFaceXY = cvbOrientedSurfaces[negativeFaceXY]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(nFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(nFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(nFaceXY.col(2).isApprox(zaxis));
 
   auto pFaceXY = cvbOrientedSurfaces[positiveFaceXY]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(pFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(pFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(pFaceXY.col(2).isApprox(zaxis));
 
   auto nFaceYZ = cvbOrientedSurfaces[negativeFaceYZ]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(nFaceYZ.col(0).isApprox(yaxis));
   BOOST_CHECK(nFaceYZ.col(1).isApprox(zaxis));
   BOOST_CHECK(nFaceYZ.col(2).isApprox(xaxis));
 
   auto pFaceYZ = cvbOrientedSurfaces[positiveFaceYZ]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(pFaceYZ.col(0).isApprox(yaxis));
   BOOST_CHECK(pFaceYZ.col(1).isApprox(zaxis));
   BOOST_CHECK(pFaceYZ.col(2).isApprox(xaxis));
 
   auto nFaceZX = cvbOrientedSurfaces[negativeFaceZX]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(nFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(nFaceZX.col(1).isApprox(xaxis));
   BOOST_CHECK(nFaceZX.col(2).isApprox(yaxis));
 
   auto pFaceZX = cvbOrientedSurfaces[positiveFaceZX]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(pFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(pFaceZX.col(1).isApprox(xaxis));

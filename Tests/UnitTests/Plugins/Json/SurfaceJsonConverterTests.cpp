@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceRoundTripTests) {
 
   auto coneTest = SurfaceJsonConverter::fromJson(coneIn);
 
-  BOOST_CHECK(
-      coneTest->localToGlobal(gctx).isApprox(coneRef->localToGlobal(gctx)));
+  BOOST_CHECK(coneTest->localToGlobalTransform(gctx).isApprox(
+      coneRef->localToGlobalTransform(gctx)));
   BOOST_CHECK_EQUAL(coneTest->geometryId(), coneRef->geometryId());
   BOOST_CHECK_EQUAL(coneTest->bounds(), coneRef->bounds());
 }
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceRoundTripTests) {
 
   auto ringDiscTest = SurfaceJsonConverter::fromJson(discIn);
 
-  BOOST_CHECK(ringDiscTest->localToGlobal(gctx).isApprox(
-      ringDiscRef->localToGlobal(gctx)));
+  BOOST_CHECK(ringDiscTest->localToGlobalTransform(gctx).isApprox(
+      ringDiscRef->localToGlobalTransform(gctx)));
   BOOST_CHECK_EQUAL(ringDiscTest->geometryId(), ringDiscRef->geometryId());
   BOOST_CHECK_EQUAL(ringDiscTest->bounds(), ringDiscRef->bounds());
 }
@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceRoundTripTests) {
 
   auto cylinderTest = SurfaceJsonConverter::fromJson(cylinderIn);
 
-  BOOST_CHECK(cylinderTest->localToGlobal(gctx).isApprox(
-      cylinderRef->localToGlobal(gctx)));
+  BOOST_CHECK(cylinderTest->localToGlobalTransform(gctx).isApprox(
+      cylinderRef->localToGlobalTransform(gctx)));
   BOOST_CHECK_EQUAL(cylinderTest->geometryId(), cylinderRef->geometryId());
   BOOST_CHECK_EQUAL(cylinderTest->bounds(), cylinderRef->bounds());
 }
@@ -148,8 +148,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceRoundTripTests) {
 
   auto trapezoidPlaneTest = SurfaceJsonConverter::fromJson(planeIn);
 
-  BOOST_CHECK(trapezoidPlaneTest->localToGlobal(gctx).isApprox(
-      trapezoidPlaneRef->localToGlobal(gctx)));
+  BOOST_CHECK(trapezoidPlaneTest->localToGlobalTransform(gctx).isApprox(
+      trapezoidPlaneRef->localToGlobalTransform(gctx)));
   BOOST_CHECK_EQUAL(trapezoidPlaneTest->geometryId(),
                     trapezoidPlaneRef->geometryId());
   BOOST_CHECK_EQUAL(trapezoidPlaneTest->bounds(), trapezoidPlaneRef->bounds());
@@ -176,8 +176,8 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceRoundTripTests) {
 
   auto strawTest = SurfaceJsonConverter::fromJson(strawIn);
 
-  BOOST_CHECK(
-      strawTest->localToGlobal(gctx).isApprox(strawRef->localToGlobal(gctx)));
+  BOOST_CHECK(strawTest->localToGlobalTransform(gctx).isApprox(
+      strawRef->localToGlobalTransform(gctx)));
   BOOST_CHECK_EQUAL(strawTest->geometryId(), strawRef->geometryId());
   BOOST_CHECK_EQUAL(strawTest->bounds(), strawRef->bounds());
 }
@@ -202,8 +202,8 @@ BOOST_AUTO_TEST_CASE(PerigeeRoundTripTests) {
 
   auto perigeeTest = SurfaceJsonConverter::fromJson(perigeeIn);
 
-  BOOST_CHECK(perigeeTest->localToGlobal(gctx).isApprox(
-      perigeeRef->localToGlobal(gctx)));
+  BOOST_CHECK(perigeeTest->localToGlobalTransform(gctx).isApprox(
+      perigeeRef->localToGlobalTransform(gctx)));
   BOOST_CHECK_EQUAL(perigeeTest->geometryId(), perigeeRef->geometryId());
 }
 

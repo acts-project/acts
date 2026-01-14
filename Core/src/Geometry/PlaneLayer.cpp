@@ -65,7 +65,7 @@ void PlaneLayer::buildApproachDescriptor() {
   // get the appropriate transform, the center and the normal vector
 
   //@todo fix with representing volume
-  const Transform3& lTransform = localToGlobal(gctx);
+  const Transform3& lTransform = localToGlobalTransform(gctx);
   RotationMatrix3 lRotation = lTransform.rotation();
   const Vector3& lCenter = center(gctx);
   const Vector3& lVector = normal(gctx, lCenter);

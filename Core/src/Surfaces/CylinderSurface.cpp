@@ -120,7 +120,7 @@ Vector3 CylinderSurface::localToGlobal(const GeometryContext& gctx,
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[0] / r;
   Vector3 position(r * std::cos(phi), r * std::sin(phi), lposition[1]);
-  return localToGlobal(gctx) * position;
+  return localToGlobalTransform(gctx) * position;
 }
 
 Result<Vector2> CylinderSurface::globalToLocal(const GeometryContext& gctx,
@@ -135,7 +135,7 @@ Result<Vector2> CylinderSurface::globalToLocal(const GeometryContext& gctx,
   if (inttol < 0.01) {
     inttol = 0.01;
   }
-  const Transform3& sfTransform = localToGlobal(gctx);
+  const Transform3& sfTransform = localToGlobalTransform(gctx);
   Transform3 inverseTrans(sfTransform.inverse());
   Vector3 loc3Dframe(inverseTrans * position);
   if (std::abs(perp(loc3Dframe) - bounds().get(CylinderBounds::eR)) > inttol) {
@@ -153,12 +153,12 @@ Vector3 CylinderSurface::normal(const GeometryContext& gctx,
                                 const Vector2& lposition) const {
   double phi = lposition[0] / m_bounds->get(CylinderBounds::eR);
   Vector3 localNormal(std::cos(phi), std::sin(phi), 0.);
-  return localToGlobal(gctx).linear() * localNormal;
+  return localToGlobalTransform(gctx).linear() * localNormal;
 }
 
 Vector3 CylinderSurface::normal(const GeometryContext& gctx,
                                 const Vector3& position) const {
-  const Transform3& sfTransform = localToGlobal(gctx);
+  const Transform3& sfTransform = localToGlobalTransform(gctx);
   // get it into the cylinder frame
   Vector3 pos3D = sfTransform.inverse() * position;
   // set the z coordinate to 0
@@ -181,7 +181,7 @@ const CylinderBounds& CylinderSurface::bounds() const {
 
 Polyhedron CylinderSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int quarterSegments) const {
-  auto ctrans = localToGlobal(gctx);
+  auto ctrans = localToGlobalTransform(gctx);
 
   // Prepare vertices and faces
   std::vector<Vector3> vertices =
@@ -193,7 +193,7 @@ Polyhedron CylinderSurface::polyhedronRepresentation(
 
 Vector3 CylinderSurface::rotSymmetryAxis(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not rotation())
-  return localToGlobal(gctx).matrix().block<3, 1>(0, 2);
+  return localToGlobalTransform(gctx).matrix().block<3, 1>(0, 2);
 }
 
 detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
@@ -222,7 +222,7 @@ MultiIntersection3D CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
-  const auto& gctxTransform = localToGlobal(gctx);
+  const auto& gctxTransform = localToGlobalTransform(gctx);
 
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctxTransform, position, direction);
@@ -291,7 +291,7 @@ AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
-  const auto& rotation = localToGlobal(gctx).rotation();
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   // The local frame x/y/z axis
   const auto& localXAxis = rotation.col(0);
   const auto& localYAxis = rotation.col(1);
@@ -336,7 +336,7 @@ ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
-  const auto& sTransform = localToGlobal(gctx);
+  const auto& sTransform = localToGlobalTransform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);

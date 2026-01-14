@@ -168,10 +168,10 @@ struct EventDataView3D {
 
       // Draw the local covariance
       const auto& covariance = *parameters.covariance();
-      drawCovarianceCartesian(helper, lposition,
-                              covariance.template block<2, 2>(0, 0),
-                              parameters.referenceSurface().localToGlobal(gctx),
-                              locErrorScale, covConfig);
+      drawCovarianceCartesian(
+          helper, lposition, covariance.template block<2, 2>(0, 0),
+          parameters.referenceSurface().localToGlobalTransform(gctx),
+          locErrorScale, covConfig);
 
       drawCovarianceAngular(
           helper, position, direction, covariance.template block<2, 2>(2, 2),
@@ -265,7 +265,7 @@ struct EventDataView3D {
         const SquareMatrix2 covariance =
             state.template calibratedCovariance<2>();
         drawMeasurement(helper, lposition, covariance,
-                        state.referenceSurface().localToGlobal(gctx),
+                        state.referenceSurface().localToGlobalTransform(gctx),
                         locErrorScale, measurementConfig);
       }
 

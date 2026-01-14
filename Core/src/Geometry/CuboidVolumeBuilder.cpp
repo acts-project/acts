@@ -72,7 +72,7 @@ std::shared_ptr<const Layer> CuboidVolumeBuilder::buildLayer(
   Vector3 centroid{0., 0., 0.};
 
   for (const auto& surface : cfg.surfaces) {
-    centroid += surface->localToGlobal(gctx).translation();
+    centroid += surface->localToGlobalTransform(gctx).translation();
   }
 
   centroid /= cfg.surfaces.size();
@@ -85,7 +85,8 @@ std::shared_ptr<const Layer> CuboidVolumeBuilder::buildLayer(
   if (cfg.rotation) {
     trafo.linear() = *cfg.rotation;
   } else {
-    trafo.linear() = cfg.surfaces.front()->localToGlobal(gctx).rotation();
+    trafo.linear() =
+        cfg.surfaces.front()->localToGlobalTransform(gctx).rotation();
   }
 
   LayerCreator::Config lCfg;

@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(surface_reading_test) {
 
   BOOST_REQUIRE_EQUAL(surfaces.size(), readBackSurfaces.size());
   for (auto [refSurface, surface] : zip(surfaces, readBackSurfaces)) {
-    BOOST_CHECK(refSurface->localToGlobal(gctx).isApprox(
-        surface->localToGlobal(gctx), 1.e-4));
+    BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
+        surface->localToGlobalTransform(gctx), 1.e-4));
     BOOST_CHECK(
         refSurface->center(gctx).isApprox(surface->center(gctx), 1.e-4));
     BOOST_CHECK_EQUAL(refSurface->type(), surface->type());
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(json_detelement_reading_test) {
   BOOST_REQUIRE_EQUAL(surfaces.size(), readBackDetElements.size());
   for (auto [refSurface, detElement] : zip(surfaces, readBackDetElements)) {
     auto surface = &detElement->surface();
-    BOOST_CHECK(refSurface->localToGlobal(gctx).isApprox(
-        surface->localToGlobal(gctx), 1.e-4));
+    BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
+        surface->localToGlobalTransform(gctx), 1.e-4));
     BOOST_CHECK(
         refSurface->center(gctx).isApprox(surface->center(gctx), 1.e-4));
     BOOST_CHECK_EQUAL(refSurface->type(), surface->type());

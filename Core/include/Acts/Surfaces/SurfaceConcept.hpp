@@ -28,7 +28,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
   { cs == s2 } -> std::same_as<bool>;
 
   { cs.type() } -> std::same_as<Surface::SurfaceType>;
-  { cs.localToGlobal(gctx) } -> std::same_as<const Transform3&>;
+  { cs.localToGlobalTransform(gctx) } -> std::same_as<const Transform3&>;
   { cs.center(gctx) } -> std::same_as<Vector3>;
   { cs.normal(gctx, Vector3{}, Vector3{}) } -> std::same_as<Vector3>;
   { cs.bounds() } -> std::convertible_to<const SurfaceBounds&>;

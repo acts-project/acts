@@ -68,7 +68,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   ///
-  /// @note this is called from the surface().localToGlobal(gctx) in the PROXY
+  /// @note this is called from the surface().localToGlobalTransform(gctx) in the PROXY
   /// mode
   const Acts::Transform3& transform(
       const Acts::GeometryContext& gctx) const override;

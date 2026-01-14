@@ -51,10 +51,10 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
   // Orientation of the surface (i.e., axes of the corresponding coordinate
   // system)
   RotationMatrix3 surfaceAxes =
-      trkParams->referenceSurface().localToGlobal(gctx).rotation();
+      trkParams->referenceSurface().localToGlobalTransform(gctx).rotation();
   // Origin of the surface coordinate system
   Vector3 surfaceOrigin =
-      trkParams->referenceSurface().localToGlobal(gctx).translation();
+      trkParams->referenceSurface().localToGlobalTransform(gctx).translation();
 
   // x- and y-axis of the surface coordinate system
   Vector3 xAxis = surfaceAxes.col(0);

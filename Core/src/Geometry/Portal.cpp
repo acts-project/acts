@@ -271,9 +271,11 @@ Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
   if (!isSameSurface(gctx, *aPortal.m_surface, *bPortal.m_surface)) {
     ACTS_ERROR("Portals have different surfaces");
     ACTS_ERROR("A: " << aPortal.m_surface->bounds());
-    ACTS_ERROR("\n" << aPortal.m_surface->localToGlobal(gctx).matrix());
+    ACTS_ERROR("\n"
+               << aPortal.m_surface->localToGlobalTransform(gctx).matrix());
     ACTS_ERROR("B: " << bPortal.m_surface->bounds());
-    ACTS_ERROR("\n" << bPortal.m_surface->localToGlobal(gctx).matrix());
+    ACTS_ERROR("\n"
+               << bPortal.m_surface->localToGlobalTransform(gctx).matrix());
     throw PortalFusingException();
   }
 
@@ -337,13 +339,14 @@ bool Portal::isSameSurface(const GeometryContext& gctx, const Surface& a,
     return false;
   }
 
-  if (!a.localToGlobal(gctx).linear().isApprox(
-          b.localToGlobal(gctx).linear(), s_transformEquivalentTolerance)) {
+  if (!a.localToGlobalTransform(gctx).linear().isApprox(
+          b.localToGlobalTransform(gctx).linear(),
+          s_transformEquivalentTolerance)) {
     return false;
   }
 
-  Vector3 delta = (a.localToGlobal(gctx).translation() -
-                   b.localToGlobal(gctx).translation())
+  Vector3 delta = (a.localToGlobalTransform(gctx).translation() -
+                   b.localToGlobalTransform(gctx).translation())
                       .cwiseAbs();
 
   if (delta.maxCoeff() > s_onSurfaceTolerance) {

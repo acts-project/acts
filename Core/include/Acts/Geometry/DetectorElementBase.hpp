@@ -36,15 +36,19 @@ class DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return reference to the transform of this detector element
   [[deprecated(
-      "Please use localToGlobal(const GeometryContext& gctx) instead")]]
-  virtual const Transform3& transform(const GeometryContext& gctx) const = 0;
+      "Please use localToGlobalTransform(const GeometryContext& gctx) "
+      "instead")]]
+  virtual const Transform3& transform(const GeometryContext& gctx) const {
+    return localToGlobalTransform(gctx);
+  }
 
   /// Return the transform for the Element proxy mechanism
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return reference to the transform to switch from the element's
   ///         coordinates to the experiment's global coordinate system
-  virtual const Transform3& localToGlobal(const GeometryContext& gctx) const {
+  virtual const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const {
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"

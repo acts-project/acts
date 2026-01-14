@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
     CHECK_CLOSE_ABS(hy, hY, s_epsilon);
 
     // Check if the surface is the (negative) identity
-    auto transform = plane->localToGlobal(tgContext);
+    auto transform = plane->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
     const Vector3 offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
     GeometryView3D::drawSurface(objVis, *plane, tgContext,

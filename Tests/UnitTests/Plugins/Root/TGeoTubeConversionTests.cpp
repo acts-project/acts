@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
     CHECK_CLOSE_ABS(bR, 10.5, s_epsilon);
     CHECK_CLOSE_ABS(bhZ, hz, s_epsilon);
 
-    auto transform = cylinder->localToGlobal(tgContext);
+    auto transform = cylinder->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
 
     // Check if the surface is the (negative) identity

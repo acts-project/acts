@@ -286,8 +286,8 @@ BOOST_DATA_TEST_CASE(CovarianceConversionSamePlane,
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
-  auto planeSurfaceB =
-      Surface::makeShared<PlaneSurface>(planeSurfaceA->localToGlobal(gctx));
+  auto planeSurfaceB = Surface::makeShared<PlaneSurface>(
+      planeSurfaceA->localToGlobalTransform(gctx));
 
   BoundMatrix covA;
   covA.setZero();
@@ -331,9 +331,10 @@ BOOST_DATA_TEST_CASE(CovarianceConversionRotatedPlane,
   auto planeSurfaceA = MAKE_SURFACE();
 
   Transform3 transform;
-  transform = planeSurfaceA->localToGlobal(gctx).rotation();
+  transform = planeSurfaceA->localToGlobalTransform(gctx).rotation();
   transform = AngleAxis3(angle, planeSurfaceA->normal(gctx)) * transform;
-  transform.translation() = planeSurfaceA->localToGlobal(gctx).translation();
+  transform.translation() =
+      planeSurfaceA->localToGlobalTransform(gctx).translation();
   auto planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
 
   // sanity check that the normal didn't change
@@ -382,14 +383,15 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL0TiltedPlane,
 
   // make plane that is slightly rotated
   Transform3 transform;
-  transform = planeSurfaceA->localToGlobal(gctx).rotation();
+  transform = planeSurfaceA->localToGlobalTransform(gctx).rotation();
 
   // figure out rotation axis along local x
   Vector3 axis =
-      planeSurfaceA->localToGlobal(gctx).rotation() * Vector3::UnitY();
+      planeSurfaceA->localToGlobalTransform(gctx).rotation() * Vector3::UnitY();
   transform = AngleAxis3(angle, axis) * transform;
 
-  transform.translation() = planeSurfaceA->localToGlobal(gctx).translation();
+  transform.translation() =
+      planeSurfaceA->localToGlobalTransform(gctx).translation();
 
   auto planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
 
@@ -433,13 +435,14 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL1TiltedPlane,
 
   // make plane that is slightly rotated
   Transform3 transform;
-  transform = planeSurfaceA->localToGlobal(gctx).rotation();
+  transform = planeSurfaceA->localToGlobalTransform(gctx).rotation();
 
   Vector3 axis =
-      planeSurfaceA->localToGlobal(gctx).rotation() * Vector3::UnitX();
+      planeSurfaceA->localToGlobalTransform(gctx).rotation() * Vector3::UnitX();
   transform = AngleAxis3(angle, axis) * transform;
 
-  transform.translation() = planeSurfaceA->localToGlobal(gctx).translation();
+  transform.translation() =
+      planeSurfaceA->localToGlobalTransform(gctx).translation();
 
   auto planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
 

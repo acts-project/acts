@@ -72,7 +72,7 @@ static void drawMeasurements(
     auto lposition = singleMeasurement.parameters;
 
     auto surf = geometry->findSurface(singleMeasurement.m_geometryId);
-    auto transf = surf->localToGlobal(geoCtx);
+    auto transf = surf->localToGlobalTransform(geoCtx);
 
     EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
                                      locErrorScale, viewConfig);

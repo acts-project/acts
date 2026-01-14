@@ -170,11 +170,11 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   GeometryContext positiveContext{AlignmentContext{alignmentStore, 1}};
 
   // Test the transforms
-  BOOST_CHECK(alignedSurface.localToGlobal(defaultContext)
+  BOOST_CHECK(alignedSurface.localToGlobalTransform(defaultContext)
                   .isApprox(Transform3::Identity()));
-  BOOST_CHECK(alignedSurface.localToGlobal(negativeContext)
+  BOOST_CHECK(alignedSurface.localToGlobalTransform(negativeContext)
                   .isApprox(negativeTransform));
-  BOOST_CHECK(alignedSurface.localToGlobal(positiveContext)
+  BOOST_CHECK(alignedSurface.localToGlobalTransform(positiveContext)
                   .isApprox(positiveTransform));
 
   // Test the centers

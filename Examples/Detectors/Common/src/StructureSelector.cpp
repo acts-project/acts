@@ -56,7 +56,7 @@ ActsExamples::StructureSelector::selectedTransforms(
   std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3> transforms;
   auto selectedSurfaces = selectSurfaces(geoId);
   for (const auto& surface : selectedSurfaces) {
-    transforms[surface->geometryId()] = surface->localToGlobal(gctx);
+    transforms[surface->geometryId()] = surface->localToGlobalTransform(gctx);
   }
   return transforms;
 }

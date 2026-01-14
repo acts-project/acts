@@ -81,28 +81,28 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 
   // Test the orientation of the boundary surfaces
   auto nFaceXY = tvbOrientedSurfaces[negativeFaceXY]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(nFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(nFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(nFaceXY.col(2).isApprox(zaxis));
 
   auto pFaceXY = tvbOrientedSurfaces[positiveFaceXY]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(pFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(pFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(pFaceXY.col(2).isApprox(zaxis));
 
   auto nFaceZX = tvbOrientedSurfaces[negativeFaceZX]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(nFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(nFaceZX.col(1).isApprox(xaxis));
   BOOST_CHECK(nFaceZX.col(2).isApprox(yaxis));
 
   auto pFaceZX = tvbOrientedSurfaces[positiveFaceZX]
-                     .surface->localToGlobal(geoCtx)
+                     .surface->localToGlobalTransform(geoCtx)
                      .rotation();
   BOOST_CHECK(pFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(pFaceZX.col(1).isApprox(xaxis));

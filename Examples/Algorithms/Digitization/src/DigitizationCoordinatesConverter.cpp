@@ -37,7 +37,7 @@ std::tuple<double, double> DigitizationCoordinatesConverter::globalToLocal(
 
   // Transform the position into the local surface frame
   const Acts::Surface* surfacePtr = surfaceItr->second;
-  const auto invTransform = surfacePtr->localToGlobal(gctx).inverse();
+  const auto invTransform = surfacePtr->localToGlobalTransform(gctx).inverse();
 
   const Acts::Vector3 pos(x, y, z);
   Acts::Vector2 pos2Local = (invTransform * pos).segment<2>(0);
@@ -58,7 +58,7 @@ DigitizationCoordinatesConverter::localToGlobal(std::uint64_t moduleId,
 
   // Transform the position into the global frame
   const Acts::Surface* surfacePtr = surfaceItr->second;
-  const auto& transform = surfacePtr->localToGlobal(gctx);
+  const auto& transform = surfacePtr->localToGlobalTransform(gctx);
 
   const Acts::Vector3 pos(x, y, 0);
   Acts::Vector3 pos2Global = (transform * pos);

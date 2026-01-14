@@ -57,7 +57,7 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
   // pretty generic
   if (!sensitive) {
     auto newSurface = Surface::template makeShared<Surface>(
-        surface->localToGlobal(gctx), sharedBounds);
+        surface->localToGlobalTransform(gctx), sharedBounds);
     return std::make_tuple(nullptr, newSurface);
   }
 

@@ -134,7 +134,7 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
   const GeometryContext gctx{};
   // Create transform from the transform of surfaceA and translate it in y
   // direction using the half length
-  auto transform = surfaceA->localToGlobal(gctx);
+  auto transform = surfaceA->localToGlobalTransform(gctx);
   transform.translate(Vector3{
       0.f, boundsA.values()[TrapezoidBounds::eHalfLengthY] - halfLengthY, 0.f});
 

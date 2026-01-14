@@ -176,7 +176,8 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return the contextual transform
   [[deprecated(
-      "Please use localToGlobal(const GeometryContext& gctx) instead")]]
+      "Please use localToGlobalTransform(const GeometryContext& gctx) "
+      "instead")]]
   const Transform3& transform(const GeometryContext& gctx) const;
   /// Return method for the surface Transform3 by reference
   /// In case a detector element is associated the surface transform
@@ -186,7 +187,7 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return the contextual transform
-  const Transform3& localToGlobal(const GeometryContext& gctx) const;
+  const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
 
   /// Return method for the surface center
   /// @note the center is always recalculated in order to not keep a cache
