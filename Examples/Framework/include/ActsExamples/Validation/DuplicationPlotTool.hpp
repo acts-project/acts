@@ -42,17 +42,17 @@ class DuplicationPlotTool {
   /// @brief Nested Cache struct
   struct Cache {
     /// Number of duplicated tracks vs pT
-    std::optional<Acts::Experimental::ProfileHistogram1> nDuplicated_vs_pT;
+    Acts::Experimental::ProfileHistogram1 nDuplicated_vs_pT;
     /// Number of duplicated tracks vs eta
-    std::optional<Acts::Experimental::ProfileHistogram1> nDuplicated_vs_eta;
+    Acts::Experimental::ProfileHistogram1 nDuplicated_vs_eta;
     /// Number of duplicated tracks vs phi
-    std::optional<Acts::Experimental::ProfileHistogram1> nDuplicated_vs_phi;
+    Acts::Experimental::ProfileHistogram1 nDuplicated_vs_phi;
     /// Tracking duplication ratio vs pT
-    std::optional<Acts::Experimental::Efficiency1> duplicationRatio_vs_pT;
+    Acts::Experimental::Efficiency1 duplicationRatio_vs_pT;
     /// Tracking duplication ratio vs eta
-    std::optional<Acts::Experimental::Efficiency1> duplicationRatio_vs_eta;
+    Acts::Experimental::Efficiency1 duplicationRatio_vs_eta;
     /// Tracking duplication ratio vs phi
-    std::optional<Acts::Experimental::Efficiency1> duplicationRatio_vs_phi;
+    Acts::Experimental::Efficiency1 duplicationRatio_vs_phi;
   };
 
   /// Constructor

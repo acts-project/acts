@@ -28,31 +28,31 @@ void TrackQualityPlotTool::book(Cache& cache) const {
   ACTS_DEBUG("Initialize the histograms for completeness plots");
 
   // completeness vs pT
-  cache.completeness_vs_pT.emplace("completeness_vs_pT",
-                                   "Completeness;pT [GeV/c];Completeness",
-                                   std::array{ptAxis}, "Completeness");
+  cache.completeness_vs_pT = Acts::Experimental::ProfileHistogram1(
+      "completeness_vs_pT", "Completeness;pT [GeV/c];Completeness",
+      std::array{ptAxis}, "Completeness");
 
   // completeness vs eta
-  cache.completeness_vs_eta.emplace("completeness_vs_eta",
-                                    "Completeness;#eta;Completeness",
-                                    std::array{etaAxis}, "Completeness");
+  cache.completeness_vs_eta = Acts::Experimental::ProfileHistogram1(
+      "completeness_vs_eta", "Completeness;#eta;Completeness",
+      std::array{etaAxis}, "Completeness");
 
   // completeness vs phi
-  cache.completeness_vs_phi.emplace("completeness_vs_phi",
-                                    "Completeness;#phi;Completeness",
-                                    std::array{phiAxis}, "Completeness");
+  cache.completeness_vs_phi = Acts::Experimental::ProfileHistogram1(
+      "completeness_vs_phi", "Completeness;#phi;Completeness",
+      std::array{phiAxis}, "Completeness");
 
   // purity vs pT
-  cache.purity_vs_pT.emplace("purity_vs_pT", "Purity;pT [GeV/c];Purity",
-                             std::array{ptAxis}, "Purity");
+  cache.purity_vs_pT = Acts::Experimental::ProfileHistogram1(
+      "purity_vs_pT", "Purity;pT [GeV/c];Purity", std::array{ptAxis}, "Purity");
 
   // purity vs eta
-  cache.purity_vs_eta.emplace("purity_vs_eta", "Purity;#eta;Purity",
-                              std::array{etaAxis}, "Purity");
+  cache.purity_vs_eta = Acts::Experimental::ProfileHistogram1(
+      "purity_vs_eta", "Purity;#eta;Purity", std::array{etaAxis}, "Purity");
 
   // purity vs phi
-  cache.purity_vs_phi.emplace("purity_vs_phi", "Purity;#phi;Purity",
-                              std::array{phiAxis}, "Purity");
+  cache.purity_vs_phi = Acts::Experimental::ProfileHistogram1(
+      "purity_vs_phi", "Purity;#phi;Purity", std::array{phiAxis}, "Purity");
 }
 
 void TrackQualityPlotTool::fill(
@@ -63,13 +63,13 @@ void TrackQualityPlotTool::fill(
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  cache.completeness_vs_pT->fill({fit_pT}, completeness);
-  cache.completeness_vs_eta->fill({fit_eta}, completeness);
-  cache.completeness_vs_phi->fill({fit_phi}, completeness);
+  cache.completeness_vs_pT.fill({fit_pT}, completeness);
+  cache.completeness_vs_eta.fill({fit_eta}, completeness);
+  cache.completeness_vs_phi.fill({fit_phi}, completeness);
 
-  cache.purity_vs_pT->fill({fit_pT}, purity);
-  cache.purity_vs_eta->fill({fit_eta}, purity);
-  cache.purity_vs_phi->fill({fit_phi}, purity);
+  cache.purity_vs_pT.fill({fit_pT}, purity);
+  cache.purity_vs_eta.fill({fit_eta}, purity);
+  cache.purity_vs_phi.fill({fit_phi}, purity);
 }
 
 }  // namespace ActsExamples

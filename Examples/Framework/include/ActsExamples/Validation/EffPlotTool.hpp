@@ -59,28 +59,28 @@ class EffPlotTool {
   /// @brief Nested Cache struct
   struct Cache {
     /// Tracking efficiency vs eta
-    std::optional<Acts::Experimental::Efficiency1> trackEff_vs_eta;
+    Acts::Experimental::Efficiency1 trackEff_vs_eta;
     /// Tracking efficiency vs phi
-    std::optional<Acts::Experimental::Efficiency1> trackEff_vs_phi;
+    Acts::Experimental::Efficiency1 trackEff_vs_phi;
     /// Tracking efficiency vs pT
-    std::optional<Acts::Experimental::Efficiency1> trackEff_vs_pT;
+    Acts::Experimental::Efficiency1 trackEff_vs_pT;
     /// Tracking efficiency vs log pT
-    std::optional<Acts::Experimental::Efficiency1> trackEff_vs_LogPt;
+    Acts::Experimental::Efficiency1 trackEff_vs_LogPt;
     /// Tracking efficiency vs low pT
-    std::optional<Acts::Experimental::Efficiency1> trackEff_vs_LowPt;
+    Acts::Experimental::Efficiency1 trackEff_vs_LowPt;
     /// Tracking efficiency vs d0
-    std::optional<Acts::Experimental::Efficiency1> trackEff_vs_d0;
+    Acts::Experimental::Efficiency1 trackEff_vs_d0;
     /// Tracking efficiency vs z0
-    std::optional<Acts::Experimental::Efficiency1> trackEff_vs_z0;
+    Acts::Experimental::Efficiency1 trackEff_vs_z0;
     /// Tracking efficiency vs distance to the closest truth particle
-    std::optional<Acts::Experimental::Efficiency1> trackEff_vs_DeltaR;
+    Acts::Experimental::Efficiency1 trackEff_vs_DeltaR;
     /// Tracking efficiency vs production radius
-    std::optional<Acts::Experimental::Efficiency1> trackEff_vs_prodR;
+    Acts::Experimental::Efficiency1 trackEff_vs_prodR;
 
     /// Tracking efficiency vs eta and phi
-    std::optional<Acts::Experimental::Efficiency2> trackEff_vs_eta_phi;
+    Acts::Experimental::Efficiency2 trackEff_vs_eta_phi;
     /// Tracking efficiency vs eta and pT
-    std::optional<Acts::Experimental::Efficiency2> trackEff_vs_eta_pt;
+    Acts::Experimental::Efficiency2 trackEff_vs_eta_pt;
 
     /// Tracking efficiency vs eta in different pT ranges
     std::vector<Acts::Experimental::Efficiency1> trackEff_vs_eta_inPtRanges;

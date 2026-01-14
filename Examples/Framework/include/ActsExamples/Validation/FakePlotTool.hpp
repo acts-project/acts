@@ -39,23 +39,23 @@ class FakePlotTool {
   /// @brief Nested Cache struct
   struct Cache {
     /// Number of reco tracks vs pT scatter plot
-    std::optional<Acts::Experimental::Histogram2> nReco_vs_pT;
+    Acts::Experimental::Histogram2 nReco_vs_pT;
     /// Number of truth-matched reco tracks vs pT scatter plot
-    std::optional<Acts::Experimental::Histogram2> nTruthMatched_vs_pT;
+    Acts::Experimental::Histogram2 nTruthMatched_vs_pT;
     /// Number of fake (truth-unmatched) tracks vs pT scatter plot
-    std::optional<Acts::Experimental::Histogram2> nFake_vs_pT;
+    Acts::Experimental::Histogram2 nFake_vs_pT;
     /// Number of reco tracks vs eta scatter plot
-    std::optional<Acts::Experimental::Histogram2> nReco_vs_eta;
+    Acts::Experimental::Histogram2 nReco_vs_eta;
     /// Number of truth-matched reco tracks vs eta scatter plot
-    std::optional<Acts::Experimental::Histogram2> nTruthMatched_vs_eta;
+    Acts::Experimental::Histogram2 nTruthMatched_vs_eta;
     /// Number of fake (truth-unmatched) tracks vs eta scatter plot
-    std::optional<Acts::Experimental::Histogram2> nFake_vs_eta;
+    Acts::Experimental::Histogram2 nFake_vs_eta;
     /// Tracking fake ratio vs pT
-    std::optional<Acts::Experimental::Efficiency1> fakeRatio_vs_pT;
+    Acts::Experimental::Efficiency1 fakeRatio_vs_pT;
     /// Tracking fake ratio vs eta
-    std::optional<Acts::Experimental::Efficiency1> fakeRatio_vs_eta;
+    Acts::Experimental::Efficiency1 fakeRatio_vs_eta;
     /// Tracking fake ratio vs phi
-    std::optional<Acts::Experimental::Efficiency1> fakeRatio_vs_phi;
+    Acts::Experimental::Efficiency1 fakeRatio_vs_phi;
   };
 
   /// Constructor

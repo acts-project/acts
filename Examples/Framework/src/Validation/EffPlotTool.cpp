@@ -42,48 +42,48 @@ void EffPlotTool::book(Cache& cache) const {
       std::format("pT > {} GeV/c", m_cfg.minTruthPt / Acts::UnitConstants::GeV);
 
   // efficiency vs eta
-  cache.trackEff_vs_eta.emplace(
+  cache.trackEff_vs_eta = Acts::Experimental::Efficiency1(
       "trackeff_vs_eta",
       std::format("Tracking efficiency with {};Truth #eta;Efficiency", ptCutStr),
       std::array{etaAxis});
 
   // efficiency vs phi
-  cache.trackEff_vs_phi.emplace(
+  cache.trackEff_vs_phi = Acts::Experimental::Efficiency1(
       "trackeff_vs_phi",
       std::format("Tracking efficiency with {};Truth #phi;Efficiency", ptCutStr),
       std::array{phiAxis});
 
   // efficiency vs pT
-  cache.trackEff_vs_pT.emplace(
+  cache.trackEff_vs_pT = Acts::Experimental::Efficiency1(
       "trackeff_vs_pT", "Tracking efficiency;Truth pT [GeV/c];Efficiency",
       std::array{ptAxis});
 
   // efficiency vs log pT
-  cache.trackEff_vs_LogPt.emplace(
+  cache.trackEff_vs_LogPt = Acts::Experimental::Efficiency1(
       "trackeff_vs_LogPt", "Tracking efficiency;Truth pT [GeV/c];Efficiency",
       std::array{logPtAxis});
 
   // efficiency vs low pT
-  cache.trackEff_vs_LowPt.emplace(
+  cache.trackEff_vs_LowPt = Acts::Experimental::Efficiency1(
       "trackeff_vs_LowPt", "Tracking efficiency;Truth pT [GeV/c];Efficiency",
       std::array{lowPtAxis});
 
   // efficiency vs d0
-  cache.trackEff_vs_d0.emplace(
+  cache.trackEff_vs_d0 = Acts::Experimental::Efficiency1(
       "trackeff_vs_d0",
       std::format("Tracking efficiency with {};Truth d_0 [mm];Efficiency",
                   ptCutStr),
       std::array{d0Axis});
 
   // efficiency vs z0
-  cache.trackEff_vs_z0.emplace(
+  cache.trackEff_vs_z0 = Acts::Experimental::Efficiency1(
       "trackeff_vs_z0",
       std::format("Tracking efficiency with {};Truth z_0 [mm];Efficiency",
                   ptCutStr),
       std::array{z0Axis});
 
   // efficiency vs distance to the closest truth particle
-  cache.trackEff_vs_DeltaR.emplace(
+  cache.trackEff_vs_DeltaR = Acts::Experimental::Efficiency1(
       "trackeff_vs_DeltaR",
       std::format(
           "Tracking efficiency with {};Closest track #Delta R;Efficiency",
@@ -91,7 +91,7 @@ void EffPlotTool::book(Cache& cache) const {
       std::array{deltaRAxis});
 
   // efficiency vs production radius
-  cache.trackEff_vs_prodR.emplace(
+  cache.trackEff_vs_prodR = Acts::Experimental::Efficiency1(
       "trackeff_vs_prodR",
       std::format(
           "Tracking efficiency with {};Production radius [mm];Efficiency",
@@ -99,7 +99,7 @@ void EffPlotTool::book(Cache& cache) const {
       std::array{prodRAxis});
 
   // efficiency vs eta and phi
-  cache.trackEff_vs_eta_phi.emplace(
+  cache.trackEff_vs_eta_phi = Acts::Experimental::Efficiency2(
       "trackeff_vs_eta_phi",
       std::format(
           "Tracking efficiency with {};Truth #eta;Truth #phi;Efficiency",
@@ -107,7 +107,7 @@ void EffPlotTool::book(Cache& cache) const {
       std::array{etaAxis, phiAxis});
 
   // efficiency vs eta and pT
-  cache.trackEff_vs_eta_pt.emplace(
+  cache.trackEff_vs_eta_pt = Acts::Experimental::Efficiency2(
       "trackeff_vs_eta_pt",
       "Tracking efficiency;Truth #eta;Truth pT [GeV/c];Efficiency",
       std::array{etaAxis, ptAxis});
@@ -165,21 +165,21 @@ void EffPlotTool::fill(const Acts::GeometryContext& gctx, Cache& cache,
 
   // cut on truth pT with the global range for the relevant plots
   if (t_pT >= m_cfg.minTruthPt) {
-    cache.trackEff_vs_eta->fill({t_eta}, status);
-    cache.trackEff_vs_phi->fill({t_phi}, status);
-    cache.trackEff_vs_d0->fill({t_d0}, status);
-    cache.trackEff_vs_z0->fill({t_z0}, status);
-    cache.trackEff_vs_DeltaR->fill({t_deltaR}, status);
-    cache.trackEff_vs_prodR->fill({t_prodR}, status);
+    cache.trackEff_vs_eta.fill({t_eta}, status);
+    cache.trackEff_vs_phi.fill({t_phi}, status);
+    cache.trackEff_vs_d0.fill({t_d0}, status);
+    cache.trackEff_vs_z0.fill({t_z0}, status);
+    cache.trackEff_vs_DeltaR.fill({t_deltaR}, status);
+    cache.trackEff_vs_prodR.fill({t_prodR}, status);
 
-    cache.trackEff_vs_eta_phi->fill({t_eta, t_phi}, status);
+    cache.trackEff_vs_eta_phi.fill({t_eta, t_phi}, status);
   }
 
   // do not cut on truth pT as it is a variable on the plot
-  cache.trackEff_vs_pT->fill({t_pT}, status);
-  cache.trackEff_vs_LogPt->fill({t_pT}, status);
-  cache.trackEff_vs_LowPt->fill({t_pT}, status);
-  cache.trackEff_vs_eta_pt->fill({t_eta, t_pT}, status);
+  cache.trackEff_vs_pT.fill({t_pT}, status);
+  cache.trackEff_vs_LogPt.fill({t_pT}, status);
+  cache.trackEff_vs_LowPt.fill({t_pT}, status);
+  cache.trackEff_vs_eta_pt.fill({t_eta, t_pT}, status);
 
   // fill the efficiency vs eta in different pT ranges
   for (const auto& [ptRange, eff] :

@@ -34,12 +34,12 @@ class TrackQualityPlotTool {
 
   /// @brief Nested Cache struct
   struct Cache {
-    std::optional<Acts::Experimental::ProfileHistogram1> completeness_vs_pT;
-    std::optional<Acts::Experimental::ProfileHistogram1> completeness_vs_eta;
-    std::optional<Acts::Experimental::ProfileHistogram1> completeness_vs_phi;
-    std::optional<Acts::Experimental::ProfileHistogram1> purity_vs_pT;
-    std::optional<Acts::Experimental::ProfileHistogram1> purity_vs_eta;
-    std::optional<Acts::Experimental::ProfileHistogram1> purity_vs_phi;
+    Acts::Experimental::ProfileHistogram1 completeness_vs_pT;
+    Acts::Experimental::ProfileHistogram1 completeness_vs_eta;
+    Acts::Experimental::ProfileHistogram1 completeness_vs_phi;
+    Acts::Experimental::ProfileHistogram1 purity_vs_pT;
+    Acts::Experimental::ProfileHistogram1 purity_vs_eta;
+    Acts::Experimental::ProfileHistogram1 purity_vs_phi;
   };
 
   /// Constructor

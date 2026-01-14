@@ -28,49 +28,49 @@ void FakePlotTool::book(Cache& cache) const {
   ACTS_DEBUG("Initialize the histograms for fake ratio plots");
 
   // number of reco tracks vs pT scatter plots
-  cache.nReco_vs_pT.emplace("nRecoTracks_vs_pT",
-                            "Number of reconstructed track candidates",
-                            std::array{ptAxis, numAxis});
+  cache.nReco_vs_pT = Acts::Experimental::Histogram2(
+      "nRecoTracks_vs_pT", "Number of reconstructed track candidates",
+      std::array{ptAxis, numAxis});
 
   // number of truth-matched tracks vs pT scatter plots
-  cache.nTruthMatched_vs_pT.emplace(
+  cache.nTruthMatched_vs_pT = Acts::Experimental::Histogram2(
       "nTruthMatchedTracks_vs_pT", "Number of truth-matched track candidates",
       std::array{ptAxis, numAxis});
 
   // number of fake tracks vs pT scatter plots
-  cache.nFake_vs_pT.emplace("nFakeTracks_vs_pT",
-                            "Number of fake track candidates",
-                            std::array{ptAxis, numAxis});
+  cache.nFake_vs_pT = Acts::Experimental::Histogram2(
+      "nFakeTracks_vs_pT", "Number of fake track candidates",
+      std::array{ptAxis, numAxis});
 
   // number of reco tracks vs eta scatter plots
-  cache.nReco_vs_eta.emplace("nRecoTracks_vs_eta",
-                             "Number of reconstructed track candidates",
-                             std::array{etaAxis, numAxis});
+  cache.nReco_vs_eta = Acts::Experimental::Histogram2(
+      "nRecoTracks_vs_eta", "Number of reconstructed track candidates",
+      std::array{etaAxis, numAxis});
 
   // number of truth-matched tracks vs eta scatter plots
-  cache.nTruthMatched_vs_eta.emplace(
+  cache.nTruthMatched_vs_eta = Acts::Experimental::Histogram2(
       "nTruthMatchedTracks_vs_eta", "Number of truth-matched track candidates",
       std::array{etaAxis, numAxis});
 
   // number of fake tracks vs eta scatter plots
-  cache.nFake_vs_eta.emplace("nFakeTracks_vs_eta",
-                             "Number of fake track candidates",
-                             std::array{etaAxis, numAxis});
+  cache.nFake_vs_eta = Acts::Experimental::Histogram2(
+      "nFakeTracks_vs_eta", "Number of fake track candidates",
+      std::array{etaAxis, numAxis});
 
   // fake ratio vs pT
-  cache.fakeRatio_vs_pT.emplace("fakeRatio_vs_pT",
-                                "Tracking fake ratio;pT [GeV/c];Fake ratio",
-                                std::array{ptAxis});
+  cache.fakeRatio_vs_pT = Acts::Experimental::Efficiency1(
+      "fakeRatio_vs_pT", "Tracking fake ratio;pT [GeV/c];Fake ratio",
+      std::array{ptAxis});
 
   // fake ratio vs eta
-  cache.fakeRatio_vs_eta.emplace("fakeRatio_vs_eta",
-                                 "Tracking fake ratio;#eta;Fake ratio",
-                                 std::array{etaAxis});
+  cache.fakeRatio_vs_eta = Acts::Experimental::Efficiency1(
+      "fakeRatio_vs_eta", "Tracking fake ratio;#eta;Fake ratio",
+      std::array{etaAxis});
 
   // fake ratio vs phi
-  cache.fakeRatio_vs_phi.emplace("fakeRatio_vs_phi",
-                                 "Tracking fake ratio;#phi;Fake ratio",
-                                 std::array{phiAxis});
+  cache.fakeRatio_vs_phi = Acts::Experimental::Efficiency1(
+      "fakeRatio_vs_phi", "Tracking fake ratio;#phi;Fake ratio",
+      std::array{phiAxis});
 }
 
 void FakePlotTool::fill(Cache& cache,
@@ -81,9 +81,9 @@ void FakePlotTool::fill(Cache& cache,
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  cache.fakeRatio_vs_pT->fill({fit_pT}, status);
-  cache.fakeRatio_vs_eta->fill({fit_eta}, status);
-  cache.fakeRatio_vs_phi->fill({fit_phi}, status);
+  cache.fakeRatio_vs_pT.fill({fit_pT}, status);
+  cache.fakeRatio_vs_eta.fill({fit_eta}, status);
+  cache.fakeRatio_vs_phi.fill({fit_phi}, status);
 }
 
 void FakePlotTool::fill(Cache& cache, const SimParticleState& truthParticle,
@@ -92,17 +92,17 @@ void FakePlotTool::fill(Cache& cache, const SimParticleState& truthParticle,
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
-  cache.nReco_vs_pT->fill(
+  cache.nReco_vs_pT.fill(
       {t_pT, static_cast<double>(nTruthMatchedTracks + nFakeTracks)});
-  cache.nTruthMatched_vs_pT->fill(
+  cache.nTruthMatched_vs_pT.fill(
       {t_pT, static_cast<double>(nTruthMatchedTracks)});
-  cache.nFake_vs_pT->fill({t_pT, static_cast<double>(nFakeTracks)});
+  cache.nFake_vs_pT.fill({t_pT, static_cast<double>(nFakeTracks)});
 
-  cache.nReco_vs_eta->fill(
+  cache.nReco_vs_eta.fill(
       {t_eta, static_cast<double>(nTruthMatchedTracks + nFakeTracks)});
-  cache.nTruthMatched_vs_eta->fill(
+  cache.nTruthMatched_vs_eta.fill(
       {t_eta, static_cast<double>(nTruthMatchedTracks)});
-  cache.nFake_vs_eta->fill({t_eta, static_cast<double>(nFakeTracks)});
+  cache.nFake_vs_eta.fill({t_eta, static_cast<double>(nFakeTracks)});
 }
 
 }  // namespace ActsExamples

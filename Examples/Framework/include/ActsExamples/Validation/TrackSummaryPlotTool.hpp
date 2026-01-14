@@ -35,25 +35,25 @@ class TrackSummaryPlotTool {
   /// @brief Nested Cache struct
   struct Cache {
     /// Number of total states vs eta
-    std::optional<Acts::Experimental::ProfileHistogram1> nStates_vs_eta;
+    Acts::Experimental::ProfileHistogram1 nStates_vs_eta;
     /// Number of non-outlier measurements vs eta
-    std::optional<Acts::Experimental::ProfileHistogram1> nMeasurements_vs_eta;
+    Acts::Experimental::ProfileHistogram1 nMeasurements_vs_eta;
     /// Number of holes vs eta
-    std::optional<Acts::Experimental::ProfileHistogram1> nHoles_vs_eta;
+    Acts::Experimental::ProfileHistogram1 nHoles_vs_eta;
     /// Number of outliers vs eta
-    std::optional<Acts::Experimental::ProfileHistogram1> nOutliers_vs_eta;
+    Acts::Experimental::ProfileHistogram1 nOutliers_vs_eta;
     /// Number of Shared Hits vs eta
-    std::optional<Acts::Experimental::ProfileHistogram1> nSharedHits_vs_eta;
+    Acts::Experimental::ProfileHistogram1 nSharedHits_vs_eta;
     /// Number of total states vs pt
-    std::optional<Acts::Experimental::ProfileHistogram1> nStates_vs_pt;
+    Acts::Experimental::ProfileHistogram1 nStates_vs_pt;
     /// Number of non-outlier measurements vs pt
-    std::optional<Acts::Experimental::ProfileHistogram1> nMeasurements_vs_pt;
+    Acts::Experimental::ProfileHistogram1 nMeasurements_vs_pt;
     /// Number of holes vs pt
-    std::optional<Acts::Experimental::ProfileHistogram1> nHoles_vs_pt;
+    Acts::Experimental::ProfileHistogram1 nHoles_vs_pt;
     /// Number of outliers vs pt
-    std::optional<Acts::Experimental::ProfileHistogram1> nOutliers_vs_pt;
+    Acts::Experimental::ProfileHistogram1 nOutliers_vs_pt;
     /// Number of Shared Hits vs pt
-    std::optional<Acts::Experimental::ProfileHistogram1> nSharedHits_vs_pt;
+    Acts::Experimental::ProfileHistogram1 nSharedHits_vs_pt;
   };
 
   /// Constructor
