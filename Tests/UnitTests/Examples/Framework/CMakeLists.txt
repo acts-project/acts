@@ -1,2 +1,2 @@
-set(unittest_extra_libraries ActsExamplesFramework)
+set(unittest_extra_libraries ActsExamplesFramework ActsExamplesIoRoot)
 add_unittest(DataHandle DataHandleTest.cpp)
