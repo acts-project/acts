@@ -9,15 +9,14 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
-
-class TProfile;
 
 namespace ActsExamples {
 
@@ -26,35 +25,35 @@ class TrackSummaryPlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning::Uniform("#eta", 40, -4, 4)},
-        {"Phi", PlotHelpers::Binning::Uniform("#phi", 100, -3.15, 3.15)},
-        {"Pt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 100)},
-        {"Num", PlotHelpers::Binning::Uniform("N", 30, -0.5, 29.5)}};
+    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
   /// @brief Nested Cache struct
   struct Cache {
     /// Number of total states vs eta
-    TProfile* nStates_vs_eta;
+    std::optional<Acts::Experimental::ProfileHistogram1> nStates_vs_eta;
     /// Number of non-outlier measurements vs eta
-    TProfile* nMeasurements_vs_eta;
+    std::optional<Acts::Experimental::ProfileHistogram1> nMeasurements_vs_eta;
     /// Number of holes vs eta
-    TProfile* nHoles_vs_eta;
+    std::optional<Acts::Experimental::ProfileHistogram1> nHoles_vs_eta;
     /// Number of outliers vs eta
-    TProfile* nOutliers_vs_eta;
+    std::optional<Acts::Experimental::ProfileHistogram1> nOutliers_vs_eta;
     /// Number of Shared Hits vs eta
-    TProfile* nSharedHits_vs_eta;
+    std::optional<Acts::Experimental::ProfileHistogram1> nSharedHits_vs_eta;
     /// Number of total states vs pt
-    TProfile* nStates_vs_pt;
+    std::optional<Acts::Experimental::ProfileHistogram1> nStates_vs_pt;
     /// Number of non-outlier measurements vs pt
-    TProfile* nMeasurements_vs_pt;
+    std::optional<Acts::Experimental::ProfileHistogram1> nMeasurements_vs_pt;
     /// Number of holes vs pt
-    TProfile* nHoles_vs_pt;
+    std::optional<Acts::Experimental::ProfileHistogram1> nHoles_vs_pt;
     /// Number of outliers vs pt
-    TProfile* nOutliers_vs_pt;
+    std::optional<Acts::Experimental::ProfileHistogram1> nOutliers_vs_pt;
     /// Number of Shared Hits vs pt
-    TProfile* nSharedHits_vs_pt;
+    std::optional<Acts::Experimental::ProfileHistogram1> nSharedHits_vs_pt;
   };
 
   /// Constructor
@@ -81,16 +80,6 @@ class TrackSummaryPlotTool {
             std::size_t nStates, std::size_t nMeasurements,
             std::size_t Outliers, std::size_t nHoles,
             std::size_t nSharedHits) const;
-
-  /// @brief write the track info plots to file
-  ///
-  /// @param cache cache object for track info plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the track info plots
-  ///
-  /// @param cache cache object for track info plots
-  void clear(Cache& cache) const;
 
  private:
   /// The Config class
