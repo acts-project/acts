@@ -475,7 +475,8 @@ Line_t generateLine(RandomEngine& engine, const Logger& logger) {
   linePars[toUnderlying(ParIndex::theta)] =
       uniform{5_degree, 175_degree}(engine);
   if ((Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
-      10._degree) || (Acts::abs(linePars[toUnderlying(ParIndex::phi)]) < 15._degree)) {
+       10._degree) ||
+      (Acts::abs(linePars[toUnderlying(ParIndex::phi)]) < 15._degree)) {
     return generateLine(engine, logger);
   }
   Line_t line{linePars};
