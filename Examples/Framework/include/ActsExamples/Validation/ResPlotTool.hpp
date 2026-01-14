@@ -10,17 +10,14 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-
-class TH1F;
-class TH2F;
 
 namespace ActsExamples {
 
@@ -37,55 +34,39 @@ class ResPlotTool {
                                            "theta", "qop", "t"};
 
     /// Binning info for variables
-    std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning::Uniform("#eta", 40, -4, 4)},
-        {"Pt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 100)},
-        {"Pull", PlotHelpers::Binning::Uniform("pull", 100, -5, 5)},
+    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Pull", Acts::Experimental::BoostRegularAxis(100, -5, 5, "pull")},
         {"Residual_d0",
-         PlotHelpers::Binning::Uniform("r_{d0} [mm]", 100, -0.5, 0.5)},
+         Acts::Experimental::BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
         {"Residual_z0",
-         PlotHelpers::Binning::Uniform("r_{z0} [mm]", 100, -0.5, 0.5)},
-        {"Residual_phi",
-         PlotHelpers::Binning::Uniform("r_{#phi} [rad]", 100, -0.01, 0.01)},
-        {"Residual_theta",
-         PlotHelpers::Binning::Uniform("r_{#theta} [rad]", 100, -0.01, 0.01)},
-        {"Residual_qop",
-         PlotHelpers::Binning::Uniform("r_{q/p} [c/GeV]", 100, -0.1, 0.1)},
+         Acts::Experimental::BoostRegularAxis(100, -0.5, 0.5, "r_{z0} [mm]")},
+        {"Residual_phi", Acts::Experimental::BoostRegularAxis(
+                             100, -0.01, 0.01, "r_{#phi} [rad]")},
+        {"Residual_theta", Acts::Experimental::BoostRegularAxis(
+                               100, -0.01, 0.01, "r_{#theta} [rad]")},
+        {"Residual_qop", Acts::Experimental::BoostRegularAxis(
+                             100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
         {"Residual_t",
-         PlotHelpers::Binning::Uniform("r_{t} [s]", 100, -1000, 1000)}};
+         Acts::Experimental::BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
   };
 
   /// @brief Nested Cache struct
   struct Cache {
     /// Residual distribution
-    std::map<std::string, TH1F*> res;
+    std::map<std::string, Acts::Experimental::Histogram1> res;
     /// Residual vs eta scatter plot
-    std::map<std::string, TH2F*> res_vs_eta;
-    /// Residual mean vs eta distribution
-    std::map<std::string, TH1F*> resMean_vs_eta;
-    /// Residual width vs eta distribution
-    std::map<std::string, TH1F*> resWidth_vs_eta;
+    std::map<std::string, Acts::Experimental::Histogram2> res_vs_eta;
     /// Residual vs pT scatter plot
-    std::map<std::string, TH2F*> res_vs_pT;
-    /// Residual mean vs pT distribution
-    std::map<std::string, TH1F*> resMean_vs_pT;
-    /// Residual width vs pT distribution
-    std::map<std::string, TH1F*> resWidth_vs_pT;
+    std::map<std::string, Acts::Experimental::Histogram2> res_vs_pT;
 
     /// Pull distribution
-    std::map<std::string, TH1F*> pull;
+    std::map<std::string, Acts::Experimental::Histogram1> pull;
     /// Pull vs eta scatter plot
-    std::map<std::string, TH2F*> pull_vs_eta;
-    /// Pull mean vs eta distribution
-    std::map<std::string, TH1F*> pullMean_vs_eta;
-    /// Pull width vs eta distribution
-    std::map<std::string, TH1F*> pullWidth_vs_eta;
+    std::map<std::string, Acts::Experimental::Histogram2> pull_vs_eta;
     /// Pull vs pT scatter plot
-    std::map<std::string, TH2F*> pull_vs_pT;
-    /// Pull mean vs pT distribution
-    std::map<std::string, TH1F*> pullMean_vs_pT;
-    /// Pull width vs pT distribution
-    std::map<std::string, TH1F*> pullWidth_vs_pT;
+    std::map<std::string, Acts::Experimental::Histogram2> pull_vs_pT;
   };
 
   /// Constructor
@@ -108,22 +89,6 @@ class ResPlotTool {
   void fill(Cache& cache, const Acts::GeometryContext& gctx,
             const SimParticleState& truthParticle,
             const Acts::BoundTrackParameters& fittedParamters) const;
-
-  /// @brief extract the details of the residual/pull plots and fill details
-  ///
-  /// into separate histograms
-  /// @param cache the cache object for residual/pull histograms
-  void refinement(Cache& cache) const;
-
-  /// @brief write the histograms to output file
-  ///
-  /// @param cache the cache object for residual/pull histograms
-  void write(const Cache& cache) const;
-
-  /// @brief delete the histograms
-  ///
-  /// @param cache the cache object for residual/pull histograms
-  void clear(Cache& cache) const;
 
  private:
   /// The config class
