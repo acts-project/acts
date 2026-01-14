@@ -15,8 +15,6 @@
 #include <format>
 #include <limits>
 
-#include <TEfficiency.h>
-
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -28,15 +26,15 @@ EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("EffPlotTool", lvl)) {}
 
 void EffPlotTool::book(Cache& cache) const {
-  const PlotHelpers::Binning& bEta = m_cfg.varBinning.at("Eta");
-  const PlotHelpers::Binning& bPhi = m_cfg.varBinning.at("Phi");
-  const PlotHelpers::Binning& bPt = m_cfg.varBinning.at("Pt");
-  const PlotHelpers::Binning& bLogPt = m_cfg.varBinning.at("LogPt");
-  const PlotHelpers::Binning& bLowPt = m_cfg.varBinning.at("LowPt");
-  const PlotHelpers::Binning& bD0 = m_cfg.varBinning.at("D0");
-  const PlotHelpers::Binning& bZ0 = m_cfg.varBinning.at("Z0");
-  const PlotHelpers::Binning& bDeltaR = m_cfg.varBinning.at("DeltaR");
-  const PlotHelpers::Binning& bProdR = m_cfg.varBinning.at("prodR");
+  const auto& etaAxis = m_cfg.varBinning.at("Eta");
+  const auto& phiAxis = m_cfg.varBinning.at("Phi");
+  const auto& ptAxis = m_cfg.varBinning.at("Pt");
+  const auto& logPtAxis = m_cfg.varBinning.at("LogPt");
+  const auto& lowPtAxis = m_cfg.varBinning.at("LowPt");
+  const auto& d0Axis = m_cfg.varBinning.at("D0");
+  const auto& z0Axis = m_cfg.varBinning.at("Z0");
+  const auto& deltaRAxis = m_cfg.varBinning.at("DeltaR");
+  const auto& prodRAxis = m_cfg.varBinning.at("prodR");
 
   ACTS_DEBUG("Initialize the histograms for efficiency plots");
 
@@ -44,66 +42,75 @@ void EffPlotTool::book(Cache& cache) const {
       std::format("pT > {} GeV/c", m_cfg.minTruthPt / Acts::UnitConstants::GeV);
 
   // efficiency vs eta
-  cache.trackEff_vs_eta = PlotHelpers::bookEff(
+  cache.trackEff_vs_eta.emplace(
       "trackeff_vs_eta",
-      std::format("Tracking efficiency with {};Truth #eta;Efficiency",
-                  ptCutStr),
-      bEta);
+      std::format("Tracking efficiency with {};Truth #eta;Efficiency", ptCutStr),
+      std::array{etaAxis});
+
   // efficiency vs phi
-  cache.trackEff_vs_phi = PlotHelpers::bookEff(
+  cache.trackEff_vs_phi.emplace(
       "trackeff_vs_phi",
-      std::format("Tracking efficiency with {};Truth #phi;Efficiency",
-                  ptCutStr),
-      bPhi);
+      std::format("Tracking efficiency with {};Truth #phi;Efficiency", ptCutStr),
+      std::array{phiAxis});
+
   // efficiency vs pT
-  cache.trackEff_vs_pT = PlotHelpers::bookEff(
-      "trackeff_vs_pT", "Tracking efficiency;Truth pT [GeV/c];Efficiency", bPt);
+  cache.trackEff_vs_pT.emplace(
+      "trackeff_vs_pT", "Tracking efficiency;Truth pT [GeV/c];Efficiency",
+      std::array{ptAxis});
+
   // efficiency vs log pT
-  cache.trackEff_vs_LogPt = PlotHelpers::bookEff(
+  cache.trackEff_vs_LogPt.emplace(
       "trackeff_vs_LogPt", "Tracking efficiency;Truth pT [GeV/c];Efficiency",
-      bLogPt);
+      std::array{logPtAxis});
+
   // efficiency vs low pT
-  cache.trackEff_vs_LowPt = PlotHelpers::bookEff(
+  cache.trackEff_vs_LowPt.emplace(
       "trackeff_vs_LowPt", "Tracking efficiency;Truth pT [GeV/c];Efficiency",
-      bLowPt);
+      std::array{lowPtAxis});
+
   // efficiency vs d0
-  cache.trackEff_vs_d0 = PlotHelpers::bookEff(
+  cache.trackEff_vs_d0.emplace(
       "trackeff_vs_d0",
       std::format("Tracking efficiency with {};Truth d_0 [mm];Efficiency",
                   ptCutStr),
-      bD0);
+      std::array{d0Axis});
+
   // efficiency vs z0
-  cache.trackEff_vs_z0 = PlotHelpers::bookEff(
+  cache.trackEff_vs_z0.emplace(
       "trackeff_vs_z0",
       std::format("Tracking efficiency with {};Truth z_0 [mm];Efficiency",
                   ptCutStr),
-      bZ0);
-  // efficiancy vs distance to the closest truth particle
-  cache.trackEff_vs_DeltaR = PlotHelpers::bookEff(
+      std::array{z0Axis});
+
+  // efficiency vs distance to the closest truth particle
+  cache.trackEff_vs_DeltaR.emplace(
       "trackeff_vs_DeltaR",
       std::format(
           "Tracking efficiency with {};Closest track #Delta R;Efficiency",
           ptCutStr),
-      bDeltaR);
+      std::array{deltaRAxis});
+
   // efficiency vs production radius
-  cache.trackEff_vs_prodR = PlotHelpers::bookEff(
+  cache.trackEff_vs_prodR.emplace(
       "trackeff_vs_prodR",
       std::format(
           "Tracking efficiency with {};Production radius [mm];Efficiency",
           ptCutStr),
-      bProdR);
+      std::array{prodRAxis});
 
   // efficiency vs eta and phi
-  cache.trackEff_vs_eta_phi = PlotHelpers::bookEff(
+  cache.trackEff_vs_eta_phi.emplace(
       "trackeff_vs_eta_phi",
       std::format(
           "Tracking efficiency with {};Truth #eta;Truth #phi;Efficiency",
           ptCutStr),
-      bEta, bPhi);
+      std::array{etaAxis, phiAxis});
+
   // efficiency vs eta and pT
-  cache.trackEff_vs_eta_pt = PlotHelpers::bookEff(
+  cache.trackEff_vs_eta_pt.emplace(
       "trackeff_vs_eta_pt",
-      "Tracking efficiency;Truth #eta;Truth pT [GeV/c];Efficiency", bEta, bPt);
+      "Tracking efficiency;Truth #eta;Truth pT [GeV/c];Efficiency",
+      std::array{etaAxis, ptAxis});
 
   // efficiency vs eta in different pT ranges
   for (const auto& [i, ptRange] : Acts::enumerate(m_cfg.truthPtRangesForEta)) {
@@ -112,9 +119,10 @@ void EffPlotTool::book(Cache& cache) const {
         "Tracking efficiency with pT in [{}, {}] GeV/c;Truth #eta;Efficiency",
         ptRange.first / Acts::UnitConstants::GeV,
         ptRange.second / Acts::UnitConstants::GeV);
-    cache.trackEff_vs_eta_inPtRanges.push_back(
-        PlotHelpers::bookEff(name, title, bEta));
+    cache.trackEff_vs_eta_inPtRanges.emplace_back(name, title,
+        std::array{etaAxis});
   }
+
   // efficiency vs pT in different abs(eta) ranges
   for (const auto& [i, absEtaRange] :
        Acts::enumerate(m_cfg.truthAbsEtaRangesForPt)) {
@@ -123,55 +131,9 @@ void EffPlotTool::book(Cache& cache) const {
         "Tracking efficiency with |#eta| in [{}, {}];Truth pT "
         "[GeV/c];Efficiency",
         absEtaRange.first, absEtaRange.second);
-    cache.trackEff_vs_pT_inAbsEtaRanges.push_back(
-        PlotHelpers::bookEff(name, title, bPt));
+    cache.trackEff_vs_pT_inAbsEtaRanges.emplace_back(name, title,
+        std::array{ptAxis});
   }
-}
-
-void EffPlotTool::clear(Cache& cache) const {
-  ACTS_DEBUG("Clear the histograms for efficiency plots.");
-
-  delete cache.trackEff_vs_eta;
-  delete cache.trackEff_vs_phi;
-  delete cache.trackEff_vs_pT;
-  delete cache.trackEff_vs_LogPt;
-  delete cache.trackEff_vs_LowPt;
-  delete cache.trackEff_vs_d0;
-  delete cache.trackEff_vs_z0;
-  delete cache.trackEff_vs_DeltaR;
-  delete cache.trackEff_vs_prodR;
-
-  delete cache.trackEff_vs_eta_phi;
-  delete cache.trackEff_vs_eta_pt;
-
-  for (TEfficiency* eff : cache.trackEff_vs_eta_inPtRanges) {
-    delete eff;
-  }
-  for (TEfficiency* eff : cache.trackEff_vs_pT_inAbsEtaRanges) {
-    delete eff;
-  }
-}
-
-void EffPlotTool::write(const Cache& cache) const {
-  ACTS_DEBUG("Write the plots to output file.");
-
-  cache.trackEff_vs_eta->Write();
-  for (const TEfficiency* eff : cache.trackEff_vs_eta_inPtRanges) {
-    eff->Write();
-  }
-  cache.trackEff_vs_eta_phi->Write();
-  cache.trackEff_vs_eta_pt->Write();
-  cache.trackEff_vs_phi->Write();
-  cache.trackEff_vs_pT->Write();
-  for (const TEfficiency* eff : cache.trackEff_vs_pT_inAbsEtaRanges) {
-    eff->Write();
-  }
-  cache.trackEff_vs_LogPt->Write();
-  cache.trackEff_vs_LowPt->Write();
-  cache.trackEff_vs_d0->Write();
-  cache.trackEff_vs_z0->Write();
-  cache.trackEff_vs_DeltaR->Write();
-  cache.trackEff_vs_prodR->Write();
 }
 
 void EffPlotTool::fill(const Acts::GeometryContext& gctx, Cache& cache,
@@ -203,27 +165,27 @@ void EffPlotTool::fill(const Acts::GeometryContext& gctx, Cache& cache,
 
   // cut on truth pT with the global range for the relevant plots
   if (t_pT >= m_cfg.minTruthPt) {
-    PlotHelpers::fillEff(cache.trackEff_vs_eta, t_eta, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_phi, t_phi, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_d0, t_d0, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_z0, t_z0, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_DeltaR, t_deltaR, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_prodR, t_prodR, status);
+    cache.trackEff_vs_eta->fill({t_eta}, status);
+    cache.trackEff_vs_phi->fill({t_phi}, status);
+    cache.trackEff_vs_d0->fill({t_d0}, status);
+    cache.trackEff_vs_z0->fill({t_z0}, status);
+    cache.trackEff_vs_DeltaR->fill({t_deltaR}, status);
+    cache.trackEff_vs_prodR->fill({t_prodR}, status);
 
-    PlotHelpers::fillEff(cache.trackEff_vs_eta_phi, t_eta, t_phi, status);
+    cache.trackEff_vs_eta_phi->fill({t_eta, t_phi}, status);
   }
 
   // do not cut on truth pT as it is a variable on the plot
-  PlotHelpers::fillEff(cache.trackEff_vs_pT, t_pT, status);
-  PlotHelpers::fillEff(cache.trackEff_vs_LogPt, t_pT, status);
-  PlotHelpers::fillEff(cache.trackEff_vs_LowPt, t_pT, status);
-  PlotHelpers::fillEff(cache.trackEff_vs_eta_pt, t_eta, t_pT, status);
+  cache.trackEff_vs_pT->fill({t_pT}, status);
+  cache.trackEff_vs_LogPt->fill({t_pT}, status);
+  cache.trackEff_vs_LowPt->fill({t_pT}, status);
+  cache.trackEff_vs_eta_pt->fill({t_eta, t_pT}, status);
 
   // fill the efficiency vs eta in different pT ranges
   for (const auto& [ptRange, eff] :
        Acts::zip(m_cfg.truthPtRangesForEta, cache.trackEff_vs_eta_inPtRanges)) {
     if (t_pT >= ptRange.first && t_pT < ptRange.second) {
-      PlotHelpers::fillEff(eff, t_eta, status);
+      eff.fill({t_eta}, status);
     }
   }
 
@@ -231,7 +193,7 @@ void EffPlotTool::fill(const Acts::GeometryContext& gctx, Cache& cache,
   for (const auto& [absEtaRange, eff] : Acts::zip(
            m_cfg.truthAbsEtaRangesForPt, cache.trackEff_vs_pT_inAbsEtaRanges)) {
     if (t_absEta >= absEtaRange.first && t_absEta < absEtaRange.second) {
-      PlotHelpers::fillEff(eff, t_pT, status);
+      eff.fill({t_pT}, status);
     }
   }
 }
