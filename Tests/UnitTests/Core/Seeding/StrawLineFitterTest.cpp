@@ -38,12 +38,11 @@ namespace ActsTests {
 using GenCfg_t = MeasurementGenerator::Config;
 
 void runCalibratorTest(const SpCalibrator* calibrator, TFile& outFile) {
-
   ACTS_INFO("Start Calibrator Test.");
 
   const int Nbin = 1000;
-  const double& tMin = SpCalibrator::s_minDriftTime/ 1._ns;
-  const double& tMax = SpCalibrator::s_maxDriftTime/ 1._ns;
+  const double& tMin = SpCalibrator::s_minDriftTime / 1._ns;
+  const double& tMax = SpCalibrator::s_maxDriftTime / 1._ns;
   TH1D h_rt("h_rt", "R-T relation; t [ns]; r [mm]", Nbin, tMin, tMax);
   TH1D h_vt("h_vt", "V-T relation; t [ns]; v [mm/ns]", Nbin, tMin, tMax);
   TH1D h_at("h_at", "A-T relation; t [ns]; a [mm/ns^2]", Nbin, tMin, tMax);
@@ -56,7 +55,8 @@ void runCalibratorTest(const SpCalibrator* calibrator, TFile& outFile) {
     const double t = tMin + (i + 0.5) * (tMax - tMin) / Nbin;
     h_rt.SetBinContent(i, calibrator->driftRadius(t * 1._ns));
     h_vt.SetBinContent(i, calibrator->driftVelocity(t * 1._ns) * 1._ns);
-    h_at.SetBinContent(i, calibrator->driftAcceleration(t * 1._ns) * 1._ns * 1._ns);
+    h_at.SetBinContent(
+        i, calibrator->driftAcceleration(t * 1._ns) * 1._ns * 1._ns);
 
     const double r = rMin + (i + 0.5) * (rMax - rMin) / Nbin;
     h_tr.SetBinContent(i, calibrator->driftTime(r) / 1._ns);
@@ -146,7 +146,8 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
   auto calibrator = std::make_unique<SpCalibrator>();
   std::size_t goodFits{0};
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
-    ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Start event " << (evt + 1) << "/" << nEvents << ".");
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Start event " << (evt + 1)
+                        << "/" << nEvents << ".");
     const auto line = generateLine(engine, logger());
     fillPars(line.parameters(), trueY0, trueX0, trueTheta, truePhi);
     fillProjected(line.parameters(), trueProjTheta, trueProjPhi);
@@ -226,7 +227,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
       std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
 
   runCalibratorTest(std::make_unique<SpCalibrator>().get(), *outFile);
-  
+
   // Base configuration for the fit
   Fitter_t::Config fitCfg{};
   fitCfg.useHessian = false;
@@ -284,10 +285,11 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   auto launchTest = [&](const std::string& testName, const GenCfg_t& genCfg,
                         const unsigned seed) {
     sendSleep();
-    timings.emplace_back(
-        "Fast" + testName, std::async(std::launch::async, [&]() {
-          return runFitTest(fastOnly(fitCfg), genCfg, "Fast" + testName, seed, *outFile);
-        }));
+    timings.emplace_back("Fast" + testName,
+                         std::async(std::launch::async, [&]() {
+                           return runFitTest(fastOnly(fitCfg), genCfg,
+                                             "Fast" + testName, seed, *outFile);
+                         }));
     sendSleep();
     timings.emplace_back(testName, std::async(std::launch::async, [&]() {
                            return runFitTest(fitCfg, genCfg, testName, seed,
@@ -297,26 +299,25 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     sendSleep();
     timings.emplace_back(
         "FastPre" + testName, std::async(std::launch::async, [&]() {
-          return runFitTest(fastPreFit(fitCfg), genCfg, "FastPre" + testName, seed,
-                            *outFile);
+          return runFitTest(fastPreFit(fitCfg), genCfg, "FastPre" + testName,
+                            seed, *outFile);
         }));
     sendSleep();
     timings.emplace_back(
         "Fast" + testName + "T0", std::async(std::launch::async, [&]() {
-          return runFitTest(enableTime(fastOnly(fitCfg)), genCfg, "Fast" + testName + "T0", seed,
-                            *outFile);
+          return runFitTest(enableTime(fastOnly(fitCfg)), genCfg,
+                            "Fast" + testName + "T0", seed, *outFile);
         }));
     sendSleep();
-    timings.emplace_back(
-        testName + "T0", std::async(std::launch::async, [&]() {
-          return runFitTest(enableTime(fitCfg), genCfg, testName + "T0", seed,
-                            *outFile);
-        }));
+    timings.emplace_back(testName + "T0", std::async(std::launch::async, [&]() {
+                           return runFitTest(enableTime(fitCfg), genCfg,
+                                             testName + "T0", seed, *outFile);
+                         }));
     sendSleep();
     timings.emplace_back(
         "FastPre" + testName + "T0", std::async(std::launch::async, [&]() {
-          return runFitTest(enableTime(fastPreFit(fitCfg)), genCfg, "FastPre" + testName + "T0", seed,
-                            *outFile);
+          return runFitTest(enableTime(fastPreFit(fitCfg)), genCfg,
+                            "FastPre" + testName + "T0", seed, *outFile);
         }));
     sendSleep();
   };
