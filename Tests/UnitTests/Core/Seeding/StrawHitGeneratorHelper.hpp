@@ -208,7 +208,7 @@ class SpCalibrator {
     const double x = normDriftTime(t);
     double v{0.0};
     for (std::size_t n = 1; n < s_TtoRcoeffs.size(); ++n) {
-      v += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyUn(x, n, 1u);
+      v += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyTn(x, n, 1u);
     }
     return v * s_timeNormFactor;
   }
@@ -217,7 +217,7 @@ class SpCalibrator {
     const double x = normDriftTime(t);
     double a{0.0};
     for (std::size_t n = 2; n < s_TtoRcoeffs.size(); ++n) {
-      a += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyUn(x, n, 2u);
+      a += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyTn(x, n, 2u);
     }
     return a * Acts::square(s_timeNormFactor);
   }
@@ -335,7 +335,7 @@ class SpCalibrator {
   /// @param trackDir: Direction of the track in the local frame
   /// @param timeOffSet: Offset in the time of arrival (To be implemented)
   /// @param uncalibCont: Uncalibrated composite space point container
-  Container_t calibrate(const Acts::CalibrationContext& /*ctx*/,
+  Container_t calibrate(const Acts::CalibrationContext& ctx,
                         const Vector3& trackPos, const Vector3& trackDir,
                         const double timeOffSet,
                         const Container_t& uncalibCont) const {
@@ -344,7 +344,7 @@ class SpCalibrator {
         uncalibCont, std::back_inserter(calibMeas), [&](const auto& calibMe) {
           return calibrate(ctx, trackPos, trackDir, timeOffSet, *calibMe);
         });
-    return uncalibCont;
+    return calibMeas;
   }
   /// @brief Updates the sign of the Straw's drift radii indicating that they are on the left (-1)
   ///        or right side (+1) of the track line
@@ -474,8 +474,8 @@ Line_t generateLine(RandomEngine& engine, const Logger& logger) {
   linePars[toUnderlying(ParIndex::y0)] = uniform{-500., 500.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
       uniform{5_degree, 175_degree}(engine);
-  if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
-      3_degree) {
+  if ((Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
+      10._degree) || (Acts::abs(linePars[toUnderlying(ParIndex::phi)]) < 15._degree)) {
     return generateLine(engine, logger);
   }
   Line_t line{linePars};
