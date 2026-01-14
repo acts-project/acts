@@ -20,8 +20,6 @@
 #include <TFile.h>
 #include <TH1D.h>
 #include <TTree.h>
-#include <TH1D.h>
-#include "Acts/Utilities/detail/Polynomials.hpp"
 
 #include "StrawHitGeneratorHelper.hpp"
 
@@ -29,7 +27,7 @@ using TimePoint_t = std::chrono::system_clock::time_point;
 using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 1e4;
+constexpr std::size_t nEvents = 1;
 constexpr long int nThreads = 1;
 std::mutex writeMutex{};
 
@@ -146,7 +144,6 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
   };
   // Pass a localToGlobal transform to the calibrator to proper handling the ToF
   auto calibrator = std::make_unique<SpCalibrator>();
-  runCalibratorTest(calibrator.get(), outFile);
   std::size_t goodFits{0};
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Start event " << (evt + 1) << "/" << nEvents << ".");
@@ -179,7 +176,6 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
       outTree->Fill();
       continue;
     }
-    ACTS_INFO(__func__ << "() " << __LINE__ << " - Fit Successful.");
 
     ACTS_DEBUG("Fit Successful.");
     converged = 1;
@@ -229,6 +225,9 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   auto outFile =
       std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
 
+  runCalibratorTest(std::make_unique<SpCalibrator>().get(), *outFile);
+  
+  // Base configuration for the fit
   Fitter_t::Config fitCfg{};
   fitCfg.useHessian = false;
   fitCfg.calcAlongStraw = true;
@@ -240,12 +239,26 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
       std::array{-179._degree, 179._degree};
   fitCfg.ranges[toUnderlying(FitParIndex::x0)] = std::array{-1000., 1000.};
   fitCfg.ranges[toUnderlying(FitParIndex::y0)] = std::array{-1000., 1000.};
-  /// Configuration for fast pre-fit
-  Fitter_t::Config fastPreCfg{fitCfg};
-  fastPreCfg.useFastFitter = true;
-  /// Configuration for fast only fit
-  Fitter_t::Config fastCfg{fastPreCfg};
-  fastCfg.fastPreFitter = false;
+
+  auto fastPreFit = [](Fitter_t::Config cfg) {
+    cfg.useFastFitter = true;
+    cfg.fastPreFitter = true;
+    return cfg;
+  };
+
+  auto fastOnly = [](Fitter_t::Config cfg) {
+    cfg.useFastFitter = true;
+    cfg.fastPreFitter = false;
+    return cfg;
+  };
+
+  auto enableTime = [](Fitter_t::Config cfg) {
+    cfg.useHessian = true;
+    cfg.recalibrate = true;
+    cfg.fitT0 = true;
+    cfg.ranges[toUnderlying(FitParIndex::t0)] = std::array{-150._ns, 150._ns};
+    return cfg;
+  };
 
   // 2D straw only test
   std::vector<std::pair<std::string, std::future<long int>>> timings{};
@@ -273,7 +286,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     sendSleep();
     timings.emplace_back(
         "Fast" + testName, std::async(std::launch::async, [&]() {
-          return runFitTest(fastCfg, genCfg, "Fast" + testName, seed, *outFile);
+          return runFitTest(fastOnly(fitCfg), genCfg, "Fast" + testName, seed, *outFile);
         }));
     sendSleep();
     timings.emplace_back(testName, std::async(std::launch::async, [&]() {
@@ -284,7 +297,25 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     sendSleep();
     timings.emplace_back(
         "FastPre" + testName, std::async(std::launch::async, [&]() {
-          return runFitTest(fastPreCfg, genCfg, "FastPre" + testName, seed,
+          return runFitTest(fastPreFit(fitCfg), genCfg, "FastPre" + testName, seed,
+                            *outFile);
+        }));
+    sendSleep();
+    timings.emplace_back(
+        "Fast" + testName + "T0", std::async(std::launch::async, [&]() {
+          return runFitTest(enableTime(fastOnly(fitCfg)), genCfg, "Fast" + testName + "T0", seed,
+                            *outFile);
+        }));
+    sendSleep();
+    timings.emplace_back(
+        testName + "T0", std::async(std::launch::async, [&]() {
+          return runFitTest(enableTime(fitCfg), genCfg, testName + "T0", seed,
+                            *outFile);
+        }));
+    sendSleep();
+    timings.emplace_back(
+        "FastPre" + testName + "T0", std::async(std::launch::async, [&]() {
+          return runFitTest(enableTime(fastPreFit(fitCfg)), genCfg, "FastPre" + testName + "T0", seed,
                             *outFile);
         }));
     sendSleep();
