@@ -9,17 +9,15 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
-
-class TEfficiency;
-class TProfile;
 
 namespace ActsExamples {
 
@@ -34,27 +32,27 @@ class DuplicationPlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning::Uniform("#eta", 40, -4, 4)},
-        {"Phi", PlotHelpers::Binning::Uniform("#phi", 100, -3.15, 3.15)},
-        {"Pt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 100)},
-        {"Num", PlotHelpers::Binning::Uniform("N", 30, -0.5, 29.5)}};
+    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
   /// @brief Nested Cache struct
   struct Cache {
     /// Number of duplicated tracks vs pT
-    TProfile* nDuplicated_vs_pT;
+    std::optional<Acts::Experimental::ProfileHistogram1> nDuplicated_vs_pT;
     /// Number of duplicated tracks vs eta
-    TProfile* nDuplicated_vs_eta;
+    std::optional<Acts::Experimental::ProfileHistogram1> nDuplicated_vs_eta;
     /// Number of duplicated tracks vs phi
-    TProfile* nDuplicated_vs_phi;
+    std::optional<Acts::Experimental::ProfileHistogram1> nDuplicated_vs_phi;
     /// Tracking duplication ratio vs pT
-    TEfficiency* duplicationRatio_vs_pT;
+    std::optional<Acts::Experimental::Efficiency1> duplicationRatio_vs_pT;
     /// Tracking duplication ratio vs eta
-    TEfficiency* duplicationRatio_vs_eta;
+    std::optional<Acts::Experimental::Efficiency1> duplicationRatio_vs_eta;
     /// Tracking duplication ratio vs phi
-    TEfficiency* duplicationRatio_vs_phi;
+    std::optional<Acts::Experimental::Efficiency1> duplicationRatio_vs_phi;
   };
 
   /// Constructor
@@ -83,16 +81,6 @@ class DuplicationPlotTool {
   /// @param nDuplicatedTracks the number of duplicated tracks
   void fill(Cache& cache, const SimParticleState& truthParticle,
             std::size_t nDuplicatedTracks) const;
-
-  /// @brief write the duplication plots to file
-  ///
-  /// @param cache cache object for duplication plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the duplication plots
-  ///
-  /// @param cache cache object for duplication plots
-  void clear(Cache& cache) const;
 
  private:
   /// The Config class

@@ -11,13 +11,9 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
-#include <TEfficiency.h>
-#include <TProfile.h>
-
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
-using Acts::VectorHelpers::theta;
 
 namespace ActsExamples {
 
@@ -27,55 +23,40 @@ DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
       m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl)) {}
 
 void DuplicationPlotTool::book(Cache& cache) const {
-  PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
-  PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
-  PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
-  PlotHelpers::Binning bNum = m_cfg.varBinning.at("Num");
+  const auto& ptAxis = m_cfg.varBinning.at("Pt");
+  const auto& etaAxis = m_cfg.varBinning.at("Eta");
+  const auto& phiAxis = m_cfg.varBinning.at("Phi");
   ACTS_DEBUG("Initialize the histograms for duplication ratio plots");
 
   // duplication ratio vs pT
-  cache.duplicationRatio_vs_pT = PlotHelpers::bookEff(
+  cache.duplicationRatio_vs_pT.emplace(
       "duplicationRatio_vs_pT",
-      "Duplication ratio;pT [GeV/c];Duplication ratio", bPt);
+      "Duplication ratio;pT [GeV/c];Duplication ratio", std::array{ptAxis});
+
   // duplication ratio vs eta
-  cache.duplicationRatio_vs_eta =
-      PlotHelpers::bookEff("duplicationRatio_vs_eta",
-                           "Duplication ratio;#eta;Duplication ratio", bEta);
+  cache.duplicationRatio_vs_eta.emplace(
+      "duplicationRatio_vs_eta", "Duplication ratio;#eta;Duplication ratio",
+      std::array{etaAxis});
+
   // duplication ratio vs phi
-  cache.duplicationRatio_vs_phi =
-      PlotHelpers::bookEff("duplicationRatio_vs_phi",
-                           "Duplication ratio;#phi;Duplication ratio", bPhi);
+  cache.duplicationRatio_vs_phi.emplace(
+      "duplicationRatio_vs_phi", "Duplication ratio;#phi;Duplication ratio",
+      std::array{phiAxis});
 
   // duplication number vs pT
-  cache.nDuplicated_vs_pT = PlotHelpers::bookProf(
-      "nDuplicated_vs_pT", "Number of duplicated track candidates", bPt, bNum);
+  cache.nDuplicated_vs_pT.emplace("nDuplicated_vs_pT",
+                                  "Number of duplicated track candidates",
+                                  std::array{ptAxis}, "N");
+
   // duplication number vs eta
-  cache.nDuplicated_vs_eta = PlotHelpers::bookProf(
-      "nDuplicated_vs_eta", "Number of duplicated track candidates", bEta,
-      bNum);
+  cache.nDuplicated_vs_eta.emplace("nDuplicated_vs_eta",
+                                   "Number of duplicated track candidates",
+                                   std::array{etaAxis}, "N");
+
   // duplication number vs phi
-  cache.nDuplicated_vs_phi = PlotHelpers::bookProf(
-      "nDuplicated_vs_phi", "Number of duplicated track candidates", bPhi,
-      bNum);
-}
-
-void DuplicationPlotTool::clear(Cache& cache) const {
-  delete cache.duplicationRatio_vs_pT;
-  delete cache.duplicationRatio_vs_eta;
-  delete cache.duplicationRatio_vs_phi;
-  delete cache.nDuplicated_vs_pT;
-  delete cache.nDuplicated_vs_eta;
-  delete cache.nDuplicated_vs_phi;
-}
-
-void DuplicationPlotTool::write(const Cache& cache) const {
-  ACTS_DEBUG("Write the plots to output file.");
-  cache.duplicationRatio_vs_pT->Write();
-  cache.duplicationRatio_vs_eta->Write();
-  cache.duplicationRatio_vs_phi->Write();
-  cache.nDuplicated_vs_pT->Write();
-  cache.nDuplicated_vs_eta->Write();
-  cache.nDuplicated_vs_phi->Write();
+  cache.nDuplicated_vs_phi.emplace("nDuplicated_vs_phi",
+                                   "Number of duplicated track candidates",
+                                   std::array{phiAxis}, "N");
 }
 
 void DuplicationPlotTool::fill(
@@ -86,9 +67,9 @@ void DuplicationPlotTool::fill(
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  PlotHelpers::fillEff(cache.duplicationRatio_vs_pT, fit_pT, status);
-  PlotHelpers::fillEff(cache.duplicationRatio_vs_eta, fit_eta, status);
-  PlotHelpers::fillEff(cache.duplicationRatio_vs_phi, fit_phi, status);
+  cache.duplicationRatio_vs_pT->fill({fit_pT}, status);
+  cache.duplicationRatio_vs_eta->fill({fit_eta}, status);
+  cache.duplicationRatio_vs_phi->fill({fit_phi}, status);
 }
 
 void DuplicationPlotTool::fill(Cache& cache,
@@ -98,9 +79,11 @@ void DuplicationPlotTool::fill(Cache& cache,
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
-  PlotHelpers::fillProf(cache.nDuplicated_vs_pT, t_pT, nDuplicatedTracks);
-  PlotHelpers::fillProf(cache.nDuplicated_vs_eta, t_eta, nDuplicatedTracks);
-  PlotHelpers::fillProf(cache.nDuplicated_vs_phi, t_phi, nDuplicatedTracks);
+  cache.nDuplicated_vs_pT->fill({t_pT}, static_cast<double>(nDuplicatedTracks));
+  cache.nDuplicated_vs_eta->fill({t_eta},
+                                 static_cast<double>(nDuplicatedTracks));
+  cache.nDuplicated_vs_phi->fill({t_phi},
+                                 static_cast<double>(nDuplicatedTracks));
 }
 
 }  // namespace ActsExamples
