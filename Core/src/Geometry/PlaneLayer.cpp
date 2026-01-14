@@ -57,8 +57,8 @@ PlaneSurface& PlaneLayer::surfaceRepresentation() {
 }
 
 void PlaneLayer::buildApproachDescriptor() {
-  // delete it
   const GeometryContext gctx{};
+  // delete it
   m_approachDescriptor.reset(nullptr);
   // delete the surfaces
   std::vector<std::shared_ptr<const Surface>> aSurfaces;
