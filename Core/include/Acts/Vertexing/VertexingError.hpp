@@ -14,18 +14,30 @@
 namespace Acts {
 
 /// Error codes for vertexing operations
+/// @ingroup errors
 enum class VertexingError {
   // ensure all values are non-zero
+  /// Numeric failure in calculation.
   NumericFailure = 1,
+  /// Empty input provided.
   EmptyInput,
+  /// Error while finding vertex seed.
   SeedingError,
+  /// Unable to converge.
   NotConverged,
+  /// Unable to find element.
   ElementNotFound,
+  /// No covariance provided.
   NoCovariance,
+  /// Encountered non-invertible matrix.
   SingularMatrix,
+  /// Encountered negative or zero variance.
   NonPositiveVariance,
+  /// Encountered a matrix that is not positive definite.
   MatrixNotPositiveDefinite,
+  /// Invalid input provided.
   InvalidInput,
+  /// Could not remove track from collection.
   CouldNotRemoveTrack,
 };
 

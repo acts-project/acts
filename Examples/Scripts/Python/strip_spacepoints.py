@@ -18,7 +18,6 @@ def createStripSpacepoints(
     inputParticlePath: Optional[Path] = None,
     inputHitsPath: Optional[Path] = None,
     decorators=[],
-    reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (

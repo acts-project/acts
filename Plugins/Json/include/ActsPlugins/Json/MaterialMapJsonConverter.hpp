@@ -32,6 +32,9 @@
 #include <nlohmann/json.hpp>
 
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 class ISurfaceMaterial;
 class ITrackingGeometryJsonDecorator;
 class IVolumeMaterial;
@@ -163,4 +166,5 @@ class MaterialMapJsonConverter {
   const Logger& logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace Acts

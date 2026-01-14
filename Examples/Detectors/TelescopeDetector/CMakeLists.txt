@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesDetectorTelescope
-    SHARED
     src/TelescopeDetector.cpp
     src/TelescopeDetectorElement.cpp
     src/BuildTelescopeDetector.cpp

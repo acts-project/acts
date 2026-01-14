@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeConstruction) {
   // Test Construction
   CuboidVolumeBounds box(hx, hy, hz);
 
-  // Test initilizer list construction
+  // Test initializer list construction
   CuboidVolumeBounds init(
       {{CuboidVolumeBounds::BoundValues::eHalfLengthX, hx},
        {CuboidVolumeBounds::BoundValues::eHalfLengthY, hy},
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeException) {
   BOOST_CHECK_THROW(CuboidVolumeBounds(hx, -hy, -hz), std::logic_error);
   // Other iterations : all
   BOOST_CHECK_THROW(CuboidVolumeBounds(-hx, -hy, -hz), std::logic_error);
-  // Initilizer list with missing bound values
+  // Initializer list with missing bound values
   BOOST_CHECK_THROW(
       CuboidVolumeBounds({{CuboidVolumeBounds::BoundValues::eHalfLengthX, hx},
                           {CuboidVolumeBounds::BoundValues::eHalfLengthZ, hz}}),

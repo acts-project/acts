@@ -11,8 +11,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <iostream>
 #include <numbers>
+#include <utility>
 namespace Acts::Experimental {
 
 GbtsEtaBin::GbtsEtaBin() {
@@ -29,7 +29,7 @@ GbtsEtaBin::~GbtsEtaBin() {
 }
 
 void GbtsEtaBin::sortByPhi() {
-  std::vector<std::pair<float, const GbtsNode*> > phiBuckets[32];
+  std::vector<std::pair<float, const GbtsNode*>> phiBuckets[32];
 
   int nBuckets = 31;
 
@@ -101,38 +101,13 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
         std::pair<float, unsigned int>(phi + 2 * std::numbers::pi, nIdx));
   }
 }
-GbtsDataStorage::GbtsDataStorage(const GbtsGeometry& geometry,
-                                 const SeedFinderGbtsConfig& config)
-    : m_geo(geometry), m_config(config) {
+GbtsDataStorage::GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
+                                 const SeedFinderGbtsConfig& config,
+                                 const GbtsMLLookupTable& parseLutFile)
+    : m_geo(std::move(geometry)), m_config(config), m_mlLUT(parseLutFile) {
   // parse the look up table if useML is true
-  if (m_config.useML) {
-    if (m_config.lutInputFile.empty()) {
-      throw std::runtime_error("Cannot find ML predictor LUT file");
-    } else {
-      m_mlLUT.reserve(100);
-      std::ifstream ifs(std::string(m_config.lutInputFile).c_str());
 
-      if (!ifs.is_open()) {
-        throw std::runtime_error("Failed to open LUT file");
-      }
-
-      float cl_width{}, min1{}, max1{}, min2{}, max2{};
-
-      while (ifs >> cl_width >> min1 >> max1 >> min2 >> max2) {
-        std::array<float, 5> lut_line = {cl_width, min1, max1, min2, max2};
-        m_mlLUT.emplace_back(lut_line);
-      }
-      if (!ifs.eof()) {
-        // ended if parse error present, not clean EOF
-
-        throw std::runtime_error("Stopped reading LUT file due to parse error");
-      }
-
-      ifs.close();
-    }
-  }
-
-  m_etaBins.resize(geometry.num_bins());
+  m_etaBins.resize(m_geo->num_bins());
 }
 
 GbtsDataStorage::~GbtsDataStorage() = default;
@@ -142,7 +117,7 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
                                          bool useML) {
   int nLoaded = 0;
 
-  const GbtsLayer* pL = m_geo.getGbtsLayerByIndex(layerIndex);
+  const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
 
   if (pL == nullptr) {
     return -1;
@@ -179,7 +154,7 @@ int GbtsDataStorage::loadStripGraphNodes(short layerIndex,
                                          const std::vector<GbtsNode>& coll) {
   int nLoaded = 0;
 
-  const GbtsLayer* pL = m_geo.getGbtsLayerByIndex(layerIndex);
+  const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
 
   if (pL == nullptr) {
     return -1;
@@ -218,7 +193,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
   for (auto& b : m_etaBins) {
     b.initializeNodes();
     if (!b.m_vn.empty()) {
-      b.m_layerKey = m_geo.getGbtsLayerKeyByIndex((*b.m_vn.begin())->m_layer);
+      b.m_layerKey = m_geo->getGbtsLayerKeyByIndex((*b.m_vn.begin())->m_layer);
     }
   }
 
@@ -226,10 +201,10 @@ void GbtsDataStorage::initializeNodes(bool useML) {
     return;
   }
 
-  unsigned int nL = m_geo.num_layers();
+  unsigned int nL = m_geo->num_layers();
 
   for (unsigned int layerIdx = 0; layerIdx < nL; layerIdx++) {
-    const GbtsLayer* pL = m_geo.getGbtsLayerByIndex(layerIdx);
+    const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIdx);
 
     if (pL->m_layer.m_subdet <
         20000) {  // skip strips volumes: layers in range [1200X-1400X]
