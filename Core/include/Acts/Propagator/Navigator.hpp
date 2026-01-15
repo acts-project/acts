@@ -166,6 +166,9 @@ class Navigator {
     /// Navigation options configuration
     Options options;
 
+    /// Management of policy state allocation and deallocation
+    NavigationPolicyStateManager policyStateManager;
+
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};

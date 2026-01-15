@@ -20,43 +20,90 @@ namespace Acts {
 class TrackingVolume;
 class INavigationPolicy;
 class Surface;
+class Navigator;
+
 class NavigationPolicyStateManager;
 
 class NavigationPolicyState {
  public:
   template <typename T>
   T& as() {
-    return m_payload.template as<T>();
+    return std::any_cast<T&>(payload());
   }
 
   template <typename T>
   const T& as() const {
-    return m_payload.template as<T>();
+    return std::any_cast<T&>(payload());
   }
-
-  template <typename T, typename... Args>
-  explicit NavigationPolicyState(Args&&... args)
-      : m_payload(std::in_place_type<T>, std::forward<Args>(args)...) {}
 
   NavigationPolicyState() = default;
 
-  template <typename T, typename... Args>
-  T& emplace(Args&&... args) {
-    return m_payload.template emplace<T>(std::forward<Args>(args)...);
-  }
-
-  // NavigationPolicyState(const NavigationPolicyState& other) = delete;
-  // NavigationPolicyState& operator=(const NavigationPolicyState& other) =
-  // delete; NavigationPolicyState(const NavigationPolicyState&& other) =
-  // delete; NavigationPolicyState& operator=(const NavigationPolicyState&&
-  // other) =
-  //     delete;
+  bool empty() const { return m_manager == nullptr; }
 
  private:
-  Acts::Any m_payload;
+  NavigationPolicyState(NavigationPolicyStateManager& manager,
+                        std::size_t index)
+      : m_manager(&manager), m_index(index) {}
+
+  std::any& payload();
+  const std::any& payload() const;
+
+  NavigationPolicyStateManager* m_manager = nullptr;
+  std::size_t m_index = 0;
 
   friend class NavigationPolicyStateManager;
 };
+
+class NavigationPolicyStateManager {
+ public:
+  template <typename T, typename... Args>
+  std::pair<T&, NavigationPolicyState> pushState(Args&&... args) {
+    std::any& state = m_stateStack.emplace_back();
+    T& content = state.emplace<T>(std::forward<Args>(args)...);
+    return std::pair<T&, NavigationPolicyState>{
+        content, {*this, m_stateStack.size() - 1}};
+  }
+
+  friend class Navigator;
+
+  NavigationPolicyState currentState() {
+    if (m_stateStack.empty()) {
+      return {};  // Emtpy state as sentinel
+    }
+    return NavigationPolicyState{*this, m_stateStack.size() - 1};
+  }
+
+  void popState() {
+    if (m_stateStack.empty()) {
+      throw std::runtime_error(
+          "NavigationPolicyStateManager: Attempt to pop from empty stack");
+    }
+    m_stateStack.pop_back();
+  }
+
+ private:
+  // We might want to extend this to a stack
+  std::vector<std::any> m_stateStack;
+
+  friend class NavigationPolicyState;
+};
+
+inline std::any& NavigationPolicyState::payload() {
+  if (m_manager == nullptr) {
+    throw std::runtime_error(
+        "NavigationPolicyState: Attempt to access empty payload");
+  }
+  return m_manager->m_stateStack.at(m_index);
+}
+
+inline const std::any& NavigationPolicyState::payload() const {
+  if (m_manager == nullptr) {
+    throw std::runtime_error(
+        "NavigationPolicyState: Attempt to access empty payload");
+  }
+  return m_manager->m_stateStack.at(m_index);
+}
+
 namespace detail {
 template <typename T>
 concept HasOldInitializeCandidates = requires {
@@ -132,6 +179,29 @@ class INavigationPolicy {
   virtual void visit(
       const std::function<void(const INavigationPolicy&)>& visitor) const {
     visitor(*this);
+  }
+
+  virtual bool isValid(const GeometryContext& /*gctx*/,
+                       const NavigationArguments /*args*/,
+                       NavigationPolicyState& /*state*/,
+                       const Logger& logger) const {
+    ACTS_VERBOSE("Default navigation policy isValid check. (always true)");
+    return true;
+  }
+
+  // MAKE SURE to also implement the pop method if you implement this one!
+  virtual NavigationPolicyState createState(
+      const GeometryContext& /*gctx*/, const NavigationArguments /*args*/,
+      NavigationPolicyStateManager& /*stateManager*/,
+      const Logger& logger) const {
+    ACTS_VERBOSE("Default navigation policy state initialization. (noop)");
+    return {};
+  }
+
+  virtual void popState(NavigationPolicyStateManager& /*stateManager*/,
+                        const Logger& logger) const {
+    // By default, we didn't push anything, so we don't need to poop anything
+    ACTS_VERBOSE("Default navigation policy pop state. (noop)");
   }
 
  protected:
