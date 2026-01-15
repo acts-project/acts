@@ -99,10 +99,11 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
+  NavigationPolicyState policyState;
   delegate(gctx,
            NavigationArguments{.position = Vector3::Zero(),
                                .direction = Vector3::Zero()},
-           stream, *logger);
+           policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
   const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
@@ -137,10 +138,11 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
+  NavigationPolicyState policyState;
   delegate(gctx,
            NavigationArguments{.position = Vector3::Zero(),
                                .direction = Vector3::Zero()},
-           stream, *logger);
+           policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
   const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
@@ -158,7 +160,7 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   delegate2(gctx,
             NavigationArguments{.position = Vector3::Zero(),
                                 .direction = Vector3::Zero()},
-            stream, *logger);
+            policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy2.policies().size(), 2);
   const auto& policy2A = dynamic_cast<const APolicy&>(*policy2.policies()[0]);
@@ -186,10 +188,11 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
+  NavigationPolicyState policyState;
   delegate(gctx,
            NavigationArguments{.position = Vector3::Zero(),
                                .direction = Vector3::Zero()},
-           stream, *logger);
+           policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 1);
   BOOST_CHECK(dynamic_cast<const APolicy&>(*policy.policies()[0]).executed);
@@ -257,10 +260,11 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
+  NavigationPolicyState policyState;
   delegate(gctx,
            NavigationArguments{.position = Vector3::Zero(),
                                .direction = Vector3::Zero()},
-           stream, *logger);
+           policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
 

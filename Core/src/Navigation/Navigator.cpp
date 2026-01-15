@@ -473,8 +473,12 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   NavigationArguments args;
   args.position = position;
   args.direction = direction;
+
+  // @TODO: Add policy state management
+  NavigationPolicyState policyState;
+
   state.currentVolume->initializeNavigationCandidates(
-      state.options.geoContext, args, appendOnly, logger());
+      state.options.geoContext, args, policyState, appendOnly, logger());
 
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                               << " navigation candidates.");

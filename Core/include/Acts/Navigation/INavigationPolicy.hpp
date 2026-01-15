@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Utilities/Any.hpp"
 
 #include <type_traits>
 
@@ -19,20 +20,84 @@ namespace Acts {
 class TrackingVolume;
 class INavigationPolicy;
 class Surface;
+class NavigationPolicyStateManager;
+
+class NavigationPolicyState {
+ public:
+  template <typename T>
+  T& as() {
+    return m_payload.template as<T>();
+  }
+
+  template <typename T>
+  const T& as() const {
+    return m_payload.template as<T>();
+  }
+
+  template <typename T, typename... Args>
+  explicit NavigationPolicyState(Args&&... args)
+      : m_payload(std::in_place_type<T>, std::forward<Args>(args)...) {}
+
+  NavigationPolicyState() = default;
+
+  template <typename T, typename... Args>
+  T& emplace(Args&&... args) {
+    return m_payload.template emplace<T>(std::forward<Args>(args)...);
+  }
+
+  // NavigationPolicyState(const NavigationPolicyState& other) = delete;
+  // NavigationPolicyState& operator=(const NavigationPolicyState& other) =
+  // delete; NavigationPolicyState(const NavigationPolicyState&& other) =
+  // delete; NavigationPolicyState& operator=(const NavigationPolicyState&&
+  // other) =
+  //     delete;
+
+ private:
+  Acts::Any m_payload;
+
+  friend class NavigationPolicyStateManager;
+};
+namespace detail {
+template <typename T>
+concept HasOldInitializeCandidates = requires {
+  requires requires(T policy, const GeometryContext& gctx,
+                    const NavigationArguments& args,
+                    AppendOnlyNavigationStream& stream, const Logger& logger) {
+    policy.initializeCandidates(gctx, args, stream, logger);
+  };
+};
+
+template <typename T>
+concept HasNewInitializeCandidates = requires {
+  requires requires(T policy, const GeometryContext& gctx,
+                    const NavigationArguments& args,
+                    NavigationPolicyState& state,
+                    AppendOnlyNavigationStream& stream, const Logger& logger) {
+    policy.initializeCandidates(gctx, args, state, stream, logger);
+  };
+};
+
+template <detail::HasOldInitializeCandidates T>
+void oldToNewSignatureAdapter(const void* instance, const GeometryContext& gctx,
+                              const NavigationArguments& args,
+                              NavigationPolicyState& /*state*/,
+                              AppendOnlyNavigationStream& stream,
+                              const Logger& logger) {
+  const auto* policy = static_cast<const T*>(instance);
+  policy->initializeCandidates(gctx, args, stream, logger);
+}
+}  // namespace detail
 
 /// Concept for a navigation policy
-/// This exists so `updateState` can be a non-virtual method and we still have a
-/// way to enforce it exists.
+/// This exists so `initializeCandidates` can be a non-virtual method and we
+/// still have a way to enforce it exists.
 template <typename T>
 concept NavigationPolicyConcept = requires {
   requires std::is_base_of_v<INavigationPolicy, T>;
-  // Has a conforming update method
-  requires requires(T policy, const GeometryContext& gctx,
-                    const NavigationArguments& args) {
-    policy.initializeCandidates(gctx, args,
-                                std::declval<AppendOnlyNavigationStream&>(),
-                                std::declval<const Logger&>());
-  };
+
+  // Require either of the signatures to allow backwards compatibility
+  requires(detail::HasOldInitializeCandidates<T> ||
+           detail::HasNewInitializeCandidates<T>);
 };
 
 /// Base class for all navigation policies. The policy needs to be *connected*
@@ -46,6 +111,7 @@ class INavigationPolicy {
   /// delegates.
   static void noopInitializeCandidates(
       const GeometryContext& /*unused*/, const NavigationArguments& /*unused*/,
+      NavigationPolicyState& /*unused*/,
       const AppendOnlyNavigationStream& /*unused*/, const Logger& /*unused*/) {
     // This is a noop
   }
@@ -78,7 +144,13 @@ class INavigationPolicy {
   void connectDefault(NavigationDelegate& delegate) const {
     // This cannot be a concept because we use it in CRTP below
     const auto* self = static_cast<const T*>(this);
-    delegate.template connect<&T::initializeCandidates>(self);
+
+    if constexpr (detail::HasNewInitializeCandidates<T>) {
+      delegate.template connect<&T::initializeCandidates>(self);
+    } else {
+      // @TODO: Remove navigation policy signature compatibility eventually
+      delegate.connect(&detail::oldToNewSignatureAdapter<T>, self);
+    }
   }
 };
 

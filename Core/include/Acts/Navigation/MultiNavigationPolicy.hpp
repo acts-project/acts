@@ -62,6 +62,7 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   /// @param logger Logger for debug output
   void initializeCandidates(const GeometryContext& gctx,
                             const NavigationArguments& args,
+                            NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 
