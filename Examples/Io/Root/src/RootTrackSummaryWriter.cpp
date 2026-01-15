@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
@@ -57,6 +58,9 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
+  if (m_cfg.writeJets) {
+    m_inputJets.maybeInitialize(m_cfg.inputJets);
+  }
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -197,6 +201,15 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   if (m_cfg.writeGx2fSpecific) {
     m_outputTree->Branch("nUpdatesGx2f", &m_nUpdatesGx2f);
   }
+
+  if (m_cfg.writeJets) {
+    m_outputTree->Branch("nJets", &m_nJets);
+    m_outputTree->Branch("jet_pt", &m_jet_pt);
+    m_outputTree->Branch("jet_eta", &m_jet_eta);
+    m_outputTree->Branch("jet_phi", &m_jet_phi);
+    m_outputTree->Branch("jet_label", &m_jet_label);
+    m_outputTree->Branch("ntracks_per_jets", &m_ntracks_per_jets);
+  }
 }
 
 RootTrackSummaryWriter::~RootTrackSummaryWriter() {
@@ -238,6 +251,14 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
   // Get the event number
   m_eventNr = ctx.eventNumber;
+
+  // Input jets
+  // if (m_cfg.writeJets) {
+  auto& inputJets = m_inputJets(ctx);
+  std::vector<ActsPlugins::FastJet::TruthJet> jets = inputJets;
+  std::unordered_map<std::size_t, std::vector<std::int32_t>>
+      jetToTrackIndicesMap;
+  //}
 
   for (const auto& track : tracks) {
     m_trackNr.push_back(track.index());
@@ -548,6 +569,59 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         m_nUpdatesGx2f.push_back(-1);
       }
     }
+
+    if (m_cfg.writeJets) {
+      double minDeltaR = 0.4;
+      std::int32_t closestJetIndex = -1;
+
+      for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
+        Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
+        Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
+
+        Acts::Vector4 track_4mom = track.fourMomentum();
+        Acts::Vector3 track_3mom{track_4mom[0], track_4mom[1], track_4mom[2]};
+
+        // consider a track to be associated to a jet if within dR < 0.4
+        auto drTrackJet = Acts::VectorHelpers::deltaR(jet_3mom, track_3mom);
+
+        if (drTrackJet < 0.4) {
+          minDeltaR = drTrackJet;
+          closestJetIndex = ijet;
+        }  // if drTrackJet < 0.4
+      }  // for loop over jets
+      if (closestJetIndex != -1) {
+        jetToTrackIndicesMap[closestJetIndex].push_back(track.index());
+      }
+    }
+  }
+
+  if (m_cfg.writeJets) {
+    for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
+      Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
+      Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
+      float jet_theta = theta(jet_3mom);
+      m_jet_pt.push_back(perp(jet_4mom));
+      m_jet_eta.push_back(std::atanh(std::cos(jet_theta)));
+      m_jet_phi.push_back(phi(jet_4mom));
+      m_jet_label.push_back(static_cast<int>(jets[ijet].jetLabel()));
+      std::size_t nTracksAssociated = 0;
+      auto search = jetToTrackIndicesMap.find(ijet);
+      if (search != jetToTrackIndicesMap.end()) {
+        nTracksAssociated = search->second.size();
+        ACTS_VERBOSE("Jet " << ijet << " has " << nTracksAssociated
+                            << " associated tracks with indices:");
+        for (auto trackIdx : search->second) {
+          ACTS_VERBOSE("  Track index: " << trackIdx);
+          // auto constTrack = tracks.getTrack(trackIdx);
+          // Acts::AnyConstTrackProxy trackProxy(constTrack);
+        }
+      }
+      if (nTracksAssociated > 0) {
+        m_ntracks_per_jets.push_back(nTracksAssociated);
+      }
+
+      m_nJets.push_back(jets.size());
+    }
   }
 
   // fill the variables
@@ -666,6 +740,15 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   }
 
   m_nUpdatesGx2f.clear();
+
+  if (m_cfg.writeJets) {
+    m_nJets.clear();
+    m_jet_pt.clear();
+    m_jet_eta.clear();
+    m_jet_phi.clear();
+    m_jet_label.clear();
+    m_ntracks_per_jets.clear();
+  }
 
   return ProcessCode::SUCCESS;
 }
