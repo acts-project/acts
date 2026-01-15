@@ -453,12 +453,17 @@ class Propagator final
     auto state = makeState<propagator_options_t, path_aborter_t>(options);
     using StateType = decltype(state);
 
-    auto initRes =
+    // TODO check result
+    const Result<void> initRes =
         initialize<StateType, parameters_t, path_aborter_t>(state, start);
-    // TODO check result
+    if (!initRes.ok()) {
+      throw std::runtime_error(
+          "Error during initialization of step-by-step propagation: " +
+          initRes.error().message());
+    }
 
-    auto preRes = prePropagation(state);
     // TODO check result
+    prePropagation(state);
 
     return StepByStepPropagation<StateType>(*this, std::move(state));
   }
@@ -532,12 +537,17 @@ class Propagator final
     auto state = makeState<propagator_options_t, path_aborter_t>(options);
     using StateType = decltype(state);
 
-    auto initRes =
+    // TODO check result
+    const Result<void> initRes =
         initialize<StateType, parameters_t, path_aborter_t>(state, start);
-    // TODO check result
+    if (!initRes.ok()) {
+      throw std::runtime_error(
+          "Error during initialization of surface-by-surface propagation: " +
+          initRes.error().message());
+    }
 
-    auto preRes = prePropagation(state);
     // TODO check result
+    prePropagation(state);
 
     return SurfaceBySurfacePropagation<StateType>(*this, std::move(state));
   }
