@@ -176,7 +176,7 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     node.x() = sp.x();
     node.y() = sp.y();
     node.z() = sp.z();
-
+    node.r() = sp.r();
     node.phi() = sp.phi();
     node.sp_idx() = sp.index();
     node.pixelClusterWidth() = sp.extra(std::get<2>(container));
