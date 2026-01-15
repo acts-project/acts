@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cstddef>
 #include <ostream>
@@ -22,7 +23,11 @@
 #include <utility>
 #include <vector>
 
+#include <TEfficiency.h>
 #include <TFile.h>
+#include <TH1.h>
+#include <TH2.h>
+#include <TProfile.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
@@ -58,19 +63,10 @@ ActsExamples::RootTrackFitterPerformanceWriter::
   if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }
-
-  // initialize the residual and efficiency plots tool
-  m_resPlotTool.book(m_resPlotCache);
-  m_effPlotTool.book(m_effPlotCache);
-  m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
 }
 
 ActsExamples::RootTrackFitterPerformanceWriter::
     ~RootTrackFitterPerformanceWriter() {
-  m_resPlotTool.clear(m_resPlotCache);
-  m_effPlotTool.clear(m_effPlotCache);
-  m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
-
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
@@ -78,17 +74,67 @@ ActsExamples::RootTrackFitterPerformanceWriter::
 
 ActsExamples::ProcessCode
 ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
-  // fill residual and pull details into additional hists
-  m_resPlotTool.refinement(m_resPlotCache);
-
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_resPlotTool.write(m_resPlotCache);
-    m_effPlotTool.write(m_effPlotCache);
-    m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
-
-    ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
+  if (m_outputFile == nullptr) {
+    return ProcessCode::SUCCESS;
   }
+
+  m_outputFile->cd();
+
+  // Write residual histograms
+  for (const auto& [name, hist] : m_resPlotTool.res()) {
+    ActsPlugins::toRoot(hist)->Write();
+  }
+  for (const auto& [name, hist] : m_resPlotTool.resVsEta()) {
+    ActsPlugins::toRoot(hist)->Write();
+  }
+  for (const auto& [name, hist] : m_resPlotTool.resVsPt()) {
+    ActsPlugins::toRoot(hist)->Write();
+  }
+
+  // Write pull histograms
+  for (const auto& [name, hist] : m_resPlotTool.pull()) {
+    ActsPlugins::toRoot(hist)->Write();
+  }
+  for (const auto& [name, hist] : m_resPlotTool.pullVsEta()) {
+    ActsPlugins::toRoot(hist)->Write();
+  }
+  for (const auto& [name, hist] : m_resPlotTool.pullVsPt()) {
+    ActsPlugins::toRoot(hist)->Write();
+  }
+
+  // Write efficiency histograms
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsEta())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsPhi())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsPt())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsLogPt())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsLowPt())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsD0())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsZ0())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsDeltaR())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsProdR())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsEtaPhi())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsEtaPt())->Write();
+
+  for (const auto& eff : m_effPlotTool.trackEffVsEtaInPtRanges()) {
+    ActsPlugins::toRoot(eff)->Write();
+  }
+  for (const auto& eff : m_effPlotTool.trackEffVsPtInAbsEtaRanges()) {
+    ActsPlugins::toRoot(eff)->Write();
+  }
+
+  // Write track summary histograms
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nStatesVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nMeasurementsVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nHolesVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nOutliersVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nSharedHitsVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nStatesVsPt())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nMeasurementsVsPt())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nHolesVsPt())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nOutliersVsPt())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nSharedHitsVsPt())->Write();
+
+  ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   return ProcessCode::SUCCESS;
 }
 
@@ -145,13 +191,11 @@ ActsExamples::RootTrackFitterPerformanceWriter::writeT(
     // Record this majority particle ID of this trajectory
     reconParticleIds.push_back(ip->particleId());
     // Fill the residual plots
-    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, ip->initialState(),
-                       fittedParameters);
+    m_resPlotTool.fill(ctx.geoContext, ip->initialState(), fittedParameters);
     // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                track.nTrackStates(), track.nMeasurements(),
-                                track.nOutliers(), track.nHoles(),
-                                track.nSharedHits());
+    m_trackSummaryPlotTool.fill(fittedParameters, track.nTrackStates(),
+                                track.nMeasurements(), track.nOutliers(),
+                                track.nHoles(), track.nSharedHits());
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
@@ -179,8 +223,8 @@ ActsExamples::RootTrackFitterPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
-    m_effPlotTool.fill(ctx.geoContext, m_effPlotCache, particle.initialState(),
-                       minDeltaR, isReconstructed);
+    m_effPlotTool.fill(ctx.geoContext, particle.initialState(), minDeltaR,
+                       isReconstructed);
   }
 
   return ProcessCode::SUCCESS;

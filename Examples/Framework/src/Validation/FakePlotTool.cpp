@@ -18,91 +18,66 @@ namespace ActsExamples {
 
 FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
                            Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("FakePlotTool", lvl)) {}
-
-void FakePlotTool::book(Cache& cache) const {
-  const auto& ptAxis = m_cfg.varBinning.at("Pt");
-  const auto& etaAxis = m_cfg.varBinning.at("Eta");
-  const auto& phiAxis = m_cfg.varBinning.at("Phi");
-  const auto& numAxis = m_cfg.varBinning.at("Num");
+    : m_cfg(cfg),
+      m_logger(Acts::getDefaultLogger("FakePlotTool", lvl)),
+      m_nRecoVsPt("nRecoTracksVsPt", "Number of reconstructed track candidates",
+                  std::array{m_cfg.varBinning.at("Pt"),
+                             m_cfg.varBinning.at("Num")}),
+      m_nTruthMatchedVsPt("nTruthMatchedTracksVsPt",
+                          "Number of truth-matched track candidates",
+                          std::array{m_cfg.varBinning.at("Pt"),
+                                     m_cfg.varBinning.at("Num")}),
+      m_nFakeVsPt("nFakeTracksVsPt", "Number of fake track candidates",
+                  std::array{m_cfg.varBinning.at("Pt"),
+                             m_cfg.varBinning.at("Num")}),
+      m_nRecoVsEta("nRecoTracksVsEta",
+                   "Number of reconstructed track candidates",
+                   std::array{m_cfg.varBinning.at("Eta"),
+                              m_cfg.varBinning.at("Num")}),
+      m_nTruthMatchedVsEta("nTruthMatchedTracksVsEta",
+                           "Number of truth-matched track candidates",
+                           std::array{m_cfg.varBinning.at("Eta"),
+                                      m_cfg.varBinning.at("Num")}),
+      m_nFakeVsEta("nFakeTracksVsEta", "Number of fake track candidates",
+                   std::array{m_cfg.varBinning.at("Eta"),
+                              m_cfg.varBinning.at("Num")}),
+      m_fakeRatioVsPt("fakeRatioVsPt",
+                      "Tracking fake ratio;pT [GeV/c];Fake ratio",
+                      std::array{m_cfg.varBinning.at("Pt")}),
+      m_fakeRatioVsEta("fakeRatioVsEta", "Tracking fake ratio;#eta;Fake ratio",
+                       std::array{m_cfg.varBinning.at("Eta")}),
+      m_fakeRatioVsPhi("fakeRatioVsPhi", "Tracking fake ratio;#phi;Fake ratio",
+                       std::array{m_cfg.varBinning.at("Phi")}) {
   ACTS_DEBUG("Initialize the histograms for fake ratio plots");
-
-  // number of reco tracks vs pT scatter plots
-  cache.nReco_vs_pT = Acts::Experimental::Histogram2(
-      "nRecoTracks_vs_pT", "Number of reconstructed track candidates",
-      std::array{ptAxis, numAxis});
-
-  // number of truth-matched tracks vs pT scatter plots
-  cache.nTruthMatched_vs_pT = Acts::Experimental::Histogram2(
-      "nTruthMatchedTracks_vs_pT", "Number of truth-matched track candidates",
-      std::array{ptAxis, numAxis});
-
-  // number of fake tracks vs pT scatter plots
-  cache.nFake_vs_pT = Acts::Experimental::Histogram2(
-      "nFakeTracks_vs_pT", "Number of fake track candidates",
-      std::array{ptAxis, numAxis});
-
-  // number of reco tracks vs eta scatter plots
-  cache.nReco_vs_eta = Acts::Experimental::Histogram2(
-      "nRecoTracks_vs_eta", "Number of reconstructed track candidates",
-      std::array{etaAxis, numAxis});
-
-  // number of truth-matched tracks vs eta scatter plots
-  cache.nTruthMatched_vs_eta = Acts::Experimental::Histogram2(
-      "nTruthMatchedTracks_vs_eta", "Number of truth-matched track candidates",
-      std::array{etaAxis, numAxis});
-
-  // number of fake tracks vs eta scatter plots
-  cache.nFake_vs_eta = Acts::Experimental::Histogram2(
-      "nFakeTracks_vs_eta", "Number of fake track candidates",
-      std::array{etaAxis, numAxis});
-
-  // fake ratio vs pT
-  cache.fakeRatio_vs_pT = Acts::Experimental::Efficiency1(
-      "fakeRatio_vs_pT", "Tracking fake ratio;pT [GeV/c];Fake ratio",
-      std::array{ptAxis});
-
-  // fake ratio vs eta
-  cache.fakeRatio_vs_eta = Acts::Experimental::Efficiency1(
-      "fakeRatio_vs_eta", "Tracking fake ratio;#eta;Fake ratio",
-      std::array{etaAxis});
-
-  // fake ratio vs phi
-  cache.fakeRatio_vs_phi = Acts::Experimental::Efficiency1(
-      "fakeRatio_vs_phi", "Tracking fake ratio;#phi;Fake ratio",
-      std::array{phiAxis});
 }
 
-void FakePlotTool::fill(Cache& cache,
-                        const Acts::BoundTrackParameters& fittedParameters,
-                        bool status) const {
+void FakePlotTool::fill(const Acts::BoundTrackParameters& fittedParameters,
+                        bool status) {
   const auto momentum = fittedParameters.momentum();
   const double fit_phi = phi(momentum);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  cache.fakeRatio_vs_pT.fill({fit_pT}, status);
-  cache.fakeRatio_vs_eta.fill({fit_eta}, status);
-  cache.fakeRatio_vs_phi.fill({fit_phi}, status);
+  m_fakeRatioVsPt.fill({fit_pT}, status);
+  m_fakeRatioVsEta.fill({fit_eta}, status);
+  m_fakeRatioVsPhi.fill({fit_phi}, status);
 }
 
-void FakePlotTool::fill(Cache& cache, const SimParticleState& truthParticle,
+void FakePlotTool::fill(const SimParticleState& truthParticle,
                         std::size_t nTruthMatchedTracks,
-                        std::size_t nFakeTracks) const {
+                        std::size_t nFakeTracks) {
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
-  cache.nReco_vs_pT.fill(
+  m_nRecoVsPt.fill(
       {t_pT, static_cast<double>(nTruthMatchedTracks + nFakeTracks)});
-  cache.nTruthMatched_vs_pT.fill(
-      {t_pT, static_cast<double>(nTruthMatchedTracks)});
-  cache.nFake_vs_pT.fill({t_pT, static_cast<double>(nFakeTracks)});
+  m_nTruthMatchedVsPt.fill({t_pT, static_cast<double>(nTruthMatchedTracks)});
+  m_nFakeVsPt.fill({t_pT, static_cast<double>(nFakeTracks)});
 
-  cache.nReco_vs_eta.fill(
+  m_nRecoVsEta.fill(
       {t_eta, static_cast<double>(nTruthMatchedTracks + nFakeTracks)});
-  cache.nTruthMatched_vs_eta.fill(
-      {t_eta, static_cast<double>(nTruthMatchedTracks)});
-  cache.nFake_vs_eta.fill({t_eta, static_cast<double>(nFakeTracks)});
+  m_nTruthMatchedVsEta.fill({t_eta, static_cast<double>(nTruthMatchedTracks)});
+  m_nFakeVsEta.fill({t_eta, static_cast<double>(nFakeTracks)});
 }
 
 }  // namespace ActsExamples

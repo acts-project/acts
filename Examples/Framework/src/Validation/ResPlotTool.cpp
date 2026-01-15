@@ -12,20 +12,15 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <cmath>
 #include <format>
-#include <optional>
-#include <ostream>
 
 namespace ActsExamples {
 
 ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {}
-
-void ResPlotTool::book(Cache& cache) const {
+    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {
   const auto& etaAxis = m_cfg.varBinning.at("Eta");
   const auto& ptAxis = m_cfg.varBinning.at("Pt");
   const auto& pullAxis = m_cfg.varBinning.at("Pull");
@@ -38,52 +33,47 @@ void ResPlotTool::book(Cache& cache) const {
     const auto& residualAxis = m_cfg.varBinning.at(parResidual);
 
     // residual distributions
-    cache.res.emplace(parName, Acts::Experimental::Histogram1(
-                                    std::format("res_{}", parName),
-                                    std::format("Residual of {}", parName),
-                                    std::array{residualAxis}));
+    m_res.emplace(parName, Acts::Experimental::Histogram1(
+                               std::format("res{}", parName),
+                               std::format("Residual of {}", parName),
+                               std::array{residualAxis}));
 
     // residual vs eta scatter plots
-    cache.res_vs_eta.emplace(
-        parName,
-        Acts::Experimental::Histogram2(std::format("res_{}_vs_eta", parName),
-                                       std::format("Residual of {} vs eta", parName),
-                                       std::array{etaAxis, residualAxis}));
+    m_resVsEta.emplace(
+        parName, Acts::Experimental::Histogram2(
+                     std::format("res{}VsEta", parName),
+                     std::format("Residual of {} vs eta", parName),
+                     std::array{etaAxis, residualAxis}));
 
     // residual vs pT scatter plots
-    cache.res_vs_pT.emplace(
-        parName,
-        Acts::Experimental::Histogram2(std::format("res_{}_vs_pT", parName),
-                                       std::format("Residual of {} vs pT", parName),
-                                       std::array{ptAxis, residualAxis}));
+    m_resVsPt.emplace(parName, Acts::Experimental::Histogram2(
+                                   std::format("res{}VsPt", parName),
+                                   std::format("Residual of {} vs pT", parName),
+                                   std::array{ptAxis, residualAxis}));
 
     // pull distributions
-    cache.pull.emplace(parName,
-                       Acts::Experimental::Histogram1(
-                           std::format("pull_{}", parName),
-                           std::format("Pull of {}", parName),
-                           std::array{pullAxis}));
+    m_pull.emplace(parName, Acts::Experimental::Histogram1(
+                                std::format("pull{}", parName),
+                                std::format("Pull of {}", parName),
+                                std::array{pullAxis}));
 
     // pull vs eta scatter plots
-    cache.pull_vs_eta.emplace(
-        parName, Acts::Experimental::Histogram2(
-                     std::format("pull_{}_vs_eta", parName),
-                     std::format("Pull of {} vs eta", parName),
-                     std::array{etaAxis, pullAxis}));
+    m_pullVsEta.emplace(parName, Acts::Experimental::Histogram2(
+                                     std::format("pull{}VsEta", parName),
+                                     std::format("Pull of {} vs eta", parName),
+                                     std::array{etaAxis, pullAxis}));
 
     // pull vs pT scatter plots
-    cache.pull_vs_pT.emplace(
-        parName, Acts::Experimental::Histogram2(
-                     std::format("pull_{}_vs_pT", parName),
-                     std::format("Pull of {} vs pT", parName),
-                     std::array{ptAxis, pullAxis}));
+    m_pullVsPt.emplace(parName, Acts::Experimental::Histogram2(
+                                    std::format("pull{}VsPt", parName),
+                                    std::format("Pull of {} vs pT", parName),
+                                    std::array{ptAxis, pullAxis}));
   }
 }
 
-void ResPlotTool::fill(
-    Cache& cache, const Acts::GeometryContext& gctx,
-    const SimParticleState& truthParticle,
-    const Acts::BoundTrackParameters& fittedParamters) const {
+void ResPlotTool::fill(const Acts::GeometryContext& gctx,
+                       const SimParticleState& truthParticle,
+                       const Acts::BoundTrackParameters& fittedParamters) {
   using ParametersVector = Acts::BoundTrackParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
@@ -131,17 +121,17 @@ void ResPlotTool::fill(
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
     double residual = trackParameter[parID] - truthParameter[parID];
-    cache.res.at(parName).fill({residual});
-    cache.res_vs_eta.at(parName).fill({truthEta, residual});
-    cache.res_vs_pT.at(parName).fill({truthPt, residual});
+    m_res.at(parName).fill({residual});
+    m_resVsEta.at(parName).fill({truthEta, residual});
+    m_resVsPt.at(parName).fill({truthPt, residual});
 
     if (fittedParamters.covariance().has_value()) {
       auto covariance = *fittedParamters.covariance();
       if (covariance(parID, parID) > 0) {
         double pull = residual / std::sqrt(covariance(parID, parID));
-        cache.pull.at(parName).fill({pull});
-        cache.pull_vs_eta.at(parName).fill({truthEta, pull});
-        cache.pull_vs_pT.at(parName).fill({truthPt, pull});
+        m_pull.at(parName).fill({pull});
+        m_pullVsEta.at(parName).fill({truthEta, pull});
+        m_pullVsPt.at(parName).fill({truthPt, pull});
       } else {
         ACTS_WARNING("Fitted track parameter :" << parName
                                                 << " has negative covariance = "

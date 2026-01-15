@@ -16,7 +16,6 @@
 #include <cstddef>
 #include <map>
 #include <memory>
-#include <optional>
 #include <string>
 
 namespace ActsExamples {
@@ -36,65 +35,70 @@ class FakePlotTool {
         {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
-  /// @brief Nested Cache struct
-  struct Cache {
-    /// Number of reco tracks vs pT scatter plot
-    Acts::Experimental::Histogram2 nReco_vs_pT;
-    /// Number of truth-matched reco tracks vs pT scatter plot
-    Acts::Experimental::Histogram2 nTruthMatched_vs_pT;
-    /// Number of fake (truth-unmatched) tracks vs pT scatter plot
-    Acts::Experimental::Histogram2 nFake_vs_pT;
-    /// Number of reco tracks vs eta scatter plot
-    Acts::Experimental::Histogram2 nReco_vs_eta;
-    /// Number of truth-matched reco tracks vs eta scatter plot
-    Acts::Experimental::Histogram2 nTruthMatched_vs_eta;
-    /// Number of fake (truth-unmatched) tracks vs eta scatter plot
-    Acts::Experimental::Histogram2 nFake_vs_eta;
-    /// Tracking fake ratio vs pT
-    Acts::Experimental::Efficiency1 fakeRatio_vs_pT;
-    /// Tracking fake ratio vs eta
-    Acts::Experimental::Efficiency1 fakeRatio_vs_eta;
-    /// Tracking fake ratio vs phi
-    Acts::Experimental::Efficiency1 fakeRatio_vs_phi;
-  };
-
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param lvl Message level declaration
   FakePlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the fake ratio plots
-  ///
-  /// @param cache the cache for fake ratio plots
-  void book(Cache& cache) const;
-
   /// @brief fill fake ratio w.r.t. fitted track parameters
   ///
-  /// @param cache cache object for fake ratio plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the reconstructed track is fake or not
-  void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
-            bool status) const;
+  void fill(const Acts::BoundTrackParameters& fittedParameters, bool status);
 
   /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
-  /// seed
   ///
-  /// @param cache cache object for fake ratio plots
   /// @param truthParticle the truth Particle
   /// @param nTruthMatchedTracks the number of truth-matched tracks
   /// @param nFakeTracks the number of fake tracks
-  void fill(Cache& cache, const SimParticleState& truthParticle,
-            std::size_t nTruthMatchedTracks, std::size_t nFakeTracks) const;
+  void fill(const SimParticleState& truthParticle,
+            std::size_t nTruthMatchedTracks, std::size_t nFakeTracks);
+
+  /// @brief Accessors for histograms (const reference)
+  const Acts::Experimental::Histogram2& nRecoVsPt() const {
+    return m_nRecoVsPt;
+  }
+  const Acts::Experimental::Histogram2& nTruthMatchedVsPt() const {
+    return m_nTruthMatchedVsPt;
+  }
+  const Acts::Experimental::Histogram2& nFakeVsPt() const {
+    return m_nFakeVsPt;
+  }
+  const Acts::Experimental::Histogram2& nRecoVsEta() const {
+    return m_nRecoVsEta;
+  }
+  const Acts::Experimental::Histogram2& nTruthMatchedVsEta() const {
+    return m_nTruthMatchedVsEta;
+  }
+  const Acts::Experimental::Histogram2& nFakeVsEta() const {
+    return m_nFakeVsEta;
+  }
+  const Acts::Experimental::Efficiency1& fakeRatioVsPt() const {
+    return m_fakeRatioVsPt;
+  }
+  const Acts::Experimental::Efficiency1& fakeRatioVsEta() const {
+    return m_fakeRatioVsEta;
+  }
+  const Acts::Experimental::Efficiency1& fakeRatioVsPhi() const {
+    return m_fakeRatioVsPhi;
+  }
 
  private:
-  /// The Config class
+  const Acts::Logger& logger() const { return *m_logger; }
+
   Config m_cfg;
-  /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  Acts::Experimental::Histogram2 m_nRecoVsPt;
+  Acts::Experimental::Histogram2 m_nTruthMatchedVsPt;
+  Acts::Experimental::Histogram2 m_nFakeVsPt;
+  Acts::Experimental::Histogram2 m_nRecoVsEta;
+  Acts::Experimental::Histogram2 m_nTruthMatchedVsEta;
+  Acts::Experimental::Histogram2 m_nFakeVsEta;
+  Acts::Experimental::Efficiency1 m_fakeRatioVsPt;
+  Acts::Experimental::Efficiency1 m_fakeRatioVsEta;
+  Acts::Experimental::Efficiency1 m_fakeRatioVsPhi;
 };
 
 }  // namespace ActsExamples

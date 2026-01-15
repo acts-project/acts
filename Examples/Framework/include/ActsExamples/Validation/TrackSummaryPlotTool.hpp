@@ -15,7 +15,6 @@
 #include <cstddef>
 #include <map>
 #include <memory>
-#include <optional>
 #include <string>
 
 namespace ActsExamples {
@@ -30,30 +29,8 @@ class TrackSummaryPlotTool {
         {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
         {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
         {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
-  };
-
-  /// @brief Nested Cache struct
-  struct Cache {
-    /// Number of total states vs eta
-    Acts::Experimental::ProfileHistogram1 nStates_vs_eta;
-    /// Number of non-outlier measurements vs eta
-    Acts::Experimental::ProfileHistogram1 nMeasurements_vs_eta;
-    /// Number of holes vs eta
-    Acts::Experimental::ProfileHistogram1 nHoles_vs_eta;
-    /// Number of outliers vs eta
-    Acts::Experimental::ProfileHistogram1 nOutliers_vs_eta;
-    /// Number of Shared Hits vs eta
-    Acts::Experimental::ProfileHistogram1 nSharedHits_vs_eta;
-    /// Number of total states vs pt
-    Acts::Experimental::ProfileHistogram1 nStates_vs_pt;
-    /// Number of non-outlier measurements vs pt
-    Acts::Experimental::ProfileHistogram1 nMeasurements_vs_pt;
-    /// Number of holes vs pt
-    Acts::Experimental::ProfileHistogram1 nHoles_vs_pt;
-    /// Number of outliers vs pt
-    Acts::Experimental::ProfileHistogram1 nOutliers_vs_pt;
-    /// Number of Shared Hits vs pt
-    Acts::Experimental::ProfileHistogram1 nSharedHits_vs_pt;
+    /// Optional prefix for histogram names
+    std::string prefix;
   };
 
   /// Constructor
@@ -62,33 +39,66 @@ class TrackSummaryPlotTool {
   /// @param lvl Message level declaration
   TrackSummaryPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the track info plots
-  ///
-  /// @param cache the cache for track info plots
-  /// @param prefix a prefix prepended to the name, concatenation with '_'
-  void book(Cache& cache, const std::string& prefix = "") const;
-
   /// @brief fill reco track info w.r.t. fitted track parameters
   ///
-  /// @param cache cache object for track info plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param nStates number of track states
   /// @param nMeasurements number of measurements
   /// @param nOutliers number of outliers
   /// @param nHoles number of holes
-  void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
+  /// @param nSharedHits number of shared hits
+  void fill(const Acts::BoundTrackParameters& fittedParameters,
             std::size_t nStates, std::size_t nMeasurements,
-            std::size_t Outliers, std::size_t nHoles,
-            std::size_t nSharedHits) const;
+            std::size_t nOutliers, std::size_t nHoles, std::size_t nSharedHits);
+
+  /// @brief Accessors for histograms (const reference)
+  const Acts::Experimental::ProfileHistogram1& nStatesVsEta() const {
+    return m_nStatesVsEta;
+  }
+  const Acts::Experimental::ProfileHistogram1& nMeasurementsVsEta() const {
+    return m_nMeasurementsVsEta;
+  }
+  const Acts::Experimental::ProfileHistogram1& nHolesVsEta() const {
+    return m_nHolesVsEta;
+  }
+  const Acts::Experimental::ProfileHistogram1& nOutliersVsEta() const {
+    return m_nOutliersVsEta;
+  }
+  const Acts::Experimental::ProfileHistogram1& nSharedHitsVsEta() const {
+    return m_nSharedHitsVsEta;
+  }
+  const Acts::Experimental::ProfileHistogram1& nStatesVsPt() const {
+    return m_nStatesVsPt;
+  }
+  const Acts::Experimental::ProfileHistogram1& nMeasurementsVsPt() const {
+    return m_nMeasurementsVsPt;
+  }
+  const Acts::Experimental::ProfileHistogram1& nHolesVsPt() const {
+    return m_nHolesVsPt;
+  }
+  const Acts::Experimental::ProfileHistogram1& nOutliersVsPt() const {
+    return m_nOutliersVsPt;
+  }
+  const Acts::Experimental::ProfileHistogram1& nSharedHitsVsPt() const {
+    return m_nSharedHitsVsPt;
+  }
 
  private:
-  /// The Config class
+  const Acts::Logger& logger() const { return *m_logger; }
+
   Config m_cfg;
-  /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  Acts::Experimental::ProfileHistogram1 m_nStatesVsEta;
+  Acts::Experimental::ProfileHistogram1 m_nMeasurementsVsEta;
+  Acts::Experimental::ProfileHistogram1 m_nHolesVsEta;
+  Acts::Experimental::ProfileHistogram1 m_nOutliersVsEta;
+  Acts::Experimental::ProfileHistogram1 m_nSharedHitsVsEta;
+  Acts::Experimental::ProfileHistogram1 m_nStatesVsPt;
+  Acts::Experimental::ProfileHistogram1 m_nMeasurementsVsPt;
+  Acts::Experimental::ProfileHistogram1 m_nHolesVsPt;
+  Acts::Experimental::ProfileHistogram1 m_nOutliersVsPt;
+  Acts::Experimental::ProfileHistogram1 m_nSharedHitsVsPt;
 };
 
 }  // namespace ActsExamples

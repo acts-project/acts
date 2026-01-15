@@ -52,52 +52,63 @@ class ResPlotTool {
          Acts::Experimental::BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
   };
 
-  /// @brief Nested Cache struct
-  struct Cache {
-    /// Residual distribution
-    std::map<std::string, Acts::Experimental::Histogram1> res;
-    /// Residual vs eta scatter plot
-    std::map<std::string, Acts::Experimental::Histogram2> res_vs_eta;
-    /// Residual vs pT scatter plot
-    std::map<std::string, Acts::Experimental::Histogram2> res_vs_pT;
-
-    /// Pull distribution
-    std::map<std::string, Acts::Experimental::Histogram1> pull;
-    /// Pull vs eta scatter plot
-    std::map<std::string, Acts::Experimental::Histogram2> pull_vs_eta;
-    /// Pull vs pT scatter plot
-    std::map<std::string, Acts::Experimental::Histogram2> pull_vs_pT;
-  };
-
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param level Message level declaration
   ResPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the histograms
-  ///
-  /// @param cache the cache for residual/pull histograms
-  void book(Cache& cache) const;
-
   /// @brief fill the histograms
   ///
-  /// @param cache the cache for residual/pull histograms
   /// @param gctx the geometry context
   /// @param truthParticle the truth particle
   /// @param fittedParamters the fitted parameters at perigee surface
-  void fill(Cache& cache, const Acts::GeometryContext& gctx,
+  void fill(const Acts::GeometryContext& gctx,
             const SimParticleState& truthParticle,
-            const Acts::BoundTrackParameters& fittedParamters) const;
+            const Acts::BoundTrackParameters& fittedParamters);
+
+  /// @brief Accessors for histograms (const reference)
+  const std::map<std::string, Acts::Experimental::Histogram1>& res() const {
+    return m_res;
+  }
+  const std::map<std::string, Acts::Experimental::Histogram2>& resVsEta()
+      const {
+    return m_resVsEta;
+  }
+  const std::map<std::string, Acts::Experimental::Histogram2>& resVsPt() const {
+    return m_resVsPt;
+  }
+  const std::map<std::string, Acts::Experimental::Histogram1>& pull() const {
+    return m_pull;
+  }
+  const std::map<std::string, Acts::Experimental::Histogram2>& pullVsEta()
+      const {
+    return m_pullVsEta;
+  }
+  const std::map<std::string, Acts::Experimental::Histogram2>& pullVsPt()
+      const {
+    return m_pullVsPt;
+  }
 
  private:
-  /// The config class
+  const Acts::Logger& logger() const { return *m_logger; }
+
   Config m_cfg;
-  /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  /// Residual distribution
+  std::map<std::string, Acts::Experimental::Histogram1> m_res;
+  /// Residual vs eta scatter plot
+  std::map<std::string, Acts::Experimental::Histogram2> m_resVsEta;
+  /// Residual vs pT scatter plot
+  std::map<std::string, Acts::Experimental::Histogram2> m_resVsPt;
+
+  /// Pull distribution
+  std::map<std::string, Acts::Experimental::Histogram1> m_pull;
+  /// Pull vs eta scatter plot
+  std::map<std::string, Acts::Experimental::Histogram2> m_pullVsEta;
+  /// Pull vs pT scatter plot
+  std::map<std::string, Acts::Experimental::Histogram2> m_pullVsPt;
 };
 
 }  // namespace ActsExamples
