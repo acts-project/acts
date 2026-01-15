@@ -80,7 +80,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @note this is called from the surface().transform() in the PROXY mode
-  const Acts::Transform3& transform(
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const final;
 
   /// Return the nominal local to global transform
@@ -99,6 +99,8 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   /// Return the set of alignment transforms in flight
   const std::vector<std::unique_ptr<Acts::Transform3>>& alignedTransforms()
       const;
+  /// Is the detector element a sensitive element
+  bool isSensitive() const final { return true; }
 
  private:
   /// the transform for positioning in 3D space

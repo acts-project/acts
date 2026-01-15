@@ -42,7 +42,10 @@ class JsonDetectorElement : public DetectorElementBase {
   /// Return the transform for this detector element
   /// @param gctx Geometry context (unused for this implementation)
   /// @return Transform matrix for this detector element
-  const Transform3 &transform(const GeometryContext &gctx) const override;
+  const Transform3 &localToGlobalTransform(
+      const GeometryContext &gctx) const override;
+
+  bool isSensitive() const override { return true; }
 
  private:
   std::shared_ptr<Surface> m_surface;

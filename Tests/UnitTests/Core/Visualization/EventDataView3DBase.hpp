@@ -145,7 +145,7 @@ void createDetector(GeometryContext& tgContext,
   // Get the surfaces;
   surfaces.reserve(nSurfaces);
   detector->visitSurfaces([&](const Surface* surface) {
-    if (surface != nullptr && surface->associatedDetectorElement() != nullptr) {
+    if (surface != nullptr && surface->isSensitive()) {
       std::cout << "surface " << surface->geometryId() << " placed at: ("
                 << surface->center(tgContext).transpose() << " )" << std::endl;
       surfaces.push_back(surface);
