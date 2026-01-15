@@ -139,7 +139,7 @@ constexpr T binomial(const T n, const T k) {
     throw std::invalid_argument("k must be <= n");
   }
 
-  return factorial<T>(n) / factorial<T>(k) / factorial<T>(n - k);
+  return (factorial<T>(n) / factorial<T>(k)) / factorial<T>(n - k);
 }
 
 }  // namespace Acts

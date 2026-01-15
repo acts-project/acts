@@ -105,7 +105,7 @@ constexpr double evaluate(const double x, const unsigned l, unsigned d = 0u) {
   double sum{0.};
   for (unsigned k = l % 2; k + d <= l; k += 2u) {
     sum += pow(x, k - d) * coeff(l, k) *
-           (d > 0u ? factorial(k - d) / factorial(k - d) : 1u);
+           (d > 0u ? factorial(k) / factorial(k - d) : 1u);
   }
   return sum;
 }
