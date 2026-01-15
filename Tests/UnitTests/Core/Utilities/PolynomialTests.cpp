@@ -139,12 +139,12 @@ BOOST_AUTO_TEST_CASE(LegendrePolynomials) {
                           (2 * order + 1) * x * evalX - order * evalX_M1),
           true);
       for (unsigned d = 0; d <= std::min(2u, order); ++d) {
-        const double compileTime = legendrePoly(x, order, d);
-        const double runTime = Legendre::evaluate(x, order, d);
-        BOOST_CHECK_EQUAL(withinTolerance(compileTime, runTime), true);
-        if (!withinTolerance(compileTime, runTime)) {
-          std::cout << "Compile time evaluation (" << compileTime
-                    << ") vs. run time evaluation (" << runTime
+        const double constExpEval = legendrePoly(x, order, d);
+        const double runTimeEval = Legendre::evaluate(x, order, d);
+        BOOST_CHECK_EQUAL(withinTolerance(constExpEval, runTimeEval), true);
+        if (!withinTolerance(constExpEval, runTimeEval)) {
+          std::cout << "Compile time evaluation (" << constExpEval
+                    << ") vs. run time evaluation (" << runTimeEval
                     << ") differ - order: " << order << ", derivative: " << d
                     << std::endl;
         }
