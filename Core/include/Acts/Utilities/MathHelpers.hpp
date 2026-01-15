@@ -102,11 +102,11 @@ constexpr T sumUpToN(const T N) {
 /// @brief Calculates the product of all integers
 ///        within the given integer range
 ///           (nLower)(nLower +1)(...)(upper-1)(upper)
-/// @param upperN: Upper range of the product calculation
 /// @param lowerN: Lower range of the product calculation
+/// @param upperN: Upper range of the product calculation
 /// @return Factorial result
 template <std::unsigned_integral T>
-constexpr T product(const T upperN, const T lowerN) {
+constexpr T product(const T lowerN, const T upperN) {
   T value{1};
   for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
     value *= iter;
@@ -117,7 +117,7 @@ constexpr T product(const T upperN, const T lowerN) {
 /// @param N: Number of which the factorial is to be calculated
 template <std::unsigned_integral T>
 constexpr T factorial(const T N) {
-  return product<T>(N, 1);
+  return product<T>(1, N);
 }
 /// @brief Calculate the binomial coefficient
 ///              n        n!
@@ -128,7 +128,7 @@ constexpr T factorial(const T N) {
 /// @return Binomial coefficient n choose k
 template <std::unsigned_integral T>
 constexpr T binomial(const T n, const T k) {
-  return product<T>(n, n - k + 1) / factorial<T>(k);
+  return product<T>(n - k + 1, n) / factorial<T>(k);
 }
 
 }  // namespace Acts
