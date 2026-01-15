@@ -129,7 +129,7 @@ inline double TelescopeDetectorElement::thickness() const {
   return m_elementThickness;
 }
 
-inline const Acts::Transform3& TelescopeDetectorElement::transform(
+inline const Acts::Transform3& TelescopeDetectorElement::localToGlobalTransform(
     const Acts::GeometryContext& gctx) const {
   // Check if a different transform than the nominal exists
   if (!m_alignedTransforms.empty()) {
