@@ -253,7 +253,7 @@ static inline std::string testMeasurement(IVisualization3D& helper,
     auto lposition = singleMeasurement.parameters;
 
     auto surf = detector->findSurface(singleMeasurement.m_geometryId);
-    auto transf = surf->transform(tgContext);
+    auto transf = surf->localToGlobalTransform(tgContext);
 
     EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
                                      localErrorScale, mcolor);
