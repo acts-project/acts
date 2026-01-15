@@ -131,11 +131,21 @@ def main():
         mockUpCfg.dbName = "ActsGeoMS.db"
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
-        mockUpCfg.buildEndcaps = False
+        mockUpCfg.buildEndcaps = True
         mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
             mockUpCfg, "GeoMockUpMS", logLevel
         )
-        gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
+        gmBuilderConfig.stationNames = [
+            "BI",
+            "BM",
+            "BO",
+            "EAI",
+            "EAM",
+            "EAO",
+            "ECI",
+            "ECM",
+            "ECO",
+        ]
 
         gmTree = mockUpBuilder.constructMS()
     else:
@@ -149,7 +159,7 @@ def main():
         "SmallWheelGasGap",
     ]
     gmFactoryConfig.convertSubVolumes = True
-    gmFactoryConfig.convertBox = ["MDT", "RPC"]
+    gmFactoryConfig.convertBox = ["MDT", "RPC", "SmallWheel", "TGC"]
 
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options

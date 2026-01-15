@@ -36,7 +36,8 @@ struct IsReadOnlyTrackContainer;
 /// @tparam holder_t ownership management class for the backend
 template <TrackContainerBackend track_container_t,
           CommonMultiTrajectoryBackend traj_t,
-          template <typename> class holder_t = detail::RefHolder>
+          template <typename> class holder_t = RefHolder>
+  requires HolderFor<holder_t, track_container_t> && HolderFor<holder_t, traj_t>
 class TrackContainer {
  public:
   /// Indicates if this track container is read-only, or if it can be modified
@@ -124,7 +125,9 @@ class TrackContainer {
   /// @param container the track container backend
   /// @param traj the track state container backend
   TrackContainer(auto& container, auto& traj)
-    requires(detail::is_same_template<holder_t, detail::RefHolder>::value)
+    requires(std::same_as<holder_t<track_container_t>,
+                          RefHolder<track_container_t>> &&
+             std::same_as<holder_t<traj_t>, RefHolder<traj_t>>)
       : m_container{&container}, m_traj{&traj} {}
 
   /// Constructor from const references to a track container backend and to a
@@ -134,8 +137,9 @@ class TrackContainer {
   /// @param container the track container backend
   /// @param traj the track state container backend
   TrackContainer(const auto& container, const auto& traj)
-    requires(detail::is_same_template<holder_t,
-                                      detail::ConstRefHolder>::value &&
+    requires(std::same_as<holder_t<track_container_t>,
+                          ConstRefHolder<track_container_t>> &&
+             std::same_as<holder_t<traj_t>, ConstRefHolder<traj_t>> &&
              ReadOnly && TrackStateReadOnly)
       : m_container{&container}, m_traj{&traj} {}
 
@@ -491,20 +495,20 @@ class TrackContainer {
 /// @param traj Trajectory reference
 template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
-    -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
+    -> TrackContainer<track_container_t, traj_t, RefHolder>;
 
 /// Deduction guide for TrackContainer with const references
 /// @param container Const track container reference
 /// @param traj Const trajectory reference
 template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(const track_container_t& container, const traj_t& traj)
-    -> TrackContainer<track_container_t, traj_t, detail::ConstRefHolder>;
+    -> TrackContainer<track_container_t, traj_t, ConstRefHolder>;
 
 /// Deduction guide for TrackContainer with rvalue references
 /// @param container Track container rvalue reference
 /// @param traj Trajectory rvalue reference
 template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
-    -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
+    -> TrackContainer<track_container_t, traj_t, ValueHolder>;
 
 }  // namespace Acts

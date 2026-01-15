@@ -38,7 +38,8 @@ Surface::Surface(const Surface& other)
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
                  const Transform3& shift)
     : GeometryObject(),
-      m_transform(std::make_unique<Transform3>(shift * other.transform(gctx))),
+      m_transform(std::make_unique<Transform3>(
+          shift * other.localToGlobalTransform(gctx))),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
 Surface::~Surface() noexcept = default;
@@ -90,7 +91,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
-  const auto& rotation = transform(gctx).rotation();
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   // The axes of local frame
   const auto& localXAxis = rotation.col(0);
   const auto& localYAxis = rotation.col(1);
@@ -130,7 +131,7 @@ AlignmentToPathMatrix Surface::alignmentToPathDerivative(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
-  const auto& rotation = transform(gctx).rotation();
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   // The local frame z axis
   const auto& localZAxis = rotation.col(2);
   // Cosine of angle between momentum direction and local frame z axis
@@ -211,7 +212,7 @@ std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
   const Vector3& sfcenter = center(gctx);
   sl << "     Center position  (x, y, z) = (" << sfcenter.x() << ", "
      << sfcenter.y() << ", " << sfcenter.z() << ")" << std::endl;
-  RotationMatrix3 rot(transform(gctx).matrix().block<3, 3>(0, 0));
+  RotationMatrix3 rot(localToGlobalTransform(gctx).matrix().block<3, 3>(0, 0));
   Vector3 rotX(rot.col(0));
   Vector3 rotY(rot.col(1));
   Vector3 rotZ(rot.col(2));
@@ -235,13 +236,18 @@ std::string Surface::toString(const GeometryContext& gctx) const {
 
 Vector3 Surface::center(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not translation())
-  auto tMatrix = transform(gctx).matrix();
+  auto tMatrix = localToGlobalTransform(gctx).matrix();
   return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 
 const Transform3& Surface::transform(const GeometryContext& gctx) const {
+  return localToGlobalTransform(gctx);
+}
+
+const Transform3& Surface::localToGlobalTransform(
+    const GeometryContext& gctx) const {
   if (m_associatedDetElement != nullptr) {
-    return m_associatedDetElement->transform(gctx);
+    return m_associatedDetElement->localToGlobalTransform(gctx);
   }
   return *m_transform;
 }
@@ -263,7 +269,7 @@ bool Surface::insideBounds(const Vector2& lposition,
 RotationMatrix3 Surface::referenceFrame(const GeometryContext& gctx,
                                         const Vector3& /*position*/,
                                         const Vector3& /*direction*/) const {
-  return transform(gctx).matrix().block<3, 3>(0, 0);
+  return localToGlobalTransform(gctx).matrix().block<3, 3>(0, 0);
 }
 
 BoundToFreeMatrix Surface::boundToFreeJacobian(const GeometryContext& gctx,

@@ -146,7 +146,7 @@ nlohmann::json Acts::SurfaceJsonConverter::toJson(const GeometryContext& gctx,
                                                   const Options& options) {
   nlohmann::json jSurface;
   const auto& sBounds = surface.bounds();
-  const auto sTransform = surface.transform(gctx);
+  const auto sTransform = surface.localToGlobalTransform(gctx);
 
   jSurface["transform"] =
       Transform3JsonConverter::toJson(sTransform, options.transformOptions);
@@ -165,7 +165,7 @@ nlohmann::json Acts::SurfaceJsonConverter::toJsonDetray(
     const Options& options) {
   nlohmann::json jSurface;
   const auto& sBounds = surface.bounds();
-  const auto sTransform = surface.transform(gctx);
+  const auto sTransform = surface.localToGlobalTransform(gctx);
 
   jSurface["transform"] =
       Transform3JsonConverter::toJson(sTransform, options.transformOptions);

@@ -67,8 +67,10 @@ std::pair<Vector2, Vector2> boundingBox(const RegularSurface& surface,
   min = min - relMargin * size;
   max = max + relMargin * size;
 
-  Vector3 min3 = surface.transform(gctx) * Vector3{min[0], min[1], 0};
-  Vector3 max3 = surface.transform(gctx) * Vector3{max[0], max[1], 0};
+  Vector3 min3 =
+      surface.localToGlobalTransform(gctx) * Vector3{min[0], min[1], 0};
+  Vector3 max3 =
+      surface.localToGlobalTransform(gctx) * Vector3{max[0], max[1], 0};
 
   return {min3.head<2>(), max3.head<2>()};
 }

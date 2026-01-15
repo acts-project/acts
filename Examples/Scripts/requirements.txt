@@ -26,11 +26,11 @@ cycler==0.12.1
     # via matplotlib
 fonttools==4.61.1
     # via matplotlib
-fsspec==2025.12.0
+fsspec==2026.1.0
     # via
     #   awkward
     #   uproot
-hist==2.9.0
+hist==2.9.1
     # via -r Examples/Scripts/requirements.in
 histoprint==2.6.0
     # via hist
@@ -48,7 +48,7 @@ mplhep==0.4.1
     # via -r Examples/Scripts/requirements.in
 mplhep-data==0.0.5
     # via mplhep
-numpy==2.4.0
+numpy==2.4.1
     # via
     #   awkward
     #   awkward-cpp
@@ -92,13 +92,13 @@ rich==14.2.0
     # via
     #   -r Examples/Scripts/requirements.in
     #   typer
-scipy==1.16.3
+scipy==1.17.0
     # via -r Examples/Scripts/requirements.in
 shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.21.0
+typer==0.21.1
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.15.0
     # via

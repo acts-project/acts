@@ -100,22 +100,22 @@ def main(
         logger.debug("Watching %s", target)
         server.watch(target, rebuild)
 
-    doxy_template = docs_dir / "Doxyfile.in"
-    if not doxy_template.exists():
-        logger.error("Doxygen template %s is missing", doxy_template)
-        raise typer.Exit(1)
+    extra_files = [
+        docs_dir / "header.html",
+        docs_dir / "Doxyfile.in",
+        docs_dir / "DoxygenLayout.xml",
+        source_dir / "CONTRIBUTING.md",
+    ]
 
-    server.watch(str(doxy_template), rebuild)
-
-    layout_file = docs_dir / "DoxygenLayout.xml"
-    if layout_file.exists():
-        server.watch(str(layout_file), rebuild)
-
-    server.watch(str(source_dir / "CONTRIBUTING.md"), rebuild)
+    for extra in extra_files:
+        if extra.exists():
+            server.watch(str(extra), rebuild)
 
     server.watch(str(docs_dir / "examples/**/*.cpp"), rebuild)
     server.watch(str(docs_dir / "examples/**/*.py"), rebuild)
     server.watch(str(docs_dir / "*.bib"), rebuild)
+    server.watch(str(docs_dir / "*.js"), rebuild)
+    server.watch(str(docs_dir / "*.css"), rebuild)
 
     server.serve(root=str(output_dir), port=port)
 

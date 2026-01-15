@@ -316,10 +316,10 @@ CompositeSpacePointLineFitter::fit(
       if (fitTime) {
         if constexpr (fastCalibrator) {
           FastFitDelegate_t<Cont_t, true> fitDelegate{
-              [this, &fitOpts](const Cont_t& measurements,
-                               const std::vector<int>& strawSigns) {
+              [this, &fitOpts, &result](const Cont_t& measurements,
+                                        const std::vector<int>& strawSigns) {
                 const double initialT0 =
-                    fitOpts.startParameters[toUnderlying(FitParIndex::t0)];
+                    result.parameters[toUnderlying(FitParIndex::t0)];
                 return m_fastFitter.fit(fitOpts.calibContext,
                                         *fitOpts.calibrator, measurements,
                                         strawSigns, initialT0);

@@ -67,6 +67,8 @@ def main():
         "todo.md",
         "bugs.md",
         "deprecated.md",
+        "acts-version-manager.js",
+        "tex-mml-chtml.js",
     )
 
     suffix_header = (

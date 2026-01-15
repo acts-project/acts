@@ -137,7 +137,8 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   surface.assignSurfaceMaterial(pNewMaterial);
   BOOST_CHECK_EQUAL(surface.surfaceMaterial(), pNewMaterial.get());
 
-  CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), pTransform, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(surface.localToGlobalTransform(tgContext), pTransform,
+                       1e-6, 1e-9);
 
   // type() is pure virtual
 }
