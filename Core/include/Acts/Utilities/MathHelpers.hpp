@@ -106,10 +106,11 @@ constexpr T sumUpToN(const T N) {
 /// @return Factorial result
 template <std::unsigned_integral T>
 constexpr T factorial(const T upperN, const T lowerN = 1) {
-  constexpr T one = 1;
-  constexpr T two = 2;
-  const T limit = std::max(two, lowerN);
-  return upperN >= limit ? upperN * factorial(upperN - 1, limit) : one;
+  T value{1};
+  for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
+    value *= iter;
+  }
+  return value;
 }
 /// @brief Calculate the binomial coefficient
 ///              n        n!
