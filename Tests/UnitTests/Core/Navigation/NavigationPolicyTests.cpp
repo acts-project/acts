@@ -44,6 +44,7 @@ struct APolicy : public INavigationPolicy {
 
   void initializeCandidates(const GeometryContext& /*unused*/,
                             const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
                             AppendOnlyNavigationStream& /*unused*/,
                             const Logger& /*unused*/) const {
     const_cast<APolicy*>(this)->executed = true;
@@ -71,6 +72,7 @@ struct BPolicy : public INavigationPolicy {
 
   void initializeCandidates(const GeometryContext& /*unused*/,
                             const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
                             AppendOnlyNavigationStream& /*unused*/,
                             const Logger& /*unused*/) const {
     const_cast<BPolicy*>(this)->executed = true;
@@ -215,6 +217,7 @@ struct CPolicySpecialized : public CPolicy {
 
   void initializeCandidates(const GeometryContext& /*unused*/,
                             const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
                             AppendOnlyNavigationStream& /*stream*/,
                             const Logger& /*logger*/) const {
     auto* self = const_cast<CPolicySpecialized<int>*>(this);
@@ -292,7 +295,8 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
-  tryAll.initializeCandidates(gctx, args, stream, logger);
+  NavigationPolicyState policyState;
+  tryAll.initializeCandidates(gctx, args, policyState, stream, logger);
   main.initialize(gctx, {gpos, gdir}, BoundaryTolerance::None());
   std::vector<const Portal*> portals;
   for (auto& candidate : main.candidates()) {
@@ -376,7 +380,8 @@ std::vector<const Portal*> getSmart(const Vector3& position,
   NavigationStream main;
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   AppendOnlyNavigationStream stream{main};
-  policy.initializeCandidates(gctx, args, stream, *logger);
+  NavigationPolicyState policyState;
+  policy.initializeCandidates(gctx, args, policyState, stream, *logger);
 
   std::vector<const Portal*> portals;
   // We don't filter here, because we want to test the candidates as they come
