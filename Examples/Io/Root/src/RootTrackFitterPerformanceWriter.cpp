@@ -67,9 +67,7 @@ ActsExamples::RootTrackFitterPerformanceWriter::
 
 ActsExamples::RootTrackFitterPerformanceWriter::
     ~RootTrackFitterPerformanceWriter() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  delete m_outputFile;
 }
 
 ActsExamples::ProcessCode
@@ -135,6 +133,10 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
   ActsPlugins::toRoot(m_trackSummaryPlotTool.nSharedHitsVsPt())->Write();
 
   ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
+
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
   return ProcessCode::SUCCESS;
 }
 
