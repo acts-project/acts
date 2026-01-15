@@ -18,6 +18,7 @@
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -28,6 +29,7 @@ namespace Acts {
 template <TrackContainerBackend track_container_t,
           CommonMultiTrajectoryBackend traj_t,
           template <typename> class holder_t>
+  requires HolderFor<holder_t, track_container_t> && HolderFor<holder_t, traj_t>
 class TrackContainer;
 
 template <bool read_only>
