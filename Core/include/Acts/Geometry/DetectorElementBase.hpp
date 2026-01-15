@@ -47,31 +47,28 @@ class DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return reference to the transform to switch from the element's
   ///         coordinates to the experiment's global coordinate system
-  virtual const Transform3& localToGlobalTransform(const GeometryContext& gctx)
-      const = 0 /*{
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-return transform(gctx);
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-}*/
+  virtual const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const = 0; /*{
+                             #if defined(__clang__)
+                             #pragma clang diagnostic push
+                             #pragma clang diagnostic ignored
+                             "-Wdeprecated-declarations" #elif defined(__GNUC__)
+                             #pragma GCC diagnostic push
+                             #pragma GCC diagnostic ignored
+                             "-Wdeprecated-declarations" #endif return
+                             transform(gctx); #if defined(__clang__) #pragma
+                             clang diagnostic pop #elif defined(__GNUC__)
+                             #pragma GCC diagnostic pop
+                             #endif
+                             }*/
 
-              /// Get a reference to the surface that is associated with this
-              /// detector element.
-              /// @note It is expected that the surface returned will have it's @ref
-              ///       Acts::Surface::associatedDetectorElement method return a
-              ///       pointer to this object.
-              /// @return Reference to a surface that represents this detector element
-              virtual const Surface
-              & surface() const = 0;
+  /// Get a reference to the surface that is associated with this
+  /// detector element.
+  /// @note It is expected that the surface returned will have it's @ref
+  ///       Acts::Surface::associatedDetectorElement method return a
+  ///       pointer to this object.
+  /// @return Reference to a surface that represents this detector element
+  virtual const Surface& surface() const = 0;
 
   /// @copydoc surface
   /// @return Reference to a surface that represents this detector element
