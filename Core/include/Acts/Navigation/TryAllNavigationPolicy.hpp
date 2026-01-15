@@ -50,6 +50,7 @@ class TryAllNavigationPolicy final : public INavigationPolicy {
   /// @param logger is the logger
   void initializeCandidates(const GeometryContext& gctx,
                             const NavigationArguments& args,
+                            NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 
