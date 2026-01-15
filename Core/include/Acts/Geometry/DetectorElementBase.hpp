@@ -35,12 +35,12 @@ class DetectorElementBase {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return reference to the transform of this detector element
-  /// [[deprecated(
-  ///     "Please use localToGlobalTransform(const GeometryContext& gctx) "
-  ///     "instead")]]
-  /// virtual const Transform3& transform(const GeometryContext& gctx) const {
-  ///   return localToGlobalTransform(gctx);
-  /// }
+  [[deprecated(
+      "Please use localToGlobalTransform(const GeometryContext& gctx) "
+      "instead")]]
+  virtual const Transform3& transform(const GeometryContext& gctx) const {
+    return localToGlobalTransform(gctx);
+  }
 
   /// Return the transform for the Element proxy mechanism
   ///
@@ -48,25 +48,27 @@ class DetectorElementBase {
   /// @return reference to the transform to switch from the element's
   ///         coordinates to the experiment's global coordinate system
   virtual const Transform3& localToGlobalTransform(
-      const GeometryContext& gctx) const = 0; /*{
-                             #if defined(__clang__)
-                             #pragma clang diagnostic push
-                             #pragma clang diagnostic ignored
-                             "-Wdeprecated-declarations" #elif defined(__GNUC__)
-                             #pragma GCC diagnostic push
-                             #pragma GCC diagnostic ignored
-                             "-Wdeprecated-declarations" #endif return
-                             transform(gctx); #if defined(__clang__) #pragma
-                             clang diagnostic pop #elif defined(__GNUC__)
-                             #pragma GCC diagnostic pop
-                             #endif
-                             }*/
+      const GeometryContext& gctx) const {
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+    return transform(gctx);
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+  }
 
-  /// Get a reference to the surface that is associated with this
-  /// detector element.
+  /// Get a reference to the surface that is associated with this detector
+  /// element.
   /// @note It is expected that the surface returned will have it's @ref
-  ///       Acts::Surface::associatedDetectorElement method return a
-  ///       pointer to this object.
+  ///       Acts::Surface::associatedDetectorElement method return a pointer to
+  ///       this object.
   /// @return Reference to a surface that represents this detector element
   virtual const Surface& surface() const = 0;
 
@@ -77,10 +79,9 @@ class DetectorElementBase {
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
   virtual double thickness() const = 0;
-
   /// Returns whether the detector element corresponds to a sensitive
   /// surface on which measurements are expressed
-  virtual bool isSensitive() const = 0;  // { return true; }
+  virtual bool isSensitive() const { return true; }
 };
 
 }  // namespace Acts
