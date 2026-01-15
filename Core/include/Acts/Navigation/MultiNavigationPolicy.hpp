@@ -9,6 +9,9 @@
 #pragma once
 
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Utilities/Zip.hpp"
+
+#include <ranges>
 
 namespace Acts {
 
@@ -53,6 +56,98 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   /// @param visitor The function to call for each policy
   void visit(const std::function<void(const INavigationPolicy&)>& visitor)
       const override;
+
+  struct State {
+    std::vector<NavigationPolicyState> policyStates;
+  };
+
+  bool isValid(const GeometryContext& gctx, const NavigationArguments args,
+               NavigationPolicyState& state,
+               const Logger& logger) const override {
+    ACTS_VERBOSE("MultiNavigationPolicy isValid check, forward to "
+                 << m_policyPtrs.size() << " policies.");
+
+    auto& thisState = state.as<State>();
+    if (thisState.policyStates.size() != m_policyPtrs.size()) {
+      ACTS_ERROR("MultiNavigationPolicy isValid: number of states ("
+                 << thisState.policyStates.size()
+                 << ") does not match number of policies ("
+                 << m_policyPtrs.size() << ").");
+      throw std::runtime_error(
+          "MultiNavigationPolicy isValid: inconsistent state size.");
+    }
+
+    for (auto [policy, policyState] :
+         zip(m_policyPtrs, thisState.policyStates)) {
+      if (!policy->isValid(gctx, args, policyState, logger)) {
+        return false;
+      }
+    }
+    // If no policy rejected, return true
+    return true;
+  }
+
+  NavigationPolicyState createState(const GeometryContext& gctx,
+                                    const NavigationArguments args,
+                                    NavigationPolicyStateManager& stateManager,
+                                    const Logger& logger) const override {
+    ACTS_VERBOSE("MultiNavigationPolicy createState, create states for "
+                 << m_policyPtrs.size() << " policies.");
+
+    // Push child states first, then at the end push this policy's state,
+    // containing the references
+
+    std::vector<NavigationPolicyState> states;
+    states.reserve(m_policyPtrs.size());
+
+    for (const auto& policy : m_policyPtrs) {
+      ACTS_VERBOSE("Creating child state for policy ");
+      states.emplace_back(
+          policy->createState(gctx, args, stateManager, logger));
+    }
+
+    ACTS_VERBOSE("Created "
+                 << states.size()
+                 << " child states for MultiNavigationPolicy (of which "
+                 << std::ranges::count_if(
+                        states, [](const auto& s) { return !s.empty(); })
+                 << " are valid)");
+
+    auto [state, any] = stateManager.pushState<State>(std::move(states));
+    return any;
+  }
+
+  void popState(NavigationPolicyStateManager& stateManager,
+                const Logger& logger) const override {
+    // By default, we didn't push anything, so we don't need to poop anything
+    ACTS_VERBOSE("MultiNavigationPolicy popState called, popping for "
+                 << m_policyPtrs.size() << " child policies");
+
+    // `createState` pushed a State containing all child states, so we
+    // pop the current state (which should be this policy's state) and then pop
+    // however many non-empty states the children had pushed.
+
+    std::vector<NavigationPolicyState> states =
+        std::move(stateManager.currentState().as<State>().policyStates);
+    stateManager.popState();
+
+    if (states.size() != m_policyPtrs.size()) {
+      ACTS_ERROR("MultiNavigationPolicy popState: number of states ("
+                 << states.size() << ") does not match number of policies ("
+                 << m_policyPtrs.size() << ").");
+      throw std::runtime_error(
+          "MultiNavigationPolicy popState: inconsistent state size.");
+    }
+
+    // @TODO: Possibly use updated zip | reverse
+    for (std::size_t i = states.size(); i-- > 0;) {
+      auto& state = states[i];
+      auto& policy = m_policyPtrs[i];
+      if (!state.empty()) {
+        policy->popState(stateManager, logger);
+      }
+    }
+  }
 
  private:
   /// Initialize navigation candidates by calling all contained policies
