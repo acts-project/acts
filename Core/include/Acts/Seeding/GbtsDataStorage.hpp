@@ -13,6 +13,7 @@
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 
 #include <array>
+#include <cstdint>
 #include <limits>
 #include <span>
 #include <vector>
