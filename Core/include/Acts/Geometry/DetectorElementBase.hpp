@@ -35,7 +35,34 @@ class DetectorElementBase {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return reference to the transform of this detector element
-  virtual const Transform3& transform(const GeometryContext& gctx) const = 0;
+  [[deprecated(
+      "Please use localToGlobalTransform(const GeometryContext& gctx) "
+      "instead")]]
+  virtual const Transform3& transform(const GeometryContext& gctx) const {
+    return localToGlobalTransform(gctx);
+  }
+
+  /// Return the transform for the Element proxy mechanism
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return reference to the transform to switch from the element's
+  ///         coordinates to the experiment's global coordinate system
+  virtual const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const {
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+    return transform(gctx);
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+  }
 
   /// Get a reference to the surface that is associated with this detector
   /// element.

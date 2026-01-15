@@ -86,7 +86,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
     // This is safe ONLY(!) if there is no associated detector element, since
     // the surface will not inspect the geometry context at all by itself.
     GeometryContext gctx;
-    trf = surface.transform(gctx).matrix();
+    trf = surface.localToGlobalTransform(gctx).matrix();
   }
 
   return result;
