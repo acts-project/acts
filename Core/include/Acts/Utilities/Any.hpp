@@ -308,10 +308,9 @@ class AnyBase : public AnyBaseAll {
   }
 
   template <typename T>
-  static consteval std::uint64_t typeHash() {
-    // Technically, `__PRETTY_FUNCTION__` contains extra content, but should be
-    // unique per type, that's all we care about.
-    return detail::fnv1a_64(__PRETTY_FUNCTION__);
+  static std::uint64_t typeHash() {
+    const static std::uint64_t value = detail::fnv1a_64(typeid(T).name());
+    return value;
   }
 
   struct Handler {
