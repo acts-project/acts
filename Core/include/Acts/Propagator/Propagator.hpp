@@ -11,6 +11,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/Propagation.hpp"
+#include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/PropagatorResult.hpp"
 #include "Acts/Propagator/PropagatorState.hpp"
@@ -368,6 +370,177 @@ class Propagator final
   Result<ResultType<propagator_options_t>> makeResult(
       propagator_state_t state, Result<void> result, const Surface& target,
       const propagator_options_t& options) const;
+
+  template <typename propagator_state_t>
+  Result<NavigationTarget> getNextTarget(propagator_state_t& state) const;
+
+  template <typename propagator_state_t>
+  Result<void> performStep(propagator_state_t& state) const;
+
+  template <typename propagator_state_t>
+  Result<void> reachNextSurface(propagator_state_t& state) const;
+
+  template <typename propagator_state_t>
+  Result<bool> prePropagation(propagator_state_t& state) const;
+
+  template <typename propagator_state_t>
+  Result<void> postPropagation(propagator_state_t& state) const;
+
+  template <typename propagator_state_t>
+  class StepByStepPropagation {
+   public:
+    using StepByStepPropagationType = StepByStepPropagation<propagator_state_t>;
+    using PropagatorType = Propagator<Stepper, Navigator>;
+    using PropagationType = Propagation<PropagatorType, propagator_state_t>;
+
+    class Iterator {
+     public:
+      Iterator() = default;
+      Iterator(StepByStepPropagationType& propagation, bool done)
+          : m_propagation(&propagation), m_done(done) {}
+      Iterator(const Iterator&) = delete;
+      Iterator(Iterator&&) = default;
+      Iterator& operator=(const Iterator&) = delete;
+      Iterator& operator=(Iterator&&) = default;
+
+      bool operator==(const Iterator& other) const {
+        return m_propagation == other.m_propagation && m_done == other.m_done;
+      }
+
+      std::tuple<const Result<void>&, PropagationType> operator*() const {
+        return {m_lastResult, propagation()};
+      }
+
+      Iterator& operator++() {
+        if (m_done || !m_lastResult.ok()) {
+          return *this;
+        }
+
+        const Result<void> resStep = propagation().performStep();
+        m_lastResult = resStep;
+        m_done = propagation().state().terminatedNormally;
+
+        return *this;
+      }
+
+     private:
+      StepByStepPropagationType* m_propagation{nullptr};
+      Result<void> m_lastResult = Result<void>::success();
+      bool m_done{false};
+
+      PropagationType propagation() const {
+        return PropagationType(*m_propagation->m_propagator,
+                               m_propagation->m_state);
+      }
+    };
+
+    StepByStepPropagation(const PropagatorType& propagator,
+                          propagator_state_t state)
+        : m_propagator(&propagator), m_state(std::move(state)) {}
+
+    Iterator begin() { return Iterator(*this, false); }
+    Iterator end() { return Iterator(*this, true); }
+
+   private:
+    const PropagatorType* m_propagator{nullptr};
+    propagator_state_t m_state;
+  };
+
+  template <typename parameters_t, typename propagator_options_t,
+            typename path_aborter_t = PathLimitReached>
+  auto propagateStepByStep(const parameters_t& start,
+                           const propagator_options_t& options) const {
+    auto state = makeState<propagator_options_t, path_aborter_t>(options);
+    using StateType = decltype(state);
+
+    auto initRes =
+        initialize<StateType, parameters_t, path_aborter_t>(state, start);
+    // TODO check result
+
+    auto preRes = prePropagation(state);
+    // TODO check result
+
+    return StepByStepPropagation<StateType>(*this, std::move(state));
+  }
+
+  template <typename propagator_state_t>
+  class SurfaceBySurfacePropagation {
+   public:
+    using SurfaceBySurfacePropagationType =
+        SurfaceBySurfacePropagation<propagator_state_t>;
+    using PropagatorType = Propagator<Stepper, Navigator>;
+    using PropagationType = Propagation<PropagatorType, propagator_state_t>;
+
+    class Iterator {
+     public:
+      Iterator() = default;
+      Iterator(SurfaceBySurfacePropagationType& propagation, bool done)
+          : m_propagation(&propagation), m_done(done) {}
+      Iterator(const Iterator&) = delete;
+      Iterator(Iterator&&) = default;
+      Iterator& operator=(const Iterator&) = delete;
+      Iterator& operator=(Iterator&&) = default;
+
+      bool operator==(const Iterator& other) const {
+        return m_propagation == other.m_propagation && m_done == other.m_done;
+      }
+
+      std::tuple<const Result<void>&, const Surface*, PropagationType>
+      operator*() const {
+        return {m_lastResult, propagation().currentSurface(), propagation()};
+      }
+
+      Iterator& operator++() {
+        if (m_done || !m_lastResult.ok()) {
+          return *this;
+        }
+
+        const Result<void> resNextSurface = propagation().reachNextSurface();
+        m_lastResult = resNextSurface.error();
+        m_done = propagation().state().terminatedNormally;
+
+        return *this;
+      }
+
+     private:
+      SurfaceBySurfacePropagationType* m_propagation{nullptr};
+      Result<void> m_lastResult = Result<void>::success();
+      bool m_done{false};
+
+      PropagationType propagation() const {
+        return PropagationType(*m_propagation->m_propagator,
+                               m_propagation->m_state);
+      }
+    };
+
+    SurfaceBySurfacePropagation(const PropagatorType& propagator,
+                                propagator_state_t state)
+        : m_propagator(&propagator), m_state(std::move(state)) {}
+
+    Iterator begin() { return Iterator(*this, false); }
+    Iterator end() { return Iterator(*this, true); }
+
+   private:
+    const PropagatorType* m_propagator{nullptr};
+    propagator_state_t m_state;
+  };
+
+  template <typename parameters_t, typename propagator_options_t,
+            typename path_aborter_t = PathLimitReached>
+  auto propagateSurfaceBySurface(const parameters_t& start,
+                                 const propagator_options_t& options) const {
+    auto state = makeState<propagator_options_t, path_aborter_t>(options);
+    using StateType = decltype(state);
+
+    auto initRes =
+        initialize<StateType, parameters_t, path_aborter_t>(state, start);
+    // TODO check result
+
+    auto preRes = prePropagation(state);
+    // TODO check result
+
+    return SurfaceBySurfacePropagation<StateType>(*this, std::move(state));
+  }
 
  private:
   /// Implementation of propagation algorithm

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorStatistics.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 
@@ -68,6 +69,8 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
   /// Propagation stage
   PropagatorStage stage = PropagatorStage::invalid;
 
+  NavigationTarget nextTarget = NavigationTarget::None();
+
   /// The position of the propagation
   Vector3 position = Vector3::Zero();
 
@@ -85,6 +88,8 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
 
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
+
+  bool terminatedNormally = false;
 
   /// Statistics of the propagation
   PropagatorStatistics statistics;

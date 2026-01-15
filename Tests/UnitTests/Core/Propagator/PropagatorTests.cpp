@@ -484,6 +484,49 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(BLA) {
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 2_T});
+  EigenStepper<> eigenStepper{field};
+  VoidNavigator navigator{};
+
+  std::shared_ptr<PlaneSurface> startSurface =
+      CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
+  std::shared_ptr<PlaneSurface> targetSurface =
+      CurvilinearSurface(Vector3::UnitX() * 20_mm, Vector3::UnitX())
+          .planeSurface();
+
+  BoundVector startPars;
+  startPars << 0, 0, 0, std::numbers::pi / 2., 1 / 1_GeV, 0;
+
+  BoundTrackParameters startParameters{startSurface, startPars, std::nullopt,
+                                       ParticleHypothesis::pion()};
+
+  BoundTrackParameters startCurv = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+
+  GeometryContext gctx;
+  MagneticFieldContext mctx;
+
+  EigenPropagatorType::Options<> options{gctx, mctx};
+
+  Propagator propagator{eigenStepper, navigator};
+
+  for (auto [result, propagation] :
+       propagator.propagateStepByStep(startParameters, options)) {
+    BOOST_CHECK(result.ok());
+
+    std::cout << "position: " << propagation.position().transpose() << "\n";
+  }
+
+  for (auto [result, surface, propagation] :
+       propagator.propagateSurfaceBySurface(startParameters, options)) {
+    BOOST_CHECK(result.ok());
+
+    std::cout << "position: " << propagation.position().transpose() << "\n";
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

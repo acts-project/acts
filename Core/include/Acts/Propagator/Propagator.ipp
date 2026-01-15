@@ -24,169 +24,213 @@ namespace Acts {
 
 template <typename S, typename N>
 template <typename propagator_state_t>
-Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
-  ACTS_VERBOSE("Entering propagation.");
-
-  state.stage = PropagatorStage::prePropagation;
-
-  // Pre-Propagation: call to the actor list, abort condition check
-  state.options.actorList.act(state, m_stepper, m_navigator, logger());
-
-  if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
-                                         logger())) {
-    ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
-
-    state.stage = PropagatorStage::postPropagation;
-
-    return state.options.actorList.act(state, m_stepper, m_navigator, logger());
+Result<NavigationTarget> Propagator<S, N>::getNextTarget(
+    propagator_state_t& state) const {
+  for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
+    NavigationTarget nextTarget = m_navigator.nextTarget(
+        state.navigation, state.position, state.direction);
+    if (nextTarget.isNone()) {
+      return NavigationTarget::None();
+    }
+    IntersectionStatus preStepSurfaceStatus = m_stepper.updateSurfaceStatus(
+        state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
+        state.options.direction, nextTarget.boundaryTolerance(),
+        state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
+        logger());
+    if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
+      // This indicates a geometry overlap which is not handled by the
+      // navigator, so we skip this target.
+      // This can also happen in a well-behaved geometry with external
+      // surfaces.
+      ACTS_VERBOSE("Pre-step surface status is onSurface, skipping target "
+                   << nextTarget.surface().geometryId());
+      continue;
+    }
+    if (preStepSurfaceStatus == IntersectionStatus::reachable) {
+      return nextTarget;
+    }
   }
 
-  auto getNextTarget = [&]() -> Result<NavigationTarget> {
-    for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
-      NavigationTarget nextTarget = m_navigator.nextTarget(
-          state.navigation, state.position, state.direction);
-      if (nextTarget.isNone()) {
-        return NavigationTarget::None();
-      }
-      IntersectionStatus preStepSurfaceStatus = m_stepper.updateSurfaceStatus(
-          state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
-          state.options.direction, nextTarget.boundaryTolerance(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
-      if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
-        // This indicates a geometry overlap which is not handled by the
-        // navigator, so we skip this target.
-        // This can also happen in a well-behaved geometry with external
-        // surfaces.
-        ACTS_VERBOSE("Pre-step surface status is onSurface, skipping target "
-                     << nextTarget.surface().geometryId());
-        continue;
-      }
-      if (preStepSurfaceStatus == IntersectionStatus::reachable) {
-        return nextTarget;
-      }
-    }
+  ACTS_ERROR("getNextTarget failed to find a valid target surface after "
+             << state.options.maxTargetSkipping << " attempts.");
+  return Result<NavigationTarget>::failure(
+      PropagatorError::NextTargetLimitReached);
+}
 
-    ACTS_ERROR("getNextTarget failed to find a valid target surface after "
-               << state.options.maxTargetSkipping << " attempts.");
-    return Result<NavigationTarget>::failure(
-        PropagatorError::NextTargetLimitReached);
-  };
-
-  // priming error condition
-  bool terminatedNormally = false;
-
+template <typename S, typename N>
+template <typename propagator_state_t>
+Result<void> Propagator<S, N>::performStep(propagator_state_t& state) const {
   // Pre-Stepping: target setting
   state.stage = PropagatorStage::preStep;
 
-  Result<NavigationTarget> nextTargetResult = getNextTarget();
-  if (!nextTargetResult.ok()) {
-    return nextTargetResult.error();
-  }
-  NavigationTarget nextTarget = *nextTargetResult;
-
-  ACTS_VERBOSE("Starting stepping loop.");
-
-  // Stepping loop
-  for (; state.steps < state.options.maxSteps; ++state.steps) {
-    // Perform a step
-    Result<double> res =
-        m_stepper.step(state.stepping, state.options.direction,
-                       m_navigator.currentVolumeMaterial(state.navigation));
-    if (!res.ok()) {
-      ACTS_ERROR("Step failed with " << res.error() << ": "
-                                     << res.error().message());
-      // pass error to caller
-      return res.error();
-    }
-    // Accumulate the path length
-    state.pathLength += *res;
-    // Update the position and direction
-    state.position = m_stepper.position(state.stepping);
-    state.direction =
-        state.options.direction * m_stepper.direction(state.stepping);
-
-    ACTS_VERBOSE("Step with size " << *res << " performed. We are now at "
-                                   << state.position.transpose()
-                                   << " with direction "
-                                   << state.direction.transpose());
-
-    // release actor and aborter constrains after step was performed
-    m_stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
-    m_stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Actor);
-
-    // Post-stepping: check target status, call actors, check abort conditions
-    state.stage = PropagatorStage::postStep;
-
-    if (!nextTarget.isNone()) {
-      IntersectionStatus postStepSurfaceStatus = m_stepper.updateSurfaceStatus(
-          state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
-          state.options.direction, nextTarget.boundaryTolerance(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
-      if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
-        m_navigator.handleSurfaceReached(state.navigation, state.position,
-                                         state.direction, nextTarget.surface());
-      }
-      if (postStepSurfaceStatus != IntersectionStatus::reachable) {
-        nextTarget = NavigationTarget::None();
-      }
-    }
-
-    Result<void> actResult =
-        state.options.actorList.act(state, m_stepper, m_navigator, logger());
-    if (!actResult.ok()) {
-      return actResult;
-    }
-
-    if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
-                                           logger())) {
-      terminatedNormally = true;
-      break;
-    }
-
-    // Update the position and direction because actors might have changed it
-    state.position = m_stepper.position(state.stepping);
-    state.direction =
-        state.options.direction * m_stepper.direction(state.stepping);
-
-    // Pre-Stepping: target setting
-    state.stage = PropagatorStage::preStep;
-
-    if (!nextTarget.isNone() &&
-        !m_navigator.checkTargetValid(state.navigation, state.position,
-                                      state.direction)) {
-      ACTS_VERBOSE("Target is not valid anymore.");
-      nextTarget = NavigationTarget::None();
-    }
-
-    if (nextTarget.isNone()) {
-      // navigator step constraint is not valid anymore
-      m_stepper.releaseStepSize(state.stepping,
-                                ConstrainedStep::Type::Navigator);
-
-      nextTargetResult = getNextTarget();
-      if (!nextTargetResult.ok()) {
-        return nextTargetResult.error();
-      }
-      nextTarget = *nextTargetResult;
-    }
-  }  // end of stepping loop
-
-  // check if we didn't terminate normally via aborters
-  if (!terminatedNormally) {
+  if (state.steps >= state.options.maxSteps) {
     ACTS_ERROR("Propagation reached the step count limit of "
                << state.options.maxSteps << " (did " << state.steps
                << " steps)");
     return PropagatorError::StepCountLimitReached;
   }
 
-  ACTS_VERBOSE("Stepping loop done.");
+  if (!state.nextTarget.isNone() &&
+      !m_navigator.checkTargetValid(state.navigation, state.position,
+                                    state.direction)) {
+    ACTS_VERBOSE("Target is not valid anymore.");
+    state.nextTarget = NavigationTarget::None();
+  }
 
+  if (state.nextTarget.isNone()) {
+    // navigator step constraint is not valid anymore
+    m_stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
+
+    const Result<NavigationTarget> nextTargetResult = getNextTarget(state);
+    if (!nextTargetResult.ok()) {
+      return nextTargetResult.error();
+    }
+    state.nextTarget = *nextTargetResult;
+  }
+
+  // Perform a step
+  const Result<double> res =
+      m_stepper.step(state.stepping, state.options.direction,
+                     m_navigator.currentVolumeMaterial(state.navigation));
+  if (!res.ok()) {
+    ACTS_ERROR("Step failed with " << res.error() << ": "
+                                   << res.error().message());
+    // pass error to caller
+    return res.error();
+  }
+  // Accumulate the path length
+  state.pathLength += *res;
+  // Update the position and direction
+  state.position = m_stepper.position(state.stepping);
+  state.direction =
+      state.options.direction * m_stepper.direction(state.stepping);
+
+  ACTS_VERBOSE("Step with size " << *res << " performed. We are now at "
+                                 << state.position.transpose()
+                                 << " with direction "
+                                 << state.direction.transpose());
+
+  // release actor and aborter constrains after step was performed
+  m_stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
+  m_stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Actor);
+
+  // Post-stepping: check target status, call actors, check abort conditions
+  state.stage = PropagatorStage::postStep;
+
+  if (!state.nextTarget.isNone()) {
+    IntersectionStatus postStepSurfaceStatus = m_stepper.updateSurfaceStatus(
+        state.stepping, state.nextTarget.surface(),
+        state.nextTarget.intersectionIndex(), state.options.direction,
+        state.nextTarget.boundaryTolerance(), state.options.surfaceTolerance,
+        ConstrainedStep::Type::Navigator, logger());
+    if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
+      m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                       state.direction,
+                                       state.nextTarget.surface());
+    }
+    if (postStepSurfaceStatus != IntersectionStatus::reachable) {
+      state.nextTarget = NavigationTarget::None();
+    }
+  }
+
+  const Result<void> actResult =
+      state.options.actorList.act(state, m_stepper, m_navigator, logger());
+  if (!actResult.ok()) {
+    return actResult.error();
+  }
+
+  // Update the position and direction because actors might have changed it
+  state.position = m_stepper.position(state.stepping);
+  state.direction =
+      state.options.direction * m_stepper.direction(state.stepping);
+
+  if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                         logger())) {
+    state.terminatedNormally = true;
+    return Result<void>::success();
+  }
+
+  ++state.steps;
+
+  return Result<void>::success();
+}
+
+template <typename S, typename N>
+template <typename propagator_state_t>
+Result<void> Propagator<S, N>::reachNextSurface(
+    propagator_state_t& state) const {
+  while (!state.terminatedNormally) {
+    const Result<void> stepRes = performStep(state);
+    if (!stepRes.ok()) {
+      return stepRes.error();
+    }
+    const Surface* currentSurface =
+        m_navigator.currentSurface(state.navigation);
+    if (currentSurface != nullptr) {
+      return Result<void>::success();
+    }
+  }
+
+  return PropagatorError::NextSurfaceNotReached;
+}
+
+template <typename S, typename N>
+template <typename propagator_state_t>
+Result<bool> Propagator<S, N>::prePropagation(propagator_state_t& state) const {
+  state.stage = PropagatorStage::prePropagation;
+
+  // Pre-Propagation: call to the actor list, abort condition check
+  const Result<void> actResult =
+      state.options.actorList.act(state, m_stepper, m_navigator, logger());
+  if (!actResult.ok()) {
+    return Result<bool>::failure(actResult.error());
+  }
+
+  if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                         logger())) {
+    return Result<bool>::success(false);
+  }
+
+  return Result<bool>::success(true);
+}
+
+template <typename S, typename N>
+template <typename propagator_state_t>
+Result<void> Propagator<S, N>::postPropagation(
+    propagator_state_t& state) const {
+  // Post-Propagation: call to the actor list
   state.stage = PropagatorStage::postPropagation;
 
-  // Post-stepping call to the actor list
   return state.options.actorList.act(state, m_stepper, m_navigator, logger());
+}
+
+template <typename S, typename N>
+template <typename propagator_state_t>
+Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
+  ACTS_VERBOSE("Entering propagation.");
+
+  const Result<bool> prePropagationResult = prePropagation(state);
+  if (!prePropagationResult.ok()) {
+    return prePropagationResult.error();
+  }
+  if (!prePropagationResult.value()) {
+    ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
+
+    return postPropagation(state);
+  }
+
+  ACTS_VERBOSE("Starting stepping loop.");
+
+  while (!state.terminatedNormally) {
+    const Result<void> stepRes = performStep(state);
+    if (!stepRes.ok()) {
+      return stepRes.error();
+    }
+  }
+
+  ACTS_VERBOSE("Stepping loop done.");
+
+  return postPropagation(state);
 }
 
 template <typename S, typename N>
@@ -300,6 +344,12 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
                                           const parameters_t& start) const {
   static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
+
+  state.stage = PropagatorStage::prePropagation;
+
+  state.nextTarget = NavigationTarget::None();
+
+  state.terminatedNormally = false;
 
   m_stepper.initialize(state.stepping, start.toBound());
 
