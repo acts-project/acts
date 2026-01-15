@@ -117,6 +117,24 @@ BOOST_AUTO_TEST_CASE(ConstructFromConstTrackProxy) {
   BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
 }
 
+BOOST_AUTO_TEST_CASE(ConstructFromReadOnlyTrackContainer) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer tc{vtc, mtj};
+
+  auto track = tc.makeTrack();
+  fillTestTrack<decltype(tc)>(track);
+
+  TrackContainer constTc{ConstVectorTrackContainer{vtc},
+                         ConstVectorMultiTrajectory{mtj}};
+  auto constTrack = constTc.getTrack(track.index());
+
+  AnyConstTrackProxy anyTrack(constTrack);
+
+  BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
+  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundLoc0), 1.0, 1e-6);
+}
+
 BOOST_AUTO_TEST_CASE(AccessIndices) {
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
