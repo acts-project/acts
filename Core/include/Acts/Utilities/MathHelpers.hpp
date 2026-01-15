@@ -99,18 +99,25 @@ template <std::integral T>
 constexpr T sumUpToN(const T N) {
   return N * (N + 1) / 2;
 }
-/// @brief Calculates the factorial of a number
-///        N!= N*(N-1)....*3*2*1
-/// @param upperN: Upper factor until which the factorial is calculated
-/// @param lowerN: Optional argument to remove the first factors from the calculation
+/// @brief Calculates the product of all integers
+///        within the given integer range
+///           (nLower)(nLower +1)(...)(upper-1)(upper)
+/// @param upperN: Upper range of the product calculation
+/// @param lowerN: Lower range of the product calculation
 /// @return Factorial result
 template <std::unsigned_integral T>
-constexpr T factorial(const T upperN, const T lowerN = 1) {
+constexpr T product(const T upperN, const T lowerN) {
   T value{1};
   for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
     value *= iter;
   }
   return value;
+}
+/// @brief Calculate the the factorial of an integer
+/// @param N: Number of which the factorial is to be calculated
+template <std::unsigned_integral T>
+constexpr T factorial(const T N) {
+  return product<T>(N, 1);
 }
 /// @brief Calculate the binomial coefficient
 ///              n        n!
@@ -119,9 +126,9 @@ constexpr T factorial(const T upperN, const T lowerN = 1) {
 /// @param n Upper value in binomial coefficient
 /// @param k Lower value in binomial coefficient
 /// @return Binomial coefficient n choose k
-template <std::integral T>
+template <std::unsigned_integral T>
 constexpr T binomial(const T n, const T k) {
-  return factorial<T>(n, n - k + 1) / factorial<T>(k);
+  return product<T>(n, n - k + 1) / factorial<T>(k);
 }
 
 }  // namespace Acts
