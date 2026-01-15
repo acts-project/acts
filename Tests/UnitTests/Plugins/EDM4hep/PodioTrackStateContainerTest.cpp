@@ -93,13 +93,16 @@ struct MapHelper : public NullHelper {
 };
 
 struct Factory {
-  using trajectory_t = MutablePodioTrackStateContainer;
-  using const_trajectory_t = ConstPodioTrackStateContainer;
+  using trajectory_t = MutablePodioTrackStateContainer<>;
+  using const_trajectory_t = ConstPodioTrackStateContainer<>;
 
   MapHelper m_helper;
 
-  MutablePodioTrackStateContainer create() {
-    return MutablePodioTrackStateContainer{m_helper};
+  MutablePodioTrackStateContainer<> create() {
+    return MutablePodioTrackStateContainer<>{
+        m_helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+        std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+        std::make_unique<ActsPodioEdm::JacobianCollection>()};
   }
 };
 
@@ -242,16 +245,19 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
   podio::Frame frame;
 
-  MutablePodioTrackStateContainer c{helper};
-  BOOST_CHECK(!c.hasColumn("int_column"_hash));
-  BOOST_CHECK(!c.hasColumn("float_column"_hash));
-  c.addColumn<std::int32_t>("int_column");
-  c.addColumn<float>("float_column");
-  BOOST_CHECK(c.hasColumn("int_column"_hash));
-  BOOST_CHECK(c.hasColumn("float_column"_hash));
+  auto c = std::make_shared<MutablePodioTrackStateContainer<>>(
+      helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+      std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+      std::make_unique<ActsPodioEdm::JacobianCollection>());
+  BOOST_CHECK(!c->hasColumn("int_column"_hash));
+  BOOST_CHECK(!c->hasColumn("float_column"_hash));
+  c->addColumn<std::int32_t>("int_column");
+  c->addColumn<float>("float_column");
+  BOOST_CHECK(c->hasColumn("int_column"_hash));
+  BOOST_CHECK(c->hasColumn("float_column"_hash));
 
   {
-    auto t1 = c.makeTrackState(TrackStatePropMask::Predicted);
+    auto t1 = c->makeTrackState(TrackStatePropMask::Predicted);
     t1.predicted() = tv1;
     t1.predictedCovariance() = cov1;
 
@@ -281,7 +287,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
     t3.component<float, "float_column"_hash>() = -98.9f;
   }
 
-  c.releaseInto(frame, "test");
+  c->releaseInto(frame, "test");
 
   BOOST_CHECK_EQUAL(frame.get("trackStates_test")->size(), 3);
   BOOST_CHECK_EQUAL(frame.get("trackStateParameters_test")->size(), 7);
@@ -289,15 +295,16 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   BOOST_CHECK_NE(frame.get("trackStates_test_extra__int_column"), nullptr);
   BOOST_CHECK_NE(frame.get("trackStates_test_extra__float_column"), nullptr);
 
-  ConstPodioTrackStateContainer cc{helper, frame, "test"};
+  auto cc =
+      std::make_shared<ConstPodioTrackStateContainer<>>(helper, frame, "test");
 
-  BOOST_CHECK_EQUAL(cc.size(), 3);
-  BOOST_CHECK(cc.hasColumn("int_column"_hash));
-  BOOST_CHECK(cc.hasColumn("float_column"_hash));
+  BOOST_CHECK_EQUAL(cc->size(), 3);
+  BOOST_CHECK(cc->hasColumn("int_column"_hash));
+  BOOST_CHECK(cc->hasColumn("float_column"_hash));
 
-  auto t1 = cc.getTrackState(0);
-  auto t2 = cc.getTrackState(1);
-  auto t3 = cc.getTrackState(2);
+  auto t1 = cc->getTrackState(0);
+  auto t2 = cc->getTrackState(1);
+  auto t3 = cc->getTrackState(2);
 
   BOOST_CHECK_EQUAL(t2.previous(), 0);
 
@@ -338,6 +345,38 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   BOOST_CHECK_EQUAL((t1.component<float, "float_column"_hash>()), -11.2f);
   BOOST_CHECK_EQUAL((t2.component<float, "float_column"_hash>()), 42.4f);
   BOOST_CHECK_EQUAL((t3.component<float, "float_column"_hash>()), -98.9f);
+}
+
+BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
+  NullHelper helper;
+
+  // Test external collection constructor (non-owning via RefHolder)
+  ActsPodioEdm::TrackStateCollection externalTrackStates;
+  ActsPodioEdm::BoundParametersCollection externalParams;
+  ActsPodioEdm::JacobianCollection externalJacs;
+
+  auto externalContainer =
+      std::make_shared<MutablePodioTrackStateContainer<Acts::RefHolder>>(
+          helper, externalTrackStates, externalParams, externalJacs);
+
+  // Add a track state to the external container
+  auto ts = externalContainer->addTrackState_impl();
+  BOOST_CHECK_EQUAL(ts, 0);
+  BOOST_CHECK_EQUAL(externalContainer->size_impl(), 1);
+  BOOST_CHECK_EQUAL(externalTrackStates.size(), 1);
+
+  // Test owned collection constructor (default using std::unique_ptr)
+  auto ownedContainer = std::make_shared<MutablePodioTrackStateContainer<>>(
+      helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+      std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+      std::make_unique<ActsPodioEdm::JacobianCollection>());
+  ts = ownedContainer->addTrackState_impl();
+  BOOST_CHECK_EQUAL(ts, 0);
+  BOOST_CHECK_EQUAL(ownedContainer->size_impl(), 1);
+
+  // Test that releaseInto works for owned collections
+  podio::Frame frame;
+  BOOST_CHECK_NO_THROW(ownedContainer->releaseInto(frame, ""));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
