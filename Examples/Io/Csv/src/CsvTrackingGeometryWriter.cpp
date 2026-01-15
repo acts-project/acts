@@ -21,7 +21,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -31,15 +30,14 @@
 #include <array>
 #include <cstddef>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 #include "CsvOutputData.hpp"
 
-using namespace ActsExamples;
+namespace ActsExamples {
 
-CsvTrackingGeometryWriter::CsvTrackingGeometryWriter(
-    const CsvTrackingGeometryWriter::Config& config, Acts::Logging::Level level)
+CsvTrackingGeometryWriter::CsvTrackingGeometryWriter(const Config& config,
+                                                     Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("CsvTrackingGeometryWriter", level))
 
@@ -59,9 +57,9 @@ std::string CsvTrackingGeometryWriter::name() const {
 
 namespace {
 
-using SurfaceWriter = ActsExamples::NamedTupleCsvWriter<SurfaceData>;
-using SurfaceGridWriter = ActsExamples::NamedTupleCsvWriter<SurfaceGridData>;
-using LayerVolumeWriter = ActsExamples::NamedTupleCsvWriter<LayerVolumeData>;
+using SurfaceWriter = NamedTupleCsvWriter<SurfaceData>;
+using SurfaceGridWriter = NamedTupleCsvWriter<SurfaceGridData>;
+using LayerVolumeWriter = NamedTupleCsvWriter<LayerVolumeData>;
 using BoundarySurface = Acts::BoundarySurfaceT<Acts::TrackingVolume>;
 
 /// Write a single surface.
@@ -80,7 +78,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   data.cy = center.y() / Acts::UnitConstants::mm;
   data.cz = center.z() / Acts::UnitConstants::mm;
   // rotation matrix components are unit-less
-  auto transform = surface.transform(geoCtx);
+  auto transform = surface.localToGlobalTransform(geoCtx);
   data.rot_xu = transform(0, 0);
   data.rot_xv = transform(0, 1);
   data.rot_xw = transform(0, 2);
@@ -396,3 +394,5 @@ ProcessCode CsvTrackingGeometryWriter::finalize() {
               m_cfg.writeLayerVolume, Acts::GeometryContext());
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

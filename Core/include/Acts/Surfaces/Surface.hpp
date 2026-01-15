@@ -175,7 +175,19 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return the contextual transform
-  virtual const Transform3& transform(const GeometryContext& gctx) const;
+  [[deprecated(
+      "Please use localToGlobalTransform(const GeometryContext& gctx) "
+      "instead")]]
+  const Transform3& transform(const GeometryContext& gctx) const;
+  /// Return method for the surface Transform3 by reference
+  /// In case a detector element is associated the surface transform
+  /// is just forwarded to the detector element in order to keep the
+  /// (mis-)alignment cache cetrally handled
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  ///
+  /// @return the contextual transform
+  const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
 
   /// Return method for the surface center
   /// @note the center is always recalculated in order to not keep a cache
@@ -384,7 +396,7 @@ class Surface : public virtual GeometryObject,
                                                 const Vector3& position,
                                                 const Vector3& direction) const;
 
-  /// Calucation of the path correction for incident
+  /// Calculation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position

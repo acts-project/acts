@@ -32,33 +32,23 @@ concept ConstProxyType = requires(T t, HashedString key) {
 };
 
 template <typename T>
-concept ProxyType = (MutableProxyType<T> || ConstProxyType<T>) && requires {
-  typename T::ConstProxyType;
+concept ProxyType = (MutableProxyType<T> || ConstProxyType<T>) &&
+                    requires(T t, HashedString key) {
+                      typename T::ConstProxyType;
 
-  requires ConstProxyType<typename T::ConstProxyType>;
-};
+                      requires ConstProxyType<typename T::ConstProxyType>;
+
+                      { t.hasColumn(key) } -> std::same_as<bool>;
+                    };
+
+template <typename T>
+concept TrackProxyLike =
+    ProxyType<T> &&
+    std::is_same_v<typename T::ConstProxyType, typename T::ConstProxyType>;
 
 }  // namespace Acts::detail
 
 namespace Acts {
-
-namespace detail {
-template <typename... Args>
-struct associatedConstProxy;
-
-template <typename trajectory_t, std::size_t M, bool read_only>
-struct associatedConstProxy<TrackStateProxy<trajectory_t, M, read_only>> {
-  using type = TrackStateProxy<trajectory_t, M, true>;
-};
-
-template <typename track_container_t, typename trajectory_t,
-          template <typename> class holder_t, bool read_only>
-struct associatedConstProxy<
-    TrackProxy<track_container_t, trajectory_t, holder_t, read_only>> {
-  using type = TrackProxy<track_container_t, trajectory_t, holder_t, true>;
-};
-
-}  // namespace detail
 
 /// Utility class that eases accessing dynamic columns in track and track state
 /// containers
@@ -115,7 +105,7 @@ struct ProxyAccessorBase {
   /// @return true if the column exists, false otherwise
   template <detail::ProxyType proxy_t>
   bool hasColumn(proxy_t proxy) const {
-    return proxy.container().hasColumn(key);
+    return proxy.hasColumn(key);
   }
 };
 
