@@ -24,14 +24,18 @@ template <std::size_t D, std::size_t N>
 constexpr std::array<double, N - D> derivativeCoefficients(
     const std::array<double, N>& coeffs) {
   static_assert(N > D, "Coefficients trivially collapse to 0.");
+
   if constexpr (D == 0) {
     return coeffs;
+  } else {
+    std::array<double, N - 1> newCoeffs{filledArray<double, N - 1>(0.)};
+
+    for (std::size_t i = 0; i < N - 1; ++i) {
+      newCoeffs[i] = (i + 1) * coeffs[i + 1];
+    }
+
+    return derivativeCoefficients<D - 1>(newCoeffs);
   }
-  std::array<double, N - D> newCoeffs{filledArray<double, N - D>(0.)};
-  for (std::size_t i = 0; i < N - D; ++i) {
-    newCoeffs[i] = factorial(i + D) / factorial(i) * coeffs[i + D];
-  }
-  return newCoeffs;
 }
 
 /// @brief Evaluates a polynomial with degree (N-1) at domain value x
