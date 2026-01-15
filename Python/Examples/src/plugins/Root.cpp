@@ -244,8 +244,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackSummaryWriter, root, "RootTrackSummaryWriter", inputTracks,
-        inputParticles, inputTrackParticleMatching, filePath, treeName,
-        fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
+        inputParticles, inputTrackParticleMatching, inputJets, filePath,
+        treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific,
+        writeJets);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootVertexNTupleWriter, root, "RootVertexNTupleWriter", inputVertices,
