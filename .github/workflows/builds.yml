@@ -597,7 +597,7 @@ jobs:
       - uses: actions/upload-artifact@v6
         with:
           name: linux-ubuntu-wheel
-          path: *.whl
+          path: "*.whl"
 
       - name: Test
         run: python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"
