@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -19,6 +21,9 @@
 
 namespace HepMC3 {
 class GenEvent;
+class GenParticle;
+class GenVertex;
+class FourVector;
 class Reader;
 class Writer;
 }  // namespace HepMC3
@@ -46,6 +51,10 @@ void mergeEvents(HepMC3::GenEvent& event,
 void mergeEvents(HepMC3::GenEvent& event,
                  std::span<std::shared_ptr<const HepMC3::GenEvent>> genEvents,
                  const Acts::Logger& logger);
+
+constexpr int kBeamParticleStatus = 4;
+constexpr int kUndecayedParticleStatus = 1;
+constexpr int kDecayedParticleStatus = 2;
 
 /// Supported compression codecs for HepMC3 files.
 enum class Compression { none, zlib, lzma, bzip2, zstd };
@@ -94,6 +103,17 @@ std::span<const Format> availableFormats();
 /// @param filename Path used to infer format from its suffix
 /// @return Format inferred from @p filename
 Format formatFromFilename(const std::filesystem::path& filename);
+
+static constexpr std::string_view kEventGeneratorIndexAttribute =
+    "acts_gen_event_index";
+
+int eventGeneratorIndex(const HepMC3::GenParticle& particle);
+int eventGeneratorIndex(const HepMC3::GenVertex& vertex);
+
+Acts::Vector4 convertPosition(const HepMC3::FourVector& vec);
+
+std::vector<const HepMC3::GenVertex*> findHardScatterVertices(
+    const HepMC3::GenEvent& event);
 
 /// Result of HepMC3 file normalization
 struct NormalizeResult {
