@@ -114,10 +114,11 @@ constexpr T factorial(const T n) {
                              : bits >= 16 ? 8
                              : bits >= 8  ? 5
                                           : 0;
-
-  if (n > max_n) {
+  (void)max_n;
+  if (std::is_constant_evaluated() && n > max_n) {
     throw std::overflow_error("factorial overflow");
   }
+  assert(n <= max_n && "factorial overflow");
 
   T r = 1;
   for (T i = 2; i <= n; i++) {
@@ -135,9 +136,10 @@ constexpr T factorial(const T n) {
 /// @return Binomial coefficient n choose k
 template <std::unsigned_integral T>
 constexpr T binomial(const T n, const T k) {
-  if (k > n) {
-    throw std::invalid_argument("k must be <= n");
+  if (std::is_constant_evaluated() && k > n) {
+    throw std::overflow_error("k must be <= n");
   }
+  assert(k <= n && "k must be <= n");
 
   return (factorial<T>(n) / factorial<T>(k)) / factorial<T>(n - k);
 }

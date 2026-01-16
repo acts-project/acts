@@ -55,14 +55,11 @@ BOOST_AUTO_TEST_CASE(Factorial) {
   // static_assert(Acts::factorial(static_cast<std::uint32_t>(13)));
   // static_assert(Acts::factorial(static_cast<std::uint64_t>(21)));
 
-  BOOST_CHECK_THROW(Acts::factorial(static_cast<std::uint8_t>(6)),
-                    std::overflow_error);
-  BOOST_CHECK_THROW(Acts::factorial(static_cast<std::uint16_t>(9)),
-                    std::overflow_error);
-  BOOST_CHECK_THROW(Acts::factorial(static_cast<std::uint32_t>(13)),
-                    std::overflow_error);
-  BOOST_CHECK_THROW(Acts::factorial(static_cast<std::uint64_t>(21)),
-                    std::overflow_error);
+  // These expressions should fail at runtime
+  // auto fail8 = Acts::factorial(static_cast<std::uint64_t>(6));
+  // auto fail16 = Acts::factorial(static_cast<std::uint64_t>(9));
+  // auto fail32 = Acts::factorial(static_cast<std::uint64_t>(13));
+  // auto fail64 = Acts::factorial(static_cast<std::uint64_t>(21));
 
   for (std::size_t k = 1; k <= 20; ++k) {
     BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - 1u));
