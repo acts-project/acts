@@ -504,12 +504,12 @@ if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP)
     find_package(EDM4HEP ${_acts_edm4hep_version} CONFIG)
-    if (NOT EDM4HEP_FOUND)
-      message(
-        STATUS
-        "EDM4hep not found, trying ${_acts_edm4hep_fallback_version} version"
-      )
-      find_package(EDM4HEP ${_acts_edm4hep_fallback_version} CONFIG REQUIRED)
+    if(NOT EDM4HEP_FOUND)
+        message(
+            STATUS
+            "EDM4hep not found, trying ${_acts_edm4hep_fallback_version} version"
+        )
+        find_package(EDM4HEP ${_acts_edm4hep_fallback_version} CONFIG REQUIRED)
     endif()
     find_package(podio ${_acts_podio_version} CONFIG)
     if(NOT podio_FOUND)
