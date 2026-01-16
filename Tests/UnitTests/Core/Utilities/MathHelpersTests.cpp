@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(BinomialTests) {
   for (unsigned n = 2; n <= 10; ++n) {
     /// Check that the binomial of (n 1 is always n)
     BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
-    for (unsigned k = 1; k <= n; ++k) {
+    for (unsigned k = 1; k <= n - 1u; ++k) {
       /// Use recursive formula
       ///  n      n -1       n -1
       ///     =          +
