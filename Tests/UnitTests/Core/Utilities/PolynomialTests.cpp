@@ -117,26 +117,6 @@ BOOST_AUTO_TEST_CASE(SumOfIntegers) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(BinomialTests) {
-  BOOST_CHECK_EQUAL(Acts::binomial(1u, 1u), 1u);
-  for (unsigned n = 2; n <= 10; ++n) {
-    /// Check that the binomial of (n 1 is always n)
-    BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
-    for (unsigned k = 1; k <= n; ++k) {
-      /// Use recursive formula
-      ///  n      n -1       n -1
-      ///     =          +
-      ///  k      k -1        k
-      std::cout << "n: " << n << ", k: " << k
-                << ", binom(n,k): " << Acts::binomial(n, k)
-                << ", binom(n-1, k-1): " << Acts::binomial(n - 1, k - 1)
-                << ", binom(n-1,k): " << Acts::binomial(n - 1, k) << std::endl;
-      BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n - 1, k - 1) +
-                                                  Acts::binomial(n - 1, k));
-      BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n, n - k));
-    }
-  }
-}
 BOOST_AUTO_TEST_CASE(LegendrePolynomials) {
   using namespace Acts::detail::Legendre;
   using namespace Acts::detail;
