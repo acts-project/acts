@@ -40,10 +40,10 @@ MultiNavigationPolicy::policies() const {
 
 void MultiNavigationPolicy::initializeCandidates(
     [[maybe_unused]] const GeometryContext& gctx,
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
+    const NavigationArguments& args, NavigationPolicyState& state,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
   for (const auto& delegate : m_delegates) {
-    delegate(gctx, args, stream, logger);
+    delegate(gctx, args, state, stream, logger);
   }
 }
 

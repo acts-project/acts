@@ -530,6 +530,7 @@ class TrackingVolume : public Volume {
   /// @param logger is the logger
   void initializeNavigationCandidates(const GeometryContext& gctx,
                                       const NavigationArguments& args,
+                                      NavigationPolicyState& state,
                                       AppendOnlyNavigationStream& stream,
                                       const Logger& logger) const;
 
