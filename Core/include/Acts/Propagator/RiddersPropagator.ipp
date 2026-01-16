@@ -11,6 +11,7 @@
 #include "Acts/Propagator/RiddersPropagator.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 
 #include <numbers>
 
@@ -88,10 +89,8 @@ template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 auto RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
-    -> Result<actor_list_t_result_t<
-        BoundTrackParameters, typename propagator_options_t::actor_list_type>> {
-  using ThisResult = Result<actor_list_t_result_t<
-      BoundTrackParameters, typename propagator_options_t::actor_list_type>>;
+    -> Result<ResultType<propagator_options_t>> {
+  using ThisResult = Result<ResultType<propagator_options_t>>;
 
   // Remove the covariance from our start parameters in order to skip jacobian
   // transport for the nominal propagation
@@ -130,10 +129,8 @@ template <typename parameters_t, typename propagator_options_t>
 auto RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
-    -> Result<actor_list_t_result_t<
-        BoundTrackParameters, typename propagator_options_t::actor_list_type>> {
-  using ThisResult = Result<actor_list_t_result_t<
-      BoundTrackParameters, typename propagator_options_t::actor_list_type>>;
+    -> Result<ResultType<propagator_options_t>> {
+  using ThisResult = Result<ResultType<propagator_options_t>>;
 
   // Remove the covariance from our start parameters in order to skip jacobian
   // transport for the nominal propagation
@@ -171,9 +168,7 @@ template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 BoundMatrix RiddersPropagator<propagator_t>::wiggleAndCalculateJacobian(
     const parameters_t& start, const propagator_options_t& options,
-    const actor_list_t_result_t<BoundTrackParameters,
-                                typename propagator_options_t::actor_list_type>&
-        nominalResult) const {
+    const ResultType<propagator_options_t>& nominalResult) const {
   const auto& nominalFinalParameters = nominalResult.endParameters.value();
   // Use the curvilinear surface of the propagated parameters as target
   const Surface& target = nominalFinalParameters.referenceSurface();

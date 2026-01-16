@@ -215,6 +215,7 @@ void SurfaceMaterialMapper::mapMaterialTrack(
     return;
   }
 }
+
 void SurfaceMaterialMapper::mapInteraction(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Retrieve the recorded material from the recorded material track
