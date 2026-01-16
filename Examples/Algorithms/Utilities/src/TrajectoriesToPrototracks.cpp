@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -17,7 +16,6 @@
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 TrajectoriesToPrototracks::TrajectoriesToPrototracks(Config cfg,
                                                      Acts::Logging::Level lvl)
@@ -37,7 +35,7 @@ ProcessCode TrajectoriesToPrototracks::execute(
       ProtoTrack track;
 
       trajectory.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
-        if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        if (!state.typeFlags().isMeasurement()) {
           return true;
         }
 

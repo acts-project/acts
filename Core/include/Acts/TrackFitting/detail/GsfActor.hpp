@@ -573,7 +573,7 @@ struct GsfActor {
 
       // If at least one component is no outlier, we consider the whole thing
       // as a measurementState
-      if (trackStateProxy.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+      if (trackStateProxy.typeFlags().isMeasurement()) {
         is_valid_measurement = true;
       }
 
@@ -650,7 +650,7 @@ struct GsfActor {
 
       const auto& trackStateProxy = *trackStateProxyRes;
 
-      if (!trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+      if (!trackStateProxy.typeFlags().isHole()) {
         isHole = false;
       }
 
@@ -722,8 +722,7 @@ struct GsfActor {
     if (!m_cfg.inReversePass) {
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
-      const auto isMeasurement =
-          firstCmpProxy.typeFlags().test(MeasurementFlag);
+      const auto isMeasurement = firstCmpProxy.typeFlags().isMeasurement();
 
       const auto mask =
           isMeasurement

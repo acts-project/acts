@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/EventData/TrackProxyConcept.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
@@ -542,7 +541,7 @@ bool TrackSelector::MeasurementCounter::isValidTrack(
   counterValues.resize(counters.size(), 0);
 
   for (const auto& ts : track.trackStatesReversed()) {
-    if (!ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!ts.typeFlags().isMeasurement()) {
       continue;
     }
 

@@ -70,11 +70,11 @@ void ActsExamples::identifyContributingParticles(
 
   trajectories.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
     // no truth info with non-measurement state
-    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().isMeasurement()) {
       return true;
     }
     // skip outliers
-    if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+    if (state.typeFlags().isOutlier()) {
       return true;
     }
     // register all particles that generated this hit
@@ -98,11 +98,11 @@ void ActsExamples::identifyContributingParticles(
 
   for (const auto& state : track.trackStatesReversed()) {
     // no truth info with non-measurement state
-    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().isMeasurement()) {
       continue;
     }
     // skip outliers
-    if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+    if (state.typeFlags().isOutlier()) {
       continue;
     }
     // register all particles that generated this hit

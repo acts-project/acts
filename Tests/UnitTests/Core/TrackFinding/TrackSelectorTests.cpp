@@ -119,9 +119,9 @@ struct MockTrack {
       return *srf;
     }
 
-    ConstTrackStateType typeFlags() const {
-      static const ConstTrackStateType::raw_type raw{0};
-      return ConstTrackStateType{raw};
+    ConstTrackStateTypeMap typeFlags() const {
+      static const ConstTrackStateTypeMap::raw_type raw{0};
+      return ConstTrackStateTypeMap{raw};
     }
   };
 
@@ -709,16 +709,16 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
                           TrackStateFlag flag) {
     auto ts = track.appendTrackState();
     ts.setReferenceSurface(surface);
-    ts.typeFlags().set(flag);
+    ts.typeFlags().setUnchecked(flag);
     return ts;
   };
 
   auto addMeasurement = [&](auto& track, const auto& surface) {
-    return addTrackState(track, surface, TrackStateFlag::MeasurementFlag);
+    return addTrackState(track, surface, TrackStateFlag::HasMeasurement);
   };
 
   auto addMaterial = [&](auto& track, const auto& surface) {
-    return addTrackState(track, surface, TrackStateFlag::MaterialFlag);
+    return addTrackState(track, surface, TrackStateFlag::HasMaterial);
   };
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};

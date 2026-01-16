@@ -19,7 +19,6 @@
 #include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <any>
 #include <cassert>
@@ -122,7 +121,7 @@ class VectorMultiTrajectoryBase {
     for (IndexType i = 0; i < instance.size(); i++) {
       auto ts = instance.getTrackState(i);
 
-      bool isMeas = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
+      bool isMeas = ts.typeFlags().hasMeasurement();
 
       h("count", isMeas);
 

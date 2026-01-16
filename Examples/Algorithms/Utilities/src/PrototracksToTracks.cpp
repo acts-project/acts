@@ -11,7 +11,6 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -69,7 +68,7 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
 
       auto trackStateProxy =
           track.appendTrackState(Acts::TrackStatePropMask::None);
-      trackStateProxy.typeFlags().set(Acts::TrackStateFlag::MeasurementFlag);
+      trackStateProxy.typeFlags().setIsMeasurement();
       trackStateProxy.setUncalibratedSourceLink(Acts::SourceLink(sourceLink));
     }
 

@@ -8,22 +8,16 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxyCommon.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cstddef>
-#include <ranges>
-#include <span>
 
 #include <Eigen/Core>
 

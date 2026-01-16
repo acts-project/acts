@@ -232,7 +232,7 @@ void EDM4hepUtil::writeTrajectory(
   multiTrajectory.visitBackwards(fromIndex, [&](const auto& state) {
     // we only fill the track states with non-outlier measurement
     auto typeFlags = state.typeFlags();
-    if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!typeFlags.isMeasurement()) {
       return true;
     }
 

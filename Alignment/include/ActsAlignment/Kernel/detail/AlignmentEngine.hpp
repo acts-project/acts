@@ -136,7 +136,7 @@ TrackAlignmentState trackAlignmentState(
 
     // Only measurement states matter (we can't align non-measurement states,
     // no?)
-    if (!ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+    if (!ts.typeFlags().isMeasurement()) {
       return true;
     }
     // Check if the reference surface is to be aligned

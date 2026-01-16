@@ -10,8 +10,6 @@
 
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
 
-#include "Acts/EventData/TrackStateType.hpp"
-
 #include <unordered_map>
 
 namespace Acts {
@@ -37,9 +35,7 @@ void GreedyAmbiguityResolution::computeInitialState(
     }
     std::vector<std::size_t> measurements;
     for (auto ts : track.trackStatesReversed()) {
-      bool isMeasurement = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
-      bool isOutlier = ts.typeFlags().test(TrackStateFlag::OutlierFlag);
-      if (isMeasurement && !isOutlier) {
+      if (ts.typeFlags().isMeasurement()) {
         SourceLink sourceLink = ts.getUncalibratedSourceLink();
         // assign a new measurement index if the source link was not seen yet
         auto emplace = measurementIndexMap.try_emplace(

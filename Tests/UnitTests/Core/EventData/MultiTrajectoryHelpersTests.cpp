@@ -12,7 +12,6 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 
 using namespace Acts;
 
@@ -26,37 +25,37 @@ BOOST_AUTO_TEST_CASE(trajectoryState) {
   VectorMultiTrajectory traj;
 
   auto ts = traj.makeTrackState(TrackStatePropMask::None);
-  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  ts.typeFlags().setIsMeasurement();
+  ts.typeFlags().setIsSharedHit();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(HoleFlag);
+  ts.typeFlags().setIsHole();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(HoleFlag);
+  ts.typeFlags().setIsHole();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  ts.typeFlags().setIsMeasurement();
+  ts.typeFlags().setIsSharedHit();
   ts.setReferenceSurface(surface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(surface);
 
   auto state = MultiTrajectoryHelpers::trajectoryState(traj, ts.index());
@@ -81,37 +80,37 @@ BOOST_AUTO_TEST_CASE(trajectoryStateVolume) {
   VectorMultiTrajectory traj;
 
   auto ts = traj.makeTrackState(TrackStatePropMask::None);
-  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  ts.typeFlags().setIsMeasurement();
+  ts.typeFlags().setIsSharedHit();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(HoleFlag);
+  ts.typeFlags().setIsHole();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(HoleFlag);
+  ts.typeFlags().setIsHole();
   ts.setReferenceSurface(searchSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(MeasurementFlag);
-  ts.typeFlags().set(SharedHitFlag);
+  ts.typeFlags().setIsMeasurement();
+  ts.typeFlags().setIsSharedHit();
   ts.setReferenceSurface(otherSurface);
 
   ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
-  ts.typeFlags().set(OutlierFlag);
+  ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(otherSurface);
 
   auto state =
