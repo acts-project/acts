@@ -8,12 +8,12 @@
 
 #include "Acts/Geometry/VolumeBounds.hpp"
 
-std::ostream& Acts::operator<<(std::ostream& sl, const VolumeBounds& vb) {
+namespace Acts {
+std::ostream& operator<<(std::ostream& sl, const VolumeBounds& vb) {
   return vb.toStream(sl);
 }
 
-std::ostream& Acts::operator<<(std::ostream& sl,
-                               const VolumeBounds::BoundsType& bt) {
+std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt) {
   switch (bt) {
     using enum VolumeBounds::BoundsType;
     case eCone:
@@ -43,3 +43,34 @@ std::ostream& Acts::operator<<(std::ostream& sl,
   }
   return sl;
 }
+
+std::vector<OrientedSurface> VolumeBounds::boundarySurfaces(
+    const GeometryContext& gctx, Volume& parentVolume) const {
+  if (!parentVolume.volumePositioner()) {
+    return orientedSurfaces(parentVolume.transform());
+  }
+  std::vector<OrientedSurface> portalSurfaces =
+      orientedSurfaces(Acts::Transform3::Identity());
+
+  for (std::size_t faceIdx = 0lu; faceIdx < portalSurfaces.size(); ++faceIdx) {
+    std::shared_ptr<RegularSurface>& alignMe = portalSurfaces[faceIdx].surface;
+    Acts::Transform3 internalTrf = alignMe->localToGlobalTransform(gctx);
+    alignMe = parentVolume.volumePositioner()->alignWithVolume(
+        faceIdx, std::move(alignMe), std::move(internalTrf));
+    // Ensure that the surface is not destroyed by the client
+    if (alignMe == nullptr) {
+      throw std::logic_error(
+          "boundarySurfaces() - alignWithVolume() should not destroy the "
+          "surface");
+    }
+    // if the surface does not have an associated detector element
+    // it cannot move with the volume
+    if (alignMe->associatedDetectorElement() == nullptr) {
+      throw std::logic_error(
+          "boundarySurfaces() - alignWithVolume() is supposed to make the "
+          "surface alignable");
+    }
+  }
+  return portalSurfaces;
+}
+}  // namespace Acts
