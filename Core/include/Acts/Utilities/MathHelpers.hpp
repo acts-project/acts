@@ -8,8 +8,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <type_traits>
 namespace Acts {
 
@@ -104,12 +106,23 @@ constexpr T sumUpToN(const T N) {
 /// @param upperN: Upper factor until which the factorial is calculated
 /// @param lowerN: Optional argument to remove the first factors from the calculation
 /// @return Factorial result
+/// @note Asserts on overflow. In constexpr context, overflow is a compile error.
 template <std::integral T>
 constexpr T factorial(const T upperN, const T lowerN = 1) {
   constexpr T one = 1;
   const T& limit = std::max(one, lowerN);
-  return upperN >= limit ? upperN * factorial(static_cast<T>(upperN - 1), limit)
-                         : one;
+  if (upperN < limit) {
+    return one;
+  }
+
+  const T subFactorial = factorial(static_cast<T>(upperN - 1), limit);
+
+  // Check for multiplication overflow: upperN * subFactorial > max
+  // Equivalent to: subFactorial > max / upperN (since upperN >= 1 here)
+  assert(subFactorial <= std::numeric_limits<T>::max() / upperN &&
+         "factorial overflow");
+
+  return upperN * subFactorial;
 }
 /// @brief Calculate the binomial coefficient
 ///              n        n!

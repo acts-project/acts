@@ -56,11 +56,14 @@ BOOST_AUTO_TEST_CASE(Factorial) {
   BOOST_CHECK_EQUAL(Acts::factorial(5, 5), 5);    // just 5
   BOOST_CHECK_EQUAL(Acts::factorial(5, 6), 1);    // lowerN > upperN returns 1
 
-  // Overflow test: factorial<uint8_t>(10) overflows to 0
-  // 10! = 3628800 = 14175 * 256, so it wraps to exactly 0
-  // This demonstrates a potential division-by-zero hazard in binomial()
+  // Compile-time overflow detection: the following would be a compile error:
+  // static_assert(Acts::factorial(std::uint8_t{10}, std::uint8_t{1}) == 0);
+  // because 10! overflows uint8_t and triggers the overflow assertion.
+
+  // Verify maximum valid factorial for uint8_t (5! = 120 fits, 6! = 720 doesn't)
+  static_assert(Acts::factorial(std::uint8_t{5}, std::uint8_t{1}) == 120);
   BOOST_CHECK_EQUAL(
-      Acts::factorial(std::uint8_t{10}, std::uint8_t{1}), std::uint8_t{0});
+      Acts::factorial(std::uint8_t{5}, std::uint8_t{1}), std::uint8_t{120});
 }
 
 BOOST_AUTO_TEST_CASE(Binomial) {
@@ -71,8 +74,12 @@ BOOST_AUTO_TEST_CASE(Binomial) {
   BOOST_CHECK_EQUAL(Acts::binomial(5, 5), 1);
   BOOST_CHECK_EQUAL(Acts::binomial(10, 3), 120);
 
-  // Note: binomial<uint8_t>(n, 10) for n >= 10 would cause division by zero
-  // because factorial<uint8_t>(10) overflows to 0
+  // Compile-time verification
+  static_assert(Acts::binomial(5, 2) == 10);
+  static_assert(Acts::binomial(10, 3) == 120);
+
+  // Note: binomial with small integer types that would overflow in factorial
+  // now triggers an assertion (compile error if constexpr, runtime assert otherwise)
 }
 
 BOOST_AUTO_TEST_CASE(CopySign) {
