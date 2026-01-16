@@ -28,6 +28,7 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -357,8 +358,7 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
       std::pair<std::size_t, std::size_t> bins = {0, 0}) const {
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     return Acts::NavigationPolicyFactory{}
-        .add<Acts::TryAllNavigationPolicy>(
-            Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+        .add<Acts::CylinderNavigationPolicy>()
         .add<SrfArrayNavPol>(
             SrfArrayNavPol::Config{.layerType = layerType, .bins = bins})
         .asUniquePtr();
