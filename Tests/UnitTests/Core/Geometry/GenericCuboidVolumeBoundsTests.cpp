@@ -34,7 +34,7 @@ using namespace Acts;
 
 namespace ActsTests {
 
-GeometryContext gctx = GeometryContext();
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
   BOOST_CHECK_EQUAL(gcvbOrientedSurfaces.size(), 6);
 
   for (auto& os : gcvbOrientedSurfaces) {
-    auto geoCtx = GeometryContext();
+    auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
     auto osCenter = os.surface->center(geoCtx);
     const auto* pSurface = dynamic_cast<const PlaneSurface*>(os.surface.get());
     BOOST_REQUIRE_MESSAGE(pSurface != nullptr,

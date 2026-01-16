@@ -122,7 +122,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
     const AlgorithmContext& ctx, const MuonSpacePointContainer& hits) {
   std::lock_guard lock{m_mutex};
   m_eventId = ctx.eventNumber;
-  const Acts::GeometryContext gctx{};
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
   for (const auto& [counter, bucket] : enumerate(hits)) {
     for (const MuonSpacePoint& writeMe : bucket) {
       ACTS_VERBOSE("Dump space point " << writeMe);

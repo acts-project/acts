@@ -47,7 +47,7 @@ using namespace Acts;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 

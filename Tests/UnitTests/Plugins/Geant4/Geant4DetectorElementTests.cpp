@@ -24,7 +24,7 @@ using namespace ActsPlugins;
 /// Mockup class
 class G4VPhysicalVolume {};
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 namespace ActsTests {
 

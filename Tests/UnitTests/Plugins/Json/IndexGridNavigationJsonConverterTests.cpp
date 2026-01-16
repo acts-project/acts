@@ -32,7 +32,7 @@ using namespace Acts;
 
 namespace ActsTests {
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 CylindricalTrackingGeometry::DetectorStore dStore;
 
@@ -42,7 +42,7 @@ auto tLogger =
 BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridNavigationPolicyToJson) {
-  GeometryContext tContext;
+  auto tContext = GeometryContext::dangerouslyDefaultConstruct();
   CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
   CylindricalTrackingGeometry::DetectorStore dStore;
 

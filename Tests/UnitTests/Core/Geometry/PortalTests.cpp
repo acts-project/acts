@@ -52,7 +52,7 @@ std::shared_ptr<TrackingVolume> makeDummyVolume() {
       std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
 }
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_FIXTURE_TEST_SUITE(GeometrySuite, Fixture)
 

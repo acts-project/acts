@@ -30,7 +30,7 @@ auto rectangle = std::make_shared<RectangleBounds>(10., 10.);
 auto plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
 
 // Test context
-GeometryContext gctx = GeometryContext();
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 /// Helper method to visualize all types of surfaces
 ///

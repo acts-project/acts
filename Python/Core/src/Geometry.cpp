@@ -120,7 +120,23 @@ namespace ActsPython {
 /// @param m the module to add the bindings to
 void addGeometry(py::module_& m) {
   {
-    py::class_<GeometryContext>(m, "GeometryContext").def(py::init<>());
+    py::class_<GeometryContext>(m, "GeometryContext")
+        .def(py::init([]() {
+          // Issue Python warning about deprecated default constructor
+          auto warnings = py::module_::import("warnings");
+          auto builtins = py::module_::import("builtins");
+          warnings.attr("warn")(
+              "GeometryContext::dangerouslyDefaultConstruct() is deprecated. "
+              "Use "
+              "GeometryContext.dangerouslyDefaultConstruct() instead to "
+              "make empty context construction explicit.",
+              builtins.attr("DeprecationWarning"));
+          return GeometryContext::dangerouslyDefaultConstruct();
+        }))  // Keep for backward compatibility but warn
+        .def_static("dangerouslyDefaultConstruct",
+                    &GeometryContext::dangerouslyDefaultConstruct,
+                    "Create a default GeometryContext (empty, no alignment "
+                    "data)");
 
     py::class_<GeometryIdentifier>(m, "GeometryIdentifier")
         .def(py::init<>())

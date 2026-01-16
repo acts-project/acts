@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   ProtoLayerHelper plHelper(
       plhConfig, getDefaultLogger("ProtoLayerHelper", Logging::VERBOSE));
 
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   ObjVisualization3D objVis;
 

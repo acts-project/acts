@@ -75,7 +75,7 @@ std::vector<std::shared_ptr<Surface>> createCylinders() {
   return {surfaceC, surfaceB, surfaceA, surfaceD};
 }
 
-auto gContext = GeometryContext();
+auto gContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(Navigation)
 

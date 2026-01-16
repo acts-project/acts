@@ -40,7 +40,7 @@ namespace bdata = boost::unit_test::data;
 
 namespace Acts::Test {
 
-Acts::GeometryContext gctx;
+const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 Acts::MagneticFieldContext mctx;
 
 using namespace Acts::UnitLiterals;
@@ -53,7 +53,7 @@ using Jacobian = BoundMatrix;
 /// the numerical correctness is performed in the integration tests.
 BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   auto particleHypothesis = ParticleHypothesis::pion();
 

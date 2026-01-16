@@ -33,7 +33,7 @@ using namespace Acts;
 
 namespace ActsTests {
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 

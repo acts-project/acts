@@ -96,9 +96,10 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
   //          \_______/
   //          3       2
 
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   // First check now, if this actually is correct
-  const auto vtxsa = surfaceA->polyhedronRepresentation({}, 0).vertices;
-  const auto vtxsb = surfaceB->polyhedronRepresentation({}, 0).vertices;
+  const auto vtxsa = surfaceA->polyhedronRepresentation(gctx, 0).vertices;
+  const auto vtxsb = surfaceB->polyhedronRepresentation(gctx, 0).vertices;
 
   if (!trapezoidsAreMergeable(vtxsa, vtxsb)) {
     return GeoModelConversionError::WrongShapeForConverter;
@@ -131,7 +132,6 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
 
   auto trapezoidBounds =
       boundFactory.makeBounds<TrapezoidBounds>(hlxpy, hlxny, halfLengthY);
-  const GeometryContext gctx{};
   // Create transform from the transform of surfaceA and translate it in y
   // direction using the half length
   auto transform = surfaceA->localToGlobalTransform(gctx);

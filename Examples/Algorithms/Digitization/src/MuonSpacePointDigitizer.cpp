@@ -172,7 +172,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   MuonSpacePointContainer outSpacePoints{};
 
-  GeometryContext gctx{};
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   using MuonId_t = MuonSpacePoint::MuonId;
   auto rndEngine = m_cfg.randomNumbers->spawnGenerator(ctx);

@@ -59,7 +59,7 @@ using Propagator = Acts::Propagator<Stepper>;
 using Estimator = ImpactPointEstimator;
 using StraightLineEstimator = ImpactPointEstimator;
 
-const GeometryContext geoContext;
+const auto geoContext = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magFieldContext;
 
 MagneticFieldProvider::Cache magFieldCache() {

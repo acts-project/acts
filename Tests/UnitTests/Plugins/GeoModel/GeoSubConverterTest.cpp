@@ -30,7 +30,7 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 RotationMatrix3 idRotation = RotationMatrix3::Identity();
 Transform3 idTransform = Transform3::Identity();
 
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
 
   // create pars for conversion
   GeoModelDetectorObjectFactory::Config gmConfig;
-  GeometryContext gContext;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
   GeoModelDetectorObjectFactory::Cache subCache;
 
   // create factory instance

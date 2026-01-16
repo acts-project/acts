@@ -136,7 +136,8 @@ struct EventDataView3D {
   template <typename parameters_t>
   static inline void drawBoundTrackParameters(
       IVisualization3D& helper, const parameters_t& parameters,
-      const GeometryContext& gctx = GeometryContext(),
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& parConfig = s_viewParameter,
@@ -224,7 +225,8 @@ struct EventDataView3D {
   static void drawMultiTrajectory(
       IVisualization3D& helper, const traj_t& multiTraj,
       const std::size_t& entryIndex,
-      const GeometryContext& gctx = GeometryContext(),
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& surfaceConfig = s_viewSensitive,

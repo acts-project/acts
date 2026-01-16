@@ -112,7 +112,7 @@ def main():
 
     args = parser.parse_args()
 
-    gContext = acts.GeometryContext()
+    gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
     # Create the tracking geometry builder for the muon system

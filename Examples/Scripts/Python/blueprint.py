@@ -87,7 +87,7 @@ with open("blueprint.dot", "w") as fh:
     root.graphviz(fh)
 
 
-gctx = acts.GeometryContext()
+gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
 trackingGeometry = root.construct(
     options=acts.BlueprintNode.Options(), gctx=gctx, level=acts.logging.VERBOSE
 )

@@ -31,7 +31,7 @@ using MagneticField = ConstantBField;
 using Stepper = EigenStepper<>;
 using TestPropagator = Propagator<Stepper, Navigator>;
 
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 
 std::vector<double> xPositionsOfPassedSurfaces(Navigator::Config navCfg,

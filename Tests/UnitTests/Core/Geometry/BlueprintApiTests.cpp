@@ -47,7 +47,7 @@ namespace ActsTests {
 
 auto logger = getDefaultLogger("UnitTests", Logging::DEBUG);
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
     const Transform3& base,

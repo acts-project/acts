@@ -47,7 +47,8 @@ void testResult(std::array<bool, 3> failing, std::array<bool, 3> expectedCalled,
   using ActionList =
       ActorList<FailingActor<1>, FailingActor<2>, FailingActor<3>>;
   Propagator<StraightLineStepper>::Options<ActionList> options{
-      Acts::GeometryContext{}, Acts::MagneticFieldContext{}};
+      Acts::GeometryContext::dangerouslyDefaultConstruct(),
+      Acts::MagneticFieldContext{}};
 
   options.actorList.get<FailingActor<1>>().fail = failing[0];
   options.actorList.get<FailingActor<1>>().called = &called[0];

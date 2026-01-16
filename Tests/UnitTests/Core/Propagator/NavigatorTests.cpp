@@ -50,7 +50,7 @@ using Acts::VectorHelpers::perp;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 void step(Vector3& pos, const Vector3& dir, double stepSize) {

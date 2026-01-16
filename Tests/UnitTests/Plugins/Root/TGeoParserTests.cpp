@@ -36,7 +36,7 @@ struct RootGeometry {
   }
 };
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 RootGeometry rGeometry = RootGeometry();
 

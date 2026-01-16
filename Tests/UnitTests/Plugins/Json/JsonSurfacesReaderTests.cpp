@@ -27,6 +27,9 @@
 
 using namespace Acts;
 
+namespace ActsTests {
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+
 const std::vector<std::shared_ptr<Surface>> surfaces = []() {
   std::vector<std::shared_ptr<Surface>> v;
 
@@ -53,7 +56,7 @@ struct FileFixture {
     nlohmann::json js = nlohmann::json::array();
 
     for (const auto &s : surfaces) {
-      js.push_back(SurfaceJsonConverter::toJson({}, *s));
+      js.push_back(SurfaceJsonConverter::toJson(gctx, *s));
     }
 
     nlohmann::json j;
@@ -68,10 +71,6 @@ struct FileFixture {
 
 FileFixture fileFixture;
 
-namespace ActsTests {
-
-const GeometryContext gctx{};
-
 BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(surface_reading_test) {
@@ -79,6 +78,8 @@ BOOST_AUTO_TEST_CASE(surface_reading_test) {
 
   BOOST_REQUIRE_EQUAL(surfaces.size(), readBackSurfaces.size());
   for (auto [refSurface, surface] : zip(surfaces, readBackSurfaces)) {
+    BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
+        surface->localToGlobalTransform(gctx), 1.e-4));
     BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
         surface->localToGlobalTransform(gctx), 1.e-4));
     BOOST_CHECK(
@@ -95,6 +96,8 @@ BOOST_AUTO_TEST_CASE(json_detelement_reading_test) {
   BOOST_REQUIRE_EQUAL(surfaces.size(), readBackDetElements.size());
   for (auto [refSurface, detElement] : zip(surfaces, readBackDetElements)) {
     auto surface = &detElement->surface();
+    BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
+        surface->localToGlobalTransform(gctx), 1.e-4));
     BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
         surface->localToGlobalTransform(gctx), 1.e-4));
     BOOST_CHECK(

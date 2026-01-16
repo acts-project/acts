@@ -742,7 +742,8 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
 GenericDetector::GenericDetector(const Config& cfg)
     : Detector(Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
       m_cfg(cfg) {
-  m_nominalGeometryContext = Acts::GeometryContext();
+  m_nominalGeometryContext =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
   auto detectorElementFactory =
       [this](const Acts::Transform3& transform,
              std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,

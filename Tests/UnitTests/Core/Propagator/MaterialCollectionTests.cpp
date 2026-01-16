@@ -45,7 +45,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Global definitions
