@@ -9,15 +9,13 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
-
-class TProfile;
 
 namespace ActsExamples {
 
@@ -26,21 +24,11 @@ class TrackQualityPlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning::Uniform("#eta", 40, -4, 4)},
-        {"Phi", PlotHelpers::Binning::Uniform("#phi", 100, -3.15, 3.15)},
-        {"Pt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 100)},
-        {"Num", PlotHelpers::Binning::Uniform("N", 30, -0.5, 29.5)}};
-  };
-
-  /// @brief Nested Cache struct
-  struct Cache {
-    TProfile* completeness_vs_pT;
-    TProfile* completeness_vs_eta;
-    TProfile* completeness_vs_phi;
-    TProfile* purity_vs_pT;
-    TProfile* purity_vs_eta;
-    TProfile* purity_vs_phi;
+    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
   /// Constructor
@@ -49,38 +37,46 @@ class TrackQualityPlotTool {
   /// @param lvl Message level declaration
   TrackQualityPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the track quality plots
-  ///
-  /// @param cache the cache for track quality plots
-  void book(Cache& cache) const;
-
   /// @brief fill track quality w.r.t. fitted track parameters
   ///
-  /// @param cache cache object for track quality plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param completeness completeness of the track
   /// @param purity purity of the track
-  void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
-            double completeness, double purity) const;
+  void fill(const Acts::BoundTrackParameters& fittedParameters,
+            double completeness, double purity);
 
-  /// @brief write the track quality plots to file
-  ///
-  /// @param cache cache object for track quality plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the track quality plots
-  ///
-  /// @param cache cache object for track quality plots
-  void clear(Cache& cache) const;
+  /// @brief Accessors for histograms (const reference)
+  const Acts::Experimental::ProfileHistogram1& completenessVsPt() const {
+    return m_completenessVsPt;
+  }
+  const Acts::Experimental::ProfileHistogram1& completenessVsEta() const {
+    return m_completenessVsEta;
+  }
+  const Acts::Experimental::ProfileHistogram1& completenessVsPhi() const {
+    return m_completenessVsPhi;
+  }
+  const Acts::Experimental::ProfileHistogram1& purityVsPt() const {
+    return m_purityVsPt;
+  }
+  const Acts::Experimental::ProfileHistogram1& purityVsEta() const {
+    return m_purityVsEta;
+  }
+  const Acts::Experimental::ProfileHistogram1& purityVsPhi() const {
+    return m_purityVsPhi;
+  }
 
  private:
-  /// The Config class
+  const Acts::Logger& logger() const { return *m_logger; }
+
   Config m_cfg;
-  /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  Acts::Experimental::ProfileHistogram1 m_completenessVsPt;
+  Acts::Experimental::ProfileHistogram1 m_completenessVsEta;
+  Acts::Experimental::ProfileHistogram1 m_completenessVsPhi;
+  Acts::Experimental::ProfileHistogram1 m_purityVsPt;
+  Acts::Experimental::ProfileHistogram1 m_purityVsEta;
+  Acts::Experimental::ProfileHistogram1 m_purityVsPhi;
 };
 
 }  // namespace ActsExamples

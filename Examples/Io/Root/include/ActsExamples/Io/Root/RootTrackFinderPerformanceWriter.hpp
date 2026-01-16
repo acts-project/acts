@@ -97,20 +97,16 @@ class RootTrackFinderPerformanceWriter final
   TFile* m_outputFile{nullptr};
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
-  EffPlotTool::Cache m_effPlotCache;
   /// Plot tool for fake rate
   FakePlotTool m_fakePlotTool;
-  FakePlotTool::Cache m_fakePlotCache{};
   /// Plot tool for duplication rate
   DuplicationPlotTool m_duplicationPlotTool;
-  DuplicationPlotTool::Cache m_duplicationPlotCache{};
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::Cache m_trackSummaryPlotCache{};
-  std::map<std::string, TrackSummaryPlotTool::Cache> m_subDetectorSummaryCaches;
+  /// Plot tools for subdetector track summaries
+  std::map<std::string, TrackSummaryPlotTool> m_subDetectorSummaryTools;
   /// Plot tool for track quality
   TrackQualityPlotTool m_trackQualityPlotTool;
-  TrackQualityPlotTool::Cache m_trackQualityPlotCache{};
 
   /// For optional output of the matching details
   TTree* m_matchingTree{nullptr};

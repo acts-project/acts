@@ -19,7 +19,7 @@
 
 using namespace Acts::Experimental;
 
-namespace {
+namespace ActsPlugins {
 
 std::vector<double> extractBinEdges(const AxisVariant& axis) {
   assert(axis.size() > 0 && "Axis must have at least one bin");
@@ -31,10 +31,6 @@ std::vector<double> extractBinEdges(const AxisVariant& axis) {
 
   return edges;
 }
-
-}  // namespace
-
-namespace ActsPlugins {
 
 TH1F* toRoot(const Histogram1& boostHist) {
   const auto& bh = boostHist.histogram();
