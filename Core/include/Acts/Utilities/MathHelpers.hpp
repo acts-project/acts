@@ -108,7 +108,8 @@ template <std::integral T>
 constexpr T factorial(const T upperN, const T lowerN = 1) {
   constexpr T one = 1;
   const T& limit = std::max(one, lowerN);
-  return upperN >= limit ? upperN * factorial(upperN - 1, limit) : one;
+  return upperN >= limit ? upperN * factorial(static_cast<T>(upperN - 1), limit)
+                         : one;
 }
 /// @brief Calculate the binomial coefficient
 ///              n        n!

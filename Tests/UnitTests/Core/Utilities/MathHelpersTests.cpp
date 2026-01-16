@@ -13,6 +13,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
+#include <cstdint>
 
 namespace bdata = boost::unit_test::data;
 
@@ -41,6 +42,37 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
 
   CHECK_CLOSE_REL(stdFloat, fastFloat, 1e-6);
   CHECK_CLOSE_REL(stdDouble, fastDouble, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(Factorial) {
+  // Basic factorial tests
+  BOOST_CHECK_EQUAL(Acts::factorial(0), 1);
+  BOOST_CHECK_EQUAL(Acts::factorial(1), 1);
+  BOOST_CHECK_EQUAL(Acts::factorial(5), 120);
+  BOOST_CHECK_EQUAL(Acts::factorial(6), 720);
+
+  // Partial factorial tests (n! / (lowerN-1)!)
+  BOOST_CHECK_EQUAL(Acts::factorial(5, 3), 60);   // 5 * 4 * 3 = 60
+  BOOST_CHECK_EQUAL(Acts::factorial(5, 5), 5);    // just 5
+  BOOST_CHECK_EQUAL(Acts::factorial(5, 6), 1);    // lowerN > upperN returns 1
+
+  // Overflow test: factorial<uint8_t>(10) overflows to 0
+  // 10! = 3628800 = 14175 * 256, so it wraps to exactly 0
+  // This demonstrates a potential division-by-zero hazard in binomial()
+  BOOST_CHECK_EQUAL(
+      Acts::factorial(std::uint8_t{10}, std::uint8_t{1}), std::uint8_t{0});
+}
+
+BOOST_AUTO_TEST_CASE(Binomial) {
+  // Basic binomial coefficient tests
+  BOOST_CHECK_EQUAL(Acts::binomial(5, 0), 1);
+  BOOST_CHECK_EQUAL(Acts::binomial(5, 1), 5);
+  BOOST_CHECK_EQUAL(Acts::binomial(5, 2), 10);
+  BOOST_CHECK_EQUAL(Acts::binomial(5, 5), 1);
+  BOOST_CHECK_EQUAL(Acts::binomial(10, 3), 120);
+
+  // Note: binomial<uint8_t>(n, 10) for n >= 10 would cause division by zero
+  // because factorial<uint8_t>(10) overflows to 0
 }
 
 BOOST_AUTO_TEST_CASE(CopySign) {
