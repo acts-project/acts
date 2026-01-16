@@ -79,7 +79,8 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @note this is called from the surface().transform() in the PROXY mode
-  const Transform3& transform(const GeometryContext& gctx) const override;
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const override;
 
   /// Return surface associated with this detector element
   const Surface& surface() const override;
@@ -90,6 +91,9 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const override;
 
+  /// Is the detector element a sensitive element
+  bool isSensitive() const override { return true; }
+
  private:
   /// the transform for positioning in 3D space
   std::shared_ptr<const Transform3> m_elementTransform;
@@ -99,7 +103,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   double m_elementThickness{0.};
 };
 
-inline const Transform3& AlignableDetectorElement::transform(
+inline const Transform3& AlignableDetectorElement::localToGlobalTransform(
     const GeometryContext& gctx) const {
   auto alignContext = gctx.get<AlignmentContext>();
   if (alignContext.alignmentStore != nullptr &&
