@@ -103,9 +103,9 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 
   GenericApproachDescriptor gad(approachSurface);
 
-  auto sfIntersection =
-      gad.approachSurface(GeometryContext::dangerouslyDefaultConstruct(), origin, direction,
-                          boundaryTolerance, nearLimit, farLimit);
+  auto sfIntersection = gad.approachSurface(
+      GeometryContext::dangerouslyDefaultConstruct(), origin, direction,
+      boundaryTolerance, nearLimit, farLimit);
 
   // No overstepping allowed, the preferred solution should be the forward one
   CHECK_CLOSE_ABS(sfIntersection.pathLength(), 10.5, s_epsilon);

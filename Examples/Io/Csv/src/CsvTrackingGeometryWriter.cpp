@@ -391,7 +391,8 @@ ProcessCode CsvTrackingGeometryWriter::finalize() {
 
   writeVolume(sfWriter, sfGridWriter, lvWriter, *m_world, m_cfg.writeSensitive,
               m_cfg.writeBoundary, m_cfg.writeSurfaceGrid,
-              m_cfg.writeLayerVolume, Acts::GeometryContext::dangerouslyDefaultConstruct());
+              m_cfg.writeLayerVolume,
+              Acts::GeometryContext::dangerouslyDefaultConstruct());
   return ProcessCode::SUCCESS;
 }
 

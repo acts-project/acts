@@ -806,7 +806,9 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     jAxis["bins"] = bData.bins();
     double offset = 0;
     if (bData.binvalue == AxisDirection::AxisZ) {
-      offset = surface.center(Acts::GeometryContext::dangerouslyDefaultConstruct()).z();
+      offset =
+          surface.center(Acts::GeometryContext::dangerouslyDefaultConstruct())
+              .z();
     }
     jAxis["edges"] =
         std::array<double, 2>{bData.min + offset, bData.max + offset};
