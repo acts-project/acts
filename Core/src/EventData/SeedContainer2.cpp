@@ -8,6 +8,7 @@
 
 #include "Acts/EventData/SeedContainer2.hpp"
 
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 
 namespace Acts {
@@ -68,6 +69,69 @@ void SeedContainer2::clear() noexcept {
   m_qualities.clear();
   m_vertexZs.clear();
   m_spacePoints.clear();
+}
+
+void SeedContainer2::assignSpacePointContainer(
+    SpacePointContainer2 spacePointContainer) noexcept {
+  auto movedContainer =
+      std::make_shared<SpacePointContainer2>(std::move(spacePointContainer));
+
+  m_sharedConstSpacePointContainer = movedContainer;
+  m_constSpacePointContainer = movedContainer.get();
+  m_mutableSpacePointContainer = movedContainer.get();
+}
+
+void SeedContainer2::assignSpacePointContainer(
+    SpacePointContainer2 &spacePointContainer) noexcept {
+  m_sharedConstSpacePointContainer = nullptr;
+  m_mutableSpacePointContainer = &spacePointContainer;
+  m_constSpacePointContainer = &spacePointContainer;
+}
+
+void SeedContainer2::assignSpacePointContainer(
+    const SpacePointContainer2 &spacePointContainer) noexcept {
+  m_sharedConstSpacePointContainer = nullptr;
+  m_constSpacePointContainer = &spacePointContainer;
+  m_mutableSpacePointContainer = nullptr;
+}
+
+void SeedContainer2::assignSpacePointContainer(
+    const std::shared_ptr<SpacePointContainer2> &spacePointContainer) noexcept {
+  m_sharedConstSpacePointContainer = spacePointContainer;
+  m_constSpacePointContainer = spacePointContainer.get();
+  m_mutableSpacePointContainer = spacePointContainer.get();
+}
+
+void SeedContainer2::assignSpacePointContainer(
+    const std::shared_ptr<const SpacePointContainer2>
+        &spacePointContainer) noexcept {
+  m_sharedConstSpacePointContainer = spacePointContainer;
+  m_constSpacePointContainer = spacePointContainer.get();
+  m_mutableSpacePointContainer = nullptr;
+}
+
+bool SeedContainer2::hasSpacePointContainer() const noexcept {
+  return m_constSpacePointContainer != nullptr;
+}
+
+bool SeedContainer2::hasMutableSpacePointContainer() const noexcept {
+  return m_mutableSpacePointContainer != nullptr;
+}
+
+SpacePointContainer2 &SeedContainer2::mutableSpacePointContainer() {
+  if (!hasMutableSpacePointContainer()) {
+    throw std::logic_error(
+        "No mutable SpacePointContainer2 assigned to SeedContainer2");
+  }
+  return *m_mutableSpacePointContainer;
+}
+
+const SpacePointContainer2 &SeedContainer2::spacePointContainer() const {
+  if (!hasSpacePointContainer()) {
+    throw std::logic_error(
+        "No SpacePointContainer2 assigned to SeedContainer2");
+  }
+  return *m_constSpacePointContainer;
 }
 
 void SeedContainer2::assignSpacePointIndices(

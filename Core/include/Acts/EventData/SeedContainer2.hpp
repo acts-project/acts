@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
@@ -75,6 +76,59 @@ class SeedContainer2 {
 
   /// Clears the seed container, removing all seeds and space points.
   void clear() noexcept;
+
+  /// Assigns the mutable space point container to be used by this seed
+  /// container by value. This can be used to either copy or move-assign a
+  /// container. The ownership of the space point container is transferred to
+  /// this seed container.
+  /// @param spacePointContainer The space point container to assign.
+  void assignSpacePointContainer(
+      SpacePointContainer2 spacePointContainer) noexcept;
+  /// Assigns the mutable space point container to be used by this seed
+  /// container by reference. Note that the ownership of the space point
+  /// container is not transferred and the user must ensure that the space point
+  /// container remains valid for the lifetime of this seed container.
+  /// @param spacePointContainer The space point container to assign.
+  void assignSpacePointContainer(
+      SpacePointContainer2 &spacePointContainer) noexcept;
+  /// Assigns the const space point container to be used by this seed container
+  /// by const reference. Note that the ownership of the space point container
+  /// is not transferred and the user must ensure that the space point container
+  /// remains valid for the lifetime of this seed container.
+  /// @param spacePointContainer The space point container to assign.
+  void assignSpacePointContainer(
+      const SpacePointContainer2 &spacePointContainer) noexcept;
+  /// Assigns the mutable space point container to be used by this seed
+  /// container by shared pointer. The ownership of the space point container is
+  /// shared between this seed container and the user.
+  /// @param spacePointContainer The space point container to assign.
+  void assignSpacePointContainer(const std::shared_ptr<SpacePointContainer2>
+                                     &spacePointContainer) noexcept;
+  /// Assigns the const space point container to be used by this seed container
+  /// by shared pointer. The ownership of the space point container is shared
+  /// between this seed container and the user.
+  /// @param spacePointContainer The space point container to assign.
+  void assignSpacePointContainer(
+      const std::shared_ptr<const SpacePointContainer2>
+          &spacePointContainer) noexcept;
+
+  /// Checks if a space point container has been assigned to this seed
+  /// container.
+  /// @return True if a space point container has been assigned.
+  bool hasSpacePointContainer() const noexcept;
+  /// Checks if a mutable space point container has been assigned to this seed
+  /// container.
+  /// @return True if a mutable space point container has been assigned.
+  bool hasMutableSpacePointContainer() const noexcept;
+
+  /// Returns a const reference to the assigned space point container.
+  /// @return A const reference to the assigned space point container.
+  /// @throws std::logic_error if no space point container has been assigned.
+  const SpacePointContainer2 &spacePointContainer() const;
+  /// Returns a mutable reference to the assigned space point container.
+  /// @return A mutable reference to the assigned space point container.
+  /// @throws std::logic_error if no mutable space point container has been assigned.
+  SpacePointContainer2 &mutableSpacePointContainer();
 
   /// Creates a new seed.
   /// @return A mutable proxy to the newly created seed.
@@ -201,6 +255,10 @@ class SeedContainer2 {
   std::vector<float> m_qualities;
   std::vector<float> m_vertexZs;
   std::vector<SpacePointIndex2> m_spacePoints;
+
+  std::shared_ptr<const SpacePointContainer2> m_sharedConstSpacePointContainer;
+  SpacePointContainer2 *m_mutableSpacePointContainer{nullptr};
+  const SpacePointContainer2 *m_constSpacePointContainer{nullptr};
 
   auto knownColumns() & noexcept {
     return std::tie(m_spacePointOffsets, m_spacePointCounts, m_qualities,
