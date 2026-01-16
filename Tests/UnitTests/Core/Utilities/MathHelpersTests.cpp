@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(Factorial) {
   for (std::size_t k = 3; k <= 20; ++k) {
     BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - 1u));
     for (std::size_t j = 1; j <= k; ++j) {
-      BOOST_CHECK_EQUAL(Acts::product(k, j),
+      BOOST_CHECK_EQUAL(Acts::product(j, k),
                         Acts::factorial(k) / Acts::factorial(j - 1));
     }
   }

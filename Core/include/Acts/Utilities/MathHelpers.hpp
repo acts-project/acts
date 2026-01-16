@@ -110,6 +110,7 @@ constexpr T product(const T lowerN, const T upperN) {
   T value{1};
   for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
     value *= iter;
+    assert(value < std::numeric_limits<T>::max());
   }
   return value;
 }
@@ -128,6 +129,7 @@ constexpr T factorial(const T N) {
 /// @return Binomial coefficient n choose k
 template <std::unsigned_integral T>
 constexpr T binomial(const T n, const T k) {
+  assert(k <= n);
   return product<T>(n - k + 1, n) / factorial<T>(k);
 }
 
