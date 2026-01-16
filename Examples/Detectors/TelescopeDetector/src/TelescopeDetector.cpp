@@ -38,7 +38,8 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
         "provided stereo angles.");
   }
 
-  m_nominalGeometryContext = Acts::GeometryContext::dangerouslyDefaultConstruct();
+  m_nominalGeometryContext =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   m_trackingGeometry = buildTelescopeDetector(
       m_nominalGeometryContext, m_detectorStore, m_cfg.positions, m_cfg.stereos,

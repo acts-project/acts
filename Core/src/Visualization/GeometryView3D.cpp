@@ -293,8 +293,8 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
     auto lbounds = std::make_shared<CylinderBounds>(thickness, hlength);
     auto line = Surface::makeShared<CylinderSurface>(ltransform, lbounds);
 
-    drawSurface(helper, *line, GeometryContext::dangerouslyDefaultConstruct(), Transform3::Identity(),
-                viewConfig);
+    drawSurface(helper, *line, GeometryContext::dangerouslyDefaultConstruct(),
+                Transform3::Identity(), viewConfig);
   } else {
     helper.line(start, end, viewConfig.color);
   }
@@ -312,16 +312,17 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
       // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, -alength, 0.);
       auto cone = Surface::makeShared<ConeSurface>(aetransform, coneBounds);
-      drawSurface(helper, *cone, GeometryContext::dangerouslyDefaultConstruct(), Transform3::Identity(),
-                  viewConfig);
+      drawSurface(helper, *cone, GeometryContext::dangerouslyDefaultConstruct(),
+                  Transform3::Identity(), viewConfig);
       // Arrow end plate
       auto aptransform = Transform3::Identity();
       aptransform.prerotate(lrotation);
       aptransform.pretranslate(Vector3(end - alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
-      drawSurface(helper, *plate, GeometryContext::dangerouslyDefaultConstruct(), Transform3::Identity(),
-                  viewConfig);
+      drawSurface(helper, *plate,
+                  GeometryContext::dangerouslyDefaultConstruct(),
+                  Transform3::Identity(), viewConfig);
     }
     if (arrows < 0 || arrows == 2) {
       auto astransform = Transform3::Identity();
@@ -331,16 +332,17 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
       // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, 0., alength);
       auto cone = Surface::makeShared<ConeSurface>(astransform, coneBounds);
-      drawSurface(helper, *cone, GeometryContext::dangerouslyDefaultConstruct(), Transform3::Identity(),
-                  viewConfig);
+      drawSurface(helper, *cone, GeometryContext::dangerouslyDefaultConstruct(),
+                  Transform3::Identity(), viewConfig);
       // Arrow end plate
       auto aptransform = Transform3::Identity();
       aptransform.prerotate(lrotation);
       aptransform.pretranslate(Vector3(start + alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
-      drawSurface(helper, *plate, GeometryContext::dangerouslyDefaultConstruct(), Transform3::Identity(),
-                  viewConfig);
+      drawSurface(helper, *plate,
+                  GeometryContext::dangerouslyDefaultConstruct(),
+                  Transform3::Identity(), viewConfig);
     }
   }
 }

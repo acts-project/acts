@@ -74,18 +74,16 @@ class GeometryContext : public ContextType {
   /// @param value The value to construct from
   template <typename T>
     requires(!std::is_same_v<std::decay_t<T>, GeometryContext> &&
-             !std::is_base_of_v<ContextType, std::decay_t<T>>)
-  explicit GeometryContext(T&& value)
-      : ContextType(std::forward<T>(value)) {}
+             !std::is_base_of_v<ContextType, std::decay_t<T> >)
+  explicit GeometryContext(T&& value) : ContextType(std::forward<T>(value)) {}
 
   /// Copy construct from arbitrary type (inherited from ContextType)
   /// @tparam T The type of the value to construct from
   /// @param value The value to construct from
   template <typename T>
     requires(!std::is_same_v<std::decay_t<T>, GeometryContext> &&
-             !std::is_base_of_v<ContextType, std::decay_t<T>>)
-  explicit GeometryContext(const T& value)
-      : ContextType(value) {}
+             !std::is_base_of_v<ContextType, std::decay_t<T> >)
+  explicit GeometryContext(const T& value) : ContextType(value) {}
 
   /// Inherit assignment operators
   using ContextType::operator=;
