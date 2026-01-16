@@ -16,9 +16,7 @@
 namespace ActsExamples {
 
 Detector::Detector(std::unique_ptr<const Acts::Logger> logger)
-    : m_logger(std::move(logger)),
-      m_nominalGeometryContext(
-          Acts::GeometryContext::dangerouslyDefaultConstruct()) {}
+    : m_logger(std::move(logger)) {}
 
 Detector::~Detector() = default;
 
