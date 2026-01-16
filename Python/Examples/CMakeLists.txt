@@ -78,6 +78,8 @@ endmacro()
 # Add the examples python binding
 pybind11_add_module(ActsExamplesPythonBindings src/ExamplesModuleEntry.cpp)
 
+add_dependencies(ActsPythonBindings ActsExamplesPythonBindings)
+
 # The PythonBindings for the examples
 target_sources(
     ActsExamplesPythonBindings
