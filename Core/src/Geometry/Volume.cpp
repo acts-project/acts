@@ -130,10 +130,16 @@ bool Volume::operator==(const Volume& other) const {
 
 void Volume::visualize(IVisualization3D& helper, const GeometryContext& gctx,
                        const ViewConfig& viewConfig) const {
-  auto bSurfaces = volumeBounds().orientedSurfaces(transform());
+  auto bSurfaces = volumeBounds().boundarySurfaces(gctx, *this);
   for (const auto& bs : bSurfaces) {
     bs.surface->visualize(helper, gctx, viewConfig);
   }
+}
+VolumePlacementBase* Volume::volumePositioner() {
+  return m_volPlacement;
+}
+const VolumePlacementBase* Volume::volumePositioner() const {
+  return m_volPlacement;
 }
 
 }  // namespace Acts

@@ -114,8 +114,9 @@ class VolumeBounds {
   virtual std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const = 0;
 
-  virtual std::vector<OrientedSurface> orientedSurfaces(Volume& parentVolume) const = 0;
-  
+  std::vector<OrientedSurface> boundarySurfaces(const GeometryContext& gctx,
+                                                Volume& parentVolume) const;
+
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max

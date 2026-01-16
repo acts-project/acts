@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/VolumePlacementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Geometry/VolumePlacementBase.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -48,7 +48,8 @@ class Volume : public GeometryObject {
   /// @param shift is the optional shift applied as : shift * vol.transform()
   Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
 
-  Volume(VolumePlacementBase& volumePlacement, std::shared_ptr<VolumeBounds> volBounds);
+  Volume(VolumePlacementBase& volumePlacement,
+         std::shared_ptr<VolumeBounds> volBounds);
 
   ~Volume() noexcept override = default;
 
@@ -92,7 +93,6 @@ class Volume : public GeometryObject {
 
   VolumePlacementBase* volumePositioner();
   const VolumePlacementBase* volumePositioner() const;
-  
 
   /// Set volume bounds and update volume bounding boxes implicitly
   /// @param volbounds The volume bounds to be assigned
@@ -159,9 +159,8 @@ class Volume : public GeometryObject {
  private:
   /// @brief Volume bounds that define the shape and extent of the volume
   std::shared_ptr<VolumeBounds> m_volumeBounds;
-  /// @brief 
+  /// @brief
   VolumePlacementBase* m_volPlacement{nullptr};
-  
 };
 
 /**Overload of << operator for std::ostream for debug output*/
