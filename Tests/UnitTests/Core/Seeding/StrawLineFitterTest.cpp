@@ -113,6 +113,8 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
   auto calibrator = std::make_unique<SpCalibrator>();
   std::size_t goodFits{0};
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Start event " << (evt + 1)
+                        << "/" << nEvents << ".");
     const auto line = generateLine(engine, logger());
     fillPars(line.parameters(), trueY0, trueX0, trueTheta, truePhi);
     fillProjected(line.parameters(), trueProjTheta, trueProjPhi);
@@ -191,6 +193,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   auto outFile =
       std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
 
+  // Base configuration for the fit
   Fitter_t::Config fitCfg{};
   fitCfg.useHessian = false;
   fitCfg.calcAlongStraw = true;
@@ -202,14 +205,27 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
       std::array{-179._degree, 179._degree};
   fitCfg.ranges[toUnderlying(FitParIndex::x0)] = std::array{-1000., 1000.};
   fitCfg.ranges[toUnderlying(FitParIndex::y0)] = std::array{-1000., 1000.};
-  /// Configuration for fast pre-fit
-  Fitter_t::Config fastPreCfg{fitCfg};
-  fastPreCfg.useFastFitter = true;
-  /// Configuration for fast only fit
-  Fitter_t::Config fastCfg{fastPreCfg};
-  fastCfg.fastPreFitter = false;
 
-  // 2D straw only test
+  auto fastPreFit = [](Fitter_t::Config cfg) {
+    cfg.useFastFitter = true;
+    cfg.fastPreFitter = true;
+    return cfg;
+  };
+
+  auto fastOnly = [](Fitter_t::Config cfg) {
+    cfg.useFastFitter = true;
+    cfg.fastPreFitter = false;
+    return cfg;
+  };
+
+  auto enableTime = [](Fitter_t::Config cfg) {
+    cfg.useHessian = true;
+    cfg.recalibrate = true;
+    cfg.fitT0 = true;
+    cfg.ranges[toUnderlying(FitParIndex::t0)] = std::array{-150._ns, 150._ns};
+    return cfg;
+  };
+
   std::vector<std::pair<std::string, std::future<long int>>> timings{};
   using namespace std::chrono_literals;
 
@@ -221,43 +237,48 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
              }) >= nThreads);
   };
   /// @brief Helper lambda to launch the test for a given measurement configuration.
-  ///        Always three tests are launched:
+  ///        Always three tests are launched, either with time or without time:
   ///           Fast: Use only the fast fitter to obtain the results
   ///           FastPre: Use the fast fitter for a pre estimate of the
-  ///           parameters
-  ///                    followed by the full fitter
+  ///           parameters followed by the full fitter
   ///           Full: Just use the full fitter to obtain the results
   /// @param testName: Name of the tests
   /// @param genCfg: Configuration object to generate the measurements
   /// @param seed: Seed number for the random number generator
+  /// @param fitTime: Toggle to fit the time offset t0
   auto launchTest = [&](const std::string& testName, const GenCfg_t& genCfg,
-                        const unsigned seed) {
+                        const unsigned seed, const bool fitTime = false) {
+    Fitter_t::Config baseCfg{fitTime ? enableTime(fitCfg) : fitCfg};
     sendSleep();
-    timings.emplace_back(
-        "Fast" + testName, std::async(std::launch::async, [&]() {
-          return runFitTest(fastCfg, genCfg, "Fast" + testName, seed, *outFile);
-        }));
+    timings.emplace_back("Fast" + testName,
+                         std::async(std::launch::async, [&]() {
+                           return runFitTest(fastOnly(baseCfg), genCfg,
+                                             "Fast" + testName, seed, *outFile);
+                         }));
     sendSleep();
     timings.emplace_back(testName, std::async(std::launch::async, [&]() {
-                           return runFitTest(fitCfg, genCfg, testName, seed,
+                           return runFitTest(baseCfg, genCfg, testName, seed,
                                              *outFile);
                          }));
 
     sendSleep();
     timings.emplace_back(
         "FastPre" + testName, std::async(std::launch::async, [&]() {
-          return runFitTest(fastPreCfg, genCfg, "FastPre" + testName, seed,
-                            *outFile);
+          return runFitTest(fastPreFit(baseCfg), genCfg, "FastPre" + testName,
+                            seed, *outFile);
         }));
     sendSleep();
   };
+  // 2D Fit, straw only test (with & without t0)
   {
     GenCfg_t genCfg{};
+    genCfg.createStraws = true;
     genCfg.twinStraw = false;
     genCfg.createStrips = false;
     launchTest("StrawOnlyTest", genCfg, 1602);
+    launchTest("StrawOnlyTestT0", genCfg, 1602, true);
   }
-  // 2D straws + twin measurement test
+  // Full fit, straws + twin measurement test (with & without t0)
   {
     GenCfg_t genCfg{};
     genCfg.createStraws = true;
@@ -265,40 +286,44 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.createStrips = false;
 
     launchTest("StrawAndTwinTest", genCfg, 1503);
+    launchTest("StrawAndTwinTestT0", genCfg, 1503, true);
   }
-  // 1D straws + single strip measurements
+  // Full fit, straws + single strip measurements (with & without t0)
   {
     GenCfg_t genCfg{};
-    genCfg.createStrips = true;
+    genCfg.createStraws = true;
     genCfg.twinStraw = false;
+    genCfg.createStrips = true;
     genCfg.combineSpacePoints = false;
     genCfg.discretizeStrips = true;
-    genCfg.createStraws = true;
     genCfg.stripPitchLoc1 = 2._cm;
     genCfg.stripPitchLoc0 = 3.5_cm;
     launchTest("StrawAndStripTest", genCfg, 1701);
+    launchTest("StrawAndStripTestT0", genCfg, 1701, true);
   }
-  // 1D straws + 2D strip measurements
+  // Full fit, straws + 2D strip measurements (with & without t0)
   {
     GenCfg_t genCfg{};
-
-    genCfg.createStrips = true;
+    genCfg.createStraws = true;
     genCfg.twinStraw = false;
+    genCfg.createStrips = true;
     genCfg.combineSpacePoints = true;
     genCfg.discretizeStrips = true;
-    genCfg.createStraws = true;
+
     genCfg.stripPitchLoc1 = 2._cm;
     genCfg.stripPitchLoc0 = 3.5_cm;
     launchTest("StrawAndStrip2DTest", genCfg, 1404);
+    launchTest("StrawAndStrip2DTestT0", genCfg, 1404, true);
   }
-  // Strip only
+  // Single trip only
   {
     GenCfg_t genCfg{};
-    genCfg.createStrips = true;
+    genCfg.createStraws = false;
     genCfg.twinStraw = false;
+    genCfg.createStrips = true;
     genCfg.combineSpacePoints = false;
     genCfg.discretizeStrips = true;
-    genCfg.createStraws = false;
+
     genCfg.stripPitchLoc1 = 500._um;
     genCfg.stripPitchLoc0 = 3._cm;
     launchTest("StripOnlyTest", genCfg, 2070);
@@ -306,11 +331,12 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   // 2D Strip only
   {
     GenCfg_t genCfg{};
-    genCfg.createStrips = true;
+    genCfg.createStraws = false;
     genCfg.twinStraw = false;
+    genCfg.createStrips = true;
     genCfg.combineSpacePoints = true;
     genCfg.discretizeStrips = true;
-    genCfg.createStraws = false;
+
     genCfg.stripPitchLoc1 = 500._um;
     genCfg.stripPitchLoc0 = 3._cm;
     launchTest("Strip2DOnlyTest", genCfg, 2225);
