@@ -13,51 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docs-old:
-    runs-on: ubuntu-latest
-    env:
-      DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
-      DOXYGEN_VERSION: "1.15.0"
-      DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install doxygen
-        run: |
-          curl -SL https://acts.web.cern.ch/ci/doxygen/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz -o doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
-          echo "${{ env.DOXYGEN_HASH }}  doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz" | sha256sum -c -
-          tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
-          mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
-
-      - name: Install dependencies
-        run: >
-          pip3 install --upgrade pip
-          && pip install -r docs/old/requirements.txt
-
-      - name: Build documentation
-        run: >
-          cd docs/old
-          && sphinx-build
-          -b html
-          -d _build/doctrees/
-          -j auto
-          -W
-          --keep-going
-          -t run_doxygen
-          -t lazy_autodoc
-          -t white_papers
-          -b linkcheck
-          . _build/html/
-
-
-      - uses: actions/upload-artifact@v6
-        with:
-          name: acts-docs-old
-          path: docs/old/_build/html/
-
   docs:
     runs-on: ubuntu-latest
-    # container: ghcr.io/acts-project/ubuntu2404:83
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
       DOXYGEN_VERSION: "1.15.0"
@@ -85,6 +42,24 @@ jobs:
         run: >
           cmake --build build --target docs
 
+      - name: Generate PR metadata
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.head_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          jq -n \
+            --arg pr "$PR_NUMBER" \
+            --arg branch "$PR_BRANCH" \
+            --arg title "$PR_TITLE" \
+            --arg url "$PR_URL" \
+            '{pr: ($pr | tonumber), branch: $branch, title: $title, url: $url}' \
+            > build/docs/html/pr.json
+          echo "Created pr.json for PR #$PR_NUMBER"
+          cat build/docs/html/pr.json
+
       - uses: actions/upload-artifact@v6
         id: artifact-upload-step
         with:
@@ -92,4 +67,28 @@ jobs:
           path: build/docs/html
 
       - name: Documentation display
-        run: echo 'https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}/index.html'
+        run: |
+          base_link='https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}'
+          link="$base_link/index.html"
+          echo "📚 Docs preview available at: $link"
+          echo "**📚 Documentation preview available [here]($link)**" >> $GITHUB_STEP_SUMMARY
+
+          # prime cache
+          (curl -L -m1 "$link" "$base_link/pr.json" > /dev/null 2>&1) || true
+
+      - name: Repository Dispatch
+        # Dispatch only if on a tag or on the main branch
+        if: >-
+          ${{
+            github.event_name == 'push' &&
+            (
+              github.ref_type == 'tag' ||
+              (github.ref_type == 'branch' && github.ref_name == 'main')
+            )
+          }}
+        uses: peter-evans/repository-dispatch@v4
+        with:
+          token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
+          repository: acts-project/acts-project.github.io
+          event-type: deploy_docs
+          client-payload: ${{ format('{{"source_repo":{0},"run_id":{1},"artifact_id":{2},"ref":{3},"ref_type":{4},"ref_name":{5},"sha":{6}}}', toJson(github.repository), toJson(github.run_id), toJson(steps.artifact-upload-step.outputs.artifact-id), toJson(github.ref), toJson(github.ref_type), toJson(github.ref_name), toJson(github.sha)) }}
