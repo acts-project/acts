@@ -39,11 +39,11 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                                std::array{residualAxis}));
 
     // residual vs eta scatter plots
-    m_resVsEta.emplace(
-        parName, Acts::Experimental::Histogram2(
-                     std::format("res_{}_vs_eta", parName),
-                     std::format("Residual of {} vs eta", parName),
-                     std::array{etaAxis, residualAxis}));
+    m_resVsEta.emplace(parName,
+                       Acts::Experimental::Histogram2(
+                           std::format("res_{}_vs_eta", parName),
+                           std::format("Residual of {} vs eta", parName),
+                           std::array{etaAxis, residualAxis}));
 
     // residual vs pT scatter plots
     m_resVsPt.emplace(parName, Acts::Experimental::Histogram2(
@@ -52,10 +52,10 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                                    std::array{ptAxis, residualAxis}));
 
     // pull distributions
-    m_pull.emplace(parName, Acts::Experimental::Histogram1(
-                                std::format("pull_{}", parName),
-                                std::format("Pull of {}", parName),
-                                std::array{pullAxis}));
+    m_pull.emplace(
+        parName, Acts::Experimental::Histogram1(
+                     std::format("pull_{}", parName),
+                     std::format("Pull of {}", parName), std::array{pullAxis}));
 
     // pull vs eta scatter plots
     m_pullVsEta.emplace(parName, Acts::Experimental::Histogram2(

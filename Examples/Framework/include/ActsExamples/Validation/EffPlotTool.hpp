@@ -32,13 +32,15 @@ class EffPlotTool {
     std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
         {"Eta", Acts::Experimental::BoostRegularAxis(40, -3.0, 3.0, "#eta")},
         {"Phi", Acts::Experimental::BoostRegularAxis(100, -std::numbers::pi,
-                                                      std::numbers::pi, "#phi")},
+                                                     std::numbers::pi, "#phi")},
         {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
         {"LogPt", Acts::Experimental::BoostLogAxis(11, 0.1, 100, "pT [GeV/c]")},
         {"LowPt", Acts::Experimental::BoostRegularAxis(40, 0, 2, "pT [GeV/c]")},
-        {"D0", Acts::Experimental::BoostRegularAxis(200, -200, 200, "d_0 [mm]")},
+        {"D0",
+         Acts::Experimental::BoostRegularAxis(200, -200, 200, "d_0 [mm]")},
         {"Z0", Acts::Experimental::BoostRegularAxis(50, -200, 200, "z_0 [mm]")},
-        {"DeltaR", Acts::Experimental::BoostRegularAxis(100, 0, 0.3, "#Delta R")},
+        {"DeltaR",
+         Acts::Experimental::BoostRegularAxis(100, 0, 0.3, "#Delta R")},
         {"prodR",
          Acts::Experimental::BoostRegularAxis(100, 0, 200, "prod_R [mm]")}};
 

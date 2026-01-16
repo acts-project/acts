@@ -13,9 +13,9 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/Helpers.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cstddef>
@@ -107,7 +107,8 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
 
     // Project each X bin and extract mean/width via Gaussian fit
     for (int j = 1; j <= nBinsX; j++) {
-      TH1D* proj = hist2d->ProjectionY(Form("%s_projy_bin%d", baseName.c_str(), j), j, j);
+      TH1D* proj = hist2d->ProjectionY(
+          Form("%s_projy_bin%d", baseName.c_str(), j), j, j);
       PlotHelpers::anaHisto(proj, j, meanHist, widthHist);
       delete proj;
     }

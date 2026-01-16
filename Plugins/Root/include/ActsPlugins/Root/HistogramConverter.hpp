@@ -26,7 +26,8 @@ namespace ActsPlugins {
 ///
 /// @param axis The axis variant to extract edges from
 /// @return Vector of bin edges (size = nBins + 1)
-std::vector<double> extractBinEdges(const Acts::Experimental::AxisVariant& axis);
+std::vector<double> extractBinEdges(
+    const Acts::Experimental::AxisVariant& axis);
 
 /// Convert Histogram1 to ROOT TH1F
 ///

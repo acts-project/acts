@@ -107,9 +107,9 @@ RootTrackFinderPerformanceWriter::RootTrackFinderPerformanceWriter(
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
     TrackSummaryPlotTool::Config subConfig = m_cfg.trackSummaryPlotToolConfig;
     subConfig.prefix = key;
-    m_subDetectorSummaryTools.emplace(
-        std::piecewise_construct, std::forward_as_tuple(key),
-        std::forward_as_tuple(subConfig, lvl));
+    m_subDetectorSummaryTools.emplace(std::piecewise_construct,
+                                      std::forward_as_tuple(key),
+                                      std::forward_as_tuple(subConfig, lvl));
   }
 }
 
@@ -315,9 +315,8 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
     }
 
     // Fill fake ratio plots
-    m_fakePlotTool.fill(
-        fittedParameters,
-        particleMatch.classification == TrackMatchClassification::Fake);
+    m_fakePlotTool.fill(fittedParameters, particleMatch.classification ==
+                                              TrackMatchClassification::Fake);
 
     // Fill the duplication ratio
     m_duplicationPlotTool.fill(
