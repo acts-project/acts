@@ -1204,7 +1204,7 @@ class Gx2Fitter {
 
     for (; it != end; ++it) {
       inputMeasurements.try_emplace(gx2fOptions.extensions.surfaceAccessor(*it),
-                                *it);
+                                    *it);
     }
 
     // Store, if we want to do multiple scattering. We still need to pass this
