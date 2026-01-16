@@ -34,38 +34,38 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
 
     // residual distributions
     m_res.emplace(parName, Acts::Experimental::Histogram1(
-                               std::format("res{}", parName),
+                               std::format("res_{}", parName),
                                std::format("Residual of {}", parName),
                                std::array{residualAxis}));
 
     // residual vs eta scatter plots
     m_resVsEta.emplace(
         parName, Acts::Experimental::Histogram2(
-                     std::format("res{}VsEta", parName),
+                     std::format("res_{}_vs_eta", parName),
                      std::format("Residual of {} vs eta", parName),
                      std::array{etaAxis, residualAxis}));
 
     // residual vs pT scatter plots
     m_resVsPt.emplace(parName, Acts::Experimental::Histogram2(
-                                   std::format("res{}VsPt", parName),
+                                   std::format("res_{}_vs_pT", parName),
                                    std::format("Residual of {} vs pT", parName),
                                    std::array{ptAxis, residualAxis}));
 
     // pull distributions
     m_pull.emplace(parName, Acts::Experimental::Histogram1(
-                                std::format("pull{}", parName),
+                                std::format("pull_{}", parName),
                                 std::format("Pull of {}", parName),
                                 std::array{pullAxis}));
 
     // pull vs eta scatter plots
     m_pullVsEta.emplace(parName, Acts::Experimental::Histogram2(
-                                     std::format("pull{}VsEta", parName),
+                                     std::format("pull_{}_vs_eta", parName),
                                      std::format("Pull of {} vs eta", parName),
                                      std::array{etaAxis, pullAxis}));
 
     // pull vs pT scatter plots
     m_pullVsPt.emplace(parName, Acts::Experimental::Histogram2(
-                                    std::format("pull{}VsPt", parName),
+                                    std::format("pull_{}_vs_pT", parName),
                                     std::format("Pull of {} vs pT", parName),
                                     std::array{ptAxis, pullAxis}));
   }

@@ -26,58 +26,58 @@ EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("EffPlotTool", lvl)),
       m_trackEffVsEta(
-          "trackEffVsEta",
+          "trackeff_vs_eta",
           std::format("Tracking efficiency with pT > {} GeV/c;Truth "
                       "#eta;Efficiency",
                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
           std::array{m_cfg.varBinning.at("Eta")}),
       m_trackEffVsPhi(
-          "trackEffVsPhi",
+          "trackeff_vs_phi",
           std::format("Tracking efficiency with pT > {} GeV/c;Truth "
                       "#phi;Efficiency",
                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
           std::array{m_cfg.varBinning.at("Phi")}),
-      m_trackEffVsPt("trackEffVsPt",
+      m_trackEffVsPt("trackeff_vs_pT",
                      "Tracking efficiency;Truth pT [GeV/c];Efficiency",
                      std::array{m_cfg.varBinning.at("Pt")}),
-      m_trackEffVsLogPt("trackEffVsLogPt",
+      m_trackEffVsLogPt("trackeff_vs_LogPt",
                         "Tracking efficiency;Truth pT [GeV/c];Efficiency",
                         std::array{m_cfg.varBinning.at("LogPt")}),
-      m_trackEffVsLowPt("trackEffVsLowPt",
+      m_trackEffVsLowPt("trackeff_vs_LowPt",
                         "Tracking efficiency;Truth pT [GeV/c];Efficiency",
                         std::array{m_cfg.varBinning.at("LowPt")}),
       m_trackEffVsD0(
-          "trackEffVsD0",
+          "trackeff_vs_d0",
           std::format("Tracking efficiency with pT > {} GeV/c;Truth d_0 "
                       "[mm];Efficiency",
                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
           std::array{m_cfg.varBinning.at("D0")}),
       m_trackEffVsZ0(
-          "trackEffVsZ0",
+          "trackeff_vs_z0",
           std::format("Tracking efficiency with pT > {} GeV/c;Truth z_0 "
                       "[mm];Efficiency",
                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
           std::array{m_cfg.varBinning.at("Z0")}),
       m_trackEffVsDeltaR(
-          "trackEffVsDeltaR",
+          "trackeff_vs_DeltaR",
           std::format("Tracking efficiency with pT > {} GeV/c;Closest track "
                       "#Delta R;Efficiency",
                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
           std::array{m_cfg.varBinning.at("DeltaR")}),
       m_trackEffVsProdR(
-          "trackEffVsProdR",
+          "trackeff_vs_prodR",
           std::format("Tracking efficiency with pT > {} GeV/c;Production "
                       "radius [mm];Efficiency",
                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
           std::array{m_cfg.varBinning.at("prodR")}),
       m_trackEffVsEtaPhi(
-          "trackEffVsEtaPhi",
+          "trackeff_vs_eta_phi",
           std::format("Tracking efficiency with pT > {} GeV/c;Truth #eta;Truth "
                       "#phi;Efficiency",
                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
           std::array{m_cfg.varBinning.at("Eta"), m_cfg.varBinning.at("Phi")}),
       m_trackEffVsEtaPt(
-          "trackEffVsEtaPt",
+          "trackeff_vs_eta_pt",
           "Tracking efficiency;Truth #eta;Truth pT [GeV/c];Efficiency",
           std::array{m_cfg.varBinning.at("Eta"), m_cfg.varBinning.at("Pt")}) {
   ACTS_DEBUG("Initialize the histograms for efficiency plots");
@@ -87,7 +87,7 @@ EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
 
   // efficiency vs eta in different pT ranges
   for (const auto& [i, ptRange] : Acts::enumerate(m_cfg.truthPtRangesForEta)) {
-    const std::string name = std::format("trackEffVsEtaPtRange{}", i);
+    const std::string name = std::format("trackeff_vs_eta_ptRange_{}", i);
     const std::string title = std::format(
         "Tracking efficiency with pT in [{}, {}] GeV/c;Truth #eta;Efficiency",
         ptRange.first / Acts::UnitConstants::GeV,
@@ -98,7 +98,7 @@ EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
   // efficiency vs pT in different abs(eta) ranges
   for (const auto& [i, absEtaRange] :
        Acts::enumerate(m_cfg.truthAbsEtaRangesForPt)) {
-    const std::string name = std::format("trackEffVsPtAbsEtaRange{}", i);
+    const std::string name = std::format("trackeff_vs_pT_absEtaRange_{}", i);
     const std::string title = std::format(
         "Tracking efficiency with |#eta| in [{}, {}];Truth pT "
         "[GeV/c];Efficiency",

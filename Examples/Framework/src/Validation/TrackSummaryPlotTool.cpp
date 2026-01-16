@@ -19,56 +19,56 @@ TrackSummaryPlotTool::TrackSummaryPlotTool(
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("TrackSummaryPlotTool", lvl)),
       m_nStatesVsEta(
-          m_cfg.prefix.empty() ? "nStatesVsEta"
-                               : std::format("{}_nStatesVsEta", m_cfg.prefix),
+          m_cfg.prefix.empty() ? "nStates_vs_eta"
+                               : std::format("{}_nStates_vs_eta", m_cfg.prefix),
           "Number of total states vs. #eta",
           std::array{m_cfg.varBinning.at("Eta")}, "N"),
       m_nMeasurementsVsEta(
           m_cfg.prefix.empty()
-              ? "nMeasurementsVsEta"
-              : std::format("{}_nMeasurementsVsEta", m_cfg.prefix),
+              ? "nMeasurements_vs_eta"
+              : std::format("{}_nMeasurements_vs_eta", m_cfg.prefix),
           "Number of measurements vs. #eta",
           std::array{m_cfg.varBinning.at("Eta")}, "N"),
       m_nHolesVsEta(
-          m_cfg.prefix.empty() ? "nHolesVsEta"
-                               : std::format("{}_nHolesVsEta", m_cfg.prefix),
+          m_cfg.prefix.empty() ? "nHoles_vs_eta"
+                               : std::format("{}_nHoles_vs_eta", m_cfg.prefix),
           "Number of holes vs. #eta", std::array{m_cfg.varBinning.at("Eta")},
           "N"),
       m_nOutliersVsEta(
-          m_cfg.prefix.empty() ? "nOutliersVsEta"
-                               : std::format("{}_nOutliersVsEta", m_cfg.prefix),
+          m_cfg.prefix.empty() ? "nOutliers_vs_eta"
+                               : std::format("{}_nOutliers_vs_eta", m_cfg.prefix),
           "Number of outliers vs. #eta", std::array{m_cfg.varBinning.at("Eta")},
           "N"),
       m_nSharedHitsVsEta(
           m_cfg.prefix.empty()
-              ? "nSharedHitsVsEta"
-              : std::format("{}_nSharedHitsVsEta", m_cfg.prefix),
+              ? "nSharedHits_vs_eta"
+              : std::format("{}_nSharedHits_vs_eta", m_cfg.prefix),
           "Number of Shared Hits vs. #eta",
           std::array{m_cfg.varBinning.at("Eta")}, "N"),
       m_nStatesVsPt(
-          m_cfg.prefix.empty() ? "nStatesVsPt"
-                               : std::format("{}_nStatesVsPt", m_cfg.prefix),
+          m_cfg.prefix.empty() ? "nStates_vs_pT"
+                               : std::format("{}_nStates_vs_pT", m_cfg.prefix),
           "Number of total states vs. pT",
           std::array{m_cfg.varBinning.at("Pt")}, "N"),
       m_nMeasurementsVsPt(
           m_cfg.prefix.empty()
-              ? "nMeasurementsVsPt"
-              : std::format("{}_nMeasurementsVsPt", m_cfg.prefix),
+              ? "nMeasurements_vs_pT"
+              : std::format("{}_nMeasurements_vs_pT", m_cfg.prefix),
           "Number of measurements vs. pT",
           std::array{m_cfg.varBinning.at("Pt")}, "N"),
       m_nHolesVsPt(
-          m_cfg.prefix.empty() ? "nHolesVsPt"
-                               : std::format("{}_nHolesVsPt", m_cfg.prefix),
+          m_cfg.prefix.empty() ? "nHoles_vs_pT"
+                               : std::format("{}_nHoles_vs_pT", m_cfg.prefix),
           "Number of holes vs. pT", std::array{m_cfg.varBinning.at("Pt")}, "N"),
       m_nOutliersVsPt(
-          m_cfg.prefix.empty() ? "nOutliersVsPt"
-                               : std::format("{}_nOutliersVsPt", m_cfg.prefix),
+          m_cfg.prefix.empty() ? "nOutliers_vs_pT"
+                               : std::format("{}_nOutliers_vs_pT", m_cfg.prefix),
           "Number of outliers vs. pT", std::array{m_cfg.varBinning.at("Pt")},
           "N"),
       m_nSharedHitsVsPt(
           m_cfg.prefix.empty()
-              ? "nSharedHitsVsPt"
-              : std::format("{}_nSharedHitsVsPt", m_cfg.prefix),
+              ? "nSharedHits_vs_pT"
+              : std::format("{}_nSharedHits_vs_pT", m_cfg.prefix),
           "Number of Shared Hits vs. pT",
           std::array{m_cfg.varBinning.at("Pt")}, "N") {
   ACTS_DEBUG("Initialize the histograms for track info plots"
