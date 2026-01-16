@@ -33,7 +33,6 @@ struct AlgorithmContext {
       : algorithmNumber(alg),
         eventNumber(event),
         eventStore(store),
-        geoContext(Acts::GeometryContext::dangerouslyDefaultConstruct()),
         threadId{thread} {}
 
   /// @brief ++operator overload to increase the algorithm number
@@ -42,10 +41,12 @@ struct AlgorithmContext {
     return (*this);
   }
 
-  std::size_t algorithmNumber;       ///< Unique algorithm identifier
-  std::size_t eventNumber;           ///< Unique event identifier
-  WhiteBoard& eventStore;            ///< Per-event data store
-  Acts::GeometryContext geoContext;  ///< Per-event geometry context
+  std::size_t algorithmNumber;  ///< Unique algorithm identifier
+  std::size_t eventNumber;      ///< Unique event identifier
+  WhiteBoard& eventStore;       ///< Per-event data store
+  Acts::GeometryContext geoContext{
+      Acts::GeometryContext::
+          dangerouslyDefaultConstruct()};  ///< Per-event geometry context
   Acts::MagneticFieldContext
       magFieldContext;                    ///< Per-event magnetic Field context
   Acts::CalibrationContext calibContext;  ///< Per-event calibration context
