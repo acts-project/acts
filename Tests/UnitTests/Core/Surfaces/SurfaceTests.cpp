@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SensitiveSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -38,8 +39,8 @@ class MockTrack {
   Vector3 position() const { return m_pos; }
 
  private:
-  Vector3 m_mom;
-  Vector3 m_pos;
+  Vector3 m_mom{Vector3::Zero()};
+  Vector3 m_pos{Vector3::Zero()};
 };
 }  // namespace Acts
 
@@ -66,8 +67,7 @@ BOOST_AUTO_TEST_CASE(SurfaceConstruction) {
                     SurfaceStub(tgContext, original, transform).type());
   // need some cruft to make the next one work
   auto pTransform = Transform3(translation);
-  std::shared_ptr<const Acts::PlanarBounds> p =
-      std::make_shared<const RectangleBounds>(5., 10.);
+  auto p = std::make_shared<const RectangleBounds>(5., 10.);
   DetectorElementStub detElement{pTransform, p, 0.2, nullptr};
   BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(detElement).type());
 }
@@ -75,8 +75,7 @@ BOOST_AUTO_TEST_CASE(SurfaceConstruction) {
 /// Unit test for testing Surface properties
 BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   // build a test object , 'surface'
-  std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
-      std::make_shared<const RectangleBounds>(5., 10.);
+  auto pPlanarBound = std::make_shared<const RectangleBounds>(5., 10.);
   Vector3 reference{0., 1., 2.};
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
@@ -88,7 +87,8 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
 
   // associatedDetectorElement
   BOOST_CHECK_EQUAL(surface.associatedDetectorElement(), &detElement);
-
+  //
+  BOOST_CHECK_EQUAL(surface.isSensitive(), detElement.isSensitive());
   // test associatelayer, associatedLayer
   surface.associateLayer(*pLayer);
   BOOST_CHECK_EQUAL(surface.associatedLayer(), pLayer.get());
@@ -126,8 +126,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   // normal()
   auto normal = surface.normal(tgContext, Vector3{1, 2, 3}.normalized(),
                                Vector3::UnitZ());
-  Vector3 zero{0., 0., 0.};
-  BOOST_CHECK_EQUAL(zero, normal);
+  BOOST_CHECK_EQUAL(Vector3::Zero(), normal);
 
   // pathCorrection is pure virtual
 
@@ -145,8 +144,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
 
 BOOST_AUTO_TEST_CASE(EqualityOperators) {
   // build some test objects
-  std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
-      std::make_shared<const RectangleBounds>(5., 10.);
+  auto pPlanarBound = std::make_shared<const RectangleBounds>(5., 10.);
   Vector3 reference{0., 1., 2.};
   Translation3 translation1{0., 1., 2.};
   Translation3 translation2{1., 1., 2.};
@@ -180,6 +178,21 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   const auto surfacePtr = Surface::makeShared<const SurfaceStub>(detElement1);
   const auto sharedSurfacePtr = surfacePtr->getSharedPtr();
   BOOST_CHECK(*surfacePtr == *sharedSurfacePtr);
+}
+
+BOOST_AUTO_TEST_CASE(FreeSensitive) {
+  auto planeSurf = Surface::makeShared<PlaneSurface>(Transform3::Identity());
+  // Check that the ordinary plane surface is not sensitive
+  BOOST_CHECK_EQUAL(planeSurf->isSensitive(), false);
+  using SensPlaneSurf_t = SensitiveSurface<PlaneSurface>;
+  auto sensplane =
+      Surface::makeShared<SensPlaneSurf_t>(Transform3{Translation3{2, 0, 0}});
+  // Check that the interface is over written
+  BOOST_CHECK_EQUAL(std::shared_ptr<Surface>(sensplane)->isSensitive(), true);
+  BOOST_CHECK_EQUAL(sensplane->type(), planeSurf->type());
+
+  (*sensplane) = (*planeSurf);
+  BOOST_CHECK_EQUAL(sensplane->center(tgContext), Vector3::Zero());
 }
 BOOST_AUTO_TEST_SUITE_END()
 
