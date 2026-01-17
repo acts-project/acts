@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -182,7 +183,7 @@ void CuboidVolumeStack::initializeOuterVolume(const GeometryContext& gctx,
     assert(bounds != nullptr && "Volume bounds are not cuboid bounds");
     Volume::update(gctx, std::make_shared<CuboidVolumeBounds>(*bounds),
                    std::nullopt, logger);
-    ACTS_VERBOSE("Transform is now: " << m_transform.matrix());
+    ACTS_VERBOSE("Transform is now: " << toString(localToGlobalTransform(gctx)));
     return;
   }
 
@@ -247,20 +248,19 @@ void CuboidVolumeStack::initializeOuterVolume(const GeometryContext& gctx,
   double hl = std::midpoint(max, -min);
 
   Translation3 translation(Vector3::Unit(dirIdx) * mid);
-  m_transform = m_groupTransform * translation;
   auto bounds = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
           {CuboidVolumeBounds::boundsFromAxisDirection(m_direction), hl},
           {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1), hl1},
           {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2), hl2}});
-  Volume::update(gctx, bounds, std::nullopt, logger);
+  Volume::update(gctx, bounds, m_groupTransform * translation, logger);
   ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
   ACTS_DEBUG("Outer transform / new group transform is:\n"
-             << m_transform.matrix());
+             << toString(localToGlobalTransform(gctx)));
 
   // Update group transform to the new center
   // @TODO: We probably can reuse m_transform
-  m_groupTransform = m_transform;
+  m_groupTransform = localToGlobalTransform(gctx);
 }
 
 void CuboidVolumeStack::overlapPrint(const CuboidVolumeStack::VolumeTuple& a,
@@ -579,17 +579,17 @@ void CuboidVolumeStack::update(const GeometryContext& gctx,
     return;
   }
 
-  ACTS_VERBOSE("Group transform is:\n" << m_groupTransform.matrix());
-  ACTS_VERBOSE("Current transform is:\n" << m_transform.matrix());
+  ACTS_VERBOSE("Group transform is:\n" << toString(m_groupTransform));
+  ACTS_VERBOSE("Current transform is:\n" << toString(localToGlobalTransform(gctx)));
   if (transform.has_value()) {
-    ACTS_VERBOSE("Input transform:\n" << transform.value().matrix());
+    ACTS_VERBOSE("Input transform:\n" << toString(transform.value()));
   }
 
-  VolumeTuple oldVolume{gctx, *this, m_transform};
-  VolumeTuple newVolume{gctx, *this, m_transform};
+  VolumeTuple oldVolume{gctx, *this, localToGlobalTransform(gctx)};
+  VolumeTuple newVolume{gctx, *this, localToGlobalTransform(gctx)};
   newVolume.updatedBounds = std::make_shared<CuboidVolumeBounds>(*bounds);
-  newVolume.globalTransform = transform.value_or(m_transform);
-  newVolume.localTransform = m_transform.inverse() * newVolume.globalTransform;
+  newVolume.globalTransform = transform.value_or(localToGlobalTransform(gctx));
+  newVolume.localTransform = globalToLocalTransform(gctx) * newVolume.globalTransform;
 
   if (!transform.has_value()) {
     ACTS_VERBOSE("Local transform does not change");
@@ -859,10 +859,10 @@ void CuboidVolumeStack::update(const GeometryContext& gctx,
     m_volumes.push_back(vt.volume);
   }
 
-  m_transform = newVolume.globalTransform;
+  Volume::update(gctx, std::move(bounds), newVolume.globalTransform, logger);
   // @TODO: We probably can reuse m_transform
-  m_groupTransform = m_transform;
-  Volume::update(gctx, std::move(bounds), std::nullopt, logger);
+  m_groupTransform = localToGlobalTransform(gctx);
+
 }
 
 }  // namespace Acts

@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -154,7 +155,7 @@ void CylinderVolumeStack::initializeOuterVolume(
     assert(cylBounds != nullptr && "Volume bounds are not cylinder bounds");
     Volume::update(gctx, std::make_shared<CylinderVolumeBounds>(*cylBounds),
                    std::nullopt, logger);
-    ACTS_VERBOSE("Transform is now: " << m_transform.matrix());
+    ACTS_VERBOSE("Transform is now: " <<toString(localToGlobalTransform(gctx)));
     return;
   }
 
@@ -210,18 +211,16 @@ void CylinderVolumeStack::initializeOuterVolume(
     double midZ = (minZ + maxZ) / 2.0;
     double hlZ = (maxZ - minZ) / 2.0;
 
-    m_transform = m_groupTransform * Translation3{0, 0, midZ};
-
     Volume::update(gctx,
                    std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ),
-                   std::nullopt, logger);
+                   m_groupTransform * Translation3{0, 0, midZ}, logger);
     ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
     ACTS_DEBUG("Outer transform / new group transform is:\n"
-               << m_transform.matrix());
+               << toString(localToGlobalTransform(gctx)));
 
     // Update group transform to the new center
     // @TODO: We probably can reuse m_transform
-    m_groupTransform = m_transform;
+    m_groupTransform = localToGlobalTransform(gctx);
 
   } else if (direction == Acts::AxisDirection::AxisR) {
     ACTS_VERBOSE("Sorting by volume r middle point");
@@ -268,18 +267,17 @@ void CylinderVolumeStack::initializeOuterVolume(
     double midZ = (minZ + maxZ) / 2.0;
     double hlZ = (maxZ - minZ) / 2.0;
 
-    m_transform = m_groupTransform * Translation3{0, 0, midZ};
-
+   
     Volume::update(gctx,
                    std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ),
-                   std::nullopt, logger);
+                   m_groupTransform * Translation3{0, 0, midZ}, logger);
 
     ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
-    ACTS_DEBUG("Outer transform is:\n" << m_transform.matrix());
+    ACTS_DEBUG("Outer transform is:\n" << toString(localToGlobalTransform(gctx)));
 
     // Update group transform to the new center
     // @TODO: We probably can reuse m_transform
-    m_groupTransform = m_transform;
+    m_groupTransform = localToGlobalTransform(gctx);
 
   } else {
     ACTS_ERROR("Binning in " << axisDirectionName(direction)
@@ -681,17 +679,17 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
     return;
   }
 
-  ACTS_VERBOSE("Group transform is:\n" << m_groupTransform.matrix());
-  ACTS_VERBOSE("Current transform is:\n" << m_transform.matrix());
+  ACTS_VERBOSE("Group transform is:\n" << toString(m_groupTransform));
+  ACTS_VERBOSE("Current transform is:\n" << toString(localToGlobalTransform(gctx)));
   if (transform.has_value()) {
-    ACTS_VERBOSE("Input transform:\n" << transform.value().matrix());
+    ACTS_VERBOSE("Input transform:\n" << toString(transform.value()));
   }
 
-  VolumeTuple oldVolume{gctx, *this, m_transform};
-  VolumeTuple newVolume{gctx, *this, m_transform};
+  VolumeTuple oldVolume{gctx, *this, localToGlobalTransform(gctx)};
+  VolumeTuple newVolume{gctx, *this, localToGlobalTransform(gctx)};
   newVolume.updatedBounds = std::make_shared<CylinderVolumeBounds>(*cylBounds);
-  newVolume.globalTransform = transform.value_or(m_transform);
-  newVolume.localTransform = m_transform.inverse() * newVolume.globalTransform;
+  newVolume.globalTransform = transform.value_or(localToGlobalTransform(gctx));
+  newVolume.localTransform = globalToLocalTransform(gctx) * newVolume.globalTransform;
 
   if (!transform.has_value()) {
     ACTS_VERBOSE("Local transform does not change");
@@ -1047,10 +1045,10 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
     }
   }
 
-  m_transform = newVolume.globalTransform;
+  Volume::update(gctx, std::move(cylBounds), newVolume.globalTransform, logger);
   // @TODO: We probably can reuse m_transform
-  m_groupTransform = m_transform;
-  Volume::update(gctx, std::move(cylBounds), std::nullopt, logger);
+  m_groupTransform = localToGlobalTransform(gctx);
+
 }
 
 void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
