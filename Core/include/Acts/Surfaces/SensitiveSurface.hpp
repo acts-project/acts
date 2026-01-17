@@ -31,7 +31,7 @@ class SensitiveSurface : public Surface_t {
   /// @param other is the source surface for copying
   /// @return Reference to this surface for assignment chaining
   SensitiveSurface& operator=(const SensitiveSurface& other) {
-    static_cast<Surface_t&>(*this) == other;
+    static_cast<Surface_t&>(*this) = other;
     return *this;
   }
   /// @brief implement the assignment operators
@@ -40,7 +40,7 @@ class SensitiveSurface : public Surface_t {
   /// @param other is the source surface for copying
   /// @return Reference to this surface for assignment chaining
   SensitiveSurface& operator=(const Surface_t& other) {
-    static_cast<Surface_t&>(*this) == other;
+    static_cast<Surface_t&>(*this) = other;
     return *this;
   }
 
