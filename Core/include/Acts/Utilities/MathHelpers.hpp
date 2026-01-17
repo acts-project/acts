@@ -109,8 +109,8 @@ template <std::unsigned_integral T>
 constexpr T product(const T lowerN, const T upperN) {
   T value{1};
   for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
+    assert(value * iter > value);
     value *= iter;
-    assert(value < std::numeric_limits<T>::max());
   }
   return value;
 }
