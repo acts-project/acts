@@ -448,8 +448,7 @@ class KalmanFitter {
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
       const bool precedingMeasurementExists = result.measurementStates > 0;
-      const bool surfaceIsSensitive =
-          surface->associatedDetectorElement() != nullptr;
+      const bool surfaceIsSensitive = surface->isSensitive();
       const bool surfaceHasMaterial = surface->surfaceMaterial() != nullptr;
 
       // Try to find the surface in the measurement surfaces

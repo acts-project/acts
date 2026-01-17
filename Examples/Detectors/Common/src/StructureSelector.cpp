@@ -19,8 +19,7 @@ struct SensitiveGetter {
   void operator()(const Acts::Surface* surface) {
     if (surface != nullptr) {
       auto geoId = surface->geometryId();
-      if (geoId.sensitive() != 0u ||
-          surface->associatedDetectorElement() != nullptr) {
+      if (geoId.sensitive() != 0u || surface->isSensitive()) {
         selected.emplace_back(surface->getSharedPtr());
       }
     }

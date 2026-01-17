@@ -262,8 +262,7 @@ Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
     throw PortalFusingException();
   }
 
-  if (aPortal.m_surface->associatedDetectorElement() != nullptr ||
-      bPortal.m_surface->associatedDetectorElement() != nullptr) {
+  if (aPortal.m_surface->isSensitive() || bPortal.m_surface->isSensitive()) {
     ACTS_ERROR("Cannot fuse portals with detector elements");
     throw PortalFusingException();
   }

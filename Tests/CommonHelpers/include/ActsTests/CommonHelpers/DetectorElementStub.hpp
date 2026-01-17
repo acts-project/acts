@@ -82,7 +82,7 @@ class DetectorElementStub : public Acts::DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @note this is called from the surface().transform() in the PROXY mode
-  const Acts::Transform3& transform(
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
 
   /// Return surface associated with this detector element
@@ -94,6 +94,9 @@ class DetectorElementStub : public Acts::DetectorElementBase {
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const override;
 
+  /// Is the detector element a sensitive element
+  bool isSensitive() const override { return true; }
+
  private:
   /// the transform for positioning in 3D space
   Acts::Transform3 m_elementTransform;
@@ -103,7 +106,7 @@ class DetectorElementStub : public Acts::DetectorElementBase {
   double m_elementThickness{0.};
 };
 
-inline const Acts::Transform3& DetectorElementStub::transform(
+inline const Acts::Transform3& DetectorElementStub::localToGlobalTransform(
     const Acts::GeometryContext& /*gctx*/) const {
   return m_elementTransform;
 }

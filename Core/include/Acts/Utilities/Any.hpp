@@ -114,7 +114,24 @@ static _AnyAllocationReporter s_reporter;
 /// Base class for all instances of @ref AnyBase regarfless of SBO size
 class AnyBaseAll {};
 
-/// Small opaque cache type with configurable small buffer optimization
+/// Small opaque type-erased type with configurable small buffer optimization
+///
+/// @note
+/// Type requirements:
+/// - All stored types must be copy constructible and copy assignable.
+/// - Types stored locally (`sizeof(T) <= SIZE`) must also be move constructible
+///   and move assignable because local moves use move operations when not
+///   trivially movable (trivial moves fall back to buffer copies).
+/// - Types stored on the heap (`sizeof(T) > SIZE`) are moved by stealing the
+///   pointer, so no move operations are required in that case.
+///
+/// @note
+/// In summary:
+/// - Local storage: values live inside the internal buffer; moves may invoke
+///   move operations or buffer copies; copies use copy operations or buffer
+///   copies when trivial.
+/// - Heap storage: values are allocated on the heap; moves transfer ownership
+///   of the pointer; copies allocate and copy-construct the pointee.
 template <std::size_t SIZE>
 class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
@@ -125,29 +142,15 @@ class AnyBase : public AnyBaseAll {
   /// @tparam Args Constructor argument types
   /// @param args Arguments to forward to T's constructor
   template <typename T, typename... Args>
+    requires(std::is_copy_assignable_v<std::decay_t<T>> &&
+             std::is_copy_constructible_v<std::decay_t<T>> &&
+             (sizeof(std::decay_t<T>) > SIZE ||
+              (std::is_move_assignable_v<std::decay_t<T>> &&
+               std::is_move_constructible_v<std::decay_t<T>>)))
   explicit AnyBase(std::in_place_type_t<T> /*unused*/, Args&&... args) {
     using U = std::decay_t<T>;
-    static_assert(
-        std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
-        "Type needs to be move assignable and move constructible");
-    static_assert(
-        std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U>,
-        "Type needs to be copy assignable and copy constructible");
-
     m_handler = makeHandler<U>();
-    if constexpr (!heapAllocated<U>()) {
-      // construct into local buffer
-      /*U* ptr =*/new (m_data.data()) U(std::forward<Args>(args)...);
-      _ACTS_ANY_VERBOSE("Construct local (this="
-                        << this
-                        << ") at: " << static_cast<void*>(m_data.data()));
-    } else {
-      // too large, heap allocate
-      U* heap = new U(std::forward<Args>(args)...);
-      _ACTS_ANY_DEBUG("Allocate type: " << typeid(U).name() << " at " << heap);
-      _ACTS_ANY_TRACK_ALLOCATION(T, heap);
-      setDataPtr(heap);
-    }
+    constructValue<U>(std::forward<Args>(args)...);
   }
 
 #if defined(_ACTS_ANY_ENABLE_VERBOSE)
@@ -161,8 +164,31 @@ class AnyBase : public AnyBaseAll {
   /// @param value Value to store in the Any
   template <typename T>
   explicit AnyBase(T&& value) _ACTS_ANY_NOEXCEPT
-    requires(!std::same_as<std::decay_t<T>, AnyBase<SIZE>>)
+    requires(!std::same_as<std::decay_t<T>, AnyBase<SIZE>> &&
+             std::is_copy_assignable_v<std::decay_t<T>> &&
+             std::is_copy_constructible_v<std::decay_t<T>> &&
+             (sizeof(std::decay_t<T>) > SIZE ||
+              (std::is_move_assignable_v<std::decay_t<T>> &&
+               std::is_move_constructible_v<std::decay_t<T>>)))
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
+
+  /// Construct a new value in place, destroying any existing value
+  /// @tparam T Type to construct
+  /// @tparam Args Constructor argument types
+  /// @param args Arguments to forward to T's constructor
+  /// @return Reference to the newly constructed value
+  template <typename T, typename... Args>
+    requires(std::is_copy_assignable_v<std::decay_t<T>> &&
+             std::is_copy_constructible_v<std::decay_t<T>> &&
+             (sizeof(std::decay_t<T>) > SIZE ||
+              (std::is_move_assignable_v<std::decay_t<T>> &&
+               std::is_move_constructible_v<std::decay_t<T>>)))
+  T& emplace(Args&&... args) {
+    using U = std::decay_t<T>;
+    destroy();
+    m_handler = makeHandler<U>();
+    return *constructValue<U>(std::forward<Args>(args)...);
+  }
 
   /// Get reference to stored value of specified type
   /// @tparam T Type to retrieve (must be exact type, no const/ref)
@@ -308,10 +334,9 @@ class AnyBase : public AnyBaseAll {
   }
 
   template <typename T>
-  static consteval std::uint64_t typeHash() {
-    // Technically, `__PRETTY_FUNCTION__` contains extra content, but should be
-    // unique per type, that's all we care about.
-    return detail::fnv1a_64(__PRETTY_FUNCTION__);
+  static std::uint64_t typeHash() {
+    const static std::uint64_t value = detail::fnv1a_64(typeid(T).name());
+    return value;
   }
 
   struct Handler {
@@ -334,12 +359,12 @@ class AnyBase : public AnyBaseAll {
                     heapAllocated<T>()) {
         h.destroy = &destroyImpl<T>;
       }
-      if constexpr (!std::is_trivially_move_constructible_v<T> ||
-                    heapAllocated<T>()) {
+      if constexpr (!heapAllocated<T>() &&
+                    !std::is_trivially_move_constructible_v<T>) {
         h.moveConstruct = &moveConstructImpl<T>;
       }
-      if constexpr (!std::is_trivially_move_assignable_v<T> ||
-                    heapAllocated<T>()) {
+      if constexpr (!heapAllocated<T>() &&
+                    !std::is_trivially_move_assignable_v<T>) {
         h.move = &moveImpl<T>;
       }
       if constexpr (!std::is_trivially_copy_constructible_v<T> ||
@@ -370,6 +395,25 @@ class AnyBase : public AnyBaseAll {
   template <typename T>
   static constexpr bool heapAllocated() {
     return sizeof(T) > SIZE;
+  }
+
+  template <typename T, typename... Args>
+  T* constructValue(Args&&... args) {
+    if constexpr (!heapAllocated<T>()) {
+      // construct into local buffer
+      auto* ptr = new (m_data.data()) T(std::forward<Args>(args)...);
+      _ACTS_ANY_VERBOSE("Construct local (this="
+                        << this
+                        << ") at: " << static_cast<void*>(m_data.data()));
+      return ptr;
+    } else {
+      // too large, heap allocate
+      T* heap = new T(std::forward<Args>(args)...);
+      _ACTS_ANY_DEBUG("Allocate type: " << typeid(T).name() << " at " << heap);
+      _ACTS_ANY_TRACK_ALLOCATION(T, heap);
+      setDataPtr(heap);
+      return heap;
+    }
   }
 
   void destroy() {

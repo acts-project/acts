@@ -107,7 +107,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
     (*dataBoundParameters[ipar]) = boundValues[ipar];
   }
 
-  if (surface.associatedDetectorElement() != nullptr) {
+  if (surface.isSensitive()) {
     data.module_t = surface.associatedDetectorElement()->thickness() /
                     Acts::UnitConstants::mm;
   }

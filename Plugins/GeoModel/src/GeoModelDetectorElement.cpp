@@ -24,7 +24,7 @@ ActsPlugins::GeoModelDetectorElement::GeoModelDetectorElement(
       m_surfaceTransform(sfTransform),
       m_thickness(thickness) {}
 
-const Transform3& ActsPlugins::GeoModelDetectorElement::transform(
+const Transform3& ActsPlugins::GeoModelDetectorElement::localToGlobalTransform(
     const GeometryContext& /*gctx*/) const {
   return m_surfaceTransform;
 }

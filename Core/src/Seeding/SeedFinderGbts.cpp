@@ -166,23 +166,21 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
   for (auto sp : std::get<0>(container)) {
     // for every sp in container,
     // add its variables to node_storage organised by layer
-    int layer = sp.extra(std::get<1>(container));
+    std::uint16_t layer = sp.extra(std::get<1>(container));
 
     // add node to storage
     GbtsNode& node = node_storage[layer].emplace_back(layer);
 
     // fill the node with spacepoint variables
 
-    node.m_x = sp.x();
-    node.m_y = sp.y();
-    node.m_z = sp.z();
-    node.m_r = sp.r();
-    node.m_phi = sp.phi();
-    node.m_idx =
-        sp.index();  // change node so that is uses SpacePointIndex2 (doesn't
-                     // affect code but i guess it looks cleaner)
-    node.m_pcw = sp.extra(std::get<2>(container));
-    node.m_locPosY = sp.extra(std::get<3>(container));
+    node.x() = sp.x();
+    node.y() = sp.y();
+    node.z() = sp.z();
+    node.r() = sp.r();
+    node.phi() = sp.phi();
+    node.sp_idx() = sp.index();
+    node.pixelClusterWidth() = sp.extra(std::get<2>(container));
+    node.localPositionY() = sp.extra(std::get<3>(container));
   }
 
   return node_storage;

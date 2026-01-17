@@ -36,12 +36,14 @@ namespace ActsPython {
 namespace Test {
 class DetectorElementStub : public DetectorElementBase {
  public:
-  DetectorElementStub() : DetectorElementBase() {}
-
-  const Transform3& transform(const GeometryContext& /*gctx*/) const override {
+  DetectorElementStub() = default;
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& /*gctx*/) const override {
     return m_transform;
   }
 
+  /// Is the detector element a sensitive element
+  bool isSensitive() const override { return true; }
   /// Return surface representation - const return pattern
   const Surface& surface() const override {
     throw std::runtime_error("Not implemented");

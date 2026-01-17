@@ -79,6 +79,9 @@ class DetectorElementBase {
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
   virtual double thickness() const = 0;
+  /// Returns whether the detector element corresponds to a sensitive
+  /// surface on which measurements are expressed
+  virtual bool isSensitive() const { return true; }
 };
 
 }  // namespace Acts

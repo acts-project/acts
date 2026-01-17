@@ -28,7 +28,7 @@ Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
     throw std::invalid_argument(
         "Geant4DetectorElement: Surface cannot be nullptr");
   }
-  if (m_surface->associatedDetectorElement() != nullptr) {
+  if (m_surface->isSensitive()) {
     throw std::logic_error(
         "Geant4DetectorElement: Surface already has an associated detector "
         "element");
@@ -36,7 +36,7 @@ Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
   m_surface->assignDetectorElement(*this);
 }
 
-const Transform3& Geant4DetectorElement::transform(
+const Transform3& Geant4DetectorElement::localToGlobalTransform(
     const GeometryContext& /*gctx*/) const {
   return m_toGlobal;
 }

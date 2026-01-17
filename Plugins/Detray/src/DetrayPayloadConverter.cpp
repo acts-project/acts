@@ -210,7 +210,7 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
       DetrayPayloadConverter::Config::SensitiveStrategy::Identifier) {
     isSensitive = surface.geometryId().sensitive() > 0;
   } else {
-    isSensitive = surface.associatedDetectorElement() != nullptr;
+    isSensitive = surface.isSensitive();
   }
 
   if (portal) {

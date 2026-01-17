@@ -58,9 +58,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
   // Draw all the surfaces
   Extent arrayExtent;
   for (const auto& sf : surfaceArray.surfaces()) {
-    ViewConfig vConfig = sf->associatedDetectorElement() != nullptr
-                             ? sensitiveConfig
-                             : passiveConfig;
+    ViewConfig vConfig = sf->isSensitive() ? sensitiveConfig : passiveConfig;
     drawSurface(helper, *sf, gctx, transform, vConfig);
     auto sfExtent = sf->polyhedronRepresentation(gctx, 1).extent();
     arrayExtent.extend(sfExtent);

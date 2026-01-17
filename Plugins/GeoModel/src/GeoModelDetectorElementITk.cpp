@@ -98,7 +98,7 @@ GeoModelDetectorElementITk::convertFromGeomodel(
         dynamic_cast<const bounds_t &>(srf->bounds()));
 
     auto itkEl = std::make_shared<GeoModelDetectorElementITk>(
-        detEl->physicalVolume(), nullptr, detEl->transform(gctx),
+        detEl->physicalVolume(), nullptr, detEl->localToGlobalTransform(gctx),
         detEl->thickness(), hardware, barrelEndcap, layerWheel, etaModule,
         phiModule, side);
     auto surface = Surface::makeShared<surface_t>(bounds, *itkEl);

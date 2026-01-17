@@ -65,9 +65,8 @@ void TrackingGeometryPrintVisitor::visitSurface(const Surface& surface) {
                 << Surface::s_surfaceTypeNames[toUnderlying(surface.type())]
                 << " surface "
                 << " @ " << toString(surface.center(m_gctx))
-                << " --- id: " << surface.geometryId() << ", sensitive: "
-                << (surface.associatedDetectorElement() != nullptr ? "yay"
-                                                                   : "nay")
+                << " --- id: " << surface.geometryId()
+                << ", sensitive: " << (surface.isSensitive() ? "yay" : "nay")
                 << ", material: "
                 << (surface.surfaceMaterial() != nullptr ? "yay" : "nay")
                 << std::endl;
