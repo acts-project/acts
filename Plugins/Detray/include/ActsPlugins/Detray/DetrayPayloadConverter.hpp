@@ -176,6 +176,7 @@ class DetrayPayloadConverter {
                                              bool portal = false) const;
 
   detray::io::volume_payload convertVolume(
+      const Acts::GeometryContext& gctx,
       const Acts::TrackingVolume& volume) const;
 
   struct Payloads {

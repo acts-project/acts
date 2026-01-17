@@ -142,10 +142,12 @@ class ContainerBlueprintNode : public BlueprintNode {
  protected:
   /// Make the volume stack for the container. This is called by the build
   /// method and is implemented by the derived classes.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volumes The volumes to stack
   /// @param logger The logger to use
   /// @return The volume stack
-  virtual std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
+  virtual std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
+                                                 std::vector<Volume*>& volumes,
                                                  const Logger& logger) = 0;
 
   /// Get the type name of the container. This is used for the debug output
@@ -265,7 +267,8 @@ class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
       const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
+  std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
+                                         std::vector<Volume*>& volumes,
                                          const Logger& logger) override;
 
  protected:
@@ -297,7 +300,8 @@ class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
       const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
+  std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
+                                         std::vector<Volume*>& volumes,
                                          const Logger& logger) override;
 
  protected:

@@ -154,7 +154,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   std::stringstream ss;
   bounds.toStream(ss);
   ACTS_DEBUG(prefix() << "have top volume: " << ss.str() << "\n"
-                      << topVolume.transform().matrix());
+                      << topVolume.localToGlobalTransform(gctx).matrix());
 
   std::unique_ptr<TrackingVolume> world;
   static const std::string worldName = "World";
@@ -187,8 +187,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     ACTS_DEBUG(prefix() << "Applied envelope to cylinder: Z=" << zEnv[0]
                         << ", Rmin=" << rEnv[0] << ", Rmax=" << rEnv[1]);
 
-    world = std::make_unique<TrackingVolume>(topVolume.transform(),
-                                             std::move(newBounds), worldName);
+    world =
+        std::make_unique<TrackingVolume>(topVolume.localToGlobalTransform(gctx),
+                                         std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
     SingleCylinderPortalShell worldShell{*world};
@@ -242,8 +243,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     ACTS_DEBUG(prefix() << "Applied envelope to cuboid: X=" << xEnv[0]
                         << ", Y=" << yEnv[0] << ", Z=" << zEnv[0]);
 
-    world = std::make_unique<TrackingVolume>(topVolume.transform(),
-                                             std::move(newBounds), worldName);
+    world =
+        std::make_unique<TrackingVolume>(topVolume.localToGlobalTransform(gctx),
+                                         std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
     SingleCuboidPortalShell worldShell{*world};

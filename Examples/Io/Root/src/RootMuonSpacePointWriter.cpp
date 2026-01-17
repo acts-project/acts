@@ -160,7 +160,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
           m_cfg.trackingGeometry->findVolume(toChamberId(writeMe.geometryId()));
       assert(chambVol != nullptr);
 
-      const Vector3 globPos = chambVol->transform() *
+      const Vector3 globPos = chambVol->localToGlobalTransform(gctx) *
                               AngleAxis3{-90._degree, Vector3::UnitZ()} *
                               writeMe.localPosition();
       castPush(m_globalPosX, globPos.x());
