@@ -34,8 +34,21 @@ SingleTrapezoidPortalShell::SingleTrapezoidPortalShell(TrackingVolume& volume)
   const auto& bounds =
       dynamic_cast<const TrapezoidVolumeBounds&>(m_volume->volumeBounds());
 
-  std::vector<OrientedSurface> orientedSurfaces =
-      bounds.orientedSurfaces(m_volume->transform());
+  std::vector<OrientedSurface> orientedSurfaces{};
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  orientedSurfaces = bounds.orientedSurfaces(m_volume->transform());
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
   for (Face face : {NegativeZFaceXY, PositiveZFaceXY, TrapezoidFaceAlpha,
                     TrapezoidFaceBeta, NegativeYFaceZX, PositiveYFaceZX}) {
