@@ -145,7 +145,7 @@ void createDetector(GeometryContext& tgContext,
   // Get the surfaces;
   surfaces.reserve(nSurfaces);
   detector->visitSurfaces([&](const Surface* surface) {
-    if (surface != nullptr && surface->associatedDetectorElement() != nullptr) {
+    if (surface != nullptr && surface->isSensitive()) {
       std::cout << "surface " << surface->geometryId() << " placed at: ("
                 << surface->center(tgContext).transpose() << " )" << std::endl;
       surfaces.push_back(surface);
@@ -253,7 +253,7 @@ static inline std::string testMeasurement(IVisualization3D& helper,
     auto lposition = singleMeasurement.parameters;
 
     auto surf = detector->findSurface(singleMeasurement.m_geometryId);
-    auto transf = surf->transform(tgContext);
+    auto transf = surf->localToGlobalTransform(tgContext);
 
     EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
                                      localErrorScale, mcolor);
