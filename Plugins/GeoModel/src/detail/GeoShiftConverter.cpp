@@ -26,8 +26,7 @@ namespace ActsPlugins::detail {
 
 namespace {
 
-template <typename ContainedShape, typename Converter, typename Surface,
-          typename Bounds>
+template <typename ContainedShape, typename Converter>
 Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
                                       const GeoShapeShift& geoShift,
                                       const Transform3& absTransform,
@@ -51,14 +50,13 @@ Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
     bool sensitive) const {
   const auto opType = geoShift.getOp()->typeID();
   if (opType == GeoTrd::getClassTypeID()) {
-    return impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
-        geoPV, geoShift, absTransform, boundFactory, sensitive);
+    return impl<GeoTrd, detail::GeoTrdConverter>(geoPV, geoShift, absTransform,
+                                                 boundFactory, sensitive);
   } else if (opType == GeoBox::getClassTypeID()) {
-    return impl<GeoBox, detail::GeoBoxConverter, PlaneSurface, RectangleBounds>(
-        geoPV, geoShift, absTransform, boundFactory, sensitive);
+    return impl<GeoBox, detail::GeoBoxConverter>(geoPV, geoShift, absTransform,
+                                                 boundFactory, sensitive);
   } else if (opType == GeoTube::getClassTypeID()) {
-    // For now this does straw by default
-    return impl<GeoTube, detail::GeoTubeConverter, StrawSurface, LineBounds>(
+    return impl<GeoTube, detail::GeoTubeConverter>(
         geoPV, geoShift, absTransform, boundFactory, sensitive);
   }
 
