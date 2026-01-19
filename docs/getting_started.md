@@ -181,7 +181,7 @@ Building and running ACTS on your local machine is not officially supported.
 However, if you have the necessary prerequisites installed it is possible to
 use it locally. ACTS developers regularly use different Linux distributions and
 macOS to build and develop ACTS. It is possible to use Spack to more easily
-install ACTS' dependencies; see the [building with Spack](#howto_spack) page for
+install ACTS' dependencies; see the [building with Spack](./docs/pages/contributing/spack.md) page for
 more information.
 
 # Building the documentation
