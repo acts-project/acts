@@ -60,6 +60,10 @@ jobs:
       - name: Build
         run: cmake --build build
 
+      - name: Build docs examples
+        # these are excluded from the ALL target, but we want to test them here
+        run: cmake --build build --target docs-examples
+
       - name: ccache stats
         run: ccache -s
 
