@@ -33,9 +33,6 @@ void addPropagation(py::module_& m);
 void addSeeding(py::module_& mt);
 void addTrackFinding(py::module_& m);
 
-/// Legacy python modules
-void addModuleEntry(Context& ctx);
-
 }  // namespace ActsPython
 
 namespace py = pybind11;
@@ -73,14 +70,4 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addPropagation(m);
   addSeeding(m);
   addTrackFinding(m);
-
-  // Legacy python modules
-  Context ctx;
-  ctx.modules["main"] = m;
-  auto mex = m.def_submodule("_examples");
-  ctx.modules["examples"] = mex;
-  auto prop = m.def_submodule("_propagator");
-  ctx.modules["propagation"] = prop;
-
-  addModuleEntry(ctx);
 }

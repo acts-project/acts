@@ -2,8 +2,14 @@ set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
-set(_python_install_dir "python/acts/examples")
-set(py_files)
+set(_examples_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}/examples")
+set(py_files
+    __init__.py
+    simulation.py
+    reconstruction.py
+    itk.py
+    odd.py
+)
 
 # Macro to add example bindings conditionally
 macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
@@ -18,7 +24,7 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
 
         pybind11_add_module(${_target} src/plugins/${_name}.cpp)
 
-        install(TARGETS ${_target} DESTINATION ${_python_install_dir})
+        install(TARGETS ${_target} DESTINATION ${_examples_python_install_dir})
 
         set_target_properties(
             ${_target}
@@ -65,11 +71,80 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
     # Install the file
     install(
         FILES ${_python_dir}/acts/examples/${_name_lower}.py
-        DESTINATION ${_python_install_dir}
+        DESTINATION ${_examples_python_install_dir}
     )
 endmacro()
 
+# Add the examples python binding
+pybind11_add_module(ActsExamplesPythonBindings src/ExamplesModuleEntry.cpp)
+
+add_dependencies(ActsPythonBindings ActsExamplesPythonBindings)
+
+# The PythonBindings for the examples
+target_sources(
+    ActsExamplesPythonBindings
+    PRIVATE
+        src/Framework.cpp
+        src/ExampleAlgorithms.cpp
+        src/Generators.cpp
+        src/AmbiguityResolution.cpp
+        src/Detector.cpp
+        src/Digitization.cpp
+        src/MaterialMapping.cpp
+        src/Propagation.cpp
+        src/TrackFinding.cpp
+        src/TrackFitting.cpp
+        src/TruthTracking.cpp
+        src/Vertexing.cpp
+        src/Input.cpp
+        src/Output.cpp
+        src/Obj.cpp
+        src/Utilities.cpp
+)
+
+install(
+    TARGETS
+        ActsExamplesPythonBindings
+        DESTINATION
+        ${_examples_python_install_dir}
+)
+
+set_target_properties(
+    ActsExamplesPythonBindings
+    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+)
+set_target_properties(
+    ActsExamplesPythonBindings
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+)
+
+target_link_libraries(
+    ActsExamplesPythonBindings
+    PUBLIC
+        Acts::Core
+        Acts::ExamplesFramework
+        Acts::ExamplesFatras
+        Acts::ExamplesAmbiguityResolution
+        Acts::ExamplesDetectorsCommon
+        Acts::ExamplesDetectorGeneric
+        Acts::ExamplesDetectorTelescope
+        Acts::ExamplesDigitization
+        Acts::ExamplesGenerators
+        Acts::ExamplesMaterialMapping
+        Acts::ExamplesUtilities
+        Acts::ExamplesIoCsv
+        Acts::ExamplesIoObj
+        Acts::ExamplesPropagation
+        Acts::ExamplesTrackFinding
+        Acts::ExamplesTrackFitting
+        Acts::ExamplesTruthTracking
+        Acts::ExamplesVertexing
+        Acts::ExamplesPrinters
+        Acts::PythonUtilities
+)
+
 # Add all plugin related examples bindings conditionally to their build flag
+add_examples_binding_if(Alignment "Acts::ExamplesAlignment;Acts::ExamplesDetectorsCommon" ACTS_BUILD_ALIGNMENT FALSE)
 add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
 add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)
 add_examples_binding_if(Geant4
@@ -95,7 +170,10 @@ add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_PLUGIN_FASTJET FA
 # Special case for HepMC3 as it a hard dependency
 pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
 install(
-    TARGETS ActsExamplesPythonBindingsHepMC3 DESTINATION ${_python_install_dir}
+    TARGETS
+        ActsExamplesPythonBindingsHepMC3
+        DESTINATION
+        ${_examples_python_install_dir}
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3
@@ -146,11 +224,13 @@ foreach(f ${py_files})
     get_filename_component(_rel ${f} DIRECTORY)
     message(
         STATUS
-        "Installing example python file: ${f} to ${_python_install_dir}/${_rel}"
+        "Installing example python file: ${f} to ${_examples_python_install_dir}/${_rel}"
     )
 
     install(
         FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${_python_install_dir}/${_rel}
+        DESTINATION ${_examples_python_install_dir}/${_rel}
     )
 endforeach()
+
+# Finally copy the python files

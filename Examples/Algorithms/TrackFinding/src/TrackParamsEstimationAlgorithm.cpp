@@ -12,11 +12,13 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/Seed.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -154,8 +156,9 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
         inputParticleHypotheses != nullptr ? inputParticleHypotheses->at(iseed)
                                            : m_cfg.particleHypothesis;
 
-    trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
-                                 hypothesis);
+    const TrackParameters& trackParams = trackParameters.emplace_back(
+        surface->getSharedPtr(), params, cov, hypothesis);
+    ACTS_VERBOSE("Estimated track parameters: " << trackParams);
     if (m_outputSeeds.isInitialized()) {
       outputSeeds.push_back(seed);
     }
@@ -164,7 +167,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
   }
 
-  ACTS_VERBOSE("Estimated " << trackParameters.size() << " track parameters");
+  ACTS_DEBUG("Estimated " << trackParameters.size() << " track parameters");
 
   m_outputTrackParameters(ctx, std::move(trackParameters));
   if (m_outputSeeds.isInitialized()) {

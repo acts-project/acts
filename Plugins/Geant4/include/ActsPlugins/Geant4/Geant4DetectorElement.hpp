@@ -25,6 +25,9 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
+
 /// @class Geant4DetectorElement
 ///
 /// Detector element representative for Geant4 sensitive
@@ -46,7 +49,7 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Acts::Transform3& transform(
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
   /// @return Reference to the local-to-global transformation matrix
 
@@ -64,6 +67,8 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
 
   /// @return to the Geant4 physical volume
   const G4VPhysicalVolume& g4PhysicalVolume() const;
+  /// Is the detector element a sensitive element
+  bool isSensitive() const final { return true; }
 
  private:
   /// Corresponding Surface
@@ -76,4 +81,5 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
   double m_thickness{0.};
 };
 
+/// @}
 }  // namespace ActsPlugins

@@ -38,9 +38,7 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
 
     state.stage = PropagatorStage::postPropagation;
 
-    state.options.actorList.act(state, m_stepper, m_navigator, logger());
-
-    return Result<void>::success();
+    return state.options.actorList.act(state, m_stepper, m_navigator, logger());
   }
 
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
@@ -135,7 +133,11 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
       }
     }
 
-    state.options.actorList.act(state, m_stepper, m_navigator, logger());
+    Result<void> actResult =
+        state.options.actorList.act(state, m_stepper, m_navigator, logger());
+    if (!actResult.ok()) {
+      return actResult;
+    }
 
     if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
                                            logger())) {
@@ -184,9 +186,7 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
   state.stage = PropagatorStage::postPropagation;
 
   // Post-stepping call to the actor list
-  state.options.actorList.act(state, m_stepper, m_navigator, logger());
-
-  return Result<void>::success();
+  return state.options.actorList.act(state, m_stepper, m_navigator, logger());
 }
 
 template <typename S, typename N>

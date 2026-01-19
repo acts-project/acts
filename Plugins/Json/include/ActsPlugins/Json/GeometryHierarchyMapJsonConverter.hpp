@@ -18,6 +18,9 @@
 
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// Convert a geometry hierarchy map to/from Json.
 ///
 /// @tparam value_t value type stored in the geometry hierarchy map
@@ -159,4 +162,5 @@ auto GeometryHierarchyMapJsonConverter<value_t, decorator_t>::fromJson(
   return Container(std::move(elements));
 }
 
+/// @}
 }  // namespace Acts

@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Csv/CsvMuonSpacePointReader.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
@@ -19,6 +18,7 @@
 #include "CsvOutputData.hpp"
 
 namespace ActsExamples {
+
 CsvMuonSpacePointReader::CsvMuonSpacePointReader(const Config& config,
                                                  Acts::Logging::Level level)
     : m_cfg{config},

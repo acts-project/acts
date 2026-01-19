@@ -251,7 +251,7 @@ start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
 "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
-  "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Examples/Python/tests/requirements.txt"
+  "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
   "${venv_dir}/bin/python3" -m pip install histcmp==0.8.1 matplotlib
   "${venv_dir}/bin/python3" -m pip install pytest-md-report
 fi
@@ -264,7 +264,8 @@ if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "${venv_dir}/bin" >> "$GITHUB_PATH"
 fi
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
-set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib"
+set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
+set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
 set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
 set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"

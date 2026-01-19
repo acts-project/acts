@@ -56,9 +56,8 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     // treats the Surfaces as volumes and thus it is not ensured, that each hit
     // lies exactly on the Acts::Surface
     const auto tolerance =
-        surface.associatedDetectorElement() != nullptr
-            ? surface.associatedDetectorElement()->thickness()
-            : Acts::s_onSurfaceTolerance;
+        surface.isSensitive() ? surface.associatedDetectorElement()->thickness()
+                              : Acts::s_onSurfaceTolerance;
 
     // transforming first to local positions and average that ensures that the
     // averaged position is still on the surface. the averaged global position

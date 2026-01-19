@@ -1,4 +1,4 @@
-acts_add_library(ExamplesPropagation SHARED src/PropagationAlgorithm.cpp)
+acts_add_library(ExamplesPropagation src/PropagationAlgorithm.cpp)
 
 target_include_directories(
     ActsExamplesPropagation

@@ -13,7 +13,7 @@ Since Optuna and Orion are independent frameworks, these need to be installed se
    $ source PYTHON_VIRTUAL_ENV/bin/activate
    $ export PYTHONPATH=
    $ python -m pip install --upgrade pip
-   $ pip install -r acts/Examples/Python/tests/requirements.txt
+   $ pip install -r acts/Python/Examples/tests/requirements.txt
    $ pip install pytest --upgrade
    $ pip install cmake dataclasses sphinxcontrib-applehelp sphinxcontrib-jsmath sphinxcontrib-serializinghtml argparse sphinxcontrib-devhelp sphinxcontrib-htmlhelp sphinxcontrib-qthelp AppDirs filelock joblib pandas plotly psutil pyYAML requests scipy tabulate cloudpickle scikit-learn orion==0.2.2 cloudpickle==1.6.0 optuna matplotlib
 

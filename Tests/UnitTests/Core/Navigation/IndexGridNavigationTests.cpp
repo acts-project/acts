@@ -9,264 +9,469 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/IndexGridFiller.hpp"
+#include "Acts/Geometry/IndexGrid.hpp"
 #include "Acts/Geometry/ReferenceGenerators.hpp"
-#include "Acts/Navigation/IndexGridNavigation.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/IndexGridNavigationPolicy.hpp"
+#include "Acts/Navigation/NavigationDelegate.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-using namespace Acts;
-
-namespace {
-
-/// Helper method to count how many bins are not empty
-template <typename indexed_surface_grid>
-std::size_t countBins(const indexed_surface_grid& isGrid) {
-  std::size_t nonEmptyBins = 0u;
-  for (std::size_t igb = 0u; igb < isGrid.grid.size(); ++igb) {
-    const auto& gb = isGrid.grid.at(igb);
-    if (!gb.empty()) {
-      ++nonEmptyBins;
-    }
-  }
-  return nonEmptyBins;
-}
-
-}  // namespace
+#include <memory>
+#include <numbers>
 
 namespace ActsTests {
 
+using namespace Acts;
+
 GeometryContext tContext;
 
-Logging::Level logLevel = Logging::VERBOSE;
+auto tLogger = getDefaultLogger("IndexGridNavigation", Logging::VERBOSE);
 
 BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
-BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 0", logLevel));
-  ACTS_INFO("Testing X-Y grid.");
-  ACTS_INFO("Testing one surface with center generator, should lead to 1 bin.");
+BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
+  // Test here:
+  // - we create a grid -25, -15, -5, 5, 15, 25 in X and Y
+  // - we create a surface at Z=0 spanning -4 to 4 in X and -6 to 6 in Y
+  //
+  // Setup the surface should thus be (without any expansion):
+  // - central bin [3,3] for center reference at (0,0,0)
+  // - bins [3,2], [3,3], [3,4] for polyhedron reference
+  //
+  // All can be modified by bin expansion or reference expansion
+
+  // Let's create a simple plane in the XY plane
+  auto planeSurface = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(4., 6.));
 
   // x-y Axes & Grid
-  Axis axisX(AxisBound, -5., 5., 5);
-  Axis axisY(AxisBound, -5., 5., 5);
-  Grid gridXY(Type<std::vector<unsigned int>>, std::move(axisX),
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisX(-35, 35, 7);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisY(-25., 25., 5);
+  Grid gridXY(Type<std::vector<std::size_t>>, std::move(axisX),
               std::move(axisY));
 
-  // Indexed Surface grid
-  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
-      std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
+  TrackingVolume tVolume(Transform3::Identity(),
+                         std::make_shared<CuboidVolumeBounds>(20., 20., 5.),
+                         "CuboidVolume");
 
-  // Create a single surface in the center
-  auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
-  auto pSurface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
-                                                    std::move(rBounds));
-
-  // The Filler instance and a center based generator
-  IndexGridFiller filler{{}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::VERBOSE);
-  CenterReferenceGenerator generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
-
-  // Fill the surface
-  filler.fill(tContext, indexedGridXY, surfaces, generator);
-
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
-  // Check the correct number of filled bins
-  ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK_EQUAL(nonEmptyBins, 1u);
-}
-
-BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 1", logLevel));
-  ACTS_INFO("Testing X-Y grid.");
-  ACTS_INFO(
-      "Testing one surface with bin value generator, should lead to 1 bin.");
-
-  // x-y Axes & Grid
-  Axis axisX(AxisBound, -5., 5., 5);
-  Axis axisY(AxisBound, -5., 5., 5);
-  Grid gridXY(Type<std::vector<unsigned int>>, std::move(axisX),
-              std::move(axisY));
+  tVolume.addSurface(planeSurface);
 
   // Indexed Surface grid
-  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
+  IndexGrid<decltype(gridXY)> indexedGridXY(
       std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
 
-  // Create a single surface in the center
-  auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
-  auto pSurface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
-                                                    std::move(rBounds));
+  // Create a tracking volume and add the surface
 
-  // The Filler instance and a center based generator
-  IndexGridFiller filler{{}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::VERBOSE);
+  // (1a) Test with Center reference generator - no bin expansion
+  IndexGridNavigationConfig centerConfig;
+  centerConfig.referenceGenerator =
+      std::make_shared<CenterReferenceGenerator>();
 
-  AxisDirectionReferenceGenerator<AxisDirection::AxisX> generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
+  IndexGridNavigationPolicy<decltype(gridXY)> centerNavigationPolicy(
+      tContext, tVolume, *tLogger, centerConfig, indexedGridXY);
 
-  // Fill the surface
-  filler.fill(tContext, indexedGridXY, surfaces, generator);
+  NavigationDelegate delegate;
+  BOOST_CHECK_NO_THROW(centerNavigationPolicy.connect(delegate));
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
-  ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK_EQUAL(nonEmptyBins, 1u);
+  // Now initialize candidates at position (0,0,0)
+  NavigationArguments navArgs;
+  NavigationStream nStream;
+  AppendOnlyNavigationStream navStream{nStream};
+
+  // Address central posision
+  navArgs.position = Vector3(0., 0., 0.);
+  navArgs.direction = Vector3(0., 0., 1.);
+  centerNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                              *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+
+  // The off-central position - should yield no candidates
+  nStream.reset();
+  navArgs.position = Vector3(11., 11., 0.);
+  navArgs.direction = Vector3(0., 0., 1.);
+  centerNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                              *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
+
+  // (1b) Test with Center reference generator - with bin expansion (1,0)
+  IndexGridNavigationConfig expandedConfig;
+  expandedConfig.referenceGenerator =
+      std::make_shared<CenterReferenceGenerator>();
+  expandedConfig.binExpansion = {1u, 0u};
+
+  IndexGridNavigationPolicy<decltype(gridXY)> expandedNavigationPolicy(
+      tContext, tVolume, *tLogger, expandedConfig, indexedGridXY);
+
+  nStream.reset();
+
+  // The bins are expanded in X - should yield a candidate
+  navArgs.position = Vector3(11., 0., 0.);
+  navArgs.direction = Vector3(0., 0., 1.);
+  expandedNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                                *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+  // They are not expanded in Y - should yield no candidate
+  nStream.reset();
+  navArgs.position = Vector3(0., 11., 0.);
+  navArgs.direction = Vector3(0., 0., 1.);
+  expandedNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                                *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
+
+  // (2a) Test with Polyhedron reference generator - no bin expansion
+  IndexGridNavigationConfig polyConfig;
+  polyConfig.referenceGenerator =
+      std::make_shared<PolyhedronReferenceGenerator>();
+
+  IndexGridNavigationPolicy<decltype(gridXY)> polyNavigationPolicy(
+      tContext, tVolume, *tLogger, polyConfig, indexedGridXY);
+  nStream.reset();
+  // Address central posision
+  navArgs.position = Vector3(0., 0., 0.);
+  polyNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                            *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+  // Through the polyhedron also the bins in y before/after are filled
+  nStream.reset();
+  navArgs.position = Vector3(0., -7., 0.);
+  polyNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                            *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+  nStream.reset();
+  navArgs.position = Vector3(0., 7., 0.);
+  polyNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                            *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+  // However, the bins in x before/after are not filled
+  nStream.reset();
+  navArgs.position = Vector3(-7., 0., 0.);
+  polyNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                            *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
+  nStream.reset();
+  navArgs.position = Vector3(7., 0., 0.);
+  polyNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                            *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
+
+  // (2b) Test with Polyhedron reference generator - with reference expansion
+  // (12., 0.)
+  IndexGridNavigationConfig polyExpandedConfig;
+  polyExpandedConfig.referenceGenerator =
+      std::make_shared<PolyhedronReferenceGenerator>();
+  polyExpandedConfig.referenceExpansion = {12., 0.};
+
+  IndexGridNavigationPolicy<decltype(gridXY)> polyExpandedNavigationPolicy(
+      tContext, tVolume, *tLogger, polyExpandedConfig, indexedGridXY);
+  nStream.reset();
+  // Address central posision - should still work
+  navArgs.position = Vector3(0., 0., 0.);
+  polyExpandedNavigationPolicy.initializeCandidates(tContext, navArgs,
+                                                    navStream, *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+  // Sunndenly all x bins +2/-2 are filled
+  nStream.reset();
+  navArgs.position = Vector3(-20., 0., 0.);
+  polyExpandedNavigationPolicy.initializeCandidates(tContext, navArgs,
+                                                    navStream, *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+  nStream.reset();
+  navArgs.position = Vector3(20., 0., 0.);
+  polyExpandedNavigationPolicy.initializeCandidates(tContext, navArgs,
+                                                    navStream, *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+  // While the first bin is still out of reach
+  nStream.reset();
+  navArgs.position = Vector3(-30., 0., 0.);
+  polyExpandedNavigationPolicy.initializeCandidates(tContext, navArgs,
+                                                    navStream, *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
+  nStream.reset();
+  navArgs.position = Vector3(30., 0., 0.);
+  polyExpandedNavigationPolicy.initializeCandidates(tContext, navArgs,
+                                                    navStream, *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 2", logLevel));
-  ACTS_INFO("Testing X-Y grid.");
-  ACTS_INFO(
-      "Testing one surface with polyhedron generator without expansion, should "
-      "lead to 5 unique bins, 25 total bins filled");
+BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
+  // Most of the tests are covered by the plane grid, we can concentrate here on
+  // the phi periodicity & the projected reference generator
 
-  // x-y Axes & Grid
-  Axis axisX(AxisBound, -5., 5., 5);
-  Axis axisY(AxisBound, -5., 5., 5);
-  Grid gridXY(Type<std::vector<unsigned int>>, std::move(axisX),
-              std::move(axisY));
+  // Test setup:
+  // - We create a grid in z: -20 to 20 in 20 bins in z
+  // - in phi: -pi to pi in 10 bins
+  // - We create a surface at phi = -PI at radius R=10, spanning -2 to 2 in z
 
-  // Indexed Surface grid
-  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
-      std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
+  // We create a plane surface at phi = -PI and Radius R
+  double cylinderRadius = 10.;
+  Vector3 surfaceCenter(-cylinderRadius, 0., 0.);
 
-  // Create a single surface in the center
-  auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
-  auto pSurface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
-                                                    std::move(rBounds));
+  // Local z axis is the negative x axis
+  Vector3 surfaceLocalZ(-1, 0., 0.);
+  // Local x axis is the global y axis
+  Vector3 surfaceLocalY(0., 0., -1.);
+  // Local x axis is then the global
+  Vector3 surfaceLocalX(0., 1., 0);
+  // Create the RotationMatrix
+  RotationMatrix3 surfaceRotation;
+  surfaceRotation.col(0) = surfaceLocalX;
+  surfaceRotation.col(1) = surfaceLocalY;
+  surfaceRotation.col(2) = surfaceLocalZ;
+  // Get the surfaceTransform
+  auto surfaceTransform =
+      Transform3(Translation3(surfaceCenter) * surfaceRotation);
 
-  // The Filler instance and a center based generator
-  IndexGridFiller filler{{0u, 0u}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
+  auto planeSurface = Surface::makeShared<PlaneSurface>(
+      surfaceTransform, std::make_shared<RectangleBounds>(2., 3.));
 
-  PolyhedronReferenceGenerator generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
+  // z-phi axes & Grid
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(
+      -std::numbers::pi, std::numbers::pi, 10);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisZ(-20, 20, 20);
+  Grid gridPhiZ(Type<std::vector<std::size_t>>, std::move(axisPhi),
+                std::move(axisZ));
 
-  // Fill the surface
-  filler.fill(tContext, indexedGridXY, surfaces, generator);
+  TrackingVolume tVolume(Transform3::Identity(),
+                         std::make_shared<CylinderVolumeBounds>(0., 15., 22.),
+                         "CylinderVolume");
+  tVolume.addSurface(planeSurface);
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
-  ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK_EQUAL(nonEmptyBins, 25u);
+  // (1a) - Index grid with polyhedron reference generator - no expansion
+  IndexGrid<decltype(gridPhiZ)> indexedgridPhiZ(
+      std::move(gridPhiZ), {AxisDirection::AxisPhi, AxisDirection::AxisZ});
+  IndexGridNavigationConfig polyConfig;
+  polyConfig.referenceGenerator =
+      std::make_shared<PolyhedronReferenceGenerator>();
+  IndexGridNavigationPolicy<decltype(gridPhiZ)> polyNavigationPolicy(
+      tContext, tVolume, *tLogger, polyConfig, indexedgridPhiZ);
+
+  NavigationDelegate delegate;
+  BOOST_CHECK_NO_THROW(polyNavigationPolicy.connect(delegate));
+
+  // Now initialize candidates at position (R,0,0) - opposite should. not lead
+  // to a candidate
+  NavigationArguments navArgs;
+  NavigationStream nStream;
+  AppendOnlyNavigationStream navStream{nStream};
+  navArgs.position = Vector3(cylinderRadius, 0., 0.);
+  navArgs.direction = Vector3(1., 0., 0.);
+  polyNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                            *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
+  // However, a position at (-R,0,0) should yield a candidate
+  nStream.reset();
+  navArgs.position = Vector3(-cylinderRadius, 0., 0.);
+  navArgs.direction = Vector3(-1., 0., 0.);
+  polyNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                            *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+  // A candidate a off in phi - no results
+  nStream.reset();
+  navArgs.position =
+      Vector3(cylinderRadius * std::cos(-std::numbers::pi + 0.8),
+              cylinderRadius * std::sin(-std::numbers::pi + 0.8), 0.);
+  polyNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                            *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
+
+  // A candidate a off in z range - no result
+  nStream.reset();
+  navArgs.position = Vector3(-cylinderRadius, 0., 4.);
+  polyNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                            *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
+
+  // Let's test a reference surface projection generator
+  // Create a reference surface with bigger radius, should expand z but not phi
+  double referenceSurfaceRadius = 15.;
+  auto referenceCylinder = Surface::makeShared<CylinderSurface>(
+      Transform3::Identity(),
+      std::make_shared<CylinderBounds>(referenceSurfaceRadius, 22.));
+
+  IndexGridNavigationConfig projectedConfig;
+  auto projectedReferenceGenerator =
+      std::make_shared<ProjectedReferenceGenerator>();
+  projectedReferenceGenerator->nSegements = 1;
+  projectedReferenceGenerator->expansionValue = 0.0;
+  projectedReferenceGenerator->referenceSurface = referenceCylinder;
+  projectedReferenceGenerator->luminousRegion = {Vector3(0., 0., 0.)};
+
+  projectedConfig.referenceGenerator = projectedReferenceGenerator;
+  IndexGridNavigationPolicy<decltype(gridPhiZ)> projectedNavigationPolicy(
+      tContext, tVolume, *tLogger, projectedConfig, indexedgridPhiZ);
+
+  // A candidate a off in phi - still outside
+  nStream.reset();
+  navArgs.position =
+      Vector3(cylinderRadius * std::cos(-std::numbers::pi + 0.8),
+              cylinderRadius * std::sin(-std::numbers::pi + 0.8), 0.);
+  projectedNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                                 *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
+
+  // A candidate a off in z range - should now yield a candidate now
+  nStream.reset();
+  navArgs.position = Vector3(-cylinderRadius, 0., 4.);
+  projectedNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                                 *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+
+  // Now reference generator that also carries the reference surface
+  IndexGridNavigationConfig projectedWithSurfaceConfig;
+  projectedWithSurfaceConfig.surface = referenceCylinder;
+  auto projectedWithSurfaceReferenceGenerator =
+      std::make_shared<ProjectedReferenceGenerator>();
+  projectedWithSurfaceReferenceGenerator->nSegements = 1;
+  projectedWithSurfaceReferenceGenerator->expansionValue = 0.0;
+  projectedWithSurfaceReferenceGenerator->referenceSurface = referenceCylinder;
+  projectedWithSurfaceReferenceGenerator->luminousRegion = {
+      Vector3(0., 0., 0.)};
+  projectedWithSurfaceConfig.referenceGenerator =
+      projectedWithSurfaceReferenceGenerator;
+  IndexGridNavigationPolicy<decltype(gridPhiZ)>
+      projectedWithSurfaceNavigationPolicy(tContext, tVolume, *tLogger,
+                                           projectedWithSurfaceConfig,
+                                           indexedgridPhiZ);
+  // A candidate a off in phi - we get the phi surface now as well
+  nStream.reset();
+  navArgs.position =
+      Vector3(cylinderRadius * std::cos(-std::numbers::pi + 0.8),
+              cylinderRadius * std::sin(-std::numbers::pi + 0.8), 0.);
+  projectedWithSurfaceNavigationPolicy.initializeCandidates(
+      tContext, navArgs, navStream, *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
 }
 
-BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 3", logLevel));
-  ACTS_INFO("Testing X-Y grid.");
-  ACTS_INFO(
-      "Testing one surface with polyhedron generator and expansion, should "
-      "lead to 5 unique bins, 49 total bins filled");
+BOOST_AUTO_TEST_CASE(RegularDiscIndexGridTests) {
+  // Most of the test cases are covered by the plane and cylinder grid and
+  // planar grid we can concentrate here on multiple fillings
 
-  // x-y Axes & Grid
-  Axis axisX(AxisBound, -9., 9., 9);
-  Axis axisY(AxisBound, -9., 9., 9);
-  Grid gridXY(Type<std::vector<unsigned int>>, std::move(axisX),
-              std::move(axisY));
+  // Test setup:
+  // - We create a grid in r: 5 to 25 in 4 bins
+  // - in phi: -pi to pi in 10 bins
+  // - We create a few disc sectoral surfaces and let them overlap in r and phi
 
-  // Indexed Surface grid
-  IndexGridNavigation<decltype(gridXY)> indexedGridXY(
-      std::move(gridXY), {AxisDirection::AxisX, AxisDirection::AxisY});
+  // This surface spans in some bins around phi = 0
+  auto surface0 = Surface::makeShared<DiscSurface>(
+      Transform3::Identity(),
+      std::make_shared<RadialBounds>(5., 12., std::numbers::pi / 5, 0.));
 
-  // Create a single surface in the center
-  auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
-  auto pSurface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
-                                                    std::move(rBounds));
+  // Tiny surface only in the neighboring bin
+  auto surface1 = Surface::makeShared<DiscSurface>(
+      Transform3::Identity(),
+      std::make_shared<RadialBounds>(6., 8., std::numbers::pi / 12,
+                                     1.5 * std::numbers::pi / 5));
 
-  // The Filler instance and a center based generator
-  IndexGridFiller filler{{1u, 1u}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
+  double innerRadius = 5.;
+  double outerRadius = 25.;
 
-  PolyhedronReferenceGenerator generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
-
-  // Fill the surface
-  filler.fill(tContext, indexedGridXY, surfaces, generator);
-
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
-  ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK_EQUAL(nonEmptyBins, 49u);
-}
-
-BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 4", logLevel));
-  ACTS_INFO("Testing Phi-Z grid.");
-  ACTS_INFO(
-      "Testing one surface with polyhedron generator without expansion, should "
-      "lead to 5 unique bins, 6 total bins filled");
-
-  // z-phi Axes & Grid
-  Axis axisZ(AxisBound, -9., 9., 9);
-  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 36);
-  Grid gridZPhi(Type<std::vector<unsigned int>>, std::move(axisZ),
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisR(innerRadius,
+                                                             outerRadius, 4);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(
+      -std::numbers::pi, std::numbers::pi, 10);
+  Grid gridRPhi(Type<std::vector<std::size_t>>, std::move(axisR),
                 std::move(axisPhi));
 
-  // Indexed Surface grid
-  IndexGridNavigation<decltype(gridZPhi)> indexedGridZPhi(
-      std::move(gridZPhi), {AxisDirection::AxisZ, AxisDirection::AxisPhi});
+  auto tVolume = TrackingVolume(Transform3::Identity(),
+                                std::make_shared<CylinderVolumeBounds>(
+                                    innerRadius - 1., outerRadius + 1., 5.),
+                                "DiscVolume");
+  tVolume.addSurface(surface0);
+  tVolume.addSurface(surface1);
 
-  auto cBounds =
-      std::make_shared<CylinderBounds>(10, 2., std::numbers::pi / 30, 0.);
-  auto cSurface = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
-                                                       std::move(cBounds));
+  // (1a) - Index grid with center reference generator - no expansion
+  IndexGrid<decltype(gridRPhi)> indexedGridRPhi(
+      std::move(gridRPhi), {AxisDirection::AxisR, AxisDirection::AxisPhi});
+  IndexGridNavigationConfig centerConfig;
+  centerConfig.referenceGenerator =
+      std::make_shared<PolyhedronReferenceGenerator>();
+  IndexGridNavigationPolicy<decltype(gridRPhi)> centerNavigationPolicy(
+      tContext, tVolume, *tLogger, centerConfig, indexedGridRPhi);
 
-  // The Filler instance and a center based generator
-  IndexGridFiller filler{{0u, 0u}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
+  NavigationDelegate delegate;
+  BOOST_CHECK_NO_THROW(centerNavigationPolicy.connect(delegate));
 
-  PolyhedronReferenceGenerator generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {cSurface};
-
-  // Fill the surface
-  filler.fill(tContext, indexedGridZPhi, surfaces, generator);
-
-  std::size_t nonEmptyBins =
-      countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
-  ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK_EQUAL(nonEmptyBins, 6u);
+  // Now initialize candidates at position (R,0,0) - should yield only surface0
+  NavigationArguments navArgs;
+  NavigationStream nStream;
+  AppendOnlyNavigationStream navStream{nStream};
+  navArgs.position = Vector3(7.5, 0., 0.);
+  navArgs.direction = Vector3(1., 0., 0.);
+  centerNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                              *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
+  BOOST_CHECK(&nStream.currentCandidate().surface() == surface0.get());
+  // Check the neighboring bin, which should not be filled by surface0 and
+  // surface1
+  nStream.reset();
+  navArgs.position = Vector3(7.5 * std::cos(1.1 * std::numbers::pi / 5),
+                             7.5 * std::sin(1.1 * std::numbers::pi / 5), 0.);
+  centerNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                              *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 2);
 }
 
-BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 4", logLevel));
-  ACTS_INFO("Testing Phi-Z grid.");
-  ACTS_INFO(
-      "Testing one surface at std::numbers::pi jump, with polyhedron "
-      "generator");
+BOOST_AUTO_TEST_CASE(RegularRingIndexGridTests) {
+  // This tests the one dimensional closed grid in phi only
+  // Test setup:
+  // - We create a grid in phi: -pi to pi in 10 bins
 
-  // z-phi Axes & Grid
-  Axis axisZ(AxisBound, -9., 9., 9);
-  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 36);
-  Grid gridZPhi(Type<std::vector<unsigned int>>, std::move(axisZ),
-                std::move(axisPhi));
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(
+      -std::numbers::pi, std::numbers::pi, 10);
+  Grid gridPhi(Type<std::vector<std::size_t>>, std::move(axisPhi));
 
-  // Indexed Surface grid
-  IndexGridNavigation<decltype(gridZPhi)> indexedGridZPhi(
-      std::move(gridZPhi), {AxisDirection::AxisZ, AxisDirection::AxisPhi});
+  auto surface = Surface::makeShared<DiscSurface>(
+      Transform3::Identity(),
+      std::make_shared<RadialBounds>(6., 14., std::numbers::pi / 5, 0.));
 
-  auto cBounds =
-      std::make_shared<CylinderBounds>(10, 2., std::numbers::pi / 10, 0.);
-  auto tf =
-      AngleAxis3(std::numbers::pi, Vector3::UnitZ()) * Transform3::Identity();
-  auto cSurface = Surface::makeShared<CylinderSurface>(tf, std::move(cBounds));
+  auto tVolume = TrackingVolume(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(0., 15., 5.), "RingVolume");
+  tVolume.addSurface(surface);
+  // (1a) - Index grid with center reference generator - no expansion
+  IndexGrid<decltype(gridPhi)> indexedGridPhi(std::move(gridPhi),
+                                              {AxisDirection::AxisPhi});
+  IndexGridNavigationConfig centerConfig;
+  centerConfig.binExpansion = {0u, 0u};
+  centerConfig.referenceGenerator =
+      std::make_shared<CenterReferenceGenerator>();
+  BOOST_CHECK_THROW(
+      {
+        IndexGridNavigationPolicy<decltype(gridPhi)>
+            centerNavigationPolicyThrow(tContext, tVolume, *tLogger,
+                                        centerConfig, indexedGridPhi);
+      },
+      std::runtime_error);
 
-  // The Filler instance and a center based generator
-  IndexGridFiller filler{{0u, 0u}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
+  centerConfig.binExpansion = {1u};
 
-  PolyhedronReferenceGenerator generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {cSurface};
+  IndexGridNavigationPolicy<decltype(gridPhi)> centerNavigationPolicy(
+      tContext, tVolume, *tLogger, centerConfig, indexedGridPhi);
 
-  // Fill the surface
-  filler.fill(tContext, indexedGridZPhi, surfaces, generator);
+  NavigationDelegate delegate;
+  BOOST_CHECK_NO_THROW(centerNavigationPolicy.connect(delegate));
 
-  std::size_t nonEmptyBins =
-      countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
-  ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK_EQUAL(nonEmptyBins, 9u);
+  // Now initialize candidates at position (R,0,0) - should yield the surface
+  NavigationArguments navArgs;
+  NavigationStream nStream;
+  AppendOnlyNavigationStream navStream{nStream};
+  navArgs.position = Vector3(10., 0., 0.);
+  navArgs.direction = Vector3(1., 0., 0.);
+  centerNavigationPolicy.initializeCandidates(tContext, navArgs, navStream,
+                                              *tLogger);
+  BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

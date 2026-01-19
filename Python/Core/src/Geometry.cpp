@@ -177,6 +177,11 @@ void addGeometry(py::module_& m) {
   }
 
   {
+    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
+        m, "DetectorElementBase");
+  }
+
+  {
     py::enum_<VolumeBounds::BoundsType>(m, "VolumeBoundsType")
         .value("Cone", VolumeBounds::BoundsType::eCone)
         .value("Cuboid", VolumeBounds::BoundsType::eCuboid)

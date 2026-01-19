@@ -22,8 +22,8 @@ def runRefittingKf(
     outputDir: Path,
     multipleScattering: bool = True,
     energyLoss: bool = True,
-    reverseFilteringMomThreshold=0 * u.GeV,
-    reverseFilteringCovarianceScaling=1.0,
+    reverseFilteringMomThreshold=float("inf"),
+    reverseFilteringCovarianceScaling=100.0,
     s: acts.examples.Sequencer = None,
 ):
     s = runTruthTrackingKalman(
@@ -31,7 +31,7 @@ def runRefittingKf(
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
-        reverseFilteringMomThreshold=reverseFilteringMomThreshold,
+        reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
         reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
         s=s,
     )

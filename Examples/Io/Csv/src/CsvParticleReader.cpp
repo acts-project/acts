@@ -16,19 +16,18 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <array>
 #include <cmath>
 #include <stdexcept>
 #include <string>
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvParticleReader::CsvParticleReader(
-    const ActsExamples::CsvParticleReader::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvParticleReader::CsvParticleReader(const Config& config,
+                                     Acts::Logging::Level level)
     : m_cfg(config),
       m_eventsRange(
           determineEventFilesRange(m_cfg.inputDir, m_cfg.inputStem + ".csv")),
@@ -43,23 +42,21 @@ ActsExamples::CsvParticleReader::CsvParticleReader(
   m_outputParticles.initialize(m_cfg.outputParticles);
 }
 
-std::string ActsExamples::CsvParticleReader::CsvParticleReader::name() const {
+std::string CsvParticleReader::name() const {
   return "CsvParticleReader";
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::CsvParticleReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> CsvParticleReader::availableEvents() const {
   return m_eventsRange;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
-    const ActsExamples::AlgorithmContext& ctx) {
+ProcessCode CsvParticleReader::read(const AlgorithmContext& ctx) {
   SimParticleContainer::sequence_type unordered;
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  ActsExamples::NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
+  NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
   ParticleData data;
 
   while (reader.read(data)) {
@@ -90,3 +87,5 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

@@ -16,6 +16,8 @@
 class TGeoNode;
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 class TGeoDetectorElement;
 
@@ -40,4 +42,5 @@ class ITGeoDetectorElementSplitter {
         std::shared_ptr<const ActsPlugins::TGeoDetectorElement> tgde) const = 0;
 };
 
+/// @}
 }  // namespace ActsPlugins

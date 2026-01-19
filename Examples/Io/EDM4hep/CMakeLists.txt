@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesIoEDM4hep
-    SHARED
     src/EDM4hepMeasurementInputConverter.cpp
     src/EDM4hepMeasurementOutputConverter.cpp
     src/EDM4hepMultiTrajectoryOutputConverter.cpp

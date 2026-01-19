@@ -17,8 +17,9 @@ def runTruthTrackingKalman(
     inputParticlePath: Optional[Path] = None,
     inputHitsPath: Optional[Path] = None,
     decorators=[],
+    generatedParticleType: acts.PdgParticle = acts.PdgParticle.eMuon,
     reverseFilteringMomThreshold=0 * u.GeV,
-    reverseFilteringCovarianceScaling=1,
+    reverseFilteringCovarianceScaling=100.0,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
@@ -35,6 +36,7 @@ def runTruthTrackingKalman(
 
     from acts.examples.root import (
         RootParticleReader,
+        RootSimHitReader,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
         RootTrackFitterPerformanceWriter,
@@ -62,7 +64,7 @@ def runTruthTrackingKalman(
     if inputParticlePath is None:
         addParticleGun(
             s,
-            ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            ParticleConfig(num=1, pdg=generatedParticleType, randomizeCharge=True),
             EtaConfig(-3.0, 3.0, uniform=True),
             MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
@@ -103,6 +105,7 @@ def runTruthTrackingKalman(
                 outputSimHits="simhits",
             )
         )
+        s.addWhiteboardAlias("particles_simulated_selected", "particles_generated")
 
     addDigitization(
         s,
@@ -130,7 +133,7 @@ def runTruthTrackingKalman(
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         trackSmearingSigmas=TrackSmearingSigmas(
-            # zero eveything so the KF has a chance to find the measurements
+            # zero everything so the KF has a chance to find the measurements
             loc0=0,
             loc0PtA=0,
             loc0PtB=0,

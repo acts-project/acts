@@ -171,7 +171,8 @@ Transform3 MuonSpacePointDigitizer::toSpacePointFrame(
   assert(volume != nullptr);
   /// Transformation to the common coordinate system of all space points
   const Transform3 parentTrf{AngleAxis3{90._degree, Vector3::UnitZ()} *
-                             volume->itransform() * hitSurf->transform(gctx)};
+                             volume->itransform() *
+                             hitSurf->localToGlobalTransform(gctx)};
   ACTS_VERBOSE("Transform into space point frame for surface "
                << hitId << " is \n"
                << toString(parentTrf));
@@ -214,7 +215,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
     const Surface* hitSurf = trackingGeometry().findSurface(moduleGeoId);
     assert(hitSurf != nullptr);
 
-    const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
+    const Transform3& surfLocToGlob{hitSurf->localToGlobalTransform(gctx)};
+
+    /// Transformation to the common coordinate system of all space points
+    const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
+    /// Retrieve the bounds
+    const auto& bounds = hitSurf->bounds();
 
     // Iterate over all simHits in a single module
     for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
@@ -226,7 +232,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
       const Vector3 locDir =
           surfLocToGlob.inverse().linear() * simHit.direction();
 
-      const auto& bounds = hitSurf->bounds();
       ACTS_DEBUG("Process hit: " << toString(locPos)
                                  << ", dir: " << toString(locDir)
                                  << " recorded in a " << hitSurf->type()
@@ -236,9 +241,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
       MuonSpacePoint newSp{};
       newSp.setGeometryId(moduleGeoId);
-
-      /// Transformation to the common coordinate system of all space points
-      const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
 
       const auto& calibCfg = calibrator().config();
       switch (hitSurf->type()) {
@@ -282,7 +284,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   break;
                 }
               }
-              /// Mark the
+              /// Mark that a new hit has been recorded at this position & time
+              /// Subsequent hits are rejected if they remain within the dead
+              /// time
               stripTimes.insert(std::make_pair(
                   moduleGeoId, std::array{smearedHit[ePos0], smearedHit[ePos1],
                                           simHit.time()}));
@@ -326,12 +330,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
             default:
               convertSp = false;
           }
-          /// Implement a dead time
+          /// Define the space point coordinates
           if (convertSp) {
             newSp.defineCoordinates(
                 Vector3{parentTrf * smearedHit},
-                Vector3{parentTrf.linear() * Vector3::UnitY()},
-                Vector3{parentTrf.linear() * Vector3::UnitX()});
+                Vector3{parentTrf.linear().col(Acts::ePos1)},
+                Vector3{parentTrf.linear().col(Acts::ePos0)});
             MuonId_t id{};
             /// @todo Refine me using the volume name
             id.setChamber(MuonId_t::StationName::BIS,
@@ -582,7 +586,7 @@ void MuonSpacePointDigitizer::visualizeBucket(
     const auto toSpTrf = toSpacePointFrame(gctx, simHit.geometryId()) *
                          trackingGeometry()
                              .findSurface(simHit.geometryId())
-                             ->transform(gctx)
+                             ->localToGlobalTransform(gctx)
                              .inverse();
     const Vector3 pos = toSpTrf * simHit.position();
     const Vector3 dir = toSpTrf.linear() * simHit.direction();

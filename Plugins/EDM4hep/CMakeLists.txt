@@ -1,6 +1,5 @@
 acts_add_library(
     PluginEDM4hep
-    SHARED
     src/EDM4hepUtil.cpp
     src/PodioUtil.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
