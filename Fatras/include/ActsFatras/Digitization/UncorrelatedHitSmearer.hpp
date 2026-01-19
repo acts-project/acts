@@ -77,9 +77,8 @@ struct BoundParametersSmearer {
     // treats the Surfaces as volumes and thus it is not ensured, that each hit
     // lies exactly on the Acts::Surface
     const auto tolerance =
-        surface.associatedDetectorElement() != nullptr
-            ? surface.associatedDetectorElement()->thickness()
-            : Acts::s_onSurfaceTolerance;
+        surface.isSensitive() ? surface.associatedDetectorElement()->thickness()
+                              : Acts::s_onSurfaceTolerance;
 
     // construct full bound parameters. they are probably not all needed, but it
     // is easier to just create them all and then select the requested ones.

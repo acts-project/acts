@@ -550,3 +550,54 @@ jobs:
           name: comment-51-key4hep-external-failure.md
           path: comment-51-key4hep-external-failure.md
           retention-days: 5
+
+
+  linux_ubuntu_python_wheel:
+    runs-on: ubuntu-latest
+    needs: [linux_ubuntu]
+    container: ghcr.io/acts-project/ubuntu2404:83
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Reset ccache
+        run: ccache -z
+
+      - name: Build wheel with pip
+        run: pip wheel . -v
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Install wheel
+        run: pip install $(ls *.whl)
+
+      - name: Save ccache
+        uses: actions/cache/save@v5
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-ubuntu-wheel
+          path: "*.whl"
+
+      - name: Test
+        run: python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"
