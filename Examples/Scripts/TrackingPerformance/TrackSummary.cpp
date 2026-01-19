@@ -23,21 +23,12 @@
 
 #include <TApplication.h>
 #include <boost/program_options.hpp>
-#include <boost/version.hpp>
+#include <boost/timer/progress_display.hpp>
 #include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
-#if BOOST_VERSION < 107200
-// Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
-#include <boost/progress.hpp>
-
-using progress_display = boost::progress_display;
-#else
-// Boost >=1.72 can use this as a replacement
-#include <boost/timer/progress_display.hpp>
 
 using progress_display = boost::timer::progress_display;
-#endif
 
 #define NLOHMANN_AVAILABLE 1
 #include "trackSummaryAnalysis.C"
@@ -47,7 +38,7 @@ using namespace boost::program_options;
 using Interval = ActsExamples::Options::Interval;
 using VariableReals = ActsExamples::Options::VariableReals;
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   std::cout << "*** ACTS Perigee parameters and Track summary plotting "
             << std::endl;
 
@@ -95,14 +86,14 @@ int main(int argc, char** argv) {
     // Define the parameters for the residual/pull analysis
     std::vector<std::string> resPullPars = {"d0",  "z0",   "phi0", "theta0",
                                             "qop", "time", "pt"};
-    for (const auto& rp : resPullPars) {
+    for (const auto &rp : resPullPars) {
       ao(rp.c_str(), bool_switch(),
          (std::string("Residual/pulls for ") + rp).c_str());
     }
     // Define the auxiliary track information
     std::vector<std::string> auxPars = {"chi2ndf", "measurements", "holes",
                                         "outliers", "shared"};
-    for (const auto& aux : auxPars) {
+    for (const auto &aux : auxPars) {
       ao(aux.c_str(), bool_switch(),
          (std::string("Auxiliary information for ") + aux).c_str());
     }
@@ -151,7 +142,7 @@ int main(int argc, char** argv) {
       ptBorders = {0., std::numeric_limits<double>::infinity()};
     }
 
-    TApplication* tApp =
+    TApplication *tApp =
         vm["silent"].as<bool>()
             ? nullptr
             : new TApplication("TrackSummary", nullptr, nullptr);
@@ -198,7 +189,7 @@ int main(int argc, char** argv) {
       tApp->Run();
     }
 
-  } catch (std::exception& e) {
+  } catch (std::exception &e) {
     std::cerr << e.what() << "\n";
   }
 

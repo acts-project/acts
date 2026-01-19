@@ -26,6 +26,8 @@ class G4VPhysicalVolume;
 using G4Transform3D = HepGeom::Transform3D;
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
 
 class Geant4DetectorElement;
 class IGeant4PhysicalVolumeSelector;
@@ -127,4 +129,5 @@ class Geant4DetectorSurfaceFactory {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace ActsPlugins

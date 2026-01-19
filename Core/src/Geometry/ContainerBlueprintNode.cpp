@@ -141,15 +141,6 @@ VolumeAttachmentStrategy ContainerBlueprintNode::attachmentStrategy() const {
   return m_attachmentStrategy;
 }
 
-VolumeResizeStrategy ContainerBlueprintNode::resizeStrategy() const {
-  if (m_resizeStrategies.first != m_resizeStrategies.second) {
-    throw std::runtime_error(
-        "Resize strategy is not the same for inner and outer. Use "
-        "resizeStrategies() instead.");
-  }
-  return m_resizeStrategies.first;
-}
-
 std::pair<VolumeResizeStrategy, VolumeResizeStrategy>
 ContainerBlueprintNode::resizeStrategies() const {
   return m_resizeStrategies;

@@ -165,8 +165,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
             .def(py::init<const Geant4Detector::Config&>());
 
     auto c = py::class_<Geant4Detector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, name, g4World, g4SurfaceOptions, protoDetector,
-                       geometryIdentifierHook, logLevel);
+    ACTS_PYTHON_STRUCT(c, name, g4World, g4SurfaceOptions, logLevel);
   }
 
   {
@@ -251,7 +250,4 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
     ACTS_PYTHON_STRUCT(c, gammaCut, electronCut, positronCut, protonCut,
                        volumes);
   }
-
-  Context ctx;
-  ctx.modules["geant4"] = mod;
 }

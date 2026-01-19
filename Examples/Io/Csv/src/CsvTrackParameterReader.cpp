@@ -17,15 +17,15 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <algorithm>
 #include <stdexcept>
 #include <string>
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvTrackParameterReader::CsvTrackParameterReader(
-    const ActsExamples::CsvTrackParameterReader::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvTrackParameterReader::CsvTrackParameterReader(const Config& config,
+                                                 Acts::Logging::Level level)
     : m_cfg(config),
       m_eventsRange(
           determineEventFilesRange(m_cfg.inputDir, m_cfg.inputStem + ".csv")),
@@ -40,18 +40,16 @@ ActsExamples::CsvTrackParameterReader::CsvTrackParameterReader(
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }
 
-std::string
-ActsExamples::CsvTrackParameterReader::CsvTrackParameterReader::name() const {
+std::string CsvTrackParameterReader::CsvTrackParameterReader::name() const {
   return "CsvTrackParameterReader";
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::CsvTrackParameterReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> CsvTrackParameterReader::availableEvents()
+    const {
   return m_eventsRange;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
-    const ActsExamples::AlgorithmContext& ctx) {
+ProcessCode CsvTrackParameterReader::read(const AlgorithmContext& ctx) {
   TrackParametersContainer trackParameters;
 
   auto surface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
@@ -59,7 +57,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
-  ActsExamples::NamedTupleCsvReader<TrackParameterData> reader(path);
+  NamedTupleCsvReader<TrackParameterData> reader(path);
   TrackParameterData d{};
 
   while (reader.read(d)) {
@@ -112,3 +110,5 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

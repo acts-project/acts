@@ -200,8 +200,8 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
     const GeometryContext& gctx, const Surface& surface, bool portal) const {
   detray::io::surface_payload payload;
 
-  payload.transform =
-      DetrayConversionUtils::convertTransform(surface.transform(gctx));
+  payload.transform = DetrayConversionUtils::convertTransform(
+      surface.localToGlobalTransform(gctx));
   payload.source = surface.geometryId().value();
   payload.barcode = std::nullopt;
 
@@ -210,7 +210,7 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
       DetrayPayloadConverter::Config::SensitiveStrategy::Identifier) {
     isSensitive = surface.geometryId().sensitive() > 0;
   } else {
-    isSensitive = surface.associatedDetectorElement() != nullptr;
+    isSensitive = surface.isSensitive();
   }
 
   if (portal) {

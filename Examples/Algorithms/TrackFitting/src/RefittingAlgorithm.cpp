@@ -124,20 +124,26 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
       if (refittedTrack.hasReferenceSurface()) {
         ACTS_VERBOSE("Refitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << track.parameters().transpose());
+        ACTS_VERBOSE("Measurements: " << refittedTrack.nMeasurements());
+        ACTS_VERBOSE("Outliers: " << refittedTrack.nOutliers());
       } else {
         ACTS_DEBUG("No refitted parameters for track " << itrack);
       }
     } else {
-      ACTS_WARNING("Fit failed for track "
-                   << itrack << " with error: " << result.error() << ", "
-                   << result.error().message());
+      ACTS_WARNING("Fit failed for event "
+                   << ctx.eventNumber << " track " << itrack << " with error: "
+                   << result.error() << ", " << result.error().message());
     }
     ++itrack;
   }
 
-  std::stringstream ss;
-  trackStateContainer->statistics().toStream(ss);
-  ACTS_DEBUG(ss.str());
+  ACTS_DEBUG("Fitted tracks: " << trackContainer->size());
+
+  if (logger().doPrint(Acts::Logging::DEBUG)) {
+    std::stringstream ss;
+    trackStateContainer->statistics().toStream(ss);
+    ACTS_DEBUG(ss.str());
+  }
 
   ConstTrackContainer constTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(

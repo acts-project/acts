@@ -156,7 +156,8 @@ Transform3 MuonSpacePointDigitizer::toSpacePointFrame(
   assert(volume != nullptr);
   /// Transformation to the common coordinate system of all space points
   const Transform3 parentTrf{AngleAxis3{90._degree, Vector3::UnitZ()} *
-                             volume->itransform() * hitSurf->transform(gctx)};
+                             volume->itransform() *
+                             hitSurf->localToGlobalTransform(gctx)};
   ACTS_VERBOSE("Transform into space point frame for surface "
                << hitId << " is \n"
                << toString(parentTrf));
@@ -192,7 +193,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
     const Surface* hitSurf = trackingGeometry().findSurface(moduleGeoId);
     assert(hitSurf != nullptr);
 
-    const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
+    const Transform3& surfLocToGlob{hitSurf->localToGlobalTransform(gctx)};
 
     /// Transformation to the common coordinate system of all space points
     const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
@@ -519,7 +520,7 @@ void MuonSpacePointDigitizer::visualizeBucket(
     const auto toSpTrf = toSpacePointFrame(gctx, simHit.geometryId()) *
                          trackingGeometry()
                              .findSurface(simHit.geometryId())
-                             ->transform(gctx)
+                             ->localToGlobalTransform(gctx)
                              .inverse();
     const Vector3 pos = toSpTrf * simHit.position();
     const Vector3 dir = toSpTrf.linear() * simHit.direction();

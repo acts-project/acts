@@ -11,7 +11,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Navigation/IndexGridNavigation.hpp"
+#include "Acts/Geometry/IndexGrid.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
@@ -35,7 +35,9 @@ using ProtoAssociations = std::vector<std::vector<std::size_t>>;
 using ProtoIndexedSurfaceGrid =
     std::tuple<ProtoSurfaces, ProtoGrid, ProtoAssociations>;
 
+/// @ingroup actsvg_plugin
 namespace IndexedSurfacesConverter {
+/// @ingroup actsvg_plugin
 /// Nested options struct
 struct Options {
   /// Hierarchy map of styles
@@ -48,7 +50,7 @@ struct Options {
 ///
 /// @note actual conversion implementation, bottom of unrolling loop
 ///
-/// @param gtcx is the geometry context of the conversion call
+/// @param gctx is the geometry context of the conversion call
 /// @param surfaces the container of surfaces
 /// @param indexGrid the indexGrid delegate
 /// @param cOptions the conversion options
@@ -175,6 +177,7 @@ ProtoIndexedSurfaceGrid convertImpl(const Acts::GeometryContext& gctx,
 
 }  // namespace IndexedSurfacesConverter
 
+/// @ingroup actsvg_plugin
 namespace View {
 
 /// Convert into an ActsPlugins::Svg::object with an XY view

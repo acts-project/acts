@@ -370,7 +370,7 @@ class GenericBoundTrackParameters {
   friend std::ostream& operator<<(std::ostream& os,
                                   const GenericBoundTrackParameters& tp) {
     detail::printBoundParameters(
-        os, tp.referenceSurface(), tp.parameters(),
+        os, tp.referenceSurface(), tp.particleHypothesis(), tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
     return os;
   }

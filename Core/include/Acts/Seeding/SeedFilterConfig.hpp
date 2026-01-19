@@ -86,12 +86,6 @@ struct SeedFilterConfig {
 
   /// Flag indicating whether configuration values are in internal units
   bool isInInternalUnits = true;
-
-  /// Convert configuration to internal units.
-  /// @deprecated SeedFilterConfig already uses internal units
-  /// @return Copy of this configuration (already in internal units)
-  //[[deprecated("SeedFilterConfig uses internal units")]]
-  SeedFilterConfig toInternalUnits() const { return *this; }
 };
 
 }  // namespace Acts

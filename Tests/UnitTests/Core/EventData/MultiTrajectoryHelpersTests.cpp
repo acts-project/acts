@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(trajectoryState) {
   BOOST_CHECK_EQUAL(state.nMeasurements, 3);
   BOOST_CHECK_EQUAL(state.nOutliers, 3);
   BOOST_CHECK_EQUAL(state.nSharedHits, 2);
+  BOOST_CHECK_EQUAL(state.nStates, 8);
 }
 
 BOOST_AUTO_TEST_CASE(trajectoryStateVolume) {

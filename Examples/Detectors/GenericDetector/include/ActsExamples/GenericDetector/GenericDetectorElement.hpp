@@ -68,9 +68,9 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   ///
-  /// @note this is called from the surface().transform(gctx) in the PROXY
+  /// @note this is called from the surface().localToGlobalTransform(gctx) in the PROXY
   /// mode
-  const Acts::Transform3& transform(
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
 
   /// Return local to global transform associated with this detector element
@@ -87,6 +87,8 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
 
   /// The identifier of the detector element
   Identifier identifier() const;
+  /// Is the detector element a sensitive element
+  bool isSensitive() const override { return true; }
 
  private:
   // The element identifier

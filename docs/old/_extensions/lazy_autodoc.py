@@ -97,7 +97,7 @@ def run() -> None:
         "Acts::CutoutCylinderVolumeBounds",
         "Acts::GenericCuboidVolumeBounds",
         "Acts::TrapezoidVolumeBounds",
-        "Acts::ConvexPolygonVolumeBounds",
+        "Acts::DiamondVolumeBounds",
         "Acts::CylinderVolumeStack",
         "Acts::CuboidVolumeStack",
         "Acts::VolumeStack",

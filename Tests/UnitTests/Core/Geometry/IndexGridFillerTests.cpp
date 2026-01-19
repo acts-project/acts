@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/IndexGridFiller.hpp"
+#include "Acts/Geometry/IndexGrid.hpp"
 
 #include <vector>
 

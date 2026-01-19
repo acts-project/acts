@@ -31,7 +31,7 @@ def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
     for prefix in ("Eigen", "Atlas", "StraightLine"):
         _stepper = getattr(ActsPythonBindings, f"{prefix}Stepper")
         if isinstance(stepper, _stepper):
-            return getattr(ActsPythonBindings._propagator, f"{prefix}Propagator")(
+            return getattr(ActsPythonBindings, f"{prefix}Propagator")(
                 stepper, navigator, level
             )
     raise TypeError(f"Unknown stepper {type(stepper).__name__}")

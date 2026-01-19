@@ -184,7 +184,7 @@ s = acts.examples.Sequencer(
 
 if args.edm4hep:
     import acts.examples.edm4hep
-    from acts.examples.podio import PodioReader
+    from acts.examples.edm4hep import PodioReader
 
     s.addReader(
         PodioReader(
@@ -346,9 +346,11 @@ if args.reco:
         initialSigmaQoverPt=0.1 * u.e / u.GeV,
         initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
+        particleHypothesis=acts.ParticleHypothesis.muon,
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
+        logLevel=acts.logging.DEBUG,
     )
 
     if seedFilter_ML:
@@ -406,6 +408,7 @@ if args.reco:
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
         writeCovMat=True,
+        logLevel=acts.logging.DEBUG,
     )
 
     if ambi_ML:

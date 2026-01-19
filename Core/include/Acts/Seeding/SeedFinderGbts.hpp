@@ -17,6 +17,8 @@
 
 #include <memory>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -24,41 +26,60 @@ namespace Acts::Experimental {
 // defined the tuple template used to carry the spacepoint components
 using SPContainerComponentsType =
     std::tuple<SpacePointContainer2, SpacePointColumnProxy<int, true>,
+               SpacePointColumnProxy<float, true>,
                SpacePointColumnProxy<float, true>>;
 
 class SeedFinderGbts {
  public:
-  SeedFinderGbts(const SeedFinderGbtsConfig config, const GbtsGeometry* gbtsGeo,
+  SeedFinderGbts(const SeedFinderGbtsConfig config,
+                 std::unique_ptr<GbtsGeometry> gbtsGeo,
                  const std::vector<TrigInDetSiLayer>* layerGeometry,
                  std::unique_ptr<const Acts::Logger> logger =
                      Acts::getDefaultLogger("Finder",
                                             Acts::Logging::Level::INFO));
 
-  using GNN_Node = GbtsNode;
-  using GNN_DataStorage = GbtsDataStorage;
-  using GNN_Edge = GbtsEdge;
+  struct seedProperties {
+    seedProperties(float quality, int clone, std::vector<unsigned int> sps)
+        : seedQuality(quality), isClone(clone), spacepoints(std::move(sps)) {}
 
-  SeedContainer2 CreateSeeds(
+    float seedQuality{};
+    int isClone{};
+    std::vector<unsigned int> spacepoints{};
+
+    bool operator<(seedProperties const& o) const {
+      return std::tie(seedQuality, isClone, spacepoints) <
+             std::tie(o.seedQuality, o.isClone, o.spacepoints);
+    }
+  };
+
+  SeedContainer2 createSeeds(
       const RoiDescriptor& roi,
-      const SPContainerComponentsType& SpContainerComponents, int max_layers);
+      const SPContainerComponentsType& SpContainerComponents,
+      int max_layers) const;
 
-  std::vector<std::vector<SeedFinderGbts::GNN_Node>> CreateNodes(
-      const auto& container, int MaxLayers);
+  std::vector<std::vector<GbtsNode>> createNodes(
+      const SPContainerComponentsType& container, int MaxLayers) const;
+
+  GbtsMLLookupTable parseGbtsMLLookupTable(const std::string& lutInputFile);
 
   std::pair<int, int> buildTheGraph(
-      const RoiDescriptor& roi, const std::unique_ptr<GNN_DataStorage>& storage,
-      std::vector<GNN_Edge>& edgeStorage) const;
+      const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,
+      std::vector<GbtsEdge>& edgeStorage) const;
 
-  int runCCA(int nEdges, std::vector<GNN_Edge>& edgeStorage) const;
+  int runCCA(int nEdges, std::vector<GbtsEdge>& edgeStorage) const;
+
+  void extractSeedsFromTheGraph(
+      int maxLevel, int nEdges, int nHits, std::vector<GbtsEdge>& edgeStorage,
+      std::vector<seedProperties>& vSeedCandidates) const;
 
  private:
   SeedFinderGbtsConfig m_config;
 
-  const GbtsGeometry* m_geo;
-
-  std::unique_ptr<GNN_DataStorage> m_storage = nullptr;
+  const std::shared_ptr<const GbtsGeometry> m_geo;
 
   const std::vector<TrigInDetSiLayer>* m_layerGeometry;
+
+  GbtsMLLookupTable m_mlLut{};
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);

@@ -35,6 +35,9 @@
 
 namespace Acts {
 
+/// @addtogroup track_finding
+/// @{
+
 /// Combined options for the combinatorial Kalman filter.
 ///
 /// @tparam source_link_iterator_t Type of the source link iterator
@@ -126,9 +129,6 @@ struct CombinatorialKalmanFilterResult {
 
   /// Indicator if track finding has been done
   bool finished = false;
-
-  /// Last encountered error
-  Result<void> lastError{Result<void>::success()};
 
   /// Path limit aborter
   PathLimitReached pathLimitReached;
@@ -239,9 +239,9 @@ class CombinatorialKalmanFilter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void act(propagator_state_t& state, const stepper_t& stepper,
-             const navigator_t& navigator, result_type& result,
-             const Logger& /*logger*/) const {
+    Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                     const navigator_t& navigator, result_type& result,
+                     const Logger& /*logger*/) const {
       ACTS_VERBOSE("CKF Actor called");
 
       assert(result.trackStates && "No MultiTrajectory set");
@@ -249,19 +249,17 @@ class CombinatorialKalmanFilter {
       if (state.stage == PropagatorStage::prePropagation &&
           skipPrePropagationUpdate) {
         ACTS_VERBOSE("Skip pre-propagation update (first surface)");
-        return;
+        return Result<void>::success();
       }
       if (state.stage == PropagatorStage::postPropagation) {
         ACTS_VERBOSE("Skip post-propagation action");
-        return;
+        return Result<void>::success();
       }
 
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
       assert(!result.activeBranches.empty() && "No active branches");
       assert(!result.finished && "Should never reach this when finished");
-      assert(result.lastError.ok() &&
-             "Should never reach this when `lastError` is set");
 
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
@@ -292,12 +290,12 @@ class CombinatorialKalmanFilter {
         auto res = filter(surface, state, stepper, navigator, result);
         if (!res.ok()) {
           ACTS_ERROR("Error in filter: " << res.error().message());
-          result.lastError = res.error();
+          return res.error();
         }
 
-        if (!result.lastError.ok() || result.finished) {
+        if (result.finished) {
           ACTS_VERBOSE("CKF Actor returns after filter step");
-          return;
+          return Result<void>::success();
         }
       }
 
@@ -327,16 +325,16 @@ class CombinatorialKalmanFilter {
           if (!res.ok()) {
             ACTS_ERROR("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
-            result.lastError = res.error();
-          } else {
-            const auto& [boundParams, jacobian, pathLength] = *res;
-            auto currentBranch = result.activeBranches.back();
-            // Assign the fitted parameters
-            currentBranch.parameters() = boundParams.parameters();
-            currentBranch.covariance() = *boundParams.covariance();
-            currentBranch.setReferenceSurface(
-                boundParams.referenceSurface().getSharedPtr());
+            return res.error();
           }
+
+          const auto& [boundParams, jacobian, pathLength] = *res;
+          auto currentBranch = result.activeBranches.back();
+          // Assign the fitted parameters
+          currentBranch.parameters() = boundParams.parameters();
+          currentBranch.covariance() = *boundParams.covariance();
+          currentBranch.setReferenceSurface(
+              boundParams.referenceSurface().getSharedPtr());
 
           stepper.releaseStepSize(state.stepping,
                                   ConstrainedStep::Type::Navigator);
@@ -347,8 +345,13 @@ class CombinatorialKalmanFilter {
         result.activeBranches.pop_back();
 
         // Reset propagation state to track state at next active branch
-        reset(state, stepper, navigator, result);
+        auto resetRes = reset(state, stepper, navigator, result);
+        if (!resetRes.ok()) {
+          return resetRes.error();
+        }
       }
+
+      return Result<void>::success();
     }
 
     template <typename propagator_state_t, typename stepper_t,
@@ -356,7 +359,7 @@ class CombinatorialKalmanFilter {
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_type& result,
                     const Logger& /*logger*/) const {
-      return !result.lastError.ok() || result.finished;
+      return result.finished;
     }
 
     /// @brief CombinatorialKalmanFilter actor operation: reset propagation
@@ -371,14 +374,15 @@ class CombinatorialKalmanFilter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void reset(propagator_state_t& state, const stepper_t& stepper,
-               const navigator_t& navigator, result_type& result) const {
+    Result<void> reset(propagator_state_t& state, const stepper_t& stepper,
+                       const navigator_t& navigator,
+                       result_type& result) const {
       if (result.activeBranches.empty()) {
         ACTS_VERBOSE("Stop CKF with " << result.collectedTracks.size()
                                       << " found tracks");
         result.finished = true;
 
-        return;
+        return Result<void>::success();
       }
 
       auto currentBranch = result.activeBranches.back();
@@ -402,7 +406,7 @@ class CombinatorialKalmanFilter {
           stepper.direction(state.stepping), state.options.direction);
       if (!navInitRes.ok()) {
         ACTS_ERROR("Navigation initialization failed: " << navInitRes.error());
-        result.lastError = navInitRes.error();
+        return navInitRes.error();
       }
 
       // No Kalman filtering for the starting surface, but still need
@@ -416,6 +420,8 @@ class CombinatorialKalmanFilter {
 
       // Set path limit based on target surface
       targetReached.checkAbort(state, stepper, navigator, logger());
+
+      return Result<void>::success();
     }
 
     /// @brief CombinatorialKalmanFilter actor operation:
@@ -439,7 +445,7 @@ class CombinatorialKalmanFilter {
                         result_type& result) const {
       using PM = TrackStatePropMask;
 
-      bool isSensitive = surface->associatedDetectorElement() != nullptr;
+      bool isSensitive = surface->isSensitive();
       bool hasMaterial = surface->surfaceMaterial() != nullptr;
       bool isMaterialOnly = hasMaterial && !isSensitive;
       bool expectMeasurements = isSensitive;
@@ -842,9 +848,6 @@ class CombinatorialKalmanFilter {
  public:
   /// Combinatorial Kalman Filter implementation, calls the Kalman filter
   ///
-  /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam parameters_t Type of parameters used for local parameters
-  ///
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
@@ -857,9 +860,8 @@ class CombinatorialKalmanFilter {
   ///
   /// @return a container of track finding result for all the initial track
   /// parameters
-  template <typename start_parameters_t>
   auto findTracks(
-      const start_parameters_t& initialParameters,
+      const BoundTrackParameters& initialParameters,
       const CombinatorialKalmanFilterOptions<track_container_t>& tfOptions,
       track_container_t& trackContainer,
       typename track_container_t::TrackProxy rootBranch) const
@@ -898,7 +900,7 @@ class CombinatorialKalmanFilter {
                 propOptions);
 
     auto initResult = m_propagator.template initialize<
-        decltype(propState), start_parameters_t, StubPathLimitReached>(
+        decltype(propState), BoundTrackParameters, StubPathLimitReached>(
         propState, initialParameters);
     if (!initResult.ok()) {
       ACTS_ERROR("Propagation initialization failed: " << initResult.error());
@@ -910,6 +912,9 @@ class CombinatorialKalmanFilter {
             .template get<CombinatorialKalmanFilterResult<track_container_t>>();
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
+
+    // make sure the right particle hypothesis is set on the root branch
+    rootBranch.setParticleHypothesis(initialParameters.particleHypothesis());
 
     r.activeBranches.push_back(rootBranch);
 
@@ -933,27 +938,19 @@ class CombinatorialKalmanFilter {
         std::move(propRes.template get<
                   CombinatorialKalmanFilterResult<track_container_t>>());
 
-    Result<void> error = combKalmanResult.lastError;
-    if (error.ok() && !combKalmanResult.finished) {
-      error = Result<void>(
-          CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
-    }
-    if (!error.ok()) {
+    // Check if track finding finished properly
+    if (!combKalmanResult.finished) {
       ACTS_ERROR("CombinatorialKalmanFilter failed: "
-                 << combKalmanResult.lastError.error() << " "
-                 << combKalmanResult.lastError.error().message()
-                 << " with the initial parameters: "
+                 << "Propagation reached max steps "
+                 << "with the initial parameters: "
                  << initialParameters.parameters().transpose());
-      return error.error();
+      return CombinatorialKalmanFilterError::PropagationReachesMaxSteps;
     }
 
     return std::move(combKalmanResult.collectedTracks);
   }
 
   /// Combinatorial Kalman Filter implementation, calls the Kalman filter
-  ///
-  /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
@@ -965,10 +962,8 @@ class CombinatorialKalmanFilter {
   ///
   /// @return a container of track finding result for all the initial track
   /// parameters
-  template <typename start_parameters_t,
-            typename parameters_t = BoundTrackParameters>
   auto findTracks(
-      const start_parameters_t& initialParameters,
+      const BoundTrackParameters& initialParameters,
       const CombinatorialKalmanFilterOptions<track_container_t>& tfOptions,
       track_container_t& trackContainer) const
       -> Result<std::vector<
@@ -977,5 +972,7 @@ class CombinatorialKalmanFilter {
     return findTracks(initialParameters, tfOptions, trackContainer, rootBranch);
   }
 };
+
+/// @}
 
 }  // namespace Acts

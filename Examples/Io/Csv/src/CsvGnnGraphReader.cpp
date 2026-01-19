@@ -8,20 +8,13 @@
 
 #include "ActsExamples/Io/Csv/CsvGnnGraphReader.hpp"
 
-#include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
 #include <ActsExamples/Utilities/Paths.hpp>
 
-#include <array>
-#include <cmath>
 #include <stdexcept>
 #include <string>
 
@@ -52,7 +45,7 @@ ProcessCode CsvGnnGraphReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  ActsExamples::NamedTupleCsvReader<GraphData> reader(path, {"vt", "m"});
+  NamedTupleCsvReader<GraphData> reader(path, {"vt", "m"});
   GraphData data;
 
   Graph g;

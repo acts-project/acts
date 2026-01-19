@@ -11,7 +11,7 @@ jobs:
     # This action checks all monitored (specified in `folder_list` below) requirements.in
     # files and generates a new requirements.txt file with pip-compile. If any
     # requirements changed, a PR is created with the changes.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     env:
       # This branch will receive updates each time the workflow runs
       # It doesn't matter if it's deleted when merged, it'll be re-created
@@ -34,7 +34,7 @@ jobs:
             CI/clang_tidy
             CI/fpe_masks
             docs/old
-            Examples/Python/tests
+            Python/Examples/tests
             Examples/Scripts
           )
           for folder in "${folder_list[@]}"; do
