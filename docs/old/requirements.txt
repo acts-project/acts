@@ -113,7 +113,7 @@ sphinx==7.3.7
     #   myst-parser
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
-sphinx-rtd-theme==3.0.2
+sphinx-rtd-theme==3.1.0
     # via -r docs/old/requirements.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
