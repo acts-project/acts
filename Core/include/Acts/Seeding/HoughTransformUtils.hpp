@@ -12,7 +12,6 @@
 
 #include <array>
 #include <span>
-#include <stdexcept>
 #include <unordered_set>
 
 namespace Acts::HoughTransformUtils {
@@ -97,7 +96,7 @@ template <class identifier_t>
 class HoughCell {
  public:
   /// @brief construct the cell as empty
-  HoughCell() = default;
+  HoughCell();
   /// @brief add an entry to this cell
   /// @param identifier: Identifier of the hit (used to distinguish hits from another)
   /// @param layer: Layer of the hit (used when counting layers)
@@ -126,19 +125,14 @@ class HoughCell {
   /// (weighted) number of unique hits on this cell
   YieldType m_nHits{0};
 
-  /// index for the hits -- keeps track of vector's size
-  std::size_t m_iHit{0};
-  /// index for the layers -- keeps track of vector's size
-  std::size_t m_iLayer{0};
-
-  /// a batch to resize the vector of the hits or the layers
-  std::size_t m_assignBatch{20};
+  /// a batch to resize the vector of the hits
+  static constexpr std::size_t m_assignBatch{20};
 
   /// vector of layers with hits on this cell
-  std::vector<unsigned> m_layers{std::vector<unsigned>(m_assignBatch)};
+  std::vector<unsigned> m_layers;
 
   /// vector of hits on this cell
-  std::vector<identifier_t> m_hits{std::vector<identifier_t>(m_assignBatch)};
+  std::vector<identifier_t> m_hits;
 };
 
 /// @brief Configuration - number of bins in each axis.
