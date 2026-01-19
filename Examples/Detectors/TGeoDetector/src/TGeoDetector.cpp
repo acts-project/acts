@@ -373,5 +373,12 @@ TGeoDetector::TGeoDetector(const Config& cfg)
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {
   readTGeoLayerBuilderConfigsFile(jsonFile, *this);
 }
-
+std::shared_ptr<const TrackingGeometry> buildTGeoDetectorWrapper(
+    const TGeoDetector::Config& config, const GeometryContext& context,
+    std::vector<std::shared_ptr<const DetectorElementBase>>& detElementStore,
+    std::shared_ptr<const IMaterialDecorator> materialDecorator,
+    const Logger& logger) {
+  return buildTGeoDetector(config, context, detElementStore,
+			   materialDecorator, logger);
+}
 }  // namespace ActsExamples
