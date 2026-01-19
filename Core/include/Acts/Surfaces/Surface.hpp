@@ -445,7 +445,7 @@ class Surface : public virtual GeometryObject,
   virtual std::string name() const = 0;
 
   /// @brief Returns whether the Surface is sensitive
-  virtual bool isSensitive() const;
+  bool isSensitive() const;
 
   /// Return a Polyhedron for surface objects
   ///
