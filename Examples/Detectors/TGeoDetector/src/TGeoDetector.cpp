@@ -378,7 +378,7 @@ std::shared_ptr<const TrackingGeometry> buildTGeoDetectorWrapper(
     std::vector<std::shared_ptr<const DetectorElementBase>>& detElementStore,
     std::shared_ptr<const IMaterialDecorator> materialDecorator,
     const Logger& logger) {
-  return buildTGeoDetector(config, context, detElementStore,
-			   materialDecorator, logger);
+  return buildTGeoDetector(config, context, detElementStore, materialDecorator,
+                           logger);
 }
 }  // namespace ActsExamples

@@ -132,7 +132,7 @@ class TGeoDetector : public Detector {
 
     std::vector<Volume> volumes;
   };
-  
+
   static void readTGeoLayerBuilderConfigsFile(const std::string& path,
                                               Config& config);
 
@@ -141,11 +141,11 @@ class TGeoDetector : public Detector {
  private:
   Config m_cfg;
 };
-  
+
 std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetectorWrapper(
-    const TGeoDetector::Config& config, 
-    const Acts::GeometryContext& context,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>& detElementStore,
+    const TGeoDetector::Config& config, const Acts::GeometryContext& context,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+        detElementStore,
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator,
     const Acts::Logger& logger);
 }  // namespace ActsExamples
