@@ -507,7 +507,7 @@ if(ACTS_BUILD_PLUGIN_EDM4HEP)
     if(NOT EDM4HEP_FOUND)
         message(
             STATUS
-            "EDM4hep not found, trying ${_acts_edm4hep_fallback_version} version"
+            "EDM4hep not found, trying version ${_acts_edm4hep_fallback_version}"
         )
         find_package(EDM4HEP ${_acts_edm4hep_fallback_version} CONFIG REQUIRED)
     endif()
