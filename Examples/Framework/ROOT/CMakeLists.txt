@@ -1,16 +1,16 @@
 acts_add_library(
-    ExamplesFrameworkROOT
+    ExamplesFrameworkRoot
     src/ScalingCalibrator.cpp
     src/Helpers.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
 target_include_directories(
-    ActsExamplesFrameworkROOT
+    ActsExamplesFrameworkRoot
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 target_link_libraries(
-    ActsExamplesFrameworkROOT
+    ActsExamplesFrameworkRoot
     PUBLIC Acts::ExamplesFramework ROOT::Core ROOT::Hist
 )
