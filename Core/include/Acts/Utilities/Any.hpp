@@ -205,7 +205,7 @@ class AnyBase : public AnyBaseAll {
     _ACTS_ANY_VERBOSE("Get as "
                       << (m_handler->heapAllocated ? "heap" : "local"));
 
-    return *reinterpret_cast<T*>(dataPtr());
+    return *std::bit_cast<T*>(dataPtr());
   }
 
   /// Get const reference to stored value of specified type
@@ -222,7 +222,7 @@ class AnyBase : public AnyBaseAll {
 
     _ACTS_ANY_VERBOSE("Get as " << (m_handler->heap ? "heap" : "local"));
 
-    return *reinterpret_cast<const T*>(dataPtr());
+    return *std::bit_cast<const T*>(dataPtr());
   }
 
   ~AnyBase() { destroy(); }
@@ -317,19 +317,19 @@ class AnyBase : public AnyBaseAll {
  private:
   void* dataPtr() {
     if (m_handler->heapAllocated) {
-      return *reinterpret_cast<void**>(m_data.data());
+      return *std::bit_cast<void**>(m_data.data());
     } else {
-      return reinterpret_cast<void*>(m_data.data());
+      return std::bit_cast<void*>(m_data.data());
     }
   }
 
-  void setDataPtr(void* ptr) { *reinterpret_cast<void**>(m_data.data()) = ptr; }
+  void setDataPtr(void* ptr) { *std::bit_cast<void**>(m_data.data()) = ptr; }
 
   const void* dataPtr() const {
     if (m_handler->heapAllocated) {
-      return *reinterpret_cast<void* const*>(m_data.data());
+      return *std::bit_cast<void* const*>(m_data.data());
     } else {
-      return reinterpret_cast<const void*>(m_data.data());
+      return std::bit_cast<const void*>(m_data.data());
     }
   }
 
