@@ -660,8 +660,8 @@ if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
     add_subdirectory(Tests)
 endif()
 
-# documentation
-add_subdirectory_if(docs ACTS_BUILD_DOCS)
+# documentation, adding unconditionally but will only set up docs build if configured
+add_subdirectory(docs)
 
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)
