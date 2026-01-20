@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -44,41 +45,6 @@ class GainMatrixSmoother {
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
     static_cast<void>(gctx);
-
-    using TrackStateProxy = typename traj_t::TrackStateProxy;
-
-    GetParameters filtered;
-    GetCovariance filteredCovariance;
-    GetParameters smoothed;
-    GetParameters predicted;
-    GetCovariance predictedCovariance;
-    GetCovariance smoothedCovariance;
-    GetCovariance jacobian;
-
-    filtered.connect([](const void*, void* ts) {
-      return static_cast<TrackStateProxy*>(ts)->filtered();
-    });
-    filteredCovariance.connect([](const void*, void* ts) {
-      return static_cast<TrackStateProxy*>(ts)->filteredCovariance();
-    });
-
-    smoothed.connect([](const void*, void* ts) {
-      return static_cast<TrackStateProxy*>(ts)->smoothed();
-    });
-    smoothedCovariance.connect([](const void*, void* ts) {
-      return static_cast<TrackStateProxy*>(ts)->smoothedCovariance();
-    });
-
-    predicted.connect([](const void*, void* ts) {
-      return static_cast<TrackStateProxy*>(ts)->predicted();
-    });
-    predictedCovariance.connect([](const void*, void* ts) {
-      return static_cast<TrackStateProxy*>(ts)->predictedCovariance();
-    });
-
-    jacobian.connect([](const void*, void* ts) {
-      return static_cast<TrackStateProxy*>(ts)->jacobian();
-    });
 
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
 
@@ -118,9 +84,8 @@ class GainMatrixSmoother {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
 
-      if (auto res = calculate(&ts, &prev_ts, filtered, filteredCovariance,
-                               smoothed, predicted, predictedCovariance,
-                               smoothedCovariance, jacobian, logger);
+      if (auto res = calculate(AnyMutableTrackStateProxy{ts},
+                               AnyConstTrackStateProxy{prev_ts}, logger);
           !res.ok()) {
         error = res.error();
         return false;
@@ -146,23 +111,11 @@ class GainMatrixSmoother {
   /// formalism.
   ///
   /// @param ts Current track state to be smoothed
-  /// @param prev_ts Previous track state (already smoothed)
-  /// @param filtered Delegate to get filtered parameters
-  /// @param filteredCovariance Delegate to get filtered covariance
-  /// @param smoothed Delegate to get smoothed parameters
-  /// @param predicted Delegate to get predicted parameters
-  /// @param predictedCovariance Delegate to get predicted covariance
-  /// @param smoothedCovariance Delegate to get smoothed covariance
-  /// @param jacobian Delegate to get Jacobian matrix
+  /// @param prev_ts Previous track state (in forward direction)
   /// @param logger Logger for verbose output
   /// @return Success or failure of the smoothing calculation
-  Result<void> calculate(void* ts, void* prev_ts, const GetParameters& filtered,
-                         const GetCovariance& filteredCovariance,
-                         const GetParameters& smoothed,
-                         const GetParameters& predicted,
-                         const GetCovariance& predictedCovariance,
-                         const GetCovariance& smoothedCovariance,
-                         const GetCovariance& jacobian,
+  Result<void> calculate(AnyMutableTrackStateProxy ts,
+                         AnyConstTrackStateProxy prev_ts,
                          const Logger& logger) const;
 };
 

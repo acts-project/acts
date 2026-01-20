@@ -8,84 +8,90 @@
 
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
 #include <cstdint>
 
 namespace Acts {
 
-void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
+void MbfSmoother::calculateSmoothed(AnyMutableTrackStateProxy& ts,
                                     const BoundMatrix& bigLambdaHat,
                                     const BoundVector& smallLambdaHat) const {
-  ts.smoothedCovariance = ts.filteredCovariance - ts.filteredCovariance *
-                                                      bigLambdaHat *
-                                                      ts.filteredCovariance;
-  ts.smoothed = ts.filtered - ts.filteredCovariance * smallLambdaHat;
+  auto filteredCovariance = ts.filteredCovariance();
+  auto smoothed = ts.smoothed();
+  ts.smoothedCovariance() = filteredCovariance - filteredCovariance *
+                                                     bigLambdaHat *
+                                                     filteredCovariance;
+  smoothed = ts.filtered() - filteredCovariance * smallLambdaHat;
   // Normalize phi and theta
-  ts.smoothed = normalizeBoundParameters(ts.smoothed);
+  smoothed = normalizeBoundParameters(smoothed);
 }
 
-void MbfSmoother::visitNonMeasurement(const InternalTrackState& ts,
-                                      BoundMatrix& bigLambdaHat,
-                                      BoundVector& smallLambdaHat) const {
-  const InternalTrackState::Jacobian F = ts.jacobian;
+void MbfSmoother::visitNonMeasurement(
+    const AnyConstTrackStateProxy::ConstCovarianceMap& jacobian,
+    BoundMatrix& bigLambdaHat, BoundVector& smallLambdaHat) const {
+  const auto F = jacobian;
 
   bigLambdaHat = F.transpose() * bigLambdaHat * F;
   smallLambdaHat = F.transpose() * smallLambdaHat;
 }
 
-void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
+void MbfSmoother::visitMeasurement(const AnyConstTrackStateProxy& ts,
                                    BoundMatrix& bigLambdaHat,
                                    BoundVector& smallLambdaHat) const {
-  assert(ts.measurement.has_value());
+  assert(ts.hasCalibrated());
 
-  const InternalTrackState::Measurement& measurement = ts.measurement.value();
-  const InternalTrackState::Jacobian F = ts.jacobian;
+  const auto F = ts.jacobian();
 
-  visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
-    constexpr std::size_t kMeasurementSize = decltype(N)::value;
-    std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
-        measurement.projector.begin(),
-        measurement.projector.begin() + kMeasurementSize);
-    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
-        validSubspaceIndices);
+  visit_measurement(
+      ts.calibratedSize(),
+      [&]<std::size_t N>(std::integral_constant<std::size_t, N> /*unused*/) {
+        constexpr std::size_t kMeasurementSize = N;
 
-    using ProjectorMatrix = Eigen::Matrix<double, kMeasurementSize, eBoundSize>;
-    using CovarianceMatrix =
-        Eigen::Matrix<double, kMeasurementSize, kMeasurementSize>;
-    using KalmanGainMatrix =
-        Eigen::Matrix<double, eBoundSize, kMeasurementSize>;
+        const auto subspaceHelper =
+            ts.projectorSubspaceHelper<kMeasurementSize>();
 
-    typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
-        measurement.calibrated};
-    typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
-        calibratedCovariance{measurement.calibratedCovariance};
+        using ProjectorMatrix =
+            Eigen::Matrix<double, kMeasurementSize, eBoundSize>;
+        using CovarianceMatrix =
+            Eigen::Matrix<double, kMeasurementSize, kMeasurementSize>;
+        using KalmanGainMatrix =
+            Eigen::Matrix<double, eBoundSize, kMeasurementSize>;
 
-    // Projector matrix
-    const ProjectorMatrix H = subspaceHelper.projector();
+        typename TrackStateTraits<kMeasurementSize, true>::Calibrated
+            calibrated{ts.calibrated<kMeasurementSize>()};
+        typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
+            calibratedCovariance{ts.calibratedCovariance<kMeasurementSize>()};
 
-    // Residual covariance
-    const CovarianceMatrix S =
-        (H * ts.predictedCovariance * H.transpose() + calibratedCovariance);
-    // TODO Sinv could be cached by the filter step
-    const CovarianceMatrix SInv = S.inverse();
+        // Projector matrix
+        const ProjectorMatrix H = subspaceHelper.projector();
 
-    // Kalman gain
-    // TODO K could be cached by the filter step
-    const KalmanGainMatrix K = (ts.predictedCovariance * H.transpose() * SInv);
+        // Predicted parameter covariance
+        const auto predictedCovariance = ts.predictedCovariance();
 
-    const Acts::BoundMatrix CHat = (Acts::BoundMatrix::Identity() - K * H);
-    const Eigen::Matrix<double, kMeasurementSize, 1> y =
-        (calibrated - H * ts.predicted);
+        // Residual covariance
+        const CovarianceMatrix S =
+            (H * predictedCovariance * H.transpose() + calibratedCovariance);
+        // TODO Sinv could be cached by the filter step
+        const CovarianceMatrix SInv = S.inverse();
 
-    const Acts::BoundMatrix bigLambdaTilde =
-        (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat);
-    const Eigen::Matrix<double, eBoundSize, 1> smallLambdaTilde =
-        (-H.transpose() * SInv * y + CHat.transpose() * smallLambdaHat);
+        // Kalman gain
+        // TODO K could be cached by the filter step
+        const KalmanGainMatrix K = (predictedCovariance * H.transpose() * SInv);
 
-    bigLambdaHat = F.transpose() * bigLambdaTilde * F;
-    smallLambdaHat = F.transpose() * smallLambdaTilde;
-  });
+        const Acts::BoundMatrix CHat = (Acts::BoundMatrix::Identity() - K * H);
+        const Eigen::Matrix<double, kMeasurementSize, 1> y =
+            (calibrated - H * ts.predicted());
+
+        const Acts::BoundMatrix bigLambdaTilde =
+            (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat);
+        const Eigen::Matrix<double, eBoundSize, 1> smallLambdaTilde =
+            (-H.transpose() * SInv * y + CHat.transpose() * smallLambdaHat);
+
+        bigLambdaHat = F.transpose() * bigLambdaTilde * F;
+        smallLambdaHat = F.transpose() * smallLambdaTilde;
+      });
 }
 
 }  // namespace Acts
