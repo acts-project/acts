@@ -98,7 +98,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-0.3, 0.3))) ^
         bdata::xrange(ntests),
     phi, theta, index) {
-  (void)index;
+  static_cast<void>(index);
 
   std::cout << std::endl
             << "Benchmarking theta=" << theta << ", phi=" << phi << "..."

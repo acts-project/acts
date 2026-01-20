@@ -44,7 +44,7 @@ class GainMatrixSmoother {
   Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    (void)gctx;
+    static_cast<void>(gctx);
 
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
 

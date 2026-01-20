@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
                      yExp, i) {
-  (void)i;
+  static_cast<void>(i);
 
   const double x = std::pow(10, xExp);
   const double y = std::pow(10, yExp);

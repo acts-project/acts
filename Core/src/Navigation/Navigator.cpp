@@ -68,7 +68,7 @@ bool Navigator::navigationBreak(const State& state) const {
 Result<void> Navigator::initialize(State& state, const Vector3& position,
                                    const Vector3& direction,
                                    Direction propagationDirection) const {
-  (void)propagationDirection;
+  static_cast<void>(propagationDirection);
 
   ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
@@ -230,8 +230,8 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
 
 bool Navigator::checkTargetValid(const State& state, const Vector3& position,
                                  const Vector3& direction) const {
-  (void)position;
-  (void)direction;
+  static_cast<void>(position);
+  static_cast<void>(direction);
 
   return state.navigationStage != Stage::initial;
 }

@@ -227,7 +227,7 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   *mxcsr |= ((*mxcsr & SSE_STATUS_FLAGS) << 7);
   *mxcsr &= ~SSE_STATUS_FLAGS;  // clear all pending SSE exceptions
 #else
-  (void)ctx;
+  static_cast<void>(ctx);
 #endif
 }
 
@@ -247,7 +247,7 @@ void FpeMonitor::enable() {
 
   stack().push(this);
 #else
-  (void)m_excepts;
+  static_cast<void>(m_excepts);
 #endif
 }
 
