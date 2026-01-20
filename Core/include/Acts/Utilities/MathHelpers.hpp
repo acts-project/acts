@@ -122,7 +122,7 @@ constexpr T factorial(const T n) {
     }
   }();
 
-  (void)max_n;
+  static_cast<void>(max_n);
   if (std::is_constant_evaluated() && n > max_n) {
     throw std::overflow_error("factorial overflow");
   }
