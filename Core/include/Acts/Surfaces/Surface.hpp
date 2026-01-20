@@ -444,6 +444,9 @@ class Surface : public virtual GeometryObject,
   /// @return The surface class name as a string
   virtual std::string name() const = 0;
 
+  /// @brief Returns whether the Surface is sensitive
+  virtual bool isSensitive() const;
+
   /// Return a Polyhedron for surface objects
   ///
   /// @param gctx The current geometry context object, e.g. alignment

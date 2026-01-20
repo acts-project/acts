@@ -117,7 +117,7 @@ std::vector<const Acts::Surface*> SensitiveCandidates::queryPosition(
       }
 
       for (const auto& surface : surfaceArray->surfaces()) {
-        if (surface->associatedDetectorElement() != nullptr) {
+        if (surface->isSensitive()) {
           surfaces.push_back(surface);
         }
       }
