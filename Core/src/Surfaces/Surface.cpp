@@ -85,7 +85,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
 AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  (void)direction;
+  static_cast<void>(direction);
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The vector between position and center

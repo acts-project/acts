@@ -177,7 +177,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-10., 10.))) ^
         bdata::xrange(100),
     alpha, beta, gamma, posX, posY, posZ, index) {
-  (void)index;
+  static_cast<void>(index);
 
   // Create a test context
   GeometryContext tgContext = GeometryContext();
