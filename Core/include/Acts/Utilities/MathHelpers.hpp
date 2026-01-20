@@ -108,12 +108,20 @@ template <std::unsigned_integral T>
 constexpr T factorial(const T n) {
   constexpr unsigned bits = std::numeric_limits<T>::digits;
 
-  // max n such that n! fits in T
-  constexpr unsigned max_n = bits >= 64   ? 20
-                             : bits >= 32 ? 12
-                             : bits >= 16 ? 8
-                             : bits >= 8  ? 5
-                                          : 0;
+  constexpr unsigned max_n = [] {
+    if constexpr (bits >= 64) {
+      return 20u;
+    } else if constexpr (bits >= 32) {
+      return 12u;
+    } else if constexpr (bits >= 16) {
+      return 8u;
+    } else if constexpr (bits >= 8) {
+      return 5u;
+    } else {
+      return 0u;
+    }
+  }();
+
   (void)max_n;
   if (std::is_constant_evaluated() && n > max_n) {
     throw std::overflow_error("factorial overflow");
