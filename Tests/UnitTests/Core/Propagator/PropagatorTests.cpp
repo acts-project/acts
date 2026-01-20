@@ -182,7 +182,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   using CylinderObserver = SurfaceObserver<CylinderSurface>;
   using ActorList = ActorList<CylinderObserver>;
@@ -242,7 +242,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // setup propagation options - the tow step options
   EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
@@ -322,7 +322,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // setup propagation options - 2 setp options
   EigenPropagatorType::Options<> options_2s(tgContext, mfContext);

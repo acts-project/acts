@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(CommitHash) {
   // This test just checks that the variables are accessible
   auto hash = Acts::CommitHash;
   auto hashShort = Acts::CommitHashShort;
-  (void)hash;       // suppress unused warning
-  (void)hashShort;  // suppress unused warning
+  static_cast<void>(hash);       // suppress unused warning
+  static_cast<void>(hashShort);  // suppress unused warning
 }
 
 BOOST_AUTO_TEST_CASE(VersionInfo) {

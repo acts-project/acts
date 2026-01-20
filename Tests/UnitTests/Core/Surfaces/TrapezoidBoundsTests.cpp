@@ -181,7 +181,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-3, 3))) ^
         bdata::xrange(1000),
     x, y, index) {
-  (void)index;
+  static_cast<void>(index);
 
   static const TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
   static const auto vertices = trapezoidBoundsObject.vertices();

@@ -97,7 +97,7 @@ BOOST_DATA_TEST_CASE(
     pT, phi, theta, charge, index) {
   double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // define start parameters
   /// a covariance matrix to transport
@@ -144,7 +144,7 @@ BOOST_DATA_TEST_CASE(
     pT, phi, theta, charge, index) {
   double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // define start parameters
   /// a covariance matrix to transport
@@ -194,7 +194,7 @@ BOOST_DATA_TEST_CASE(
     pT, phi, theta, charge, index) {
   double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // define start parameters
   /// a covariance matrix to transport
@@ -260,7 +260,7 @@ BOOST_DATA_TEST_CASE(
     pT, phi, theta, charge, index) {
   double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // define start parameters
   /// a covariance matrix to transport
@@ -307,7 +307,7 @@ BOOST_DATA_TEST_CASE(
     pT, phi, theta, charge, index) {
   double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // define start parameters
   /// a covariance matrix to transport

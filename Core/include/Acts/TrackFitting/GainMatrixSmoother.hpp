@@ -43,7 +43,7 @@ class GainMatrixSmoother {
   Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    (void)gctx;
+    static_cast<void>(gctx);
 
     using TrackStateProxy = typename traj_t::TrackStateProxy;
 
