@@ -8,18 +8,11 @@
 
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/TrackFitting/KalmanFitterError.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <type_traits>
-#include <utility>
-
-#include <Eigen/src/Core/MatrixBase.h>
 
 namespace Acts {
 

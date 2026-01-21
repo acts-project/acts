@@ -89,7 +89,7 @@ def getOpenDataDetector(
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
         )
         # Use default constructed geometry context. This will have to change if DD4hep gains alignment awareness.
-        gctx = acts.GeometryContext()
+        gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             detector = acts.examples.dd4hep.OpenDataDetector(
@@ -108,7 +108,7 @@ def getOpenDataDetector(
         }
 
         def geoid_hook(geoid, surface):
-            gctx = acts.GeometryContext()
+            gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
             if geoid.volume in volumeRadiusCutsMap:
                 r = math.sqrt(
                     surface.center(gctx)[0] ** 2 + surface.center(gctx)[1] ** 2

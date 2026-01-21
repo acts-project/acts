@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(ITkIdentifierTests) {
 }
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
-  GeometryContext gctx{};
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   auto box = make_intrusive<GeoBox>(100, 200, 2);

@@ -27,7 +27,7 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 const char* cylinder_xml =
     R""""(

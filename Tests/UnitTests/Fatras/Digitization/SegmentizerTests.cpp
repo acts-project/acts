@@ -43,7 +43,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(DigitizationSuite)
 
 BOOST_AUTO_TEST_CASE(SegmentizerCartesian) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   auto rectangleBounds = std::make_shared<RectangleBounds>(1., 1.);
   auto planeSurface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(SegmentizerCartesian) {
 }
 
 BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   auto radialBounds = std::make_shared<const RadialBounds>(5., 10., 0.25, 0.);
   auto radialDisc =
@@ -137,7 +137,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(0., 1.))) ^
         bdata::xrange(25),
     startR0, startR1, endR0, endR1, index) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   Segmentizer cl;
 
   // Test beds with random numbers generated inside
