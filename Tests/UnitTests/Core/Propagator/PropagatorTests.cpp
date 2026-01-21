@@ -53,7 +53,7 @@ using Acts::VectorHelpers::perp;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 using Covariance = BoundSquareMatrix;
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
       Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
       ParticleHypothesis::pion());
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mctx;
 
   {

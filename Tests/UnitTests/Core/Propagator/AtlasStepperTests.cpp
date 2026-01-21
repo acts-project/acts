@@ -75,7 +75,7 @@ static const auto particleHypothesis = ParticleHypothesis::pion();
 static const Covariance cov = Covariance::Identity();
 
 // context objects
-static const GeometryContext geoCtx;
+static const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 static const MagneticFieldContext magCtx;
 
 BOOST_AUTO_TEST_SUITE(PropagatorSuite)

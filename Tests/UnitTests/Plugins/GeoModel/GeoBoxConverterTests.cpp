@@ -27,7 +27,7 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 RotationMatrix3 idRotation = RotationMatrix3::Identity();
 Transform3 idTransform = Transform3::Identity();
 
