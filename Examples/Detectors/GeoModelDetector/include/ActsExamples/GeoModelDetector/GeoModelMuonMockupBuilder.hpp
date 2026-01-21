@@ -88,14 +88,16 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   using NodePtr_t = std::shared_ptr<Node_t>;
 
   /// @brief Produce a station node from the provided converted volume boxes
-  NodePtr_t processStation(const std::span<Box_t> boundingBoxes,
+  NodePtr_t processStation(const Acts::GeometryContext& gctx,
+                           const std::span<Box_t> boundingBoxes,
                            const std::string& station, const bool isBarrel,
                            Acts::VolumeBoundFactory& boundFactory,
                            const Acts::GeometryIdentifier& geoId) const;
 
   /// @brief Build a child chamber volume from the provided converted volume box
   std::unique_ptr<Acts::TrackingVolume> buildChildChamber(
-      const Box_t& box, Acts::VolumeBoundFactory& boundFactory) const;
+      const Acts::GeometryContext& gctx, const Box_t& box,
+      Acts::VolumeBoundFactory& boundFactory) const;
 
   /// @brief Helper struct to store cylinder bounds, used to compute the overall bounds
   ///        of a station tracking volume from its component volumes
@@ -114,7 +116,8 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   /// @param volume: The chamber volume to extract the bounds from
   /// @param bounds: The cylBounds object to be updated
   template <Acts::VolumeBounds::BoundsType VolBounds_t>
-  void updateBounds(const Acts::TrackingVolume& volume,
+  void updateBounds(const Acts::GeometryContext& gctx,
+                    const Acts::TrackingVolume& volume,
                     cylBounds& bounds) const;
 
   // Helper function returning the station idx from a box volume
