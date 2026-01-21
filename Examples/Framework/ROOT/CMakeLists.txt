@@ -1,7 +1,6 @@
 acts_add_library(
     ExamplesFrameworkRoot
     src/ScalingCalibrator.cpp
-    src/Helpers.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
