@@ -96,11 +96,9 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
 
     state.freeCandidates.clear();
     state.freeCandidates.reserve(state.options.freeSurfaces.size());
-    std::ranges::transform(state.options.freeSurfaces,
-                           std::back_inserter(state.freeCandidates),
-                           [](const Surface* candidate) {
-                             return std::make_pair(candidate, false);
-                           });
+    for (const Surface* candidate : state.options.freeSurfaces) {
+      state.freeCandidates.emplace_back(candidate, false);
+    }
   }
 
   state.startSurface = state.options.startSurface;
@@ -479,46 +477,38 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                               << " navigation candidates.");
   if (!state.options.externalSurfaces.empty()) {
-    std::ranges::for_each(
-        state.options.externalSurfaces, [&](const GeometryIdentifier& geoId) {
-          // Don't add any surface which is not in the same volume (volume bits)
-          // or sub volume (extra bits)
-          if (geoId.volume() != state.currentVolume->geometryId().volume() ||
-              geoId.extra() != state.currentVolume->geometryId().extra()) {
-            return;
-          }
-          const Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-          assert(surface != nullptr);
-          ACTS_VERBOSE(volInfo(state)
-                       << "Try to navigate to " << surface->type()
-                       << " surface " << geoId);
-          appendOnly.addSurfaceCandidate(*surface,
-                                         BoundaryTolerance::Infinite());
-        });
+    for (const GeometryIdentifier& geoId : state.options.externalSurfaces) {
+      // Don't add any surface which is not in the same volume (volume bits)
+      // or sub volume (extra bits)
+      if (geoId.volume() != state.currentVolume->geometryId().volume() ||
+          geoId.extra() != state.currentVolume->geometryId().extra()) {
+        continue;
+      }
+      const Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+      assert(surface != nullptr);
+      ACTS_VERBOSE(volInfo(state) << "Try to navigate to " << surface->type()
+                                  << " surface " << geoId);
+      appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
+    };
   }
   bool pruneFreeCand{false};
   if (!state.freeCandidates.empty()) {
-    std::ranges::for_each(
-        state.freeCandidates,
-        [&](const std::pair<const Surface*, bool>& freeCandidate) {
-          /// Don't process already reached surfaces again
-          if (freeCandidate.second) {
-            return;
-          }
-          if (!state.options.freeSurfaceSelector.connected() ||
-              state.options.freeSurfaceSelector(
-                  state.options.geoContext, *state.currentVolume, position,
-                  direction, *freeCandidate.first)) {
-            ACTS_VERBOSE(
-                volInfo(state)
-                << "Append free " << freeCandidate.first->type()
-                << " surface  \n"
-                << freeCandidate.first->toStream(state.options.geoContext));
-            appendOnly.addSurfaceCandidate(*freeCandidate.first,
-                                           BoundaryTolerance::Infinite());
-            pruneFreeCand = !state.options.freeSurfaceSelector.connected();
-          }
-        });
+    for (const auto& [surface, wasReached] : state.freeCandidates) {
+      /// Don't process already reached surfaces again
+      if (wasReached) {
+        continue;
+      }
+      if (!state.options.freeSurfaceSelector.connected() ||
+          state.options.freeSurfaceSelector(state.options.geoContext,
+                                            *state.currentVolume, position,
+                                            direction, *surface)) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Append free " << surface->type() << " surface  \n"
+                     << surface->toStream(state.options.geoContext));
+        appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
+        pruneFreeCand = !state.options.freeSurfaceSelector.connected();
+      }
+    };
   }
   state.stream.initialize(state.options.geoContext, {position, direction},
                           BoundaryTolerance::None(),
@@ -595,12 +585,11 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
 
   if (!state.options.externalSurfaces.empty()) {
     const auto layerId = layerSurface->geometryId().layer();
-    navOpts.externalSurfaces.reserve(state.options.externalSurfaces.size());
-    std::ranges::copy_if(state.options.externalSurfaces,
-                         std::back_inserter(navOpts.externalSurfaces),
-                         [&layerId](const GeometryIdentifier& id) {
-                           return id.layer() == layerId;
-                         });
+    for (const GeometryIdentifier& id : state.options.externalSurfaces) {
+      if (id.layer() == layerId) {
+        navOpts.externalSurfaces.push_back(id);
+      }
+    }
   }
 
   // Request the compatible surfaces
