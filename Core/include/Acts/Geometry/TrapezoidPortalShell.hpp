@@ -40,7 +40,6 @@ class TrapezoidPortalShell : public PortalShellBase {
 
   /// @copydoc PortalShellBase::fill
   void fill(TrackingVolume& volume) override;
-
 };
 
 /// Output stream operator for the TrapezoidPortalShell::Face enum

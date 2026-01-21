@@ -38,7 +38,6 @@ class DiamondPortalShell : public PortalShellBase {
 
   /// @copydoc PortalShellBase::fill
   void fill(TrackingVolume& volume) override;
-
 };
 // Output stream operator for the CuboidPortalShell::Face enum
 /// @param os The output stream
