@@ -51,6 +51,24 @@ BOOST_FIXTURE_TEST_CASE(WrapTrackStateProxy, TestTrackStateFixture) {
   BOOST_CHECK_EQUAL(anyState.index(), proxy.index());
 }
 
+BOOST_FIXTURE_TEST_CASE(ConstructFromReadOnlyTrackStateProxy,
+                        TestTrackStateFixture) {
+  auto track = container.makeTrack();
+  auto state = container.trackStateContainer().makeTrackState();
+  track.tipIndex() = state.index();
+  state.predicted() = ActsVector<eBoundSize>::Ones();
+
+  TrackContainer constContainer{ConstVectorTrackContainer{trackContainer},
+                                ConstVectorMultiTrajectory{trajectory}};
+
+  auto constState =
+      constContainer.trackStateContainer().getTrackState(state.index());
+  AnyConstTrackStateProxy anyState(constState);
+
+  BOOST_CHECK_EQUAL(anyState.index(), state.index());
+  BOOST_CHECK_CLOSE(anyState.predicted()[eBoundLoc0], 1.0, 1e-6);
+}
+
 BOOST_FIXTURE_TEST_CASE(AccessFiltered, TestTrackStateFixture) {
   auto track = container.makeTrack();
   auto state = container.trackStateContainer().makeTrackState();

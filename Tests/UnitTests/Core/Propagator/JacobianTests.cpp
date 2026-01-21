@@ -43,7 +43,7 @@ using AtlasStepperType = AtlasStepper;
 using Covariance = BoundSquareMatrix;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 static auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 1_T});

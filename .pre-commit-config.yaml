@@ -39,7 +39,7 @@ repos:
         "-I", "./CI/codespell_ignore.txt",
         "-w"
       ]
-      exclude: ^CI/.*$
+      exclude: ^CI/.*|docs/tex-mml-chtml.js$
 
   - repo: local
     hooks:
@@ -76,7 +76,7 @@ repos:
     - id: cmake_options
       name: cmake_options
       language: system
-      entry: docs/parse_cmake_options.py --write docs/getting_started.md
+      entry: docs/parse_cmake_options.py --write docs/pages/contributing/building_acts.md
       files: ^CMakeLists.txt$
 
     - id: leftover_conflict_markers
@@ -106,3 +106,11 @@ repos:
       require_serial: true
       args: [--indent=4]
       exclude: ^.zenodo.json$
+
+    - id: sync_citation_metadata
+      name: sync citation metadata
+      entry: CI/sync_citation_metadata.py
+      language: python
+      files: ^(CITATION\.cff|\.zenodo\.json|AUTHORS)$
+      additional_dependencies: ["typer", "rich", "pyyaml"]
+      pass_filenames: false

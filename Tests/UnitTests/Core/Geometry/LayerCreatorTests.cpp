@@ -47,7 +47,7 @@ using namespace Acts;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
@@ -65,8 +65,8 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
         dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
     for (const auto& vtxloc : bounds->vertices()) {
-      Vector3 vtx =
-          srf->transform(tgContext) * Vector3(vtxloc.x(), vtxloc.y(), 0);
+      Vector3 vtx = srf->localToGlobalTransform(tgContext) *
+                    Vector3(vtxloc.x(), vtxloc.y(), 0);
       os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
     }
 

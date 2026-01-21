@@ -136,7 +136,8 @@ struct EventDataView3D {
   template <typename parameters_t>
   static inline void drawBoundTrackParameters(
       IVisualization3D& helper, const parameters_t& parameters,
-      const GeometryContext& gctx = GeometryContext(),
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& parConfig = s_viewParameter,
@@ -168,10 +169,10 @@ struct EventDataView3D {
 
       // Draw the local covariance
       const auto& covariance = *parameters.covariance();
-      drawCovarianceCartesian(helper, lposition,
-                              covariance.template block<2, 2>(0, 0),
-                              parameters.referenceSurface().transform(gctx),
-                              locErrorScale, covConfig);
+      drawCovarianceCartesian(
+          helper, lposition, covariance.template block<2, 2>(0, 0),
+          parameters.referenceSurface().localToGlobalTransform(gctx),
+          locErrorScale, covConfig);
 
       drawCovarianceAngular(
           helper, position, direction, covariance.template block<2, 2>(2, 2),
@@ -224,7 +225,8 @@ struct EventDataView3D {
   static void drawMultiTrajectory(
       IVisualization3D& helper, const traj_t& multiTraj,
       const std::size_t& entryIndex,
-      const GeometryContext& gctx = GeometryContext(),
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& surfaceConfig = s_viewSensitive,
@@ -265,8 +267,8 @@ struct EventDataView3D {
         const SquareMatrix2 covariance =
             state.template calibratedCovariance<2>();
         drawMeasurement(helper, lposition, covariance,
-                        state.referenceSurface().transform(gctx), locErrorScale,
-                        measurementConfig);
+                        state.referenceSurface().localToGlobalTransform(gctx),
+                        locErrorScale, measurementConfig);
       }
 
       // Last, if necessary and present, draw the track parameters

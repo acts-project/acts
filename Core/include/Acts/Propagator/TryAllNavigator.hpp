@@ -191,7 +191,7 @@ class TryAllNavigatorBase {
   [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
                                         const Vector3& direction,
                                         Direction propagationDirection) const {
-    (void)propagationDirection;
+    static_cast<void>(propagationDirection);
 
     ACTS_VERBOSE("initialize");
 
@@ -476,9 +476,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @return True if the target is still valid
   bool checkTargetValid(const State& state, const Vector3& position,
                         const Vector3& direction) const {
-    (void)state;
-    (void)position;
-    (void)direction;
+    static_cast<void>(state);
+    static_cast<void>(position);
+    static_cast<void>(direction);
 
     return false;
   }
@@ -701,7 +701,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @return The next target surface
   NavigationTarget nextTarget(State& state, const Vector3& position,
                               const Vector3& direction) const {
-    (void)direction;
+    static_cast<void>(direction);
 
     // Navigator preStep always resets the current surface
     state.currentSurface = nullptr;
@@ -806,9 +806,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @return True if the target is still valid
   bool checkTargetValid(const State& state, const Vector3& position,
                         const Vector3& direction) const {
-    (void)state;
-    (void)position;
-    (void)direction;
+    static_cast<void>(state);
+    static_cast<void>(position);
+    static_cast<void>(direction);
 
     return true;
   }

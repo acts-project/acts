@@ -45,7 +45,7 @@ GenericDetectorElement::GenericDetectorElement(
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
 
-const Acts::Transform3& GenericDetectorElement::transform(
+const Acts::Transform3& GenericDetectorElement::localToGlobalTransform(
     const Acts::GeometryContext& /*gctx*/) const {
   return m_elementTransform;
 }

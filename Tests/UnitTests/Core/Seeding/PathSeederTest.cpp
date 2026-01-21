@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_SUITE(SeedingSuite)
 using Axis = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
 using Grid = Grid<std::vector<SourceLink>, Axis, Axis>;
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 // Parameters for the geometry
 const double halfY = 10.;

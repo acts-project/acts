@@ -156,7 +156,7 @@ void CylindricalSpacePointGridCreator::fillGrid(
     CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     external_spacepoint_iterator_t spBegin,
     external_spacepoint_iterator_t spEnd, const Logger& logger) {
-  (void)options;
+  static_cast<void>(options);
 
   if (config.seedFilter == nullptr) {
     throw std::runtime_error("SeedFinderConfig has a null SeedFilter object");
