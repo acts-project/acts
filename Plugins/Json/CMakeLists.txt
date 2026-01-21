@@ -1,6 +1,5 @@
 acts_add_library(
     PluginJson
-    SHARED
     src/AlgebraJsonConverter.cpp
     src/ExtentJsonConverter.cpp
     src/GridJsonConverter.cpp

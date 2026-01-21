@@ -19,8 +19,7 @@ struct SensitiveGetter {
   void operator()(const Acts::Surface* surface) {
     if (surface != nullptr) {
       auto geoId = surface->geometryId();
-      if (geoId.sensitive() != 0u ||
-          surface->associatedDetectorElement() != nullptr) {
+      if (geoId.sensitive() != 0u || surface->isSensitive()) {
         selected.emplace_back(surface->getSharedPtr());
       }
     }
@@ -56,7 +55,7 @@ ActsExamples::StructureSelector::selectedTransforms(
   std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3> transforms;
   auto selectedSurfaces = selectSurfaces(geoId);
   for (const auto& surface : selectedSurfaces) {
-    transforms[surface->geometryId()] = surface->transform(gctx);
+    transforms[surface->geometryId()] = surface->localToGlobalTransform(gctx);
   }
   return transforms;
 }

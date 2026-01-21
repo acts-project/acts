@@ -1,6 +1,5 @@
 acts_add_library(
     Fatras
-    SHARED
     src/Digitization/Segmentizer.cpp
     src/Digitization/DigitizationError.cpp
     src/Digitization/PlanarSurfaceMask.cpp

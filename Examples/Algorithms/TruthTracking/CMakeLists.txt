@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesTruthTracking
-    SHARED
     ActsExamples/TruthTracking/ParticleSelector.cpp
     ActsExamples/TruthTracking/ParticleTrackParamExtractor.cpp
     ActsExamples/TruthTracking/TrackParameterSmearing.cpp

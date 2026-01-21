@@ -837,8 +837,7 @@ class Gx2Fitter {
       const GeometryIdentifier geoId = surface->geometryId();
       ACTS_DEBUG("Surface " << geoId << " detected.");
 
-      const bool surfaceIsSensitive =
-          (surface->associatedDetectorElement() != nullptr);
+      const bool surfaceIsSensitive = surface->isSensitive();
       const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
       // First we figure out, if we would need to look into material surfaces at
       // all. Later, we also check, if the material slab is valid, otherwise we

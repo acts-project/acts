@@ -445,7 +445,7 @@ class CombinatorialKalmanFilter {
                         result_type& result) const {
       using PM = TrackStatePropMask;
 
-      bool isSensitive = surface->associatedDetectorElement() != nullptr;
+      bool isSensitive = surface->isSensitive();
       bool hasMaterial = surface->surfaceMaterial() != nullptr;
       bool isMaterialOnly = hasMaterial && !isSensitive;
       bool expectMeasurements = isSensitive;

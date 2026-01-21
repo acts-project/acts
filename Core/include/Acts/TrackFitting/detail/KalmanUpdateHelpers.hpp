@@ -172,8 +172,7 @@ auto kalmanHandleNoMeasurement(
 
   // Set the track state flags
   const bool surfaceHasMaterial = surface.surfaceMaterial() != nullptr;
-  const bool surfaceIsSensitive =
-      surface.associatedDetectorElement() != nullptr;
+  const bool surfaceIsSensitive = surface.isSensitive();
   auto typeFlags = trackStateProxy.typeFlags();
   typeFlags.setHasParameters();
 

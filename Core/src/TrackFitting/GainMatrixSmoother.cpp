@@ -15,30 +15,31 @@
 
 namespace Acts {
 
-Result<void> GainMatrixSmoother::calculate(
-    void* ts, void* prev_ts, const GetParameters& filtered,
-    const GetCovariance& filteredCovariance, const GetParameters& smoothed,
-    const GetParameters& predicted, const GetCovariance& predictedCovariance,
-    const GetCovariance& smoothedCovariance, const GetCovariance& jacobian,
-    const Logger& logger) const {
+Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
+                                           AnyConstTrackStateProxy prev_ts,
+                                           const Logger& logger) const {
+  auto prevPredictedCovariance = prev_ts.predictedCovariance();
+  auto filteredCovariance = ts.filteredCovariance();
+  auto prevJacobian = prev_ts.jacobian();
+
   ACTS_VERBOSE("Prev. predicted covariance\n"
-               << predictedCovariance(prev_ts) << "\n, inverse: \n"
-               << predictedCovariance(prev_ts).inverse());
+               << prevPredictedCovariance << "\n, inverse: \n"
+               << prevPredictedCovariance.inverse());
 
   // Gain smoothing matrix
   // NB: The jacobian stored in a state is the jacobian from previous
   // state to this state in forward propagation
-  BoundMatrix G = filteredCovariance(ts) * jacobian(prev_ts).transpose() *
-                  predictedCovariance(prev_ts).inverse();
+  BoundMatrix G = filteredCovariance * prevJacobian.transpose() *
+                  prevPredictedCovariance.inverse();
 
   if (G.hasNaN()) {
     ACTS_VERBOSE("Gain smoothing matrix G has NaNs");
 
-    ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance(ts));
-    ACTS_VERBOSE("Jacobian:\n" << jacobian(prev_ts));
-    ACTS_VERBOSE("Predicted covariance:\n" << predictedCovariance(prev_ts));
+    ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
+    ACTS_VERBOSE("Jacobian:\n" << prevJacobian);
+    ACTS_VERBOSE("Predicted covariance:\n" << prevPredictedCovariance);
     ACTS_VERBOSE("Inverse of predicted covariance:\n"
-                 << predictedCovariance(prev_ts).inverse());
+                 << prevPredictedCovariance.inverse());
 
     ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
 
@@ -47,44 +48,50 @@ Result<void> GainMatrixSmoother::calculate(
 
   ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
 
+  auto prevPredicted = prev_ts.predicted();
+  auto prevSmoothed = prev_ts.smoothed();
+
+  auto filtered = ts.filtered();
+  auto smoothed = ts.smoothed();
+  auto smoothedCovariance = ts.smoothedCovariance();
+  auto prevSmoothedCovariance = prev_ts.smoothedCovariance();
+
   ACTS_VERBOSE("Calculate smoothed parameters:");
-  ACTS_VERBOSE("Filtered parameters: " << filtered(ts).transpose());
-  ACTS_VERBOSE("Prev. smoothed parameters: " << smoothed(prev_ts).transpose());
-  ACTS_VERBOSE(
-      "Prev. predicted parameters: " << predicted(prev_ts).transpose());
+  ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
+  ACTS_VERBOSE("Prev. smoothed parameters: " << prevSmoothed.transpose());
+  ACTS_VERBOSE("Prev. predicted parameters: " << prevPredicted.transpose());
 
   // Calculate the smoothed parameters
-  smoothed(ts) = filtered(ts) + G * subtractBoundParameters(smoothed(prev_ts),
-                                                            predicted(prev_ts));
+  smoothed =
+      filtered + G * subtractBoundParameters(prevSmoothed, prevPredicted);
   // Normalize phi and theta
-  smoothed(ts) = normalizeBoundParameters(smoothed(ts));
+  smoothed = normalizeBoundParameters(smoothed);
 
-  ACTS_VERBOSE("Smoothed parameters are: " << smoothed(ts).transpose());
+  ACTS_VERBOSE("Smoothed parameters are: " << smoothed.transpose());
   ACTS_VERBOSE("Calculate smoothed covariance:");
-  ACTS_VERBOSE("Prev. smoothed covariance:\n" << smoothedCovariance(prev_ts));
+  ACTS_VERBOSE("Prev. smoothed covariance:\n" << prevSmoothedCovariance);
 
   // And the smoothed covariance
-  smoothedCovariance(ts) =
-      filteredCovariance(ts) +
-      G * (smoothedCovariance(prev_ts) - predictedCovariance(prev_ts)) *
-          G.transpose();
+  smoothedCovariance =
+      filteredCovariance +
+      G * (prevSmoothedCovariance - prevPredictedCovariance) * G.transpose();
 
   if (doCovCheckAndAttemptFix) {
     // Check if the covariance matrix is semi-positive definite.
     // If not, make one (could do more) attempt to replace it with the
     // nearest semi-positive def matrix,
     // but it could still be non semi-positive
-    BoundSquareMatrix smoothedCov = smoothedCovariance(ts);
+    BoundSquareMatrix smoothedCov = smoothedCovariance;
     if (!detail::CovarianceHelper<BoundSquareMatrix>::validate(smoothedCov)) {
       ACTS_DEBUG(
           "Smoothed covariance is not positive definite. Could result in "
           "negative covariance!");
     }
     // Reset smoothed covariance
-    smoothedCovariance(ts) = smoothedCov;
+    smoothedCovariance = smoothedCov;
   }
 
-  ACTS_VERBOSE("Smoothed covariance is: \n" << smoothedCovariance(ts));
+  ACTS_VERBOSE("Smoothed covariance is: \n" << smoothedCovariance);
 
   return Result<void>::success();
 }
