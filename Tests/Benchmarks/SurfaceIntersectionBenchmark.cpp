@@ -41,7 +41,7 @@ const bool testCylinder = true;
 const bool testStraw = true;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 // Create a test plane in 10 m distance
 // Some random transform

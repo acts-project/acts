@@ -15,6 +15,6 @@ namespace Acts {
 
 template std::tuple<double, std::error_code>
 GainMatrixUpdater::visitMeasurementImpl<@DIM@>(AnyMutableTrackStateProxy trackState,
-                                                const Logger& logger) const;
+                                               const Logger& logger) const;
 
 }  // namespace Acts

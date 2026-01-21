@@ -165,7 +165,7 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   ViewConfig pcolor{.color = {20, 120, 20}};
   ViewConfig scolor{.color = {235, 198, 52}};
 
-  auto gctx = GeometryContext();
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   auto identity = Transform3::Identity();
 
   // rectangle and plane
@@ -217,7 +217,7 @@ static inline std::string testMeasurement(IVisualization3D& helper,
   std::stringstream ss;
 
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   // Create a detector
   const std::size_t nSurfaces = 7;
@@ -275,7 +275,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   std::stringstream ss;
 
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mfContext = MagneticFieldContext();
   CalibrationContext calContext = CalibrationContext();
 

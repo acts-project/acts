@@ -33,7 +33,7 @@ namespace ActsTests {
 using Covariance = BoundSquareMatrix;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
