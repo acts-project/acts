@@ -103,7 +103,7 @@ if "__main__" == __name__:
     # structureSelector = StructureSelector(trackingGeometry)
     # pixelBarrelID = acts.GeometryIdentifier(volume=17)
     # pixelBarrelTransforms = structureSelector.selectedTransforms(
-    #     acts.GeometryContext(), pixelBarrelID
+    #     acts.GeometryContext.dangerouslyDefaultConstruct(), pixelBarrelID
     # )
     # alignDecoConfig = AlignmentDecorator.Config()
     # alignDecoConfig.nominalStore = acts.examples.GeoIdAlignmentStore(

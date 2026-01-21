@@ -43,7 +43,7 @@ using Jacobian = BoundMatrix;
 using Covariance = BoundSquareMatrix;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 ///
 /// @brief the bound state propagation
