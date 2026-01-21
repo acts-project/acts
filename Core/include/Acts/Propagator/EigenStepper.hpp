@@ -431,7 +431,7 @@ class EigenStepper {
   /// @param [in,out] state State of the stepper
   void setIdentityJacobian(State& state) const;
 
- protected:
+ private:
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 };
