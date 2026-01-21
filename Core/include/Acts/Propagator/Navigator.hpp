@@ -381,7 +381,7 @@ class Navigator {
   /// @param direction The current direction
   ///
   /// @return True if the target is valid
-  bool checkTargetValid(const State& state, const Vector3& position,
+  bool checkTargetValid(State& state, const Vector3& position,
                         const Vector3& direction) const;
 
   /// @brief Handle the surface reached

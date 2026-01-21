@@ -164,6 +164,15 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
 
       return Result<void>::failure(NavigatorError::NotInsideExpectedVolume);
     }
+
+    if (const auto* policy = state.currentVolume->navigationPolicy();
+        policy != nullptr) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Creating initial navigation policy state for volume.");
+      policy->createState(state.options.geoContext,
+                          {.position = position, .direction = direction},
+                          state.policyStateManager, logger());
+    }
   }
   if (state.currentLayer != nullptr) {
     ACTS_VERBOSE(volInfo(state) << "Start layer resolved "
@@ -237,12 +246,27 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
   return NavigationTarget::None();
 }
 
-bool Navigator::checkTargetValid(const State& state, const Vector3& position,
+bool Navigator::checkTargetValid(State& state, const Vector3& position,
                                  const Vector3& direction) const {
+  ACTS_VERBOSE(volInfo(state) << "Entering Navigator::checkTargetValid.");
   static_cast<void>(position);
   static_cast<void>(direction);
 
-  return state.navigationStage != Stage::initial;
+  if (state.navigationStage == Stage::initial) {
+    return true;
+  }
+
+  if (state.currentVolume != nullptr) {
+    ACTS_VERBOSE(volInfo(state) << "Checking policy validity for volume");
+
+    auto policyState = state.policyStateManager.currentState();
+    bool isValid = state.currentVolume->navigationPolicy()->isValid(
+        state.options.geoContext,
+        {.position = position, .direction = direction}, policyState, logger());
+    return isValid;
+  }
+
+  return false;
 }
 
 void Navigator::handleSurfaceReached(State& state, const Vector3& position,
@@ -278,7 +302,7 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
       if (state.currentVolume != nullptr &&
           state.currentVolume->navigationPolicy() != nullptr) {
         ACTS_VERBOSE(volInfo(state)
-                     << "Popping navigation policy state for volume");
+                     << "Popping navigation policy state for volume on exit");
         state.currentVolume->navigationPolicy()->popState(
             state.policyStateManager, logger());
       }
@@ -290,6 +314,16 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
 
       if (state.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Volume updated.");
+
+        if (const auto* policy = state.currentVolume->navigationPolicy();
+            policy != nullptr) {
+          ACTS_VERBOSE(
+              volInfo(state)
+              << "Creating navigation policy state for updated volume");
+          policy->createState(state.options.geoContext,
+                              {.position = position, .direction = direction},
+                              state.policyStateManager, logger());
+        }
 
         // this is set only for the check target validity since gen3 does not
         // care
@@ -436,11 +470,9 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   }
 
   auto policyState = state.policyStateManager.currentState();
-  bool isValid = state.policyStateManager.currentState().empty() ||
-                 state.currentVolume->navigationPolicy()->isValid(
-                     state.options.geoContext,
-                     {.position = position, .direction = direction},
-                     policyState, logger());
+  bool isValid = state.currentVolume->navigationPolicy()->isValid(
+      state.options.geoContext, {.position = position, .direction = direction},
+      policyState, logger());
 
   ACTS_VERBOSE(volInfo(state) << "Current policy says navigation sequence is "
                               << (isValid ? "valid" : "invalid"));
@@ -506,14 +538,6 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     // @TODO: Should this be an exception?
     return;
   }
-
-  // This might be the first volume, check if we have a current state
-  if (!state.policyStateManager.currentState().empty()) {
-    policy->popState(state.policyStateManager, logger());
-  }
-
-  policy->createState(state.options.geoContext, args, state.policyStateManager,
-                      logger());
 
   auto policyState = state.policyStateManager.currentState();
   state.currentVolume->initializeNavigationCandidates(

@@ -11,8 +11,6 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
-#include <ranges>
-
 namespace Acts {
 
 /// Combined navigation policy that calls all contained other navigation
@@ -87,10 +85,9 @@ class MultiNavigationPolicy final : public INavigationPolicy {
     return true;
   }
 
-  NavigationPolicyState createState(const GeometryContext& gctx,
-                                    const NavigationArguments args,
-                                    NavigationPolicyStateManager& stateManager,
-                                    const Logger& logger) const override {
+  void createState(const GeometryContext& gctx, const NavigationArguments args,
+                   NavigationPolicyStateManager& stateManager,
+                   const Logger& logger) const override {
     ACTS_VERBOSE("MultiNavigationPolicy createState, create states for "
                  << m_policyPtrs.size() << " policies.");
 
@@ -102,8 +99,8 @@ class MultiNavigationPolicy final : public INavigationPolicy {
 
     for (const auto& policy : m_policyPtrs) {
       ACTS_VERBOSE("Creating child state for policy ");
-      states.emplace_back(
-          policy->createState(gctx, args, stateManager, logger));
+      policy->createState(gctx, args, stateManager, logger);
+      states.emplace_back(stateManager.currentState());
     }
 
     ACTS_VERBOSE("Created "
@@ -111,41 +108,24 @@ class MultiNavigationPolicy final : public INavigationPolicy {
                  << " child states for MultiNavigationPolicy (of which "
                  << std::ranges::count_if(
                         states, [](const auto& s) { return !s.empty(); })
-                 << " are valid)");
+                 << " are non-empty)");
 
-    auto [state, any] = stateManager.pushState<State>(std::move(states));
-    return any;
+    // Important, push at the end
+    stateManager.pushState<State>(std::move(states));
   }
 
   void popState(NavigationPolicyStateManager& stateManager,
                 const Logger& logger) const override {
-    // By default, we didn't push anything, so we don't need to poop anything
+    // By default, we didn't push anything, so we don't need to pop anything
     ACTS_VERBOSE("MultiNavigationPolicy popState called, popping for "
                  << m_policyPtrs.size() << " child policies");
 
-    // `createState` pushed a State containing all child states, so we
-    // pop the current state (which should be this policy's state) and then pop
-    // however many non-empty states the children had pushed.
-
-    std::vector<NavigationPolicyState> states =
-        std::move(stateManager.currentState().as<State>().policyStates);
+    // Pops this policy's state first
     stateManager.popState();
 
-    if (states.size() != m_policyPtrs.size()) {
-      ACTS_ERROR("MultiNavigationPolicy popState: number of states ("
-                 << states.size() << ") does not match number of policies ("
-                 << m_policyPtrs.size() << ").");
-      throw std::runtime_error(
-          "MultiNavigationPolicy popState: inconsistent state size.");
-    }
-
-    // @TODO: Possibly use updated zip | reverse
-    for (std::size_t i = states.size(); i-- > 0;) {
-      auto& state = states[i];
-      auto& policy = m_policyPtrs[i];
-      if (!state.empty()) {
-        policy->popState(stateManager, logger);
-      }
+    // Then pops all child states
+    for (const auto& policy : m_policyPtrs) {
+      policy->popState(stateManager, logger);
     }
   }
 
