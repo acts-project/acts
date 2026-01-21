@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
@@ -23,31 +21,22 @@ namespace Acts {
 
 template <std::size_t N>
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
-    const InternalTrackState& trackState, const Logger& logger) const {
+    AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   constexpr std::size_t kMeasurementSize = N;
   using ProjectedVector = ActsVector<kMeasurementSize>;
   using ProjectedMatrix = ActsSquareMatrix<kMeasurementSize>;
 
-  typename TrackStateTraits<kMeasurementSize, true>::Parameters
-      predictedParameters{trackState.predicted};
-  typename TrackStateTraits<kMeasurementSize, true>::Covariance
-      predictedCovariance{trackState.predictedCovariance};
-  typename TrackStateTraits<kMeasurementSize, false>::Parameters
-      filteredParameters{trackState.filtered};
-  typename TrackStateTraits<kMeasurementSize, false>::Covariance
-      filteredCovariance{trackState.filteredCovariance};
-  typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
-      trackState.calibrated};
-  typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
-      calibratedCovariance{trackState.calibratedCovariance};
+  const auto calibrated = trackState.calibrated<kMeasurementSize>();
+  const auto calibratedCovariance =
+      trackState.calibratedCovariance<kMeasurementSize>();
 
   ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
   ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
   ACTS_VERBOSE("Calibrated measurement covariance:\n" << calibratedCovariance);
 
-  const std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
-      trackState.projector.begin(),
-      trackState.projector.begin() + kMeasurementSize);
+  const auto validSubspaceIndices =
+      trackState.template projectorSubspaceIndices<kMeasurementSize>();
+
   const FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
       validSubspaceIndices);
 
@@ -55,6 +44,11 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   const auto H = subspaceHelper.projector();
 
   ACTS_VERBOSE("Measurement projector H:\n" << H);
+
+  auto filtered = trackState.filtered();
+  auto filteredCovariance = trackState.filteredCovariance();
+  const auto predicted = trackState.predicted();
+  const auto predictedCovariance = trackState.predictedCovariance();
 
   const auto K =
       (predictedCovariance * H.transpose() *
@@ -69,16 +63,15 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
     return {0, KalmanFitterError::UpdateFailed};
   }
 
-  filteredParameters =
-      predictedParameters + K * (calibrated - H * predictedParameters);
+  filtered = predicted + K * (calibrated - H * predicted);
   // Normalize phi and theta
-  filteredParameters = normalizeBoundParameters(filteredParameters);
+  filtered = normalizeBoundParameters(filtered);
   filteredCovariance =
       (BoundSquareMatrix::Identity() - K * H) * predictedCovariance;
-  ACTS_VERBOSE("Filtered parameters: " << filteredParameters.transpose());
+  ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
   ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
 
-  const ProjectedVector residual = calibrated - H * filteredParameters;
+  const ProjectedVector residual = calibrated - H * filtered;
   ACTS_VERBOSE("Residual: " << residual.transpose());
 
   const ProjectedMatrix m =
@@ -94,7 +87,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 #define _EXTERN(N)                                    \
   extern template std::tuple<double, std::error_code> \
   GainMatrixUpdater::visitMeasurementImpl<N>(         \
-      const InternalTrackState& trackState, const Logger& logger) const
+      AnyMutableTrackStateProxy trackState, const Logger& logger) const
 
 _EXTERN(1);
 _EXTERN(2);

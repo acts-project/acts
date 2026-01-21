@@ -29,13 +29,13 @@ class InfiniteBounds : public SurfaceBounds {
 
   /// @copydoc SurfaceBounds::boundToCartesianJacobian
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
   /// @copydoc SurfaceBounds::boundToCartesianMetric
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
@@ -44,22 +44,22 @@ class InfiniteBounds : public SurfaceBounds {
 
   /// @copydoc SurfaceBounds::inside(const Vector2&) const
   bool inside(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return true;
   }
 
   /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
                        const SquareMatrix2& metric) const final {
-    (void)metric;
+    static_cast<void>(metric);
     return lposition;
   }
 
   /// @copydoc SurfaceBounds::inside(const Vector2&, const BoundaryTolerance&) const
   bool inside(const Vector2& lposition,
               const BoundaryTolerance& boundaryTolerance) const final {
-    (void)lposition;
-    (void)boundaryTolerance;
+    static_cast<void>(lposition);
+    static_cast<void>(boundaryTolerance);
     return true;
   }
 

@@ -177,7 +177,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-10., 10.))) ^
         bdata::xrange(100),
     alpha, beta, gamma, posX, posY, posZ, index) {
-  (void)index;
+  static_cast<void>(index);
 
   // Create a test context
   GeometryContext tgContext = GeometryContext();
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
     BOOST_CHECK(!cvb.inside(outsideCvb));
 
     // Test the orientation of the boundary surfaces
-    auto rot = os.surface->transform(geoCtx).rotation();
+    auto rot = os.surface->localToGlobalTransform(geoCtx).rotation();
     BOOST_CHECK(rot.col(0).isApprox(xaxis));
     BOOST_CHECK(rot.col(1).isApprox(yaxis));
     BOOST_CHECK(rot.col(2).isApprox(zaxis));

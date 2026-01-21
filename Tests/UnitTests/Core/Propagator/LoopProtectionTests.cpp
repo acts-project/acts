@@ -129,8 +129,8 @@ BOOST_DATA_TEST_CASE(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::xrange(1),
     phi, deltaPhi, index) {
-  (void)index;
-  (void)deltaPhi;
+  static_cast<void>(index);
+  static_cast<void>(deltaPhi);
 
   PropagatorState pState;
   pState.stepping.dir = Vector3(std::cos(phi), std::sin(phi), 0.);

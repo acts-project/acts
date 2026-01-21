@@ -8,13 +8,12 @@
 
 #pragma once
 
-#include "Acts/EventData/Types.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cassert>
-#include <cstdint>
 #include <system_error>
 #include <tuple>
 
@@ -23,19 +22,6 @@ namespace Acts {
 /// Kalman update step using the gain matrix formalism.
 /// @ingroup track_fitting
 class GainMatrixUpdater {
-  struct InternalTrackState {
-    std::uint32_t calibratedSize{};
-    // This is used to build a covariance matrix view in the .cpp file
-    const double* calibrated{};
-    const double* calibratedCovariance{};
-    BoundSubspaceIndices projector{};
-
-    const double* predicted{};
-    const double* predictedCovariance{};
-    double* filtered{};
-    double* filteredCovariance{};
-  };
-
  public:
   /// Run the Kalman update step for a single trajectory state.
   ///
@@ -69,20 +55,8 @@ class GainMatrixUpdater {
     // auto filtered = trackState.filtered();
     // auto filteredCovariance = trackState.filteredCovariance();
 
-    const InternalTrackState internalTrackState{
-        trackState.calibratedSize(),
-        // Note that we pass raw pointers here which are used in the correct
-        // shape later
-        trackState.effectiveCalibrated().data(),
-        trackState.effectiveCalibratedCovariance().data(),
-        trackState.projectorSubspaceIndices(),
-        trackState.predicted().data(),
-        trackState.predictedCovariance().data(),
-        trackState.filtered().data(),
-        trackState.filteredCovariance().data(),
-    };
-
-    const auto [chi2, error] = visitMeasurement(internalTrackState, logger);
+    const auto [chi2, error] =
+        visitMeasurement(AnyMutableTrackStateProxy{trackState}, logger);
 
     trackState.chi2() = chi2;
 
@@ -91,11 +65,11 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      const InternalTrackState& trackState, const Logger& logger) const;
+      AnyMutableTrackStateProxy trackState, const Logger& logger) const;
 
   template <std::size_t N>
   std::tuple<double, std::error_code> visitMeasurementImpl(
-      const InternalTrackState& trackState, const Logger& logger) const;
+      AnyMutableTrackStateProxy trackState, const Logger& logger) const;
 };
 
 }  // namespace Acts
