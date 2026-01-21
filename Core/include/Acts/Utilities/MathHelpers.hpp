@@ -99,17 +99,42 @@ template <std::integral T>
 constexpr T sumUpToN(const T N) {
   return N * (N + 1) / 2;
 }
+
 /// @brief Calculates the factorial of a number
-///        N!= N*(N-1)....*3*2*1
-/// @param upperN: Upper factor until which the factorial is calculated
-/// @param lowerN: Optional argument to remove the first factors from the calculation
+///        n!= n*(n-1)*...*3*2*1
+/// @param n: Factor until which the factorial is calculated
 /// @return Factorial result
-template <std::integral T>
-constexpr T factorial(const T upperN, const T lowerN = 1) {
-  constexpr T one = 1;
-  const T& limit = std::max(one, lowerN);
-  return upperN >= limit ? upperN * factorial(upperN - 1, limit) : one;
+template <std::unsigned_integral T>
+constexpr T factorial(const T n) {
+  constexpr unsigned bits = std::numeric_limits<T>::digits;
+
+  constexpr unsigned max_n = [] {
+    if constexpr (bits >= 64) {
+      return 20u;
+    } else if constexpr (bits >= 32) {
+      return 12u;
+    } else if constexpr (bits >= 16) {
+      return 8u;
+    } else if constexpr (bits >= 8) {
+      return 5u;
+    } else {
+      return 0u;
+    }
+  }();
+
+  static_cast<void>(max_n);
+  if (std::is_constant_evaluated() && n > max_n) {
+    throw std::overflow_error("factorial overflow");
+  }
+  assert(n <= max_n && "factorial overflow");
+
+  T r = 1;
+  for (T i = 2; i <= n; i++) {
+    r *= i;
+  }
+  return r;
 }
+
 /// @brief Calculate the binomial coefficient
 ///              n        n!
 ///                 =  --------
@@ -117,9 +142,14 @@ constexpr T factorial(const T upperN, const T lowerN = 1) {
 /// @param n Upper value in binomial coefficient
 /// @param k Lower value in binomial coefficient
 /// @return Binomial coefficient n choose k
-template <std::integral T>
+template <std::unsigned_integral T>
 constexpr T binomial(const T n, const T k) {
-  return factorial<T>(n, n - k + 1) / factorial<T>(k);
+  if (std::is_constant_evaluated() && k > n) {
+    throw std::overflow_error("k must be <= n");
+  }
+  assert(k <= n && "k must be <= n");
+
+  return (factorial<T>(n) / factorial<T>(k)) / factorial<T>(n - k);
 }
 
 }  // namespace Acts
