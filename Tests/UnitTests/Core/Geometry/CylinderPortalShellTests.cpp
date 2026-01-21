@@ -28,7 +28,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 std::size_t getVolumeIndex() {
   static std::size_t i = 1;

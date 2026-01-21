@@ -28,7 +28,8 @@ using ParametersVector = Acts::BoundVector;
 using CovarianceMatrix = Acts::BoundSquareMatrix;
 using Jacobian = Acts::BoundMatrix;
 
-const Acts::GeometryContext tgContext;
+const Acts::GeometryContext tgContext =
+    Acts::GeometryContext::dangerouslyDefaultConstruct();
 
 }  // namespace
 
