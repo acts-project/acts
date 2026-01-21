@@ -35,7 +35,7 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 auto logger = getDefaultLogger("NavigationPolicyTests", Logging::VERBOSE);
 
 struct APolicy : public INavigationPolicy {
@@ -287,7 +287,7 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   NavigationArguments args{.position = gpos, .direction = gdir};
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   tryAll.initializeCandidates(gctx, args, stream, logger);
   main.initialize(gctx, {gpos, gdir}, BoundaryTolerance::None());
   std::vector<const Portal*> portals;
@@ -370,7 +370,7 @@ std::vector<const Portal*> getSmart(const Vector3& position,
   Vector3 gdir = transform.linear() * direction;
   NavigationArguments args{.position = gpos, .direction = gdir};
   NavigationStream main;
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   AppendOnlyNavigationStream stream{main};
   policy.initializeCandidates(gctx, args, stream, *logger);
 

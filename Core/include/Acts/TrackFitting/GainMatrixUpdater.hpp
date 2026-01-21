@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
-#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -56,7 +55,7 @@ class GainMatrixUpdater {
     // auto filtered = trackState.filtered();
     // auto filteredCovariance = trackState.filteredCovariance();
 
-    auto [chi2, error] =
+    const auto [chi2, error] =
         visitMeasurement(AnyMutableTrackStateProxy{trackState}, logger);
 
     trackState.chi2() = chi2;

@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
   auto tvbOrientedSurfaces = tvb.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(tvbOrientedSurfaces.size(), 6);
 
-  auto geoCtx = GeometryContext();
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   for (auto& os : tvbOrientedSurfaces) {
     auto osCenter = os.surface->center(geoCtx);
