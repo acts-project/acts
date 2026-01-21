@@ -11,7 +11,6 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Digitization/DigitizationCoordinatesConverter.hpp"
-#include "ActsExamples/Digitization/MuonSpacePointDigitizer.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -65,14 +64,6 @@ void addDigitization(py::module& mex) {
         .def(py::init<std::vector<
                  std::pair<GeometryIdentifier, DigiComponentsConfig>>>());
   }
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      MuonSpacePointDigitizer, mex, "MuonSpacePointDigitizer", inputSimHits,
-      inputParticles, outputSpacePoints, randomNumbers,
-      /// @todo: Expose <calibrator> to python bindings
-      trackingGeometry, digitizeTime, dumpVisualization, strawDeadTime
-
-  );
 
   {
     using DC = DigitizationConfigurator;

@@ -34,6 +34,7 @@
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
+#include "ActsExamples/Digitization/MuonSpacePointDigitizer.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -89,6 +90,14 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_READER(RootSimHitReader, root, "RootSimHitReader",
                                treeName, filePath, outputSimHits);
+  }
+
+  // Algorithms
+  {
+    ACTS_PYTHON_DECLARE_ALGORITHM(
+        MuonSpacePointDigitizer, root, "MuonSpacePointDigitizer", inputSimHits,
+        inputParticles, outputSpacePoints, randomNumbers, trackingGeometry,
+        digitizeTime, dumpVisualization, strawDeadTime);
   }
 
   // Output

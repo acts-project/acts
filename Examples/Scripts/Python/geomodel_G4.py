@@ -194,7 +194,7 @@ def main():
         seed=args.randomSeed,
     )
 
-    from acts.examples import MuonSpacePointDigitizer
+    from acts.examples.root import MuonSpacePointDigitizer
 
     digiAlg = MuonSpacePointDigitizer(
         randomNumbers=acts.examples.RandomNumbers(
