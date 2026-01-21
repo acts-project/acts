@@ -19,6 +19,7 @@ acts_add_library(
     src/Utilities/EventDataTransforms.cpp
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
+    src/Utilities/Helpers.cpp
     src/Utilities/ParametricParticleGenerator.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
@@ -40,13 +41,10 @@ target_link_libraries(
         Acts::Fatras
         Acts::PluginFpeMonitoring
         Boost::boost
+        ROOT::Core
+        ROOT::Hist
         HepMC3::HepMC3
 )
-
-if(ACTS_BUILD_EXAMPLES_ROOT)
-    target_link_libraries(ActsExamplesFramework PUBLIC ROOT::Core)
-    target_compile_definitions(ActsExamplesFramework PRIVATE ACTS_EXAMPLES_WITH_ROOT)
-endif()
 target_compile_definitions(
     ActsExamplesFramework
     PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED
