@@ -39,9 +39,6 @@ class DiamondPortalShell : public PortalShellBase {
   /// @copydoc PortalShellBase::fill
   void fill(TrackingVolume& volume) override;
 
-  /// @brief Get the transformation matrix for this polygon shape portal shell
-  /// @return Reference to the transformation matrix
-  virtual const Transform3& transform() const = 0;
 };
 // Output stream operator for the CuboidPortalShell::Face enum
 /// @param os The output stream
@@ -73,11 +70,6 @@ class SingleDiamondPortalShell : public DiamondPortalShell {
 
   /// @copydoc PortalShellBase::label
   std::string label() const override;
-
-  /// @copydoc DiamondPortalShell::transform
-  const Transform3& transform() const override {
-    return m_volume->transform();
-  };
 
  private:
   std::array<std::shared_ptr<Portal>, 8> m_portals;
