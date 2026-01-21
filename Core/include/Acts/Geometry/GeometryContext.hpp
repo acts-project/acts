@@ -9,6 +9,7 @@
 #pragma once
 
 // Set the Geometry Context PLUGIN
+#include "Acts/Utilities/Diagnostics.hpp"
 #ifdef ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #include ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #else
@@ -48,19 +49,9 @@ class GeometryContext : public ContextType {
   /// @note Use this when you need a default context for testing or
   ///       simple applications without alignment/conditions data
   static GeometryContext dangerouslyDefaultConstruct() {
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
+    ACTS_PUSH_IGNORE_DEPRECATED()
     return GeometryContext();
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   /// Default constructor
