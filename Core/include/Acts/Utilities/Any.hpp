@@ -294,7 +294,10 @@ class AnyBase : public AnyBaseAll {
       return *this;
     }
 
-    if (m_handler == other.m_handler) {
+    // At this point they can't be equal and nullptr, so it's safe to
+    // dereference
+    if (m_handler == other.m_handler &&
+        m_handler->typeHash == other.m_handler->typeHash) {
       // same type, but checked before they're not both nullptr
       move(std::move(other));
     } else {
