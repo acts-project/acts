@@ -57,11 +57,9 @@ class NavigationPolicyState {
 class NavigationPolicyStateManager {
  public:
   template <typename T, typename... Args>
-  std::pair<T&, NavigationPolicyState> pushState(Args&&... args) {
+  T& pushState(Args&&... args) {
     std::any& state = m_stateStack.emplace_back();
-    T& content = state.emplace<T>(std::forward<Args>(args)...);
-    return std::pair<T&, NavigationPolicyState>{
-        content, {*this, m_stateStack.size() - 1}};
+    return state.emplace<T>(std::forward<Args>(args)...);
   }
 
   friend class Navigator;
@@ -189,19 +187,24 @@ class INavigationPolicy {
     return true;
   }
 
-  // MAKE SURE to also implement the pop method if you implement this one!
-  virtual NavigationPolicyState createState(
-      const GeometryContext& /*gctx*/, const NavigationArguments /*args*/,
-      NavigationPolicyStateManager& /*stateManager*/,
-      const Logger& logger) const {
-    ACTS_VERBOSE("Default navigation policy state initialization. (noop)");
-    return {};
+  struct EmptyState {};
+
+  virtual void createState(const GeometryContext& /*gctx*/,
+                           const NavigationArguments /*args*/,
+                           NavigationPolicyStateManager& stateManager,
+                           const Logger& logger) const {
+    ACTS_VERBOSE(
+        "Default navigation policy state initialization. (empty state)");
+    stateManager.pushState<EmptyState>();
   }
 
-  virtual void popState(NavigationPolicyStateManager& /*stateManager*/,
+  virtual void popState(NavigationPolicyStateManager& stateManager,
                         const Logger& logger) const {
     // By default, we didn't push anything, so we don't need to poop anything
-    ACTS_VERBOSE("Default navigation policy pop state. (noop)");
+    ACTS_VERBOSE("Default navigation policy pop state. (pops empty state)");
+    stateManager.popState();  // This will be correct regardless of if a derived
+                              // class pushed a concrete state type that's
+                              // different from the default EmptyState.
   }
 
  protected:
