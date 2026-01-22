@@ -276,7 +276,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                invariantMassBins, multiplicityMax,
                                writeOptionalHistograms, nSimulatedEvents);
 
-    mex.def(
+    root.def(
         "makeScalingCalibrator",
         [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
           return std::make_shared<ScalingCalibrator>(path);
