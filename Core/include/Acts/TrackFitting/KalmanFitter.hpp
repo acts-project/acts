@@ -374,7 +374,7 @@ class KalmanFitter {
         ACTS_VERBOSE("Perform " << state.options.direction << " filter step");
         auto res = filter(surface, state, stepper, navigator, result);
         if (!res.ok()) {
-          ACTS_ERROR("Error in " << state.options.direction
+          ACTS_DEBUG("Error in " << state.options.direction
                                  << " filter: " << res.error());
           return res.error();
         }
@@ -408,7 +408,7 @@ class KalmanFitter {
           // Bind the parameter to the target surface
           auto res = stepper.boundState(state.stepping, *targetReached.surface);
           if (!res.ok()) {
-            ACTS_ERROR("Error while acquiring bound state for target surface: "
+            ACTS_DEBUG("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
             return res.error();
           } else {
@@ -730,7 +730,7 @@ class KalmanFitter {
     auto propagatorInitResult =
         m_propagator.initialize(propagatorState, sParameters);
     if (!propagatorInitResult.ok()) {
-      ACTS_ERROR("Propagation initialization failed: "
+      ACTS_DEBUG("Propagation initialization failed: "
                  << propagatorInitResult.error());
       return propagatorInitResult.error();
     }
@@ -743,14 +743,14 @@ class KalmanFitter {
     auto result = m_propagator.propagate(propagatorState);
 
     if (!result.ok()) {
-      ACTS_ERROR("Propagation failed: " << result.error());
+      ACTS_DEBUG("Propagation failed: " << result.error());
       return result.error();
     }
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
     if (!kalmanResult.measurementStates) {
-      ACTS_ERROR("KalmanFilter failed: No measurement states found");
+      ACTS_DEBUG("KalmanFilter failed: No measurement states found");
       return KalmanFitterError::NoMeasurementFound;
     }
 
@@ -799,7 +799,7 @@ class KalmanFitter {
         filter_impl(sParameters, forwardPropagatorOptions, trackContainer);
 
     if (!forwardFilterResult.ok()) {
-      ACTS_ERROR("KalmanFilter failed: "
+      ACTS_DEBUG("KalmanFilter failed: "
                  << forwardFilterResult.error() << ", "
                  << forwardFilterResult.error().message());
       return forwardFilterResult.error();
@@ -836,7 +836,7 @@ class KalmanFitter {
           reverseStartParameters, reversePropagatorOptions, trackContainer);
 
       if (!reverseFilterResult.ok()) {
-        ACTS_ERROR("Reversed KalmanFilter failed: "
+        ACTS_DEBUG("Reversed KalmanFilter failed: "
                    << reverseFilterResult.error() << ", "
                    << reverseFilterResult.error().message());
         return reverseFilterResult.error();
@@ -850,7 +850,7 @@ class KalmanFitter {
 
       if (&firstMeasurementState.referenceSurface() !=
           &reverseLastMeasurementState.referenceSurface()) {
-        ACTS_ERROR(
+        ACTS_DEBUG(
             "Inconsistent reference surfaces between forward and "
             "reversed filtered tracks");
         return Result<TrackProxy>::failure(
@@ -875,7 +875,7 @@ class KalmanFitter {
           kfOptions.geoContext, trackContainer.trackStateContainer(),
           forwardTrack.tipIndex(), logger());
       if (!smoothRes.ok()) {
-        ACTS_ERROR("Smoothing step failed: " << smoothRes.error() << ", "
+        ACTS_DEBUG("Smoothing step failed: " << smoothRes.error() << ", "
                                              << smoothRes.error().message());
         return smoothRes.error();
       }
@@ -889,7 +889,7 @@ class KalmanFitter {
           extrapolationOptions, kfOptions.referenceSurfaceStrategy, logger());
 
       if (!extrapolationResult.ok()) {
-        ACTS_ERROR("Extrapolation to reference surface failed: "
+        ACTS_DEBUG("Extrapolation to reference surface failed: "
                    << extrapolationResult.error() << ", "
                    << extrapolationResult.error().message());
         return extrapolationResult.error();
