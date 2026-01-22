@@ -10,8 +10,9 @@
 
 #include "Acts/Utilities/BoundFactory.hpp"
 
+#include <GeoModelKernel/GeoFullPhysVol.h>
+
 class GeoShape;
-class PVConstLink;
 
 namespace ActsPlugins::GeoModel {
 
