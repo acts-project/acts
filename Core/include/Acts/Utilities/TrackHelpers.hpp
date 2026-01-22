@@ -128,7 +128,7 @@ Result<void> smoothTrack(
 
   auto last = findLastMeasurementState(track);
   if (!last.ok()) {
-    ACTS_ERROR("no last track state found");
+    ACTS_DEBUG("no last track state found");
     return last.error();
   }
 
@@ -136,7 +136,7 @@ Result<void> smoothTrack(
       smoother(geoContext, trackStateContainer, last->index(), logger);
 
   if (!smoothingResult.ok()) {
-    ACTS_ERROR("Smoothing track " << track.index() << " failed with error "
+    ACTS_DEBUG("Smoothing track " << track.index() << " failed with error "
                                   << smoothingResult.error());
     return smoothingResult.error();
   }
@@ -215,13 +215,13 @@ findTrackStateForExtrapolation(
 
       auto first = findFirstMeasurementState(track);
       if (!first.ok()) {
-        ACTS_ERROR("no first track state found");
+        ACTS_DEBUG("no first track state found");
         return first.error();
       }
 
       Intersection3D intersection = intersect(*first);
       if (!intersection.isValid()) {
-        ACTS_ERROR("no intersection found");
+        ACTS_DEBUG("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
       }
@@ -235,13 +235,13 @@ findTrackStateForExtrapolation(
 
       auto last = findLastMeasurementState(track);
       if (!last.ok()) {
-        ACTS_ERROR("no last track state found");
+        ACTS_DEBUG("no last track state found");
         return last.error();
       }
 
       Intersection3D intersection = intersect(*last);
       if (!intersection.isValid()) {
-        ACTS_ERROR("no intersection found");
+        ACTS_DEBUG("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
       }
@@ -255,13 +255,13 @@ findTrackStateForExtrapolation(
 
       auto first = findFirstMeasurementState(track);
       if (!first.ok()) {
-        ACTS_ERROR("no first track state found");
+        ACTS_DEBUG("no first track state found");
         return first.error();
       }
 
       auto last = findLastMeasurementState(track);
       if (!last.ok()) {
-        ACTS_ERROR("no last track state found");
+        ACTS_DEBUG("no last track state found");
         return last.error();
       }
 
@@ -283,7 +283,7 @@ findTrackStateForExtrapolation(
         return std::pair(*last, intersectionLast.pathLength());
       }
 
-      ACTS_ERROR("no intersection found");
+      ACTS_DEBUG("no intersection found");
       return Result<std::pair<TrackStateProxy, double>>::failure(
           TrackExtrapolationError::ReferenceSurfaceUnreachable);
     }
@@ -320,7 +320,7 @@ Result<void> extrapolateTrackToReferenceSurface(
       options.geoContext, track, referenceSurface, strategy, logger);
 
   if (!findResult.ok()) {
-    ACTS_ERROR("failed to find track state for extrapolation");
+    ACTS_DEBUG("failed to find track state for extrapolation");
     return findResult.error();
   }
 
@@ -339,7 +339,7 @@ Result<void> extrapolateTrackToReferenceSurface(
           parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {
-    ACTS_ERROR("failed to extrapolate track: " << propagateResult.error());
+    ACTS_DEBUG("failed to extrapolate track: " << propagateResult.error());
     return propagateResult.error();
   }
 
