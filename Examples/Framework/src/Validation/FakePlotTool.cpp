@@ -40,13 +40,13 @@ FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
       m_nFakeVsEta(
           "nFakeTracks_vs_eta", "Number of fake track candidates",
           std::array{m_cfg.varBinning.at("Eta"), m_cfg.varBinning.at("Num")}),
-      m_fakeRatioVsPt("fakeratio_vs_pT",
+      m_fakeRatioVsPt("fakeRatio_vs_pT",
                       "Tracking fake ratio;pT [GeV/c];Fake ratio",
                       std::array{m_cfg.varBinning.at("Pt")}),
-      m_fakeRatioVsEta("fakeratio_vs_eta",
+      m_fakeRatioVsEta("fakeRatio_vs_eta",
                        "Tracking fake ratio;#eta;Fake ratio",
                        std::array{m_cfg.varBinning.at("Eta")}),
-      m_fakeRatioVsPhi("fakeratio_vs_phi",
+      m_fakeRatioVsPhi("fakeRatio_vs_phi",
                        "Tracking fake ratio;#phi;Fake ratio",
                        std::array{m_cfg.varBinning.at("Phi")}) {
   ACTS_DEBUG("Initialize the histograms for fake ratio plots");
