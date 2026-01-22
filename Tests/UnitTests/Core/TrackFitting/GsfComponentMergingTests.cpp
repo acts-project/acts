@@ -189,7 +189,9 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
 
   for (const auto &cmp : cmps) {
     mean += cmp.weight * transformBoundToFreeParameters(
-                             surface, GeometryContext{}, cmp.boundPars);
+                             surface,
+                             GeometryContext::dangerouslyDefaultConstruct(),
+                             cmp.boundPars);
   }
 
   mean.segment<3>(eFreeDir0).normalize();
@@ -201,12 +203,13 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   Vector3 direction = mean.segment<3>(eFreeDir0);
   Intersection3D intersection =
       surface
-          .intersect(GeometryContext{}, position, direction,
-                     BoundaryTolerance::Infinite())
+          .intersect(GeometryContext::dangerouslyDefaultConstruct(), position,
+                     direction, BoundaryTolerance::Infinite())
           .closest();
   mean.head<3>() = intersection.position();
 
-  return *transformFreeToBoundParameters(mean, surface, GeometryContext{});
+  return *transformFreeToBoundParameters(
+      mean, surface, GeometryContext::dangerouslyDefaultConstruct());
 }
 
 // Typedef to describe local positions of 4 components

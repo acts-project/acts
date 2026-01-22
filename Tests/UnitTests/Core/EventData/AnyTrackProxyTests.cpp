@@ -31,7 +31,7 @@ using namespace Acts::UnitLiterals;
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
 
-const GeometryContext gctx;
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 // Helper to create a test track with some data
 template <typename track_container_t>

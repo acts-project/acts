@@ -16,7 +16,7 @@
 
 using namespace Acts;
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 Logging::Level logLevel = Logging::VERBOSE;
 
 namespace {

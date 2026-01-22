@@ -157,7 +157,7 @@ struct TestData {
 template <typename T_StepperCreator>
 void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
                                const T_StepperCreator &stepper_creator) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext magFieldContext;
 
   for (const auto &test_data : test_data_list) {
