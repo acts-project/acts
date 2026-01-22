@@ -35,7 +35,7 @@ namespace ActsPlugins {
 ///
 /// Detector element representative for GeoModel based
 /// sensitive elements.
-class GeoModelDetectorElement : public Acts::DetectorElementBase {
+class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
  public:
   /// Broadcast the context type
   using ContextType = Acts::GeometryContext;

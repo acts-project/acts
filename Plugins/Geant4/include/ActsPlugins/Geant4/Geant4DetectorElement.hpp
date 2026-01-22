@@ -32,7 +32,7 @@ namespace ActsPlugins {
 ///
 /// Detector element representative for Geant4 sensitive
 /// elements.
-class Geant4DetectorElement : public Acts::DetectorElementBase {
+class Geant4DetectorElement : public Acts::SurfacePlacementBase {
  public:
   /// Broadcast the context type
   using ContextType = Acts::GeometryContext;

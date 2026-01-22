@@ -29,7 +29,7 @@ namespace ActsExamples {
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
 ///
-class GenericDetectorElement : public Acts::DetectorElementBase {
+class GenericDetectorElement : public Acts::SurfacePlacementBase {
  public:
   using identifier_type = unsigned long long;
   using identifier_diff = long long;

@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
@@ -22,7 +23,7 @@ namespace Acts {
 Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(std::make_unique<Transform3>(transform)) {}
 
-Surface::Surface(const DetectorElementBase& detelement)
+Surface::Surface(const SurfacePlacementBase& detelement)
     : GeometryObject(), m_associatedDetElement(&detelement) {}
 
 Surface::Surface(const Surface& other)
@@ -337,8 +338,11 @@ FreeToPathMatrix Surface::freeToPathDerivative(const GeometryContext& gctx,
   return freeToPath;
 }
 
-const DetectorElementBase* Surface::associatedDetectorElement() const {
+const SurfacePlacementBase* Surface::surfacePlacement() const {
   return m_associatedDetElement;
+}
+const DetectorElementBase* Surface::associatedDetectorElement() const {
+  return dynamic_cast<const DetectorElementBase*>(m_associatedDetElement);
 }
 
 const Layer* Surface::associatedLayer() const {

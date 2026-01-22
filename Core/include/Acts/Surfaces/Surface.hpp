@@ -91,10 +91,15 @@ class Surface : public virtual GeometryObject,
   /// @param other Source surface for copy.
   Surface(const Surface& other);
 
-  /// Constructor from DetectorElementBase: Element proxy
+  /// Constructor from SurfacePlacement: Element proxy
   ///
-  /// @param detelement Detector element which is represented by this surface
-  explicit Surface(const DetectorElementBase& detelement);
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
+  explicit Surface(const SurfacePlacementBase& placement);
 
   /// Copy constructor with optional shift
   ///
@@ -212,8 +217,13 @@ class Surface : public virtual GeometryObject,
   virtual const SurfaceBounds& bounds() const = 0;
 
   /// Return method for the associated Detector Element
+  /// @deprecated This method is deprecated in favour of surfacePlacement()
   /// @return plain pointer to the DetectorElement, can be nullptr
+  [[deprecated("Please use surfacePlacement()")]]
   const DetectorElementBase* associatedDetectorElement() const;
+
+  /// @brief Return the associated surface placement if there is any
+  const SurfacePlacementBase* surfacePlacement() const;
 
   /// Return method for the associated Layer in which the surface is embedded
   /// @return Layer by plain pointer, can be nullptr
@@ -534,8 +544,8 @@ class Surface : public virtual GeometryObject,
   /// (translation, rotation) the surface in global space
   std::unique_ptr<const Transform3> m_transform{};
 
-  /// Pointer to the a DetectorElementBase
-  const DetectorElementBase* m_associatedDetElement{nullptr};
+  /// Pointer to the a SurfacePlacement
+  const SurfacePlacementBase* m_associatedDetElement{nullptr};
 
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated

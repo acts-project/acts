@@ -24,7 +24,6 @@
 
 namespace Acts {
 
-class DetectorElementBase;
 class PlanarBounds;
 class SurfaceBounds;
 
@@ -57,9 +56,14 @@ class PlaneSurface : public RegularSurface {
   /// Constructor from DetectorElementBase : Element proxy
   ///
   /// @param pbounds are the provided planar bounds
-  /// @param detelement is the linked detector element to this surface
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
   PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               const DetectorElementBase& detelement);
+               const SurfacePlacementBase& placement);
 
   /// Constructor for Planes with (optional) shared bounds object
   ///

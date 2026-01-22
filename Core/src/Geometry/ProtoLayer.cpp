@@ -9,6 +9,7 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 

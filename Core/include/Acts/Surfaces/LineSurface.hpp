@@ -25,7 +25,6 @@
 namespace Acts {
 
 class LineBounds;
-class DetectorElementBase;
 class SurfaceBounds;
 
 ///  @class LineSurface
@@ -60,9 +59,14 @@ class LineSurface : public Surface {
   ///
   /// @param lbounds are the bounds describing the line dimensions, they must
   /// not be nullptr
-  /// @param detelement for which this surface is (at least) one representation
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
   explicit LineSurface(std::shared_ptr<const LineBounds> lbounds,
-                       const DetectorElementBase& detelement);
+                       const SurfacePlacementBase& placement);
 
   /// Copy constructor
   ///

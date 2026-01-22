@@ -30,7 +30,7 @@ namespace ActsExamples {
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
-class TelescopeDetectorElement : public Acts::DetectorElementBase {
+class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
  public:
   /// @class ContextType
   /// convention: nested to the Detector element

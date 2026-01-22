@@ -27,7 +27,6 @@
 
 namespace Acts {
 
-class DetectorElementBase;
 class DiscBounds;
 class SurfaceBounds;
 
@@ -89,9 +88,14 @@ class DiscSurface : public RegularSurface {
   /// Constructor from DetectorElementBase : Element proxy
   ///
   /// @param dbounds The disc bounds describing the surface coverage
-  /// @param detelement The detector element represented by this surface
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
   explicit DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                       const DetectorElementBase& detelement);
+                       const SurfacePlacementBase& placement);
 
   /// Copy Constructor
   ///

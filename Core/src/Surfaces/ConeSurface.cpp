@@ -32,32 +32,26 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 ConeSurface::ConeSurface(const ConeSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : RegularSurface(other), m_bounds(other.m_bounds) {}
 
 ConeSurface::ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
                          const Transform3& shift)
-    : GeometryObject(),
-      RegularSurface(gctx, other, shift),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 ConeSurface::ConeSurface(const Transform3& transform, double alpha,
                          bool symmetric)
-    : GeometryObject(),
-      RegularSurface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric)) {}
 
 ConeSurface::ConeSurface(const Transform3& transform, double alpha, double zmin,
                          double zmax, double halfPhi)
-    : GeometryObject(),
-      RegularSurface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi)) {
 }
 
 ConeSurface::ConeSurface(const Transform3& transform,
                          std::shared_ptr<const ConeBounds> cbounds)
-    : GeometryObject(),
-      RegularSurface(transform),
-      m_bounds(std::move(cbounds)) {
+    : RegularSurface(transform), m_bounds(std::move(cbounds)) {
   throw_assert(m_bounds, "ConeBounds must not be nullptr");
 }
 

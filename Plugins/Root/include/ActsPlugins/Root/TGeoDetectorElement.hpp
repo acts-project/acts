@@ -40,7 +40,7 @@ namespace ActsPlugins {
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what if not used with DD4hep?
 ///
-class TGeoDetectorElement : public Acts::DetectorElementBase {
+class TGeoDetectorElement : public Acts::SurfacePlacementBase {
  public:
   using identifier_type = unsigned long long;
   using identifier_diff = long long;

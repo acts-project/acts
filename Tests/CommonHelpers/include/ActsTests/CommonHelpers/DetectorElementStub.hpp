@@ -28,7 +28,7 @@ namespace ActsTests {
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
-class DetectorElementStub : public Acts::DetectorElementBase {
+class DetectorElementStub : public Acts::SurfacePlacementBase {
  public:
   /// Default constructor
   DetectorElementStub() = default;

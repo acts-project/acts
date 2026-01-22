@@ -35,43 +35,8 @@ class StrawSurface : public LineSurface {
   friend class Surface;
 
  protected:
-  /// Constructor from Transform3 and bounds
-  ///
-  /// @param transform the transform that positions the straw in the global
-  /// frame
-  /// @param radius is the straw radius
-  /// @param halez is the half length in z
-  StrawSurface(const Transform3& transform, double radius, double halez);
-
-  /// Constructor from Transform3 and a shared bounds object
-  ///
-  /// @param transform the transform that positions the straw in the global
-  /// frame
-  /// @param lbounds are the bounds describing the straw dimensions, can be
-  /// optionally nullptr
-  explicit StrawSurface(const Transform3& transform,
-                        std::shared_ptr<const LineBounds> lbounds = nullptr);
-
-  /// Constructor from DetectorElementBase : Element proxy
-  ///
-  /// @param lbounds are the bounds describing the straw dimensions, they must
-  /// not be nullptr
-  /// @param detelement for which this surface is (at least) one representation
-  explicit StrawSurface(const std::shared_ptr<const LineBounds>& lbounds,
-                        const DetectorElementBase& detelement);
-
-  /// Copy constructor
-  ///
-  /// @param other is the source surface for copying
-  StrawSurface(const StrawSurface& other);
-
-  /// Copy constructor - with shift
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param other is the source cone surface
-  /// @param shift is the additional transform applied after copying
-  StrawSurface(const GeometryContext& gctx, const StrawSurface& other,
-               const Transform3& shift);
+  /// @brief Implement all constructors from the mother class
+  using LineSurface::LineSurface;
 
  public:
   /// Assignment operator

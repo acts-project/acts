@@ -20,10 +20,10 @@ namespace Acts {
 /// @remark It is possible toe replace this base class by defining a
 ///         `ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT` pre-processor replacement.
 ///         If found, @ref SurfacePlacementBase.hpp will instead include that file.
-[[deprecated(
-    "This class is deprecated in favour of SurfacePlacementBase")]] class
-    DetectorElementBase : public SurfacePlacementBase {
+
+class DetectorElementBase : public SurfacePlacementBase {
  public:
+  [[deprecated("This class is deprecated in favour of SurfacePlacementBase")]]
   DetectorElementBase() = default;
   /// Return the transform for the Element proxy mechanism
   ///
@@ -56,5 +56,3 @@ namespace Acts {
 };
 
 }  // namespace Acts
-
-#endif
