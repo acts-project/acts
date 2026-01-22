@@ -411,6 +411,14 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
+if(ACTS_BUILD_PYTHON_BINDINGS)
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
+    if(ACTS_USE_SYSTEM_PYBIND11)
+        find_package(pybind11 CONFIG REQUIRED)
+    else()
+        add_subdirectory(thirdparty/pybind11)
+    endif()
+endif()
 if(ACTS_BUILD_PLUGIN_ACTSVG)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
@@ -420,7 +428,7 @@ if(ACTS_BUILD_PLUGIN_ACTSVG)
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
     # Explicitly find python so we can more easily override the version
-    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
     find_package(
         DD4hep
         ${_acts_dd4hep_version}
@@ -605,14 +613,6 @@ if(ACTS_BUILD_EXAMPLES)
             COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
         )
         check_root_compatibility()
-    endif()
-    if(ACTS_BUILD_PYTHON_BINDINGS)
-        find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-        if(ACTS_USE_SYSTEM_PYBIND11)
-            find_package(pybind11 CONFIG REQUIRED)
-        else()
-            add_subdirectory(thirdparty/pybind11)
-        endif()
     endif()
     if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
         find_package(
