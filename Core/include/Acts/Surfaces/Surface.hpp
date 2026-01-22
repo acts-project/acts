@@ -250,6 +250,11 @@ class Surface : public virtual GeometryObject,
   /// @param material Material description associated to this surface
   void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
 
+  /// Assign whether the surface is sensitive
+  /// @param isSensitive Boolean flag to set sensitivity
+  /// @throw logic_error if the surface is associated to a detector element
+  void assignIsSensitive(bool isSensitive);
+
   /// The geometric onSurface method
   ///
   /// Geometrical check whether position is on Surface
@@ -445,7 +450,7 @@ class Surface : public virtual GeometryObject,
   virtual std::string name() const = 0;
 
   /// @brief Returns whether the Surface is sensitive
-  virtual bool isSensitive() const;
+  bool isSensitive() const;
 
   /// Return a Polyhedron for surface objects
   ///
@@ -543,6 +548,9 @@ class Surface : public virtual GeometryObject,
 
   /// Possibility to attach a material description
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
+
+  /// Flag to indicate whether the surface is sensitive
+  bool m_isSensitive{false};
 
  private:
   /// Calculate the derivative of bound track parameters w.r.t.

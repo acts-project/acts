@@ -354,6 +354,8 @@ void Surface::assignDetectorElement(const DetectorElementBase& detelement) {
   // resetting the transform as it will be handled through the detector element
   // now
   m_transform.reset();
+  // reset sensitivity flag
+  m_isSensitive = false;
 }
 
 void Surface::assignSurfaceMaterial(
@@ -372,10 +374,20 @@ void Surface::visualize(IVisualization3D& helper, const GeometryContext& gctx,
   polyhedron.visualize(helper, viewConfig);
 }
 
-/// @brief Returns whether the Surface is sensitive
+void Surface::assignIsSensitive(bool isSensitive) {
+  if (m_associatedDetElement != nullptr) {
+    throw std::logic_error(
+        "Cannot assign sensitivity to a surface associated to a detector "
+        "element.");
+  }
+  m_isSensitive = isSensitive;
+}
+
 bool Surface::isSensitive() const {
-  return m_associatedDetElement != nullptr &&
-         m_associatedDetElement->isSensitive();
+  if (m_associatedDetElement != nullptr) {
+    return m_associatedDetElement->isSensitive();
+  }
+  return m_isSensitive;
 }
 
 }  // namespace Acts
