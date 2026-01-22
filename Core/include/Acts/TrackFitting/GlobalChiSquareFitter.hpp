@@ -753,7 +753,7 @@ class Gx2Fitter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
+    const std::unordered_map<const Surface*, SourceLink>* inputMeasurements{};
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = false;
@@ -888,7 +888,7 @@ class Gx2Fitter {
       }
 
       // Here we handle all measurements
-      if (auto sourceLinkIt = inputMeasurements->find(geoId);
+      if (auto sourceLinkIt = inputMeasurements->find(surface);
           sourceLinkIt != inputMeasurements->end()) {
         ACTS_DEBUG("    The surface contains a measurement.");
 
@@ -1198,12 +1198,11 @@ class Gx2Fitter {
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Surface*, SourceLink> inputMeasurements{};
 
     for (; it != end; ++it) {
-      SourceLink sl = *it;
-      auto geoId = gx2fOptions.extensions.surfaceAccessor(sl)->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      inputMeasurements.try_emplace(gx2fOptions.extensions.surfaceAccessor(*it),
+                                    *it);
     }
 
     // Store, if we want to do multiple scattering. We still need to pass this
@@ -1261,8 +1260,8 @@ class Gx2Fitter {
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      for (const auto& [surfaceId, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1427,8 +1426,8 @@ class Gx2Fitter {
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      for (const auto& [surfaceId, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();

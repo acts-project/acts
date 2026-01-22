@@ -41,7 +41,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_SUITE(PlaneSurfaceMerging)
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 // Create a test context
-GeometryContext gctx = GeometryContext();
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 auto rBounds = std::make_shared<const RectangleBounds>(1., 2.);
 

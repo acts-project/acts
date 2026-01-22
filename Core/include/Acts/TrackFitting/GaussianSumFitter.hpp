@@ -171,8 +171,7 @@ struct GaussianSumFitter {
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
           propOptions.navigation.insertExternalSurface(
-              options.extensions.surfaceAccessor(SourceLink{*it})
-                  ->geometryId());
+              *options.extensions.surfaceAccessor(*it));
         }
       }
 
@@ -194,8 +193,7 @@ struct GaussianSumFitter {
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
           propOptions.navigation.insertExternalSurface(
-              options.extensions.surfaceAccessor(SourceLink{*it})
-                  ->geometryId());
+              *options.extensions.surfaceAccessor(*it));
         }
       }
 
@@ -245,8 +243,9 @@ struct GaussianSumFitter {
     // Check if the start parameters are on the start surface
     IntersectionStatus intersectionStatusStartSurface =
         sParameters.referenceSurface()
-            .intersect(GeometryContext{},
-                       sParameters.position(GeometryContext{}),
+            .intersect(GeometryContext::dangerouslyDefaultConstruct(),
+                       sParameters.position(
+                           GeometryContext::dangerouslyDefaultConstruct()),
                        sParameters.direction(), BoundaryTolerance::None())
             .closest()
             .status();
