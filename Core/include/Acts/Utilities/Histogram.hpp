@@ -110,7 +110,8 @@ class ProfileHistogram {
   /// @param sampleRange Samples are discarded when outside range
   ProfileHistogram(std::string name, std::string title,
                    const std::array<AxisVariant, Dim>& axes,
-                   std::string sampleAxisTitle, Range1D<double> sampleRange = {})
+                   std::string sampleAxisTitle,
+                   Range1D<double> sampleRange = {})
       : m_name(std::move(name)),
         m_title(std::move(title)),
         m_sampleAxisTitle(std::move(sampleAxisTitle)),
@@ -122,7 +123,7 @@ class ProfileHistogram {
   /// @param values Bin coordinate values (one per axis)
   /// @param sample Sample value (profiled quantity)
   void fill(const std::array<double, Dim>& values, double sample) {
-    if( !m_sampleRange.contains(sample) ) {
+    if (!m_sampleRange.contains(sample)) {
       return;
     }
 
