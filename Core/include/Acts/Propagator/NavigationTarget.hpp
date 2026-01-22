@@ -246,6 +246,14 @@ class NavigationTarget {
     return Intersection3D::closestForwardOrder(aIntersection.intersection(),
                                                bIntersection.intersection());
   }
+  /// @brief Define the ostream operator to print the object
+  /// @param ostr: Reference to the ostream
+  /// @param target: Reference to the target to print
+  friend std::ostream& operator<<(std::ostream& ostr,
+                                  const NavigationTarget& target) {
+    target.print(ostr);
+    return ostr;
+  }
 
  private:
   /// Alias for the target variant
@@ -266,6 +274,10 @@ class NavigationTarget {
 
   /// Default constructor creating a none target
   constexpr NavigationTarget() = default;
+
+  /// @brief print method
+  /// @param ostr: Stream to which the object is printed
+  void print(std::ostream& ostr) const;
 };
 
 static_assert(std::is_trivially_copy_constructible_v<NavigationTarget>);

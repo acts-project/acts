@@ -16,8 +16,8 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <sstream>
-
 namespace Acts {
 
 Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
@@ -93,6 +93,12 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     // iteration.
     // @TODO: Make this user configurable through the configuration
     state.stream.candidates().reserve(50);
+
+    state.freeCandidates.clear();
+    state.freeCandidates.reserve(state.options.freeSurfaces.size());
+    for (const Surface* candidate : state.options.freeSurfaces) {
+      state.freeCandidates.emplace_back(candidate, false);
+    }
   }
 
   state.startSurface = state.options.startSurface;
@@ -284,6 +290,18 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
         state.navigationBreak = true;
       }
     }
+    // Mark reached free candidates
+    else if (&state.navCandidate().surface() == &surface &&
+             surface.geometryId() == GeometryIdentifier{}) {
+      auto freeItr = std::ranges::find_if(
+          state.freeCandidates,
+          [&surface](const std::pair<const Surface*, bool>& cand) {
+            return &surface == cand.first;
+          });
+      if (freeItr != state.freeCandidates.end()) {
+        freeItr->second = true;
+      }
+    }
     return;
   }
 
@@ -410,7 +428,8 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
     ++state.navCandidateIndex.value();
   }
   if (state.navCandidateIndex.value() < state.navCandidates.size()) {
-    ACTS_VERBOSE(volInfo(state) << "Target set to next candidate.");
+    ACTS_VERBOSE(volInfo(state)
+                 << "Target set to next candidate " << state.navCandidate());
     return state.navCandidate();
   } else {
     ACTS_VERBOSE(volInfo(state) << "Candidate targets exhausted. Renavigate.");
@@ -458,7 +477,40 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                               << " navigation candidates.");
-
+  if (!state.options.externalSurfaces.empty()) {
+    for (const GeometryIdentifier& geoId : state.options.externalSurfaces) {
+      // Don't add any surface which is not in the same volume (volume bits)
+      // or sub volume (extra bits)
+      if (geoId.volume() != state.currentVolume->geometryId().volume() ||
+          geoId.extra() != state.currentVolume->geometryId().extra()) {
+        continue;
+      }
+      const Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+      assert(surface != nullptr);
+      ACTS_VERBOSE(volInfo(state) << "Try to navigate to " << surface->type()
+                                  << " surface " << geoId);
+      appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
+    };
+  }
+  bool pruneFreeCand{false};
+  if (!state.freeCandidates.empty()) {
+    for (const auto& [surface, wasReached] : state.freeCandidates) {
+      /// Don't process already reached surfaces again
+      if (wasReached) {
+        continue;
+      }
+      if (!state.options.freeSurfaceSelector.connected() ||
+          state.options.freeSurfaceSelector(state.options.geoContext,
+                                            *state.currentVolume, position,
+                                            direction, *surface)) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Append free " << surface->type() << " surface  \n"
+                     << surface->toStream(state.options.geoContext));
+        appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
+        pruneFreeCand = !state.options.freeSurfaceSelector.connected();
+      }
+    };
+  }
   state.stream.initialize(state.options.geoContext, {position, direction},
                           BoundaryTolerance::None(),
                           state.options.surfaceTolerance);
@@ -468,10 +520,23 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
   state.navCandidates.clear();
 
+  double farLimit = state.options.farLimit;
+  // If the user has not provided the selection delegate, then
+  // just apply a simple candidate pruning. Constrain the maximum
+  // reach of the navigation to the last portal in the state
+  if (pruneFreeCand) {
+    farLimit = state.options.nearLimit;
+    for (const auto& candidate : state.stream.candidates()) {
+      if (candidate.isPortalTarget()) {
+        farLimit = std::max(farLimit, candidate.intersection().pathLength() +
+                                          state.options.surfaceTolerance);
+      }
+    }
+  }
+
   for (auto& candidate : state.stream.candidates()) {
     if (!detail::checkPathLength(candidate.intersection().pathLength(),
-                                 state.options.nearLimit,
-                                 state.options.farLimit, logger())) {
+                                 state.options.nearLimit, farLimit, logger())) {
       continue;
     }
 
@@ -489,9 +554,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     std::ostringstream os;
     os << "Navigation candidates: " << state.navCandidates.size() << "\n";
     for (auto& candidate : state.navCandidates) {
-      os << "Candidate: " << candidate.surface().geometryId()
-         << " at path length: " << candidate.intersection().pathLength()
-         << "  ";
+      os << " -- " << candidate << "\n";
     }
 
     logger().log(Logging::VERBOSE, os.str());
@@ -500,6 +563,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
 void Navigator::resolveSurfaces(State& state, const Vector3& position,
                                 const Vector3& direction) const {
+  // Gen-1 surface resolution
   ACTS_VERBOSE(volInfo(state) << "Searching for compatible surfaces.");
 
   const Layer* currentLayer = state.currentLayer;
@@ -521,14 +585,11 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
   navOpts.farLimit = state.options.farLimit;
 
   if (!state.options.externalSurfaces.empty()) {
-    auto layerId = layerSurface->geometryId().layer();
-    auto externalSurfaceRange =
-        state.options.externalSurfaces.equal_range(layerId);
-    navOpts.externalSurfaces.reserve(
-        state.options.externalSurfaces.count(layerId));
-    for (auto itSurface = externalSurfaceRange.first;
-         itSurface != externalSurfaceRange.second; itSurface++) {
-      navOpts.externalSurfaces.push_back(itSurface->second);
+    const auto layerId = layerSurface->geometryId().layer();
+    for (const GeometryIdentifier& id : state.options.externalSurfaces) {
+      if (id.layer() == layerId) {
+        navOpts.externalSurfaces.push_back(id);
+      }
     }
   }
 
@@ -673,9 +734,13 @@ bool Navigator::inactive(const State& state) const {
 }
 
 std::string Navigator::volInfo(const State& state) const {
-  return (state.currentVolume != nullptr ? state.currentVolume->volumeName()
-                                         : "No Volume") +
-         " | ";
+  if (state.currentVolume == nullptr) {
+    return "No Volume | ";
+  }
+  std::stringstream sstr{};
+  sstr << state.currentVolume->volumeName() << " ("
+       << state.currentVolume->geometryId() << ") | ";
+  return sstr.str();
 }
 
 }  // namespace Acts
