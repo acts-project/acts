@@ -8,29 +8,23 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-
-#ifdef ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT
-#include ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT
-#else
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 namespace Acts {
-
-class Surface;
 
 /// This class is the base of all detector elements that are usable by ACTS.
 /// All experiment-specific detector element classes are expected to inherit
 /// from it.
 ///
+/// @deprecated: This class is deprecated in favour of SurfacePlacementBase
 /// @remark It is possible toe replace this base class by defining a
 ///         `ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT` pre-processor replacement.
-///         If found, @ref DetectorElementBase.hpp will instead include that file.
-class DetectorElementBase {
+///         If found, @ref SurfacePlacementBase.hpp will instead include that file.
+[[deprecated(
+    "This class is deprecated in favour of SurfacePlacementBase")]] class
+    DetectorElementBase : public SurfacePlacementBase {
  public:
   DetectorElementBase() = default;
-  virtual ~DetectorElementBase() = default;
-
   /// Return the transform for the Element proxy mechanism
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -48,40 +42,17 @@ class DetectorElementBase {
   /// @return reference to the transform to switch from the element's
   ///         coordinates to the experiment's global coordinate system
   virtual const Transform3& localToGlobalTransform(
-      const GeometryContext& gctx) const {
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
+      const GeometryContext& gctx) const override {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     return transform(gctx);
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+    ACTS_POP_IGNORE_DEPRECATED()
   }
-
-  /// Get a reference to the surface that is associated with this detector
-  /// element.
-  /// @note It is expected that the surface returned will have it's @ref
-  ///       Acts::Surface::associatedDetectorElement method return a pointer to
-  ///       this object.
-  /// @return Reference to a surface that represents this detector element
-  virtual const Surface& surface() const = 0;
-
-  /// @copydoc surface
-  /// @return Reference to a surface that represents this detector element
-  virtual Surface& surface() = 0;
-
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
   virtual double thickness() const = 0;
   /// Returns whether the detector element corresponds to a sensitive
   /// surface on which measurements are expressed
-  virtual bool isSensitive() const { return true; }
+  virtual bool isSensitive() const override { return true; }
 };
 
 }  // namespace Acts

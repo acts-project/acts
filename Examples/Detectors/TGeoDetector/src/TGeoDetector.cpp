@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -22,6 +21,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"

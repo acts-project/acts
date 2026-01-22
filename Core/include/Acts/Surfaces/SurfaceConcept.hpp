@@ -11,12 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {

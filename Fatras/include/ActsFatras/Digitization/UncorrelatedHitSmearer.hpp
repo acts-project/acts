@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/EventData/Hit.hpp"

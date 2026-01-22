@@ -8,11 +8,11 @@
 
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "ActsTests/CommonHelpers/LineSurfaceStub.hpp"
 
 using namespace Acts;

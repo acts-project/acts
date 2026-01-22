@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <nlohmann/json.hpp>
 
