@@ -1280,7 +1280,7 @@ class Gx2Fitter {
       auto propagatorInitResult =
           m_propagator.initialize(propagatorState, params);
       if (!propagatorInitResult.ok()) {
-        ACTS_ERROR("Propagation initialization failed: "
+        ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
         return propagatorInitResult.error();
       }
@@ -1300,7 +1300,7 @@ class Gx2Fitter {
                                   propagatorOptions, false);
 
       if (!result.ok()) {
-        ACTS_ERROR("Propagation failed: " << result.error());
+        ACTS_DEBUG("Propagation failed: " << result.error());
         return result.error();
       }
 
@@ -1446,7 +1446,7 @@ class Gx2Fitter {
       auto propagatorInitResult =
           m_propagator.initialize(propagatorState, params);
       if (!propagatorInitResult.ok()) {
-        ACTS_ERROR("Propagation initialization failed: "
+        ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
         return propagatorInitResult.error();
       }
@@ -1466,7 +1466,7 @@ class Gx2Fitter {
                                   propagatorOptions, false);
 
       if (!result.ok()) {
-        ACTS_ERROR("Propagation failed: " << result.error());
+        ACTS_DEBUG("Propagation failed: " << result.error());
         return result.error();
       }
 
@@ -1592,7 +1592,7 @@ class Gx2Fitter {
       auto propagatorInitResult =
           m_propagator.initialize(propagatorState, params);
       if (!propagatorInitResult.ok()) {
-        ACTS_ERROR("Propagation initialization failed: "
+        ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
         return propagatorInitResult.error();
       }
@@ -1608,7 +1608,7 @@ class Gx2Fitter {
                                   propagatorOptions, false);
 
       if (!result.ok()) {
-        ACTS_ERROR("Propagation failed: " << result.error());
+        ACTS_DEBUG("Propagation failed: " << result.error());
         return result.error();
       }
 
