@@ -92,7 +92,7 @@ class DetectorElementStub : public Acts::SurfacePlacementBase {
   Acts::Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  double thickness() const;
 
   /// Is the detector element a sensitive element
   bool isSensitive() const override { return true; }

@@ -93,7 +93,7 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   Acts::Surface& surface() override;
 
   /// Return the thickness of this detector element
-  double thickness() const override;
+  double thickness() const;
 
   /// @return to the Geant4 physical volume
   PVConstLink physicalVolume() const;

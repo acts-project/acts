@@ -341,8 +341,18 @@ FreeToPathMatrix Surface::freeToPathDerivative(const GeometryContext& gctx,
 const SurfacePlacementBase* Surface::surfacePlacement() const {
   return m_associatedDetElement;
 }
+
 const DetectorElementBase* Surface::associatedDetectorElement() const {
   return dynamic_cast<const DetectorElementBase*>(m_associatedDetElement);
+}
+
+double Surface::thickness() const {
+    return m_thickness;
+}
+
+void Surface::assignThickness(double thick) {
+  assert(thick >= 0.); 
+  m_thickness = thick;
 }
 
 const Layer* Surface::associatedLayer() const {
@@ -358,7 +368,14 @@ Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
 }
 
-void Surface::assignDetectorElement(const DetectorElementBase& detelement) {
+void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
+  m_associatedDetElement = &placement;
+  // resetting the transform as it will be handled through the detector element
+  // now
+  m_transform.reset();
+}
+
+void Surface::assignDetectorElement(const SurfacePlacementBase& detelement) {
   m_associatedDetElement = &detelement;
   // resetting the transform as it will be handled through the detector element
   // now

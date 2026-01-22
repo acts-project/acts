@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
 
   auto recBounds = std::make_shared<RectangleBounds>(3_mm, 6_mm);
 
-  std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
+  std::vector<std::unique_ptr<SurfacePlacementBase>> detectorElements;
 
   auto makeFan = [&](double yrot, double thickness = 0) {
     detectorElements.clear();

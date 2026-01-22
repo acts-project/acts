@@ -229,6 +229,9 @@ class Surface : public virtual GeometryObject,
   /// @return Layer by plain pointer, can be nullptr
   const Layer* associatedLayer() const;
 
+  /// @brief Return the thickness of the surface in the orthogonal expansion
+  double thickness() const;
+
   /// Set Associated Layer
   /// Many surfaces can be associated to a Layer, but it might not be known yet
   /// during construction of the layer, this can be set afterwards
@@ -247,8 +250,16 @@ class Surface : public virtual GeometryObject,
 
   /// Assign a detector element
   ///
+  /// @deprecated: The method is deprecated in favour of assignSurfacePlacement()
   /// @param detelement Detector element which is represented by this surface
-  void assignDetectorElement(const DetectorElementBase& detelement);
+  [[deprecated(
+      "Please use assignSurfacePlacement(const SurfacePlacementBase& "
+      "placement) instead")]]
+  void assignDetectorElement(const SurfacePlacementBase& detelement);
+
+  /// @brief Assign a placement object which may dynamically align the surface in space
+  /// @param placement: Placement object defining the surface's position
+  void assignSurfacePlacement(const SurfacePlacementBase& placement);
 
   /// Assign the surface material description
   ///
@@ -263,6 +274,10 @@ class Surface : public virtual GeometryObject,
   /// @param isSensitive Boolean flag to set sensitivity
   /// @throw logic_error if the surface is associated to a detector element
   void assignIsSensitive(bool isSensitive);
+  /// @brief Assign the thickness of the surface in the
+  ///        orthogonal dimension
+  /// @param thick: Thickness parameter to assign (>=0)
+  void assignThickness(double thick);
 
   /// The geometric onSurface method
   ///
@@ -562,6 +577,8 @@ class Surface : public virtual GeometryObject,
   bool m_isSensitive{false};
 
  private:
+  /// @brief Thickness of the surface in the orthogonal extension
+  double m_thickness{0};
   /// Calculate the derivative of bound track parameters w.r.t.
   /// alignment parameters of its reference surface (i.e. origin in global 3D
   /// Cartesian coordinates and its rotation represented with extrinsic Euler

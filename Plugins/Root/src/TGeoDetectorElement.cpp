@@ -33,7 +33,7 @@ TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
     std::shared_ptr<const ISurfaceMaterial> material)
-    : DetectorElementBase(), m_detElement(&tGeoNode), m_identifier(identifier) {
+    : m_detElement(&tGeoNode), m_identifier(identifier) {
   // Create temporary local non const surface (to allow setting the
   // material)
   const Double_t* translation = tGeoMatrix.GetTranslation();
@@ -62,6 +62,7 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_transform = dTransform;
       m_thickness = dThickness;
       m_surface = Surface::makeShared<DiscSurface>(dBounds, *this);
+
     }
   }
 
@@ -81,6 +82,7 @@ TGeoDetectorElement::TGeoDetectorElement(
   // set the asscoiated material (non const method)
   if (m_surface != nullptr) {
     m_surface->assignSurfaceMaterial(std::move(material));
+    m_surface->assignThickness(m_thickness);
   }
 }
 
@@ -88,26 +90,28 @@ TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
     const std::shared_ptr<const PlanarBounds>& tgBounds, double tgThickness)
-    : DetectorElementBase(),
+    : 
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
       m_thickness(tgThickness) {
   m_surface = Surface::makeShared<PlaneSurface>(tgBounds, *this);
+      m_surface->assignThickness(m_thickness);
 }
 
 TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
     const std::shared_ptr<const DiscBounds>& tgBounds, double tgThickness)
-    : DetectorElementBase(),
+    : 
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
       m_thickness(tgThickness) {
   m_surface = Surface::makeShared<DiscSurface>(tgBounds, *this);
+      m_surface->assignThickness(m_thickness);
 }
 
 TGeoDetectorElement::~TGeoDetectorElement() = default;

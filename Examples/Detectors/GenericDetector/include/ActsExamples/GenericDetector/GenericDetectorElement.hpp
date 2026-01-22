@@ -83,7 +83,7 @@ class GenericDetectorElement : public Acts::SurfacePlacementBase {
   Acts::Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  double thickness() const;
 
   /// The identifier of the detector element
   Identifier identifier() const;

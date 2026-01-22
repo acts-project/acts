@@ -29,7 +29,7 @@ class LineSurfaceStub : public Acts::LineSurface {
         Acts::LineSurface(htrans, std::move(lbounds)) { /*nop */ }
 
   LineSurfaceStub(std::shared_ptr<const Acts::LineBounds> lbounds,
-                  const Acts::DetectorElementBase& detelement)
+                  const Acts::SurfacePlacementBase& detelement)
       : Acts::GeometryObject(),
         Acts::LineSurface(std::move(lbounds), detelement) { /* nop */ }
 

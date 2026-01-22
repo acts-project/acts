@@ -18,37 +18,34 @@
 using namespace Acts;
 
 ActsTests::DetectorElementStub::DetectorElementStub(const Transform3& transform)
-    : DetectorElementBase(), m_elementTransform(transform) {}
+    : m_elementTransform(transform) {}
 
 ActsTests::DetectorElementStub::DetectorElementStub(
     const Transform3& transform, std::shared_ptr<const CylinderBounds> cBounds,
     double thickness, std::shared_ptr<const ISurfaceMaterial> material)
-    : DetectorElementBase(),
-      m_elementTransform(transform),
-      m_elementThickness(thickness) {
+    : m_elementTransform(transform), m_elementThickness(thickness) {
   m_elementSurface =
       Surface::makeShared<CylinderSurface>(std::move(cBounds), *this);
+  m_elementSurface->assignThickness(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
 
 ActsTests::DetectorElementStub::DetectorElementStub(
     const Transform3& transform, std::shared_ptr<const PlanarBounds> pBounds,
     double thickness, std::shared_ptr<const ISurfaceMaterial> material)
-    : DetectorElementBase(),
-      m_elementTransform(transform),
-      m_elementThickness(thickness) {
+    : m_elementTransform(transform), m_elementThickness(thickness) {
   m_elementSurface =
       Surface::makeShared<PlaneSurface>(std::move(pBounds), *this);
+  m_elementSurface->assignThickness(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
 
 ActsTests::DetectorElementStub::DetectorElementStub(
     const Transform3& transform, std::shared_ptr<const LineBounds> lBounds,
     double thickness, std::shared_ptr<const ISurfaceMaterial> material)
-    : DetectorElementBase(),
-      m_elementTransform(transform),
-      m_elementThickness(thickness) {
+    : m_elementTransform(transform), m_elementThickness(thickness) {
   m_elementSurface =
       Surface::makeShared<LineSurfaceStub>(std::move(lBounds), *this);
+  m_elementSurface->assignThickness(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }

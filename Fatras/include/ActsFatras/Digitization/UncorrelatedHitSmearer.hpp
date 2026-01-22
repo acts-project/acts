@@ -76,9 +76,8 @@ struct BoundParametersSmearer {
     // We use the thickness of the detector element as tolerance, because Geant4
     // treats the Surfaces as volumes and thus it is not ensured, that each hit
     // lies exactly on the Acts::Surface
-    const auto tolerance =
-        surface.isSensitive() ? surface.associatedDetectorElement()->thickness()
-                              : Acts::s_onSurfaceTolerance;
+    const auto tolerance = surface.isSensitive() ? surface.thickness()
+                                                 : Acts::s_onSurfaceTolerance;
 
     // construct full bound parameters. they are probably not all needed, but it
     // is easier to just create them all and then select the requested ones.

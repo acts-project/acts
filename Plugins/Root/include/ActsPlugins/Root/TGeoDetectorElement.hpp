@@ -143,7 +143,7 @@ class TGeoDetectorElement : public Acts::SurfacePlacementBase {
 
   /// Returns the thickness of the module
   /// @return Thickness of the detector element in units of length
-  double thickness() const override;
+  double thickness() const;
 
   /// Return the TGeoNode for back navigation
   /// @return Reference to the underlying TGeoNode

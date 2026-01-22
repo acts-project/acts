@@ -63,7 +63,7 @@ class Geant4DetectorElement : public Acts::SurfacePlacementBase {
 
   /// Return the thickness of this detector element
   /// @return The thickness value in length units
-  double thickness() const override;
+  double thickness() const ;
 
   /// @return to the Geant4 physical volume
   const G4VPhysicalVolume& g4PhysicalVolume() const;
