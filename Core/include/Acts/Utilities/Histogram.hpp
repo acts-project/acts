@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/RangeXD.hpp"
+
 #include <array>
 #include <string>
 #include <tuple>
@@ -105,12 +107,14 @@ class ProfileHistogram {
   /// @param title Histogram title (for plotting)
   /// @param axes Array of axes with binning and metadata
   /// @param sampleAxisTitle Title for the sampled axis (profiled quantity)
+  /// @param sampleRange Samples are discarded when outside range
   ProfileHistogram(std::string name, std::string title,
                    const std::array<AxisVariant, Dim>& axes,
-                   std::string sampleAxisTitle)
+                   std::string sampleAxisTitle, Range1D<double> sampleRange = {})
       : m_name(std::move(name)),
         m_title(std::move(title)),
         m_sampleAxisTitle(std::move(sampleAxisTitle)),
+        m_sampleRange(sampleRange),
         m_hist(boost::histogram::make_profile(axes.begin(), axes.end())) {}
 
   /// Fill profile with values and sample
@@ -118,6 +122,10 @@ class ProfileHistogram {
   /// @param values Bin coordinate values (one per axis)
   /// @param sample Sample value (profiled quantity)
   void fill(const std::array<double, Dim>& values, double sample) {
+    if( !m_sampleRange.contains(sample) ) {
+      return;
+    }
+
     std::apply(
         [&](auto... v) { m_hist(v..., boost::histogram::sample(sample)); },
         std::tuple_cat(values));
@@ -142,6 +150,7 @@ class ProfileHistogram {
   std::string m_name;
   std::string m_title;
   std::string m_sampleAxisTitle;
+  Range1D<double> m_sampleRange;
 
   BoostProfileHist m_hist;
 };

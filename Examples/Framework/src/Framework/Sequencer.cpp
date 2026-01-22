@@ -42,11 +42,8 @@
 #include <thread>
 #include <typeinfo>
 
-#include <boost/algorithm/string.hpp>
-
-#ifdef ACTS_EXAMPLES_WITH_ROOT
 #include <TROOT.h>
-#endif
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
 
@@ -80,9 +77,7 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
   if (m_cfg.numThreads == 1) {
     ACTS_INFO("Create Sequencer (single-threaded)");
   } else {
-#ifdef ACTS_EXAMPLES_WITH_ROOT
     ROOT::EnableThreadSafety();
-#endif
     ACTS_INFO("Create Sequencer with " << m_cfg.numThreads << " threads");
   }
 

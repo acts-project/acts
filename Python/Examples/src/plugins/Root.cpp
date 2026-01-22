@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/Histogram.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
@@ -35,7 +34,6 @@
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
-#include "ActsExamples/EventData/ScalingCalibrator.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -275,12 +273,5 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                interactionProbabilityBins, momentumBins,
                                invariantMassBins, multiplicityMax,
                                writeOptionalHistograms, nSimulatedEvents);
-
-    root.def(
-        "makeScalingCalibrator",
-        [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
-          return std::make_shared<ScalingCalibrator>(path);
-        },
-        py::arg("path"));
   }
 }

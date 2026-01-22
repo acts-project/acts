@@ -8,6 +8,7 @@ acts_add_library(
     src/EventData/MuonSpacePointCalibrator.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
+    src/EventData/ScalingCalibrator.cpp
     src/EventData/SimParticle.cpp
     src/Framework/IAlgorithm.cpp
     src/Framework/SequenceElement.cpp
@@ -19,6 +20,7 @@ acts_add_library(
     src/Utilities/EventDataTransforms.cpp
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
+    src/Utilities/Helpers.cpp
     src/Utilities/ParametricParticleGenerator.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
@@ -40,13 +42,10 @@ target_link_libraries(
         Acts::Fatras
         Acts::PluginFpeMonitoring
         Boost::boost
+        ROOT::Core
+        ROOT::Hist
         HepMC3::HepMC3
 )
-
-if(ACTS_BUILD_EXAMPLES_ROOT)
-    target_link_libraries(ActsExamplesFramework PUBLIC ROOT::Core)
-    target_compile_definitions(ActsExamplesFramework PRIVATE ACTS_EXAMPLES_WITH_ROOT)
-endif()
 target_compile_definitions(
     ActsExamplesFramework
     PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED
@@ -67,4 +66,3 @@ target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
 acts_compile_headers(ExamplesFramework GLOB "include/**/*.hpp")
 
 add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)
-add_subdirectory_if(ROOT ACTS_BUILD_EXAMPLES_ROOT)
