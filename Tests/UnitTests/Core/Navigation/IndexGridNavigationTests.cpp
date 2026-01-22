@@ -35,7 +35,7 @@ namespace ActsTests {
 
 using namespace Acts;
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 auto tLogger = getDefaultLogger("IndexGridNavigation", Logging::VERBOSE);
 

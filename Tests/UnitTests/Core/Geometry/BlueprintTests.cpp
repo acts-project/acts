@@ -53,7 +53,7 @@ namespace ActsTests {
 
 auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 auto nameLookup(const TrackingGeometry& geo) {
   return [&](const std::string& name) -> const TrackingVolume& {
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
     std::size_t nSurfaces = 0;
 
     trackingGeometry->visitSurfaces([&](const Surface* surface) {
-      if (surface->associatedDetectorElement() != nullptr) {
+      if (surface->isSensitive()) {
         nSurfaces++;
       }
     });
@@ -591,7 +591,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
     std::size_t nSurfaces = 0;
 
     trackingGeometry->visitSurfaces([&](const Surface* surface) {
-      if (surface->associatedDetectorElement() != nullptr) {
+      if (surface->isSensitive()) {
         nSurfaces++;
       }
     });

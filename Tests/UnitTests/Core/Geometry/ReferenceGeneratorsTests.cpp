@@ -22,7 +22,7 @@
 
 using namespace Acts;
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 auto rBounds = std::make_shared<RectangleBounds>(10, 20);
 auto sTransform = Transform3::Identity();

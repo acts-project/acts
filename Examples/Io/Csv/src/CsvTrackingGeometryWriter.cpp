@@ -107,7 +107,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
     (*dataBoundParameters[ipar]) = boundValues[ipar];
   }
 
-  if (surface.associatedDetectorElement() != nullptr) {
+  if (surface.isSensitive()) {
     data.module_t = surface.associatedDetectorElement()->thickness() /
                     Acts::UnitConstants::mm;
   }
@@ -391,7 +391,8 @@ ProcessCode CsvTrackingGeometryWriter::finalize() {
 
   writeVolume(sfWriter, sfGridWriter, lvWriter, *m_world, m_cfg.writeSensitive,
               m_cfg.writeBoundary, m_cfg.writeSurfaceGrid,
-              m_cfg.writeLayerVolume, Acts::GeometryContext());
+              m_cfg.writeLayerVolume,
+              Acts::GeometryContext::dangerouslyDefaultConstruct());
   return ProcessCode::SUCCESS;
 }
 

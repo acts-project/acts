@@ -96,7 +96,8 @@ struct adl_serializer<parameters_t> {
     // reference surface attached
     // and position takes a geometry context
     if constexpr (Acts::detail::isGenericBoundTrackParams<parameters_t>) {
-      Acts::GeometryContext gctx;
+      Acts::GeometryContext gctx =
+          Acts::GeometryContext::dangerouslyDefaultConstruct();
       j["position"] = t.fourPosition(gctx);
 
       j["referenceSurface"] =
@@ -147,7 +148,8 @@ struct adl_serializer<parameters_t> {
     // and constructor is hidden
     // behind a factory method
     if constexpr (Acts::detail::isGenericBoundTrackParams<parameters_t>) {
-      Acts::GeometryContext gctx;
+      Acts::GeometryContext gctx =
+          Acts::GeometryContext::dangerouslyDefaultConstruct();
       auto referenceSurface =
           Acts::SurfaceJsonConverter::fromJson(j.at("referenceSurface"));
 

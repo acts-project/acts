@@ -76,7 +76,7 @@ repos:
     - id: cmake_options
       name: cmake_options
       language: system
-      entry: docs/parse_cmake_options.py --write docs/getting_started.md
+      entry: docs/parse_cmake_options.py --write docs/pages/contributing/building_acts.md
       files: ^CMakeLists.txt$
 
     - id: leftover_conflict_markers

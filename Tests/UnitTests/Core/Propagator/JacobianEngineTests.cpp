@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 ///
 BOOST_AUTO_TEST_CASE(jacobian_engine_to_bound) {
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   // Build a start vector
   Vector3 position{1., 2., 3.};
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_bound) {
 ///
 BOOST_AUTO_TEST_CASE(jacobian_engine_to_curvilinear) {
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   // Build a start vector
   Vector3 position{1., 2., 3.};
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_curvilinear) {
 ///
 BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   // Build a start vector
   Vector3 position{1., 2., 3.};

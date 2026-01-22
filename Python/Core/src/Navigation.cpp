@@ -36,12 +36,14 @@ namespace ActsPython {
 namespace Test {
 class DetectorElementStub : public DetectorElementBase {
  public:
-  DetectorElementStub() : DetectorElementBase() {}
-
-  const Transform3& transform(const GeometryContext& /*gctx*/) const override {
+  DetectorElementStub() = default;
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& /*gctx*/) const override {
     return m_transform;
   }
 
+  /// Is the detector element a sensitive element
+  bool isSensitive() const override { return true; }
   /// Return surface representation - const return pattern
   const Surface& surface() const override {
     throw std::runtime_error("Not implemented");
@@ -132,7 +134,7 @@ void addNavigation(py::module_& m) {
         vol1->addSurface(std::move(surface));
 
         std::unique_ptr<INavigationPolicy> result =
-            self->build(GeometryContext{}, *vol1,
+            self->build(GeometryContext::dangerouslyDefaultConstruct(), *vol1,
                         *getDefaultLogger("Test", Logging::VERBOSE));
       });
 

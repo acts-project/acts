@@ -85,7 +85,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
 AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  (void)direction;
+  static_cast<void>(direction);
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The vector between position and center
@@ -370,6 +370,12 @@ void Surface::visualize(IVisualization3D& helper, const GeometryContext& gctx,
   Polyhedron polyhedron =
       polyhedronRepresentation(gctx, viewConfig.quarterSegments);
   polyhedron.visualize(helper, viewConfig);
+}
+
+/// @brief Returns whether the Surface is sensitive
+bool Surface::isSensitive() const {
+  return m_associatedDetElement != nullptr &&
+         m_associatedDetElement->isSensitive();
 }
 
 }  // namespace Acts
