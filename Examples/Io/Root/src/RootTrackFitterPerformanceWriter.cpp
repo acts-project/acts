@@ -13,7 +13,6 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
@@ -26,6 +25,8 @@
 
 #include <TEfficiency.h>
 #include <TFile.h>
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TProfile.h>
@@ -109,7 +110,17 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
     for (int j = 1; j <= nBinsX; j++) {
       TH1D* proj = hist2d->ProjectionY(
           Form("%s_projy_bin%d", baseName.c_str(), j), j, j);
-      PlotHelpers::anaHisto(proj, j, meanHist, widthHist);
+      if (proj->GetEntries() > 0) {
+        TFitResultPtr r = proj->Fit("gaus", "QS0");
+        if ((r.Get() != nullptr) && ((r->Status() % 1000) == 0)) {
+          // fill the mean and width into 'j'th bin of the meanHist and
+          // widthHist, respectively
+          meanHist->SetBinContent(j, r->Parameter(1));
+          meanHist->SetBinError(j, r->ParError(1));
+          widthHist->SetBinContent(j, r->Parameter(2));
+          widthHist->SetBinError(j, r->ParError(2));
+        }
+      }
       delete proj;
     }
 
