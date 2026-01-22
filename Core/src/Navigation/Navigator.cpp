@@ -153,7 +153,7 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state) << "Start volume resolved "
                                 << state.currentVolume->geometryId());
 
-    if (!state.currentVolume->inside(position,
+    if (!state.currentVolume->inside(state.options.geoContext, position,
                                      state.options.surfaceTolerance)) {
       ACTS_DEBUG(volInfo(state)
                  << "We did not end up inside the expected volume. position = "
