@@ -1,4 +1,5 @@
 add_subdirectory(Digitization)
+add_subdirectory_if(DigitizationMuon ACTS_BUILD_EXAMPLES_ROOT)
 add_subdirectory(Fatras)
 add_subdirectory_if(Geant4 ACTS_BUILD_EXAMPLES_GEANT4)
 add_subdirectory(Generators)

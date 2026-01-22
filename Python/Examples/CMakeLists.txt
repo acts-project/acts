@@ -161,7 +161,7 @@ add_examples_binding_if(Hashing "Acts::PluginHashing;Acts::ExamplesTrackFinding"
 add_examples_binding_if(Json Acts::ExamplesIoJson ACTS_BUILD_PLUGIN_JSON TRUE)
 add_examples_binding_if(Onnx "Acts::ExamplesFrameworkML;Acts::ExamplesTrackFindingML" ACTS_BUILD_PLUGIN_ONNX FALSE)
 add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 ACTS_BUILD_EXAMPLES_PYTHIA8 FALSE)
-add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_PLUGIN_ROOT TRUE)
+add_examples_binding_if(Root "Acts::ExamplesIoRoot;Acts::ExamplesDigitizationMuon" ACTS_BUILD_EXAMPLES_ROOT TRUE)
 add_examples_binding_if(Svg Acts::ExamplesIoSvg ACTS_BUILD_PLUGIN_ACTSVG TRUE)
 add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_PLUGIN_ROOT TRUE)
 add_examples_binding_if(Traccc "Acts::PluginCovfie;Acts::ExamplesTraccc" ACTS_BUILD_PLUGIN_TRACCC FALSE)
