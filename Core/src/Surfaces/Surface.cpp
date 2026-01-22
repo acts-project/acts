@@ -169,6 +169,7 @@ Surface& Surface::operator=(const Surface& other) {
     m_associatedLayer = other.m_associatedLayer;
     m_surfaceMaterial = other.m_surfaceMaterial;
     m_associatedDetElement = other.m_associatedDetElement;
+    m_isSensitive = other.m_isSensitive;
   }
   return *this;
 }
@@ -197,6 +198,10 @@ bool Surface::operator==(const Surface& other) const {
   }
   // (f) compare material
   if (m_surfaceMaterial != other.m_surfaceMaterial) {
+    return false;
+  }
+  // (g) compare sensitivity
+  if (m_isSensitive != other.m_isSensitive) {
     return false;
   }
 

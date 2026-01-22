@@ -37,7 +37,6 @@ class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
 class IVisualization3D;
-class Surface;
 
 /// @class Surface
 ///
