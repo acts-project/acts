@@ -46,35 +46,22 @@ std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt) {
 }
 
 std::vector<OrientedSurface> VolumeBounds::boundarySurfaces(
-    const GeometryContext& gctx, Volume& parentVolume) const {
+    Volume& parentVolume) const {
   if (!parentVolume.volumePositioner()) {
-    return orientedSurfaces(parentVolume.localToGlobalTransform(gctx));
+    return orientedSurfaces(*parentVolume.m_transform);
   }
   std::vector<OrientedSurface> portalSurfaces =
       orientedSurfaces(Acts::Transform3::Identity());
-
+  // It is safe to construct a default geometry context here as the oriented
+  // surfaces have their own transform
+  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   for (std::size_t faceIdx = 0lu; faceIdx < portalSurfaces.size(); ++faceIdx) {
     std::shared_ptr<RegularSurface>& alignMe = portalSurfaces[faceIdx].surface;
+    // the localToGlobal from the surface is the transform from the portal
+    // frame to the volume center
     const Acts::Transform3 internalTrf = alignMe->localToGlobalTransform(gctx);
-    alignMe = parentVolume.volumePositioner()->alignWithVolume(
+    alignMe = parentVolume.volumePositioner()->makePortalAlignable(
         faceIdx, internalTrf, std::move(alignMe));
-    // Ensure that the surface is not destroyed by the client
-    if (alignMe == nullptr) {
-      throw std::logic_error(
-          "boundarySurfaces() - alignWithVolume() must not destroy the "
-          "surface");
-    }
-    // if the surface does not have an associated detector element
-    // it cannot move with the volume
-    if (alignMe->associatedDetectorElement() == nullptr) {
-      throw std::logic_error(
-          "boundarySurfaces() - alignWithVolume() is supposed to make the "
-          "surface alignable");
-    }
-    if (alignMe->isSensitive()) {
-      throw std::logic_error(
-          "boundarySurfaces() - The aligned surface shall not be sensitive");
-    }
   }
   return portalSurfaces;
 }
