@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cassert>
 #include <sstream>
+
 namespace Acts {
 
 Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
@@ -139,9 +140,10 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
       state.startLayer = state.startVolume->associatedLayer(
           state.options.geoContext, position);
     } else {
-      ACTS_ERROR(volInfo(state)
+      ACTS_DEBUG(volInfo(state)
                  << "No start volume resolved. Nothing left to do.");
       state.navigationBreak = true;
+      return Result<void>::failure(NavigatorError::NoStartVolume);
     }
   }
 
@@ -153,7 +155,7 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state) << "Start volume resolved "
                                 << state.currentVolume->geometryId());
 
-    if (!state.currentVolume->inside(position,
+    if (!state.currentVolume->inside(state.options.geoContext, position,
                                      state.options.surfaceTolerance)) {
       ACTS_DEBUG(volInfo(state)
                  << "We did not end up inside the expected volume. position = "

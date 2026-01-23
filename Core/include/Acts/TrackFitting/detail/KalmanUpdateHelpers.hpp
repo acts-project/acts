@@ -59,7 +59,7 @@ auto kalmanHandleMeasurement(
     auto res = stepper.boundState(state.stepping, surface, doCovTransport,
                                   freeToBoundCorrection);
     if (!res.ok()) {
-      ACTS_ERROR("Propagate to surface " << surface.geometryId()
+      ACTS_DEBUG("Propagate to surface " << surface.geometryId()
                                          << " failed: " << res.error());
       return res.error();
     }
@@ -97,7 +97,7 @@ auto kalmanHandleMeasurement(
       auto updateRes =
           extensions.updater(state.geoContext, trackStateProxy, logger);
       if (!updateRes.ok()) {
-        ACTS_ERROR("Update step failed: " << updateRes.error());
+        ACTS_DEBUG("Update step failed: " << updateRes.error());
         return updateRes.error();
       }
       // Set the measurement type flag

@@ -13,6 +13,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Propagator/NavigatorError.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
@@ -221,7 +222,9 @@ class TryAllNavigatorBase {
       if (state.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
       } else {
-        ACTS_ERROR("Start volume not resolved.");
+        ACTS_DEBUG("Start volume not resolved.");
+        state.navigationBreak = true;
+        return NavigatorError::NoStartVolume;
       }
 
       state.currentSurface = state.startSurface;

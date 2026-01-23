@@ -9,11 +9,11 @@
 #pragma once
 
 // Set the Geometry Context PLUGIN
-#include "Acts/Utilities/Diagnostics.hpp"
 #ifdef ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #include ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #else
 
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/detail/ContextType.hpp"
 
 #include <ostream>

@@ -211,7 +211,8 @@ MutableTrackingVolumePtr CuboidVolumeBuilder::trackingVolume(
 
   // Sort the volumes vectors according to the center location, otherwise the
   // binning boundaries will fail
-  std::ranges::sort(volumes, {}, [](const auto& v) { return v->center().x(); });
+  std::ranges::sort(volumes, {},
+                    [&](const auto& v) { return v->center(gctx).x(); });
 
   // Glue volumes
   for (unsigned int i = 0; i < volumes.size() - 1; i++) {
@@ -235,15 +236,15 @@ MutableTrackingVolumePtr CuboidVolumeBuilder::trackingVolume(
   std::vector<std::pair<TrackingVolumePtr, Vector3>> tapVec;
   tapVec.reserve(m_cfg.volumeCfg.size());
   for (auto& tVol : volumes) {
-    tapVec.push_back(std::make_pair(tVol, tVol->center()));
+    tapVec.push_back(std::make_pair(tVol, tVol->center(gctx)));
   }
 
   // Set bin boundaries along binning
   std::vector<float> binBoundaries;
-  binBoundaries.push_back(volumes[0]->center().x() -
+  binBoundaries.push_back(volumes[0]->center(gctx).x() -
                           m_cfg.volumeCfg[0].length.x() * 0.5);
   for (std::size_t i = 0; i < volumes.size(); i++) {
-    binBoundaries.push_back(volumes[i]->center().x() +
+    binBoundaries.push_back(volumes[i]->center(gctx).x() +
                             m_cfg.volumeCfg[i].length.x() * 0.5);
   }
 

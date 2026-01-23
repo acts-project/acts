@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -21,8 +22,6 @@
 
 #include <stdexcept>
 
-#include <Eigen/src/Core/util/Memory.h>
-#include <boost/graph/graph_traits.hpp>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
