@@ -99,39 +99,49 @@ class TrackStateTypeBase {
   /// Checks if the track state has parameters
   /// @return true if parameters are present
   bool hasParameters() const { return test(HasParameters); }
+
   /// Checks if the track state has material
   /// @note use isMaterial() to check for a pure material state
   /// @return true if material is present
   bool hasMaterial() const { return test(HasMaterial); }
+
   /// Checks if the track state **has** a measurement
   /// @note use isMeasurement() to check for a pure measurement state
   /// @return true if a measurement is present
   bool hasMeasurement() const { return test(HasMeasurement); }
+
   /// Checks if the track state **is** a pure material state
   /// @note use hasMaterial() to check for the presence of material
   /// @return true if it is a pure material state
   bool isMaterial() const { return test(HasMaterial) && !test(HasMeasurement); }
+
   /// Checks if the track state **is** a pure measurement state
   /// @note use hasMeasurement() to check for the presence of a measurement
   /// @return true if it is a pure measurement state
   bool isMeasurement() const {
     return test(HasMeasurement) && !test(IsOutlier);
   }
+
   /// Checks if the track state is an outlier
   /// @return true if it is an outlier
   bool isOutlier() const { return test(IsOutlier); }
+
   /// Checks if the track state is a hole
   /// @return true if it is a hole
   bool isHole() const { return test(IsHole); }
+
   /// Checks if the track state has a shared hit
   /// @return true if it has a shared hit
   bool isSharedHit() const { return test(IsSharedHit); }
+
   /// Checks if the track state has a split hit
   /// @return true if it has a split hit
   bool isSplitHit() const { return test(IsSplitHit); }
+
   /// Checks if the track state has no expected hit
   /// @return true if it has no expected hit
   bool hasNoExpectedHit() const { return test(HasNoExpectedHit); }
+
   /// Sets whether the track state has parameters
   /// @param value the value to set
   /// @return self-reference for chaining
@@ -142,6 +152,7 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+
   /// Sets whether the track state has material
   /// @param value the value to set
   /// @return self-reference for chaining
@@ -152,6 +163,7 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+
   /// Sets whether the track state has a measurement
   /// @param value the value to set
   /// @return self-reference for chaining
@@ -162,6 +174,7 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+
   /// Sets the track state to be a pure material state
   /// @return self-reference for chaining
   Derived& setIsMaterial()
@@ -177,6 +190,7 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+
   /// Sets the track state to be a pure measurement state
   /// @return self-reference for chaining
   Derived& setIsMeasurement()
@@ -189,6 +203,7 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+
   /// Sets the track state to be an outlier
   /// @param value the value to set
   /// @return self-reference for chaining
@@ -204,6 +219,7 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+
   /// Sets the track state to be a hole
   /// @param value the value to set
   /// @return self-reference for chaining
@@ -219,6 +235,7 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+
   /// Sets the track state to be a shared hit
   /// @param value the value to set
   /// @return self-reference for chaining
@@ -233,6 +250,7 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+
   /// Sets the track state to be a split hit
   /// @param value the value to set
   /// @return self-reference for chaining
@@ -247,6 +265,7 @@ class TrackStateTypeBase {
     assertConsistency();
     return self();
   }
+
   /// Sets the track state to have no expected hit
   /// @param value the value to set
   /// @return self-reference for chaining
