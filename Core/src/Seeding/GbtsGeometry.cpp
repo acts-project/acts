@@ -327,6 +327,7 @@ const GbtsLayer* GbtsGeometry::addNewLayer(const TrigInDetSiLayer& l,
 
   m_layMap.insert(std::pair<unsigned int, GbtsLayer*>(layerKey, pHL));
   m_layArray.push_back(pHL);
+  m_layerKeys.push_back(layerKey);
   return pHL;
 }
 

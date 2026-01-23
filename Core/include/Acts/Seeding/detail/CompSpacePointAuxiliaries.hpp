@@ -320,7 +320,7 @@ class CompSpacePointAuxiliaries {
                            const Vector& sensorN, const Vector& sensorD,
                            const Vector& stripPos, const bool isBending,
                            const bool isNonBending);
-  /// @brief Calculates the reidual of a strip measurement w.r.t. the time offset parameter
+  /// @brief Calculates the residual of a strip measurement w.r.t. the time offset parameter
   /// @param sensorN: Reference to the first basis vector inside the strip measruement plane,
   ///            which is given by the sensor normal
   /// @param sensorD: Reference to the second basis vector inside the strip measruement plane,
@@ -389,7 +389,7 @@ class CompSpacePointAuxiliaries {
   /// @brief Partial derivative of the actual distance of the closest approach
   std::array<double, s_nLinePars> m_partialApproachDist{
       filledArray<double, s_nLinePars>(0.)};
-  /// @brief Tansform matrix to treat stereo angles amongst the strips
+  /// @brief Transform matrix to treat stereo angles amongst the strips
   ActsSquareMatrix<2> m_stereoTrf{ActsSquareMatrix<2>::Identity()};
 };
 

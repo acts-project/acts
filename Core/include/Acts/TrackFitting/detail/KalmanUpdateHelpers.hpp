@@ -45,8 +45,7 @@ auto kalmanHandleMeasurement(
   // all components, which we will set later.
   TrackStatePropMask mask =
       TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-      TrackStatePropMask::Smoothed | TrackStatePropMask::Jacobian |
-      TrackStatePropMask::Calibrated;
+      TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
   typename traj_t::TrackStateProxy trackStateProxy =
       fittedStates.makeTrackState(mask, lastTrackIndex);
 
@@ -60,7 +59,7 @@ auto kalmanHandleMeasurement(
     auto res = stepper.boundState(state.stepping, surface, doCovTransport,
                                   freeToBoundCorrection);
     if (!res.ok()) {
-      ACTS_ERROR("Propagate to surface " << surface.geometryId()
+      ACTS_DEBUG("Propagate to surface " << surface.geometryId()
                                          << " failed: " << res.error());
       return res.error();
     }
@@ -98,7 +97,7 @@ auto kalmanHandleMeasurement(
       auto updateRes =
           extensions.updater(state.geoContext, trackStateProxy, logger);
       if (!updateRes.ok()) {
-        ACTS_ERROR("Update step failed: " << updateRes.error());
+        ACTS_DEBUG("Update step failed: " << updateRes.error());
         return updateRes.error();
       }
       // Set the measurement type flag
@@ -141,9 +140,8 @@ auto kalmanHandleNoMeasurement(
         false)) -> Result<typename traj_t::TrackStateProxy> {
   // Add a <mask> TrackState entry multi trajectory. This allocates storage for
   // all components, which we will set later.
-  TrackStatePropMask mask = TrackStatePropMask::Predicted |
-                            TrackStatePropMask::Smoothed |
-                            TrackStatePropMask::Jacobian;
+  TrackStatePropMask mask =
+      TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
   typename traj_t::TrackStateProxy trackStateProxy =
       fittedStates.makeTrackState(mask, lastTrackIndex);
 
@@ -174,8 +172,7 @@ auto kalmanHandleNoMeasurement(
 
   // Set the track state flags
   const bool surfaceHasMaterial = surface.surfaceMaterial() != nullptr;
-  const bool surfaceIsSensitive =
-      surface.associatedDetectorElement() != nullptr;
+  const bool surfaceIsSensitive = surface.isSensitive();
   auto typeFlags = trackStateProxy.typeFlags();
   typeFlags.set(TrackStateFlag::ParameterFlag);
 

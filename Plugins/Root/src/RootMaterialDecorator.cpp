@@ -177,9 +177,10 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
                   Material::fromMassDensity(dx0, dl0, da, dz, drho);
               mGrid.at(p - 1) = material.parameters();
             }
-            MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, mGrid);
+            MaterialMapLookup<MaterialGrid2D> matMap(transfoGlobalToLocal,
+                                                     mGrid);
             vMaterial = std::make_shared<
-                InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>>(
+                InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid2D>>>(
                 std::move(matMap), bUtility);
           } else if (dim == 3) {
             // 3D Grid material
@@ -208,9 +209,10 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
                   Material::fromMassDensity(dx0, dl0, da, dz, drho);
               mGrid.at(p - 1) = material.parameters();
             }
-            MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
+            MaterialMapLookup<MaterialGrid3D> matMap(transfoGlobalToLocal,
+                                                     mGrid);
             vMaterial = std::make_shared<
-                InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
+                InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid3D>>>(
                 std::move(matMap), bUtility);
           }
         } else {

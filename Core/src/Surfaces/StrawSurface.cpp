@@ -54,7 +54,7 @@ Polyhedron StrawSurface::polyhedronRepresentation(
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
 
-  const Transform3& ctransform = transform(gctx);
+  const Transform3& ctransform = localToGlobalTransform(gctx);
   // Draw the bounds if more than one segment are chosen
   if (quarterSegments > 0u) {
     double r = m_bounds->get(LineBounds::eR);

@@ -1,6 +1,5 @@
 acts_add_library(
     PluginFpeMonitoring
-    SHARED
     src/FpeMonitor.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
@@ -181,7 +180,7 @@ else()
             message(STATUS "ld lib available: use boost basic fallback")
         else()
             message(STATUS "Unable to set up stacktraces: use noop")
-            list(APPEND _fpe_options -BOOST_STACKTRACE_USE_NOOP)
+            list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_NOOP)
         endif()
     endif()
 endif()

@@ -72,7 +72,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
     bool mergeCommonCorner = true;
     /// Energy deposit threshold for accepting a hit
     /// For a generic readout frontend we assume 1000 e/h pairs, in Si each
-    /// e/h-pair requiers on average an energy of 3.65 eV (PDG  review 2023,
+    /// e/h-pair requires on average an energy of 3.65 eV (PDG  review 2023,
     /// Table 35.10)
     /// @NOTE The default is set to 0 because this works only well with Geant4
     double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;

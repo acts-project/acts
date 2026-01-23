@@ -35,7 +35,7 @@ namespace ActsTests {
 void runPlanarTests(const Surface& surface, const Svg::Style& style,
                     const std::string& identification) {
   // Default Geometry context
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   using SurfaceOptions = Svg::SurfaceConverter::Options;
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
 
   runPlanarTests(*trapeozidPlaneTransformed, planarStyle, "trapezoid_rotated");
   // A reference test for the rotated one
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   actsvg::proto::surface<std::vector<Vector3>> reference;
   reference._vertices =
       trapeozidPlaneTransformed->polyhedronRepresentation(geoCtx, 1u).vertices;

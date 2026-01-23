@@ -27,7 +27,7 @@ message(${sphinx_command})
 
 # standard target to build the documentation without automatic API generation
 add_custom_target(
-    docs
+    docs-old
     COMMAND ${Sphinx_EXECUTABLE} ${sphinx_command}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Build documentation"

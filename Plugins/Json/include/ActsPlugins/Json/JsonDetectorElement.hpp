@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Geometry/DetectorElementBase.hpp"
@@ -12,6 +13,9 @@
 #include <nlohmann/json.hpp>
 
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 
 /// A implementation of a detector element, that is constructed from a
 /// JSON description of a surface. The idea behind this is that it helps
@@ -39,12 +43,17 @@ class JsonDetectorElement : public DetectorElementBase {
   /// Return the transform for this detector element
   /// @param gctx Geometry context (unused for this implementation)
   /// @return Transform matrix for this detector element
-  const Transform3 &transform(const GeometryContext &gctx) const override;
+  const Transform3 &localToGlobalTransform(
+      const GeometryContext &gctx) const override;
+
+  bool isSensitive() const override { return true; }
 
  private:
   std::shared_ptr<Surface> m_surface;
   Transform3 m_transform{};
   double m_thickness{};
 };
+
+/// @}
 
 }  // namespace Acts

@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -111,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ConvertSurface) {
 
   auto free2 = PodioUtil::convertSurfaceFromPodio(helper, surface);
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   BOOST_REQUIRE(free2);
   BOOST_CHECK_EQUAL(free->type(), free2->type());
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     BOOST_CHECK_EQUAL(tc.size(), 0);
 
     auto t = tc.makeTrack();
-    BOOST_CHECK_EQUAL(t.tipIndex(), MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_EQUAL(t.tipIndex(), kTrackIndexInvalid);
 
     t.setParticleHypothesis(pHypo);
     BOOST_CHECK_EQUAL(t.particleHypothesis(), pHypo);
@@ -209,7 +210,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     t.nSharedHits() = 99;
     BOOST_CHECK_EQUAL(pTrack.getData().nSharedHits, 99);
 
-    GeometryContext gctx;
+    auto gctx = GeometryContext::dangerouslyDefaultConstruct();
     t.setReferenceSurface(free);
     const auto& free2 = t.referenceSurface();
     BOOST_CHECK_EQUAL(free->center(gctx), free2.center(gctx));
@@ -365,7 +366,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
     auto t3 = tc3.makeTrack();
     t3.copyFrom(t);  // this should work
 
-    BOOST_CHECK_NE(t3.tipIndex(), MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(t3.tipIndex(), kTrackIndexInvalid);
     BOOST_CHECK_GT(t3.nTrackStates(), 0);
     BOOST_REQUIRE_EQUAL(t.nTrackStates(), t3.nTrackStates());
 

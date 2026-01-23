@@ -23,7 +23,7 @@ class SurfaceArray;
 /// @class PlaneLayer
 ///
 /// Class to describe a planar detector layer for tracking,
-/// it inhertis from both, Layer base class and PlaneSurface class
+/// it inherits from both, Layer base class and PlaneSurface class
 ///
 class PlaneLayer : virtual public PlaneSurface, public Layer {
  public:

@@ -13,6 +13,7 @@
 
 #include <memory>
 
+/// @cond
 namespace torch::jit {
 class Module;
 }
@@ -20,8 +21,11 @@ class Module;
 namespace c10 {
 enum class DeviceType : std::int8_t;
 }
+/// @endcond
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 class TorchMetricLearning final : public GraphConstructionBase {
  public:
@@ -57,4 +61,5 @@ class TorchMetricLearning final : public GraphConstructionBase {
   std::unique_ptr<torch::jit::Module> m_model;
 };
 
+/// @}
 }  // namespace ActsPlugins

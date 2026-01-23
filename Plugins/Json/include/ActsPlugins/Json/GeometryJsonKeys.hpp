@@ -12,6 +12,9 @@
 
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// @struct jsonKey
 ///
 /// @brief store in a single place the different key used for the material
@@ -36,4 +39,5 @@ struct jsonKey {
   std::string maptype = "mappingType";
 };
 
+/// @}
 }  // namespace Acts

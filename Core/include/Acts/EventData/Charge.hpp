@@ -17,6 +17,7 @@
 
 namespace Acts {
 
+/// @ingroup eventdata
 /// @defgroup eventdata-charge Charge interpretation for track parameters
 ///
 /// Track parameters store a single coefficient that describes charge and
@@ -63,7 +64,7 @@ struct Neutral {
   /// @param absQ Absolute charge magnitude (must be zero for neutral particles)
   constexpr explicit Neutral(float absQ) noexcept {
     assert((absQ == 0) && "Input charge must be zero");
-    (void)absQ;
+    static_cast<void>(absQ);
   }
 
   /// Get the absolute charge magnitude
@@ -90,7 +91,7 @@ struct Neutral {
   /// @return Charge over momentum (1/momentum for neutral particles)
   constexpr double qOverP(double momentum, float signedQ) const noexcept {
     assert((signedQ != 0) && "charge must be 0");
-    (void)signedQ;
+    static_cast<void>(signedQ);
     return 1.0f / momentum;
   }
 
@@ -117,7 +118,7 @@ struct SinglyCharged {
   /// @param absQ Absolute charge magnitude (must be e for singly charged particles)
   constexpr explicit SinglyCharged(float absQ) noexcept {
     assert((absQ == UnitConstants::e) && "Input charge magnitude must be e");
-    (void)absQ;
+    static_cast<void>(absQ);
   }
 
   /// Get the absolute charge magnitude

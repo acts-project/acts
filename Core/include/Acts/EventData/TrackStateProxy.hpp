@@ -12,6 +12,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/TrackStateProxyCommon.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
@@ -31,11 +32,10 @@ namespace Acts {
 template <typename derived_t>
 class MultiTrajectory;
 
-namespace detail_lt {
+template <bool read_only>
+class AnyTrackStateProxy;
 
-/// Either type T or const T depending on the boolean.
-template <typename T, bool select>
-using ConstIf = std::conditional_t<select, const T, T>;
+namespace detail_lt {
 
 /// Helper type to make a member pointers constness transitive.
 template <typename T>
@@ -66,6 +66,8 @@ class TransitiveConstPointer {
 
   template <typename U>
   friend class TransitiveConstPointer;
+  template <bool R>
+  friend class AnyTrackStateProxy;
 
   const T& operator*() const { return *m_ptr; }
 
@@ -73,64 +75,14 @@ class TransitiveConstPointer {
 
   explicit operator bool() const { return m_ptr != nullptr; }
 
- private:
-  T* ptr() const { return m_ptr; }
+  const T* ptr() const { return m_ptr; }
+  T* ptr() { return m_ptr; }
 
+ private:
   T* m_ptr{nullptr};
 };
 
-/// Type construction helper for fixed size coefficients and associated
-/// covariances.
-template <std::size_t Size, bool ReadOnlyMaps = true>
-struct FixedSizeTypes {
-  constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
-
-  // single items
-  using Coefficients = Eigen::Matrix<double, Size, 1, Flags>;
-  using Covariance = Eigen::Matrix<double, Size, Size, Flags>;
-  using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
-  using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
-
-  using DynamicCoefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
-  using DynamicCovariance =
-      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
-  using DynamicCoefficientsMap =
-      Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
-  using DynamicCovarianceMap =
-      Eigen::Map<ConstIf<DynamicCovariance, ReadOnlyMaps>>;
-};
-
-// Type construction helper for dynamic sized coefficients and associated
-/// covariances.
-template <bool ReadOnlyMaps = true>
-struct DynamicSizeTypes {
-  constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
-
-  using Coefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
-  using Covariance =
-      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
-  using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
-  using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
-};
-
 }  // namespace detail_lt
-
-// This is public
-template <std::size_t M, bool ReadOnly = true>
-struct TrackStateTraits {
-  using Parameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CoefficientsMap;
-  using Covariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CovarianceMap;
-  using Calibrated =
-      typename detail_lt::FixedSizeTypes<M, ReadOnly>::CoefficientsMap;
-  using CalibratedCovariance =
-      typename detail_lt::FixedSizeTypes<M, ReadOnly>::CovarianceMap;
-  using EffectiveCalibrated =
-      typename detail_lt::DynamicSizeTypes<ReadOnly>::CoefficientsMap;
-  using EffectiveCalibratedCovariance =
-      typename detail_lt::DynamicSizeTypes<ReadOnly>::CovarianceMap;
-};
 
 /// Proxy object to access a single point on the trajectory.
 ///
@@ -138,7 +90,16 @@ struct TrackStateTraits {
 /// @tparam M          Maximum number of measurement dimensions
 /// @tparam read_only  true for read-only access to underlying storage
 template <typename trajectory_t, std::size_t M, bool read_only = true>
-class TrackStateProxy {
+class TrackStateProxy
+    : public TrackStateProxyCommon<TrackStateProxy<trajectory_t, M, read_only>,
+                                   read_only> {
+  using Base =
+      TrackStateProxyCommon<TrackStateProxy<trajectory_t, M, read_only>,
+                            read_only>;
+
+  friend class TrackStateProxyCommon<
+      TrackStateProxy<trajectory_t, M, read_only>, read_only>;
+
  public:
   /// Indicates whether this track state proxy is read-only or if it can be
   /// modified
@@ -149,22 +110,28 @@ class TrackStateProxy {
 
   /// Map-type for a bound parameter vector. This has reference semantics, i.e.
   /// points at a matrix by an internal pointer.
-  using Parameters = typename TrackStateTraits<M, ReadOnly>::Parameters;
+  using Parameters = typename TrackStateTraits<M, false>::Parameters;
 
   /// Same as @ref Parameters, but with const semantics
   using ConstParameters = typename TrackStateTraits<M, true>::Parameters;
 
   /// Map-type for a bound covariance. This has reference semantics, i.e.
   /// points at a matrix by an internal pointer.
-  using Covariance = typename TrackStateTraits<M, ReadOnly>::Covariance;
+  using Covariance = typename TrackStateTraits<M, false>::Covariance;
+
+  /// Jacobian shape is identical to @ref Covariance
+  using Jacobian = typename TrackStateTraits<M, false>::Covariance;
 
   /// Same as @ref Covariance, but with const semantics
   using ConstCovariance = typename TrackStateTraits<M, true>::Covariance;
 
+  /// Jacobian shape is identical to @ref Covariance
+  using ConstJacobian = typename TrackStateTraits<M, true>::Covariance;
+
   /// Map-type for a calibrated measurement vector, where the local measurement
   /// dimension is variable.
   template <std::size_t N>
-  using Calibrated = typename TrackStateTraits<N, ReadOnly>::Calibrated;
+  using Calibrated = typename TrackStateTraits<N, false>::Calibrated;
 
   /// Same as @c Calibrated, but with const semantics
   template <std::size_t N>
@@ -174,7 +141,7 @@ class TrackStateProxy {
   /// measurement dimension is variable.
   template <std::size_t N>
   using CalibratedCovariance =
-      typename TrackStateTraits<N, ReadOnly>::CalibratedCovariance;
+      typename TrackStateTraits<N, false>::CalibratedCovariance;
 
   /// Same as @ref CalibratedCovariance, but with const semantics
   template <std::size_t N>
@@ -184,7 +151,7 @@ class TrackStateProxy {
   /// Map-type for a measurement vector, where the local measurement dimension
   /// is variable.
   using EffectiveCalibrated =
-      typename TrackStateTraits<M, ReadOnly>::EffectiveCalibrated;
+      typename TrackStateTraits<M, false>::EffectiveCalibrated;
 
   /// Same as @c EffectiveCalibrated, but with const semantics
   using ConstEffectiveCalibrated =
@@ -193,7 +160,7 @@ class TrackStateProxy {
   /// Map-type for a measurement covariance matrix, where the local measurement
   /// dimension is variable.
   using EffectiveCalibratedCovariance =
-      typename TrackStateTraits<M, ReadOnly>::EffectiveCalibratedCovariance;
+      typename TrackStateTraits<M, false>::EffectiveCalibratedCovariance;
 
   /// Same as @ref EffectiveCalibratedCovariance, but with const semantics
   using ConstEffectiveCalibratedCovariance =
@@ -207,6 +174,35 @@ class TrackStateProxy {
 
   /// The track state container backend given as a template parameter
   using Trajectory = trajectory_t;
+
+  using Base::allocateCalibrated;
+  using Base::calibrated;
+  using Base::calibratedCovariance;
+  using Base::chi2;
+  using Base::covariance;
+  using Base::effectiveCalibrated;
+  using Base::effectiveCalibratedCovariance;
+  using Base::filtered;
+  using Base::filteredCovariance;
+  using Base::getMask;
+  using Base::hasCalibrated;
+  using Base::hasFiltered;
+  using Base::hasJacobian;
+  using Base::hasPredicted;
+  using Base::hasPrevious;
+  using Base::hasProjector;
+  using Base::hasSmoothed;
+  using Base::parameters;
+  using Base::pathLength;
+  using Base::predicted;
+  using Base::predictedCovariance;
+  using Base::previous;
+  using Base::projectorSubspaceHelper;
+  using Base::projectorSubspaceIndices;
+  using Base::setProjectorSubspaceIndices;
+  using Base::smoothed;
+  using Base::smoothedCovariance;
+  using Base::typeFlags;
 
   /// @anchor track_state_proxy_construct
   /// @name Constructors and assignment operator
@@ -297,33 +293,6 @@ class TrackStateProxy {
   /// @return the index
   IndexType index() const { return m_istate; }
 
-  /// Return the index of the track state `previous` in the track sequence
-  /// @return The index of the previous track state.
-  IndexType previous() const {
-    return component<IndexType, hashString("previous")>();
-  }
-
-  /// Return a mutable reference to the index of the track state 'previous' in
-  /// the track sequence
-  /// @note Only available if the track state proxy is not read-only
-  /// @return The index of the previous track state.
-  IndexType& previous()
-    requires(!ReadOnly)
-  {
-    return component<IndexType, hashString("previous")>();
-  }
-
-  /// Return whether this track state has a previous (parent) track state.
-  /// @return Boolean indicating whether a previous track state exists
-  bool hasPrevious() const {
-    return component<IndexType, hashString("previous")>() != kInvalid;
-  }
-
-  /// Build a mask that represents all the allocated components of this track
-  /// state proxy
-  /// @return The generated mask
-  TrackStatePropMask getMask() const;
-
   /// Unset an optional track state component
   /// @note Only available if the track state proxy is not read-only
   /// @param target The component to unset
@@ -369,209 +338,13 @@ class TrackStateProxy {
   }
   // NOLINTEND(performance-unnecessary-value-param)
 
-  /// Getter/setter for chi2 value associated with the track state
-  /// This overload returns a mutable reference, which allows setting a new
-  /// value directly into the backing store.
-  /// @note this overload is only enabled in case the proxy is not read-only
-  /// @return Mutable reference to the chi2 value
-  float& chi2()
-    requires(!ReadOnly)
-  {
-    return component<float, hashString("chi2")>();
-  }
-
-  /// Getter for the chi2 value associated with the track state.
-  /// This overload returns a copy of the chi2 value, and thus does not allow
-  /// modification of the value in the backing storage.
-  /// @return the chi2 value of the track state
-  float chi2() const { return component<float, hashString("chi2")>(); }
-
-  /// Getter for the path length associated with the track state.
-  /// This overloaded is only enabled if not read-only, and returns a mutable
-  /// reference.
-  /// @return Mutable reference to the pathlength.
-  double& pathLength()
-    requires(!ReadOnly)
-  {
-    return component<double, hashString("pathLength")>();
-  }
-
-  /// Getter for the path length. Returns a copy of the path length value.
-  /// @return The path length of this track state
-  double pathLength() const {
-    return component<double, hashString("pathLength")>();
-  }
-
-  /// Getter for the type flags associated with the track state.
-  /// This overloaded is only enabled if not read-only, and returns a mutable
-  /// reference.
-  /// @return reference to the type flags.
-  TrackStateType typeFlags()
-    requires(!ReadOnly)
-  {
-    return TrackStateType{
-        component<TrackStateType::raw_type, hashString("typeFlags")>()};
-  }
-
-  /// Getter for the type flags. Returns a copy of the type flags value.
-  /// @return The type flags of this track state
-  ConstTrackStateType typeFlags() const {
-    return ConstTrackStateType{
-        component<TrackStateType::raw_type, hashString("typeFlags")>()};
-  }
-
   /// @}
-
-  /// @anchor track_state_proxy_params
-  /// @name Track state parameters
-  /// @{
-
-  /// Track parameters vector. This tries to be somewhat smart and return the
-  /// first parameters that are set in this order: predicted -> filtered ->
-  /// smoothed
-  /// @return one of predicted, filtered or smoothed parameters
-  ConstParameters parameters() const;
-
-  /// Track parameters covariance matrix. This tries to be somewhat smart and
-  /// return the
-  /// first parameters that are set in this order: predicted -> filtered ->
-  /// smoothed
-  /// @return one of predicted, filtered or smoothed covariances
-  ConstCovariance covariance() const;
-
-  /// Predicted track parameters vector
-  /// @return The predicted parameters
-  ConstParameters predicted() const {
-    assert(has<hashString("predicted")>());
-    return m_traj->self().parameters(
-        component<IndexType, hashString("predicted")>());
-  }
-
-  /// Predicted track parameters vector (non-const version)
-  /// @return The predicted parameters with mutable access
-  Parameters predicted()
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("predicted")>());
-    return m_traj->self().parameters(
-        component<IndexType, hashString("predicted")>());
-  }
-
-  /// Predicted track parameters covariance matrix.
-  /// @return The predicted track parameter covariance
-  ConstCovariance predictedCovariance() const {
-    assert(has<hashString("predicted")>());
-    return m_traj->self().covariance(
-        component<IndexType, hashString("predicted")>());
-  }
-
-  /// Predicted track parameters covariance matrix (non-const version)
-  /// @return The predicted track parameter covariance with mutable access
-  Covariance predictedCovariance()
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("predicted")>());
-    return m_traj->self().covariance(
-        component<IndexType, hashString("predicted")>());
-  }
-
-  /// Check whether the predicted parameters+covariance is set
-  /// @return Whether it is set or not
-  bool hasPredicted() const { return has<hashString("predicted")>(); }
-
-  /// Filtered track parameters vector
-  /// @return The filtered parameters
-  /// @note Const version
-  ConstParameters filtered() const {
-    assert(has<hashString("filtered")>());
-    return m_traj->self().parameters(
-        component<IndexType, hashString("filtered")>());
-  }
-
-  /// Filtered track parameters vector
-  /// @return The filtered parameters
-  /// @note Mutable version
-  Parameters filtered()
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("filtered")>());
-    return m_traj->self().parameters(
-        component<IndexType, hashString("filtered")>());
-  }
-
-  /// Filtered track parameters covariance matrix
-  /// @return The filtered parameters covariance
-  /// @note Const version
-  ConstCovariance filteredCovariance() const {
-    assert(has<hashString("filtered")>());
-    return m_traj->self().covariance(
-        component<IndexType, hashString("filtered")>());
-  }
-
-  /// Filtered track parameters covariance matrix
-  /// @return The filtered parameters covariance
-  /// @note Mutable version
-  Covariance filteredCovariance()
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("filtered")>());
-    return m_traj->self().covariance(
-        component<IndexType, hashString("filtered")>());
-  }
-
-  /// Return whether filtered parameters+covariance is set
-  /// @return Whether it is set
-  bool hasFiltered() const { return has<hashString("filtered")>(); }
-
-  /// Smoothed track parameters vector
-  /// @return The smoothed parameters
-  /// @note Const version
-  ConstParameters smoothed() const {
-    assert(has<hashString("smoothed")>());
-    return m_traj->self().parameters(
-        component<IndexType, hashString("smoothed")>());
-  }
-
-  /// Smoothed track parameters vector
-  /// @return The smoothed parameters
-  /// @note Mutable version
-  Parameters smoothed()
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("smoothed")>());
-    return m_traj->self().parameters(
-        component<IndexType, hashString("smoothed")>());
-  }
-
-  /// Smoothed track parameters covariance matrix
-  /// @return the parameter covariance matrix
-  /// @note Const version
-  ConstCovariance smoothedCovariance() const {
-    assert(has<hashString("smoothed")>());
-    return m_traj->self().covariance(
-        component<IndexType, hashString("smoothed")>());
-  }
-
-  /// Smoothed track parameters covariance matrix
-  /// @return the parameter covariance matrix
-  /// @note Mutable version
-  Covariance smoothedCovariance()
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("smoothed")>());
-    return m_traj->self().covariance(
-        component<IndexType, hashString("smoothed")>());
-  }
-
-  /// Return whether smoothed parameters+covariance is set
-  /// @return Whether it is set
-  bool hasSmoothed() const { return has<hashString("smoothed")>(); }
 
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
   /// @note Const version
   ConstCovariance jacobian() const {
-    assert(has<hashString("jacobian")>());
+    assert(has<detail_tsp::kJacobianKey>());
     return m_traj->self().jacobian(m_istate);
   }
 
@@ -581,15 +354,9 @@ class TrackStateProxy {
   Covariance jacobian()
     requires(!ReadOnly)
   {
-    assert(has<hashString("jacobian")>());
+    assert(has<detail_tsp::kJacobianKey>());
     return m_traj->self().jacobian(m_istate);
   }
-
-  /// Returns whether a jacobian is set for this trackstate
-  /// @return Whether it is set
-  bool hasJacobian() const { return has<hashString("jacobian")>(); }
-
-  /// @}
 
   /// @anchor track_state_proxy_meas
   /// @name Track state measurement properties
@@ -618,64 +385,6 @@ class TrackStateProxy {
   ///
   /// @{
 
-  /// Set the projector subspace indices
-  /// @param subspaceIndices The projector subspace indices to set
-  template <std::ranges::sized_range index_range_t>
-  void setProjectorSubspaceIndices(const index_range_t& subspaceIndices)
-    requires(!ReadOnly &&
-             std::convertible_to<std::ranges::range_value_t<index_range_t>,
-                                 std::uint8_t>)
-  {
-    assert(has<hashString("projector")>());
-    assert(subspaceIndices.size() <= eBoundSize);
-    BoundSubspaceIndices boundSubspace{};
-    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
-                   boundSubspace.begin(),
-                   [](auto i) { return static_cast<std::uint8_t>(i); });
-    component<SerializedSubspaceIndices, hashString("projector")>() =
-        serializeSubspaceIndices(boundSubspace);
-  }
-
-  /// Returns whether a projector is set
-  /// @return Whether it is set
-  bool hasProjector() const { return has<hashString("projector")>(); }
-
-  /// Returns the projector subspace indices
-  /// @return The projector subspace indices
-  BoundSubspaceIndices projectorSubspaceIndices() const {
-    assert(has<hashString("projector")>());
-    return deserializeSubspaceIndices<eBoundSize>(
-        component<SerializedSubspaceIndices, hashString("projector")>());
-  }
-
-  /// Returns the projector subspace indices
-  /// @return The projector subspace indices
-  template <std::size_t measdim>
-  SubspaceIndices<measdim> projectorSubspaceIndices() const {
-    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
-    SubspaceIndices<measdim> subspace;
-    std::copy(boundSubspace.begin(), boundSubspace.begin() + measdim,
-              subspace.begin());
-    return subspace;
-  }
-
-  /// Creates a variable size subspace helper
-  /// @return The subspace helper
-  VariableBoundSubspaceHelper projectorSubspaceHelper() const {
-    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
-    std::span<std::uint8_t> validSubspaceIndices(
-        boundSubspace.begin(), boundSubspace.begin() + calibratedSize());
-    return VariableBoundSubspaceHelper(validSubspaceIndices);
-  }
-
-  /// Creates a fixed size subspace helper
-  /// @return The subspace helper
-  template <std::size_t measdim>
-  FixedBoundSubspaceHelper<measdim> projectorSubspaceHelper() const {
-    SubspaceIndices<measdim> subspace = projectorSubspaceIndices<measdim>();
-    return FixedBoundSubspaceHelper<measdim>(subspace);
-  }
-
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
   SourceLink getUncalibratedSourceLink() const;
@@ -691,89 +400,7 @@ class TrackStateProxy {
   /// Check if the point has an associated uncalibrated measurement.
   /// @return Whether it is set
   bool hasUncalibratedSourceLink() const {
-    return has<hashString("uncalibratedSourceLink")>();
-  }
-
-  /// Check if the point has an associated calibrated measurement.
-  /// @return Whether it is set
-  bool hasCalibrated() const { return has<hashString("calibrated")>(); }
-
-  /// Full calibrated measurement vector. Might contain additional zeroed
-  /// dimensions.
-  /// @return The measurement vector
-  /// @note Const version
-  template <std::size_t measdim>
-  ConstCalibrated<measdim> calibrated() const {
-    assert(has<hashString("calibrated")>());
-    return m_traj->self().template calibrated<measdim>(m_istate);
-  }
-
-  /// Full calibrated measurement vector. Might contain additional zeroed
-  /// dimensions.
-  /// @return The measurement vector
-  /// @note Mutable version
-  template <std::size_t measdim>
-  Calibrated<measdim> calibrated()
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("calibrated")>());
-    return m_traj->self().template calibrated<measdim>(m_istate);
-  }
-
-  /// Const full calibrated measurement covariance matrix. The effective
-  /// covariance is located in the top left corner, everything else is zeroed.
-  /// @return The measurement covariance matrix
-  template <std::size_t measdim>
-  ConstCalibratedCovariance<measdim> calibratedCovariance() const {
-    assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template calibratedCovariance<measdim>(m_istate);
-  }
-
-  /// Mutable full calibrated measurement covariance matrix. The effective
-  /// covariance is located in the top left corner, everything else is zeroed.
-  /// @return The measurement covariance matrix
-  template <std::size_t measdim>
-  CalibratedCovariance<measdim> calibratedCovariance()
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template calibratedCovariance<measdim>(m_istate);
-  }
-
-  /// Mutable dynamic measurement vector with only the valid dimensions.
-  /// @warning The dynamic vector has a runtime overhead!
-  /// @return The effective calibrated measurement vector
-  EffectiveCalibrated effectiveCalibrated()
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("calibrated")>());
-    return m_traj->self().effectiveCalibrated(m_istate);
-  }
-
-  /// Const dynamic measurement vector with only the valid dimensions.
-  /// @warning The dynamic matrix has a runtime overhead!
-  /// @return The effective calibrated measurement vector
-  ConstEffectiveCalibrated effectiveCalibrated() const {
-    assert(has<hashString("calibrated")>());
-    return m_traj->self().effectiveCalibrated(m_istate);
-  }
-
-  /// Mutable dynamic measurement covariance matrix with only the valid
-  /// dimensions.
-  /// @warning The dynamic matrix has a runtime overhead!
-  /// @return The effective calibrated covariance matrix
-  EffectiveCalibratedCovariance effectiveCalibratedCovariance() {
-    assert(has<hashString("calibratedCov")>());
-    return m_traj->self().effectiveCalibratedCovariance(m_istate);
-  }
-
-  /// Const dynamic measurement covariance matrix with only the valid
-  /// dimensions.
-  /// @warning The dynamic matrix has a runtime overhead!
-  /// @return The effective calibrated covariance matrix
-  ConstEffectiveCalibratedCovariance effectiveCalibratedCovariance() const {
-    assert(has<hashString("calibratedCov")>());
-    return m_traj->self().effectiveCalibratedCovariance(m_istate);
+    return has<detail_tsp::kUncalibratedKey>();
   }
 
   /// Return the (dynamic) number of dimensions stored for this measurement.
@@ -788,29 +415,10 @@ class TrackStateProxy {
   /// @note This does not allocate if an allocation of the same size already exists
   /// @note This will zero-initialize the allocated storage
   /// @note This is an error if an existing allocation has different size
-  void allocateCalibrated(std::size_t measdim) {
-    m_traj->allocateCalibrated(m_istate, measdim);
-  }
-
-  /// Allocate storage and assign the given vector and covariance to it.
-  /// The dimension is inferred from the given vector and matrix.
-  /// @tparam val_t Type of the vector
-  /// @tparam cov_t Type of the covariance matrix
-  /// @param val The measurement vector
-  /// @param cov The covariance matrix
-  /// @note This does not allocate if an allocation of the same size already exists
-  /// @note This throws an exception if an existing allocation has different size
-  template <typename val_t, typename cov_t>
-  void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
-                          const Eigen::DenseBase<cov_t>& cov)
-    requires(Concepts::eigen_base_is_fixed_size<val_t> &&
-             Concepts::eigen_bases_have_same_num_rows<val_t, cov_t> &&
-             Concepts::eigen_base_is_square<cov_t> &&
-             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <=
-                 static_cast<std::underlying_type_t<BoundIndices>>(eBoundSize))
+  void allocateCalibrated(std::size_t measdim)
+    requires(!ReadOnly)
   {
-    m_traj->template allocateCalibrated<
-        Eigen::PlainObjectBase<val_t>::RowsAtCompileTime>(m_istate, val, cov);
+    m_traj->allocateCalibrated(m_istate, measdim);
   }
 
   /// @}
@@ -948,20 +556,22 @@ class TrackStateProxy {
       }
     } else {
       if (ACTS_CHECK_BIT(mask, PM::Predicted) &&
-          has<hashString("predicted")>() &&
-          other.template has<hashString("predicted")>()) {
+          has<detail_tsp::kPredictedKey>() &&
+          other.template has<detail_tsp::kPredictedKey>()) {
         predicted() = other.predicted();
         predictedCovariance() = other.predictedCovariance();
       }
 
-      if (ACTS_CHECK_BIT(mask, PM::Filtered) && has<hashString("filtered")>() &&
-          other.template has<hashString("filtered")>()) {
+      if (ACTS_CHECK_BIT(mask, PM::Filtered) &&
+          has<detail_tsp::kFilteredKey>() &&
+          other.template has<detail_tsp::kFilteredKey>()) {
         filtered() = other.filtered();
         filteredCovariance() = other.filteredCovariance();
       }
 
-      if (ACTS_CHECK_BIT(mask, PM::Smoothed) && has<hashString("smoothed")>() &&
-          other.template has<hashString("smoothed")>()) {
+      if (ACTS_CHECK_BIT(mask, PM::Smoothed) &&
+          has<detail_tsp::kSmoothedKey>() &&
+          other.template has<detail_tsp::kSmoothedKey>()) {
         smoothed() = other.smoothed();
         smoothedCovariance() = other.smoothedCovariance();
       }
@@ -970,15 +580,16 @@ class TrackStateProxy {
         setUncalibratedSourceLink(other.getUncalibratedSourceLink());
       }
 
-      if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
-          other.template has<hashString("jacobian")>()) {
+      if (ACTS_CHECK_BIT(mask, PM::Jacobian) &&
+          has<detail_tsp::kJacobianKey>() &&
+          other.template has<detail_tsp::kJacobianKey>()) {
         jacobian() = other.jacobian();
       }
 
       // NOTE: we should not check hasCalibrated on this, since it
       // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
-          other.template has<hashString("calibrated")>()) {
+          other.template has<detail_tsp::kCalibratedKey>()) {
         visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
           allocateCalibrated(
@@ -1118,20 +729,70 @@ class TrackStateProxy {
   /// @return a const reference to the backend
   const auto& container() const { return *m_traj; }
 
+  /// Check if the track state has a specific dynamic column
+  /// @param key The hashed column key
+  /// @return true if the column exists
+  bool hasColumn(HashedString key) const { return container().hasColumn(key); }
+
+ protected:
+  ConstParameters parametersAtIndex(IndexType parIndex) const {
+    return m_traj->parameters(parIndex);
+  }
+
+  Parameters parametersAtIndexMutable(IndexType parIndex)
+    requires(!ReadOnly)
+  {
+    return m_traj->parameters(parIndex);
+  }
+
+  ConstCovariance covarianceAtIndex(IndexType covIndex) const {
+    return m_traj->covariance(covIndex);
+  }
+
+  Covariance covarianceAtIndexMutable(IndexType covIndex)
+    requires(!ReadOnly)
+  {
+    return m_traj->covariance(covIndex);
+  }
+
+  double* calibratedDataMutable()
+    requires(!ReadOnly)
+  {
+    return m_traj->template calibrated<M>(m_istate).data();
+  }
+
+  const double* calibratedData() const {
+    return m_traj->template calibrated<M>(m_istate).data();
+  }
+
+  double* calibratedCovarianceDataMutable()
+    requires(!ReadOnly)
+  {
+    return m_traj->template calibratedCovariance<M>(m_istate).data();
+  }
+
+  const double* calibratedCovarianceData() const {
+    return m_traj->template calibratedCovariance<M>(m_istate).data();
+  }
+
  private:
   // Private since it can only be created by the trajectory.
-  TrackStateProxy(
-      detail_lt::ConstIf<MultiTrajectory<Trajectory>, ReadOnly>& trajectory,
-      IndexType istate);
+  TrackStateProxy(const_if_t<ReadOnly, MultiTrajectory<Trajectory>>& trajectory,
+                  IndexType istate);
 
   detail_lt::TransitiveConstPointer<
-      detail_lt::ConstIf<MultiTrajectory<Trajectory>, ReadOnly>>
+      const_if_t<ReadOnly, MultiTrajectory<Trajectory>>>
       m_traj;
   IndexType m_istate;
 
   friend class Acts::MultiTrajectory<Trajectory>;
   friend class TrackStateProxy<Trajectory, M, true>;
   friend class TrackStateProxy<Trajectory, M, false>;
+  template <bool R>
+  friend class AnyTrackStateProxy;
+
+  const auto* rawTrajectoryPtr() const { return m_traj.ptr(); }
+  auto* rawTrajectoryPtr() { return m_traj.ptr(); }
 };
 }  // namespace Acts
 

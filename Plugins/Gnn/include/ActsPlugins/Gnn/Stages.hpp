@@ -16,6 +16,8 @@
 #include <vector>
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
 /// Error that is thrown if no edges are found
 struct NoEdgesError : std::exception {};
@@ -81,4 +83,5 @@ class TrackBuildingBase {
   virtual ~TrackBuildingBase() = default;
 };
 
+/// @}
 }  // namespace ActsPlugins
