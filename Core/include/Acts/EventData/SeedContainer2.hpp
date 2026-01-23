@@ -65,6 +65,7 @@ class SeedContainer2 {
   /// contained in it.
   /// @return The number of seeds in the container.
   std::size_t size() const noexcept { return m_size; }
+
   /// Checks if the seed container is empty.
   /// @return True if the container is empty, false otherwise.
   bool empty() const noexcept { return size() == 0; }
@@ -84,7 +85,7 @@ class SeedContainer2 {
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
       SpacePointContainer2 spacePointContainer) noexcept;
-      
+
   /// Assigns the mutable space point container to be used by this seed
   /// container by reference. Note that the ownership of the space point
   /// container is not transferred and the user must ensure that the space point
@@ -92,6 +93,7 @@ class SeedContainer2 {
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
       SpacePointContainer2 &spacePointContainer) noexcept;
+
   /// Assigns the const space point container to be used by this seed container
   /// by const reference. Note that the ownership of the space point container
   /// is not transferred and the user must ensure that the space point container
@@ -99,12 +101,14 @@ class SeedContainer2 {
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
       const SpacePointContainer2 &spacePointContainer) noexcept;
+
   /// Assigns the mutable space point container to be used by this seed
   /// container by shared pointer. The ownership of the space point container is
   /// shared between this seed container and the user.
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(const std::shared_ptr<SpacePointContainer2>
                                      &spacePointContainer) noexcept;
+
   /// Assigns the const space point container to be used by this seed container
   /// by shared pointer. The ownership of the space point container is shared
   /// between this seed container and the user.
@@ -117,6 +121,7 @@ class SeedContainer2 {
   /// container.
   /// @return True if a space point container has been assigned.
   bool hasSpacePointContainer() const noexcept;
+
   /// Checks if a mutable space point container has been assigned to this seed
   /// container.
   /// @return True if a mutable space point container has been assigned.
@@ -126,6 +131,7 @@ class SeedContainer2 {
   /// @return A const reference to the assigned space point container.
   /// @throws std::logic_error if no space point container has been assigned.
   const SpacePointContainer2 &spacePointContainer() const;
+
   /// Returns a mutable reference to the assigned space point container.
   /// @return A mutable reference to the assigned space point container.
   /// @throws std::logic_error if no mutable space point container has been assigned.
@@ -141,6 +147,7 @@ class SeedContainer2 {
   /// @return A mutable proxy to the seed at the given index.
   /// @throws std::out_of_range if the index is out of range.
   MutableProxy at(Index index);
+
   /// Returns a const proxy to the seed at the given index.
   /// If the index is out of range, an exception is thrown.
   /// @param index The index of the seed to access.
@@ -152,6 +159,7 @@ class SeedContainer2 {
   /// @param index The index of the seed to access.
   /// @return A mutable proxy to the seed at the given index.
   MutableProxy operator[](Index index) noexcept;
+
   /// Returns a const proxy to the seed at the given index.
   /// @param index The index of the seed to access.
   /// @return A const proxy to the seed at the given index.
@@ -185,6 +193,7 @@ class SeedContainer2 {
     assert(index < m_qualities.size() && "Index out of bounds");
     return m_qualities[index];
   }
+
   /// Mutable access to the vertex Z coordinate of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A mutable reference to the vertex Z coordinate of the seed at the
@@ -214,6 +223,7 @@ class SeedContainer2 {
     assert(index < m_qualities.size() && "Index out of bounds");
     return m_qualities[index];
   }
+
   /// Const access to the vertex Z coordinate of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A const reference to the vertex Z coordinate of the seed at the
