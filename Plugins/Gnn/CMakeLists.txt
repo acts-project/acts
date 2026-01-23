@@ -25,6 +25,7 @@ if(ACTS_GNN_ENABLE_MODULEMAP)
         ActsPluginGnn
         PRIVATE ModuleMapGraph::CPU ModuleMapGraph::GPU
     )
+    # EdgeLayerConnector.cu is included in ModuleMapGraph.cu because of ODR violations in ModuleMapGraph
     target_sources(ActsPluginGnn PRIVATE src/ModuleMapCuda.cu)
 endif()
 
