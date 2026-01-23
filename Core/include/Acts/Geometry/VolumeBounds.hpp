@@ -26,6 +26,7 @@ namespace Acts {
 class Surface;
 class VolumeBounds;
 class Direction;
+class Volume;
 
 struct OrientedSurface {
   std::shared_ptr<RegularSurface> surface;
@@ -112,6 +113,9 @@ class VolumeBounds {
   /// @return a vector of surfaces bounding this volume
   virtual std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const = 0;
+
+  std::vector<OrientedSurface> boundarySurfaces(const GeometryContext& gctx,
+                                                Volume& parentVolume) const;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
