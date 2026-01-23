@@ -82,7 +82,6 @@ class Volume : public GeometryObject {
   /// @brief Get the transform matrix that positions the volume in 3D space
   /// @deprecated: Function deprecated in favour of localToGlobalTransform
   /// @return Const reference to the transform matrix
- private:
   [[deprecated(
       "Use localToGlobalTransform(const GeometryContext& gctx) instead.")]]
   const Transform3& transform() const;
@@ -94,7 +93,6 @@ class Volume : public GeometryObject {
       "Use globalToLocalTransform(const GeometryContext& gctx) instead.")]]
   const Transform3& itransform() const;
 
- public:
   /// @brief Set the transform matrix for the volume and update internal state
   /// @param transform The new transform matrix to be applied
   void setTransform(const Transform3& transform);
