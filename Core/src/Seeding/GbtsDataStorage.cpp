@@ -13,6 +13,7 @@
 #include <cstring>
 #include <numbers>
 #include <utility>
+
 namespace Acts::Experimental {
 
 GbtsEtaBin::GbtsEtaBin() {

@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cassert>
 #include <sstream>
+
 namespace Acts {
 
 Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
