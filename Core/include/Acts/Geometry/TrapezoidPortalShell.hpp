@@ -40,10 +40,6 @@ class TrapezoidPortalShell : public PortalShellBase {
 
   /// @copydoc PortalShellBase::fill
   void fill(TrackingVolume& volume) override;
-
-  /// @brief Get the transformation matrix for this trapezoid portal shell
-  /// @return Reference to the transformation matrix
-  virtual const Transform3& transform() const = 0;
 };
 
 /// Output stream operator for the TrapezoidPortalShell::Face enum
@@ -77,10 +73,6 @@ class SingleTrapezoidPortalShell : public TrapezoidPortalShell {
 
   /// @copydoc PortalShellBase::label
   std::string label() const override;
-
-  const Transform3& transform() const override {
-    return m_volume->transform();
-  };
 
  private:
   std::array<std::shared_ptr<Portal>, 6> m_portals{};

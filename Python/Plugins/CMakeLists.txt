@@ -11,7 +11,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
         set(_target "ActsPluginsPythonBindings${_name}")
         pybind11_add_module(${_target} src/${_name}.cpp)
 
-        install(TARGETS ${_target} DESTINATION ${_python_install_dir})
+        install(TARGETS ${_target} DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
 
         set_target_properties(
             ${_target}
@@ -39,7 +39,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
     )
     install(
         FILES ${_python_dir}/acts/${_name_lower}.py
-        DESTINATION ${_python_install_dir}
+        DESTINATION ${ACTS_PYTHON_INSTALL_DIR}
     )
 endmacro()
 

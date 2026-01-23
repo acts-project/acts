@@ -128,7 +128,8 @@ struct FitterTester {
   using Rng = std::default_random_engine;
 
   // Context objects
-  Acts::GeometryContext geoCtx;
+  Acts::GeometryContext geoCtx =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
   Acts::MagneticFieldContext magCtx;
   Acts::CalibrationContext calCtx;
 

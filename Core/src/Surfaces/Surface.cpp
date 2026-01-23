@@ -85,7 +85,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
 AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  (void)direction;
+  static_cast<void>(direction);
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The vector between position and center
@@ -169,6 +169,7 @@ Surface& Surface::operator=(const Surface& other) {
     m_associatedLayer = other.m_associatedLayer;
     m_surfaceMaterial = other.m_surfaceMaterial;
     m_associatedDetElement = other.m_associatedDetElement;
+    m_isSensitive = other.m_isSensitive;
   }
   return *this;
 }
@@ -197,6 +198,10 @@ bool Surface::operator==(const Surface& other) const {
   }
   // (f) compare material
   if (m_surfaceMaterial != other.m_surfaceMaterial) {
+    return false;
+  }
+  // (g) compare sensitivity
+  if (m_isSensitive != other.m_isSensitive) {
     return false;
   }
 
@@ -354,6 +359,8 @@ void Surface::assignDetectorElement(const DetectorElementBase& detelement) {
   // resetting the transform as it will be handled through the detector element
   // now
   m_transform.reset();
+  // reset sensitivity flag
+  m_isSensitive = false;
 }
 
 void Surface::assignSurfaceMaterial(
@@ -370,6 +377,22 @@ void Surface::visualize(IVisualization3D& helper, const GeometryContext& gctx,
   Polyhedron polyhedron =
       polyhedronRepresentation(gctx, viewConfig.quarterSegments);
   polyhedron.visualize(helper, viewConfig);
+}
+
+void Surface::assignIsSensitive(bool isSensitive) {
+  if (m_associatedDetElement != nullptr) {
+    throw std::logic_error(
+        "Cannot assign sensitivity to a surface associated to a detector "
+        "element.");
+  }
+  m_isSensitive = isSensitive;
+}
+
+bool Surface::isSensitive() const {
+  if (m_associatedDetElement != nullptr) {
+    return m_associatedDetElement->isSensitive();
+  }
+  return m_isSensitive;
 }
 
 }  // namespace Acts

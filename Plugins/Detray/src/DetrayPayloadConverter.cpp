@@ -210,7 +210,7 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
       DetrayPayloadConverter::Config::SensitiveStrategy::Identifier) {
     isSensitive = surface.geometryId().sensitive() > 0;
   } else {
-    isSensitive = surface.associatedDetectorElement() != nullptr;
+    isSensitive = surface.isSensitive();
   }
 
   if (portal) {
@@ -224,10 +224,10 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
 }
 
 detray::io::volume_payload DetrayPayloadConverter::convertVolume(
-    const TrackingVolume& volume) const {
+    const GeometryContext& gctx, const TrackingVolume& volume) const {
   detray::io::volume_payload payload;
-  payload.transform =
-      DetrayConversionUtils::convertTransform(volume.transform());
+  payload.transform = DetrayConversionUtils::convertTransform(
+      volume.localToGlobalTransform(gctx));
   payload.name = volume.volumeName();
   switch (volume.volumeBounds().type()) {
     using enum VolumeBounds::BoundsType;
@@ -696,7 +696,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
       volumeSurfaceIndices;
 
   geometry.apply([&](const TrackingVolume& volume) {
-    auto& volPayload = detPayload.volumes.emplace_back(convertVolume(volume));
+    auto& volPayload =
+        detPayload.volumes.emplace_back(convertVolume(gctx, volume));
     volPayload.index.link = detPayload.volumes.size() - 1;
     volumeIds[&volume] = volPayload.index.link;
 

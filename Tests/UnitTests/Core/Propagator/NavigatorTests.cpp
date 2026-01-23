@@ -50,7 +50,7 @@ using Acts::VectorHelpers::perp;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 void step(Vector3& pos, const Vector3& dir, double stepSize) {
@@ -601,10 +601,10 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     ACTS_INFO("Test 3: start in the middle with external surfaces");
 
     Navigator::Options options(tgContext);
-    options.insertExternalSurface(surfaceTop.geometryId());
+    options.insertExternalSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
-    Vector3 position = {0, 0, 0};
+    Vector3 position = Vector3::Zero();
     Vector3 direction = Vector3::UnitZ();
 
     Result<void> result =
@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     ACTS_INFO("Test 4: start from top with external surfaces");
 
     Navigator::Options options(tgContext);
-    options.insertExternalSurface(surfaceBottom.geometryId());
+    options.insertExternalSurface(surfaceBottom);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, 0.5_m, 0};
@@ -645,7 +645,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     ACTS_INFO("Test 5: start from bottom with external surfaces");
 
     Navigator::Options options(tgContext);
-    options.insertExternalSurface(surfaceTop.geometryId());
+    options.insertExternalSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, -0.5_m, 0};

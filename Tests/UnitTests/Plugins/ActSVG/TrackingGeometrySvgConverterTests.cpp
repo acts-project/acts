@@ -27,7 +27,7 @@ using namespace ActsPlugins;
 
 namespace ActsTests {
 
-GeometryContext tgContext;
+auto tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(ActSvgSuite)
 
