@@ -73,7 +73,7 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
   Acts::Surface& surface() final;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const final;
+  double thickness() const;
 
   /// Return local to global transform associated with this identifier
   ///

@@ -346,7 +346,7 @@ const DetectorElementBase* Surface::associatedDetectorElement() const {
   return dynamic_cast<const DetectorElementBase*>(m_placement);
 }
 
-double Surface::thickness() const {
+double Surface::depth() const {
   return m_thickness;
 }
 

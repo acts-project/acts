@@ -108,7 +108,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   }
 
   if (surface.isSensitive()) {
-    data.module_t = surface.thickness() / Acts::UnitConstants::mm;
+    data.module_t = surface.depth() / Acts::UnitConstants::mm;
   }
 }
 

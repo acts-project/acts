@@ -20,14 +20,6 @@
 
 namespace Acts {
 
-StrawSurface& StrawSurface::operator=(const StrawSurface& other) {
-  if (this != &other) {
-    LineSurface::operator=(other);
-    m_bounds = other.m_bounds;
-  }
-  return *this;
-}
-
 Polyhedron StrawSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces

@@ -39,7 +39,7 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 DiscSurface::DiscSurface(const DiscSurface& other)
-    : RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 DiscSurface::DiscSurface(const GeometryContext& gctx, const DiscSurface& other,
                          const Transform3& shift)
@@ -374,8 +374,7 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
 
   ACTS_VERBOSE("Merging disc surfaces in " << direction << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (surfacePlacement() != nullptr || other.surfacePlacement() != nullptr) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");

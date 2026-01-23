@@ -37,7 +37,7 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 CylinderSurface::CylinderSurface(const CylinderSurface& other)
-    : RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                  const CylinderSurface& other,
@@ -357,8 +357,7 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
   ACTS_VERBOSE("Merging cylinder surfaces in " << axisDirectionName(direction)
                                                << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (surfacePlacement() != nullptr || other.surfacePlacement() != nullptr) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");

@@ -38,12 +38,6 @@ class StrawSurface : public LineSurface {
   using LineSurface::LineSurface;
 
  public:
-  /// Assignment operator
-  ///
-  /// @param other is the source surface for copying
-  /// @return Reference to this surface for assignment chaining
-  StrawSurface& operator=(const StrawSurface& other);
-
   /// Return the surface type
   /// @return Surface type identifier for straw surfaces
   SurfaceType type() const final { return Surface::Straw; }

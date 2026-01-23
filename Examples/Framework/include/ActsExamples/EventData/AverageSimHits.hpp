@@ -52,11 +52,11 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     // check their validity again.
     const auto& simHit = *simHits.nth(simHitIdx);
 
-    // We use the thickness of the detector element as tolerance, because Geant4
+    // We use the thickness of the surface as tolerance, because Geant4
     // treats the Surfaces as volumes and thus it is not ensured, that each hit
     // lies exactly on the Acts::Surface
-    const double tolerance = surface.isSensitive() ? surface.thickness()
-                                                   : Acts::s_onSurfaceTolerance;
+    const double tolerance =
+        surface.isSensitive() ? surface.depth() : Acts::s_onSurfaceTolerance;
 
     // transforming first to local positions and average that ensures that the
     // averaged position is still on the surface. the averaged global position

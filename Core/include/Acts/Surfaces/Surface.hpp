@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -88,7 +89,7 @@ class Surface : public virtual GeometryObject,
   /// to detector element and layer
   ///
   /// @param other Source surface for copy.
-  Surface(const Surface& other);
+  explicit Surface(const Surface& other);
 
   /// Constructor from SurfacePlacement: Element proxy
   ///
@@ -108,8 +109,8 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other Source surface for copy
   /// @param shift Additional transform applied as: shift * transform
-  Surface(const GeometryContext& gctx, const Surface& other,
-          const Transform3& shift);
+  explicit Surface(const GeometryContext& gctx, const Surface& other,
+                   const Transform3& shift);
 
  public:
   ~Surface() noexcept override;
@@ -229,7 +230,7 @@ class Surface : public virtual GeometryObject,
   const Layer* associatedLayer() const;
 
   /// @brief Return the thickness of the surface in the normal direction
-  double thickness() const;
+  double depth() const;
 
   /// Set Associated Layer
   /// Many surfaces can be associated to a Layer, but it might not be known yet
@@ -554,11 +555,11 @@ class Surface : public virtual GeometryObject,
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
 
- private:
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
   std::unique_ptr<const Transform3> m_transform{};
 
+ private:
   /// Pointer to the a SurfacePlacement
   const SurfacePlacementBase* m_placement{nullptr};
 
@@ -577,7 +578,7 @@ class Surface : public virtual GeometryObject,
   bool m_isSensitive{false};
 
   /// @brief Thickness of the surface in the normal direction
-  double m_thickness{0};
+  double m_thickness{0.};
   /// Calculate the derivative of bound track parameters w.r.t.
   /// alignment parameters of its reference surface (i.e. origin in global 3D
   /// Cartesian coordinates and its rotation represented with extrinsic Euler

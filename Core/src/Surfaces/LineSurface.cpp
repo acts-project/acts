@@ -40,7 +40,7 @@ LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
 }
 
 LineSurface::LineSurface(const LineSurface& other)
-    : Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, Surface(other), m_bounds(other.m_bounds) {}
 
 LineSurface::LineSurface(const GeometryContext& gctx, const LineSurface& other,
                          const Transform3& shift)

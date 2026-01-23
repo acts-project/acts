@@ -23,7 +23,7 @@
 #include <vector>
 
 namespace Acts {
-
+class SurfacePlacementBase;
 class TrackingVolume;
 class VolumeBounds;
 class RectangleBounds;

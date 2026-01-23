@@ -34,7 +34,7 @@
 namespace Acts {
 
 PlaneSurface::PlaneSurface(const PlaneSurface& other)
-    : RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                            const PlaneSurface& other,
@@ -197,8 +197,7 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   ACTS_VERBOSE("Merging plane surfaces in " << axisDirectionName(direction)
                                             << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (surfacePlacement() != nullptr || other.surfacePlacement() != nullptr) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "PlaneSurface::merge: surfaces are "
                                   "associated with a detector element");

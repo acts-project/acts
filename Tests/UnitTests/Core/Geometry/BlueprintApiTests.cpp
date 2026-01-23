@@ -70,7 +70,7 @@ inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
     auto& element = elements.emplace_back(
         std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
 
-    element->surface().assignDetectorElement(*element);
+    element->surface().assignSurfacePlacement(*element);
 
     surfaces.push_back(element->surface().getSharedPtr());
   }
@@ -100,7 +100,7 @@ inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
                        AngleAxis3{90_degree, Vector3::UnitZ()};
       auto& element = elements.emplace_back(
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
-      element->surface().assignDetectorElement(*element);
+      element->surface().assignSurfacePlacement(*element);
       surfaces.push_back(element->surface().getSharedPtr());
     }
   }

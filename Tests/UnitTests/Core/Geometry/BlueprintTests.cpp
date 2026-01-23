@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
     auto& element = elements.emplace_back(
         std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
 
-    element->surface().assignDetectorElement(*element);
+    element->surface().assignSurfacePlacement(*element);
 
     surfaces.push_back(element->surface().getSharedPtr());
   }
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
                        AngleAxis3{90_degree, Vector3::UnitZ()};
       auto& element = elements.emplace_back(
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
-      element->surface().assignDetectorElement(*element);
+      element->surface().assignSurfacePlacement(*element);
       surfaces.push_back(element->surface().getSharedPtr());
     }
   }
@@ -1087,7 +1087,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
       auto& element = elements.emplace_back(
           std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
 
-      element->surface().assignDetectorElement(*element);
+      element->surface().assignSurfacePlacement(*element);
       surfaces.push_back(element->surface().getSharedPtr());
     }
 
@@ -1157,7 +1157,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
                          AngleAxis3{90_degree, Vector3::UnitZ()};
         auto& element = elements.emplace_back(
             std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
-        element->surface().assignDetectorElement(*element);
+        element->surface().assignSurfacePlacement(*element);
         surfaces.push_back(element->surface().getSharedPtr());
       }
     }

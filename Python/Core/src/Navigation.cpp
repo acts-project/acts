@@ -125,7 +125,7 @@ void addNavigation(py::module_& m) {
 
         auto surface = Surface::makeShared<CylinderSurface>(
             Transform3::Identity(), std::make_shared<CylinderBounds>(30, 40));
-        surface->assignDetectorElement(*detElem);
+        surface->assignSurfacePlacement(*detElem);
 
         vol1->addSurface(std::move(surface));
 

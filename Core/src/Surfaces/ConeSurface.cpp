@@ -32,7 +32,7 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 ConeSurface::ConeSurface(const ConeSurface& other)
-    : RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 ConeSurface::ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
                          const Transform3& shift)
