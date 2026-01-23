@@ -47,6 +47,7 @@ std::shared_ptr<const Surface> CuboidVolumeBuilder::buildSurface(
     surface = Surface::makeShared<PlaneSurface>(
         cfg.rBounds,
         *(cfg.detElementConstructor(trafo, cfg.rBounds, cfg.thickness)));
+    surface->assignDepth(cfg.thickness);
   } else {
     surface = Surface::makeShared<PlaneSurface>(trafo, cfg.rBounds);
   }

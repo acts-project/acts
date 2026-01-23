@@ -28,6 +28,8 @@ ActsTests::DetectorElementStub::DetectorElementStub(
       Surface::makeShared<CylinderSurface>(std::move(cBounds), *this);
   m_elementSurface->assignDepth(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
+  assert(m_elementSurface->surfacePlacement() == this);
+  assert(m_elementSurface->isSensitive() == isSensitive());
 }
 
 ActsTests::DetectorElementStub::DetectorElementStub(
@@ -38,6 +40,8 @@ ActsTests::DetectorElementStub::DetectorElementStub(
       Surface::makeShared<PlaneSurface>(std::move(pBounds), *this);
   m_elementSurface->assignDepth(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
+  assert(m_elementSurface->surfacePlacement() == this);
+  assert(m_elementSurface->isSensitive() == isSensitive());
 }
 
 ActsTests::DetectorElementStub::DetectorElementStub(
@@ -48,4 +52,6 @@ ActsTests::DetectorElementStub::DetectorElementStub(
       Surface::makeShared<LineSurfaceStub>(std::move(lBounds), *this);
   m_elementSurface->assignDepth(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
+  assert(m_elementSurface->surfacePlacement() == this);
+  assert(m_elementSurface->isSensitive() == isSensitive());
 }
