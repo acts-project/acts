@@ -399,7 +399,9 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
     m_effPlotTool.fill(ctx.geoContext, particle.initialState(), minDeltaR,
                        isReconstructed);
     // Fill number of duplicated tracks for this particle
-    m_duplicationPlotTool.fill(particle.initialState(), nMatchedTracks - 1);
+    // Guard against underflow when nMatchedTracks == 0
+    m_duplicationPlotTool.fill(particle.initialState(),
+                               nMatchedTracks > 0 ? nMatchedTracks - 1 : 0);
 
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
     m_fakePlotTool.fill(particle.initialState(), nMatchedTracks, nFakeTracks);
