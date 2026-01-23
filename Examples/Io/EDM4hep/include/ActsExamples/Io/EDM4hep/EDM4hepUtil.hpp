@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
+#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
 
 #include <functional>
 
