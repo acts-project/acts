@@ -53,7 +53,7 @@ class DetectorElementStub : public SurfacePlacementBase {
   Surface& surface() override { throw std::runtime_error("Not implemented"); }
 
  private:
-  Transform3 m_transform{Tranform3::Identity()};
+  Transform3 m_transform{Transform3::Identity()};
 };
 
 }  // namespace Test
