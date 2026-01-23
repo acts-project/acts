@@ -67,7 +67,12 @@ class VolumePlacementBase {
   /// @param portalIdx: Internal index of the portal surface [0 - number of portals)
   virtual const Transform3& portalLocalToGlobal(
       const GeometryContext& gctx, const std::size_t portalIdx) const = 0;
-  /// @brief Helper method to  invoke
+  /// @brief Helper method to invoke the population of the experiment specific
+  ///        GeometryContext with the transforms of the associated portals
+  ///        If the implementation of the GeometryContext does not forsee
+  ///        a const-mutable lazy population, this method has to be called
+  ///        at every change of the alignment constants
+  /// @param gctx: Mutable reference of the GeometryContext to populate
   void populateContextWithPortals(GeometryContext& gctx) const;
 
  protected:
