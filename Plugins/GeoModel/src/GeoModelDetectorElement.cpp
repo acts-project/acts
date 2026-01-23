@@ -23,8 +23,9 @@ ActsPlugins::GeoModelDetectorElement::GeoModelDetectorElement(
       m_surface(std::move(surface)),
       m_surfaceTransform(sfTransform),
       m_thickness(thickness) {
-  m_surface->assignDepth(thickness);
-  m_surface->assignSurfacePlacement(*this);
+  if (m_surface) {
+    attachSurface(std::move(m_surface));
+  }
 }
 
 const Transform3& ActsPlugins::GeoModelDetectorElement::localToGlobalTransform(

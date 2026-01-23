@@ -567,10 +567,6 @@ class Surface : public virtual GeometryObject,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
 
-  /// The associated TrackingVolume - tracking volume in case the surface is a
-  /// boundary surface, nullptr if not associated
-  const TrackingVolume* m_associatedTrackingVolume{nullptr};
-
   /// Possibility to attach a material description
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
 

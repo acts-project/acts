@@ -117,6 +117,9 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   /// @param surface The surface to attach
   void attachSurface(std::shared_ptr<Acts::Surface> surface) {
     m_surface = std::move(surface);
+    assert(m_surface != nullptr);
+    m_surface->assignDepth(thickness());
+    m_surface->assignSurfacePlacement(*this);
   }
 
  private:
@@ -126,7 +129,7 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   /// The surface
   std::shared_ptr<Acts::Surface> m_surface;
   /// The global transformation before the volume
-  Acts::Transform3 m_surfaceTransform;
+  Acts::Transform3 m_surfaceTransform{Acts::Transform3::Identity()};
   ///  Thickness of this detector element
   double m_thickness{0.};
 };
