@@ -102,7 +102,7 @@ void VolumeMaterialMapper::checkAndInsert(State& mState,
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning is " << *bu);
       // Now update
-      BinUtility buAdjusted = adjustBinUtility(*bu, volume);
+      BinUtility buAdjusted = adjustBinUtility(mState.geoContext, *bu, volume);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
       mState.materialBin[geoID] = buAdjusted;
@@ -417,7 +417,7 @@ void VolumeMaterialMapper::mapMaterialTrack(
   // to map onto
   while (rmIter != rMaterial.end() && volIter != mappingVolumes.end()) {
     if (volIter != mappingVolumes.end() &&
-        !volIter->volume->inside(rmIter->position)) {
+        !volIter->volume->inside(mState.geoContext, rmIter->position)) {
       // Check if the material point is past the entry point to the current
       // volume (this prevents switching volume before the first volume has been
       // reached)
@@ -430,7 +430,8 @@ void VolumeMaterialMapper::mapMaterialTrack(
       }
     }
     if (volIter != mappingVolumes.end() &&
-        volIter->volume->inside(rmIter->position, s_epsilon)) {
+        volIter->volume->inside(mState.geoContext, rmIter->position,
+                                s_epsilon)) {
       currentID = volIter->volume->geometryId();
       direction = rmIter->direction;
       if (!(currentID == lastID)) {
@@ -464,7 +465,8 @@ void VolumeMaterialMapper::mapMaterialTrack(
       // check if we have reached the end of the volume or the last hit of the
       // track.
       if ((rmIter + 1) == rMaterial.end() ||
-          !volIter->volume->inside((rmIter + 1)->position, s_epsilon)) {
+          !volIter->volume->inside(mState.geoContext, (rmIter + 1)->position,
+                                   s_epsilon)) {
         // find the boundary surface corresponding to the end of the volume
         while (sfIter != mappingSurfaces.end()) {
           if (sfIter->surface->geometryId().volume() == lastID.volume() ||

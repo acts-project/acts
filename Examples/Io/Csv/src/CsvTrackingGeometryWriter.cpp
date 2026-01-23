@@ -225,7 +225,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
                  bool writeLayerVolume, const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
   if (volume.confinedLayers() != nullptr) {
-    const auto& vTransform = volume.transform();
+    const auto& vTransform = volume.localToGlobalTransform(geoCtx);
 
     // Get the values of the volume boundaries
     std::vector<double> volumeBoundValues = volume.volumeBounds().values();
@@ -288,7 +288,8 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
           if (rVolume->volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
             bool last = (layerIdx + 2 ==
                          volume.confinedLayers()->arrayObjects().size());
-            writeCylinderLayerVolume(lvWriter, *layer, rVolume->transform(),
+            writeCylinderLayerVolume(lvWriter, *layer,
+                                     rVolume->localToGlobalTransform(geoCtx),
                                      representingBoundValues, volumeBoundValues,
                                      lastBoundValues, last);
           }
