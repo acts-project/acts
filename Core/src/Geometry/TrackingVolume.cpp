@@ -159,7 +159,7 @@ void TrackingVolume::createBoundarySurfaces() {
   using Boundary = BoundarySurfaceT<TrackingVolume>;
 
   // Transform Surfaces To BoundarySurfaces
-  auto orientedSurfaces = Volume::volumeBounds().orientedSurfaces(m_transform);
+  auto orientedSurfaces = volumeBounds().boundarySurfaces(*this);
 
   m_boundarySurfaces.reserve(orientedSurfaces.size());
   for (auto& osf : orientedSurfaces) {
