@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Geometry/VolumePlacementBase.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -39,13 +40,25 @@ class Volume : public GeometryObject {
   ///
   /// @param transform is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
-  Volume(const Transform3& transform, std::shared_ptr<VolumeBounds> volbounds);
+  explicit Volume(const Transform3& transform,
+                  std::shared_ptr<VolumeBounds> volbounds) noexcept;
+  /// @brief Constructor that connects the volume to an external alignment
+  ///        I.e. the volume may move with the alignment of the surfaces
+  ///        The placement of the volume is delegated to the positioner
+  /// @param positioner: Reference to the object aligning the volume
+  /// @param volbounds is the volume boundary definitions
+  explicit Volume(VolumePlacementBase& positioner,
+                  std::shared_ptr<VolumeBounds> volbounds) noexcept;
 
-  /// Copy Constructor - with optional shift
-  ///
+  /// @brief Copy Constructor
+  /// @param vol is the source volume for the copy
+  explicit Volume(const Volume& vol) noexcept;
+  /// @brief Copy Constructor - with shift
   /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied as : shift * vol.transform()
-  Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
+  /// @param gctx The current geometry context object, e.g. alignment
+  explicit Volume(const Volume& vol, const Transform3& shift,
+                  const GeometryContext& gctx) noexcept;
 
   ~Volume() noexcept override = default;
 
@@ -53,7 +66,7 @@ class Volume : public GeometryObject {
   ///
   /// @param vol is the source volume to be copied
   /// @return Reference to this volume for assignment chaining
-  Volume& operator=(const Volume& vol);
+  Volume& operator=(const Volume& vol) noexcept;
 
   /// @brief Get the transformation matrix from the local volume frame
   ///        to the global experiment's frame
@@ -180,19 +193,23 @@ class Volume : public GeometryObject {
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
                  const ViewConfig& viewConfig) const;
 
- protected:
-  /// @brief Transform matrix that positions the volume in 3D space
-  Transform3 m_transform;
-
-  /// @brief Inverse of the transform matrix for efficient calculations
-  Transform3 m_itransform;
-
-  /// @brief Center position of the volume in global coordinates
-  Vector3 m_center;
+  VolumePlacementBase* volumePositioner();
+  const VolumePlacementBase* volumePositioner() const;
 
  private:
+  /// @brief Transform matrix that positions the volume in 3D space
+  std::unique_ptr<const Transform3> m_transform{};
+
+  /// @brief Inverse of the transform matrix for efficient calculations
+  std::unique_ptr<const Transform3> m_itransform{};
+
+  /// @brief Center position of the volume in global coordinates
+  Vector3 m_center{Vector3::Zero()};
+
   /// @brief Volume bounds that define the shape and extent of the volume
   std::shared_ptr<VolumeBounds> m_volumeBounds;
+  /// @brief Pointer to the external volume placement that's connected to the alignment
+  VolumePlacementBase* m_placement{nullptr};
 };
 
 /**Overload of << operator for std::ostream for debug output*/
