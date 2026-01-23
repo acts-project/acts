@@ -38,7 +38,7 @@ class VolumePlacementBase {
   ///        the portal surfaces is a priori unrestricted, the ownership
   ///        of the portal surface is transferred
   /// @param portalIdx: Internal index of the portal surface [0 - number of portals)
-  /// @param protalToVolTrf: Transform to switch from the portal's frame into the volume's frame
+  /// @param portalToVolTrf: Transform to switch from the portal's frame into the volume's frame
   /// @param surface: Mutable reference to the portal surface that is to be aligned
   std::shared_ptr<RegularSurface> makePortalAlignable(
       const std::size_t portalIdx, const Transform3& portalToVolTrf,
