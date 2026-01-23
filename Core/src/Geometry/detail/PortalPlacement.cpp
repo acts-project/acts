@@ -1,14 +1,22 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
 
 #include "Acts/Geometry/detail/PortalPlacement.hpp"
+
 #include "Acts/Geometry/VolumePlacementBase.hpp"
 
 namespace Acts::detail {
-    PortalPlacement::PortalPlacement(
-    const std::size_t portalIdx, const Transform3& portalTrf, 
-    VolumePlacementBase* parent,
-    std::shared_ptr<RegularSurface>&& surface)
+PortalPlacement::PortalPlacement(const std::size_t portalIdx,
+                                 const Transform3& portalTrf,
+                                 VolumePlacementBase* parent,
+                                 std::shared_ptr<RegularSurface>&& surface)
     : m_interalTrf{portalTrf},
       m_surface{std::move(surface)},
       m_parent{parent},
@@ -46,8 +54,7 @@ std::size_t PortalPlacement::index() const {
   return m_portalIdx;
 }
 
-const Transform3& PortalPlacement::portalToVolumeCenter()
-    const {
+const Transform3& PortalPlacement::portalToVolumeCenter() const {
   return m_interalTrf;
 }
-}
+}  // namespace Acts::detail
