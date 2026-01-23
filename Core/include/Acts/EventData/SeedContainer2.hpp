@@ -84,6 +84,7 @@ class SeedContainer2 {
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
       SpacePointContainer2 spacePointContainer) noexcept;
+      
   /// Assigns the mutable space point container to be used by this seed
   /// container by reference. Note that the ownership of the space point
   /// container is not transferred and the user must ensure that the space point
