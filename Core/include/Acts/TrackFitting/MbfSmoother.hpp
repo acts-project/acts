@@ -10,13 +10,11 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
-#include <optional>
 #include <utility>
 
 namespace Acts {
@@ -78,7 +76,7 @@ class MbfSmoother {
       }
 
       // Update the lambdas depending on the type of track state
-      if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+      if (ts.typeFlags().isMeasurement()) {
         visitMeasurement(AnyConstTrackStateProxy{ts}, bigLambdaHat,
                          smallLambdaHat);
       } else {

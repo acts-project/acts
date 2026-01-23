@@ -119,7 +119,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 
   for (const auto& state : track.trackStatesReversed()) {
     auto typeFlags = state.typeFlags();
-    if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!typeFlags.isMeasurement()) {
       continue;
     }
 
@@ -237,7 +237,7 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
     auto params = unpack(trackState);
 
     auto ts = track.appendTrackState(mask);
-    ts.typeFlags().set(MeasurementFlag);
+    ts.typeFlags().setIsMeasurement();
 
     auto converted = detail::convertTrackParametersFromEdm4hep(Bz, params);
 
