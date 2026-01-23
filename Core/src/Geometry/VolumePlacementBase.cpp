@@ -27,5 +27,23 @@ std::shared_ptr<RegularSurface> VolumePlacementBase::makePortalAlignable(
   return dynamic_pointer_cast<RegularSurface>(
       placement->surface().getSharedPtr());
 }
+const detail::PortalPlacement* VolumePlacementBase::portalPlacement(
+    const std::size_t portalIdx) const {
+  return portalIdx < m_portalPlacements.size()
+             ? m_portalPlacements[portalIdx].get()
+             : nullptr;
+}
+/// @brief Returns the number of portal placement objects
+std::size_t VolumePlacementBase::nPortalPlacement() const {
+  return m_portalPlacements.size();
+}
+
+void VolumePlacementBase::populateContextWithPortals(
+    GeometryContext& gctx) const {
+  for (const auto& portalPlacement : m_portalPlacements) {
+    cachePortalTransform(gctx, portalPlacement->index(),
+                         portalPlacement->assembleFullTransform(gctx));
+  }
+}
 
 }  // namespace Acts

@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
-
 #include "Acts/Geometry/detail/PortalPlacement.hpp"
 
 #include "Acts/Geometry/VolumePlacementBase.hpp"
@@ -25,12 +23,12 @@ PortalPlacement::PortalPlacement(const std::size_t portalIdx,
   m_surface->assignDetectorElement(*this);
 }
 
+Transform3 PortalPlacement::assembleFullTransform(
+    const GeometryContext& gctx) const {
+  return m_parent->localToGlobalTransform(gctx) * portalToVolumeCenter();
+}
 const Transform3& PortalPlacement::localToGlobalTransform(
     const GeometryContext& gctx) const {
-  if (!m_parent->portalTransformCached(m_portalIdx)) {
-    m_parent->cachePortalTransform(
-        m_portalIdx, m_parent->localToGlobalTransform(gctx) * m_interalTrf);
-  }
   return m_parent->portalLocalToGlobal(gctx, m_portalIdx);
 }
 
