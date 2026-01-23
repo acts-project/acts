@@ -44,16 +44,10 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fill(
 }
 
 template <class identifier_t>
-Acts::HoughTransformUtils::HoughCell<identifier_t>::HoughCell() {
-  m_layers.reserve(m_assignBatch);
-  m_hits.reserve(m_assignBatch);
-}
-
-template <class identifier_t>
 std::span<const identifier_t, std::dynamic_extent>
 Acts::HoughTransformUtils::HoughCell<identifier_t>::getHits() const {
   std::span<const identifier_t, std::dynamic_extent> hits(m_hits.begin(),
-                                                          m_hits.end());
+                                                          m_iHit);
   return hits;
 }
 
@@ -61,7 +55,7 @@ template <class identifier_t>
 std::span<const unsigned, std::dynamic_extent>
 Acts::HoughTransformUtils::HoughCell<identifier_t>::getLayers() const {
   std::span<const unsigned, std::dynamic_extent> layers(m_layers.begin(),
-                                                        m_layers.end());
+                                                        m_iLayer);
 
   return layers;
 }
@@ -71,23 +65,30 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
     const identifier_t& identifier, unsigned layer, YieldType weight) {
   // add the hit to the list of hits in the cell
 
-  // Simple check to make sure we are not readding previously pushed item
-  if (!m_hits.empty() && m_hits.back() == identifier) {
+  if (m_iHit != 0 && m_hits[m_iHit - 1] == identifier) {
     return;
   }
 
-  if (m_hits.size() == m_hits.capacity()) {
-    m_hits.reserve(m_hits.capacity() + m_assignBatch);
+  if (m_iHit == m_hits.size()) {
+    m_hits.resize(m_hits.size() + m_assignBatch);
   }
 
-  m_hits.push_back(identifier);
+  m_hits[m_iHit] = identifier;
+  m_iHit += 1;
   m_nHits += weight;
 
-  // Check for duplicates
-  if (std::find(m_layers.begin(), m_layers.end(), layer) == m_layers.end()) {
-    m_layers.push_back(layer);
-    m_nLayers += weight;
+  // Check for duplicate layers
+  if (m_iLayer != 0 && m_layers[m_iLayer - 1] == layer) {
+    return;
   }
+
+  if (m_iLayer == m_layers.size()) {
+    m_layers.resize(m_layers.size() + m_assignBatch);
+  }
+
+  m_layers[m_iLayer] = layer;
+  m_iLayer += 1;
+  m_nLayers += weight;
 }
 
 template <class identifier_t>
@@ -95,8 +96,8 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::reset() {
   m_nHits = 0;
   m_nLayers = 0;
 
-  m_hits.clear();
-  m_layers.clear();
+  m_iLayer = 0;
+  m_iHit = 0;
 }
 
 template <class identifier_t>
