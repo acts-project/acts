@@ -19,19 +19,26 @@ namespace Acts {
 using namespace UnitLiterals;
 
 Volume::Volume(const Transform3& transform,
-               std::shared_ptr<VolumeBounds> volbounds)
+               std::shared_ptr<VolumeBounds> volbounds) noexcept
     : GeometryObject(),
-      m_transform(transform),
-      m_itransform(m_transform.inverse()),
-      m_center(m_transform.translation()),
+      m_transform{std::make_unique<Transform3>(transform)},
+      m_itransform{std::make_unique<Transform3>(transform.inverse())},
+      m_center{transform.translation()},
       m_volumeBounds(std::move(volbounds)) {}
 
-Volume::Volume(const Volume& vol, const Transform3& shift)
-    : GeometryObject(),
-      m_transform(shift * vol.m_transform),
-      m_itransform(m_transform.inverse()),
-      m_center(m_transform.translation()),
-      m_volumeBounds(vol.m_volumeBounds) {}
+Volume::Volume(VolumePlacementBase& positioner,
+               std::shared_ptr<VolumeBounds> volbounds) noexcept
+    : GeometryObject{},
+      m_volumeBounds{std::move(volbounds)},
+      m_placement{&positioner} {}
+
+Volume::Volume(const Volume& vol) noexcept : GeometryObject{} {
+  (*this) = vol;
+}
+
+Volume::Volume(const Volume& vol, const Transform3& shift,
+               const GeometryContext& gctx) noexcept
+    : Volume{shift * vol.localToGlobalTransform(gctx), vol.m_volumeBounds} {}
 
 Vector3 Volume::referencePosition(const GeometryContext& gctx,
                                   AxisDirection aDir) const {
@@ -46,9 +53,16 @@ Vector3 Volume::referencePosition(const GeometryContext& gctx,
 }
 
 // assignment operator
-Volume& Volume::operator=(const Volume& vol) {
+Volume& Volume::operator=(const Volume& vol) noexcept {
   if (this != &vol) {
-    m_transform = vol.m_transform;
+    if (vol.m_transform) {
+      m_transform = std::make_unique<Transform3>(*vol.m_transform);
+      m_itransform = std::make_unique<Transform3>(*vol.m_itransform);
+    } else {
+      m_transform.reset();
+      m_itransform.reset();
+    }
+    m_placement = vol.m_placement;
     m_center = vol.m_center;
     m_volumeBounds = vol.m_volumeBounds;
   }
@@ -72,7 +86,7 @@ std::ostream& operator<<(std::ostream& sl, const Volume& vol) {
 }
 
 Volume::BoundingBox Volume::boundingBox(const Vector3& envelope) const {
-  return m_volumeBounds->boundingBox(&m_transform, envelope, this);
+  return m_volumeBounds->boundingBox(m_transform.get(), envelope, this);
 }
 
 Volume::BoundingBox Volume::orientedBoundingBox() const {
@@ -97,19 +111,29 @@ void Volume::update(const GeometryContext& /*gctx*/,
 }
 
 const Transform3& Volume::localToGlobalTransform(
-    const GeometryContext& /*gctx*/) const {
-  return m_transform;
+    const GeometryContext& gctx) const {
+  if (volumePositioner() != nullptr) {
+    return volumePositioner()->localToGlobalTransform(gctx);
+  }
+  assert(m_transform != nullptr);
+  return (*m_transform);
 }
 const Transform3& Volume::globalToLocalTransform(
-    const GeometryContext& /*gctx*/) const {
-  return m_itransform;
+    const GeometryContext& gctx) const {
+  if (volumePositioner() != nullptr) {
+    return volumePositioner()->globalToLocalTransform(gctx);
+  }
+  assert(m_itransform != nullptr);
+  return (*m_itransform);
 }
 const Transform3& Volume::transform() const {
-  return m_transform;
+  assert(m_transform != nullptr);
+  return (*m_transform);
 }
 
 const Transform3& Volume::itransform() const {
-  return m_itransform;
+  assert(m_itransform != nullptr);
+  return (*m_itransform);
 }
 
 const Vector3& Volume::center(const GeometryContext& /*gctx*/) const {
@@ -136,14 +160,29 @@ std::shared_ptr<VolumeBounds> Volume::volumeBoundsPtr() {
   return m_volumeBounds;
 }
 
+VolumePlacementBase* Volume::volumePositioner() {
+  return m_placement;
+}
+const VolumePlacementBase* Volume::volumePositioner() const {
+  return m_placement;
+}
+
 void Volume::setTransform(const Transform3& transform) {
-  m_transform = transform;
-  m_itransform = m_transform.inverse();
-  m_center = m_transform.translation();
+  if (volumePositioner() != nullptr) {
+    throw std::runtime_error(
+        "volumePositioner() - Transforms of externally aligned volumes cannot "
+        "be overwritten");
+  }
+  m_transform = std::make_unique<Transform3>(transform);
+  m_itransform = std::make_unique<Transform3>(transform.inverse());
+  m_center = transform.translation();
 }
 
 bool Volume::operator==(const Volume& other) const {
-  return (m_transform.matrix() == other.m_transform.matrix()) &&
+  return ((m_transform != nullptr && other.m_transform != nullptr &&
+           m_transform->matrix() == other.m_transform->matrix()) ||
+          (volumePositioner() == other.volumePositioner() &&
+           volumePositioner() != nullptr)) &&
          (*m_volumeBounds == *other.m_volumeBounds);
 }
 
