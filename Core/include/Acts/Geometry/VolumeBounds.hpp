@@ -114,6 +114,11 @@ class VolumeBounds {
   virtual std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const = 0;
 
+  /// @brief Returns the vector of orientedSurfaces but connects the
+  ///        surfaces to the alignment of the parsed volume, if the
+  ///        volume is an alignable volume
+  /// @param parentVolume: Mutable reference to the volume to which the
+  ///                      oriented surfaces are connected
   std::vector<OrientedSurface> boundarySurfaces(Volume& parentVolume) const;
 
   /// Construct bounding box for this shape

@@ -170,7 +170,7 @@ const VolumePlacementBase* Volume::volumePositioner() const {
 void Volume::setTransform(const Transform3& transform) {
   if (volumePositioner() != nullptr) {
     throw std::runtime_error(
-        "volumePositioner() - Transforms of externally aligned volumes cannot "
+        "setTransform() - Transforms of externally aligned volumes cannot "
         "be overwritten");
   }
   m_transform = std::make_unique<Transform3>(transform);
