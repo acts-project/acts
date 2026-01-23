@@ -14,21 +14,36 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
+using namespace Acts::Experimental;
+
+namespace {
+
+ProfileHistogram1 makeProfile(
+    const ActsExamples::DuplicationPlotTool::Config& cfg, std::string name,
+    const std::string& title, const AxisVariant& ax) {
+  const auto& yAxis = cfg.varBinning.at("Num");
+  Acts::Range1D<double> yRange{yAxis.bin(0).lower(),
+                               yAxis.bin(yAxis.size() - 1).upper()};
+  return ProfileHistogram1(name, title, {ax}, yAxis.metadata(), yRange);
+}
+
+}  // namespace
+
 namespace ActsExamples {
 
 DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
                                          Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl)),
-      m_nDuplicatedVsPt("nDuplicated_vs_pT",
-                        "Number of duplicated track candidates",
-                        std::array{m_cfg.varBinning.at("Pt")}, "N"),
-      m_nDuplicatedVsEta("nDuplicated_vs_eta",
-                         "Number of duplicated track candidates",
-                         std::array{m_cfg.varBinning.at("Eta")}, "N"),
-      m_nDuplicatedVsPhi("nDuplicated_vs_phi",
-                         "Number of duplicated track candidates",
-                         std::array{m_cfg.varBinning.at("Phi")}, "N"),
+      m_nDuplicatedVsPt(makeProfile(m_cfg, "nDuplicated_vs_pT",
+                                    "Number of duplicated track candidates",
+                                    m_cfg.varBinning.at("Pt"))),
+      m_nDuplicatedVsEta(makeProfile(m_cfg, "nDuplicated_vs_eta",
+                                     "Number of duplicated track candidates",
+                                     m_cfg.varBinning.at("Eta"))),
+      m_nDuplicatedVsPhi(makeProfile(m_cfg, "nDuplicated_vs_phi",
+                                     "Number of duplicated track candidates",
+                                     m_cfg.varBinning.at("Phi"))),
       m_duplicationRatioVsPt("duplicationRatio_vs_pT",
                              "Duplication ratio;pT [GeV/c];Duplication ratio",
                              std::array{m_cfg.varBinning.at("Pt")}),
