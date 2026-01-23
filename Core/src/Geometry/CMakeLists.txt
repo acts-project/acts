@@ -25,6 +25,7 @@ target_sources(
         Polyhedron.cpp
         ProtoLayer.cpp
         ProtoLayerHelper.cpp
+        VolumePlacementBase.cpp
         SurfaceArrayCreator.cpp
         TrackingGeometry.cpp
         TrackingGeometryBuilder.cpp
@@ -64,4 +65,5 @@ target_sources(
         ReferenceGenerators.cpp
         detail/TrackingGeometryPrintVisitor.cpp
         detail/BoundDeduplicator.cpp
+        detail/PortalPlacement.cpp
 )

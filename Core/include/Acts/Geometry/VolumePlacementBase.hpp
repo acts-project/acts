@@ -9,7 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/detail/PortalPlacement.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
+
+#include <memory>
+#include <vector>
 
 namespace Acts {
 class GeometryContext;
@@ -23,6 +27,8 @@ class GeometryContext;
 ///        detector elements that are then passed to the oriented surfaces
 class VolumePlacementBase {
  public:
+  /// @brief Default constructor
+  VolumePlacementBase();
   /// @brief Default destructor
   virtual ~VolumePlacementBase() = default;
   /// @brief Returns the transformation from the local volume coordinates to
@@ -36,18 +42,19 @@ class VolumePlacementBase {
   virtual const Transform3& globalToLocalTransform(
       const GeometryContext& gctx) const = 0;
 
-  /// @brief Interface method that connects the portal surface to the volume's
-  ///        alignment. For the given volume surface face and surface, the
-  ///        client code is expected to create an DetectorElementBase and to
-  ///        parse it to the surface via
-  ///             portalSurface->assignDetectorElement(detElement)
-  ///        and then to return back the portal surface again.
-  ///        The ownership is transferred to the client as multiple calls on the
-  ///        same face are not excluded.
-  /// @param faceIdx: Index of the oriented surface
-  /// @param internalTrf: Transform aligning the portal within the volume
-  virtual std::shared_ptr<RegularSurface> alignWithVolume(
-      const std::size_t faceIdx, const Transform3& internalTrf,
-      std::shared_ptr<RegularSurface>&& portalSurface) = 0;
+  virtual bool portalTransformCached(const std::size_t portalIdx) const = 0;
+
+  virtual void cachePortalTransform(const std::size_t portalIdx,
+                                    const Transform3& portalLocToGlob) = 0;
+
+  virtual const Transform3& portalLocalToGlobal(
+      const GeometryContext& gctx, const std::size_t portalIdx) const = 0;
+
+  std::shared_ptr<RegularSurface> makePortalAlignable(
+      const std::size_t portalIdx, const Transform3& portalToVolTrf,
+      std::shared_ptr<RegularSurface>&& surface);
+
+ private:
+  std::vector<std::unique_ptr<detail::PortalPlacement>> m_portalPlacements{};
 };
 }  // namespace Acts
