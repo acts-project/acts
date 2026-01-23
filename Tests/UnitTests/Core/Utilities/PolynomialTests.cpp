@@ -8,12 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/detail/Polynomials.hpp"
 
 #include <algorithm>
 #include <format>
-#include <numeric>
+
 namespace {
 constexpr double stepSize = 1.e-4;
 

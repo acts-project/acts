@@ -31,11 +31,9 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
-#include <functional>
-#include <limits>
-#include <map>
 #include <memory>
-#include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 namespace Acts {
 
