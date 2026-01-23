@@ -347,12 +347,12 @@ const DetectorElementBase* Surface::associatedDetectorElement() const {
 }
 
 double Surface::depth() const {
-  return m_thickness;
+  return m_depth;
 }
 
 void Surface::assignDepth(double thick) {
   assert(thick >= 0.);
-  m_thickness = thick;
+  m_depth = thick;
 }
 
 const Layer* Surface::associatedLayer() const {
