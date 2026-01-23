@@ -402,6 +402,7 @@ BOOST_AUTO_TEST_CASE(DetrayPortalConversionTests) {
 }
 
 BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   // Create a transform with translation and rotation
   Transform3 transform = Transform3::Identity();
   transform.pretranslate(Vector3(1., 2., 3.));
@@ -416,7 +417,7 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
     auto volume =
         std::make_shared<TrackingVolume>(transform, cvlBounds, "TestCylinder");
 
-    auto payload = converter.convertVolume(*volume);
+    auto payload = converter.convertVolume(gctx, *volume);
 
     // Check type
     BOOST_CHECK(payload.type == detray::volume_id::e_cylinder);
@@ -436,7 +437,7 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
     auto volume =
         std::make_shared<TrackingVolume>(transform, cuboidBounds, "TestCuboid");
 
-    auto payload = converter.convertVolume(*volume);
+    auto payload = converter.convertVolume(gctx, *volume);
 
     BOOST_CHECK(payload.type == detray::volume_id::e_cuboid);
     BOOST_CHECK_EQUAL(payload.name, "TestCuboid");
@@ -448,7 +449,7 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
     auto volume = std::make_shared<TrackingVolume>(transform, trapBounds,
                                                    "TestTrapezoid");
 
-    auto payload = converter.convertVolume(*volume);
+    auto payload = converter.convertVolume(gctx, *volume);
 
     BOOST_CHECK(payload.type == detray::volume_id::e_trapezoid);
     BOOST_CHECK_EQUAL(payload.name, "TestTrapezoid");
@@ -483,7 +484,7 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
     auto volume =
         std::make_shared<TrackingVolume>(transform, mockBounds, "TestUnknown");
 
-    auto payload = converter.convertVolume(*volume);
+    auto payload = converter.convertVolume(gctx, *volume);
 
     BOOST_CHECK(payload.type == detray::volume_id::e_unknown);
     BOOST_CHECK_EQUAL(payload.name, "TestUnknown");
