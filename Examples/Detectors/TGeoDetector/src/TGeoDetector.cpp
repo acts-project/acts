@@ -161,7 +161,7 @@ std::vector<ActsPlugins::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 /// @param vm is the variable map from the options
 std::shared_ptr<const TrackingGeometry> buildTGeoDetector(
     const TGeoDetector::Config& config, const GeometryContext& context,
-    std::vector<std::shared_ptr<const DetectorElementBase>>& detElementStore,
+    std::vector<std::shared_ptr<const SurfacePlacementBase>>& detElementStore,
     std::shared_ptr<const IMaterialDecorator> materialDecorator,
     const Logger& logger) {
   // configure surface array creator

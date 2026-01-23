@@ -51,7 +51,7 @@ auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
     const Transform3& base,
-    std::vector<std::unique_ptr<DetectorElementBase>>& elements,
+    std::vector<std::unique_ptr<SurfacePlacementBase>>& elements,
     double r = 300_mm, std::size_t nSensors = 8, double thickness = 0) {
   auto recBounds = std::make_shared<RectangleBounds>(40_mm, 60_mm);
 
@@ -79,7 +79,7 @@ inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
 
 inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
     const Transform3& base,
-    std::vector<std::unique_ptr<DetectorElementBase>>& elements,
+    std::vector<std::unique_ptr<SurfacePlacementBase>>& elements,
     double r = 300_mm, std::size_t nStaves = 10, int nSensorsPerStave = 8,
     double thickness = 0, double hlPhi = 40_mm, double hlZ = 60_mm) {
   auto recBounds = std::make_shared<RectangleBounds>(hlPhi, hlZ);
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   // Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
   Transform3 base{Transform3::Identity()};
 
-  std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
+  std::vector<std::unique_ptr<SurfacePlacementBase>> detectorElements;
   auto makeFan = [&](const Transform3& layerBase, auto&&..., double r,
                      std::size_t nSensors, double thickness) {
     return makeFanLayer(layerBase, detectorElements, r, nSensors, thickness);

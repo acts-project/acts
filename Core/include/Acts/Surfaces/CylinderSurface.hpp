@@ -65,7 +65,7 @@ class CylinderSurface : public RegularSurface {
   CylinderSurface(const Transform3& transform,
                   std::shared_ptr<const CylinderBounds> cbounds);
 
-  /// Constructor from DetectorElementBase: Element proxy
+  /// Constructor from SurfacePlacementBase: Element proxy
   ///
   /// @param cbounds are the provided cylinder bounds (shared)
   /// @param placement Reference to the surface placement

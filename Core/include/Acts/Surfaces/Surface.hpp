@@ -31,7 +31,6 @@
 
 namespace Acts {
 
-class DetectorElementBase;
 class SurfaceBounds;
 class ISurfaceMaterial;
 class Layer;
@@ -229,7 +228,7 @@ class Surface : public virtual GeometryObject,
   /// @return Layer by plain pointer, can be nullptr
   const Layer* associatedLayer() const;
 
-  /// @brief Return the thickness of the surface in the orthogonal expansion
+  /// @brief Return the thickness of the surface in the normal direction
   double thickness() const;
 
   /// Set Associated Layer
@@ -555,12 +554,13 @@ class Surface : public virtual GeometryObject,
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
 
+ private:
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
   std::unique_ptr<const Transform3> m_transform{};
 
   /// Pointer to the a SurfacePlacement
-  const SurfacePlacementBase* m_associatedDetElement{nullptr};
+  const SurfacePlacementBase* m_placement{nullptr};
 
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
@@ -576,8 +576,7 @@ class Surface : public virtual GeometryObject,
   /// Flag to indicate whether the surface is sensitive
   bool m_isSensitive{false};
 
- private:
-  /// @brief Thickness of the surface in the orthogonal extension
+  /// @brief Thickness of the surface in the normal direction
   double m_thickness{0};
   /// Calculate the derivative of bound track parameters w.r.t.
   /// alignment parameters of its reference surface (i.e. origin in global 3D

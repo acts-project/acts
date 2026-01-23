@@ -20,7 +20,6 @@
 
 namespace Acts {
 
-class DetectorElementBase;
 struct Polyhedron;
 class LineBounds;
 

@@ -62,7 +62,6 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_transform = dTransform;
       m_thickness = dThickness;
       m_surface = Surface::makeShared<DiscSurface>(dBounds, *this);
-
     }
   }
 
@@ -90,28 +89,26 @@ TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
     const std::shared_ptr<const PlanarBounds>& tgBounds, double tgThickness)
-    : 
-      m_detElement(&tGeoNode),
+    : m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
       m_thickness(tgThickness) {
   m_surface = Surface::makeShared<PlaneSurface>(tgBounds, *this);
-      m_surface->assignThickness(m_thickness);
+  m_surface->assignThickness(m_thickness);
 }
 
 TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
     const std::shared_ptr<const DiscBounds>& tgBounds, double tgThickness)
-    : 
-      m_detElement(&tGeoNode),
+    : m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
       m_thickness(tgThickness) {
   m_surface = Surface::makeShared<DiscSurface>(tgBounds, *this);
-      m_surface->assignThickness(m_thickness);
+  m_surface->assignThickness(m_thickness);
 }
 
 TGeoDetectorElement::~TGeoDetectorElement() = default;

@@ -85,7 +85,7 @@ class DiscSurface : public RegularSurface {
   explicit DiscSurface(const Transform3& transform,
                        std::shared_ptr<const DiscBounds> dbounds = nullptr);
 
-  /// Constructor from DetectorElementBase : Element proxy
+  /// Constructor from SurfacePlacementBase : Element proxy
   ///
   /// @param dbounds The disc bounds describing the surface coverage
   /// @param placement Reference to the surface placement

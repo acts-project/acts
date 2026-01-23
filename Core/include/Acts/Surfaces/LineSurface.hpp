@@ -55,7 +55,7 @@ class LineSurface : public Surface {
   explicit LineSurface(const Transform3& transform,
                        std::shared_ptr<const LineBounds> lbounds = nullptr);
 
-  /// Constructor from DetectorElementBase : Element proxy
+  /// Constructor from SurfacePlacementBase : Element proxy
   ///
   /// @param lbounds are the bounds describing the line dimensions, they must
   /// not be nullptr

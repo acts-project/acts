@@ -65,7 +65,8 @@ class Detector {
   Acts::GeometryContext m_nominalGeometryContext{
       Acts::GeometryContext::dangerouslyDefaultConstruct()};
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
-  std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>> m_detectorStore;
+  std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>
+      m_detectorStore;
   std::vector<std::shared_ptr<IContextDecorator>> m_contextDecorators;
 };
 

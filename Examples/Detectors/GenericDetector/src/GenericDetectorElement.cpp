@@ -19,8 +19,7 @@ GenericDetectorElement::GenericDetectorElement(
     const Identifier identifier, const Acts::Transform3& transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
-    : 
-      m_elementIdentifier(identifier),
+    : m_elementIdentifier(identifier),
       m_elementTransform(transform),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::PlaneSurface>(pBounds, *this)),
@@ -35,8 +34,7 @@ GenericDetectorElement::GenericDetectorElement(
     const Identifier identifier, const Acts::Transform3& transform,
     std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
-    :
-      m_elementIdentifier(identifier),
+    : m_elementIdentifier(identifier),
       m_elementTransform(transform),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::DiscSurface>(dBounds, *this)),

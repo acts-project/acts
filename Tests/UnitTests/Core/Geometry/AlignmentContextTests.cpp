@@ -65,8 +65,7 @@ class AlignableDetectorElement : public SurfacePlacementBase {
   AlignableDetectorElement(std::shared_ptr<const Transform3> transform,
                            const std::shared_ptr<const PlanarBounds>& pBounds,
                            double thickness)
-:
-        m_elementTransform(std::move(transform)),
+      : m_elementTransform(std::move(transform)),
         m_elementThickness(thickness) {
     m_elementSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
     m_elementSurface->assignThickness(thickness);
@@ -90,7 +89,7 @@ class AlignableDetectorElement : public SurfacePlacementBase {
   Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const ;
+  double thickness() const;
 
   /// Is the detector element a sensitive element
   bool isSensitive() const override { return true; }

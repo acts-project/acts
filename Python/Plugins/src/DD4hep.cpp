@@ -36,7 +36,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDD4hep, dd4hep) {
         dd4hep, "DD4hepDetElement");
 
     // The Acts:: glue detector element
-    py::class_<DD4hepDetectorElement, DetectorElementBase,
+    py::class_<DD4hepDetectorElement, SurfacePlacementBase,
                std::shared_ptr<DD4hepDetectorElement>>(dd4hep,
                                                        "DD4hepDetectorElement");
 
