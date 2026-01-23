@@ -96,7 +96,7 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
     const auto* detElement =
         dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(
-            surface->associatedDetectorElement());
+            surface->surfacePlacement());
 
     if (detElement == nullptr) {
       ACTS_ERROR("Surface has no associated detector element");
