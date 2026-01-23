@@ -293,7 +293,7 @@ void SurfaceMaterialMapper::mapInteraction(
   while (rmIter != rMaterial.end() && sfIter != mappingSurfaces.end()) {
     // Material not inside current volume
     if (volIter != mappingVolumes.end() &&
-        !volIter->volume->inside(rmIter->position)) {
+        !volIter->volume->inside(mState.geoContext, rmIter->position)) {
       double distVol = (volIter->position - mTrack.first.first).norm();
       double distMat = (rmIter->position - mTrack.first.first).norm();
       // Material past the entry point to the current volume
@@ -305,7 +305,7 @@ void SurfaceMaterialMapper::mapInteraction(
     }
     /// check if we are inside a material volume
     if (volIter != mappingVolumes.end() &&
-        volIter->volume->inside(rmIter->position)) {
+        volIter->volume->inside(mState.geoContext, rmIter->position)) {
       ++rmIter;
       continue;
     }
