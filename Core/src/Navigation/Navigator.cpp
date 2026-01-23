@@ -139,9 +139,10 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
       state.startLayer = state.startVolume->associatedLayer(
           state.options.geoContext, position);
     } else {
-      ACTS_ERROR(volInfo(state)
+      ACTS_DEBUG(volInfo(state)
                  << "No start volume resolved. Nothing left to do.");
       state.navigationBreak = true;
+      return Result<void>::failure(NavigatorError::NoStartVolume);
     }
   }
 
