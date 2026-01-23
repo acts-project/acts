@@ -277,7 +277,7 @@ class Surface : public virtual GeometryObject,
   /// @brief Assign the thickness of the surface in the
   ///        orthogonal dimension
   /// @param thick: Thickness parameter to assign (>=0)
-  void assignThickness(double thick);
+  void assignDepth(double thick);
 
   /// The geometric onSurface method
   ///

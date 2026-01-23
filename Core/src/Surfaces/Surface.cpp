@@ -350,7 +350,7 @@ double Surface::depth() const {
   return m_thickness;
 }
 
-void Surface::assignThickness(double thick) {
+void Surface::assignDepth(double thick) {
   assert(thick >= 0.);
   m_thickness = thick;
 }

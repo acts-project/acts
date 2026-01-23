@@ -33,7 +33,7 @@ Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
         "Geant4DetectorElement: Surface already has an associated detector "
         "element");
   }
-  m_surface->assignThickness(m_thickness);
+  m_surface->assignDepth(m_thickness);
   m_surface->assignSurfacePlacement(*this);
 }
 

@@ -24,7 +24,7 @@ TelescopeDetectorElement::TelescopeDetectorElement(
       m_elementPlanarBounds(std::move(pBounds)),
       m_elementDiscBounds(nullptr) {
   m_elementSurface->assignSurfaceMaterial(std::move(material));
-  m_elementSurface->assignThickness(thickness);
+  m_elementSurface->assignDepth(thickness);
 }
 
 TelescopeDetectorElement::TelescopeDetectorElement(
@@ -38,7 +38,7 @@ TelescopeDetectorElement::TelescopeDetectorElement(
       m_elementPlanarBounds(nullptr),
       m_elementDiscBounds(std::move(dBounds)) {
   m_elementSurface->assignSurfaceMaterial(std::move(material));
-  m_elementSurface->assignThickness(thickness);
+  m_elementSurface->assignDepth(thickness);
 }
 
 }  // namespace ActsExamples

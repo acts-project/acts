@@ -27,7 +27,7 @@ GenericDetectorElement::GenericDetectorElement(
       m_elementPlanarBounds(std::move(pBounds)),
       m_elementDiscBounds(nullptr) {
   m_elementSurface->assignSurfaceMaterial(std::move(material));
-  m_elementSurface->assignThickness(thickness);
+  m_elementSurface->assignDepth(thickness);
 }
 
 GenericDetectorElement::GenericDetectorElement(
@@ -42,7 +42,7 @@ GenericDetectorElement::GenericDetectorElement(
       m_elementPlanarBounds(nullptr),
       m_elementDiscBounds(std::move(dBounds)) {
   m_elementSurface->assignSurfaceMaterial(std::move(material));
-  m_elementSurface->assignThickness(thickness);
+  m_elementSurface->assignDepth(thickness);
 }
 
 const Acts::Transform3& GenericDetectorElement::localToGlobalTransform(

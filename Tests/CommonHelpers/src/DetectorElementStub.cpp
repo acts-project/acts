@@ -26,7 +26,7 @@ ActsTests::DetectorElementStub::DetectorElementStub(
     : m_elementTransform(transform), m_elementThickness(thickness) {
   m_elementSurface =
       Surface::makeShared<CylinderSurface>(std::move(cBounds), *this);
-  m_elementSurface->assignThickness(thickness);
+  m_elementSurface->assignDepth(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
 
@@ -36,7 +36,7 @@ ActsTests::DetectorElementStub::DetectorElementStub(
     : m_elementTransform(transform), m_elementThickness(thickness) {
   m_elementSurface =
       Surface::makeShared<PlaneSurface>(std::move(pBounds), *this);
-  m_elementSurface->assignThickness(thickness);
+  m_elementSurface->assignDepth(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
 
@@ -46,6 +46,6 @@ ActsTests::DetectorElementStub::DetectorElementStub(
     : m_elementTransform(transform), m_elementThickness(thickness) {
   m_elementSurface =
       Surface::makeShared<LineSurfaceStub>(std::move(lBounds), *this);
-  m_elementSurface->assignThickness(thickness);
+  m_elementSurface->assignDepth(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
