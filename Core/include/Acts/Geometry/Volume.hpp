@@ -53,7 +53,7 @@ class Volume : public GeometryObject {
 
   /// @brief Copy Constructor
   /// @param vol is the source volume for the copy
-  explicit Volume(const Volume& vol) noexcept;
+  Volume(const Volume& vol) noexcept;
   /// @brief Copy Constructor - with shift
   /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied as : shift * vol.transform()
