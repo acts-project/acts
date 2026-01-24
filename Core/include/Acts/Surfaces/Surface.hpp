@@ -89,7 +89,7 @@ class Surface : public virtual GeometryObject,
   /// to detector element and layer
   ///
   /// @param other Source surface for copy.
-  explicit Surface(const Surface& other);
+  Surface(const Surface& other) noexcept;
 
   /// Constructor from SurfacePlacement: Element proxy
   ///
@@ -99,7 +99,7 @@ class Surface : public virtual GeometryObject,
   ///        ensures the life-time of the `SurfacePlacementBase`
   ///        and that the `Surface` is actually owned by
   ///        the `SurfacePlacementBase` instance
-  explicit Surface(const SurfacePlacementBase& placement);
+  explicit Surface(const SurfacePlacementBase& placement) noexcept;
 
   /// Copy constructor with optional shift
   ///
@@ -110,7 +110,7 @@ class Surface : public virtual GeometryObject,
   /// @param other Source surface for copy
   /// @param shift Additional transform applied as: shift * transform
   explicit Surface(const GeometryContext& gctx, const Surface& other,
-                   const Transform3& shift);
+                   const Transform3& shift) noexcept;
 
  public:
   ~Surface() noexcept override;

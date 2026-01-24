@@ -23,10 +23,10 @@ namespace Acts {
 Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(std::make_unique<Transform3>(transform)) {}
 
-Surface::Surface(const SurfacePlacementBase& placement)
+Surface::Surface(const SurfacePlacementBase& placement) noexcept
     : GeometryObject(), m_placement(&placement) {}
 
-Surface::Surface(const Surface& other)
+Surface::Surface(const Surface& other) noexcept
     : GeometryObject(other),
       std::enable_shared_from_this<Surface>(),
       m_placement(other.m_placement),
@@ -37,7 +37,7 @@ Surface::Surface(const Surface& other)
 }
 
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
-                 const Transform3& shift)
+                 const Transform3& shift) noexcept
     : GeometryObject(),
       m_transform(std::make_unique<Transform3>(
           shift * other.localToGlobalTransform(gctx))),

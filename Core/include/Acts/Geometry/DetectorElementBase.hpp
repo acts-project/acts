@@ -32,7 +32,7 @@ class DetectorElementBase : public SurfacePlacementBase {
   [[deprecated(
       "Please use localToGlobalTransform(const GeometryContext& gctx) "
       "instead")]]
-  virtual const Transform3& transform(const GeometryContext& gctx) const {
+  const Transform3& transform(const GeometryContext& gctx) const {
     return localToGlobalTransform(gctx);
   }
 
@@ -41,7 +41,7 @@ class DetectorElementBase : public SurfacePlacementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return reference to the transform to switch from the element's
   ///         coordinates to the experiment's global coordinate system
-  virtual const Transform3& localToGlobalTransform(
+  const Transform3& localToGlobalTransform(
       const GeometryContext& gctx) const override {
     ACTS_PUSH_IGNORE_DEPRECATED()
     return transform(gctx);
@@ -52,7 +52,7 @@ class DetectorElementBase : public SurfacePlacementBase {
   virtual double thickness() const = 0;
   /// Returns whether the detector element corresponds to a sensitive
   /// surface on which measurements are expressed
-  virtual bool isSensitive() const override { return true; }
+  bool isSensitive() const override { return true; }
 };
 
 }  // namespace Acts
