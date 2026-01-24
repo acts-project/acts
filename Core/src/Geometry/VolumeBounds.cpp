@@ -47,7 +47,7 @@ std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt) {
 
 std::vector<OrientedSurface> VolumeBounds::boundarySurfaces(
     Volume& parentVolume) const {
-  if (!parentVolume.volumePositioner()) {
+  if (parentVolume.volumePositioner() == nullptr) {
     return orientedSurfaces(*parentVolume.m_transform);
   }
   std::vector<OrientedSurface> portalSurfaces =
