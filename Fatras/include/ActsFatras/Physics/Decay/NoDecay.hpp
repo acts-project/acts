@@ -26,6 +26,7 @@ struct NoDecay {
     return std::numeric_limits<double>::infinity();
   }
   /// Decay the particle without generating any descendant particles.
+  /// @return Empty array of particles (no decay products)
   template <typename generator_t>
   constexpr std::array<Particle, 0> run(generator_t& /* rng */,
                                         const Particle& /* particle */) const {

@@ -29,12 +29,12 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -44,7 +44,7 @@
 #include <utility>
 #include <vector>
 
-namespace {
+namespace ActsTests {
 
 namespace bd = boost::unit_test::data;
 
@@ -52,17 +52,17 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-using MagneticField = Acts::ConstantBField;
-using StraightPropagator = Acts::Propagator<StraightLineStepper>;
-using Stepper = Acts::EigenStepper<>;
+using MagneticField = ConstantBField;
+using StraightPropagator = Propagator<StraightLineStepper>;
+using Stepper = EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper>;
-using Estimator = Acts::ImpactPointEstimator;
-using StraightLineEstimator = Acts::ImpactPointEstimator;
+using Estimator = ImpactPointEstimator;
+using StraightLineEstimator = ImpactPointEstimator;
 
-const Acts::GeometryContext geoContext;
-const Acts::MagneticFieldContext magFieldContext;
+const auto geoContext = GeometryContext::dangerouslyDefaultConstruct();
+const MagneticFieldContext magFieldContext;
 
-Acts::MagneticFieldProvider::Cache magFieldCache() {
+MagneticFieldProvider::Cache magFieldCache() {
   return NullBField{}.makeCache(magFieldContext);
 }
 
@@ -100,8 +100,7 @@ Estimator makeEstimator(double bZ) {
 }
 
 // Construct a diagonal track covariance w/ reasonable values.
-Acts::BoundSquareMatrix makeBoundParametersCovariance(
-    double stdDevTime = 30_ps) {
+BoundSquareMatrix makeBoundParametersCovariance(double stdDevTime = 30_ps) {
   BoundVector stddev;
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 100_um;
@@ -113,7 +112,7 @@ Acts::BoundSquareMatrix makeBoundParametersCovariance(
 }
 
 // Construct a diagonal vertex covariance w/ reasonable values.
-Acts::SquareMatrix4 makeVertexCovariance() {
+SquareMatrix4 makeVertexCovariance() {
   Vector4 stddev;
   stddev[ePos0] = 10_um;
   stddev[ePos1] = 10_um;
@@ -126,9 +125,8 @@ Acts::SquareMatrix4 makeVertexCovariance() {
 std::uniform_real_distribution<double> uniformDist(0.0, 1.0);
 // random sign
 std::uniform_real_distribution<double> signDist(-1, 1);
-}  // namespace
 
-BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
 // Check `calculateDistance`, `estimate3DImpactParameters`, and
 // `getVertexCompatibility`.
@@ -364,8 +362,8 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   double timeDiffFar = timeDiffFactor * 0.11_ps;
 
   // Different random signs for the time offsets
-  double sgnClose = signDist(gen) < 0 ? -1. : 1.;
-  double sgnFar = signDist(gen) < 0 ? -1. : 1.;
+  double sgnClose = std::copysign(1., signDist(gen));
+  double sgnFar = std::copysign(1., signDist(gen));
 
   BoundVector paramVecClose = BoundVector::Zero();
   paramVecClose[eBoundLoc0] = d0;
@@ -542,3 +540,5 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

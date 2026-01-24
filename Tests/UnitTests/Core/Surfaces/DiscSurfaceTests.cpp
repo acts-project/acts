@@ -23,26 +23,27 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <string>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 /// Unit tests for creating DiscSurface object
 BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
   /// Test default construction
@@ -552,15 +553,18 @@ BOOST_DATA_TEST_CASE(RDirection,
   BOOST_CHECK_EQUAL(bounds->get(RadialBounds::eMaxR), 150_mm);
 
   // Disc did not move
-  BOOST_CHECK_EQUAL(base.matrix(), disc3->transform(tgContext).matrix());
+  BOOST_CHECK_EQUAL(base.matrix(),
+                    disc3->localToGlobalTransform(tgContext).matrix());
 
   // Rotation in z depends on the ordering, the left side "wins"
   Transform3 expected12 = base;
-  BOOST_CHECK_EQUAL(expected12.matrix(), disc3->transform(tgContext).matrix());
+  BOOST_CHECK_EQUAL(expected12.matrix(),
+                    disc3->localToGlobalTransform(tgContext).matrix());
 
   Transform3 expected21 = base * AngleAxis3(14_degree, Vector3::UnitZ());
-  CHECK_CLOSE_OR_SMALL(disc3Reversed->transform(tgContext).matrix(),
-                       expected21.matrix(), 1e-6, 1e-10);
+  CHECK_CLOSE_OR_SMALL(
+      disc3Reversed->localToGlobalTransform(tgContext).matrix(),
+      expected21.matrix(), 1e-6, 1e-10);
 
   // Test r merging with phi sectors (matching)
   auto discPhi1 = makeDisc(base, 30_mm, 100_mm, 10_degree, 40_degree);
@@ -646,7 +650,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     auto [disc3, reversed] =
         disc->mergedWith(*disc2, Acts::AxisDirection::AxisPhi, false, *logger);
     BOOST_REQUIRE_NE(disc3, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), disc3->transform(tgContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(),
+                      disc3->localToGlobalTransform(tgContext).matrix());
     BOOST_CHECK(reversed);
 
     auto [disc3Reversed, reversed2] =
@@ -670,7 +675,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     auto [disc45, reversed45] =
         disc4->mergedWith(*disc5, Acts::AxisDirection::AxisPhi, false, *logger);
     BOOST_REQUIRE_NE(disc45, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), disc45->transform(tgContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(),
+                      disc45->localToGlobalTransform(tgContext).matrix());
     BOOST_CHECK(reversed45);
 
     auto [disc54, reversed54] =
@@ -696,8 +702,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     auto [disc67, reversed67] =
         disc6->mergedWith(*disc7, Acts::AxisDirection::AxisPhi, false, *logger);
     BOOST_REQUIRE_NE(disc67, nullptr);
-    CHECK_CLOSE_OR_SMALL(disc67->transform(tgContext).matrix(), base.matrix(),
-                         1e-6, 1e-10);
+    CHECK_CLOSE_OR_SMALL(disc67->localToGlobalTransform(tgContext).matrix(),
+                         base.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(!reversed67);
 
     auto [disc76, reversed76] =
@@ -708,8 +714,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     // bounds are different because of avg phi
     BOOST_CHECK_NE(disc76->bounds(), disc67->bounds());
     // transforms should be the same
-    BOOST_CHECK_EQUAL(disc76->transform(tgContext).matrix(),
-                      disc67->transform(tgContext).matrix());
+    BOOST_CHECK_EQUAL(disc76->localToGlobalTransform(tgContext).matrix(),
+                      disc67->localToGlobalTransform(tgContext).matrix());
     // not reversed either because you get the ordering you put in
     BOOST_CHECK(!reversed76);
 
@@ -734,7 +740,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_REQUIRE_NE(disc3, nullptr);
     Transform3 trfExpected12 =
         base * AngleAxis3(a(85_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(disc3->transform(tgContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(disc3->localToGlobalTransform(tgContext).matrix(),
                          trfExpected12.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(reversed);
 
@@ -760,7 +766,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_REQUIRE_NE(disc45, nullptr);
     Transform3 trfExpected45 =
         base * AngleAxis3(a(180_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(disc45->transform(tgContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(disc45->localToGlobalTransform(tgContext).matrix(),
                          trfExpected45.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(reversed45);
 
@@ -787,7 +793,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_REQUIRE_NE(disc67, nullptr);
     Transform3 trfExpected67 =
         base * AngleAxis3(a(90_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(disc67->transform(tgContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(disc67->localToGlobalTransform(tgContext).matrix(),
                          trfExpected67.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(!reversed67);
 
@@ -796,8 +802,8 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     BOOST_REQUIRE_NE(disc76, nullptr);
     // surfaces are not equal due to different transforms
     BOOST_CHECK(*disc76 != *disc67);
-    BOOST_CHECK_NE(disc76->transform(tgContext).matrix(),
-                   disc67->transform(tgContext).matrix());
+    BOOST_CHECK_NE(disc76->localToGlobalTransform(tgContext).matrix(),
+                   disc67->localToGlobalTransform(tgContext).matrix());
     // bounds should be equal however
     BOOST_CHECK_EQUAL(disc76->bounds(), disc67->bounds());
 
@@ -816,4 +822,4 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

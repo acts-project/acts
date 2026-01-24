@@ -15,7 +15,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(DefinitionsDirection)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DefinitionsSuite)
 
 BOOST_AUTO_TEST_CASE(DirectionTests) {
   constexpr Direction bwd = Direction::Backward();
@@ -71,3 +73,5 @@ BOOST_AUTO_TEST_CASE(DirectionTests) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

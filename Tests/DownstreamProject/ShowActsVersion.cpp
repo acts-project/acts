@@ -13,9 +13,10 @@
 int main(void) {
   std::cout << "Using Acts version " << Acts::VersionMajor << "."
             << Acts::VersionMinor << "." << Acts::VersionPatch << " commit "
-            << Acts::CommitHash << std::endl;
+            << Acts::CommitHash.value_or("UNKNOWN") << std::endl;
 
-  if (Acts::VersionInfo::fromHeader() != Acts::VersionInfo::fromLibrary()) {
+  if (Acts::VersionInfo::fromHeader().withoutCommit() !=
+      Acts::VersionInfo::fromLibrary().withoutCommit()) {
     std::cout << "WARNING: The version information is inconsistent!"
               << std::endl;
     std::cout << "Header: " << Acts::VersionInfo::fromHeader() << std::endl;

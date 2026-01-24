@@ -9,19 +9,23 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <numbers>
 
 namespace bd = boost::unit_test::data;
 
+using namespace Acts;
+
 using Acts::AngleHelpers::etaFromTheta;
 using Acts::AngleHelpers::EtaThetaConversionTraits;
 using Acts::AngleHelpers::thetaFromEta;
 
-BOOST_AUTO_TEST_SUITE(AngleHelpers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(EtaThetaConversion) {
   CHECK_CLOSE_ABS(0.0, etaFromTheta(std::numbers::pi / 2), 1e-6);
@@ -95,3 +99,5 @@ BOOST_DATA_TEST_CASE(ThetaFromEtaRobustness, bd::xrange(1.0, 1000.0, 1.0),
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

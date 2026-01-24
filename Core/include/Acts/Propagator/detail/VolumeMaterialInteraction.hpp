@@ -72,30 +72,6 @@ struct VolumeMaterialInteraction {
         performCovarianceTransport(state.stepping.covTransport),
         navDir(state.options.direction) {}
 
-  /// @brief Constructor
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  /// @tparam stepper_t Type of the stepper
-  ///
-  /// @param [in] vVolume The current volume
-  /// @param [in] state State of the propagation
-  /// @param [in] stepper Stepper in use
-  template <typename propagator_state_t, typename stepper_t>
-  VolumeMaterialInteraction(const Acts::Experimental::DetectorVolume* vVolume,
-                            const propagator_state_t& state,
-                            const stepper_t& stepper)
-      : volume(vVolume),
-        pos(stepper.position(state.stepping)),
-        time(stepper.time(state.stepping)),
-        dir(stepper.direction(state.stepping)),
-        qOverP(stepper.qOverP(state.stepping)),
-        absQ(stepper.particleHypothesis(state.stepping).absoluteCharge()),
-        momentum(stepper.absoluteMomentum(state.stepping)),
-        mass(stepper.particleHypothesis(state.stepping).mass()),
-        absPdg(stepper.particleHypothesis(state.stepping).absolutePdg()),
-        performCovarianceTransport(state.stepping.covTransport),
-        navDir(state.options.direction) {}
-
   /// @brief This function evaluates the material properties to interact with
   ///
   /// @tparam propagator_state_t Type of the propagator state

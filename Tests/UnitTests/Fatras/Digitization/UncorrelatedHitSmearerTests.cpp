@@ -19,12 +19,12 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -36,16 +36,19 @@
 #include <random>
 #include <utility>
 
-namespace {
+using namespace Acts;
+using namespace ActsFatras;
+
+namespace ActsTests {
 
 namespace bd = boost::unit_test::data;
 
 using RandomGenerator = std::default_random_engine;
 
 struct SterileSmearer {
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomGenerator& /*rng*/) {
-    return Acts::Result<std::pair<double, double>>(
+  Result<std::pair<double, double>> operator()(double value,
+                                               RandomGenerator& /*rng*/) {
+    return Result<std::pair<double, double>>(
         std::make_pair<double, double>(value + 0., 0.));
   }
 };
@@ -53,18 +56,17 @@ struct SterileSmearer {
 struct AddSmearer {
   double offset = 1.0;
 
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomGenerator& /*rng*/) {
-    return Acts::Result<std::pair<double, double>>(
+  Result<std::pair<double, double>> operator()(double value,
+                                               RandomGenerator& /*rng*/) {
+    return Result<std::pair<double, double>>(
         std::make_pair<double, double>(value + offset, 3.));
   }
 };
 
 struct InvalidSmearer {
-  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/,
-                                                     RandomGenerator& /*rng*/) {
-    return Acts::Result<std::pair<double, double>>(
-        ActsFatras::DigitizationError::SmearingError);
+  Result<std::pair<double, double>> operator()(double /*ignored*/,
+                                               RandomGenerator& /*rng*/) {
+    return Result<std::pair<double, double>>(DigitizationError::SmearingError);
   }
 };
 
@@ -72,73 +74,64 @@ template <typename generator_t>
 struct Fixture {
   generator_t rng;
   // identifiers
-  Acts::GeometryIdentifier gid;
-  ActsFatras::Barcode pid;
+  GeometryIdentifier gid;
+  Barcode pid;
   // geometry information
-  std::shared_ptr<Acts::Surface> surface;
-  Acts::GeometryContext geoCtx;
+  std::shared_ptr<Surface> surface;
+  GeometryContext geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   // local and global track parameters
-  Acts::BoundVector boundParams;
-  Acts::FreeVector freeParams;
+  BoundVector boundParams;
+  FreeVector freeParams{};
   // hit information
-  ActsFatras::Hit hit;
+  Hit hit;
 
-  Fixture(std::uint64_t rngSeed, std::shared_ptr<Acts::Surface> surf)
+  Fixture(std::uint64_t rngSeed, std::shared_ptr<Surface> surf)
       : rng(rngSeed),
-        gid(Acts::GeometryIdentifier().withVolume(1).withLayer(2).withSensitive(
-            3)),
-        pid(ActsFatras::Barcode().withVertexPrimary(12).withParticle(23)),
+        gid(GeometryIdentifier().withVolume(1).withLayer(2).withSensitive(3)),
+        pid(Barcode().withVertexPrimary(12).withParticle(23)),
         surface(std::move(surf)) {
-    using namespace Acts::UnitLiterals;
-    using Acts::VectorHelpers::makeVector4;
+    using namespace UnitLiterals;
+    using VectorHelpers::makeVector4;
 
     surface->assignGeometryId(gid);
 
     // generate random track parameters
-    auto [par, cov] =
-        Acts::detail::Test::generateBoundParametersCovariance(rng, {});
+    auto [par, cov] = detail::Test::generateBoundParametersCovariance(rng, {});
     boundParams = par;
 
-    freeParams =
-        Acts::transformBoundToFreeParameters(*surface, geoCtx, boundParams);
+    freeParams = transformBoundToFreeParameters(*surface, geoCtx, boundParams);
 
     // construct hit from free parameters
-    Acts::Vector4 r4;
-    r4.segment<3>(Acts::ePos0) = freeParams.segment<3>(Acts::eFreePos0);
-    r4[Acts::eTime] = freeParams[Acts::eFreeTime];
+    Vector4 r4;
+    r4.segment<3>(ePos0) = freeParams.segment<3>(eFreePos0);
+    r4[eTime] = freeParams[eFreeTime];
     // construct 4-momentum vector assuming m=0
-    Acts::Vector4 p4;
-    p4.segment<3>(Acts::eMom0) =
-        freeParams.segment<3>(Acts::eFreeDir0).normalized();
-    p4[Acts::eEnergy] = 1;
-    p4 *= std::abs(1_e / freeParams[Acts::eFreeQOverP]);
+    Vector4 p4;
+    p4.segment<3>(eMom0) = freeParams.segment<3>(eFreeDir0).normalized();
+    p4[eEnergy] = 1;
+    p4 *= std::abs(1_e / freeParams[eFreeQOverP]);
     // same 4-momentum before/after hit
-    hit = ActsFatras::Hit(gid, pid, r4, p4, p4, 13);
+    hit = Hit(gid, pid, r4, p4, p4, 13);
   }
 };
 
 // track parameter indices to test smearing with. q/p smearing is not supported
 // in either case.
-const Acts::BoundIndices boundIndices[] = {
-    Acts::eBoundLoc0, Acts::eBoundLoc1,  Acts::eBoundTime,
-    Acts::eBoundPhi,  Acts::eBoundTheta,
+const BoundIndices boundIndices[] = {
+    eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta,
 };
-const Acts::FreeIndices freeIndices[] = {
-    Acts::eFreePos0, Acts::eFreePos1, Acts::eFreePos2, Acts::eFreeTime,
-    Acts::eFreeDir0, Acts::eFreeDir1, Acts::eFreeDir2,
+const FreeIndices freeIndices[] = {
+    eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2,
 };
 
 constexpr auto tol = 128 * std::numeric_limits<double>::epsilon();
 
-}  // namespace
-
-BOOST_AUTO_TEST_SUITE(FatrasUncorrelatedHitSmearer)
+BOOST_AUTO_TEST_SUITE(DigitizationSuite)
 
 BOOST_DATA_TEST_CASE(Bound1, bd::make(boundIndices), index) {
-  Fixture<RandomGenerator> f(
-      123, Acts::Surface::makeShared<Acts::PlaneSurface>(
-               Acts::Transform3(Acts::Translation3(3, 2, 1))));
-  ActsFatras::BoundParametersSmearer<RandomGenerator, 1u> s;
+  Fixture<RandomGenerator> f(123, Surface::makeShared<PlaneSurface>(
+                                      Transform3(Translation3(3, 2, 1))));
+  BoundParametersSmearer<RandomGenerator, 1u> s;
   s.indices = {index};
 
   // smearing does not do anything
@@ -167,12 +160,10 @@ BOOST_DATA_TEST_CASE(Bound1, bd::make(boundIndices), index) {
 }
 
 BOOST_AUTO_TEST_CASE(BoundAll) {
-  Fixture<RandomGenerator> f(
-      12356, Acts::Surface::makeShared<Acts::PlaneSurface>(
-                 Acts::Transform3(Acts::Translation3(3, 2, 1))));
+  Fixture<RandomGenerator> f(12356, Surface::makeShared<PlaneSurface>(
+                                        Transform3(Translation3(3, 2, 1))));
   // without q/p
-  ActsFatras::BoundParametersSmearer<RandomGenerator, std::size(boundIndices)>
-      s;
+  BoundParametersSmearer<RandomGenerator, std::size(boundIndices)> s;
   std::copy(std::begin(boundIndices), std::end(boundIndices),
             s.indices.begin());
 
@@ -213,10 +204,9 @@ BOOST_AUTO_TEST_CASE(BoundAll) {
 }
 
 BOOST_DATA_TEST_CASE(Free1, bd::make(freeIndices), index) {
-  Fixture<RandomGenerator> f(
-      1234, Acts::Surface::makeShared<Acts::PlaneSurface>(
-                Acts::Transform3(Acts::Translation3(3, 2, 1))));
-  ActsFatras::FreeParametersSmearer<RandomGenerator, 1u> s;
+  Fixture<RandomGenerator> f(1234, Surface::makeShared<PlaneSurface>(
+                                       Transform3(Translation3(3, 2, 1))));
+  FreeParametersSmearer<RandomGenerator, 1u> s;
   s.indices = {index};
 
   // smearing does not do anything
@@ -245,11 +235,10 @@ BOOST_DATA_TEST_CASE(Free1, bd::make(freeIndices), index) {
 }
 
 BOOST_AUTO_TEST_CASE(FreeAll) {
-  Fixture<RandomGenerator> f(
-      123567, Acts::Surface::makeShared<Acts::PlaneSurface>(
-                  Acts::Transform3(Acts::Translation3(3, 2, 1))));
+  Fixture<RandomGenerator> f(123567, Surface::makeShared<PlaneSurface>(
+                                         Transform3(Translation3(3, 2, 1))));
   // without q/p
-  ActsFatras::FreeParametersSmearer<RandomGenerator, std::size(freeIndices)> s;
+  FreeParametersSmearer<RandomGenerator, std::size(freeIndices)> s;
   std::copy(std::begin(freeIndices), std::end(freeIndices), s.indices.begin());
 
   // smearing does not do anything
@@ -289,3 +278,5 @@ BOOST_AUTO_TEST_CASE(FreeAll) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

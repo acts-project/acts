@@ -289,7 +289,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
                   dParameters, *surfacePtr, ctx.geoContext);
               clusters.emplace_back(std::move(dParameters.cluster));
 
-              for (auto [i, simHitIdx] : Acts::enumerate(simHitsIdxs)) {
+              for (auto simHitIdx : simHitsIdxs) {
                 measurementParticlesMap.emplace_hint(
                     measurementParticlesMap.end(), measurement.index(),
                     simHits.nth(simHitIdx)->particleId());

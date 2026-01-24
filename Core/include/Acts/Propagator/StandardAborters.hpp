@@ -40,7 +40,7 @@ struct PathLimitReached {
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    (void)navigator;
+    static_cast<void>(navigator);
 
     // Check if the maximum allowed step size has to be updated
     double distance =
@@ -218,8 +218,7 @@ struct VolumeConstraintAborter {
         static_cast<std::uint32_t>(currentVolume->geometryId().volume());
 
     if (!constrainToVolumeIds.empty() &&
-        std::find(constrainToVolumeIds.begin(), constrainToVolumeIds.end(),
-                  currentVolumeId) == constrainToVolumeIds.end()) {
+        !rangeContainsValue(constrainToVolumeIds, currentVolumeId)) {
       ACTS_VERBOSE(
           "VolumeConstraintAborter aborter | Abort with volume constrain "
           << currentVolumeId);
@@ -227,8 +226,7 @@ struct VolumeConstraintAborter {
     }
 
     if (!endOfWorldVolumeIds.empty() &&
-        std::find(endOfWorldVolumeIds.begin(), endOfWorldVolumeIds.end(),
-                  currentVolumeId) != endOfWorldVolumeIds.end()) {
+        rangeContainsValue(endOfWorldVolumeIds, currentVolumeId)) {
       ACTS_VERBOSE(
           "VolumeConstraintAborter aborter | Abort with additional end of "
           "world volume "
@@ -255,8 +253,8 @@ struct AnySurfaceReached {
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    (void)stepper;
-    (void)logger;
+    static_cast<void>(stepper);
+    static_cast<void>(logger);
 
     const Surface* startSurface = navigator.startSurface(state.navigation);
     const Surface* targetSurface = navigator.targetSurface(state.navigation);

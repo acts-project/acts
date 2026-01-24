@@ -13,10 +13,13 @@
 #include <cstdint>
 
 namespace ActsPlugins {
+/// @addtogroup hashing_plugin
+/// @{
 
 using AnnoyMetric = Annoy::AngularEuclidean;
 using AnnoyModel =
     Annoy::AnnoyIndex<std::uint32_t, float, AnnoyMetric, Annoy::Kiss32Random,
                       Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
+/// @}
 }  // namespace ActsPlugins

@@ -14,6 +14,8 @@
 class TGeoNode;
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @brief ITGeoIdentierProvider
 ///
@@ -27,8 +29,10 @@ class ITGeoIdentifierProvider {
   ///
   /// @param gctx is a geometry context object
   /// @param tgnode is a TGeoNode that is translated
+  /// @return The detector element identifier for the given TGeo node
   virtual TGeoDetectorElement::Identifier identify(
       const Acts::GeometryContext& gctx, const TGeoNode& tgnode) const = 0;
 };
 
+/// @}
 }  // namespace ActsPlugins

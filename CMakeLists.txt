@@ -78,7 +78,6 @@ option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
-option(ACTS_BUILD_PLUGIN_PODIO "Build Podio plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FASTJET "Build FastJet plugin" OFF)
@@ -96,12 +95,16 @@ option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
+# python related options
+option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
+option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
+option(ACTS_BUILD_EXAMPLES "Build basic examples components" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
@@ -109,7 +112,7 @@ option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "[Deprecated] Build python bindings and enables the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
@@ -142,6 +145,14 @@ option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
 
+# Preserve previous behaviour of ACTS_BUILD_PYTHON_BINDINGS but mark as deprecated
+if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+    message(
+        DEPRECATION
+        "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS is deprecated. Enable ACTS_BUILD_EXAMPLES and ACTS_BUILD_PYTHON_BINDINGS to achieve the same effect."
+    )
+    set(ACTS_BUILD_PYTHON_BINDINGS ON)
+endif()
 # any examples component activates the general examples option
 set_option_if(
     ACTS_BUILD_EXAMPLES
@@ -160,7 +171,6 @@ set_option_if(
     ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
 )
 # core plugins might be required by examples or depend on each other
-
 set_option_if(
     ACTS_BUILD_PLUGIN_DD4HEP
     ACTS_BUILD_EXAMPLES_DD4HEP
@@ -169,7 +179,6 @@ set_option_if(
 )
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
-set_option_if(ACTS_BUILD_PLUGIN_PODIO ACTS_BUILD_EXAMPLES_PODIO)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
 set_option_if(
     ACTS_BUILD_PLUGIN_ROOT
@@ -181,21 +190,56 @@ set_option_if(
     ACTS_BUILD_PLUGIN_IDENTIFICATION
     ACTS_BUILD_PLUGIN_ROOT
     OR
-    ACTS_BUILD_PLUGIN_PODIO
+    ACTS_BUILD_PLUGIN_EDM4HEP
     OR
     ACTS_BUILD_EXAMPLES
 )
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES)
+set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_PLUGIN_FASTJET)
 set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_HASHING ACTS_BUILD_EXAMPLES_HASHING)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
-
+set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 # feature tests
 include(CheckCXXSourceCompiles)
+
+# Set flags dependent whether we build ACTS in the default configuration or for deployment in pip with scikit-build-core
+if(ACTS_BUILD_PYTHON_WHEEL)
+    # Check if skbuild is running
+    if("${SKBUILD}" STREQUAL "2")
+        message(
+            STATUS
+            "Build with skbuild as ${SKBUILD_PROJECT_NAME},${SKBUILD_PROJECT_VERSION_FULL} (${SKBUILD_STATE})"
+        )
+    else()
+        message(WARNING "scikit-build-core not detected for building wheel")
+    endif()
+
+    # For deployment with pip, we build static libs
+    set(BUILD_SHARED_LIBS FALSE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+    # Set installation paths for proper python package creation
+    # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
+    set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
+    set(CMAKE_INSTALL_LIBDIR "acts")
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
+    set(CMAKE_INSTALL_DATAROOTDIR "acts/share")
+    set(CMAKE_INSTALL_DATADIR "acts/share")
+    set(ACTS_PYTHON_INSTALL_DIR "acts")
+else()
+    # GNU-like installation paths, e.g. lib/, include/, ...
+    include(GNUInstallDirs)
+    set(ACTS_PYTHON_INSTALL_DIR "python")
+endif()
+
+include(ActsCompilerOptions) # default compile options
+include(ActsComponentsHelpers) # handle components via add_..._if commands
+include(ActsStaticAnalysis)
 
 # function that tests if the root installation is compatible
 function(check_root_compatibility)
@@ -211,12 +255,6 @@ function(check_root_compatibility)
     #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
     #endif()
 endfunction()
-
-# additional configuration and tools
-include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
-include(ActsCompilerOptions) # default compile options
-include(ActsComponentsHelpers) # handle components via add_..._if commands
-include(ActsStaticAnalysis)
 
 # place build products in `<build>/bin` and `<build>/lib` for simple use
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
@@ -243,33 +281,30 @@ endif()
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_actsvg_version 0.4.56)
-set(_acts_boost_version 1.77.0) # first version with C++20 support
+set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
-set(_acts_edm4hep_version 0.10.5)
+set(_acts_edm4hep_version 1.0)
+set(_acts_edm4hep_fallback_version 0.10.5)
 set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.4)
-set(_acts_nlohmanjson_version 3.10.5)
+set(_acts_nlohmanjson_version 3.11.3)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 2.13.1)
-set(_acts_detray_version 0.101.0)
-set(_acts_traccc_version 0.22.0)
-set(_acts_covfie_version 0.13.0)
-set(_acts_vecmem_version 1.17.0)
-set(_acts_algebraplugins_version 0.27.0)
+set(_acts_detray_version 0.103.0)
+set(_acts_traccc_version 0.26.1)
+set(_acts_covfie_version 0.15.2)
+set(_acts_vecmem_version 1.21.0)
+set(_acts_algebraplugins_version 0.28.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
-
-# recommended dependency version. if there is an opportunity to reach
-# this version we will try so.
-set(_acts_boost_recommended_version 1.78.0)
 
 # Help with compiler flags discovery
 include(ActsFunctions)
@@ -297,13 +332,6 @@ if(ACTS_SETUP_BOOST)
         find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
     endif()
 
-    if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
-        message(
-            WARNING
-            "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}"
-        )
-    endif()
-
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
         set(_boost_version_severity WARNING)
         if(ACTS_BUILD_EXAMPLES)
@@ -318,13 +346,45 @@ endif()
 
 if(ACTS_SETUP_EIGEN3)
     if(ACTS_USE_SYSTEM_EIGEN3)
-        find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
+        find_package(Eigen3 REQUIRED CONFIG)
+
+        if(DEFINED Eigen3_VERSION)
+            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_version)
+                message(
+                    FATAL_ERROR
+                    "Eigen3 ${Eigen3_VERSION} is too old (need >= 3.4.0)"
+                )
+            endif()
+            if(Eigen3_VERSION VERSION_GREATER_EQUAL 6.0.0)
+                message(
+                    FATAL_ERROR
+                    "Eigen3 ${Eigen3_VERSION} is not supported (need < 6.0.0)"
+                )
+            endif()
+        else()
+            message(
+                WARNING
+                "Eigen3 version unknown - cannot verify version requirements"
+            )
+        endif()
     else()
         add_subdirectory(thirdparty/eigen3)
     endif()
-endif()
+    # get the first include path so we can nicely print where we get eigen from
+    get_target_property(
+        _eigen3_include_dirs
+        Eigen3::Eigen
+        INTERFACE_INCLUDE_DIRECTORIES
+    )
+    if(_eigen3_include_dirs)
+        list(GET _eigen3_include_dirs 0 _eigen3_first_include_dir)
+    endif()
 
-find_package(Filesystem REQUIRED)
+    message(
+        STATUS
+        "Found Eigen3 at: ${_eigen3_first_include_dir} (${Eigen3_VERSION})"
+    )
+endif()
 
 # CUDA settings are collected here in a macro, so that they can be reused by different plugins
 macro(enable_cuda)
@@ -351,6 +411,14 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
+if(ACTS_BUILD_PYTHON_BINDINGS)
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
+    if(ACTS_USE_SYSTEM_PYBIND11)
+        find_package(pybind11 CONFIG REQUIRED)
+    else()
+        add_subdirectory(thirdparty/pybind11)
+    endif()
+endif()
 if(ACTS_BUILD_PLUGIN_ACTSVG)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
@@ -360,7 +428,7 @@ if(ACTS_BUILD_PLUGIN_ACTSVG)
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
     # Explicitly find python so we can more easily override the version
-    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
     find_package(
         DD4hep
         ${_acts_dd4hep_version}
@@ -403,7 +471,7 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         ${_acts_root_version}
         REQUIRED
         CONFIG
-        COMPONENTS Geom Graf
+        COMPONENTS Geom Graf Tree RIO Hist
     )
     check_root_compatibility()
 endif()
@@ -427,7 +495,9 @@ if(ACTS_BUILD_PLUGIN_GNN)
     endif()
     if(ACTS_GNN_ENABLE_TORCH)
         find_package(Torch REQUIRED)
-        add_subdirectory(thirdparty/FRNN)
+        if(ACTS_GNN_ENABLE_CUDA)
+            add_subdirectory(thirdparty/FRNN)
+        endif()
     endif()
     if(ACTS_GNN_ENABLE_MODULEMAP)
         if(ACTS_USE_SYSTEM_MODULEMAPGRAPH)
@@ -440,7 +510,15 @@ endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)
 endif()
-if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
+if(ACTS_BUILD_PLUGIN_EDM4HEP)
+    find_package(EDM4HEP ${_acts_edm4hep_version} CONFIG)
+    if(NOT EDM4HEP_FOUND)
+        message(
+            STATUS
+            "EDM4hep not found, trying version ${_acts_edm4hep_fallback_version}"
+        )
+        find_package(EDM4HEP ${_acts_edm4hep_fallback_version} CONFIG REQUIRED)
+    endif()
     find_package(podio ${_acts_podio_version} CONFIG)
     if(NOT podio_FOUND)
         message(
@@ -450,9 +528,6 @@ if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
         find_package(podio ${_acts_podio_fallback_version} CONFIG REQUIRED)
     endif()
     find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core)
-endif()
-if(ACTS_BUILD_PLUGIN_EDM4HEP)
-    find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
@@ -539,14 +614,6 @@ if(ACTS_BUILD_EXAMPLES)
         )
         check_root_compatibility()
     endif()
-    if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-        find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-        if(ACTS_USE_SYSTEM_PYBIND11)
-            find_package(pybind11 CONFIG REQUIRED)
-        else()
-            add_subdirectory(thirdparty/pybind11)
-        endif()
-    endif()
     if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
         find_package(
             DD4hep
@@ -571,35 +638,21 @@ endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
     find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
-    find_package(Sphinx REQUIRED)
 endif()
 
 # core library, core plugins, and other components
 add_component(Core Core)
-add_subdirectory(Plugins)
 add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
+add_subdirectory(Plugins)
 add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
-if(ACTS_BUILD_ODD)
-    if(
-        EXISTS
-            "${CMAKE_CURRENT_LIST_DIR}/thirdparty/OpenDataDetector/CMakeLists.txt"
-    )
-        add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
-    else()
-        message(
-            FATAL_ERROR
-            "ODD build was requested, but the ODD directory seems not to be present. "
-            "Did you init and update the submodule?"
-        )
-    endif()
-endif()
+add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 
-# Python bindings infrastructure
-add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-
-# examples
+# Examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+
+# Python bindings
+add_subdirectory_if(Python ACTS_BUILD_PYTHON_BINDINGS)
 
 # automated tests and benchmarks
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
@@ -607,8 +660,8 @@ if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
     add_subdirectory(Tests)
 endif()
 
-# documentation
-add_subdirectory_if(docs ACTS_BUILD_DOCS)
+# documentation, adding unconditionally but will only set up docs build if configured
+add_subdirectory(docs)
 
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)

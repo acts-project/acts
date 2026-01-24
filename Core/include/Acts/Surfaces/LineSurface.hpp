@@ -190,7 +190,7 @@ class LineSurface : public Surface {
   ///
   /// <b>Mathematical motivation:</b>
   ///
-  /// Given two lines in parameteric form:<br>
+  /// Given two lines in parametric form:<br>
   ///
   /// @f$ \vec l_{a}(u) = \vec m_a + u \cdot \vec e_{a} @f$
   ///
@@ -261,6 +261,11 @@ class LineSurface : public Surface {
   /// This method returns the bounds of the surface by reference
   /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const final;
+  /// This method returns the shared_ptr to the LineBounds
+  const std::shared_ptr<const LineBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const LineBounds> newBounds);
 
   /// Return properly formatted class name for screen output
   /// @return String representation of the class name

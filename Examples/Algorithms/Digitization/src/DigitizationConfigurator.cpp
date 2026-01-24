@@ -53,7 +53,7 @@ bool digiConfigMaybeEqual(ActsExamples::DigiComponentsConfig &a,
 
 void ActsExamples::DigitizationConfigurator::operator()(
     const Acts::Surface *surface) {
-  if (surface->associatedDetectorElement() != nullptr) {
+  if (surface->isSensitive()) {
     Acts::GeometryIdentifier geoId = surface->geometryId();
     auto dInputConfig = inputDigiComponents.find((geoId));
     if (dInputConfig != inputDigiComponents.end()) {

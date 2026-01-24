@@ -9,7 +9,6 @@
 #include "Acts/Definitions/ParticleData.hpp"
 
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/Units.hpp"
 
 #include <algorithm>
 #include <array>
@@ -38,7 +37,7 @@ enum class Type {
 template <typename T, Acts::PdgParticle pdg, Type type>
 std::optional<T> findCachedImpl(const std::map<std::int32_t, T>& map) {
   const static std::optional<T> value = [&map]() -> std::optional<T> {
-    const auto it = map.find(pdg);
+    const auto it = map.find(static_cast<std::int32_t>(pdg));
     if (it == map.end()) {
       return std::nullopt;
     }

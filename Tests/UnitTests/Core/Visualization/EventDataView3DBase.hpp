@@ -26,14 +26,14 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <cmath>
 #include <optional>
@@ -72,9 +72,9 @@ void createDetector(GeometryContext& tgContext,
   // Construct the rotation
   RotationMatrix3 rotation = RotationMatrix3::Identity();
   double rotationAngle = 90_degree;
-  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;
@@ -84,7 +84,7 @@ void createDetector(GeometryContext& tgContext,
       std::make_shared<const RectangleBounds>(RectangleBounds(50_mm, 50_mm));
 
   // Material of the surfaces
-  MaterialSlab matProp(Acts::Test::makeSilicon(), 0.5_mm);
+  MaterialSlab matProp(ActsTests::makeSilicon(), 0.5_mm);
   const auto surfaceMaterial =
       std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
@@ -110,7 +110,7 @@ void createDetector(GeometryContext& tgContext,
         [](const Transform3& trans,
            const std::shared_ptr<const RectangleBounds>& bounds,
            double thickness) {
-          return new Test::DetectorElementStub(trans, bounds, thickness);
+          return new ActsTests::DetectorElementStub(trans, bounds, thickness);
         };
     CuboidVolumeBuilder::LayerConfig lConf;
     lConf.surfaceCfg = {sConf};
@@ -145,7 +145,7 @@ void createDetector(GeometryContext& tgContext,
   // Get the surfaces;
   surfaces.reserve(nSurfaces);
   detector->visitSurfaces([&](const Surface* surface) {
-    if (surface != nullptr && surface->associatedDetectorElement() != nullptr) {
+    if (surface != nullptr && surface->isSensitive()) {
       std::cout << "surface " << surface->geometryId() << " placed at: ("
                 << surface->center(tgContext).transpose() << " )" << std::endl;
       surfaces.push_back(surface);
@@ -165,7 +165,7 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   ViewConfig pcolor{.color = {20, 120, 20}};
   ViewConfig scolor{.color = {235, 198, 52}};
 
-  auto gctx = GeometryContext();
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   auto identity = Transform3::Identity();
 
   // rectangle and plane
@@ -217,7 +217,7 @@ static inline std::string testMeasurement(IVisualization3D& helper,
   std::stringstream ss;
 
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   // Create a detector
   const std::size_t nSurfaces = 7;
@@ -253,7 +253,7 @@ static inline std::string testMeasurement(IVisualization3D& helper,
     auto lposition = singleMeasurement.parameters;
 
     auto surf = detector->findSurface(singleMeasurement.m_geometryId);
-    auto transf = surf->transform(tgContext);
+    auto transf = surf->localToGlobalTransform(tgContext);
 
     EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
                                      localErrorScale, mcolor);
@@ -275,7 +275,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   std::stringstream ss;
 
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mfContext = MagneticFieldContext();
   CalibrationContext calContext = CalibrationContext();
 

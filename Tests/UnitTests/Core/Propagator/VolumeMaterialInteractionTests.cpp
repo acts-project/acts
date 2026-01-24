@@ -18,26 +18,27 @@
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <memory>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 /// @brief Simplified stepper state
 struct StepperState {
   ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
-  Vector3 pos, dir;
+  Vector3 pos{}, dir{};
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
   double absCharge = UnitConstants::e;
 };
 
 /// @brief Simplified navigator
-struct NaivgatorState {
+struct NavigatorState {
   TrackingVolume* currentVolume = nullptr;
 };
 
@@ -48,7 +49,7 @@ struct State {
   } options;
 
   StepperState stepping;
-  NaivgatorState navigation;
+  NavigatorState navigation;
 };
 
 /// @brief Simplified stepper
@@ -74,10 +75,12 @@ struct Stepper {
 
 /// @brief Simplified navigator
 struct Navigator {
-  const TrackingVolume* currentVolume(const NaivgatorState& state) const {
+  const TrackingVolume* currentVolume(const NavigatorState& state) const {
     return state.currentVolume;
   }
 };
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   // Create a Tracking Volume
@@ -135,4 +138,6 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -46,6 +46,10 @@ void testTruthTestGraph(std::vector<std::int64_t> &truthGraph,
   BOOST_CHECK_EQUAL(std::string(begin, str.end() - 1), resStr);
 }
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GnnSuite)
+
 BOOST_AUTO_TEST_CASE(same_graph) {
   // clang-format off
   std::vector<std::int64_t> truthGraph = {
@@ -118,3 +122,7 @@ BOOST_AUTO_TEST_CASE(fifty_fifty) {
 
   testTruthTestGraph(truthGraph, testGraph, "Efficiency=0.5, purity=0.5");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Detector/GeometryCompatibilityConcept.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -57,21 +56,17 @@ struct MaterialInteractor {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& logger) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& logger) const {
     if (state.stage == PropagatorStage::postPropagation) {
-      return;
+      return Result<void>::success();
     }
 
     // Do nothing if nothing is what is requested.
     if (!(multipleScattering || energyLoss || recordInteractions)) {
-      return;
+      return Result<void>::success();
     }
-
-    static_assert(
-        Acts::NavigationCompatibleConcept<propagator_state_t, navigator_t>,
-        "Navigation does not fulfill geometry compatibility concept");
 
     // Handle surface material
 
@@ -141,6 +136,7 @@ struct MaterialInteractor {
         recordResult(interaction, result);
       }
     }
+    return Result<void>::success();
   }
 
  private:

@@ -23,6 +23,9 @@
 
 namespace Acts {
 
+/// @addtogroup material
+/// @{
+
 /// @brief Base class for material accessors, this is needed
 /// for the I/O of the different grid material types, in the actual
 /// implementation the material accessor is a template parameter.
@@ -162,10 +165,14 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   }
 };
 
+/// Base class for the concrete templated grid surface material types.
+/// This allows referning to all template instances as the same base class type.
+class IGridSurfaceMaterialBase : public ISurfaceMaterial {};
+
 /// Intermediate interface to the grid surface material given access to the grid
 /// and the material accessor.
 template <typename grid_value_t>
-class IGridSurfaceMaterial : public ISurfaceMaterial {
+class IGridSurfaceMaterial : public IGridSurfaceMaterialBase {
  public:
   /// @brief Accessor to the grid interface
   /// @return Reference to the grid interface
@@ -356,5 +363,7 @@ using GloballyIndexedSurfaceMaterial =
 template <typename grid_type>
 using GridSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, GridMaterialAccessor>;
+
+/// @}
 
 }  // namespace Acts

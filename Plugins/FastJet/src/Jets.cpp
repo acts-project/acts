@@ -8,18 +8,15 @@
 
 #include "ActsPlugins/FastJet/Jets.hpp"
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+
+using TrackContainer =
+    Acts::TrackContainer<Acts::VectorTrackContainer,
+                         Acts::VectorMultiTrajectory, std::shared_ptr>;
+
 namespace ActsPlugins::FastJet {
-
-TrackJetBuilder TrackJetBuilder::create(std::vector<fastjet::PseudoJet>& tracks,
-                                        const fastjet::JetDefinition& jetDef) {
-  fastjet::ClusterSequence cs(tracks, jetDef);
-  return TrackJetBuilder(cs);
-}
-
-std::vector<fastjet::PseudoJet> TrackJetBuilder::jets(float ptMin,
-                                                      float etaMax) {
-  fastjet::Selector sel_eta = fastjet::SelectorAbsEtaMax(etaMax);
-  return sel_eta(m_clusterSeq.inclusive_jets(ptMin));
-}
-
+// Initiate a truth jet with 4-momentum
+Acts::Vector4 testVec4(10.0, 0.0, 10.0, 14.1421);
+TruthJet<TrackContainer> testJet(testVec4, JetLabel::Unknown);
 }  // namespace ActsPlugins::FastJet

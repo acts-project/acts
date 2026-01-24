@@ -70,13 +70,10 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
 }
 
 void SurfaceArrayNavigationPolicy::initializeCandidates(
+    [[maybe_unused]] const GeometryContext& gctx,
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
   ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
-
-  if (!args.wantsSurfaces) {
-    return;
-  }
 
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
   const std::vector<const Surface*>& sensitiveSurfaces =

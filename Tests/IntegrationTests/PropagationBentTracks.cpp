@@ -15,61 +15,59 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
-#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
 
-using namespace Acts::UnitLiterals;
+using namespace Acts;
+using namespace UnitLiterals;
+using namespace ActsTests;
 
 /// This tests intend to check the behaviour of the navigator in cases where the
 /// straight-line approach for the layer resolval can fail. This is in
 /// particular the case with bent tracks in telesocpe-like geometries, and can
 /// be fixed by not doing the bounds check in the initial resolving.
 
-using MagneticField = Acts::ConstantBField;
-using Stepper = Acts::EigenStepper<>;
-using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+using MagneticField = ConstantBField;
+using Stepper = EigenStepper<>;
+using TestPropagator = Propagator<Stepper, Navigator>;
 
-const Acts::GeometryContext geoCtx;
-const Acts::MagneticFieldContext magCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+const MagneticFieldContext magCtx;
 
-std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
+std::vector<double> xPositionsOfPassedSurfaces(Navigator::Config navCfg,
                                                double bz) {
-  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
-  Acts::Test::CubicTrackingGeometry cubicBuilder(geoCtx);
+  auto magField = std::make_shared<MagneticField>(Vector3(0.0, 0.0, bz));
+  CubicTrackingGeometry cubicBuilder(geoCtx);
 
   navCfg.trackingGeometry = cubicBuilder();
   Stepper stepper(std::move(magField));
-  Propagator propagator(
-      stepper,
-      Acts::Navigator(navCfg,
-                      Acts::getDefaultLogger("nav", Acts::Logging::VERBOSE)),
-      Acts::getDefaultLogger("nav", Acts::Logging::VERBOSE));
+  TestPropagator propagator(
+      stepper, Navigator(navCfg, getDefaultLogger("nav", Logging::VERBOSE)),
+      getDefaultLogger("nav", Logging::VERBOSE));
 
   // Start with a slightly tilted direction that does not hit the surfaces at
   // x=2000 with 0 B-Field
-  Acts::Vector3 dir = Acts::Vector3{1.0_m, 0.3_m, 0.0_m};
+  Vector3 dir = Vector3{1.0_m, 0.3_m, 0.0_m};
 
   // Start a bit in the volume 2, so we do not have any boundary checking for
   // the volume transition in the log
-  Acts::BoundTrackParameters start =
-      Acts::BoundTrackParameters::createCurvilinear(
-          Acts::Vector4(0.01, 0, 0, 0), dir.normalized(), 1 / 1_GeV,
-          std::nullopt, Acts::ParticleHypothesis::pion());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4(0.01, 0, 0, 0), dir.normalized(), 1 / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
 
-  Propagator::Options<
-      Acts::ActorList<Acts::detail::SteppingLogger, Acts::EndOfWorldReached>>
+  TestPropagator::Options<ActorList<detail::SteppingLogger, EndOfWorldReached>>
       opts(geoCtx, magCtx);
 
   auto res = propagator.propagate(start, opts);
 
   BOOST_CHECK(res.ok());
 
-  const auto &stepLog = res->get<Acts::detail::SteppingLogger::result_type>();
+  const auto &stepLog = res->get<detail::SteppingLogger::result_type>();
 
   std::vector<double> xPositions;
   for (const auto &step : stepLog.steps) {
     if (step.surface) {
-      xPositions.push_back(step.surface->center(geoCtx)[Acts::ePos0]);
+      xPositions.push_back(step.surface->center(geoCtx)[ePos0]);
     }
   }
 
@@ -77,7 +75,7 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
 }
 
 BOOST_AUTO_TEST_CASE(with_boundary_check_no_bfield) {
-  auto navCfg = Acts::Navigator::Config{};
+  auto navCfg = Navigator::Config{};
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.0_T);
 
   // without bfield we exit at the side so we don't hit the surfaces at x ~
@@ -95,7 +93,7 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_no_bfield) {
 }
 
 BOOST_AUTO_TEST_CASE(with_boundary_check_with_bfield) {
-  auto navCfg = Acts::Navigator::Config{};
+  auto navCfg = Navigator::Config{};
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.5_T);
 
   // With default navigation config we miss the surfaces at x ~ 2000, but hit

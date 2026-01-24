@@ -13,7 +13,11 @@
 #include <tuple>
 #include <type_traits>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 // This tests the implementation of the ActionList
 // and the standard aborters
@@ -32,7 +36,7 @@ BOOST_AUTO_TEST_CASE(Extendable_) {
 
   // Test the empty list
   detail::Extendable<> nullist{};
-  (void)nullist;
+  static_cast<void>(nullist);
   BOOST_CHECK_EQUAL(std::tuple_size_v<std::tuple<>>, 0u);
 
   detail::Extendable<TypeA> alist;
@@ -56,4 +60,6 @@ BOOST_AUTO_TEST_CASE(Extendable_) {
   BOOST_CHECK_EQUAL(abcList.get<TypeC>().vaC, '4');
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

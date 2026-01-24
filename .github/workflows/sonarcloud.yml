@@ -8,7 +8,7 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:80
+    container: ghcr.io/acts-project/ubuntu2404:83
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Dump job context
@@ -22,7 +22,7 @@ jobs:
           apt-get install -y unzip
 
       - name: "Checkout repository"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # To prevent shallow clone
 
@@ -113,7 +113,7 @@ jobs:
           ls -al build/coverage
 
       - name: Run sonar-scanner (PR mode)
-        uses: SonarSource/sonarqube-scan-action@v6.0.0
+        uses: SonarSource/sonarqube-scan-action@v7.0.0
         if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -129,7 +129,7 @@ jobs:
             --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
 
       - name: Run sonar-scanner (push mode)
-        uses: SonarSource/sonarqube-scan-action@v6.0.0
+        uses: SonarSource/sonarqube-scan-action@v7.0.0
         if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

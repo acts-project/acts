@@ -11,15 +11,19 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/TextMagneticFieldIo.hpp"
-#include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <fstream>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MagneticFieldSuite)
 
 BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_text) {
   TemporaryDirectory tmp{};
@@ -78,7 +82,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_text) {
             },
             tmp.path() / fieldName, 1_mm, fieldScale, fOctant, dlm);
 
-        // Check that the bfield is two dimenstional
+        // Check that the bfield is two dimensional
         auto nBins = rzField.getNBins();
         BOOST_CHECK_EQUAL(nBins.size(), 2u);
 
@@ -157,4 +161,6 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_text) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

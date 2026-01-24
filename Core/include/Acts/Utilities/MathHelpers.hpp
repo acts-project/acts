@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include <cassert>
 #include <cmath>
+#include <type_traits>
 
 namespace Acts {
 
@@ -18,12 +20,31 @@ namespace Acts {
 /// @return The absolute value of the input
 template <typename T>
 constexpr T abs(const T n) {
-  if constexpr (std::is_signed_v<T>) {
-    if (n < 0) {
-      return -n;
+  if (std::is_constant_evaluated()) {
+    if constexpr (std::is_signed_v<T>) {
+      if (n < 0) {
+        return -n;
+      }
     }
+    return n;
+  } else {
+    return std::abs(n);
   }
-  return n;
+}
+/// @brief Copies the sign of a signed variable onto the copyTo input object
+///        Return type & magnitude remain unaffected by this method which allows
+///        usage for Vectors & other types providing the - operator.
+///        By convention, the zero is assigned to a positive sign.
+/// @param copyTo: Variable to which the sign is copied to.
+/// @param sign: Variable from which the sign is taken.
+template <typename out_t, typename sign_t>
+constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
+  if constexpr (std::is_enum_v<sign_t>) {
+    return copySign(copyTo, static_cast<std::underlying_type_t<sign_t>>(sign));
+  } else {
+    constexpr sign_t zero = 0;
+    return sign >= zero ? copyTo : -copyTo;
+  }
 }
 
 /// @brief Calculates the ordinary power of the number x.
@@ -32,15 +53,19 @@ constexpr T abs(const T n) {
 /// @return x raised to the power p
 template <typename T, std::integral P>
 constexpr T pow(T x, P p) {
-  constexpr T one = 1;
-  if constexpr (std::is_signed_v<P>) {
-    if (p < 0 && abs(x) > std::numeric_limits<T>::epsilon()) {
-      x = one / x;
-      p = -p;
+  if (std::is_constant_evaluated()) {
+    constexpr T one = 1;
+    if constexpr (std::is_signed_v<P>) {
+      if (p < 0 && abs(x) > std::numeric_limits<T>::epsilon()) {
+        x = one / x;
+        p = -p;
+      }
     }
+    using unsigned_p = std::make_unsigned_t<P>;
+    return p == 0 ? one : x * pow(x, static_cast<unsigned_p>(p) - 1);
+  } else {
+    return static_cast<T>(std::pow(x, static_cast<T>(p)));
   }
-  using unsigned_p = std::make_unsigned_t<P>;
-  return p == 0 ? one : x * pow(x, static_cast<unsigned_p>(p) - 1);
 }
 
 /// @brief Returns the square of the passed number
@@ -75,16 +100,31 @@ template <std::integral T>
 constexpr T sumUpToN(const T N) {
   return N * (N + 1) / 2;
 }
-/// @brief Calculates the factorial of a number
-///        N!= N*(N-1)....*3*2*1
-/// @param upperN: Upper factor until which the factorial is calculated
-/// @param lowerN: Optional argument to remove the first factors from the calculation
+/// @brief Calculates the product of all integers
+///        within the given integer range
+///           (nLower)(nLower +1)(...)(upper-1)(upper)
+///        If lowerN is bigger than upperN, the function
+///        returns one
+/// @param lowerN: Lower range of the product calculation
+/// @param upperN: Upper range of the product calculation
 /// @return Factorial result
-template <std::integral T>
-constexpr T factorial(const T upperN, const T lowerN = 1) {
-  constexpr T one = 1;
-  const T& limit = std::max(one, lowerN);
-  return upperN >= limit ? upperN * factorial(upperN - 1, limit) : one;
+template <std::unsigned_integral T>
+constexpr T product(const T lowerN, const T upperN) {
+  if (lowerN == static_cast<T>(0)) {
+    return 0;
+  }
+  T value{1};
+  for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
+    assert(value * iter > value);
+    value *= iter;
+  }
+  return value;
+}
+/// @brief Calculate the the factorial of an integer
+/// @param N: Number of which the factorial is to be calculated
+template <std::unsigned_integral T>
+constexpr T factorial(const T N) {
+  return product<T>(1, N);
 }
 /// @brief Calculate the binomial coefficient
 ///              n        n!
@@ -93,9 +133,10 @@ constexpr T factorial(const T upperN, const T lowerN = 1) {
 /// @param n Upper value in binomial coefficient
 /// @param k Lower value in binomial coefficient
 /// @return Binomial coefficient n choose k
-template <std::integral T>
+template <std::unsigned_integral T>
 constexpr T binomial(const T n, const T k) {
-  return factorial<T>(n, n - k + 1) / factorial<T>(k);
+  assert(k <= n);
+  return product<T>(n - k + 1, n) / factorial<T>(k);
 }
 
 }  // namespace Acts

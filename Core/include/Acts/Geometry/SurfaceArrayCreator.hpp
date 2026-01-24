@@ -30,11 +30,11 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace ActsTests {
 struct SurfaceArrayCreatorFixture;
 }
+
+namespace Acts {
 
 /// Function type for comparing two surfaces in a given geometry context and
 /// axis direction.
@@ -71,7 +71,7 @@ using AxisScalar = Vector3::Scalar;
 /// @todo write more documentation on how this is done
 class SurfaceArrayCreator {
  public:
-  friend struct Test::SurfaceArrayCreatorFixture;
+  friend struct ActsTests::SurfaceArrayCreatorFixture;
   friend class SurfaceArray;
 
   struct ProtoAxis {
@@ -137,7 +137,7 @@ class SurfaceArrayCreator {
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
@@ -160,7 +160,7 @@ class SurfaceArrayCreator {
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param bTypeZ the binning type in z direction (equidistant/arbitrary)
@@ -183,7 +183,7 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
@@ -207,7 +207,7 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/arbitrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
@@ -227,7 +227,7 @@ class SurfaceArrayCreator {
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
   ///
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param [in] surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the plane
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -349,7 +349,7 @@ class SurfaceArrayCreator {
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
-  /// direction) are extracted. The number of key surfaces euqals the number
+  /// direction) are extracted. The number of key surfaces equals the number
   /// of bins. Afterwards the minimum and maximum are calculated by
   /// subtracting/adding half of a bin size to the center position (in the
   /// binning direction) to the first/last surface.

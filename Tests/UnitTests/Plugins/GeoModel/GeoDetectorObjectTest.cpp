@@ -32,7 +32,9 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(GeoModelDetObj)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 struct GeoDims {
   std::vector<double> boxO;
@@ -43,8 +45,7 @@ struct GeoDims {
   std::vector<std::vector<double>> polyVerts;
 };
 
-void test(const GeoModelDetectorObjectFactory::Cache& cache,
-          GeoModelDetObj::GeoDims geoDims) {
+void test(const GeoModelDetectorObjectFactory::Cache& cache, GeoDims geoDims) {
   for (const auto& convertedObj : cache.volumeBoxFPVs) {
     const auto& box = convertedObj.volume;
     const VolumeBounds& bounds = box->volumeBounds();
@@ -134,7 +135,7 @@ GeoGeometry constructGeoModel() {
   return ret;
 }
 
-BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
+BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactoryCase) {
   GeoGeometry geom = constructGeoModel();
   GeoDims geoDims = geom.dim;
   std::vector<GeoIntrusivePtr<GeoFullPhysVol>> fpvs = geom.fpvs;
@@ -148,13 +149,13 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   }
 
   // create pars for conversion
-  ActsPlugins::GeoModelDetectorObjectFactory::Config gmConfig;
+  GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"LogVolumeXY"};
-  GeometryContext gContext;
-  ActsPlugins::GeoModelDetectorObjectFactory::Cache gmCache;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
+  GeoModelDetectorObjectFactory::Cache gmCache;
 
   // create factory instance
-  ActsPlugins::GeoModelDetectorObjectFactory factory(gmConfig);
+  GeoModelDetectorObjectFactory factory(gmConfig);
   // convert GeoFullPhysVol
   factory.convertFpv("LogVolumeXY", parentVol, gmCache, gContext);
 
@@ -163,3 +164,5 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

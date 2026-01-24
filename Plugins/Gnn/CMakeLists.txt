@@ -1,6 +1,5 @@
 acts_add_library(
     PluginGnn
-    SHARED
     src/GnnPipeline.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
@@ -15,6 +14,8 @@ if(ACTS_GNN_ENABLE_CUDA)
         ActsPluginGnn
         PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
+    target_link_libraries(ActsPluginGnn PUBLIC CUDA::nvtx3)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_NVTX)
 endif()
 
 if(ACTS_GNN_ENABLE_MODULEMAP)
@@ -60,8 +61,6 @@ target_include_directories(
 
 target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
 
-target_link_libraries(ActsPluginGnn PRIVATE std::filesystem)
-
 if(ACTS_GNN_ENABLE_CUDA)
     target_compile_features(ActsPluginGnn PUBLIC cuda_std_20)
     set_target_properties(
@@ -88,7 +87,10 @@ endif()
 
 if(ACTS_GNN_ENABLE_TORCH)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_TORCH_BACKEND)
-    target_link_libraries(ActsPluginGnn PRIVATE ${TORCH_LIBRARIES} frnn)
+    target_link_libraries(ActsPluginGnn PRIVATE ${TORCH_LIBRARIES})
+    if(ACTS_GNN_ENABLE_CUDA)
+        target_link_libraries(ActsPluginGnn PRIVATE frnn)
+    endif()
     find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)
         message(

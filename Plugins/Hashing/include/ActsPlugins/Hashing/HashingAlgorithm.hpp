@@ -15,6 +15,8 @@
 #include <cstdint>
 
 namespace ActsPlugins {
+/// @addtogroup hashing_plugin
+/// @{
 
 class HashingAlgorithm {
  public:
@@ -46,4 +48,5 @@ class HashingAlgorithm {
   Config m_cfg;
 };
 
+/// @}
 }  // namespace ActsPlugins

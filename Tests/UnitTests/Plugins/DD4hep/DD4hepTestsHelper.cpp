@@ -17,6 +17,8 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
+namespace ActsTests {
+
 void DD4hepTestsHelper::decodeBinning(
     dd4hep::rec::VariantParameters& variantParams, const xml_comp_t& xmlBinning,
     const std::string& bname, const std::vector<std::string>& bvals) {
@@ -160,9 +162,11 @@ std::string DD4hepTestsHelper::surfaceToXML(const GeometryContext& gctx,
   }
 
   // Unwind the placement you have already
-  auto relTransform = ref * surface.transform(gctx);
+  auto relTransform = ref * surface.localToGlobalTransform(gctx);
   sxml << transformToXML(relTransform, axes);
   sxml << " material=\"Air\"";
   sxml << " sensitive=\"true\"/>";
   return sxml.str();
 }
+
+}  // namespace ActsTests

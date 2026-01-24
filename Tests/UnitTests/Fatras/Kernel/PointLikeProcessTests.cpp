@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/PointLikeProcess.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <algorithm>
 #include <array>
@@ -21,6 +21,7 @@
 #include <random>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace ActsFatras;
 
@@ -63,14 +64,16 @@ struct MockHighP {
 
 struct Fixture {
   std::default_random_engine generator;
-  Acts::MaterialSlab slab{Acts::Test::makeBeryllium(), 1_mm};
+  MaterialSlab slab{ActsTests::makeBeryllium(), 1_mm};
   Particle parent = Particle().setAbsoluteMomentum(10_GeV);
   std::vector<Particle> children;
 };
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(FatrasPointLikeProcess)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(KernelSuite)
 
 BOOST_AUTO_TEST_CASE(NoSelectors) {
   Fixture f;
@@ -149,3 +152,5 @@ BOOST_AUTO_TEST_CASE(WithChildSelector) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

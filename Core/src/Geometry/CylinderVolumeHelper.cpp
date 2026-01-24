@@ -146,8 +146,8 @@ std::shared_ptr<TrackingVolume> CylinderVolumeHelper::createTrackingVolume(
       transform, volumeBounds, volumeMaterial, std::move(layerArray), nullptr,
       mtvVector, volumeName);
   // screen output
-  ACTS_VERBOSE(
-      "Created cylindrical volume at z-position :" << tVolume->center().z());
+  ACTS_VERBOSE("Created cylindrical volume at z-position :"
+               << tVolume->center(gctx).z());
   ACTS_VERBOSE("   created bounds : " << tVolume->volumeBounds());
   // return the constructed TrackingVolume
   return tVolume;
@@ -290,9 +290,10 @@ CylinderVolumeHelper::createContainerTrackingVolume(
     }
     ACTS_VERBOSE("   - volume (" << ivol
                                  << ") is : " << (*firstVolume)->volumeName());
-    ACTS_VERBOSE("     at position : " << (*firstVolume)->center().x() << ", "
-                                       << (*firstVolume)->center().y() << ", "
-                                       << (*firstVolume)->center().z());
+    ACTS_VERBOSE("     at position : "
+                 << (*firstVolume)->center(gctx).x() << ", "
+                 << (*firstVolume)->center(gctx).y() << ", "
+                 << (*firstVolume)->center(gctx).z());
 
     ACTS_VERBOSE("     with bounds : " << (*firstVolume)->volumeBounds());
     // put the name together
@@ -341,9 +342,9 @@ CylinderVolumeHelper::createContainerTrackingVolume(
   double zSep1 = 0.;
   double zSep2 = 0.;
   if (rCase) {
-    zMin = (*firstVolume)->center().z() -
+    zMin = (*firstVolume)->center(gctx).z() -
            firstVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
-    zMax = (*firstVolume)->center().z() +
+    zMax = (*firstVolume)->center(gctx).z() +
            firstVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
     zSep1 = zMin;
     zSep2 = zMax;
@@ -351,11 +352,11 @@ CylinderVolumeHelper::createContainerTrackingVolume(
     rGlueMin = firstVolumeBounds->get(CylinderVolumeBounds::eMaxR);
     rMax = lastVolumeBounds->get(CylinderVolumeBounds::eMaxR);
   } else {
-    zMin = (*firstVolume)->center().z() -
+    zMin = (*firstVolume)->center(gctx).z() -
            firstVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
-    zMax = (*lastVolume)->center().z() +
+    zMax = (*lastVolume)->center(gctx).z() +
            lastVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
-    zSep1 = (*firstVolume)->center().z() +
+    zSep1 = (*firstVolume)->center(gctx).z() +
             firstVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
     zSep2 = zSep1;
     rMin = firstVolumeBounds->get(CylinderVolumeBounds::eMinR);
@@ -826,8 +827,7 @@ void CylinderVolumeHelper::glueTrackingVolumes(
       // (1) create the Boundary CylinderSurface
       auto cBounds =
           std::make_shared<CylinderBounds>(rGlueMin, 0.5 * (zMax - zMin));
-      std::shared_ptr<const RegularSurface> cSurface =
-          Surface::makeShared<CylinderSurface>(transform, cBounds);
+      auto cSurface = Surface::makeShared<CylinderSurface>(transform, cBounds);
       ACTS_VERBOSE(
           "             creating a new cylindrical boundary surface "
           "with bounds = "
@@ -843,7 +843,7 @@ void CylinderVolumeHelper::glueTrackingVolumes(
       // we assume it's cylinder bounds
       auto cylVolBounds =
           dynamic_cast<const CylinderVolumeBounds*>(&tvolOne->volumeBounds());
-      double zPos = tvolOne->center().z();
+      double zPos = tvolOne->center(gctx).z();
       double zHL = cylVolBounds->get(CylinderVolumeBounds::eHalfLengthZ);
       transform = Transform3(Translation3(0, 0, zPos + zHL));
       // this puts the surface on the positive z side of the cyl vol bounds
@@ -851,8 +851,7 @@ void CylinderVolumeHelper::glueTrackingVolumes(
 
       // (2) create the BoundaryDiscSurface, in that case the zMin/zMax provided
       // are both the position of the disk in question
-      std::shared_ptr<const RegularSurface> dSurface =
-          Surface::makeShared<DiscSurface>(transform, rMin, rMax);
+      auto dSurface = Surface::makeShared<DiscSurface>(transform, rMin, rMax);
       ACTS_VERBOSE(
           "             creating a new disc-like boundary surface "
           "with bounds = "

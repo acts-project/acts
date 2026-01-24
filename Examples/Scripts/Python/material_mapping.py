@@ -10,19 +10,28 @@ from acts import (
     Navigator,
     Propagator,
     StraightLineStepper,
-    MaterialMapJsonConverter,
 )
+
+from acts.json import MaterialMapJsonConverter
+
 from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
+    MaterialMapping,
+)
+
+from acts.examples.root import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
-    MaterialMapping,
+)
+
+from acts.examples.json import (
     JsonMaterialWriter,
     JsonFormat,
 )
+
 from acts.examples.odd import getOpenDataDetector
 
 

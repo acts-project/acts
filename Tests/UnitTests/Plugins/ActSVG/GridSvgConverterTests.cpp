@@ -25,7 +25,7 @@ using namespace Acts;
 using namespace Acts::detail;
 using namespace ActsPlugins;
 
-namespace {
+namespace ActsTests {
 /// Helper method to turn a local bin into a string
 ///
 /// @tparam local_bin_t the type for the local bin
@@ -44,9 +44,8 @@ std::string localToString(const local_bin_t& lBin) {
   lbString += std::string("]");
   return lbString;
 }
-}  // namespace
 
-BOOST_AUTO_TEST_SUITE(ActSvg)
+BOOST_AUTO_TEST_SUITE(ActSvgSuite)
 
 BOOST_AUTO_TEST_CASE(BoundGridXY) {
   using GlobalBin = std::size_t;
@@ -124,7 +123,7 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   oGrid.add_object(yLabel);
   oGrid.add_object(caption);
 
-  ActsPlugins::Svg::toFile({oGrid}, oGrid._id + ".svg");
+  Svg::toFile({oGrid}, oGrid._id + ".svg");
 }
 
 BOOST_AUTO_TEST_CASE(OpenGridXY) {
@@ -203,7 +202,7 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   oGrid.add_object(yLabel);
   oGrid.add_object(caption);
 
-  ActsPlugins::Svg::toFile({oGrid}, oGrid._id + ".svg");
+  Svg::toFile({oGrid}, oGrid._id + ".svg");
 }
 
 BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
@@ -284,7 +283,7 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   oGrid.add_object(yLabel);
   oGrid.add_object(caption);
 
-  ActsPlugins::Svg::toFile({oGrid}, oGrid._id + ".svg");
+  Svg::toFile({oGrid}, oGrid._id + ".svg");
 }
 
 BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
@@ -323,11 +322,11 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
                                                   decltype(gridRPhi)::DIM>(l);
           std::vector<std::string> glBin = {gBin, lBin};
           std::string gBinID = "g_" + std::to_string(ig++);
-          targets.push_back(
-              actsvg::draw::text(gBinID,
-                                 {static_cast<actsvg::scalar>(rp * cos(phip)),
-                                  static_cast<actsvg::scalar>(rp * sin(phip))},
-                                 glBin));
+          targets.push_back(actsvg::draw::text(
+              gBinID,
+              {static_cast<actsvg::scalar>(rp * std::cos(phip)),
+               static_cast<actsvg::scalar>(rp * std::sin(phip))},
+              glBin));
         }
       }
     }
@@ -345,8 +344,8 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   auto phiAxis = actsvg::draw::arc_measure(
       "phi_axis", 410., {410, 0.},
-      {static_cast<actsvg::scalar>(410. * cos(0.25)),
-       static_cast<actsvg::scalar>(410. * sin(0.25))},
+      {static_cast<actsvg::scalar>(410. * std::cos(0.25)),
+       static_cast<actsvg::scalar>(410. * std::sin(0.25))},
       axis_stroke, actsvg::style::marker(), axis_marker);
 
   auto phiLabel =
@@ -367,7 +366,9 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   oGrid.add_object(phiLabel);
   oGrid.add_object(caption);
 
-  ActsPlugins::Svg::toFile({oGrid}, oGrid._id + ".svg");
+  Svg::toFile({oGrid}, oGrid._id + ".svg");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

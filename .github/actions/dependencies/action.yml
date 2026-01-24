@@ -13,7 +13,7 @@ inputs:
   spack_version:
     description: 'Version of Spack to use'
     required: false
-    default: 'v1.0.0'
+    default: 'v1.0.2'
   spack_repo_version:
     description: 'Version of Spack builtin repo to use'
     required: false
@@ -21,12 +21,24 @@ inputs:
   DEPENDENCY_TAG:
     description: 'Dependency tag to pull from'
     required: false
-    default: 'v13.0.0'
+    default: 'v19.0.0'
+  full_install:
+    description: 'Whether to do a full dependency installation including Geant4 datasets and Python packages'
+    required: false
+    default: 'false'
 
 
 runs:
   using: 'composite'
   steps:
+    - name: Setup Python version
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install the latest version of uv
+      uses: astral-sh/setup-uv@v6
+
     - name: Prerequisites
       if: startsWith(runner.os, 'macos')
       shell: bash
@@ -38,7 +50,7 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: spack_cache
-        key: spack-r2-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-r4-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Extract cached Spack
       if: steps.cache-restore.outputs.cache-hit == 'true'
@@ -75,10 +87,14 @@ runs:
         SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
         DEPENDENCY_TAG: ${{ inputs.DEPENDENCY_TAG }}
       run: |
+        args=""
+        if [ "${{ inputs.full_install }}" == "true" ]; then
+          echo "Full install"
+          args="${args} -f"
+        fi
         if [ -n "${{ inputs.compiler }}" ]; then
           echo "With compiler"
-          CI/dependencies/setup.sh -c "${{ inputs.compiler }}"
-        else
-          echo "Without compiler"
-          CI/dependencies/setup.sh
+          args="${args} -c ${{ inputs.compiler }}"
         fi
+
+        CI/dependencies/setup.sh $args

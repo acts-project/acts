@@ -51,6 +51,8 @@ struct SingleParticleSimulation {
   std::unique_ptr<const Acts::Logger> logger;
 
   /// Alternatively construct the simulator with an external logger.
+  /// @param propagator_ Propagator to use for particle simulation
+  /// @param _logger Logger instance for debug output
   SingleParticleSimulation(propagator_t &&propagator_,
                            std::unique_ptr<const Acts::Logger> _logger)
       : propagator(propagator_), logger(std::move(_logger)) {}
@@ -134,12 +136,18 @@ struct FailedParticle {
 template <typename charged_selector_t, typename charged_simulator_t,
           typename neutral_selector_t, typename neutral_simulator_t>
 struct Simulation {
+  /// Selector for charged particle simulation
   charged_selector_t selectCharged;
+  /// Selector for neutral particle simulation
   neutral_selector_t selectNeutral;
+  /// Simulator for charged particles
   charged_simulator_t charged;
+  /// Simulator for neutral particles
   neutral_simulator_t neutral;
 
   /// Construct from the single charged/neutral particle simulators.
+  /// @param charged_ Simulator for charged particles
+  /// @param neutral_ Simulator for neutral particles
   Simulation(charged_simulator_t &&charged_, neutral_simulator_t &&neutral_)
       : charged(std::move(charged_)), neutral(std::move(neutral_)) {}
 
@@ -203,7 +211,7 @@ struct Simulation {
       // required to allow correct particle id numbering for secondaries later
       if ((inputParticle.particleId().generation() != 0u) ||
           (inputParticle.particleId().subParticle() != 0u)) {
-        return detail::SimulationError::eInvalidInputParticleId;
+        return detail::SimulationError::InvalidInputParticleId;
       }
 
       // Do a *depth-first* simulation of the particle and its secondaries,

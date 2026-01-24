@@ -25,14 +25,13 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
-// Create a test context
-GeometryContext tgContext = GeometryContext();
-}  // namespace Acts::Test
+using namespace Acts;
 
-namespace Acts::Test::Layers {
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(Layers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// Unit test for creating compliant/non-compliant PlaneLayer object
 BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
@@ -94,4 +93,4 @@ BOOST_AUTO_TEST_CASE(PlaneLayerProperties) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

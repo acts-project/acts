@@ -14,7 +14,9 @@
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Metadata.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
+#include "ActsExamples/Utilities/MultiplicityGenerators.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -22,7 +24,6 @@
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/Print.h>
 #include <HepMC3/Reader.h>
-#include <HepMC3/ReaderFactory.h>
 #include <HepMC3/Units.h>
 #include <boost/algorithm/string/join.hpp>
 
@@ -39,23 +40,41 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
 
   m_outputEvent.initialize(m_cfg.outputEvent);
 
-  if (!m_cfg.inputPaths.empty() && !m_cfg.inputPath.empty()) {
+  // Validate: exactly one of inputPath or inputs must be set
+  bool hasInputPath = m_cfg.inputPath.has_value();
+  bool hasInputs = !m_cfg.inputs.empty();
+
+  if (!hasInputPath && !hasInputs) {
     throw std::invalid_argument(
-        "inputPath and inputPaths are mutually exclusive");
+        "HepMC3 reader requires either 'inputPath' or 'inputs' to be set");
   }
 
-  if (!m_cfg.inputPath.empty()) {
-    m_cfg.inputPaths.emplace_back(m_cfg.inputPath, 1);
-  }
-
-  if (m_cfg.inputPaths.empty()) {
+  if (hasInputPath && hasInputs) {
     throw std::invalid_argument(
-        "HepMC3 reader was not configured with any input files");
+        "HepMC3 reader: 'inputPath' and 'inputs' are mutually exclusive. "
+        "Use 'inputPath' for single file or 'inputs' for multiple files.");
   }
 
-  for (const auto& [path, numEvents] : m_cfg.inputPaths) {
-    auto reader = HepMC3::deduce_reader(path);
-    m_inputs.emplace_back(reader, numEvents, path);
+  // If inputPath is set, create a single input with default multiplicity
+  // generator
+  if (hasInputPath) {
+    Input input;
+    input.path = m_cfg.inputPath.value();
+    input.multiplicityGenerator =
+        std::make_shared<FixedMultiplicityGenerator>(1);
+
+    auto reader = HepMC3Util::deduceReader(input.path);
+    m_inputs.emplace_back(reader, input.path, input.multiplicityGenerator);
+  } else {
+    // Use the provided inputs
+    for (const auto& input : m_cfg.inputs) {
+      if (!input.multiplicityGenerator) {
+        throw std::invalid_argument(
+            "All Input objects must have a multiplicityGenerator set");
+      }
+      auto reader = HepMC3Util::deduceReader(input.path);
+      m_inputs.emplace_back(reader, input.path, input.multiplicityGenerator);
+    }
   }
 
   if (m_cfg.numEvents.has_value()) {
@@ -66,13 +85,26 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
                             Acts::Logging::DEBUG);
     // This uses the first reader that's configured, with the assumption that
     // this is the hard-scatter event
-    auto reader = HepMC3::deduce_reader(m_inputs.front().path);
-    m_eventsRange = {0, determineNumEvents(*reader)};
+    m_eventsRange = {0, determineNumEvents(m_inputs.front().path)};
   }
 
-  if (m_cfg.vertexGenerator != nullptr && m_cfg.randomNumbers == nullptr) {
+  // Check if any input uses a non-Fixed multiplicity generator
+  m_hasNonFixedMultiplicity =
+      std::ranges::any_of(m_inputs, [](const auto& input) {
+        // Check if this is NOT a FixedMultiplicityGenerator
+        return dynamic_cast<const FixedMultiplicityGenerator*>(
+                   input.multiplicityGenerator.get()) == nullptr;
+      });
+
+  // Check if randomNumbers is required
+  // RNG is needed if we have a vertex generator or any non-Fixed multiplicity
+  // generator
+  m_needsRng = (m_cfg.vertexGenerator != nullptr) || m_hasNonFixedMultiplicity;
+
+  if (m_needsRng && m_cfg.randomNumbers == nullptr) {
     throw std::invalid_argument(
-        "randomNumbers must be set if vertexGenerator is set");
+        "randomNumbers must be set if vertexGenerator or any non-Fixed "
+        "multiplicityGenerator is used");
   }
 
   ACTS_DEBUG("HepMC3Reader: " << m_eventsRange.first << " - "
@@ -89,7 +121,18 @@ std::pair<std::size_t, std::size_t> HepMC3Reader::availableEvents() const {
   return m_eventsRange;
 }
 
-std::size_t HepMC3Reader::determineNumEvents(HepMC3::Reader& reader) const {
+std::size_t HepMC3Reader::determineNumEvents(
+    const std::filesystem::path& path) const {
+  std::optional metadata = HepMC3Metadata::readSidecar(path);
+
+  if (metadata.has_value()) {
+    std::size_t numEvents = metadata.value().numEvents;
+    ACTS_INFO("HepMC3Reader: Found sidecar metadata file for "
+              << path << " with " << numEvents << " events");
+    return numEvents;
+  }
+
+  auto reader = HepMC3Util::deduceReader(m_inputs.front().path);
   ACTS_INFO(
       "HepMC3Reader: Number of events not specified, will read the "
       "whole file to determine the number of events. This might take a while "
@@ -97,9 +140,9 @@ std::size_t HepMC3Reader::determineNumEvents(HepMC3::Reader& reader) const {
   std::size_t numEvents = 0;
   auto event =
       std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
-  while (!reader.failed()) {
-    reader.read_event(*event);
-    if (!reader.failed()) {
+  while (!reader->failed()) {
+    reader->read_event(*event);
+    if (!reader->failed()) {
       ++numEvents;
     }
   }
@@ -117,18 +160,39 @@ ProcessCode HepMC3Reader::skip(std::size_t events) {
     return SUCCESS;
   }
 
-  ACTS_DEBUG("Skipping " << events << " events");
+  ACTS_DEBUG("Skipping " << events << " logical events");
 
-  for (const auto& [reader, numEvents, path] : m_inputs) {
-    ACTS_VERBOSE("Skipping " << events << "*" << numEvents << "="
-                             << events * numEvents << " events from " << path);
-    if (!reader->skip(static_cast<int>(events * numEvents))) {
-      ACTS_ERROR("Error skipping events " << events << " " << path);
-      return ABORT;
+  // Check if all multiplicity generators are Fixed (deterministic)
+  // Use the precomputed flag
+  if (m_hasNonFixedMultiplicity) {
+    ACTS_ERROR(
+        "Cannot skip events with non-Fixed multiplicityGenerator (e.g., "
+        "PoissonMultiplicityGenerator). Skipping requires knowing the exact "
+        "number of physical events to skip from each input file, which is only "
+        "possible with deterministic (Fixed) multiplicity generators.");
+    return ABORT;
+  }
+
+  // For each logical event to skip, evaluate the Fixed multiplicity generators
+  // to determine how many physical events to skip from each input file
+  for (std::size_t logicalEvent = 0; logicalEvent < events; ++logicalEvent) {
+    for (const auto& input : m_inputs) {
+      // Must be FixedMultiplicityGenerator (checked above), so downcast is safe
+      const auto* fixedGen = static_cast<const FixedMultiplicityGenerator*>(
+          input.multiplicityGenerator.get());
+      std::size_t count = fixedGen->n;
+
+      ACTS_VERBOSE("Skipping " << count << " events from " << input.path
+                               << " for logical event "
+                               << (m_nextEvent + logicalEvent));
+      if (!input.reader->skip(static_cast<int>(count))) {
+        ACTS_ERROR("Error skipping " << count << " events from " << input.path);
+        return ABORT;
+      }
     }
   }
 
-  m_nextEvent = events;
+  m_nextEvent += events;
 
   return SUCCESS;
 }
@@ -335,17 +399,47 @@ ProcessCode HepMC3Reader::readLogicalEvent(
 
   // @TODO: Add the index as an attribute to the event and it's content
 
-  for (const auto& [reader, numEvents, path] : m_inputs) {
-    ACTS_VERBOSE("Reading " << numEvents << " events from " << path);
-    for (std::size_t i = 0; i < numEvents; ++i) {
+  // Spawn RNG for multiplicity generators if needed
+  std::optional<RandomEngine> rng;
+  if (m_needsRng) {
+    rng = m_cfg.randomNumbers->spawnGenerator(ctx);
+  }
+
+  for (std::size_t inputIndex = 0; inputIndex < m_inputs.size(); ++inputIndex) {
+    auto& reader = m_inputs[inputIndex].reader;
+    auto& path = m_inputs[inputIndex].path;
+    auto& multiplicityGenerator = m_inputs[inputIndex].multiplicityGenerator;
+
+    // Use multiplicityGenerator to determine count
+    std::size_t count = 0;
+    if (rng.has_value()) {
+      count = (*multiplicityGenerator)(*rng);
+    } else {
+      // Must be FixedMultiplicityGenerator if no RNG, so downcast is safe
+      const auto& fixedGen = static_cast<const FixedMultiplicityGenerator&>(
+          *multiplicityGenerator);
+      count = fixedGen.n;
+    }
+
+    ACTS_VERBOSE("Reading " << count << " events from " << path);
+    for (std::size_t i = 0; i < count; ++i) {
       auto event = makeEvent();
 
       reader->read_event(*event);
       if (reader->failed()) {
-        ACTS_ERROR("Error reading event " << i << " from " << path);
+        ACTS_ERROR("Error reading event " << i << " (input index = "
+                                          << inputIndex << ") from " << path);
+        if (inputIndex > 0) {
+          ACTS_ERROR("-> since this is input file index "
+                     << inputIndex
+                     << ", this probably means that the "
+                        "input file has "
+                        "fewer events than expected.");
+        }
         return ABORT;
       }
       events.push_back(std::move(event));
+      m_inputs[inputIndex].eventsRead++;
     }
   }
 
@@ -356,8 +450,27 @@ ProcessCode HepMC3Reader::readLogicalEvent(
 
 ProcessCode HepMC3Reader::finalize() {
   ACTS_VERBOSE("Closing " << m_inputs.size() << " input files");
-  for (const auto& [reader, numEvents, path] : m_inputs) {
-    reader->close();
+
+  std::size_t totalEventsRead = 0;
+
+  // Print summary of events read from each input file
+  if (m_inputs.size() > 1) {
+    ACTS_INFO("Events read per input file:");
+    for (std::size_t i = 0; i < m_inputs.size(); ++i) {
+      const auto& input = m_inputs[i];
+      ACTS_INFO("  [" << i << "] " << input.path.filename() << ": "
+                      << input.eventsRead << " events");
+      totalEventsRead += input.eventsRead;
+      input.reader->close();
+    }
+    ACTS_INFO("Total physical events read: " << totalEventsRead);
+  } else {
+    // Single input file
+    for (const auto& input : m_inputs) {
+      ACTS_INFO("Events read from " << input.path.filename() << ": "
+                                    << input.eventsRead);
+      input.reader->close();
+    }
   }
 
   ACTS_DEBUG("Maximum event buffer size was: "

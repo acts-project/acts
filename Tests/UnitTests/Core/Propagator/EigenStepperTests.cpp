@@ -43,11 +43,11 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <cmath>
 #include <limits>
@@ -59,17 +59,18 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 
 static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// @brief Aborter for the case that a particle leaves the detector or reaches
@@ -134,11 +135,12 @@ struct StepCollector {
   /// @param [out] result Struct which is filled with the data
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& /*navigator*/, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& /*navigator*/, result_type& result,
+                   const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping));
+    return Result<void>::success();
   }
 
   template <typename propagator_state_t, typename stepper_t,
@@ -149,6 +151,8 @@ struct StepCollector {
     return false;
   }
 };
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
@@ -512,7 +516,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
       Vector4::Zero(), startDir, 1_e / 1_GeV, cov, ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
-  using Propagator = Propagator<Stepper, Navigator>;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActorList<StepCollector, EndOfWorld>>;
 
@@ -607,7 +611,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       Vector4::Zero(), startDir, 1_e / 5_GeV, cov, ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
-  using Propagator = Propagator<Stepper, Navigator>;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActorList<StepCollector, EndOfWorld>>;
 
@@ -620,7 +624,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
   Stepper es(bField);
   Propagator prop(es, naviMat,
-                  Acts::getDefaultLogger("Propagator", Acts::Logging::VERBOSE));
+                  getDefaultLogger("Propagator", Logging::VERBOSE));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -899,9 +903,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 // valid in this case.
 BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   double rotationAngle = std::numbers::pi / 2.;
-  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
   MaterialSlab matProp(makeBeryllium(), 0.5_mm);
 
   CuboidVolumeBuilder cvb;
@@ -1036,4 +1040,6 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

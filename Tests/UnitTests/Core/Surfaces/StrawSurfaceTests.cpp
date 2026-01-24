@@ -15,17 +15,19 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <memory>
 #include <string>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(StrawSurfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 const double radius = 1.;
 const double halfZ = 10.;
@@ -125,4 +127,4 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

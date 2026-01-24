@@ -16,11 +16,15 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <format>
-BOOST_AUTO_TEST_SUITE(LineInterSectionTests)
+
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_AUTO_TEST_CASE(checkPlaneIsection) {
-  using namespace Acts;
-  using namespace Acts::PlanarHelper;
+  using namespace PlanarHelper;
 
   const Vector3 pointInPlane{561., 0., 0.};
   const Vector3 planeNormal{Vector3::UnitX()};
@@ -39,9 +43,8 @@ BOOST_AUTO_TEST_CASE(checkPlaneIsection) {
 }
 
 BOOST_AUTO_TEST_CASE(lineDistance) {
-  using namespace Acts::detail::LineHelper;
-  using namespace Acts;
-  using namespace Acts::UnitLiterals;
+  using namespace detail::LineHelper;
+  using namespace UnitLiterals;
   const Vector3 posA{100, 0., 0.};
   const Vector3 posB{100, 50, 0.};
   constexpr double tolerance = 1.e-12;
@@ -108,3 +111,5 @@ BOOST_AUTO_TEST_CASE(lineDistance) {
   BOOST_CHECK_LE(std::abs(crossLines), 1e-5);
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

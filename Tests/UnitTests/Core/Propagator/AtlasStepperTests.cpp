@@ -32,9 +32,9 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/Assertions.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/Assertions.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -45,14 +45,15 @@
 #include <type_traits>
 #include <utility>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-using Acts::VectorHelpers::makeVector4;
+using VectorHelpers::makeVector4;
 using Covariance = BoundSquareMatrix;
 using Jacobian = BoundMatrix;
-using Stepper = Acts::AtlasStepper;
+using Stepper = AtlasStepper;
 
 // epsilon for floating point comparisons
 static constexpr auto eps = 1024 * std::numeric_limits<double>::epsilon();
@@ -74,10 +75,10 @@ static const auto particleHypothesis = ParticleHypothesis::pion();
 static const Covariance cov = Covariance::Identity();
 
 // context objects
-static const GeometryContext geoCtx;
+static const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 static const MagneticFieldContext magCtx;
 
-BOOST_AUTO_TEST_SUITE(AtlasStepper)
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 // test state construction from parameters w/o covariance
 BOOST_AUTO_TEST_CASE(ConstructState) {
@@ -592,4 +593,4 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

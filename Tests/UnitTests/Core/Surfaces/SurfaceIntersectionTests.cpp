@@ -18,8 +18,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <memory>
@@ -27,17 +27,19 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 // Some random transform
 Transform3 aTransform = Transform3::Identity() *
                         Translation3(30_cm, 7_m, -87_mm) *
                         AngleAxis3(0.42, Vector3(-3., 1., 8).normalized());
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
@@ -415,4 +417,4 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

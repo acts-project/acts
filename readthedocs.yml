@@ -9,6 +9,6 @@ build:
 
 python:
   install:
-    - requirements: docs/requirements.txt
+    - requirements: docs/old/requirements.txt
 sphinx:
-  configuration: docs/conf.py
+  configuration: docs/old/conf.py

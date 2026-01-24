@@ -16,6 +16,10 @@
 
 using namespace ActsPlugins::detail;
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GnnSuite)
+
 BOOST_AUTO_TEST_CASE(test_vector_tensor_conversion_int_2cols) {
   std::vector<std::int64_t> start_vec = {
       // clang-format off
@@ -109,3 +113,7 @@ BOOST_AUTO_TEST_CASE(test_slicing) {
 
   BOOST_CHECK_EQUAL(test_vec, ref_vec);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

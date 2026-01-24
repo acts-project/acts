@@ -5,21 +5,20 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 
 #include <cstdint>
 #include <iostream>
-#include <memory>
-#include <optional>
 #include <vector>
 
 namespace ActsExamples {
+
 /// @brief Example implementation of a CompositeSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM.
 ///         The space points are expressed in a local frame such that the x-axis
 ///         is parallel to the ATLAS Monitored Drift Tubes (Mdt), the y-axis
@@ -55,7 +54,8 @@ class MuonSpacePoint {
       EOS,
       EOL,
       EES,
-      EEL
+      EEL,
+      MaxVal
     };
     /// @brief Detector side encoding
     enum class DetSide : std::int8_t { UnDef = 0, A = 1, C = -1 };
@@ -65,6 +65,11 @@ class MuonSpacePoint {
     static std::string toString(const TechField tech);
     /// @brief Print the Identifier's detector side to a string
     static std::string toString(const DetSide side);
+
+    /// @brief Constructor taking the encoded 32 bit integer
+    explicit MuonId(std::uint32_t rawRep);
+    /// @brief Returns the integer representation of the Identifier
+    std::uint32_t toInt() const;
     /// @brief Empty default Identifier constructor
     explicit MuonId() = default;
     /// @brief Default copy constructor
@@ -80,7 +85,7 @@ class MuonSpacePoint {
     /// @brief Returns the MS station in which the measurement was recorded
     StationName msStation() const { return m_stName; }
     /// @brief Returns the sector in which the measurement was recorded
-    std::uint8_t sector() const { return m_sector; }
+    std::uint16_t sector() const { return m_sector; }
     /// @brief Returns the detector side
     DetSide side() const { return m_side; }
     /// @brief Returns the layer
@@ -91,6 +96,8 @@ class MuonSpacePoint {
     bool measuresEta() const { return m_measEta; }
     /// @brief Returns whether the id corresponds to a non-precision coordinate (phi) measurement
     bool measuresPhi() const { return m_measPhi; }
+    /// @brief Returns whether the id corresponds to a channel carrying time information
+    bool measuresTime() const { return m_measTime; }
     /// @brief Returns whether two Identifiers belong to the same station, which
     ///        is characterized that both share the same msStation, sector &
     ///        side field.
@@ -103,14 +110,15 @@ class MuonSpacePoint {
     /// @param side: Positive or negative side
     /// @param sector: Phi sector in which the chamber is installed
     /// @param tech: Technology of the chamber within the chamber
-    void setChamber(StationName stName, DetSide side, int sector,
+    void setChamber(StationName stName, DetSide side, std::uint16_t sector,
                     TechField tech);
     /// @brief Set the measurement layer & channel */
     void setLayAndCh(std::uint8_t layer, std::uint16_t ch);
     /// @brief Define the measurement type of the space point
     /// @param measEta: Flag stating whether the space point measures the precision (eta) coordinate
     /// @param measPhi: Flag stating whether the space point measures the non-precsion (phi) coordinate
-    void setCoordFlags(bool measEta, bool measPhi);
+    /// @param measTime: Flag stating whether the space point carries time information
+    void setCoordFlags(bool measEta, bool measPhi, bool measTime = false);
     /// @brief prints the Muon identifier to string
     std::string toString() const;
 
@@ -118,11 +126,12 @@ class MuonSpacePoint {
     TechField m_tech{TechField::UnDef};
     StationName m_stName{StationName::UnDef};
     DetSide m_side{DetSide::UnDef};
-    std::uint8_t m_sector{0};
-    std::uint8_t m_layer{0};
-    std::uint16_t m_channel{0};
+    std::uint16_t m_sector{1};
+    std::uint8_t m_layer{1};
+    std::uint16_t m_channel{1};
     bool m_measEta{false};
     bool m_measPhi{false};
+    bool m_measTime{false};
   };
   /// @brief Empty default constructor
   MuonSpacePoint() = default;
@@ -151,11 +160,11 @@ class MuonSpacePoint {
   /// @brief Returns the drift radius
   double driftRadius() const { return m_radius; }
   /// @brief Returns the measurement time *
-  double time() const { return m_time.value_or(0.); }
+  double time() const { return m_time; }
   /// @brief Returns whether the measurement is a straw measurement
   bool isStraw() const { return id().technology() == MuonId::TechField::Mdt; }
   /// @brief Returns whether the measurement provides time information
-  bool hasTime() const { return m_time.has_value(); }
+  bool hasTime() const { return id().measuresTime(); }
   /// @brief Returns whether the measurement constrains the bending plane
   bool measuresLoc1() const { return id().measuresEta(); }
   /// @brief Returns whether the measurement constrains the non-bending plane
@@ -186,7 +195,7 @@ class MuonSpacePoint {
 
   std::array<double, 3> m_cov{Acts::filledArray<double, 3>(0.)};
   double m_radius{0.};
-  std::optional<double> m_time{std::nullopt};
+  double m_time{0.};
   Acts::GeometryIdentifier m_geoId{};
 };
 
@@ -203,4 +212,5 @@ std::ostream& operator<<(std::ostream& ostr,
 /// @brief osteram operator of the Space point
 std::ostream& operator<<(std::ostream& ostr,
                          const ActsExamples::MuonSpacePoint& sp);
+
 }  // namespace ActsExamples

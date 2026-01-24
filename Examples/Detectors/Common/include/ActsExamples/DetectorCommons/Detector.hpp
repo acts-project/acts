@@ -18,9 +18,6 @@ class GeometryContext;
 class TrackingGeometry;
 class DetectorElementBase;
 class Logger;
-namespace Experimental {
-class Detector;
-}  // namespace Experimental
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -49,7 +46,6 @@ class Detector {
       const;
   /// @brief Returns the valid pointer to the Gen-2 tracking geometry.
   ///        Throws an exception if the pointer is invalid
-  virtual std::shared_ptr<Acts::Experimental::Detector> gen2Geometry() const;
   virtual std::vector<std::shared_ptr<IContextDecorator>> contextDecorators()
       const;
 
@@ -66,9 +62,9 @@ class Detector {
 
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  Acts::GeometryContext m_nominalGeometryContext;
+  Acts::GeometryContext m_nominalGeometryContext{
+      Acts::GeometryContext::dangerouslyDefaultConstruct()};
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
-  std::shared_ptr<Acts::Experimental::Detector> m_gen2Geometry;
   std::vector<std::shared_ptr<const Acts::DetectorElementBase>> m_detectorStore;
   std::vector<std::shared_ptr<IContextDecorator>> m_contextDecorators;
 };

@@ -18,7 +18,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -26,6 +25,7 @@
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <iostream>
 #include <memory>
@@ -34,17 +34,19 @@
 #include <system_error>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 ///
 /// @brief Unit test for TrackDensityVertexFinder using same configuration
 /// and values as VertexSeedFinderTestAlg in Athena implementation, i.e.
@@ -241,7 +243,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
@@ -369,4 +371,6 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

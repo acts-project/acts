@@ -23,7 +23,9 @@ using namespace Acts;
 using namespace Acts::detail;
 using namespace Acts::GridAxisGenerators;
 
-BOOST_AUTO_TEST_SUITE(Detector)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(Eq1D) {
   EqBound eqb{{-10, 10}, 10};
@@ -106,3 +108,5 @@ BOOST_AUTO_TEST_CASE(VarVar2D) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

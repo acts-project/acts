@@ -8,8 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <optional>
 #include <vector>
@@ -18,71 +20,133 @@
 #include <fastjet/PseudoJet.hh>
 
 namespace ActsPlugins::FastJet {
+/// @addtogroup fastjet_plugin
+/// @{
 
-/// Default jet definition: Anti-kt with a radius of 0.4
-const fastjet::JetDefinition DefaultJetDefinition =
-    fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
+/// Jet labeling enum
+
+enum class JetLabel {
+  Unknown = 0,
+  BJet = 5,
+  CJet = 4,
+  LightJet = 1,
+};
+
+inline std::ostream& operator<<(std::ostream& os, const JetLabel& label) {
+  switch (label) {
+    case JetLabel::Unknown:
+      os << "Unknown";
+      break;
+    case JetLabel::BJet:
+      os << "BJet";
+      break;
+    case JetLabel::CJet:
+      os << "CJet";
+      break;
+    case JetLabel::LightJet:
+      os << "LightJet";
+      break;
+    default:
+      os << "InvalidJetLabel";
+      break;
+  }
+  return os;
+}
+
+/// Common class for jets
+class Jet {
+ public:
+  Jet(const Acts::Vector4& fourMom, const JetLabel& label)
+      : m_fourMomentum{fourMom}, m_jetLabel{label} {}
+
+  /// @brief Get the jet 4-momentum
+  /// @return the jet 4-momentum as an Acts::Vector4
+  Acts::Vector4 fourMomentum() const { return m_fourMomentum; }
+
+  /// @brief Get the jet label
+  /// @return the jet label as JetLabel enum
+  JetLabel jetLabel() const { return m_jetLabel; }
+
+  /// @brief Set the jet label
+  /// @param label the jet label as JetLabel enum
+  void setJetLabel(const JetLabel& label) { m_jetLabel = label; }
+
+ private:
+  Acts::Vector4 m_fourMomentum{Acts::Vector4::Zero()};
+  JetLabel m_jetLabel{JetLabel::Unknown};
+  /// @brief Print the jet information
+  friend std::ostream& operator<<(std::ostream& os, const Jet& jet) {
+    os << "Jet 4-momentum: " << jet.fourMomentum().transpose() << std::endl;
+    os << "Jet label: " << jet.jetLabel() << std::endl;
+    return os;
+  }
+};
 
 template <typename TrackContainer>
-class InputTracks {
+class TruthJet : public Jet {
  public:
-  /// Constructor; saves a reference to the container
-  /// @param tracks the TrackContainer
-  explicit InputTracks(TrackContainer& tracks) : m_tracks{tracks} {}
+  TruthJet(const Acts::Vector4& fourMom, const JetLabel& label)
+      : Jet(fourMom, label) {}
 
-  /// Get vector for 4-momenta from the track collection
-  /// @return vector of fastjet::PseudoJet, one per track
-  std::vector<fastjet::PseudoJet> fourMomenta() const;
-
-  /// Get the tracks making up a track-jet
-  ///
-  /// @param jet the jet from which to get the constituent tracks
-  /// @param coreR optional radius inside which to get the tracks
-  ///
-  /// @return a vector of TrackProxy
-  std::vector<typename TrackContainer::TrackProxy> tracksInJet(
-      const fastjet::PseudoJet& jet, std::optional<float> coreR = {});
-
- private:
-  TrackContainer& m_tracks;
-};
-
-class TrackJetBuilder {
- public:
-  /// Factory function to create a sequence of track jets
-  ///
-  /// @param tracks the input tracks
-  /// @jetDef the jet definition to use, defaults to "DefaultJetDefinition"
-  static TrackJetBuilder create(
-      std::vector<fastjet::PseudoJet>& tracks,
-      const fastjet::JetDefinition& jetDef = DefaultJetDefinition);
-
-  static TrackJetBuilder create(
-      std::vector<fastjet::PseudoJet>&& tracks,
-      const fastjet::JetDefinition& jetDef = DefaultJetDefinition) {
-    return create(tracks, jetDef);
+  /// @brief Set the truth particles as constituents of this truth jet from its barcode
+  void setConstituents(const std::vector<ActsFatras::Barcode>& constituents) {
+    m_constituents = constituents;
   }
 
-  /// Get all the track jets passing the pT & eta cuts
-  ///
-  /// @param ptMin the minimum jet pT in GeV
-  /// @param etaMax the maximum jet absolute eta
-  ///
-  /// @return a vector of fastjet::PseudoJet objects
-  std::vector<fastjet::PseudoJet> jets(float ptMin = 20 *
-                                                     Acts::UnitConstants::GeV,
-                                       float etaMax = 2.5);
+  /// @brief Set the indices of the truth particles that are constituents of this truth jet
+  /// @param indices
+  void setConstituentIndices(const std::vector<int>& indices) {
+    m_constituentIndices = indices;
+  }
+
+  /// @brief Get the truth particles that are truth jet constituents
+  const std::vector<ActsFatras::Barcode>& constituents() const {
+    return m_constituents;
+  }
+
+  /// @brief Set the tracks associated to this truth jet
+  void setAssociatedTracks(
+      const std::vector<typename TrackContainer::TrackProxy>&
+          associatedTracks) {
+    m_associatedTracks = associatedTracks;
+  }
+
+  /// @brief Get the tracks associated to this truth jet
+  const std::vector<typename TrackContainer::TrackProxy>& associatedTracks()
+      const {
+    return m_associatedTracks;
+  }
 
  private:
-  /// Main constructor. Users should call "TrackJetBuilder::create" instead
-  ///
-  /// @param clusterSeq the fastjet::ClusterSequence object
-  explicit TrackJetBuilder(const fastjet::ClusterSequence& clusterSeq)
-      : m_clusterSeq{clusterSeq} {}
-
-  fastjet::ClusterSequence m_clusterSeq{};
+  /// @brief  Truth particles as the constituents of the truth jet
+  std::vector<ActsFatras::Barcode> m_constituents;
+  /// @brief Indices of the constituents in the input collection
+  std::vector<int> m_constituentIndices;
+  /// @brief The tracks associated to this truth jet
+  std::vector<typename TrackContainer::TrackProxy> m_associatedTracks;
 };
 
-}  // namespace ActsPlugins::FastJet
+template <typename TrackContainer>
+class TrackJet : public Jet {
+ public:
+  explicit TrackJet(const Acts::Vector4& fourMom, const JetLabel& label)
+      : Jet(fourMom, label) {}
 
-#include "Jets.ipp"
+  /// @brief Set the tracks as constituents of this track jet
+  void setConstituents(
+      const std::vector<typename TrackContainer::TrackProxy>& constituents) {
+    m_constituents = constituents;
+  }
+
+  /// @brief Get the track jet constituents that are tracks
+  const std::vector<typename TrackContainer::TrackProxy>& constituents() const {
+    return m_constituents;
+  }
+
+ private:
+  /// @brief Tracks as the constituents of the track jet
+  std::vector<typename TrackContainer::TrackProxy> m_constituents;
+};
+
+/// @}
+}  // namespace ActsPlugins::FastJet

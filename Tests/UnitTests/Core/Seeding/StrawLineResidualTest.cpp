@@ -8,16 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/CombinatorialSeedSolver.hpp"
-#include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Polynomials.hpp"
 
 #include <random>
+
+#include "StrawHitGeneratorHelper.hpp"
 
 using namespace Acts;
 using namespace Acts::detail;
@@ -27,8 +25,6 @@ using namespace Acts::UnitLiterals;
 using namespace Acts::PlanarHelper;
 using namespace Acts::detail::LineHelper;
 using namespace Acts::VectorHelpers;
-using RandomEngine = std::mt19937;
-using uniform = std::uniform_real_distribution<double>;
 
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using Config_t = CompSpacePointAuxiliaries::Config;
@@ -44,144 +40,7 @@ constexpr double tolerance = 1.e-3;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
 
-namespace Acts::Test {
-class TestSpacePoint {
- public:
-  /// @brief Mask to express which track directions are measured
-  ///        by the space point
-  enum ProjectorMask : std::size_t {
-    bendingDir = 1 << 0,
-    nonBendingDir = 1 << 1,
-    bothDirections = bendingDir | nonBendingDir
-  };
-  /// @brief Constructor for straw-like space points
-  /// @param pos: A point on the straw wire
-  /// @param wireDir: Orientation of the straw in space
-  /// @param radius: Drift-radius of the straw measurement
-  /// @param measNonPrec: Flag toggling whether the position along
-  ///                     the wire shall be taken into account for
-  ///                     residual calculation
-  /// @param cov: Straw covariance
-  TestSpacePoint(
-      const Vector3& pos, const Vector3& wireDir, const double radius,
-      bool measNonPrec = false,
-      const std::array<double, 3>& cov = Acts::filledArray<double, 3>(0.))
-      : m_pos{pos},
-        m_dir{wireDir},
-        m_radius{radius},
-        m_dirMask{measNonPrec ? bothDirections : bendingDir},
-        m_cov{cov} {}
-
-  /// @brief Constructor for strip space points without time measurements
-  /// @param pos: Position of the (combined) strip space point
-  /// @param stripDir: Orientation of the strip in space
-  /// @param toNext: Vector pointing to the next strip
-  /// @param mask: Enum Toggling whether the strip measures loc0 or loc1
-  /// @param cov: Strip's covariance
-  TestSpacePoint(
-      const Vector3& pos, const Vector3& stripDir, const Vector3& toNext,
-      ProjectorMask mask,
-      const std::array<double, 3>& cov = Acts::filledArray<double, 3>(0.))
-      : m_pos{pos},
-        m_dir{stripDir},
-        m_toNext{toNext},
-        m_dirMask{mask},
-        m_cov{cov},
-        m_isStraw{false} {}
-  /// @brief Constructor for strip space points with time measurements
-  /// @param pos: Position of the (combined) strip space point
-  /// @param stripDir: Orientation of the strip in space
-  /// @param toNext: Vector pointing to the next strip
-  /// @param stripTime: Recorded strip time used to calculate the residual
-  /// @param cov: Strip's covariance
-  TestSpacePoint(
-      const Vector3& pos, const Vector3& stripDir, const Vector3& toNext,
-      const double stripTime,
-      const std::array<double, 3>& cov = Acts::filledArray<double, 3>(0.))
-      : m_pos{pos},
-        m_dir{stripDir},
-        m_toNext{toNext},
-        m_time{stripTime},
-        m_cov{cov},
-        m_isStraw{false} {}
-  const Vector3& localPosition() const { return m_pos; }
-  const Vector3& sensorDirection() const { return m_dir; }
-  const Vector3& toNextSensor() const { return m_toNext; }
-  const Vector3& planeNormal() const { return m_planeNorm; }
-
-  bool isStraw() const { return m_isStraw; }
-  bool hasTime() const { return m_time.has_value(); }
-  bool measuresLoc1() const {
-    return (m_dirMask & (ProjectorMask::bendingDir)) != 0u;
-  }
-  bool measuresLoc0() const {
-    return (m_dirMask & (ProjectorMask::nonBendingDir)) != 0u;
-  }
-
-  double driftRadius() const { return m_radius; }
-  double time() const { return m_time.value_or(0.); }
-  const std::array<double, 3>& covariance() const { return m_cov; }
-
-  friend std::ostream& operator<<(std::ostream& ostr,
-                                  const TestSpacePoint& sp) {
-    ostr << (sp.isStraw() ? "straw" : "strip") << " space point @ "
-         << toString(sp.localPosition());
-    if (sp.isStraw()) {
-      ostr << " wire direction: " << toString(sp.sensorDirection())
-           << ", drift Radius: " << sp.driftRadius();
-    } else {
-      ostr << ", sensor/toNext/normal: " << toString(sp.sensorDirection())
-           << "/" << toString(sp.toNextSensor()) << "/"
-           << toString(sp.planeNormal());
-    }
-    if (sp.hasTime()) {
-      ostr << ", time: " << sp.time();
-    }
-    ostr << ", non-bending: " << (sp.measuresLoc0() ? "yay" : "nay");
-    ostr << ", bending: " << (sp.measuresLoc1() ? "yay" : "nay");
-    const auto& cov = sp.covariance();
-    ostr << ", covariance: (" << cov[0] << ", " << cov[1] << ", " << cov[2]
-         << "), ";
-    return ostr;
-  }
-
- private:
-  Vector3 m_pos{Vector3::Zero()};
-  Vector3 m_dir{Vector3::Zero()};
-  Vector3 m_toNext{Vector3::Zero()};
-  Vector3 m_planeNorm{m_dir.cross(m_toNext).normalized()};
-  double m_radius{0.};
-  std::optional<double> m_time{std::nullopt};
-  ProjectorMask m_dirMask{ProjectorMask::bothDirections};
-  std::array<double, 3> m_cov{Acts::filledArray<double, 3>(0.)};
-  bool m_isStraw{true};
-};
-
-/// @brief Generate a random straight track with a flat distribution in theta & y0
-///        Range in theta is [0, 180] degrees in steps of 0.1 excluding the
-///        vicinity around 90 degrees.
-///          In y0, the generated range is [-500, 500] mm
-Line_t::ParamVector generateLine(RandomEngine& engine) {
-  using ParIndex = Line_t::ParIndex;
-  Line_t::ParamVector linePars{};
-  linePars[toUnderlying(ParIndex::phi)] =
-      uniform{-180._degree, 180._degree}(engine);
-  linePars[toUnderlying(ParIndex::y0)] = uniform{-5000., 5000.}(engine);
-  linePars[toUnderlying(ParIndex::x0)] = uniform{-5000., 5000.}(engine);
-  linePars[toUnderlying(ParIndex::theta)] =
-      uniform{0.1_degree, 179.9_degree}(engine);
-  if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
-      0.2_degree) {
-    return generateLine(engine);
-  }
-  ACTS_DEBUG("Generated parameters -- "
-             << "theta: "
-             << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
-             << ", phi: " << (linePars[toUnderlying(ParIndex::phi)] / 1._degree)
-             << ", y0: " << linePars[toUnderlying(ParIndex::y0)]
-             << ", x0: " << linePars[toUnderlying(ParIndex::x0)]);
-  return linePars;
-}
+namespace ActsTests {
 
 template <typename T>
 constexpr T absMax(const T& a, const T& b) {
@@ -209,9 +68,9 @@ double angle(const Vector& v1, const Vector& v2) {
                 v2[toUnderlying(ResidualIdx::time)], tol);       \
   }
 
-BOOST_AUTO_TEST_SUITE(StrawLineSeederTest)
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
-void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
+void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
   Config_t resCfg{};
   resCfg.useHessian = true;
   resCfg.calcAlongStrip = false;
@@ -231,7 +90,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
                                     Acts::getDefaultLogger("testRes", logLvl)};
   resCalc.updateSpatialResidual(line, testPoint);
   ACTS_INFO(__func__ << "() - " << __LINE__ << ": Test residual w.r.t. "
-                     << testPoint);
+                     << toString(testPoint));
   if (testPoint.isStraw()) {
     const double lineDist =
         signedDistance(testPoint.localPosition(), testPoint.sensorDirection(),
@@ -256,7 +115,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
                 << resCalc.residual()[toUnderlying(ResidualIdx::nonBending)]);
 
       CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::nonBending)],
-                  closePoint.pathLength(), 1.e-10);
+                  closePoint.pathLength(), 1.e-9);
     }
   } else {
     const Vector3& n{testPoint.planeNormal()};
@@ -279,7 +138,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
                                  : testPoint.toNextSensor();
     coordTrf.col(2) = n;
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Coordinate trf: \n"
-                        << coordTrf);
+                        << toString(coordTrf));
 
     const Vector3 trfDelta = coordTrf.inverse() * delta;
     ACTS_DEBUG(__func__ << "() - " << __LINE__
@@ -351,14 +210,15 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   }
 }
 
-void testSeed(const std::array<std::shared_ptr<TestSpacePoint>, 4>& spacePoints,
-              const std::array<double, 4>& truthDistances,
-              const Vector3& truthPosZ0, const Vector3& truthDir) {
+void testSeed(
+    const std::array<std::shared_ptr<FitTestSpacePoint>, 4>& spacePoints,
+    const std::array<double, 4>& truthDistances, const Vector3& truthPosZ0,
+    const Vector3& truthDir) {
   const SquareMatrix2 bMatrix =
       CombinatorialSeedSolver::betaMatrix(spacePoints);
   if (std::abs(bMatrix.determinant()) < std::numeric_limits<float>::epsilon()) {
     ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": Beta Matrix \n"
-                          << bMatrix
+                          << toString(bMatrix)
                           << "\nhas zero determinant - skip the combination");
     return;
   }
@@ -387,7 +247,7 @@ void testSeed(const std::array<std::shared_ptr<TestSpacePoint>, 4>& spacePoints,
 }
 
 void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
-                           const TestSpacePoint& sp,
+                           const FitTestSpacePoint& sp,
                            const Acts::Transform3& locToGlob) {
   using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
   Config_t resCfg{};
@@ -510,8 +370,10 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     CompSpacePointAuxiliaries resCalc{resCfg,
                                       Acts::getDefaultLogger(calcName, logLvl)};
 
-    resCalc.updateFullResidual(line, t0, TestSpacePoint{pos, dir, driftR},
-                               driftV, driftA);
+    resCalc.updateFullResidual(
+        line, t0,
+        FitTestSpacePoint{pos, dir, driftR, SpCalibrator::driftUncert(driftR)},
+        driftV, driftA);
     return resCalc;
   };
 
@@ -575,18 +437,19 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     break;
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
     resCfg.localToGlobal = Acts::Transform3::Identity();
-    Pars_t linePars{generateLine(rndEngine)};
-    const double t0 = uniform{0_ns, 150._ns}(rndEngine);
+    Line_t line{generateLine(rndEngine, logger())};
+    const double t0 = uniform{0_ns, 50._ns}(rndEngine);
 
-    testTimingResidual(linePars, wirePos, Vector::UnitX(), t0);
-    testTimingResidual(linePars, wirePos, Vector{1., 1., 0.}.normalized(), t0);
-
+    testTimingResidual(line.parameters(), wirePos, Vector::UnitX(), t0);
+    testTimingResidual(line.parameters(), wirePos,
+                       Vector{1., 1., 0.}.normalized(), t0);
     resCfg.localToGlobal.translation() =
         Vector{uniform{-10._cm, 10._cm}(rndEngine),
                uniform{-20._cm, 20._cm}(rndEngine),
                uniform{-30._cm, 30._cm}(rndEngine)};
-    testTimingResidual(linePars, wirePos, Vector::UnitX(), t0);
-    testTimingResidual(linePars, wirePos, Vector{1., 1., 0.}.normalized(), t0);
+    testTimingResidual(line.parameters(), wirePos, Vector::UnitX(), t0);
+    testTimingResidual(line.parameters(), wirePos,
+                       Vector{1., 1., 0.}.normalized(), t0);
 
     //// Next test the displacement
     resCfg.localToGlobal *=
@@ -594,8 +457,9 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
                          makeDirectionFromPhiTheta(
                              uniform{-30._degree, 30._degree}(rndEngine),
                              uniform{-45._degree, -35._degree}(rndEngine))};
-    testTimingResidual(linePars, wirePos, Vector::UnitX(), t0);
-    testTimingResidual(linePars, wirePos, Vector{1., 1., 0.}.normalized(), t0);
+    testTimingResidual(line.parameters(), wirePos, Vector::UnitX(), t0);
+    testTimingResidual(line.parameters(), wirePos,
+                       Vector{1., 1., 0.}.normalized(), t0);
   }
 }
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
@@ -607,24 +471,30 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
 
   for (std::size_t e = 0; e < nEvents; ++e) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
-    Pars_t linePars{generateLine(rndEngine)};
+    const Line_t line{generateLine(rndEngine, logger())};
     // Generate the first test measurement
-    testResidual(linePars, TestSpacePoint{wirePos, wireDir1, 10._cm});
+    constexpr double R = 10._cm;
+    const double dR = SpCalibrator::driftUncert(R);
+    constexpr double uncertWire = 1._cm;
+    testResidual(line.parameters(),
+                 FitTestSpacePoint{wirePos, wireDir1, R, dR});
 
-    testResidual(linePars, TestSpacePoint{wirePos, wireDir2, 10._cm});
+    testResidual(line.parameters(),
+                 FitTestSpacePoint{wirePos, wireDir2, R, dR});
 
-    const Line_t line{linePars};
     auto isect =
         lineIntersect(line.position(), line.direction(), wirePos, wireDir1);
-    testResidual(linePars, TestSpacePoint{
-                               isect.position() +
-                                   uniform{-50._cm, 50._cm}(rndEngine)*wireDir1,
-                               wireDir1, 10._cm, true});
+
+    testResidual(line.parameters(),
+                 FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(
+                                                          rndEngine)*wireDir1,
+                                   wireDir1, R, dR, uncertWire});
+
     isect = lineIntersect(line.position(), line.direction(), wirePos, wireDir2);
-    testResidual(linePars, TestSpacePoint{
-                               isect.position() +
-                                   uniform{-50._cm, 50._cm}(rndEngine)*wireDir2,
-                               wireDir2, 10._cm, true});
+    testResidual(line.parameters(),
+                 FitTestSpacePoint{isect.position() + uniform{-50._cm, 50._cm}(
+                                                          rndEngine)*wireDir2,
+                                   wireDir2, R, dR, uncertWire});
   }
 }
 BOOST_AUTO_TEST_CASE(StripResidual) {
@@ -635,23 +505,18 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
   const Vector b2{makeDirectionFromPhiTheta(0._degree, 90_degree)};
   for (std::size_t e = 0; e < nEvents; ++e) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
-    Pars_t linePars{generateLine(rndEngine)};
+    Pars_t linePars{generateLine(rndEngine, logger()).parameters()};
 
-    testResidual(linePars,
-                 TestSpacePoint{stripPos, b1, b2, TestSpacePoint::bendingDir});
+    /// Test solely the residual along the bending direction
+    testResidual(linePars, FitTestSpacePoint{stripPos, b1, b2, 0._cm, 1._cm});
+    /// Test solely the residual along the non-bending direction
+    testResidual(linePars, FitTestSpacePoint{stripPos, b2, b1, 1._cm, 0._cm});
+    /// Test the combined residual
+    testResidual(linePars, FitTestSpacePoint{stripPos, b1, b2, 1._cm, 1._cm});
+    const Vector b3 = makeDirectionFromPhiTheta(30._degree, 90._degree);
+    const Vector b4 = makeDirectionFromPhiTheta(60._degree, 90._degree);
 
-    testResidual(linePars, TestSpacePoint{stripPos, b2, b1,
-                                          TestSpacePoint::nonBendingDir});
-
-    testResidual(linePars, TestSpacePoint{stripPos, b1, b2,
-                                          TestSpacePoint::bothDirections});
-
-    testResidual(
-        linePars,
-        TestSpacePoint{stripPos,
-                       makeDirectionFromPhiTheta(30._degree, 90._degree),
-                       makeDirectionFromPhiTheta(60._degree, 90_degree),
-                       TestSpacePoint::bothDirections});
+    testResidual(linePars, FitTestSpacePoint{stripPos, b3, b4, 1._cm, 1._cm});
   }
 }
 
@@ -662,49 +527,32 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
 
   Acts::Transform3 locToGlob{Acts::Transform3::Identity()};
 
-  timeStripResidualTest(
-      linePars, 10.,
-      TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
-                     makeDirectionFromPhiTheta(30._degree, 90._degree),
-                     makeDirectionFromPhiTheta(60._degree, 90_degree), 15},
-      locToGlob);
+  const Vector pos{75._cm, -75._cm, 100._cm};
+  const Vector pos1{75._cm, -75._cm, 200._cm};
 
-  timeStripResidualTest(
-      linePars, 10.,
-      TestSpacePoint{Vector{75._cm, -75_cm, 200_cm},
-                     makeDirectionFromPhiTheta(0_degree, 90_degree),
-                     makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
-      locToGlob);
+  const Vector b1{makeDirectionFromPhiTheta(30._degree, 90._degree)};
+  const Vector b2{makeDirectionFromPhiTheta(60._degree, 90._degree)};
+  const Vector b3{makeDirectionFromPhiTheta(00._degree, 90._degree)};
+  const Vector b4{makeDirectionFromPhiTheta(60._degree, 75._degree)};
+  const std::array cov{Acts::square(10._cm), Acts::square(10._cm),
+                       Acts::square(1._ns)};
+  FitTestSpacePoint p1{pos, b1, b2, 15._ns, cov};
+
+  FitTestSpacePoint p2{pos1, b3, b4, 15._ns, cov};
+
+  timeStripResidualTest(linePars, 10., p1, locToGlob);
+
+  timeStripResidualTest(linePars, 10., p2, locToGlob);
 
   locToGlob.translation() = Vector{75._cm, -75._cm, -35._cm};
-  timeStripResidualTest(
-      linePars, 10.,
-      TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
-                     makeDirectionFromPhiTheta(30._degree, 90._degree),
-                     makeDirectionFromPhiTheta(60._degree, 90_degree), 15},
-      locToGlob);
+  timeStripResidualTest(linePars, 10., p1, locToGlob);
 
-  timeStripResidualTest(
-      linePars, 10.,
-      TestSpacePoint{Vector{75._cm, -75_cm, 200_cm},
-                     makeDirectionFromPhiTheta(0_degree, 90_degree),
-                     makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
-      locToGlob);
+  timeStripResidualTest(linePars, 10., p2, locToGlob);
   locToGlob *= Acts::AngleAxis3{
       30_degree, makeDirectionFromPhiTheta(30_degree, -45_degree)};
-  timeStripResidualTest(
-      linePars, 10.,
-      TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
-                     makeDirectionFromPhiTheta(30._degree, 90._degree),
-                     makeDirectionFromPhiTheta(60._degree, 90_degree), 15},
-      locToGlob);
+  timeStripResidualTest(linePars, 10., p1, locToGlob);
 
-  timeStripResidualTest(
-      linePars, 10.,
-      TestSpacePoint{Vector{75._cm, -75_cm, 200_cm},
-                     makeDirectionFromPhiTheta(0_degree, 90_degree),
-                     makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
-      locToGlob);
+  timeStripResidualTest(linePars, 10., p2, locToGlob);
 }
 
 BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
@@ -728,11 +576,11 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   const double t0{1._ns};
 
   auto testChi2 = [&line, &t0, &resCalc,
-                   &resCfg](const TestSpacePoint& testMe) {
+                   &resCfg](const FitTestSpacePoint& testMe) {
     using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
     ChiSq_t chi2{};
     ACTS_DEBUG(__func__ << "() " << __LINE__ << ": Test space point "
-                        << testMe);
+                        << toString(testMe));
 
     resCalc.updateFullResidual(line, t0, testMe);
 
@@ -748,7 +596,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__
                         << ": Calculated chi2: " << chi2.chi2 << ", Gradient: "
                         << toString(chi2.gradient) << ", Hessian: \n"
-                        << chi2.hessian
+                        << toString(chi2.hessian)
                         << "\ndeterminant: " << chi2.hessian.determinant());
     CHECK_CLOSE(CompSpacePointAuxiliaries::chi2Term(line, resCfg.localToGlobal,
                                                     t0, testMe),
@@ -806,7 +654,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   };
 
   /// Test orthogonal strips
-  testChi2(TestSpacePoint{
+  testChi2(FitTestSpacePoint{
       line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
       makeDirectionFromPhiTheta(0_degree, 90._degree),
       makeDirectionFromPhiTheta(90._degree, 0._degree),
@@ -814,29 +662,23 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
       {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
 
   /// Test strips with stereo
-  testChi2(TestSpacePoint{
+  testChi2(FitTestSpacePoint{
       line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
       makeDirectionFromPhiTheta(0_degree, 45._degree),
       makeDirectionFromPhiTheta(60._degree, 0._degree),
       15._ns,
       {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
   //// Test ordinary straws
-  testChi2(TestSpacePoint{
+  testChi2(FitTestSpacePoint{
       line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
-      Vector3::UnitX(),
-      5._cm,
-      false,
-      {0., Acts::pow(10._mm, 2), 0.}});
+      Vector3::UnitX(), 5._cm, 10._mm});
 
   /// Test straws with information on the position along the
   /// tube
-  testChi2(TestSpacePoint{line.point(20._cm) +
-                              5._cm * line.direction().cross(Vector::UnitX()) +
-                              4._cm * Vector::UnitX(),
-                          Vector3::UnitX(),
-                          5._cm,
-                          true,
-                          {Acts::pow(0.5_cm, 2), Acts::pow(10._mm, 2), 0.}});
+  testChi2(FitTestSpacePoint{
+      line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()) +
+          4._cm * Vector::UnitX(),
+      Vector3::UnitX(), 5._cm, 0.5_cm});
 }
 
 BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
@@ -866,12 +708,12 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Combinatorial Seed test - "
                         << "Processing Event: " << i);
     // update pseudo track parameters with random values
-    Line_t line{generateLine(rndEngine)};
+    Line_t line{generateLine(rndEngine, logger())};
 
     const Vector3& muonPos = line.position();
     const Vector3& muonDir = line.direction();
 
-    std::array<std::shared_ptr<TestSpacePoint>, nStrips> spacePoints{};
+    std::array<std::shared_ptr<FitTestSpacePoint>, nStrips> spacePoints{};
     for (std::size_t layer = 0; layer < nStrips; ++layer) {
       auto intersection = PlanarHelper::intersectPlane(
           muonPos, muonDir, Vector3::UnitZ(), distancesZ[layer]);
@@ -885,14 +727,13 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
       Vector3 stripPos =
           intersections[layer] + parameters[layer] * stripDirections[layer];
 
-      spacePoints[layer] = std::make_shared<TestSpacePoint>(
-          stripPos, stripDirections[layer], Vector3::UnitZ(),
-          TestSpacePoint::nonBendingDir);
+      spacePoints[layer] = std::make_shared<FitTestSpacePoint>(
+          stripPos, stripDirections[layer], Vector3::UnitZ(), 1._cm, 0._cm);
     }
 
     // let's pick four strips on fours different layers
     // check combinatorics
-    std::array<std::shared_ptr<TestSpacePoint>, 4> seedSpacePoints{};
+    std::array<std::shared_ptr<FitTestSpacePoint>, 4> seedSpacePoints{};
     for (unsigned int l = 0; l < distancesZ.size() - 3; ++l) {
       seedSpacePoints[0] = spacePoints[l];
       for (unsigned int k = l + 1; k < distancesZ.size() - 2; ++k) {
@@ -913,5 +754,5 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   }
 }
 
-}  // namespace Acts::Test
+}  // namespace ActsTests
 BOOST_AUTO_TEST_SUITE_END()

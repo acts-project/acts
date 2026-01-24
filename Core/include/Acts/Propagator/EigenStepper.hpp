@@ -106,7 +106,7 @@ class EigenStepper {
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
-    /// Accummulated path length state
+    /// Accumulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps
@@ -131,10 +131,10 @@ class EigenStepper {
 
     /// @brief Storage of magnetic field and the sub steps during a RKN4 step
     struct {
-      /// Magnetic field evaulations
-      Vector3 B_first, B_middle, B_last;
+      /// Magnetic field evaluations
+      Vector3 B_first{}, B_middle{}, B_last{};
       /// k_i of the RKN4 algorithm
-      Vector3 k1, k2, k3, k4;
+      Vector3 k1{}, k2{}, k3{}, k4{};
       /// k_i elements of the momenta
       std::array<double, 4> kQoP{};
     } stepData;
@@ -282,7 +282,7 @@ class EigenStepper {
   /// @param stype [in] The step size type to be set
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
+    static_cast<void>(direction);
     double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }

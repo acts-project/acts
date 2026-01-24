@@ -8,13 +8,13 @@
 
 #include "Acts/Navigation/NavigationStream.hpp"
 
-#include "Acts/Detector/Portal.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
+#include <unordered_set>
 
 namespace Acts {
 
@@ -29,9 +29,15 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   // A container collecting additional candidates from multiple
   // valid intersections
   std::vector<NavigationTarget> additionalCandidates = {};
+  additionalCandidates.reserve(m_candidates.size());
+  std::unordered_set<const Surface*> processed{};
   for (auto& candidate : m_candidates) {
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
+    // Check whether the surface already has been processed
+    if (!processed.insert(&surface).second) {
+      continue;
+    }
     // Intersect the surface
     auto multiIntersection = surface.intersect(gctx, position, direction,
                                                cTolerance, onSurfaceTolerance);
@@ -86,6 +92,8 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // If we have duplicates, we expect them to be close by in path length, so we
   // don't need to re-sort Remove duplicates on basis of the surface pointer
+
+  /// But but but... What about the surfaces with multiple intersections?
   auto nonUniqueRange = std::ranges::unique(
       m_candidates.begin(), m_candidates.end(),
       [](const NavigationTarget& a, const NavigationTarget& b) {
@@ -159,23 +167,9 @@ void NavigationStream::addSurfaceCandidates(
   });
 }
 
-void NavigationStream::addPortalCandidate(const Experimental::Portal& portal) {
-  m_candidates.emplace_back(Intersection3D::Invalid(), 0, portal,
-                            BoundaryTolerance::None());
-}
-
 void NavigationStream::addPortalCandidate(const Portal& portal) {
   m_candidates.emplace_back(Intersection3D::Invalid(), 0, portal,
                             BoundaryTolerance::None());
-}
-
-void NavigationStream::addPortalCandidates(
-    std::span<const Experimental::Portal*> portals) {
-  m_candidates.reserve(m_candidates.size() + portals.size());
-  std::ranges::for_each(portals, [&](const auto& portal) {
-    m_candidates.emplace_back(Intersection3D::Invalid(), 0, *portal,
-                              BoundaryTolerance::None());
-  });
 }
 
 AppendOnlyNavigationStream::AppendOnlyNavigationStream(NavigationStream& stream)

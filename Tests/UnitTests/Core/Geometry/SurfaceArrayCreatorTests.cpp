@@ -18,7 +18,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -27,6 +26,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -45,13 +45,14 @@
 
 #include <boost/format.hpp>
 
+using namespace Acts;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
@@ -61,8 +62,7 @@ struct SurfaceArrayCreatorFixture {
 
   SurfaceArrayCreatorFixture()
       : m_SAC(SurfaceArrayCreator::Config(),
-              Acts::getDefaultLogger("SurfaceArrayCreator",
-                                     Acts::Logging::VERBOSE)) {
+              getDefaultLogger("SurfaceArrayCreator", Logging::VERBOSE)) {
     BOOST_TEST_MESSAGE("setup fixture");
   }
   ~SurfaceArrayCreatorFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
@@ -244,8 +244,8 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
         dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
     for (const auto& vtxloc : bounds->vertices()) {
-      Vector3 vtx =
-          srf->transform(tgContext) * Vector3(vtxloc.x(), vtxloc.y(), 0);
+      Vector3 vtx = srf->localToGlobalTransform(tgContext) *
+                    Vector3(vtxloc.x(), vtxloc.y(), 0);
       os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
     }
 
@@ -262,7 +262,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
   os.close();
 }
 
-BOOST_AUTO_TEST_SUITE(Tools)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                         SurfaceArrayCreatorFixture) {
@@ -700,4 +700,4 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -9,36 +9,39 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
 #include <numbers>
 
+using namespace Acts;
 using namespace Acts::VectorHelpers;
 
-BOOST_AUTO_TEST_SUITE(VectorHelpers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(PhiFromVector) {
   // Test phi calculation for Eigen vectors
-  CHECK_CLOSE_ABS(0.0, phi(Acts::Vector2{1, 0}), 1e-6);
-  CHECK_CLOSE_ABS(std::numbers::pi / 2, phi(Acts::Vector2{0, 1}), 1e-6);
-  CHECK_CLOSE_ABS(std::numbers::pi, phi(Acts::Vector2{-1, 0}), 1e-6);
-  CHECK_CLOSE_ABS(-std::numbers::pi / 2, phi(Acts::Vector2{0, -1}), 1e-6);
-  CHECK_CLOSE_ABS(std::numbers::pi / 4, phi(Acts::Vector2{1, 1}), 1e-6);
+  CHECK_CLOSE_ABS(0.0, phi(Vector2{1, 0}), 1e-6);
+  CHECK_CLOSE_ABS(std::numbers::pi / 2, phi(Vector2{0, 1}), 1e-6);
+  CHECK_CLOSE_ABS(std::numbers::pi, phi(Vector2{-1, 0}), 1e-6);
+  CHECK_CLOSE_ABS(-std::numbers::pi / 2, phi(Vector2{0, -1}), 1e-6);
+  CHECK_CLOSE_ABS(std::numbers::pi / 4, phi(Vector2{1, 1}), 1e-6);
 
   // Test with 3D vectors
-  CHECK_CLOSE_ABS(0.0, phi(Acts::Vector3{1, 0, 5}), 1e-6);
-  CHECK_CLOSE_ABS(std::numbers::pi / 2, phi(Acts::Vector3{0, 1, -2}), 1e-6);
+  CHECK_CLOSE_ABS(0.0, phi(Vector3{1, 0, 5}), 1e-6);
+  CHECK_CLOSE_ABS(std::numbers::pi / 2, phi(Vector3{0, 1, -2}), 1e-6);
 
   // Test with dynamic vectors
-  Acts::ActsDynamicVector dynVec2(2);
+  ActsDynamicVector dynVec2(2);
   dynVec2 << 1, 1;
   CHECK_CLOSE_ABS(std::numbers::pi / 4, phi(dynVec2), 1e-6);
 
-  Acts::ActsDynamicVector dynVec3(3);
+  ActsDynamicVector dynVec3(3);
   dynVec3 << 0, 1, 5;
   CHECK_CLOSE_ABS(std::numbers::pi / 2, phi(dynVec3), 1e-6);
 }
@@ -55,33 +58,32 @@ BOOST_AUTO_TEST_CASE(PhiFromObject) {
 
 BOOST_AUTO_TEST_CASE(PerpFromVector) {
   // Test transverse radius calculation
-  CHECK_CLOSE_ABS(1.0, perp(Acts::Vector2{1, 0}), 1e-6);
-  CHECK_CLOSE_ABS(1.0, perp(Acts::Vector2{0, 1}), 1e-6);
-  CHECK_CLOSE_ABS(std::sqrt(2.0), perp(Acts::Vector2{1, 1}), 1e-6);
-  CHECK_CLOSE_ABS(5.0, perp(Acts::Vector2{3, 4}), 1e-6);
+  CHECK_CLOSE_ABS(1.0, perp(Vector2{1, 0}), 1e-6);
+  CHECK_CLOSE_ABS(1.0, perp(Vector2{0, 1}), 1e-6);
+  CHECK_CLOSE_ABS(std::sqrt(2.0), perp(Vector2{1, 1}), 1e-6);
+  CHECK_CLOSE_ABS(5.0, perp(Vector2{3, 4}), 1e-6);
 
   // Test with 3D vectors (should ignore z component)
-  CHECK_CLOSE_ABS(1.0, perp(Acts::Vector3{1, 0, 10}), 1e-6);
-  CHECK_CLOSE_ABS(5.0, perp(Acts::Vector3{3, 4, 100}), 1e-6);
+  CHECK_CLOSE_ABS(1.0, perp(Vector3{1, 0, 10}), 1e-6);
+  CHECK_CLOSE_ABS(5.0, perp(Vector3{3, 4, 100}), 1e-6);
 
   // Test with dynamic vectors
-  Acts::ActsDynamicVector dynVec(3);
+  ActsDynamicVector dynVec(3);
   dynVec << 3, 4, 5;
   CHECK_CLOSE_ABS(5.0, perp(dynVec), 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(ThetaFromVector) {
   // Test theta calculation
-  CHECK_CLOSE_ABS(std::numbers::pi / 2, theta(Acts::Vector3{1, 0, 0}), 1e-6);
-  CHECK_CLOSE_ABS(std::numbers::pi / 2, theta(Acts::Vector3{0, 1, 0}), 1e-6);
-  CHECK_CLOSE_ABS(0.0, theta(Acts::Vector3{0, 0, 1}), 1e-6);
-  CHECK_CLOSE_ABS(std::numbers::pi, theta(Acts::Vector3{0, 0, -1}), 1e-6);
-  CHECK_CLOSE_ABS(std::numbers::pi / 4, theta(Acts::Vector3{1, 0, 1}), 1e-6);
-  CHECK_CLOSE_ABS(3 * std::numbers::pi / 4, theta(Acts::Vector3{1, 0, -1}),
-                  1e-6);
+  CHECK_CLOSE_ABS(std::numbers::pi / 2, theta(Vector3{1, 0, 0}), 1e-6);
+  CHECK_CLOSE_ABS(std::numbers::pi / 2, theta(Vector3{0, 1, 0}), 1e-6);
+  CHECK_CLOSE_ABS(0.0, theta(Vector3{0, 0, 1}), 1e-6);
+  CHECK_CLOSE_ABS(std::numbers::pi, theta(Vector3{0, 0, -1}), 1e-6);
+  CHECK_CLOSE_ABS(std::numbers::pi / 4, theta(Vector3{1, 0, 1}), 1e-6);
+  CHECK_CLOSE_ABS(3 * std::numbers::pi / 4, theta(Vector3{1, 0, -1}), 1e-6);
 
   // Test with dynamic vectors
-  Acts::ActsDynamicVector dynVec(3);
+  ActsDynamicVector dynVec(3);
   dynVec << 1, 0, 1;
   CHECK_CLOSE_ABS(std::numbers::pi / 4, theta(dynVec), 1e-6);
 
@@ -91,23 +93,22 @@ BOOST_AUTO_TEST_CASE(ThetaFromVector) {
 
 BOOST_AUTO_TEST_CASE(EtaFromVector) {
   // Test pseudorapidity calculation
-  CHECK_CLOSE_ABS(0.0, eta(Acts::Vector3{1, 0, 0}), 1e-6);
-  CHECK_CLOSE_ABS(0.0, eta(Acts::Vector3{0, 1, 0}), 1e-6);
+  CHECK_CLOSE_ABS(0.0, eta(Vector3{1, 0, 0}), 1e-6);
+  CHECK_CLOSE_ABS(0.0, eta(Vector3{0, 1, 0}), 1e-6);
 
   // Test special case: vector parallel to z-axis
-  BOOST_CHECK_EQUAL(eta(Acts::Vector3{0, 0, 1}),
+  BOOST_CHECK_EQUAL(eta(Vector3{0, 0, 1}),
                     std::numeric_limits<double>::infinity());
-  BOOST_CHECK_EQUAL(eta(Acts::Vector3{0, 0, -1}),
+  BOOST_CHECK_EQUAL(eta(Vector3{0, 0, -1}),
                     -std::numeric_limits<double>::infinity());
 
   // Test finite values
-  CHECK_CLOSE_ABS(std::asinh(1.0), eta(Acts::Vector3{1, 0, 1}), 1e-6);
-  CHECK_CLOSE_ABS(std::asinh(-1.0), eta(Acts::Vector3{1, 0, -1}), 1e-6);
-  CHECK_CLOSE_ABS(std::asinh(2.0), eta(Acts::Vector3{1, 1, 2 * std::sqrt(2)}),
-                  1e-6);
+  CHECK_CLOSE_ABS(std::asinh(1.0), eta(Vector3{1, 0, 1}), 1e-6);
+  CHECK_CLOSE_ABS(std::asinh(-1.0), eta(Vector3{1, 0, -1}), 1e-6);
+  CHECK_CLOSE_ABS(std::asinh(2.0), eta(Vector3{1, 1, 2 * std::sqrt(2)}), 1e-6);
 
   // Test with dynamic vectors
-  Acts::ActsDynamicVector dynVec(3);
+  ActsDynamicVector dynVec(3);
   dynVec << 1, 0, 1;
   CHECK_CLOSE_ABS(std::asinh(1.0), eta(dynVec), 1e-6);
 
@@ -120,7 +121,7 @@ BOOST_AUTO_TEST_CASE(EtaFromVector) {
 
 BOOST_AUTO_TEST_CASE(EvaluateTrigonomics) {
   // Test trigonometric evaluation
-  Acts::Vector3 dir{1, 0, 0};  // pointing in x direction
+  Vector3 dir{1, 0, 0};  // pointing in x direction
   auto trig = evaluateTrigonomics(dir);
 
   CHECK_CLOSE_ABS(1.0, trig[0], 1e-6);  // cos(phi)
@@ -129,7 +130,7 @@ BOOST_AUTO_TEST_CASE(EvaluateTrigonomics) {
   CHECK_CLOSE_ABS(1.0, trig[3], 1e-6);  // sin(theta)
 
   // Test with y direction
-  dir = Acts::Vector3{0, 1, 0};
+  dir = Vector3{0, 1, 0};
   trig = evaluateTrigonomics(dir);
 
   CHECK_CLOSE_ABS(0.0, trig[0], 1e-6);  // cos(phi)
@@ -138,7 +139,7 @@ BOOST_AUTO_TEST_CASE(EvaluateTrigonomics) {
   CHECK_CLOSE_ABS(1.0, trig[3], 1e-6);  // sin(theta)
 
   // Test with diagonal direction (avoid z-axis singularity)
-  dir = Acts::Vector3{1, 1, 1};
+  dir = Vector3{1, 1, 1};
   dir.normalize();
   trig = evaluateTrigonomics(dir);
 
@@ -151,8 +152,8 @@ BOOST_AUTO_TEST_CASE(EvaluateTrigonomics) {
 }
 
 BOOST_AUTO_TEST_CASE(CastAxisDirection) {
-  using enum Acts::AxisDirection;
-  Acts::Vector3 pos{3, 4, 5};
+  using enum AxisDirection;
+  Vector3 pos{3, 4, 5};
 
   // Test all axis directions
   CHECK_CLOSE_ABS(3.0, cast(pos, AxisX), 1e-6);
@@ -167,21 +168,18 @@ BOOST_AUTO_TEST_CASE(CastAxisDirection) {
 }
 
 BOOST_AUTO_TEST_CASE(CrossProduct) {
-  Acts::SquareMatrix3 m;
+  SquareMatrix3 m;
   m << 1, 0, 0, 0, 1, 0, 0, 0, 1;
 
-  Acts::Vector3 v{1, 0, 0};
+  Vector3 v{1, 0, 0};
 
-  Acts::SquareMatrix3 result = cross(m, v);
+  SquareMatrix3 result = cross(m, v);
 
   // Check that each column is the cross product of the corresponding column of
   // m with v
-  Acts::Vector3 expected_col0 =
-      m.col(0).cross(v);  // [1,0,0] x [1,0,0] = [0,0,0]
-  Acts::Vector3 expected_col1 =
-      m.col(1).cross(v);  // [0,1,0] x [1,0,0] = [0,0,-1]
-  Acts::Vector3 expected_col2 =
-      m.col(2).cross(v);  // [0,0,1] x [1,0,0] = [0,1,0]
+  Vector3 expected_col0 = m.col(0).cross(v);  // [1,0,0] x [1,0,0] = [0,0,0]
+  Vector3 expected_col1 = m.col(1).cross(v);  // [0,1,0] x [1,0,0] = [0,0,-1]
+  Vector3 expected_col2 = m.col(2).cross(v);  // [0,0,1] x [1,0,0] = [0,1,0]
 
   CHECK_CLOSE_ABS(expected_col0[0], result.col(0)[0], 1e-6);
   CHECK_CLOSE_ABS(expected_col0[1], result.col(0)[1], 1e-6);
@@ -197,7 +195,7 @@ BOOST_AUTO_TEST_CASE(CrossProduct) {
 }
 
 BOOST_AUTO_TEST_CASE(PositionFromVector4) {
-  Acts::Vector4 pos4{1, 2, 3, 4};
+  Vector4 pos4{1, 2, 3, 4};
   auto pos3 = position(pos4);
 
   CHECK_CLOSE_ABS(1.0, pos3[0], 1e-6);
@@ -206,10 +204,10 @@ BOOST_AUTO_TEST_CASE(PositionFromVector4) {
 }
 
 BOOST_AUTO_TEST_CASE(PositionFromFreeVector) {
-  Acts::FreeVector params = Acts::FreeVector::Zero();
-  params[Acts::eFreePos0] = 1;
-  params[Acts::eFreePos1] = 2;
-  params[Acts::eFreePos2] = 3;
+  FreeVector params = FreeVector::Zero();
+  params[eFreePos0] = 1;
+  params[eFreePos1] = 2;
+  params[eFreePos2] = 3;
 
   auto pos3 = position(params);
 
@@ -219,23 +217,23 @@ BOOST_AUTO_TEST_CASE(PositionFromFreeVector) {
 }
 
 BOOST_AUTO_TEST_CASE(MakeVector4) {
-  Acts::Vector3 vec3{1, 2, 3};
+  Vector3 vec3{1, 2, 3};
   double w = 4.0;
 
   auto vec4 = makeVector4(vec3, w);
 
-  CHECK_CLOSE_ABS(1.0, vec4[Acts::ePos0], 1e-6);
-  CHECK_CLOSE_ABS(2.0, vec4[Acts::ePos1], 1e-6);
-  CHECK_CLOSE_ABS(3.0, vec4[Acts::ePos2], 1e-6);
-  CHECK_CLOSE_ABS(4.0, vec4[Acts::eTime], 1e-6);
+  CHECK_CLOSE_ABS(1.0, vec4[ePos0], 1e-6);
+  CHECK_CLOSE_ABS(2.0, vec4[ePos1], 1e-6);
+  CHECK_CLOSE_ABS(3.0, vec4[ePos2], 1e-6);
+  CHECK_CLOSE_ABS(4.0, vec4[eTime], 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(IncidentAngles) {
-  Acts::Vector3 direction{1, 1, 1};
+  Vector3 direction{1, 1, 1};
   direction.normalize();
 
   // Identity rotation (global == local)
-  Acts::RotationMatrix3 globalToLocal = Acts::RotationMatrix3::Identity();
+  RotationMatrix3 globalToLocal = RotationMatrix3::Identity();
 
   auto angles = incidentAngles(direction, globalToLocal);
 
@@ -246,10 +244,10 @@ BOOST_AUTO_TEST_CASE(IncidentAngles) {
   CHECK_CLOSE_ABS(std::numbers::pi / 4, angles.second, 1e-6);
 
   // Test with rotation around z-axis by 90 degrees
-  Acts::RotationMatrix3 rotZ;
+  RotationMatrix3 rotZ;
   rotZ << 0, 1, 0, -1, 0, 0, 0, 0, 1;
 
-  angles = incidentAngles(Acts::Vector3{1, 0, 0}, rotZ);
+  angles = incidentAngles(Vector3{1, 0, 0}, rotZ);
   // After rotation: {1,0,0} -> {0,-1,0}
   // phi = atan2(0, 0) = 0, theta = atan2(0, -1) = pi (atan2 of 0,-1)
   CHECK_CLOSE_ABS(0.0, angles.first, 1e-6);
@@ -257,3 +255,5 @@ BOOST_AUTO_TEST_CASE(IncidentAngles) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

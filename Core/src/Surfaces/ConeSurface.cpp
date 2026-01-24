@@ -90,7 +90,7 @@ ConeSurface& ConeSurface::operator=(const ConeSurface& other) {
 }
 
 Vector3 ConeSurface::rotSymmetryAxis(const GeometryContext& gctx) const {
-  return transform(gctx).matrix().block<3, 1>(0, 2);
+  return localToGlobalTransform(gctx).matrix().block<3, 1>(0, 2);
 }
 
 RotationMatrix3 ConeSurface::referenceFrame(
@@ -119,33 +119,34 @@ Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,
   // create the position in the local 3d frame
   double r = lposition[1] * bounds().tanAlpha();
   double phi = lposition[0] / r;
-  Vector3 loc3Dframe(r * cos(phi), r * sin(phi), lposition[1]);
-  return transform(gctx) * loc3Dframe;
+  Vector3 loc3Dframe(r * std::cos(phi), r * std::sin(phi), lposition[1]);
+  return localToGlobalTransform(gctx) * loc3Dframe;
 }
 
 Result<Vector2> ConeSurface::globalToLocal(const GeometryContext& gctx,
                                            const Vector3& position,
                                            double tolerance) const {
-  Vector3 loc3Dframe = transform(gctx).inverse() * position;
+  Vector3 loc3Dframe = localToGlobalTransform(gctx).inverse() * position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > tolerance) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Vector2>::success(
-      Vector2(r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()));
+      Vector2(r * std::atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()));
 }
 
 double ConeSurface::pathCorrection(const GeometryContext& gctx,
                                    const Vector3& position,
                                    const Vector3& direction) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  Vector3 posLocal = transform(gctx).inverse() * position;
+  Vector3 posLocal = localToGlobalTransform(gctx).inverse() * position;
   double phi = VectorHelpers::phi(posLocal);
-  double sgn = posLocal.z() > 0. ? -1. : +1.;
+  double sgn = -std::copysign(1., posLocal.z());
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
-  Vector3 normalC(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
-  normalC = transform(gctx) * normalC;
+  Vector3 normalC(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
+                  sgn * sinAlpha);
+  normalC = localToGlobalTransform(gctx).linear() * normalC;
   // Back to the global frame
   double cAlpha = normalC.dot(direction);
   return std::abs(1. / cAlpha);
@@ -159,18 +160,19 @@ Vector3 ConeSurface::normal(const GeometryContext& gctx,
                             const Vector2& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   double phi = lposition[0] / (bounds().r(lposition[1])),
-         sgn = lposition[1] > 0 ? -1. : +1.;
+         sgn = -std::copysign(1., lposition[1]);
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
-  Vector3 localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
-  return Vector3(transform(gctx).linear() * localNormal);
+  Vector3 localNormal(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
+                      sgn * sinAlpha);
+  return Vector3(localToGlobalTransform(gctx).linear() * localNormal);
 }
 
 Vector3 ConeSurface::normal(const GeometryContext& gctx,
                             const Vector3& position) const {
   // get it into the cylinder frame if needed
   // @todo respect opening angle
-  Vector3 pos3D = transform(gctx).inverse() * position;
+  Vector3 pos3D = localToGlobalTransform(gctx).inverse() * position;
   pos3D.z() = 0;
   return pos3D.normalized();
 }
@@ -195,7 +197,7 @@ Polyhedron ConeSurface::polyhedronRepresentation(
         "Polyhedron representation of boundless surface is not possible");
   }
 
-  auto ctransform = transform(gctx);
+  auto ctransform = localToGlobalTransform(gctx);
 
   // The tip - created only once and only, if it is not a cut-off cone
   bool tipExists = false;
@@ -259,7 +261,7 @@ detail::RealQuadraticEquation ConeSurface::intersectionSolver(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
   // Transform into the local frame
-  Transform3 invTrans = transform(gctx).inverse();
+  Transform3 invTrans = localToGlobalTransform(gctx).inverse();
   Vector3 point1 = invTrans * position;
   Vector3 dir1 = invTrans.linear() * direction;
 
@@ -312,7 +314,7 @@ MultiIntersection3D ConeSurface::intersect(
     status2 = IntersectionStatus::unreachable;
   }
 
-  const auto& tf = transform(gctx);
+  const auto& tf = localToGlobalTransform(gctx);
   // Set the intersection
   Intersection3D first(tf * solution1, qe.first, status1);
   Intersection3D second(tf * solution2, qe.second, status2);
@@ -331,7 +333,7 @@ AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
-  const auto& rotation = transform(gctx).rotation();
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   // The local frame x/y/z axis
   const auto& localXAxis = rotation.col(0);
   const auto& localYAxis = rotation.col(1);
@@ -380,7 +382,7 @@ ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
-  const auto& sTransform = transform(gctx);
+  const auto& sTransform = localToGlobalTransform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
@@ -395,5 +397,11 @@ ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
-
+const std::shared_ptr<const ConeBounds>& ConeSurface::boundsPtr() const {
+  return m_bounds;
+}
+void ConeSurface::assignSurfaceBounds(
+    std::shared_ptr<const ConeBounds> newBounds) {
+  m_bounds = std::move(newBounds);
+}
 }  // namespace Acts

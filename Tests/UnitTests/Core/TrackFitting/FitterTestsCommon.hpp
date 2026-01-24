@@ -12,7 +12,6 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -25,17 +24,20 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
-#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
 #include <iterator>
 
 using namespace Acts::UnitLiterals;
-using namespace Acts::Test;
+
+constexpr auto kInvalid = Acts::kTrackIndexInvalid;
+
+namespace ActsTests {
 
 /// Find outliers using plain distance for testing purposes.
 ///
@@ -125,7 +127,8 @@ struct FitterTester {
   using Rng = std::default_random_engine;
 
   // Context objects
-  Acts::GeometryContext geoCtx;
+  Acts::GeometryContext geoCtx =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
   Acts::MagneticFieldContext magCtx;
   Acts::CalibrationContext calCtx;
 
@@ -203,7 +206,7 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       BOOST_CHECK(!track.hasReferenceSurface());
       BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
       BOOST_CHECK_EQUAL(track.nHoles(), 0u);
@@ -249,7 +252,7 @@ struct FitterTester {
     BOOST_REQUIRE(res.ok());
 
     const auto& track = res.value();
-    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(track.tipIndex(), kInvalid);
     BOOST_CHECK(track.hasReferenceSurface());
     BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
     BOOST_CHECK_EQUAL(track.nHoles(), 0u);
@@ -309,7 +312,7 @@ struct FitterTester {
     BOOST_CHECK(res.ok());
 
     const auto& track = res.value();
-    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(track.tipIndex(), kInvalid);
     BOOST_CHECK(track.hasReferenceSurface());
     BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
     BOOST_CHECK_EQUAL(track.nHoles(), 0u);
@@ -362,7 +365,7 @@ struct FitterTester {
     BOOST_REQUIRE(res.ok());
 
     const auto& track = res.value();
-    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(track.tipIndex(), kInvalid);
     BOOST_CHECK(track.hasReferenceSurface());
     BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
     BOOST_CHECK_EQUAL(track.nHoles(), 0u);
@@ -407,7 +410,7 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
       BOOST_REQUIRE(track.hasReferenceSurface());
       parameters = track.parameters();
@@ -428,7 +431,7 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       BOOST_REQUIRE(track.hasReferenceSurface());
       // check consistency w/ un-shuffled measurements
       CHECK_CLOSE_ABS(track.parameters(), parameters, 1e-5);
@@ -474,7 +477,7 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       BOOST_REQUIRE(!track.hasReferenceSurface());
       BOOST_CHECK_EQUAL(track.nMeasurements(), withHole.size());
       // check the output status flags
@@ -522,11 +525,11 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
-      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(track.tipIndex(), kInvalid);
       // count the number of outliers
       std::size_t nOutliers = 0;
       for (const auto state : track.trackStatesReversed()) {
-        nOutliers += state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+        nOutliers += state.typeFlags().isOutlier();
       }
       BOOST_CHECK_EQUAL(nOutliers, 1u);
       BOOST_REQUIRE(!track.hasReferenceSurface());
@@ -620,3 +623,5 @@ struct FitterTester {
                       Acts::eBoundSize * (nMeasurements - 1));
   }
 };
+
+}  // namespace ActsTests

@@ -8,6 +8,7 @@
 
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 
+#include "Acts/Geometry/ReferenceGenerators.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 
 namespace Acts::Experimental {
@@ -28,17 +29,17 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
     surfaces.push_back(surface.getSharedPtr());
   }
 
-  Experimental::detail::CenterReferenceGenerator rGenerator;
-  Experimental::detail::IndexedGridFiller filler{config.binExpansion};
+  CenterReferenceGenerator rGenerator;
+  IndexGridFiller filler{config.binExpansion};
   filler.fill(gctx, m_indexedGrid, surfaces, rGenerator, {});
 }
 
 void MultiLayerNavigationPolicy::initializeCandidates(
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
+    const GeometryContext& gctx, const NavigationArguments& args,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
   ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates initialization for volume"
                << m_volume.volumeName());
-  const Transform3& itransform = m_volume.itransform();
+  const Transform3& itransform = m_volume.globalToLocalTransform(gctx);
   const Vector3 locPosition = itransform * args.position;
   const Vector3 locDirection = itransform.linear() * args.direction;
 

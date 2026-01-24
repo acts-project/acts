@@ -26,27 +26,28 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <fstream>
 #include <random>
 #include <vector>
 
-using namespace Acts::UnitLiterals;
+using namespace Acts;
+using namespace UnitLiterals;
 
-using Acts::Experimental::Blueprint;
-using Acts::Experimental::LayerBlueprintNode;
-using Acts::Experimental::MaterialDesignatorBlueprintNode;
+using Experimental::Blueprint;
+using Experimental::LayerBlueprintNode;
+using Experimental::MaterialDesignatorBlueprintNode;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::DEBUG);
+auto logger = getDefaultLogger("UnitTests", Logging::DEBUG);
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
     const Transform3& base,
@@ -107,9 +108,11 @@ inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
   return surfaces;
 }
 
-BOOST_AUTO_TEST_SUITE(Geometry);
+}  // namespace ActsTests
 
-BOOST_AUTO_TEST_SUITE(BlueprintApiTest);
+using namespace ActsTests;
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite);
 
 void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       Vector3 position, const Vector3& direction,
@@ -142,7 +145,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     AppendOnlyNavigationStream stream{main};
 
     currentVolume->initializeNavigationCandidates(
-        {.position = position, .direction = direction}, stream, logger);
+        gctx, {.position = position, .direction = direction}, stream, logger);
 
     ACTS_VERBOSE(main.candidates().size() << " candidates");
 
@@ -391,7 +394,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   double thetaMax = 2 * std::atan(std::exp(etaWidth));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
 
   for (std::size_t i = 0; i < 5000; i++) {
     double theta = thetaDist(rnd);
@@ -441,7 +444,3 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
 }
 
 BOOST_AUTO_TEST_SUITE_END();
-
-BOOST_AUTO_TEST_SUITE_END();
-
-}  // namespace Acts::Test

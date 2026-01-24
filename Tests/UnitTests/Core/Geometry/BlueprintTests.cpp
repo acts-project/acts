@@ -30,32 +30,30 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
+using Experimental::Blueprint;
+using Experimental::BlueprintNode;
+using Experimental::BlueprintOptions;
+using Experimental::LayerBlueprintNode;
+using Experimental::MaterialDesignatorBlueprintNode;
+using Experimental::StaticBlueprintNode;
 
-using Acts::Experimental::Blueprint;
-using Acts::Experimental::BlueprintNode;
-using Acts::Experimental::BlueprintOptions;
-using Acts::Experimental::LayerBlueprintNode;
-using Acts::Experimental::MaterialDesignatorBlueprintNode;
-using Acts::Experimental::StaticBlueprintNode;
+namespace ActsTests {
 
-namespace Acts::Test {
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
-
-GeometryContext gctx;
-
-namespace {
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 auto nameLookup(const TrackingGeometry& geo) {
   return [&](const std::string& name) -> const TrackingVolume& {
@@ -80,11 +78,7 @@ std::size_t countVolumes(const TrackingGeometry& geo) {
   return nVolumes;
 }
 
-}  // namespace
-
-BOOST_AUTO_TEST_SUITE(Geometry);
-
-BOOST_AUTO_TEST_SUITE(BlueprintNodeTest);
+BOOST_AUTO_TEST_SUITE(GeometrySuite);
 
 BOOST_AUTO_TEST_CASE(InvalidRoot) {
   Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
@@ -113,7 +107,7 @@ class DummyNode : public BlueprintNode {
 
   Volume& build(const BlueprintOptions& /*options*/,
                 const GeometryContext& /*gctx*/,
-                const Acts::Logger& /*logger*/) override {
+                const Logger& /*logger*/) override {
     throw std::logic_error("Not implemented");
   }
 
@@ -427,16 +421,16 @@ BOOST_AUTO_TEST_CASE(ConfinedWithShared) {
       break;
     }
     const auto& nextVol = lookup(volNames[(v + 1)]);
-    const Acts::Vector3 outside =
-        testMe.transform().translation() +
-        Acts::Vector3{150_mm, 0.,
-                      actCyl.get(CylinderVolumeBounds::eHalfLengthZ) - 0.5_mm};
-    BOOST_CHECK_EQUAL(nextVol.inside(outside), false);
-    const Acts::Vector3 inside =
-        testMe.transform().translation() +
-        Acts::Vector3{150_mm, 0.,
-                      actCyl.get(CylinderVolumeBounds::eHalfLengthZ) + 0.5_mm};
-    BOOST_CHECK_EQUAL(nextVol.inside(inside), true);
+    const Vector3 outside =
+        testMe.localToGlobalTransform(gctx).translation() +
+        Vector3{150_mm, 0.,
+                actCyl.get(CylinderVolumeBounds::eHalfLengthZ) - 0.5_mm};
+    BOOST_CHECK_EQUAL(nextVol.inside(gctx, outside), false);
+    const Vector3 inside =
+        testMe.localToGlobalTransform(gctx).translation() +
+        Vector3{150_mm, 0.,
+                actCyl.get(CylinderVolumeBounds::eHalfLengthZ) + 0.5_mm};
+    BOOST_CHECK_EQUAL(nextVol.inside(gctx, inside), true);
   }
 }
 
@@ -505,7 +499,7 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
     std::size_t nSurfaces = 0;
 
     trackingGeometry->visitSurfaces([&](const Surface* surface) {
-      if (surface->associatedDetectorElement() != nullptr) {
+      if (surface->isSensitive()) {
         nSurfaces++;
       }
     });
@@ -597,7 +591,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
     std::size_t nSurfaces = 0;
 
     trackingGeometry->visitSurfaces([&](const Surface* surface) {
-      if (surface->associatedDetectorElement() != nullptr) {
+      if (surface->isSensitive()) {
         nSurfaces++;
       }
     });
@@ -620,7 +614,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(Material) {
+BOOST_AUTO_TEST_CASE(MaterialTesting) {
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
@@ -887,7 +881,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousMaterialCylinder) {
   using enum CylinderVolumeBounds::Face;
 
   // Create some homogeneous materials with different properties
-  auto testMaterial = Acts::Material::fromMolarDensity(
+  auto testMaterial = Material::fromMolarDensity(
       9.370_cm, 46.52_cm, 28.0855, 14, (2.329 / 28.0855) * 1_mol / 1_cm3);
 
   auto negDiscMat = std::make_shared<HomogeneousSurfaceMaterial>(
@@ -962,7 +956,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousMaterialCuboid) {
                                                  cuboidBounds, "child");
 
   // Create different homogeneous materials for each face
-  auto testMaterial = Acts::Material::fromMolarDensity(
+  auto testMaterial = Material::fromMolarDensity(
       9.370_cm, 46.52_cm, 28.0855, 14, (2.329 / 28.0855) * 1_mol / 1_cm3);
 
   auto negXMat = std::make_shared<HomogeneousSurfaceMaterial>(
@@ -1036,7 +1030,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousMaterialMixedVolumeTypes) {
   cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
   Blueprint root{cfg};
 
-  auto testMaterial = Acts::Material::fromMolarDensity(
+  auto testMaterial = Material::fromMolarDensity(
       9.370_cm, 46.52_cm, 28.0855, 14, (2.329 / 28.0855) * 1_mol / 1_cm3);
 
   auto material = std::make_shared<HomogeneousSurfaceMaterial>(
@@ -1214,7 +1208,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdnetifiersForPortals) {
   auto parentBounds = std::make_shared<CuboidVolumeBounds>(1_m, 20_mm, 20_mm);
   auto parentVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
                                                     parentBounds, "parent");
-  parentVol->assignGeometryId(Acts::GeometryIdentifier{}.withVolume(1));
+  parentVol->assignGeometryId(GeometryIdentifier{}.withVolume(1));
   auto parentNode = std::make_shared<StaticBlueprintNode>(std::move(parentVol));
   std::size_t nChambers = 50;
   // start from the edge of the parent volume
@@ -1230,7 +1224,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdnetifiersForPortals) {
     auto childVol = std::make_unique<TrackingVolume>(
         trf, tbounds, "child" + std::to_string(i));
     childVol->assignGeometryId(
-        Acts::GeometryIdentifier{}.withVolume(1).withLayer(i + 1));
+        GeometryIdentifier{}.withVolume(1).withLayer(i + 1));
     auto childNode = std::make_shared<StaticBlueprintNode>(std::move(childVol));
     parentNode->addChild(std::move(childNode));
   }
@@ -1242,6 +1236,4 @@ BOOST_AUTO_TEST_CASE(GeometryIdnetifiersForPortals) {
 
 BOOST_AUTO_TEST_SUITE_END();
 
-BOOST_AUTO_TEST_SUITE_END();
-
-}  // namespace Acts::Test
+}  // namespace ActsTests

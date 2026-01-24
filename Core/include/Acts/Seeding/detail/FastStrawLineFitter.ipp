@@ -13,7 +13,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
-#include <format>
 namespace Acts::Experimental::detail {
 
 template <CompositeSpacePointContainer StrawCont_t>
@@ -98,8 +97,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   for (const auto& [sIdx, strip] : enumerate(measurements)) {
     if (!select(strip)) {
       ACTS_VERBOSE(__func__ << "() - " << __LINE__
-                            << ": Skip strip measurement @"
-                            << toString(strip->localPosition()));
+                            << ": Skip strip measurement " << toString(*strip));
       continue;
     }
     const auto& invCov =
@@ -176,16 +174,20 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
   // Calculate first the center of gravity
   for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
     if (!strawMeas->isStraw()) {
-      ACTS_DEBUG(__func__ << "() - " << __LINE__
-                          << ": The measurement is not a straw");
+      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": The measurement "
+                          << toString(*strawMeas) << " is not a straw");
       continue;
     }
     const double cov = strawMeas->covariance()[s_covIdx];
     if (cov < std::numeric_limits<double>::epsilon()) {
       ACTS_WARNING(__func__ << "() - " << __LINE__ << ": The covariance ("
-                            << cov << ") of the measurement is invalid.");
+                            << cov << ") of the measurement "
+                            << toString(*strawMeas) << " is invalid.");
       continue;
     }
+    ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": Fill "
+                          << toString(*strawMeas) << ".");
+
     auto& invCov = (auxVars.invCovs[sIdx] = 1. / cov);
     auxVars.covNorm += invCov;
     centerOfGravity += invCov * strawMeas->localPosition();
@@ -194,9 +196,7 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
   if (auxVars.nDoF < 3) {
     std::stringstream sstr{};
     for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
-      sstr << " --- " << (sIdx + 1) << ") "
-           << toString(strawMeas->localPosition())
-           << ", r: " << strawMeas->driftRadius()
+      sstr << " --- " << (sIdx + 1) << ") " << toString(*strawMeas)
            << ", weight: " << auxVars.invCovs[sIdx] << std::endl;
     }
     ACTS_WARNING(__func__ << "() - " << __LINE__
@@ -259,21 +259,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   }
 
   FitResultT0 result{};
-  if (startT0.has_value()) {
-    result.t0 = startT0.value_or(0.);
-  } else {
-    Range1D<double> tRange{std::numeric_limits<double>::max(),
-                           -std::numeric_limits<double>::max()};
-    for (const auto& strawMeas : measurements) {
-      if (!strawMeas->isStraw()) {
-        ACTS_WARNING(__func__ << "() - " << __LINE__
-                              << ": The measurement is not a straw");
-        continue;
-      }
-      tRange.expand(strawMeas->time(), strawMeas->time());
-    }
-    result.t0 = 0.5 * (tRange.min() + tRange.max());
-  }
+  result.t0 = startT0.value_or(0.);
 
   FitAuxiliariesWithT0 fitPars{
       fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0)};
@@ -291,6 +277,21 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     }
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);
   }
+  if (logger().doPrint(Logging::VERBOSE)) {
+    ACTS_VERBOSE("Fit failed, printing all measurements:");
+    for (const auto& meas : measurements) {
+      ACTS_VERBOSE(toString(*meas)
+                   << ", t0: " << result.t0 / 1._ns
+                   << ", truthR, RecoR: " << meas->driftRadius() << ", "
+                   << calibrator.driftRadius(ctx, *meas, result.t0)
+                   << ", velocity: "
+                   << calibrator.driftVelocity(ctx, *meas, result.t0) * 1._ns
+                   << ", acceleration: "
+                   << calibrator.driftAcceleration(ctx, *meas, result.t0) *
+                          Acts::square(1._ns));
+    }
+    ACTS_VERBOSE("Result: " << result);
+  }
   return std::nullopt;
 }
 
@@ -302,6 +303,7 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
     const CalibrationContext& ctx, const Calibrator_t& calibrator,
     const StrawCont_t& measurements, const std::vector<int>& signs,
     const double t0) const {
+  using namespace Acts::UnitLiterals;
   FitAuxiliariesWithT0 auxVars{fillAuxiliaries(measurements, signs)};
   if (auxVars.nDoF <= 1) {
     auxVars.nDoF = 0;
@@ -327,8 +329,11 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
                      auxVars.centerY;
     const double z = strawMeas->localPosition().dot(strawMeas->planeNormal()) -
                      auxVars.centerZ;
+
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": # " << (spIdx + 1)
-                          << ") r: " << r << ", v: " << v << ", a: " << a);
+                          << ") " << toString(*strawMeas) << ", t0: "
+                          << t0 / 1._ns << " r: " << r << ", v: " << v * 1._ns
+                          << ", a: " << a * Acts::square(1._ns));
     auxVars.fitY0 += sInvCov * r;
     auxVars.R_v += sInvCov * v;
     auxVars.R_a += sInvCov * a;
@@ -344,7 +349,8 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
 
     auxVars.T_ay += sInvCov * a * y;
     auxVars.T_az += sInvCov * a * z;
-    auxVars.R_va += sInvCov * v * a;
+
+    auxVars.R_ar += invCov * a * r;
   }
   auxVars.fitY0 *= auxVars.covNorm;
   ACTS_DEBUG(__func__ << "() - " << __LINE__ << " Fit constants calculated \n"

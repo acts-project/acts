@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesPrinters
-    SHARED
     ActsExamples/Printers/ParticlesPrinter.cpp
     ActsExamples/Printers/TrackParametersPrinter.cpp
 )

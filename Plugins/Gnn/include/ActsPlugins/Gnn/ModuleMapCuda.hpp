@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// This file is part of the Acts project.
-//
-// Copyright (C) 2023 CERN for the benefit of the Acts project
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
@@ -22,18 +14,21 @@
 #include <memory>
 #include <string>
 
+/// @cond
 template <typename T>
 class CUDA_module_map_doublet;
 
 struct CUstream_st;
-typedef CUstream_st *cudaStream_t;
+using cudaStream_t = CUstream_st *;
 
 template <typename T>
 class CUDA_module_map_triplet;
+/// @endcond
 
 namespace ActsPlugins {
 
 namespace detail {
+
 class GraphCreatorWrapperBase;
 
 template <typename T>
@@ -64,6 +59,9 @@ struct CUDA_edge_data {
 };
 
 }  // namespace detail
+
+/// @addtogroup gnn_plugin
+/// @{
 
 class ModuleMapCuda : public GraphConstructionBase {
  public:
@@ -111,4 +109,5 @@ class ModuleMapCuda : public GraphConstructionBase {
                              const ExecutionContext &execContext = {}) override;
 };
 
+/// @}
 }  // namespace ActsPlugins

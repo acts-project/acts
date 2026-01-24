@@ -25,8 +25,8 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -41,12 +41,14 @@ class Surface;
 }  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 CylindricalTrackingGeometry cGeometry(tgContext);
@@ -98,7 +100,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   }
 
   // Define start parameters from ranom input
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
       Vector4::Zero(), phi, theta, dcharge / p, std::nullopt,
       ParticleHypothesis::pion());
@@ -273,21 +275,22 @@ void runSimpleTest(const std::vector<const Surface*>& surfaces,
       expectedSurfaces.begin(), expectedSurfaces.end());
 }
 
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
+
 BOOST_AUTO_TEST_CASE(test_direct_navigator_fwd_bwd) {
   // Create 10 surfaces at z = 0, 100, 200, ..., 900
-  std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
+  std::vector<std::shared_ptr<const Surface>> surfaces;
   for (int i = 0; i < 10; i++) {
     Transform3 transform = Transform3::Identity();
     transform.translate(Vector3{0.0_mm, 0.0_mm, i * 100.0_mm});
     auto surface = Surface::makeShared<PlaneSurface>(transform, nullptr);
     surface->assignGeometryId(
-        Acts::GeometryIdentifier().withVolume(1).withLayer(1).withSensitive(i +
-                                                                            1));
+        GeometryIdentifier().withVolume(1).withLayer(1).withSensitive(i + 1));
     surfaces.push_back(surface);
   }
 
   // Create vector of pointers to the surfaces
-  std::vector<const Acts::Surface*> surfacePointers;
+  std::vector<const Surface*> surfacePointers;
   std::ranges::transform(surfaces, std::back_inserter(surfacePointers),
                          [](const auto& s) { return s.get(); });
 
@@ -309,4 +312,6 @@ BOOST_AUTO_TEST_CASE(test_direct_navigator_fwd_bwd) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

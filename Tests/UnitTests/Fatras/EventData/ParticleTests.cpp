@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -20,13 +20,18 @@
 using Acts::PdgParticle;
 using ActsFatras::Barcode;
 using ActsFatras::Particle;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
+using namespace ActsFatras;
 
 namespace {
 constexpr auto eps = std::numeric_limits<double>::epsilon();
 }
 
-BOOST_AUTO_TEST_SUITE(FatrasParticle)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Construct) {
   const auto pid = Barcode().withVertexPrimary(1).withParticle(42);
@@ -35,8 +40,8 @@ BOOST_AUTO_TEST_CASE(Construct) {
   BOOST_CHECK_EQUAL(particle.particleId(), pid);
   BOOST_CHECK_EQUAL(particle.pdg(), PdgParticle::eProton);
   // particle is at rest at the origin
-  BOOST_CHECK_EQUAL(particle.fourPosition(), Acts::Vector4::Zero());
-  BOOST_CHECK_EQUAL(particle.position(), Acts::Vector3::Zero());
+  BOOST_CHECK_EQUAL(particle.fourPosition(), Vector4::Zero());
+  BOOST_CHECK_EQUAL(particle.position(), Vector3::Zero());
   BOOST_CHECK_EQUAL(particle.time(), 0.);
   BOOST_CHECK_EQUAL(particle.fourPosition().x(), particle.position().x());
   BOOST_CHECK_EQUAL(particle.fourPosition().y(), particle.position().y());
@@ -53,7 +58,7 @@ BOOST_AUTO_TEST_CASE(Construct) {
 BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   const auto pid = Barcode().withVertexPrimary(1).withParticle(42);
   auto particle = Particle(pid, PdgParticle::eProton, 1_e, 1_GeV)
-                      .setDirection(Acts::Vector3::UnitX())
+                      .setDirection(Vector3::UnitX())
                       .setAbsoluteMomentum(2_GeV);
 
   BOOST_CHECK_EQUAL(particle.mass(), 1_GeV);
@@ -106,3 +111,5 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

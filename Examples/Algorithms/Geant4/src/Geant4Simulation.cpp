@@ -43,7 +43,6 @@
 #include <G4VUserPhysicsList.hh>
 #include <G4Version.hh>
 #include <Randomize.hh>
-#include <boost/version.hpp>
 
 namespace ActsExamples {
 
@@ -273,10 +272,12 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
     ACTS_INFO(
         "Remapping selected volumes from Geant4 to Acts::Surface::GeometryID");
     cfg.sensitiveSurfaceMapper->remapSensitiveNames(
-        sState, Acts::GeometryContext{}, g4World, Acts::Transform3::Identity());
+        sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), g4World,
+        Acts::Transform3::Identity());
 
     auto allSurfacesMapped = cfg.sensitiveSurfaceMapper->checkMapping(
-        sState, Acts::GeometryContext{}, false, false);
+        sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), false,
+        false);
     if (!allSurfacesMapped) {
       ACTS_WARNING(
           "Not all sensitive surfaces have been mapped to Geant4 volumes!");
@@ -308,16 +309,8 @@ ProcessCode Geant4Simulation::execute(const AlgorithmContext& ctx) const {
       ctx, SimParticleContainer(eventStore().particlesSimulated.begin(),
                                 eventStore().particlesSimulated.end()));
 
-#if BOOST_VERSION < 107800
-  SimHitContainer container;
-  for (const auto& hit : eventStore().hits) {
-    container.insert(hit);
-  }
-  m_outputSimHits(ctx, std::move(container));
-#else
   m_outputSimHits(
       ctx, SimHitContainer(eventStore().hits.begin(), eventStore().hits.end()));
-#endif
 
   // Output the propagation summaries if requested
   if (m_cfg.recordPropagationSummaries) {

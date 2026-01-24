@@ -11,10 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -30,9 +30,10 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-GeometryContext tContext;
-Test::CylindricalTrackingGeometry cGeometry =
-    Test::CylindricalTrackingGeometry(tContext);
+namespace ActsTests {
+
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 const char* beampipe_head_xml =
     R""""(
@@ -137,8 +138,8 @@ const std::string indent_12_xml(12, ' ');
 
 namespace {
 
-Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
-  Test::CylindricalTrackingGeometry::DetectorStore dStore;
+CylindricalTrackingGeometry::DetectorStore generateXML() {
+  CylindricalTrackingGeometry::DetectorStore dStore;
 
   // Nec surfaces
   double necZ = -800.;
@@ -285,7 +286,7 @@ Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
 
 auto store = generateXML();
 
-BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
+BOOST_AUTO_TEST_SUITE(DD4hepSuite)
 
 BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
   auto lcdd = &(dd4hep::Detector::getInstance());
@@ -320,7 +321,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
 
   auto world = lcdd->world();
 
-  // A typical extension would be overriding the `tranform(const
+  // A typical extension would be overriding the `transform(const
   // GeometryContext&)` method in order change how the detector element is
   // handled in alignment, for simplicity here we show a simple extension that
   // overrides the  thickness
@@ -369,3 +370,5 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

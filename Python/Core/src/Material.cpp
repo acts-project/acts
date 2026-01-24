@@ -19,8 +19,6 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
-#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -137,7 +135,7 @@ void addMaterial(py::module_& m) {
 
     auto c = py::class_<IntersectionMaterialAssigner::Config>(isma, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, surfaces, trackingVolumes, detectorVolumes);
+    ACTS_PYTHON_STRUCT(c, surfaces, trackingVolumes);
   }
 
   {

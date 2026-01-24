@@ -27,6 +27,9 @@ class ISurfaceMaterial;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
+
 /// @class DD4hepDetectorElement
 ///
 /// @brief DetectorElement class implementation for DD4hep geometry
@@ -41,7 +44,7 @@ namespace ActsPlugins {
 ///
 class DD4hepDetectorElement : public TGeoDetectorElement {
  public:
-  // Define the context type
+  /// Type alias for DD4hep volume identifier used in segmentation
   using DD4hepVolumeID = dd4hep::DDSegmentation::VolumeID;
 
   /// Broadcast the context type
@@ -88,6 +91,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   ~DD4hepDetectorElement() override = default;
 
   /// Give access to the DD4hep detector element
+  /// @return Reference to the underlying DD4hep detector element
   const dd4hep::DetElement& sourceElement() const { return m_detElement; }
 
  private:
@@ -98,6 +102,8 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
 /// This extension holds an ACTS detector element belonging to a DD4hep detector
 /// element, and synchronizes ownership
 struct DD4hepDetectorElementExtension {
+  /// Constructor from shared pointer to DD4hep detector element
+  /// @param de The DD4hep detector element to wrap (must not be nullptr)
   explicit DD4hepDetectorElementExtension(
       std::shared_ptr<DD4hepDetectorElement> de)
       : detectorElement(std::move(de)) {
@@ -109,4 +115,5 @@ struct DD4hepDetectorElementExtension {
   std::shared_ptr<DD4hepDetectorElement> detectorElement;
 };
 
+/// @}
 }  // namespace ActsPlugins

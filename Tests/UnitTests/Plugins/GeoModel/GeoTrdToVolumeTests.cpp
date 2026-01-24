@@ -18,8 +18,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -29,7 +29,9 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
@@ -46,14 +48,14 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
   auto errPhysTrd = make_intrusive<GeoFullPhysVol>(errLogTrd);
 
   // create pars for conversion
-  ActsPlugins::GeoModelDetectorObjectFactory::Config gmConfig;
+  GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"Trd"};
-  GeometryContext gContext;
-  ActsPlugins::GeoModelDetectorObjectFactory::Cache gmCache;
-  ActsPlugins::GeoModelDetectorObjectFactory::Cache errCache;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
+  GeoModelDetectorObjectFactory::Cache gmCache;
+  GeoModelDetectorObjectFactory::Cache errCache;
 
   // create factory instance
-  ActsPlugins::GeoModelDetectorObjectFactory factory(gmConfig);
+  GeoModelDetectorObjectFactory factory(gmConfig);
 
   // test error case
   BOOST_CHECK_THROW(factory.convertFpv("Trd", errPhysTrd, errCache, gContext),
@@ -74,3 +76,5 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

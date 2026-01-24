@@ -36,10 +36,12 @@
 
 using Acts::VectorHelpers::phi;
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 struct SurfaceArrayFixture {
@@ -155,8 +157,8 @@ struct SurfaceArrayFixture {
           dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
       for (const auto& vtxloc : bounds->vertices()) {
-        Vector3 vtx =
-            srf->transform(tgContext) * Vector3(vtxloc.x(), vtxloc.y(), 0);
+        Vector3 vtx = srf->localToGlobalTransform(tgContext) *
+                      Vector3(vtxloc.x(), vtxloc.y(), 0);
         os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
       }
 
@@ -174,10 +176,10 @@ struct SurfaceArrayFixture {
   }
 };
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   SrfVec brl = makeBarrel(30, 7, 2, 1);
   std::vector<const Surface*> brlRaw = unpackSmartPointers(brl);
@@ -253,4 +255,4 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -51,8 +51,9 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
          ++phiBin) {
       // calculate the current phi value
       double modulePhi = minPhi + phiBin * phiStep;
-      mPositions.push_back(Acts::Vector3(moduleR * cos(modulePhi),
-                                         moduleR * sin(modulePhi), moduleZ));
+      mPositions.push_back(Acts::Vector3(moduleR * std::cos(modulePhi),
+                                         moduleR * std::sin(modulePhi),
+                                         moduleZ));
     }
   }
   return mPositions;
@@ -94,8 +95,8 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
     double phi = minPhi + static_cast<double>(iphi) * phiStep;
     // main z position depending on phi bin
     double rz = (iphi % 2) != 0u ? z - 0.5 * phiStagger : z + 0.5 * phiStagger;
-    rPositions.push_back(
-        Acts::Vector3(radius * cos(phi), radius * sin(phi), rz + rzs));
+    rPositions.push_back(Acts::Vector3(radius * std::cos(phi),
+                                       radius * std::sin(phi), rz + rzs));
   }
   return rPositions;
 }

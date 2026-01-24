@@ -22,9 +22,11 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-auto tContext = GeometryContext();
+namespace ActsTests {
+
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 /// @brief Interface for the material mapping that seeks the possible
 /// assignment candidates for the material interactiosn
@@ -56,8 +58,7 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
           gctx, position, direction, BoundaryTolerance::None());
       // One solution, take it
       if (multiIntersection.size() == 1u &&
-          multiIntersection.at(0).status() >=
-              Acts::IntersectionStatus::reachable &&
+          multiIntersection.at(0).status() >= IntersectionStatus::reachable &&
           multiIntersection.at(0).pathLength() >= 0.0) {
         surfaceAssignments.push_back(
             {surface, multiIntersection.at(0).position(), direction});
@@ -66,7 +67,7 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
       if (multiIntersection.size() > 1u) {
         // Multiple intersections, take the closest
         Intersection3D closestForward = multiIntersection.closestForward();
-        if (closestForward.status() >= Acts::IntersectionStatus::reachable &&
+        if (closestForward.status() >= IntersectionStatus::reachable &&
             closestForward.pathLength() > 0.0) {
           surfaceAssignments.push_back(
               {surface, closestForward.position(), direction});
@@ -155,7 +156,7 @@ class MaterialBlender : public ISurfaceMaterialAccumulater {
   std::vector<std::shared_ptr<Surface>> m_surfaces;
 };
 
-BOOST_AUTO_TEST_SUITE(MaterialMapperTestSuite)
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// @brief This test checks the data flow of the material mapper, it is not
 /// a test of the single components, which are tested individually
@@ -249,4 +250,4 @@ BOOST_AUTO_TEST_CASE(MaterialMapperInvalidTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

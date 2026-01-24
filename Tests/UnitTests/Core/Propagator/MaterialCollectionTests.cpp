@@ -25,8 +25,8 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -38,12 +38,14 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Global definitions
@@ -51,7 +53,7 @@ CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
 using BField = ConstantBField;
-using EigenStepper = Acts::EigenStepper<>;
+using EigenStepper = EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
@@ -70,7 +72,7 @@ int ntests = 500;
 int skip = 0;
 bool debugMode = false;
 
-/// the actual test nethod that runs the test can be used with several
+/// the actual test method that runs the test can be used with several
 /// propagator types
 ///
 /// @tparam propagator_t is the actual propagator type
@@ -343,6 +345,8 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
       covfwdResult.endParameters->covariance().value().determinant());
 }
 
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
+
 // This test case checks that no segmentation fault appears
 // - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
@@ -367,7 +371,7 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
 
   // define start parameters
@@ -389,4 +393,6 @@ BOOST_DATA_TEST_CASE(
   runTest(slpropagator, start);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

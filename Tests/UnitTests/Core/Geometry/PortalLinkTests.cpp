@@ -24,9 +24,9 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cstdio>
 #include <iostream>
@@ -34,20 +34,21 @@
 #include <numbers>
 #include <stdexcept>
 
-using namespace Acts::UnitLiterals;
+using namespace Acts;
+using namespace UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
 struct Fixture {
   Logging::Level m_level;
   Fixture() {
-    m_level = Acts::Logging::getFailureThreshold();
-    Acts::Logging::setFailureThreshold(Acts::Logging::FATAL);
+    m_level = Logging::getFailureThreshold();
+    Logging::setFailureThreshold(Logging::FATAL);
   }
 
-  ~Fixture() { Acts::Logging::setFailureThreshold(m_level); }
+  ~Fixture() { Logging::setFailureThreshold(m_level); }
 };
 
 std::shared_ptr<TrackingVolume> makeDummyVolume() {
@@ -56,7 +57,7 @@ std::shared_ptr<TrackingVolume> makeDummyVolume() {
       std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
 }
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 template <typename T>
 std::unique_ptr<T> copy(const std::unique_ptr<T>& p) {
@@ -81,7 +82,7 @@ void visitBins(const link_t& link,
   }
 }
 
-BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
+BOOST_FIXTURE_TEST_SUITE(GeometrySuite, Fixture)
 
 BOOST_AUTO_TEST_SUITE(GridConstruction)
 
@@ -3173,4 +3174,4 @@ BOOST_AUTO_TEST_SUITE_END()  // PortalMerging
 
 BOOST_AUTO_TEST_SUITE_END()  // Geometry
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

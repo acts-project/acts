@@ -8,20 +8,21 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <map>
+#include <tuple>
 
 #include <detray/core/detector.hpp>
 #include <detray/definitions/grid_axis.hpp>
 #include <detray/detectors/default_metadata.hpp>
 #include <detray/io/frontend/payloads.hpp>
-
-namespace Acts::Experimental {
-class DetectorVolume;
-}  // namespace Acts::Experimental
 
 namespace ActsPlugins {
 
@@ -29,22 +30,17 @@ using DetrayMetaData = detray::default_metadata<detray::array<double>>;
 
 using DetrayHostDetector = detray::detector<DetrayMetaData>;
 
+/// @ingroup detray_plugin
 namespace DetrayConversionUtils {
+
+/// @addtogroup detray_plugin
+/// @{
 
 /// Detray conversion cache object
 ///
 /// This object is used to synchronize link information between the
 /// different converters (geometry, material, surface grids)
 struct Cache {
-  /// Explicit constructor with detector volumes
-  ///
-  /// @param detectorVolumes the number of detector volumes
-  explicit Cache(
-      const std::vector<const Acts::Experimental::DetectorVolume*>& dVolumes)
-      : detectorVolumes(dVolumes) {}
-
-  /// The volumes of the detector for index lookup
-  std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes;
   /// This is a map to pass on volume link information
   std::map<Acts::GeometryIdentifier, unsigned long> volumeLinks;
   /// This is a multimap to pass volume local surface link information
@@ -53,20 +49,6 @@ struct Cache {
   /// These are volume local, hence indexed per volumes
   std::map<std::size_t, std::multimap<Acts::GeometryIdentifier, unsigned long>>
       localSurfaceLinks;
-
-  /// Find the position of the volume to point to
-  ///
-  /// @param volume the volume to find
-  ///
-  /// @note throws exception if volume is not found
-  std::size_t volumeIndex(
-      const Acts::Experimental::DetectorVolume* volume) const {
-    if (auto candidate = std::ranges::find(detectorVolumes, volume);
-        candidate != detectorVolumes.end()) {
-      return std::distance(detectorVolumes.begin(), candidate);
-    }
-    throw std::invalid_argument("Volume not found in the cache");
-  }
 };
 
 /// Convert the binning option
@@ -96,6 +78,45 @@ detray::axis::binning convertBinningType(Acts::BinningType bType);
 ///
 /// @return a detray axis payload
 detray::io::axis_payload convertBinningData(const Acts::BinningData& bData);
+
+/// Convert an IAxis to a detray axis payload
+///
+/// @param axis the axis to be converted
+///
+/// @return a detray axis payload
+detray::io::axis_payload convertAxis(const Acts::IAxis& axis);
+
+/// Convert a MaterialSlab to a detray material slab payload
+///
+/// @param slab the material slab to be converted
+///
+/// @return a detray material slab payload
+detray::io::material_slab_payload convertMaterialSlab(
+    const Acts::MaterialSlab& slab);
+
+/// Convert a Transform3 to a detray transform payload
+///
+/// @param transform the transform to be converted
+///
+/// @return a detray transform payload
+detray::io::transform_payload convertTransform(
+    const Acts::Transform3& transform);
+
+/// Convert a 1D BinUtility to a 2D BinUtility for Detray
+///
+/// Detray expects 2-dimensional grids. This function converts 1D grids
+/// to 2D by adding a dummy second dimension. Currently supported 2D grids
+/// are: x-y, r-phi, phi-z
+///
+/// @param bUtility the bin utility to be converted (may be 1D or 2D)
+///
+/// @return a tuple containing:
+///   - the converted 2D BinUtility
+///   - a boolean indicating if axes were swapped
+std::tuple<Acts::BinUtility, bool> convertBinUtilityTo2D(
+    const Acts::BinUtility& bUtility);
+
+/// @}
 
 }  // namespace DetrayConversionUtils
 }  // namespace ActsPlugins

@@ -8,15 +8,12 @@
 
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
-#include <utility>
 
 namespace {
 
@@ -73,7 +70,11 @@ void ActsExamples::identifyContributingParticles(
 
   trajectories.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
     // no truth info with non-measurement state
-    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().isMeasurement()) {
+      return true;
+    }
+    // skip outliers
+    if (state.typeFlags().isOutlier()) {
       return true;
     }
     // register all particles that generated this hit
@@ -97,7 +98,11 @@ void ActsExamples::identifyContributingParticles(
 
   for (const auto& state : track.trackStatesReversed()) {
     // no truth info with non-measurement state
-    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().isMeasurement()) {
+      continue;
+    }
+    // skip outliers
+    if (state.typeFlags().isOutlier()) {
       continue;
     }
     // register all particles that generated this hit

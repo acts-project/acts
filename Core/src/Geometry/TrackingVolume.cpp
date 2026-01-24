@@ -57,9 +57,12 @@ TrackingVolume::TrackingVolume(
 }
 
 TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
-    : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
-                     nullptr, nullptr, MutableTrackingVolumeVector{},
-                     volumeName) {}
+    : Volume{volume}, m_name{volumeName} {
+  createBoundarySurfaces();
+  interlinkLayers();
+
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
+}
 
 TrackingVolume::TrackingVolume(const Transform3& transform,
                                std::shared_ptr<VolumeBounds> volbounds,
@@ -74,7 +77,7 @@ TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
     const double tol) const {
-  if (!inside(position, tol)) {
+  if (!inside(gctx, position, tol)) {
     return nullptr;
   }
 
@@ -89,7 +92,7 @@ const TrackingVolume* TrackingVolume::lowestTrackingVolume(
   // search for dense volumes
   if (!m_confinedDenseVolumes.empty()) {
     for (auto& denseVolume : m_confinedDenseVolumes) {
-      if (denseVolume->inside(position, tol)) {
+      if (denseVolume->inside(gctx, position, tol)) {
         return denseVolume.get();
       }
     }
@@ -97,7 +100,7 @@ const TrackingVolume* TrackingVolume::lowestTrackingVolume(
 
   // @TODO: Abstract this into an accelerateable structure
   for (const auto& volume : volumes()) {
-    if (volume.inside(position, tol)) {
+    if (volume.inside(gctx, position, tol)) {
       return volume.lowestTrackingVolume(gctx, position, tol);
     }
   }
@@ -656,9 +659,9 @@ void TrackingVolume::setNavigationPolicy(
 }
 
 void TrackingVolume::initializeNavigationCandidates(
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
-  m_navigationDelegate(args, stream, logger);
+    const GeometryContext& gctx, const NavigationArguments& args,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
+  m_navigationDelegate(gctx, args, stream, logger);
 }
 
 namespace {

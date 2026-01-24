@@ -21,7 +21,9 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 BOOST_AUTO_TEST_CASE(ITkIdentifierTests) {
   auto test = [](int hw, int bec, int lw, int em, int pm, int side) {
@@ -50,7 +52,7 @@ BOOST_AUTO_TEST_CASE(ITkIdentifierTests) {
 }
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
-  GeometryContext gctx{};
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   auto box = make_intrusive<GeoBox>(100, 200, 2);
@@ -82,3 +84,5 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

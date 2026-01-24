@@ -8,83 +8,83 @@
 
 #pragma once
 
-#include "Acts/EventData/Seed.hpp"
+#include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/Seeding/GbtsDataStorage.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts::Experimental {
 
-template <typename external_spacepoint_t>
-struct GbtsTrigTracklet {
- public:
-  GbtsTrigTracklet(std::vector<const GbtsSP<external_spacepoint_t> *> &vSP,
-                   std::vector<TrigInDetTriplet<external_spacepoint_t>> &tbuf)
-      : m_track(vSP), m_seeds(tbuf) {}
+// defined the tuple template used to carry the spacepoint components
+using SPContainerComponentsType =
+    std::tuple<SpacePointContainer2, SpacePointColumnProxy<int, true>,
+               SpacePointColumnProxy<float, true>,
+               SpacePointColumnProxy<float, true>>;
 
-  std::vector<const GbtsSP<external_spacepoint_t> *> m_track;
-  std::vector<TrigInDetTriplet<external_spacepoint_t>> m_seeds;
-};
-
-template <typename external_spacepoint_t>
 class SeedFinderGbts {
  public:
-  static constexpr std::size_t NDims = 3;
-
-  using seed_t = Seed<external_spacepoint_t>;
-
-  // constructors
-  SeedFinderGbts(const SeedFinderGbtsConfig<external_spacepoint_t> &config,
-                 const GbtsGeometry<external_spacepoint_t> &gbtsgeo,
+  SeedFinderGbts(const SeedFinderGbtsConfig config,
+                 std::unique_ptr<GbtsGeometry> gbtsGeo,
+                 const std::vector<TrigInDetSiLayer>* layerGeometry,
                  std::unique_ptr<const Acts::Logger> logger =
                      Acts::getDefaultLogger("Finder",
                                             Acts::Logging::Level::INFO));
 
-  ~SeedFinderGbts() = default;
-  SeedFinderGbts() = default;
-  SeedFinderGbts(const SeedFinderGbts<external_spacepoint_t> &) = delete;
-  SeedFinderGbts<external_spacepoint_t> &operator=(
-      const SeedFinderGbts<external_spacepoint_t> &) = delete;
+  struct seedProperties {
+    seedProperties(float quality, int clone, std::vector<unsigned int> sps)
+        : seedQuality(quality), isClone(clone), spacepoints(std::move(sps)) {}
 
-  void loadSpacePoints(
-      const std::vector<GbtsSP<external_spacepoint_t>> &gbtsSPvect);
+    float seedQuality{};
+    int isClone{};
+    std::vector<unsigned int> spacepoints{};
 
-  // inner
-  template <typename output_container_t>
-  void createSeeds(const RoiDescriptor & /*roi*/,
-                   const GbtsGeometry<external_spacepoint_t> & /*gbtsgeo*/,
-                   output_container_t & /*out_cont*/);
-  // outer
-  std::vector<seed_t> createSeeds(
-      const RoiDescriptor & /*roi*/,
-      const GbtsGeometry<external_spacepoint_t> & /*gbtsgeo*/);
+    bool operator<(seedProperties const& o) const {
+      return std::tie(seedQuality, isClone, spacepoints) <
+             std::tie(o.seedQuality, o.isClone, o.spacepoints);
+    }
+  };
+
+  SeedContainer2 createSeeds(
+      const RoiDescriptor& roi,
+      const SPContainerComponentsType& SpContainerComponents,
+      int max_layers) const;
+
+  std::vector<std::vector<GbtsNode>> createNodes(
+      const SPContainerComponentsType& container, int MaxLayers) const;
+
+  GbtsMLLookupTable parseGbtsMLLookupTable(const std::string& lutInputFile);
+
+  std::pair<int, int> buildTheGraph(
+      const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,
+      std::vector<GbtsEdge>& edgeStorage) const;
+
+  int runCCA(int nEdges, std::vector<GbtsEdge>& edgeStorage) const;
+
+  void extractSeedsFromTheGraph(
+      int maxLevel, int nEdges, int nHits, std::vector<GbtsEdge>& edgeStorage,
+      std::vector<seedProperties>& vSeedCandidates) const;
 
  private:
-  enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
+  SeedFinderGbtsConfig m_config;
 
-  // config object
-  SeedFinderGbtsConfig<external_spacepoint_t> m_config;
+  const std::shared_ptr<const GbtsGeometry> m_geo;
 
-  void runGbts_TrackFinder(
-      std::vector<GbtsTrigTracklet<external_spacepoint_t>> &vTracks,
-      const RoiDescriptor &roi,
-      const GbtsGeometry<external_spacepoint_t> &gbtsgeo);
+  const std::vector<TrigInDetSiLayer>* m_layerGeometry;
 
-  // needs to be member of class so can accessed by all member functions
-  std::unique_ptr<GbtsDataStorage<external_spacepoint_t>> m_storage{nullptr};
+  GbtsMLLookupTable m_mlLut{};
 
-  // for create seeds:
-  std::vector<TrigInDetTriplet<external_spacepoint_t>> m_triplets;
-
-  const Acts::Logger &logger() const { return *m_logger; }
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
+
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts::Experimental
-
-#include "Acts/Seeding/SeedFinderGbts.ipp"

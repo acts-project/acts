@@ -20,9 +20,11 @@
 
 #include "Visualization3DTester.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Visualization)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(VisualizationSuite)
 
 BOOST_AUTO_TEST_CASE(Visualization3DTesterObj) {
   // Test the tester
@@ -341,4 +343,4 @@ BOOST_AUTO_TEST_CASE(ColorTests) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

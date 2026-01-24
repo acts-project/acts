@@ -19,6 +19,8 @@
 class G4VPhysicalVolume;
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
 
 /// Interface class for selectors from physical volumes
 class IGeant4PhysicalVolumeSelector {
@@ -30,6 +32,7 @@ class IGeant4PhysicalVolumeSelector {
   virtual bool select(const G4VPhysicalVolume& g4Phys) const = 0;
 };
 
+/// @ingroup geant4_plugin
 namespace Geant4PhysicalVolumeSelectors {
 
 /// @brief  Struct that selects all G4VPhysicalVolume objects
@@ -40,7 +43,9 @@ struct AllSelector : public IGeant4PhysicalVolumeSelector {
 /// @brief Struct that selects G4VPhysicalVolume objects
 /// that match one of the provided names, exact or partially
 struct NameSelector : public IGeant4PhysicalVolumeSelector {
+  /// List of volume names for selection criteria
   std::vector<std::string> names = {};
+  /// Flag indicating exact name matching vs partial matching
   bool exact = false;
 
   /// Constructor with arguments
@@ -66,6 +71,7 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
 /// @note Careful with axis conventions as
 /// Geant4 uses a different one than Acts
 struct PositionSelector : public IGeant4PhysicalVolumeSelector {
+  /// Map of axis indices to position ranges for volume selection
   std::map<unsigned int, std::tuple<double, double>> m_ranges;
 
   /// Constructor with arguments
@@ -81,4 +87,6 @@ struct PositionSelector : public IGeant4PhysicalVolumeSelector {
 };
 
 }  // namespace Geant4PhysicalVolumeSelectors
+
+/// @}
 }  // namespace ActsPlugins

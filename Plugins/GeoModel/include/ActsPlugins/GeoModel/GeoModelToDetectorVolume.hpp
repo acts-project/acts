@@ -5,16 +5,19 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
-#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
-#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
-#include "GeoModelKernel/GeoDefinitions.h"
+#include <GeoModelKernel/GeoFullPhysVol.h>
+
 class GeoShape;
 
 namespace ActsPlugins::GeoModel {
+
+/// @addtogroup geomodel_plugin
+/// @{
 
 /// @brief Calculates the absolute volume position w.r.t. the world node
 ///        This is only possible, if the volume is not shared in multiple
@@ -34,15 +37,6 @@ std::shared_ptr<Acts::Volume> convertVolume(
     const Acts::Transform3& trf, const GeoShape* shape,
     Acts::VolumeBoundFactory& boundFactory);
 
-/// @brief Converts a simple Volume into a Gen-2 DetectorVolume with associated sensitive surfaces inside
-/// @param context: GeometryContext to align the volume needed during the construction phase of the volume
-/// @param vol: Non-const reference to the volume to convert
-/// @param name: Name of the constructed Gen-2 volume
-/// @param sensitives: List of sensitive surfaces to be put inside the detector volume.
-/// @return A shared pointer initialized with the new Gen-2 volume
-std::shared_ptr<Acts::Experimental::DetectorVolume> convertDetectorVolume(
-    const Acts::GeometryContext& context, Acts::Volume& vol,
-    const std::string& name,
-    const std::vector<std::shared_ptr<Acts::Surface>>& sensitives);
+/// @}
 
 }  // namespace ActsPlugins::GeoModel

@@ -8,10 +8,12 @@
 
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/IndexGrid.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -35,15 +37,19 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
                << toString(m_config.transform.translation())
                << " and number of surfaces " << m_config.mlSurfaces.size());
 
-  const auto& bounds =
-      dynamic_pointer_cast<TrapezoidVolumeBounds>(m_config.bounds);
-  if (bounds == nullptr) {
-    throw std::runtime_error(
-        "MultiWireVolumeBuilder: Invalid bounds - trapezoidal needed");
+  auto boundsType = m_config.bounds ? m_config.bounds->type()
+                                    : VolumeBounds::BoundsType::eOther;
+  if (!(boundsType == VolumeBounds::BoundsType::eTrapezoid ||
+        boundsType == VolumeBounds::BoundsType::eCuboid ||
+        boundsType == VolumeBounds::BoundsType::eDiamond)) {
+    throw std::invalid_argument(
+        "MultiWireStructureBuilder: Only trapezoid cuboid or diamond bounds "
+        "are "
+        "supported");
   }
 
   std::unique_ptr<TrackingVolume> trackingVolume =
-      std::make_unique<TrackingVolume>(m_config.transform, bounds,
+      std::make_unique<TrackingVolume>(m_config.transform, m_config.bounds,
                                        m_config.name);
 
   // Add the surfaces to the tracking volume
@@ -85,7 +91,7 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
                                                                         axisB);
 
   // The indexed grid to be filled from the navigation policy
-  IndexedSurfacesNavigation<decltype(grid)> indexedGrid(
+  IndexGrid<decltype(grid)> indexedGrid(
       std::move(grid),
       {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
       m_config.transform.inverse());

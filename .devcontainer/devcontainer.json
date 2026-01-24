@@ -1,25 +1,25 @@
 {
-	"name": "Ubuntu 24.04",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"xaver.clang-format",
-				"twxs.cmake",
-				"llvm-vs-code-extensions.vscode-clangd",
-			],
-			"settings": {
-				"clangd.path": "/usr/bin/clangd",
-				"clangd.arguments": [
-					"--compile-commands-dir=${containerWorkspaceFolder}/build_devcontainer"
-				]
-			}
-		}
-	},
-	"containerEnv": {
-		"CXXFLAGS": "-Wno-psabi"
-	},
-	"postCreateCommand": "bash .devcontainer/setup.sh ${containerWorkspaceFolder}"
+    "name": "Ubuntu 24.04",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "xaver.clang-format",
+                "twxs.cmake",
+                "llvm-vs-code-extensions.vscode-clangd"
+            ],
+            "settings": {
+                "clangd.path": "/usr/bin/clangd",
+                "clangd.arguments": [
+                    "--compile-commands-dir=${containerWorkspaceFolder}/build_devcontainer"
+                ]
+            }
+        }
+    },
+    "containerEnv": {
+        "CXXFLAGS": "-Wno-psabi"
+    },
+    "postCreateCommand": "bash .devcontainer/setup.sh ${containerWorkspaceFolder}"
 }

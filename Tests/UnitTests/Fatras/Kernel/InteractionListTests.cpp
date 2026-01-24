@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -21,10 +21,10 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace ActsFatras;
-
-using Acts::MaterialSlab;
+using namespace ActsFatras::detail;
 
 namespace {
 
@@ -38,9 +38,9 @@ struct SterileContinuousProcess {
   }
 };
 
-static_assert(detail::ContinuousProcessConcept<SterileContinuousProcess>,
+static_assert(ContinuousProcessConcept<SterileContinuousProcess>,
               "Is not a continuous process");
-static_assert(!detail::PointLikeProcessConcept<SterileContinuousProcess>,
+static_assert(!PointLikeProcessConcept<SterileContinuousProcess>,
               "Is a point-like process");
 
 /// Continuous process that DOES trigger a break
@@ -52,9 +52,9 @@ struct FatalContinuousProcess {
     return true;
   }
 };
-static_assert(detail::ContinuousProcessConcept<FatalContinuousProcess>,
+static_assert(ContinuousProcessConcept<FatalContinuousProcess>,
               "Is not a continuous process");
-static_assert(!detail::PointLikeProcessConcept<FatalContinuousProcess>,
+static_assert(!PointLikeProcessConcept<FatalContinuousProcess>,
               "Is a point-like process");
 
 /// EM-like point-like process that triggers on X0 and keeps the particle alive.
@@ -76,9 +76,9 @@ struct X0PointLikeProcess {
   }
 };
 
-static_assert(!detail::ContinuousProcessConcept<X0PointLikeProcess>,
+static_assert(!ContinuousProcessConcept<X0PointLikeProcess>,
               "Is a continuous process");
-static_assert(detail::PointLikeProcessConcept<X0PointLikeProcess>,
+static_assert(PointLikeProcessConcept<X0PointLikeProcess>,
               "Is not a point-like process");
 
 /// Nuclear-like point-like process that triggers on L0 and kills the particle.
@@ -102,22 +102,23 @@ struct L0PointLikeProcess {
   }
 };
 
-static_assert(!detail::ContinuousProcessConcept<L0PointLikeProcess>,
+static_assert(!ContinuousProcessConcept<L0PointLikeProcess>,
               "Is a continuous process");
-static_assert(detail::PointLikeProcessConcept<L0PointLikeProcess>,
+static_assert(PointLikeProcessConcept<L0PointLikeProcess>,
               "Is not a point-like process");
 
 struct Fixture {
   std::ranlux48 rng{23};
-  Acts::MaterialSlab slab =
-      Acts::MaterialSlab(Acts::Test::makeBeryllium(), 1_mm);
+  MaterialSlab slab = MaterialSlab(ActsTests::makeBeryllium(), 1_mm);
   Particle incoming;
   std::vector<Particle> outgoing;
 };
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(FatrasInteractionList)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(KernelSuite)
 
 BOOST_AUTO_TEST_CASE(Empty) {
   Fixture f;
@@ -292,3 +293,5 @@ BOOST_AUTO_TEST_CASE(Disable) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -23,10 +23,10 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -43,7 +43,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
 void checkParameters(const BoundTrackParameters& params, double l0, double l1,
@@ -267,7 +267,9 @@ const auto straws = bdata::make({
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(EventDataBoundTrackParameters)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_DATA_TEST_CASE(ConeSurface,
                      cones* posAngle* posPositiveNonzero* ts* phis* thetas* ps,
@@ -316,3 +318,5 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -11,8 +11,8 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
 #include <string>
 
@@ -25,7 +25,7 @@ namespace ActsExamples {
 /// - after4 momentum
 /// - hit index
 /// - digitization channel
-class EDM4hepSimHitOutputConverter final : public EDM4hepOutputConverter {
+class EDM4hepSimHitOutputConverter final : public PodioOutputConverter {
  public:
   struct Config {
     /// Which simulated (truth) hits collection to use.

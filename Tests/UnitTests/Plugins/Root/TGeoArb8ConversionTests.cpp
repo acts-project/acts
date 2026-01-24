@@ -35,13 +35,15 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
 ViewConfig blue{.color = {0, 0, 200}};
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a TGeoTrd2 into a Plane
 ///
@@ -88,7 +90,7 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
     BOOST_CHECK_NE(bounds, nullptr);
 
     // Check if the surface is the (negative) identity
-    auto transform = plane->transform(tgContext);
+    auto transform = plane->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
     GeometryView3D::drawSurface(objVis, *plane, tgContext);
     const Vector3 center = plane->center(tgContext);
@@ -115,4 +117,6 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

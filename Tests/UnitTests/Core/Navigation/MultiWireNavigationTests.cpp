@@ -9,17 +9,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/MultiWireStructureBuilder.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 #include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <memory>
 #include <numbers>
@@ -29,15 +25,16 @@
 using namespace Acts;
 using namespace Acts::Experimental;
 using namespace Acts::detail;
-using namespace Acts::Test;
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 constexpr std::size_t nSurfacesX = 15;
 constexpr std::size_t nSurfacesY = 4;
 constexpr double radius = 15.0;
 constexpr double halfZ = 250.0;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
 auto logger = getDefaultLogger("MultiWireNavigationTests", Logging::VERBOSE);
 
 // a function that constructs and returns detector elements for straw surfaces
@@ -71,47 +68,6 @@ void generateStrawSurfaces(
 
     pos.y() = ipos.y() + 2 * (i + 1) * radius;
   }
-}
-
-BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
-  std::vector<std::shared_ptr<Surface>> strawSurfaces = {};
-  std::vector<std::unique_ptr<DetectorElementStub>> detElements = {};
-
-  generateStrawSurfaces(nSurfacesX, nSurfacesY, radius, halfZ, strawSurfaces,
-                        detElements);
-
-  std::vector<double> vBounds = {0.5 * nSurfacesX * 2 * radius,
-                                 0.5 * nSurfacesX * 2 * radius,
-                                 0.5 * nSurfacesY * 2 * radius, halfZ};
-
-  MultiWireStructureBuilder::Config mlCfg;
-  mlCfg.name = "Multi_Layer_With_Wires";
-  mlCfg.mlSurfaces = strawSurfaces;
-
-  mlCfg.mlBinning = {
-      {DirectedProtoAxis(AxisDirection::AxisX, AxisBoundaryType::Bound,
-                         -vBounds[0], vBounds[0], nSurfacesX),
-       1u},
-      {DirectedProtoAxis(AxisDirection::AxisY, AxisBoundaryType::Bound,
-                         -vBounds[2], vBounds[2], nSurfacesY),
-       0u}};
-  auto boundsPtr = std::make_unique<TrapezoidVolumeBounds>(
-      vBounds[0], vBounds[1], vBounds[2], vBounds[3]);
-  mlCfg.mlBounds = boundsPtr->values();
-
-  MultiWireStructureBuilder mlBuilder(mlCfg);
-  auto [volumes, portals, roots] = mlBuilder.construct(tContext);
-
-  Acts::Experimental::NavigationState nState;
-  nState.position = Acts::Vector3(0., -59., 0.);
-  nState.direction = Acts::Vector3(0., 1., 0.);
-
-  nState.currentVolume = volumes.front().get();
-  nState.currentVolume->updateNavigationState(tContext, nState);
-
-  // check the surface candidates after update (12 surfaces + 6 portals but only
-  // 4 surfaces are reachable (one of each layer and one portal)
-  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 5u);
 }
 
 // This tests the multilayer navigation policy for gen3 geometry interface
@@ -168,7 +124,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   auto navFactory = mwBuilder.createNavigationPolicyFactory();
   volume->setNavigationPolicy(navFactory->build(tContext, *volume, *logger));
 
-  volume->initializeNavigationCandidates(args, stream, *logger);
+  volume->initializeNavigationCandidates(tContext, args, stream, *logger);
 
   // we expect 18 candidates (12 surfaces + 6 portals)
   BOOST_CHECK_EQUAL(main.candidates().size(), 18u);
@@ -186,9 +142,11 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   args.direction = startDir;
   // clear the candidates and re initialize with new arguments
   main.candidates().clear();
-  volume->initializeNavigationCandidates(args, stream, *logger);
+  volume->initializeNavigationCandidates(tContext, args, stream, *logger);
   // we expect 18 candidates (12 surfaces + 6 portals)
   BOOST_CHECK_EQUAL(main.candidates().size(), 18u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

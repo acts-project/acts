@@ -16,8 +16,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -30,11 +30,13 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 RotationMatrix3 idRotation = RotationMatrix3::Identity();
 Transform3 idTransform = Transform3::Identity();
 
-BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
@@ -52,22 +54,24 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
   auto fphysSub = make_intrusive<GeoFullPhysVol>(logSub);
 
   // create pars for conversion
-  ActsPlugins::GeoModelDetectorObjectFactory::Config gmConfig;
-  GeometryContext gContext;
-  ActsPlugins::GeoModelDetectorObjectFactory::Cache subCache;
+  GeoModelDetectorObjectFactory::Config gmConfig;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
+  GeoModelDetectorObjectFactory::Cache subCache;
 
   // create factory instance
-  ActsPlugins::GeoModelDetectorObjectFactory factory(gmConfig);
+  GeoModelDetectorObjectFactory factory(gmConfig);
 
   // convert GeoFullPhysVol (to surfaces)
   factory.convertFpv("Sub", fphysSub, subCache, gContext);
 
-  ActsPlugins::GeoModelSensitiveSurface subSensSurface =
-      subCache.sensitiveSurfaces[0];
+  GeoModelSensitiveSurface subSensSurface = subCache.sensitiveSurfaces[0];
   std::shared_ptr<Surface> subSurface = std::get<1>(subSensSurface);
   const auto* subBounds =
       dynamic_cast<const RectangleBounds*>(&subSurface->bounds());
   BOOST_CHECK(subBounds->halfLengthX() == hlX);
   BOOST_CHECK(subBounds->halfLengthY() == hlY);
 }
+
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

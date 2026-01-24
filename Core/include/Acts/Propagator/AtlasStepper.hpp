@@ -119,7 +119,7 @@ class AtlasStepper {
     /// Jacobian matrix storage for parameter derivatives
     double jacobian[eBoundSize * eBoundSize] = {};
 
-    // accummulated path length cache
+    // accumulated path length cache
     /// Accumulated path length during propagation
     double pathAccumulated = 0.;
 
@@ -484,7 +484,7 @@ class AtlasStepper {
   /// @param stype [in] The step size type to be set
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
+    static_cast<void>(direction);
     double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
@@ -586,7 +586,7 @@ class AtlasStepper {
   /// @param [in, out] state The stepping state (thread-local cache)
   /// @return true if nothing is missing after this call, false otherwise.
   bool prepareCurvilinearState(State& state) const {
-    (void)state;
+    static_cast<void>(state);
     return true;
   }
 
@@ -1138,7 +1138,7 @@ class AtlasStepper {
       double R2 = RC * RC + RS * RS;
 
       // inverse radius
-      double Ri = 1. / sqrt(R2);
+      double Ri = 1. / std::sqrt(R2);
       MA[0] = (RC * Ax[0] + RS * Ay[0]) * Ri;
       MA[1] = (RC * Ax[1] + RS * Ay[1]) * Ri;
       MA[2] = (RC * Ax[2] + RS * Ay[2]) * Ri;
@@ -1216,7 +1216,7 @@ class AtlasStepper {
   ///       propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
-    (void)material;
+    static_cast<void>(material);
 
     // we use h for keeping the nominclature with the original atlas code
     auto h = state.stepSize.value() * propDir;

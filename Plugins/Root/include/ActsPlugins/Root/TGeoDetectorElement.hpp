@@ -28,6 +28,8 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @class TGeoDetectorElement
 ///
@@ -114,30 +116,40 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
 
   ~TGeoDetectorElement() override;
 
+  /// Get the detector element identifier
+  /// @return The unique identifier for this detector element
   Identifier identifier() const;
 
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Acts::Transform3& transform(
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
+  /// @return Reference to the transformation matrix from local to global coordinates
 
   /// Return the nominal - non-contextual transform
   const Acts::Transform3& nominalTransform() const;
+  /// @return Reference to the nominal transformation matrix
 
   /// Return surface associated with this detector element
   const Acts::Surface& surface() const override;
+  /// @return Const reference to the surface
 
   /// Return surface associated with this detector element
   ///
   /// @note this is the non-const access
   Acts::Surface& surface() override;
+  /// @return Mutable reference to the surface
 
   /// Returns the thickness of the module
+  /// @return Thickness of the detector element in units of length
   double thickness() const override;
 
   /// Return the TGeoNode for back navigation
+  /// @return Reference to the underlying TGeoNode
   const TGeoNode& tgeoNode() const { return *m_detElement; }
+  /// Is the detector element a sensitive element
+  bool isSensitive() const final { return true; }
 
  private:
   /// Pointer to TGeoNode (not owned)
@@ -158,7 +170,7 @@ inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {
   return m_identifier;
 }
 
-inline const Acts::Transform3& TGeoDetectorElement::transform(
+inline const Acts::Transform3& TGeoDetectorElement::localToGlobalTransform(
     const Acts::GeometryContext& /*gctx*/) const {
   return m_transform;
 }
@@ -175,4 +187,5 @@ inline double TGeoDetectorElement::thickness() const {
   return m_thickness;
 }
 
+/// @}
 }  // namespace ActsPlugins

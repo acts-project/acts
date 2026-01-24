@@ -14,11 +14,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -39,13 +39,15 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
 ViewConfig blue{.color = {0, 0, 200}};
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a TGeoTrd2 into a Plane
 ///
@@ -89,7 +91,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
     CHECK_CLOSE_ABS(hy, hY, s_epsilon);
 
     // Check if the surface is the (negative) identity
-    auto transform = plane->transform(tgContext);
+    auto transform = plane->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
     const Vector3 offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
     GeometryView3D::drawSurface(objVis, *plane, tgContext,
@@ -156,7 +158,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
     CHECK_CLOSE_ABS(hy, hY, s_epsilon);
 
     // Check if the surface is the (negative) identity
-    auto transform = plane->transform(tgContext);
+    auto transform = plane->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
     const Vector3 offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
     GeometryView3D::drawSurface(objVis, *plane, tgContext,
@@ -181,4 +183,6 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

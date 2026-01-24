@@ -66,10 +66,12 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
   /// inner radius
   /// - Outer cylinder: Added as fallback when no other portals are reachable
   ///
+  /// @param gctx is the geometry context
   /// @param args are the navigation arguments containing position and direction
   /// @param stream is the navigation stream to update with selected candidates
   /// @param logger is the logger for debugging output
-  void initializeCandidates(const NavigationArguments& args,
+  void initializeCandidates(const GeometryContext& gctx,
+                            const NavigationArguments& args,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 

@@ -24,7 +24,8 @@ class PodioWriterImpl;
 /// This writer writes events to a PODIO file in the form of frame.
 ///
 /// The writer supports parallel execution by serializing the writes to the
-/// file.
+/// file. Alternatively, it can be configured to produce one output file per
+/// thread.
 /// The writer is configured with a @c podio::Frame name to read from the white
 /// board. If empty, it will create a new frame.
 ///
@@ -32,7 +33,8 @@ class PodioWriterImpl;
 /// the file. The collections must be present in the event store and be of type
 /// @c podio::CollectionBase.
 ///
-/// @note The writer uses a mutex to ensure thread safety when writing to the file.
+/// @note The writer uses a mutex to ensure thread safety when writing to the
+/// file in single-file mode.
 class PodioWriter final : public IWriter {
  public:
   struct Config {
@@ -52,6 +54,13 @@ class PodioWriter final : public IWriter {
     /// @note Collection names must not be empty and must be unique.
     /// The collections must be present in the event store.
     std::vector<std::string> collections;
+
+    /// If set to true, events are written to individual files per thread,
+    /// obtained via AlgorithmContext::threadId. The file name is derived
+    /// from `outputPath` by appending `_thread<threadId>` before the file
+    /// extension. When false (default), all events go to a single file and
+    /// writes are serialized with a mutex.
+    bool separateFilesPerThread = false;
   };
 
   /// Construct the writer.

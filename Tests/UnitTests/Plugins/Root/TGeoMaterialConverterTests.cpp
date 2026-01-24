@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsPlugins/Root/TGeoMaterialConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <string>
 #include <vector>
@@ -22,7 +22,9 @@ using namespace Acts;
 using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   new TGeoManager("gm", "garbage collector");
@@ -76,4 +78,6 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
                   1e-5);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

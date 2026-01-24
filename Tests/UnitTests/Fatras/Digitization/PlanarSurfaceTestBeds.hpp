@@ -17,9 +17,9 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <numbers>
@@ -80,7 +80,7 @@ struct PlanarSurfaceTestBeds {
     double xmin = 2.;
     double xmax = 3.5;
     double ymax = std::sqrt(rmax * rmax - xmax * xmax);
-    double alpha = std::max(atan2(xmin, rmin), atan2(xmax, ymax));
+    double alpha = std::max(std::atan2(xmin, rmin), std::atan2(xmax, ymax));
 
     auto discTrapezoid =
         std::make_shared<Acts::DiscTrapezoidBounds>(xmin, xmax, rmin, rmax);

@@ -18,8 +18,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -30,6 +30,8 @@
 
 using namespace Acts;
 using namespace ActsPlugins;
+
+namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
@@ -45,13 +47,13 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto physTube = make_intrusive<GeoFullPhysVol>(logTube);
 
   // create pars for conversion
-  ActsPlugins::GeoModelDetectorObjectFactory::Config gmConfig;
+  GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"Tube"};
-  GeometryContext gContext;
-  ActsPlugins::GeoModelDetectorObjectFactory::Cache gmCache;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
+  GeoModelDetectorObjectFactory::Cache gmCache;
 
   // create factory instance
-  ActsPlugins::GeoModelDetectorObjectFactory factory(gmConfig);
+  GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Tube", physTube, gmCache, gContext);
   BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
@@ -65,3 +67,5 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

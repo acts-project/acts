@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+
 namespace Acts::Experimental {
 
 /// @brief Interface concept to define the straw measurement calibrator used by the FastStrawLineFitter.
@@ -53,7 +54,9 @@ concept CompositeSpacePointCalibrator =
     requires(const Calibrator_t calibrator, const UnCalibCont_t& uncalibCont,
              CalibCont_t& calibCont, const Vector3& trackPos,
              const Vector3& trackDir, const double trackT0,
-             const CalibrationContext& ctx) {
+             const CalibrationContext& ctx,
+             const Acts::RemovePointer_t<typename CalibCont_t::value_type>&
+                 measurement) {
       ///  @brief Calibrate the entire input space point container using the external track parameters
       ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
       ///  @param trackPos: Position of the track / segment
@@ -71,6 +74,18 @@ concept CompositeSpacePointCalibrator =
       {
         calibrator.updateSigns(trackPos, trackDir, calibCont)
       } -> std::same_as<void>;
+      /// @brief Returns the drift velocity of the straw measurement's radius - time relation
+      ///        which is defined as the first derivative of the relation.
+      ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
+      ///  @param measurement: Reference to the calibrated space point
+      { calibrator.driftVelocity(ctx, measurement) } -> std::same_as<double>;
+      /// @brief Returns the drift acceleration of the straw measurement's radius - time relation
+      ///        which is defined as the second derivative of the relation
+      ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
+      ///  @param measurement: Reference to the calibrated space point
+      {
+        calibrator.driftAcceleration(ctx, measurement)
+      } -> std::same_as<double>;
     };
 
 }  // namespace Acts::Experimental

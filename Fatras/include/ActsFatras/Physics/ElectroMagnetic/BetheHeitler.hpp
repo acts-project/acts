@@ -29,7 +29,7 @@ struct BetheHeitler {
   /// A scaling factor to
   double scaleFactor = 1.;
 
-  // Simplified angle evaluation
+  /// Flag for simplified uniform Hertz dipole angle evaluation
   bool uniformHertzDipoleAngle = false;
 
   /// Simulate the photon emission
@@ -40,6 +40,7 @@ struct BetheHeitler {
   /// @param [in] rndTheta1 Random number for the polar angle
   /// @param [in] rndTheta2 Random number for the polar angle
   /// @param [in] rndTheta3 Random number for the polar angle
+  /// @return Particle representing the emitted photon
   Particle bremPhoton(const Particle &particle, double gammaE, double rndPsi,
                       double rndTheta1, double rndTheta2,
                       double rndTheta3) const;

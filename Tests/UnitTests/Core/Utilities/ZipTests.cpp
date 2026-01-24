@@ -18,9 +18,15 @@ const std::vector<int> vec = {1, 2, 3, 4};
 const std::array<double, 4> arr = {2.0, 4.0, 6.0, 8.0};
 const std::string str = "abcd";
 
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
+
 BOOST_AUTO_TEST_CASE(test_access) {
   int i = 0;
-  for (const auto &[a, b, c] : Acts::zip(vec, arr, str)) {
+  for (const auto &[a, b, c] : zip(vec, arr, str)) {
     BOOST_CHECK_EQUAL(a, vec[i]);
     BOOST_CHECK_EQUAL(b, arr[i]);
     BOOST_CHECK_EQUAL(c, str[i]);
@@ -33,7 +39,7 @@ BOOST_AUTO_TEST_CASE(test_mutation) {
   std::array<double, 4> arr2 = arr;
   std::string str2 = str;
 
-  for (auto [a, b, c] : Acts::zip(vec2, arr2, str2)) {
+  for (auto [a, b, c] : zip(vec2, arr2, str2)) {
     a *= 2;
     b *= 2;
     c = 'e';
@@ -46,3 +52,7 @@ BOOST_AUTO_TEST_CASE(test_mutation) {
 
   BOOST_CHECK_EQUAL(str2, "eeee");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

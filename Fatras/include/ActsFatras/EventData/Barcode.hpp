@@ -106,11 +106,17 @@ class Barcode {
   // Construct an invalid barcode with all levels set to zero.
   static constexpr Barcode Invalid() { return Barcode(); }
 
-  // Default constructors
+  /// Empty barcode
   constexpr Barcode() = default;
+  /// Copy constructor
   constexpr Barcode(const Barcode&) = default;
+  /// Move constructor
   constexpr Barcode(Barcode&&) = default;
+  /// Copy assignment operator
+  /// @return Reference to this barcode after copying
   Barcode& operator=(const Barcode&) = default;
+  /// Move assignment operator
+  /// @return Reference to this barcode after moving
   Barcode& operator=(Barcode&&) = default;
 
   ///  Compare two barcodes
@@ -124,16 +130,25 @@ class Barcode {
   constexpr bool isValid() const { return isValid(*this); }
 
   /// Return the primary vertex identifier.
+  /// @return The primary vertex identifier value
   constexpr PrimaryVertexId vertexPrimary() const { return vertexPrimaryID; }
+
   /// Return the secondary vertex identifier.
+  /// @return The secondary vertex identifier value
   constexpr SecondaryVertexId vertexSecondary() const {
     return vertexSecondaryID;
   }
+
   /// Return the particle identifier.
+  /// @return The particle identifier value
   constexpr ParticleId particle() const { return particleID; }
+
   /// Return the generation identifier.
+  /// @return The generation identifier value
   constexpr GenerationId generation() const { return generationID; }
+
   /// Return the sub-particle identifier.
+  /// @return The sub-particle identifier value
   constexpr SubParticleId subParticle() const { return subParticleID; }
 
   /// Export barcode as vector
@@ -142,66 +157,49 @@ class Barcode {
             subParticle()};
   }
 
-  /// Set the primary vertex identifier.
-  [[deprecated("Use withVertexPrimary() instead")]]
-  constexpr Barcode& setVertexPrimary(PrimaryVertexId id) {
-    vertexPrimaryID = id;
-    return *this;
-  }
-  /// Set the secondary vertex identifier.
-  [[deprecated("Use withVertexSecondary() instead")]]
-  constexpr Barcode& setVertexSecondary(SecondaryVertexId id) {
-    vertexSecondaryID = id;
-    return *this;
-  }
-  /// Set the parent particle identifier.
-  [[deprecated("Use withParticle() instead")]]
-  constexpr Barcode& setParticle(ParticleId id) {
-    particleID = id;
-    return *this;
-  }
-  /// Set the particle identifier.
-  [[deprecated("Use withGeneration() instead")]]
-  constexpr Barcode& setGeneration(GenerationId id) {
-    generationID = id;
-    return *this;
-  }
-  /// Set the process identifier.
-  [[deprecated("Use withSubParticle() instead")]]
-  constexpr Barcode& setSubParticle(SubParticleId id) {
-    subParticleID = id;
-    return *this;
-  }
-
   /// Create a new barcode with a different primary vertex identifier.
+  /// @param id Primary vertex identifier to set
+  /// @return New barcode with modified primary vertex identifier
   [[nodiscard]]
   constexpr Barcode withVertexPrimary(PrimaryVertexId id) const {
     Barcode barcode = *this;
     barcode.vertexPrimaryID = id;
     return barcode;
   }
+
   /// Create a new barcode with a different secondary vertex identifier.
+  /// @param id Secondary vertex identifier to set
+  /// @return New barcode with modified secondary vertex identifier
   [[nodiscard]]
   constexpr Barcode withVertexSecondary(SecondaryVertexId id) const {
     Barcode barcode = *this;
     barcode.vertexSecondaryID = id;
     return barcode;
   }
+
   /// Create a new barcode with a different particle identifier.
+  /// @param id Particle identifier to set
+  /// @return New barcode with modified particle identifier
   [[nodiscard]]
   constexpr Barcode withParticle(ParticleId id) const {
     Barcode barcode = *this;
     barcode.particleID = id;
     return barcode;
   }
+
   /// Create a new barcode with a different generation identifier.
+  /// @param id Generation identifier to set
+  /// @return New barcode with modified generation identifier
   [[nodiscard]]
   constexpr Barcode withGeneration(GenerationId id) const {
     Barcode barcode = *this;
     barcode.generationID = id;
     return barcode;
   }
+
   /// Create a new barcode with a different sub-particle identifier.
+  /// @param id Sub-particle identifier to set
+  /// @return New barcode with modified sub-particle identifier
   [[nodiscard]]
   constexpr Barcode withSubParticle(SubParticleId id) const {
     Barcode barcode = *this;
@@ -210,6 +208,8 @@ class Barcode {
   }
 
   /// Create a new barcode from a vector
+  /// @param data Vector containing exactly 5 elements
+  /// @return New barcode with data from the vector
   [[nodiscard]]
   constexpr Barcode withData(std::span<std::uint32_t> data) {
     if (data.size() != 5) {
@@ -230,6 +230,7 @@ class Barcode {
   /// Construct a new barcode representing a descendant particle.
   ///
   /// @param sub sub-particle index of the new barcode.
+  /// @return New barcode with increased generation and specified sub-particle index
   Barcode makeDescendant(SubParticleId sub = 0u) const {
     Barcode barcode = *this;
     barcode.generationID += 1;
@@ -238,6 +239,7 @@ class Barcode {
   }
 
   /// Reduce the barcode to the vertex identifier.
+  /// @return Barcode containing only vertex and generation information
   constexpr Barcode vertexId() const {
     // The vertex is identified by primary vertex, secondary vertex, and
     // generation. The other components are set to 0 so two particle originating

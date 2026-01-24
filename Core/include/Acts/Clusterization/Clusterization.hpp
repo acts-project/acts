@@ -109,7 +109,8 @@ concept CanReserve = requires(Cluster cluster, std::size_t n) {
 enum class ConnectResult {
   eNoConn,      // No connections, keep looking
   eNoConnStop,  // No connections, stop looking
-  eConn         // Found connection
+  eConn,        // Found connection
+  eDuplicate    // Found duplicate cell, throw an exception
 };
 
 // Default connection type for 2-D grids: 4- or 8-cell connectivity
@@ -160,6 +161,7 @@ struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
 /// @param [in] data collection of quantities for clusterization
 /// @param [in] cells the cell collection to be labeled
 /// @param [in] connect the connection type (see DefaultConnect)
+/// @throws std::invalid_argument if the input contains duplicate cells.
 template <typename CellCollection, std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
@@ -179,18 +181,9 @@ void mergeClusters(Acts::Ccl::ClusteringData& data, const CellCollection& cells,
                    ClusterCollection& outv);
 
 /// @brief createClusters
-/// Convenience function which runs both labelClusters and createClusters.
-template <typename CellCollection, typename ClusterCollection,
-          std::size_t GridDim = 2,
-          typename Connect =
-              DefaultConnect<typename CellCollection::value_type, GridDim>>
-[[deprecated]]
-ClusterCollection createClusters(CellCollection& cells,
-                                 Connect&& connect = Connect());
-
-/// @brief createClusters
-/// Alternative convenience function which runs both labelClusters and
-/// createClusters.
+/// Convenience function which runs both labelClusters and mergeClusters.
+///
+/// @throws std::invalid_argument if the input contains duplicate cells.
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim = 2,
           typename Connect =

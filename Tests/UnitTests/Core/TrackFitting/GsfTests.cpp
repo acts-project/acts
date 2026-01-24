@@ -26,31 +26,28 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
 #include <memory>
 #include <optional>
 #include <random>
 #include <string>
-#include <string_view>
 #include <tuple>
 #include <vector>
 
 #include "FitterTestsCommon.hpp"
 
-namespace {
-
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
 
 static const auto electron = ParticleHypothesis::electron();
 
@@ -74,12 +71,11 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using BetheHeitlerApprox = AtlasBetheHeitlerApprox<6, 5>;
-using GSF =
-    GaussianSumFitter<Propagator, BetheHeitlerApprox, VectorMultiTrajectory>;
+using GSF = GaussianSumFitter<Propagator, VectorMultiTrajectory>;
 
-const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
-                  makeDefaultBetheHeitlerApprox());
+const GSF gsfZero(
+    makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
+    std::make_shared<AtlasBetheHeitlerApprox>(makeDefaultBetheHeitlerApprox()));
 
 std::default_random_engine rng(42);
 
@@ -145,9 +141,7 @@ auto makeParameters() {
       cp.referenceSurface().getSharedPtr(), cmps, electron));
 }
 
-}  // namespace
-
-BOOST_AUTO_TEST_SUITE(TrackFittingGsf)
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto multi_pars = makeParameters();
@@ -243,3 +237,5 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

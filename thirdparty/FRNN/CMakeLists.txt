@@ -8,6 +8,11 @@
 
 cmake_minimum_required(VERSION 3.25)
 
+# Set policy to allow FetchContent_Populate for projects without CMakeLists.txt
+if(POLICY CMP0169)
+    cmake_policy(SET CMP0169 OLD)
+endif()
+
 include(FetchContent)
 
 message(STATUS "Building FRNN as part of the ACTS project")

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
+#include <cassert>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>

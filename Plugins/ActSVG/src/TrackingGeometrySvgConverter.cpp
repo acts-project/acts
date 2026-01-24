@@ -16,8 +16,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Utilities/Zip.hpp"
-#include "ActsPlugins/ActSVG/DetectorVolumeSvgConverter.hpp"
-#include "ActsPlugins/ActSVG/PortalSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 
@@ -273,7 +271,7 @@ struct Visitor : TrackingGeometryVisitor {
     Svg::ProtoVolume pVolume;
     pVolume._name = volume.volumeName();
 
-    auto volumeTransform = volume.transform();
+    const Transform3& volumeTransform = volume.localToGlobalTransform(gctx);
 
     // https://github.com/acts-project/actsvg/blob/2f1aaa58365a1dd1af62dc27aea5039459a65a38/meta/include/actsvg/display/geometry.hpp#L687-L692
     enum svgBv : unsigned int {

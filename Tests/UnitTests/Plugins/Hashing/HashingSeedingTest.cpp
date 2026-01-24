@@ -8,18 +8,18 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
 #include "ActsPlugins/Hashing/HashingTraining.hpp"
 
 #include <cstdlib>
-#include <vector>
 
 #include <annoy/annoylib.h>
 #include <annoy/kissrandom.h>
 
-using namespace Acts::UnitLiterals;
+using namespace ActsPlugins;
+
+namespace ActsTests {
 
 // Function to create and initialize the test vector
 Acts::SpacePointContainer2 createTestVector() {
@@ -47,7 +47,7 @@ Acts::SpacePointContainer2 createTestVector() {
   return testVector;
 }
 
-namespace Acts::Test {
+BOOST_AUTO_TEST_SUITE(HashingSuite)
 
 BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   // Initialize testVector using the createTestVector function
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   double layerZMin = -550;
   double layerZMax = 550;
 
-  ActsPlugins::HashingAlgorithm::Config hashingConfig;
+  HashingAlgorithm::Config hashingConfig;
   hashingConfig.bucketSize = bucketSize;
   hashingConfig.zBins = zBins;
   hashingConfig.phiBins = phiBins;
@@ -81,15 +81,15 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   hashingConfig.layerZMin = layerZMin;
   hashingConfig.layerZMax = layerZMax;
 
-  ActsPlugins::HashingTraining::Config hashingTrainingConfig;
+  HashingTraining::Config hashingTrainingConfig;
   hashingTrainingConfig.annoySeed = annoySeed;
   hashingTrainingConfig.f = nf;
 
-  ActsPlugins::HashingTraining hashingTraining(hashingTrainingConfig);
-  ActsPlugins::HashingAlgorithm hashing(hashingConfig);
+  HashingTraining hashingTraining(hashingTrainingConfig);
+  HashingAlgorithm hashing(hashingConfig);
 
   // Hashing Training
-  ActsPlugins::AnnoyModel annoyModel = hashingTraining.execute(testVector);
+  AnnoyModel annoyModel = hashingTraining.execute(testVector);
 
   // Hashing
   auto result = hashing.execute(annoyModel, testVector);
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   double layerZMin = -550;
   double layerZMax = 550;
 
-  ActsPlugins::HashingAlgorithm::Config hashingConfig;
+  HashingAlgorithm::Config hashingConfig;
   hashingConfig.bucketSize = bucketSize;
   hashingConfig.zBins = zBins;
   hashingConfig.phiBins = phiBins;
@@ -130,15 +130,15 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   hashingConfig.layerZMin = layerZMin;
   hashingConfig.layerZMax = layerZMax;
 
-  ActsPlugins::HashingTraining::Config hashingTrainingConfig;
+  HashingTraining::Config hashingTrainingConfig;
   hashingTrainingConfig.annoySeed = annoySeed;
   hashingTrainingConfig.f = nf;
 
-  ActsPlugins::HashingTraining hashingTraining(hashingTrainingConfig);
-  ActsPlugins::HashingAlgorithm hashing(hashingConfig);
+  HashingTraining hashingTraining(hashingTrainingConfig);
+  HashingAlgorithm hashing(hashingConfig);
 
   // Hashing Training
-  ActsPlugins::AnnoyModel annoyModel = hashingTraining.execute(testVector);
+  AnnoyModel annoyModel = hashingTraining.execute(testVector);
 
   // Hashing
   auto result = hashing.execute(annoyModel, testVector);
@@ -152,4 +152,6 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

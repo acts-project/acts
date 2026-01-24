@@ -10,9 +10,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
+#include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <fstream>
 
@@ -25,7 +25,9 @@ using namespace Acts;
 using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_root) {
   TemporaryDirectory tmp{};
@@ -63,7 +65,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_root) {
       },
       fileName, fieldName, 1_mm, 1_T, false);
 
-  // Check that the bfield is two dimenstional
+  // Check that the bfield is two dimensional
   auto nBins = rzField.getNBins();
   BOOST_CHECK_EQUAL(nBins.size(), 2u);
 
@@ -149,4 +151,6 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_root) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

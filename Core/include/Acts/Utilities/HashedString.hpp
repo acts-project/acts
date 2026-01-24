@@ -34,6 +34,23 @@ constexpr HashedString fnv1a_32(std::string_view s) {
                     : 2166136261u;
 }
 
+// FNV-1a 64bit hashing algorithm.
+constexpr std::uint64_t fnv1a_64(const char* data, std::size_t len) {
+  constexpr std::uint64_t fnv_offset_basis = 0xcbf29ce484222325ULL;
+  constexpr std::uint64_t fnv_prime = 0x100000001b3ULL;
+
+  std::uint64_t hash = fnv_offset_basis;
+  for (std::size_t i = 0; i < len; ++i) {
+    hash ^= static_cast<std::uint64_t>(static_cast<unsigned char>(data[i]));
+    hash *= fnv_prime;
+  }
+  return hash;
+}
+
+constexpr std::uint64_t fnv1a_64(std::string_view sv) {
+  return fnv1a_64(sv.data(), sv.size());
+}
+
 constexpr int length(const char* str) {
   return *str != 0 ? 1 + length(str + 1) : 0;
 }

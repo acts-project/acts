@@ -13,6 +13,7 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <bitset>
+#include <cassert>
 #include <optional>
 
 #include "Eigen/Dense"

@@ -17,80 +17,84 @@
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-namespace Acts {
+namespace ActsTests {
 /// Surface derived class stub
-class SurfaceStub : public RegularSurface {
+class SurfaceStub : public Acts::RegularSurface {
  public:
-  explicit SurfaceStub(const Transform3& htrans = Transform3::Identity())
-      : GeometryObject(), RegularSurface(htrans) {}
-  SurfaceStub(const GeometryContext& gctx, const SurfaceStub& sf,
-              const Transform3& transf)
-      : GeometryObject(), RegularSurface(gctx, sf, transf) {}
-  explicit SurfaceStub(const DetectorElementBase& detelement)
-      : GeometryObject(), RegularSurface(detelement) {}
+  explicit SurfaceStub(
+      const Acts::Transform3& htrans = Acts::Transform3::Identity())
+      : Acts::GeometryObject(), Acts::RegularSurface(htrans) {}
+  SurfaceStub(const Acts::GeometryContext& gctx, const SurfaceStub& sf,
+              const Acts::Transform3& transf)
+      : Acts::GeometryObject(), Acts::RegularSurface(gctx, sf, transf) {}
+  explicit SurfaceStub(const Acts::DetectorElementBase& detelement)
+      : Acts::GeometryObject(), Acts::RegularSurface(detelement) {}
 
   ~SurfaceStub() override = default;
 
   /// Return method for the Surface type to avoid dynamic casts
-  SurfaceType type() const final { return Surface::Other; }
+  Acts::Surface::SurfaceType type() const final { return Acts::Surface::Other; }
 
   /// Return method for the normal vector of the surface
-  Vector3 normal(const GeometryContext& /*gctx*/,
-                 const Vector3& /*position*/) const final {
-    return Vector3{0., 0., 0.};
+  Acts::Vector3 normal(const Acts::GeometryContext& /*gctx*/,
+                       const Acts::Vector3& /*position*/) const final {
+    return Acts::Vector3{0., 0., 0.};
   }
 
-  Vector3 normal(const GeometryContext& /*gctx*/,
-                 const Vector2& /*lposition*/) const final {
-    return Vector3{0., 0., 0.};
+  Acts::Vector3 normal(const Acts::GeometryContext& /*gctx*/,
+                       const Acts::Vector2& /*lposition*/) const final {
+    return Acts::Vector3{0., 0., 0.};
   }
 
-  using RegularSurface::normal;
+  using Acts::RegularSurface::normal;
 
   /// Return method for SurfaceBounds
-  const SurfaceBounds& bounds() const final {
-    return s_noBounds;  // need to improve this for meaningful test
+  const Acts::SurfaceBounds& bounds() const final {
+    return Acts::s_noBounds;  // need to improve this for meaningful test
   }
 
   /// Local to global transformation
-  Vector3 localToGlobal(const GeometryContext& /*gctx*/, const Vector2& /*lpos*/
+  Acts::Vector3 localToGlobal(const Acts::GeometryContext& /*gctx*/,
+                              const Acts::Vector2& /*lpos*/
   ) const final {
-    return Vector3(0., 0., 0.);
+    return Acts::Vector3(0., 0., 0.);
   }
 
-  using RegularSurface::localToGlobal;
+  using Acts::RegularSurface::localToGlobal;
 
   /// Global to local transformation
-  Result<Vector2> globalToLocal(const GeometryContext& /*cxt*/,
-                                const Vector3& /*gpos*/,
-                                double /*tolerance*/) const final {
-    return Result<Vector2>::success(Vector2{20., 20.});
+  Acts::Result<Acts::Vector2> globalToLocal(
+      const Acts::GeometryContext& /*cxt*/, const Acts::Vector3& /*gpos*/,
+      double /*tolerance*/) const final {
+    return Acts::Result<Acts::Vector2>::success(Acts::Vector2{20., 20.});
   }
 
-  using RegularSurface::globalToLocal;
+  using Acts::RegularSurface::globalToLocal;
 
   /// Calculation of the path correction for incident
-  double pathCorrection(const GeometryContext& /*cxt*/, const Vector3& /*gpos*/,
-                        const Vector3& /*gmom*/) const final {
+  double pathCorrection(const Acts::GeometryContext& /*cxt*/,
+                        const Acts::Vector3& /*gpos*/,
+                        const Acts::Vector3& /*gmom*/) const final {
     return 0.0;
   }
 
   /// Inherited from GeometryObject base
-  Vector3 referencePosition(const GeometryContext& /*txt*/,
-                            AxisDirection /*bValue*/) const final {
-    const Vector3 v{0., 0., 0.};
+  Acts::Vector3 referencePosition(const Acts::GeometryContext& /*txt*/,
+                                  Acts::AxisDirection /*bValue*/) const final {
+    const Acts::Vector3 v{0., 0., 0.};
     return v;
   }
 
   /// Surface intersction
-  MultiIntersection3D intersect(const GeometryContext& /*gctx*/,
-                                const Vector3& /*position*/,
-                                const Vector3& /*direction*/,
-                                const BoundaryTolerance& /*boundaryTolerance*/,
-                                const double /*tolerance*/) const final {
-    Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
-                                    IntersectionStatus::reachable);
-    return MultiIntersection3D(stubIntersection, Intersection3D::Invalid());
+  Acts::MultiIntersection3D intersect(
+      const Acts::GeometryContext& /*gctx*/, const Acts::Vector3& /*position*/,
+      const Acts::Vector3& /*direction*/,
+      const Acts::BoundaryTolerance& /*boundaryTolerance*/,
+      const double /*tolerance*/) const final {
+    Acts::Intersection3D stubIntersection(Acts::Vector3(20., 0., 0.), 20.,
+                                          Acts::IntersectionStatus::reachable);
+    return Acts::MultiIntersection3D(stubIntersection,
+                                     Acts::Intersection3D::Invalid());
   }
 
   /// Return properly formatted class name
@@ -100,28 +104,29 @@ class SurfaceStub : public RegularSurface {
   bool constructedOk() const { return true; }
 
   /// Return a Polyhedron for the surfaces
-  Polyhedron polyhedronRepresentation(const GeometryContext& /*gctx*/,
-                                      unsigned int /* ignored */) const final {
-    std::vector<Vector3> vertices;
+  Acts::Polyhedron polyhedronRepresentation(
+      const Acts::GeometryContext& /*gctx*/,
+      unsigned int /* ignored */) const final {
+    std::vector<Acts::Vector3> vertices;
     std::vector<std::vector<std::size_t>> faces;
     std::vector<std::vector<std::size_t>> triangularMesh;
 
-    return Polyhedron(vertices, faces, triangularMesh);
+    return Acts::Polyhedron(vertices, faces, triangularMesh);
   }
 
   // Cartesian 3D to local bound derivative
-  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& /*gctx*/,
-      const Vector3& /*position*/) const final {
-    return ActsMatrix<2, 3>::Identity();
+  Acts::ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+      const Acts::GeometryContext& /*gctx*/,
+      const Acts::Vector3& /*position*/) const final {
+    return Acts::ActsMatrix<2, 3>::Identity();
   };
 
  private:
   /// the bounds of this surface
-  std::shared_ptr<const PlanarBounds> m_bounds;
+  std::shared_ptr<const Acts::PlanarBounds> m_bounds;
 };
 
-static_assert(RegularSurfaceConcept<SurfaceStub>,
+static_assert(Acts::RegularSurfaceConcept<SurfaceStub>,
               "SurfaceStub does not fulfill RegularSurfaceConcept");
 
-}  // namespace Acts
+}  // namespace ActsTests

@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 #include "ActsPlugins/Root/RootMeasurementIo.hpp"
+#include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <filesystem>
 
@@ -20,10 +20,11 @@
 #include "TTree.h"
 
 using namespace Acts;
-using namespace Test;
 using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(RootMeasurementIoTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 BOOST_AUTO_TEST_CASE(RootMeasurementIoTestsWrite) {
   // Create temporary directory
@@ -87,3 +88,5 @@ BOOST_AUTO_TEST_CASE(RootMeasurementIoExceptions) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -89,6 +89,10 @@ Connections<GridDim> getConnections(std::size_t idx, std::vector<Cell>& cells,
     std::size_t idx2 = idx - i - 1;
     ConnectResult cr = connect(cells[idx], cells[idx2]);
 
+    if (cr == ConnectResult::eDuplicate) {
+      throw std::invalid_argument(
+          "Clusterization: input contains duplicate cells");
+    }
     if (cr == ConnectResult::eNoConnStop) {
       break;
     }
@@ -153,31 +157,47 @@ template <typename Cell>
            Acts::Ccl::HasRetrievableRowInfo<Cell>)
 ConnectResult Connect2D<Cell>::operator()(const Cell& ref,
                                           const Cell& iter) const {
-  int deltaRow = std::abs(getCellRow(ref) - getCellRow(iter));
-  int deltaCol = std::abs(getCellColumn(ref) - getCellColumn(iter));
-  // Iteration is column-wise, so if too far in column, can
-  // safely stop
-  if (deltaCol > 1) {
-    return ConnectResult::eNoConnStop;
+  int deltaRow = getCellRow(iter) - getCellRow(ref);
+  int deltaCol = getCellColumn(iter) - getCellColumn(ref);
+  assert((deltaCol < 0 || (deltaCol == 0 && deltaRow <= 0)) &&
+         "Not iterating backwards");
+
+  switch (deltaCol) {
+    case 0:
+      if (deltaRow == 0) {
+        return ConnectResult::eDuplicate;
+      } else if (deltaRow == -1) {
+        return ConnectResult::eConn;
+      } else {
+        return ConnectResult::eNoConn;
+      }
+    case -1:
+      if (deltaRow > static_cast<int>(conn8)) {
+        return ConnectResult::eNoConn;
+      } else if (deltaRow < -static_cast<int>(conn8)) {
+        return ConnectResult::eNoConnStop;
+      } else {
+        return ConnectResult::eConn;
+      }
+    default:
+      return ConnectResult::eNoConnStop;
   }
-  // For same reason, if too far in row we know the pixel is not
-  // connected, but need to keep iterating
-  if (deltaRow > 1) {
-    return ConnectResult::eNoConn;
-  }
-  // Decide whether or not cluster is connected based on 4- or
-  // 8-connectivity
-  if ((deltaRow + deltaCol) <= (conn8 ? 2 : 1)) {
-    return ConnectResult::eConn;
-  }
-  return ConnectResult::eNoConn;
 }
 
 template <Acts::Ccl::HasRetrievableColumnInfo Cell>
 ConnectResult Connect1D<Cell>::operator()(const Cell& ref,
                                           const Cell& iter) const {
-  int deltaCol = std::abs(getCellColumn(ref) - getCellColumn(iter));
-  return deltaCol == 1 ? ConnectResult::eConn : ConnectResult::eNoConnStop;
+  int deltaCol = getCellColumn(iter) - getCellColumn(ref);
+  assert((deltaCol <= 0) && "Not iterating backwards");
+
+  switch (deltaCol) {
+    case 0:
+      return ConnectResult::eDuplicate;
+    case -1:
+      return ConnectResult::eConn;
+    default:
+      return ConnectResult::eNoConnStop;
+  }
 }
 
 template <std::size_t GridDim>
@@ -239,17 +259,6 @@ void labelClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
   for (const Label label : data.labels) {
     ++data.nClusters[label - 1];
   }
-}
-
-template <typename CellCollection, typename ClusterCollection,
-          std::size_t GridDim, typename Connect>
-ClusterCollection createClusters(CellCollection& cells, Connect&& connect) {
-  ClusterCollection clusters;
-  Acts::Ccl::ClusteringData data;
-  Acts::Ccl::createClusters<CellCollection, ClusterCollection, GridDim,
-                            Connect>(data, cells, clusters,
-                                     std::forward<Connect>(connect));
-  return clusters;
 }
 
 template <typename CellCollection, typename ClusterCollection,

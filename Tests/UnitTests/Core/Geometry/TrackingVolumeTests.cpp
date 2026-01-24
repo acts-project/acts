@@ -21,11 +21,13 @@
 
 #include "LayerStub.hpp"
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(Geometry)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
+
 BOOST_AUTO_TEST_SUITE(TrackingVolumeTests)
 
 std::size_t countVolumes(const TrackingVolume& tv) {
@@ -35,8 +37,7 @@ std::size_t countVolumes(const TrackingVolume& tv) {
 }
 
 BOOST_AUTO_TEST_CASE(TrackigVolumeChildren) {
-  auto cylBounds =
-      std::make_shared<Acts::CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
 
   TrackingVolume tv{Transform3::Identity(), cylBounds};
 
@@ -79,8 +80,7 @@ void testVisitor(auto visitor) {
   visitor.visitSurface(*surface);
   BOOST_CHECK(visitor.m_surfaceCalled);
 
-  auto cylBounds =
-      std::make_shared<Acts::CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
 
   TrackingVolume tv{Transform3::Identity(), cylBounds};
   visitor.visitVolume(tv);
@@ -186,8 +186,7 @@ BOOST_AUTO_TEST_CASE(VisitLambda) {
   visitor.visitSurface(*surface);
   BOOST_CHECK(surfaceCalled);
 
-  auto cylBounds =
-      std::make_shared<Acts::CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
 
   TrackingVolume tv{Transform3::Identity(), cylBounds};
   visitor.visitVolume(tv);
@@ -236,8 +235,7 @@ BOOST_AUTO_TEST_CASE(VisitLambdaMutable) {
   visitor.visitSurface(*surface);
   BOOST_CHECK(surfaceCalled);
 
-  auto cylBounds =
-      std::make_shared<Acts::CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
 
   TrackingVolume tv{Transform3::Identity(), cylBounds};
   visitor.visitVolume(tv);
@@ -332,4 +330,4 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Clusterization/Clusterization.hpp"
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"

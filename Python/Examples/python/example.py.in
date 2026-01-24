@@ -1,0 +1,14 @@
+import warnings
+
+try :
+    @PLUGIN_IMPORT@
+    from .ActsExamplesPythonBindings@EXAMPLE_NAME@ import *
+
+    from acts._adapter import _patch_config
+    from . import ActsExamplesPythonBindings@EXAMPLE_NAME@
+
+    _patch_config(ActsExamplesPythonBindings@EXAMPLE_NAME@)
+
+except ImportError:
+    warnings.warn("@EXAMPLE_NAME@ example component not available. Try building with @EXAMPLE_BUILD_FLAG@=ON.")
+    raise

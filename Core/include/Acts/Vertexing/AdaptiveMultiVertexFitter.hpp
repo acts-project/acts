@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -23,7 +21,6 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <algorithm>
-#include <functional>
 
 namespace Acts {
 
@@ -160,19 +157,7 @@ class AdaptiveMultiVertexFitter {
   /// @param logger The logging instance
   explicit AdaptiveMultiVertexFitter(
       Config cfg, std::unique_ptr<const Logger> logger = getDefaultLogger(
-                      "AdaptiveMultiVertexFitter", Logging::INFO))
-      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
-    if (!m_cfg.extractParameters.connected()) {
-      throw std::invalid_argument(
-          "AdaptiveMultiVertexFitter: No function to extract parameters "
-          "from InputTrack_t provided.");
-    }
-
-    if (!m_cfg.trackLinearizer.connected()) {
-      throw std::invalid_argument(
-          "AdaptiveMultiVertexFitter: No track linearizer provided.");
-    }
-  }
+                      "AdaptiveMultiVertexFitter", Logging::INFO));
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
@@ -184,11 +169,12 @@ class AdaptiveMultiVertexFitter {
   /// 3. The multivertex fit is performed for all vertices on said list.
   ///
   /// @param state Fitter state
-  /// @param newVertex Vertex to be added to fit
+  /// @param newVertices Vertex to be added to fit
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> addVtxToFit(State& state, Vertex& newVertex,
+  Result<void> addVtxToFit(State& state,
+                           const std::vector<Vertex*>& newVertices,
                            const VertexingOptions& vertexingOptions) const;
 
   /// @brief Performs a simultaneous fit of all vertices in

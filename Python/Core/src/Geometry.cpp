@@ -7,23 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/CuboidalContainerBuilder.hpp"
-#include "Acts/Detector/CylindricalContainerBuilder.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorBuilder.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/DetectorVolumeBuilder.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
-#include "Acts/Detector/KdtSurfacesProvider.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/VolumeStructureBuilder.hpp"
-#include "Acts/Detector/interface/IDetectorBuilder.hpp"
-#include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
-#include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
-#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -47,7 +30,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -55,6 +37,7 @@
 #include <memory>
 #include <numbers>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <boost/algorithm/string/join.hpp>
@@ -119,6 +102,12 @@ class PyTrackingGeometryVisitor : public TrackingGeometryMutableVisitor {
     _INVOKE(TrackingGeometryMutableVisitor::visitSurface, "visitSurface",
             surface);
   }
+
+  void visitBoundarySurface(
+      Acts::BoundarySurfaceT<Acts::TrackingVolume>& boundary) override {
+    _INVOKE(Acts::TrackingGeometryMutableVisitor::visitBoundarySurface,
+            "visitBoundarySurface", boundary);
+  }
 };
 
 #undef _INVOKE
@@ -131,7 +120,23 @@ namespace ActsPython {
 /// @param m the module to add the bindings to
 void addGeometry(py::module_& m) {
   {
-    py::class_<GeometryContext>(m, "GeometryContext").def(py::init<>());
+    py::class_<GeometryContext>(m, "GeometryContext")
+        .def(py::init([]() {
+          // Issue Python warning about deprecated default constructor
+          auto warnings = py::module_::import("warnings");
+          auto builtins = py::module_::import("builtins");
+          warnings.attr("warn")(
+              "GeometryContext::dangerouslyDefaultConstruct() is deprecated. "
+              "Use "
+              "GeometryContext.dangerouslyDefaultConstruct() instead to "
+              "make empty context construction explicit.",
+              builtins.attr("DeprecationWarning"));
+          return GeometryContext::dangerouslyDefaultConstruct();
+        }))  // Keep for backward compatibility but warn
+        .def_static("dangerouslyDefaultConstruct",
+                    &GeometryContext::dangerouslyDefaultConstruct,
+                    "Create a default GeometryContext (empty, no alignment "
+                    "data)");
 
     py::class_<GeometryIdentifier>(m, "GeometryIdentifier")
         .def(py::init<>())
@@ -188,6 +193,11 @@ void addGeometry(py::module_& m) {
   }
 
   {
+    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
+        m, "DetectorElementBase");
+  }
+
+  {
     py::enum_<VolumeBounds::BoundsType>(m, "VolumeBoundsType")
         .value("Cone", VolumeBounds::BoundsType::eCone)
         .value("Cuboid", VolumeBounds::BoundsType::eCuboid)
@@ -202,15 +212,17 @@ void addGeometry(py::module_& m) {
     auto trkGeo =
         py::class_<TrackingGeometry, std::shared_ptr<TrackingGeometry>>(
             m, "TrackingGeometry")
-            .def(py::init([](const MutableTrackingVolumePtr& volPtr,
-                             std::shared_ptr<const IMaterialDecorator> matDec,
-                             const GeometryIdentifierHook& hook,
-                             Logging::Level level) {
-              auto logger = getDefaultLogger("TrackingGeometry", level);
-              auto obj = std::make_shared<TrackingGeometry>(
-                  volPtr, matDec.get(), hook, *logger);
-              return obj;
-            }))
+            .def(py::init(
+                [](const MutableTrackingVolumePtr& volPtr,
+                   const std::shared_ptr<const IMaterialDecorator>& matDec,
+                   const GeometryIdentifierHook& hook,
+                   Acts::Logging::Level level) {
+                  auto logger =
+                      Acts::getDefaultLogger("TrackingGeometry", level);
+                  auto obj = std::make_shared<Acts::TrackingGeometry>(
+                      volPtr, matDec.get(), hook, *logger);
+                  return obj;
+                }))
             .def("visitSurfaces",
                  [](TrackingGeometry& self, py::function& func) {
                    self.visitSurfaces(func);
@@ -276,7 +288,7 @@ void addGeometry(py::module_& m) {
         m, "GeometryIdentifierHook")
         .def(py::init([](py::object callable) {
           auto hook = std::make_shared<GeometryIdentifierHookBinding>();
-          hook->callable = callable;
+          hook->callable = std::move(callable);
           return hook;
         }));
   }

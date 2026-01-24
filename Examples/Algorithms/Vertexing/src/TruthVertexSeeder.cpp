@@ -8,8 +8,6 @@
 
 #include "TruthVertexSeeder.hpp"
 
-#include "VertexingHelpers.hpp"
-
 namespace ActsExamples {
 
 TruthVertexSeeder::TruthVertexSeeder(const Config &cfg) : m_cfg(cfg) {}
@@ -24,23 +22,32 @@ Acts::Result<std::vector<Acts::Vertex>> TruthVertexSeeder::find(
     return std::vector<Acts::Vertex>();
   }
 
-  const auto &truthVertex = state.truthVertices[state.nextVertexIndex];
-  ++state.nextVertexIndex;
+  std::vector<Acts::Vertex> seeds;
+  for (std::size_t i = 0; i < m_cfg.simultaneousSeeds; ++i) {
+    if (state.nextVertexIndex >= state.truthVertices.size()) {
+      break;
+    }
 
-  Acts::Vertex converted;
-  converted.fullPosition().z() = truthVertex.position().z();
-  if (m_cfg.useXY) {
-    converted.fullPosition().x() = truthVertex.position().x();
-    converted.fullPosition().y() = truthVertex.position().y();
+    const auto &truthVertex = state.truthVertices[state.nextVertexIndex];
+    ++state.nextVertexIndex;
+
+    Acts::Vertex converted;
+    converted.fullPosition().z() = truthVertex.position().z();
+    if (m_cfg.useXY) {
+      converted.fullPosition().x() = truthVertex.position().x();
+      converted.fullPosition().y() = truthVertex.position().y();
+    }
+    if (m_cfg.useTime) {
+      converted.setTime(truthVertex.time());
+    }
+
+    Acts::SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
+    converted.setFullCovariance(seedCov);
+
+    seeds.push_back(converted);
   }
-  if (m_cfg.useTime) {
-    converted.setTime(truthVertex.time());
-  }
 
-  Acts::SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
-  converted.setFullCovariance(seedCov);
-
-  return std::vector<Acts::Vertex>{converted};
+  return seeds;
 }
 
 Acts::IVertexFinder::State TruthVertexSeeder::makeState(

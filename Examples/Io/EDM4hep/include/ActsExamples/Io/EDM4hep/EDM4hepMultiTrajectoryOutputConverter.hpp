@@ -10,8 +10,8 @@
 
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <string>
@@ -29,7 +29,7 @@ namespace ActsExamples {
 /// - curvature parameter
 /// - track state local coordinates are written to (D0,Z0)
 /// - covariance incorrect
-class EDM4hepMultiTrajectoryOutputConverter : public EDM4hepOutputConverter {
+class EDM4hepMultiTrajectoryOutputConverter : public PodioOutputConverter {
  public:
   struct Config {
     /// Input trajectory collection

@@ -30,7 +30,7 @@ class TrackingGeometryPrintVisitor : public Acts::TrackingGeometryVisitor {
   /// @brief Visit a tracking volume in the geometry
   /// @param volume The tracking volume being visited
   /// @note Called for each volume in the geometry hierarchy during traversal
-  void visitVolume(const Acts::TrackingVolume& volume) override;
+  void visitVolume(const TrackingVolume& volume) override;
 
   /// @brief Visit and potentially modify a portal
   /// @param portal The portal being visited

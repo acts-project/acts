@@ -29,28 +29,21 @@ namespace ActsExamples {
 class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
  public:
   struct Config {
-    /// If true, one file per event is written with the event number appended to
-    /// the filename
-    bool perEvent = false;
-
     /// The output file path for writing HepMC3 events.
-    ///
-    /// This path is handled differently based on the perEvent flag:
-    /// - If perEvent is false: The path points to a single file where all
-    /// events will be written
-    /// - If perEvent is true: The path is used as a template for creating
-    /// per-event files
-    ///   in the format "event{number}-{filename}" in the parent directory
-    ///
-    /// When in per-event mode, the writer uses perEventFilepath() to generate
-    /// the appropriate filename for each event.
+    /// All events will be written to a single file.
     std::filesystem::path outputPath;
 
     /// The input collection
     std::string inputEvent;
 
-    /// The compression mode to use for the output file
-    HepMC3Util::Compression compression = HepMC3Util::Compression::none;
+    /// The compression mode to use for the output file.
+    /// If set, the compression is explicitly specified and the outputPath can
+    /// omit the compression extension (e.g., ".hepmc3" instead of
+    /// ".hepmc3.gz"). If both compression and the extension in outputPath are
+    /// specified, they must be consistent.
+    /// If not set (nullopt), the compression is deduced from the outputPath
+    /// extension.
+    std::optional<HepMC3Util::Compression> compression = std::nullopt;
 
     /// Write events in order of their event number. If `false`, events are
     /// written in whatever order they are processed.
@@ -89,11 +82,20 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   const Config& config() const { return m_cfg; }
 
  private:
-  std::unique_ptr<HepMC3::Writer> createWriter(
-      const std::filesystem::path& target);
+  /// Resolve and validate compression settings.
+  /// Returns the resolved compression mode and the base path (without
+  /// compression extension).
+  std::pair<HepMC3Util::Compression, std::filesystem::path> resolveCompression(
+      const std::filesystem::path& path) const;
 
   /// The configuration of this writer
   Config m_cfg;
+
+  /// The resolved compression mode (deduced from config or path)
+  HepMC3Util::Compression m_compression;
+
+  /// The actual output path with compression extension
+  std::filesystem::path m_actualOutputPath;
 
   std::mutex m_mutex;
 
@@ -108,6 +110,9 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   std::atomic<unsigned int> m_waiting = 0;
 
   std::unique_ptr<HepMC3::Writer> m_writer;
+
+  // Track the number of events written for metadata
+  std::size_t m_eventsWritten = 0;
 };
 
 }  // namespace ActsExamples

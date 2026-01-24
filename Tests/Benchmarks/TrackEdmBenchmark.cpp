@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
@@ -31,7 +30,7 @@ class BenchmarkSourceLink final {
   using Index = std::uint32_t;
 
   /// Construct from geometry identifier and index.
-  constexpr BenchmarkSourceLink(Acts::GeometryIdentifier gid, Index idx)
+  constexpr BenchmarkSourceLink(GeometryIdentifier gid, Index idx)
       : m_geometryId(gid), m_index(idx) {}
 
   BenchmarkSourceLink() = default;
@@ -43,10 +42,10 @@ class BenchmarkSourceLink final {
   /// Access the index.
   constexpr Index index() const { return m_index; }
 
-  Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
+  GeometryIdentifier geometryId() const { return m_geometryId; }
 
  private:
-  Acts::GeometryIdentifier m_geometryId;
+  GeometryIdentifier m_geometryId;
   Index m_index = 0;
 
   friend bool operator==(const BenchmarkSourceLink& lhs,
@@ -126,10 +125,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
         if (crit < 0.1) {
           // hole
-          trackState.typeFlags().set(TrackStateFlag::HoleFlag);
+          trackState.typeFlags().setIsHole();
         } else if (crit < 0.2) {
           // material
-          trackState.typeFlags().set(TrackStateFlag::MaterialFlag);
+          trackState.typeFlags().setIsMaterial();
         } else {
           BenchmarkSourceLink bsl{gid, 123};
           std::size_t measdim = measDimDist(rng);
@@ -149,10 +148,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
                 trackState.setProjectorSubspaceIndices(indices);
               });
 
-          trackState.typeFlags().set(TrackStateFlag::MeasurementFlag);
+          trackState.typeFlags().setHasMeasurement();
           if (crit < 0.4) {
             // outlier
-            trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
+            trackState.typeFlags().setIsOutlier();
           }
         }
       }

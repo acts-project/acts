@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
@@ -26,17 +25,12 @@ namespace ActsExamples {
 struct Geant4Detector : public Detector {
   /// Nested configuration struct
   struct Config {
-    /// The detector/geometry name
+    /// The Geometry/geometry name
     std::string name = "";
     /// The Geant4 world volume
     const G4VPhysicalVolume* g4World = nullptr;
     /// The Converter options: detector surfaces
     ActsPlugins::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
-    /// The corresponding ProtoDetector
-    Acts::ProtoDetector protoDetector;
-    /// Optional geometry identifier hook to be used during closure
-    std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
-        std::make_shared<Acts::GeometryIdentifierHook>();
     /// Logging level of the child tools
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };

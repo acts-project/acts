@@ -1,6 +1,6 @@
 acts_add_library(
     PluginRoot
-    SHARED
+    src/RootMaterialDecorator.cpp
     src/RootMaterialMapIo.cpp
     src/RootMaterialTrackIo.cpp
     src/RootMagneticFieldIo.cpp
@@ -12,6 +12,7 @@ acts_add_library(
     src/TGeoParser.cpp
     src/TGeoPrimitivesHelper.cpp
     src/TGeoSurfaceConverter.cpp
+    src/HistogramConverter.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 

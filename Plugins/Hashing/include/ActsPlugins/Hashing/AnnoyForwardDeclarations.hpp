@@ -8,7 +8,10 @@
 
 #pragma once
 
+/// @cond
+
 namespace Annoy {
+
 // Forward declarations for the Annoy classes we use.
 struct AngularEuclidean;  // Metric used
 struct Kiss32Random;      // Random type, not a template
@@ -17,4 +20,7 @@ template <typename S, typename T, typename Distance, typename Random,
 class AnnoyIndex;  // AnnoyIndex template class
 
 class AnnoyIndexSingleThreadedBuildPolicy;  // Build policy
+
 }  // namespace Annoy
+
+/// @endcond

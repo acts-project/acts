@@ -338,7 +338,7 @@ struct PtResidualAccessor {
       float p = 1. / std::abs(qop_value->at(entry));
       float theta = theta_value->at(entry);
       float pt_true = reference_pt->at(entry);
-      return (p * sin(theta) - pt_true);
+      return (p * std::sin(theta) - pt_true);
     }
     return std::numeric_limits<float>::infinity();
   }

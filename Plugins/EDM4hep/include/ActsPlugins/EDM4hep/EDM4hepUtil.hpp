@@ -5,14 +5,13 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
@@ -20,18 +19,34 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <stdexcept>
 
-#include <Eigen/src/Core/util/Memory.h>
-#include <boost/graph/graph_traits.hpp>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
+#include <podio/podioVersion.h>
+
+#if podio_VERSION_MAJOR == 0 || \
+    (podio_VERSION_MAJOR == 1 && podio_VERSION_MINOR <= 2)
+
+template <>
+struct std::hash<podio::ObjectID> {
+  std::size_t operator()(const podio::ObjectID& id) const noexcept {
+    auto hash_collectionID = std::hash<std::uint32_t>{}(id.collectionID);
+    auto hash_index = std::hash<int>{}(id.index);
+
+    return hash_collectionID ^ hash_index;
+  }
+};
+
+#endif
+
+/// @namespace ActsPlugins::EDM4hepUtil
+/// @ingroup edm4hep_plugin
 
 namespace ActsPlugins::EDM4hepUtil {
 
@@ -39,7 +54,7 @@ static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
 namespace detail {
 struct Parameters {
-  Acts::ActsVector<6> values;
+  Acts::ActsVector<6> values{};
   // Dummy default
   Acts::ParticleHypothesis particleHypothesis =
       Acts::ParticleHypothesis::pion();
@@ -64,6 +79,9 @@ Acts::BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
 }  // namespace detail
+
+/// @addtogroup edm4hep_plugin
+/// @{
 
 // Compatibility with EDM4hep < 0.99 and >= 0.99
 edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
@@ -101,7 +119,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 
   for (const auto& state : track.trackStatesReversed()) {
     auto typeFlags = state.typeFlags();
-    if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!typeFlags.isMeasurement()) {
       continue;
     }
 
@@ -174,16 +192,17 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 template <Acts::TrackProxyConcept track_proxy_t>
 void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
                const Acts::Logger& logger = Acts::getDummyLogger()) {
+  using namespace Acts;
   ACTS_VERBOSE("Reading track from EDM4hep");
-  Acts::TrackStatePropMask mask = Acts::TrackStatePropMask::Smoothed;
+  TrackStatePropMask mask = TrackStatePropMask::Smoothed;
 
   std::optional<edm4hep::TrackState> ipState;
 
   auto unpack =
       [](const edm4hep::TrackState& trackState) -> detail::Parameters {
     detail::Parameters params;
-    params.covariance = Acts::BoundMatrix::Zero();
-    params.values = Acts::BoundVector::Zero();
+    params.covariance = BoundMatrix::Zero();
+    params.values = BoundVector::Zero();
     detail::unpackCovariance(trackState.covMatrix.data(),
                              params.covariance.value());
     params.values[0] = trackState.D0;
@@ -193,12 +212,12 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
     params.values[4] = trackState.omega;
     params.values[5] = trackState.time;
 
-    Acts::Vector3 center = {
+    Vector3 center = {
         trackState.referencePoint.x,
         trackState.referencePoint.y,
         trackState.referencePoint.z,
     };
-    params.surface = Acts::Surface::makeShared<Acts::PerigeeSurface>(center);
+    params.surface = Acts::Surface::makeShared<PerigeeSurface>(center);
 
     return params;
   };
@@ -218,13 +237,13 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
     auto params = unpack(trackState);
 
     auto ts = track.appendTrackState(mask);
-    ts.typeFlags().set(Acts::MeasurementFlag);
+    ts.typeFlags().setIsMeasurement();
 
     auto converted = detail::convertTrackParametersFromEdm4hep(Bz, params);
 
     ts.smoothed() = converted.parameters();
     ts.smoothedCovariance() =
-        converted.covariance().value_or(Acts::BoundMatrix::Zero());
+        converted.covariance().value_or(BoundMatrix::Zero());
     ts.setReferenceSurface(params.surface);
   }
 
@@ -239,16 +258,35 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
 
   ACTS_VERBOSE("IP state parameters: " << converted.parameters().transpose());
   ACTS_VERBOSE("-> covariance:\n"
-               << converted.covariance().value_or(Acts::BoundMatrix::Zero()));
+               << converted.covariance().value_or(BoundMatrix::Zero()));
 
   track.parameters() = converted.parameters();
-  track.covariance() =
-      converted.covariance().value_or(Acts::BoundMatrix::Zero());
+  track.covariance() = converted.covariance().value_or(BoundMatrix::Zero());
   track.setReferenceSurface(params.surface);
 
   track.chi2() = from.getChi2();
   track.nDoF() = from.getNdf();
   track.nMeasurements() = track.nTrackStates();
 }
+
+class SimHitAssociation {
+ public:
+  void reserve(std::size_t size);
+
+  std::size_t size() const;
+
+  void add(std::size_t internalIndex, const edm4hep::SimTrackerHit& edm4hepHit);
+
+  [[nodiscard]]
+  edm4hep::SimTrackerHit lookup(std::size_t internalIndex) const;
+
+  std::size_t lookup(const edm4hep::SimTrackerHit& hit) const;
+
+ private:
+  std::vector<edm4hep::SimTrackerHit> m_internalToEdm4hep;
+  std::unordered_map<podio::ObjectID, std::size_t> m_edm4hepToInternal;
+};
+
+/// @}
 
 }  // namespace ActsPlugins::EDM4hepUtil

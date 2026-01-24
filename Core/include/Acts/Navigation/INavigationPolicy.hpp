@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 
@@ -17,6 +18,7 @@ namespace Acts {
 
 class TrackingVolume;
 class INavigationPolicy;
+class Surface;
 
 /// Concept for a navigation policy
 /// This exists so `updateState` can be a non-virtual method and we still have a
@@ -25,8 +27,9 @@ template <typename T>
 concept NavigationPolicyConcept = requires {
   requires std::is_base_of_v<INavigationPolicy, T>;
   // Has a conforming update method
-  requires requires(T policy, const NavigationArguments& args) {
-    policy.initializeCandidates(args,
+  requires requires(T policy, const GeometryContext& gctx,
+                    const NavigationArguments& args) {
+    policy.initializeCandidates(gctx, args,
                                 std::declval<AppendOnlyNavigationStream&>(),
                                 std::declval<const Logger&>());
   };
@@ -42,7 +45,7 @@ class INavigationPolicy {
   /// Noop update function that is suitable as a default for default navigation
   /// delegates.
   static void noopInitializeCandidates(
-      const NavigationArguments& /*unused*/,
+      const GeometryContext& /*unused*/, const NavigationArguments& /*unused*/,
       const AppendOnlyNavigationStream& /*unused*/, const Logger& /*unused*/) {
     // This is a noop
   }

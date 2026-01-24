@@ -16,11 +16,11 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -30,7 +30,6 @@
 namespace {
 
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::detail::Test;
 
 using ParametersVector = Acts::BoundVector;
@@ -38,11 +37,14 @@ using CovarianceMatrix = Acts::BoundSquareMatrix;
 using Jacobian = Acts::BoundMatrix;
 
 constexpr double tol = 1e-6;
-const Acts::GeometryContext tgContext;
+const Acts::GeometryContext tgContext =
+    Acts::GeometryContext::dangerouslyDefaultConstruct();
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixUpdater)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(Update) {
   // Make dummy measurement
@@ -132,3 +134,5 @@ BOOST_AUTO_TEST_CASE(UpdateFailed) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

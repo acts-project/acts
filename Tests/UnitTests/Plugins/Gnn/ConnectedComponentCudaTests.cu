@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <fstream>
 #include <random>
+#include <ranges>
 #include <set>
 #include <vector>
 
@@ -385,4 +386,100 @@ BOOST_AUTO_TEST_CASE(special_4) {
   Vi refLabels{0, 1, 2, 3, 1, 4, 5, 2};
 
   testRelabeling(labelsFromCuda, refLabelMask, refPrefixSum, refLabels);
+}
+
+BOOST_AUTO_TEST_CASE(find_bounds) {
+  Vi labels{0, 1, 2, 1, 2, 3, 0, 3, 0};
+  Vi spids{0, 1, 2, 3, 4, 5, 6, 7, 8};
+  int numberLabels = 4;
+
+  const std::vector<Vi> expectedTrackCandidates{
+      {0, 6, 8},  // label 0
+      {1, 3},     // label 1
+      {2, 4},     // label 2
+      {5, 7}      // label 3
+  };
+
+  const Vi expectedBounds{0, 3, 5, 7, 9};  // bounds for labels 0, 1, 2, 3
+
+  cudaStream_t stream{};
+  BOOST_REQUIRE_EQUAL(cudaStreamCreate(&stream), cudaSuccess);
+
+  // Copy spacepoint IDs to device
+  int *cudaSpacepointIDs{};
+  BOOST_REQUIRE_EQUAL(
+      cudaMallocAsync(&cudaSpacepointIDs, spids.size() * sizeof(int), stream),
+      cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaMemcpyAsync(cudaSpacepointIDs, spids.data(),
+                                      spids.size() * sizeof(int),
+                                      cudaMemcpyHostToDevice, stream),
+                      cudaSuccess);
+
+  // Copy labels to device
+  int *cudaLabels{};
+  BOOST_REQUIRE_EQUAL(
+      cudaMallocAsync(&cudaLabels, labels.size() * sizeof(int), stream),
+      cudaSuccess);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpyAsync(cudaLabels, labels.data(), labels.size() * sizeof(int),
+                      cudaMemcpyHostToDevice, stream),
+      cudaSuccess);
+
+  // Allocate bounds array
+  int *cudaBounds{};
+  BOOST_REQUIRE_EQUAL(
+      cudaMallocAsync(&cudaBounds, numberLabels * sizeof(int), stream),
+      cudaSuccess);
+
+  ActsPlugins::detail::findTrackCandidateBounds(cudaLabels, cudaSpacepointIDs,
+                                                cudaBounds, spids.size(),
+                                                numberLabels, stream);
+  BOOST_REQUIRE_EQUAL(cudaGetLastError(), cudaSuccess);
+
+  // Copy bounds back to host
+  std::vector<int> bounds(numberLabels);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpyAsync(bounds.data(), cudaBounds, numberLabels * sizeof(int),
+                      cudaMemcpyDeviceToHost, stream),
+      cudaSuccess);
+
+  // Copy back sorted spacepoint IDs
+  BOOST_REQUIRE_EQUAL(cudaMemcpyAsync(spids.data(), cudaSpacepointIDs,
+                                      spids.size() * sizeof(int),
+                                      cudaMemcpyDeviceToHost, stream),
+                      cudaSuccess);
+
+  // Synchronize the stream
+  BOOST_REQUIRE_EQUAL(cudaStreamSynchronize(stream), cudaSuccess);
+
+  // Free resources
+  BOOST_REQUIRE_EQUAL(cudaStreamDestroy(stream), cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaFree(cudaSpacepointIDs), cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaFree(cudaLabels), cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaFree(cudaBounds), cudaSuccess);
+
+  bounds.push_back(spids.size());  // Add the last bound
+  BOOST_REQUIRE_EQUAL(bounds.size(), expectedBounds.size());
+  BOOST_CHECK_EQUAL_COLLECTIONS(bounds.begin(), bounds.end(),
+                                expectedBounds.begin(), expectedBounds.end());
+
+  std::vector<Vi> trackCandidates;
+  for (int i = 0; i < numberLabels; ++i) {
+    std::vector<int> trackCandidate;
+    for (int j = bounds.at(i); j < bounds.at(i + 1); ++j) {
+      trackCandidate.push_back(spids.at(j));
+    }
+    std::sort(trackCandidate.begin(), trackCandidate.end());
+    trackCandidates.push_back(trackCandidate);
+  }
+
+  BOOST_REQUIRE_EQUAL(trackCandidates.size(), expectedTrackCandidates.size());
+  for (int i = 0; i < numberLabels; ++i) {
+    BOOST_REQUIRE_EQUAL(trackCandidates.at(i).size(),
+                        expectedTrackCandidates.at(i).size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(trackCandidates.at(i).begin(),
+                                  trackCandidates.at(i).end(),
+                                  expectedTrackCandidates.at(i).begin(),
+                                  expectedTrackCandidates.at(i).end());
+  }
 }

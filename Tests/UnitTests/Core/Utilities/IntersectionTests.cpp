@@ -17,7 +17,11 @@
 #include <string>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 /// test of the intersection class
 BOOST_AUTO_TEST_CASE(IntersectionTest) {
@@ -130,4 +134,6 @@ BOOST_AUTO_TEST_CASE(IntersectionStatusPrinting) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -10,12 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/Seed.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -48,6 +51,7 @@ TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
   m_inputSeeds.initialize(m_cfg.inputSeeds);
   m_inputTracks.maybeInitialize(m_cfg.inputProtoTracks);
+  m_inputParticleHypotheses.maybeInitialize(m_cfg.inputParticleHypotheses);
 
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
   m_outputSeeds.maybeInitialize(m_cfg.outputSeeds);
@@ -77,6 +81,17 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
     inputTracks = &inputTracksRef;
     outputTracks.reserve(seeds.size());
+  }
+
+  const std::vector<Acts::ParticleHypothesis>* inputParticleHypotheses =
+      nullptr;
+  if (m_inputParticleHypotheses.isInitialized()) {
+    const auto& inputParticleHypothesesRef = m_inputParticleHypotheses(ctx);
+    if (seeds.size() != inputParticleHypothesesRef.size()) {
+      ACTS_FATAL("Inconsistent number of seeds and particle hypotheses");
+      return ProcessCode::ABORT;
+    }
+    inputParticleHypotheses = &inputParticleHypothesesRef;
   }
 
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
@@ -120,8 +135,8 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     const auto paramsResult = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp(), *surface, field);
     if (!paramsResult.ok()) {
-      ACTS_WARNING("Skip track because param estimation failed "
-                   << paramsResult.error());
+      ACTS_WARNING("Skip track because param estimation failed: "
+                   << paramsResult.error().message());
       continue;
     }
     const auto& params = *paramsResult;
@@ -137,8 +152,13 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
         config, params, bottomSP->t().has_value());
 
-    trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
-                                 m_cfg.particleHypothesis);
+    Acts::ParticleHypothesis hypothesis =
+        inputParticleHypotheses != nullptr ? inputParticleHypotheses->at(iseed)
+                                           : m_cfg.particleHypothesis;
+
+    const TrackParameters& trackParams = trackParameters.emplace_back(
+        surface->getSharedPtr(), params, cov, hypothesis);
+    ACTS_VERBOSE("Estimated track parameters: " << trackParams);
     if (m_outputSeeds.isInitialized()) {
       outputSeeds.push_back(seed);
     }
@@ -147,7 +167,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
   }
 
-  ACTS_VERBOSE("Estimated " << trackParameters.size() << " track parameters");
+  ACTS_DEBUG("Estimated " << trackParameters.size() << " track parameters");
 
   m_outputTrackParameters(ctx, std::move(trackParameters));
   if (m_outputSeeds.isInitialized()) {

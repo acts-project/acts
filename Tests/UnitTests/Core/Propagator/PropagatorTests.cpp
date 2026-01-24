@@ -29,9 +29,9 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -44,14 +44,16 @@
 #include <utility>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 using Acts::VectorHelpers::perp;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 using Covariance = BoundSquareMatrix;
@@ -93,11 +95,11 @@ struct SurfaceObserver {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& /*navigator*/, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& /*navigator*/, result_type& result,
+                   const Logger& /*logger*/) const {
     if (surface == nullptr || result.surfaces_passed != 0) {
-      return;
+      return Result<void>::success();
     }
 
     // calculate the distance to the surface
@@ -120,6 +122,8 @@ struct SurfaceObserver {
       result.surface_passed_r = perp(stepper.position(state.stepping));
       state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
     }
+
+    return Result<void>::success();
   }
 };
 
@@ -142,6 +146,8 @@ auto cSurface =
     Surface::makeShared<CylinderSurface>(Transform3::Identity(), cCylinder);
 
 const int ntests = 5;
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 // This tests the Options
 BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
@@ -176,7 +182,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   using CylinderObserver = SurfaceObserver<CylinderSurface>;
   using ActorList = ActorList<CylinderObserver>;
@@ -196,9 +202,9 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -236,7 +242,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // setup propagation options - the tow step options
   EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
@@ -247,9 +253,9 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -316,7 +322,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // setup propagation options - 2 setp options
   EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
@@ -327,9 +333,9 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -397,7 +403,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
       Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
       ParticleHypothesis::pion());
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mctx;
 
   {
@@ -477,4 +483,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                   "Propagator unexpectedly inherits from BasePropagator");
   }
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

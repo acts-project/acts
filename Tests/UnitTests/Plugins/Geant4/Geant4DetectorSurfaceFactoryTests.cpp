@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "ActsPlugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <numbers>
@@ -32,7 +32,9 @@ using namespace ActsPlugins;
 
 class G4VPhysicalVolume;
 
-BOOST_AUTO_TEST_SUITE(Geant4Plugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(Geant4Suite)
 
 BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_box) {
   G4Box* worldS = new G4Box("world", 100, 100, 100);
@@ -47,16 +49,16 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_box) {
   G4Transform3D nominal;
 
   // Get the box
-  auto nameSelector = std::make_shared<
-      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
-      std::vector<std::string>{"ox"}, false);
+  auto nameSelector =
+      std::make_shared<Geant4PhysicalVolumeSelectors::NameSelector>(
+          std::vector<std::string>{"ox"}, false);
 
-  ActsPlugins::Geant4DetectorSurfaceFactory::Cache cache;
-  ActsPlugins::Geant4DetectorSurfaceFactory::Options options;
+  Geant4DetectorSurfaceFactory::Cache cache;
+  Geant4DetectorSurfaceFactory::Options options;
   options.sensitiveSurfaceSelector = nameSelector;
 
-  ActsPlugins::Geant4DetectorSurfaceFactory::Config factoryConfig;
-  ActsPlugins::Geant4DetectorSurfaceFactory factory(factoryConfig);
+  Geant4DetectorSurfaceFactory::Config factoryConfig;
+  Geant4DetectorSurfaceFactory factory(factoryConfig);
 
   factory.construct(cache, nominal, *boxPV, options);
 
@@ -85,16 +87,16 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Cylinder) {
   G4Transform3D nominal;
 
   // Get the box
-  auto nameSelector = std::make_shared<
-      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
-      std::vector<std::string>{"yl"}, false);
+  auto nameSelector =
+      std::make_shared<Geant4PhysicalVolumeSelectors::NameSelector>(
+          std::vector<std::string>{"yl"}, false);
 
-  ActsPlugins::Geant4DetectorSurfaceFactory::Cache cache;
-  ActsPlugins::Geant4DetectorSurfaceFactory::Options options;
+  Geant4DetectorSurfaceFactory::Cache cache;
+  Geant4DetectorSurfaceFactory::Options options;
   options.sensitiveSurfaceSelector = nameSelector;
 
-  ActsPlugins::Geant4DetectorSurfaceFactory::Config factoryConfig;
-  ActsPlugins::Geant4DetectorSurfaceFactory factory(factoryConfig);
+  Geant4DetectorSurfaceFactory::Config factoryConfig;
+  Geant4DetectorSurfaceFactory factory(factoryConfig);
   factory.construct(cache, nominal, *cylinderPV, options);
 
   BOOST_CHECK_EQUAL(cache.sensitiveSurfaces.size(), 1u);
@@ -105,7 +107,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Cylinder) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   G4Box* worldS = new G4Box("world", 1000, 1000, 1000);
   G4LogicalVolume* worldLV = new G4LogicalVolume(worldS, nullptr, "World");
@@ -140,18 +142,18 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
       transformVol3, vol3L, "Volume3", vol2L, false, 0, false);
 
   // Get the lowest volume
-  auto nameSelector = std::make_shared<
-      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
-      std::vector<std::string>{"olume"}, false);
+  auto nameSelector =
+      std::make_shared<Geant4PhysicalVolumeSelectors::NameSelector>(
+          std::vector<std::string>{"olume"}, false);
 
-  ActsPlugins::Geant4DetectorSurfaceFactory::Cache cache;
-  ActsPlugins::Geant4DetectorSurfaceFactory::Options options;
+  Geant4DetectorSurfaceFactory::Cache cache;
+  Geant4DetectorSurfaceFactory::Options options;
   options.sensitiveSurfaceSelector = nameSelector;
 
   G4Transform3D nominal;
 
-  ActsPlugins::Geant4DetectorSurfaceFactory::Config factoryConfig;
-  ActsPlugins::Geant4DetectorSurfaceFactory factory(factoryConfig);
+  Geant4DetectorSurfaceFactory::Config factoryConfig;
+  Geant4DetectorSurfaceFactory factory(factoryConfig);
   factory.construct(cache, nominal, *worldPV, options);
 
   auto [element, surface] = cache.sensitiveSurfaces.front();
@@ -208,10 +210,9 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
   // for a speicif alignment behavior and overwrite the transform() method.
   //
   // Here we demonstrate it with an override of the thickness() method
-  class ExtendedGeant4DetectorElement
-      : public ActsPlugins::Geant4DetectorElement {
+  class ExtendedGeant4DetectorElement : public Geant4DetectorElement {
    public:
-    using ActsPlugins::Geant4DetectorElement::Geant4DetectorElement;
+    using Geant4DetectorElement::Geant4DetectorElement;
 
     double thickness() const final {
       // Overwrite the thickness to be 42
@@ -220,10 +221,10 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
   };
 
   // A factory method for the extended element
-  auto extendedElementFactory = [](std::shared_ptr<Surface> surface,
-                                   const G4VPhysicalVolume& g4physVol,
-                                   const Transform3& toGlobal, double thickness)
-      -> std::shared_ptr<ActsPlugins::Geant4DetectorElement> {
+  auto extendedElementFactory =
+      [](std::shared_ptr<Surface> surface, const G4VPhysicalVolume& g4physVol,
+         const Transform3& toGlobal,
+         double thickness) -> std::shared_ptr<Geant4DetectorElement> {
     return std::make_shared<ExtendedGeant4DetectorElement>(
         std::move(surface), g4physVol, toGlobal, thickness);
   };
@@ -239,17 +240,17 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
   G4Transform3D nominal;
 
   // Get the box
-  auto nameSelector = std::make_shared<
-      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
-      std::vector<std::string>{"ox"}, false);
+  auto nameSelector =
+      std::make_shared<Geant4PhysicalVolumeSelectors::NameSelector>(
+          std::vector<std::string>{"ox"}, false);
 
-  ActsPlugins::Geant4DetectorSurfaceFactory::Cache cache;
-  ActsPlugins::Geant4DetectorSurfaceFactory::Options options;
+  Geant4DetectorSurfaceFactory::Cache cache;
+  Geant4DetectorSurfaceFactory::Options options;
   options.sensitiveSurfaceSelector = nameSelector;
 
-  ActsPlugins::Geant4DetectorSurfaceFactory::Config config;
+  Geant4DetectorSurfaceFactory::Config config;
   config.detectorElementFactory = extendedElementFactory;
-  ActsPlugins::Geant4DetectorSurfaceFactory factory(config);
+  Geant4DetectorSurfaceFactory factory(config);
   factory.construct(cache, nominal, *boxPV, options);
 
   BOOST_CHECK_EQUAL(cache.sensitiveSurfaces.size(), 1u);
@@ -263,3 +264,5 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

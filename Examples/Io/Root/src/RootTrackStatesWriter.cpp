@@ -14,8 +14,9 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
@@ -116,7 +117,12 @@ RootTrackStatesWriter::RootTrackStatesWriter(
   m_outputTree->Branch("t_eTHETA", &m_t_eTHETA);
   m_outputTree->Branch("t_eQOP", &m_t_eQOP);
   m_outputTree->Branch("t_eT", &m_t_eT);
-  m_outputTree->Branch("particle_ids", &m_particleId);
+  m_outputTree->Branch("particle_ids_vertex_primary", &m_particleVertexPrimary);
+  m_outputTree->Branch("particle_ids_vertex_secondary",
+                       &m_particleVertexSecondary);
+  m_outputTree->Branch("particle_ids_particle", &m_particleParticle);
+  m_outputTree->Branch("particle_ids_generation", &m_particleGeneration);
+  m_outputTree->Branch("particle_ids_sub_particle", &m_particleSubParticle);
 
   m_outputTree->Branch("dim_hit", &m_dim_hit);
   m_outputTree->Branch("l_x_hit", &m_lx_hit);
@@ -280,25 +286,21 @@ ProcessCode RootTrackStatesWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
-
-  ACTS_INFO("Wrote states of trajectories to tree '"
-            << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
-
   return ProcessCode::SUCCESS;
 }
 
 RootTrackStatesWriter::StateType RootTrackStatesWriter::getStateType(
     ConstTrackStateProxy state) {
-  if (state.typeFlags().test(Acts::OutlierFlag)) {
+  if (state.typeFlags().isOutlier()) {
     return StateType::eOutlier;
   }
-  if (state.typeFlags().test(Acts::MeasurementFlag)) {
+  if (state.typeFlags().isMeasurement()) {
     return StateType::eMeasurement;
   }
-  if (state.typeFlags().test(Acts::HoleFlag)) {
+  if (state.typeFlags().isHole()) {
     return StateType::eHole;
   }
-  if (state.typeFlags().test(Acts::MaterialFlag)) {
+  if (state.typeFlags().isMaterial()) {
     return StateType::eMaterial;
   }
   return StateType::eUnknown;
@@ -306,9 +308,9 @@ RootTrackStatesWriter::StateType RootTrackStatesWriter::getStateType(
 
 ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
                                           const ConstTrackContainer& tracks) {
-  float nan = std::numeric_limits<float>::quiet_NaN();
+  constexpr float nan = std::numeric_limits<float>::quiet_NaN();
 
-  auto& gctx = ctx.geoContext;
+  const Acts::GeometryContext& gctx = ctx.geoContext;
   // Read additional input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
@@ -329,7 +331,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     m_nStates = track.nTrackStates();
 
     // Get the majority truth particle to this track
-    int truthQ = 1.;
+    int truthQ = 1;
     auto match = trackParticleMatching.find(track.index());
     if (match != trackParticleMatching.end() &&
         match->second.particle.has_value()) {
@@ -352,15 +354,17 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     // Get the trackStates on the trajectory
     m_nParams = {0, 0, 0, 0};
 
-    // particle barcodes for a given track state (size depends on a type of
-    // digitization, for smeared digitization is not more than 1)
-    std::vector<std::vector<std::uint32_t>> particleIds;
+    std::vector<std::uint32_t> particleVertexPrimary;
+    std::vector<std::uint32_t> particleVertexSecondary;
+    std::vector<std::uint32_t> particleParticle;
+    std::vector<std::uint32_t> particleGeneration;
+    std::vector<std::uint32_t> particleSubParticle;
 
     for (const auto& state : track.trackStatesReversed()) {
-      const auto& surface = state.referenceSurface();
+      const Acts::Surface& surface = state.referenceSurface();
 
       // get the geometry ID
-      auto geoID = surface.geometryId();
+      const Acts::GeometryIdentifier geoID = surface.geometryId();
       m_volumeID.push_back(geoID.volume());
       m_layerID.push_back(geoID.layer());
       m_moduleID.push_back(geoID.sensitive());
@@ -376,7 +380,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       // the truth track parameter at this track state
       Acts::BoundVector truthParams;
 
-      particleIds.clear();
+      particleVertexPrimary.clear();
+      particleVertexSecondary.clear();
+      particleParticle.clear();
+      particleGeneration.clear();
+      particleSubParticle.clear();
 
       if (!state.hasUncalibratedSourceLink()) {
         m_t_x.push_back(nan);
@@ -401,12 +409,14 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       } else {
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
-        auto sl =
+        const auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+
         const auto hitIdx = sl.index();
-        auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
-        auto [truthLocal, truthPos4, truthUnitDir] =
+        const auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
+        const auto [truthLocal, truthPos4, truthUnitDir] =
             averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         if (!indices.empty()) {
@@ -414,26 +424,31 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           // need to check their validity again.
           const auto simHitIdx0 = indices.begin()->second;
           const auto& simHit0 = *simHits.nth(simHitIdx0);
-          const auto p =
+          const double p =
               simHit0.momentum4Before().template segment<3>(Acts::eMom0).norm();
           truthParams[Acts::eBoundQOverP] = truthQ / p;
 
           // extract particle ids contributed to this track state
           for (auto const& [key, simHitIdx] : indices) {
             const auto& simHit = *simHits.nth(simHitIdx);
-            particleIds.push_back(simHit.particleId().asVector());
+            const auto barcode = simHit.particleId();
+            particleVertexPrimary.push_back(barcode.vertexPrimary());
+            particleVertexSecondary.push_back(barcode.vertexSecondary());
+            particleParticle.push_back(barcode.particle());
+            particleGeneration.push_back(barcode.generation());
+            particleSubParticle.push_back(barcode.subParticle());
           }
         }
 
         // fill the truth hit info
-        m_t_x.push_back(static_cast<float>(truthPos4[Acts::ePos0]));
-        m_t_y.push_back(static_cast<float>(truthPos4[Acts::ePos1]));
-        m_t_z.push_back(static_cast<float>(truthPos4[Acts::ePos2]));
-        m_t_r.push_back(static_cast<float>(
+        m_t_x.push_back(Acts::clampValue<float>(truthPos4[Acts::ePos0]));
+        m_t_y.push_back(Acts::clampValue<float>(truthPos4[Acts::ePos1]));
+        m_t_z.push_back(Acts::clampValue<float>(truthPos4[Acts::ePos2]));
+        m_t_r.push_back(Acts::clampValue<float>(
             perp(truthPos4.template segment<3>(Acts::ePos0))));
-        m_t_dx.push_back(static_cast<float>(truthUnitDir[Acts::eMom0]));
-        m_t_dy.push_back(static_cast<float>(truthUnitDir[Acts::eMom1]));
-        m_t_dz.push_back(static_cast<float>(truthUnitDir[Acts::eMom2]));
+        m_t_dx.push_back(Acts::clampValue<float>(truthUnitDir[Acts::eMom0]));
+        m_t_dy.push_back(Acts::clampValue<float>(truthUnitDir[Acts::eMom1]));
+        m_t_dz.push_back(Acts::clampValue<float>(truthUnitDir[Acts::eMom2]));
 
         // get the truth track parameter at this track State
         truthParams[Acts::eBoundLoc0] = truthLocal[Acts::ePos0];
@@ -443,28 +458,35 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         truthParams[Acts::eBoundTime] = truthPos4[Acts::eTime];
 
         // fill the truth track parameter at this track State
-        m_t_eLOC0.push_back(static_cast<float>(truthParams[Acts::eBoundLoc0]));
-        m_t_eLOC1.push_back(static_cast<float>(truthParams[Acts::eBoundLoc1]));
-        m_t_ePHI.push_back(static_cast<float>(truthParams[Acts::eBoundPhi]));
+        m_t_eLOC0.push_back(
+            Acts::clampValue<float>(truthParams[Acts::eBoundLoc0]));
+        m_t_eLOC1.push_back(
+            Acts::clampValue<float>(truthParams[Acts::eBoundLoc1]));
+        m_t_ePHI.push_back(
+            Acts::clampValue<float>(truthParams[Acts::eBoundPhi]));
         m_t_eTHETA.push_back(
-            static_cast<float>(truthParams[Acts::eBoundTheta]));
-        m_t_eQOP.push_back(static_cast<float>(truthParams[Acts::eBoundQOverP]));
-        m_t_eT.push_back(static_cast<float>(truthParams[Acts::eBoundTime]));
+            Acts::clampValue<float>(truthParams[Acts::eBoundTheta]));
+        m_t_eQOP.push_back(
+            Acts::clampValue<float>(truthParams[Acts::eBoundQOverP]));
+        m_t_eT.push_back(
+            Acts::clampValue<float>(truthParams[Acts::eBoundTime]));
 
         // expand the local measurements into the full bound space
-        Acts::BoundVector meas = state.projectorSubspaceHelper().expandVector(
-            state.effectiveCalibrated());
+        const Acts::BoundVector meas =
+            state.projectorSubspaceHelper().expandVector(
+                state.effectiveCalibrated());
         // extract local and global position
-        Acts::Vector2 local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
-        Acts::Vector3 global =
+        const Acts::Vector2 local(meas[Acts::eBoundLoc0],
+                                  meas[Acts::eBoundLoc1]);
+        const Acts::Vector3 global =
             surface.localToGlobal(ctx.geoContext, local, truthUnitDir);
 
         // fill the measurement info
-        m_lx_hit.push_back(static_cast<float>(local[Acts::ePos0]));
-        m_ly_hit.push_back(static_cast<float>(local[Acts::ePos1]));
-        m_x_hit.push_back(static_cast<float>(global[Acts::ePos0]));
-        m_y_hit.push_back(static_cast<float>(global[Acts::ePos1]));
-        m_z_hit.push_back(static_cast<float>(global[Acts::ePos2]));
+        m_lx_hit.push_back(Acts::clampValue<float>(local[Acts::ePos0]));
+        m_ly_hit.push_back(Acts::clampValue<float>(local[Acts::ePos1]));
+        m_x_hit.push_back(Acts::clampValue<float>(global[Acts::ePos0]));
+        m_y_hit.push_back(Acts::clampValue<float>(global[Acts::ePos1]));
+        m_z_hit.push_back(Acts::clampValue<float>(global[Acts::ePos2]));
       }
 
       // lambda to get the fitted track parameters
@@ -489,7 +511,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       // fill the fitted track parameters
       for (unsigned int ipar = 0; ipar < eSize; ++ipar) {
         // get the fitted track parameters
-        auto trackParamsOpt = getTrackParams(ipar);
+        const auto trackParamsOpt = getTrackParams(ipar);
         // fill the track parameters status
         m_hasParams[ipar].push_back(trackParamsOpt.has_value());
 
@@ -547,126 +569,143 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         // track parameters
         m_eLOC0[ipar].push_back(
-            static_cast<float>(parameters[Acts::eBoundLoc0]));
+            Acts::clampValue<float>(parameters[Acts::eBoundLoc0]));
         m_eLOC1[ipar].push_back(
-            static_cast<float>(parameters[Acts::eBoundLoc1]));
-        m_ePHI[ipar].push_back(static_cast<float>(parameters[Acts::eBoundPhi]));
+            Acts::clampValue<float>(parameters[Acts::eBoundLoc1]));
+        m_ePHI[ipar].push_back(
+            Acts::clampValue<float>(parameters[Acts::eBoundPhi]));
         m_eTHETA[ipar].push_back(
-            static_cast<float>(parameters[Acts::eBoundTheta]));
+            Acts::clampValue<float>(parameters[Acts::eBoundTheta]));
         m_eQOP[ipar].push_back(
-            static_cast<float>(parameters[Acts::eBoundQOverP]));
-        m_eT[ipar].push_back(static_cast<float>(parameters[Acts::eBoundTime]));
+            Acts::clampValue<float>(parameters[Acts::eBoundQOverP]));
+        m_eT[ipar].push_back(
+            Acts::clampValue<float>(parameters[Acts::eBoundTime]));
 
         // track parameters error
         Acts::BoundVector errors;
         for (Eigen::Index i = 0; i < parameters.size(); ++i) {
-          double variance = covariance(i, i);
+          const double variance = covariance(i, i);
           errors[i] = variance >= 0 ? std::sqrt(variance) : nan;
         }
         m_err_eLOC0[ipar].push_back(
-            static_cast<float>(errors[Acts::eBoundLoc0]));
+            Acts::clampValue<float>(errors[Acts::eBoundLoc0]));
         m_err_eLOC1[ipar].push_back(
-            static_cast<float>(errors[Acts::eBoundLoc1]));
-        m_err_ePHI[ipar].push_back(static_cast<float>(errors[Acts::eBoundPhi]));
+            Acts::clampValue<float>(errors[Acts::eBoundLoc1]));
+        m_err_ePHI[ipar].push_back(
+            Acts::clampValue<float>(errors[Acts::eBoundPhi]));
         m_err_eTHETA[ipar].push_back(
-            static_cast<float>(errors[Acts::eBoundTheta]));
+            Acts::clampValue<float>(errors[Acts::eBoundTheta]));
         m_err_eQOP[ipar].push_back(
-            static_cast<float>(errors[Acts::eBoundQOverP]));
-        m_err_eT[ipar].push_back(static_cast<float>(errors[Acts::eBoundTime]));
+            Acts::clampValue<float>(errors[Acts::eBoundQOverP]));
+        m_err_eT[ipar].push_back(
+            Acts::clampValue<float>(errors[Acts::eBoundTime]));
 
         // further track parameter info
-        Acts::FreeVector freeParams =
+        const Acts::FreeVector freeParams =
             Acts::transformBoundToFreeParameters(surface, gctx, parameters);
-        m_x[ipar].push_back(freeParams[Acts::eFreePos0]);
-        m_y[ipar].push_back(freeParams[Acts::eFreePos1]);
-        m_z[ipar].push_back(freeParams[Acts::eFreePos2]);
+        m_x[ipar].push_back(
+            Acts::clampValue<float>(freeParams[Acts::eFreePos0]));
+        m_y[ipar].push_back(
+            Acts::clampValue<float>(freeParams[Acts::eFreePos1]));
+        m_z[ipar].push_back(
+            Acts::clampValue<float>(freeParams[Acts::eFreePos2]));
         // single charge assumption
-        auto p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
-        m_px[ipar].push_back(p * freeParams[Acts::eFreeDir0]);
-        m_py[ipar].push_back(p * freeParams[Acts::eFreeDir1]);
-        m_pz[ipar].push_back(p * freeParams[Acts::eFreeDir2]);
-        m_pT[ipar].push_back(p * std::hypot(freeParams[Acts::eFreeDir0],
-                                            freeParams[Acts::eFreeDir1]));
-        m_eta[ipar].push_back(
-            Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0)));
+        const double p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
+        m_px[ipar].push_back(
+            Acts::clampValue<float>(p * freeParams[Acts::eFreeDir0]));
+        m_py[ipar].push_back(
+            Acts::clampValue<float>(p * freeParams[Acts::eFreeDir1]));
+        m_pz[ipar].push_back(
+            Acts::clampValue<float>(p * freeParams[Acts::eFreeDir2]));
+        m_pT[ipar].push_back(Acts::clampValue<float>(
+            p * std::hypot(freeParams[Acts::eFreeDir0],
+                           freeParams[Acts::eFreeDir1])));
+        m_eta[ipar].push_back(Acts::clampValue<float>(
+            Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0))));
 
         if (!state.hasUncalibratedSourceLink()) {
           continue;
         }
 
         // track parameters residual
-        Acts::BoundVector residuals;
-        residuals = parameters - truthParams;
+        Acts::BoundVector residuals = parameters - truthParams;
         residuals[Acts::eBoundPhi] = Acts::detail::difference_periodic(
             parameters[Acts::eBoundPhi], truthParams[Acts::eBoundPhi],
             2 * std::numbers::pi);
         m_res_eLOC0[ipar].push_back(
-            static_cast<float>(residuals[Acts::eBoundLoc0]));
+            Acts::clampValue<float>(residuals[Acts::eBoundLoc0]));
         m_res_eLOC1[ipar].push_back(
-            static_cast<float>(residuals[Acts::eBoundLoc1]));
+            Acts::clampValue<float>(residuals[Acts::eBoundLoc1]));
         m_res_ePHI[ipar].push_back(
-            static_cast<float>(residuals[Acts::eBoundPhi]));
+            Acts::clampValue<float>(residuals[Acts::eBoundPhi]));
         m_res_eTHETA[ipar].push_back(
-            static_cast<float>(residuals[Acts::eBoundTheta]));
+            Acts::clampValue<float>(residuals[Acts::eBoundTheta]));
         m_res_eQOP[ipar].push_back(
-            static_cast<float>(residuals[Acts::eBoundQOverP]));
+            Acts::clampValue<float>(residuals[Acts::eBoundQOverP]));
         m_res_eT[ipar].push_back(
-            static_cast<float>(residuals[Acts::eBoundTime]));
+            Acts::clampValue<float>(residuals[Acts::eBoundTime]));
 
         // track parameters pull
-        Acts::BoundVector pulls;
+        Acts::BoundVector pulls = Acts::BoundVector::Constant(nan);
         for (Eigen::Index i = 0; i < parameters.size(); ++i) {
           pulls[i] = (!std::isnan(errors[i]) && errors[i] > 0)
                          ? residuals[i] / errors[i]
                          : nan;
         }
         m_pull_eLOC0[ipar].push_back(
-            static_cast<float>(pulls[Acts::eBoundLoc0]));
+            Acts::clampValue<float>(pulls[Acts::eBoundLoc0]));
         m_pull_eLOC1[ipar].push_back(
-            static_cast<float>(pulls[Acts::eBoundLoc1]));
-        m_pull_ePHI[ipar].push_back(static_cast<float>(pulls[Acts::eBoundPhi]));
+            Acts::clampValue<float>(pulls[Acts::eBoundLoc1]));
+        m_pull_ePHI[ipar].push_back(
+            Acts::clampValue<float>(pulls[Acts::eBoundPhi]));
         m_pull_eTHETA[ipar].push_back(
-            static_cast<float>(pulls[Acts::eBoundTheta]));
+            Acts::clampValue<float>(pulls[Acts::eBoundTheta]));
         m_pull_eQOP[ipar].push_back(
-            static_cast<float>(pulls[Acts::eBoundQOverP]));
-        m_pull_eT[ipar].push_back(static_cast<float>(pulls[Acts::eBoundTime]));
+            Acts::clampValue<float>(pulls[Acts::eBoundQOverP]));
+        m_pull_eT[ipar].push_back(
+            Acts::clampValue<float>(pulls[Acts::eBoundTime]));
 
         if (ipar == ePredicted) {
           // local hit residual info
-          auto H =
+          const Acts::ActsDynamicMatrix H =
               state.projectorSubspaceHelper().fullProjector().topLeftCorner(
                   state.calibratedSize(), Acts::eBoundSize);
-          auto V = state.effectiveCalibratedCovariance();
-          auto resCov = V + H * covariance * H.transpose();
-          Acts::ActsDynamicVector res =
+          const Acts::ActsDynamicMatrix V =
+              state.effectiveCalibratedCovariance();
+          const Acts::ActsDynamicMatrix resCov =
+              V + H * covariance * H.transpose();
+          const Acts::ActsDynamicVector res =
               state.effectiveCalibrated() - H * parameters;
 
-          double resX = res[Acts::eBoundLoc0];
-          double errX = V(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
-                            ? std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0))
-                            : nan;
-          double pullX =
+          const double resX = res[Acts::eBoundLoc0];
+          const double errX =
+              V(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
+                  ? std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0))
+                  : nan;
+          const double pullX =
               resCov(Acts::eBoundLoc0, Acts::eBoundLoc0) > 0
                   ? resX / std::sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0))
                   : nan;
 
-          m_res_x_hit.push_back(static_cast<float>(resX));
-          m_err_x_hit.push_back(static_cast<float>(errX));
-          m_pull_x_hit.push_back(static_cast<float>(pullX));
+          m_res_x_hit.push_back(Acts::clampValue<float>(resX));
+          m_err_x_hit.push_back(Acts::clampValue<float>(errX));
+          m_pull_x_hit.push_back(Acts::clampValue<float>(pullX));
 
           if (state.calibratedSize() >= 2) {
-            double resY = res[Acts::eBoundLoc1];
-            double errY = V(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
-                              ? std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1))
-                              : nan;
-            double pullY = resCov(Acts::eBoundLoc1, Acts::eBoundLoc1) > 0
-                               ? resY / std::sqrt(resCov(Acts::eBoundLoc1,
-                                                         Acts::eBoundLoc1))
-                               : nan;
+            const double resY = res[Acts::eBoundLoc1];
+            const double errY =
+                V(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
+                    ? std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1))
+                    : nan;
+            const double pullY =
+                resCov(Acts::eBoundLoc1, Acts::eBoundLoc1) > 0
+                    ? resY /
+                          std::sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1))
+                    : nan;
 
-            m_res_y_hit.push_back(static_cast<float>(resY));
-            m_err_y_hit.push_back(static_cast<float>(errY));
-            m_pull_y_hit.push_back(static_cast<float>(pullY));
+            m_res_y_hit.push_back(Acts::clampValue<float>(resY));
+            m_err_y_hit.push_back(Acts::clampValue<float>(errY));
+            m_pull_y_hit.push_back(Acts::clampValue<float>(pullY));
           } else {
             m_res_y_hit.push_back(nan);
             m_err_y_hit.push_back(nan);
@@ -676,7 +715,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           m_dim_hit.push_back(state.calibratedSize());
         }
       }
-      m_particleId.push_back(std::move(particleIds));
+      m_particleVertexPrimary.push_back(std::move(particleVertexPrimary));
+      m_particleVertexSecondary.push_back(std::move(particleVertexSecondary));
+      m_particleParticle.push_back(std::move(particleParticle));
+      m_particleGeneration.push_back(std::move(particleGeneration));
+      m_particleSubParticle.push_back(std::move(particleSubParticle));
     }
 
     // fill the variables for one track to tree
@@ -706,8 +749,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     m_t_eTHETA.clear();
     m_t_eQOP.clear();
     m_t_eT.clear();
-
-    m_particleId.clear();
+    m_particleVertexPrimary.clear();
+    m_particleVertexSecondary.clear();
+    m_particleParticle.clear();
+    m_particleGeneration.clear();
+    m_particleSubParticle.clear();
 
     m_dim_hit.clear();
     m_lx_hit.clear();

@@ -34,12 +34,13 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
+using namespace Acts;
+using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
 
 /// @brief create a small tracking geometry to map some dummy material on
 std::shared_ptr<const TrackingGeometry> trackingGeometry() {
-  using namespace Acts::UnitLiterals;
-
   BinUtility zbinned(8, -40, 40, open, AxisDirection::AxisZ);
   auto matProxy = std::make_shared<const ProtoSurfaceMaterial>(zbinned);
 
@@ -94,7 +95,7 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
   auto centralVolumeBounds =
       std::make_shared<const CylinderVolumeBounds>(0., 40., 110.);
 
-  GeometryContext gCtx;
+  auto gCtx = GeometryContext::dangerouslyDefaultConstruct();
   auto centralVolume =
       centralVolumeBuilder->trackingVolume(gCtx, nullptr, centralVolumeBounds);
 
@@ -103,9 +104,7 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
 
 std::shared_ptr<const TrackingGeometry> tGeometry = trackingGeometry();
 
-}  // namespace Acts
-
-namespace Acts::Test {
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
@@ -120,7 +119,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   SurfaceMaterialMapper smMapper(smmConfig, std::move(propagator));
 
   /// Create some contexts
-  GeometryContext gCtx;
+  auto gCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mfCtx;
 
   /// Now create the mapper state
@@ -130,4 +129,6 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3u);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

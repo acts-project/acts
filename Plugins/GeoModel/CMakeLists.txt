@@ -1,8 +1,6 @@
 acts_add_library(
     PluginGeoModel
-    SHARED
     src/GeoModelTree.cpp
-    src/GeoModelBlueprintCreater.cpp
     src/GeoModelConversionError.cpp
     src/GeoModelToDetectorVolume.cpp
     src/GeoModelReader.cpp

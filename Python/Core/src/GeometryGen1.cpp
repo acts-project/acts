@@ -36,6 +36,9 @@ void addGeometryGen1(py::module_ &m) {
 
   py::class_<Layer, std::shared_ptr<Layer>>(m, "Layer");
 
+  py::class_<BoundarySurfaceT<TrackingVolume>>(
+      m, "BoundarySurfaceT_TrackingVolume");
+
   {
     auto creator =
         py::class_<LayerCreator>(m, "LayerCreator")

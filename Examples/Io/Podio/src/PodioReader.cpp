@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsPlugins/Podio/PodioUtil.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 
 #include <filesystem>
 

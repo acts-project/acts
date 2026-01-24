@@ -8,10 +8,13 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
+
 #include <concepts>
 
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
+#include <pybind11/pybind11.h>
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -54,21 +57,24 @@ concept has_write_method =
     ACTS_PYTHON_STRUCT_END();                                    \
   } while (0)
 
+template <typename A, typename B>
+auto declareAlgorithm(pybind11::module_& m, const char* name) {
+  using Config = typename A::Config;
+  auto alg = pybind11::class_<A, B, std::shared_ptr<A>>(m, name)
+                 .def(pybind11::init<const Config&, Acts::Logging::Level>(),
+                      pybind11::arg("config"), pybind11::arg("level"))
+                 .def_property_readonly("config", &A::config);
+  auto c = pybind11::class_<Config>(alg, "Config").def(pybind11::init<>());
+  return std::tuple{alg, c};
+}
+
 /// A macro that uses Boost.Preprocessor to create the python binding for and
 /// algorithm and the additional config struct.
-#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, mod, name, ...)              \
-  do {                                                                        \
-    using Alg = algorithm;                                                    \
-    using Config = Alg::Config;                                               \
-    auto alg =                                                                \
-        py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(mod,  \
-                                                                        name) \
-            .def(py::init<const Config&, Acts::Logging::Level>(),             \
-                 py::arg("config"), py::arg("level"))                         \
-            .def_property_readonly("config", &Alg::config);                   \
-                                                                              \
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());             \
-    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                       \
+#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, mod, name, ...)          \
+  do {                                                                    \
+    auto [alg, c] =                                                       \
+        declareAlgorithm<algorithm, ActsExamples::IAlgorithm>(mod, name); \
+    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                   \
   } while (0)
 
 /// Similar as above for writers

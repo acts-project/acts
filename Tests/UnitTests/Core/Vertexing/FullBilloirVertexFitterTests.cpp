@@ -22,13 +22,13 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -44,14 +44,15 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // 4D vertex distributions
@@ -104,6 +105,8 @@ struct InputTrackStub {
  private:
   BoundTrackParameters m_parameters;
 };
+
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
 ///
 /// @brief Unit test for FullBilloirVertexFitter
@@ -220,7 +223,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     // Calculate random track emerging from vicinity of vertex position
     for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
       // Charge
-      double q = qDist(gen) < 0 ? -1. : 1.;
+      double q = std::copysign(1., qDist(gen));
 
       // Track parameters
       BoundVector paramVec;
@@ -296,4 +299,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     }
   }
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

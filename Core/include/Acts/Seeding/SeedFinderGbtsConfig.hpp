@@ -10,68 +10,70 @@
 
 // TODO: update to C++17 style
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/GbtsBase.hpp"  //definition of Trigsispacepoint base and trigtriplets
-#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
-#include <memory>
+#include <string>
 
 // core algorithm so in acts namespace
 namespace Acts::Experimental {
 
-template <typename SpacePoint>
 struct SeedFinderGbtsConfig {
-  // // how many sigmas of scattering angle should be considered?
-  float sigmaScattering = 5;
+  // GbtsSeedingAlgorithm options
+  bool BeamSpotCorrection = false;
 
-  // Seed cut
-  float minPt = 400. * Acts::UnitConstants::MeV;
+  // Path to the connector configuration file that defines the layer connections
+  std::string connectorInputFile;
 
-  //   //detector ROI
-  //   // derived values, set on SeedFinder construction
-  float highland = 0;
-  float maxScatteringAngle2 = 0;
-  /// for load space points
+  std::string lutInputFile;
 
-  // Parameter which can loosen the tolerance of the track seed to form a
-  // helix. This is useful for e.g. misaligned seeding.
-  float helixCutTolerance = 1.;
+  // SeedFinderGbts option
+  bool LRTmode = false;
+  bool useML = false;  // use cluster width
+  bool matchBeforeCreate = false;
+  bool useOldTunings = false;
+  float tau_ratio_cut = 0.007;
+  float tau_ratio_precut = 0.009f;
+  float etaBinOverride =
+      0.0f;  // specify non-zero to override eta bin width from connection file
+             // (default 0.2 in createLinkingScheme.py)
+  float nMaxPhiSlice = 53;  // used to calculate phi slices
+  float minPt = 1000. * UnitConstants::MeV;
+  float phiSliceWidth{};  // derived in CreatSeeds function
 
-  float m_phiSliceWidth{};    // initialised in loadSpacePoints function
-  float m_nMaxPhiSlice = 53;  // used to calculate phi slices
-  bool m_useClusterWidth =
-      false;  // bool for use of cluster width in loadSpacePoints function
-  std::string ConnectorInputFile;  // Path to the connector configuration file
-                                   // that defines the layer connections
-  std::vector<TrigInDetSiLayer> m_layerGeometry;
-
-  // for runGbts_TrackFinder
-  bool m_useEtaBinning =
-      true;  // bool to use eta binning from geometry structure
-  bool m_doubletFilterRZ = true;  // bool applies new Z cuts on doublets
-  float m_minDeltaRadius = 2.0;   // min dr for doublet
-  float m_tripletD0Max = 4.0;     // D0 cut for triplets
-  unsigned int m_maxTripletBufferLength =
-      3;                        // maximum number of space points per triplet
-  int MaxEdges = 2000000;       // max number of Gbts edges/doublets
-  float cut_dphi_max = 0.012;   // phi cut for triplets
-  float cut_dcurv_max = 0.001;  // curv cut for triplets
-  float cut_tau_ratio_max = 0.007;  // tau cut for doublets and triplets
-  float maxOuterRadius = 550.0;     // used to calculate Z cut on doublets
-  float m_PtMin = 1000.0;
-  float m_tripletPtMinFrac = 0.3;
-  float m_tripletPtMin = m_PtMin * m_tripletPtMinFrac;  // Limit on triplet pt
+  // BuildTheGraph() options
   double ptCoeff =
       0.29997 * 1.9972 / 2.0;  // ~0.3*B/2 - assumes nominal field of 2*T
+  bool useEtaBinning = true;  // bool to use eta binning from geometry structure
+  bool doubletFilterRZ = true;  // bool applies new Z cuts on doublets
+  int nMaxEdges = 2000000;      // max number of Gbts edges/doublets
+  float minDeltaRadius = 2.0;
 
-  // ROI:
-  bool containsPhi() {
-    return false;
-    // need to implement this function
-  }
+  // GbtsTrackingFilter
+  // Update()
+  float sigmaMS = 0.016;  // for 900 MeV track at eta=0
+  float radLen = 0.025;   // 2.5% per layer
 
-  ////
+  float sigma_x = 0.08;
+  float sigma_y = 0.25;
+
+  float weight_x = 0.5;
+  float weight_y = 0.5;
+
+  float maxDChi2_x = 5.0;
+  float maxDChi2_y = 6.0;
+
+  float add_hit = 14.0;
+
+  float max_curvature = 1e-3f;
+  float max_z0 = 170.0;
+
+  // extractSeedsFromTheGraph()
+  float edge_mask_min_eta = 1.5;
+  float hit_share_threshold = 0.49;
+
+  // GbtsDataStorage
+  float max_endcap_clusterwidth = 0.35;
+
   // 2 member functions
   SeedFinderGbtsConfig calculateDerivedQuantities() const {
     // thorw statement if the isInternalUnits member is false, ie if dont call
