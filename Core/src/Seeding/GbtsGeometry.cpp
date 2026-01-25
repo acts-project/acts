@@ -14,18 +14,18 @@
 
 namespace Acts::Experimental {
 
-GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, float ew, int bin0)
+GbtsLayer::GbtsLayer(const TrigInDetSiLayer* ls, float ew, int bin0)
     : m_layer(ls), m_etaBinWidth(ew) {
-  if (m_layer.m_type == 0) {  // barrel
-    m_r1 = m_layer.m_refCoord;
-    m_r2 = m_layer.m_refCoord;
-    m_z1 = m_layer.m_minBound;
-    m_z2 = m_layer.m_maxBound;
+  if (m_layer->m_type == 0) {  // barrel
+    m_r1 = m_layer->m_refCoord;
+    m_r2 = m_layer->m_refCoord;
+    m_z1 = m_layer->m_minBound;
+    m_z2 = m_layer->m_maxBound;
   } else {  // endcap
-    m_r1 = m_layer.m_minBound;
-    m_r2 = m_layer.m_maxBound;
-    m_z1 = m_layer.m_refCoord;
-    m_z2 = m_layer.m_refCoord;
+    m_r1 = m_layer->m_minBound;
+    m_r2 = m_layer->m_maxBound;
+    m_z1 = m_layer->m_refCoord;
+    m_z2 = m_layer->m_refCoord;
   }
 
   float t1 = m_z1 / m_r1;
@@ -53,16 +53,16 @@ GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, float ew, int bin0)
     m_nBins = 1;
     m_bins.push_back(binCounter++);
     m_etaBin = deltaEta;
-    if (m_layer.m_type == 0) {  // barrel
-      m_minRadius.push_back(m_layer.m_refCoord - 2.0);
-      m_maxRadius.push_back(m_layer.m_refCoord + 2.0);
-      m_minBinCoord.push_back(m_layer.m_minBound);
-      m_maxBinCoord.push_back(m_layer.m_maxBound);
+    if (m_layer->m_type == 0) {  // barrel
+      m_minRadius.push_back(m_layer->m_refCoord - 2.0);
+      m_maxRadius.push_back(m_layer->m_refCoord + 2.0);
+      m_minBinCoord.push_back(m_layer->m_minBound);
+      m_maxBinCoord.push_back(m_layer->m_maxBound);
     } else {  // endcap
-      m_minRadius.push_back(m_layer.m_minBound - 2.0);
-      m_maxRadius.push_back(m_layer.m_maxBound + 2.0);
-      m_minBinCoord.push_back(m_layer.m_minBound);
-      m_maxBinCoord.push_back(m_layer.m_maxBound);
+      m_minRadius.push_back(m_layer->m_minBound - 2.0);
+      m_maxRadius.push_back(m_layer->m_maxBound + 2.0);
+      m_minBinCoord.push_back(m_layer->m_minBound);
+      m_maxBinCoord.push_back(m_layer->m_maxBound);
     }
   } else {
     int nB = static_cast<int>(deltaEta / m_etaBinWidth);
@@ -75,16 +75,16 @@ GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, float ew, int bin0)
 
     if (m_nBins == 1) {
       m_bins.push_back(binCounter++);
-      if (m_layer.m_type == 0) {  // barrel
-        m_minRadius.push_back(m_layer.m_refCoord - 2.0);
-        m_maxRadius.push_back(m_layer.m_refCoord + 2.0);
-        m_minBinCoord.push_back(m_layer.m_minBound);
-        m_maxBinCoord.push_back(m_layer.m_maxBound);
+      if (m_layer->m_type == 0) {  // barrel
+        m_minRadius.push_back(m_layer->m_refCoord - 2.0);
+        m_maxRadius.push_back(m_layer->m_refCoord + 2.0);
+        m_minBinCoord.push_back(m_layer->m_minBound);
+        m_maxBinCoord.push_back(m_layer->m_maxBound);
       } else {  // endcap
-        m_minRadius.push_back(m_layer.m_minBound - 2.0);
-        m_maxRadius.push_back(m_layer.m_maxBound + 2.0);
-        m_minBinCoord.push_back(m_layer.m_minBound);
-        m_maxBinCoord.push_back(m_layer.m_maxBound);
+        m_minRadius.push_back(m_layer->m_minBound - 2.0);
+        m_maxRadius.push_back(m_layer->m_maxBound + 2.0);
+        m_minBinCoord.push_back(m_layer->m_minBound);
+        m_maxBinCoord.push_back(m_layer->m_maxBound);
       }
     } else {
       float eta = m_minEta + 0.5 * m_etaBin;
@@ -95,18 +95,23 @@ GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, float ew, int bin0)
         float e1 = eta - 0.5 * m_etaBin;
         float e2 = eta + 0.5 * m_etaBin;
 
-        if (m_layer.m_type == 0) {  // barrel
-          m_minRadius.push_back(m_layer.m_refCoord - 2.0);
-          m_maxRadius.push_back(m_layer.m_refCoord + 2.0);
-          float z1 = m_layer.m_refCoord * std::sinh(e1);
+        if (m_layer->m_type == 0) {  // barrel
+          m_minRadius.push_back(m_layer->m_refCoord - 2.0);
+          m_maxRadius.push_back(m_layer->m_refCoord + 2.0);
+          float z1 = m_layer->m_refCoord * std::sinh(e1);
           m_minBinCoord.push_back(z1);
-          float z2 = m_layer.m_refCoord * std::sinh(e2);
+          float z2 = m_layer->m_refCoord * std::sinh(e2);
           m_maxBinCoord.push_back(z2);
         } else {  // endcap
-          float r = m_layer.m_refCoord / std::sinh(e1);
+
+          // for the positive endcap larger eta corresponds to smaller radius
+          if (m_layer->m_refCoord > 0) {
+            std::swap(e1, e2);
+          }
+          float r = m_layer->m_refCoord / std::sinh(e1);
           m_minBinCoord.push_back(r);
           m_minRadius.push_back(r - 2.0);
-          r = m_layer.m_refCoord / std::sinh(e2);
+          r = m_layer->m_refCoord / std::sinh(e2);
           m_maxBinCoord.push_back(r);
           m_maxRadius.push_back(r + 2.0);
         }
@@ -121,16 +126,16 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
                           float max_z0) const {
   float z1min = m_minBinCoord.at(b1);
   float z1max = m_maxBinCoord.at(b1);
-  float r1 = m_layer.m_refCoord;
+  float r1 = m_layer->m_refCoord;
 
-  if (m_layer.m_type == 0 && pL->m_layer.m_type == 0) {  // barrel -> barrel
+  if (m_layer->m_type == 0 && pL->m_layer->m_type == 0) {  // barrel <- barrel
 
     const float tol = 5.0;
 
     float min_b2 = pL->m_minBinCoord.at(b2);
     float max_b2 = pL->m_maxBinCoord.at(b2);
 
-    float r2 = pL->m_layer.m_refCoord;
+    float r2 = pL->m_layer->m_refCoord;
 
     float A = r2 / (r2 - r1);
     float B = r1 / (r2 - r1);
@@ -145,11 +150,9 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
     return true;
   }
 
-  if (m_layer.m_type == 0 && pL->m_layer.m_type != 0) {  // barrel -> endcap
+  if (m_layer->m_type == 0 && pL->m_layer->m_type != 0) {  // barrel <- endcap
 
-    const float tol = 10.0;
-
-    float z2 = pL->m_layer.m_refCoord;
+    float z2 = pL->m_layer->m_refCoord;
     float r2max = pL->m_maxBinCoord.at(b2);
     float r2min = pL->m_minBinCoord.at(b2);
 
@@ -172,7 +175,7 @@ bool GbtsLayer::verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
       z0_min = (z1min * r2max - z2 * r1) / (r2max - r1);
     }
 
-    if (z0_max < min_z0 - tol || z0_min > max_z0 + tol) {
+    if (z0_max < min_z0 || z0_min > max_z0) {
       return false;
     }
     return true;
@@ -221,10 +224,6 @@ float GbtsLayer::getMaxBinRadius(int idx) const {
   }
 
   return m_maxRadius.at(idx);
-}
-
-GbtsLayer::~GbtsLayer() {
-  m_bins.clear();
 }
 
 GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
@@ -296,15 +295,6 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
   }
 }
 
-GbtsGeometry::~GbtsGeometry() {
-  for (std::vector<GbtsLayer*>::iterator it = m_layArray.begin();
-       it != m_layArray.end(); ++it) {
-    delete (*it);
-  }
-  m_layMap.clear();
-  m_layArray.clear();
-}
-
 const GbtsLayer* GbtsGeometry::getGbtsLayerByKey(unsigned int key) const {
   std::map<unsigned int, GbtsLayer*>::const_iterator it = m_layMap.find(key);
   if (it == m_layMap.end()) {
@@ -314,7 +304,7 @@ const GbtsLayer* GbtsGeometry::getGbtsLayerByKey(unsigned int key) const {
 }
 
 const GbtsLayer* GbtsGeometry::getGbtsLayerByIndex(int idx) const {
-  return m_layArray.at(idx);
+  return m_layArray.at(idx).get();
 }
 
 const GbtsLayer* GbtsGeometry::addNewLayer(const TrigInDetSiLayer& l,
@@ -323,12 +313,13 @@ const GbtsLayer* GbtsGeometry::addNewLayer(const TrigInDetSiLayer& l,
 
   float ew = m_etaBinWidth;
 
-  GbtsLayer* pHL = new GbtsLayer(l, ew, bin0);
+  std::unique_ptr<GbtsLayer> pHL = std::make_unique<GbtsLayer>(&l, ew, bin0);
+  GbtsLayer* ref = pHL.get();
 
-  m_layMap.insert(std::pair<unsigned int, GbtsLayer*>(layerKey, pHL));
-  m_layArray.push_back(pHL);
+  m_layMap.insert(std::pair<unsigned int, GbtsLayer*>(layerKey, ref));
+  m_layArray.push_back(std::move(pHL));
   m_layerKeys.push_back(layerKey);
-  return pHL;
+  return ref;
 }
 
 }  // namespace Acts::Experimental

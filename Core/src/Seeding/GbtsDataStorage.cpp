@@ -113,7 +113,7 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
     return -1;
   }
 
-  bool isBarrel = (pL->m_layer.m_type == 0);
+  bool isBarrel = (pL->m_layer->m_type == 0);
 
   for (const auto& node : coll) {
     int binIndex = pL->getEtaBin(node.z(), node.r());
@@ -196,12 +196,12 @@ void GbtsDataStorage::initializeNodes(bool useML) {
   for (unsigned int layerIdx = 0; layerIdx < nL; layerIdx++) {
     const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIdx);
 
-    if (pL->m_layer.m_subdet <
+    if (pL->m_layer->m_subdet <
         20000) {  // skip strips volumes: layers in range [1200X-1400X]
       continue;
     }
 
-    bool isBarrel = (pL->m_layer.m_type == 0);
+    bool isBarrel = (pL->m_layer->m_type == 0);
 
     if (!isBarrel) {
       continue;
