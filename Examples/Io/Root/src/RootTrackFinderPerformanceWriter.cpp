@@ -306,19 +306,18 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
     bool isReconstructed = false;
     if (auto imatched = particleTrackMatching.find(particleId);
         imatched != particleTrackMatching.end()) {
-      nMatchedTracks = (imatched->second.track.has_value() ? 1 : 0) +
-                       imatched->second.duplicates;
+      isReconstructed = imatched->second.track.has_value();
+      nMatchedTracks = (isReconstructed ? 1 : 0) + imatched->second.duplicates;
 
       // Add number for total matched tracks here
       m_nTotalMatchedTracks += nMatchedTracks;
-      m_nTotalMatchedParticles += imatched->second.track.has_value() ? 1 : 0;
+      m_nTotalMatchedParticles += isReconstructed ? 1 : 0;
 
       // Check if the particle has more than one matched track for the duplicate
       // rate/ratio
       if (nMatchedTracks > 1) {
         m_nTotalDuplicateParticles += 1;
       }
-      isReconstructed = imatched->second.track.has_value();
 
       nFakeTracks = imatched->second.fakes;
       if (nFakeTracks > 0) {
@@ -343,9 +342,9 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
     // Fill efficiency plots
     m_effPlotTool.fill(ctx.geoContext, m_effPlotCache, particle.initialState(),
                        minDeltaR, isReconstructed);
-    // Fill number of duplicated tracks for this particle, guard against underflow when nMatchedTracks == 0
+    // Fill duplication plots
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle.initialState(),
-                               nMatchedTracks > 0 ? nMatchedTracks - 1 : 0);
+                               nMatchedTracks);
 
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
     m_fakePlotTool.fill(m_fakePlotCache, particle.initialState(),
