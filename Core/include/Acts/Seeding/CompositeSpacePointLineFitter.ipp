@@ -371,7 +371,9 @@ CompositeSpacePointLineFitter::fit(
       result.converged = false;
     } else {
       ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed.");
-      return result;
+      if (!m_cfg.fullFitOnPreFail) {
+        return result;
+      }
     }
   }
   // Update the drift signs if no re-calibration per iteration is scheduled

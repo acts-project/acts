@@ -178,10 +178,10 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
     const FitAuxiliariesWithT0& fitPars, FitResultT0& fitResult) const {
   ++fitResult.nIter;
   if (fitResult.nIter > m_cfg.maxIter) {
-    ACTS_WARNING(__func__ << "() - " << __LINE__
-                          << ": The fast straw fit did not converge " << fitPars
-                          << "\n"
-                          << fitResult);
+    ACTS_DEBUG(__func__ << "() - " << __LINE__
+                        << ": The fast straw fit did not converge " << fitPars
+                        << "\n"
+                        << fitResult);
     return UpdateStatus::Exceeded;
   }
 
@@ -216,9 +216,9 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
       << (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta));
   const auto invCov = cov.inverse();
   if (invCov(1, 1) < 0) {
-    ACTS_WARNING("Invalid covariance\n"
-                 << cov << ", determinant: " << cov.determinant() << ", "
-                 << fitPars);
+    ACTS_DEBUG("Invalid covariance\n"
+               << invCov << cov << ", determinant: " << cov.determinant()
+               << ", " << fitPars);
     return UpdateStatus::Exceeded;
   }
   const Vector2 update = invCov * grad;

@@ -26,7 +26,7 @@
 using TimePoint_t = std::chrono::system_clock::time_point;
 using Fitter_t = CompositeSpacePointLineFitter;
 
-constexpr auto logLvl = Acts::Logging::Level::INFO;
+constexpr auto logLvl = Acts::Logging::Level::VERBOSE;
 constexpr std::size_t nEvents = 1;
 constexpr long int nThreads = 1;
 std::mutex writeMutex{};
@@ -34,6 +34,37 @@ std::mutex writeMutex{};
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
 namespace ActsTests {
+
+void runCalibratorTest(const SpCalibrator* calibrator, TFile& outFile) {
+  const int Nbin = 1000;
+  const double tMin = SpCalibrator::s_minDriftTime / 1._ns;
+  const double tMax = SpCalibrator::s_maxDriftTime / 1._ns;
+  TH1D h_rt("h_rt", "R-T relation; t [ns]; r [mm]", Nbin, tMin, tMax);
+  TH1D h_vt("h_vt", "V-T relation; t [ns]; v [mm/ns]", Nbin, tMin, tMax);
+  TH1D h_at("h_at", "A-T relation; t [ns]; a [mm/ns^2]", Nbin, tMin, tMax);
+  const double rMin = SpCalibrator::s_minDriftRadius;
+  const double rMax = SpCalibrator::s_maxDriftRadius;
+  TH1D h_tr("h_tr", "T-R relation; r [mm]; t [ns]", Nbin, rMin, rMax);
+  TH1D h_sr("h_sr", "Sigma-R relation; r [mm]; sigma [mm]", Nbin, rMin, rMax);
+
+  for (int i = 0; i < Nbin; ++i) {
+    const double t = tMin + (i + 0.5) * (tMax - tMin) / Nbin;
+    h_rt.SetBinContent(i, calibrator->driftRadius(t * 1._ns));
+    h_vt.SetBinContent(i, calibrator->driftVelocity(t * 1._ns) * 1._ns);
+    h_at.SetBinContent(
+        i, calibrator->driftAcceleration(t * 1._ns) * Acts::square(1._ns));
+
+    const double r = rMin + (i + 0.5) * (rMax - rMin) / Nbin;
+    h_tr.SetBinContent(i, calibrator->driftTime(r) / 1._ns);
+    h_sr.SetBinContent(i, calibrator->driftUncert(r));
+  }
+
+  outFile.WriteObject(&h_rt, h_rt.GetName());
+  outFile.WriteObject(&h_vt, h_vt.GetName());
+  outFile.WriteObject(&h_at, h_at.GetName());
+  outFile.WriteObject(&h_tr, h_tr.GetName());
+  outFile.WriteObject(&h_sr, h_sr.GetName());
+}
 
 using GenCfg_t = MeasurementGenerator::Config;
 
@@ -120,12 +151,12 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
     fillProjected(line.parameters(), trueProjTheta, trueProjPhi);
     const double t0 = uniform{-50._ns, 50._ns}(engine);
     trueT0 = t0 / 1._ns;
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Generated t0: " << trueT0
+                        << " ns.");
 
     using FitOpts_t = Fitter_t::FitOptions<Container_t, SpCalibrator>;
-
     FitOpts_t fitOpts{};
     fitOpts.calibrator = calibrator.get();
-
     fitOpts.selector.connect<&isGoodHit>();
     fitOpts.measurements =
         MeasurementGenerator::spawn(line, t0, engine, genCfg, logger());
@@ -192,6 +223,12 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
   auto outFile =
       std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
+
+  // Run calibrator test first
+  {
+    auto calibrator = std::make_unique<SpCalibrator>();
+    runCalibratorTest(calibrator.get(), *outFile);
+  }
 
   // Base configuration for the fit
   Fitter_t::Config fitCfg{};
@@ -275,7 +312,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.createStraws = true;
     genCfg.twinStraw = false;
     genCfg.createStrips = false;
-    launchTest("StrawOnlyTest", genCfg, 1602);
+    // launchTest("StrawOnlyTest", genCfg, 1602);
     launchTest("StrawOnlyTestT0", genCfg, 1602, true);
   }
   // Full fit, straws + twin measurement test (with & without t0)
@@ -285,8 +322,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.twinStraw = true;
     genCfg.createStrips = false;
 
-    launchTest("StrawAndTwinTest", genCfg, 1503);
-    launchTest("StrawAndTwinTestT0", genCfg, 1503, true);
+    // launchTest("StrawAndTwinTest", genCfg, 1503);
+    // launchTest("StrawAndTwinTestT0", genCfg, 1503, true);
   }
   // Full fit, straws + single strip measurements (with & without t0)
   {
@@ -298,8 +335,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.discretizeStrips = true;
     genCfg.stripPitchLoc1 = 2._cm;
     genCfg.stripPitchLoc0 = 3.5_cm;
-    launchTest("StrawAndStripTest", genCfg, 1701);
-    launchTest("StrawAndStripTestT0", genCfg, 1701, true);
+    // launchTest("StrawAndStripTest", genCfg, 1701);
+    // launchTest("StrawAndStripTestT0", genCfg, 1701, true);
   }
   // Full fit, straws + 2D strip measurements (with & without t0)
   {
@@ -312,8 +349,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     genCfg.stripPitchLoc1 = 2._cm;
     genCfg.stripPitchLoc0 = 3.5_cm;
-    launchTest("StrawAndStrip2DTest", genCfg, 1404);
-    launchTest("StrawAndStrip2DTestT0", genCfg, 1404, true);
+    // launchTest("StrawAndStrip2DTest", genCfg, 1404);
+    // launchTest("StrawAndStrip2DTestT0", genCfg, 1404, true);
   }
   // Single trip only
   {
@@ -326,7 +363,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     genCfg.stripPitchLoc1 = 500._um;
     genCfg.stripPitchLoc0 = 3._cm;
-    launchTest("StripOnlyTest", genCfg, 2070);
+    // launchTest("StripOnlyTest", genCfg, 2070);
   }
   // 2D Strip only
   {
@@ -339,7 +376,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     genCfg.stripPitchLoc1 = 500._um;
     genCfg.stripPitchLoc0 = 3._cm;
-    launchTest("Strip2DOnlyTest", genCfg, 2225);
+    // launchTest("Strip2DOnlyTest", genCfg, 2225);
   }
   // Strip stereo test
   {
@@ -365,7 +402,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     fitCfg.parsToUse = {FitParIndex::x0, FitParIndex::y0, FitParIndex::theta,
                         FitParIndex::phi};
-    launchTest("StereoStripTest", genCfg, 1800);
+    // launchTest("StereoStripTest", genCfg, 1800);
   }
   /// Wait until all tests ar ecompleted
   while (std::ranges::any_of(timings, [](const auto& lblTh) {

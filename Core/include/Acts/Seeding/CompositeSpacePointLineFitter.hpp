@@ -70,6 +70,9 @@ class CompositeSpacePointLineFitter {
     double badFastChi2SignSwap{5.};
     /// @brief Switch to use the fast fitter as pre-fitter. The flag useFastFitter needs to be enabled
     bool fastPreFitter{true};
+    /// @brief Switch to try the full fit when the fast pre-fitter fails. The flags useFastFitter
+    ///        and fastPreFitter need to be enabled
+    bool fullFitOnPreFail{false};
     /// @brief Use the second derivative in the residual calculation
     bool useHessian{false};
     /// @brief Flag toggling whether the along the wire component of straws shall be calculated
