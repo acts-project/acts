@@ -14,8 +14,8 @@
 
 namespace Acts::Experimental {
 
-GbtsLayer::GbtsLayer(const TrigInDetSiLayer* ls, float ew, int bin0)
-    : m_layer(ls), m_etaBinWidth(ew) {
+GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, float ew, std::int32_t bin0)
+    : m_layer(&ls), m_etaBinWidth(ew) {
   if (m_layer->m_type == 0) {  // barrel
     m_r1 = m_layer->m_refCoord;
     m_r2 = m_layer->m_refCoord;
@@ -235,7 +235,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
 
   for (const auto& layer : layers) {
     const GbtsLayer* pL = addNewLayer(layer, m_nEtaBins);
-    m_nEtaBins += pL->num_bins();
+    m_nEtaBins += pL->numOfBins();
   }
 
   // calculating bin tables in the connector...
@@ -264,8 +264,8 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
         std::cout << " skipping invalid src layer " << src << std::endl;
         continue;
       }
-      int nSrcBins = pL2->m_bins.size();
-      int nDstBins = pL1->m_bins.size();
+      int nSrcBins = pL2->numOfBins();
+      int nDstBins = pL1->numOfBins();
 
       (*cIt)->m_binTable.resize(nSrcBins * nDstBins, 0);
 
@@ -277,8 +277,8 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
           int address = b1 + b2 * nDstBins;
           (*cIt)->m_binTable.at(address) = 1;
 
-          int bin1_idx = pL1->m_bins.at(b1);
-          int bin2_idx = pL2->m_bins.at(b2);
+          int bin1_idx = pL1->getBins().at(b1);
+          int bin2_idx = pL2->getBins().at(b2);
 
           if (bin1_idx != lastBin1) {  // adding a new group
 
@@ -313,7 +313,7 @@ const GbtsLayer* GbtsGeometry::addNewLayer(const TrigInDetSiLayer& l,
 
   float ew = m_etaBinWidth;
 
-  std::unique_ptr<GbtsLayer> pHL = std::make_unique<GbtsLayer>(&l, ew, bin0);
+  std::unique_ptr<GbtsLayer> pHL = std::make_unique<GbtsLayer>(l, ew, bin0);
   GbtsLayer* ref = pHL.get();
 
   m_layMap.insert(std::pair<unsigned int, GbtsLayer*>(layerKey, ref));

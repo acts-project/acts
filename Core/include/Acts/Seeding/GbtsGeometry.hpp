@@ -36,20 +36,27 @@ class TrigInDetSiLayer {
 
 class GbtsLayer {
  public:
-  GbtsLayer(const TrigInDetSiLayer* ls, float ew, int bin0);
+  GbtsLayer(const TrigInDetSiLayer& ls, float ew, std::int32_t bin0);
 
+  // accessors
   int getEtaBin(float zh, float rh) const;
 
   float getMinBinRadius(int idx) const;
+
   float getMaxBinRadius(int idx) const;
 
-  int num_bins() const { return m_bins.size(); }
+  std::int32_t numOfBins() const { return m_bins.size(); }
+
+  std::vector<std::int32_t> getBins() const { return m_bins; }
+
+  const TrigInDetSiLayer* getLayer() const { return m_layer; }
 
   bool verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
                  float max_z0) const;
 
-  const TrigInDetSiLayer* m_layer;
-  std::vector<int> m_bins;  // eta-bin indices
+ protected:
+  const TrigInDetSiLayer* m_layer{};
+  std::vector<std::int32_t> m_bins;  // eta-bin indices
   std::vector<float> m_minRadius;
   std::vector<float> m_maxRadius;
   std::vector<float> m_minBinCoord;
@@ -58,8 +65,6 @@ class GbtsLayer {
   float m_minEta{};
   float m_maxEta{};
   float m_etaBin{};
-
- protected:
   float m_etaBinWidth{};
   float m_r1{};
   float m_z1{};
