@@ -27,6 +27,8 @@ class Layer;
 }
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
 
 /// Helper method to translate DD4hep material to Acts::ISurfaceMaterial
 ///
@@ -81,4 +83,5 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
         binning,
     const Acts::Logger& logger = Acts::getDummyLogger());
 
+/// @}
 }  // namespace ActsPlugins

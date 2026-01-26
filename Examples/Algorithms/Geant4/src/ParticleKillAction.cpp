@@ -35,13 +35,15 @@ void ParticleKillAction::UserSteppingAction(const G4Step* step) {
 
   G4Track* track = step->GetTrack();
 
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
+
   const auto time = convertTime * track->GetGlobalTime();
   const bool isSecondary =
       track->GetDynamicParticle()->GetPrimaryParticle() == nullptr;
 
   const bool outOfVolume =
       m_cfg.volume &&
-      !m_cfg.volume->inside(convertPosition(track->GetPosition()));
+      !m_cfg.volume->inside(gctx, convertPosition(track->GetPosition()));
   const bool outOfTime = time > m_cfg.maxTime;
   const bool invalidSecondary = m_cfg.secondaries && isSecondary;
 

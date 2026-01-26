@@ -8,13 +8,6 @@
 
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
-#include "Acts/Geometry/CylinderVolumeHelper.hpp"
-#include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
-#include "Acts/Geometry/LayerArrayCreator.hpp"
-#include "Acts/Geometry/LayerCreator.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/Geant4/Geant4DetectorElement.hpp"
 
@@ -39,49 +32,10 @@ Geant4Detector::Geant4Detector(const Config& cfg)
             << m_cfg.name << "' from the Geant4PhysVolume '"
             << m_cfg.g4World->GetName() << "'");
 
-  m_nominalGeometryContext = Acts::GeometryContext();
+  m_nominalGeometryContext =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   auto [surfaces, elements] = buildGeant4Volumes(cfg, logger());
-
-  // Surface array creator
-  auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
-      Acts::SurfaceArrayCreator::Config(),
-      logger().clone("SurfaceArrayCreator"));
-  // Layer Creator
-  Acts::LayerCreator::Config lcConfig;
-  lcConfig.surfaceArrayCreator = surfaceArrayCreator;
-  auto layerCreator = std::make_shared<Acts::LayerCreator>(
-      lcConfig, logger().clone("LayerCreator"));
-  // Layer array creator
-  Acts::LayerArrayCreator::Config lacConfig;
-  auto layerArrayCreator = std::make_shared<const Acts::LayerArrayCreator>(
-      lacConfig, logger().clone("LayerArrayCreator"));
-  // Tracking volume array creator
-  Acts::TrackingVolumeArrayCreator::Config tvacConfig;
-  auto tVolumeArrayCreator =
-      std::make_shared<const Acts::TrackingVolumeArrayCreator>(
-          tvacConfig, logger().clone("TrackingVolumeArrayCreator"));
-  // configure the cylinder volume helper
-  Acts::CylinderVolumeHelper::Config cvhConfig;
-  cvhConfig.layerArrayCreator = layerArrayCreator;
-  cvhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
-  auto cylinderVolumeHelper =
-      std::make_shared<const Acts::CylinderVolumeHelper>(
-          cvhConfig, logger().clone("CylinderVolumeHelper"));
-
-  // Configure the tracking geometry builder, copy the surfaces in
-  Acts::KDTreeTrackingGeometryBuilder::Config kdtCfg;
-  kdtCfg.surfaces = surfaces;
-  kdtCfg.layerCreator = layerCreator;
-  kdtCfg.trackingVolumeHelper = cylinderVolumeHelper;
-  kdtCfg.protoDetector = m_cfg.protoDetector;
-  kdtCfg.geometryIdentifierHook = m_cfg.geometryIdentifierHook;
-
-  // The KDT tracking geometry builder
-  auto kdtBuilder = Acts::KDTreeTrackingGeometryBuilder(
-      kdtCfg, logger().clone("KDTreeTrackingGeometryBuilder"));
-
-  m_trackingGeometry = kdtBuilder.trackingGeometry(m_nominalGeometryContext);
 }
 
 std::tuple<std::vector<std::shared_ptr<Acts::Surface>>,

@@ -27,6 +27,10 @@ class PlanarBounds;
 }  // namespace Acts
 
 namespace ActsPlugins {
+
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @class GeoModelDetectorElement
 ///
 /// Detector element representative for GeoModel based
@@ -76,7 +80,7 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Acts::Transform3& transform(
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
 
   /// Return the nominal - non-contextual transform
@@ -104,6 +108,8 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
 
   /// Set the corresponding database entry string
   void setDatabaseEntryName(const std::string& n) { m_entryName = n; };
+  /// Is the detector element a sensitive element
+  bool isSensitive() const final { return true; }
 
  protected:
   /// Attach a surface
@@ -129,5 +135,7 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
 using GeoModelSensitiveSurface =
     std::tuple<std::shared_ptr<GeoModelDetectorElement>,
                std::shared_ptr<Acts::Surface>>;
+
+/// @}
 
 }  // namespace ActsPlugins

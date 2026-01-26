@@ -5,15 +5,19 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Utilities/BoundFactory.hpp"
-#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
-#include "GeoModelKernel/GeoDefinitions.h"
+#include <GeoModelKernel/GeoFullPhysVol.h>
+
 class GeoShape;
 
 namespace ActsPlugins::GeoModel {
+
+/// @addtogroup geomodel_plugin
+/// @{
 
 /// @brief Calculates the absolute volume position w.r.t. the world node
 ///        This is only possible, if the volume is not shared in multiple
@@ -32,5 +36,7 @@ Acts::Transform3 volumePosInSpace(const PVConstLink& physVol);
 std::shared_ptr<Acts::Volume> convertVolume(
     const Acts::Transform3& trf, const GeoShape* shape,
     Acts::VolumeBoundFactory& boundFactory);
+
+/// @}
 
 }  // namespace ActsPlugins::GeoModel

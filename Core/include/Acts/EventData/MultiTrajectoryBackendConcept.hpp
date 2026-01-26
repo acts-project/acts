@@ -48,19 +48,7 @@ concept CommonMultiTrajectoryBackend =
 
       { cv.referenceSurface_impl(istate) } -> std::same_as<const Surface*>;
 
-      { cv.parameters_impl(istate) } -> std::same_as<detail::ConstParameters>;
-
-      { cv.covariance_impl(istate) } -> std::same_as<detail::ConstCovariance>;
-
       { cv.jacobian_impl(istate) } -> std::same_as<detail::ConstCovariance>;
-
-      {
-        cv.template calibrated_impl<2>(istate)
-      } -> std::same_as<Eigen::Map<const Vector2>>;
-
-      {
-        cv.template calibratedCovariance_impl<2>(istate)
-      } -> std::same_as<Eigen::Map<const ActsSquareMatrix<2>>>;
 
       { cv.has_impl(key, istate) } -> std::same_as<bool>;
 
@@ -146,5 +134,4 @@ concept MutableMultiTrajectoryBackend =
 
       { v.copyDynamicFrom_impl(istate, key, std::declval<const std::any&>()) };
     };
-
 }  // namespace Acts

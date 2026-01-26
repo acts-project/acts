@@ -24,6 +24,7 @@
 
 namespace Acts {
 
+/// @ingroup eventdata_measurement
 class SourceLink final {
   using any_type = AnyBase<ACTS_SOURCELINK_SBO_SIZE>;
 

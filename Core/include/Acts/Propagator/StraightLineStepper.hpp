@@ -101,7 +101,7 @@ class StraightLineStepper {
     /// Additional free parameter covariance matrix
     std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
-    /// accummulated path length state
+    /// accumulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps
@@ -246,7 +246,7 @@ class StraightLineStepper {
   /// @param stype [in] The step size type to be set
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
+    static_cast<void>(direction);
     double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
@@ -402,7 +402,7 @@ class StraightLineStepper {
   ///       backwards track propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
-    (void)material;
+    static_cast<void>(material);
 
     // use the adjusted step size
     const auto h = state.stepSize.value() * propDir;

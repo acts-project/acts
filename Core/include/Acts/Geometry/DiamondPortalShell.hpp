@@ -17,10 +17,8 @@
 
 namespace Acts {
 
-/// @class DiamondPortalShell
-/// Base class for convrrex polygon shaped portal shells, e.g
+/// Base class for diamond  shaped portal shells, e.g
 /// single volumes with polygon shape or stacked (multiple) volumes (TODO)
-
 class DiamondPortalShell : public PortalShellBase {
  public:
   using Face = DiamondVolumeBounds::Face;
@@ -40,10 +38,6 @@ class DiamondPortalShell : public PortalShellBase {
 
   /// @copydoc PortalShellBase::fill
   void fill(TrackingVolume& volume) override;
-
-  /// @brief Get the transformation matrix for this polygon shape portal shell
-  /// @return Reference to the transformation matrix
-  virtual const Transform3& transform() const = 0;
 };
 // Output stream operator for the CuboidPortalShell::Face enum
 /// @param os The output stream
@@ -51,7 +45,6 @@ class DiamondPortalShell : public PortalShellBase {
 /// @return The output stream
 std::ostream& operator<<(std::ostream& os, DiamondPortalShell::Face face);
 
-/// @class SingleDiamondPortalShell
 /// Implementation of a portal shell class for a single convex polygon volume
 class SingleDiamondPortalShell : public DiamondPortalShell {
  public:
@@ -76,11 +69,6 @@ class SingleDiamondPortalShell : public DiamondPortalShell {
 
   /// @copydoc PortalShellBase::label
   std::string label() const override;
-
-  /// @copydoc DiamondPortalShell::transform
-  const Transform3& transform() const override {
-    return m_volume->transform();
-  };
 
  private:
   std::array<std::shared_ptr<Portal>, 8> m_portals;

@@ -40,7 +40,7 @@ struct SurfaceSelector {
   /// @param surface is the test surface
   /// @return true if surface meets selection criteria
   bool operator()(const Acts::Surface& surface) const {
-    if (selectSensitive && surface.associatedDetectorElement() != nullptr) {
+    if (selectSensitive && surface.isSensitive()) {
       return true;
     }
     if (selectMaterial && surface.surfaceMaterial() != nullptr) {
@@ -101,11 +101,11 @@ struct SurfaceCollector {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& logger) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& logger) const {
     if (state.stage == PropagatorStage::postPropagation) {
-      return;
+      return {};
     }
 
     auto currentSurface = navigator.currentSurface(state.navigation);
@@ -122,6 +122,8 @@ struct SurfaceCollector {
       // Screen output
       ACTS_VERBOSE("Collect surface  " << currentSurface->geometryId());
     }
+
+    return {};
   }
 };
 

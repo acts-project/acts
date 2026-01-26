@@ -28,7 +28,8 @@ using ParametersVector = Acts::BoundVector;
 using CovarianceMatrix = Acts::BoundSquareMatrix;
 using Jacobian = Acts::BoundMatrix;
 
-const Acts::GeometryContext tgContext;
+const Acts::GeometryContext tgContext =
+    Acts::GeometryContext::dangerouslyDefaultConstruct();
 
 }  // namespace
 
@@ -48,7 +49,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
 
   std::size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(ts_idx);
-  ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
 
   ts.predicted() << 0.3, 0.5, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
@@ -65,7 +66,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
-  ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
 
   ts.predicted() << 0.2, 0.5, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
-  ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
 
   ts.predicted() << 0.35, 0.49, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;

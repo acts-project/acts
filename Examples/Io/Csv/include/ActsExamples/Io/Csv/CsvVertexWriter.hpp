@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
@@ -20,7 +19,6 @@
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 using SimVertexContainerV = std::vector<Acts::Vertex>;
 

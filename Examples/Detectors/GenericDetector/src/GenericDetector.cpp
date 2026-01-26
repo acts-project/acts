@@ -28,6 +28,7 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -134,7 +135,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   LayerBuilder::Config plbConfig;
   plbConfig.layerCreator = layerCreator;
   plbConfig.layerIdentification = "Pixel";
-  // material concentration alsways outside the modules
+  // material concentration always outside the modules
   plbConfig.centralProtoLayers = pplCreator.centralProtoLayers(gctx);
   plbConfig.centralLayerMaterialConcentration = {1, 1, 1, 1};
   plbConfig.centralLayerMaterial = {
@@ -357,8 +358,7 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
       std::pair<std::size_t, std::size_t> bins = {0, 0}) const {
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     return Acts::NavigationPolicyFactory{}
-        .add<Acts::TryAllNavigationPolicy>(
-            Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+        .add<Acts::CylinderNavigationPolicy>()
         .add<SrfArrayNavPol>(
             SrfArrayNavPol::Config{.layerType = layerType, .bins = bins})
         .asUniquePtr();
@@ -742,7 +742,8 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
 GenericDetector::GenericDetector(const Config& cfg)
     : Detector(Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
       m_cfg(cfg) {
-  m_nominalGeometryContext = Acts::GeometryContext();
+  m_nominalGeometryContext =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
   auto detectorElementFactory =
       [this](const Acts::Transform3& transform,
              std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,

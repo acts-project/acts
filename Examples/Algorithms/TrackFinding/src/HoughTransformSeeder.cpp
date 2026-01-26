@@ -38,6 +38,9 @@ static inline double unquant(double min, double max, unsigned nSteps, int step);
 template <typename T>
 static inline std::string to_string(std::vector<T> v);
 
+thread_local std::vector<std::shared_ptr<ActsExamples::HoughMeasurementStruct>>
+    houghMeasurementStructs;
+
 ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
     ActsExamples::HoughTransformSeeder::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("HoughTransformSeeder", lvl),

@@ -21,7 +21,7 @@ namespace ActsFatras {
 /// channel merging.
 ///
 /// @tparam signal_t The type of signal, needs operator+= to be defined
-/// @tparam kSize the dimensonality of the object (cluster)
+/// @tparam kSize the dimensionality of the object (cluster)
 ///
 /// @param channels The channels from one cluster
 ///
