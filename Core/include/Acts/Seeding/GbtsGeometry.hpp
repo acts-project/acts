@@ -47,7 +47,7 @@ class GbtsLayer {
 
   std::int32_t numOfBins() const { return m_bins.size(); }
 
-  std::vector<std::int32_t> getBins() const { return m_bins; }
+  const std::vector<std::int32_t>& getBins() const { return m_bins; }
 
   const TrigInDetSiLayer* getLayer() const { return m_layer; }
 
