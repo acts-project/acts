@@ -287,7 +287,7 @@ class CombinatorialKalmanFilter {
         // 3) The surface is neither in the measurement map nor with material
         // -> Do nothing
         ACTS_VERBOSE("Perform filter step");
-        auto res = filter(surface, state, stepper, navigator, result);
+        auto res = filter(*surface, state, stepper, navigator, result);
         if (!res.ok()) {
           ACTS_DEBUG("Error in filter: " << res.error().message());
           return res.error();
@@ -411,7 +411,7 @@ class CombinatorialKalmanFilter {
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
-      materialInteractor(navigator.currentSurface(state.navigation), state,
+      materialInteractor(*navigator.currentSurface(state.navigation), state,
                          stepper, navigator, MaterialUpdateStage::PostUpdate);
 
       // Set path limit based on loop protection
@@ -440,24 +440,24 @@ class CombinatorialKalmanFilter {
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    Result<void> filter(const Surface* surface, propagator_state_t& state,
+    Result<void> filter(const Surface& surface, propagator_state_t& state,
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
       using PM = TrackStatePropMask;
 
-      bool isSensitive = surface->isSensitive();
-      bool hasMaterial = surface->surfaceMaterial() != nullptr;
+      bool isSensitive = surface.isSensitive();
+      bool hasMaterial = surface.surfaceMaterial() != nullptr;
       bool isMaterialOnly = hasMaterial && !isSensitive;
       bool expectMeasurements = isSensitive;
 
       if (isSensitive) {
-        ACTS_VERBOSE("Measurement surface " << surface->geometryId()
+        ACTS_VERBOSE("Measurement surface " << surface.geometryId()
                                             << " detected.");
       } else if (isMaterialOnly) {
-        ACTS_VERBOSE("Material surface " << surface->geometryId()
+        ACTS_VERBOSE("Material surface " << surface.geometryId()
                                          << " detected.");
       } else {
-        ACTS_VERBOSE("Passive surface " << surface->geometryId()
+        ACTS_VERBOSE("Passive surface " << surface.geometryId()
                                         << " detected.");
         return Result<void>::success();
       }
@@ -466,7 +466,7 @@ class CombinatorialKalmanFilter {
       if (isMaterialOnly) {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       } else {
-        stepper.transportCovarianceToBound(state.stepping, *surface);
+        stepper.transportCovarianceToBound(state.stepping, surface);
       }
 
       // Update state and stepper with pre material effects
@@ -474,7 +474,7 @@ class CombinatorialKalmanFilter {
                          MaterialUpdateStage::PreUpdate);
 
       // Bind the transported state to the current surface
-      auto boundStateRes = stepper.boundState(state.stepping, *surface, false);
+      auto boundStateRes = stepper.boundState(state.stepping, surface, false);
       if (!boundStateRes.ok()) {
         return boundStateRes.error();
       }
@@ -492,7 +492,7 @@ class CombinatorialKalmanFilter {
         // which may create extra trajectory branches if more than one
         // measurement is selected.
         tsRes = extensions.createTrackStates(
-            state.geoContext, *calibrationContextPtr, *surface, boundState,
+            state.geoContext, *calibrationContextPtr, surface, boundState,
             prevTip, result.trackStateCandidates, *result.trackStates,
             logger());
       }
@@ -510,7 +510,7 @@ class CombinatorialKalmanFilter {
         unsigned int nBranchesOnSurface = *procRes;
 
         if (nBranchesOnSurface == 0) {
-          ACTS_VERBOSE("All branches on surface " << surface->geometryId()
+          ACTS_VERBOSE("All branches on surface " << surface.geometryId()
                                                   << " have been stopped");
 
           reset(state, stepper, navigator, result);
@@ -530,14 +530,14 @@ class CombinatorialKalmanFilter {
             expectMeasurements = false;
           } else {
             ACTS_DEBUG("Track state creation failed on surface "
-                       << surface->geometryId() << ": " << tsRes.error());
+                       << surface.geometryId() << ": " << tsRes.error());
             return tsRes.error();
           }
         }
 
         if (expectMeasurements) {
           ACTS_VERBOSE("Detected hole after measurement selection on surface "
-                       << surface->geometryId());
+                       << surface.geometryId());
         }
 
         auto stateMask = PM::Predicted | PM::Jacobian;
@@ -567,7 +567,7 @@ class CombinatorialKalmanFilter {
           result.activeBranches.pop_back();
 
           // Branch on the surface has been stopped - reset
-          ACTS_VERBOSE("Branch on surface " << surface->geometryId()
+          ACTS_VERBOSE("Branch on surface " << surface.geometryId()
                                             << " has been stopped");
 
           reset(state, stepper, navigator, result);
@@ -581,7 +581,7 @@ class CombinatorialKalmanFilter {
       if (currentState.typeFlags().isOutlier()) {
         // We don't need to update the stepper given an outlier state
         ACTS_VERBOSE("Outlier state detected on surface "
-                     << surface->geometryId());
+                     << surface.geometryId());
       } else if (currentState.typeFlags().isMeasurement()) {
         // If there are measurement track states on this surface
         // Update stepping state using filtered parameters of last track
@@ -590,7 +590,7 @@ class CombinatorialKalmanFilter {
                        MultiTrajectoryHelpers::freeFiltered(
                            state.options.geoContext, currentState),
                        currentState.filtered(),
-                       currentState.filteredCovariance(), *surface);
+                       currentState.filteredCovariance(), surface);
         ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
         ACTS_VERBOSE("-> " << currentState.filtered().transpose()
                            << " of track state with tip = "
@@ -769,18 +769,14 @@ class CombinatorialKalmanFilter {
     /// @param updateStage The material update stage
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void materialInteractor(const Surface* surface, propagator_state_t& state,
+    void materialInteractor(const Surface& surface, propagator_state_t& state,
                             const stepper_t& stepper,
                             const navigator_t& navigator,
                             const MaterialUpdateStage& updateStage) const {
-      if (surface == nullptr) {
-        return;
-      }
-
       // Indicator if having material
       bool hasMaterial = false;
 
-      if (surface->surfaceMaterial() != nullptr) {
+      if (surface.surfaceMaterial() != nullptr) {
         // Prepare relevant input particle properties
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
@@ -795,7 +791,7 @@ class CombinatorialKalmanFilter {
 
           // Screen out material effects info
           ACTS_VERBOSE("Material effects on surface: "
-                       << surface->geometryId()
+                       << surface.geometryId()
                        << " at update stage: " << updateStage << " are :");
           ACTS_VERBOSE("eLoss = "
                        << interaction.Eloss * interaction.navDir << ", "
@@ -811,7 +807,7 @@ class CombinatorialKalmanFilter {
 
       if (!hasMaterial) {
         // Screen out message
-        ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
+        ACTS_VERBOSE("No material effects on surface: " << surface.geometryId()
                                                         << " at update stage: "
                                                         << updateStage);
       }

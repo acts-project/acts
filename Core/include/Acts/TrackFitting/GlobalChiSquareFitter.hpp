@@ -36,7 +36,6 @@
 
 #include <functional>
 #include <limits>
-#include <map>
 #include <memory>
 #include <type_traits>
 #include <unordered_map>
@@ -853,8 +852,8 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          Acts::detail::PointwiseMaterialInteraction interaction(surface, state,
-                                                                 stepper);
+          detail::PointwiseMaterialInteraction interaction(*surface, state,
+                                                           stepper);
           // We need to evaluate the material to create the correct slab
           const bool slabIsValid = interaction.evaluateMaterialSlab(
               state, navigator, MaterialUpdateStage::FullUpdate);

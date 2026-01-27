@@ -74,10 +74,10 @@ struct PointwiseMaterialInteraction {
   /// @param [in] state State of the propagation
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  PointwiseMaterialInteraction(const Surface* sSurface,
+  PointwiseMaterialInteraction(const Surface& sSurface,
                                const propagator_state_t& state,
                                const stepper_t& stepper)
-      : surface(sSurface),
+      : surface(&sSurface),
         pos(stepper.position(state.stepping)),
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
@@ -112,10 +112,10 @@ struct PointwiseMaterialInteraction {
       updateStage = MaterialUpdateStage::PreUpdate;
     }
 
+    const ISurfaceMaterial* material = surface->surfaceMaterial();
+
     // Retrieve the material properties
-    slab = navigator.currentSurface(state.navigation)
-               ->surfaceMaterial()
-               ->materialSlab(pos, navDir, updateStage);
+    slab = material->materialSlab(pos, navDir, updateStage);
 
     // Correct the material properties for non-zero incidence
     pathCorrection = surface->pathCorrection(state.geoContext, pos, dir);
