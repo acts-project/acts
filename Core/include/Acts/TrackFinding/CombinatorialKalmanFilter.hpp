@@ -766,7 +766,7 @@ class CombinatorialKalmanFilter {
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
     /// @param navigator The navigator in use
-    /// @param updateStage The material update stage
+    /// @param updateMode The material update mode
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,

@@ -14,12 +14,16 @@
 #include "Acts/Material/MaterialSlab.hpp"
 
 #include <sstream>
-#include <stdexcept>
 
 namespace Acts {
 
 /// This enum describes the type of surface material mapping
-enum MappingType { PreMapping = -1, Default = 0, PostMapping = 1, Sensor = 2 };
+enum class MappingType : std::int8_t {
+  PreMapping = -1,
+  Default = 0,
+  PostMapping = 1,
+  Sensor = 2
+};
 
 /// @ingroup material
 ///
@@ -44,7 +48,7 @@ class ISurfaceMaterial {
   ///
   /// @param splitFactor is the splitting ratio between pre/post update
   /// @param mappingType is the type of surface mapping associated to the surface
-  explicit ISurfaceMaterial(double splitFactor, Acts::MappingType mappingType)
+  explicit ISurfaceMaterial(double splitFactor, MappingType mappingType)
       : m_splitFactor(splitFactor), m_mappingType(mappingType) {}
 
   /// Destructor
@@ -75,7 +79,7 @@ class ISurfaceMaterial {
   /// Update pre factor
   ///
   /// @param pDir is the positive direction through the surface
-  /// @param mode is the material update directive (onapproach, full, onleave)
+  /// @param mode is the material update directive
   /// @return Factor for material scaling based on direction and update mode
   double factor(Direction pDir, MaterialUpdateMode mode) const;
 
@@ -89,7 +93,7 @@ class ISurfaceMaterial {
   ///
   /// @param lp is the local position used for the (eventual) lookup
   /// @param pDir is the positive direction through the surface
-  /// @param mode is the material update directive (onapproach, full, onleave)
+  /// @param mode is the material update directive
   ///
   /// @return MaterialSlab
   MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
@@ -100,7 +104,7 @@ class ISurfaceMaterial {
   ///
   /// @param gp is the global position used for the (eventual) lookup
   /// @param pDir is the positive direction through the surface
-  /// @param mode is the material update directive (onapproach, full, onleave)
+  /// @param mode is the material update directive
   ///
   /// @return MaterialSlab
   MaterialSlab materialSlab(const Vector3& gp, Direction pDir,
@@ -137,53 +141,7 @@ class ISurfaceMaterial {
   double m_splitFactor{1.};
 
   /// Use the default mapping type by default
-  MappingType m_mappingType{Acts::MappingType::Default};
+  MappingType m_mappingType{MappingType::Default};
 };
-
-inline double ISurfaceMaterial::factor(Direction pDir,
-                                       MaterialUpdateMode mode) const {
-  if (mode == Acts::MaterialUpdateMode::NoUpdate) {
-    return 0.;
-  } else if (mode == Acts::MaterialUpdateMode::FullUpdate) {
-    return 1.;
-  } else if (mode == Acts::MaterialUpdateMode::PreUpdate) {
-    return pDir == Direction::Negative() ? m_splitFactor : 1 - m_splitFactor;
-  } else if (mode == Acts::MaterialUpdateMode::PostUpdate) {
-    return pDir == Direction::Positive() ? m_splitFactor : 1 - m_splitFactor;
-  }
-
-  throw std::logic_error(
-      "ISurfaceMaterial::factor: Unknown MaterialUpdateMode");
-}
-
-inline MaterialSlab ISurfaceMaterial::materialSlab(
-    const Vector2& lp, Direction pDir, MaterialUpdateMode mode) const {
-  // The plain material properties associated to this bin
-  MaterialSlab plainMatProp = materialSlab(lp);
-  // Scale if you have material to scale
-  if (!plainMatProp.isVacuum()) {
-    double scaleFactor = factor(pDir, mode);
-    if (scaleFactor == 0.) {
-      return MaterialSlab::Nothing();
-    }
-    plainMatProp.scaleThickness(scaleFactor);
-  }
-  return plainMatProp;
-}
-
-inline MaterialSlab ISurfaceMaterial::materialSlab(
-    const Vector3& gp, Direction pDir, MaterialUpdateMode mode) const {
-  // The plain material properties associated to this bin
-  MaterialSlab plainMatProp = materialSlab(gp);
-  // Scale if you have material to scale
-  if (!plainMatProp.isVacuum()) {
-    double scaleFactor = factor(pDir, mode);
-    if (scaleFactor == 0.) {
-      return MaterialSlab::Nothing();
-    }
-    plainMatProp.scaleThickness(scaleFactor);
-  }
-  return plainMatProp;
-}
 
 }  // namespace Acts
