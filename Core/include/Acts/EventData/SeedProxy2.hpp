@@ -235,8 +235,17 @@ class SeedProxy2 {
     std::span<const SpacePointIndex2> m_spacePointIndices;
   };
 
-  /// Get the space points associated with this seed.
-  /// @param spacePointContainer Container holding all space points
+  /// Get the space points associated with this seed. The space point container
+  /// is taken from the seed container.
+  /// @return Range of space points for this seed
+  SpacePointRange spacePoints() const {
+    return SpacePointRange(m_container->spacePointContainer(),
+                           m_container->spacePointIndices(m_index));
+  }
+
+  /// Get the space points associated with this seed using an external space
+  /// point container.
+  /// @param spacePointContainer External container holding all space points
   /// @return Range of space points for this seed
   SpacePointRange spacePoints(
       const SpacePointContainer2 &spacePointContainer) const noexcept {

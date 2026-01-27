@@ -487,14 +487,13 @@ struct GaussianSumFitter {
              fwdGsfResult.currentTip)) {
       const bool found =
           rangeContainsValue(foundBwd, &state.referenceSurface());
-      if (!found && state.typeFlags().test(MeasurementFlag)) {
-        state.typeFlags().set(OutlierFlag);
-        state.typeFlags().reset(MeasurementFlag);
+      if (!found && state.typeFlags().isMeasurement()) {
+        state.typeFlags().setIsOutlier();
         state.unset(TrackStatePropMask::Smoothed);
       }
 
       measurementStatesFinal +=
-          static_cast<std::size_t>(state.typeFlags().test(MeasurementFlag));
+          static_cast<std::size_t>(state.typeFlags().isMeasurement());
     }
 
     if (measurementStatesFinal == 0) {
