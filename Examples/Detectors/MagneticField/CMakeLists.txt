@@ -16,25 +16,3 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesMagneticField GLOB "include/**/*.hpp")
-
-# Add Python bindings for ToroidalField if Python bindings are enabled
-if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-    pybind11_add_module(acts_toroidal_field src/ToroidalFieldBindings.cpp)
-    target_link_libraries(
-        acts_toroidal_field
-        PUBLIC ActsExamplesMagneticField Acts::Core
-    )
-    target_include_directories(
-        acts_toroidal_field
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-    )
-
-    # Set output directory to make module available during build
-    set_target_properties(
-        acts_toroidal_field
-        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/python/acts
-    )
-
-    # Install the Python module
-    install(TARGETS acts_toroidal_field DESTINATION python/acts)
-endif()

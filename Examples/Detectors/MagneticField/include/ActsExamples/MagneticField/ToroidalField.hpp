@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -18,71 +19,88 @@
 
 namespace Acts {
 
+/// Toroidal magnetic field implementation
+///
+/// This class implements a toroidal magnetic field configuration similar to
+/// those used in ATLAS and other detector systems. It uses Biot-Savart
+/// calculations with discrete current-carrying wire segments to compute
+/// the field at any position.
 class ToroidalField final : public MagneticFieldProvider {
  public:
+  /// Configuration for barrel toroid coils
   struct BarrelConfig {
-    float R_in = 4.9f;    // [m]
-    float R_out = 10.0f;  // [m]
-    float c = 25.3f;      // [m]
-    float b = 0.16f;      // [m]
-    float I = 20500.0f;   // [A]
-    int Nturns = 120;     // [turns]
+    double R_in = 4.9 * UnitConstants::m;    ///< Inner radius
+    double R_out = 10.0 * UnitConstants::m;  ///< Outer radius
+    double c = 25.3 * UnitConstants::m;      ///< Coil length along z
+    double b = 0.16 * UnitConstants::m;      ///< Coil width (radial)
+    double I = 20500.0;                       ///< Current [A]
+    int Nturns = 120;                         ///< Number of turns
   };
 
-  struct ECTConfig {
-    float R_in = 1.65f * 0.5f;   // [m] ≈ 0.825
-    float R_out = 10.7f * 0.5f;  // [m] ≈ 5.35
-    float c = 5.0f;              // [m]
-    float b = 0.12f;             // [m]
-    float I = 20500.0f;          // [A]
-    int Nturns = 116;            // [turns]
-    float gap = 0.5f;            // [m]
+  /// Configuration for end-cap toroid (ECT) coils
+  struct EctConfig {
+    double R_in = 1.65 * 0.5 * UnitConstants::m;   ///< Inner radius ≈ 0.825 m
+    double R_out = 10.7 * 0.5 * UnitConstants::m;  ///< Outer radius ≈ 5.35 m
+    double c = 5.0 * UnitConstants::m;              ///< Coil length along z
+    double b = 0.12 * UnitConstants::m;             ///< Coil width (radial)
+    double I = 20500.0;                              ///< Current [A]
+    int Nturns = 116;                                ///< Number of turns
+    double gap = 0.5 * UnitConstants::m;            ///< Gap between barrel and endcap
   };
 
+  /// Configuration for coil layout and discretization
   struct LayoutConfig {
-    float theta0_deg = 22.5f;
-    float thetaStep_deg = 45.0f;
-    int nCoils = 8;
+    double theta0 = 22.5 * UnitConstants::degree;    ///< Initial azimuthal angle
+    double thetaStep = 45.0 * UnitConstants::degree; ///< Angular spacing between coils
+    int nCoils = 8;                                   ///< Number of coils
 
-    int nArc = 200;
-    int nStraight = 160;
-    bool closeLoop = true;
+    int nArc = 200;         ///< Number of segments in arc portions
+    int nStraight = 160;    ///< Number of segments in straight portions
+    bool closeLoop = true;  ///< Whether to close the coil loop
 
-    float eps = 1e-18f;
+    double eps = 1e-18;  ///< Small epsilon for numerical stability
   };
 
+  /// Full configuration for the toroidal field
   struct Config {
-    BarrelConfig barrel;
-    ECTConfig ect;
-    LayoutConfig layout;
+    BarrelConfig barrel;  ///< Barrel coil configuration
+    EctConfig ect;        ///< End-cap toroid configuration
+    LayoutConfig layout;  ///< Layout and discretization parameters
 
-    // Per-coil current senses (applied to dl):
-    // - barrelSigns size must be nCoils
-    // - ectSigns    size must be 2*nCoils (first +z endcap [0..nCoils-1], then
-    // -z [nCoils..2*nCoils-1])
-    std::vector<int> barrelSigns;  // default filled in ctor if empty
-    std::vector<int> ectSigns;     // default filled in ctor if empty
+    /// Per-coil current senses (applied to dl)
+    /// Size must be nCoils; default filled in ctor if empty
+    std::vector<int> barrelSigns;
+    /// Per-coil current senses for endcaps
+    /// Size must be 2*nCoils (first +z endcap [0..nCoils-1], then -z
+    /// [nCoils..2*nCoils-1]); default filled in ctor if empty
+    std::vector<int> ectSigns;
   };
 
+  /// Cache for magnetic field provider
   struct Cache {
     explicit Cache(const MagneticFieldContext& /*ctx*/) {}
   };
 
-  ToroidalField();                     // default config
-  explicit ToroidalField(Config cfg);  // with config
+  /// Construct with default configuration
+  ToroidalField();
+  /// Construct with custom configuration
+  explicit ToroidalField(Config cfg);
 
+  /// @copydoc MagneticFieldProvider::makeCache
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override;
 
+  /// @copydoc MagneticFieldProvider::getField
   Result<Vector3> getField(const Vector3& position,
                            MagneticFieldProvider::Cache& cache) const override;
 
+  /// Field is defined everywhere
   bool isInside(const Vector3& /*position*/) const { return true; }
 
+  /// Get the configuration
   const Config& config() const { return m_cfg; }
 
  private:
-  static float deg2rad(float deg);
 
   // Helpers (declared here, defined in .cpp)
   static std::vector<std::array<float, 2>> ectRacetrackRadial(

@@ -14,6 +14,8 @@
 
 #include "ActsExamples/MagneticField/ToroidalField.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+
 #include <cmath>
 #include <numbers>
 #include <stdexcept>
@@ -69,12 +71,12 @@ Result<Vector3> ToroidalField::getField(
 
   constexpr double mu0 = 4e-7 * std::numbers::pi;  // [T·m/A]
   const double prefBarrel = (mu0 * static_cast<double>(m_cfg.barrel.Nturns) *
-                             static_cast<double>(m_cfg.barrel.I)) /
+                             m_cfg.barrel.I) /
                             (4.0 * std::numbers::pi);
   const double prefECT = (mu0 * static_cast<double>(m_cfg.ect.Nturns) *
-                          static_cast<double>(m_cfg.ect.I)) /
+                          m_cfg.ect.I) /
                          (4.0 * std::numbers::pi);
-  const double eps = static_cast<double>(m_cfg.layout.eps);
+  const double eps = m_cfg.layout.eps;
 
   // Split computations
   accumulateBarrelField(X, Y, Z, eps, prefBarrel, bx, by, bz);
@@ -141,10 +143,6 @@ void ToroidalField::accumulateEndcapField(double X, double Y, double Z,
     by += pref * cy * invr3;
     bz += pref * cz * invr3;
   }
-}
-
-float ToroidalField::deg2rad(float deg) {
-  return deg * static_cast<float>(std::numbers::pi / 180.0);
 }
 
 // End-cap racetrack with LONG straights along z (kept for parity with
@@ -302,19 +300,20 @@ void ToroidalField::buildGeometry() {
   buildSegsMidsRZ(rz_barrel, d_rzB, m_rzB);
 
   // ---- ECT base curve ----
-  const float lE = 0.5f * (m_cfg.ect.R_in + m_cfg.ect.R_out);
-  const float rEndECT = 0.5f * m_cfg.ect.b;
-  const float aE = (m_cfg.ect.R_out - m_cfg.ect.R_in) - 2.0f * rEndECT;
+  const float lE = 0.5f * static_cast<float>((m_cfg.ect.R_in + m_cfg.ect.R_out) / UnitConstants::m);
+  const float rEndECT = 0.5f * static_cast<float>(m_cfg.ect.b / UnitConstants::m);
+  const float aE = static_cast<float>((m_cfg.ect.R_out - m_cfg.ect.R_in) / UnitConstants::m) - 2.0f * rEndECT;
   const auto rz_ect = racetrackRZ(
-      /*a=*/aE, /*b=*/m_cfg.ect.b, /*Lz=*/m_cfg.ect.c, m_cfg.layout.nArc,
-      m_cfg.layout.nStraight, m_cfg.layout.closeLoop);
+      /*a=*/aE, /*b=*/static_cast<float>(m_cfg.ect.b / UnitConstants::m), 
+      /*Lz=*/static_cast<float>(m_cfg.ect.c / UnitConstants::m), 
+      m_cfg.layout.nArc, m_cfg.layout.nStraight, m_cfg.layout.closeLoop);
   std::vector<std::array<float, 2>> d_rzE, m_rzE;
   buildSegsMidsRZ(rz_ect, d_rzE, m_rzE);
 
   // ---- Angles ----
   const int nC = m_cfg.layout.nCoils;
-  const float th0 = deg2rad(m_cfg.layout.theta0_deg);
-  const float dth = deg2rad(m_cfg.layout.thetaStep_deg);
+  const float th0 = static_cast<float>(m_cfg.layout.theta0);
+  const float dth = static_cast<float>(m_cfg.layout.thetaStep);
 
   // ---- Reserve & fill ----
   m_mids_barrel.clear();
@@ -336,8 +335,9 @@ void ToroidalField::buildGeometry() {
   }
 
   // Endcap centers (overlap placement)
-  const float zECT =
-      0.5f * m_cfg.barrel.c - 0.5f * m_cfg.ect.c + 2.0f * m_cfg.ect.gap;
+  const float zECT = 0.5f * static_cast<float>(m_cfg.barrel.c / UnitConstants::m) - 
+                     0.5f * static_cast<float>(m_cfg.ect.c / UnitConstants::m) + 
+                     2.0f * static_cast<float>(m_cfg.ect.gap / UnitConstants::m);
 
   // +z endcap (indices 0..nC-1 in ectSigns)
   for (int k = 0; k < nC; ++k) {

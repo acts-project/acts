@@ -45,23 +45,22 @@ PYBIND11_MODULE(acts_toroidal_field, m) {
       .def_readwrite("I", &ToroidalField::BarrelConfig::I)
       .def_readwrite("Nturns", &ToroidalField::BarrelConfig::Nturns);
 
-  // ECTConfig
-  py::class_<ToroidalField::ECTConfig>(m, "ECTConfig")
+  // EctConfig
+  py::class_<ToroidalField::EctConfig>(m, "EctConfig")
       .def(py::init<>())
-      .def_readwrite("R_in", &ToroidalField::ECTConfig::R_in)
-      .def_readwrite("R_out", &ToroidalField::ECTConfig::R_out)
-      .def_readwrite("c", &ToroidalField::ECTConfig::c)
-      .def_readwrite("b", &ToroidalField::ECTConfig::b)
-      .def_readwrite("I", &ToroidalField::ECTConfig::I)
-      .def_readwrite("Nturns", &ToroidalField::ECTConfig::Nturns)
-      .def_readwrite("gap", &ToroidalField::ECTConfig::gap);
+      .def_readwrite("R_in", &ToroidalField::EctConfig::R_in)
+      .def_readwrite("R_out", &ToroidalField::EctConfig::R_out)
+      .def_readwrite("c", &ToroidalField::EctConfig::c)
+      .def_readwrite("b", &ToroidalField::EctConfig::b)
+      .def_readwrite("I", &ToroidalField::EctConfig::I)
+      .def_readwrite("Nturns", &ToroidalField::EctConfig::Nturns)
+      .def_readwrite("gap", &ToroidalField::EctConfig::gap);
 
   // LayoutConfig
   py::class_<ToroidalField::LayoutConfig>(m, "LayoutConfig")
       .def(py::init<>())
-      .def_readwrite("theta0_deg", &ToroidalField::LayoutConfig::theta0_deg)
-      .def_readwrite("thetaStep_deg",
-                     &ToroidalField::LayoutConfig::thetaStep_deg)
+      .def_readwrite("theta0", &ToroidalField::LayoutConfig::theta0)
+      .def_readwrite("thetaStep", &ToroidalField::LayoutConfig::thetaStep)
       .def_readwrite("nCoils", &ToroidalField::LayoutConfig::nCoils)
       .def_readwrite("nArc", &ToroidalField::LayoutConfig::nArc)
       .def_readwrite("nStraight", &ToroidalField::LayoutConfig::nStraight)

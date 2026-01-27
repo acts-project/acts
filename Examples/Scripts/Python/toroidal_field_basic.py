@@ -30,10 +30,10 @@ def test_toroidal_field_basic():
     print("\n📋 Testing Config with defaults:")
     try:
         config = toroidal_field.Config()
-        print(f"   Barrel R_in: {config.barrel.R_in} m")
-        print(f"   Barrel R_out: {config.barrel.R_out} m")
-        print(f"   Barrel c: {config.barrel.c} m")
-        print(f"   Barrel b: {config.barrel.b} m")
+        print(f"   Barrel R_in: {config.barrel.R_in / 1000:.1f} m")
+        print(f"   Barrel R_out: {config.barrel.R_out / 1000:.1f} m")
+        print(f"   Barrel c: {config.barrel.c / 1000:.1f} m")
+        print(f"   Barrel b: {config.barrel.b / 1000:.3f} m")
         print(f"   Barrel I: {config.barrel.I} A")
         print(f"   Barrel Nturns: {config.barrel.Nturns}")
         print(f"   Number of coils: {config.layout.nCoils}")
@@ -46,13 +46,13 @@ def test_toroidal_field_basic():
     print("\n🔧 Testing Config customization:")
     try:
         custom_config = toroidal_field.Config()
-        custom_config.barrel.R_in = 5.2
-        custom_config.barrel.R_out = 9.8
+        custom_config.barrel.R_in = 5.2 * 1000  # Convert to mm
+        custom_config.barrel.R_out = 9.8 * 1000  # Convert to mm
         custom_config.barrel.I = 18000.0
         custom_config.layout.nCoils = 10
 
-        print(f"   Customized Barrel R_in: {custom_config.barrel.R_in} m")
-        print(f"   Customized Barrel R_out: {custom_config.barrel.R_out} m")
+        print(f"   Customized Barrel R_in: {custom_config.barrel.R_in / 1000:.1f} m")
+        print(f"   Customized Barrel R_out: {custom_config.barrel.R_out / 1000:.1f} m")
         print(f"   Customized Barrel I: {custom_config.barrel.I} A")
         print(f"   Customized number of coils: {custom_config.layout.nCoils}")
         print("✅ Config customization successful")
@@ -137,16 +137,16 @@ def test_configuration_classes():
         # Test BarrelConfig
         print("\n🏺 Testing BarrelConfig:")
         barrel_config = toroidal_field.BarrelConfig()
-        print(f"   Default R_in: {barrel_config.R_in} m")
-        print(f"   Default R_out: {barrel_config.R_out} m")
+        print(f"   Default R_in: {barrel_config.R_in / 1000:.1f} m")
+        print(f"   Default R_out: {barrel_config.R_out / 1000:.1f} m")
         print(f"   Default current: {barrel_config.I} A")
         print(f"   Default turns: {barrel_config.Nturns}")
 
-        # Test ECTConfig
-        print("\n🔚 Testing ECTConfig:")
-        ect_config = toroidal_field.ECTConfig()
-        print(f"   Default R_in: {ect_config.R_in} m")
-        print(f"   Default R_out: {ect_config.R_out} m")
+        # Test EctConfig
+        print("\n🔚 Testing EctConfig:")
+        ect_config = toroidal_field.EctConfig()
+        print(f"   Default R_in: {ect_config.R_in / 1000:.3f} m")
+        print(f"   Default R_out: {ect_config.R_out / 1000:.2f} m")
         print(f"   Default current: {ect_config.I} A")
         print(f"   Default turns: {ect_config.Nturns}")
 
@@ -154,8 +154,8 @@ def test_configuration_classes():
         print("\n📐 Testing LayoutConfig:")
         layout_config = toroidal_field.LayoutConfig()
         print(f"   Default nCoils: {layout_config.nCoils}")
-        print(f"   Default theta0_deg: {layout_config.theta0_deg}")
-        print(f"   Default thetaStep_deg: {layout_config.thetaStep_deg}")
+        print(f"   Default theta0: {layout_config.theta0:.4f} rad")
+        print(f"   Default thetaStep: {layout_config.thetaStep:.4f} rad")
 
         print("✅ Configuration classes test successful")
         return True
