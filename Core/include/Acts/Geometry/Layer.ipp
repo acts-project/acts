@@ -20,7 +20,7 @@ inline SurfaceArray* Layer::surfaceArray() {
   return const_cast<SurfaceArray*>(m_surfaceArray.get());
 }
 
-inline double Layer::thickness() const {
+inline double Layer::layerThickness() const {
   return m_layerThickness;
 }
 
