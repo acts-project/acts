@@ -801,7 +801,8 @@ struct GsfActor {
       auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
       result.currentTip = proxy.index();
 
-      proxy.copyFrom(firstCmpProxy, mask);
+      // copy source link and subspace
+      proxy.copyFrom(firstCmpProxy, TrackStatePropMask::None);
       proxy.setReferenceSurface(surface.getSharedPtr());
 
       auto [prtMean, prtCov] =
