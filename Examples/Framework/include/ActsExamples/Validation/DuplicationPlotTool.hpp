@@ -53,9 +53,9 @@ class DuplicationPlotTool {
   /// @brief fill number of duplicated tracks for a truth particle seed
   ///
   /// @param truthParticle the truth Particle
-  /// @param nDuplicatedTracks the number of duplicated tracks
+  /// @param nDuplicatedTracks the number of matched tracks
   void fill(const SimParticleState& truthParticle,
-            std::size_t nDuplicatedTracks);
+            std::size_t nMatchedTracks);
 
   /// @brief Accessors for histograms (const reference)
   const Acts::Experimental::ProfileHistogram1& nDuplicatedVsPt() const {

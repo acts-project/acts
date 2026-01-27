@@ -69,10 +69,12 @@ void DuplicationPlotTool::fill(
 }
 
 void DuplicationPlotTool::fill(const SimParticleState& truthParticle,
-                               std::size_t nDuplicatedTracks) {
+                               std::size_t nMatchedTracks) {
   const auto t_phi = phi(truthParticle.direction());
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
+
+  const auto nDuplicatedTracks = nMatchedTracks == 0 ? 0 : nMatchedTracks - 1;
 
   m_nDuplicatedVsPt.fill({t_pT}, static_cast<double>(nDuplicatedTracks));
   m_nDuplicatedVsEta.fill({t_eta}, static_cast<double>(nDuplicatedTracks));
