@@ -89,7 +89,7 @@ SympyStepper::boundState(
 
 bool SympyStepper::prepareCurvilinearState(State& state) const {
   // TODO implement like in EigenStepper
-  (void)state;
+  static_cast<void>(state);
   return true;
 }
 

@@ -33,7 +33,8 @@ std::tuple<double, double> DigitizationCoordinatesConverter::globalToLocal(
     throw std::runtime_error("Surface not found for moduleGeoId");
   }
 
-  const Acts::GeometryContext gctx{};
+  const Acts::GeometryContext gctx =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   // Transform the position into the local surface frame
   const Acts::Surface* surfacePtr = surfaceItr->second;
@@ -54,7 +55,8 @@ DigitizationCoordinatesConverter::localToGlobal(std::uint64_t moduleId,
     throw std::runtime_error("Surface not found for moduleGeoId");
   }
 
-  const Acts::GeometryContext gctx{};
+  const Acts::GeometryContext gctx =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   // Transform the position into the global frame
   const Acts::Surface* surfacePtr = surfaceItr->second;

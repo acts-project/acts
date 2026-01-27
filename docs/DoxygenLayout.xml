@@ -13,6 +13,7 @@
       <tab type="user" url="@ref howto_profiling" visible="yes" title="Profiling"/>
       <tab type="user" url="@ref howto_release" visible="yes" title="How to make a release"/>
       <tab type="user" url="@ref formatting" visible="yes" title="Source code formatting"/>
+      <tab type="user" url="@ref building_acts" visible="yes" title="Building ACTS"/>
       <tab type="user" url="@ref howto_spack" visible="yes" title="Building with Spack"/>
       <tab type="user" url="@ref physmon" visible="yes" title="Physics performance monitoring"/>
       <tab type="user" url="@ref root_file_hashes" visible="yes" title="ROOT file hashes"/>

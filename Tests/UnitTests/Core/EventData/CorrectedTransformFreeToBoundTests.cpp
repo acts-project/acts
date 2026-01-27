@@ -38,7 +38,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   const auto loc0 = 0.0;
   const auto loc1 = 0.0;

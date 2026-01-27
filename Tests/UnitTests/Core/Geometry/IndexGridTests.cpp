@@ -40,7 +40,7 @@ std::size_t countBins(const indexed_surface_grid& isGrid) {
 
 namespace ActsTests {
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 Logging::Level logLevel = Logging::VERBOSE;
 

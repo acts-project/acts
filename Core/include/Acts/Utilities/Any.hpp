@@ -205,7 +205,7 @@ class AnyBase : public AnyBaseAll {
     _ACTS_ANY_VERBOSE("Get as "
                       << (m_handler->heapAllocated ? "heap" : "local"));
 
-    return *reinterpret_cast<T*>(dataPtr());
+    return *std::bit_cast<T*>(dataPtr());
   }
 
   /// Get const reference to stored value of specified type
@@ -222,7 +222,7 @@ class AnyBase : public AnyBaseAll {
 
     _ACTS_ANY_VERBOSE("Get as " << (m_handler->heap ? "heap" : "local"));
 
-    return *reinterpret_cast<const T*>(dataPtr());
+    return *std::bit_cast<const T*>(dataPtr());
   }
 
   ~AnyBase() { destroy(); }
@@ -294,7 +294,10 @@ class AnyBase : public AnyBaseAll {
       return *this;
     }
 
-    if (m_handler == other.m_handler) {
+    // At this point they can't be equal and nullptr, so it's safe to
+    // dereference
+    if (m_handler == other.m_handler &&
+        m_handler->typeHash == other.m_handler->typeHash) {
       // same type, but checked before they're not both nullptr
       move(std::move(other));
     } else {
@@ -317,19 +320,19 @@ class AnyBase : public AnyBaseAll {
  private:
   void* dataPtr() {
     if (m_handler->heapAllocated) {
-      return *reinterpret_cast<void**>(m_data.data());
+      return *std::bit_cast<void**>(m_data.data());
     } else {
-      return reinterpret_cast<void*>(m_data.data());
+      return std::bit_cast<void*>(m_data.data());
     }
   }
 
-  void setDataPtr(void* ptr) { *reinterpret_cast<void**>(m_data.data()) = ptr; }
+  void setDataPtr(void* ptr) { *std::bit_cast<void**>(m_data.data()) = ptr; }
 
   const void* dataPtr() const {
     if (m_handler->heapAllocated) {
-      return *reinterpret_cast<void* const*>(m_data.data());
+      return *std::bit_cast<void* const*>(m_data.data());
     } else {
-      return reinterpret_cast<const void*>(m_data.data());
+      return std::bit_cast<const void*>(m_data.data());
     }
   }
 
@@ -408,7 +411,7 @@ class AnyBase : public AnyBaseAll {
       return ptr;
     } else {
       // too large, heap allocate
-      T* heap = new T(std::forward<Args>(args)...);
+      auto* heap = new T(std::forward<Args>(args)...);
       _ACTS_ANY_DEBUG("Allocate type: " << typeid(T).name() << " at " << heap);
       _ACTS_ANY_TRACK_ALLOCATION(T, heap);
       setDataPtr(heap);
@@ -517,7 +520,7 @@ class AnyBase : public AnyBaseAll {
   template <typename T>
   static void destroyImpl(void* ptr) {
     assert(ptr != nullptr && "Address to destroy is nullptr");
-    T* obj = static_cast<T*>(ptr);
+    auto* obj = static_cast<T*>(ptr);
     if constexpr (!heapAllocated<T>()) {
       // stored in place: just call the destructor
       _ACTS_ANY_VERBOSE("Destroy local at: " << ptr);
@@ -536,7 +539,7 @@ class AnyBase : public AnyBaseAll {
     _ACTS_ANY_VERBOSE("move const: " << from << " -> " << to);
     assert(from != nullptr && "Source is null");
     assert(to != nullptr && "Target is null");
-    T* _from = static_cast<T*>(from);
+    auto* _from = static_cast<T*>(from);
     /*T* ptr =*/new (to) T(std::move(*_from));
   }
 
@@ -546,8 +549,8 @@ class AnyBase : public AnyBaseAll {
     assert(from != nullptr && "Source is null");
     assert(to != nullptr && "Target is null");
 
-    T* _from = static_cast<T*>(from);
-    T* _to = static_cast<T*>(to);
+    auto* _from = static_cast<T*>(from);
+    auto* _to = static_cast<T*>(to);
 
     (*_to) = std::move(*_from);
   }
@@ -556,7 +559,7 @@ class AnyBase : public AnyBaseAll {
   static void* copyConstructImpl(const void* from, void* to) {
     _ACTS_ANY_VERBOSE("copy const: " << from << " -> " << to);
     assert(from != nullptr && "Source is null");
-    const T* _from = static_cast<const T*>(from);
+    const auto* _from = static_cast<const T*>(from);
     if (to == nullptr) {
       assert(heapAllocated<T>() && "Received nullptr in local buffer case");
       to = new T(*_from);
@@ -575,8 +578,8 @@ class AnyBase : public AnyBaseAll {
     assert(from != nullptr && "Source is null");
     assert(to != nullptr && "Target is null");
 
-    const T* _from = static_cast<const T*>(from);
-    T* _to = static_cast<T*>(to);
+    const auto* _from = static_cast<const T*>(from);
+    auto* _to = static_cast<T*>(to);
 
     (*_to) = *_from;
   }

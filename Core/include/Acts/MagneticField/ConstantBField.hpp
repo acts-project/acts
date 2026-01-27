@@ -42,8 +42,8 @@ class ConstantBField final : public MagneticFieldProvider {
   ///       a consistent interface with other magnetic field services.
   Result<Vector3> getField(const Vector3& position,
                            MagneticFieldProvider::Cache& cache) const override {
-    (void)position;
-    (void)cache;
+    static_cast<void>(position);
+    static_cast<void>(cache);
     return Result<Vector3>::success(m_BField);
   }
 
