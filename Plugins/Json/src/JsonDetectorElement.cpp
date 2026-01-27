@@ -19,7 +19,7 @@ JsonDetectorElement::JsonDetectorElement(const nlohmann::json &jSurface,
   m_surface = Acts::SurfaceJsonConverter::fromJson(jSurface);
   m_transform = Transform3JsonConverter::fromJson(jSurface["transform"]);
   m_surface->assignSurfacePlacement(*this);
-  m_surface->assignDepth(thickness);
+  m_surface->assignThickness(thickness);
 }
 
 const Surface &JsonDetectorElement::surface() const {

@@ -277,7 +277,7 @@ class Surface : public virtual GeometryObject,
   /// @brief Assign the thickness of the surface in the
   ///        orthogonal dimension
   /// @param thick: Thickness parameter to assign (>=0)
-  void assignDepth(double thick);
+  void assignThickness(double thick);
 
   /// The geometric onSurface method
   ///
@@ -475,6 +475,8 @@ class Surface : public virtual GeometryObject,
 
   /// @brief Returns whether the Surface is sensitive
   bool isSensitive() const;
+  /// @brief Returns whether the Surface is alignable
+  bool isAlignable() const;
 
   /// Return a Polyhedron for surface objects
   ///

@@ -374,7 +374,7 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
 
   ACTS_VERBOSE("Merging disc surfaces in " << direction << " direction");
 
-  if (surfacePlacement() != nullptr || other.surfacePlacement() != nullptr) {
+  if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");

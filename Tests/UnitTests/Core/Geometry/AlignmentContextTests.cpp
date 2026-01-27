@@ -68,7 +68,7 @@ class AlignableDetectorElement : public SurfacePlacementBase {
       : m_elementTransform(std::move(transform)),
         m_elementThickness(thickness) {
     m_elementSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
-    m_elementSurface->assignDepth(thickness);
+    m_elementSurface->assignThickness(thickness);
   }
 
   ///  Destructor

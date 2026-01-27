@@ -118,7 +118,7 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   void attachSurface(std::shared_ptr<Acts::Surface> surface) {
     m_surface = std::move(surface);
     assert(m_surface != nullptr);
-    m_surface->assignDepth(thickness());
+    m_surface->assignThickness(thickness());
     m_surface->assignSurfacePlacement(*this);
   }
 

@@ -81,7 +81,7 @@ TGeoDetectorElement::TGeoDetectorElement(
   // set the asscoiated material (non const method)
   if (m_surface != nullptr) {
     m_surface->assignSurfaceMaterial(std::move(material));
-    m_surface->assignDepth(m_thickness);
+    m_surface->assignThickness(m_thickness);
   }
 }
 
@@ -95,7 +95,7 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_bounds(tgBounds),
       m_thickness(tgThickness) {
   m_surface = Surface::makeShared<PlaneSurface>(tgBounds, *this);
-  m_surface->assignDepth(m_thickness);
+  m_surface->assignThickness(m_thickness);
 }
 
 TGeoDetectorElement::TGeoDetectorElement(
@@ -108,7 +108,7 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_bounds(tgBounds),
       m_thickness(tgThickness) {
   m_surface = Surface::makeShared<DiscSurface>(tgBounds, *this);
-  m_surface->assignDepth(m_thickness);
+  m_surface->assignThickness(m_thickness);
 }
 
 TGeoDetectorElement::~TGeoDetectorElement() = default;

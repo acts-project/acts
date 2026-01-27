@@ -26,7 +26,7 @@ ActsTests::DetectorElementStub::DetectorElementStub(
     : m_elementTransform(transform), m_elementThickness(thickness) {
   m_elementSurface =
       Surface::makeShared<CylinderSurface>(std::move(cBounds), *this);
-  m_elementSurface->assignDepth(thickness);
+  m_elementSurface->assignThickness(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
   assert(m_elementSurface->surfacePlacement() == this);
   assert(m_elementSurface->isSensitive() == isSensitive());
@@ -38,7 +38,7 @@ ActsTests::DetectorElementStub::DetectorElementStub(
     : m_elementTransform(transform), m_elementThickness(thickness) {
   m_elementSurface =
       Surface::makeShared<PlaneSurface>(std::move(pBounds), *this);
-  m_elementSurface->assignDepth(thickness);
+  m_elementSurface->assignThickness(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
   assert(m_elementSurface->surfacePlacement() == this);
   assert(m_elementSurface->isSensitive() == isSensitive());
@@ -50,7 +50,7 @@ ActsTests::DetectorElementStub::DetectorElementStub(
     : m_elementTransform(transform), m_elementThickness(thickness) {
   m_elementSurface =
       Surface::makeShared<LineSurfaceStub>(std::move(lBounds), *this);
-  m_elementSurface->assignDepth(thickness);
+  m_elementSurface->assignThickness(thickness);
   m_elementSurface->assignSurfaceMaterial(std::move(material));
   assert(m_elementSurface->surfacePlacement() == this);
   assert(m_elementSurface->isSensitive() == isSensitive());

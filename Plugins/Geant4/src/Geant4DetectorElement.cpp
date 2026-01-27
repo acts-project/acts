@@ -34,7 +34,7 @@ Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
         "element");
   }
   if (thickness > 0.) {
-    m_surface->assignDepth(m_thickness);
+    m_surface->assignThickness(m_thickness);
   }
   m_surface->assignSurfacePlacement(*this);
 }

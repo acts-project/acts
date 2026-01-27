@@ -357,7 +357,7 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
   ACTS_VERBOSE("Merging cylinder surfaces in " << axisDirectionName(direction)
                                                << " direction");
 
-  if (surfacePlacement() != nullptr || other.surfacePlacement() != nullptr) {
+  if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");

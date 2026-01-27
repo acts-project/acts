@@ -350,7 +350,7 @@ double Surface::depth() const {
   return m_depth;
 }
 
-void Surface::assignDepth(double thick) {
+void Surface::assignThickness(double thick) {
   assert(thick >= 0.);
   m_depth = thick;
 }
@@ -411,6 +411,9 @@ bool Surface::isSensitive() const {
     return m_placement->isSensitive();
   }
   return m_isSensitive;
+}
+bool Surface::isAlignable() const {
+  return m_placement != nullptr;
 }
 
 }  // namespace Acts
