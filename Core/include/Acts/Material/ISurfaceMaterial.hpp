@@ -14,6 +14,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 
 #include <sstream>
+#include <stdexcept>
 
 namespace Acts {
 
@@ -74,9 +75,9 @@ class ISurfaceMaterial {
   /// Update pre factor
   ///
   /// @param pDir is the positive direction through the surface
-  /// @param mStage is the material update directive (onapproach, full, onleave)
-  /// @return Factor for material scaling based on direction and update stage
-  double factor(Direction pDir, MaterialUpdateStage mStage) const;
+  /// @param mode is the material update directive (onapproach, full, onleave)
+  /// @return Factor for material scaling based on direction and update mode
+  double factor(Direction pDir, MaterialUpdateMode mode) const;
 
   /// Return the type of surface material mapping
   ///
@@ -88,22 +89,22 @@ class ISurfaceMaterial {
   ///
   /// @param lp is the local position used for the (eventual) lookup
   /// @param pDir is the positive direction through the surface
-  /// @param mStage is the material update directive (onapproach, full, onleave)
+  /// @param mode is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
   MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
-                            MaterialUpdateStage mStage) const;
+                            MaterialUpdateMode mode) const;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
   ///
   /// @param gp is the global position used for the (eventual) lookup
   /// @param pDir is the positive direction through the surface
-  /// @param mStage is the material update directive (onapproach, full, onleave)
+  /// @param mode is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
   MaterialSlab materialSlab(const Vector3& gp, Direction pDir,
-                            MaterialUpdateStage mStage) const;
+                            MaterialUpdateMode mode) const;
 
   /// @brief output stream operator
   ///
@@ -140,23 +141,28 @@ class ISurfaceMaterial {
 };
 
 inline double ISurfaceMaterial::factor(Direction pDir,
-                                       MaterialUpdateStage mStage) const {
-  if (mStage == Acts::MaterialUpdateStage::FullUpdate) {
+                                       MaterialUpdateMode mode) const {
+  if (mode == Acts::MaterialUpdateMode::NoUpdate) {
+    return 0.;
+  } else if (mode == Acts::MaterialUpdateMode::FullUpdate) {
     return 1.;
-  } else if (mStage == Acts::MaterialUpdateStage::PreUpdate) {
+  } else if (mode == Acts::MaterialUpdateMode::PreUpdate) {
     return pDir == Direction::Negative() ? m_splitFactor : 1 - m_splitFactor;
-  } else /*if (mStage == Acts::MaterialUpdateStage::PostUpdate)*/ {
+  } else if (mode == Acts::MaterialUpdateMode::PostUpdate) {
     return pDir == Direction::Positive() ? m_splitFactor : 1 - m_splitFactor;
   }
+
+  throw std::logic_error(
+      "ISurfaceMaterial::factor: Unknown MaterialUpdateMode");
 }
 
 inline MaterialSlab ISurfaceMaterial::materialSlab(
-    const Vector2& lp, Direction pDir, MaterialUpdateStage mStage) const {
+    const Vector2& lp, Direction pDir, MaterialUpdateMode mode) const {
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(lp);
   // Scale if you have material to scale
   if (!plainMatProp.isVacuum()) {
-    double scaleFactor = factor(pDir, mStage);
+    double scaleFactor = factor(pDir, mode);
     if (scaleFactor == 0.) {
       return MaterialSlab::Nothing();
     }
@@ -166,12 +172,12 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
 }
 
 inline MaterialSlab ISurfaceMaterial::materialSlab(
-    const Vector3& gp, Direction pDir, MaterialUpdateStage mStage) const {
+    const Vector3& gp, Direction pDir, MaterialUpdateMode mode) const {
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(gp);
   // Scale if you have material to scale
   if (!plainMatProp.isVacuum()) {
-    double scaleFactor = factor(pDir, mStage);
+    double scaleFactor = factor(pDir, mode);
     if (scaleFactor == 0.) {
       return MaterialSlab::Nothing();
     }
