@@ -24,7 +24,6 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out the geometry for all sensitive detector surfaces.
 ///

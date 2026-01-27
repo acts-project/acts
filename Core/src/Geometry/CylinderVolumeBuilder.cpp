@@ -65,7 +65,7 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
   // -----------------------------------------------------------------------------
   MutableTrackingVolumePtr volume = nullptr;
 
-  // now analyize the layers that are provided
+  // now analyze the layers that are provided
   // -----------------------------------------------------
   ACTS_DEBUG("-> Building layers");
   LayerVector negativeLayers;
@@ -106,10 +106,10 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
     wConfig.existingVolumeConfig.rMax =
         existingBounds->get(CylinderVolumeBounds::eMaxR);
     wConfig.existingVolumeConfig.zMin =
-        existingVolume->center().z() -
+        existingVolume->center(gctx).z() -
         existingBounds->get(CylinderVolumeBounds::eHalfLengthZ);
     wConfig.existingVolumeConfig.zMax =
-        existingVolume->center().z() +
+        existingVolume->center(gctx).z() +
         existingBounds->get(CylinderVolumeBounds::eHalfLengthZ);
   }
   //

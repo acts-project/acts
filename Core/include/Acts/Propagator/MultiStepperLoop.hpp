@@ -38,8 +38,6 @@
 
 namespace Acts {
 
-using namespace Acts::UnitLiterals;
-
 namespace detail {
 
 struct MaxMomentumComponent {
@@ -706,7 +704,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @param [in, out] state The stepping state (thread-local cache)
   /// @return true if nothing is missing after this call, false otherwise.
   bool prepareCurvilinearState(State& state) const {
-    (void)state;
+    static_cast<void>(state);
     return true;
   }
 

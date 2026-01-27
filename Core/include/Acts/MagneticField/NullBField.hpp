@@ -14,8 +14,9 @@
 
 namespace Acts {
 
-/// @ingroup MagneticField
-/// @brief Null bfield which returns 0 always
+/// Null bfield which returns 0 always
+///
+/// @ingroup magnetic_field
 class NullBField final : public MagneticFieldProvider {
  public:
   struct Cache {
@@ -32,8 +33,8 @@ class NullBField final : public MagneticFieldProvider {
   ///       a consistent interface with other magnetic field services.
   Result<Vector3> getField(const Vector3& position,
                            MagneticFieldProvider::Cache& cache) const override {
-    (void)position;
-    (void)cache;
+    static_cast<void>(position);
+    static_cast<void>(cache);
     return Result<Vector3>::success(Vector3::Zero());
   }
 

@@ -32,6 +32,9 @@ class ISurfaceMaterial;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
+
 class DD4hepDetectorElement;
 
 /// A factory to convert DD4hep DetectorElements into sensitive
@@ -195,4 +198,5 @@ class DD4hepDetectorSurfaceFactory {
                              const Options& options) const;
 };
 
+/// @}
 }  // namespace ActsPlugins

@@ -16,6 +16,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
@@ -45,9 +46,9 @@ using namespace Acts;
 using namespace Acts::HashedStringLiteral;
 using namespace Acts::detail::Test;
 
-using MultiTrajectoryTraits::IndexType;
+using IndexType = TrackIndexType;
 
-const GeometryContext gctx;
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 // fixed seed for reproducible tests
 std::default_random_engine rng(31415);
 
@@ -163,7 +164,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
     }
   };
 
-  auto ts1 = mkts(MultiTrajectoryTraits::kInvalid);
+  auto ts1 = mkts(kTrackIndexInvalid);
   auto ts2 = mkts(ts1);
   auto ts3 = mkts(ts2);
   auto ts4 = mkts(ts3);
@@ -185,7 +186,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   const auto& ct = t;
 
   for (const auto& ts : ct.trackStatesReversed()) {
-    (void)ts;
+    static_cast<void>(ts);
   }
 
   BOOST_CHECK_EQUAL(t.nTrackStates(), 5);
@@ -198,7 +199,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   std::size_t i = 0;
   for (const auto& state : tNone.trackStatesReversed()) {
-    (void)state;
+    static_cast<void>(state);
     i++;
   }
   BOOST_CHECK_EQUAL(i, 0);
@@ -304,7 +305,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
     }
 
     for (const auto track : tc) {
-      (void)track;
+      static_cast<void>(track);
       // does not compile
       // track.parameters().setRandom();
     }

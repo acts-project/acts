@@ -20,7 +20,6 @@
 #include <map>
 #include <numbers>
 #include <sstream>
-#include <stdexcept>
 #include <vector>
 
 ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
@@ -40,25 +39,14 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   // as well as a map that tracks there index in m_layerGeometry
   m_layerGeometry = LayerNumbering();
 
-  // parse connection file
-  std::ifstream input_ifstream(
-      m_cfg.seedFinderConfig.connectorInputFile.c_str(), std::ifstream::in);
-
-  if (input_ifstream.peek() == std::ifstream::traits_type::eof()) {
-    ACTS_WARNING("Cannot find layer connections file ");
-    throw std::runtime_error("connection file not found");
-
-  }
-
   // create the connection objects
-  else {
-    m_connector = std::make_unique<Acts::Experimental::GbtsConnector>(
-        input_ifstream, m_cfg.seedFinderConfig.LRTmode);
+  m_connector = std::make_unique<Acts::Experimental::GbtsConnector>(
+      m_cfg.seedFinderConfig.connectorInputFile,
+      m_cfg.seedFinderConfig.LRTmode);
 
-    // option that allows for adding custom eta binning (default is at 0.2)
-    if (m_cfg.seedFinderConfig.etaBinOverride != 0.0f) {
-      m_connector->m_etaBin = m_cfg.seedFinderConfig.etaBinOverride;
-    }
+  // option that allows for adding custom eta binning (default is at 0.2)
+  if (m_cfg.seedFinderConfig.etaBinOverride != 0.0f) {
+    m_connector->m_etaBin = m_cfg.seedFinderConfig.etaBinOverride;
   }
 
   // initialise the object that holds all the geometry information needed for
@@ -69,6 +57,11 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   // manually convert min Pt as no conversion available in ACTS Examples
   // (currently inputs as 0.9 GeV but need 900 MeV)
   m_cfg.seedFinderConfig.minPt = m_cfg.seedFinderConfig.minPt * 1000;
+
+  m_finder = std::make_unique<Acts::Experimental::SeedFinderGbts>(
+      m_cfg.seedFinderConfig, std::move(m_gbtsGeo), &m_layerGeometry,
+      logger().cloneWithSuffix("GbtsFinder"));
+
   printSeedFinderGbtsConfig(m_cfg.seedFinderConfig);
 }
 
@@ -80,11 +73,6 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
   auto SpContainerComponents = MakeSpContainer(ctx, m_cfg.ActsGbtsMap);
-
-  // this is now calling on a core algorithm
-  Acts::Experimental::SeedFinderGbts finder(
-      m_cfg.seedFinderConfig, m_gbtsGeo.get(), &m_layerGeometry,
-      logger().cloneWithSuffix("GbtdFinder"));
 
   // used to reserve size of nodes 2D vector in core
   int max_layers = m_LayeridMap.size();
@@ -99,7 +87,7 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   // create the seeds
 
   Acts::SeedContainer2 seeds =
-      finder.CreateSeeds(internalRoi, SpContainerComponents, max_layers);
+      m_finder->createSeeds(internalRoi, SpContainerComponents, max_layers);
 
   // move seeds to simseedcontainer to be used down stream taking fist middle
   // and last sps currently as simseeds need to be hard types so only 3
@@ -282,7 +270,8 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     auto ACTS_lay_id = geoid.layer();
     auto mod_id = geoid.sensitive();
     auto bounds_vect = surface->bounds().values();
-    auto center = surface->center(Acts::GeometryContext());
+    auto center =
+        surface->center(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
     // make bounds global
     Acts::Vector3 globalFakeMom(1, 1, 1);
@@ -291,9 +280,11 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     Acts::Vector2 max_bound_local =
         Acts::Vector2(bounds_vect[2], bounds_vect[3]);
     Acts::Vector3 min_bound_global = surface->localToGlobal(
-        Acts::GeometryContext(), min_bound_local, globalFakeMom);
+        Acts::GeometryContext::dangerouslyDefaultConstruct(), min_bound_local,
+        globalFakeMom);
     Acts::Vector3 max_bound_global = surface->localToGlobal(
-        Acts::GeometryContext(), max_bound_local, globalFakeMom);
+        Acts::GeometryContext::dangerouslyDefaultConstruct(), max_bound_local,
+        globalFakeMom);
 
     if (min_bound_global(0) >
         max_bound_global(0)) {  // checking that not wrong way round

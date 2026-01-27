@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   fastPreCfg.useFastFitter = true;
   /// Configuration for fast only fit
   Fitter_t::Config fastCfg{fastPreCfg};
-  fastPreCfg.fastPreFitter = false;
+  fastCfg.fastPreFitter = false;
 
   // 2D straw only test
   std::vector<std::pair<std::string, std::future<long int>>> timings{};
