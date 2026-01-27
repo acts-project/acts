@@ -18,7 +18,12 @@
 namespace Acts {
 
 /// This enum describes the type of surface material mapping
-enum MappingType { PreMapping = -1, Default = 0, PostMapping = 1, Sensor = 2 };
+enum class MappingType : std::int8_t {
+  PreMapping = -1,
+  Default = 0,
+  PostMapping = 1,
+  Sensor = 2
+};
 
 /// @ingroup material
 ///
@@ -43,7 +48,7 @@ class ISurfaceMaterial {
   ///
   /// @param splitFactor is the splitting ratio between pre/post update
   /// @param mappingType is the type of surface mapping associated to the surface
-  explicit ISurfaceMaterial(double splitFactor, Acts::MappingType mappingType)
+  explicit ISurfaceMaterial(double splitFactor, MappingType mappingType)
       : m_splitFactor(splitFactor), m_mappingType(mappingType) {}
 
   /// Destructor
@@ -136,7 +141,7 @@ class ISurfaceMaterial {
   double m_splitFactor{1.};
 
   /// Use the default mapping type by default
-  MappingType m_mappingType{Acts::MappingType::Default};
+  MappingType m_mappingType{MappingType::Default};
 };
 
 inline double ISurfaceMaterial::factor(Direction pDir,
