@@ -477,7 +477,6 @@ struct GsfActor {
   void updateStepper(propagator_state_t& state, const stepper_t& stepper,
                      const TemporaryStates& tmpStates) const {
     auto cmps = stepper.componentIterable(state.stepping);
-
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       // we set ignored components to missed, so we can remove them after
       // the loop
@@ -604,7 +603,7 @@ struct GsfActor {
         }
 
         tmpStates.tips.push_back(trackStateProxy.index());
-        tmpStates.weights[tmpStates.tips.back()] = cmp.weight();
+        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
       }
 
       allTips.push_back(trackStateProxy.index());
@@ -630,7 +629,7 @@ struct GsfActor {
                                   TrackStatePropMask::Filtered);
 
         tmpStates.tips.push_back(trackStateProxy.index());
-        tmpStates.weights[tmpStates.tips.back()] = cmp.weight();
+        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
       }
     }
 
@@ -679,8 +678,7 @@ struct GsfActor {
       const auto& singleStepper = cmp.singleStepper(stepper);
 
       // Add a <mask> TrackState entry multi trajectory. This allocates storage
-      // for
-      // all components, which we will set later.
+      // for all components, which we will set later.
       TrackStatePropMask mask =
           TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
       typename traj_t::TrackStateProxy trackStateProxy =
@@ -713,7 +711,7 @@ struct GsfActor {
       }
 
       tmpStates.tips.push_back(trackStateProxy.index());
-      tmpStates.weights[tmpStates.tips.back()] = cmp.weight();
+      tmpStates.weights[trackStateProxy.index()] = cmp.weight();
     }
 
     const bool precedingMeasurementExists = result.processedStates > 0;
@@ -790,6 +788,8 @@ struct GsfActor {
 
     if (!m_cfg.inReversePass) {
       const bool hasMaterial = surface.surfaceMaterial() != nullptr;
+      const auto firstCmpProxy =
+          tmpStates.traj.getTrackState(tmpStates.tips.front());
 
       auto mask = TrackStatePropMask::Predicted | TrackStatePropMask::Smoothed;
       if (isMeasurement) {
@@ -801,6 +801,7 @@ struct GsfActor {
       auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
       result.currentTip = proxy.index();
 
+      proxy.copyFrom(firstCmpProxy, mask);
       proxy.setReferenceSurface(surface.getSharedPtr());
 
       auto [prtMean, prtCov] =
@@ -825,11 +826,11 @@ struct GsfActor {
                         TrackStatePropMask::Filtered);
       }
 
-      proxy.smoothed() = BoundVector::Constant(-2);
-      proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
-
       proxy.typeFlags().setIsOutlier(isOutlier);
       proxy.typeFlags().setIsHole(isHole);
+
+      proxy.smoothed() = BoundVector::Constant(-2);
+      proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
 
     } else {
       assert((result.currentTip != kTrackIndexInvalid && "tip not valid"));
