@@ -80,9 +80,9 @@ class DuplicationPlotTool {
   ///
   /// @param cache cache object for duplication plots
   /// @param truthParticle the truth Particle
-  /// @param nDuplicatedTracks the number of duplicated tracks
+  /// @param nMatchedTracks the number of matched tracks
   void fill(Cache& cache, const SimParticleState& truthParticle,
-            std::size_t nDuplicatedTracks) const;
+            std::size_t nMatchedTracks) const;
 
   /// @brief write the duplication plots to file
   ///
