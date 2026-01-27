@@ -152,7 +152,7 @@ bool containsParticleId(const Container& sortedByParticleId,
 
 BOOST_DATA_TEST_CASE(FatrasSimulationCase, dataset, pdg, phi, eta, p,
                      numParticles) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext magCtx;
   Logging::Level logLevel = Logging::Level::DEBUG;
 

@@ -8,7 +8,6 @@
 
 #pragma once
 
-// TODO: update to C++17 style
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 
@@ -17,6 +16,7 @@
 #include <limits>
 #include <span>
 #include <vector>
+
 namespace Acts::Experimental {
 
 constexpr int MAX_SEG_PER_NODE = 1000;

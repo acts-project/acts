@@ -156,7 +156,7 @@ Transform3 MuonSpacePointDigitizer::toSpacePointFrame(
   assert(volume != nullptr);
   /// Transformation to the common coordinate system of all space points
   const Transform3 parentTrf{AngleAxis3{90._degree, Vector3::UnitZ()} *
-                             volume->itransform() *
+                             volume->globalToLocalTransform(gctx) *
                              hitSurf->localToGlobalTransform(gctx)};
   ACTS_VERBOSE("Transform into space point frame for surface "
                << hitId << " is \n"
@@ -172,7 +172,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   MuonSpacePointContainer outSpacePoints{};
 
-  GeometryContext gctx{};
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   using MuonId_t = MuonSpacePoint::MuonId;
   auto rndEngine = m_cfg.randomNumbers->spawnGenerator(ctx);

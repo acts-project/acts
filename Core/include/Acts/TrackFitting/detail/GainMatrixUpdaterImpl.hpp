@@ -22,14 +22,12 @@ namespace Acts {
 template <std::size_t N>
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
     AnyMutableTrackStateProxy trackState, const Logger& logger) const {
-  double chi2 = 0;
-
   constexpr std::size_t kMeasurementSize = N;
-  using ParametersVector = ActsVector<kMeasurementSize>;
-  using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
+  using ProjectedVector = ActsVector<kMeasurementSize>;
+  using ProjectedMatrix = ActsSquareMatrix<kMeasurementSize>;
 
-  auto calibrated = trackState.calibrated<kMeasurementSize>();
-  auto calibratedCovariance =
+  const auto calibrated = trackState.calibrated<kMeasurementSize>();
+  const auto calibratedCovariance =
       trackState.calibratedCovariance<kMeasurementSize>();
 
   ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
@@ -39,7 +37,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   const auto validSubspaceIndices =
       trackState.template projectorSubspaceIndices<kMeasurementSize>();
 
-  FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+  const FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
       validSubspaceIndices);
 
   // TODO use subspace helper for projection instead
@@ -73,15 +71,12 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
   ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
 
-  ParametersVector residual;
-  residual = calibrated - H * filtered;
+  const ProjectedVector residual = calibrated - H * filtered;
   ACTS_VERBOSE("Residual: " << residual.transpose());
 
-  CovarianceMatrix m =
-      ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance).eval();
-
-  chi2 = (residual.transpose() * m.inverse() * residual).value();
-
+  const ProjectedMatrix m =
+      ((ProjectedMatrix::Identity() - H * K) * calibratedCovariance);
+  const double chi2 = (residual.transpose() * m.inverse() * residual).value();
   ACTS_VERBOSE("Chi2: " << chi2);
 
   return {chi2, {}};
