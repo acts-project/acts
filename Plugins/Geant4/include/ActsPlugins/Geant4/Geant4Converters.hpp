@@ -52,6 +52,8 @@ using G4RotationMatrix = CLHEP::HepRotation;
 using G4Transform3D = HepGeom::Transform3D;
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
 
 struct Geant4AlgebraConverter {
   // A potential scalar between Geant4 and ACTS
@@ -166,7 +168,7 @@ struct Geant4PhysicalVolumeConverter {
   /// Optionally allow to foce a type, throws exception if not possible
   Acts::Surface::SurfaceType forcedType = Acts::Surface::SurfaceType::Other;
 
-  /// @brief Convert a Geant4 phsyical volume to a surface
+  /// @brief Convert a Geant4 physical volume to a surface
   ///
   /// @param g4PhysVol the physical volume to be constructed
   /// @param toGlobal the global transformation before the volume
@@ -203,4 +205,5 @@ struct Geant4VolumeConverter {
       const G4Tubs& g4Tubs);
 };
 
+/// @}
 }  // namespace ActsPlugins

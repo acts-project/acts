@@ -18,6 +18,9 @@
 #include <tuple>
 
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 using namespace GridAxisGenerators;
 
 namespace IndexedGridJsonHelper {
@@ -233,4 +236,6 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
 }
 
 }  // namespace IndexedGridJsonHelper
+
+/// @}
 }  // namespace Acts

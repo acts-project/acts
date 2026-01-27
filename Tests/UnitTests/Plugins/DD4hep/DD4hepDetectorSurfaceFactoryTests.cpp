@@ -32,7 +32,7 @@ using namespace ActsPlugins;
 
 namespace ActsTests {
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 const char* beampipe_head_xml =
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
 
   auto world = lcdd->world();
 
-  // A typical extension would be overriding the `tranform(const
+  // A typical extension would be overriding the `transform(const
   // GeometryContext&)` method in order change how the detector element is
   // handled in alignment, for simplicity here we show a simple extension that
   // overrides the  thickness

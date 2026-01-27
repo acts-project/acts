@@ -1,6 +1,5 @@
 acts_add_library(
     PluginDetray
-    SHARED
     src/DetrayConversionUtils.cpp
     #src/DetrayConverter.cpp
     #src/DetrayGeometryConverter.cpp

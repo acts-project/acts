@@ -17,16 +17,15 @@
 #include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cstddef>
 #include <memory>
 #include <numeric>
 #include <random>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 using namespace Acts;
+using namespace Acts::UnitLiterals;
 
 namespace {
 

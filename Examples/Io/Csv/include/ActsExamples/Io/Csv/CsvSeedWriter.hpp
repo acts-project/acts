@@ -18,8 +18,6 @@
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
-using namespace Acts::UnitLiterals;
-
 namespace ActsExamples {
 
 /// @class CsvSeedWriter

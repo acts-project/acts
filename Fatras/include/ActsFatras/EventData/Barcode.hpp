@@ -157,51 +157,6 @@ class Barcode {
             subParticle()};
   }
 
-  /// Set the primary vertex identifier.
-  /// @param id Primary vertex identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withVertexPrimary() instead")]]
-  constexpr Barcode& setVertexPrimary(PrimaryVertexId id) {
-    vertexPrimaryID = id;
-    return *this;
-  }
-
-  /// Set the secondary vertex identifier.
-  /// @param id Secondary vertex identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withVertexSecondary() instead")]]
-  constexpr Barcode& setVertexSecondary(SecondaryVertexId id) {
-    vertexSecondaryID = id;
-    return *this;
-  }
-
-  /// Set the parent particle identifier.
-  /// @param id Particle identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withParticle() instead")]]
-  constexpr Barcode& setParticle(ParticleId id) {
-    particleID = id;
-    return *this;
-  }
-
-  /// Set the particle identifier.
-  /// @param id Generation identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withGeneration() instead")]]
-  constexpr Barcode& setGeneration(GenerationId id) {
-    generationID = id;
-    return *this;
-  }
-
-  /// Set the process identifier.
-  /// @param id Sub-particle identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withSubParticle() instead")]]
-  constexpr Barcode& setSubParticle(SubParticleId id) {
-    subParticleID = id;
-    return *this;
-  }
-
   /// Create a new barcode with a different primary vertex identifier.
   /// @param id Primary vertex identifier to set
   /// @return New barcode with modified primary vertex identifier

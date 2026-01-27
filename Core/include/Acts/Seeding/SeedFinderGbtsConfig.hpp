@@ -22,7 +22,9 @@ struct SeedFinderGbtsConfig {
   bool BeamSpotCorrection = false;
 
   // Path to the connector configuration file that defines the layer connections
-  std::string ConnectorInputFile;
+  std::string connectorInputFile;
+
+  std::string lutInputFile;
 
   // SeedFinderGbts option
   bool LRTmode = false;
@@ -30,6 +32,7 @@ struct SeedFinderGbtsConfig {
   bool matchBeforeCreate = false;
   bool useOldTunings = false;
   float tau_ratio_cut = 0.007;
+  float tau_ratio_precut = 0.009f;
   float etaBinOverride =
       0.0f;  // specify non-zero to override eta bin width from connection file
              // (default 0.2 in createLinkingScheme.py)
@@ -47,21 +50,29 @@ struct SeedFinderGbtsConfig {
 
   // GbtsTrackingFilter
   // Update()
-  float sigma_t = 0.0003;
-  float sigma_w = 0.00009;
+  float sigmaMS = 0.016;  // for 900 MeV track at eta=0
+  float radLen = 0.025;   // 2.5% per layer
 
-  float sigmaMS = 0.016;
-
-  float sigma_x = 0.25;
-  float sigma_y = 2.5;
+  float sigma_x = 0.08;
+  float sigma_y = 0.25;
 
   float weight_x = 0.5;
   float weight_y = 0.5;
 
-  float maxDChi2_x = 60.0;
-  float maxDChi2_y = 60.0;
+  float maxDChi2_x = 5.0;
+  float maxDChi2_y = 6.0;
 
   float add_hit = 14.0;
+
+  float max_curvature = 1e-3f;
+  float max_z0 = 170.0;
+
+  // extractSeedsFromTheGraph()
+  float edge_mask_min_eta = 1.5;
+  float hit_share_threshold = 0.49;
+
+  // GbtsDataStorage
+  float max_endcap_clusterwidth = 0.35;
 
   // 2 member functions
   SeedFinderGbtsConfig calculateDerivedQuantities() const {

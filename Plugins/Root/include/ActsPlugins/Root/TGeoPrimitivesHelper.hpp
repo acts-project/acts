@@ -14,6 +14,8 @@
 #include <vector>
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 struct TGeoPrimitivesHelper {
   /// Helper method to create a transform from
@@ -29,10 +31,10 @@ struct TGeoPrimitivesHelper {
       const Eigen::Vector3d& rotationMatrixCol2,
       const Eigen::Vector3d& translation) {
     Acts::Transform3 trf;
-    trf.matrix().block(0, 0, 3, 1) = rotationMatrixCol0;
-    trf.matrix().block(0, 1, 3, 1) = rotationMatrixCol1;
-    trf.matrix().block(0, 2, 3, 1) = rotationMatrixCol2;
-    trf.matrix().block(0, 3, 3, 1) = translation;
+    trf.matrix().block<3, 1>(0, 0) = rotationMatrixCol0;
+    trf.matrix().block<3, 1>(0, 1) = rotationMatrixCol1;
+    trf.matrix().block<3, 1>(0, 2) = rotationMatrixCol2;
+    trf.matrix().block<3, 1>(0, 3) = translation;
     return trf;
   }
 
@@ -48,4 +50,5 @@ struct TGeoPrimitivesHelper {
   /// @param second is the test string
   static bool match(const std::vector<std::string>& first, const char* second);
 };
+/// @}
 }  // namespace ActsPlugins

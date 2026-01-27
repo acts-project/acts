@@ -40,7 +40,7 @@ namespace bdata = boost::unit_test::data;
 
 namespace Acts::Test {
 
-Acts::GeometryContext gctx;
+const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 Acts::MagneticFieldContext mctx;
 
 using namespace Acts::UnitLiterals;
@@ -53,7 +53,7 @@ using Jacobian = BoundMatrix;
 /// the numerical correctness is performed in the integration tests.
 BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   auto particleHypothesis = ParticleHypothesis::pion();
 
@@ -282,12 +282,12 @@ BOOST_DATA_TEST_CASE(CovarianceConversionSamePlane,
                       locDist ^ locDist) ^
                          bdata::xrange(100),
                      Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, l1, index) {
-  (void)index;
+  static_cast<void>(index);
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
-  auto planeSurfaceB =
-      Surface::makeShared<PlaneSurface>(planeSurfaceA->transform(gctx));
+  auto planeSurfaceB = Surface::makeShared<PlaneSurface>(
+      planeSurfaceA->localToGlobalTransform(gctx));
 
   BoundMatrix covA;
   covA.setZero();
@@ -325,15 +325,16 @@ BOOST_DATA_TEST_CASE(CovarianceConversionRotatedPlane,
                       locDist ^ locDist ^ angleDist) ^
                          bdata::xrange(100),
                      Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, l1, angle, index) {
-  (void)index;
+  static_cast<void>(index);
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
 
   Transform3 transform;
-  transform = planeSurfaceA->transform(gctx).rotation();
+  transform = planeSurfaceA->localToGlobalTransform(gctx).rotation();
   transform = AngleAxis3(angle, planeSurfaceA->normal(gctx)) * transform;
-  transform.translation() = planeSurfaceA->transform(gctx).translation();
+  transform.translation() =
+      planeSurfaceA->localToGlobalTransform(gctx).translation();
   auto planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
 
   // sanity check that the normal didn't change
@@ -375,20 +376,22 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL0TiltedPlane,
                       locDist ^ angleDist) ^
                          bdata::xrange(100),
                      Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l1, angle, index) {
-  (void)index;
+  static_cast<void>(index);
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
 
   // make plane that is slightly rotated
   Transform3 transform;
-  transform = planeSurfaceA->transform(gctx).rotation();
+  transform = planeSurfaceA->localToGlobalTransform(gctx).rotation();
 
   // figure out rotation axis along local x
-  Vector3 axis = planeSurfaceA->transform(gctx).rotation() * Vector3::UnitY();
+  Vector3 axis =
+      planeSurfaceA->localToGlobalTransform(gctx).rotation() * Vector3::UnitY();
   transform = AngleAxis3(angle, axis) * transform;
 
-  transform.translation() = planeSurfaceA->transform(gctx).translation();
+  transform.translation() =
+      planeSurfaceA->localToGlobalTransform(gctx).translation();
 
   auto planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
 
@@ -425,19 +428,21 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL1TiltedPlane,
                       locDist ^ angleDist) ^
                          bdata::xrange(100),
                      Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, angle, index) {
-  (void)index;
+  static_cast<void>(index);
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
 
   // make plane that is slightly rotated
   Transform3 transform;
-  transform = planeSurfaceA->transform(gctx).rotation();
+  transform = planeSurfaceA->localToGlobalTransform(gctx).rotation();
 
-  Vector3 axis = planeSurfaceA->transform(gctx).rotation() * Vector3::UnitX();
+  Vector3 axis =
+      planeSurfaceA->localToGlobalTransform(gctx).rotation() * Vector3::UnitX();
   transform = AngleAxis3(angle, axis) * transform;
 
-  transform.translation() = planeSurfaceA->transform(gctx).translation();
+  transform.translation() =
+      planeSurfaceA->localToGlobalTransform(gctx).translation();
 
   auto planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
 
@@ -476,7 +481,7 @@ BOOST_DATA_TEST_CASE(CovarianceConversionPerigee,
                          bdata::xrange(100),
                      Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, l1, pRx, pRy, pRz,
                      index) {
-  (void)index;
+  static_cast<void>(index);
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();

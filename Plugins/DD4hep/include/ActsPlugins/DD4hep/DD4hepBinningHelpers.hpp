@@ -24,6 +24,8 @@
 #include <DDRec/DetectorData.h>
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
 
 static const std::vector<std::tuple<std::string, Acts::AxisDirection>>
     allowedBinnings = {{"x", Acts::AxisDirection::AxisX},
@@ -78,6 +80,7 @@ inline std::vector<Acts::AxisDirection> stringToAxisDirections(
 }
 
 namespace DD4hepBinningHelpers {
+/// @ingroup dd4hep_plugin
 
 /// @brief This method converts the DD4hep binning into the Acts ProtoAxis
 ///
@@ -89,4 +92,5 @@ std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname);
 
 }  // namespace DD4hepBinningHelpers
+/// @}
 }  // namespace ActsPlugins

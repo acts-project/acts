@@ -104,9 +104,9 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
 
     // understand what sort of material you have in mind
     auto bvMaterial3D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapper<Acts::MaterialGrid3D>>*>(vMaterial);
+        Acts::MaterialMapLookup<Acts::MaterialGrid3D>>*>(vMaterial);
     auto bvMaterial2D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapper<Acts::MaterialGrid2D>>*>(vMaterial);
+        Acts::MaterialMapLookup<Acts::MaterialGrid2D>>*>(vMaterial);
 
     int points = 1;
     if (bvMaterial3D != nullptr || bvMaterial2D != nullptr) {

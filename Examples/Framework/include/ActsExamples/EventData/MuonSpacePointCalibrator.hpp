@@ -23,14 +23,14 @@ class MuonSpacePointCalibrator {
   enum class CalibPolyType { Chebychev, Legendre };
   /// @brief Calibration configuration struct */
   struct Config {
-    /// @brief Coefficients of the r-t relation parametrised as othogonal polynomial
+    /// @brief Coefficients of the r-t relation parametrised as orthogonal polynomial
     std::vector<double> rtCoefficients{9.0077,  6.7416,    -1.5805,
                                        0.56482, -0.1911,   0.018885,
                                        0.03027, -0.034393, 0.023613};
-    ///  @brief Coefficients of the t-r relation as othogonal polynomial
+    ///  @brief Coefficients of the t-r relation as orthogonal polynomial
     std::vector<double> trCoefficients{256.328, 348.773, 118.157, 18.667,
                                        -6.4899};
-    /// @brief Coefficients of the drift radius uncertainty parameterized as an othogonal polynomial
+    /// @brief Coefficients of the drift radius uncertainty parameterized as an orthogonal polynomial
     ///        as a function of the drift time
     std::vector<double> rtUncertCoefficients{0.10833, -0.071956, 0.037702,
                                              -0.011763};
