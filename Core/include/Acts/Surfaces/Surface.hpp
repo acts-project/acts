@@ -230,7 +230,7 @@ class Surface : public virtual GeometryObject,
   const Layer* associatedLayer() const;
 
   /// @brief Return the thickness of the surface in the normal direction
-  double depth() const;
+  double thickness() const;
 
   /// Set Associated Layer
   /// Many surfaces can be associated to a Layer, but it might not be known yet
@@ -576,7 +576,7 @@ class Surface : public virtual GeometryObject,
   bool m_isSensitive{false};
 
   /// @brief Thickness of the surface in the normal direction
-  double m_depth{0.};
+  double m_thickness{0.};
   /// Calculate the derivative of bound track parameters w.r.t.
   /// alignment parameters of its reference surface (i.e. origin in global 3D
   /// Cartesian coordinates and its rotation represented with extrinsic Euler

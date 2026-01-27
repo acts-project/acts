@@ -30,7 +30,7 @@ void ProtoLayerBase::measureImpl(const GeometryContext& gctx,
     const auto* regSurface = dynamic_cast<const RegularSurface*>(sf);
     if (sf->isSensitive() && regSurface != nullptr) {
       // Take the thickness in account if necessary
-      double thickness = sf->depth();
+      double thickness = sf->thickness();
       // We need a translation along and opposite half thickness
       Vector3 sfNormal = regSurface->normal(gctx, sf->center(gctx));
       for (const auto& dT : {-0.5 * thickness, 0.5 * thickness}) {
