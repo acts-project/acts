@@ -717,7 +717,7 @@ struct GsfActor {
     }
 
     const bool precedingMeasurementExists = result.processedStates > 0;
-    const bool isHole = !surface.isSensitive();
+    const bool isHole = surface.isSensitive();
 
     // Do the statistics
     ++result.processedStates;
