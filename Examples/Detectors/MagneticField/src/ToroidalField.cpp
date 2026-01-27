@@ -70,12 +70,12 @@ Result<Vector3> ToroidalField::getField(
   double bx = 0.0, by = 0.0, bz = 0.0;
 
   constexpr double mu0 = 4e-7 * std::numbers::pi;  // [T·m/A]
-  const double prefBarrel = (mu0 * static_cast<double>(m_cfg.barrel.Nturns) *
-                             m_cfg.barrel.I) /
-                            (4.0 * std::numbers::pi);
-  const double prefECT = (mu0 * static_cast<double>(m_cfg.ect.Nturns) *
-                          m_cfg.ect.I) /
-                         (4.0 * std::numbers::pi);
+  const double prefBarrel =
+      (mu0 * static_cast<double>(m_cfg.barrel.Nturns) * m_cfg.barrel.I) /
+      (4.0 * std::numbers::pi);
+  const double prefECT =
+      (mu0 * static_cast<double>(m_cfg.ect.Nturns) * m_cfg.ect.I) /
+      (4.0 * std::numbers::pi);
   const double eps = m_cfg.layout.eps;
 
   // Split computations
@@ -300,12 +300,17 @@ void ToroidalField::buildGeometry() {
   buildSegsMidsRZ(rz_barrel, d_rzB, m_rzB);
 
   // ---- ECT base curve ----
-  const float lE = 0.5f * static_cast<float>((m_cfg.ect.R_in + m_cfg.ect.R_out) / UnitConstants::m);
-  const float rEndECT = 0.5f * static_cast<float>(m_cfg.ect.b / UnitConstants::m);
-  const float aE = static_cast<float>((m_cfg.ect.R_out - m_cfg.ect.R_in) / UnitConstants::m) - 2.0f * rEndECT;
+  const float lE =
+      0.5f *
+      static_cast<float>((m_cfg.ect.R_in + m_cfg.ect.R_out) / UnitConstants::m);
+  const float rEndECT =
+      0.5f * static_cast<float>(m_cfg.ect.b / UnitConstants::m);
+  const float aE = static_cast<float>((m_cfg.ect.R_out - m_cfg.ect.R_in) /
+                                      UnitConstants::m) -
+                   2.0f * rEndECT;
   const auto rz_ect = racetrackRZ(
-      /*a=*/aE, /*b=*/static_cast<float>(m_cfg.ect.b / UnitConstants::m), 
-      /*Lz=*/static_cast<float>(m_cfg.ect.c / UnitConstants::m), 
+      /*a=*/aE, /*b=*/static_cast<float>(m_cfg.ect.b / UnitConstants::m),
+      /*Lz=*/static_cast<float>(m_cfg.ect.c / UnitConstants::m),
       m_cfg.layout.nArc, m_cfg.layout.nStraight, m_cfg.layout.closeLoop);
   std::vector<std::array<float, 2>> d_rzE, m_rzE;
   buildSegsMidsRZ(rz_ect, d_rzE, m_rzE);
@@ -335,9 +340,10 @@ void ToroidalField::buildGeometry() {
   }
 
   // Endcap centers (overlap placement)
-  const float zECT = 0.5f * static_cast<float>(m_cfg.barrel.c / UnitConstants::m) - 
-                     0.5f * static_cast<float>(m_cfg.ect.c / UnitConstants::m) + 
-                     2.0f * static_cast<float>(m_cfg.ect.gap / UnitConstants::m);
+  const float zECT =
+      0.5f * static_cast<float>(m_cfg.barrel.c / UnitConstants::m) -
+      0.5f * static_cast<float>(m_cfg.ect.c / UnitConstants::m) +
+      2.0f * static_cast<float>(m_cfg.ect.gap / UnitConstants::m);
 
   // +z endcap (indices 0..nC-1 in ectSigns)
   for (int k = 0; k < nC; ++k) {

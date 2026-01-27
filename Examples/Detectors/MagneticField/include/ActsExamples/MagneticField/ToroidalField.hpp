@@ -33,26 +33,27 @@ class ToroidalField final : public MagneticFieldProvider {
     double R_out = 10.0 * UnitConstants::m;  ///< Outer radius
     double c = 25.3 * UnitConstants::m;      ///< Coil length along z
     double b = 0.16 * UnitConstants::m;      ///< Coil width (radial)
-    double I = 20500.0;                       ///< Current [A]
-    int Nturns = 120;                         ///< Number of turns
+    double I = 20500.0;                      ///< Current [A]
+    int Nturns = 120;                        ///< Number of turns
   };
 
   /// Configuration for end-cap toroid (ECT) coils
   struct EctConfig {
     double R_in = 1.65 * 0.5 * UnitConstants::m;   ///< Inner radius ≈ 0.825 m
     double R_out = 10.7 * 0.5 * UnitConstants::m;  ///< Outer radius ≈ 5.35 m
-    double c = 5.0 * UnitConstants::m;              ///< Coil length along z
-    double b = 0.12 * UnitConstants::m;             ///< Coil width (radial)
-    double I = 20500.0;                              ///< Current [A]
-    int Nturns = 116;                                ///< Number of turns
-    double gap = 0.5 * UnitConstants::m;            ///< Gap between barrel and endcap
+    double c = 5.0 * UnitConstants::m;             ///< Coil length along z
+    double b = 0.12 * UnitConstants::m;            ///< Coil width (radial)
+    double I = 20500.0;                            ///< Current [A]
+    int Nturns = 116;                              ///< Number of turns
+    double gap = 0.5 * UnitConstants::m;  ///< Gap between barrel and endcap
   };
 
   /// Configuration for coil layout and discretization
   struct LayoutConfig {
-    double theta0 = 22.5 * UnitConstants::degree;    ///< Initial azimuthal angle
-    double thetaStep = 45.0 * UnitConstants::degree; ///< Angular spacing between coils
-    int nCoils = 8;                                   ///< Number of coils
+    double theta0 = 22.5 * UnitConstants::degree;  ///< Initial azimuthal angle
+    double thetaStep =
+        45.0 * UnitConstants::degree;  ///< Angular spacing between coils
+    int nCoils = 8;                    ///< Number of coils
 
     int nArc = 200;         ///< Number of segments in arc portions
     int nStraight = 160;    ///< Number of segments in straight portions
@@ -101,7 +102,6 @@ class ToroidalField final : public MagneticFieldProvider {
   const Config& config() const { return m_cfg; }
 
  private:
-
   // Helpers (declared here, defined in .cpp)
   static std::vector<std::array<float, 2>> ectRacetrackRadial(
       float Lrho, float Lz, int nArc, int nStraight, bool close);
