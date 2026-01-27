@@ -14,9 +14,7 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <cmath>
 #include <numbers>
-#include <optional>
 #include <tuple>
 
 namespace Acts::detail {
