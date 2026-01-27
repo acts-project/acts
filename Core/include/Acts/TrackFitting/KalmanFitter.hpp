@@ -12,7 +12,6 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -31,11 +30,9 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
-#include <functional>
-#include <limits>
-#include <map>
 #include <memory>
-#include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 namespace Acts {
 
@@ -480,7 +477,7 @@ class KalmanFitter {
         result.lastTrackIndex = trackStateProxy.index();
 
         // Update the stepper if it is not an outlier
-        if (trackStateProxy.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+        if (trackStateProxy.typeFlags().isMeasurement()) {
           // Update the stepping state with filtered parameters
           ACTS_VERBOSE("Filtering step successful, updated parameters are:\n"
                        << trackStateProxy.filtered().transpose());
@@ -523,7 +520,7 @@ class KalmanFitter {
         const auto& trackStateProxy = *trackStateProxyRes;
         result.lastTrackIndex = trackStateProxy.index();
 
-        if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+        if (trackStateProxy.typeFlags().isHole()) {
           // Count the missed surface
           result.missedActiveSurfaces.push_back(surface);
         }

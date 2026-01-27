@@ -67,7 +67,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       }
     }
 
-    ACTS_ERROR("getNextTarget failed to find a valid target surface after "
+    ACTS_DEBUG("getNextTarget failed to find a valid target surface after "
                << state.options.maxTargetSkipping << " attempts.");
     return Result<NavigationTarget>::failure(
         PropagatorError::NextTargetLimitReached);
@@ -94,7 +94,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
         m_stepper.step(state.stepping, state.options.direction,
                        m_navigator.currentVolumeMaterial(state.navigation));
     if (!res.ok()) {
-      ACTS_ERROR("Step failed with " << res.error() << ": "
+      ACTS_DEBUG("Step failed with " << res.error() << ": "
                                      << res.error().message());
       // pass error to caller
       return res.error();
@@ -175,7 +175,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 
   // check if we didn't terminate normally via aborters
   if (!terminatedNormally) {
-    ACTS_ERROR("Propagation reached the step count limit of "
+    ACTS_DEBUG("Propagation reached the step count limit of "
                << state.options.maxSteps << " (did " << state.steps
                << " steps)");
     return PropagatorError::StepCountLimitReached;
