@@ -11,6 +11,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/EventData/MuonSpacePointCalibrator.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -32,6 +33,12 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     std::string inputParticles{"particles_simulated"};
     /// @brief Name of the output space points collection
     std::string outputSpacePoints{"MuonSpacePoints"};
+    /// @brief Output measurements collection.
+    std::string outputMeasurements = "measurements";
+    /// @brief Output collection to map measured hits to simulated hits.
+    std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
+    /// @brief Output collection to map particles to simulated hits.
+    std::string outputSimHitMeasurementsMap = "simhit_measurements_map";
     /// @brief Random number generator service
     std::shared_ptr<const RandomNumbers> randomNumbers{};
     /// @brief Pointer to the muon calibrator to fetch the smearing constants
@@ -99,5 +106,11 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   /// @brief Data handle for the output space points
   WriteDataHandle<MuonSpacePointContainer> m_outputSpacePoints{this,
                                                                "SpacePoints"};
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
+      this, "OutputMeasurements"};
+  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+      this, "OutputMeasurementSimHitsMap"};
+  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+      this, "OutputSimHitMeasurementsMap"};
 };
 }  // namespace ActsExamples
