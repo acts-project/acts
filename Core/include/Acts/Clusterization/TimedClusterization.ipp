@@ -25,15 +25,14 @@ Acts::Ccl::ConnectResult TimedConnect<Cell, N>::operator()(
     const Cell& ref, const Cell& iter) const {
   Acts::Ccl::ConnectResult spaceCompatibility =
       Acts::Ccl::DefaultConnect<Cell, N>::operator()(ref, iter);
-  if (spaceCompatibility != Acts::Ccl::ConnectResult::eConn) {
-    return spaceCompatibility;
-  }
+  double timeDiff = std::abs(getCellTime(iter) - getCellTime(ref));
 
-  if (std::abs(getCellTime(ref) - getCellTime(iter)) < timeTolerance) {
-    return Acts::Ccl::ConnectResult::eConn;
+  if (spaceCompatibility == Acts::Ccl::ConnectResult::eDuplicate ||
+      spaceCompatibility == Acts::Ccl::ConnectResult::eConn) {
+    return (timeDiff < timeTolerance) ? spaceCompatibility
+                                      : Acts::Ccl::ConnectResult::eNoConn;
   }
-
-  return Acts::Ccl::ConnectResult::eNoConn;
+  return spaceCompatibility;
 }
 
 }  // namespace Acts::Ccl
