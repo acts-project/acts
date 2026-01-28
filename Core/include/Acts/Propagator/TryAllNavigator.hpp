@@ -13,6 +13,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Propagator/NavigatorError.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
@@ -191,7 +192,7 @@ class TryAllNavigatorBase {
   [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
                                         const Vector3& direction,
                                         Direction propagationDirection) const {
-    (void)propagationDirection;
+    static_cast<void>(propagationDirection);
 
     ACTS_VERBOSE("initialize");
 
@@ -221,7 +222,9 @@ class TryAllNavigatorBase {
       if (state.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
       } else {
-        ACTS_ERROR("Start volume not resolved.");
+        ACTS_DEBUG("Start volume not resolved.");
+        state.navigationBreak = true;
+        return NavigatorError::NoStartVolume;
       }
 
       state.currentSurface = state.startSurface;
@@ -476,9 +479,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @return True if the target is still valid
   bool checkTargetValid(const State& state, const Vector3& position,
                         const Vector3& direction) const {
-    (void)state;
-    (void)position;
-    (void)direction;
+    static_cast<void>(state);
+    static_cast<void>(position);
+    static_cast<void>(direction);
 
     return false;
   }
@@ -701,7 +704,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @return The next target surface
   NavigationTarget nextTarget(State& state, const Vector3& position,
                               const Vector3& direction) const {
-    (void)direction;
+    static_cast<void>(direction);
 
     // Navigator preStep always resets the current surface
     state.currentSurface = nullptr;
@@ -806,9 +809,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @return True if the target is still valid
   bool checkTargetValid(const State& state, const Vector3& position,
                         const Vector3& direction) const {
-    (void)state;
-    (void)position;
-    (void)direction;
+    static_cast<void>(state);
+    static_cast<void>(position);
+    static_cast<void>(direction);
 
     return true;
   }

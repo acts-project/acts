@@ -5,14 +5,13 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
@@ -20,12 +19,9 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <stdexcept>
 
-#include <Eigen/src/Core/util/Memory.h>
-#include <boost/graph/graph_traits.hpp>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
@@ -123,7 +119,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 
   for (const auto& state : track.trackStatesReversed()) {
     auto typeFlags = state.typeFlags();
-    if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!typeFlags.isMeasurement()) {
       continue;
     }
 
@@ -241,7 +237,7 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
     auto params = unpack(trackState);
 
     auto ts = track.appendTrackState(mask);
-    ts.typeFlags().set(MeasurementFlag);
+    ts.typeFlags().setIsMeasurement();
 
     auto converted = detail::convertTrackParametersFromEdm4hep(Bz, params);
 

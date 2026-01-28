@@ -83,7 +83,7 @@ set(ACTS_ODD_SOURCE
 mark_as_advanced(ACTS_ODD_SOURCE)
 
 set(ACTS_MODULEMAPGRAPH_SOURCE
-    "GIT_REPOSITORY;https://gitlab.cern.ch/gnn4itkteam/ModuleMapGraph;GIT_TAG;1.1.14"
+    "GIT_REPOSITORY;https://gitlab.cern.ch/gnn4itkteam/ModuleMapGraph;GIT_TAG;1.1.16"
     CACHE STRING
     "Source to take ModuleMapGraph from"
 )

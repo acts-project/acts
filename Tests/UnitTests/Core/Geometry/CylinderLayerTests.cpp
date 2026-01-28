@@ -59,10 +59,10 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
   // construct with thickness:
   auto pCylinderLayerWithThickness =
       CylinderLayer::create(pTransform, pCylinder, nullptr, thickness);
-  CHECK_CLOSE_REL(pCylinderLayerWithThickness->thickness(), thickness, 1e-6);
+  CHECK_CLOSE_REL(pCylinderLayerWithThickness->layerThickness(), thickness,
+                  1e-6);
   // with an approach descriptor...
-  std::unique_ptr<ApproachDescriptor> ad(
-      new GenericApproachDescriptor(aSurfaces));
+  auto ad(std::make_unique<GenericApproachDescriptor>(aSurfaces));
   auto adPtr = ad.get();
   auto pCylinderLayerWithApproachDescriptor = CylinderLayer::create(
       pTransform, pCylinder, nullptr, thickness, std::move(ad));

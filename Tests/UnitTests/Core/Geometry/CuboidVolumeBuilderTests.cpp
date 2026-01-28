@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   CuboidVolumeBuilder cvb;
 
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   // Create configurations for surfaces
   std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;

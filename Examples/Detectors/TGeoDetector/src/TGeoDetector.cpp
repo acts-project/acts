@@ -363,7 +363,7 @@ void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
 
 TGeoDetector::TGeoDetector(const Config& cfg)
     : Detector(getDefaultLogger("TGeoDetector", cfg.logLevel)), m_cfg(cfg) {
-  m_nominalGeometryContext = GeometryContext();
+  m_nominalGeometryContext = GeometryContext::dangerouslyDefaultConstruct();
 
   m_trackingGeometry =
       buildTGeoDetector(m_cfg, m_nominalGeometryContext, m_detectorStore,
@@ -373,5 +373,12 @@ TGeoDetector::TGeoDetector(const Config& cfg)
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {
   readTGeoLayerBuilderConfigsFile(jsonFile, *this);
 }
-
+std::shared_ptr<const TrackingGeometry> buildTGeoDetectorWrapper(
+    const TGeoDetector::Config& config, const GeometryContext& context,
+    std::vector<std::shared_ptr<const DetectorElementBase>>& detElementStore,
+    std::shared_ptr<const IMaterialDecorator> materialDecorator,
+    const Logger& logger) {
+  return buildTGeoDetector(config, context, detElementStore,
+                           std::move(materialDecorator), logger);
+}
 }  // namespace ActsExamples

@@ -126,9 +126,9 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   // source link defines the uncalibrated measurement
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-    testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{},
-                                           Acts::CalibrationContext{},
-                                           SourceLink{pc.sourceLink}, ts);
+    testSourceLinkCalibrator<trajectory_t>(
+        Acts::GeometryContext::dangerouslyDefaultConstruct(),
+        Acts::CalibrationContext{}, SourceLink{pc.sourceLink}, ts);
     assert(ts.hasUncalibratedSourceLink());
   }
 }
