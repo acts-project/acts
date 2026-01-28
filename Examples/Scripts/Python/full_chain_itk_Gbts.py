@@ -30,7 +30,7 @@ trackingGeometry = detector.trackingGeometry()
 field = acts.root.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=2, numThreads=2, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=50, numThreads=16, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(

@@ -11,7 +11,7 @@
 // TODO: update to C++17 style
 // Consider to moving to detail subdirectory
 #include <map>
-#include <string>
+#include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -21,15 +21,15 @@ struct GbtsConnection {
   /// Constructor
   /// @param s Source layer index
   /// @param d Destination layer index
-  GbtsConnection(unsigned int s, unsigned int d);
+  GbtsConnection(std::uint32_t s, std::uint32_t d);
 
   /// Source and destination layer indices
-  unsigned int m_src;
+  std::uint32_t m_src;
   /// Destination layer index
-  unsigned int m_dst;
+  std::uint32_t m_dst;
 
   /// Binning table for the connection
-  std::vector<int> m_binTable;
+  std::vector<std::int32_t> m_binTable;
 };
 
 /// Loader and container for GBTs layer connection data.
@@ -40,11 +40,11 @@ class GbtsConnector {
     /// Constructor
     /// @param l1Key Destination layer key
     /// @param v Vector of source connections
-    LayerGroup(unsigned int l1Key, const std::vector<const GbtsConnection*>& v)
+    LayerGroup(std::uint32_t l1Key, const std::vector<const GbtsConnection*>& v)
         : m_dst(l1Key), m_sources(v) {};
 
     /// The target layer of the group
-    unsigned int m_dst;
+    std::uint32_t m_dst;
 
     /// The source layers of the group
     std::vector<const GbtsConnection*> m_sources;
@@ -55,15 +55,15 @@ class GbtsConnector {
   /// @param inFile Input configuration file path
   /// @param LRTmode Enable LRT (Large Radius Tracking) mode
   GbtsConnector(std::string& inFile, bool LRTmode);
-  ~GbtsConnector();
 
   /// Eta bin size
   float m_etaBin{};
 
   /// Map of layer groups indexed by layer
-  std::map<int, std::vector<struct LayerGroup> > m_layerGroups;
+  std::map<std::int32_t, std::vector<struct LayerGroup>> m_layerGroups;
   /// Map of connections indexed by layer
-  std::map<int, std::vector<GbtsConnection*> > m_connMap;
+  std::map<std::int32_t, std::vector<std::unique_ptr<GbtsConnection>>>
+      m_connMap;
 };
 
 }  // namespace Acts::Experimental

@@ -26,14 +26,12 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
     ActsExamples::GbtsSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
   // initialise the spacepoint, seed and cluster handles
-  m_inputSpacePoints.initialize(
-      m_cfg.inputSpacePoints);  // TO DO: change bindings so it only gives a
-                                // string instead of a vector
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_inputClusters.initialize(m_cfg.inputClusters);
 
   // parse the mapping file and turn into map
-  m_cfg.ActsGbtsMap = makeActsGbtsMap();
+  m_cfg.actsGbtsMap = makeActsGbtsMap();
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
@@ -56,7 +54,6 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 
   // manually convert min Pt as no conversion available in ACTS Examples
   // (currently inputs as 0.9 GeV but need 900 MeV)
-  m_cfg.seedFinderConfig.minPt = m_cfg.seedFinderConfig.minPt * 1000;
 
   m_finder = std::make_unique<Acts::Experimental::SeedFinderGbts>(
       m_cfg.seedFinderConfig, std::move(m_gbtsGeo), &m_layerGeometry,
@@ -72,15 +69,13 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   // container due to how spacepoint container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  auto SpContainerComponents = MakeSpContainer(ctx, m_cfg.ActsGbtsMap);
+  auto SpContainerComponents = makeSpContainer(ctx, m_cfg.actsGbtsMap);
 
   // used to reserve size of nodes 2D vector in core
-  int max_layers = m_LayeridMap.size();
+  std::int32_t max_layers = m_LayeridMap.size();
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
-  //  Acts::Experimental::RoiDescriptor internalRoi(0, -5, 5, 0,
-  //  -std::numbers::pi, std::numbers::pi, 0, -225., 225.);
   Acts::Experimental::RoiDescriptor internalRoi(
       0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
 
@@ -97,7 +92,7 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   seedContainerForStorage.reserve(seeds.size());
   for (const auto &seed : seeds) {
     auto sps = seed.spacePointIndices();
-    unsigned int indices = sps.size() - 1;
+    std::uint32_t indices = sps.size() - 1;
     std::size_t mid = static_cast<std::size_t>(std::round(indices / 2.0));
     seedContainerForStorage.emplace_back(
         *std::get<0>(SpContainerComponents)
@@ -122,16 +117,17 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-std::map<std::pair<int, int>, std::tuple<int, int, int>>
+std::map<ActsExamples::GbtsSeedingAlgorithm::Acts_IDs,
+         ActsExamples::GbtsSeedingAlgorithm::Gbts_IDs>
 ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
-  std::map<std::pair<int, int>, std::tuple<int, int, int>> ActsGbts;
+  std::map<Acts_IDs, Gbts_IDs> actsToGbtsMap;
 
   // prepare the acts to gbts mapping file
-  std::ifstream data(
-      m_cfg.layerMappingFile);  // 0 in this file refers to no Gbts ID
+  // 0 in this file refers to no Gbts ID
+  std::ifstream data(m_cfg.layerMappingFile);
   std::string line;
-  std::vector<std::vector<std::string>>
-      parsedCsv;  // row = physical module, column = ACTS ID components
+  // row = physical module, column = ACTS ID components
+  std::vector<std::vector<std::string>> parsedCsv;
   while (std::getline(data, line)) {
     std::stringstream lineStream(line);
     std::string cell;
@@ -145,22 +141,25 @@ ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
 
   // file in format ACTS_vol,ACTS_lay,ACTS_mod,Gbts_id
   for (auto i : parsedCsv) {
-    int ACTS_vol = stoi(i[0]);
-    int ACTS_lay = stoi(i[1]);
-    int ACTS_mod = stoi(i[2]);
-    int Gbts = stoi(i[5]);
-    int eta_mod = stoi(i[6]);
-    int ACTS_joint = ACTS_vol * 100 + ACTS_lay;
-    ActsGbts.insert({{ACTS_joint, ACTS_mod}, {Gbts, eta_mod, 0}});
+    std::uint32_t actsVol = stoi(i[0]);
+    std::uint32_t actsLay = stoi(i[1]);
+    std::uint32_t actsMod = stoi(i[2]);
+    std::uint32_t gbts = stoi(i[5]);
+    std::uint32_t etaMod = stoi(i[6]);
+    std::uint32_t actsJoint = actsVol * 100 + actsLay;
+    Acts_IDs ActsId{static_cast<std::uint64_t>(actsJoint),
+                    static_cast<std::uint64_t>(actsMod)};
+    Gbts_IDs GbtsId{static_cast<std::uint32_t>(gbts),
+                    static_cast<std::uint32_t>(etaMod), 0};
+    actsToGbtsMap.insert({{ActsId}, {GbtsId}});
   }
 
-  return ActsGbts;
+  return actsToGbtsMap;
 }
 
 Acts::Experimental::SPContainerComponentsType
-ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
-    const AlgorithmContext &ctx,
-    std::map<std::pair<int, int>, std::tuple<int, int, int>> map) const {
+ActsExamples::GbtsSeedingAlgorithm::makeSpContainer(
+    const AlgorithmContext &ctx, std::map<Acts_IDs, Gbts_IDs> map) const {
   // new seeding container test
   // initialise input spacepoints from handle and define new container
   const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
@@ -171,7 +170,7 @@ ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
       Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
 
   // add new column for layer ID and clusterwidth
-  auto LayerColoumn = coreSpacePoints.createColumn<int>("LayerID");
+  auto LayerColoumn = coreSpacePoints.createColumn<std::uint32_t>("LayerID");
   auto ClusterWidthColoumn =
       coreSpacePoints.createColumn<float>("Cluster_Width");
   auto LocalPositionColoumn =
@@ -194,44 +193,45 @@ ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
 
     const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
 
-    int ACTS_vol_id = indexSourceLink.geometryId().volume();
-    int ACTS_lay_id = indexSourceLink.geometryId().layer();
-    int ACTS_mod_id = indexSourceLink.geometryId().sensitive();
+    std::uint32_t actsVolId = indexSourceLink.geometryId().volume();
+    std::uint32_t actsLayId = indexSourceLink.geometryId().layer();
+    std::uint32_t actsModId = indexSourceLink.geometryId().sensitive();
 
     // dont want strips or HGTD
-    if (ACTS_vol_id == 2 || ACTS_vol_id == 22 || ACTS_vol_id == 23 ||
-        ACTS_vol_id == 24) {
+    if (actsVolId == 2 || actsVolId == 22 || actsVolId == 23 ||
+        actsVolId == 24) {
       continue;
     }
 
     // Search for vol, lay and module=0, if doesn't esist (end) then search
     // for full thing vol*100+lay as first number in pair then 0 or mod id
-    auto ACTS_joint_id = ACTS_vol_id * 100 + ACTS_lay_id;
-    auto key =
-        std::make_pair(ACTS_joint_id,
-                       0);  // here the key needs to be pair of(vol*100+lay, 0)
+    auto actsJointId = actsVolId * 100 + actsLayId;
+
+    // here the key needs to be pair of(vol*100+lay, 0)
+    Acts_IDs key{static_cast<std::uint64_t>(actsJointId), 0};
     auto Find = map.find(key);
 
-    if (Find ==
-        map.end()) {  // if end then make new key of (vol*100+lay, modid)
-      key = std::make_pair(ACTS_joint_id, ACTS_mod_id);  // mod ID
+    // if end then make new key of (vol*100+lay, modid)
+    if (Find == map.end()) {
+      key = Acts_IDs{static_cast<std::uint64_t>(actsJointId),
+                     static_cast<std::uint64_t>(actsModId)};  // mod ID
       Find = map.find(key);
     }
 
     // warning if key not in map
     if (Find == map.end()) {
       ACTS_WARNING("Key not found in Gbts map for volume id: "
-                   << ACTS_vol_id << " and layer id: " << ACTS_lay_id);
+                   << actsVolId << " and layer id: " << actsLayId);
       continue;
     }
 
     // now should be pixel with Gbts ID:
-    int Gbts_id = std::get<0>(
-        Find->second);  // new map the item is a pair so want first from it
+    // new map the item is a pair so want first from it
+    std::uint32_t Gbts_id = std::get<0>(Find->second);
 
     if (Gbts_id == 0) {
       ACTS_WARNING("No assigned Gbts ID for key for volume id: "
-                   << ACTS_vol_id << " and layer id: " << ACTS_lay_id);
+                   << actsVolId << " and layer id: " << actsLayId);
     }
 
     // access IDs from map
@@ -266,8 +266,8 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
   m_cfg.trackingGeometry->visitSurfaces([this, &input_vector, &count_vector](
                                             const Acts::Surface *surface) {
     Acts::GeometryIdentifier geoid = surface->geometryId();
-    auto ACTS_vol_id = geoid.volume();
-    auto ACTS_lay_id = geoid.layer();
+    auto actsVolId = geoid.volume();
+    auto actsLayId = geoid.layer();
     auto mod_id = geoid.sensitive();
     auto bounds_vect = surface->bounds().values();
     auto center =
@@ -286,8 +286,8 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
         Acts::GeometryContext::dangerouslyDefaultConstruct(), max_bound_local,
         globalFakeMom);
 
-    if (min_bound_global(0) >
-        max_bound_global(0)) {  // checking that not wrong way round
+    // checking that not wrong way round
+    if (min_bound_global(0) > max_bound_global(0)) {
       min_bound_global.swap(max_bound_global);
     }
 
@@ -296,23 +296,23 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     float maxBound = -100000.0;
 
     // convert to Gbts ID
-    auto ACTS_joint_id = ACTS_vol_id * 100 + ACTS_lay_id;
-    auto key =
-        std::make_pair(ACTS_joint_id,
-                       0);  // here the key needs to be pair of(vol*100+lay, 0)
-    auto Find = m_cfg.ActsGbtsMap.find(key);
-    int Gbts_id = 0;  // initialise first to avoid FLTUND later
-    Gbts_id = std::get<0>(Find->second);  // new map, item is pair want first
-    if (Find ==
-        m_cfg.ActsGbtsMap
-            .end()) {  // if end then make new key of (vol*100+lay, modid)
-      key = std::make_pair(ACTS_joint_id, mod_id);  // mod ID
-      Find = m_cfg.ActsGbtsMap.find(key);
+    auto actsJointId = actsVolId * 100 + actsLayId;
+    // here the key needs to be pair of(vol*100+lay, 0)
+    auto key = Acts_IDs{actsJointId, 0};
+    auto Find = m_cfg.actsGbtsMap.find(key);
+    // initialise first to avoid FLTUND later
+    std::uint32_t Gbts_id = 0;
+    // new map, item is pair want first
+    Gbts_id = std::get<0>(Find->second);
+    // if end then make new key of (vol*100+lay, modid)
+    if (Find == m_cfg.actsGbtsMap.end()) {
+      key = Acts_IDs{actsJointId, mod_id};  // mod ID
+      Find = m_cfg.actsGbtsMap.find(key);
       Gbts_id = std::get<0>(Find->second);
     }
 
-    short barrel_ec = 0;  // a variable that says if barrrel, 0 = barrel
-    int eta_mod = std::get<1>(Find->second);
+    std::int16_t barrel_ec = 0;  // a variable that says if barrrel, 0 = barrel
+    std::uint32_t eta_mod = std::get<1>(Find->second);
 
     // assign barrel_ec depending on Gbts_layer
     if (79 < Gbts_id && Gbts_id < 85) {  // 80s, barrel
@@ -348,7 +348,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
       }
     }
 
-    int combined_id = Gbts_id * 1000 + eta_mod;
+    std::int32_t combined_id = Gbts_id * 1000 + eta_mod;
 
     auto current_index =
         find_if(input_vector.begin(), input_vector.end(),
@@ -365,14 +365,13 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
       Acts::Experimental::TrigInDetSiLayer new_Gbts_ID(combined_id, barrel_ec,
                                                        rc, minBound, maxBound);
       input_vector.push_back(new_Gbts_ID);
-      count_vector.push_back(
-          1);  // so the element exists and not divinding by 0
+      // so the element exists and not divinding by 0
+      count_vector.push_back(1);
 
-      // tracking the index of each TrigInDetSiLayer as there added to the
-      // vector
-      int LayerID =
-          count_vector.size() -
-          1;  // so layer ID refers to actual index and not size of vector
+      // tracking the index of each TrigInDetSiLayer as there added
+
+      // so layer ID refers to actual index and not size of vector
+      std::uint32_t LayerID = count_vector.size() - 1;
       std::get<2>(Find->second) = LayerID;
       m_LayeridMap.insert({combined_id, LayerID});
     }
@@ -384,14 +383,14 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
       std::get<2>(Find->second) = FindLayer->second;
     }
 
+    // add to file each time,
+    // print to csv for each module, no repeats so dont need to make
+    // map for averaging
     if (m_cfg.fill_module_csv) {
       std::fstream fout;
-      fout.open("ACTS_modules.csv",
-                std::ios::out | std::ios::app);  // add to file each time
-      // print to csv for each module, no repeats so dont need to make
-      // map for averaging
-      fout << ACTS_vol_id << ", "                                  // vol
-           << ACTS_lay_id << ", "                                  // lay
+      fout.open("ACTS_modules.csv", std::ios::out | std::ios::app);
+      fout << actsVolId << ", "                                    // vol
+           << actsLayId << ", "                                    // lay
            << mod_id << ", "                                       // module
            << Gbts_id << ","                                       // Gbts id
            << eta_mod << ","                                       // eta_mod

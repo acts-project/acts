@@ -25,7 +25,7 @@ namespace Acts::Experimental {
 
 /// Tuple template used to carry the spacepoint components
 using SPContainerComponentsType =
-    std::tuple<SpacePointContainer2, SpacePointColumnProxy<int, true>,
+    std::tuple<SpacePointContainer2, SpacePointColumnProxy<std::uint32_t, true>,
                SpacePointColumnProxy<float, true>,
                SpacePointColumnProxy<float, true>>;
 
@@ -50,15 +50,16 @@ class SeedFinderGbts {
     /// @param quality Seed quality score
     /// @param clone Clone flag
     /// @param sps Spacepoint indices
-    seedProperties(float quality, int clone, std::vector<unsigned int> sps)
+    seedProperties(float quality, std::int32_t clone,
+                   std::vector<std::uint32_t> sps)
         : seedQuality(quality), isClone(clone), spacepoints(std::move(sps)) {}
 
     /// Seed quality score.
     float seedQuality{};
     /// Clone flag.
-    int isClone{};
+    std::int32_t isClone{};
     /// Spacepoint indices.
-    std::vector<unsigned int> spacepoints{};
+    std::vector<std::uint32_t> spacepoints{};
 
     /// Comparison operator.
     /// @param o Other seed properties to compare
@@ -77,14 +78,14 @@ class SeedFinderGbts {
   SeedContainer2 createSeeds(
       const RoiDescriptor& roi,
       const SPContainerComponentsType& SpContainerComponents,
-      int max_layers) const;
+      std::int32_t max_layers) const;
 
   /// Create graph nodes from spacepoints.
   /// @param container Spacepoint container components
   /// @param MaxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(
-      const SPContainerComponentsType& container, int MaxLayers) const;
+      const SPContainerComponentsType& container, std::int32_t MaxLayers) const;
 
   /// Parse machine learning lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
@@ -96,7 +97,7 @@ class SeedFinderGbts {
   /// @param storage Data storage containing nodes
   /// @param edgeStorage Storage for generated edges
   /// @return Pair of edge count and maximum level
-  std::pair<int, int> buildTheGraph(
+  std::pair<std::int32_t, std::int32_t> buildTheGraph(
       const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,
       std::vector<GbtsEdge>& edgeStorage) const;
 
@@ -104,7 +105,8 @@ class SeedFinderGbts {
   /// @param nEdges Number of edges in the graph
   /// @param edgeStorage Storage containing graph edges
   /// @return Number of connected components found
-  int runCCA(int nEdges, std::vector<GbtsEdge>& edgeStorage) const;
+  std::int32_t runCCA(std::int32_t nEdges,
+                      std::vector<GbtsEdge>& edgeStorage) const;
 
   /// Extract seed candidates from the graph.
   /// @param maxLevel Maximum level in the graph
@@ -113,7 +115,8 @@ class SeedFinderGbts {
   /// @param edgeStorage Storage containing edges
   /// @param vSeedCandidates Output vector for seed candidates
   void extractSeedsFromTheGraph(
-      int maxLevel, int nEdges, int nHits, std::vector<GbtsEdge>& edgeStorage,
+      std::int32_t maxLevel, std::int32_t nEdges, std::int32_t nHits,
+      std::vector<GbtsEdge>& edgeStorage,
       std::vector<seedProperties>& vSeedCandidates) const;
 
  private:
