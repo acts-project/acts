@@ -26,6 +26,7 @@ namespace Acts {
 class Surface;
 class VolumeBounds;
 class Direction;
+class Volume;
 
 struct OrientedSurface {
   std::shared_ptr<RegularSurface> surface;
@@ -112,6 +113,13 @@ class VolumeBounds {
   /// @return a vector of surfaces bounding this volume
   virtual std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const = 0;
+
+  /// @brief Returns the vector of orientedSurfaces but connects the
+  ///        surfaces to the alignment of the parsed volume, if the
+  ///        volume is an alignable volume
+  /// @param parentVolume: Mutable reference to the volume to which the
+  ///                      oriented surfaces are connected
+  std::vector<OrientedSurface> boundarySurfaces(Volume& parentVolume) const;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform

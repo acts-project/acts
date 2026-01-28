@@ -48,11 +48,8 @@ SingleDiamondPortalShell::SingleDiamondPortalShell(TrackingVolume& volume)
       dynamic_cast<const DiamondVolumeBounds&>(m_volume->volumeBounds());
 
   // fill the protals from the oriented surfaces of the volume bounds
-  std::vector<OrientedSurface> orientedSurfaces{};
-
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  orientedSurfaces = bounds.orientedSurfaces(m_volume->transform());
-  ACTS_POP_IGNORE_DEPRECATED()
+  std::vector<OrientedSurface> orientedSurfaces =
+      bounds.boundarySurfaces(*m_volume);
   for (Face face : {Face::NegativeZFaceXY, Face::PositiveZFaceXY,
                     Face::NegativeXFaceYZ12, Face::PositiveXFaceYZ12,
                     Face::NegativeXFaceYZ23, Face::PositiveXFaceYZ23,
