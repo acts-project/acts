@@ -91,8 +91,8 @@ class ISurfaceMaterial {
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
-                            MaterialUpdateStage mStage) const;
+  virtual MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
+                                    MaterialUpdateStage mStage) const;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
@@ -102,8 +102,8 @@ class ISurfaceMaterial {
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector3& gp, Direction pDir,
-                            MaterialUpdateStage mStage) const;
+  virtual MaterialSlab materialSlab(const Vector3& gp, Direction pDir,
+                                    MaterialUpdateStage mStage) const;
 
   /// @brief output stream operator
   ///
@@ -160,7 +160,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
     if (scaleFactor == 0.) {
       return MaterialSlab::Nothing();
     }
-    plainMatProp.scaleThickness(scaleFactor);
+    plainMatProp.scaleThickness(static_cast<float>(scaleFactor));
   }
   return plainMatProp;
 }
@@ -175,7 +175,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
     if (scaleFactor == 0.) {
       return MaterialSlab::Nothing();
     }
-    plainMatProp.scaleThickness(scaleFactor);
+    plainMatProp.scaleThickness(static_cast<float>(scaleFactor));
   }
   return plainMatProp;
 }
