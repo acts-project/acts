@@ -38,7 +38,7 @@ propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-pycparser==2.23
+pycparser==3.0
     # via cffi
 pygments==2.19.2
     # via rich
@@ -46,7 +46,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   gidgethub
     #   pyjwt
-rich==14.2.0
+rich==14.3.1
     # via
     #   -r CI/fpe_masks/requirements.in
     #   typer
