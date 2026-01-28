@@ -377,11 +377,12 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                                            generatorStableParticles.size());
 
       for (const auto& genParticle : generatorStableParticles) {
-        SimParticle particle =
-            EDM4hepUtil::readParticle(genParticle)
-                .withParticleId(SimBarcode()
+        nParticles += 1;
+        const auto particleId = SimBarcode()
                                     .withParticle(nParticles)
-                                    .withVertexPrimary(nPrimaryVertices));
+                                    .withVertexPrimary(nPrimaryVertices);
+        SimParticle particle =
+            EDM4hepUtil::readParticle(genParticle).withParticleId(particleId);
         particlesGeneratorUnordered->push_back(particle);
         ACTS_VERBOSE("+ add GEN particle " << particle);
         ACTS_VERBOSE("  - at " << particle.position().transpose());
