@@ -37,7 +37,6 @@ class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
 class IVisualization3D;
-class Surface;
 
 /// @class Surface
 ///
@@ -175,7 +174,19 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return the contextual transform
-  virtual const Transform3& transform(const GeometryContext& gctx) const;
+  [[deprecated(
+      "Please use localToGlobalTransform(const GeometryContext& gctx) "
+      "instead")]]
+  const Transform3& transform(const GeometryContext& gctx) const;
+  /// Return method for the surface Transform3 by reference
+  /// In case a detector element is associated the surface transform
+  /// is just forwarded to the detector element in order to keep the
+  /// (mis-)alignment cache cetrally handled
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  ///
+  /// @return the contextual transform
+  const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
 
   /// Return method for the surface center
   /// @note the center is always recalculated in order to not keep a cache
@@ -237,6 +248,11 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param material Material description associated to this surface
   void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
+
+  /// Assign whether the surface is sensitive
+  /// @param isSensitive Boolean flag to set sensitivity
+  /// @throw logic_error if the surface is associated to a detector element
+  void assignIsSensitive(bool isSensitive);
 
   /// The geometric onSurface method
   ///
@@ -432,6 +448,9 @@ class Surface : public virtual GeometryObject,
   /// @return The surface class name as a string
   virtual std::string name() const = 0;
 
+  /// @brief Returns whether the Surface is sensitive
+  bool isSensitive() const;
+
   /// Return a Polyhedron for surface objects
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -528,6 +547,9 @@ class Surface : public virtual GeometryObject,
 
   /// Possibility to attach a material description
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
+
+  /// Flag to indicate whether the surface is sensitive
+  bool m_isSensitive{false};
 
  private:
   /// Calculate the derivative of bound track parameters w.r.t.

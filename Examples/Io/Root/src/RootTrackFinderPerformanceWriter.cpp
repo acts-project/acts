@@ -224,14 +224,12 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
         }
 
         nTrackStates++;
-        nMeasurements += static_cast<std::size_t>(
-            state.typeFlags().test(Acts::MeasurementFlag));
-        nOutliers +=
-            static_cast<std::size_t>(state.typeFlags().test(Acts::OutlierFlag));
-        nHoles +=
-            static_cast<std::size_t>(state.typeFlags().test(Acts::HoleFlag));
-        nSharedHits += static_cast<std::size_t>(
-            state.typeFlags().test(Acts::SharedHitFlag));
+        nMeasurements +=
+            static_cast<std::size_t>(state.typeFlags().isMeasurement());
+        nOutliers += static_cast<std::size_t>(state.typeFlags().isOutlier());
+        nHoles += static_cast<std::size_t>(state.typeFlags().isHole());
+        nSharedHits +=
+            static_cast<std::size_t>(state.typeFlags().isSharedHit());
       }
       m_trackSummaryPlotTool.fill(m_subDetectorSummaryCaches.at(key),
                                   fittedParameters, nTrackStates, nMeasurements,
@@ -306,19 +304,18 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
     bool isReconstructed = false;
     if (auto imatched = particleTrackMatching.find(particleId);
         imatched != particleTrackMatching.end()) {
-      nMatchedTracks = (imatched->second.track.has_value() ? 1 : 0) +
-                       imatched->second.duplicates;
+      isReconstructed = imatched->second.track.has_value();
+      nMatchedTracks = (isReconstructed ? 1 : 0) + imatched->second.duplicates;
 
       // Add number for total matched tracks here
       m_nTotalMatchedTracks += nMatchedTracks;
-      m_nTotalMatchedParticles += imatched->second.track.has_value() ? 1 : 0;
+      m_nTotalMatchedParticles += isReconstructed ? 1 : 0;
 
       // Check if the particle has more than one matched track for the duplicate
       // rate/ratio
       if (nMatchedTracks > 1) {
         m_nTotalDuplicateParticles += 1;
       }
-      isReconstructed = imatched->second.track.has_value();
 
       nFakeTracks = imatched->second.fakes;
       if (nFakeTracks > 0) {
@@ -343,9 +340,9 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
     // Fill efficiency plots
     m_effPlotTool.fill(ctx.geoContext, m_effPlotCache, particle.initialState(),
                        minDeltaR, isReconstructed);
-    // Fill number of duplicated tracks for this particle
+    // Fill duplication plots
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle.initialState(),
-                               nMatchedTracks - 1);
+                               nMatchedTracks);
 
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
     m_fakePlotTool.fill(m_fakePlotCache, particle.initialState(),

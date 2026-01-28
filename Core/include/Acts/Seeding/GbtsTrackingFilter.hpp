@@ -30,11 +30,9 @@ struct GbtsEdgeState {
 
   GbtsEdgeState() = default;
 
-  explicit GbtsEdgeState(bool f) : m_initialized(f) {};
+  explicit GbtsEdgeState(bool f) : m_initialized(f) {}
 
-  ~GbtsEdgeState() = default;
-
-  void initialize(GbtsEdge* pS);
+  void initialize(GbtsEdge& pS);
   void clone(const struct GbtsEdgeState& st);
 
   float m_J{};
@@ -47,21 +45,19 @@ struct GbtsEdgeState {
   bool m_initialized{false};
 };
 
-#define MAX_EDGE_STATE 2500
-
 class GbtsTrackingFilter {
  public:
+  static constexpr int MAX_EDGE_STATE = 2500;
   GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
                      std::vector<GbtsEdge>& sb,
                      const SeedFinderGbtsConfig& config);
-  ~GbtsTrackingFilter() = default;
 
-  void followTrack(GbtsEdge* pS, GbtsEdgeState& output);
+  void followTrack(GbtsEdge& pS, GbtsEdgeState& output);
 
  protected:
-  void propagate(GbtsEdge* pS, GbtsEdgeState& ts);
+  void propagate(GbtsEdge& pS, GbtsEdgeState& ts);
 
-  bool update(GbtsEdge* pS, GbtsEdgeState& ts);
+  bool update(GbtsEdge& pS, GbtsEdgeState& ts);
 
   int getLayerType(int l);
 
@@ -71,7 +67,7 @@ class GbtsTrackingFilter {
 
   std::vector<GbtsEdgeState*> m_stateVec;
 
-  GbtsEdgeState m_stateStore[MAX_EDGE_STATE];
+  std::array<GbtsEdgeState, MAX_EDGE_STATE> m_stateStore;
 
   int m_globalStateCounter{0};
 

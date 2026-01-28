@@ -123,6 +123,8 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
   // Register the input particle read handle
   eventStore().inputParticles = &m_inputParticles;
 
+  eventStore().geoContext = ctx.geoContext;
+
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   {
     ActsPlugins::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
@@ -272,10 +274,12 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
     ACTS_INFO(
         "Remapping selected volumes from Geant4 to Acts::Surface::GeometryID");
     cfg.sensitiveSurfaceMapper->remapSensitiveNames(
-        sState, Acts::GeometryContext{}, g4World, Acts::Transform3::Identity());
+        sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), g4World,
+        Acts::Transform3::Identity());
 
     auto allSurfacesMapped = cfg.sensitiveSurfaceMapper->checkMapping(
-        sState, Acts::GeometryContext{}, false, false);
+        sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), false,
+        false);
     if (!allSurfacesMapped) {
       ACTS_WARNING(
           "Not all sensitive surfaces have been mapped to Geant4 volumes!");

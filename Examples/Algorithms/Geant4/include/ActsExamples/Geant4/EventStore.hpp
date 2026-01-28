@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -30,6 +31,9 @@ namespace ActsExamples::Geant4 {
 /// Common event store for all Geant4 related sub algorithms
 struct EventStore {
  public:
+  /// The geometry context carriyng the current alignment
+  Acts::GeometryContext geoContext{
+      Acts::GeometryContext::dangerouslyDefaultConstruct()};
   /// The current event store
   WhiteBoard* store = nullptr;
 

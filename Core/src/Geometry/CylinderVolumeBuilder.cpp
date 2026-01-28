@@ -106,10 +106,10 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
     wConfig.existingVolumeConfig.rMax =
         existingBounds->get(CylinderVolumeBounds::eMaxR);
     wConfig.existingVolumeConfig.zMin =
-        existingVolume->center().z() -
+        existingVolume->center(gctx).z() -
         existingBounds->get(CylinderVolumeBounds::eHalfLengthZ);
     wConfig.existingVolumeConfig.zMax =
-        existingVolume->center().z() +
+        existingVolume->center(gctx).z() +
         existingBounds->get(CylinderVolumeBounds::eHalfLengthZ);
   }
   //
@@ -554,7 +554,7 @@ VolumeConfig CylinderVolumeBuilder::analyzeContent(
     // loop over the layer
     for (auto& layer : lVector) {
       // the thickness of the layer needs to be taken into account
-      double thickness = layer->thickness();
+      double thickness = layer->layerThickness();
       // get the center of the layer
       const Vector3& center = layer->surfaceRepresentation().center(gctx);
       double rCenter = std::hypot(center.x(), center.y());

@@ -83,7 +83,7 @@ def main():
 
     args = p.parse_args()
 
-    gContext = acts.GeometryContext()
+    gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
     materialDecorator = None

@@ -466,7 +466,7 @@ class MultiTrajectoryTestsCommon {
 
     // use temporary measurement to reset calibrated data
     TestTrackState ttsb(rng, 2u);
-    Acts::GeometryContext gctx;
+    const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
     Acts::CalibrationContext cctx;
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,

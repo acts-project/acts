@@ -57,6 +57,7 @@ PlaneSurface& PlaneLayer::surfaceRepresentation() {
 }
 
 void PlaneLayer::buildApproachDescriptor() {
+  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   // delete it
   m_approachDescriptor.reset(nullptr);
   // delete the surfaces
@@ -64,10 +65,10 @@ void PlaneLayer::buildApproachDescriptor() {
   // get the appropriate transform, the center and the normal vector
 
   //@todo fix with representing volume
-  const Transform3& lTransform = transform(GeometryContext());
+  const Transform3& lTransform = localToGlobalTransform(gctx);
   RotationMatrix3 lRotation = lTransform.rotation();
-  const Vector3& lCenter = center(GeometryContext());
-  const Vector3& lVector = normal(GeometryContext(), lCenter);
+  const Vector3& lCenter = center(gctx);
+  const Vector3& lVector = normal(gctx, lCenter);
   // create new surfaces
   const Transform3 apnTransform = Transform3(
       Translation3(lCenter - 0.5 * Layer::m_layerThickness * lVector) *

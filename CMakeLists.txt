@@ -96,6 +96,7 @@ option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
 # python related options
+option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
 option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
@@ -170,7 +171,6 @@ set_option_if(
     ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
 )
 # core plugins might be required by examples or depend on each other
-
 set_option_if(
     ACTS_BUILD_PLUGIN_DD4HEP
     ACTS_BUILD_EXAMPLES_DD4HEP
@@ -203,9 +203,43 @@ set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_HASHING ACTS_BUILD_EXAMPLES_HASHING)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
-
+set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 # feature tests
 include(CheckCXXSourceCompiles)
+
+# Set flags dependent whether we build ACTS in the default configuration or for deployment in pip with scikit-build-core
+if(ACTS_BUILD_PYTHON_WHEEL)
+    # Check if skbuild is running
+    if("${SKBUILD}" STREQUAL "2")
+        message(
+            STATUS
+            "Build with skbuild as ${SKBUILD_PROJECT_NAME},${SKBUILD_PROJECT_VERSION_FULL} (${SKBUILD_STATE})"
+        )
+    else()
+        message(WARNING "scikit-build-core not detected for building wheel")
+    endif()
+
+    # For deployment with pip, we build static libs
+    set(BUILD_SHARED_LIBS FALSE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+    # Set installation paths for proper python package creation
+    # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
+    set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
+    set(CMAKE_INSTALL_LIBDIR "acts")
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
+    set(CMAKE_INSTALL_DATAROOTDIR "acts/share")
+    set(CMAKE_INSTALL_DATADIR "acts/share")
+    set(ACTS_PYTHON_INSTALL_DIR "acts")
+else()
+    # GNU-like installation paths, e.g. lib/, include/, ...
+    include(GNUInstallDirs)
+    set(ACTS_PYTHON_INSTALL_DIR "python")
+endif()
+
+include(ActsCompilerOptions) # default compile options
+include(ActsComponentsHelpers) # handle components via add_..._if commands
+include(ActsStaticAnalysis)
 
 # function that tests if the root installation is compatible
 function(check_root_compatibility)
@@ -221,12 +255,6 @@ function(check_root_compatibility)
     #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
     #endif()
 endfunction()
-
-# additional configuration and tools
-include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
-include(ActsCompilerOptions) # default compile options
-include(ActsComponentsHelpers) # handle components via add_..._if commands
-include(ActsStaticAnalysis)
 
 # place build products in `<build>/bin` and `<build>/lib` for simple use
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
@@ -256,7 +284,8 @@ set(_acts_actsvg_version 0.4.56)
 set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
-set(_acts_edm4hep_version 0.10.5)
+set(_acts_edm4hep_version 1.0)
+set(_acts_edm4hep_fallback_version 0.10.5)
 set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
@@ -382,6 +411,14 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
+if(ACTS_BUILD_PYTHON_BINDINGS)
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
+    if(ACTS_USE_SYSTEM_PYBIND11)
+        find_package(pybind11 CONFIG REQUIRED)
+    else()
+        add_subdirectory(thirdparty/pybind11)
+    endif()
+endif()
 if(ACTS_BUILD_PLUGIN_ACTSVG)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
@@ -391,7 +428,7 @@ if(ACTS_BUILD_PLUGIN_ACTSVG)
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
     # Explicitly find python so we can more easily override the version
-    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
     find_package(
         DD4hep
         ${_acts_dd4hep_version}
@@ -474,7 +511,14 @@ if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP)
-    find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
+    find_package(EDM4HEP ${_acts_edm4hep_version} CONFIG)
+    if(NOT EDM4HEP_FOUND)
+        message(
+            STATUS
+            "EDM4hep not found, trying version ${_acts_edm4hep_fallback_version}"
+        )
+        find_package(EDM4HEP ${_acts_edm4hep_fallback_version} CONFIG REQUIRED)
+    endif()
     find_package(podio ${_acts_podio_version} CONFIG)
     if(NOT podio_FOUND)
         message(
@@ -570,14 +614,6 @@ if(ACTS_BUILD_EXAMPLES)
         )
         check_root_compatibility()
     endif()
-    if(ACTS_BUILD_PYTHON_BINDINGS)
-        find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-        if(ACTS_USE_SYSTEM_PYBIND11)
-            find_package(pybind11 CONFIG REQUIRED)
-        else()
-            add_subdirectory(thirdparty/pybind11)
-        endif()
-    endif()
     if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
         find_package(
             DD4hep
@@ -624,8 +660,8 @@ if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
     add_subdirectory(Tests)
 endif()
 
-# documentation
-add_subdirectory_if(docs ACTS_BUILD_DOCS)
+# documentation, adding unconditionally but will only set up docs build if configured
+add_subdirectory(docs)
 
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)

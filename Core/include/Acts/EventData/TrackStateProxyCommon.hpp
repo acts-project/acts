@@ -271,22 +271,22 @@ class TrackStateProxyCommon {
 
   /// Retrieve the track-state type flags.
   /// @return Bit mask describing the state type.
-  ConstTrackStateType typeFlags() const {
+  ConstTrackStateTypeMap typeFlags() const {
     const auto& raw = derived()
-                          .template component<TrackStateType::raw_type,
+                          .template component<ConstTrackStateTypeMap::raw_type,
                                               detail_tsp::kTypeFlagsKey>();
-    return ConstTrackStateType{raw};
+    return ConstTrackStateTypeMap{raw};
   }
 
   /// Retrieve mutable track-state type flags.
   /// @return Mutable bit mask describing the state type.
-  TrackStateType typeFlags()
+  MutableTrackStateTypeMap typeFlags()
     requires(!read_only)
   {
     auto& raw = derived()
-                    .template component<TrackStateType::raw_type,
+                    .template component<MutableTrackStateTypeMap::raw_type,
                                         detail_tsp::kTypeFlagsKey>();
-    return TrackStateType{raw};
+    return MutableTrackStateTypeMap{raw};
   }
 
   /// Retrieve the local chi2 contribution.

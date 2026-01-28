@@ -16,7 +16,7 @@ jobs:
           PAYLOAD: ${{ toJson(github) }}
         run: echo "${PAYLOAD}"
 
-      - name: Install dependencies
+      - name: Install APT packages
         run: |
           apt-get update
           apt-get install -y unzip
@@ -25,6 +25,12 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0 # To prevent shallow clone
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 'Download artifact'
         uses: actions/github-script@v8

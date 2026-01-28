@@ -124,7 +124,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     toAdd.trackType = "unknown";
 
     for (const auto& state : track.trackStatesReversed()) {
-      if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (state.typeFlags().hasMeasurement()) {
         auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         auto hitIndex = sl.index();

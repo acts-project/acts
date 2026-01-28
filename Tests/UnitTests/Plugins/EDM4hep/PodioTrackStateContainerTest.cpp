@@ -305,11 +305,11 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   BOOST_CHECK(!t2.hasReferenceSurface());
   BOOST_CHECK(t3.hasReferenceSurface());
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   const auto& ext = t1.referenceSurface();
   BOOST_CHECK_NE(&ext, free.get());
-  BOOST_CHECK_EQUAL(trf.matrix(), ext.transform(gctx).matrix());
+  BOOST_CHECK_EQUAL(trf.matrix(), ext.localToGlobalTransform(gctx).matrix());
   BOOST_CHECK_EQUAL(free->bounds().type(), ext.bounds().type());
   BOOST_CHECK_EQUAL(free->type(), ext.type());
   const auto* rBounds2 = dynamic_cast<const RectangleBounds*>(&ext.bounds());
