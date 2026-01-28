@@ -20,13 +20,13 @@
 namespace Acts::Experimental {
 class TrigInDetSiLayer {
  public:
-  int m_subdet;  // combined ID
-  int m_type;    // 0: barrel, +/-n : endcap
+  std::int32_t m_subdet;  // combined ID
+  std::int32_t m_type;    // 0: barrel, +/-n : endcap
   float m_refCoord;
   float m_minBound, m_maxBound;
 
-  TrigInDetSiLayer(int subdet, short int type, float center, float min,
-                   float max)
+  TrigInDetSiLayer(std::int32_t subdet, std::int16_t type, float center,
+                   float min, float max)
       : m_subdet(subdet),
         m_type(type),
         m_refCoord(center),
@@ -38,12 +38,10 @@ class GbtsLayer {
  public:
   GbtsLayer(const TrigInDetSiLayer& ls, float ew, std::int32_t bin0);
 
-  // accessors
-  int getEtaBin(float zh, float rh) const;
+  std::int32_t getEtaBin(float zh, float rh) const;
 
-  float getMinBinRadius(int idx) const;
-
-  float getMaxBinRadius(int idx) const;
+  float getMinBinRadius(std::int32_t idx) const;
+  float getMaxBinRadius(std::int32_t idx) const;
 
   std::int32_t numOfBins() const { return m_bins.size(); }
 
@@ -51,8 +49,8 @@ class GbtsLayer {
 
   const TrigInDetSiLayer* getLayer() const { return m_layer; }
 
-  bool verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
-                 float max_z0) const;
+  bool verifyBin(const GbtsLayer* pL, std::int32_t b1, std::int32_t b2,
+                 float min_z0, float max_z0) const;
 
  protected:
   const TrigInDetSiLayer* m_layer{};
@@ -81,27 +79,28 @@ class GbtsGeometry {
   const GbtsLayer* getGbtsLayerByKey(std::uint32_t key) const;
   const GbtsLayer* getGbtsLayerByIndex(std::int32_t idx) const;
 
-  inline unsigned int getGbtsLayerKeyByIndex(int idx) const {
+  inline std::uint32_t getGbtsLayerKeyByIndex(std::int32_t idx) const {
     return m_layerKeys[idx];
   }
 
-  int num_bins() const { return m_nEtaBins; }
-  unsigned int num_layers() const { return m_layArray.size(); }
-  const std::vector<std::pair<int, std::vector<int>>>& bin_groups() const {
+  std::int32_t num_bins() const { return m_nEtaBins; }
+  std::uint32_t num_layers() const { return m_layArray.size(); }
+  const std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>>&
+  bin_groups() const {
     return m_binGroups;
   }
 
  protected:
-  const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, int bin0);
+  const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, std::int32_t bin0);
 
   float m_etaBinWidth{};
 
-  std::map<unsigned int, GbtsLayer*> m_layMap;
+  std::map<std::uint32_t, GbtsLayer*> m_layMap;
   std::vector<std::unique_ptr<GbtsLayer>> m_layArray;
-  std::vector<unsigned int> m_layerKeys;
-  int m_nEtaBins{};
+  std::vector<std::uint32_t> m_layerKeys;
+  std::int32_t m_nEtaBins{};
 
-  std::vector<std::pair<int, std::vector<int>>> m_binGroups;
+  std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>> m_binGroups;
 };
 
 }  // namespace Acts::Experimental
