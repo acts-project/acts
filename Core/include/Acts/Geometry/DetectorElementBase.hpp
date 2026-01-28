@@ -32,7 +32,7 @@ class DetectorElementBase : public SurfacePlacementBase {
   [[deprecated(
       "Please use localToGlobalTransform(const GeometryContext& gctx) "
       "instead")]]
-  const Transform3& transform(const GeometryContext& gctx) const {
+  virtual const Transform3& transform(const GeometryContext& gctx) const {
     return localToGlobalTransform(gctx);
   }
 
