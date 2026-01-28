@@ -331,7 +331,8 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
                      auxVars.centerZ;
 
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": # " << (spIdx + 1)
-                          << ") " << toString(*strawMeas) << ", t0: "
+                          << ") " << toString(*strawMeas)
+                          << " t: " << strawMeas->time() / 1._ns << " ns, t0: "
                           << t0 / 1._ns << " r: " << r << ", v: " << v * 1._ns
                           << ", a: " << a * Acts::square(1._ns));
     auxVars.fitY0 += sInvCov * r;
