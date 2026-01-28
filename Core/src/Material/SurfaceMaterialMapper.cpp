@@ -318,8 +318,9 @@ void SurfaceMaterialMapper::mapInteraction(
     }
     // Do we need to switch to next assignment surface ?
     if (sfIter != mappingSurfaces.end() - 1) {
-      int mappingType = sfIter->surface->surfaceMaterial()->mappingType();
-      int nextMappingType =
+      MappingType mappingType =
+          sfIter->surface->surfaceMaterial()->mappingType();
+      MappingType nextMappingType =
           (sfIter + 1)->surface->surfaceMaterial()->mappingType();
 
       if (mappingType == MappingType::PreMapping ||
