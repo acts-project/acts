@@ -26,7 +26,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeant4, geant4) {
 
   // Detector Element
   py::class_<Geant4DetectorElement, std::shared_ptr<Geant4DetectorElement>,
-             DetectorElementBase>(geant4, "Geant4DetectorElement")
+             SurfacePlacementBase>(geant4, "Geant4DetectorElement")
       .def("surface", [](const Geant4DetectorElement& self) {
         return self.surface().getSharedPtr();
       });

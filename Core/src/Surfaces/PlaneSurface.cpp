@@ -34,18 +34,16 @@
 namespace Acts {
 
 PlaneSurface::PlaneSurface(const PlaneSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                            const PlaneSurface& other,
                            const Transform3& transform)
-    : GeometryObject(),
-      RegularSurface(gctx, other, transform),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, transform), m_bounds(other.m_bounds) {}
 
 PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-                           const DetectorElementBase& detelement)
-    : RegularSurface(detelement), m_bounds(std::move(pbounds)) {
+                           const SurfacePlacementBase& placement)
+    : RegularSurface{placement}, m_bounds(std::move(pbounds)) {
   // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "PlaneBounds must not be nullptr");
 }
@@ -199,8 +197,7 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   ACTS_VERBOSE("Merging plane surfaces in " << axisDirectionName(direction)
                                             << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "PlaneSurface::merge: surfaces are "
                                   "associated with a detector element");

@@ -36,7 +36,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDD4hep, dd4hep) {
         dd4hep, "DD4hepDetElement");
 
     // The Acts:: glue detector element
-    py::class_<DD4hepDetectorElement, DetectorElementBase,
+    py::class_<DD4hepDetectorElement, SurfacePlacementBase,
                std::shared_ptr<DD4hepDetectorElement>>(dd4hep,
                                                        "DD4hepDetectorElement");
 
@@ -58,7 +58,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDD4hep, dd4hep) {
                 dd4hepIdGeoIdMap;
 
             void operator()(const Surface* surface) {
-              const auto* dde = surface->associatedDetectorElement();
+              const auto* dde = surface->surfacePlacement();
               const auto* dd4hepDetElement =
                   dynamic_cast<const DD4hepDetectorElement*>(dde);
               // Check if it is valid

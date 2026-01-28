@@ -420,7 +420,7 @@ bool MuonSpacePointDigitizer::isSurfaceToDraw(
     const Acts::GeometryContext& gctx, const Surface& surface,
     const RangeXD<2, double>& canvasBoundaries) const {
   // Draw only active surfaces
-  if (surface.associatedDetectorElement() == nullptr) {
+  if (!surface.isSensitive()) {
     return false;
   }
   // surface position in the frame

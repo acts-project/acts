@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <memory>
 
@@ -35,7 +35,7 @@ namespace ActsPlugins {
 ///
 /// Detector element representative for GeoModel based
 /// sensitive elements.
-class GeoModelDetectorElement : public Acts::DetectorElementBase {
+class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
  public:
   /// Broadcast the context type
   using ContextType = Acts::GeometryContext;
@@ -93,7 +93,7 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
   Acts::Surface& surface() override;
 
   /// Return the thickness of this detector element
-  double thickness() const override;
+  double thickness() const;
 
   /// @return to the Geant4 physical volume
   PVConstLink physicalVolume() const;
@@ -117,6 +117,9 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
   /// @param surface The surface to attach
   void attachSurface(std::shared_ptr<Acts::Surface> surface) {
     m_surface = std::move(surface);
+    assert(m_surface != nullptr);
+    m_surface->assignThickness(thickness());
+    m_surface->assignSurfacePlacement(*this);
   }
 
  private:
@@ -126,7 +129,7 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
   /// The surface
   std::shared_ptr<Acts::Surface> m_surface;
   /// The global transformation before the volume
-  Acts::Transform3 m_surfaceTransform;
+  Acts::Transform3 m_surfaceTransform{Acts::Transform3::Identity()};
   ///  Thickness of this detector element
   double m_thickness{0.};
 };

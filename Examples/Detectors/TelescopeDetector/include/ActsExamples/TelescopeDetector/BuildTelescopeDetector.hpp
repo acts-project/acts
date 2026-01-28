@@ -45,7 +45,7 @@ enum class TelescopeSurfaceType {
 /// parallel to
 std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+    std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
         detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,

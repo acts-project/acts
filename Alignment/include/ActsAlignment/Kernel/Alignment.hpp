@@ -23,8 +23,8 @@
 namespace ActsAlignment {
 
 using AlignedTransformUpdater =
-    std::function<bool(Acts::DetectorElementBase*, const Acts::GeometryContext&,
-                       const Acts::Transform3&)>;
+    std::function<bool(Acts::SurfacePlacementBase*,
+                       const Acts::GeometryContext&, const Acts::Transform3&)>;
 ///
 /// @brief Options for align() call
 ///
@@ -46,7 +46,7 @@ struct AlignmentOptions {
   AlignmentOptions(
       const fit_options_t& fOptions,
       const AlignedTransformUpdater& aTransformUpdater,
-      const std::vector<Acts::DetectorElementBase*>& aDetElements = {},
+      const std::vector<Acts::SurfacePlacementBase*>& aDetElements = {},
       double chi2CutOff = 0.5,
       const std::pair<std::size_t, double>& deltaChi2CutOff = {5, 0.01},
       std::size_t maxIters = 5,
@@ -66,7 +66,7 @@ struct AlignmentOptions {
   AlignedTransformUpdater alignedTransformUpdater = nullptr;
 
   // The detector elements to be aligned
-  std::vector<Acts::DetectorElementBase*> alignedDetElements;
+  std::vector<Acts::SurfacePlacementBase*> alignedDetElements;
 
   // The alignment tolerance to determine if the alignment is covered
   double averageChi2ONdfCutOff = 0.5;
@@ -89,7 +89,7 @@ struct AlignmentResult {
   Acts::ActsDynamicVector deltaAlignmentParameters;
 
   // The aligned parameters for detector elements
-  std::unordered_map<Acts::DetectorElementBase*, Acts::Transform3>
+  std::unordered_map<Acts::SurfacePlacementBase*, Acts::Transform3>
       alignedParameters;
 
   // The covariance of alignment parameters
@@ -190,7 +190,7 @@ struct Alignment {
   /// @param alignResult [in, out] The aligned result
   Acts::Result<void> updateAlignmentParameters(
       const Acts::GeometryContext& gctx,
-      const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
+      const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
       const AlignedTransformUpdater& alignedTransformUpdater,
       AlignmentResult& alignResult) const;
 

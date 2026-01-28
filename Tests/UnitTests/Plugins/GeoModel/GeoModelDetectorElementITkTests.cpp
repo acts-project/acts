@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
   BOOST_CHECK_EQUAL(element->surface().type(), itkElement->surface().type());
   BOOST_CHECK_EQUAL(element->surface().bounds().type(),
                     itkElement->surface().bounds().type());
-  BOOST_CHECK_NE(element->surface().associatedDetectorElement(),
-                 itkElement->surface().associatedDetectorElement());
+  BOOST_CHECK_NE(element->surface().surfacePlacement(),
+                 itkElement->surface().surfacePlacement());
   BOOST_CHECK_EQUAL(itkElement->identifier().barrelEndcap(), barrelEndcap);
   BOOST_CHECK_EQUAL(itkElement->identifier().hardware(), hardware);
   BOOST_CHECK_EQUAL(itkElement->identifier().layerWheel(), layerWheel);

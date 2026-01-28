@@ -208,7 +208,7 @@ struct GsfActor {
     // Early return if nothing happens
     if (!haveMaterial && !haveMeasurement) {
       // No hole before first measurement
-      if (result.processedStates > 0 && surface.associatedDetectorElement()) {
+      if (result.processedStates > 0 && surface.isSensitive()) {
         TemporaryStates tmpStates;
         noMeasurementUpdate(state, stepper, navigator, result, tmpStates, true);
       }

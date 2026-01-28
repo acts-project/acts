@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <memory>
 #include <utility>
@@ -30,7 +30,7 @@ namespace ActsExamples {
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
-class TelescopeDetectorElement : public Acts::DetectorElementBase {
+class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
  public:
   /// @class ContextType
   /// convention: nested to the Detector element
@@ -73,7 +73,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   Acts::Surface& surface() final;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const final;
+  double thickness() const;
 
   /// Return local to global transform associated with this identifier
   ///

@@ -28,7 +28,6 @@
 #include <string>
 
 namespace Acts {
-class DetectorElementBase;
 
 /// @class CylinderSurface
 ///
@@ -66,12 +65,17 @@ class CylinderSurface : public RegularSurface {
   CylinderSurface(const Transform3& transform,
                   std::shared_ptr<const CylinderBounds> cbounds);
 
-  /// Constructor from DetectorElementBase: Element proxy
+  /// Constructor from SurfacePlacementBase: Element proxy
   ///
   /// @param cbounds are the provided cylinder bounds (shared)
-  /// @param detelement is the linked detector element to this surface
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
   CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
-                  const DetectorElementBase& detelement);
+                  const SurfacePlacementBase& placement);
 
   /// Copy constructor
   ///
