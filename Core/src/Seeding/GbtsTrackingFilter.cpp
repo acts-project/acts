@@ -16,7 +16,7 @@
 
 namespace Acts::Experimental {
 
-void GbtsEdgeState::initialize(GbtsEdge* pS) {
+void GbtsEdgeState::initialize(GbtsEdge& pS) {
   m_initialized = true;
 
   m_J = 0.0;
@@ -24,8 +24,8 @@ void GbtsEdgeState::initialize(GbtsEdge* pS) {
 
   // n2->n1
 
-  float dx = pS->m_n1->x() - pS->m_n2->x();
-  float dy = pS->m_n1->y() - pS->m_n2->y();
+  float dx = pS.m_n1->x() - pS.m_n2->x();
+  float dy = pS.m_n1->y() - pS.m_n2->y();
   float L = std::sqrt(dx * dx + dy * dy);
 
   m_s = dy / L;
@@ -35,19 +35,19 @@ void GbtsEdgeState::initialize(GbtsEdge* pS) {
   //  x' =  x*m_c + y*m_s
   //  y' = -x*m_s + y*m_c
 
-  m_refY = pS->m_n2->r();
-  m_refX = pS->m_n2->x() * m_c + pS->m_n2->y() * m_s;
+  m_refY = pS.m_n2->r();
+  m_refX = pS.m_n2->x() * m_c + pS.m_n2->y() * m_s;
 
   // X-state: y, dy/dx, d2y/dx2
 
-  m_X[0] = -pS->m_n2->x() * m_s + pS->m_n2->y() * m_c;
+  m_X[0] = -pS.m_n2->x() * m_s + pS.m_n2->y() * m_c;
   m_X[1] = 0.0;
   m_X[2] = 0.0;
 
   // Y-state: z, dz/dr
 
-  m_Y[0] = pS->m_n2->z();
-  m_Y[1] = (pS->m_n1->z() - pS->m_n2->z()) / (pS->m_n1->r() - pS->m_n2->r());
+  m_Y[0] = pS.m_n2->z();
+  m_Y[1] = (pS.m_n1->z() - pS.m_n2->z()) / (pS.m_n1->r() - pS.m_n2->r());
 
   memset(&m_Cx[0][0], 0, sizeof(m_Cx));
   memset(&m_Cy[0][0], 0, sizeof(m_Cy));
@@ -82,8 +82,8 @@ GbtsTrackingFilter::GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
                                        const SeedFinderGbtsConfig& config)
     : m_geo(g), m_segStore(sb), m_config(config) {}
 
-void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
-  if (pS->m_level == -1) {
+void GbtsTrackingFilter::followTrack(GbtsEdge& pS, GbtsEdgeState& output) {
+  if (pS.m_level == -1) {
     return;  // already collected
   }
 
@@ -91,15 +91,15 @@ void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
 
   // create track state
 
-  GbtsEdgeState* pInitState = &m_stateStore[m_globalStateCounter++];
+  GbtsEdgeState& pInitState = m_stateStore[m_globalStateCounter++];
 
-  pInitState->initialize(pS);
+  pInitState.initialize(pS);
 
   m_stateVec.clear();
 
   // recursive branching and propagation
 
-  propagate(pS, *pInitState);
+  propagate(pS, pInitState);
 
   if (m_stateVec.empty()) {
     return;
@@ -115,7 +115,7 @@ void GbtsTrackingFilter::followTrack(GbtsEdge* pS, GbtsEdgeState& output) {
   m_globalStateCounter = 0;
 }
 
-void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
+void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
   if (m_globalStateCounter >= MAX_EDGE_STATE) {
     return;
   }
@@ -125,7 +125,7 @@ void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
   GbtsEdgeState& new_ts = *p_new_ts;
   new_ts.clone(ts);
 
-  new_ts.m_vs.push_back(pS);
+  new_ts.m_vs.push_back(&pS);
 
   bool accepted = update(pS, new_ts);  // update using n1 of the segment
 
@@ -133,13 +133,13 @@ void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
     return;  // stop further propagation
   }
 
-  int level = pS->m_level;
+  int level = pS.m_level;
 
   std::list<GbtsEdge*> lCont;
 
-  for (int nIdx = 0; nIdx < pS->m_nNei;
+  for (int nIdx = 0; nIdx < pS.m_nNei;
        nIdx++) {  // loop over the neighbours of this segment
-    unsigned int nextSegmentIdx = pS->m_vNei[nIdx];
+    unsigned int nextSegmentIdx = pS.m_vNei[nIdx];
 
     GbtsEdge* pN = &(m_segStore[nextSegmentIdx]);
 
@@ -172,12 +172,12 @@ void GbtsTrackingFilter::propagate(GbtsEdge* pS, GbtsEdgeState& ts) {
   } else {  // branching
     int nBranches = 0;
     for (auto sIt = lCont.begin(); sIt != lCont.end(); ++sIt, nBranches++) {
-      propagate((*sIt), new_ts);  // recursive call
+      propagate(*(*sIt), new_ts);  // recursive call
     }
   }
 }
 
-bool GbtsTrackingFilter::update(GbtsEdge* pS, GbtsEdgeState& ts) {
+bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
   if (ts.m_Cx[2][2] < 0.0 || ts.m_Cx[1][1] < 0.0 || ts.m_Cx[0][0] < 0.0) {
     std::cout << "Negative cov_x" << std::endl;
   }
@@ -191,7 +191,7 @@ bool GbtsTrackingFilter::update(GbtsEdge* pS, GbtsEdgeState& ts) {
   float tau2 = ts.m_Y[1] * ts.m_Y[1];
   float invSin2 = 1 + tau2;
 
-  int type1 = getLayerType(pS->m_n2->layer());  // 0 - barrel
+  int type1 = getLayerType(pS.m_n2->layer());  // 0 - barrel
 
   float lenCorr = type1 == 0 ? invSin2 : invSin2 / tau2;
 
@@ -214,10 +214,10 @@ bool GbtsTrackingFilter::update(GbtsEdge* pS, GbtsEdgeState& ts) {
 
   float x{}, y{}, z{}, r{};
 
-  x = pS->m_n1->x();
-  y = pS->m_n1->y();
-  z = pS->m_n1->z();
-  r = pS->m_n1->r();
+  x = pS.m_n1->x();
+  y = pS.m_n1->y();
+  z = pS.m_n1->z();
+  r = pS.m_n1->r();
 
   refX = x * ts.m_c + y * ts.m_s;
   mx = -x * ts.m_s + y * ts.m_c;  // measured X[0]
@@ -262,7 +262,7 @@ bool GbtsTrackingFilter::update(GbtsEdge* pS, GbtsEdgeState& ts) {
 
   float sigma_rz = 0.0;
 
-  int type = getLayerType(pS->m_n1->layer());
+  int type = getLayerType(pS.m_n1->layer());
 
   if (type == 0) {  // barrel TO-DO: split into barrel Pixel and barrel SCT
     sigma_rz = m_config.sigma_y * m_config.sigma_y;
