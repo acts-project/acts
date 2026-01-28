@@ -8,27 +8,28 @@
 
 #pragma once
 
-#include "ActsPlugins/Hashing/AnnoyForwardDeclarations.hpp"
-#include "ActsPlugins/Hashing/HashingTrainingConfig.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "ActsPlugins/Hashing/HashingModel.hpp"
+
+#include <cstdint>
 
 namespace ActsPlugins {
 /// @addtogroup hashing_plugin
 /// @{
 
-template <typename SpacePointContainer>
-class HashingTrainingAlgorithm {
+class HashingTraining {
  public:
-  using Config = HashingTrainingConfig;
+  struct Config {
+    /// Random seed for Annoy
+    std::uint32_t annoySeed = 123456789;
 
-  explicit HashingTrainingAlgorithm(const Config &cfg);
+    /// Number of features to use
+    std::int32_t f = 1;
+  };
 
-  HashingTrainingAlgorithm() = default;
-  HashingTrainingAlgorithm(
-      const HashingTrainingAlgorithm<SpacePointContainer> &) = delete;
-  HashingTrainingAlgorithm<SpacePointContainer> &operator=(
-      const HashingTrainingAlgorithm<SpacePointContainer> &) = default;
+  explicit HashingTraining(const Config &cfg);
 
-  AnnoyModel execute(SpacePointContainer spacePoints) const;
+  AnnoyModel execute(const Acts::SpacePointContainer2 &spacePoints) const;
 
   // / Get readonly access to the config parameters
   const Config &config() const { return m_cfg; }
@@ -39,5 +40,3 @@ class HashingTrainingAlgorithm {
 
 /// @}
 }  // namespace ActsPlugins
-
-#include "ActsPlugins/Hashing/HashingTraining.ipp"

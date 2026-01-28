@@ -32,7 +32,7 @@ acts_compile_headers(ExamplesTrackFinding GLOB "include/**/*.hpp")
 if(ACTS_BUILD_EXAMPLES_HASHING)
     target_sources(
         ActsExamplesTrackFinding
-        PRIVATE src/SeedingAlgorithmHashing.cpp
+        PRIVATE src/HashingPrototypeSeedingAlgorithm.cpp
     )
 
     target_link_libraries(ActsExamplesTrackFinding PUBLIC Acts::PluginHashing)
