@@ -17,8 +17,6 @@
 #include <memory>
 #include <string>
 
-class TProfile;
-
 namespace ActsExamples {
 
 /// Tools to make track quality plots.
@@ -33,51 +31,41 @@ class TrackQualityPlotTool {
         {"Num", PlotHelpers::Binning::Uniform("N", 30, -0.5, 29.5)}};
   };
 
-  /// @brief Nested Cache struct
-  struct Cache {
-    TProfile* completeness_vs_pT;
-    TProfile* completeness_vs_eta;
-    TProfile* completeness_vs_phi;
-    TProfile* purity_vs_pT;
-    TProfile* purity_vs_eta;
-    TProfile* purity_vs_phi;
-  };
-
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param lvl Message level declaration
   TrackQualityPlotTool(const Config& cfg, Acts::Logging::Level lvl);
+  TrackQualityPlotTool(const TrackQualityPlotTool&) = delete;
+  TrackQualityPlotTool& operator=(const TrackQualityPlotTool&) = delete;
+  TrackQualityPlotTool(TrackQualityPlotTool&&) noexcept = default;
+  TrackQualityPlotTool& operator=(TrackQualityPlotTool&&) noexcept = default;
+  ~TrackQualityPlotTool();
 
   /// @brief book the track quality plots
   ///
-  /// @param cache the cache for track quality plots
-  void book(Cache& cache) const;
+  void book();
 
   /// @brief fill track quality w.r.t. fitted track parameters
   ///
-  /// @param cache cache object for track quality plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param completeness completeness of the track
   /// @param purity purity of the track
-  void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
-            double completeness, double purity) const;
+  void fill(const Acts::BoundTrackParameters& fittedParameters,
+            double completeness, double purity);
 
   /// @brief write the track quality plots to file
   ///
-  /// @param cache cache object for track quality plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the track quality plots
-  ///
-  /// @param cache cache object for track quality plots
-  void clear(Cache& cache) const;
+  void write();
 
  private:
+  struct Impl;
+
   /// The Config class
   Config m_cfg;
   /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
+  std::unique_ptr<Impl> m_impl;
 
   /// The logger
   const Acts::Logger& logger() const { return *m_logger; }

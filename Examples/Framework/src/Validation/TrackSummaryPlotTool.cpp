@@ -14,12 +14,39 @@
 
 namespace ActsExamples {
 
+struct TrackSummaryPlotTool::Impl {
+  /// Number of total states vs eta
+  std::unique_ptr<TProfile> nStates_vs_eta;
+  /// Number of non-outlier measurements vs eta
+  std::unique_ptr<TProfile> nMeasurements_vs_eta;
+  /// Number of holes vs eta
+  std::unique_ptr<TProfile> nHoles_vs_eta;
+  /// Number of outliers vs eta
+  std::unique_ptr<TProfile> nOutliers_vs_eta;
+  /// Number of Shared Hits vs eta
+  std::unique_ptr<TProfile> nSharedHits_vs_eta;
+  /// Number of total states vs pt
+  std::unique_ptr<TProfile> nStates_vs_pt;
+  /// Number of non-outlier measurements vs pt
+  std::unique_ptr<TProfile> nMeasurements_vs_pt;
+  /// Number of holes vs pt
+  std::unique_ptr<TProfile> nHoles_vs_pt;
+  /// Number of outliers vs pt
+  std::unique_ptr<TProfile> nOutliers_vs_pt;
+  /// Number of Shared Hits vs pt
+  std::unique_ptr<TProfile> nSharedHits_vs_pt;
+};
+
 TrackSummaryPlotTool::TrackSummaryPlotTool(
     const TrackSummaryPlotTool::Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger("TrackSummaryPlotTool", lvl)) {}
+      m_logger(Acts::getDefaultLogger("TrackSummaryPlotTool", lvl)),
+      m_impl(std::make_unique<Impl>()) {}
 
-void TrackSummaryPlotTool::book(Cache& cache, const std::string& prefix) const {
+TrackSummaryPlotTool::~TrackSummaryPlotTool() = default;
+
+void TrackSummaryPlotTool::book(const std::string& prefix) {
+  Impl& cache = *m_impl;
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bNum = m_cfg.varBinning.at("Num");
@@ -69,20 +96,8 @@ void TrackSummaryPlotTool::book(Cache& cache, const std::string& prefix) const {
                             "Number of Shared Hits vs. pT", bPt, bNum);
 }
 
-void TrackSummaryPlotTool::clear(Cache& cache) const {
-  delete cache.nStates_vs_eta;
-  delete cache.nMeasurements_vs_eta;
-  delete cache.nOutliers_vs_eta;
-  delete cache.nHoles_vs_eta;
-  delete cache.nSharedHits_vs_eta;
-  delete cache.nStates_vs_pt;
-  delete cache.nMeasurements_vs_pt;
-  delete cache.nOutliers_vs_pt;
-  delete cache.nHoles_vs_pt;
-  delete cache.nSharedHits_vs_pt;
-}
-
-void TrackSummaryPlotTool::write(const Cache& cache) const {
+void TrackSummaryPlotTool::write() {
+  Impl& cache = *m_impl;
   ACTS_DEBUG("Write the plots to output file.");
   cache.nStates_vs_eta->Write();
   cache.nMeasurements_vs_eta->Write();
@@ -97,26 +112,27 @@ void TrackSummaryPlotTool::write(const Cache& cache) const {
 }
 
 void TrackSummaryPlotTool::fill(
-    Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
-    std::size_t nStates, std::size_t nMeasurements, std::size_t nOutliers,
-    std::size_t nHoles, std::size_t nSharedHits) const {
+    const Acts::BoundTrackParameters& fittedParameters, std::size_t nStates,
+    std::size_t nMeasurements, std::size_t nOutliers, std::size_t nHoles,
+    std::size_t nSharedHits) {
+  Impl& cache = *m_impl;
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   const auto momentum = fittedParameters.momentum();
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  PlotHelpers::fillProf(cache.nStates_vs_eta, fit_eta, nStates);
-  PlotHelpers::fillProf(cache.nMeasurements_vs_eta, fit_eta, nMeasurements);
-  PlotHelpers::fillProf(cache.nOutliers_vs_eta, fit_eta, nOutliers);
-  PlotHelpers::fillProf(cache.nHoles_vs_eta, fit_eta, nHoles);
-  PlotHelpers::fillProf(cache.nSharedHits_vs_eta, fit_eta, nSharedHits);
+  PlotHelpers::fillProf(*cache.nStates_vs_eta, fit_eta, nStates);
+  PlotHelpers::fillProf(*cache.nMeasurements_vs_eta, fit_eta, nMeasurements);
+  PlotHelpers::fillProf(*cache.nOutliers_vs_eta, fit_eta, nOutliers);
+  PlotHelpers::fillProf(*cache.nHoles_vs_eta, fit_eta, nHoles);
+  PlotHelpers::fillProf(*cache.nSharedHits_vs_eta, fit_eta, nSharedHits);
 
-  PlotHelpers::fillProf(cache.nStates_vs_pt, fit_pT, nStates);
-  PlotHelpers::fillProf(cache.nMeasurements_vs_pt, fit_pT, nMeasurements);
-  PlotHelpers::fillProf(cache.nOutliers_vs_pt, fit_pT, nOutliers);
-  PlotHelpers::fillProf(cache.nHoles_vs_pt, fit_pT, nHoles);
-  PlotHelpers::fillProf(cache.nSharedHits_vs_pt, fit_pT, nSharedHits);
+  PlotHelpers::fillProf(*cache.nStates_vs_pt, fit_pT, nStates);
+  PlotHelpers::fillProf(*cache.nMeasurements_vs_pt, fit_pT, nMeasurements);
+  PlotHelpers::fillProf(*cache.nOutliers_vs_pt, fit_pT, nOutliers);
+  PlotHelpers::fillProf(*cache.nHoles_vs_pt, fit_pT, nHoles);
+  PlotHelpers::fillProf(*cache.nSharedHits_vs_pt, fit_pT, nSharedHits);
 }
 
 }  // namespace ActsExamples

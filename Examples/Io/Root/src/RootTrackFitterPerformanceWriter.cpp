@@ -60,17 +60,13 @@ ActsExamples::RootTrackFitterPerformanceWriter::
   }
 
   // initialize the residual and efficiency plots tool
-  m_resPlotTool.book(m_resPlotCache);
-  m_effPlotTool.book(m_effPlotCache);
-  m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
+  m_resPlotTool.book();
+  m_effPlotTool.book();
+  m_trackSummaryPlotTool.book();
 }
 
 ActsExamples::RootTrackFitterPerformanceWriter::
     ~RootTrackFitterPerformanceWriter() {
-  m_resPlotTool.clear(m_resPlotCache);
-  m_effPlotTool.clear(m_effPlotCache);
-  m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
-
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
@@ -79,13 +75,13 @@ ActsExamples::RootTrackFitterPerformanceWriter::
 ActsExamples::ProcessCode
 ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
   // fill residual and pull details into additional hists
-  m_resPlotTool.refinement(m_resPlotCache);
+  m_resPlotTool.refinement();
 
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
-    m_resPlotTool.write(m_resPlotCache);
-    m_effPlotTool.write(m_effPlotCache);
-    m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
+    m_resPlotTool.write();
+    m_effPlotTool.write();
+    m_trackSummaryPlotTool.write();
 
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
@@ -145,13 +141,11 @@ ActsExamples::RootTrackFitterPerformanceWriter::writeT(
     // Record this majority particle ID of this trajectory
     reconParticleIds.push_back(ip->particleId());
     // Fill the residual plots
-    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, ip->initialState(),
-                       fittedParameters);
+    m_resPlotTool.fill(ctx.geoContext, ip->initialState(), fittedParameters);
     // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                track.nTrackStates(), track.nMeasurements(),
-                                track.nOutliers(), track.nHoles(),
-                                track.nSharedHits());
+    m_trackSummaryPlotTool.fill(fittedParameters, track.nTrackStates(),
+                                track.nMeasurements(), track.nOutliers(),
+                                track.nHoles(), track.nSharedHits());
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
@@ -179,8 +173,8 @@ ActsExamples::RootTrackFitterPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
-    m_effPlotTool.fill(ctx.geoContext, m_effPlotCache, particle.initialState(),
-                       minDeltaR, isReconstructed);
+    m_effPlotTool.fill(ctx.geoContext, particle.initialState(), minDeltaR,
+                       isReconstructed);
   }
 
   return ProcessCode::SUCCESS;

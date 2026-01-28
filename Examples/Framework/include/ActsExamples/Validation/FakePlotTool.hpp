@@ -18,9 +18,6 @@
 #include <memory>
 #include <string>
 
-class TEfficiency;
-class TH2F;
-
 namespace ActsExamples {
 
 /// Tools to make fake ratio plots.
@@ -38,72 +35,48 @@ class FakePlotTool {
         {"Num", PlotHelpers::Binning::Uniform("N", 30, -0.5, 29.5)}};
   };
 
-  /// @brief Nested Cache struct
-  struct Cache {
-    /// Number of reco tracks vs pT scatter plot
-    TH2F* nReco_vs_pT;
-    /// Number of truth-matched reco tracks vs pT scatter plot
-    TH2F* nTruthMatched_vs_pT;
-    /// Number of fake (truth-unmatched) tracks vs pT scatter plot
-    TH2F* nFake_vs_pT;
-    /// Number of reco tracks vs eta scatter plot
-    TH2F* nReco_vs_eta;
-    /// Number of truth-matched reco tracks vs eta scatter plot
-    TH2F* nTruthMatched_vs_eta;
-    /// Number of fake (truth-unmatched) tracks vs eta scatter plot
-    TH2F* nFake_vs_eta;
-    /// Tracking fake ratio vs pT
-    TEfficiency* fakeRatio_vs_pT;
-    /// Tracking fake ratio vs eta
-    TEfficiency* fakeRatio_vs_eta;
-    /// Tracking fake ratio vs phi
-    TEfficiency* fakeRatio_vs_phi;
-  };
-
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param lvl Message level declaration
   FakePlotTool(const Config& cfg, Acts::Logging::Level lvl);
+  FakePlotTool(const FakePlotTool&) = delete;
+  FakePlotTool& operator=(const FakePlotTool&) = delete;
+  FakePlotTool(FakePlotTool&&) noexcept = default;
+  FakePlotTool& operator=(FakePlotTool&&) noexcept = default;
+  ~FakePlotTool();
 
   /// @brief book the fake ratio plots
   ///
-  /// @param cache the cache for fake ratio plots
-  void book(Cache& cache) const;
+  void book();
 
   /// @brief fill fake ratio w.r.t. fitted track parameters
   ///
-  /// @param cache cache object for fake ratio plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the reconstructed track is fake or not
-  void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
-            bool status) const;
+  void fill(const Acts::BoundTrackParameters& fittedParameters, bool status);
 
   /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
   /// seed
   ///
-  /// @param cache cache object for fake ratio plots
   /// @param truthParticle the truth Particle
   /// @param nTruthMatchedTracks the number of truth-matched tracks
   /// @param nFakeTracks the number of fake tracks
-  void fill(Cache& cache, const SimParticleState& truthParticle,
-            std::size_t nTruthMatchedTracks, std::size_t nFakeTracks) const;
+  void fill(const SimParticleState& truthParticle,
+            std::size_t nTruthMatchedTracks, std::size_t nFakeTracks);
 
   /// @brief write the fake ratio plots to file
   ///
-  /// @param cache cache object for fake ratio plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the fake ratio plots
-  ///
-  /// @param cache cache object for fake ratio plots
-  void clear(Cache& cache) const;
+  void write();
 
  private:
+  struct Impl;
+
   /// The Config class
   Config m_cfg;
   /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
+  std::unique_ptr<Impl> m_impl;
 
   /// The logger
   const Acts::Logger& logger() const { return *m_logger; }

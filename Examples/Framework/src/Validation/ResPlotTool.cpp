@@ -24,11 +24,48 @@
 
 namespace ActsExamples {
 
+struct ResPlotTool::Impl {
+  /// Residual distribution
+  std::map<std::string, std::unique_ptr<TH1F>> res;
+  /// Residual vs eta scatter plot
+  std::map<std::string, std::unique_ptr<TH2F>> res_vs_eta;
+  /// Residual mean vs eta distribution
+  std::map<std::string, std::unique_ptr<TH1F>> resMean_vs_eta;
+  /// Residual width vs eta distribution
+  std::map<std::string, std::unique_ptr<TH1F>> resWidth_vs_eta;
+  /// Residual vs pT scatter plot
+  std::map<std::string, std::unique_ptr<TH2F>> res_vs_pT;
+  /// Residual mean vs pT distribution
+  std::map<std::string, std::unique_ptr<TH1F>> resMean_vs_pT;
+  /// Residual width vs pT distribution
+  std::map<std::string, std::unique_ptr<TH1F>> resWidth_vs_pT;
+
+  /// Pull distribution
+  std::map<std::string, std::unique_ptr<TH1F>> pull;
+  /// Pull vs eta scatter plot
+  std::map<std::string, std::unique_ptr<TH2F>> pull_vs_eta;
+  /// Pull mean vs eta distribution
+  std::map<std::string, std::unique_ptr<TH1F>> pullMean_vs_eta;
+  /// Pull width vs eta distribution
+  std::map<std::string, std::unique_ptr<TH1F>> pullWidth_vs_eta;
+  /// Pull vs pT scatter plot
+  std::map<std::string, std::unique_ptr<TH2F>> pull_vs_pT;
+  /// Pull mean vs pT distribution
+  std::map<std::string, std::unique_ptr<TH1F>> pullMean_vs_pT;
+  /// Pull width vs pT distribution
+  std::map<std::string, std::unique_ptr<TH1F>> pullWidth_vs_pT;
+};
+
 ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {}
+    : m_cfg(cfg),
+      m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)),
+      m_impl(std::make_unique<Impl>()) {}
 
-void ResPlotTool::book(Cache& cache) const {
+ResPlotTool::~ResPlotTool() = default;
+
+void ResPlotTool::book() {
+  Impl& cache = *m_impl;
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bPull = m_cfg.varBinning.at("Pull");
@@ -101,28 +138,8 @@ void ResPlotTool::book(Cache& cache) const {
   }
 }
 
-void ResPlotTool::clear(Cache& cache) const {
-  ACTS_DEBUG("Delete the hists.");
-  for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
-    std::string parName = m_cfg.paramNames.at(parID);
-    delete cache.res.at(parName);
-    delete cache.res_vs_eta.at(parName);
-    delete cache.resMean_vs_eta.at(parName);
-    delete cache.resWidth_vs_eta.at(parName);
-    delete cache.res_vs_pT.at(parName);
-    delete cache.resMean_vs_pT.at(parName);
-    delete cache.resWidth_vs_pT.at(parName);
-    delete cache.pull.at(parName);
-    delete cache.pull_vs_eta.at(parName);
-    delete cache.pullMean_vs_eta.at(parName);
-    delete cache.pullWidth_vs_eta.at(parName);
-    delete cache.pull_vs_pT.at(parName);
-    delete cache.pullMean_vs_pT.at(parName);
-    delete cache.pullWidth_vs_pT.at(parName);
-  }
-}
-
-void ResPlotTool::write(const Cache& cache) const {
+void ResPlotTool::write() {
+  Impl& cache = *m_impl;
   ACTS_DEBUG("Write the hists to output file.");
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
@@ -143,10 +160,10 @@ void ResPlotTool::write(const Cache& cache) const {
   }
 }
 
-void ResPlotTool::fill(
-    Cache& cache, const Acts::GeometryContext& gctx,
-    const SimParticleState& truthParticle,
-    const Acts::BoundTrackParameters& fittedParamters) const {
+void ResPlotTool::fill(const Acts::GeometryContext& gctx,
+                       const SimParticleState& truthParticle,
+                       const Acts::BoundTrackParameters& fittedParamters) {
+  Impl& cache = *m_impl;
   using ParametersVector = Acts::BoundTrackParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
@@ -194,17 +211,17 @@ void ResPlotTool::fill(
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
     float residual = trackParameter[parID] - truthParameter[parID];
-    PlotHelpers::fillHisto(cache.res.at(parName), residual);
-    PlotHelpers::fillHisto(cache.res_vs_eta.at(parName), truthEta, residual);
-    PlotHelpers::fillHisto(cache.res_vs_pT.at(parName), truthPt, residual);
+    PlotHelpers::fillHisto(*cache.res.at(parName), residual);
+    PlotHelpers::fillHisto(*cache.res_vs_eta.at(parName), truthEta, residual);
+    PlotHelpers::fillHisto(*cache.res_vs_pT.at(parName), truthPt, residual);
 
     if (fittedParamters.covariance().has_value()) {
       auto covariance = *fittedParamters.covariance();
       if (covariance(parID, parID) > 0) {
         float pull = residual / std::sqrt(covariance(parID, parID));
-        PlotHelpers::fillHisto(cache.pull[parName], pull);
-        PlotHelpers::fillHisto(cache.pull_vs_eta.at(parName), truthEta, pull);
-        PlotHelpers::fillHisto(cache.pull_vs_pT.at(parName), truthPt, pull);
+        PlotHelpers::fillHisto(*cache.pull.at(parName), pull);
+        PlotHelpers::fillHisto(*cache.pull_vs_eta.at(parName), truthEta, pull);
+        PlotHelpers::fillHisto(*cache.pull_vs_pT.at(parName), truthPt, pull);
       } else {
         ACTS_WARNING("Fitted track parameter :" << parName
                                                 << " has negative covariance = "
@@ -219,7 +236,8 @@ void ResPlotTool::fill(
 
 // get the mean and width of residual/pull in each eta/pT bin and fill them into
 // histograms
-void ResPlotTool::refinement(Cache& cache) const {
+void ResPlotTool::refinement() {
+  Impl& cache = *m_impl;
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
@@ -228,26 +246,28 @@ void ResPlotTool::refinement(Cache& cache) const {
     for (int j = 1; j <= static_cast<int>(bEta.nBins()); j++) {
       TH1D* temp_res = cache.res_vs_eta.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Residual_vs_eta_Histo", j), j, j);
-      PlotHelpers::anaHisto(temp_res, j, cache.resMean_vs_eta.at(parName),
-                            cache.resWidth_vs_eta.at(parName));
+      PlotHelpers::anaHisto(temp_res, j, cache.resMean_vs_eta.at(parName).get(),
+                            cache.resWidth_vs_eta.at(parName).get());
 
       TH1D* temp_pull = cache.pull_vs_eta.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Pull_vs_eta_Histo", j), j, j);
-      PlotHelpers::anaHisto(temp_pull, j, cache.pullMean_vs_eta.at(parName),
-                            cache.pullWidth_vs_eta.at(parName));
+      PlotHelpers::anaHisto(temp_pull, j,
+                            cache.pullMean_vs_eta.at(parName).get(),
+                            cache.pullWidth_vs_eta.at(parName).get());
     }
 
     // refine the plots vs pT
     for (int j = 1; j <= static_cast<int>(bPt.nBins()); j++) {
       TH1D* temp_res = cache.res_vs_pT.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Residual_vs_pT_Histo", j), j, j);
-      PlotHelpers::anaHisto(temp_res, j, cache.resMean_vs_pT.at(parName),
-                            cache.resWidth_vs_pT.at(parName));
+      PlotHelpers::anaHisto(temp_res, j, cache.resMean_vs_pT.at(parName).get(),
+                            cache.resWidth_vs_pT.at(parName).get());
 
       TH1D* temp_pull = cache.pull_vs_pT.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Pull_vs_pT_Histo", j), j, j);
-      PlotHelpers::anaHisto(temp_pull, j, cache.pullMean_vs_pT.at(parName),
-                            cache.pullWidth_vs_pT.at(parName));
+      PlotHelpers::anaHisto(temp_pull, j,
+                            cache.pullMean_vs_pT.at(parName).get(),
+                            cache.pullWidth_vs_pT.at(parName).get());
     }
   }
 }

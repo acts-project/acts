@@ -82,25 +82,19 @@ RootTrackFinderPerformanceWriter::RootTrackFinderPerformanceWriter(
   }
 
   // initialize the plot tools
-  m_effPlotTool.book(m_effPlotCache);
-  m_fakePlotTool.book(m_fakePlotCache);
-  m_duplicationPlotTool.book(m_duplicationPlotCache);
-  m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
+  m_effPlotTool.book();
+  m_fakePlotTool.book();
+  m_duplicationPlotTool.book();
+  m_trackSummaryPlotTool.book();
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
-    m_trackSummaryPlotTool.book(m_subDetectorSummaryCaches[key], key);
+    auto [it, inserted] = m_subDetectorSummaryPlotTools.try_emplace(
+        key, m_cfg.trackSummaryPlotToolConfig, lvl);
+    it->second.book(key);
   }
-  m_trackQualityPlotTool.book(m_trackQualityPlotCache);
+  m_trackQualityPlotTool.book();
 }
 
 RootTrackFinderPerformanceWriter::~RootTrackFinderPerformanceWriter() {
-  m_effPlotTool.clear(m_effPlotCache);
-  m_fakePlotTool.clear(m_fakePlotCache);
-  m_duplicationPlotTool.clear(m_duplicationPlotCache);
-  m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
-  for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
-    m_trackSummaryPlotTool.clear(m_subDetectorSummaryCaches.at(key));
-  }
-  m_trackQualityPlotTool.clear(m_trackQualityPlotCache);
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
@@ -147,14 +141,14 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
 
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
-    m_effPlotTool.write(m_effPlotCache);
-    m_fakePlotTool.write(m_fakePlotCache);
-    m_duplicationPlotTool.write(m_duplicationPlotCache);
-    m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
-    for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
-      m_trackSummaryPlotTool.write(m_subDetectorSummaryCaches.at(key));
+    m_effPlotTool.write();
+    m_fakePlotTool.write();
+    m_duplicationPlotTool.write();
+    m_trackSummaryPlotTool.write();
+    for (auto& [key, tool] : m_subDetectorSummaryPlotTools) {
+      tool.write();
     }
-    m_trackQualityPlotTool.write(m_trackQualityPlotCache);
+    m_trackQualityPlotTool.write();
 
     writeFloat(eff_tracks, "eff_tracks");
     writeFloat(fakeRatio_tracks, "fakeratio_tracks");
@@ -207,10 +201,9 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
         track.createParametersAtReference();
 
     // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                track.nTrackStates(), track.nMeasurements(),
-                                track.nOutliers(), track.nHoles(),
-                                track.nSharedHits());
+    m_trackSummaryPlotTool.fill(fittedParameters, track.nTrackStates(),
+                                track.nMeasurements(), track.nOutliers(),
+                                track.nHoles(), track.nSharedHits());
 
     // Potentially fill other track summary caches for the given volumes
     for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
@@ -231,9 +224,9 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
         nSharedHits +=
             static_cast<std::size_t>(state.typeFlags().isSharedHit());
       }
-      m_trackSummaryPlotTool.fill(m_subDetectorSummaryCaches.at(key),
-                                  fittedParameters, nTrackStates, nMeasurements,
-                                  nOutliers, nHoles, nSharedHits);
+      m_subDetectorSummaryPlotTools.at(key).fill(fittedParameters, nTrackStates,
+                                                 nMeasurements, nOutliers,
+                                                 nHoles, nSharedHits);
     }
 
     // Get the truth matching information
@@ -256,13 +249,12 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
     }
 
     // Fill fake ratio plots
-    m_fakePlotTool.fill(
-        m_fakePlotCache, fittedParameters,
-        particleMatch.classification == TrackMatchClassification::Fake);
+    m_fakePlotTool.fill(fittedParameters, particleMatch.classification ==
+                                              TrackMatchClassification::Fake);
 
     // Fill the duplication ratio
     m_duplicationPlotTool.fill(
-        m_duplicationPlotCache, fittedParameters,
+        fittedParameters,
         particleMatch.classification == TrackMatchClassification::Duplicate);
 
     if (particleMatch.particle.has_value() &&
@@ -281,8 +273,7 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
       double purity = static_cast<double>(nMatchedHits) / nTrackMeasurements;
 
       // Fill the track quality plots
-      m_trackQualityPlotTool.fill(m_trackQualityPlotCache, fittedParameters,
-                                  completeness, purity);
+      m_trackQualityPlotTool.fill(fittedParameters, completeness, purity);
     }
   }
 
@@ -338,15 +329,13 @@ ProcessCode RootTrackFinderPerformanceWriter::writeT(
     }
 
     // Fill efficiency plots
-    m_effPlotTool.fill(ctx.geoContext, m_effPlotCache, particle.initialState(),
-                       minDeltaR, isReconstructed);
+    m_effPlotTool.fill(ctx.geoContext, particle.initialState(), minDeltaR,
+                       isReconstructed);
     // Fill duplication plots
-    m_duplicationPlotTool.fill(m_duplicationPlotCache, particle.initialState(),
-                               nMatchedTracks);
+    m_duplicationPlotTool.fill(particle.initialState(), nMatchedTracks);
 
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
-    m_fakePlotTool.fill(m_fakePlotCache, particle.initialState(),
-                        nMatchedTracks, nFakeTracks);
+    m_fakePlotTool.fill(particle.initialState(), nMatchedTracks, nFakeTracks);
 
     m_nTotalParticles += 1;
   }

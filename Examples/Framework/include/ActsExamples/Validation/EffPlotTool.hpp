@@ -19,8 +19,6 @@
 #include <memory>
 #include <string>
 
-class TEfficiency;
-
 namespace ActsExamples {
 
 /// Tools to make efficiency plots to show tracking efficiency.
@@ -58,75 +56,42 @@ class EffPlotTool {
         Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3::Zero());
   };
 
-  /// @brief Nested Cache struct
-  struct Cache {
-    /// Tracking efficiency vs eta
-    TEfficiency* trackEff_vs_eta{nullptr};
-    /// Tracking efficiency vs phi
-    TEfficiency* trackEff_vs_phi{nullptr};
-    /// Tracking efficiency vs pT
-    TEfficiency* trackEff_vs_pT{nullptr};
-    /// Tracking efficiency vs log pT
-    TEfficiency* trackEff_vs_LogPt{nullptr};
-    /// Tracking efficiency vs low pT
-    TEfficiency* trackEff_vs_LowPt{nullptr};
-    /// Tracking efficiency vs d0
-    TEfficiency* trackEff_vs_d0{nullptr};
-    /// Tracking efficiency vs z0
-    TEfficiency* trackEff_vs_z0{nullptr};
-    /// Tracking efficiency vs distance to the closest truth particle
-    TEfficiency* trackEff_vs_DeltaR{nullptr};
-    /// Tracking efficiency vs production radius
-    TEfficiency* trackEff_vs_prodR{nullptr};
-
-    /// Tracking efficiency vs eta and phi
-    TEfficiency* trackEff_vs_eta_phi{nullptr};
-    /// Tracking efficiency vs eta and pT
-    TEfficiency* trackEff_vs_eta_pt{nullptr};
-
-    /// Tracking efficiency vs eta in different pT ranges
-    std::vector<TEfficiency*> trackEff_vs_eta_inPtRanges;
-    /// Tracking efficiency vs pT in different abs(eta) ranges
-    std::vector<TEfficiency*> trackEff_vs_pT_inAbsEtaRanges;
-  };
-
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param lvl Message level declaration
   EffPlotTool(const Config& cfg, Acts::Logging::Level lvl);
+  EffPlotTool(const EffPlotTool&) = delete;
+  EffPlotTool& operator=(const EffPlotTool&) = delete;
+  EffPlotTool(EffPlotTool&&) noexcept = default;
+  EffPlotTool& operator=(EffPlotTool&&) noexcept = default;
+  ~EffPlotTool();
 
   /// @brief book the efficiency plots
   ///
-  /// @param cache the cache for efficiency plots
-  void book(Cache& cache) const;
+  void book();
 
   /// @brief fill efficiency plots
   ///
   /// @param gctx geometry context
-  /// @param cache cache object for efficiency plots
   /// @param truthParticle the truth Particle
   /// @param deltaR the distance to the closest truth particle
   /// @param status the reconstruction status
-  void fill(const Acts::GeometryContext& gctx, Cache& cache,
-            const SimParticleState& truthParticle, double deltaR,
-            bool status) const;
+  void fill(const Acts::GeometryContext& gctx,
+            const SimParticleState& truthParticle, double deltaR, bool status);
 
   /// @brief write the efficiency plots to file
   ///
-  /// @param cache cache object for efficiency plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the efficiency plots
-  ///
-  /// @param cache cache object for efficiency plots
-  void clear(Cache& cache) const;
+  void write();
 
  private:
+  struct Impl;
+
   /// The Config class
   Config m_cfg;
   /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
+  std::unique_ptr<Impl> m_impl;
 
   /// The logger
   const Acts::Logger& logger() const { return *m_logger; }

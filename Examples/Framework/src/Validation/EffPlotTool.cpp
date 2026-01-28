@@ -23,11 +23,47 @@ using Acts::VectorHelpers::phi;
 
 namespace ActsExamples {
 
+struct EffPlotTool::Impl {
+  /// Tracking efficiency vs eta
+  std::unique_ptr<TEfficiency> trackEff_vs_eta{nullptr};
+  /// Tracking efficiency vs phi
+  std::unique_ptr<TEfficiency> trackEff_vs_phi{nullptr};
+  /// Tracking efficiency vs pT
+  std::unique_ptr<TEfficiency> trackEff_vs_pT{nullptr};
+  /// Tracking efficiency vs log pT
+  std::unique_ptr<TEfficiency> trackEff_vs_LogPt{nullptr};
+  /// Tracking efficiency vs low pT
+  std::unique_ptr<TEfficiency> trackEff_vs_LowPt{nullptr};
+  /// Tracking efficiency vs d0
+  std::unique_ptr<TEfficiency> trackEff_vs_d0{nullptr};
+  /// Tracking efficiency vs z0
+  std::unique_ptr<TEfficiency> trackEff_vs_z0{nullptr};
+  /// Tracking efficiency vs distance to the closest truth particle
+  std::unique_ptr<TEfficiency> trackEff_vs_DeltaR{nullptr};
+  /// Tracking efficiency vs production radius
+  std::unique_ptr<TEfficiency> trackEff_vs_prodR{nullptr};
+
+  /// Tracking efficiency vs eta and phi
+  std::unique_ptr<TEfficiency> trackEff_vs_eta_phi{nullptr};
+  /// Tracking efficiency vs eta and pT
+  std::unique_ptr<TEfficiency> trackEff_vs_eta_pt{nullptr};
+
+  /// Tracking efficiency vs eta in different pT ranges
+  std::vector<std::unique_ptr<TEfficiency>> trackEff_vs_eta_inPtRanges;
+  /// Tracking efficiency vs pT in different abs(eta) ranges
+  std::vector<std::unique_ptr<TEfficiency>> trackEff_vs_pT_inAbsEtaRanges;
+};
+
 EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("EffPlotTool", lvl)) {}
+    : m_cfg(cfg),
+      m_logger(Acts::getDefaultLogger("EffPlotTool", lvl)),
+      m_impl(std::make_unique<Impl>()) {}
 
-void EffPlotTool::book(Cache& cache) const {
+EffPlotTool::~EffPlotTool() = default;
+
+void EffPlotTool::book() {
+  Impl& cache = *m_impl;
   const PlotHelpers::Binning& bEta = m_cfg.varBinning.at("Eta");
   const PlotHelpers::Binning& bPhi = m_cfg.varBinning.at("Phi");
   const PlotHelpers::Binning& bPt = m_cfg.varBinning.at("Pt");
@@ -128,42 +164,19 @@ void EffPlotTool::book(Cache& cache) const {
   }
 }
 
-void EffPlotTool::clear(Cache& cache) const {
-  ACTS_DEBUG("Clear the histograms for efficiency plots.");
-
-  delete cache.trackEff_vs_eta;
-  delete cache.trackEff_vs_phi;
-  delete cache.trackEff_vs_pT;
-  delete cache.trackEff_vs_LogPt;
-  delete cache.trackEff_vs_LowPt;
-  delete cache.trackEff_vs_d0;
-  delete cache.trackEff_vs_z0;
-  delete cache.trackEff_vs_DeltaR;
-  delete cache.trackEff_vs_prodR;
-
-  delete cache.trackEff_vs_eta_phi;
-  delete cache.trackEff_vs_eta_pt;
-
-  for (TEfficiency* eff : cache.trackEff_vs_eta_inPtRanges) {
-    delete eff;
-  }
-  for (TEfficiency* eff : cache.trackEff_vs_pT_inAbsEtaRanges) {
-    delete eff;
-  }
-}
-
-void EffPlotTool::write(const Cache& cache) const {
+void EffPlotTool::write() {
+  Impl& cache = *m_impl;
   ACTS_DEBUG("Write the plots to output file.");
 
   cache.trackEff_vs_eta->Write();
-  for (const TEfficiency* eff : cache.trackEff_vs_eta_inPtRanges) {
+  for (const auto& eff : cache.trackEff_vs_eta_inPtRanges) {
     eff->Write();
   }
   cache.trackEff_vs_eta_phi->Write();
   cache.trackEff_vs_eta_pt->Write();
   cache.trackEff_vs_phi->Write();
   cache.trackEff_vs_pT->Write();
-  for (const TEfficiency* eff : cache.trackEff_vs_pT_inAbsEtaRanges) {
+  for (const auto& eff : cache.trackEff_vs_pT_inAbsEtaRanges) {
     eff->Write();
   }
   cache.trackEff_vs_LogPt->Write();
@@ -174,9 +187,10 @@ void EffPlotTool::write(const Cache& cache) const {
   cache.trackEff_vs_prodR->Write();
 }
 
-void EffPlotTool::fill(const Acts::GeometryContext& gctx, Cache& cache,
+void EffPlotTool::fill(const Acts::GeometryContext& gctx,
                        const SimParticleState& truthParticle,
-                       const double deltaR, const bool status) const {
+                       const double deltaR, const bool status) {
+  Impl& cache = *m_impl;
   constexpr double nan = std::numeric_limits<double>::quiet_NaN();
 
   const auto intersection =
@@ -203,27 +217,27 @@ void EffPlotTool::fill(const Acts::GeometryContext& gctx, Cache& cache,
 
   // cut on truth pT with the global range for the relevant plots
   if (t_pT >= m_cfg.minTruthPt) {
-    PlotHelpers::fillEff(cache.trackEff_vs_eta, t_eta, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_phi, t_phi, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_d0, t_d0, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_z0, t_z0, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_DeltaR, t_deltaR, status);
-    PlotHelpers::fillEff(cache.trackEff_vs_prodR, t_prodR, status);
+    PlotHelpers::fillEff(*cache.trackEff_vs_eta, t_eta, status);
+    PlotHelpers::fillEff(*cache.trackEff_vs_phi, t_phi, status);
+    PlotHelpers::fillEff(*cache.trackEff_vs_d0, t_d0, status);
+    PlotHelpers::fillEff(*cache.trackEff_vs_z0, t_z0, status);
+    PlotHelpers::fillEff(*cache.trackEff_vs_DeltaR, t_deltaR, status);
+    PlotHelpers::fillEff(*cache.trackEff_vs_prodR, t_prodR, status);
 
-    PlotHelpers::fillEff(cache.trackEff_vs_eta_phi, t_eta, t_phi, status);
+    PlotHelpers::fillEff(*cache.trackEff_vs_eta_phi, t_eta, t_phi, status);
   }
 
   // do not cut on truth pT as it is a variable on the plot
-  PlotHelpers::fillEff(cache.trackEff_vs_pT, t_pT, status);
-  PlotHelpers::fillEff(cache.trackEff_vs_LogPt, t_pT, status);
-  PlotHelpers::fillEff(cache.trackEff_vs_LowPt, t_pT, status);
-  PlotHelpers::fillEff(cache.trackEff_vs_eta_pt, t_eta, t_pT, status);
+  PlotHelpers::fillEff(*cache.trackEff_vs_pT, t_pT, status);
+  PlotHelpers::fillEff(*cache.trackEff_vs_LogPt, t_pT, status);
+  PlotHelpers::fillEff(*cache.trackEff_vs_LowPt, t_pT, status);
+  PlotHelpers::fillEff(*cache.trackEff_vs_eta_pt, t_eta, t_pT, status);
 
   // fill the efficiency vs eta in different pT ranges
   for (const auto& [ptRange, eff] :
        Acts::zip(m_cfg.truthPtRangesForEta, cache.trackEff_vs_eta_inPtRanges)) {
     if (t_pT >= ptRange.first && t_pT < ptRange.second) {
-      PlotHelpers::fillEff(eff, t_eta, status);
+      PlotHelpers::fillEff(*eff, t_eta, status);
     }
   }
 
@@ -231,7 +245,7 @@ void EffPlotTool::fill(const Acts::GeometryContext& gctx, Cache& cache,
   for (const auto& [absEtaRange, eff] : Acts::zip(
            m_cfg.truthAbsEtaRangesForPt, cache.trackEff_vs_pT_inAbsEtaRanges)) {
     if (t_absEta >= absEtaRange.first && t_absEta < absEtaRange.second) {
-      PlotHelpers::fillEff(eff, t_pT, status);
+      PlotHelpers::fillEff(*eff, t_pT, status);
     }
   }
 }

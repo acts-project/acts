@@ -19,9 +19,6 @@
 #include <string>
 #include <vector>
 
-class TH1F;
-class TH2F;
-
 namespace ActsExamples {
 
 /// Tools to make hists to show residual, i.e. smoothed_parameter -
@@ -55,81 +52,47 @@ class ResPlotTool {
          PlotHelpers::Binning::Uniform("r_{t} [s]", 100, -1000, 1000)}};
   };
 
-  /// @brief Nested Cache struct
-  struct Cache {
-    /// Residual distribution
-    std::map<std::string, TH1F*> res;
-    /// Residual vs eta scatter plot
-    std::map<std::string, TH2F*> res_vs_eta;
-    /// Residual mean vs eta distribution
-    std::map<std::string, TH1F*> resMean_vs_eta;
-    /// Residual width vs eta distribution
-    std::map<std::string, TH1F*> resWidth_vs_eta;
-    /// Residual vs pT scatter plot
-    std::map<std::string, TH2F*> res_vs_pT;
-    /// Residual mean vs pT distribution
-    std::map<std::string, TH1F*> resMean_vs_pT;
-    /// Residual width vs pT distribution
-    std::map<std::string, TH1F*> resWidth_vs_pT;
-
-    /// Pull distribution
-    std::map<std::string, TH1F*> pull;
-    /// Pull vs eta scatter plot
-    std::map<std::string, TH2F*> pull_vs_eta;
-    /// Pull mean vs eta distribution
-    std::map<std::string, TH1F*> pullMean_vs_eta;
-    /// Pull width vs eta distribution
-    std::map<std::string, TH1F*> pullWidth_vs_eta;
-    /// Pull vs pT scatter plot
-    std::map<std::string, TH2F*> pull_vs_pT;
-    /// Pull mean vs pT distribution
-    std::map<std::string, TH1F*> pullMean_vs_pT;
-    /// Pull width vs pT distribution
-    std::map<std::string, TH1F*> pullWidth_vs_pT;
-  };
-
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param level Message level declaration
   ResPlotTool(const Config& cfg, Acts::Logging::Level lvl);
+  ResPlotTool(const ResPlotTool&) = delete;
+  ResPlotTool& operator=(const ResPlotTool&) = delete;
+  ResPlotTool(ResPlotTool&&) noexcept = default;
+  ResPlotTool& operator=(ResPlotTool&&) noexcept = default;
+  ~ResPlotTool();
 
   /// @brief book the histograms
   ///
-  /// @param cache the cache for residual/pull histograms
-  void book(Cache& cache) const;
+  void book();
 
   /// @brief fill the histograms
   ///
-  /// @param cache the cache for residual/pull histograms
   /// @param gctx the geometry context
   /// @param truthParticle the truth particle
   /// @param fittedParamters the fitted parameters at perigee surface
-  void fill(Cache& cache, const Acts::GeometryContext& gctx,
+  void fill(const Acts::GeometryContext& gctx,
             const SimParticleState& truthParticle,
-            const Acts::BoundTrackParameters& fittedParamters) const;
+            const Acts::BoundTrackParameters& fittedParamters);
 
   /// @brief extract the details of the residual/pull plots and fill details
   ///
   /// into separate histograms
-  /// @param cache the cache object for residual/pull histograms
-  void refinement(Cache& cache) const;
+  void refinement();
 
   /// @brief write the histograms to output file
   ///
-  /// @param cache the cache object for residual/pull histograms
-  void write(const Cache& cache) const;
-
-  /// @brief delete the histograms
-  ///
-  /// @param cache the cache object for residual/pull histograms
-  void clear(Cache& cache) const;
+  void write();
 
  private:
+  struct Impl;
+
   /// The config class
   Config m_cfg;
   /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
+  std::unique_ptr<Impl> m_impl;
 
   /// The logger
   const Acts::Logger& logger() const { return *m_logger; }

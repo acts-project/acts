@@ -20,12 +20,25 @@ using Acts::VectorHelpers::theta;
 
 namespace ActsExamples {
 
+struct TrackQualityPlotTool::Impl {
+  std::unique_ptr<TProfile> completeness_vs_pT;
+  std::unique_ptr<TProfile> completeness_vs_eta;
+  std::unique_ptr<TProfile> completeness_vs_phi;
+  std::unique_ptr<TProfile> purity_vs_pT;
+  std::unique_ptr<TProfile> purity_vs_eta;
+  std::unique_ptr<TProfile> purity_vs_phi;
+};
+
 TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
                                            Acts::Logging::Level lvl)
     : m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger("TrackCompletenessPlotTool", lvl)) {}
+      m_logger(Acts::getDefaultLogger("TrackCompletenessPlotTool", lvl)),
+      m_impl(std::make_unique<Impl>()) {}
 
-void TrackQualityPlotTool::book(Cache& cache) const {
+TrackQualityPlotTool::~TrackQualityPlotTool() = default;
+
+void TrackQualityPlotTool::book() {
+  Impl& cache = *m_impl;
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
@@ -53,16 +66,8 @@ void TrackQualityPlotTool::book(Cache& cache) const {
       PlotHelpers::bookProf("purity_vs_phi", "Purity;#phi;Purity", bPhi, bNum);
 }
 
-void TrackQualityPlotTool::clear(Cache& cache) const {
-  delete cache.completeness_vs_pT;
-  delete cache.completeness_vs_eta;
-  delete cache.completeness_vs_phi;
-  delete cache.purity_vs_pT;
-  delete cache.purity_vs_eta;
-  delete cache.purity_vs_phi;
-}
-
-void TrackQualityPlotTool::write(const Cache& cache) const {
+void TrackQualityPlotTool::write() {
+  Impl& cache = *m_impl;
   ACTS_DEBUG("Write the plots to output file.");
   cache.completeness_vs_pT->Write();
   cache.completeness_vs_eta->Write();
@@ -73,20 +78,21 @@ void TrackQualityPlotTool::write(const Cache& cache) const {
 }
 
 void TrackQualityPlotTool::fill(
-    Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
-    double completeness, double purity) const {
+    const Acts::BoundTrackParameters& fittedParameters, double completeness,
+    double purity) {
+  Impl& cache = *m_impl;
   const auto momentum = fittedParameters.momentum();
   const double fit_phi = phi(momentum);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  PlotHelpers::fillProf(cache.completeness_vs_pT, fit_pT, completeness);
-  PlotHelpers::fillProf(cache.completeness_vs_eta, fit_eta, completeness);
-  PlotHelpers::fillProf(cache.completeness_vs_phi, fit_phi, completeness);
+  PlotHelpers::fillProf(*cache.completeness_vs_pT, fit_pT, completeness);
+  PlotHelpers::fillProf(*cache.completeness_vs_eta, fit_eta, completeness);
+  PlotHelpers::fillProf(*cache.completeness_vs_phi, fit_phi, completeness);
 
-  PlotHelpers::fillProf(cache.purity_vs_pT, fit_pT, purity);
-  PlotHelpers::fillProf(cache.purity_vs_eta, fit_eta, purity);
-  PlotHelpers::fillProf(cache.purity_vs_phi, fit_phi, purity);
+  PlotHelpers::fillProf(*cache.purity_vs_pT, fit_pT, purity);
+  PlotHelpers::fillProf(*cache.purity_vs_eta, fit_eta, purity);
+  PlotHelpers::fillProf(*cache.purity_vs_phi, fit_phi, purity);
 }
 
 }  // namespace ActsExamples
