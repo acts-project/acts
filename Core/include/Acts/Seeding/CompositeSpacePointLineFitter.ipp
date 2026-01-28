@@ -573,7 +573,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     }
 
     if (update.norm() < m_cfg.precCutOff ||
-        Acts::sqrt(normUpdate) < m_cfg.normPrecCutOff) {
+        std::sqrt(normUpdate) < m_cfg.normPrecCutOff) {
       ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Update/ Normalized update " << toString(update)
                           << "/ " << normUpdate << " are negligible small.");

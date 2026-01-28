@@ -238,10 +238,10 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
                         << cov.determinant()
                         << std::format(" update: ({:.3f}, {:.3f}),",
                                        inDeg(update[0]), inNanoS(update[1]))
-                        << " normUpdate: " << Acts::sqrt(normUpdate));
+                        << " normUpdate: " << std::sqrt(normUpdate));
 
   if (update.norm() < m_cfg.precCutOff ||
-      Acts::sqrt(normUpdate) < m_cfg.normPrecCutOff) {
+      std::sqrt(normUpdate) < m_cfg.normPrecCutOff) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
                         << fitResult);
     retCode = UpdateStatus::Converged;
