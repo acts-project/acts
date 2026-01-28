@@ -379,6 +379,95 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
   test_surface(*surface, desc, p, 1.1);
 }
 
+BOOST_AUTO_TEST_CASE(test_phi_angle_wrapping_simple) {
+  // Two components with phi angles spanning the -pi/+pi boundary
+  std::vector<DummyComponent<1>> cmps;
+
+  // Component 1: phi = +2.8 rad (about 160 degrees), weight = 0.5
+  DummyComponent<1> c1;
+  c1.weight = 0.5;
+  c1.boundPars[0] = 2.8;
+  c1.boundCov = ActsSquareMatrix<1>::Identity();
+  cmps.push_back(c1);
+
+  // Component 2: phi = -2.8 rad (about -160 degrees), weight = 0.5
+  DummyComponent<1> c2;
+  c2.weight = 0.5;
+  c2.boundPars[0] = -2.8;
+  c2.boundCov = ActsSquareMatrix<1>::Identity();
+  cmps.push_back(c2);
+
+  // Expected: mean should be +/-pi (going through discontinuity), NOT 0.0
+  // With cyclic angle descriptor
+  const auto desc = std::tuple<detail::CyclicAngle<eBoundLoc0>>{};
+  auto [mean, cov] =
+      detail::gaussianMixtureMeanCov(cmps, std::identity{}, desc);
+
+  // Check mean is close to +/-pi, not 0
+  BOOST_CHECK(std::abs(std::abs(mean[0]) - std::numbers::pi) < 0.1);
+
+  // Without cyclic angle descriptor - should give wrong result
+  auto [meanWrong, covWrong] =
+      detail::gaussianMixtureMeanCov(cmps, std::identity{}, std::tuple<>{});
+
+  // This will likely be close to 0.0 (arithmetic mean), which is wrong
+  BOOST_CHECK(std::abs(meanWrong[0]) < 0.5);
+}
+
+BOOST_AUTO_TEST_CASE(test_mean_shuffle) {
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
+  const std::size_t NComps = 10;
+
+  std::mt19937 rng(43);
+  std::uniform_real_distribution<double> weightDist(0.5, 1.5);
+  std::uniform_real_distribution<double> loc0Dist(-10.0, 10.0);
+  std::uniform_real_distribution<double> loc1Dist(-10.0, 10.0);
+  std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                                 std::numbers::pi);
+  std::uniform_real_distribution<double> thetaDist(0.0, std::numbers::pi);
+  std::uniform_real_distribution<double> qopDist(0.1, 5.0);
+
+  std::vector<DummyComponent<5>> cmps;
+  double weightSum = 0.0;
+
+  for (auto i = 0ul; i < NComps; ++i) {
+    DummyComponent<5> cmp;
+    cmp.boundPars[eBoundLoc0] = loc0Dist(rng);
+    cmp.boundPars[eBoundLoc1] = loc1Dist(rng);
+    cmp.boundPars[eBoundPhi] = phiDist(rng);
+    cmp.boundPars[eBoundTheta] = thetaDist(rng);
+    cmp.boundPars[eBoundQOverP] = qopDist(rng);
+    cmp.weight = weightDist(rng);
+    cmp.boundCov = ActsSquareMatrix<5>::Identity();
+    weightSum += cmp.weight;
+    cmps.push_back(cmp);
+  }
+
+  for (auto &cmp : cmps) {
+    cmp.weight /= weightSum;
+  }
+
+  std::ranges::sort(cmps, {}, [](const auto &c) { return c.weight; });
+
+  const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
+  const auto meanBefore =
+      std::get<0>(detail::gaussianMixtureMeanCov(cmps, std::identity{}, desc));
+
+  for (int i = 0; i < 20; ++i) {
+    std::cout << "Shuffle iteration " << i + 1 << std::endl;
+    std::shuffle(cmps.begin(), cmps.end(), rng);
+    const auto meanAfter = std::get<0>(
+        detail::gaussianMixtureMeanCov(cmps, std::identity{}, desc));
+
+    BOOST_CHECK_CLOSE(meanBefore[eBoundLoc0], meanAfter[eBoundLoc0], 1.e-8);
+    BOOST_CHECK_CLOSE(meanBefore[eBoundLoc1], meanAfter[eBoundLoc1], 1.e-8);
+    BOOST_CHECK_CLOSE(meanBefore[eBoundPhi], meanAfter[eBoundPhi], 1.e-8);
+    BOOST_CHECK_CLOSE(meanBefore[eBoundTheta], meanAfter[eBoundTheta], 1.e-8);
+    BOOST_CHECK_CLOSE(meanBefore[eBoundQOverP], meanAfter[eBoundQOverP], 1.e-8);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
