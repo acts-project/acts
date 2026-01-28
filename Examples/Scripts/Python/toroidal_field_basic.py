@@ -19,17 +19,18 @@ def test_toroidal_field_basic():
     print("=" * 60)
 
     try:
-        import acts.acts_toroidal_field as toroidal_field
+        import acts
 
-        print("✅ Successfully imported acts.acts_toroidal_field")
-    except ImportError as e:
-        print(f"❌ Failed to import acts.acts_toroidal_field: {e}")
+        _ = acts.ToroidalField
+        print("✅ Successfully imported acts.ToroidalField")
+    except (ImportError, AttributeError) as e:
+        print(f"❌ Failed to import acts.ToroidalField: {e}")
         return False
 
     # Test Config creation with defaults
     print("\n📋 Testing Config with defaults:")
     try:
-        config = toroidal_field.Config()
+        config = acts.ToroidalField.Config()
         print(f"   Barrel R_in: {config.barrel.R_in / 1000:.1f} m")
         print(f"   Barrel R_out: {config.barrel.R_out / 1000:.1f} m")
         print(f"   Barrel c: {config.barrel.c / 1000:.1f} m")
@@ -45,7 +46,7 @@ def test_toroidal_field_basic():
     # Test Config customization
     print("\n🔧 Testing Config customization:")
     try:
-        custom_config = toroidal_field.Config()
+        custom_config = acts.ToroidalField.Config()
         custom_config.barrel.R_in = 5.2 * 1000  # Convert to mm
         custom_config.barrel.R_out = 9.8 * 1000  # Convert to mm
         custom_config.barrel.I = 18000.0
@@ -63,7 +64,7 @@ def test_toroidal_field_basic():
     # Test ToroidalField creation
     print("\n🧲 Testing ToroidalField creation:")
     try:
-        field = toroidal_field.ToroidalField(config)
+        field = acts.ToroidalField(config)
         print("✅ ToroidalField creation successful")
     except Exception as e:
         print(f"❌ ToroidalField creation failed: {e}")
@@ -80,11 +81,10 @@ def test_toroidal_field_calculation():
 
     try:
         import acts
-        import acts.acts_toroidal_field as toroidal_field
 
         # Create field
-        config = toroidal_field.Config()
-        field = toroidal_field.ToroidalField(config)
+        config = acts.ToroidalField.Config()
+        field = acts.ToroidalField(config)
 
         # Create magnetic field context and cache
         ctx = acts.MagneticFieldContext()
@@ -132,11 +132,11 @@ def test_configuration_classes():
     print("=" * 60)
 
     try:
-        import acts.acts_toroidal_field as toroidal_field
+        import acts
 
         # Test BarrelConfig
         print("\n🏺 Testing BarrelConfig:")
-        barrel_config = toroidal_field.BarrelConfig()
+        barrel_config = acts.ToroidalField.BarrelConfig()
         print(f"   Default R_in: {barrel_config.R_in / 1000:.1f} m")
         print(f"   Default R_out: {barrel_config.R_out / 1000:.1f} m")
         print(f"   Default current: {barrel_config.I} A")
@@ -144,7 +144,7 @@ def test_configuration_classes():
 
         # Test EctConfig
         print("\n🔚 Testing EctConfig:")
-        ect_config = toroidal_field.EctConfig()
+        ect_config = acts.ToroidalField.EctConfig()
         print(f"   Default R_in: {ect_config.R_in / 1000:.3f} m")
         print(f"   Default R_out: {ect_config.R_out / 1000:.2f} m")
         print(f"   Default current: {ect_config.I} A")
@@ -152,7 +152,7 @@ def test_configuration_classes():
 
         # Test LayoutConfig
         print("\n📐 Testing LayoutConfig:")
-        layout_config = toroidal_field.LayoutConfig()
+        layout_config = acts.ToroidalField.LayoutConfig()
         print(f"   Default nCoils: {layout_config.nCoils}")
         print(f"   Default theta0: {layout_config.theta0:.4f} rad")
         print(f"   Default thetaStep: {layout_config.thetaStep:.4f} rad")

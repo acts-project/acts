@@ -36,12 +36,7 @@ if HAS_GEOMODEL:
     except ImportError:
         pass
 
-try:
-    import acts.acts_toroidal_field
-
-    TOROIDAL_FIELD_AVAILABLE = True
-except ImportError:
-    TOROIDAL_FIELD_AVAILABLE = False
+TOROIDAL_FIELD_AVAILABLE = hasattr(acts, "ToroidalField")
 
 u = acts.UnitConstants
 
@@ -51,8 +46,8 @@ def test_toroidal_field_basic():
     """Test basic ToroidalField functionality."""
 
     # Test default configuration
-    config = acts.acts_toroidal_field.Config()
-    field = acts.acts_toroidal_field.ToroidalField(config)
+    config = acts.ToroidalField.Config()
+    field = acts.ToroidalField(config)
     assert field is not None
 
     # Test field at origin
@@ -75,14 +70,14 @@ def test_toroidal_field_basic():
 def test_toroidal_field_custom():
     """Test ToroidalField with custom parameters."""
 
-    config = acts.acts_toroidal_field.Config()
+    config = acts.ToroidalField.Config()
 
     # Customize barrel configuration
     config.barrel.R_in = 5.0
     config.barrel.R_out = 9.0
     config.barrel.I = 15000.0
 
-    field = acts.acts_toroidal_field.ToroidalField(config)
+    field = acts.ToroidalField(config)
     assert field is not None
 
     # Test field calculation
@@ -103,8 +98,8 @@ def test_toroidal_field_custom():
 def test_toroidal_field_symmetry():
     """Test that the field has expected symmetries."""
 
-    config = acts.acts_toroidal_field.Config()
-    field = acts.acts_toroidal_field.ToroidalField(config)
+    config = acts.ToroidalField.Config()
+    field = acts.ToroidalField(config)
     ctx = acts.MagneticFieldContext()
     cache = field.makeCache(ctx)
 
@@ -129,8 +124,8 @@ def test_toroidal_field_symmetry():
 def test_toroidal_field_regions():
     """Test field behavior in different regions (barrel vs endcap)."""
 
-    config = acts.acts_toroidal_field.Config()
-    field = acts.acts_toroidal_field.ToroidalField(config)
+    config = acts.ToroidalField.Config()
+    field = acts.ToroidalField(config)
     ctx = acts.MagneticFieldContext()
     cache = field.makeCache(ctx)
 
@@ -158,19 +153,19 @@ def test_toroidal_field_configuration():
     """Test configuration classes."""
 
     # Test BarrelConfig
-    barrel_config = acts.acts_toroidal_field.BarrelConfig()
+    barrel_config = acts.ToroidalField.BarrelConfig()
     assert barrel_config.R_in > 0
     assert barrel_config.R_out > barrel_config.R_in
     assert barrel_config.I > 0
 
-    # Test ECTConfig
-    ect_config = acts.acts_toroidal_field.ECTConfig()
+    # Test EctConfig
+    ect_config = acts.ToroidalField.EctConfig()
     assert ect_config.R_in > 0
     assert ect_config.R_out > ect_config.R_in
     assert ect_config.I > 0
 
     # Test LayoutConfig
-    layout_config = acts.acts_toroidal_field.LayoutConfig()
+    layout_config = acts.ToroidalField.LayoutConfig()
     assert layout_config.nCoils > 0
     assert layout_config.nArc > 0
     assert layout_config.nStraight > 0

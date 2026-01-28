@@ -51,7 +51,6 @@ import time
 from pathlib import Path
 
 import acts
-import acts.acts_toroidal_field as toroidal_field
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LogNorm
@@ -59,8 +58,8 @@ from matplotlib.colors import LogNorm
 
 def create_analytical_field():
     """Create the analytical toroidal field"""
-    config = toroidal_field.Config()
-    return toroidal_field.ToroidalField(config)
+    config = acts.ToroidalField.Config()
+    return acts.ToroidalField(config)
 
 
 # Global cache for LUT within session
@@ -269,11 +268,11 @@ def _create_lut_from_field_data(field_grid, params):
     # This is a placeholder - we'd need to extend ACTS API or use a different approach
 
     # Create analytical field (this is temporary)
-    config = toroidal_field.Config()
-    analytical_field = toroidal_field.ToroidalField(config)
+    config = acts.ToroidalField.Config()
+    analytical_field = acts.ToroidalField(config)
 
     # Create LUT normally (this will recompute, but we have the data cached)
-    lut_field = toroidal_field.toroidalFieldMapCyl(
+    lut_field = acts.toroidalFieldMapCyl(
         params["rLim"],
         params["phiLim"],
         params["zLim"],

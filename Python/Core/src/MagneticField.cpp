@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MultiRangeBField.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/MagneticField/ToroidalField.hpp"
 #include "Acts/MagneticField/TextMagneticFieldIo.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -70,6 +71,12 @@ void addMagneticField(py::module_& m) {
 
   m.def("solenoidFieldMap", &solenoidFieldMap, py::arg("rlim"), py::arg("zlim"),
         py::arg("nbins"), py::arg("field"));
+  m.def("toroidalFieldMapCyl", &toroidalFieldMapCyl, py::arg("rLim"),
+        py::arg("phiLim"), py::arg("zLim"), py::arg("nBins"),
+        py::arg("field"));
+  m.def("toroidalFieldMapXYZ", &toroidalFieldMapXYZ, py::arg("xLim"),
+        py::arg("yLim"), py::arg("zLim"), py::arg("nBins"),
+        py::arg("field"));
 
   py::class_<ConstantBField, MagneticFieldProvider,
              std::shared_ptr<ConstantBField>>(m, "ConstantBField")
@@ -114,12 +121,37 @@ void addMagneticField(py::module_& m) {
                         py::arg("radius"), py::arg("length"), py::arg("nCoils"),
                         py::arg("bMagCenter"));
 
-    py::class_<Config>(sol, "Config")
-        .def(py::init<>())
-        .def_readwrite("radius", &Config::radius)
-        .def_readwrite("length", &Config::length)
-        .def_readwrite("nCoils", &Config::nCoils)
-        .def_readwrite("bMagCenter", &Config::bMagCenter);
+    auto solConfig = py::class_<Config>(sol, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(solConfig, radius, length, nCoils, bMagCenter);
+  }
+
+  {
+    auto toroidal = py::class_<ToroidalField, MagneticFieldProvider,
+                               std::shared_ptr<ToroidalField>>(m,
+                                                              "ToroidalField")
+                        .def(py::init<const ToroidalField::Config&>(),
+                             py::arg("config"))
+                        .def("config", &ToroidalField::config,
+                             py::return_value_policy::reference_internal);
+
+    auto barrelConfig =
+        py::class_<ToroidalField::BarrelConfig>(toroidal, "BarrelConfig")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(barrelConfig, R_in, R_out, c, b, I, Nturns);
+
+    auto ectConfig = py::class_<ToroidalField::EctConfig>(toroidal, "EctConfig")
+                         .def(py::init<>());
+    ACTS_PYTHON_STRUCT(ectConfig, R_in, R_out, c, b, I, Nturns, gap);
+
+    auto layoutConfig =
+        py::class_<ToroidalField::LayoutConfig>(toroidal, "LayoutConfig")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(layoutConfig, theta0, thetaStep, nCoils, nArc,
+                       nStraight, closeLoop, eps);
+
+    auto torConfig = py::class_<ToroidalField::Config>(toroidal, "Config")
+                         .def(py::init<>());
+    ACTS_PYTHON_STRUCT(torConfig, barrel, ect, layout, barrelSigns, ectSigns);
   }
 
   m.def(

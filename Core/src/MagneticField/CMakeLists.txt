@@ -3,6 +3,7 @@ target_sources(
     PRIVATE
         BFieldMapUtils.cpp
         SolenoidBField.cpp
+        ToroidalField.cpp
         MagneticFieldError.cpp
         MultiRangeBField.cpp
         TextMagneticFieldIo.cpp

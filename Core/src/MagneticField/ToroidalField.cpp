@@ -12,7 +12,7 @@
 //
 // MPL 2.0: https://mozilla.org/MPL/2.0/
 
-#include "ActsExamples/MagneticField/ToroidalField.hpp"
+#include "Acts/MagneticField/ToroidalField.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 

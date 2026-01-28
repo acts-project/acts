@@ -9,7 +9,6 @@ import os
 from pathlib import Path
 
 import acts
-import acts.acts_toroidal_field as toroidal_field
 from acts import GeometryContext, logging
 
 # Import GeoModel if available
@@ -34,7 +33,7 @@ except ImportError:
 
 # Create configuration for toroidal field
 def create_toroidal_field():
-    config = toroidal_field.Config()
+    config = acts.ToroidalField.Config()
 
     print(f"Creating ToroidalField with:")
     print(f"  Barrel:")
@@ -50,7 +49,7 @@ def create_toroidal_field():
     print(f"  Layout:")
     print(f"    Number of coils: {config.layout.nCoils}")
 
-    return toroidal_field.ToroidalField(config)
+    return acts.ToroidalField(config)
 
 
 def runGeant4(
