@@ -8,26 +8,44 @@
 
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts::detail {
+
+bool PointwiseMaterialInteraction::evaluateMaterialSlab(
+    MaterialUpdateMode requestedMode) {
+  updateMode = requestedMode;
+  if (surface == startSurface) {
+    updateMode &= MaterialUpdateMode::PostUpdate;
+  } else if (surface == targetSurface) {
+    updateMode &= MaterialUpdateMode::PreUpdate;
+  }
+
+  // Retrieve the material properties
+  const ISurfaceMaterial* material = surface->surfaceMaterial();
+  slab = material->materialSlab(pos, propDir, updateMode);
+
+  // Correct the material properties for non-zero incidence
+  slab.scaleThickness(pathCorrection);
+
+  return !slab.isVacuum();
+}
 
 void PointwiseMaterialInteraction::evaluatePointwiseMaterialInteraction(
     bool multipleScattering, bool energyLoss) {
   if (energyLoss) {
     Eloss = computeEnergyLossBethe(slab, mass, qOverP, absQ);
   }
-  // Compute contributions from interactions
   if (performCovarianceTransport) {
-    covarianceContributions(multipleScattering, energyLoss);
+    evaluateCovarianceContributions(multipleScattering, energyLoss);
   }
 }
 
-void PointwiseMaterialInteraction::covarianceContributions(
+void PointwiseMaterialInteraction::evaluateCovarianceContributions(
     bool multipleScattering, bool energyLoss) {
-  // Compute contributions from interactions
   if (multipleScattering) {
-    // TODO use momentum before or after energy loss in backward mode?
     const double theta0 =
         computeMultipleScatteringTheta0(slab, absPdg, mass, qOverP, absQ);
     // sigmaPhi = theta0 / sin(theta)
@@ -36,7 +54,6 @@ void PointwiseMaterialInteraction::covarianceContributions(
     // sigmaTheta = theta0
     varianceTheta = theta0 * theta0;
   }
-  // TODO just ionisation loss or full energy loss?
   if (energyLoss) {
     const double sigmaQoverP =
         computeEnergyLossLandauSigmaQOverP(slab, mass, qOverP, absQ);
@@ -45,10 +62,11 @@ void PointwiseMaterialInteraction::covarianceContributions(
 }
 
 double PointwiseMaterialInteraction::updateVariance(
-    double variance, double change, NoiseUpdateMode updateMode) const {
+    double variance, double change, NoiseUpdateMode updateMode) {
   // Add/Subtract the change
   // Protect the variance against becoming negative
-  return std::max(0., variance + std::copysign(change, updateMode));
+  return std::max(0.,
+                  variance + std::copysign(change, toUnderlying(updateMode)));
 }
 
 }  // namespace Acts::detail
