@@ -13,6 +13,7 @@
 #include "Acts/Propagator/NavigatorError.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
@@ -163,6 +164,15 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
 
       return Result<void>::failure(NavigatorError::NotInsideExpectedVolume);
     }
+
+    if (const auto* policy = state.currentVolume->navigationPolicy();
+        policy != nullptr) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Creating initial navigation policy state for volume.");
+      policy->createState(state.options.geoContext,
+                          {.position = position, .direction = direction},
+                          state.policyStateManager, logger());
+    }
   }
   if (state.currentLayer != nullptr) {
     ACTS_VERBOSE(volInfo(state) << "Start layer resolved "
@@ -236,12 +246,27 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
   return NavigationTarget::None();
 }
 
-bool Navigator::checkTargetValid(const State& state, const Vector3& position,
+bool Navigator::checkTargetValid(State& state, const Vector3& position,
                                  const Vector3& direction) const {
+  ACTS_VERBOSE(volInfo(state) << "Entering Navigator::checkTargetValid.");
   static_cast<void>(position);
   static_cast<void>(direction);
 
-  return state.navigationStage != Stage::initial;
+  if (state.navigationStage == Stage::initial) {
+    return true;
+  }
+
+  if (state.currentVolume != nullptr) {
+    ACTS_VERBOSE(volInfo(state) << "Checking policy validity for volume");
+
+    auto policyState = state.policyStateManager.currentState();
+    bool isValid = state.currentVolume->navigationPolicy()->isValid(
+        state.options.geoContext,
+        {.position = position, .direction = direction}, policyState, logger());
+    return isValid;
+  }
+
+  return false;
 }
 
 void Navigator::handleSurfaceReached(State& state, const Vector3& position,
@@ -274,6 +299,14 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
         return;
       }
 
+      if (state.currentVolume != nullptr &&
+          state.currentVolume->navigationPolicy() != nullptr) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Popping navigation policy state for volume on exit");
+        state.currentVolume->navigationPolicy()->popState(
+            state.policyStateManager, logger());
+      }
+
       state.currentVolume = res.value();
 
       // partial reset
@@ -281,6 +314,16 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
 
       if (state.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Volume updated.");
+
+        if (const auto* policy = state.currentVolume->navigationPolicy();
+            policy != nullptr) {
+          ACTS_VERBOSE(
+              volInfo(state)
+              << "Creating navigation policy state for updated volume");
+          policy->createState(state.options.geoContext,
+                              {.position = position, .direction = direction},
+                              state.policyStateManager, logger());
+        }
 
         // this is set only for the check target validity since gen3 does not
         // care
@@ -421,7 +464,20 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
 NavigationTarget Navigator::getNextTargetGen3(State& state,
                                               const Vector3& position,
                                               const Vector3& direction) const {
-  if (!state.navCandidateIndex.has_value()) {
+  if (state.currentVolume == nullptr) {
+    ACTS_VERBOSE(volInfo(state) << "No volume to get next target.");
+    return NavigationTarget::None();
+  }
+
+  auto policyState = state.policyStateManager.currentState();
+  bool isValid = state.currentVolume->navigationPolicy()->isValid(
+      state.options.geoContext, {.position = position, .direction = direction},
+      policyState, logger());
+
+  ACTS_VERBOSE(volInfo(state) << "Current policy says navigation sequence is "
+                              << (isValid ? "valid" : "invalid"));
+
+  if (!isValid || !state.navCandidateIndex.has_value()) {
     // first time, resolve the candidates
     resolveCandidates(state, position, direction);
     state.navCandidateIndex = 0;
@@ -473,8 +529,19 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   NavigationArguments args;
   args.position = position;
   args.direction = direction;
+
+  const INavigationPolicy* policy = state.currentVolume->navigationPolicy();
+  if (policy == nullptr) {
+    ACTS_ERROR(volInfo(state) << "No navigation policy found for volume "
+                              << state.currentVolume->geometryId()
+                              << ". Cannot resolve navigation candidates.");
+    // @TODO: Should this be an exception?
+    return;
+  }
+
+  auto policyState = state.policyStateManager.currentState();
   state.currentVolume->initializeNavigationCandidates(
-      state.options.geoContext, args, appendOnly, logger());
+      state.options.geoContext, args, policyState, appendOnly, logger());
 
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                               << " navigation candidates.");
