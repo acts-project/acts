@@ -20,7 +20,6 @@ acts_add_library(
     src/Utilities/EventDataTransforms.cpp
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
-    src/Utilities/Helpers.cpp
     src/Utilities/ParametricParticleGenerator.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp

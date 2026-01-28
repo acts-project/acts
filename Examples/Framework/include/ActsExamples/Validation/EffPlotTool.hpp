@@ -11,15 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <map>
 #include <memory>
 #include <string>
-
-class TEfficiency;
+#include <vector>
 
 namespace ActsExamples {
 
@@ -30,18 +29,20 @@ class EffPlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning::Uniform("#eta", 40, -3.0, 3.0)},
-        {"Phi", PlotHelpers::Binning::Uniform("#phi", 100, -std::numbers::pi,
-                                              std::numbers::pi)},
-        {"Pt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 100)},
-        {"LogPt",
-         PlotHelpers::Binning::Logarithmic("pT [GeV/c]", 11, 0.1, 100)},
-        {"LowPt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 2)},
-        {"D0", PlotHelpers::Binning::Uniform("d_0 [mm]", 200, -200, 200)},
-        {"Z0", PlotHelpers::Binning::Uniform("z_0 [mm]", 50, -200, 200)},
-        {"DeltaR", PlotHelpers::Binning::Uniform("#Delta R", 100, 0, 0.3)},
-        {"prodR", PlotHelpers::Binning::Uniform("prod_R [mm]", 100, 0, 200)}};
+    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+        {"Eta", Acts::Experimental::BoostRegularAxis(40, -3.0, 3.0, "#eta")},
+        {"Phi", Acts::Experimental::BoostRegularAxis(100, -std::numbers::pi,
+                                                     std::numbers::pi, "#phi")},
+        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"LogPt", Acts::Experimental::BoostLogAxis(11, 0.1, 100, "pT [GeV/c]")},
+        {"LowPt", Acts::Experimental::BoostRegularAxis(40, 0, 2, "pT [GeV/c]")},
+        {"D0",
+         Acts::Experimental::BoostRegularAxis(200, -200, 200, "d_0 [mm]")},
+        {"Z0", Acts::Experimental::BoostRegularAxis(50, -200, 200, "z_0 [mm]")},
+        {"DeltaR",
+         Acts::Experimental::BoostRegularAxis(100, 0, 0.3, "#Delta R")},
+        {"prodR",
+         Acts::Experimental::BoostRegularAxis(100, 0, 200, "prod_R [mm]")}};
 
     double minTruthPt = 1.0 * Acts::UnitConstants::GeV;
 
@@ -58,78 +59,83 @@ class EffPlotTool {
         Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3::Zero());
   };
 
-  /// @brief Nested Cache struct
-  struct Cache {
-    /// Tracking efficiency vs eta
-    TEfficiency* trackEff_vs_eta{nullptr};
-    /// Tracking efficiency vs phi
-    TEfficiency* trackEff_vs_phi{nullptr};
-    /// Tracking efficiency vs pT
-    TEfficiency* trackEff_vs_pT{nullptr};
-    /// Tracking efficiency vs log pT
-    TEfficiency* trackEff_vs_LogPt{nullptr};
-    /// Tracking efficiency vs low pT
-    TEfficiency* trackEff_vs_LowPt{nullptr};
-    /// Tracking efficiency vs d0
-    TEfficiency* trackEff_vs_d0{nullptr};
-    /// Tracking efficiency vs z0
-    TEfficiency* trackEff_vs_z0{nullptr};
-    /// Tracking efficiency vs distance to the closest truth particle
-    TEfficiency* trackEff_vs_DeltaR{nullptr};
-    /// Tracking efficiency vs production radius
-    TEfficiency* trackEff_vs_prodR{nullptr};
-
-    /// Tracking efficiency vs eta and phi
-    TEfficiency* trackEff_vs_eta_phi{nullptr};
-    /// Tracking efficiency vs eta and pT
-    TEfficiency* trackEff_vs_eta_pt{nullptr};
-
-    /// Tracking efficiency vs eta in different pT ranges
-    std::vector<TEfficiency*> trackEff_vs_eta_inPtRanges;
-    /// Tracking efficiency vs pT in different abs(eta) ranges
-    std::vector<TEfficiency*> trackEff_vs_pT_inAbsEtaRanges;
-  };
-
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param lvl Message level declaration
   EffPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the efficiency plots
-  ///
-  /// @param cache the cache for efficiency plots
-  void book(Cache& cache) const;
-
   /// @brief fill efficiency plots
   ///
   /// @param gctx geometry context
-  /// @param cache cache object for efficiency plots
   /// @param truthParticle the truth Particle
   /// @param deltaR the distance to the closest truth particle
   /// @param status the reconstruction status
-  void fill(const Acts::GeometryContext& gctx, Cache& cache,
-            const SimParticleState& truthParticle, double deltaR,
-            bool status) const;
+  void fill(const Acts::GeometryContext& gctx,
+            const SimParticleState& truthParticle, double deltaR, bool status);
 
-  /// @brief write the efficiency plots to file
-  ///
-  /// @param cache cache object for efficiency plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the efficiency plots
-  ///
-  /// @param cache cache object for efficiency plots
-  void clear(Cache& cache) const;
+  /// @brief Accessors for histograms (const reference)
+  const Acts::Experimental::Efficiency1& trackEffVsEta() const {
+    return m_trackEffVsEta;
+  }
+  const Acts::Experimental::Efficiency1& trackEffVsPhi() const {
+    return m_trackEffVsPhi;
+  }
+  const Acts::Experimental::Efficiency1& trackEffVsPt() const {
+    return m_trackEffVsPt;
+  }
+  const Acts::Experimental::Efficiency1& trackEffVsLogPt() const {
+    return m_trackEffVsLogPt;
+  }
+  const Acts::Experimental::Efficiency1& trackEffVsLowPt() const {
+    return m_trackEffVsLowPt;
+  }
+  const Acts::Experimental::Efficiency1& trackEffVsD0() const {
+    return m_trackEffVsD0;
+  }
+  const Acts::Experimental::Efficiency1& trackEffVsZ0() const {
+    return m_trackEffVsZ0;
+  }
+  const Acts::Experimental::Efficiency1& trackEffVsDeltaR() const {
+    return m_trackEffVsDeltaR;
+  }
+  const Acts::Experimental::Efficiency1& trackEffVsProdR() const {
+    return m_trackEffVsProdR;
+  }
+  const Acts::Experimental::Efficiency2& trackEffVsEtaPhi() const {
+    return m_trackEffVsEtaPhi;
+  }
+  const Acts::Experimental::Efficiency2& trackEffVsEtaPt() const {
+    return m_trackEffVsEtaPt;
+  }
+  const std::vector<Acts::Experimental::Efficiency1>& trackEffVsEtaInPtRanges()
+      const {
+    return m_trackEffVsEtaInPtRanges;
+  }
+  const std::vector<Acts::Experimental::Efficiency1>&
+  trackEffVsPtInAbsEtaRanges() const {
+    return m_trackEffVsPtInAbsEtaRanges;
+  }
 
  private:
-  /// The Config class
+  const Acts::Logger& logger() const { return *m_logger; }
+
   Config m_cfg;
-  /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  Acts::Experimental::Efficiency1 m_trackEffVsEta;
+  Acts::Experimental::Efficiency1 m_trackEffVsPhi;
+  Acts::Experimental::Efficiency1 m_trackEffVsPt;
+  Acts::Experimental::Efficiency1 m_trackEffVsLogPt;
+  Acts::Experimental::Efficiency1 m_trackEffVsLowPt;
+  Acts::Experimental::Efficiency1 m_trackEffVsD0;
+  Acts::Experimental::Efficiency1 m_trackEffVsZ0;
+  Acts::Experimental::Efficiency1 m_trackEffVsDeltaR;
+  Acts::Experimental::Efficiency1 m_trackEffVsProdR;
+  Acts::Experimental::Efficiency2 m_trackEffVsEtaPhi;
+  Acts::Experimental::Efficiency2 m_trackEffVsEtaPt;
+  std::vector<Acts::Experimental::Efficiency1> m_trackEffVsEtaInPtRanges;
+  std::vector<Acts::Experimental::Efficiency1> m_trackEffVsPtInAbsEtaRanges;
 };
 
 }  // namespace ActsExamples

@@ -9,17 +9,14 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
-
-class TEfficiency;
-class TProfile;
 
 namespace ActsExamples {
 
@@ -34,27 +31,11 @@ class DuplicationPlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning::Uniform("#eta", 40, -4, 4)},
-        {"Phi", PlotHelpers::Binning::Uniform("#phi", 100, -3.15, 3.15)},
-        {"Pt", PlotHelpers::Binning::Uniform("pT [GeV/c]", 40, 0, 100)},
-        {"Num", PlotHelpers::Binning::Uniform("N", 30, -0.5, 29.5)}};
-  };
-
-  /// @brief Nested Cache struct
-  struct Cache {
-    /// Number of duplicated tracks vs pT
-    TProfile* nDuplicated_vs_pT;
-    /// Number of duplicated tracks vs eta
-    TProfile* nDuplicated_vs_eta;
-    /// Number of duplicated tracks vs phi
-    TProfile* nDuplicated_vs_phi;
-    /// Tracking duplication ratio vs pT
-    TEfficiency* duplicationRatio_vs_pT;
-    /// Tracking duplication ratio vs eta
-    TEfficiency* duplicationRatio_vs_eta;
-    /// Tracking duplication ratio vs phi
-    TEfficiency* duplicationRatio_vs_phi;
+    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
   /// Constructor
@@ -63,45 +44,50 @@ class DuplicationPlotTool {
   /// @param lvl Message level declaration
   DuplicationPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the duplication plots
-  ///
-  /// @param cache the cache for duplication plots
-  void book(Cache& cache) const;
-
   /// @brief fill duplication ratio w.r.t. fitted track parameters
   ///
-  /// @param cache cache object for duplication plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the (truth-matched) reconstructed track is duplicated or not
-  void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
-            bool status) const;
+  void fill(const Acts::BoundTrackParameters& fittedParameters, bool status);
 
   /// @brief fill number of duplicated tracks for a truth particle seed
   ///
-  /// @param cache cache object for duplication plots
   /// @param truthParticle the truth Particle
-  /// @param nMatchedTracks the number of matched tracks
-  void fill(Cache& cache, const SimParticleState& truthParticle,
-            std::size_t nMatchedTracks) const;
+  /// @param nDuplicatedTracks the number of matched tracks
+  void fill(const SimParticleState& truthParticle, std::size_t nMatchedTracks);
 
-  /// @brief write the duplication plots to file
-  ///
-  /// @param cache cache object for duplication plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the duplication plots
-  ///
-  /// @param cache cache object for duplication plots
-  void clear(Cache& cache) const;
+  /// @brief Accessors for histograms (const reference)
+  const Acts::Experimental::ProfileHistogram1& nDuplicatedVsPt() const {
+    return m_nDuplicatedVsPt;
+  }
+  const Acts::Experimental::ProfileHistogram1& nDuplicatedVsEta() const {
+    return m_nDuplicatedVsEta;
+  }
+  const Acts::Experimental::ProfileHistogram1& nDuplicatedVsPhi() const {
+    return m_nDuplicatedVsPhi;
+  }
+  const Acts::Experimental::Efficiency1& duplicationRatioVsPt() const {
+    return m_duplicationRatioVsPt;
+  }
+  const Acts::Experimental::Efficiency1& duplicationRatioVsEta() const {
+    return m_duplicationRatioVsEta;
+  }
+  const Acts::Experimental::Efficiency1& duplicationRatioVsPhi() const {
+    return m_duplicationRatioVsPhi;
+  }
 
  private:
-  /// The Config class
+  const Acts::Logger& logger() const { return *m_logger; }
+
   Config m_cfg;
-  /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  Acts::Experimental::ProfileHistogram1 m_nDuplicatedVsPt;
+  Acts::Experimental::ProfileHistogram1 m_nDuplicatedVsEta;
+  Acts::Experimental::ProfileHistogram1 m_nDuplicatedVsPhi;
+  Acts::Experimental::Efficiency1 m_duplicationRatioVsPt;
+  Acts::Experimental::Efficiency1 m_duplicationRatioVsEta;
+  Acts::Experimental::Efficiency1 m_duplicationRatioVsPhi;
 };
 
 }  // namespace ActsExamples

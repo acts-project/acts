@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cstddef>
 #include <ostream>
@@ -22,7 +23,13 @@
 #include <utility>
 #include <vector>
 
+#include <TEfficiency.h>
 #include <TFile.h>
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
+#include <TH1.h>
+#include <TH2.h>
+#include <TProfile.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
@@ -58,36 +65,129 @@ ActsExamples::RootTrackFitterPerformanceWriter::
   if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }
-
-  // initialize the residual and efficiency plots tool
-  m_resPlotTool.book(m_resPlotCache);
-  m_effPlotTool.book(m_effPlotCache);
-  m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
 }
 
 ActsExamples::RootTrackFitterPerformanceWriter::
     ~RootTrackFitterPerformanceWriter() {
-  m_resPlotTool.clear(m_resPlotCache);
-  m_effPlotTool.clear(m_effPlotCache);
-  m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
-
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  delete m_outputFile;
 }
 
 ActsExamples::ProcessCode
 ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
-  // fill residual and pull details into additional hists
-  m_resPlotTool.refinement(m_resPlotCache);
+  if (m_outputFile == nullptr) {
+    return ProcessCode::SUCCESS;
+  }
+
+  m_outputFile->cd();
+
+  // Helper lambda to write 2D histogram and extract mean/width histograms
+  auto writeWithRefinement = [](TH2F* hist2d, const std::string& meanPrefix,
+                                const std::string& widthPrefix) {
+    hist2d->Write();
+
+    // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
+    std::string baseName = hist2d->GetName();
+    std::string suffix = baseName.substr(baseName.find('_'));
+
+    // Create mean and width histograms with same X binning as the 2D histogram
+    int nBinsX = hist2d->GetNbinsX();
+    TH1F* meanHist =
+        new TH1F((meanPrefix + suffix).c_str(),
+                 (std::string(hist2d->GetTitle()) + " mean").c_str(), nBinsX,
+                 hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
+    TH1F* widthHist =
+        new TH1F((widthPrefix + suffix).c_str(),
+                 (std::string(hist2d->GetTitle()) + " width").c_str(), nBinsX,
+                 hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
+
+    // Copy X axis bin edges for variable binning
+    if (hist2d->GetXaxis()->GetXbins()->GetSize() > 0) {
+      meanHist->SetBins(nBinsX, hist2d->GetXaxis()->GetXbins()->GetArray());
+      widthHist->SetBins(nBinsX, hist2d->GetXaxis()->GetXbins()->GetArray());
+    }
+
+    // Project each X bin and extract mean/width via Gaussian fit
+    for (int j = 1; j <= nBinsX; j++) {
+      TH1D* proj = hist2d->ProjectionY(
+          Form("%s_projy_bin%d", baseName.c_str(), j), j, j);
+      if (proj->GetEntries() > 0) {
+        TFitResultPtr r = proj->Fit("gaus", "QS0");
+        if ((r.Get() != nullptr) && ((r->Status() % 1000) == 0)) {
+          // fill the mean and width into 'j'th bin of the meanHist and
+          // widthHist, respectively
+          meanHist->SetBinContent(j, r->Parameter(1));
+          meanHist->SetBinError(j, r->ParError(1));
+          widthHist->SetBinContent(j, r->Parameter(2));
+          widthHist->SetBinError(j, r->ParError(2));
+        }
+      }
+      delete proj;
+    }
+
+    meanHist->Write();
+    widthHist->Write();
+    delete meanHist;
+    delete widthHist;
+  };
+
+  // Write residual histograms
+  for (const auto& [name, hist] : m_resPlotTool.res()) {
+    ActsPlugins::toRoot(hist)->Write();
+  }
+  for (const auto& [name, hist] : m_resPlotTool.resVsEta()) {
+    writeWithRefinement(ActsPlugins::toRoot(hist), "resmean", "reswidth");
+  }
+  for (const auto& [name, hist] : m_resPlotTool.resVsPt()) {
+    writeWithRefinement(ActsPlugins::toRoot(hist), "resmean", "reswidth");
+  }
+
+  // Write pull histograms
+  for (const auto& [name, hist] : m_resPlotTool.pull()) {
+    ActsPlugins::toRoot(hist)->Write();
+  }
+  for (const auto& [name, hist] : m_resPlotTool.pullVsEta()) {
+    writeWithRefinement(ActsPlugins::toRoot(hist), "pullmean", "pullwidth");
+  }
+  for (const auto& [name, hist] : m_resPlotTool.pullVsPt()) {
+    writeWithRefinement(ActsPlugins::toRoot(hist), "pullmean", "pullwidth");
+  }
+
+  // Write efficiency histograms
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsEta())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsPhi())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsPt())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsLogPt())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsLowPt())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsD0())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsZ0())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsDeltaR())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsProdR())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsEtaPhi())->Write();
+  ActsPlugins::toRoot(m_effPlotTool.trackEffVsEtaPt())->Write();
+
+  for (const auto& eff : m_effPlotTool.trackEffVsEtaInPtRanges()) {
+    ActsPlugins::toRoot(eff)->Write();
+  }
+  for (const auto& eff : m_effPlotTool.trackEffVsPtInAbsEtaRanges()) {
+    ActsPlugins::toRoot(eff)->Write();
+  }
+
+  // Write track summary histograms
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nStatesVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nMeasurementsVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nHolesVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nOutliersVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nSharedHitsVsEta())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nStatesVsPt())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nMeasurementsVsPt())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nHolesVsPt())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nOutliersVsPt())->Write();
+  ActsPlugins::toRoot(m_trackSummaryPlotTool.nSharedHitsVsPt())->Write();
+
+  ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
 
   if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_resPlotTool.write(m_resPlotCache);
-    m_effPlotTool.write(m_effPlotCache);
-    m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
-
-    ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
+    m_outputFile->Close();
   }
   return ProcessCode::SUCCESS;
 }
@@ -145,13 +245,11 @@ ActsExamples::RootTrackFitterPerformanceWriter::writeT(
     // Record this majority particle ID of this trajectory
     reconParticleIds.push_back(ip->particleId());
     // Fill the residual plots
-    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, ip->initialState(),
-                       fittedParameters);
+    m_resPlotTool.fill(ctx.geoContext, ip->initialState(), fittedParameters);
     // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                track.nTrackStates(), track.nMeasurements(),
-                                track.nOutliers(), track.nHoles(),
-                                track.nSharedHits());
+    m_trackSummaryPlotTool.fill(fittedParameters, track.nTrackStates(),
+                                track.nMeasurements(), track.nOutliers(),
+                                track.nHoles(), track.nSharedHits());
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
@@ -179,8 +277,8 @@ ActsExamples::RootTrackFitterPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
-    m_effPlotTool.fill(ctx.geoContext, m_effPlotCache, particle.initialState(),
-                       minDeltaR, isReconstructed);
+    m_effPlotTool.fill(ctx.geoContext, particle.initialState(), minDeltaR,
+                       isReconstructed);
   }
 
   return ProcessCode::SUCCESS;
