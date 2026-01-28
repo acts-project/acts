@@ -561,7 +561,7 @@ class MeasurementGenerator {
     /// Number of overall tubelayers
     constexpr std::size_t nTubeLayers = nLayersPerMl * 2;
     /// Position in z of the first tube layer
-    constexpr double chamberDistance = 8._m;
+    constexpr double chamberDistance = 5._m;
     /// Radius of each straw
     constexpr double tubeRadius = 15._mm;
     /// Distance between the first <nLayersPerMl> layers and the second pack

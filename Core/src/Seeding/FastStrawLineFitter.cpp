@@ -103,9 +103,7 @@ double FastStrawLineFitter::calcTimeGrad(const TrigonomHelper& angles,
 }
 
 void FastStrawLineFitter::completeResult(const FitAuxiliaries& fitPars,
-                                         const double thetaTwoPrime,
                                          FitResult& result) const {
-  result.dTheta = std::sqrt(1. / Acts::abs(thetaTwoPrime));
   const double tanTheta = std::tan(result.theta);
   const double secTheta = 1. / std::cos(result.theta);
   result.y0 =
@@ -159,7 +157,8 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
                  << printThetaStep(result.theta, thetaPrime, thetaTwoPrime));
 
     if (std::abs(update) < m_cfg.precCutOff) {
-      completeResult(fitPars, thetaTwoPrime, result);
+      result.dTheta = std::sqrt(1. / Acts::abs(thetaTwoPrime));
+      completeResult(fitPars, result);
       return result;
     }
     result.theta -= update;
@@ -185,6 +184,7 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
     return UpdateStatus::Exceeded;
   }
 
+  UpdateStatus retCode{UpdateStatus::GoodStep};
   ActsSquareMatrix<2> cov{ActsSquareMatrix<2>::Zero()};
   Vector2 grad{Vector2::Zero()};
 
@@ -193,10 +193,9 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   calcAngularDerivatives(angles, fitPars, grad[0], cov(0, 0));
   grad[1] = calcTimeGrad(angles, fitPars);
   if (grad.norm() < m_cfg.precCutOff) {
-    completeResult(fitPars, cov(0, 0), fitResult);
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
                         << fitResult);
-    return UpdateStatus::Converged;
+    retCode = UpdateStatus::Converged;
   }
 
   cov(1, 0) = cov(0, 1) =
@@ -222,6 +221,10 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
     return UpdateStatus::Exceeded;
   }
   const Vector2 update = invCov * grad;
+  Vector2 normUpdate{Vector2::Zero()};
+  for (unsigned int i = 0; i < 2; ++i) {
+    normUpdate[i] = update[i] / std::sqrt(invCov(i, i));
+  }
 
   ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
                         << fitResult << "\n"
@@ -233,17 +236,22 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
                         << std::format(" update: ({:.3f}, {:.3f}).",
                                        inDeg(update[0]), inNanoS(update[1])));
 
-  if (update.norm() < m_cfg.precCutOff) {
-    completeResult(fitPars, cov(0, 0), fitResult);
+  if (update.norm() < m_cfg.precCutOff ||
+      normUpdate.norm() < m_cfg.normPrecCutOff) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
                         << fitResult);
-    return UpdateStatus::Converged;
+    retCode = UpdateStatus::Converged;
   }
+
+  if (retCode == UpdateStatus::Converged) {
+    fitResult.dTheta = std::sqrt(invCov(0, 0));
+    fitResult.dT0 = std::sqrt(invCov(1, 1));
+    completeResult(fitPars, fitResult);
+    return retCode;
+  }
+
   fitResult.t0 -= update[1];
   fitResult.theta -= update[0];
-  fitResult.dT0 = std::sqrt(1. / cov(1, 1));
-  completeResult(fitPars, cov(0, 0), fitResult);
-
-  return UpdateStatus::GoodStep;
+  return retCode;
 }
 }  // namespace Acts::Experimental::detail

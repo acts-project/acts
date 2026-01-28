@@ -26,7 +26,7 @@
 using TimePoint_t = std::chrono::system_clock::time_point;
 using Fitter_t = CompositeSpacePointLineFitter;
 
-constexpr auto logLvl = Acts::Logging::Level::VERBOSE;
+constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 1;
 constexpr long int nThreads = 1;
 std::mutex writeMutex{};
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.createStraws = true;
     genCfg.twinStraw = false;
     genCfg.createStrips = false;
-    // launchTest("StrawOnlyTest", genCfg, 1602);
+    launchTest("StrawOnlyTest", genCfg, 1602);
     launchTest("StrawOnlyTestT0", genCfg, 1602, true);
   }
   // Full fit, straws + twin measurement test (with & without t0)
@@ -322,8 +322,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.twinStraw = true;
     genCfg.createStrips = false;
 
-    // launchTest("StrawAndTwinTest", genCfg, 1503);
-    // launchTest("StrawAndTwinTestT0", genCfg, 1503, true);
+    launchTest("StrawAndTwinTest", genCfg, 1503);
+    launchTest("StrawAndTwinTestT0", genCfg, 1503, true);
   }
   // Full fit, straws + single strip measurements (with & without t0)
   {
@@ -335,8 +335,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     genCfg.discretizeStrips = true;
     genCfg.stripPitchLoc1 = 2._cm;
     genCfg.stripPitchLoc0 = 3.5_cm;
-    // launchTest("StrawAndStripTest", genCfg, 1701);
-    // launchTest("StrawAndStripTestT0", genCfg, 1701, true);
+    launchTest("StrawAndStripTest", genCfg, 1701);
+    launchTest("StrawAndStripTestT0", genCfg, 1701, true);
   }
   // Full fit, straws + 2D strip measurements (with & without t0)
   {
@@ -349,8 +349,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     genCfg.stripPitchLoc1 = 2._cm;
     genCfg.stripPitchLoc0 = 3.5_cm;
-    // launchTest("StrawAndStrip2DTest", genCfg, 1404);
-    // launchTest("StrawAndStrip2DTestT0", genCfg, 1404, true);
+    launchTest("StrawAndStrip2DTest", genCfg, 1404);
+    launchTest("StrawAndStrip2DTestT0", genCfg, 1404, true);
   }
   // Single trip only
   {
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     genCfg.stripPitchLoc1 = 500._um;
     genCfg.stripPitchLoc0 = 3._cm;
-    // launchTest("StripOnlyTest", genCfg, 2070);
+    launchTest("StripOnlyTest", genCfg, 2070);
   }
   // 2D Strip only
   {
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     genCfg.stripPitchLoc1 = 500._um;
     genCfg.stripPitchLoc0 = 3._cm;
-    // launchTest("Strip2DOnlyTest", genCfg, 2225);
+    launchTest("Strip2DOnlyTest", genCfg, 2225);
   }
   // Strip stereo test
   {

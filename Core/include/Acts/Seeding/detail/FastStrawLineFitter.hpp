@@ -69,6 +69,8 @@ class FastStrawLineFitter {
     std::size_t maxIter{10};
     /// @brief Cutoff to define the fit to be converged if the parameter change is below threshold
     double precCutOff{1.e-9};
+    /// @brief If the parameter change normalized to their uncertainties is below the cutOff the fit is converged
+    double normPrecCutOff{1.e-2};
   };
   /// @brief Constructor of the fast straw line fitter
   /// @param cfg: Reference to the fitter's configuration object
@@ -296,13 +298,11 @@ class FastStrawLineFitter {
   /// @param pars: Fit constants of the current fit configuration
   static double calcTimeGrad(const TrigonomHelper& angles,
                              const FitAuxiliariesWithT0& pars);
-  /// @brief Fill the y0 and the uncertainties on theta and y0 in the result
+  /// @brief Fill the y0 and its uncertainty in the result
   /// @param fitPars: Fit constants from the straw measurements
-  /// @param thetaTwoPrime: Second derivative of the chi2 w.r.t theta
   /// @param result: Mutable reference to the FitResult object. The updated parameter are written
   ///                to this object
-  void completeResult(const FitAuxiliaries& fitPars, const double thetaTwoPrime,
-                      FitResult& result) const;
+  void completeResult(const FitAuxiliaries& fitPars, FitResult& result) const;
   /// @brief Enumeration to describe the outcome of the fit iteration
   enum class UpdateStatus : std::uint8_t {
     Converged,  ///< The fit converged
