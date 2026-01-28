@@ -58,11 +58,13 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
     # Augment the file if needed
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in")
         file(
-            READ "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
+            READ
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
             _extra_content
         )
         file(
-            APPEND "${_python_dir}/acts/examples/${_name_lower}.py"
+            APPEND
+            "${_python_dir}/acts/examples/${_name_lower}.py"
             "\n${_extra_content}"
         )
     endif()
@@ -101,8 +103,10 @@ target_sources(
 )
 
 install(
-    TARGETS ActsExamplesPythonBindings
-    DESTINATION ${_examples_python_install_dir}
+    TARGETS
+        ActsExamplesPythonBindings
+        DESTINATION
+        ${_examples_python_install_dir}
 )
 
 set_target_properties(
@@ -166,8 +170,10 @@ add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_PLUGIN_FASTJET FA
 # Special case for HepMC3 as it a hard dependency
 pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
 install(
-    TARGETS ActsExamplesPythonBindingsHepMC3
-    DESTINATION ${_examples_python_install_dir}
+    TARGETS
+        ActsExamplesPythonBindingsHepMC3
+        DESTINATION
+        ${_examples_python_install_dir}
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3
