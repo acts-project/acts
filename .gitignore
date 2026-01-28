@@ -40,4 +40,3 @@ codegen/src/codegen.egg-info/
 !.clang-tidy
 !.oclint
 
-itk/

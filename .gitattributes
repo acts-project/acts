@@ -1,3 +1,1 @@
 *.ipp gitlab-language=c++
-itk/acts-itk/itk-hgtd/*.cbor filter=lfs diff=lfs merge=lfs -text
-itk/acts-itk/itk-hgtd/*.gdml filter=lfs diff=lfs merge=lfs -text

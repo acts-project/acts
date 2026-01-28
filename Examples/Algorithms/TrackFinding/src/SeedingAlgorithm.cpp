@@ -204,6 +204,7 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   bool applySeedFiltering = false;
   float z_position = 0.0f;
 
+
   if (!m_cfg.fittedHoughVertices.empty()) {
     auto houghVertices = m_inputVertex(ctx);
 
@@ -299,48 +300,13 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                      middle, top, rMiddleSPRange);
   }
 
-  ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
-                        << spacePointPtrs.size() << " space points");
-
-  static thread_local std::vector<seed_type> filtered_seeds;
-  filtered_seeds.clear();
-
-  for (auto& seed : seeds) {
-    auto [a, b, c] = seed.sp();
-    Acts::SquareMatrix3 mat;
-    mat.row(0) = Acts::Vector3(a->x(), a->y(), a->z());
-    mat.row(1) = Acts::Vector3(b->x(), b->y(), b->z());
-    mat.row(2) = Acts::Vector3(c->x(), c->y(), c->z());
-
-    Acts::Vector3 mean = mat.colwise().mean();
-    Acts::SquareMatrix3 cov = (mat.rowwise() - mean.transpose()).transpose() *
-                              (mat.rowwise() - mean.transpose()) / 3.;
-
-    // "cov" is self-adjoint matrix
-    Eigen::SelfAdjointEigenSolver<Acts::SquareMatrix3> saes(cov);
-    // eigenvalues are sorted in increasing order
-    Acts::Vector3 eivec = saes.eigenvectors().col(2);
-
-    // mean, eivec = start, direction
-    Acts::Vector3 norm{-1. * eivec[1], 1. * eivec[0], 0};
-    float norm_size = norm.norm();
-    float zDist = eivec.cross(norm).dot(mean) / (norm_size * norm_size);
-
-    if (std::abs(zDist - 20.2309) > 30.0)
-      continue;
-    else {
-      filtered_seeds.push_back(seed);
-    }
-  }
-
-  ACTS_INFO("We have " << filtered_seeds.size() << " filtered track seeds");
-  ACTS_INFO("Filtration took " << (t2 - t1).count() / 1e6 << " ms");
+  
 
   // we have seeds of proxies
   // convert them to seed of external space points
   SimSeedContainer SeedContainerForStorage;
-  SeedContainerForStorage.reserve(filtered_seeds.size());
-  for (const auto& seed : filtered_seeds) {
+  SeedContainerForStorage.reserve(seeds.size());
+  for (const auto& seed : seeds) {
     const auto& sps = seed.sp();
     SeedContainerForStorage.emplace_back(*sps[0]->externalSpacePoint(),
                                          *sps[1]->externalSpacePoint(),
