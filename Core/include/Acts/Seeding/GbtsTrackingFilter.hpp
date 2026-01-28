@@ -47,7 +47,7 @@ struct GbtsEdgeState {
 
 class GbtsTrackingFilter {
  public:
-  static constexpr int MAX_EDGE_STATE = 2500;
+  static constexpr std::int32_t MAX_EDGE_STATE = 2500;
   GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
                      std::vector<GbtsEdge>& sb,
                      const SeedFinderGbtsConfig& config);
@@ -59,7 +59,7 @@ class GbtsTrackingFilter {
 
   bool update(GbtsEdge& pS, GbtsEdgeState& ts);
 
-  int getLayerType(int l);
+  std::int32_t getLayerType(std::int32_t l);
 
   const std::vector<TrigInDetSiLayer>& m_geo;
 
@@ -69,7 +69,7 @@ class GbtsTrackingFilter {
 
   std::array<GbtsEdgeState, MAX_EDGE_STATE> m_stateStore;
 
-  int m_globalStateCounter{0};
+  std::int32_t m_globalStateCounter{0};
 
   const SeedFinderGbtsConfig& m_config;
 };

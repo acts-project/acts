@@ -30,6 +30,8 @@ namespace ActsExamples {
 
 class GbtsSeedingAlgorithm final : public IAlgorithm {
  public:
+  using Acts_IDs = std::array<std::uint64_t, 2>;
+  using Gbts_IDs = std::array<std::uint32_t, 3>;
   struct Config {
     // this is used to initialise the handle that points to the container of
     // spacepoints
@@ -55,8 +57,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
     // conversion between ACTS labelling of volume, layer and modules to that
     // used by GBTS
-    mutable std::map<std::pair<int, int>, std::tuple<int, int, int>>
-        ActsGbtsMap;
+    mutable std::map<Acts_IDs, Gbts_IDs> actsGbtsMap;
 
     bool fill_module_csv = false;
 
@@ -81,14 +82,12 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
   // own class functions
   // make the map between ACTS geometry ID's and GBTS geometry ID's
-  std::map<std::pair<int, int>, std::tuple<int, int, int>> makeActsGbtsMap()
-      const;
+  std::map<Acts_IDs, Gbts_IDs> makeActsGbtsMap() const;
 
   // make the container that holds spacepoints that have been given
   // all the variables needed for GBTS algorithm to run
-  Acts::Experimental::SPContainerComponentsType MakeSpContainer(
-      const AlgorithmContext &ctx,
-      std::map<std::pair<int, int>, std::tuple<int, int, int>> map) const;
+  Acts::Experimental::SPContainerComponentsType makeSpContainer(
+      const AlgorithmContext &ctx, std::map<Acts_IDs, Gbts_IDs> map) const;
 
   // makes the geometry objects used by GBTS that correspond to the objects in
   // the connection table for ease these are sometimes called "logical layers"
@@ -116,7 +115,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   std::unique_ptr<const Acts::Experimental::SeedFinderGbts> m_finder = nullptr;
 
   // used to assign LayerIds to the GbtsActsMap
-  mutable std::map<int, int> m_LayeridMap{};
+  mutable std::map<std::uint32_t, std::uint32_t> m_LayeridMap{};
 
   // handle that points to the container of input spacepoints
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,

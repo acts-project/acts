@@ -133,13 +133,13 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
     return;  // stop further propagation
   }
 
-  int level = pS.m_level;
+  std::int32_t level = pS.m_level;
 
   std::list<GbtsEdge*> lCont;
 
-  for (int nIdx = 0; nIdx < pS.m_nNei;
+  for (std::int32_t nIdx = 0; nIdx < pS.m_nNei;
        nIdx++) {  // loop over the neighbours of this segment
-    unsigned int nextSegmentIdx = pS.m_vNei[nIdx];
+    std::uint32_t nextSegmentIdx = pS.m_vNei[nIdx];
 
     GbtsEdge* pN = &(m_segStore[nextSegmentIdx]);
 
@@ -170,7 +170,7 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
       }
     }
   } else {  // branching
-    int nBranches = 0;
+    std::int32_t nBranches = 0;
     for (auto sIt = lCont.begin(); sIt != lCont.end(); ++sIt, nBranches++) {
       propagate(*(*sIt), new_ts);  // recursive call
     }
@@ -191,7 +191,7 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
   float tau2 = ts.m_Y[1] * ts.m_Y[1];
   float invSin2 = 1 + tau2;
 
-  int type1 = getLayerType(pS.m_n2->layer());  // 0 - barrel
+  std::int32_t type1 = getLayerType(pS.m_n2->layer());  // 0 - barrel
 
   float lenCorr = type1 == 0 ? invSin2 : invSin2 / tau2;
 
@@ -262,7 +262,7 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
 
   float sigma_rz = 0.0;
 
-  int type = getLayerType(pS.m_n1->layer());
+  std::int32_t type = getLayerType(pS.m_n1->layer());
 
   if (type == 0) {  // barrel TO-DO: split into barrel Pixel and barrel SCT
     sigma_rz = m_config.sigma_y * m_config.sigma_y;
@@ -290,7 +290,7 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
   float Kx[3] = {Dx * Cx[0][0], Dx * Cx[0][1], Dx * Cx[0][2]};
   float Ky[2] = {Dy * Cy[0][0], Dy * Cy[0][1]};
 
-  for (int i = 0; i < 3; i++) {
+  for (std::int32_t i = 0; i < 3; i++) {
     ts.m_X[i] = X[i] + Kx[i] * resid_x;
   }
 
@@ -298,7 +298,7 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
     return false;
   }
 
-  for (int i = 0; i < 2; i++) {
+  for (std::int32_t i = 0; i < 2; i++) {
     ts.m_Y[i] = Y[i] + Ky[i] * resid_y;
   }
 
@@ -308,14 +308,14 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
     return false;
   }
 
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
+  for (std::int32_t i = 0; i < 3; i++) {
+    for (std::int32_t j = 0; j < 3; j++) {
       ts.m_Cx[i][j] = Cx[i][j] - Kx[i] * CHx[j];
     }
   }
 
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < 2; j++) {
+  for (std::int32_t i = 0; i < 2; i++) {
+    for (std::int32_t j = 0; j < 2; j++) {
       ts.m_Cy[i][j] = Cy[i][j] - Ky[i] * CHy[j];
     }
   }
@@ -324,7 +324,7 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
   return true;
 }
 
-int GbtsTrackingFilter::getLayerType(int l) {
+std::int32_t GbtsTrackingFilter::getLayerType(std::int32_t l) {
   return m_geo.at(l).m_type;
 }
 

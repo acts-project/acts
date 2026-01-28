@@ -14,7 +14,7 @@
 
 #include <string>
 
-// core algorithm so in acts namespace
+/// core algorithm so in acts namespace
 namespace Acts::Experimental {
 
 struct SeedFinderGbtsConfig {
@@ -26,29 +26,36 @@ struct SeedFinderGbtsConfig {
 
   std::string lutInputFile;
 
-  // SeedFinderGbts option
+  /// SeedFinderGbts option
   bool LRTmode = false;
   bool useML = false;  // use cluster width
   bool matchBeforeCreate = false;
   bool useOldTunings = false;
   float tau_ratio_cut = 0.007;
   float tau_ratio_precut = 0.009f;
-  float etaBinOverride =
-      0.0f;  // specify non-zero to override eta bin width from connection file
-             // (default 0.2 in createLinkingScheme.py)
-  float nMaxPhiSlice = 53;  // used to calculate phi slices
-  float minPt = 1000. * UnitConstants::MeV;
-  float phiSliceWidth{};  // derived in CreatSeeds function
+  // specify non-zero to override eta bin width from connection file
+  // (default 0.2 in createLinkingScheme.py)
+  float etaBinOverride = 0.0f;
+  // used to calculate phi slices
+  float nMaxPhiSlice = 53;
+  float minPt = 1.0f * UnitConstants::GeV;
+  // derived in CreatSeeds function
+  float phiSliceWidth{};
 
-  // BuildTheGraph() options
+  /// BuildTheGraph() options
+
+  // ~0.3*B/2 - assumes nominal field of 2*T
   double ptCoeff =
-      0.29997 * 1.9972 / 2.0;  // ~0.3*B/2 - assumes nominal field of 2*T
-  bool useEtaBinning = true;  // bool to use eta binning from geometry structure
-  bool doubletFilterRZ = true;  // bool applies new Z cuts on doublets
-  int nMaxEdges = 2000000;      // max number of Gbts edges/doublets
+      0.29997 * 1.9972 / 2.0 * (UnitConstants::MeV / UnitConstants::mm);
+  // bool to use eta binning from geometry structure
+  bool useEtaBinning = true;
+  // bool applies new Z cuts on doublets
+  bool doubletFilterRZ = true;
+  // max number of Gbts edges/doublets
+  std::int32_t nMaxEdges = 2000000;
   float minDeltaRadius = 2.0;
 
-  // GbtsTrackingFilter
+  /// GbtsTrackingFilter
   // Update()
   float sigmaMS = 0.016;  // for 900 MeV track at eta=0
   float radLen = 0.025;   // 2.5% per layer
