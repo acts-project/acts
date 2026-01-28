@@ -12,12 +12,10 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-
-#include <sstream>
 
 namespace Acts {
 
@@ -80,7 +78,8 @@ struct MaterialInteractor {
                                            << surface->geometryId());
 
       // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
+      detail::PointwiseMaterialInteraction interaction(*surface, state,
+                                                       stepper);
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
