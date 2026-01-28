@@ -238,8 +238,7 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
                         << cov.determinant()
                         << std::format(" update: ({:.3f}, {:.3f}),",
                                        inDeg(update[0]), inNanoS(update[1]))
-                        << " normUpdate: {:.3f}",
-                                       Acts::sqrt(normUpdate)));
+                        << " normUpdate: " << Acts::sqrt(normUpdate));
 
   if (update.norm() < m_cfg.precCutOff ||
       Acts::sqrt(normUpdate) < m_cfg.normPrecCutOff) {
