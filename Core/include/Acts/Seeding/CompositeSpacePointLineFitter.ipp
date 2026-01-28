@@ -605,7 +605,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                           << toString(update));
     miniPars -= update;
 
-  } else {
+  } else if (retCode != UpdateStep::converged) {
     // Fall back to gradient decent with a fixed damping factor
     const ActsVector<N> update{
         std::min(m_cfg.gradientStep, miniGradient.norm()) *
