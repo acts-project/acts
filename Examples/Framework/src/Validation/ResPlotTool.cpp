@@ -133,10 +133,10 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
 
     auto covariance = *fittedParamters.covariance();
     if (covariance(parID, parID) <= 0.0) {
-        ACTS_WARNING("Fitted track parameter :" << parName
-                                                << " has non-positive covariance = "
-                                                << covariance(parID, parID));
-        continue;
+      ACTS_WARNING("Fitted track parameter :"
+                   << parName << " has non-positive covariance = "
+                   << covariance(parID, parID));
+      continue;
     }
 
     double pull = residual / std::sqrt(covariance(parID, parID));
