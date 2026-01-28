@@ -8,7 +8,7 @@ degree = acts.UnitConstants.degree
 
 bv = acts.AxisDirection
 
-gctx = acts.GeometryContext()
+gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
 logLevel = acts.logging.VERBOSE
 
 

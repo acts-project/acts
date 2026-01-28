@@ -82,19 +82,19 @@ class PyIAlgorithm : public IAlgorithm {
 void trigger_divbyzero() {
   volatile float j = 0.0;
   volatile float r = 123 / j;  // MARK: divbyzero
-  (void)r;
+  static_cast<void>(r);
 }
 
 void trigger_overflow() {
   volatile float j = std::numeric_limits<float>::max();
   volatile float r = j * j;  // MARK: overflow
-  (void)r;
+  static_cast<void>(r);
 }
 
 void trigger_invalid() {
   volatile float j = -1;
   volatile float r = std::sqrt(j);  // MARK: invalid
-  (void)r;
+  static_cast<void>(r);
 }
 
 }  // namespace

@@ -48,7 +48,7 @@ using namespace Acts::detail::Test;
 
 using IndexType = TrackIndexType;
 
-const GeometryContext gctx;
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 // fixed seed for reproducible tests
 std::default_random_engine rng(31415);
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   const auto& ct = t;
 
   for (const auto& ts : ct.trackStatesReversed()) {
-    (void)ts;
+    static_cast<void>(ts);
   }
 
   BOOST_CHECK_EQUAL(t.nTrackStates(), 5);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   std::size_t i = 0;
   for (const auto& state : tNone.trackStatesReversed()) {
-    (void)state;
+    static_cast<void>(state);
     i++;
   }
   BOOST_CHECK_EQUAL(i, 0);
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
     }
 
     for (const auto track : tc) {
-      (void)track;
+      static_cast<void>(track);
       // does not compile
       // track.parameters().setRandom();
     }

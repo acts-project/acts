@@ -13,19 +13,11 @@
 #include <cstring>
 #include <numbers>
 #include <utility>
+
 namespace Acts::Experimental {
 
 GbtsEtaBin::GbtsEtaBin() {
-  m_in.clear();
-  m_vn.clear();
-  m_params.clear();
   m_vn.reserve(1000);
-}
-
-GbtsEtaBin::~GbtsEtaBin() {
-  m_in.clear();
-  m_vn.clear();
-  m_params.clear();
 }
 
 void GbtsEtaBin::sortByPhi() {
@@ -103,17 +95,15 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
 }
 GbtsDataStorage::GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
                                  const SeedFinderGbtsConfig& config,
-                                 const GbtsMLLookupTable& parseLutFile)
-    : m_geo(std::move(geometry)), m_config(config), m_mlLUT(parseLutFile) {
+                                 GbtsMLLookupTable mlLUT)
+    : m_geo(std::move(geometry)), m_config(config), m_mlLUT(std::move(mlLUT)) {
   // parse the look up table if useML is true
 
   m_etaBins.resize(m_geo->num_bins());
 }
 
-GbtsDataStorage::~GbtsDataStorage() = default;
-
 int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
-                                         const std::vector<GbtsNode>& coll,
+                                         std::span<const GbtsNode> coll,
                                          bool useML) {
   int nLoaded = 0;
 
@@ -123,7 +113,7 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
     return -1;
   }
 
-  bool isBarrel = (pL->m_layer.m_type == 0);
+  bool isBarrel = (pL->getLayer()->m_type == 0);
 
   for (const auto& node : coll) {
     int binIndex = pL->getEtaBin(node.z(), node.r());
@@ -151,7 +141,7 @@ int GbtsDataStorage::loadPixelGraphNodes(short layerIndex,
 }
 
 int GbtsDataStorage::loadStripGraphNodes(short layerIndex,
-                                         const std::vector<GbtsNode>& coll) {
+                                         std::span<const GbtsNode> coll) {
   int nLoaded = 0;
 
   const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
@@ -193,7 +183,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
   for (auto& b : m_etaBins) {
     b.initializeNodes();
     if (!b.m_vn.empty()) {
-      b.m_layerKey = m_geo->getGbtsLayerKeyByIndex((*b.m_vn.begin())->m_layer);
+      b.m_layerKey = m_geo->getGbtsLayerKeyByIndex((*b.m_vn.begin())->layer());
     }
   }
 
@@ -206,12 +196,12 @@ void GbtsDataStorage::initializeNodes(bool useML) {
   for (unsigned int layerIdx = 0; layerIdx < nL; layerIdx++) {
     const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIdx);
 
-    if (pL->m_layer.m_subdet <
+    if (pL->getLayer()->m_subdet <
         20000) {  // skip strips volumes: layers in range [1200X-1400X]
       continue;
     }
 
-    bool isBarrel = (pL->m_layer.m_type == 0);
+    bool isBarrel = (pL->getLayer()->m_type == 0);
 
     if (!isBarrel) {
       continue;
@@ -221,11 +211,11 @@ void GbtsDataStorage::initializeNodes(bool useML) {
 
     int lutSize = m_mlLUT.size();
 
-    int nBins = pL->m_bins.size();
+    int nBins = pL->numOfBins();
 
     for (int b = 0; b < nBins; b++) {  // loop over eta-bins in Layer
 
-      GbtsEtaBin& B = m_etaBins.at(pL->m_bins.at(b));
+      GbtsEtaBin& B = m_etaBins.at(pL->getBins().at(b));
 
       if (B.empty()) {
         continue;

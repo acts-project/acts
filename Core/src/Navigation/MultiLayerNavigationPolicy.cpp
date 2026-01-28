@@ -35,12 +35,11 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
 }
 
 void MultiLayerNavigationPolicy::initializeCandidates(
-    [[maybe_unused]] const GeometryContext& gctx,
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
+    const GeometryContext& gctx, const NavigationArguments& args,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
   ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates initialization for volume"
                << m_volume.volumeName());
-  const Transform3& itransform = m_volume.itransform();
+  const Transform3& itransform = m_volume.globalToLocalTransform(gctx);
   const Vector3 locPosition = itransform * args.position;
   const Vector3 locDirection = itransform.linear() * args.direction;
 

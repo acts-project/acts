@@ -170,6 +170,25 @@
                 "ACTS_GNN_ENABLE_TENSORRT": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "OFF"
             }
+        },
+        {
+            "name": "python-wheel",
+            "displayName": "Python wheel",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
+                "CMAKE_CXX_SCAN_FOR_MODULES": "OFF",
+                "CMAKE_FIND_FRAMEWORK": "LAST",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_BUILD_TYPE": "Release",
+                "ACTS_FORCE_ASSERTIONS": "ON",
+                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
+                "ACTS_BUILD_PYTHON_WHEEL": "ON",
+                "ACTS_BUILD_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_EXAMPLES": "ON",
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
+            }
         }
     ]
 }

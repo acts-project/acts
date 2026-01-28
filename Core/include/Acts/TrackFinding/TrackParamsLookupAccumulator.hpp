@@ -78,7 +78,7 @@ class TrackParamsLookupAccumulator {
   LookupGrid finalizeLookup() {
     auto meanTrack = [&](const TrackParameters& track, std::size_t count) {
       if constexpr (detail::isGenericBoundTrackParams<TrackParameters>) {
-        Acts::GeometryContext gctx;
+        const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
         auto res = TrackParameters::create(
             gctx, track.referenceSurface().getSharedPtr(),
@@ -146,7 +146,7 @@ class TrackParamsLookupAccumulator {
 
     // Assume track parameters being i.i.d.
     if constexpr (detail::isGenericBoundTrackParams<TrackParameters>) {
-      Acts::GeometryContext gctx;
+      const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
       Acts::Vector4 fourPosition = a.fourPosition(gctx) + b.fourPosition(gctx);
 

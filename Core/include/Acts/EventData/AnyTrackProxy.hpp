@@ -408,7 +408,7 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   /// Get a parameter value by index
   /// @param i The parameter index
   /// @return The parameter value
-  const double& parameter(std::size_t i) const { return parameters()[i]; }
+  double parameter(std::size_t i) const { return parameters()[i]; }
 
   /// Get a mutable reference to a parameter component
   /// @param i The parameter index
@@ -436,7 +436,7 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   /// @param i Row index
   /// @param j Column index
   /// @return The covariance element
-  const double& covariance(std::size_t i, std::size_t j) const {
+  double covariance(std::size_t i, std::size_t j) const {
     return covariance()(i, j);
   }
 
