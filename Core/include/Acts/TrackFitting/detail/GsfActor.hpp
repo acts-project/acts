@@ -801,9 +801,11 @@ struct GsfActor {
       auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
       result.currentTip = proxy.index();
 
-      // copy source link and subspace
-      proxy.copyFrom(firstCmpProxy, TrackStatePropMask::None);
       proxy.setReferenceSurface(surface.getSharedPtr());
+      if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
+        // copy source link, calibrated measurement, and subspace
+        proxy.copyFrom(firstCmpProxy, TrackStatePropMask::Calibrated);
+      }
 
       auto [prtMean, prtCov] =
           mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
