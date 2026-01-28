@@ -125,22 +125,24 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_resVsEta.at(parName).fill({truthEta, residual});
     m_resVsPt.at(parName).fill({truthPt, residual});
 
-    if (fittedParamters.covariance().has_value()) {
-      auto covariance = *fittedParamters.covariance();
-      if (covariance(parID, parID) > 0) {
-        double pull = residual / std::sqrt(covariance(parID, parID));
-        m_pull.at(parName).fill({pull});
-        m_pullVsEta.at(parName).fill({truthEta, pull});
-        m_pullVsPt.at(parName).fill({truthPt, pull});
-      } else {
-        ACTS_WARNING("Fitted track parameter :" << parName
-                                                << " has negative covariance = "
-                                                << covariance(parID, parID));
-      }
-    } else {
+    if (!fittedParamters.covariance().has_value()) {
       ACTS_WARNING("Fitted track parameter :" << parName
                                               << " has no covariance");
+      continue;
     }
+
+    auto covariance = *fittedParamters.covariance();
+    if (covariance(parID, parID) <= 0.0) {
+        ACTS_WARNING("Fitted track parameter :" << parName
+                                                << " has non-positive covariance = "
+                                                << covariance(parID, parID));
+        continue;
+    }
+
+    double pull = residual / std::sqrt(covariance(parID, parID));
+    m_pull.at(parName).fill({pull});
+    m_pullVsEta.at(parName).fill({truthEta, pull});
+    m_pullVsPt.at(parName).fill({truthPt, pull});
   }
 }
 
