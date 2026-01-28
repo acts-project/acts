@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     fitCfg.parsToUse = {FitParIndex::x0, FitParIndex::y0, FitParIndex::theta,
                         FitParIndex::phi};
-    // launchTest("StereoStripTest", genCfg, 1800);
+    launchTest("StereoStripTest", genCfg, 1800);
   }
   /// Wait until all tests ar ecompleted
   while (std::ranges::any_of(timings, [](const auto& lblTh) {

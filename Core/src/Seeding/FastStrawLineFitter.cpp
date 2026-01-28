@@ -221,9 +221,12 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
     return UpdateStatus::Exceeded;
   }
   const Vector2 update = invCov * grad;
-  Vector2 normUpdate{Vector2::Zero()};
+  // We compute also the normalized update, defined as the parameter
+  // update expressed in units of the parameter uncertainties. This quantifies
+  // the significance of the update relative to the estimated errors.
+  double normUpdate{0.};
   for (unsigned int i = 0; i < 2; ++i) {
-    normUpdate[i] = update[i] / std::sqrt(invCov(i, i));
+    normUpdate += Acts::square(update[i] / std::sqrt(invCov(i, i)));
   }
 
   ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
@@ -233,11 +236,13 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
                         << ", covariance:" << std::endl
                         << toString(cov) << std::endl
                         << cov.determinant()
-                        << std::format(" update: ({:.3f}, {:.3f}).",
-                                       inDeg(update[0]), inNanoS(update[1])));
+                        << std::format(" update: ({:.3f}, {:.3f}),",
+                                       inDeg(update[0]), inNanoS(update[1]))
+                        << " normUpdate: {:.3f}",
+                                       Acts::sqrt(normUpdate)));
 
   if (update.norm() < m_cfg.precCutOff ||
-      normUpdate.norm() < m_cfg.normPrecCutOff) {
+      Acts::sqrt(normUpdate) < m_cfg.normPrecCutOff) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
                         << fitResult);
     retCode = UpdateStatus::Converged;

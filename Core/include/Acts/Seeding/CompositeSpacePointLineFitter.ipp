@@ -564,13 +564,16 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   // The Hessian can safely be inverted
   if (inverseH) {
     const ActsVector<N> update{(*inverseH) * miniGradient};
-    ActsVector<N> normUpdate{};
+    // We compute also the normalized update, defined as the parameter
+    // update expressed in units of the parameter uncertainties. This quantifies
+    // the significance of the update relative to the estimated errors.
+    double normUpdate{0.};
     for (unsigned int i = 0; i < N; ++i) {
-      normUpdate[i] = update[i] / std::sqrt((*inverseH)(i, i));
+      normUpdate += Acts::square(update[i] / std::sqrt((*inverseH)(i, i)));
     }
 
     if (update.norm() < m_cfg.precCutOff ||
-        normUpdate.norm() < m_cfg.normPrecCutOff) {
+        Acts::sqrt(normUpdate) < m_cfg.normPrecCutOff) {
       ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Update/ Normalized update " << toString(update)
                           << "/ " << normUpdate << " are negligible small.");
