@@ -64,10 +64,41 @@ BOOST_AUTO_TEST_CASE(Factorial) {
 
   for (std::size_t k = 1; k <= 20; ++k) {
     BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - 1u));
+    for (std::size_t j = 1; j <= k; ++j) {
+      BOOST_CHECK_EQUAL(Acts::product(j, k),
+                        Acts::factorial(k) / Acts::factorial(j - 1));
+    }
   }
 }
 
-BOOST_AUTO_TEST_CASE(Binomial) {
+BOOST_AUTO_TEST_CASE(PowerTests) {
+  for (unsigned p = 0; p <= 15; ++p) {
+    BOOST_CHECK_EQUAL(std::pow(2., p), Acts::pow(2., p));
+    BOOST_CHECK_EQUAL(std::pow(0.5, p), Acts::pow(0.5, p));
+    for (std::size_t k = 1; k <= 15; ++k) {
+      BOOST_CHECK_EQUAL(std::pow(k, p), Acts::pow(k, p));
+    }
+  }
+  for (int p = 0; p <= 15; ++p) {
+    BOOST_CHECK_EQUAL(std::pow(2., p), Acts::pow(2., p));
+    BOOST_CHECK_EQUAL(std::pow(2., -p), Acts::pow(2., -p));
+    BOOST_CHECK_EQUAL(std::pow(0.5, p), Acts::pow(0.5, p));
+
+    BOOST_CHECK_EQUAL(std::pow(0.5, -p), Acts::pow(0.5, -p));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(SumOfIntegers) {
+  std::array<unsigned, 100> numberSeq{Acts::filledArray<unsigned, 100>(1)};
+  std::iota(numberSeq.begin(), numberSeq.end(), 1);
+  for (unsigned i = 1; i <= numberSeq.size(); ++i) {
+    const unsigned sum =
+        std::accumulate(numberSeq.begin(), numberSeq.begin() + i, 0);
+    BOOST_CHECK_EQUAL(sum, Acts::sumUpToN(i));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(BinomialTests) {
   static_assert(Acts::binomial(0u, 0u) == 1u);
 
   static_assert(Acts::binomial(5u, 0u) == 1u);
@@ -87,8 +118,15 @@ BOOST_AUTO_TEST_CASE(Binomial) {
   for (unsigned n = 2; n <= 10; ++n) {
     /// Check that the binomial of (n 1 is always n)
     BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
-    for (unsigned k = 1; k < n; ++k) {
-      // Use recursive formula C(n, k) = C(n-1, k-1) + C(n-1, k)
+    for (unsigned k = 1; k <= n - 1u; ++k) {
+      /// Use recursive formula
+      ///  n      n -1       n -1
+      ///     =          +
+      ///  k      k -1        k
+      std::cout << "n: " << n << ", k: " << k
+                << ", binom(n,k): " << Acts::binomial(n, k)
+                << ", binom(n-1, k-1): " << Acts::binomial(n - 1, k - 1)
+                << ", binom(n-1,k): " << Acts::binomial(n - 1, k) << std::endl;
       BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n - 1, k - 1) +
                                                   Acts::binomial(n - 1, k));
       BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n, n - k));
