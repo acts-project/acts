@@ -163,8 +163,10 @@ CompositeSpacePointLineFitter::fastFit(
     return result;
   } else if (precResult) {
     if constexpr (fitTime) {
-      result.covariance(toUnderlying(t0), toUnderlying(t0)) =
-          Acts::square(precResult->dT0);
+      if (!m_cfg.fastPreFitter) {
+        result.covariance(toUnderlying(t0), toUnderlying(t0)) =
+            Acts::square(precResult->dT0);
+      }
       result.parameters[toUnderlying(t0)] = precResult->t0;
       if (!withinRange(precResult->t0, FitParIndex::t0)) {
         ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips")
@@ -182,14 +184,16 @@ CompositeSpacePointLineFitter::fastFit(
       return result;
     }
     result.parameters[toUnderlying(y0)] = precResult->y0;
-    result.covariance(toUnderlying(y0), toUnderlying(y0)) =
-        Acts::square(precResult->dY0);
-    result.covariance(toUnderlying(theta), toUnderlying(theta)) =
-        Acts::square(precResult->dTheta);
     result.nDoF = precResult->nDoF;
     result.nIter = precResult->nIter;
     result.chi2 = precResult->chi2;
     result.converged = true;
+    if (!m_cfg.fastPreFitter) {
+      result.covariance(toUnderlying(y0), toUnderlying(y0)) =
+          Acts::square(precResult->dY0);
+      result.covariance(toUnderlying(theta), toUnderlying(theta)) =
+          Acts::square(precResult->dTheta);
+    }
 
     auto firstPrecMeas = std::ranges::find_if(measurements, [](const auto& m) {
       return (fitStraws && m->isStraw()) || (!fitStraws && m->measuresLoc1());
@@ -207,10 +211,14 @@ CompositeSpacePointLineFitter::fastFit(
   if (nonPrecResult) {
     tanAlpha = nonPrecResult->theta;
     result.parameters[toUnderlying(x0)] = nonPrecResult->y0;
-    result.covariance(toUnderlying(x0), toUnderlying(x0)) =
-        Acts::square(nonPrecResult->dY0);
     result.nDoF += nonPrecResult->nDoF;
     result.nIter += nonPrecResult->nIter;
+    if (!m_cfg.fastPreFitter) {
+      result.covariance(toUnderlying(x0), toUnderlying(x0)) =
+          Acts::square(nonPrecResult->dY0);
+      result.covariance(toUnderlying(phi), toUnderlying(phi)) =
+          Acts::square(nonPrecResult->dTheta);
+    }
   }
 
   const Vector postFitDir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
@@ -588,7 +596,6 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
       // swap back t0 component if needed
       if constexpr (N == 3) {
         constexpr auto t0Idx = toUnderlying(FitParIndex::t0);
-        covariance(t0Idx, t0Idx) = 1.;
         covariance.row(2).swap(covariance.row(t0Idx));
         covariance.col(2).swap(covariance.col(t0Idx));
         std::swap(currentPars[2], currentPars[t0Idx]);
