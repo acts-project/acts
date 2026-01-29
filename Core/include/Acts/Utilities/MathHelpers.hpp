@@ -108,7 +108,7 @@ constexpr T sumUpToN(const T N) {
 ///        returns one
 /// @param lowerN: Lower range of the product calculation
 /// @param upperN: Upper range of the product calculation
-/// @return Factorial result
+/// @return Product result
 template <std::unsigned_integral T>
 constexpr T product(const T lowerN, const T upperN) {
   if (lowerN == T{0}) {

@@ -44,7 +44,47 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
   CHECK_CLOSE_REL(stdDouble, fastDouble, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(Factorial) {
+BOOST_AUTO_TEST_CASE(ProductTests) {
+  static_assert(Acts::product(1u, 1u) == 1u);
+  static_assert(Acts::product(2u, 2u) == 2u);
+  static_assert(Acts::product(3u, 4u) == 12u);
+  static_assert(Acts::product(1u, 5u) == 120u);
+  static_assert(Acts::product(2u, 5u) == 120u);
+  static_assert(Acts::product(3u, 5u) == 60u);
+
+  static_assert(Acts::product(5u, 4u) == 1u);
+
+  static_assert(Acts::product(0u, 0u) == 0u);
+  static_assert(Acts::product(0u, 5u) == 0u);
+
+  // These should fail at compile time
+  // static_assert(Acts::product(std::uint8_t{1}, std::uint8_t{6}));
+  // static_assert(Acts::product(std::uint16_t{1}, std::uint16_t{9}));
+  // static_assert(Acts::product(std::uint32_t{1}, std::uint32_t{13}));
+  // static_assert(Acts::product(std::uint64_t{1}, std::uint64_t{21}));
+
+  // These expressions should fail at runtime
+  // auto fail8  = Acts::product(std::uint8_t{1},  std::uint8_t{6});
+  // auto fail16 = Acts::product(std::uint16_t{1}, std::uint16_t{9});
+  // auto fail32 = Acts::product(std::uint32_t{1}, std::uint32_t{13});
+  // auto fail64 = Acts::product(std::uint64_t{1}, std::uint64_t{21});
+
+  const std::size_t zero{0};
+  const std::size_t one{1};
+  for (std::size_t k = 0; k <= 20; ++k) {
+    BOOST_CHECK_EQUAL(Acts::product(zero, k), zero);
+    BOOST_CHECK_EQUAL(Acts::product(one, k), Acts::factorial(k));
+    BOOST_CHECK_EQUAL(Acts::product(k, k), k);
+
+    for (std::size_t j = 1; j < k; ++j) {
+      BOOST_CHECK_EQUAL(Acts::product(j, k), j * Acts::product(j + one, k));
+      BOOST_CHECK_EQUAL(Acts::product(one, k),
+                        Acts::product(one, j) * Acts::product(j + one, k));
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(FactorialTests) {
   static_assert(Acts::factorial(0u) == 1u);
   static_assert(Acts::factorial(1u) == 1u);
   static_assert(Acts::factorial(2u) == 2u);
@@ -62,11 +102,12 @@ BOOST_AUTO_TEST_CASE(Factorial) {
   // auto fail32 = Acts::factorial(std::uint32_t{13});
   // auto fail64 = Acts::factorial(std::uint64_t{21});
 
+  const std::size_t one{1};
   for (std::size_t k = 1; k <= 20; ++k) {
-    BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - 1u));
+    BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - one));
     for (std::size_t j = 1; j <= k; ++j) {
       BOOST_CHECK_EQUAL(Acts::product(j, k),
-                        Acts::factorial(k) / Acts::factorial(j - 1));
+                        Acts::factorial(k) / Acts::factorial(j - one));
     }
   }
 }
