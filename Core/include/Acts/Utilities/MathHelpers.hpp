@@ -111,14 +111,16 @@ constexpr T sumUpToN(const T N) {
 /// @return Factorial result
 template <std::unsigned_integral T>
 constexpr T product(const T lowerN, const T upperN) {
-  if (lowerN == static_cast<T>(0)) {
-    return 0;
+  if (lowerN == T{0}) {
+    return T{0};
   }
+
   T value{1};
   for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
-    assert(value * iter > value);
+    assert(value < std::numeric_limits<T>::max() / iter);
     value *= iter;
   }
+
   return value;
 }
 

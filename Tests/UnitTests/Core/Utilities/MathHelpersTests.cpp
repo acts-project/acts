@@ -50,6 +50,12 @@ BOOST_AUTO_TEST_CASE(Factorial) {
   static_assert(Acts::factorial(2u) == 2u);
   static_assert(Acts::factorial(5u) == 5u * Acts::factorial(4u));
 
+  // These expressions should fail at runtime
+  // auto fail8 = Acts::factorial(std::uint8_t{6});
+  // auto fail16 = Acts::factorial(std::uint16_t{9});
+  // auto fail32 = Acts::factorial(std::uint32_t{13});
+  // auto fail64 = Acts::factorial(std::uint64_t{21});
+
   for (std::size_t k = 1; k <= 20; ++k) {
     BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - 1u));
     for (std::size_t j = 1; j <= k; ++j) {
