@@ -90,8 +90,8 @@ Result<Vector3> ToroidField::getField(
 //-------------------------
 
 void ToroidField::accumulateBarrelField(double X, double Y, double Z,
-                                          double eps, double pref, double& bx,
-                                          double& by, double& bz) const {
+                                        double eps, double pref, double& bx,
+                                        double& by, double& bz) const {
   for (std::size_t i = 0; i < m_mids_barrel.size(); ++i) {
     const auto& mid = m_mids_barrel[i];
     const auto& dl = m_segs_barrel[i];
@@ -118,8 +118,8 @@ void ToroidField::accumulateBarrelField(double X, double Y, double Z,
 }
 
 void ToroidField::accumulateEndcapField(double X, double Y, double Z,
-                                          double eps, double pref, double& bx,
-                                          double& by, double& bz) const {
+                                        double eps, double pref, double& bx,
+                                        double& by, double& bz) const {
   for (std::size_t i = 0; i < m_mids_ect.size(); ++i) {
     const auto& mid = m_mids_ect[i];
     const auto& dl = m_segs_ect[i];
@@ -195,9 +195,9 @@ std::vector<std::array<float, 2>> ToroidField::ectRacetrackRadial(
 
 // Rounded-rectangle racetrack in local (ρ, z)
 std::vector<std::array<float, 2>> ToroidField::racetrackRZ(float a, float b,
-                                                             float Lz, int nArc,
-                                                             int nStraight,
-                                                             bool close) {
+                                                           float Lz, int nArc,
+                                                           int nStraight,
+                                                           bool close) {
   const float r = 0.5f * b;    // corner radius
   const float rz = 0.5f * Lz;  // axial half-length
   const float zTop = rz - r;   // top straight z
@@ -250,8 +250,8 @@ std::vector<std::array<float, 2>> ToroidField::racetrackRZ(float a, float b,
 }
 
 void ToroidField::buildSegsMidsRZ(const std::vector<std::array<float, 2>>& rz,
-                                    std::vector<std::array<float, 2>>& d_rz,
-                                    std::vector<std::array<float, 2>>& m_rz) {
+                                  std::vector<std::array<float, 2>>& d_rz,
+                                  std::vector<std::array<float, 2>>& m_rz) {
   d_rz.clear();
   m_rz.clear();
   d_rz.reserve(rz.size() - 1);
@@ -266,11 +266,11 @@ void ToroidField::buildSegsMidsRZ(const std::vector<std::array<float, 2>>& rz,
 }
 
 void ToroidField::mapRingToXYZ(float l,
-                                 const std::vector<std::array<float, 2>>& m_rz,
-                                 const std::vector<std::array<float, 2>>& d_rz,
-                                 float phi, int sign, float zShift,
-                                 std::vector<std::array<float, 3>>& mids_out,
-                                 std::vector<std::array<float, 3>>& segs_out) {
+                               const std::vector<std::array<float, 2>>& m_rz,
+                               const std::vector<std::array<float, 2>>& d_rz,
+                               float phi, int sign, float zShift,
+                               std::vector<std::array<float, 3>>& mids_out,
+                               std::vector<std::array<float, 3>>& segs_out) {
   const float ct = std::cos(phi), st = std::sin(phi);
   const float s = (sign >= 0) ? 1.0f : -1.0f;
 

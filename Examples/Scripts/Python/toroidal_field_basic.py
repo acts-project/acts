@@ -19,6 +19,7 @@ def test_toroidal_field_basic():
     print("=" * 60)
 
     import acts
+
     print("✅ Successfully imported acts.ToroidField")
 
     # Test Config creation with defaults
