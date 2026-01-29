@@ -50,18 +50,6 @@ BOOST_AUTO_TEST_CASE(Factorial) {
   static_assert(Acts::factorial(2u) == 2u);
   static_assert(Acts::factorial(5u) == 5u * Acts::factorial(4u));
 
-  // These tests should fail at compile time
-  // static_assert(Acts::factorial(static_cast<std::uint8_t>(6)));
-  // static_assert(Acts::factorial(static_cast<std::uint16_t>(9)));
-  // static_assert(Acts::factorial(static_cast<std::uint32_t>(13)));
-  // static_assert(Acts::factorial(static_cast<std::uint64_t>(21)));
-
-  // These expressions should fail at runtime
-  // auto fail8 = Acts::factorial(static_cast<std::uint8_t>(6));
-  // auto fail16 = Acts::factorial(static_cast<std::uint16_t>(9));
-  // auto fail32 = Acts::factorial(static_cast<std::uint32_t>(13));
-  // auto fail64 = Acts::factorial(static_cast<std::uint64_t>(21));
-
   for (std::size_t k = 1; k <= 20; ++k) {
     BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - 1u));
     for (std::size_t j = 1; j <= k; ++j) {
@@ -115,6 +103,7 @@ BOOST_AUTO_TEST_CASE(BinomialTests) {
   // This test should fail at compile time
   // static_assert(Acts::binomial(4u, 5u));
 
+  BOOST_CHECK_EQUAL(Acts::binomial(1u, 1u), 1u);
   for (unsigned n = 2; n <= 10; ++n) {
     /// Check that the binomial of (n 1 is always n)
     BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
