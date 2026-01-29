@@ -42,8 +42,19 @@ void MultiNavigationPolicy::initializeCandidates(
     [[maybe_unused]] const GeometryContext& gctx,
     const NavigationArguments& args, NavigationPolicyState& state,
     AppendOnlyNavigationStream& stream, const Logger& logger) const {
-  for (const auto& delegate : m_delegates) {
-    delegate(gctx, args, state, stream, logger);
+  auto& thisState = state.as<State>();
+  if (thisState.policyStates.size() != m_delegates.size()) {
+    ACTS_ERROR("MultiNavigationPolicy initializeCandidates: number of states ("
+               << thisState.policyStates.size()
+               << ") does not match number of policies ("
+               << m_delegates.size() << ").");
+    throw std::runtime_error(
+        "MultiNavigationPolicy initializeCandidates: inconsistent state size.");
+  }
+
+  for (auto [delegate, policyState] :
+       zip(m_delegates, thisState.policyStates)) {
+    delegate(gctx, args, policyState, stream, logger);
   }
 }
 
