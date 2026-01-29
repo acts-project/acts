@@ -19,7 +19,7 @@ using namespace Acts::Experimental;
 namespace {
 
 ProfileHistogram1 makeProfile(
-    const ActsExamples::TrackQualityPlotTool::Config& cfg, std::string name,
+    const ActsExamples::TrackQualityPlotTool::Config& cfg, const std::string &name,
     const std::string& title, const AxisVariant& ax,
     const std::string& sampleTitle) {
   const auto& yAxis = cfg.varBinning.at("Num");
@@ -36,21 +36,20 @@ TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
                                            Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("TrackQualityPlotTool", lvl)),
-      m_completenessVsPt(makeProfile(
-          m_cfg, "completeness_vs_pT", "Completeness;pT [GeV/c];Completeness",
-          m_cfg.varBinning.at("Pt"), "Completeness")),
-      m_completenessVsEta(makeProfile(
-          m_cfg, "completeness_vs_eta", "Completeness;#eta;Completeness",
-          m_cfg.varBinning.at("Eta"), "Completeness")),
-      m_completenessVsPhi(makeProfile(
-          m_cfg, "completeness_vs_phi", "Completeness;#phi;Completeness",
-          m_cfg.varBinning.at("Phi"), "Completeness")),
-      m_purityVsPt(makeProfile(m_cfg, "purity_vs_pT",
-                               "Purity;pT [GeV/c];Purity",
+      m_completenessVsPt(makeProfile(m_cfg, "completeness_vs_pT",
+                                     "Completeness",
+                                     m_cfg.varBinning.at("Pt"), "Completeness")),
+      m_completenessVsEta(makeProfile(m_cfg, "completeness_vs_eta",
+                                      "Completeness",
+                                      m_cfg.varBinning.at("Eta"), "Completeness")),
+      m_completenessVsPhi(makeProfile(m_cfg, "completeness_vs_phi",
+                                      "Completeness",
+                                      m_cfg.varBinning.at("Phi"), "Completeness")),
+      m_purityVsPt(makeProfile(m_cfg, "purity_vs_pT", "Purity",
                                m_cfg.varBinning.at("Pt"), "Purity")),
-      m_purityVsEta(makeProfile(m_cfg, "purity_vs_eta", "Purity;#eta;Purity",
+      m_purityVsEta(makeProfile(m_cfg, "purity_vs_eta", "Purity",
                                 m_cfg.varBinning.at("Eta"), "Purity")),
-      m_purityVsPhi(makeProfile(m_cfg, "purity_vs_phi", "Purity;#phi;Purity",
+      m_purityVsPhi(makeProfile(m_cfg, "purity_vs_phi", "Purity",
                                 m_cfg.varBinning.at("Phi"), "Purity")) {
   ACTS_DEBUG("Initialize the histograms for track quality plots");
 }

@@ -19,7 +19,7 @@ using namespace Acts::Experimental;
 namespace {
 
 ProfileHistogram1 makeProfile(
-    const ActsExamples::DuplicationPlotTool::Config& cfg, std::string name,
+    const ActsExamples::DuplicationPlotTool::Config& cfg, const std::string &name,
     const std::string& title, const AxisVariant& ax) {
   const auto& yAxis = cfg.varBinning.at("Num");
   Acts::Range1D<double> yRange{yAxis.bin(0).lower(),
@@ -44,14 +44,11 @@ DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
       m_nDuplicatedVsPhi(makeProfile(m_cfg, "nDuplicated_vs_phi",
                                      "Number of duplicated track candidates",
                                      m_cfg.varBinning.at("Phi"))),
-      m_duplicationRatioVsPt("duplicationRatio_vs_pT",
-                             "Duplication ratio;pT [GeV/c];Duplication ratio",
+      m_duplicationRatioVsPt("duplicationRatio_vs_pT", "Duplication ratio",
                              std::array{m_cfg.varBinning.at("Pt")}),
-      m_duplicationRatioVsEta("duplicationRatio_vs_eta",
-                              "Duplication ratio;#eta;Duplication ratio",
+      m_duplicationRatioVsEta("duplicationRatio_vs_eta", "Duplication ratio",
                               std::array{m_cfg.varBinning.at("Eta")}),
-      m_duplicationRatioVsPhi("duplicationRatio_vs_phi",
-                              "Duplication ratio;#phi;Duplication ratio",
+      m_duplicationRatioVsPhi("duplicationRatio_vs_phi", "Duplication ratio",
                               std::array{m_cfg.varBinning.at("Phi")}) {
   ACTS_DEBUG("Initialize the histograms for duplication ratio plots");
 }
