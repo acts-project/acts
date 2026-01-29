@@ -152,7 +152,16 @@ struct MaterialInteractor {
  private:
   /// @brief This function records the material effect
   ///
-  /// @param [in] interaction Interaction cache container
+  /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_t Type of the stepper of the propagation
+  /// @tparam navigator_t Type of the navigator of the propagation
+  ///
+  /// @param [in] state The propagator state
+  /// @param [in] stepper The stepper instance
+  /// @param [in] navigator The navigator instance
+  /// @param [in] slab The material slab
+  /// @param [in] initialMomentum Initial momentum before the interaction
+  /// @param [in] effects The material effects
   /// @param [in, out] result Result storage
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
