@@ -371,7 +371,7 @@ CompositeSpacePointLineFitter::fit(
       result.converged = false;
     } else {
       ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed.");
-      if (!m_cfg.fullFitOnPreFail) {
+      if (!m_cfg.ignoreFailedPreFit) {
         return result;
       }
     }
@@ -568,12 +568,12 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     // update expressed in units of the parameter uncertainties. This quantifies
     // the significance of the update relative to the estimated errors.
     double normUpdate{0.};
-    for (unsigned int i = 0; i < N; ++i) {
-      normUpdate += Acts::square(update[i] / std::sqrt((*inverseH)(i, i)));
+    for (unsigned i = 0; i < N; ++i) {
+      normUpdate += Acts::square(update[i]) / (*inverseH)(i, i);
     }
 
-    if (update.norm() < m_cfg.precCutOff ||
-        std::sqrt(normUpdate) < m_cfg.normPrecCutOff) {
+    if (std::sqrt(normUpdate) < m_cfg.normPrecCutOff ||
+        update.norm() < m_cfg.precCutOff) {
       ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Update/ Normalized update " << toString(update)
                           << "/ " << normUpdate << " are negligible small.");

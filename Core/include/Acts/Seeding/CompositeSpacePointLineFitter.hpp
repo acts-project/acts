@@ -55,7 +55,7 @@ class CompositeSpacePointLineFitter {
   struct Config {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
     double precCutOff{1.e-7};
-    /// @brief If the parameter change normalized to their uncertainties is below the cutOff the fit is converged
+    /// @brief If the parameter change normalized to their uncertainties is below the cutOff the fit is converged.  For negative cut-offs this convergence schema is effectively deactivated
     double normPrecCutOff{1.e-2};
     /// @brief Gradient decent step size if the Hessian is singular
     double gradientStep{1.e-4};
@@ -73,8 +73,8 @@ class CompositeSpacePointLineFitter {
     /// @brief Switch to use the fast fitter as pre-fitter. The flag useFastFitter needs to be enabled
     bool fastPreFitter{true};
     /// @brief Switch to try the full fit when the fast pre-fitter fails. The flags useFastFitter
-    ///        and fastPreFitter need to be enabled
-    bool fullFitOnPreFail{false};
+    ///        and fastPreFitter have to be enabled
+    bool ignoreFailedPreFit{false};
     /// @brief Use the second derivative in the residual calculation
     bool useHessian{false};
     /// @brief Flag toggling whether the along the wire component of straws shall be calculated
@@ -277,8 +277,7 @@ class CompositeSpacePointLineFitter {
   /// @brief Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was
   ///        sufficiently small such that the fit is converged. If converged,
-  ///        copies the inverse of the chi2's Hessian to the covariance matrix
-  ///        of the fit
+  ///        the covariance of the fit result is directly filled
   /// @tparam N: Number of fitted parameters. Either 1 intercept + 1 angle (2D), 2D + time,
   ///            both intercepts & angles, all 5 straight line parameters
   /// @param firstPar: The first fitted straight line parameter in the parameter vector

@@ -225,8 +225,8 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   // update expressed in units of the parameter uncertainties. This quantifies
   // the significance of the update relative to the estimated errors.
   double normUpdate{0.};
-  for (unsigned int i = 0; i < 2; ++i) {
-    normUpdate += Acts::square(update[i] / std::sqrt(invCov(i, i)));
+  for (unsigned i = 0; i < 2; ++i) {
+    normUpdate += Acts::square(update[i]) / invCov(i, i);
   }
 
   ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
@@ -240,8 +240,8 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
                                        inDeg(update[0]), inNanoS(update[1]))
                         << " normUpdate: " << std::sqrt(normUpdate));
 
-  if (update.norm() < m_cfg.precCutOff ||
-      std::sqrt(normUpdate) < m_cfg.normPrecCutOff) {
+  if (std::sqrt(normUpdate) < m_cfg.normPrecCutOff ||
+      update.norm() < m_cfg.precCutOff) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
                         << fitResult);
     retCode = UpdateStatus::Converged;
