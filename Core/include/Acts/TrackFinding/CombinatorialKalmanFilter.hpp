@@ -411,8 +411,8 @@ class CombinatorialKalmanFilter {
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
-      materialInteractor(navigator.currentSurface(state.navigation), state,
-                         stepper, navigator, MaterialUpdateMode::PostUpdate);
+      materialInteractor(currentState.referenceSurface(), state, stepper,
+                         navigator, MaterialUpdateMode::PostUpdate);
 
       // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
