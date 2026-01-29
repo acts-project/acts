@@ -27,15 +27,12 @@ constexpr std::array<double, N - D> derivativeCoefficients(
 
   if constexpr (D == 0) {
     return coeffs;
-  } else {
-    std::array<double, N - 1> newCoeffs{filledArray<double, N - 1>(0.)};
-
-    for (std::size_t i = 0; i < N - 1; ++i) {
-      newCoeffs[i] = (i + 1) * coeffs[i + 1];
-    }
-
-    return derivativeCoefficients<D - 1>(newCoeffs);
   }
+  std::array<double, N - D> newCoeffs{filledArray<double, N - D>(0.)};
+  for (std::size_t i = 0; i < N - D; ++i) {
+    newCoeffs[i] = product(i + 1ul, i + D) * coeffs[i + D];
+  }
+  return newCoeffs;
 }
 
 /// @brief Evaluates a polynomial with degree (N-1) at domain value x
@@ -107,9 +104,11 @@ constexpr std::array<double, L + 1> coefficients() {
 /// @param d: Order of the derivative
 constexpr double evaluate(const double x, const unsigned l, unsigned d = 0u) {
   double sum{0.};
-  for (unsigned k = l % 2; k + d <= l; k += 2u) {
-    sum += pow(x, k - d) * coeff(l, k) *
-           (d > 0u ? factorial(k) / factorial(k - d) : 1u);
+  for (unsigned k = l % 2; k <= l; k += 2u) {
+    if (k >= d) {
+      sum +=
+          pow(x, k - d) * coeff(l, k) * (d > 0u ? product(1u + k - d, k) : 1u);
+    }
   }
   return sum;
 }
@@ -154,7 +153,7 @@ constexpr double evalFirstKind(const double x, const unsigned n,
   double result{0.};
   for (unsigned k = 0u; 2u * k + d <= n; ++k) {
     result += coeffTn(n, k) * pow(x, n - 2u * k - d) *
-              (d > 0 ? factorial(n - 2u * k) / factorial(n - 2u * k - d) : 1);
+              (d > 0 ? product(n - 2u * k - d + 1u, n - 2u * k) : 1);
   }
   return result;
 }
@@ -191,7 +190,7 @@ constexpr double evalSecondKind(const double x, const unsigned n,
   double result{0.};
   for (unsigned k = 0u; 2u * k + d <= n; ++k) {
     result += coeffUn(n, k) * pow(x, n - 2u * k - d) *
-              (d > 0u ? factorial(n - 2u * k) / factorial(n - 2u * k - d) : 1u);
+              (d > 0u ? product(n - 2u * k - d + 1u, n - 2u * k) : 1u);
   }
   return result;
 }

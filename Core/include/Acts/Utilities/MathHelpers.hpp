@@ -101,39 +101,32 @@ constexpr T sumUpToN(const T N) {
   return N * (N + 1) / 2;
 }
 
-/// @brief Calculates the factorial of a number
-///        n!= n*(n-1)*...*3*2*1
-/// @param n: Factor until which the factorial is calculated
+/// @brief Calculates the product of all integers
+///        within the given integer range
+///           (nLower)(nLower+1)(...)(upper-1)(upper)
+///        If lowerN is bigger than upperN, the function
+///        returns one
+/// @param lowerN: Lower range of the product calculation
+/// @param upperN: Upper range of the product calculation
 /// @return Factorial result
 template <std::unsigned_integral T>
-constexpr T factorial(const T n) {
-  constexpr unsigned bits = std::numeric_limits<T>::digits;
-
-  constexpr unsigned max_n = [] {
-    if constexpr (bits >= 64) {
-      return 20u;
-    } else if constexpr (bits >= 32) {
-      return 12u;
-    } else if constexpr (bits >= 16) {
-      return 8u;
-    } else if constexpr (bits >= 8) {
-      return 5u;
-    } else {
-      return 0u;
-    }
-  }();
-
-  static_cast<void>(max_n);
-  if (std::is_constant_evaluated() && n > max_n) {
-    throw std::overflow_error("factorial overflow");
+constexpr T product(const T lowerN, const T upperN) {
+  if (lowerN == static_cast<T>(0)) {
+    return 0;
   }
-  assert(n <= max_n && "factorial overflow");
-
-  T r = 1;
-  for (T i = 2; i <= n; i++) {
-    r *= i;
+  T value{1};
+  for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
+    assert(value * iter > value);
+    value *= iter;
   }
-  return r;
+  return value;
+}
+
+/// @brief Calculate the the factorial of an integer
+/// @param N: Number of which the factorial is to be calculated
+template <std::unsigned_integral T>
+constexpr T factorial(const T N) {
+  return product<T>(1, N);
 }
 
 /// @brief Calculate the binomial coefficient
@@ -150,7 +143,7 @@ constexpr T binomial(const T n, const T k) {
   }
   assert(k <= n && "k must be <= n");
 
-  return (factorial<T>(n) / factorial<T>(k)) / factorial<T>(n - k);
+  return product<T>(n - k + 1, n) / factorial<T>(k);
 }
 
 }  // namespace Acts
