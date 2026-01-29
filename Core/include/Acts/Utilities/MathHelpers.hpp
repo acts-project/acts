@@ -116,8 +116,13 @@ constexpr T product(const T lowerN, const T upperN) {
   }
 
   T value{1};
-  for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
-    assert(value < std::numeric_limits<T>::max() / iter);
+  for (T iter = lowerN; iter <= upperN; ++iter) {
+    if (std::is_constant_evaluated() &&
+        value > std::numeric_limits<T>::max() / iter) {
+      throw std::overflow_error("product overflow");
+    }
+    assert(value <= std::numeric_limits<T>::max() / iter);
+
     value *= iter;
   }
 

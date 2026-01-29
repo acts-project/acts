@@ -50,6 +50,12 @@ BOOST_AUTO_TEST_CASE(Factorial) {
   static_assert(Acts::factorial(2u) == 2u);
   static_assert(Acts::factorial(5u) == 5u * Acts::factorial(4u));
 
+  // These tests should fail at compile time
+  // static_assert(Acts::factorial(std::uint8_t{6}));
+  // static_assert(Acts::factorial(std::uint16_t{9}));
+  // static_assert(Acts::factorial(std::uint32_t{13}));
+  // static_assert(Acts::factorial(std::uint64_t{21}));
+
   // These expressions should fail at runtime
   // auto fail8 = Acts::factorial(std::uint8_t{6});
   // auto fail16 = Acts::factorial(std::uint16_t{9});
@@ -110,18 +116,21 @@ BOOST_AUTO_TEST_CASE(BinomialTests) {
   // static_assert(Acts::binomial(4u, 5u));
 
   BOOST_CHECK_EQUAL(Acts::binomial(1u, 1u), 1u);
-  for (unsigned n = 2; n <= 10; ++n) {
-    /// Check that the binomial of (n 1 is always n)
-    BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
+  for (unsigned n = 1; n <= 10; ++n) {
+    /// Check that the binomial of (n 0 is always 1)
+    BOOST_CHECK_EQUAL(Acts::binomial(n, 0u), 1);
+    BOOST_CHECK_EQUAL(Acts::binomial(n, n), 1);
+
     for (unsigned k = 1; k <= n - 1u; ++k) {
       /// Use recursive formula
       ///  n      n -1       n -1
       ///     =          +
       ///  k      k -1        k
-      std::cout << "n: " << n << ", k: " << k
-                << ", binom(n,k): " << Acts::binomial(n, k)
-                << ", binom(n-1, k-1): " << Acts::binomial(n - 1, k - 1)
-                << ", binom(n-1,k): " << Acts::binomial(n - 1, k) << std::endl;
+      std::cout << "n: " << n << ", \tk: " << k
+                << ", \tbinom(n, k): " << Acts::binomial(n, k)
+                << ", \tbinom(n-1, k-1): " << Acts::binomial(n - 1, k - 1)
+                << ", \tbinom(n-1, k): " << Acts::binomial(n - 1, k)
+                << std::endl;
       BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n - 1, k - 1) +
                                                   Acts::binomial(n - 1, k));
       BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n, n - k));
