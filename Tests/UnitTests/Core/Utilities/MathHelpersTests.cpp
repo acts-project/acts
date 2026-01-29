@@ -9,6 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -26,7 +27,7 @@ BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
                      yExp, i) {
-  (void)i;
+  static_cast<void>(i);
 
   const double x = std::pow(10, xExp);
   const double y = std::pow(10, yExp);
@@ -84,7 +85,7 @@ BOOST_AUTO_TEST_CASE(Binomial) {
   // static_assert(Acts::binomial(4u, 5u));
 
   for (unsigned n = 2; n <= 10; ++n) {
-    // Check that the binomial of (n choose 1 is always n)
+    /// Check that the binomial of (n 1 is always n)
     BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
     for (unsigned k = 1; k < n; ++k) {
       // Use recursive formula C(n, k) = C(n-1, k-1) + C(n-1, k)

@@ -128,7 +128,8 @@ constexpr double coeffTn(const unsigned n, const unsigned k) {
   }
   const double sign = (k % 2 == 1 ? -1. : 1.);
   const double t_k = sign * static_cast<double>(factorial(n - k - 1)) /
-                     static_cast<double>(factorial(k) * factorial(n - 2 * k)) *
+                     (static_cast<double>(factorial(k)) *
+                      static_cast<double>(factorial(n - 2 * k))) *
                      static_cast<double>(n) *
                      pow(2., static_cast<int>(n - 2 * k - 1));
   return t_k;

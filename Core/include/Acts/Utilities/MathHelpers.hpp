@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cmath>
 #include <type_traits>
+
 namespace Acts {
 
 /// @brief Returns the absolute of a number
