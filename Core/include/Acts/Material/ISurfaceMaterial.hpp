@@ -96,8 +96,8 @@ class ISurfaceMaterial {
   /// @param mode is the material update directive
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
-                            MaterialUpdateMode mode) const;
+  virtual MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
+                                    MaterialUpdateMode mode) const;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
@@ -107,8 +107,8 @@ class ISurfaceMaterial {
   /// @param mode is the material update directive
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector3& gp, Direction pDir,
-                            MaterialUpdateMode mode) const;
+  virtual MaterialSlab materialSlab(const Vector3& gp, Direction pDir,
+                                    MaterialUpdateMode mode) const;
 
   /// @brief output stream operator
   ///
