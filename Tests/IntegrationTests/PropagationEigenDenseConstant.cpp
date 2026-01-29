@@ -38,7 +38,7 @@ constexpr auto epsPos = 10_um;
 constexpr auto epsDir = 1_mrad;
 constexpr auto epsMom = 5_MeV;
 
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 
 inline TestPropagator makePropagator(double bz) {

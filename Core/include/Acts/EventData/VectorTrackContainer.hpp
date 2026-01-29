@@ -133,7 +133,7 @@ class VectorTrackContainerBase {
     result = result && m_nSharedHits.size() == size;
 
     for (const auto& [key, col] : m_dynamic) {
-      (void)key;
+      static_cast<void>(key);
       result = result && col->size() == size;
     }
 

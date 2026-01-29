@@ -120,7 +120,6 @@ constexpr T product(const T lowerN, const T upperN) {
     value *= iter;
   }
   return value;
-}
 
 /// @brief Calculate the the factorial of an integer
 /// @param N: Number of which the factorial is to be calculated

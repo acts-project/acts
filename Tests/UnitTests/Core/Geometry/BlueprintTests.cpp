@@ -53,7 +53,7 @@ namespace ActsTests {
 
 auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 auto nameLookup(const TrackingGeometry& geo) {
   return [&](const std::string& name) -> const TrackingVolume& {
@@ -422,15 +422,15 @@ BOOST_AUTO_TEST_CASE(ConfinedWithShared) {
     }
     const auto& nextVol = lookup(volNames[(v + 1)]);
     const Vector3 outside =
-        testMe.transform().translation() +
+        testMe.localToGlobalTransform(gctx).translation() +
         Vector3{150_mm, 0.,
                 actCyl.get(CylinderVolumeBounds::eHalfLengthZ) - 0.5_mm};
-    BOOST_CHECK_EQUAL(nextVol.inside(outside), false);
+    BOOST_CHECK_EQUAL(nextVol.inside(gctx, outside), false);
     const Vector3 inside =
-        testMe.transform().translation() +
+        testMe.localToGlobalTransform(gctx).translation() +
         Vector3{150_mm, 0.,
                 actCyl.get(CylinderVolumeBounds::eHalfLengthZ) + 0.5_mm};
-    BOOST_CHECK_EQUAL(nextVol.inside(inside), true);
+    BOOST_CHECK_EQUAL(nextVol.inside(gctx, inside), true);
   }
 }
 

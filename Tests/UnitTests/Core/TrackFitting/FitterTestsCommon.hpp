@@ -12,7 +12,6 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -128,7 +127,8 @@ struct FitterTester {
   using Rng = std::default_random_engine;
 
   // Context objects
-  Acts::GeometryContext geoCtx;
+  Acts::GeometryContext geoCtx =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
   Acts::MagneticFieldContext magCtx;
   Acts::CalibrationContext calCtx;
 
@@ -529,7 +529,7 @@ struct FitterTester {
       // count the number of outliers
       std::size_t nOutliers = 0;
       for (const auto state : track.trackStatesReversed()) {
-        nOutliers += state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+        nOutliers += state.typeFlags().isOutlier();
       }
       BOOST_CHECK_EQUAL(nOutliers, 1u);
       BOOST_REQUIRE(!track.hasReferenceSurface());

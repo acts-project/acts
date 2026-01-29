@@ -61,8 +61,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto itrack = 0ul;
   for (const auto& track : inputTracks) {
     // Check if you are not in picking mode
+    ++itrack;
     if (m_cfg.pickTrack > -1 &&
-        static_cast<std::size_t>(m_cfg.pickTrack) != itrack++) {
+        static_cast<std::size_t>(m_cfg.pickTrack) != itrack - 1) {
       continue;
     }
 
