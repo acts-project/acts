@@ -854,9 +854,9 @@ class Gx2Fitter {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
           const MaterialUpdateMode updateMode =
-              detail::determineMaterialUpdateMode(
+              Acts::detail::determineMaterialUpdateMode(
                   state, navigator, MaterialUpdateMode::FullUpdate);
-          const MaterialSlab slab = detail::evaluateMaterialSlab(
+          const MaterialSlab slab = Acts::detail::evaluateMaterialSlab(
               state, stepper, *surface, updateMode);
           const bool slabIsValid = !slab.isVacuum();
 
