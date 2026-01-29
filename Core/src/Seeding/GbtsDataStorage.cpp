@@ -221,7 +221,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
         continue;
       }
 
-      for (std::uint32_t nIdx = 0; nIdx < B.m_vn.size(); nIdx++) {
+      for (std::uint32_t nIdx = 0; nIdx < B.m_vn.size(); ++nIdx) {
         float cluster_width = B.m_vn[nIdx]->pixelClusterWidth();
         float locPosY = B.m_vn[nIdx]->localPositionY();
 

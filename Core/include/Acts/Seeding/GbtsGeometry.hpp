@@ -40,17 +40,14 @@ class GbtsLayer {
 
   std::int32_t getEtaBin(float zh, float rh) const;
 
-  float getMinBinRadius(std::int32_t idx) const;
-  float getMaxBinRadius(std::int32_t idx) const;
-
   std::int32_t numOfBins() const { return m_bins.size(); }
 
   const std::vector<std::int32_t>& getBins() const { return m_bins; }
 
   const TrigInDetSiLayer* getLayer() const { return m_layer; }
 
-  bool verifyBin(const GbtsLayer* pL, std::int32_t b1, std::int32_t b2,
-                 float min_z0, float max_z0) const;
+  bool verifyBin(const GbtsLayer* pL, std::uint32_t b1, std::uint32_t b2,
+                 float minZ0, float maxZ0) const;
 
  protected:
   const TrigInDetSiLayer* m_layer{};
@@ -68,7 +65,7 @@ class GbtsLayer {
   float m_z1{};
   float m_r2{};
   float m_z2{};
-  std::int32_t m_nBins{};
+  std::uint32_t m_nBins{};
 };
 
 class GbtsGeometry {
@@ -91,7 +88,7 @@ class GbtsGeometry {
   }
 
  protected:
-  const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, std::int32_t bin0);
+  const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, std::uint32_t bin0);
 
   float m_etaBinWidth{};
 
