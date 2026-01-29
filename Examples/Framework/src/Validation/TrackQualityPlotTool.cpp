@@ -19,8 +19,8 @@ using namespace Acts::Experimental;
 namespace {
 
 ProfileHistogram1 makeProfile(
-    const ActsExamples::TrackQualityPlotTool::Config& cfg, const std::string &name,
-    const std::string& title, const AxisVariant& ax,
+    const ActsExamples::TrackQualityPlotTool::Config& cfg,
+    const std::string& name, const std::string& title, const AxisVariant& ax,
     const std::string& sampleTitle) {
   const auto& yAxis = cfg.varBinning.at("Num");
   Acts::Range1D<double> yRange{yAxis.bin(0).lower(),
@@ -37,14 +37,14 @@ TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("TrackQualityPlotTool", lvl)),
       m_completenessVsPt(makeProfile(m_cfg, "completeness_vs_pT",
-                                     "Completeness",
-                                     m_cfg.varBinning.at("Pt"), "Completeness")),
-      m_completenessVsEta(makeProfile(m_cfg, "completeness_vs_eta",
-                                      "Completeness",
-                                      m_cfg.varBinning.at("Eta"), "Completeness")),
-      m_completenessVsPhi(makeProfile(m_cfg, "completeness_vs_phi",
-                                      "Completeness",
-                                      m_cfg.varBinning.at("Phi"), "Completeness")),
+                                     "Completeness", m_cfg.varBinning.at("Pt"),
+                                     "Completeness")),
+      m_completenessVsEta(
+          makeProfile(m_cfg, "completeness_vs_eta", "Completeness",
+                      m_cfg.varBinning.at("Eta"), "Completeness")),
+      m_completenessVsPhi(
+          makeProfile(m_cfg, "completeness_vs_phi", "Completeness",
+                      m_cfg.varBinning.at("Phi"), "Completeness")),
       m_purityVsPt(makeProfile(m_cfg, "purity_vs_pT", "Purity",
                                m_cfg.varBinning.at("Pt"), "Purity")),
       m_purityVsEta(makeProfile(m_cfg, "purity_vs_eta", "Purity",

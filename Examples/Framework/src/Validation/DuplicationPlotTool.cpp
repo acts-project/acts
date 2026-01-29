@@ -19,8 +19,8 @@ using namespace Acts::Experimental;
 namespace {
 
 ProfileHistogram1 makeProfile(
-    const ActsExamples::DuplicationPlotTool::Config& cfg, const std::string &name,
-    const std::string& title, const AxisVariant& ax) {
+    const ActsExamples::DuplicationPlotTool::Config& cfg,
+    const std::string& name, const std::string& title, const AxisVariant& ax) {
   const auto& yAxis = cfg.varBinning.at("Num");
   Acts::Range1D<double> yRange{yAxis.bin(0).lower(),
                                yAxis.bin(yAxis.size() - 1).upper()};

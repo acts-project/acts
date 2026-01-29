@@ -18,7 +18,7 @@ using namespace ActsExamples;
 namespace {
 
 ProfileHistogram1 makeProfile(
-    const TrackSummaryPlotTool::TrackSummaryPlotTool::Config &cfg,
+    const TrackSummaryPlotTool::TrackSummaryPlotTool::Config& cfg,
     std::string name, const std::string& title,
     const Acts::Experimental::AxisVariant& ax) {
   if (!cfg.prefix.empty()) {
