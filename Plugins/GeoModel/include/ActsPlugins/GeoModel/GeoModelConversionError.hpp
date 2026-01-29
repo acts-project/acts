@@ -15,6 +15,7 @@ class GeoFullPhysVol;
 
 namespace ActsPlugins {
 
+/// Error codes for GeoModel conversion operations
 /// @ingroup errors
 enum class GeoModelConversionError {
   // ensure all values are non-zero
@@ -28,6 +29,9 @@ enum class GeoModelConversionError {
   MissingLogicalVolume
 };
 
+/// Create error code from GeoModelConversionError
+/// @param e Error code enum value
+/// @return Error code
 std::error_code make_error_code(GeoModelConversionError e);
 
 }  // namespace ActsPlugins

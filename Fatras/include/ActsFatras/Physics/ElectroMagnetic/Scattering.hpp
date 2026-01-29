@@ -73,8 +73,11 @@ struct GenericScattering {
   }
 };
 
+/// Scattering with Gaussian mixture model
 using GaussianMixtureScattering = GenericScattering<detail::GaussianMixture>;
+/// Scattering with general mixture model
 using GeneralMixtureScattering = GenericScattering<detail::GeneralMixture>;
+/// Scattering with Highland model
 using HighlandScattering = GenericScattering<detail::Highland>;
 
 }  // namespace ActsFatras

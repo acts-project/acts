@@ -47,13 +47,15 @@ namespace Acts {
 /// Author(s) Russo, F
 class FullBilloirVertexFitter {
  public:
+  /// Configuration options for the Billoir vertex fitter.
   struct Config {
     /// Maximum number of iterations in fitter
     int maxIterations = 5;
 
-    // Function to extract parameters from InputTrack
+    /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
 
+    /// Track linearizer
     TrackLinearizer trackLinearizer;
   };
 

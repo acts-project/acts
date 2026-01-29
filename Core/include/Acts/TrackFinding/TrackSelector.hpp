@@ -30,16 +30,24 @@ class TrackSelector {
   static constexpr double inf = std::numeric_limits<double>::infinity();
 
  public:
+  /// Measurement counting rules for geometry-specific requirements.
   struct MeasurementCounter {
-    // Combination of a geometry hierarchy map and a minimum hit count
+    /// Type combining a geometry hierarchy map and a minimum hit count
     using CounterElement =
         std::pair<GeometryHierarchyMap<unsigned int>, unsigned int>;
 
+    /// Collection of counter elements
     boost::container::small_vector<CounterElement, 4> counters;
 
+    /// Check if track satisfies all measurement requirements
+    /// @param track The track to check
+    /// @return True if track satisfies all counter thresholds
     template <TrackProxyConcept track_proxy_t>
     bool isValidTrack(const track_proxy_t& track) const;
 
+    /// Add a new counter with threshold for specified geometry
+    /// @param identifiers Geometry identifiers to count measurements in
+    /// @param threshold Minimum number of required measurements
     void addCounter(const std::vector<GeometryIdentifier>& identifiers,
                     unsigned int threshold) {
       std::vector<GeometryHierarchyMap<unsigned int>::InputElement> elements;

@@ -389,11 +389,14 @@ class VectorMultiTrajectory final
   VectorMultiTrajectory() = default;
   using VectorMultiTrajectoryBase::VectorMultiTrajectoryBase;
 
+  /// Get statistics about memory usage
+  /// @return Statistics object
   Statistics statistics() const {
     return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
   }
 
   // BEGIN INTERFACE
+  /// @cond
   TrackStateProxy::Parameters parameters_impl(IndexType parIdx) {
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
   }
@@ -402,7 +405,9 @@ class VectorMultiTrajectory final
       IndexType parIdx) const {
     return ConstTrackStateProxy::ConstParameters{m_params[parIdx].data()};
   }
+  /// @endcond
 
+  /// @cond
   TrackStateProxy::Covariance covariance_impl(IndexType parIdx) {
     return TrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
@@ -411,7 +416,9 @@ class VectorMultiTrajectory final
       IndexType parIdx) const {
     return ConstTrackStateProxy::ConstCovariance{m_cov[parIdx].data()};
   }
+  /// @endcond
 
+  /// @cond
   TrackStateProxy::Covariance jacobian_impl(IndexType istate) {
     IndexType jacIdx = m_index[istate].ijacobian;
     return TrackStateProxy::Covariance{m_jac[jacIdx].data()};
@@ -421,7 +428,9 @@ class VectorMultiTrajectory final
     IndexType jacIdx = m_index[istate].ijacobian;
     return ConstTrackStateProxy::ConstCovariance{m_jac[jacIdx].data()};
   }
+  /// @endcond
 
+  /// @cond
   template <std::size_t measdim>
   TrackStateProxy::Calibrated<measdim> calibrated_impl(IndexType istate) {
     IndexType offset = m_measOffset[istate];
@@ -434,7 +443,9 @@ class VectorMultiTrajectory final
     IndexType offset = m_measOffset[istate];
     return ConstTrackStateProxy::ConstCalibrated<measdim>{&m_meas[offset]};
   }
+  /// @endcond
 
+  /// @cond
   template <std::size_t measdim>
   TrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
       IndexType istate) {
@@ -449,25 +460,46 @@ class VectorMultiTrajectory final
     return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
+  /// @endcond
 
+  /// Add a track state with the given mask and previous index
+  /// @param mask Components to allocate
+  /// @param iprevious Index of the previous track state
+  /// @return Index of the added track state
   IndexType addTrackState_impl(
       TrackStatePropMask mask = TrackStatePropMask::All,
       IndexType iprevious = kInvalid);
 
+  /// Add components to an existing track state
+  /// @param istate Index of the track state
+  /// @param mask Components to add
   void addTrackStateComponents_impl(IndexType istate, TrackStatePropMask mask);
 
+  /// Reserve space for track states
+  /// @param n Number of track states to reserve space for
   void reserve(std::size_t n);
 
+  /// Share components from one track state to another
+  /// @param iself Index of the destination track state
+  /// @param iother Index of the source track state
+  /// @param shareSource Mask of components to share from source
+  /// @param shareTarget Mask of components to share to target
   void shareFrom_impl(IndexType iself, IndexType iother,
                       TrackStatePropMask shareSource,
                       TrackStatePropMask shareTarget);
 
+  /// Unset components of a track state
+  /// @param target Mask of components to unset
+  /// @param istate Index of the track state
   void unset_impl(TrackStatePropMask target, IndexType istate);
 
+  /// @cond
   bool has_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
+  /// Get the number of track states
+  /// @return Number of track states
   IndexType size_impl() const { return static_cast<IndexType>(m_index.size()); }
 
   void clear_impl();
@@ -481,17 +513,24 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(
         *this, key, istate);
   }
+  /// @endcond
 
+  /// Add a dynamic column
+  /// @tparam T Column value type
+  /// @param key Column name
   template <typename T>
   void addColumn_impl(std::string_view key) {
     HashedString hashedKey = hashStringDynamic(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
+  /// @cond
   bool hasColumn_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
+  /// @endcond
 
+  /// @cond
   template <typename val_t, typename cov_t>
   void allocateCalibrated_impl(IndexType istate,
                                const Eigen::DenseBase<val_t>& val,
@@ -542,6 +581,7 @@ class VectorMultiTrajectory final
 
   void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
                             const std::any& srcPtr);
+  /// @endcond
 
   // END INTERFACE
 };
@@ -570,33 +610,51 @@ class ConstVectorMultiTrajectory final
 
   using VectorMultiTrajectoryBase::VectorMultiTrajectoryBase;
 
+  /// Constructor from VectorMultiTrajectory
+  /// @param other VectorMultiTrajectory to construct from
   explicit ConstVectorMultiTrajectory(const VectorMultiTrajectory& other)
       : VectorMultiTrajectoryBase{other} {}
 
+  /// Move constructor from VectorMultiTrajectory
+  /// @param other VectorMultiTrajectory to move from
   explicit ConstVectorMultiTrajectory(VectorMultiTrajectory&& other)
       : VectorMultiTrajectoryBase{std::move(other)} {}
 
+  /// Get statistics about this multi trajectory
+  /// @return Statistics object
   Statistics statistics() const {
     return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
   }
 
   // BEGIN INTERFACE
 
+  /// Get parameters for a track state
+  /// @param parIdx The parameter index
+  /// @return Parameters vector
   ConstTrackStateProxy::ConstParameters parameters_impl(
       IndexType parIdx) const {
     return ConstTrackStateProxy::ConstParameters{m_params[parIdx].data()};
   }
 
+  /// Get covariance for a track state
+  /// @param parIdx The parameter index
+  /// @return Covariance matrix
   ConstTrackStateProxy::ConstCovariance covariance_impl(
       IndexType parIdx) const {
     return ConstTrackStateProxy::ConstCovariance{m_cov[parIdx].data()};
   }
 
+  /// Get jacobian for a track state
+  /// @param istate The track state index
+  /// @return Jacobian matrix
   ConstTrackStateProxy::ConstCovariance jacobian_impl(IndexType istate) const {
     IndexType jacIdx = m_index[istate].ijacobian;
     return ConstTrackStateProxy::ConstCovariance{m_jac[jacIdx].data()};
   }
 
+  /// Get calibrated measurement for a track state
+  /// @param istate Index of the track state
+  /// @return Calibrated measurement
   template <std::size_t measdim>
   ConstTrackStateProxy::ConstCalibrated<measdim> calibrated_impl(
       IndexType istate) const {
@@ -604,6 +662,9 @@ class ConstVectorMultiTrajectory final
     return ConstTrackStateProxy::ConstCalibrated<measdim>{&m_meas[offset]};
   }
 
+  /// Get calibrated measurement covariance for a track state
+  /// @param istate Index of the track state
+  /// @return Calibrated measurement covariance
   template <std::size_t measdim>
   ConstTrackStateProxy::ConstCalibratedCovariance<measdim>
   calibratedCovariance_impl(IndexType istate) const {
@@ -612,17 +673,30 @@ class ConstVectorMultiTrajectory final
         &m_measCov[offset]};
   }
 
+  /// Check if a track state has a component
+  /// @param key The component key
+  /// @param istate The track state index
+  /// @return True if the component exists
   bool has_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
+  /// Get the number of track states
+  /// @return Number of track states
   IndexType size_impl() const { return static_cast<IndexType>(m_index.size()); }
 
+  /// Get a component from a track state
+  /// @param key The component key
+  /// @param istate The track state index
+  /// @return The component value
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(
         *this, key, istate);
   }
 
+  /// Check if a column exists
+  /// @param key The column key
+  /// @return True if the column exists
   bool hasColumn_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }

@@ -63,6 +63,7 @@ struct InteractionVolumeCollector {
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
   /// @param [in,out] result is the mutable result object
+  /// @return Result object indicating success or failure
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,

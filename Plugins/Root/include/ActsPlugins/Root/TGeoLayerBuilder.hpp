@@ -63,12 +63,12 @@ class TGeoLayerBuilder : public Acts::ILayerBuilder {
   ///  Helper config structs for volume parsing
   struct LayerConfig {
    public:
+    /// Type alias for range configuration with axis direction and bounds
     using RangeConfig =
         std::pair<Acts::AxisDirection, std::pair<double, double>>;
-    /// Type alias for range configuration with axis direction and bounds
 
-    using SplitConfig = std::pair<Acts::AxisDirection, double>;
     /// Type alias for split configuration with axis direction and position
+    using SplitConfig = std::pair<Acts::AxisDirection, double>;
 
     /// Identify the search volume by name
     std::string volumeName = "";

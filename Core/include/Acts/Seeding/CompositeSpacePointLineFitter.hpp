@@ -46,6 +46,7 @@ class CompositeSpacePointLineFitter {
   template <CompositeSpacePointContainer Cont_t>
   using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
 
+  /// Number of fit parameters
   static constexpr auto s_nPars = toUnderlying(FitParIndex::nPars);
   /// @brief Vector containing the 5 straight segment line parameters
   using ParamVec_t = std::array<double, s_nPars>;
@@ -94,6 +95,7 @@ class CompositeSpacePointLineFitter {
     /// @brief Allowed parameter ranges. If the lower interval edge is higher than the upper
     ///        edge, the parameters are unbound
     using RangeArray = std::array<std::array<double, 2>, s_nPars>;
+    /// Allowed parameter ranges
     RangeArray ranges{
         filledArray<std::array<double, 2>, s_nPars>(std::array{1., -1.})};
     /// @brief Overwrite the set of parameters to use, if it's absolutely necessary
@@ -105,12 +107,18 @@ class CompositeSpacePointLineFitter {
     /// @brief Default constructor
     FitParameters() = default;
     /// @brief Copy constructor
+    /// @param other The parameters to copy
     FitParameters(const FitParameters& other) = default;
     /// @brief Move constructor
+    /// @param other The parameters to move
     FitParameters(FitParameters&& other) = default;
     /// @brief Copy assignment operator
+    /// @param other The parameters to copy
+    /// @return Reference to this object
     FitParameters& operator=(const FitParameters& other) = default;
     /// @brief Move assignment operator
+    /// @param other The parameters to move
+    /// @return Reference to this object
     FitParameters& operator=(FitParameters&& other) = default;
     /// @brief Ostream operator
     friend std::ostream& operator<<(std::ostream& ostr,
@@ -119,6 +127,7 @@ class CompositeSpacePointLineFitter {
       return ostr;
     }
     /// @brief Print function
+    /// @param ostr Output stream
     void print(std::ostream& ostr) const;
     /// @brief Local straight line parameters
     ParamVec_t parameters{filledArray<double, s_nPars>(0)};
@@ -187,16 +196,19 @@ class CompositeSpacePointLineFitter {
       std::unique_ptr<const Logger> logger = getDefaultLogger(
           "CompositeSpacePointLineFitter", Logging::Level::INFO));
   /// @brief Returns the instantiated configuration object
+  /// @return The configuration object
   const Config& config() const { return m_cfg; }
   /// @brief Classify measurements according to whether they measure
   ///        loc0, loc1, time or are straw measurements
   /// @param measurements: Collection of composite space points of interest
+  /// @return Degrees of freedom counts
   template <CompositeSpacePointContainer Cont_t>
   DoFcounts countDoF(const Cont_t& measurements) const;
   /// @brief Classify measurements according to whether they measure
   ///        loc0, loc1, time or are straw measurements
   /// @param measurements: Collection of composite space points of interest
   /// @param selector: Delegate to sort out the invalid measurements
+  /// @return Degrees of freedom counts
   template <CompositeSpacePointContainer Cont_t>
   DoFcounts countDoF(const Cont_t& measurements,
                      const Selector_t<SpacePoint_t<Cont_t>>& selector) const;
@@ -205,10 +217,12 @@ class CompositeSpacePointLineFitter {
   ///        extracted from the hit counts.
   /// @param hitCounts: Filled array representing the degrees of freedom for
   ///                   nonBending, bending, timeStrip, and straw measurement
+  /// @return Vector of fit parameter indices
   std::vector<FitParIndex> extractFitablePars(const DoFcounts& hitCounts) const;
   /// @brief Fit a line to a set of Composite space point measurements.
   /// @param fitOpts: Auxiliary object carrying all necessary input
   ///                 needed to execute the fit
+  /// @return Fit result
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
   FitResult<Cont_t> fit(FitOptions<Cont_t, Calibrator_t>&& fitOpts) const;

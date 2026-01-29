@@ -48,6 +48,7 @@ class GeometryContext : public ContextType {
   /// Static factory method for default construction
   /// @note Use this when you need a default context for testing or
   ///       simple applications without alignment/conditions data
+  /// @return A default-constructed GeometryContext
   static GeometryContext dangerouslyDefaultConstruct() {
     ACTS_PUSH_IGNORE_DEPRECATED()
     return GeometryContext();
