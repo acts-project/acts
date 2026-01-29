@@ -24,7 +24,6 @@ template <std::size_t D, std::size_t N>
 constexpr std::array<double, N - D> derivativeCoefficients(
     const std::array<double, N>& coeffs) {
   static_assert(N > D, "Coefficients trivially collapse to 0.");
-
   if constexpr (D == 0) {
     return coeffs;
   }
