@@ -78,7 +78,7 @@ struct StepWiseActor {
                    const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = navigator.currentSurface(state.navigation);
-    if (surface && surface->associatedDetectorElement()) {
+    if (surface && surface->isSensitive()) {
       // Create a bound state and log the jacobian
       auto boundState = stepper.boundState(state.stepping, *surface).value();
       result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
