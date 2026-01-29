@@ -91,8 +91,8 @@ class GbtsLayer {
   /// @param min_z0 Minimum z0 coordinate
   /// @param max_z0 Maximum z0 coordinate
   /// @return True if bins are compatible
-  bool verifyBin(const GbtsLayer* pL, std::int32_t b1, std::int32_t b2,
-                 float min_z0, float max_z0) const;
+  bool verifyBin(const GbtsLayer* pL, std::uint32_t b1, std::uint32_t b2,
+                 float minZ0, float maxZ0) const;
 
  protected:
   /// Layer
@@ -125,7 +125,7 @@ class GbtsLayer {
   /// Second z coordinate
   float m_z2{};
   /// Number of bins
-  std::int32_t m_nBins{};
+  std::uint32_t m_nBins{};
 };
 
 /// Geometry helper built from silicon layers and connectors.
@@ -171,7 +171,7 @@ class GbtsGeometry {
   /// @param l Silicon layer to add
   /// @param bin0 Starting bin index
   /// @return Pointer to the newly added layer
-  const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, std::int32_t bin0);
+  const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, std::uint32_t bin0);
 
   /// Eta bin width
   float m_etaBinWidth{};
