@@ -55,7 +55,9 @@ class CompositeSpacePointLineFitter {
   struct Config {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
     double precCutOff{1.e-7};
-    /// @brief If the parameter change normalized to their uncertainties is below the cutOff the fit is converged.  For negative cut-offs this convergence schema is effectively deactivated
+    /// @brief If the parameter change normalized to their uncertainties is below the cutOff the fit is converged.
+    //         For negative cut-offs this convergence schema is effectively
+    //         deactivated
     double normPrecCutOff{1.e-2};
     /// @brief Gradient decent step size if the Hessian is singular
     double gradientStep{1.e-4};

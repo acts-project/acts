@@ -69,7 +69,9 @@ class FastStrawLineFitter {
     std::size_t maxIter{10};
     /// @brief Cutoff to define the fit to be converged if the parameter change is below threshold
     double precCutOff{1.e-9};
-    /// @brief If the parameter change normalized to their uncertainties is below the cutOff the fit is converged.  For negative cut-offs this convergence schema is effectively deactivated
+    /// @brief If the parameter change normalized to their uncertainties is below the cutOff the fit is converged.
+    //         For negative cut-offs this convergence schema is effectively
+    //         deactivated
     double normPrecCutOff{1.e-2};
   };
   /// @brief Constructor of the fast straw line fitter
