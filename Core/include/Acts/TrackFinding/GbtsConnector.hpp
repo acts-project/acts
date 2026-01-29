@@ -8,8 +8,6 @@
 
 #pragma once
 
-// TODO: update to C++17 style
-// Consider to moving to detail subdirectory
 #include <map>
 #include <memory>
 #include <vector>
@@ -31,10 +29,10 @@ class GbtsConnector {
     LayerGroup(std::uint32_t l1Key, const std::vector<const GbtsConnection*>& v)
         : m_dst(l1Key), m_sources(v) {};
 
-    std::uint32_t m_dst;  // the target layer of the group
+    std::uint32_t m_dst{};  //< the target layer of the group
 
     std::vector<const GbtsConnection*>
-        m_sources;  // the source layers of the group
+        m_sources;  //< the source layers of the group
   };
 
  public:
