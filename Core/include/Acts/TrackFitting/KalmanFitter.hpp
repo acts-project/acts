@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -460,7 +461,7 @@ class KalmanFitter {
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PreUpdate);
+                           MaterialUpdateMode::PreUpdate);
 
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.
@@ -555,7 +556,7 @@ class KalmanFitter {
 
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PostUpdate);
+                           MaterialUpdateMode::PostUpdate);
         // We count the processed state
         ++result.processedStates;
         // Update the number of holes count only when encountering a
@@ -636,7 +637,7 @@ class KalmanFitter {
 
         // Update state and stepper with (possible) material effects
         materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::FullUpdate);
+                           MaterialUpdateMode::FullUpdate);
       }
 
       return Result<void>::success();
@@ -652,23 +653,23 @@ class KalmanFitter {
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
     /// @param navigator The navigator in use
-    /// @param updateStage The material update stage
-    ///
+    /// @param updateMode The material update mode
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void materialInteractor(const Surface& surface, propagator_state_t& state,
                             const stepper_t& stepper,
                             const navigator_t& navigator,
-                            const MaterialUpdateStage& updateStage) const {
+                            const MaterialUpdateMode& updateMode) const {
       if (surface.surfaceMaterial() == nullptr) {
         ACTS_VERBOSE("No material on surface: " << surface.geometryId());
         return;
       }
 
       // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
+      detail::PointwiseMaterialInteraction interaction(state, stepper,
+                                                       navigator);
 
-      if (!interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
+      if (!interaction.evaluateMaterialSlab(updateMode)) {
         ACTS_VERBOSE("No material on surface after evaluation: "
                      << surface.geometryId());
         return;
@@ -680,8 +681,8 @@ class KalmanFitter {
 
       // Screen out material effects info
       ACTS_VERBOSE("Material effects on surface: " << surface.geometryId()
-                                                   << " at update stage: "
-                                                   << updateStage << " are :");
+                                                   << " with update mode: "
+                                                   << updateMode << " are :");
       ACTS_VERBOSE("eLoss = "
                    << interaction.Eloss << ", "
                    << "variancePhi = " << interaction.variancePhi << ", "
@@ -689,7 +690,7 @@ class KalmanFitter {
                    << "varianceQoverP = " << interaction.varianceQoverP);
 
       // Update the state and stepper with material effects
-      interaction.updateState(state, stepper, addNoise);
+      interaction.updateState(state, stepper, NoiseUpdateMode::addNoise);
     }
   };
 

@@ -852,11 +852,11 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          detail::PointwiseMaterialInteraction interaction(*surface, state,
-                                                           stepper);
+          detail::PointwiseMaterialInteraction interaction(state, stepper,
+                                                           navigator);
           // We need to evaluate the material to create the correct slab
-          const bool slabIsValid = interaction.evaluateMaterialSlab(
-              state, navigator, MaterialUpdateStage::FullUpdate);
+          const bool slabIsValid =
+              interaction.evaluateMaterialSlab(MaterialUpdateMode::FullUpdate);
           double invSigma2 = 0.;
           if (slabIsValid) {
             const auto& particle =

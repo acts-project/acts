@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
@@ -78,12 +79,12 @@ struct MaterialInteractor {
                                            << surface->geometryId());
 
       // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(*surface, state,
-                                                       stepper);
+      detail::PointwiseMaterialInteraction interaction(state, stepper,
+                                                       navigator);
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (interaction.evaluateMaterialSlab(state, navigator)) {
+      if (interaction.evaluateMaterialSlab(MaterialUpdateMode::FullUpdate)) {
         // Evaluate the material effects
         interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
                                                          energyLoss);
