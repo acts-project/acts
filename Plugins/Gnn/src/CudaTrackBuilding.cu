@@ -133,8 +133,8 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   std::vector<std::vector<int>> trackCandidates;
   trackCandidates.reserve(numberLabels);
   for (std::size_t label = 0ul; label < numberLabels; ++label) {
-    std::size_t start = bounds.at(label);
-    std::size_t end = bounds.at(label + 1);
+    int start = bounds.at(label);
+    int end = bounds.at(label + 1);
 
     assert(start >= 0);
     assert(end <= static_cast<int>(numSpacepoints));
