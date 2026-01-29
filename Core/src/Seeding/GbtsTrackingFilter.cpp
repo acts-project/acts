@@ -116,7 +116,7 @@ void GbtsTrackingFilter::followTrack(GbtsEdge& pS, GbtsEdgeState& output) {
 }
 
 void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
-  if (m_globalStateCounter >= MAX_EDGE_STATE) {
+  if (m_globalStateCounter >= GbtsMaxEdgeState) {
     return;
   }
 
@@ -155,7 +155,7 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
   if (lCont.empty()) {  // the end of chain
 
     // store in the vector
-    if (m_globalStateCounter < MAX_EDGE_STATE) {
+    if (m_globalStateCounter < GbtsMaxEdgeState) {
       if (m_stateVec.empty()) {  // add the first segment state
         GbtsEdgeState* p = &m_stateStore[m_globalStateCounter++];
         p->clone(new_ts);
@@ -324,7 +324,7 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
   return true;
 }
 
-std::int32_t GbtsTrackingFilter::getLayerType(std::int32_t l) {
+std::uint32_t GbtsTrackingFilter::getLayerType(std::uint32_t l) {
   return m_geo.at(l).m_type;
 }
 
