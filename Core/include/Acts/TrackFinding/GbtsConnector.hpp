@@ -53,8 +53,8 @@ class GbtsConnector {
  public:
   /// Constructor
   /// @param inFile Input configuration file path
-  /// @param LRTmode Enable LRT (Large Radius Tracking) mode
-  GbtsConnector(std::string& inFile, bool LRTmode);
+  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
+  GbtsConnector(std::string& inFile, bool lrtMode);
 
   /// Eta bin size
   float m_etaBin{};

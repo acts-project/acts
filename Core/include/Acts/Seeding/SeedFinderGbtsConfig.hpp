@@ -14,7 +14,6 @@
 
 #include <string>
 
-/// core algorithm so in acts namespace
 namespace Acts::Experimental {
 
 /// Configuration options for the GBTs seed finder.
@@ -32,7 +31,7 @@ struct SeedFinderGbtsConfig {
 
   // SeedFinderGbts option
   /// Enable Large Radius Tracking mode.
-  bool LRTmode = false;
+  bool lrtMode = false;
   /// Use machine learning features (e.g., cluster width).
   bool useML = false;  // use cluster width
   /// Match seeds before creating them.
@@ -44,35 +43,35 @@ struct SeedFinderGbtsConfig {
   /// Tau ratio precut threshold.
   float tau_ratio_precut = 0.009f;
   /// Eta bin width override (0 uses default from connection file).
-  // specify non-zero to override eta bin width from connection file
-  // (default 0.2 in createLinkingScheme.py)
+  /// specify non-zero to override eta bin width from connection file
+  /// (default 0.2 in createLinkingScheme.py)
   /// Maximum number of phi slices.
   float etaBinOverride = 0.0f;
-  // used to calculate phi slices
+  /// used to calculate phi slices
   /// Minimum transverse momentum.
   float nMaxPhiSlice = 53;
   float minPt = 1.0f * UnitConstants::GeV;
   /// Phi slice width (derived in CreateSeeds function).
-  // derived in CreatSeeds function
+  /// derived in CreatSeeds function
   float phiSliceWidth{};
 
-  /// BuildTheGraph() options
+  // graph building options
   /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of 2*T).
 
   // ~0.3*B/2 - assumes nominal field of 2*T
   double ptCoeff =
       0.29997 * 1.9972 / 2.0;  // ~0.3*B/2 - assumes nominal field of 2*T
-  /// Use eta binning from geometry structure.
-  bool useEtaBinning = true;  // bool to use eta binning from geometry structure
+  //// Use eta binning from geometry structure.
+  bool useEtaBinning = true;  /// bool to use eta binning from geometry structure
   /// Apply RZ cuts on doublets.
   bool doubletFilterRZ = true;  // bool applies new Z cuts on doublets
-  /// Maximum number of Gbts edges/doublets.
+  //// Maximum number of Gbts edges/doublets.
   std::int32_t nMaxEdges = 2000000;  // max number of Gbts edges/doublets
   /// Minimum delta radius between layers.
   float minDeltaRadius = 2.0;
 
-  /// GbtsTrackingFilter
-  // Update()
+  // GbtsTrackingFilter options
+
   /// Multiple scattering sigma (for 900 MeV track at eta=0).
   float sigmaMS = 0.016;  // for 900 MeV track at eta=0
   /// Radiation length fraction per layer (2.5% per layer).
