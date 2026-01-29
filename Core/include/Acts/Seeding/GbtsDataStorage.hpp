@@ -101,11 +101,11 @@ class GbtsDataStorage {
                            const SeedFinderGbtsConfig& config,
                            GbtsMLLookupTable mlLUT);
 
-  std::int32_t loadPixelGraphNodes(std::int16_t layerIndex,
-                                   const std::span<const GbtsNode> coll,
-                                   bool useML);
-  std::int32_t loadStripGraphNodes(std::int16_t layerIndex,
-                                   const std::span<const GbtsNode> coll);
+  std::uint32_t loadPixelGraphNodes(std::uint16_t layerIndex,
+                                    const std::span<const GbtsNode> coll,
+                                    bool useML);
+  std::uint32_t loadStripGraphNodes(std::uint16_t layerIndex,
+                                    const std::span<const GbtsNode> coll);
 
   std::uint32_t numberOfNodes() const;
   void sortByPhi();
