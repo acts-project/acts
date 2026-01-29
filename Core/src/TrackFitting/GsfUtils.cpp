@@ -79,7 +79,7 @@ double detail::gsf::applyBetheHeitler(
   // Evaluate material slab
   MaterialSlab slab = surface.surfaceMaterial()->materialSlab(
       initialParameters.position(geoContext), direction,
-      MaterialUpdateStage::FullUpdate);
+      MaterialUpdateMode::FullUpdate);
 
   const double pathCorrection =
       surface.pathCorrection(geoContext, initialParameters.position(geoContext),
