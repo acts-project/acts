@@ -171,15 +171,15 @@ class GbtsDataStorage {
   /// @param coll Collection of nodes to load
   /// @param useML Use machine learning features
   /// @return Number of nodes loaded
-  std::int32_t loadPixelGraphNodes(std::int16_t layerIndex,
-                                   const std::span<const GbtsNode> coll,
-                                   bool useML);
+  std::uint32_t loadPixelGraphNodes(std::uint16_t layerIndex,
+                                    const std::span<const GbtsNode> coll,
+                                    bool useML);
   /// Load strip graph nodes
   /// @param layerIndex Layer index for the nodes
   /// @param coll Collection of nodes to load
   /// @return Number of nodes loaded
-  std::int32_t loadStripGraphNodes(std::int16_t layerIndex,
-                                   const std::span<const GbtsNode> coll);
+  std::uint32_t loadStripGraphNodes(std::uint16_t layerIndex,
+                                    const std::span<const GbtsNode> coll);
 
   /// Get the total number of nodes
   /// @return Total number of nodes
