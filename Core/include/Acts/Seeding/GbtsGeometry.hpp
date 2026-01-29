@@ -79,14 +79,14 @@ class GbtsGeometry {
   const GbtsLayer* getGbtsLayerByKey(std::uint32_t key) const;
   const GbtsLayer* getGbtsLayerByIndex(std::int32_t idx) const;
 
-  inline std::uint32_t getGbtsLayerKeyByIndex(std::int32_t idx) const {
+  inline std::uint32_t getGbtsLayerKeyByIndex(std::uint32_t idx) const {
     return m_layerKeys[idx];
   }
 
-  std::int32_t num_bins() const { return m_nEtaBins; }
-  std::uint32_t num_layers() const { return m_layArray.size(); }
+  std::uint32_t numBins() const { return m_nEtaBins; }
+  std::uint32_t numLayers() const { return m_layArray.size(); }
   const std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>>&
-  bin_groups() const {
+  binGroups() const {
     return m_binGroups;
   }
 
@@ -98,7 +98,7 @@ class GbtsGeometry {
   std::map<std::uint32_t, GbtsLayer*> m_layMap;
   std::vector<std::unique_ptr<GbtsLayer>> m_layArray;
   std::vector<std::uint32_t> m_layerKeys;
-  std::int32_t m_nEtaBins{};
+  std::uint32_t m_nEtaBins{};
 
   std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>> m_binGroups;
 };
