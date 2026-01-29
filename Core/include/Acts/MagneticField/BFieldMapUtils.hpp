@@ -31,7 +31,7 @@ namespace Acts {
 /// @{
 
 class SolenoidBField;
-class ToroidalField;
+class ToroidField;
 
 /// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of r,z to the global
@@ -165,7 +165,7 @@ solenoidFieldMap(const std::pair<double, double>& rLim,
                  const std::pair<std::size_t, std::size_t>& nBins,
                  const SolenoidBField& field);
 
-/// Function which takes an existing ToroidalField instance and creates a
+/// Function which takes an existing ToroidField instance and creates a
 /// cylindrical field mapper by sampling grid points from the analytical
 /// toroidal field.
 ///
@@ -173,21 +173,21 @@ solenoidFieldMap(const std::pair<double, double>& rLim,
 /// @param phiLim pair of phi bounds
 /// @param zLim pair of z bounds
 /// @param nBins tuple of bin counts
-/// @param field the toroidal field instance
+/// @param field the toroid field instance
 ///
 /// @return A field map instance for use in interpolation.
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>>>
-toroidalFieldMapCyl(
+toroidFieldMapCyl(
     const std::pair<double, double>& rLim,
     const std::pair<double, double>& phiLim,
     const std::pair<double, double>& zLim,
     const std::tuple<std::size_t, std::size_t, std::size_t>& nBins,
-    const ToroidalField& field);
+    const ToroidField& field);
 
-/// Function which takes an existing ToroidalField instance and creates a
+/// Function which takes an existing ToroidField instance and creates a
 /// Cartesian field mapper by sampling grid points from the analytical toroidal
 /// field.
 ///
@@ -195,19 +195,19 @@ toroidalFieldMapCyl(
 /// @param yLim pair of y bounds
 /// @param zLim pair of z bounds
 /// @param nBins tuple of bin counts
-/// @param field the toroidal field instance
+/// @param field the toroid field instance
 ///
 /// @return A field map instance for use in interpolation.
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>>>
-toroidalFieldMapXYZ(
+toroidFieldMapXYZ(
     const std::pair<double, double>& xLim,
     const std::pair<double, double>& yLim,
     const std::pair<double, double>& zLim,
     const std::tuple<std::size_t, std::size_t, std::size_t>& nBins,
-    const ToroidalField& field);
+    const ToroidField& field);
 
 /// @}
 

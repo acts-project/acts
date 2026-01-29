@@ -18,8 +18,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def create_toroidal_field():
     """Create a toroidal field with default configuration"""
-    config = acts.ToroidalField.Config()
-    return acts.ToroidalField(config)
+    config = acts.ToroidField.Config()
+    return acts.ToroidField(config)
 
 
 def benchmark_single_evaluations(field, num_evaluations=10000):
@@ -574,13 +574,13 @@ def main():
 
     args = parser.parse_args()
 
-    print("=== Toroidal Magnetic Field Benchmark ===")
+    print("=== Toroid Magnetic Field Benchmark ===")
     print(f"ACTS version: {acts.version}")
 
     # Create toroidal field
     print("\nCreating toroidal field...")
     field = create_toroidal_field()
-    print("✓ Toroidal field created successfully")
+    print("✓ Toroid field created successfully")
 
     # Run benchmarks
     try:

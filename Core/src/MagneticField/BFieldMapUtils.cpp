@@ -10,7 +10,7 @@
 
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/MagneticField/ToroidalField.hpp"
+#include "Acts/MagneticField/ToroidField.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -255,12 +255,12 @@ solenoidFieldMap(const std::pair<double, double>& rLim,
 InterpolatedBFieldMap<
     Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
          Axis<AxisType::Equidistant>>>
-toroidalFieldMapCyl(
+toroidFieldMapCyl(
     const std::pair<double, double>& rLim,
     const std::pair<double, double>& phiLim,
     const std::pair<double, double>& zLim,
     const std::tuple<std::size_t, std::size_t, std::size_t>& nBins,
-    const ToroidalField& field) {
+    const ToroidField& field) {
   // Create magnetic field context and cache
   MagneticFieldContext ctx;
   auto cache = field.makeCache(ctx);
@@ -273,7 +273,7 @@ toroidalFieldMapCyl(
   // Guard against degenerate configs
   if (nBinsR < 2 || nBinsP < 2 || nBinsZ < 2) {
     throw std::invalid_argument(
-        "toroidalFieldMapCyl: each dimension needs at least 2 bins");
+        "toroidFieldMapCyl: each dimension needs at least 2 bins");
   }
 
   // Follow solenoid style: extend upper edge by one step to accommodate
@@ -375,12 +375,12 @@ toroidalFieldMapCyl(
 InterpolatedBFieldMap<
     Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
          Axis<AxisType::Equidistant>>>
-toroidalFieldMapXYZ(
+toroidFieldMapXYZ(
     const std::pair<double, double>& xLim,
     const std::pair<double, double>& yLim,
     const std::pair<double, double>& zLim,
     const std::tuple<std::size_t, std::size_t, std::size_t>& nBins,
-    const ToroidalField& field) {
+    const ToroidField& field) {
   // Create magnetic field context and cache
   MagneticFieldContext ctx;
   auto cache = field.makeCache(ctx);
@@ -392,7 +392,7 @@ toroidalFieldMapXYZ(
 
   if (nBinsX < 2 || nBinsY < 2 || nBinsZ < 2) {
     throw std::invalid_argument(
-        "toroidalFieldMapXYZ: each dimension needs at least 2 bins");
+        "toroidFieldMapXYZ: each dimension needs at least 2 bins");
   }
 
   double stepX = std::abs(xMax - xMin) / static_cast<double>(nBinsX - 1);

@@ -12,7 +12,7 @@
 //
 // MPL 2.0: https://mozilla.org/MPL/2.0/
 
-#include "Acts/MagneticField/ToroidalField.hpp"
+#include "Acts/MagneticField/ToroidField.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 
@@ -26,9 +26,9 @@ namespace Acts {
 // Ctors
 //-------------------------
 
-ToroidalField::ToroidalField() : ToroidalField(Config{}) {}
+ToroidField::ToroidField() : ToroidField(Config{}) {}
 
-ToroidalField::ToroidalField(Config cfg) : m_cfg(std::move(cfg)) {
+ToroidField::ToroidField(Config cfg) : m_cfg(std::move(cfg)) {
   // Fill default signs if not provided
   const int nC = m_cfg.layout.nCoils;
   if (m_cfg.barrelSigns.empty()) {
@@ -40,11 +40,11 @@ ToroidalField::ToroidalField(Config cfg) : m_cfg(std::move(cfg)) {
   // Sanity on sizes
   if (static_cast<int>(m_cfg.barrelSigns.size()) != nC) {
     throw std::invalid_argument(
-        "ToroidalField: barrelSigns size must equal nCoils");
+        "ToroidField: barrelSigns size must equal nCoils");
   }
   if (static_cast<int>(m_cfg.ectSigns.size()) != 2 * nC) {
     throw std::invalid_argument(
-        "ToroidalField: ectSigns size must equal 2*nCoils");
+        "ToroidField: ectSigns size must equal 2*nCoils");
   }
 
   buildGeometry();
@@ -54,12 +54,12 @@ ToroidalField::ToroidalField(Config cfg) : m_cfg(std::move(cfg)) {
 // MagneticFieldProvider
 //-------------------------
 
-MagneticFieldProvider::Cache ToroidalField::makeCache(
+MagneticFieldProvider::Cache ToroidField::makeCache(
     const MagneticFieldContext& mctx) const {
   return MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);
 }
 
-Result<Vector3> ToroidalField::getField(
+Result<Vector3> ToroidField::getField(
     const Vector3& position, MagneticFieldProvider::Cache& cache) const {
   (void)cache;
 
@@ -89,7 +89,7 @@ Result<Vector3> ToroidalField::getField(
 // Private helpers
 //-------------------------
 
-void ToroidalField::accumulateBarrelField(double X, double Y, double Z,
+void ToroidField::accumulateBarrelField(double X, double Y, double Z,
                                           double eps, double pref, double& bx,
                                           double& by, double& bz) const {
   for (std::size_t i = 0; i < m_mids_barrel.size(); ++i) {
@@ -117,7 +117,7 @@ void ToroidalField::accumulateBarrelField(double X, double Y, double Z,
   }
 }
 
-void ToroidalField::accumulateEndcapField(double X, double Y, double Z,
+void ToroidField::accumulateEndcapField(double X, double Y, double Z,
                                           double eps, double pref, double& bx,
                                           double& by, double& bz) const {
   for (std::size_t i = 0; i < m_mids_ect.size(); ++i) {
@@ -147,7 +147,7 @@ void ToroidalField::accumulateEndcapField(double X, double Y, double Z,
 
 // End-cap racetrack with LONG straights along z (kept for parity with
 // header-only version)
-std::vector<std::array<float, 2>> ToroidalField::ectRacetrackRadial(
+std::vector<std::array<float, 2>> ToroidField::ectRacetrackRadial(
     float Lrho, float Lz, int nArc, int nStraight, bool close) {
   const float rr = 0.5f * Lrho;  // radial half-span
   const float rz = 0.5f * Lz;    // axial half-length
@@ -194,7 +194,7 @@ std::vector<std::array<float, 2>> ToroidalField::ectRacetrackRadial(
 }
 
 // Rounded-rectangle racetrack in local (ρ, z)
-std::vector<std::array<float, 2>> ToroidalField::racetrackRZ(float a, float b,
+std::vector<std::array<float, 2>> ToroidField::racetrackRZ(float a, float b,
                                                              float Lz, int nArc,
                                                              int nStraight,
                                                              bool close) {
@@ -249,7 +249,7 @@ std::vector<std::array<float, 2>> ToroidalField::racetrackRZ(float a, float b,
   return pts;
 }
 
-void ToroidalField::buildSegsMidsRZ(const std::vector<std::array<float, 2>>& rz,
+void ToroidField::buildSegsMidsRZ(const std::vector<std::array<float, 2>>& rz,
                                     std::vector<std::array<float, 2>>& d_rz,
                                     std::vector<std::array<float, 2>>& m_rz) {
   d_rz.clear();
@@ -265,7 +265,7 @@ void ToroidalField::buildSegsMidsRZ(const std::vector<std::array<float, 2>>& rz,
   }
 }
 
-void ToroidalField::mapRingToXYZ(float l,
+void ToroidField::mapRingToXYZ(float l,
                                  const std::vector<std::array<float, 2>>& m_rz,
                                  const std::vector<std::array<float, 2>>& d_rz,
                                  float phi, int sign, float zShift,
@@ -287,7 +287,7 @@ void ToroidalField::mapRingToXYZ(float l,
   }
 }
 
-void ToroidalField::buildGeometry() {
+void ToroidField::buildGeometry() {
   // ---- Barrel base curve ----
   const float rEndB = 0.5f * m_cfg.barrel.b;
   const float lB = 0.5f * (m_cfg.barrel.R_in + m_cfg.barrel.R_out);

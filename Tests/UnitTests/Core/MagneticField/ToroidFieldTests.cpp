@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/ToroidalField.hpp"
+#include "Acts/MagneticField/ToroidField.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -22,13 +22,13 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(MagneticFieldSuite)
 
-BOOST_AUTO_TEST_CASE(TestToroidalField) {
+BOOST_AUTO_TEST_CASE(TestToroidField) {
   MagneticFieldContext mfContext = MagneticFieldContext();
 
-  ToroidalField::Config cfg{};
+  ToroidField::Config cfg{};
   cfg.layout.nArc = 20;
   cfg.layout.nStraight = 10;
-  ToroidalField field(cfg);
+  ToroidField field(cfg);
 
   auto cache = field.makeCache(mfContext);
 

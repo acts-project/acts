@@ -19,13 +19,13 @@
 
 namespace Acts {
 
-/// Toroidal magnetic field implementation
+/// Toroid magnetic field implementation
 ///
-/// This class implements a toroidal magnetic field configuration similar to
+/// This class implements a toroid magnetic field configuration similar to
 /// those used in ATLAS and other detector systems. It uses Biot-Savart
 /// calculations with discrete current-carrying wire segments to compute
 /// the field at any position.
-class ToroidalField final : public MagneticFieldProvider {
+class ToroidField final : public MagneticFieldProvider {
  public:
   /// Configuration for barrel toroid coils
   struct BarrelConfig {
@@ -62,7 +62,7 @@ class ToroidalField final : public MagneticFieldProvider {
     double eps = 1e-18;  ///< Small epsilon for numerical stability
   };
 
-  /// Full configuration for the toroidal field
+  /// Full configuration for the toroid field
   struct Config {
     BarrelConfig barrel;  ///< Barrel coil configuration
     EctConfig ect;        ///< End-cap toroid configuration
@@ -83,9 +83,9 @@ class ToroidalField final : public MagneticFieldProvider {
   };
 
   /// Construct with default configuration
-  ToroidalField();
+  ToroidField();
   /// Construct with custom configuration
-  explicit ToroidalField(Config cfg);
+  explicit ToroidField(Config cfg);
 
   /// @copydoc MagneticFieldProvider::makeCache
   MagneticFieldProvider::Cache makeCache(

@@ -5,10 +5,10 @@
 # See LICENSE for details.
 
 """
-ToroidalFieldMap Benchmark and Visualization.
+ToroidFieldMap Benchmark and Visualization.
 
-This script provides optimized benchmarking and visualization of ACTS ToroidalField
-vs ToroidalFieldMap (LUT) implementations.
+This script provides optimized benchmarking and visualization of ACTS ToroidField
+vs ToroidFieldMap (LUT) implementations.
 
 Performance Features:
 - Session-based LUT caching
@@ -57,9 +57,9 @@ from matplotlib.colors import LogNorm
 
 
 def create_analytical_field():
-    """Create the analytical toroidal field"""
-    config = acts.ToroidalField.Config()
-    return acts.ToroidalField(config)
+    """Create the analytical toroid field"""
+    config = acts.ToroidField.Config()
+    return acts.ToroidField(config)
 
 
 # Global cache for LUT within session
@@ -268,11 +268,11 @@ def _create_lut_from_field_data(field_grid, params):
     # This is a placeholder - we'd need to extend ACTS API or use a different approach
 
     # Create analytical field (this is temporary)
-    config = acts.ToroidalField.Config()
-    analytical_field = acts.ToroidalField(config)
+    config = acts.ToroidField.Config()
+    analytical_field = acts.ToroidField(config)
 
     # Create LUT normally (this will recompute, but we have the data cached)
-    lut_field = acts.toroidalFieldMapCyl(
+    lut_field = acts.toroidFieldMapCyl(
         params["rLim"],
         params["phiLim"],
         params["zLim"],
@@ -652,7 +652,7 @@ def create_fast_difference_plot(points, analytical_mag, lut_mag, output_path):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="ToroidalField vs ToroidalFieldMap benchmark"
+        description="ToroidField vs ToroidFieldMap benchmark"
     )
     parser.add_argument(
         "--resolution",
@@ -684,7 +684,7 @@ def main():
 
     args = parser.parse_args()
 
-    print("=== Toroidal Field Map Benchmark ===")
+    print("=== Toroid Field Map Benchmark ===")
     print(f"Configuration:")
     print(f"  LUT Resolution: {args.resolution}")
     print(f"  Comparison points: {args.n_points}")
