@@ -235,7 +235,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
   std::int32_t nEdges = 0;
 
-  for (const auto& bg : m_geo->bin_groups()) {  // loop over bin groups
+  for (const auto& bg : m_geo->binGroups()) {  // loop over bin groups
 
     GbtsEtaBin& B1 = storage->getEtaBin(bg.first);
 
@@ -276,7 +276,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
         std::vector<std::uint32_t>& v1In = B1.m_in[n1Idx];
 
-        if (v1In.size() >= MAX_SEG_PER_NODE) {
+        if (v1In.size() >= gbtsMaxSegPerNode) {
           continue;
         }
 
@@ -309,7 +309,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
           const std::vector<std::uint32_t>& v2In = B2.m_in[n2Idx];
 
-          if (v2In.size() >= MAX_SEG_PER_NODE) {
+          if (v2In.size() >= gbtsMaxSegPerNode) {
             continue;
           }
 
@@ -410,7 +410,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
             edgeStorage.emplace_back(B1.m_vn[n1Idx], B2.m_vn[n2Idx], exp_eta,
                                      curv, phi1 + dPhi1);
 
-            if (v1In.size() < MAX_SEG_PER_NODE) {
+            if (v1In.size() < gbtsMaxSegPerNode) {
               v1In.push_back(nEdges);
             }
 
@@ -425,7 +425,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
               GbtsEdge* pS = &(edgeStorage.at(inEdgeIdx));
 
-              if (pS->m_nNei >= N_SEG_CONNS) {
+              if (pS->m_nNei >= gbtsNumSegConns) {
                 continue;
               }
 

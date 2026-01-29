@@ -99,7 +99,7 @@ GbtsDataStorage::GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
     : m_geo(std::move(geometry)), m_config(config), m_mlLUT(std::move(mlLUT)) {
   // parse the look up table if useML is true
 
-  m_etaBins.resize(m_geo->num_bins());
+  m_etaBins.resize(m_geo->numBins());
 }
 
 std::int32_t GbtsDataStorage::loadPixelGraphNodes(
@@ -190,7 +190,7 @@ void GbtsDataStorage::initializeNodes(bool useML) {
     return;
   }
 
-  std::uint32_t nL = m_geo->num_layers();
+  std::uint32_t nL = m_geo->numLayers();
 
   for (std::uint32_t layerIdx = 0; layerIdx < nL; layerIdx++) {
     const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIdx);

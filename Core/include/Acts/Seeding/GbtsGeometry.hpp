@@ -149,20 +149,20 @@ class GbtsGeometry {
   /// Get layer key by index
   /// @param idx Layer index
   /// @return Layer key
-  inline std::uint32_t getGbtsLayerKeyByIndex(std::int32_t idx) const {
+  inline std::uint32_t getGbtsLayerKeyByIndex(std::uint32_t idx) const {
     return m_layerKeys[idx];
   }
 
   /// Get number of eta bins
   /// @return Number of eta bins
-  std::int32_t num_bins() const { return m_nEtaBins; }
+  std::uint32_t numBins() const { return m_nEtaBins; }
   /// Get number of layers
   /// @return Number of layers
-  std::uint32_t num_layers() const { return m_layArray.size(); }
+  std::uint32_t numLayers() const { return m_layArray.size(); }
   /// Get bin groups
   /// @return Bin groups vector
   const std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>>&
-  bin_groups() const {
+  binGroups() const {
     return m_binGroups;
   }
 
@@ -183,7 +183,7 @@ class GbtsGeometry {
   /// Layer keys
   std::vector<std::uint32_t> m_layerKeys;
   /// Number of eta bins
-  std::int32_t m_nEtaBins{};
+  std::uint32_t m_nEtaBins{};
 
   /// Bin groups
   std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>> m_binGroups;

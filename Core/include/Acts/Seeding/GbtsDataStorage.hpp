@@ -20,9 +20,9 @@
 namespace Acts::Experimental {
 
 /// Maximum number of segments per node
-constexpr std::int32_t MAX_SEG_PER_NODE = 1000;
+constexpr std::uint32_t gbtsMaxSegPerNode = 1000;
 /// Number of segment connections
-constexpr std::int32_t N_SEG_CONNS = 6;
+constexpr std::uint32_t gbtsNumSegConns = 6;
 
 class GbtsGeometry;
 
@@ -196,8 +196,8 @@ class GbtsDataStorage {
   /// Get eta bin by index
   /// @param idx Eta bin index
   /// @return Reference to the eta bin
-  GbtsEtaBin& getEtaBin(std::int32_t idx) {
-    if (idx >= static_cast<std::int32_t>(m_etaBins.size())) {
+  GbtsEtaBin& getEtaBin(std::uint32_t idx) {
+    if (idx >= m_etaBins.size()) {
       idx = idx - 1;
     }
     return m_etaBins.at(idx);
@@ -263,7 +263,7 @@ class GbtsEdge {
   std::array<float, 3> m_p{};
 
   /// Global indices of the connected edges
-  std::array<std::uint32_t, N_SEG_CONNS> m_vNei{};
+  std::array<std::uint32_t, gbtsNumSegConns> m_vNei{};
 };
 
 }  // namespace Acts::Experimental
