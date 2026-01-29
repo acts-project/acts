@@ -85,7 +85,7 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// The inherited methods - for scale access
   ///
   /// @param pDir Direction through the surface
-  /// @param mStage Material update directive (onapproach, full, onleave)
+  /// @param mode Material update directive
   /// @return The scaling factor for the material
   using ISurfaceMaterial::factor;
 
