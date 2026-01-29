@@ -40,7 +40,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   // create the connection objects
   m_connector = std::make_unique<Acts::Experimental::GbtsConnector>(
       m_cfg.seedFinderConfig.connectorInputFile,
-      m_cfg.seedFinderConfig.LRTmode);
+      m_cfg.seedFinderConfig.lrtMode);
 
   // option that allows for adding custom eta binning (default is at 0.2)
   if (m_cfg.seedFinderConfig.etaBinOverride != 0.0f) {
@@ -417,7 +417,7 @@ void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
                                     << " (default: empty string)");
   ACTS_DEBUG("lutInputFile: " << cfg.lutInputFile
                               << " (default: empty string)");
-  ACTS_DEBUG("LRTmode: " << cfg.LRTmode << " (default: false)");
+  ACTS_DEBUG("lrtMode: " << cfg.lrtMode << " (default: false)");
   ACTS_DEBUG("useML: " << cfg.useML << " (default: false)");
   ACTS_DEBUG("matchBeforeCreate: " << cfg.matchBeforeCreate
                                    << " (default: false)");

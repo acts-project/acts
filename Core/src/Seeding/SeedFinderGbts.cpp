@@ -38,13 +38,13 @@ SeedFinderGbts::SeedFinderGbts(
 SeedContainer2 SeedFinderGbts::createSeeds(
     const RoiDescriptor& roi,
     const SPContainerComponentsType& SpContainerComponents,
-    std::int32_t max_layers) const {
+    std::int32_t maxLayers) const {
   std::unique_ptr<GbtsDataStorage> storage =
       std::make_unique<GbtsDataStorage>(m_geo, m_config, m_mlLut);
 
   SeedContainer2 SeedContainer;
   std::vector<std::vector<GbtsNode>> node_storage =
-      createNodes(SpContainerComponents, max_layers);
+      createNodes(SpContainerComponents, maxLayers);
   std::uint32_t nPixelLoaded = 0;
   std::uint32_t nStripLoaded = 0;
 
@@ -89,7 +89,7 @@ SeedContainer2 SeedFinderGbts::createSeeds(
 
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
-  std::vector<seedProperties> vSeedCandidates;
+  std::vector<SeedProperties> vSeedCandidates;
   extractSeedsFromTheGraph(maxLevel, graphStats.first,
                            std::get<0>(SpContainerComponents).size(),
                            edgeStorage, vSeedCandidates);
@@ -189,18 +189,18 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
     const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,
     std::vector<GbtsEdge>& edgeStorage) const {
   // phi cut for triplets
-  const float cut_dphi_max = m_config.LRTmode ? 0.07f : 0.012f;
+  const float cut_dphi_max = m_config.lrtMode ? 0.07f : 0.012f;
   // curv cut for triplets
-  const float cut_dcurv_max = m_config.LRTmode ? 0.015f : 0.001f;
+  const float cut_dcurv_max = m_config.lrtMode ? 0.015f : 0.001f;
   // tau cut for doublets and triplets
   const float cut_tau_ratio_max =
-      m_config.LRTmode ? 0.015f : static_cast<float>(m_config.tau_ratio_cut);
-  const float min_z0 = m_config.LRTmode ? -600.0 : roi.zedMinus();
-  const float max_z0 = m_config.LRTmode ? 600.0 : roi.zedPlus();
-  const float min_deltaPhi = m_config.LRTmode ? 0.01f : 0.001f;
+      m_config.lrtMode ? 0.015f : static_cast<float>(m_config.tau_ratio_cut);
+  const float min_z0 = m_config.lrtMode ? -600.0 : roi.zedMinus();
+  const float max_z0 = m_config.lrtMode ? 600.0 : roi.zedPlus();
+  const float min_deltaPhi = m_config.lrtMode ? 0.01f : 0.001f;
 
   // used to calculate Z cut on doublets
-  const float maxOuterRadius = m_config.LRTmode ? 1050.0 : 550.0;
+  const float maxOuterRadius = m_config.lrtMode ? 1050.0 : 550.0;
 
   const float cut_zMinU = min_z0 + maxOuterRadius * roi.dzdrMinus();
   const float cut_zMaxU = max_z0 + maxOuterRadius * roi.dzdrPlus();
@@ -214,17 +214,17 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
   float maxCurv = m_config.ptCoeff / tripletPtMin;
 
   float maxKappa_high_eta =
-      m_config.LRTmode ? 1.0f * maxCurv : std::sqrt(0.8f) * maxCurv;
+      m_config.lrtMode ? 1.0f * maxCurv : std::sqrt(0.8f) * maxCurv;
   float maxKappa_low_eta =
-      m_config.LRTmode ? 1.0f * maxCurv : std::sqrt(0.6f) * maxCurv;
+      m_config.lrtMode ? 1.0f * maxCurv : std::sqrt(0.6f) * maxCurv;
 
   // new settings for curvature cuts
-  if (!m_config.useOldTunings && !m_config.LRTmode) {
+  if (!m_config.useOldTunings && !m_config.lrtMode) {
     maxKappa_high_eta = 4.75e-4f * pt_scale;
     maxKappa_low_eta = 3.75e-4f * pt_scale;
   }
 
-  const float dphi_coeff = m_config.LRTmode ? 1.0f * maxCurv : 0.68f * maxCurv;
+  const float dphi_coeff = m_config.lrtMode ? 1.0f * maxCurv : 0.68f * maxCurv;
 
   // the default sliding window along phi
   float deltaPhi = 0.5f * m_config.phiSliceWidth;
@@ -546,12 +546,12 @@ std::int32_t SeedFinderGbts::runCCA(std::int32_t nEdges,
 void SeedFinderGbts::extractSeedsFromTheGraph(
     std::int32_t maxLevel, std::int32_t nEdges, std::int32_t nHits,
     std::vector<GbtsEdge>& edgeStorage,
-    std::vector<seedProperties>& vSeedCandidates) const {
+    std::vector<SeedProperties>& vSeedCandidates) const {
   vSeedCandidates.clear();
 
   std::int32_t minLevel = 3;  // a triplet + 2 confirmation
 
-  if (m_config.LRTmode) {
+  if (m_config.lrtMode) {
     minLevel = 2;  // a triplet + 1 confirmation
   }
 

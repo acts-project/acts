@@ -38,7 +38,7 @@ class GbtsConnector {
   };
 
  public:
-  GbtsConnector(std::string& inFile, bool LRTmode);
+  GbtsConnector(std::string& inFile, bool lrtMode);
 
   float m_etaBin{};
 

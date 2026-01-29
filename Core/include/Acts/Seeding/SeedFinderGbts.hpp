@@ -38,8 +38,8 @@ class SeedFinderGbts {
                      Acts::getDefaultLogger("Finder",
                                             Acts::Logging::Level::INFO));
 
-  struct seedProperties {
-    seedProperties(float quality, std::int32_t clone,
+  struct SeedProperties {
+    SeedProperties(float quality, std::int32_t clone,
                    std::vector<std::uint32_t> sps)
         : seedQuality(quality), isClone(clone), spacepoints(std::move(sps)) {}
 
@@ -47,7 +47,7 @@ class SeedFinderGbts {
     std::int32_t isClone{};
     std::vector<std::uint32_t> spacepoints{};
 
-    bool operator<(seedProperties const& o) const {
+    bool operator<(SeedProperties const& o) const {
       return std::tie(seedQuality, isClone, spacepoints) <
              std::tie(o.seedQuality, o.isClone, o.spacepoints);
     }
@@ -56,10 +56,10 @@ class SeedFinderGbts {
   SeedContainer2 createSeeds(
       const RoiDescriptor& roi,
       const SPContainerComponentsType& SpContainerComponents,
-      std::int32_t max_layers) const;
+      std::int32_t maxLayers) const;
 
   std::vector<std::vector<GbtsNode>> createNodes(
-      const SPContainerComponentsType& container, std::int32_t MaxLayers) const;
+      const SPContainerComponentsType& container, std::int32_t maxLayers) const;
 
   GbtsMLLookupTable parseGbtsMLLookupTable(const std::string& lutInputFile);
 
@@ -73,7 +73,7 @@ class SeedFinderGbts {
   void extractSeedsFromTheGraph(
       std::int32_t maxLevel, std::int32_t nEdges, std::int32_t nHits,
       std::vector<GbtsEdge>& edgeStorage,
-      std::vector<seedProperties>& vSeedCandidates) const;
+      std::vector<SeedProperties>& vSeedCandidates) const;
 
  private:
   SeedFinderGbtsConfig m_config;

@@ -22,7 +22,7 @@ namespace Acts::Experimental {
 GbtsConnection::GbtsConnection(std::uint32_t s, std::uint32_t d)
     : m_src(s), m_dst(d) {}
 
-GbtsConnector::GbtsConnector(std::string& inFile, bool LRTmode) {
+GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
   m_connMap.clear();
   m_layerGroups.clear();
 
@@ -59,7 +59,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool LRTmode) {
 
     bool srcIsStrip = (srcvol_id == 13 || srcvol_id == 12 || srcvol_id == 14);
     bool dstIsStrip = (dstvol_id == 13 || dstvol_id == 12 || dstvol_id == 14);
-    if (LRTmode) {
+    if (lrtMode) {
       if (!srcIsStrip || !dstIsStrip) {
         continue;
       }
