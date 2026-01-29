@@ -11,7 +11,6 @@ target_sources(
         CylinderVolumeBuilder.cpp
         CylinderVolumeHelper.cpp
         Extent.cpp
-        KDTreeTrackingGeometryBuilder.cpp
         DiscLayer.cpp
         GenericApproachDescriptor.cpp
         GenericCuboidVolumeBounds.cpp
@@ -32,7 +31,7 @@ target_sources(
         TrackingVolume.cpp
         TrackingVolumeArrayCreator.cpp
         TrapezoidVolumeBounds.cpp
-        ConvexPolygonVolumeBounds.cpp
+        DiamondVolumeBounds.cpp
         Volume.cpp
         VolumeBounds.cpp
         CylinderVolumeStack.cpp
@@ -44,7 +43,6 @@ target_sources(
         CompositePortalLink.cpp
         PortalLinkBase.cpp
         PortalError.cpp
-        ProtoDetector.cpp
         CylinderPortalShell.cpp
         CuboidPortalShell.cpp
         BlueprintNode.cpp
@@ -52,14 +50,14 @@ target_sources(
         BlueprintOptions.cpp
         StaticBlueprintNode.cpp
         LayerBlueprintNode.cpp
-        IndexGridFiller.cpp
+        IndexGrid.cpp
         MaterialDesignatorBlueprintNode.cpp
         VolumeAttachmentStrategy.cpp
         VolumeResizeStrategy.cpp
         GeometryIdentifierBlueprintNode.cpp
         TrackingGeometryVisitor.cpp
         TrapezoidPortalShell.cpp
-        ConvexPolygonPortalShell.cpp
+        DiamondPortalShell.cpp
         VolumeStack.cpp
         ContainerBlueprintNode.cpp
         MultiWireVolumeBuilder.cpp

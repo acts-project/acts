@@ -96,7 +96,7 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
     const auto* detElement =
         dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(
-            surface->associatedDetectorElement());
+            surface->surfacePlacement());
 
     if (detElement == nullptr) {
       ACTS_ERROR("Surface has no associated detector element");
@@ -583,7 +583,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     // We will (ab)use the sim hit index to store the association with the
     // incoming edm4hep simhit. The reason is that we will not have the final
     // sim hit index in the collection that's sorted by geometry id, so we can't
-    // otherwise build an assotiation map. The index will later be overwritten
+    // otherwise build an association map. The index will later be overwritten
     // based
     //
     // This index will be across the input collections,

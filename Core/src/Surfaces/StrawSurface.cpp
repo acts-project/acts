@@ -20,33 +20,6 @@
 
 namespace Acts {
 
-StrawSurface::StrawSurface(const Transform3& transform, double radius,
-                           double halez)
-    : GeometryObject(), LineSurface(transform, radius, halez) {}
-
-StrawSurface::StrawSurface(const Transform3& transform,
-                           std::shared_ptr<const LineBounds> lbounds)
-    : GeometryObject(), LineSurface(transform, std::move(lbounds)) {}
-
-StrawSurface::StrawSurface(const std::shared_ptr<const LineBounds>& lbounds,
-                           const DetectorElementBase& detelement)
-    : GeometryObject(), LineSurface(lbounds, detelement) {}
-
-StrawSurface::StrawSurface(const StrawSurface& other)
-    : GeometryObject(), LineSurface(other) {}
-
-StrawSurface::StrawSurface(const GeometryContext& gctx,
-                           const StrawSurface& other, const Transform3& shift)
-    : GeometryObject(), LineSurface(gctx, other, shift) {}
-
-StrawSurface& StrawSurface::operator=(const StrawSurface& other) {
-  if (this != &other) {
-    LineSurface::operator=(other);
-    m_bounds = other.m_bounds;
-  }
-  return *this;
-}
-
 Polyhedron StrawSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
@@ -54,7 +27,7 @@ Polyhedron StrawSurface::polyhedronRepresentation(
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
 
-  const Transform3& ctransform = transform(gctx);
+  const Transform3& ctransform = localToGlobalTransform(gctx);
   // Draw the bounds if more than one segment are chosen
   if (quarterSegments > 0u) {
     double r = m_bounds->get(LineBounds::eR);

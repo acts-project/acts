@@ -9,10 +9,11 @@
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/IndexGrid.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Navigation/IndexGridNavigation.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -39,9 +40,11 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
   auto boundsType = m_config.bounds ? m_config.bounds->type()
                                     : VolumeBounds::BoundsType::eOther;
   if (!(boundsType == VolumeBounds::BoundsType::eTrapezoid ||
-        boundsType == VolumeBounds::BoundsType::eCuboid)) {
+        boundsType == VolumeBounds::BoundsType::eCuboid ||
+        boundsType == VolumeBounds::BoundsType::eDiamond)) {
     throw std::invalid_argument(
-        "MultiWireStructureBuilder: Only trapezoid or cuboid bounds are "
+        "MultiWireStructureBuilder: Only trapezoid cuboid or diamond bounds "
+        "are "
         "supported");
   }
 
@@ -88,7 +91,7 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
                                                                         axisB);
 
   // The indexed grid to be filled from the navigation policy
-  IndexGridNavigation<decltype(grid)> indexedGrid(
+  IndexGrid<decltype(grid)> indexedGrid(
       std::move(grid),
       {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
       m_config.transform.inverse());

@@ -19,7 +19,6 @@
 #include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <any>
 #include <cassert>
@@ -44,9 +43,10 @@ struct IsReadOnlyMultiTrajectory;
 
 namespace detail_vmt {
 
-using MultiTrajectoryTraits::IndexType;
-constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
-constexpr auto MeasurementSizeMax = MultiTrajectoryTraits::MeasurementSizeMax;
+using IndexType = TrackIndexType;
+
+constexpr auto kInvalid = kTrackIndexInvalid;
+constexpr auto MeasurementSizeMax = kMeasurementSizeMax;
 
 template <typename T>
 struct NonInitializingAllocator {
@@ -121,7 +121,7 @@ class VectorMultiTrajectoryBase {
     for (IndexType i = 0; i < instance.size(); i++) {
       auto ts = instance.getTrackState(i);
 
-      bool isMeas = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
+      bool isMeas = ts.typeFlags().hasMeasurement();
 
       h("count", isMeas);
 
@@ -326,7 +326,6 @@ class VectorMultiTrajectoryBase {
 
   // END INTERFACE HELPER
 
- public:
   IndexType calibratedSize_impl(IndexType istate) const {
     return m_index[istate].measdim;
   }
@@ -344,16 +343,18 @@ class VectorMultiTrajectoryBase {
   std::vector<IndexData> m_index;
   std::vector<IndexType> m_previous;
   std::vector<IndexType> m_next;
-  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Coefficients>
+  std::vector<typename detail_tsp::FixedSizeTypes<eBoundSize>::Coefficients>
       m_params;
-  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
+  std::vector<typename detail_tsp::FixedSizeTypes<eBoundSize>::Covariance>
+      m_cov;
 
   std::vector<double, NonInitializingAllocator<double>> m_meas;
-  std::vector<MultiTrajectoryTraits::IndexType> m_measOffset;
+  std::vector<IndexType> m_measOffset;
   std::vector<double, NonInitializingAllocator<double>> m_measCov;
-  std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
+  std::vector<IndexType> m_measCovOffset;
 
-  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
+  std::vector<typename detail_tsp::FixedSizeTypes<eBoundSize>::Covariance>
+      m_jac;
   std::vector<std::optional<SourceLink>> m_sourceLinks;
   std::vector<SerializedSubspaceIndices> m_projectors;
 
@@ -376,20 +377,17 @@ class VectorMultiTrajectory;
 template <>
 struct IsReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
 
+/// In-memory transient multi-trajectory implementation using @c std::vector as
+/// backend
+/// @ingroup eventdata_tracks
 class VectorMultiTrajectory final
     : public detail_vmt::VectorMultiTrajectoryBase,
       public MultiTrajectory<VectorMultiTrajectory> {
-#ifndef DOXYGEN
-  friend MultiTrajectory<VectorMultiTrajectory>;
-#endif
+  friend class MultiTrajectory<VectorMultiTrajectory>;
 
  public:
   VectorMultiTrajectory() = default;
-  VectorMultiTrajectory(const VectorMultiTrajectory& other)
-      : VectorMultiTrajectoryBase{other} {}
-
-  VectorMultiTrajectory(VectorMultiTrajectory&& other) noexcept
-      : VectorMultiTrajectoryBase{std::move(other)} {}
+  using VectorMultiTrajectoryBase::VectorMultiTrajectoryBase;
 
   Statistics statistics() const {
     return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
@@ -400,16 +398,18 @@ class VectorMultiTrajectory final
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Parameters parameters_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Parameters{m_params[parIdx].data()};
+  ConstTrackStateProxy::ConstParameters parameters_impl(
+      IndexType parIdx) const {
+    return ConstTrackStateProxy::ConstParameters{m_params[parIdx].data()};
   }
 
   TrackStateProxy::Covariance covariance_impl(IndexType parIdx) {
     return TrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance covariance_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Covariance{m_cov[parIdx].data()};
+  ConstTrackStateProxy::ConstCovariance covariance_impl(
+      IndexType parIdx) const {
+    return ConstTrackStateProxy::ConstCovariance{m_cov[parIdx].data()};
   }
 
   TrackStateProxy::Covariance jacobian_impl(IndexType istate) {
@@ -417,9 +417,9 @@ class VectorMultiTrajectory final
     return TrackStateProxy::Covariance{m_jac[jacIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance jacobian_impl(IndexType istate) const {
+  ConstTrackStateProxy::ConstCovariance jacobian_impl(IndexType istate) const {
     IndexType jacIdx = m_index[istate].ijacobian;
-    return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
+    return ConstTrackStateProxy::ConstCovariance{m_jac[jacIdx].data()};
   }
 
   template <std::size_t measdim>
@@ -429,10 +429,10 @@ class VectorMultiTrajectory final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
+  ConstTrackStateProxy::ConstCalibrated<measdim> calibrated_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
-    return ConstTrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
+    return ConstTrackStateProxy::ConstCalibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
@@ -443,10 +443,10 @@ class VectorMultiTrajectory final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
-      IndexType istate) const {
+  ConstTrackStateProxy::ConstCalibratedCovariance<measdim>
+  calibratedCovariance_impl(IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
-    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+    return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
 
@@ -468,7 +468,7 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const { return m_index.size(); }
+  IndexType size_impl() const { return static_cast<IndexType>(m_index.size()); }
 
   void clear_impl();
 
@@ -556,6 +556,8 @@ template <>
 struct IsReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
 };
 
+/// Const version of @ref VectorMultiTrajectory
+/// @ingroup eventdata_tracks
 class ConstVectorMultiTrajectory final
     : public detail_vmt::VectorMultiTrajectoryBase,
       public MultiTrajectory<ConstVectorMultiTrajectory> {
@@ -566,8 +568,7 @@ class ConstVectorMultiTrajectory final
  public:
   ConstVectorMultiTrajectory() = default;
 
-  ConstVectorMultiTrajectory(const ConstVectorMultiTrajectory& other)
-      : VectorMultiTrajectoryBase{other} {}
+  using VectorMultiTrajectoryBase::VectorMultiTrajectoryBase;
 
   explicit ConstVectorMultiTrajectory(const VectorMultiTrajectory& other)
       : VectorMultiTrajectoryBase{other} {}
@@ -575,39 +576,39 @@ class ConstVectorMultiTrajectory final
   explicit ConstVectorMultiTrajectory(VectorMultiTrajectory&& other)
       : VectorMultiTrajectoryBase{std::move(other)} {}
 
-  ConstVectorMultiTrajectory(ConstVectorMultiTrajectory&&) = default;
-
   Statistics statistics() const {
     return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
   }
 
   // BEGIN INTERFACE
 
-  ConstTrackStateProxy::Parameters parameters_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Parameters{m_params[parIdx].data()};
+  ConstTrackStateProxy::ConstParameters parameters_impl(
+      IndexType parIdx) const {
+    return ConstTrackStateProxy::ConstParameters{m_params[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance covariance_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Covariance{m_cov[parIdx].data()};
+  ConstTrackStateProxy::ConstCovariance covariance_impl(
+      IndexType parIdx) const {
+    return ConstTrackStateProxy::ConstCovariance{m_cov[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance jacobian_impl(IndexType istate) const {
+  ConstTrackStateProxy::ConstCovariance jacobian_impl(IndexType istate) const {
     IndexType jacIdx = m_index[istate].ijacobian;
-    return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
+    return ConstTrackStateProxy::ConstCovariance{m_jac[jacIdx].data()};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
+  ConstTrackStateProxy::ConstCalibrated<measdim> calibrated_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
-    return ConstTrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
+    return ConstTrackStateProxy::ConstCalibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
-      IndexType istate) const {
+  ConstTrackStateProxy::ConstCalibratedCovariance<measdim>
+  calibratedCovariance_impl(IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
-    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+    return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
 
@@ -615,7 +616,7 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const { return m_index.size(); }
+  IndexType size_impl() const { return static_cast<IndexType>(m_index.size()); }
 
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(

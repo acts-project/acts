@@ -59,9 +59,9 @@ struct MaterialCollector {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& /*logger*/) const {
     if (navigator.currentVolume(state.navigation) != nullptr) {
       auto position = stepper.position(state.stepping);
       result.matTrue.push_back(
@@ -74,6 +74,7 @@ struct MaterialCollector {
 
       result.position.push_back(position);
     }
+    return Result<void>::success();
   }
 };
 
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   cfg.length = Vector3(3_m, 1_m, 1_m);
   cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
 
-  GeometryContext gc;
+  auto gc = GeometryContext::dangerouslyDefaultConstruct();
 
   // Build a detector
   CuboidVolumeBuilder cvb(cfg);
@@ -147,7 +148,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
       getDefaultLogger("VolumeMaterialMapper", Logging::VERBOSE));
 
   /// Create some contexts
-  GeometryContext gCtx;
+  auto gCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mfCtx;
 
   /// Now create the mapper state
@@ -192,7 +193,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   cfg.length = Vector3(3_m, 1_m, 1_m);
   cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
 
-  GeometryContext gc;
+  auto gc = GeometryContext::dangerouslyDefaultConstruct();
 
   // Build a detector
   CuboidVolumeBuilder cvb(cfg);

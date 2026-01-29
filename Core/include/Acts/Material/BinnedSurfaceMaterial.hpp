@@ -17,12 +17,11 @@
 
 namespace Acts {
 
-/// @class BinnedSurfaceMaterial
+/// @ingroup material
 ///
-/// It extends the @c ISurfaceMaterial base class and is an array pf
+/// It extends the @ref ISurfaceMaterial base class and is an array pf
 /// MaterialSlab. This is not memory optimised as every bin
 /// holds one material property object.
-
 class BinnedSurfaceMaterial : public ISurfaceMaterial {
  public:
   /// Default Constructor - deleted
@@ -119,7 +118,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
 };
 
 inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
-  return (m_binUtility);
+  return m_binUtility;
 }
 
 inline const MaterialSlabMatrix& BinnedSurfaceMaterial::fullMaterial() const {

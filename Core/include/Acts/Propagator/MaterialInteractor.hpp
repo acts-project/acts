@@ -8,16 +8,15 @@
 
 #pragma once
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-
-#include <sstream>
 
 namespace Acts {
 
@@ -56,16 +55,16 @@ struct MaterialInteractor {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& logger) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& logger) const {
     if (state.stage == PropagatorStage::postPropagation) {
-      return;
+      return Result<void>::success();
     }
 
     // Do nothing if nothing is what is requested.
     if (!(multipleScattering || energyLoss || recordInteractions)) {
-      return;
+      return Result<void>::success();
     }
 
     // Handle surface material
@@ -80,11 +79,12 @@ struct MaterialInteractor {
                                            << surface->geometryId());
 
       // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
+      detail::PointwiseMaterialInteraction interaction(state, stepper,
+                                                       navigator);
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (interaction.evaluateMaterialSlab(state, navigator)) {
+      if (interaction.evaluateMaterialSlab(MaterialUpdateMode::FullUpdate)) {
         // Evaluate the material effects
         interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
                                                          energyLoss);
@@ -136,6 +136,7 @@ struct MaterialInteractor {
         recordResult(interaction, result);
       }
     }
+    return Result<void>::success();
   }
 
  private:

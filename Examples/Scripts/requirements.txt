@@ -6,11 +6,11 @@
 #
 annotated-types==0.7.0
     # via pydantic
-awkward==2.8.10
+awkward==2.8.11
     # via
     #   -r Examples/Scripts/requirements.in
     #   uproot
-awkward-cpp==50
+awkward-cpp==51
     # via awkward
 boost-histogram==1.6.1
     # via hist
@@ -24,13 +24,13 @@ cramjam==2.11.0
     # via uproot
 cycler==0.12.1
     # via matplotlib
-fonttools==4.61.0
+fonttools==4.61.1
     # via matplotlib
-fsspec==2025.10.0
+fsspec==2026.1.0
     # via
     #   awkward
     #   uproot
-hist==2.9.0
+hist==2.9.2
     # via -r Examples/Scripts/requirements.in
 histoprint==2.6.0
     # via hist
@@ -38,7 +38,7 @@ kiwisolver==1.4.9
     # via matplotlib
 markdown-it-py==4.0.0
     # via rich
-matplotlib==3.10.7
+matplotlib==3.10.8
     # via
     #   -r Examples/Scripts/requirements.in
     #   mplhep
@@ -48,7 +48,7 @@ mplhep==0.4.1
     # via -r Examples/Scripts/requirements.in
 mplhep-data==0.0.5
     # via mplhep
-numpy==2.3.5
+numpy==2.4.1
     # via
     #   awkward
     #   awkward-cpp
@@ -70,7 +70,7 @@ packaging==25.0
     #   uproot
 pandas==2.3.3
     # via -r Examples/Scripts/requirements.in
-pillow==12.0.0
+pillow==12.1.0
     # via matplotlib
 pydantic==2.12.5
     # via -r Examples/Scripts/requirements.in
@@ -78,7 +78,7 @@ pydantic-core==2.41.5
     # via pydantic
 pygments==2.19.2
     # via rich
-pyparsing==3.2.5
+pyparsing==3.3.1
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
@@ -92,13 +92,13 @@ rich==14.2.0
     # via
     #   -r Examples/Scripts/requirements.in
     #   typer
-scipy==1.16.3
+scipy==1.17.0
     # via -r Examples/Scripts/requirements.in
 shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.20.0
+typer==0.21.1
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.15.0
     # via
@@ -108,13 +108,13 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-tzdata==2025.2
+tzdata==2025.3
     # via pandas
 uhi==1.0.0
     # via
     #   histoprint
     #   mplhep
-uproot==5.6.8
+uproot==5.6.9
     # via -r Examples/Scripts/requirements.in
 xxhash==3.6.0
     # via uproot

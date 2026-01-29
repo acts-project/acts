@@ -9,4 +9,5 @@ target_sources(
         GbtsTrackingFilter.cpp
         SeedFinderGbts.cpp
         FastStrawLineFitter.cpp
+        CompositeSpacePointLineSeeder.cpp
 )

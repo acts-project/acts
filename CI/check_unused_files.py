@@ -57,11 +57,18 @@ def main():
         "odd-digi-smearing-config-notime.json",
         # TODO Mention these files somewhere?
         "generate_particle_data_table.py",
-        "lazy_autodoc.py",
+        "Examples/Python/tests/test_toroidal_field.py" "lazy_autodoc.py",
         "codegen/src/codegen/sympy_common.py",
         "CompressedIO.h",
         # Files for python binding generation
         "tgeo_aux.py.in",
+        "serve.py",
+        "SNIPPETS.md",
+        "todo.md",
+        "bugs.md",
+        "deprecated.md",
+        "acts-version-manager.js",
+        "tex-mml-chtml.js",
     )
 
     suffix_header = (
@@ -83,6 +90,9 @@ def main():
     suffix_doc = (
         ".md",
         ".rst",
+        ".dox",
+        ".html",
+        ".bib",
     )
     suffix_other = (
         "",
@@ -99,6 +109,7 @@ def main():
         ".toml",
         ".txt",
         ".yml",
+        ".xml",
     )
     suffix_allowed = (
         suffix_header
@@ -169,7 +180,7 @@ def main():
 
             elif filepath.suffix in suffix_python:
                 # Skip the python tests folder
-                if str(root).find("Examples/Python") != -1:
+                if str(root).find("Python/Examples") != -1:
                     continue
 
                 if not file_can_be_removed("import .*" + filepath.stem, dirs_base):

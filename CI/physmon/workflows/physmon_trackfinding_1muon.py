@@ -97,7 +97,7 @@ def run_ckf_tracking(label, seeding):
             setup.trackingGeometry,
             setup.field,
             TrackSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
-                # zero eveything so the CKF has a chance to find the measurements
+                # zero everything so the CKF has a chance to find the measurements
                 loc0=0,
                 loc0PtA=0,
                 loc0PtB=0,

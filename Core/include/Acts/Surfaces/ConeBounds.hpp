@@ -80,13 +80,13 @@ class ConeBounds : public SurfaceBounds {
 
   /// @copydoc SurfaceBounds::boundToCartesianJacobian
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
   /// @copydoc SurfaceBounds::boundToCartesianMetric
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
