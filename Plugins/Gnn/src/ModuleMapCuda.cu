@@ -164,8 +164,9 @@ ModuleMapCuda::ModuleMapCuda(const Config &cfg,
 
   // copy module map to device
   m_impl->cudaModuleMapSize = m_impl->cudaModuleMapDoublet->module_map().size();
-  ACTS_CUDA_CHECK(cudaMalloc(&m_impl->cudaModuleMapKeys,
-                             m_impl->cudaModuleMapSize * sizeof(std::uint64_t)));
+  ACTS_CUDA_CHECK(
+      cudaMalloc(&m_impl->cudaModuleMapKeys,
+                 m_impl->cudaModuleMapSize * sizeof(std::uint64_t)));
   ACTS_CUDA_CHECK(cudaMalloc(&m_impl->cudaModuleMapVals,
                              m_impl->cudaModuleMapSize * sizeof(int)));
 
@@ -436,12 +437,10 @@ CUDA_edge_data<float> ModuleMapCuda::Impl::makeEdges(
       ((sum_nb_src_hits_per_doublet + block_dim.x - 1) / block_dim.x);
   detail::count_doublet_edges<float><<<grid_dim_shpd, block_dim, 0, stream>>>(
       sum_nb_src_hits_per_doublet, nb_doublets,
-      cuda_nb_src_hits_per_doublet.data(),
-      cudaModuleMapDoublet->cuda_module1(),
+      cuda_nb_src_hits_per_doublet.data(), cudaModuleMapDoublet->cuda_module1(),
       cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
       cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
-      cudaModuleMapDoublet->cuda_z0_min(),
-      cudaModuleMapDoublet->cuda_z0_max(),
+      cudaModuleMapDoublet->cuda_z0_min(), cudaModuleMapDoublet->cuda_z0_max(),
       cudaModuleMapDoublet->cuda_deta_min(),
       cudaModuleMapDoublet->cuda_deta_max(),
       cudaModuleMapDoublet->cuda_phi_slope_min(),
@@ -469,12 +468,10 @@ CUDA_edge_data<float> ModuleMapCuda::Impl::makeEdges(
 
   detail::build_doublet_edges<float><<<grid_dim_shpd, block_dim, 0, stream>>>(
       sum_nb_src_hits_per_doublet, nb_doublets,
-      cuda_nb_src_hits_per_doublet.data(),
-      cudaModuleMapDoublet->cuda_module1(),
+      cuda_nb_src_hits_per_doublet.data(), cudaModuleMapDoublet->cuda_module1(),
       cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
       cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
-      cudaModuleMapDoublet->cuda_z0_min(),
-      cudaModuleMapDoublet->cuda_z0_max(),
+      cudaModuleMapDoublet->cuda_z0_min(), cudaModuleMapDoublet->cuda_z0_max(),
       cudaModuleMapDoublet->cuda_deta_min(),
       cudaModuleMapDoublet->cuda_deta_max(),
       cudaModuleMapDoublet->cuda_phi_slope_min(),
@@ -491,7 +488,8 @@ CUDA_edge_data<float> ModuleMapCuda::Impl::makeEdges(
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   ACTS_VERBOSE("First 10 doublet edges:\n"
-               << debugPrintEdges(nb_doublet_edges, cuda_reduced_M1_hits->data(),
+               << debugPrintEdges(nb_doublet_edges,
+                                  cuda_reduced_M1_hits->data(),
                                   cuda_reduced_M2_hits->data()));
   if (nb_doublet_edges == 0) {
     throw NoEdgesError{};
