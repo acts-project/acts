@@ -118,7 +118,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
 };
 
 inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
-  return (m_binUtility);
+  return m_binUtility;
 }
 
 inline const MaterialSlabMatrix& BinnedSurfaceMaterial::fullMaterial() const {

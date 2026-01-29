@@ -38,17 +38,6 @@ class GeometryObject {
 
   virtual ~GeometryObject() noexcept = default;
 
-  /// Assignment operator
-  ///
-  /// @param geometryId the source geometryId
-  /// @return Reference to this GeometryObject after assignment
-  GeometryObject& operator=(const GeometryObject& geometryId) {
-    if (&geometryId != this) {
-      m_geometryId = geometryId.m_geometryId;
-    }
-    return *this;
-  }
-
   /// @return the geometry id by reference
   GeometryIdentifier geometryId() const;
 
