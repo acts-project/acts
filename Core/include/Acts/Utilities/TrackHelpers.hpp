@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -67,11 +68,7 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
   std::optional<TrackStateProxy> firstMeasurementOpt;
 
   for (const auto &trackState : track.trackStatesReversed()) {
-    bool isMeasurement =
-        trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
-    bool isOutlier = trackState.typeFlags().test(TrackStateFlag::OutlierFlag);
-
-    if (isMeasurement && !isOutlier) {
+    if (trackState.typeFlags().isMeasurement()) {
       firstMeasurementOpt = trackState;
     }
   }
@@ -93,11 +90,7 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
   for (const auto &trackState : track.trackStatesReversed()) {
-    bool isMeasurement =
-        trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
-    bool isOutlier = trackState.typeFlags().test(TrackStateFlag::OutlierFlag);
-
-    if (isMeasurement && !isOutlier) {
+    if (trackState.typeFlags().isMeasurement()) {
       return TrackStateProxy{trackState};
     }
   }
@@ -405,14 +398,14 @@ void calculateTrackQuantities(track_proxy_t track)
   track.nOutliers() = 0;
 
   for (const auto &trackState : track.trackStatesReversed()) {
-    ConstTrackStateType typeFlags = trackState.typeFlags();
+    ConstTrackStateTypeMap typeFlags = trackState.typeFlags();
 
-    if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+    if (typeFlags.isHole()) {
       track.nHoles()++;
-    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+    } else if (typeFlags.isOutlier()) {
       track.nOutliers()++;
-    } else if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
+    } else if (typeFlags.isMeasurement()) {
+      if (typeFlags.isSharedHit()) {
         track.nSharedHits()++;
       }
       track.nMeasurements()++;
@@ -441,14 +434,12 @@ void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
   std::optional<TrackStateProxy> front;
 
   for (TrackStateProxy trackState : track.trackStatesReversed()) {
-    TrackStateType typeFlags = trackState.typeFlags();
-    bool isHole = typeFlags.test(TrackStateFlag::HoleFlag);
-    bool isOutlier = typeFlags.test(TrackStateFlag::OutlierFlag);
-    bool isMaterial = typeFlags.test(TrackStateFlag::MaterialFlag) &&
-                      !typeFlags.test(TrackStateFlag::MeasurementFlag);
+    TrackStateTypeMap typeFlags = trackState.typeFlags();
+    bool isHole = typeFlags.isHole();
+    bool isOutlier = typeFlags.isOutlier();
+    bool isMaterial = typeFlags.isMaterial();
     bool isOtherNoneMeasurement =
-        !typeFlags.test(TrackStateFlag::MeasurementFlag) && !isHole &&
-        !isOutlier && !isMaterial;
+        !typeFlags.hasMeasurement() && !isHole && !isOutlier && !isMaterial;
     if (trimHoles && isHole) {
       continue;
     }
@@ -489,14 +480,12 @@ void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
   for (TrackStateProxy trackState : track.trackStatesReversed()) {
     back = trackState;
 
-    TrackStateType typeFlags = trackState.typeFlags();
-    bool isHole = typeFlags.test(TrackStateFlag::HoleFlag);
-    bool isOutlier = typeFlags.test(TrackStateFlag::OutlierFlag);
-    bool isMaterial = typeFlags.test(TrackStateFlag::MaterialFlag) &&
-                      !typeFlags.test(TrackStateFlag::MeasurementFlag);
+    TrackStateTypeMap typeFlags = trackState.typeFlags();
+    bool isHole = typeFlags.isHole();
+    bool isOutlier = typeFlags.isOutlier();
+    bool isMaterial = typeFlags.isMaterial();
     bool isOtherNoneMeasurement =
-        !typeFlags.test(TrackStateFlag::MeasurementFlag) && !isHole &&
-        !isOutlier && !isMaterial;
+        !typeFlags.hasMeasurement() && !isHole && !isOutlier && !isMaterial;
     if (trimHoles && isHole) {
       continue;
     }

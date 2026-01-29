@@ -56,7 +56,8 @@ TrackingVolume::TrackingVolume(
   m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
-TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
+TrackingVolume::TrackingVolume(const Volume& volume,
+                               const std::string& volumeName)
     : Volume{volume}, m_name{volumeName} {
   createBoundarySurfaces();
   interlinkLayers();
@@ -186,8 +187,8 @@ void TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
   // Find the connection of the two tracking volumes: AxisDirection::AxisR
   // returns the center except for cylindrical volumes
   Vector3 bPosition(referencePosition(gctx, AxisDirection::AxisR));
-  Vector3 distance = Vector3(
-      neighbor->referencePosition(gctx, AxisDirection::AxisR) - bPosition);
+  Vector3 distance =
+      neighbor->referencePosition(gctx, AxisDirection::AxisR) - bPosition;
   // glue to the face
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);
@@ -212,10 +213,11 @@ void TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
         neighbor->m_boundarySurfaces.at(bsfNeighbor)->surfaceRepresentation();
     auto neighborMaterial = neighborSurface.surfaceMaterialSharedPtr();
     const Surface& mySurface = bSurfaceMine->surfaceRepresentation();
-    auto myMaterial = mySurface.surfaceMaterialSharedPtr();
+
     // Keep the neighbor material
-    if (myMaterial == nullptr && neighborMaterial != nullptr) {
-      Surface* myMutbableSurface = const_cast<Surface*>(&mySurface);
+    if (auto myMaterial = mySurface.surfaceMaterialSharedPtr();
+        myMaterial == nullptr && neighborMaterial != nullptr) {
+      auto* myMutbableSurface = const_cast<Surface*>(&mySurface);
       myMutbableSurface->assignSurfaceMaterial(neighborMaterial);
     }
     // Now set it to the neighbor volume
@@ -266,7 +268,7 @@ void TrackingVolume::assignBoundaryMaterial(
     std::shared_ptr<const ISurfaceMaterial> surfaceMaterial,
     BoundarySurfaceFace bsFace) {
   auto bSurface = m_boundarySurfaces.at(bsFace);
-  RegularSurface* surface =
+  auto* surface =
       const_cast<RegularSurface*>(&bSurface->surfaceRepresentation());
   surface->assignSurfaceMaterial(std::move(surfaceMaterial));
 }
@@ -281,8 +283,7 @@ void TrackingVolume::updateBoundarySurface(
                             .surfaceMaterialSharedPtr();
     auto bsMaterial = bs->surfaceRepresentation().surfaceMaterial();
     if (cMaterialPtr != nullptr && bsMaterial == nullptr) {
-      RegularSurface* surface =
-          const_cast<RegularSurface*>(&bs->surfaceRepresentation());
+      auto* surface = const_cast<RegularSurface*>(&bs->surfaceRepresentation());
       surface->assignSurfaceMaterial(cMaterialPtr);
     }
   }
@@ -302,33 +303,8 @@ GlueVolumesDescriptor& TrackingVolume::glueVolumesDescriptor() {
 }
 
 void TrackingVolume::synchronizeLayers(double envelope) const {
-  // case a : Layers exist
-  // msgstream << MSG::VERBOSE << "  -> synchronizing Layer dimensions of
-  // TrackingVolume '" << volumeName() << "'." << endreq;
-
-  if (m_confinedLayers) {
-    // msgstream << MSG::VERBOSE << "  ---> working on " <<
-    // m_confinedLayers->arrayObjects().size() << " (material+navigation)
-    // layers." << endreq;
-    for (auto& clayIter : m_confinedLayers->arrayObjects()) {
-      if (clayIter) {
-        // @todo implement synchronize layer
-        //  if (clayIter->surfaceRepresentation().type() == Surface::Cylinder &&
-        //  !(center().isApprox(clayIter->surfaceRepresentation().center())) )
-        //      clayIter->resizeAndRepositionLayer(volumeBounds(),center(),envelope);
-        //  else
-        //      clayIter->resizeLayer(volumeBounds(),envelope);
-      }  // else
-      // msgstream << MSG::WARNING << "  ---> found 0 pointer to layer,
-      // indicates problem." << endreq;
-    }
-  }
-
-  // case b : container volume -> step down
+  // container volume -> step down
   if (m_confinedVolumes) {
-    // msgstream << MSG::VERBOSE << "  ---> no confined layers, working on " <<
-    // m_confinedVolumes->arrayObjects().size() << " confined volumes." <<
-    // endreq;
     for (auto& cVolumesIter : m_confinedVolumes->arrayObjects()) {
       cVolumesIter->synchronizeLayers(envelope);
     }
@@ -403,8 +379,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
   };
 
   /// Helper function to process boundary surfaces
-  auto processBoundaries =
-      [&](const TrackingVolumeBoundaries& boundaries) -> void {
+  auto processBoundaries = [&](const TrackingVolumeBoundaries& boundaries) {
     // Loop over the boundary surfaces
     for (const auto& boundary : boundaries) {
       // Get the boundary surface pointer
@@ -505,7 +480,7 @@ const std::string& TrackingVolume::volumeName() const {
   return m_name;
 }
 
-void TrackingVolume::setVolumeName(const std::string& volumeName) {
+void TrackingVolume::setVolumeName(std::string_view volumeName) {
   m_name = volumeName;
 }
 
@@ -527,7 +502,7 @@ const LayerArray* TrackingVolume::confinedLayers() const {
   return m_confinedLayers.get();
 }
 
-const MutableTrackingVolumeVector TrackingVolume::denseVolumes() const {
+MutableTrackingVolumeVector TrackingVolume::denseVolumes() const {
   return m_confinedDenseVolumes;
 }
 
@@ -618,12 +593,10 @@ void TrackingVolume::visualize(IVisualization3D& helper,
     Volume::visualize(helper, gctx, viewConfig);
   }
 
-  if (sensitiveViewConfig.visible) {
-    if (!surfaces().empty()) {
-      helper.object(volumeName() + "_sensitives");
-      for (const auto& surface : surfaces()) {
-        surface.visualize(helper, gctx, sensitiveViewConfig);
-      }
+  if (sensitiveViewConfig.visible && !surfaces().empty()) {
+    helper.object(volumeName() + "_sensitives");
+    for (const auto& surface : surfaces()) {
+      surface.visualize(helper, gctx, sensitiveViewConfig);
     }
   }
 

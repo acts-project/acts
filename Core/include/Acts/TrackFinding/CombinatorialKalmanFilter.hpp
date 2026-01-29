@@ -412,7 +412,7 @@ class CombinatorialKalmanFilter {
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
       materialInteractor(navigator.currentSurface(state.navigation), state,
-                         stepper, navigator, MaterialUpdateStage::PostUpdate);
+                         stepper, navigator, MaterialUpdateMode::PostUpdate);
 
       // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
@@ -471,7 +471,7 @@ class CombinatorialKalmanFilter {
 
       // Update state and stepper with pre material effects
       materialInteractor(surface, state, stepper, navigator,
-                         MaterialUpdateStage::PreUpdate);
+                         MaterialUpdateMode::PreUpdate);
 
       // Bind the transported state to the current surface
       auto boundStateRes = stepper.boundState(state.stepping, *surface, false);
@@ -578,12 +578,11 @@ class CombinatorialKalmanFilter {
 
       auto currentState = currentBranch.outermostTrackState();
 
-      if (currentState.typeFlags().test(TrackStateFlag::OutlierFlag)) {
+      if (currentState.typeFlags().isOutlier()) {
         // We don't need to update the stepper given an outlier state
         ACTS_VERBOSE("Outlier state detected on surface "
                      << surface->geometryId());
-      } else if (currentState.typeFlags().test(
-                     TrackStateFlag::MeasurementFlag)) {
+      } else if (currentState.typeFlags().isMeasurement()) {
         // If there are measurement track states on this surface
         // Update stepping state using filtered parameters of last track
         // state on this surface
@@ -600,7 +599,7 @@ class CombinatorialKalmanFilter {
 
       // Update state and stepper with post material effects
       materialInteractor(surface, state, stepper, navigator,
-                         MaterialUpdateStage::PostUpdate);
+                         MaterialUpdateMode::PostUpdate);
 
       return Result<void>::success();
     }
@@ -649,16 +648,16 @@ class CombinatorialKalmanFilter {
       // Update and select from the new branches
       for (TrackProxy newBranch : newBranches) {
         auto trackState = newBranch.outermostTrackState();
-        TrackStateType typeFlags = trackState.typeFlags();
+        TrackStateTypeMap typeFlags = trackState.typeFlags();
 
-        if (typeFlags.test(TrackStateFlag::OutlierFlag)) {
+        if (typeFlags.isOutlier()) {
           // No Kalman update for outlier
           // Set the filtered parameter index to be the same with predicted
           // parameter
           trackState.shareFrom(PM::Predicted, PM::Filtered);
           // Increment number of outliers
           newBranch.nOutliers()++;
-        } else if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
+        } else if (typeFlags.isMeasurement()) {
           // Kalman update
           auto updateRes = extensions.updater(gctx, trackState, *updaterLogger);
           if (!updateRes.ok()) {
@@ -667,8 +666,6 @@ class CombinatorialKalmanFilter {
           }
           ACTS_VERBOSE("Appended measurement track state with tip = "
                        << newBranch.tipIndex());
-          // Set the measurement flag
-          typeFlags.set(TrackStateFlag::MeasurementFlag);
           // Increment number of measurements
           newBranch.nMeasurements()++;
           newBranch.nDoF() += trackState.calibratedSize();
@@ -741,12 +738,15 @@ class CombinatorialKalmanFilter {
       // Set the track state flags
       auto typeFlags = trackStateProxy.typeFlags();
       if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
-        typeFlags.set(TrackStateFlag::MaterialFlag);
+        typeFlags.setHasMaterial();
       }
-      typeFlags.set(TrackStateFlag::ParameterFlag);
+      typeFlags.setHasParameters();
       if (isSensitive) {
-        typeFlags.set(expectMeasurements ? TrackStateFlag::HoleFlag
-                                         : TrackStateFlag::NoExpectedHitFlag);
+        if (expectMeasurements) {
+          typeFlags.setIsHole();
+        } else {
+          typeFlags.setHasNoExpectedHit();
+        }
       }
 
       // Set the filtered parameter index to be the same with predicted
@@ -766,13 +766,13 @@ class CombinatorialKalmanFilter {
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
     /// @param navigator The navigator in use
-    /// @param updateStage The material update stage
+    /// @param updateMode The material update mode
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,
                             const stepper_t& stepper,
                             const navigator_t& navigator,
-                            const MaterialUpdateStage& updateStage) const {
+                            const MaterialUpdateMode& updateMode) const {
       if (surface == nullptr) {
         return;
       }
@@ -782,10 +782,10 @@ class CombinatorialKalmanFilter {
 
       if (surface->surfaceMaterial() != nullptr) {
         // Prepare relevant input particle properties
-        detail::PointwiseMaterialInteraction interaction(surface, state,
-                                                         stepper);
+        detail::PointwiseMaterialInteraction interaction(state, stepper,
+                                                         navigator);
         // Evaluate the material properties
-        if (interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
+        if (interaction.evaluateMaterialSlab(updateMode)) {
           // Surface has material at this stage
           hasMaterial = true;
 
@@ -796,16 +796,16 @@ class CombinatorialKalmanFilter {
           // Screen out material effects info
           ACTS_VERBOSE("Material effects on surface: "
                        << surface->geometryId()
-                       << " at update stage: " << updateStage << " are :");
+                       << " at update mode: " << updateMode << " are :");
           ACTS_VERBOSE("eLoss = "
-                       << interaction.Eloss * interaction.navDir << ", "
+                       << interaction.Eloss * interaction.propDir << ", "
                        << "variancePhi = " << interaction.variancePhi << ", "
                        << "varianceTheta = " << interaction.varianceTheta
                        << ", "
                        << "varianceQoverP = " << interaction.varianceQoverP);
 
           // Update the state and stepper with material effects
-          interaction.updateState(state, stepper, addNoise);
+          interaction.updateState(state, stepper, NoiseUpdateMode::addNoise);
         }
       }
 
@@ -813,7 +813,7 @@ class CombinatorialKalmanFilter {
         // Screen out message
         ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
                                                         << " at update stage: "
-                                                        << updateStage);
+                                                        << updateMode);
       }
     }
 

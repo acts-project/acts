@@ -262,12 +262,11 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         const auto& geoID = state.referenceSurface().geometryId();
         const auto& volume = geoID.volume();
         const auto& layer = geoID.layer();
-        if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+        if (state.typeFlags().isOutlier()) {
           outlierChi2.push_back(state.chi2());
           outlierVolume.push_back(volume);
           outlierLayer.push_back(layer);
-        } else if (state.typeFlags().test(
-                       Acts::TrackStateFlag::MeasurementFlag)) {
+        } else if (state.typeFlags().isMeasurement()) {
           measurementChi2.push_back(state.chi2());
           measurementVolume.push_back(volume);
           measurementLayer.push_back(layer);

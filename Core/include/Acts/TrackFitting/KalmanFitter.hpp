@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -461,7 +461,7 @@ class KalmanFitter {
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PreUpdate);
+                           MaterialUpdateMode::PreUpdate);
 
         // do the kalman update (no need to perform covTransport here, hence no
         // point in performing globalToLocal correction)
@@ -478,7 +478,7 @@ class KalmanFitter {
         result.lastTrackIndex = trackStateProxy.index();
 
         // Update the stepper if it is not an outlier
-        if (trackStateProxy.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+        if (trackStateProxy.typeFlags().isMeasurement()) {
           // Update the stepping state with filtered parameters
           ACTS_VERBOSE("Filtering step successful, updated parameters are:\n"
                        << trackStateProxy.filtered().transpose());
@@ -494,7 +494,7 @@ class KalmanFitter {
 
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PostUpdate);
+                           MaterialUpdateMode::PostUpdate);
         // We count the processed state
         ++result.processedStates;
         // Update the number of holes count only when encountering a
@@ -521,7 +521,7 @@ class KalmanFitter {
         const auto& trackStateProxy = *trackStateProxyRes;
         result.lastTrackIndex = trackStateProxy.index();
 
-        if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+        if (trackStateProxy.typeFlags().isHole()) {
           // Count the missed surface
           result.missedActiveSurfaces.push_back(surface);
         }
@@ -530,7 +530,7 @@ class KalmanFitter {
 
         // Update state and stepper with (possible) material effects
         materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::FullUpdate);
+                           MaterialUpdateMode::FullUpdate);
       }
 
       return Result<void>::success();
@@ -546,14 +546,13 @@ class KalmanFitter {
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
     /// @param navigator The navigator in use
-    /// @param updateStage The material update stage
-    ///
+    /// @param updateMode The material update mode
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,
                             const stepper_t& stepper,
                             const navigator_t& navigator,
-                            const MaterialUpdateStage& updateStage) const {
+                            const MaterialUpdateMode& updateMode) const {
       // Protect against null surface
       if (surface == nullptr) {
         ACTS_VERBOSE(
@@ -567,9 +566,10 @@ class KalmanFitter {
       }
 
       // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
+      detail::PointwiseMaterialInteraction interaction(state, stepper,
+                                                       navigator);
 
-      if (!interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
+      if (!interaction.evaluateMaterialSlab(updateMode)) {
         ACTS_VERBOSE("No material on surface after evaluation: "
                      << surface->geometryId());
         return;
@@ -580,9 +580,9 @@ class KalmanFitter {
                                                        energyLoss);
 
       // Screen out material effects info
-      ACTS_VERBOSE("Material effects on surface: " << surface->geometryId()
-                                                   << " at update stage: "
-                                                   << updateStage << " are :");
+      ACTS_VERBOSE("Material effects on surface: "
+                   << surface->geometryId() << " at update mode: " << updateMode
+                   << " are :");
       ACTS_VERBOSE("eLoss = "
                    << interaction.Eloss << ", "
                    << "variancePhi = " << interaction.variancePhi << ", "
@@ -590,7 +590,7 @@ class KalmanFitter {
                    << "varianceQoverP = " << interaction.varianceQoverP);
 
       // Update the state and stepper with material effects
-      interaction.updateState(state, stepper, addNoise);
+      interaction.updateState(state, stepper, NoiseUpdateMode::addNoise);
     }
   };
 
