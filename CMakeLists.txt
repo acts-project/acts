@@ -468,8 +468,8 @@ endif()
 if(ACTS_BUILD_PLUGIN_ROOT)
     # In the ATLAS build, the ROOT find_package call does not find VDT unless these variables are set.
     # This should not affect other environments.
-    find_package(Vdt)
-    if(Vdt_FOUND)
+    find_package(VDT)
+    if(VDT_FOUND)
         set(VDT_INCLUDE_DIR "${VDT_INCLUDE_DIR}" CACHE PATH "")
         set(VDT_LIBRARY "${VDT_vdt_LIBRARY}" CACHE FILEPATH "")
     endif()
