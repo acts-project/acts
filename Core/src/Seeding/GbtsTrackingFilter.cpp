@@ -137,8 +137,8 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
 
   std::list<GbtsEdge*> lCont;
 
-  for (std::int32_t nIdx = 0; nIdx < pS.m_nNei;
-       nIdx++) {  // loop over the neighbours of this segment
+  // loop over the neighbours of this segment
+  for (std::uint32_t nIdx = 0; nIdx < pS.m_nNei; ++nIdx) {
     std::uint32_t nextSegmentIdx = pS.m_vNei[nIdx];
 
     GbtsEdge* pN = &(m_segStore[nextSegmentIdx]);
@@ -170,9 +170,9 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
       }
     }
   } else {  // branching
-    std::int32_t nBranches = 0;
-    for (auto sIt = lCont.begin(); sIt != lCont.end(); ++sIt, nBranches++) {
-      propagate(*(*sIt), new_ts);  // recursive call
+
+    for (const auto sIt : lCont) {
+      propagate(*sIt, new_ts);  // recursive call
     }
   }
 }
@@ -290,7 +290,7 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
   float Kx[3] = {Dx * Cx[0][0], Dx * Cx[0][1], Dx * Cx[0][2]};
   float Ky[2] = {Dy * Cy[0][0], Dy * Cy[0][1]};
 
-  for (std::int32_t i = 0; i < 3; i++) {
+  for (std::uint32_t i = 0; i < 3; ++i) {
     ts.m_X[i] = X[i] + Kx[i] * resid_x;
   }
 
@@ -298,7 +298,7 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
     return false;
   }
 
-  for (std::int32_t i = 0; i < 2; i++) {
+  for (std::uint32_t i = 0; i < 2; ++i) {
     ts.m_Y[i] = Y[i] + Ky[i] * resid_y;
   }
 
@@ -308,14 +308,14 @@ bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
     return false;
   }
 
-  for (std::int32_t i = 0; i < 3; i++) {
-    for (std::int32_t j = 0; j < 3; j++) {
+  for (std::uint32_t i = 0; i < 3; ++i) {
+    for (std::uint32_t j = 0; j < 3; ++j) {
       ts.m_Cx[i][j] = Cx[i][j] - Kx[i] * CHx[j];
     }
   }
 
-  for (std::int32_t i = 0; i < 2; i++) {
-    for (std::int32_t j = 0; j < 2; j++) {
+  for (std::uint32_t i = 0; i < 2; ++i) {
+    for (std::uint32_t j = 0; j < 2; ++j) {
       ts.m_Cy[i][j] = Cy[i][j] - Ky[i] * CHy[j];
     }
   }
