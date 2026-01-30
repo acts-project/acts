@@ -11,6 +11,7 @@
 #include "Acts/Geometry/VolumePlacementBase.hpp"
 
 namespace Acts::detail {
+
 PortalPlacement::PortalPlacement(const std::size_t portalIdx,
                                  const Transform3& portalTrf,
                                  VolumePlacementBase* parent,
@@ -20,13 +21,14 @@ PortalPlacement::PortalPlacement(const std::size_t portalIdx,
       m_parent{parent},
       m_portalIdx{portalIdx} {
   assert(m_surface != nullptr);
-  m_surface->assignDetectorElement(*this);
+  m_surface->assignSurfacePlacement(*this);
 }
 
 Transform3 PortalPlacement::assembleFullTransform(
     const GeometryContext& gctx) const {
   return m_parent->localToGlobalTransform(gctx) * portalToVolumeCenter();
 }
+
 const Transform3& PortalPlacement::localToGlobalTransform(
     const GeometryContext& gctx) const {
   return m_parent->portalLocalToGlobal(gctx, m_portalIdx);
@@ -40,10 +42,6 @@ Surface& PortalPlacement::surface() {
   return *m_surface;
 }
 
-double PortalPlacement::thickness() const {
-  return 0.;
-}
-
 bool PortalPlacement::isSensitive() const {
   return false;
 }
@@ -54,5 +52,13 @@ std::size_t PortalPlacement::index() const {
 
 const Transform3& PortalPlacement::portalToVolumeCenter() const {
   return m_interalTrf;
+}
+
+std::shared_ptr<RegularSurface> PortalPlacement::getSharedPtr() {
+  return m_surface;
+}
+
+std::shared_ptr<const RegularSurface> PortalPlacement::getSharedPtr() const {
+  return m_surface;
 }
 }  // namespace Acts::detail

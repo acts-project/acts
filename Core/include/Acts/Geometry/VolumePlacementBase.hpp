@@ -29,8 +29,10 @@ class VolumePlacementBase {
  public:
   /// @brief Default constructor
   VolumePlacementBase();
+
   /// @brief Default destructor
   virtual ~VolumePlacementBase() = default;
+
   /// @brief Attaches a SurfacePlacementBase to the volume's portal surface
   ///        to synchronize the portal alignment with the volume alignment
   ///        Internally, a `PortalPlacement` object is instantiated and
@@ -43,30 +45,36 @@ class VolumePlacementBase {
   std::shared_ptr<RegularSurface> makePortalAlignable(
       const std::size_t portalIdx, const Transform3& portalToVolTrf,
       std::shared_ptr<RegularSurface>&& surface);
+
   /// @brief Returns the const pointer to the `SurfacePlacementBase` object
   ///        aligning the i-th portal (May be nullptr if index exceeds the
   ///        number of portals)
   /// @param portalIdx: Internal index of the portal surface [0 - number of portals)
   const detail::PortalPlacement* portalPlacement(
       const std::size_t portalIdx) const;
+
   /// @brief Returns the number of portal placement objects
-  std::size_t nPortalPlacement() const;
+  std::size_t nPortalPlacements() const;
+
   /// @brief Returns the transformation from the local volume coordinates to
   ///        the experiment's global coordinate system
   /// @param gctx The current geometry context object, e.g. alignment
   virtual const Transform3& localToGlobalTransform(
       const GeometryContext& gctx) const = 0;
+
   /// @brief Returns the transformation from the experiment's global frame to the
   ///        local volume coordinate system
   /// @param gctx The current geometry context object, e.g. alignment
   virtual const Transform3& globalToLocalTransform(
       const GeometryContext& gctx) const = 0;
+
   /// @brief Returns the transform from the portal's frame to the experiment's
   ///        global frame for the portal surface associated with the volume
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param portalIdx: Internal index of the portal surface [0 - number of portals)
   virtual const Transform3& portalLocalToGlobal(
       const GeometryContext& gctx, const std::size_t portalIdx) const = 0;
+
   /// @brief Helper method to invoke the population of the experiment specific
   ///        GeometryContext with the transforms of the associated portals
   ///        If the implementation of the GeometryContext does not forsee
