@@ -253,10 +253,11 @@ bool Navigator::checkTargetValid(State& state, const Vector3& position,
   static_cast<void>(direction);
 
   if (state.navigationStage == Stage::initial) {
-    return true;
+    return false;
   }
 
-  if (state.currentVolume != nullptr) {
+  if (state.currentVolume != nullptr &&
+      state.currentVolume->navigationPolicy() != nullptr) {
     ACTS_VERBOSE(volInfo(state) << "Checking policy validity for volume");
 
     auto policyState = state.policyStateManager.currentState();
@@ -266,7 +267,7 @@ bool Navigator::checkTargetValid(State& state, const Vector3& position,
     return isValid;
   }
 
-  return false;
+  return true;
 }
 
 void Navigator::handleSurfaceReached(State& state, const Vector3& position,
