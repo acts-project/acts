@@ -33,6 +33,7 @@
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
+using ActsPlugins::toRoot;
 
 ActsExamples::RootTrackFitterPerformanceWriter::
     RootTrackFitterPerformanceWriter(
@@ -133,57 +134,57 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
 
   // Write residual histograms
   for (const auto& [name, hist] : m_resPlotTool.res()) {
-    ActsPlugins::toRoot(hist)->Write();
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsEta()) {
-    writeWithRefinement(ActsPlugins::toRoot(hist), "resmean", "reswidth");
+    writeWithRefinement(toRoot(hist), "resmean", "reswidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsPt()) {
-    writeWithRefinement(ActsPlugins::toRoot(hist), "resmean", "reswidth");
+    writeWithRefinement(toRoot(hist), "resmean", "reswidth");
   }
 
   // Write pull histograms
   for (const auto& [name, hist] : m_resPlotTool.pull()) {
-    ActsPlugins::toRoot(hist)->Write();
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsEta()) {
-    writeWithRefinement(ActsPlugins::toRoot(hist), "pullmean", "pullwidth");
+    writeWithRefinement(toRoot(hist), "pullmean", "pullwidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsPt()) {
-    writeWithRefinement(ActsPlugins::toRoot(hist), "pullmean", "pullwidth");
+    writeWithRefinement(toRoot(hist), "pullmean", "pullwidth");
   }
 
   // Write efficiency histograms
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsEta())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsPhi())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsPt())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsLogPt())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsLowPt())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsD0())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsZ0())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsDeltaR())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsProdR())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsEtaPhi())->Write();
-  ActsPlugins::toRoot(m_effPlotTool.trackEffVsEtaPt())->Write();
+  toRoot(m_effPlotTool.trackEffVsEta())->Write();
+  toRoot(m_effPlotTool.trackEffVsPhi())->Write();
+  toRoot(m_effPlotTool.trackEffVsPt())->Write();
+  toRoot(m_effPlotTool.trackEffVsLogPt())->Write();
+  toRoot(m_effPlotTool.trackEffVsLowPt())->Write();
+  toRoot(m_effPlotTool.trackEffVsD0())->Write();
+  toRoot(m_effPlotTool.trackEffVsZ0())->Write();
+  toRoot(m_effPlotTool.trackEffVsDeltaR())->Write();
+  toRoot(m_effPlotTool.trackEffVsProdR())->Write();
+  toRoot(m_effPlotTool.trackEffVsEtaPhi())->Write();
+  toRoot(m_effPlotTool.trackEffVsEtaPt())->Write();
 
   for (const auto& eff : m_effPlotTool.trackEffVsEtaInPtRanges()) {
-    ActsPlugins::toRoot(eff)->Write();
+    toRoot(eff)->Write();
   }
   for (const auto& eff : m_effPlotTool.trackEffVsPtInAbsEtaRanges()) {
-    ActsPlugins::toRoot(eff)->Write();
+    toRoot(eff)->Write();
   }
 
   // Write track summary histograms
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nStatesVsEta())->Write();
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nMeasurementsVsEta())->Write();
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nHolesVsEta())->Write();
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nOutliersVsEta())->Write();
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nSharedHitsVsEta())->Write();
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nStatesVsPt())->Write();
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nMeasurementsVsPt())->Write();
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nHolesVsPt())->Write();
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nOutliersVsPt())->Write();
-  ActsPlugins::toRoot(m_trackSummaryPlotTool.nSharedHitsVsPt())->Write();
+  toRoot(m_trackSummaryPlotTool.nStatesVsEta())->Write();
+  toRoot(m_trackSummaryPlotTool.nMeasurementsVsEta())->Write();
+  toRoot(m_trackSummaryPlotTool.nHolesVsEta())->Write();
+  toRoot(m_trackSummaryPlotTool.nOutliersVsEta())->Write();
+  toRoot(m_trackSummaryPlotTool.nSharedHitsVsEta())->Write();
+  toRoot(m_trackSummaryPlotTool.nStatesVsPt())->Write();
+  toRoot(m_trackSummaryPlotTool.nMeasurementsVsPt())->Write();
+  toRoot(m_trackSummaryPlotTool.nHolesVsPt())->Write();
+  toRoot(m_trackSummaryPlotTool.nOutliersVsPt())->Write();
+  toRoot(m_trackSummaryPlotTool.nSharedHitsVsPt())->Write();
 
   ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
 

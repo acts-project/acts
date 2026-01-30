@@ -22,6 +22,8 @@
 
 namespace ActsExamples {
 
+using Acts::Experimental::AxisVariant;
+
 /// Tools to make efficiency plots to show tracking efficiency.
 /// For the moment, the efficiency is taken as the fraction of successfully
 /// smoothed track over all tracks
@@ -29,7 +31,7 @@ class EffPlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+    std::map<std::string, AxisVariant> varBinning = {
         {"Eta", Acts::Experimental::BoostRegularAxis(40, -3.0, 3.0, "#eta")},
         {"Phi", Acts::Experimental::BoostRegularAxis(100, -std::numbers::pi,
                                                      std::numbers::pi, "#phi")},

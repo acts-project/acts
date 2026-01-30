@@ -21,6 +21,8 @@
 
 namespace ActsExamples {
 
+using Acts::Experimental::AxisVariant;
+
 /// Tools to make hists to show residual, i.e. smoothed_parameter -
 /// truth_parameter, and pull, i.e. (smoothed_parameter -
 /// truth_parameter)/smoothed_paramter_error, of track parameters at perigee
@@ -34,7 +36,7 @@ class ResPlotTool {
                                            "theta", "qop", "t"};
 
     /// Binning info for variables
-    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+    std::map<std::string, AxisVariant> varBinning = {
         {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
         {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
         {"Pull", Acts::Experimental::BoostRegularAxis(100, -5, 5, "pull")},

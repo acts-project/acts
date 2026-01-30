@@ -29,20 +29,21 @@
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
+using ActsPlugins::toRoot;
 
 namespace {
 
 void writeTrackSummaryPlots(const ActsExamples::TrackSummaryPlotTool& tool) {
-  ActsPlugins::toRoot(tool.nStatesVsEta())->Write();
-  ActsPlugins::toRoot(tool.nMeasurementsVsEta())->Write();
-  ActsPlugins::toRoot(tool.nHolesVsEta())->Write();
-  ActsPlugins::toRoot(tool.nOutliersVsEta())->Write();
-  ActsPlugins::toRoot(tool.nSharedHitsVsEta())->Write();
-  ActsPlugins::toRoot(tool.nStatesVsPt())->Write();
-  ActsPlugins::toRoot(tool.nMeasurementsVsPt())->Write();
-  ActsPlugins::toRoot(tool.nHolesVsPt())->Write();
-  ActsPlugins::toRoot(tool.nOutliersVsPt())->Write();
-  ActsPlugins::toRoot(tool.nSharedHitsVsPt())->Write();
+  toRoot(tool.nStatesVsEta())->Write();
+  toRoot(tool.nMeasurementsVsEta())->Write();
+  toRoot(tool.nHolesVsEta())->Write();
+  toRoot(tool.nOutliersVsEta())->Write();
+  toRoot(tool.nSharedHitsVsEta())->Write();
+  toRoot(tool.nStatesVsPt())->Write();
+  toRoot(tool.nMeasurementsVsPt())->Write();
+  toRoot(tool.nHolesVsPt())->Write();
+  toRoot(tool.nOutliersVsPt())->Write();
+  toRoot(tool.nSharedHitsVsPt())->Write();
 }
 
 }  // namespace
@@ -162,43 +163,43 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     m_outputFile->cd();
 
     // Write efficiency histograms
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsEta())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsPhi())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsPt())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsLogPt())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsLowPt())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsD0())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsZ0())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsDeltaR())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsProdR())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsEtaPhi())->Write();
-    ActsPlugins::toRoot(m_effPlotTool.trackEffVsEtaPt())->Write();
+    toRoot(m_effPlotTool.trackEffVsEta())->Write();
+    toRoot(m_effPlotTool.trackEffVsPhi())->Write();
+    toRoot(m_effPlotTool.trackEffVsPt())->Write();
+    toRoot(m_effPlotTool.trackEffVsLogPt())->Write();
+    toRoot(m_effPlotTool.trackEffVsLowPt())->Write();
+    toRoot(m_effPlotTool.trackEffVsD0())->Write();
+    toRoot(m_effPlotTool.trackEffVsZ0())->Write();
+    toRoot(m_effPlotTool.trackEffVsDeltaR())->Write();
+    toRoot(m_effPlotTool.trackEffVsProdR())->Write();
+    toRoot(m_effPlotTool.trackEffVsEtaPhi())->Write();
+    toRoot(m_effPlotTool.trackEffVsEtaPt())->Write();
 
     for (const auto& eff : m_effPlotTool.trackEffVsEtaInPtRanges()) {
-      ActsPlugins::toRoot(eff)->Write();
+      toRoot(eff)->Write();
     }
     for (const auto& eff : m_effPlotTool.trackEffVsPtInAbsEtaRanges()) {
-      ActsPlugins::toRoot(eff)->Write();
+      toRoot(eff)->Write();
     }
 
     // Write fake ratio histograms
-    ActsPlugins::toRoot(m_fakePlotTool.nRecoVsPt())->Write();
-    ActsPlugins::toRoot(m_fakePlotTool.nTruthMatchedVsPt())->Write();
-    ActsPlugins::toRoot(m_fakePlotTool.nFakeVsPt())->Write();
-    ActsPlugins::toRoot(m_fakePlotTool.nRecoVsEta())->Write();
-    ActsPlugins::toRoot(m_fakePlotTool.nTruthMatchedVsEta())->Write();
-    ActsPlugins::toRoot(m_fakePlotTool.nFakeVsEta())->Write();
-    ActsPlugins::toRoot(m_fakePlotTool.fakeRatioVsPt())->Write();
-    ActsPlugins::toRoot(m_fakePlotTool.fakeRatioVsEta())->Write();
-    ActsPlugins::toRoot(m_fakePlotTool.fakeRatioVsPhi())->Write();
+    toRoot(m_fakePlotTool.nRecoVsPt())->Write();
+    toRoot(m_fakePlotTool.nTruthMatchedVsPt())->Write();
+    toRoot(m_fakePlotTool.nFakeVsPt())->Write();
+    toRoot(m_fakePlotTool.nRecoVsEta())->Write();
+    toRoot(m_fakePlotTool.nTruthMatchedVsEta())->Write();
+    toRoot(m_fakePlotTool.nFakeVsEta())->Write();
+    toRoot(m_fakePlotTool.fakeRatioVsPt())->Write();
+    toRoot(m_fakePlotTool.fakeRatioVsEta())->Write();
+    toRoot(m_fakePlotTool.fakeRatioVsPhi())->Write();
 
     // Write duplication ratio histograms
-    ActsPlugins::toRoot(m_duplicationPlotTool.nDuplicatedVsPt())->Write();
-    ActsPlugins::toRoot(m_duplicationPlotTool.nDuplicatedVsEta())->Write();
-    ActsPlugins::toRoot(m_duplicationPlotTool.nDuplicatedVsPhi())->Write();
-    ActsPlugins::toRoot(m_duplicationPlotTool.duplicationRatioVsPt())->Write();
-    ActsPlugins::toRoot(m_duplicationPlotTool.duplicationRatioVsEta())->Write();
-    ActsPlugins::toRoot(m_duplicationPlotTool.duplicationRatioVsPhi())->Write();
+    toRoot(m_duplicationPlotTool.nDuplicatedVsPt())->Write();
+    toRoot(m_duplicationPlotTool.nDuplicatedVsEta())->Write();
+    toRoot(m_duplicationPlotTool.nDuplicatedVsPhi())->Write();
+    toRoot(m_duplicationPlotTool.duplicationRatioVsPt())->Write();
+    toRoot(m_duplicationPlotTool.duplicationRatioVsEta())->Write();
+    toRoot(m_duplicationPlotTool.duplicationRatioVsPhi())->Write();
 
     // Write track summary histograms
     writeTrackSummaryPlots(m_trackSummaryPlotTool);
@@ -207,12 +208,12 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     }
 
     // Write track quality histograms
-    ActsPlugins::toRoot(m_trackQualityPlotTool.completenessVsPt())->Write();
-    ActsPlugins::toRoot(m_trackQualityPlotTool.completenessVsEta())->Write();
-    ActsPlugins::toRoot(m_trackQualityPlotTool.completenessVsPhi())->Write();
-    ActsPlugins::toRoot(m_trackQualityPlotTool.purityVsPt())->Write();
-    ActsPlugins::toRoot(m_trackQualityPlotTool.purityVsEta())->Write();
-    ActsPlugins::toRoot(m_trackQualityPlotTool.purityVsPhi())->Write();
+    toRoot(m_trackQualityPlotTool.completenessVsPt())->Write();
+    toRoot(m_trackQualityPlotTool.completenessVsEta())->Write();
+    toRoot(m_trackQualityPlotTool.completenessVsPhi())->Write();
+    toRoot(m_trackQualityPlotTool.purityVsPt())->Write();
+    toRoot(m_trackQualityPlotTool.purityVsEta())->Write();
+    toRoot(m_trackQualityPlotTool.purityVsPhi())->Write();
 
     writeFloat(eff_tracks, "eff_tracks");
     writeFloat(fakeRatio_tracks, "fakeratio_tracks");

@@ -19,12 +19,14 @@
 
 namespace ActsExamples {
 
+using Acts::Experimental::AxisVariant;
+
 /// Tools to make track info plots to show tracking track info.
 class TrackSummaryPlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
+    std::map<std::string, AxisVariant> varBinning = {
         {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
         {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
         {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
