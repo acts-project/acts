@@ -225,12 +225,12 @@ void GbtsDataStorage::initializeNodes(bool useML) {
         float cluster_width = B.m_vn[nIdx]->pixelClusterWidth();
         float locPosY = B.m_vn[nIdx]->localPositionY();
 
-        std::uint32_t lutBinIdx =
+        std::int32_t lutBinIdx =
             static_cast<std::uint32_t>(std::floor(20 * cluster_width)) -
             1;  // lut bin width is 0.05 mm, check if this is
                 // actually what we want with float conversion
 
-        if (lutBinIdx >= lutSize) {
+        if (lutBinIdx >= static_cast<std::int32_t>(lutSize)) {
           continue;
         }
         if (lutBinIdx < 0) {
