@@ -193,8 +193,8 @@ void addGeometry(py::module_& m) {
   }
 
   {
-    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
-        m, "DetectorElementBase");
+    py::class_<SurfacePlacementBase, std::shared_ptr<SurfacePlacementBase>>(
+        m, "SurfacePlacementBase");
   }
 
   {

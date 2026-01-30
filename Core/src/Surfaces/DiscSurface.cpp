@@ -39,39 +39,31 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 DiscSurface::DiscSurface(const DiscSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 DiscSurface::DiscSurface(const GeometryContext& gctx, const DiscSurface& other,
                          const Transform3& shift)
-    : GeometryObject(),
-      RegularSurface(gctx, other, shift),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 DiscSurface::DiscSurface(const Transform3& transform, double rmin, double rmax,
                          double hphisec)
-    : GeometryObject(),
-      RegularSurface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
 DiscSurface::DiscSurface(const Transform3& transform, double minhalfx,
                          double maxhalfx, double minR, double maxR,
                          double avephi, double stereo)
-    : GeometryObject(),
-      RegularSurface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const DiscTrapezoidBounds>(
           minhalfx, maxhalfx, minR, maxR, avephi, stereo)) {}
 
 DiscSurface::DiscSurface(const Transform3& transform,
                          std::shared_ptr<const DiscBounds> dbounds)
-    : GeometryObject(),
-      RegularSurface(transform),
-      m_bounds(std::move(dbounds)) {}
+    : RegularSurface(transform), m_bounds(std::move(dbounds)) {}
 
 DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                         const DetectorElementBase& detelement)
-    : GeometryObject(),
-      RegularSurface(detelement),
-      m_bounds(std::move(dbounds)) {
+                         const SurfacePlacementBase& placement)
+    : RegularSurface{placement}, m_bounds(std::move(dbounds)) {
   throw_assert(m_bounds, "nullptr as DiscBounds");
 }
 
@@ -382,8 +374,7 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
 
   ACTS_VERBOSE("Merging disc surfaces in " << direction << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");

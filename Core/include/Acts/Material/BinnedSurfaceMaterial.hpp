@@ -104,6 +104,8 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   const MaterialSlab& materialSlab(const Vector3& gp) const final;
 
+  using ISurfaceMaterial::materialSlab;
+
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param sl The output stream to write to
   /// @return Reference to the output stream after writing
