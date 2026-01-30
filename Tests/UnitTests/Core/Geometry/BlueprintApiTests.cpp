@@ -144,10 +144,13 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     main = NavigationStream{};
     AppendOnlyNavigationStream stream{main};
 
-    NavigationPolicyState policyState;
-    currentVolume->initializeNavigationCandidates(
-        gctx, {.position = position, .direction = direction}, policyState,
-        stream, logger);
+    NavigationArguments navArgs{.position = position, .direction = direction};
+    NavigationPolicyStateManager stateManager;
+    currentVolume->navigationPolicy()->createState(gctx, navArgs, stateManager,
+                                                   logger);
+    auto policyState = stateManager.currentState();
+    currentVolume->initializeNavigationCandidates(gctx, navArgs, policyState,
+                                                  stream, logger);
 
     ACTS_VERBOSE(main.candidates().size() << " candidates");
 
