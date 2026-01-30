@@ -155,17 +155,12 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
   }
 
   // Write efficiency histograms
-  toRoot(m_effPlotTool.trackEffVsEta())->Write();
-  toRoot(m_effPlotTool.trackEffVsPhi())->Write();
-  toRoot(m_effPlotTool.trackEffVsPt())->Write();
-  toRoot(m_effPlotTool.trackEffVsLogPt())->Write();
-  toRoot(m_effPlotTool.trackEffVsLowPt())->Write();
-  toRoot(m_effPlotTool.trackEffVsD0())->Write();
-  toRoot(m_effPlotTool.trackEffVsZ0())->Write();
-  toRoot(m_effPlotTool.trackEffVsDeltaR())->Write();
-  toRoot(m_effPlotTool.trackEffVsProdR())->Write();
-  toRoot(m_effPlotTool.trackEffVsEtaPhi())->Write();
-  toRoot(m_effPlotTool.trackEffVsEtaPt())->Write();
+  for (const auto& [name, eff] : m_effPlotTool.efficiencies1D()) {
+    toRoot(eff)->Write();
+  }
+  for (const auto& [name, eff] : m_effPlotTool.efficiencies2D()) {
+    toRoot(eff)->Write();
+  }
 
   for (const auto& eff : m_effPlotTool.trackEffVsEtaInPtRanges()) {
     toRoot(eff)->Write();
@@ -175,16 +170,9 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
   }
 
   // Write track summary histograms
-  toRoot(m_trackSummaryPlotTool.nStatesVsEta())->Write();
-  toRoot(m_trackSummaryPlotTool.nMeasurementsVsEta())->Write();
-  toRoot(m_trackSummaryPlotTool.nHolesVsEta())->Write();
-  toRoot(m_trackSummaryPlotTool.nOutliersVsEta())->Write();
-  toRoot(m_trackSummaryPlotTool.nSharedHitsVsEta())->Write();
-  toRoot(m_trackSummaryPlotTool.nStatesVsPt())->Write();
-  toRoot(m_trackSummaryPlotTool.nMeasurementsVsPt())->Write();
-  toRoot(m_trackSummaryPlotTool.nHolesVsPt())->Write();
-  toRoot(m_trackSummaryPlotTool.nOutliersVsPt())->Write();
-  toRoot(m_trackSummaryPlotTool.nSharedHitsVsPt())->Write();
+  for (const auto& [name, prof] : m_trackSummaryPlotTool.profiles()) {
+    toRoot(prof)->Write();
+  }
 
   ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
 

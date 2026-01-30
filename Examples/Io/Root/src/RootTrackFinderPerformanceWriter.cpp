@@ -34,16 +34,9 @@ using ActsPlugins::toRoot;
 namespace {
 
 void writeTrackSummaryPlots(const ActsExamples::TrackSummaryPlotTool& tool) {
-  toRoot(tool.nStatesVsEta())->Write();
-  toRoot(tool.nMeasurementsVsEta())->Write();
-  toRoot(tool.nHolesVsEta())->Write();
-  toRoot(tool.nOutliersVsEta())->Write();
-  toRoot(tool.nSharedHitsVsEta())->Write();
-  toRoot(tool.nStatesVsPt())->Write();
-  toRoot(tool.nMeasurementsVsPt())->Write();
-  toRoot(tool.nHolesVsPt())->Write();
-  toRoot(tool.nOutliersVsPt())->Write();
-  toRoot(tool.nSharedHitsVsPt())->Write();
+  for (const auto& [name, prof] : tool.profiles()) {
+    toRoot(prof)->Write();
+  }
 }
 
 }  // namespace
@@ -163,17 +156,12 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     m_outputFile->cd();
 
     // Write efficiency histograms
-    toRoot(m_effPlotTool.trackEffVsEta())->Write();
-    toRoot(m_effPlotTool.trackEffVsPhi())->Write();
-    toRoot(m_effPlotTool.trackEffVsPt())->Write();
-    toRoot(m_effPlotTool.trackEffVsLogPt())->Write();
-    toRoot(m_effPlotTool.trackEffVsLowPt())->Write();
-    toRoot(m_effPlotTool.trackEffVsD0())->Write();
-    toRoot(m_effPlotTool.trackEffVsZ0())->Write();
-    toRoot(m_effPlotTool.trackEffVsDeltaR())->Write();
-    toRoot(m_effPlotTool.trackEffVsProdR())->Write();
-    toRoot(m_effPlotTool.trackEffVsEtaPhi())->Write();
-    toRoot(m_effPlotTool.trackEffVsEtaPt())->Write();
+    for (const auto& [name, eff] : m_effPlotTool.efficiencies1D()) {
+      toRoot(eff)->Write();
+    }
+    for (const auto& [name, eff] : m_effPlotTool.efficiencies2D()) {
+      toRoot(eff)->Write();
+    }
 
     for (const auto& eff : m_effPlotTool.trackEffVsEtaInPtRanges()) {
       toRoot(eff)->Write();
@@ -183,23 +171,20 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     }
 
     // Write fake ratio histograms
-    toRoot(m_fakePlotTool.nRecoVsPt())->Write();
-    toRoot(m_fakePlotTool.nTruthMatchedVsPt())->Write();
-    toRoot(m_fakePlotTool.nFakeVsPt())->Write();
-    toRoot(m_fakePlotTool.nRecoVsEta())->Write();
-    toRoot(m_fakePlotTool.nTruthMatchedVsEta())->Write();
-    toRoot(m_fakePlotTool.nFakeVsEta())->Write();
-    toRoot(m_fakePlotTool.fakeRatioVsPt())->Write();
-    toRoot(m_fakePlotTool.fakeRatioVsEta())->Write();
-    toRoot(m_fakePlotTool.fakeRatioVsPhi())->Write();
+    for (const auto& [name, hist] : m_fakePlotTool.histograms()) {
+      toRoot(hist)->Write();
+    }
+    for (const auto& [name, eff] : m_fakePlotTool.efficiencies()) {
+      toRoot(eff)->Write();
+    }
 
     // Write duplication ratio histograms
-    toRoot(m_duplicationPlotTool.nDuplicatedVsPt())->Write();
-    toRoot(m_duplicationPlotTool.nDuplicatedVsEta())->Write();
-    toRoot(m_duplicationPlotTool.nDuplicatedVsPhi())->Write();
-    toRoot(m_duplicationPlotTool.duplicationRatioVsPt())->Write();
-    toRoot(m_duplicationPlotTool.duplicationRatioVsEta())->Write();
-    toRoot(m_duplicationPlotTool.duplicationRatioVsPhi())->Write();
+    for (const auto& [name, prof] : m_duplicationPlotTool.profiles()) {
+      toRoot(prof)->Write();
+    }
+    for (const auto& [name, eff] : m_duplicationPlotTool.efficiencies()) {
+      toRoot(eff)->Write();
+    }
 
     // Write track summary histograms
     writeTrackSummaryPlots(m_trackSummaryPlotTool);
@@ -208,12 +193,9 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     }
 
     // Write track quality histograms
-    toRoot(m_trackQualityPlotTool.completenessVsPt())->Write();
-    toRoot(m_trackQualityPlotTool.completenessVsEta())->Write();
-    toRoot(m_trackQualityPlotTool.completenessVsPhi())->Write();
-    toRoot(m_trackQualityPlotTool.purityVsPt())->Write();
-    toRoot(m_trackQualityPlotTool.purityVsEta())->Write();
-    toRoot(m_trackQualityPlotTool.purityVsPhi())->Write();
+    for (const auto& [name, prof] : m_trackQualityPlotTool.profiles()) {
+      toRoot(prof)->Write();
+    }
 
     writeFloat(eff_tracks, "eff_tracks");
     writeFloat(fakeRatio_tracks, "fakeratio_tracks");

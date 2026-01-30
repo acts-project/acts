@@ -53,36 +53,10 @@ class TrackSummaryPlotTool {
             std::size_t nStates, std::size_t nMeasurements,
             std::size_t nOutliers, std::size_t nHoles, std::size_t nSharedHits);
 
-  /// @brief Accessors for histograms (const reference)
-  const Acts::Experimental::ProfileHistogram1& nStatesVsEta() const {
-    return m_nStatesVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nMeasurementsVsEta() const {
-    return m_nMeasurementsVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nHolesVsEta() const {
-    return m_nHolesVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nOutliersVsEta() const {
-    return m_nOutliersVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nSharedHitsVsEta() const {
-    return m_nSharedHitsVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nStatesVsPt() const {
-    return m_nStatesVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& nMeasurementsVsPt() const {
-    return m_nMeasurementsVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& nHolesVsPt() const {
-    return m_nHolesVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& nOutliersVsPt() const {
-    return m_nOutliersVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& nSharedHitsVsPt() const {
-    return m_nSharedHitsVsPt;
+  /// @brief Accessor for profile histograms map (const reference)
+  const std::map<std::string, Acts::Experimental::ProfileHistogram1>& profiles()
+      const {
+    return m_profiles;
   }
 
  private:
@@ -91,16 +65,7 @@ class TrackSummaryPlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  Acts::Experimental::ProfileHistogram1 m_nStatesVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nMeasurementsVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nHolesVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nOutliersVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nSharedHitsVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nStatesVsPt;
-  Acts::Experimental::ProfileHistogram1 m_nMeasurementsVsPt;
-  Acts::Experimental::ProfileHistogram1 m_nHolesVsPt;
-  Acts::Experimental::ProfileHistogram1 m_nOutliersVsPt;
-  Acts::Experimental::ProfileHistogram1 m_nSharedHitsVsPt;
+  std::map<std::string, Acts::Experimental::ProfileHistogram1> m_profiles;
 };
 
 }  // namespace ActsExamples

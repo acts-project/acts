@@ -47,24 +47,10 @@ class TrackQualityPlotTool {
   void fill(const Acts::BoundTrackParameters& fittedParameters,
             double completeness, double purity);
 
-  /// @brief Accessors for histograms (const reference)
-  const Acts::Experimental::ProfileHistogram1& completenessVsPt() const {
-    return m_completenessVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& completenessVsEta() const {
-    return m_completenessVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& completenessVsPhi() const {
-    return m_completenessVsPhi;
-  }
-  const Acts::Experimental::ProfileHistogram1& purityVsPt() const {
-    return m_purityVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& purityVsEta() const {
-    return m_purityVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& purityVsPhi() const {
-    return m_purityVsPhi;
+  /// @brief Accessor for profile histograms map (const reference)
+  const std::map<std::string, Acts::Experimental::ProfileHistogram1>& profiles()
+      const {
+    return m_profiles;
   }
 
  private:
@@ -73,12 +59,7 @@ class TrackQualityPlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  Acts::Experimental::ProfileHistogram1 m_completenessVsPt;
-  Acts::Experimental::ProfileHistogram1 m_completenessVsEta;
-  Acts::Experimental::ProfileHistogram1 m_completenessVsPhi;
-  Acts::Experimental::ProfileHistogram1 m_purityVsPt;
-  Acts::Experimental::ProfileHistogram1 m_purityVsEta;
-  Acts::Experimental::ProfileHistogram1 m_purityVsPhi;
+  std::map<std::string, Acts::Experimental::ProfileHistogram1> m_profiles;
 };
 
 }  // namespace ActsExamples

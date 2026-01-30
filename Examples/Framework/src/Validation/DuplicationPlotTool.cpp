@@ -33,24 +33,37 @@ namespace ActsExamples {
 
 DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
                                          Acts::Logging::Level lvl)
-    : m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl)),
-      m_nDuplicatedVsPt(makeProfile(m_cfg, "nDuplicated_vs_pT",
-                                    "Number of duplicated track candidates",
-                                    m_cfg.varBinning.at("Pt"))),
-      m_nDuplicatedVsEta(makeProfile(m_cfg, "nDuplicated_vs_eta",
-                                     "Number of duplicated track candidates",
-                                     m_cfg.varBinning.at("Eta"))),
-      m_nDuplicatedVsPhi(makeProfile(m_cfg, "nDuplicated_vs_phi",
-                                     "Number of duplicated track candidates",
-                                     m_cfg.varBinning.at("Phi"))),
-      m_duplicationRatioVsPt("duplicationRatio_vs_pT", "Duplication ratio",
-                             std::array{m_cfg.varBinning.at("Pt")}),
-      m_duplicationRatioVsEta("duplicationRatio_vs_eta", "Duplication ratio",
-                              std::array{m_cfg.varBinning.at("Eta")}),
-      m_duplicationRatioVsPhi("duplicationRatio_vs_phi", "Duplication ratio",
-                              std::array{m_cfg.varBinning.at("Phi")}) {
+    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl)) {
   ACTS_DEBUG("Initialize the histograms for duplication ratio plots");
+
+  m_profiles.insert(
+      {"nDuplicated_vs_pT",
+       makeProfile(m_cfg, "nDuplicated_vs_pT",
+                   "Number of duplicated track candidates",
+                   m_cfg.varBinning.at("Pt"))});
+  m_profiles.insert(
+      {"nDuplicated_vs_eta",
+       makeProfile(m_cfg, "nDuplicated_vs_eta",
+                   "Number of duplicated track candidates",
+                   m_cfg.varBinning.at("Eta"))});
+  m_profiles.insert(
+      {"nDuplicated_vs_phi",
+       makeProfile(m_cfg, "nDuplicated_vs_phi",
+                   "Number of duplicated track candidates",
+                   m_cfg.varBinning.at("Phi"))});
+
+  m_efficiencies.insert(
+      {"duplicationRatio_vs_pT",
+       Efficiency1("duplicationRatio_vs_pT", "Duplication ratio",
+                   std::array{m_cfg.varBinning.at("Pt")})});
+  m_efficiencies.insert(
+      {"duplicationRatio_vs_eta",
+       Efficiency1("duplicationRatio_vs_eta", "Duplication ratio",
+                   std::array{m_cfg.varBinning.at("Eta")})});
+  m_efficiencies.insert(
+      {"duplicationRatio_vs_phi",
+       Efficiency1("duplicationRatio_vs_phi", "Duplication ratio",
+                   std::array{m_cfg.varBinning.at("Phi")})});
 }
 
 void DuplicationPlotTool::fill(
@@ -60,9 +73,9 @@ void DuplicationPlotTool::fill(
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  m_duplicationRatioVsPt.fill({fit_pT}, status);
-  m_duplicationRatioVsEta.fill({fit_eta}, status);
-  m_duplicationRatioVsPhi.fill({fit_phi}, status);
+  m_efficiencies.at("duplicationRatio_vs_pT").fill({fit_pT}, status);
+  m_efficiencies.at("duplicationRatio_vs_eta").fill({fit_eta}, status);
+  m_efficiencies.at("duplicationRatio_vs_phi").fill({fit_phi}, status);
 }
 
 void DuplicationPlotTool::fill(const SimParticleState& truthParticle,
@@ -73,9 +86,12 @@ void DuplicationPlotTool::fill(const SimParticleState& truthParticle,
 
   const auto nDuplicatedTracks = nMatchedTracks == 0 ? 0 : nMatchedTracks - 1;
 
-  m_nDuplicatedVsPt.fill({t_pT}, static_cast<double>(nDuplicatedTracks));
-  m_nDuplicatedVsEta.fill({t_eta}, static_cast<double>(nDuplicatedTracks));
-  m_nDuplicatedVsPhi.fill({t_phi}, static_cast<double>(nDuplicatedTracks));
+  m_profiles.at("nDuplicated_vs_pT")
+      .fill({t_pT}, static_cast<double>(nDuplicatedTracks));
+  m_profiles.at("nDuplicated_vs_eta")
+      .fill({t_eta}, static_cast<double>(nDuplicatedTracks));
+  m_profiles.at("nDuplicated_vs_phi")
+      .fill({t_phi}, static_cast<double>(nDuplicatedTracks));
 }
 
 }  // namespace ActsExamples

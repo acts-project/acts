@@ -76,39 +76,14 @@ class EffPlotTool {
   void fill(const Acts::GeometryContext& gctx,
             const SimParticleState& truthParticle, double deltaR, bool status);
 
-  /// @brief Accessors for histograms (const reference)
-  const Acts::Experimental::Efficiency1& trackEffVsEta() const {
-    return m_trackEffVsEta;
+  /// @brief Accessors for efficiency maps (const reference)
+  const std::map<std::string, Acts::Experimental::Efficiency1>& efficiencies1D()
+      const {
+    return m_efficiencies1D;
   }
-  const Acts::Experimental::Efficiency1& trackEffVsPhi() const {
-    return m_trackEffVsPhi;
-  }
-  const Acts::Experimental::Efficiency1& trackEffVsPt() const {
-    return m_trackEffVsPt;
-  }
-  const Acts::Experimental::Efficiency1& trackEffVsLogPt() const {
-    return m_trackEffVsLogPt;
-  }
-  const Acts::Experimental::Efficiency1& trackEffVsLowPt() const {
-    return m_trackEffVsLowPt;
-  }
-  const Acts::Experimental::Efficiency1& trackEffVsD0() const {
-    return m_trackEffVsD0;
-  }
-  const Acts::Experimental::Efficiency1& trackEffVsZ0() const {
-    return m_trackEffVsZ0;
-  }
-  const Acts::Experimental::Efficiency1& trackEffVsDeltaR() const {
-    return m_trackEffVsDeltaR;
-  }
-  const Acts::Experimental::Efficiency1& trackEffVsProdR() const {
-    return m_trackEffVsProdR;
-  }
-  const Acts::Experimental::Efficiency2& trackEffVsEtaPhi() const {
-    return m_trackEffVsEtaPhi;
-  }
-  const Acts::Experimental::Efficiency2& trackEffVsEtaPt() const {
-    return m_trackEffVsEtaPt;
+  const std::map<std::string, Acts::Experimental::Efficiency2>& efficiencies2D()
+      const {
+    return m_efficiencies2D;
   }
   const std::vector<Acts::Experimental::Efficiency1>& trackEffVsEtaInPtRanges()
       const {
@@ -125,17 +100,8 @@ class EffPlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  Acts::Experimental::Efficiency1 m_trackEffVsEta;
-  Acts::Experimental::Efficiency1 m_trackEffVsPhi;
-  Acts::Experimental::Efficiency1 m_trackEffVsPt;
-  Acts::Experimental::Efficiency1 m_trackEffVsLogPt;
-  Acts::Experimental::Efficiency1 m_trackEffVsLowPt;
-  Acts::Experimental::Efficiency1 m_trackEffVsD0;
-  Acts::Experimental::Efficiency1 m_trackEffVsZ0;
-  Acts::Experimental::Efficiency1 m_trackEffVsDeltaR;
-  Acts::Experimental::Efficiency1 m_trackEffVsProdR;
-  Acts::Experimental::Efficiency2 m_trackEffVsEtaPhi;
-  Acts::Experimental::Efficiency2 m_trackEffVsEtaPt;
+  std::map<std::string, Acts::Experimental::Efficiency1> m_efficiencies1D;
+  std::map<std::string, Acts::Experimental::Efficiency2> m_efficiencies2D;
   std::vector<Acts::Experimental::Efficiency1> m_trackEffVsEtaInPtRanges;
   std::vector<Acts::Experimental::Efficiency1> m_trackEffVsPtInAbsEtaRanges;
 };

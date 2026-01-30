@@ -58,24 +58,14 @@ class DuplicationPlotTool {
   /// @param nDuplicatedTracks the number of matched tracks
   void fill(const SimParticleState& truthParticle, std::size_t nMatchedTracks);
 
-  /// @brief Accessors for histograms (const reference)
-  const Acts::Experimental::ProfileHistogram1& nDuplicatedVsPt() const {
-    return m_nDuplicatedVsPt;
+  /// @brief Accessors for histogram maps (const reference)
+  const std::map<std::string, Acts::Experimental::ProfileHistogram1>& profiles()
+      const {
+    return m_profiles;
   }
-  const Acts::Experimental::ProfileHistogram1& nDuplicatedVsEta() const {
-    return m_nDuplicatedVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nDuplicatedVsPhi() const {
-    return m_nDuplicatedVsPhi;
-  }
-  const Acts::Experimental::Efficiency1& duplicationRatioVsPt() const {
-    return m_duplicationRatioVsPt;
-  }
-  const Acts::Experimental::Efficiency1& duplicationRatioVsEta() const {
-    return m_duplicationRatioVsEta;
-  }
-  const Acts::Experimental::Efficiency1& duplicationRatioVsPhi() const {
-    return m_duplicationRatioVsPhi;
+  const std::map<std::string, Acts::Experimental::Efficiency1>& efficiencies()
+      const {
+    return m_efficiencies;
   }
 
  private:
@@ -84,12 +74,8 @@ class DuplicationPlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  Acts::Experimental::ProfileHistogram1 m_nDuplicatedVsPt;
-  Acts::Experimental::ProfileHistogram1 m_nDuplicatedVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nDuplicatedVsPhi;
-  Acts::Experimental::Efficiency1 m_duplicationRatioVsPt;
-  Acts::Experimental::Efficiency1 m_duplicationRatioVsEta;
-  Acts::Experimental::Efficiency1 m_duplicationRatioVsPhi;
+  std::map<std::string, Acts::Experimental::ProfileHistogram1> m_profiles;
+  std::map<std::string, Acts::Experimental::Efficiency1> m_efficiencies;
 };
 
 }  // namespace ActsExamples
