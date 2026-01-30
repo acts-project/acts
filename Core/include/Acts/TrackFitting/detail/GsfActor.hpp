@@ -125,7 +125,7 @@ struct GsfActor {
 
   const Logger& logger() const { return *m_cfg.logger; }
 
-  using TemporaryStates = detail::gsf::TemporaryStates<traj_t>;
+  using TemporaryStates = detail::Gsf::TemporaryStates<traj_t>;
 
   using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
@@ -250,7 +250,7 @@ struct GsfActor {
         return res.error();
       }
 
-      detail::gsf::updateStepper(state, stepper, tmpStates, m_cfg.weightCutoff);
+      detail::Gsf::updateStepper(state, stepper, tmpStates, m_cfg.weightCutoff);
     }
     // We have material, we thus need a component cache since we will
     // convolute the components and later reduce them again before updating
@@ -298,10 +298,10 @@ struct GsfActor {
           static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
       m_cfg.extensions.mixtureReducer(componentCache, finalCmpNumber, surface);
 
-      detail::gsf::removeLowWeightComponents(componentCache,
+      detail::Gsf::removeLowWeightComponents(componentCache,
                                              m_cfg.weightCutoff);
 
-      detail::gsf::updateStepper(state, stepper, navigator, componentCache,
+      detail::Gsf::updateStepper(state, stepper, navigator, componentCache,
                                  logger());
     }
 

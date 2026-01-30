@@ -42,7 +42,7 @@ double detail::calculateDeterminant(
   });
 }
 
-void detail::gsf::removeLowWeightComponents(std::vector<GsfComponent> &cmps,
+void detail::Gsf::removeLowWeightComponents(std::vector<GsfComponent> &cmps,
                                             double weightCutoff) {
   auto proj = [](auto &cmp) -> double & { return cmp.weight; };
 
@@ -64,10 +64,10 @@ void detail::gsf::removeLowWeightComponents(std::vector<GsfComponent> &cmps,
   }
 }
 
-double detail::gsf::applyBetheHeitler(
+double detail::Gsf::applyBetheHeitler(
     const GeometryContext &geoContext, const Surface &surface,
     Direction direction, const BoundTrackParameters &initialParameters,
-    const double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
+    double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
     double weightCutoff, std::vector<GsfComponent> &componentCache,
     Updatable<std::size_t> &nInvalidBetheHeitler,

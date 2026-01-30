@@ -252,7 +252,7 @@ class Updatable {
   const T &val() const { return m_val; }
 };
 
-namespace gsf {
+namespace Gsf {
 
 /// Remove components with low weights and renormalize from the component
 /// cache
@@ -337,7 +337,7 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 double applyBetheHeitler(
     const GeometryContext &geoContext, const Surface &surface,
     Direction direction, const BoundTrackParameters &initialParameters,
-    const double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
+    double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
     double weightCutoff, std::vector<GsfComponent> &componentCache,
     Updatable<std::size_t> &nInvalidBetheHeitler,
@@ -378,6 +378,6 @@ void convoluteComponents(
   sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
 }
 
-}  // namespace gsf
+}  // namespace Gsf
 
 }  // namespace Acts::detail
