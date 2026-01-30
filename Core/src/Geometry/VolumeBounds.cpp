@@ -59,9 +59,9 @@ std::vector<OrientedSurface> VolumeBounds::boundarySurfaces(
     std::shared_ptr<RegularSurface>& surface = portalSurfaces[faceIdx].surface;
     // the localToGlobal from the surface is the transform from the portal
     // frame to the volume center
-    const Acts::Transform3 internalTrf = alignMe->localToGlobalTransform(gctx);
-    alignMe = parentVolume.volumePositioner()->makePortalAlignable(
-        faceIdx, internalTrf, std::move(alignMe));
+    const Acts::Transform3 internalTrf = surface->localToGlobalTransform(gctx);
+    surface = parentVolume.volumePositioner()->makePortalAlignable(
+        faceIdx, internalTrf, std::move(surface));
   }
   return portalSurfaces;
 }

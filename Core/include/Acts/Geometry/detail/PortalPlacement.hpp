@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 namespace Acts {
 class VolumePlacementBase;
@@ -18,7 +18,7 @@ namespace detail {
 /// @brief Implementation of the `SurfacePlacementBase` to synchronize the alignment
 ///        of an alignable volume with the alignment of the boundary surfaces
 ///        associated with the Volume.
-class PortalPlacement : public DetectorElementBase {
+class PortalPlacement : public SurfacePlacementBase {
  public:
   /// @brief Allow the VolumePlacementBase as only class to construct
   ///        the portal placement
@@ -30,22 +30,31 @@ class PortalPlacement : public DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   const Transform3& localToGlobalTransform(
       const GeometryContext& gctx) const final;
+
   /// @brief Returns the const reference to portal surface connected with
   ///        this placement instance
   const Surface& surface() const final;
+
   /// @brief Returns the mutable reference to portal surface connected with
   ///        this placement instance
   Surface& surface() final;
-  /// @brief Returns a simple 0
-  [[deprecated("Not needed once the SurfacePlacementBase is the base class")]]
-  double thickness() const final;
+
+  /// @brief Returns the pointer to the hold surface
+  std::shared_ptr<RegularSurface> getSharedPtr();
+
+  /// @brief Returns the pointer to the hold surface
+  std::shared_ptr<const RegularSurface> getSharedPtr() const;
+
   /// @brief Declares the surface object to be non-sensitive
   bool isSensitive() const final;
+
   /// @brief Returns the face index of the associated portal surface
   std::size_t index() const;
+
   /// @brief Returns the transform from the portal to the
   ///        associated volume reference frame
   const Transform3& portalToVolumeCenter() const;
+
   /// @brief Assembles the transform to switch from the portal's frame
   ///        to the experiment's global frame which is essentially the
   ///        same as a call of `localToGlobalTransform` but this method
@@ -55,6 +64,12 @@ class PortalPlacement : public DetectorElementBase {
   Transform3 assembleFullTransform(const GeometryContext& gctx) const;
 
  protected:
+  /// @brief Constructor to instantiate a PortalPlacement
+  /// @param portalIdx:
+  /// @param portalTrf:
+  /// @param parent:
+  /// @param surface:
+
   PortalPlacement(const std::size_t portalIdx, const Transform3& portalTrf,
                   VolumePlacementBase* parent,
                   std::shared_ptr<RegularSurface>&& surface);
