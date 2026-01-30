@@ -232,11 +232,15 @@ struct GsfActor {
 
     if (haveMaterial) {
       if (haveMeasurement) {
-        applyMultipleScattering(state, stepper, navigator,
-                                MaterialUpdateMode::PreUpdate);
+        applyMultipleScattering(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::PreUpdate));
       } else {
-        applyMultipleScattering(state, stepper, navigator,
-                                MaterialUpdateMode::FullUpdate);
+        applyMultipleScattering(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(
+                state, navigator, MaterialUpdateMode::FullUpdate));
       }
     }
 
@@ -308,8 +312,10 @@ struct GsfActor {
 
     // If we have only done preUpdate before, now do postUpdate
     if (haveMaterial && haveMeasurement) {
-      applyMultipleScattering(state, stepper, navigator,
-                              MaterialUpdateMode::PostUpdate);
+      applyMultipleScattering(
+          state, stepper, navigator,
+          detail::determineMaterialUpdateMode(state, navigator,
+                                              MaterialUpdateMode::PostUpdate));
     }
 
     return Result<void>::success();

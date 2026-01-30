@@ -23,26 +23,24 @@
 
 namespace Acts::detail {
 
-/// Convenience method to update a variance given a change and noise update mode
-/// @param [in] variance A diagonal entry of the covariance matrix
-/// @param [in] change The change that may be applied to it
-/// @param [in] noiseUpdateMode The noise update mode
-/// @return The updated variance
-double updateVariance(double variance, double change,
-                      NoiseUpdateMode noiseUpdateMode);
-
-/// Determine the material update mode to be used for a given surface
+/// Determine the material update mode to be used for a given surface. Depending
+/// on whether the surface is the start or target surface, the update mode is
+/// restricted to pre- or post-update only. This is necessary to avoid double
+/// counting of material effects at the start and target surfaces.
 /// @param surface The current surface
 /// @param startSurface The starting surface of the propagation
 /// @param targetSurface The target surface of the propagation
 /// @param requestedMode The requested material update mode
 /// @return The determined material update mode
 MaterialUpdateMode determineMaterialUpdateMode(
-    const Surface* surface, const Surface* startSurface,
+    const Surface& surface, const Surface* startSurface,
     const Surface* targetSurface, MaterialUpdateMode requestedMode);
 
 /// Determine the material update mode to be used for the current surface given
-/// the propagation state
+/// the propagation state. Depending on whether the surface is the start or
+/// target surface, the update mode is restricted to pre- or post-update only.
+/// This is necessary to avoid double counting of material effects at the start
+/// and target surfaces.
 /// @tparam propagator_state_t The type of the propagator state
 /// @tparam navigator_t The type of the navigator
 /// @param state The current propagator state
@@ -57,7 +55,11 @@ MaterialUpdateMode determineMaterialUpdateMode(
   const Surface* startSurface = navigator.startSurface(state.navigation);
   const Surface* targetSurface = navigator.targetSurface(state.navigation);
 
-  return determineMaterialUpdateMode(surface, startSurface, targetSurface,
+  if (surface == nullptr) {
+    return MaterialUpdateMode::NoUpdate;
+  }
+
+  return determineMaterialUpdateMode(*surface, startSurface, targetSurface,
                                      requestedMode);
 }
 
@@ -106,13 +108,13 @@ MaterialSlab evaluateMaterialSlab(const propagator_state_t& state,
 /// @param state The current propagator state
 /// @param stepper The stepper used for the propagation
 /// @param navigator The navigator used for the propagation
-/// @param requestedMode The requested material update mode
+/// @param updateMode The material update mode
 /// @return The evaluated material slab
 template <typename propagator_state_t, typename stepper_t, typename navigator_t>
 MaterialSlab evaluateMaterialSlab(const propagator_state_t& state,
                                   const stepper_t& stepper,
                                   const navigator_t& navigator,
-                                  MaterialUpdateMode requestedMode) {
+                                  MaterialUpdateMode updateMode) {
   const Surface* surface = navigator.currentSurface(state.navigation);
   if (surface == nullptr) {
     return MaterialSlab::Nothing();
@@ -122,9 +124,6 @@ MaterialSlab evaluateMaterialSlab(const propagator_state_t& state,
   const Direction propDir = state.options.direction;
   const Vector3 pos = stepper.position(state.stepping);
   const Vector3 dir = stepper.direction(state.stepping);
-
-  const MaterialUpdateMode updateMode =
-      determineMaterialUpdateMode(state, navigator, requestedMode);
 
   return evaluateMaterialSlab(geoContext, *surface, propDir, pos, dir,
                               updateMode);
@@ -228,6 +227,16 @@ PointwiseMaterialEffects performMaterialInteraction(
   // update track parameters
   stepper.update(state.stepping, position, direction, nextQOverP, time);
 
+  // Convenience method to update a variance given a change and noise update
+  // mode
+  const auto updateVariance = [](double variance, double change,
+                                 NoiseUpdateMode updateMode) {
+    // Add/Subtract the change
+    // Protect the variance against becoming negative
+    return std::max(0.,
+                    variance + std::copysign(change, toUnderlying(updateMode)));
+  };
+
   // update covariance matrix
   state.stepping.cov(eBoundPhi, eBoundPhi) =
       updateVariance(state.stepping.cov(eBoundPhi, eBoundPhi),
@@ -250,7 +259,7 @@ PointwiseMaterialEffects performMaterialInteraction(
 /// @param state The current propagator state
 /// @param stepper The stepper used for the propagation
 /// @param navigator The navigator used for the propagation
-/// @param requestedMode The requested material update mode
+/// @param updateMode The material update mode
 /// @param noiseUpdateMode The noise update mode
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
@@ -259,7 +268,7 @@ PointwiseMaterialEffects performMaterialInteraction(
 template <typename propagator_state_t, typename stepper_t, typename navigator_t>
 PointwiseMaterialEffects performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper,
-    const navigator_t& navigator, MaterialUpdateMode requestedMode,
+    const navigator_t& navigator, MaterialUpdateMode updateMode,
     NoiseUpdateMode noiseUpdateMode, bool multipleScattering, bool energyLoss,
     const Logger& logger) {
   const Surface* surface = navigator.currentSurface(state.navigation);
@@ -268,8 +277,6 @@ PointwiseMaterialEffects performMaterialInteraction(
     return {};
   }
 
-  const MaterialUpdateMode updateMode =
-      determineMaterialUpdateMode(state, navigator, requestedMode);
   const MaterialSlab slab =
       evaluateMaterialSlab(state, stepper, navigator, updateMode);
   if (slab.isVacuum()) {

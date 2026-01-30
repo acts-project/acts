@@ -79,7 +79,9 @@ struct MaterialInteractor {
                                            << surface->geometryId());
 
       const MaterialSlab slab = detail::evaluateMaterialSlab(
-          state, stepper, navigator, MaterialUpdateMode::FullUpdate);
+          state, stepper, navigator,
+          detail::determineMaterialUpdateMode(state, navigator,
+                                              MaterialUpdateMode::FullUpdate));
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do

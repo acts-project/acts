@@ -461,7 +461,9 @@ class KalmanFitter {
 
         // Update state and stepper with pre material effects
         detail::performMaterialInteraction(
-            state, stepper, navigator, MaterialUpdateMode::PreUpdate,
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::PreUpdate),
             NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
             logger());
 
@@ -496,7 +498,9 @@ class KalmanFitter {
 
         // Update state and stepper with post material effects
         detail::performMaterialInteraction(
-            state, stepper, navigator, MaterialUpdateMode::PostUpdate,
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::PostUpdate),
             NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
             logger());
         // We count the processed state
@@ -534,7 +538,9 @@ class KalmanFitter {
 
         // Update state and stepper with (possible) material effects
         detail::performMaterialInteraction(
-            state, stepper, navigator, MaterialUpdateMode::FullUpdate,
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::FullUpdate),
             NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
             logger());
       }

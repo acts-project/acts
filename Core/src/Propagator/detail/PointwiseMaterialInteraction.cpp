@@ -10,21 +10,18 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 
 MaterialUpdateMode detail::determineMaterialUpdateMode(
-    const Surface* surface, const Surface* startSurface,
+    const Surface& surface, const Surface* startSurface,
     const Surface* targetSurface, MaterialUpdateMode requestedMode) {
-  if (surface == nullptr) {
-    return MaterialUpdateMode::NoUpdate;
-  }
-
+  // Avoid double counting of the material effects at start and target surfaces
+  // by restricting the update mode accordingly
   MaterialUpdateMode updateMode = requestedMode;
-  if (surface == startSurface) {
+  if (&surface == startSurface) {
     updateMode &= MaterialUpdateMode::PostUpdate;
-  } else if (surface == targetSurface) {
+  } else if (&surface == targetSurface) {
     updateMode &= MaterialUpdateMode::PreUpdate;
   }
 
@@ -84,14 +81,6 @@ detail::PointwiseMaterialEffects detail::computeMaterialEffects(
   }
 
   return result;
-}
-
-double detail::updateVariance(double variance, double change,
-                              NoiseUpdateMode updateMode) {
-  // Add/Subtract the change
-  // Protect the variance against becoming negative
-  return std::max(0.,
-                  variance + std::copysign(change, toUnderlying(updateMode)));
 }
 
 }  // namespace Acts
