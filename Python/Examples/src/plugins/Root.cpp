@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
@@ -34,8 +35,11 @@
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
+#include "ActsExamples/Root/MuonVisualization.hpp"
+#include "ActsExamples/Root/ScalingCalibrator.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
@@ -273,5 +277,31 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                interactionProbabilityBins, momentumBins,
                                invariantMassBins, multiplicityMax,
                                writeOptionalHistograms, nSimulatedEvents);
+  }
+
+  // Calibration
+  {
+    py::class_<MeasurementCalibrator, std::shared_ptr<MeasurementCalibrator>>(
+        root, "MeasurementCalibrator");
+
+    root.def(
+        "makeScalingCalibrator",
+        [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
+          return std::make_shared<ScalingCalibrator>(path);
+        },
+        py::arg("path"));
+  }
+
+  // Muon visualization
+  {
+    root.def("makeMuonVisualizationFunction", []() {
+      return std::function<void(
+          const std::string&, const Acts::GeometryContext&,
+          const MuonSpacePointBucket&, const SimHitContainer&,
+          const SimParticleContainer&,
+          const std::function<Acts::Transform3(
+              const Acts::GeometryContext&, const Acts::GeometryIdentifier&)>&,
+          const Acts::TrackingGeometry&)>(visualizeMuonSpacePoints);
+    });
   }
 }

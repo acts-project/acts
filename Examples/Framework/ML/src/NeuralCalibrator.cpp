@@ -18,8 +18,6 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
-#include <TFile.h>
-
 using namespace Acts;
 using namespace ActsPlugins;
 

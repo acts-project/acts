@@ -8,7 +8,8 @@ acts_add_library(
     src/EventData/MuonSpacePointCalibrator.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
-    src/EventData/ScalingCalibrator.cpp
+    $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:src/Root/ScalingCalibrator.cpp>
+    $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:src/Root/MuonVisualization.cpp>
     src/EventData/SimParticle.cpp
     src/Framework/IAlgorithm.cpp
     src/Framework/SequenceElement.cpp
@@ -41,13 +42,14 @@ target_link_libraries(
         Acts::Fatras
         Acts::PluginFpeMonitoring
         Boost::boost
-        ROOT::Core
-        ROOT::Hist
+        $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:ROOT::Core>
+        $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:ROOT::Hist>
         HepMC3::HepMC3
 )
 target_compile_definitions(
     ActsExamplesFramework
     PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED
+    PUBLIC $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:ACTS_BUILD_EXAMPLES_ROOT>
 )
 
 # newer DD4hep version require TBB and search internally for TBB in
