@@ -36,7 +36,8 @@ namespace ActsExamples {
 
 TrackSummaryPlotTool::TrackSummaryPlotTool(
     const TrackSummaryPlotTool::Config& cfg, Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("TrackSummaryPlotTool", lvl)) {
+    : m_cfg(cfg),
+      m_logger(Acts::getDefaultLogger("TrackSummaryPlotTool", lvl)) {
   ACTS_DEBUG(
       "Initialize the histograms for track info plots"
       << (m_cfg.prefix.empty() ? "" : ", use prefix '" + m_cfg.prefix + "'"));
@@ -46,34 +47,31 @@ TrackSummaryPlotTool::TrackSummaryPlotTool(
        makeProfile(m_cfg, "nStates_vs_eta", "Number of total states vs. #eta",
                    m_cfg.varBinning.at("Eta"))});
   m_profiles.insert(
-      {"nMeasurements_vs_eta",
-       makeProfile(m_cfg, "nMeasurements_vs_eta",
-                   "Number of measurements vs. #eta",
-                   m_cfg.varBinning.at("Eta"))});
-  m_profiles.insert(
-      {"nHoles_vs_eta", makeProfile(m_cfg, "nHoles_vs_eta",
-                                    "Number of holes vs. #eta",
-                                    m_cfg.varBinning.at("Eta"))});
+      {"nMeasurements_vs_eta", makeProfile(m_cfg, "nMeasurements_vs_eta",
+                                           "Number of measurements vs. #eta",
+                                           m_cfg.varBinning.at("Eta"))});
+  m_profiles.insert({"nHoles_vs_eta", makeProfile(m_cfg, "nHoles_vs_eta",
+                                                  "Number of holes vs. #eta",
+                                                  m_cfg.varBinning.at("Eta"))});
   m_profiles.insert(
       {"nOutliers_vs_eta",
        makeProfile(m_cfg, "nOutliers_vs_eta", "Number of outliers vs. #eta",
                    m_cfg.varBinning.at("Eta"))});
   m_profiles.insert(
-      {"nSharedHits_vs_eta",
-       makeProfile(m_cfg, "nSharedHits_vs_eta",
-                   "Number of Shared Hits vs. #eta",
-                   m_cfg.varBinning.at("Eta"))});
+      {"nSharedHits_vs_eta", makeProfile(m_cfg, "nSharedHits_vs_eta",
+                                         "Number of Shared Hits vs. #eta",
+                                         m_cfg.varBinning.at("Eta"))});
   m_profiles.insert(
       {"nStates_vs_pT",
        makeProfile(m_cfg, "nStates_vs_pT", "Number of total states vs. pT",
                    m_cfg.varBinning.at("Pt"))});
   m_profiles.insert(
-      {"nMeasurements_vs_pT",
-       makeProfile(m_cfg, "nMeasurements_vs_pT",
-                   "Number of measurements vs. pT", m_cfg.varBinning.at("Pt"))});
-  m_profiles.insert({"nHoles_vs_pT",
-                     makeProfile(m_cfg, "nHoles_vs_pT", "Number of holes vs. pT",
-                                 m_cfg.varBinning.at("Pt"))});
+      {"nMeasurements_vs_pT", makeProfile(m_cfg, "nMeasurements_vs_pT",
+                                          "Number of measurements vs. pT",
+                                          m_cfg.varBinning.at("Pt"))});
+  m_profiles.insert({"nHoles_vs_pT", makeProfile(m_cfg, "nHoles_vs_pT",
+                                                 "Number of holes vs. pT",
+                                                 m_cfg.varBinning.at("Pt"))});
   m_profiles.insert(
       {"nOutliers_vs_pT",
        makeProfile(m_cfg, "nOutliers_vs_pT", "Number of outliers vs. pT",

@@ -32,22 +32,19 @@ EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
   // 1D efficiencies
   m_efficiencies1D.insert(
       {"trackeff_vs_eta",
-       Efficiency1(
-           "trackeff_vs_eta",
-           std::format("Tracking efficiency with pT > {} GeV/c",
-                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
-           std::array{m_cfg.varBinning.at("Eta")})});
+       Efficiency1("trackeff_vs_eta",
+                   std::format("Tracking efficiency with pT > {} GeV/c",
+                               m_cfg.minTruthPt / Acts::UnitConstants::GeV),
+                   std::array{m_cfg.varBinning.at("Eta")})});
   m_efficiencies1D.insert(
       {"trackeff_vs_phi",
-       Efficiency1(
-           "trackeff_vs_phi",
-           std::format("Tracking efficiency with pT > {} GeV/c",
-                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
-           std::array{m_cfg.varBinning.at("Phi")})});
+       Efficiency1("trackeff_vs_phi",
+                   std::format("Tracking efficiency with pT > {} GeV/c",
+                               m_cfg.minTruthPt / Acts::UnitConstants::GeV),
+                   std::array{m_cfg.varBinning.at("Phi")})});
   m_efficiencies1D.insert(
-      {"trackeff_vs_pT",
-       Efficiency1("trackeff_vs_pT", "Tracking efficiency",
-                   std::array{m_cfg.varBinning.at("Pt")})});
+      {"trackeff_vs_pT", Efficiency1("trackeff_vs_pT", "Tracking efficiency",
+                                     std::array{m_cfg.varBinning.at("Pt")})});
   m_efficiencies1D.insert(
       {"trackeff_vs_LogPt",
        Efficiency1("trackeff_vs_LogPt", "Tracking efficiency",
@@ -58,46 +55,42 @@ EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
                    std::array{m_cfg.varBinning.at("LowPt")})});
   m_efficiencies1D.insert(
       {"trackeff_vs_d0",
-       Efficiency1(
-           "trackeff_vs_d0",
-           std::format("Tracking efficiency with pT > {} GeV/c",
-                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
-           std::array{m_cfg.varBinning.at("D0")})});
+       Efficiency1("trackeff_vs_d0",
+                   std::format("Tracking efficiency with pT > {} GeV/c",
+                               m_cfg.minTruthPt / Acts::UnitConstants::GeV),
+                   std::array{m_cfg.varBinning.at("D0")})});
   m_efficiencies1D.insert(
       {"trackeff_vs_z0",
-       Efficiency1(
-           "trackeff_vs_z0",
-           std::format("Tracking efficiency with pT > {} GeV/c",
-                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
-           std::array{m_cfg.varBinning.at("Z0")})});
+       Efficiency1("trackeff_vs_z0",
+                   std::format("Tracking efficiency with pT > {} GeV/c",
+                               m_cfg.minTruthPt / Acts::UnitConstants::GeV),
+                   std::array{m_cfg.varBinning.at("Z0")})});
   m_efficiencies1D.insert(
       {"trackeff_vs_DeltaR",
-       Efficiency1(
-           "trackeff_vs_DeltaR",
-           std::format("Tracking efficiency with pT > {} GeV/c",
-                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
-           std::array{m_cfg.varBinning.at("DeltaR")})});
+       Efficiency1("trackeff_vs_DeltaR",
+                   std::format("Tracking efficiency with pT > {} GeV/c",
+                               m_cfg.minTruthPt / Acts::UnitConstants::GeV),
+                   std::array{m_cfg.varBinning.at("DeltaR")})});
   m_efficiencies1D.insert(
       {"trackeff_vs_prodR",
-       Efficiency1(
-           "trackeff_vs_prodR",
-           std::format("Tracking efficiency with pT > {} GeV/c",
-                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
-           std::array{m_cfg.varBinning.at("prodR")})});
+       Efficiency1("trackeff_vs_prodR",
+                   std::format("Tracking efficiency with pT > {} GeV/c",
+                               m_cfg.minTruthPt / Acts::UnitConstants::GeV),
+                   std::array{m_cfg.varBinning.at("prodR")})});
 
   // 2D efficiencies
   m_efficiencies2D.insert(
       {"trackeff_vs_eta_phi",
-       Efficiency2(
-           "trackeff_vs_eta_phi",
-           std::format("Tracking efficiency with pT > {} GeV/c",
-                       m_cfg.minTruthPt / Acts::UnitConstants::GeV),
-           std::array{m_cfg.varBinning.at("Eta"), m_cfg.varBinning.at("Phi")})});
+       Efficiency2("trackeff_vs_eta_phi",
+                   std::format("Tracking efficiency with pT > {} GeV/c",
+                               m_cfg.minTruthPt / Acts::UnitConstants::GeV),
+                   std::array{m_cfg.varBinning.at("Eta"),
+                              m_cfg.varBinning.at("Phi")})});
   m_efficiencies2D.insert(
       {"trackeff_vs_eta_pt",
-       Efficiency2("trackeff_vs_eta_pt", "Tracking efficiency",
-                   std::array{m_cfg.varBinning.at("Eta"),
-                              m_cfg.varBinning.at("Pt")})});
+       Efficiency2(
+           "trackeff_vs_eta_pt", "Tracking efficiency",
+           std::array{m_cfg.varBinning.at("Eta"), m_cfg.varBinning.at("Pt")})});
 
   const auto& etaAxis = m_cfg.varBinning.at("Eta");
   const auto& ptAxis = m_cfg.varBinning.at("Pt");

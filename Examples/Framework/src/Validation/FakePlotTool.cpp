@@ -29,29 +29,26 @@ FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
        Histogram2(
            "nRecoTracks_vs_pT", "Number of reconstructed track candidates",
            std::array{m_cfg.varBinning.at("Pt"), m_cfg.varBinning.at("Num")})});
-  m_histograms.insert(
-      {"nTruthMatchedTracks_vs_pT",
-       Histogram2(
-           "nTruthMatchedTracks_vs_pT",
-           "Number of truth-matched track candidates",
-           std::array{m_cfg.varBinning.at("Pt"), m_cfg.varBinning.at("Num")})});
+  m_histograms.insert({"nTruthMatchedTracks_vs_pT",
+                       Histogram2("nTruthMatchedTracks_vs_pT",
+                                  "Number of truth-matched track candidates",
+                                  std::array{m_cfg.varBinning.at("Pt"),
+                                             m_cfg.varBinning.at("Num")})});
   m_histograms.insert(
       {"nFakeTracks_vs_pT",
        Histogram2(
            "nFakeTracks_vs_pT", "Number of fake track candidates",
            std::array{m_cfg.varBinning.at("Pt"), m_cfg.varBinning.at("Num")})});
-  m_histograms.insert(
-      {"nRecoTracks_vs_eta",
-       Histogram2("nRecoTracks_vs_eta",
-                  "Number of reconstructed track candidates",
-                  std::array{m_cfg.varBinning.at("Eta"),
-                             m_cfg.varBinning.at("Num")})});
-  m_histograms.insert(
-      {"nTruthMatchedTracks_vs_eta",
-       Histogram2(
-           "nTruthMatchedTracks_vs_eta",
-           "Number of truth-matched track candidates",
-           std::array{m_cfg.varBinning.at("Eta"), m_cfg.varBinning.at("Num")})});
+  m_histograms.insert({"nRecoTracks_vs_eta",
+                       Histogram2("nRecoTracks_vs_eta",
+                                  "Number of reconstructed track candidates",
+                                  std::array{m_cfg.varBinning.at("Eta"),
+                                             m_cfg.varBinning.at("Num")})});
+  m_histograms.insert({"nTruthMatchedTracks_vs_eta",
+                       Histogram2("nTruthMatchedTracks_vs_eta",
+                                  "Number of truth-matched track candidates",
+                                  std::array{m_cfg.varBinning.at("Eta"),
+                                             m_cfg.varBinning.at("Num")})});
   m_histograms.insert(
       {"nFakeTracks_vs_eta",
        Histogram2("nFakeTracks_vs_eta", "Number of fake track candidates",
@@ -59,17 +56,14 @@ FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
                              m_cfg.varBinning.at("Num")})});
 
   m_efficiencies.insert(
-      {"fakeRatio_vs_pT",
-       Efficiency1("fakeRatio_vs_pT", "Tracking fake ratio",
-                   std::array{m_cfg.varBinning.at("Pt")})});
-  m_efficiencies.insert(
-      {"fakeRatio_vs_eta",
-       Efficiency1("fakeRatio_vs_eta", "Tracking fake ratio",
-                   std::array{m_cfg.varBinning.at("Eta")})});
-  m_efficiencies.insert(
-      {"fakeRatio_vs_phi",
-       Efficiency1("fakeRatio_vs_phi", "Tracking fake ratio",
-                   std::array{m_cfg.varBinning.at("Phi")})});
+      {"fakeRatio_vs_pT", Efficiency1("fakeRatio_vs_pT", "Tracking fake ratio",
+                                      std::array{m_cfg.varBinning.at("Pt")})});
+  m_efficiencies.insert({"fakeRatio_vs_eta",
+                         Efficiency1("fakeRatio_vs_eta", "Tracking fake ratio",
+                                     std::array{m_cfg.varBinning.at("Eta")})});
+  m_efficiencies.insert({"fakeRatio_vs_phi",
+                         Efficiency1("fakeRatio_vs_phi", "Tracking fake ratio",
+                                     std::array{m_cfg.varBinning.at("Phi")})});
 }
 
 void FakePlotTool::fill(const Acts::BoundTrackParameters& fittedParameters,

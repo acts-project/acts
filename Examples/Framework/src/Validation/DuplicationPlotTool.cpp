@@ -37,20 +37,17 @@ DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
   ACTS_DEBUG("Initialize the histograms for duplication ratio plots");
 
   m_profiles.insert(
-      {"nDuplicated_vs_pT",
-       makeProfile(m_cfg, "nDuplicated_vs_pT",
-                   "Number of duplicated track candidates",
-                   m_cfg.varBinning.at("Pt"))});
-  m_profiles.insert(
-      {"nDuplicated_vs_eta",
-       makeProfile(m_cfg, "nDuplicated_vs_eta",
-                   "Number of duplicated track candidates",
-                   m_cfg.varBinning.at("Eta"))});
-  m_profiles.insert(
-      {"nDuplicated_vs_phi",
-       makeProfile(m_cfg, "nDuplicated_vs_phi",
-                   "Number of duplicated track candidates",
-                   m_cfg.varBinning.at("Phi"))});
+      {"nDuplicated_vs_pT", makeProfile(m_cfg, "nDuplicated_vs_pT",
+                                        "Number of duplicated track candidates",
+                                        m_cfg.varBinning.at("Pt"))});
+  m_profiles.insert({"nDuplicated_vs_eta",
+                     makeProfile(m_cfg, "nDuplicated_vs_eta",
+                                 "Number of duplicated track candidates",
+                                 m_cfg.varBinning.at("Eta"))});
+  m_profiles.insert({"nDuplicated_vs_phi",
+                     makeProfile(m_cfg, "nDuplicated_vs_phi",
+                                 "Number of duplicated track candidates",
+                                 m_cfg.varBinning.at("Phi"))});
 
   m_efficiencies.insert(
       {"duplicationRatio_vs_pT",

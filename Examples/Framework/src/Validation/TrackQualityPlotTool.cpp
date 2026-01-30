@@ -34,29 +34,28 @@ namespace ActsExamples {
 
 TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
                                            Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("TrackQualityPlotTool", lvl)) {
+    : m_cfg(cfg),
+      m_logger(Acts::getDefaultLogger("TrackQualityPlotTool", lvl)) {
   ACTS_DEBUG("Initialize the histograms for track quality plots");
 
   m_profiles.insert({"completeness_vs_pT",
                      makeProfile(m_cfg, "completeness_vs_pT", "Completeness",
                                  m_cfg.varBinning.at("Pt"), "Completeness")});
+  m_profiles.insert({"completeness_vs_eta",
+                     makeProfile(m_cfg, "completeness_vs_eta", "Completeness",
+                                 m_cfg.varBinning.at("Eta"), "Completeness")});
+  m_profiles.insert({"completeness_vs_phi",
+                     makeProfile(m_cfg, "completeness_vs_phi", "Completeness",
+                                 m_cfg.varBinning.at("Phi"), "Completeness")});
   m_profiles.insert(
-      {"completeness_vs_eta",
-       makeProfile(m_cfg, "completeness_vs_eta", "Completeness",
-                   m_cfg.varBinning.at("Eta"), "Completeness")});
+      {"purity_vs_pT", makeProfile(m_cfg, "purity_vs_pT", "Purity",
+                                   m_cfg.varBinning.at("Pt"), "Purity")});
   m_profiles.insert(
-      {"completeness_vs_phi",
-       makeProfile(m_cfg, "completeness_vs_phi", "Completeness",
-                   m_cfg.varBinning.at("Phi"), "Completeness")});
-  m_profiles.insert({"purity_vs_pT",
-                     makeProfile(m_cfg, "purity_vs_pT", "Purity",
-                                 m_cfg.varBinning.at("Pt"), "Purity")});
-  m_profiles.insert({"purity_vs_eta",
-                     makeProfile(m_cfg, "purity_vs_eta", "Purity",
-                                 m_cfg.varBinning.at("Eta"), "Purity")});
-  m_profiles.insert({"purity_vs_phi",
-                     makeProfile(m_cfg, "purity_vs_phi", "Purity",
-                                 m_cfg.varBinning.at("Phi"), "Purity")});
+      {"purity_vs_eta", makeProfile(m_cfg, "purity_vs_eta", "Purity",
+                                    m_cfg.varBinning.at("Eta"), "Purity")});
+  m_profiles.insert(
+      {"purity_vs_phi", makeProfile(m_cfg, "purity_vs_phi", "Purity",
+                                    m_cfg.varBinning.at("Phi"), "Purity")});
 }
 
 void TrackQualityPlotTool::fill(
