@@ -46,8 +46,8 @@ void MultiNavigationPolicy::initializeCandidates(
   if (thisState.policyStates.size() != m_delegates.size()) {
     ACTS_ERROR("MultiNavigationPolicy initializeCandidates: number of states ("
                << thisState.policyStates.size()
-               << ") does not match number of policies ("
-               << m_delegates.size() << ").");
+               << ") does not match number of policies (" << m_delegates.size()
+               << ").");
     throw std::runtime_error(
         "MultiNavigationPolicy initializeCandidates: inconsistent state size.");
   }
