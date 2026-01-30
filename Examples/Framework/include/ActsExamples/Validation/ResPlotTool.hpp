@@ -41,18 +41,13 @@ class ResPlotTool {
         {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
         {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
         {"Pull", BoostRegularAxis(100, -5, 5, "pull")},
-        {"Residual_d0",
-         BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
-        {"Residual_z0",
-         BoostRegularAxis(100, -0.5, 0.5, "r_{z0} [mm]")},
-        {"Residual_phi", BoostRegularAxis(
-                             100, -0.01, 0.01, "r_{#phi} [rad]")},
-        {"Residual_theta", BoostRegularAxis(
-                               100, -0.01, 0.01, "r_{#theta} [rad]")},
-        {"Residual_qop", BoostRegularAxis(
-                             100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
-        {"Residual_t",
-         BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
+        {"Residual_d0", BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
+        {"Residual_z0", BoostRegularAxis(100, -0.5, 0.5, "r_{z0} [mm]")},
+        {"Residual_phi", BoostRegularAxis(100, -0.01, 0.01, "r_{#phi} [rad]")},
+        {"Residual_theta",
+         BoostRegularAxis(100, -0.01, 0.01, "r_{#theta} [rad]")},
+        {"Residual_qop", BoostRegularAxis(100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
+        {"Residual_t", BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
   };
 
   /// Constructor

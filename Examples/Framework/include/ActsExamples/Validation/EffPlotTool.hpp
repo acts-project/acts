@@ -35,18 +35,15 @@ class EffPlotTool {
   struct Config {
     std::map<std::string, AxisVariant> varBinning = {
         {"Eta", BoostRegularAxis(40, -3.0, 3.0, "#eta")},
-        {"Phi", BoostRegularAxis(100, -std::numbers::pi,
-                                                     std::numbers::pi, "#phi")},
+        {"Phi",
+         BoostRegularAxis(100, -std::numbers::pi, std::numbers::pi, "#phi")},
         {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
         {"LogPt", BoostLogAxis(11, 0.1, 100, "pT [GeV/c]")},
         {"LowPt", BoostRegularAxis(40, 0, 2, "pT [GeV/c]")},
-        {"D0",
-         BoostRegularAxis(200, -200, 200, "d_0 [mm]")},
+        {"D0", BoostRegularAxis(200, -200, 200, "d_0 [mm]")},
         {"Z0", BoostRegularAxis(50, -200, 200, "z_0 [mm]")},
-        {"DeltaR",
-         BoostRegularAxis(100, 0, 0.3, "#Delta R")},
-        {"prodR",
-         BoostRegularAxis(100, 0, 200, "prod_R [mm]")}};
+        {"DeltaR", BoostRegularAxis(100, 0, 0.3, "#Delta R")},
+        {"prodR", BoostRegularAxis(100, 0, 200, "prod_R [mm]")}};
 
     double minTruthPt = 1.0 * Acts::UnitConstants::GeV;
 
