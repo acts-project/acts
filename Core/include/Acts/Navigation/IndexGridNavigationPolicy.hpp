@@ -83,9 +83,10 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
   /// @param logger The logger
   void initializeCandidates(const GeometryContext& gctx,
                             const NavigationArguments& args,
-                            NavigationPolicyState& /*state*/,
+                            NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const {
+    static_cast<void>(state);  // unused
     ACTS_VERBOSE(
         "IndexGridNavigationPolicy: candidates initialization for volume '"
         << m_volume.volumeName() << "'");
