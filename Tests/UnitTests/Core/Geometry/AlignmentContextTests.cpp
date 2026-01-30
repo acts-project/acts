@@ -51,7 +51,7 @@ struct AlignmentContext {
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
-class AlignableDetectorElement : public DetectorElementBase {
+class AlignableDetectorElement : public SurfacePlacementBase {
  public:
   // Deleted default constructor
   AlignableDetectorElement() = delete;
@@ -65,10 +65,10 @@ class AlignableDetectorElement : public DetectorElementBase {
   AlignableDetectorElement(std::shared_ptr<const Transform3> transform,
                            const std::shared_ptr<const PlanarBounds>& pBounds,
                            double thickness)
-      : DetectorElementBase(),
-        m_elementTransform(std::move(transform)),
+      : m_elementTransform(std::move(transform)),
         m_elementThickness(thickness) {
     m_elementSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
+    m_elementSurface->assignThickness(thickness);
   }
 
   ///  Destructor
@@ -89,7 +89,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  double thickness() const;
 
   /// Is the detector element a sensitive element
   bool isSensitive() const override { return true; }
