@@ -46,6 +46,7 @@ class TryAllNavigationPolicy final : public INavigationPolicy {
   /// Add all candidates to the stream
   /// @param gctx is the geometry context
   /// @param args are the navigation arguments
+  /// @param state is the navigation policy state
   /// @param stream is the navigation stream to update
   /// @param logger is the logger
   void initializeCandidates(const GeometryContext& gctx,

@@ -133,6 +133,7 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   /// Initialize navigation candidates by calling all contained policies
   /// @param gctx The geometry context
   /// @param args The navigation arguments
+  /// @param state The navigation policy state
   /// @param stream The navigation stream to populate
   /// @param logger Logger for debug output
   void initializeCandidates(const GeometryContext& gctx,
