@@ -22,6 +22,7 @@
 namespace ActsExamples {
 
 using Acts::Experimental::AxisVariant;
+using Acts::Experimental::BoostRegularAxis;
 
 /// Tools to make hists to show residual, i.e. smoothed_parameter -
 /// truth_parameter, and pull, i.e. (smoothed_parameter -
@@ -37,21 +38,21 @@ class ResPlotTool {
 
     /// Binning info for variables
     std::map<std::string, AxisVariant> varBinning = {
-        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
-        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
-        {"Pull", Acts::Experimental::BoostRegularAxis(100, -5, 5, "pull")},
+        {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Pull", BoostRegularAxis(100, -5, 5, "pull")},
         {"Residual_d0",
-         Acts::Experimental::BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
+         BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
         {"Residual_z0",
-         Acts::Experimental::BoostRegularAxis(100, -0.5, 0.5, "r_{z0} [mm]")},
-        {"Residual_phi", Acts::Experimental::BoostRegularAxis(
+         BoostRegularAxis(100, -0.5, 0.5, "r_{z0} [mm]")},
+        {"Residual_phi", BoostRegularAxis(
                              100, -0.01, 0.01, "r_{#phi} [rad]")},
-        {"Residual_theta", Acts::Experimental::BoostRegularAxis(
+        {"Residual_theta", BoostRegularAxis(
                                100, -0.01, 0.01, "r_{#theta} [rad]")},
-        {"Residual_qop", Acts::Experimental::BoostRegularAxis(
+        {"Residual_qop", BoostRegularAxis(
                              100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
         {"Residual_t",
-         Acts::Experimental::BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
+         BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
   };
 
   /// Constructor

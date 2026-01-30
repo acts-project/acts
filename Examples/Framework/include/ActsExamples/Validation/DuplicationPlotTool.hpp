@@ -21,6 +21,7 @@
 namespace ActsExamples {
 
 using Acts::Experimental::AxisVariant;
+using Acts::Experimental::BoostRegularAxis;
 
 /// Tools to make duplication ratio (formerly called duplication rate) and
 /// duplication number plots to show tracking duplication.
@@ -34,10 +35,10 @@ class DuplicationPlotTool {
   /// @brief The nested configuration struct
   struct Config {
     std::map<std::string, AxisVariant> varBinning = {
-        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
-        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
-        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
-        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
+        {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
   /// Constructor

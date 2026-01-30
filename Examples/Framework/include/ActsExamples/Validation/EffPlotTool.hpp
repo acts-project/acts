@@ -23,6 +23,8 @@
 namespace ActsExamples {
 
 using Acts::Experimental::AxisVariant;
+using Acts::Experimental::BoostLogAxis;
+using Acts::Experimental::BoostRegularAxis;
 
 /// Tools to make efficiency plots to show tracking efficiency.
 /// For the moment, the efficiency is taken as the fraction of successfully
@@ -32,19 +34,19 @@ class EffPlotTool {
   /// @brief The nested configuration struct
   struct Config {
     std::map<std::string, AxisVariant> varBinning = {
-        {"Eta", Acts::Experimental::BoostRegularAxis(40, -3.0, 3.0, "#eta")},
-        {"Phi", Acts::Experimental::BoostRegularAxis(100, -std::numbers::pi,
+        {"Eta", BoostRegularAxis(40, -3.0, 3.0, "#eta")},
+        {"Phi", BoostRegularAxis(100, -std::numbers::pi,
                                                      std::numbers::pi, "#phi")},
-        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
-        {"LogPt", Acts::Experimental::BoostLogAxis(11, 0.1, 100, "pT [GeV/c]")},
-        {"LowPt", Acts::Experimental::BoostRegularAxis(40, 0, 2, "pT [GeV/c]")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"LogPt", BoostLogAxis(11, 0.1, 100, "pT [GeV/c]")},
+        {"LowPt", BoostRegularAxis(40, 0, 2, "pT [GeV/c]")},
         {"D0",
-         Acts::Experimental::BoostRegularAxis(200, -200, 200, "d_0 [mm]")},
-        {"Z0", Acts::Experimental::BoostRegularAxis(50, -200, 200, "z_0 [mm]")},
+         BoostRegularAxis(200, -200, 200, "d_0 [mm]")},
+        {"Z0", BoostRegularAxis(50, -200, 200, "z_0 [mm]")},
         {"DeltaR",
-         Acts::Experimental::BoostRegularAxis(100, 0, 0.3, "#Delta R")},
+         BoostRegularAxis(100, 0, 0.3, "#Delta R")},
         {"prodR",
-         Acts::Experimental::BoostRegularAxis(100, 0, 200, "prod_R [mm]")}};
+         BoostRegularAxis(100, 0, 200, "prod_R [mm]")}};
 
     double minTruthPt = 1.0 * Acts::UnitConstants::GeV;
 
