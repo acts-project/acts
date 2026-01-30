@@ -21,7 +21,7 @@ using namespace Acts::Experimental;
 
 namespace ActsPlugins {
 
-std::vector<double> extractBinEdges(const AxisVariant& axis) {
+std::vector<double> ActsPlugins::extractBinEdges(const AxisVariant& axis) {
   assert(axis.size() > 0 && "Axis must have at least one bin");
   std::vector<double> edges(axis.size() + 1);
   for (int i = 0; i < axis.size(); ++i) {
