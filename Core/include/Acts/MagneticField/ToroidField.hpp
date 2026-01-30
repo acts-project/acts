@@ -124,7 +124,6 @@ class ToroidField final : public MagneticFieldProvider {
 
   void buildGeometry();
 
- private:
   Config m_cfg;
 
   // Precomputed geometry (float storage; double accumulation)

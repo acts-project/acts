@@ -63,11 +63,13 @@ Result<Vector3> ToroidField::getField(
     const Vector3& position, MagneticFieldProvider::Cache& cache) const {
   (void)cache;
 
-  const double X = static_cast<double>(position.x());
-  const double Y = static_cast<double>(position.y());
-  const double Z = static_cast<double>(position.z());
+  const double X = position.x();
+  const double Y = position.y();
+  const double Z = position.z();
 
-  double bx = 0.0, by = 0.0, bz = 0.0;
+  double bx = 0.0;
+  double by = 0.0;
+  double bz = 0.0;
 
   constexpr double mu0 = 4e-7 * std::numbers::pi;  // [T·m/A]
   const double prefBarrel =
@@ -163,9 +165,9 @@ std::vector<std::array<float, 2>> ToroidField::ectRacetrackRadial(
   }
   // Inner arc at z = -rz : θ: +π/2 → -π/2 (exclude endpoint) ; ρ = rr*sin(θ)
   for (int i = 0; i < nArc; ++i) {
-    const float th =
-        static_cast<float>(std::numbers::pi / 2) +
-        (static_cast<float>(i) / nArc) * static_cast<float>(-std::numbers::pi);
+    const float th = static_cast<float>(std::numbers::pi / 2) +
+                     (static_cast<float>(i) / static_cast<float>(nArc)) *
+                         static_cast<float>(-std::numbers::pi);
     const float rho = rr * std::sin(th);
     const float z = -rz;
     pts.push_back({rho, z});
@@ -178,17 +180,16 @@ std::vector<std::array<float, 2>> ToroidField::ectRacetrackRadial(
   }
   // Outer arc at z = +rz : θ: -π/2 → +π/2 (close if requested)
   for (int i = 0; i < nArc; ++i) {
-    const float th =
-        -static_cast<float>(std::numbers::pi) / 2 +
-        (static_cast<float>(i) / nArc) * static_cast<float>(std::numbers::pi);
+    const float th = -static_cast<float>(std::numbers::pi) / 2 +
+                     (static_cast<float>(i) / static_cast<float>(nArc)) *
+                         static_cast<float>(std::numbers::pi);
     const float rho = rr * std::sin(th);
     const float z = +rz;
     pts.push_back({rho, z});
   }
-  if (close) {
-    if (pts.front()[0] != pts.back()[0] || pts.front()[1] != pts.back()[1]) {
-      pts.push_back(pts.front());
-    }
+  if (close &&
+      (pts.front()[0] != pts.back()[0] || pts.front()[1] != pts.back()[1])) {
+    pts.push_back(pts.front());
   }
   return pts;
 }
@@ -241,10 +242,9 @@ std::vector<std::array<float, 2>> ToroidField::racetrackRZ(float a, float b,
     const float z = cz + r * std::sin(th);
     pts.push_back({rho, z});
   }
-  if (close) {
-    if (pts.front()[0] != pts.back()[0] || pts.front()[1] != pts.back()[1]) {
-      pts.push_back(pts.front());
-    }
+  if (close &&
+      (pts.front()[0] != pts.back()[0] || pts.front()[1] != pts.back()[1])) {
+    pts.push_back(pts.front());
   }
   return pts;
 }
@@ -271,7 +271,8 @@ void ToroidField::mapRingToXYZ(float l,
                                float phi, int sign, float zShift,
                                std::vector<std::array<float, 3>>& mids_out,
                                std::vector<std::array<float, 3>>& segs_out) {
-  const float ct = std::cos(phi), st = std::sin(phi);
+  const float ct = std::cos(phi);
+  const float st = std::sin(phi);
   const float s = (sign >= 0) ? 1.0f : -1.0f;
 
   for (const auto& rm : m_rz) {
@@ -289,14 +290,15 @@ void ToroidField::mapRingToXYZ(float l,
 
 void ToroidField::buildGeometry() {
   // ---- Barrel base curve ----
-  const float rEndB = 0.5f * m_cfg.barrel.b;
-  const float lB = 0.5f * (m_cfg.barrel.R_in + m_cfg.barrel.R_out);
-  const float aB = (m_cfg.barrel.R_out - m_cfg.barrel.R_in) - 2.0f * rEndB;
+  const float rEndB = 0.5 * m_cfg.barrel.b;
+  const float lB = 0.5 * (m_cfg.barrel.R_in + m_cfg.barrel.R_out);
+  const float aB = (m_cfg.barrel.R_out - m_cfg.barrel.R_in) - 2.0 * rEndB;
 
   const auto rz_barrel =
       racetrackRZ(aB, m_cfg.barrel.b, m_cfg.barrel.c, m_cfg.layout.nArc,
                   m_cfg.layout.nStraight, m_cfg.layout.closeLoop);
-  std::vector<std::array<float, 2>> d_rzB, m_rzB;
+  std::vector<std::array<float, 2>> d_rzB;
+  std::vector<std::array<float, 2>> m_rzB;
   buildSegsMidsRZ(rz_barrel, d_rzB, m_rzB);
 
   // ---- ECT base curve ----
@@ -312,13 +314,14 @@ void ToroidField::buildGeometry() {
       /*a=*/aE, /*b=*/static_cast<float>(m_cfg.ect.b / UnitConstants::m),
       /*Lz=*/static_cast<float>(m_cfg.ect.c / UnitConstants::m),
       m_cfg.layout.nArc, m_cfg.layout.nStraight, m_cfg.layout.closeLoop);
-  std::vector<std::array<float, 2>> d_rzE, m_rzE;
+  std::vector<std::array<float, 2>> d_rzE;
+  std::vector<std::array<float, 2>> m_rzE;
   buildSegsMidsRZ(rz_ect, d_rzE, m_rzE);
 
   // ---- Angles ----
   const int nC = m_cfg.layout.nCoils;
-  const float th0 = static_cast<float>(m_cfg.layout.theta0);
-  const float dth = static_cast<float>(m_cfg.layout.thetaStep);
+  const double th0 = static_cast<float>(m_cfg.layout.theta0);
+  const double dth = static_cast<float>(m_cfg.layout.thetaStep);
 
   // ---- Reserve & fill ----
   m_mids_barrel.clear();
@@ -333,7 +336,7 @@ void ToroidField::buildGeometry() {
 
   // Barrel rings with signs
   for (int k = 0; k < nC; ++k) {
-    const float phi = th0 + k * dth;
+    const float phi = th0 + static_cast<float>(k) * dth;
     const int sign = m_cfg.barrelSigns[k];
     mapRingToXYZ(lB, m_rzB, d_rzB, phi, sign, /*zShift=*/0.0f, m_mids_barrel,
                  m_segs_barrel);
@@ -347,14 +350,14 @@ void ToroidField::buildGeometry() {
 
   // +z endcap (indices 0..nC-1 in ectSigns)
   for (int k = 0; k < nC; ++k) {
-    const float phi = th0 + k * dth;
+    const float phi = th0 + static_cast<float>(k) * dth;
     const int sign = m_cfg.ectSigns[k];
     mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/+zECT, m_mids_ect,
                  m_segs_ect);
   }
   // -z endcap (indices nC..2*nC-1 in ectSigns)
   for (int k = 0; k < nC; ++k) {
-    const float phi = th0 + k * dth;
+    const float phi = th0 + static_cast<float>(k) * dth;
     const int sign = m_cfg.ectSigns[nC + k];
     mapRingToXYZ(lE, m_rzE, d_rzE, phi, sign, /*zShift=*/-zECT, m_mids_ect,
                  m_segs_ect);

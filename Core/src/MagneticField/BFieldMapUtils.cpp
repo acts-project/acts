@@ -268,7 +268,7 @@ toroidFieldMapCyl(
   auto [rMin, rMax] = rLim;
   auto [pMin, pMax] = phiLim;  // radians
   auto [zMin, zMax] = zLim;
-  const auto [nBinsR, nBinsP, nBinsZ] = nBins;
+  const auto& [nBinsR, nBinsP, nBinsZ] = nBins;
 
   // Guard against degenerate configs
   if (nBinsR < 2 || nBinsP < 2 || nBinsZ < 2) {
@@ -310,7 +310,8 @@ toroidFieldMapCyl(
   // (Br,Bphi,Bz) + Cartesian pos -> (Bx,By,Bz)
   auto transformBField = [](const Vector3& bCyl, const Vector3& pos) {
     const double r2 = pos.x() * pos.x() + pos.y() * pos.y();
-    double cosPhi = 1.0, sinPhi = 0.0;
+    double cosPhi = 1.0;
+    double sinPhi = 0.0;
     if (r2 > std::numeric_limits<double>::min()) {
       const double invR = 1.0 / std::sqrt(r2);
       cosPhi = pos.x() * invR;
@@ -388,7 +389,7 @@ toroidFieldMapXYZ(
   auto [xMin, xMax] = xLim;
   auto [yMin, yMax] = yLim;
   auto [zMin, zMax] = zLim;
-  const auto [nBinsX, nBinsY, nBinsZ] = nBins;
+  const auto& [nBinsX, nBinsY, nBinsZ] = nBins;
 
   if (nBinsX < 2 || nBinsY < 2 || nBinsZ < 2) {
     throw std::invalid_argument(
