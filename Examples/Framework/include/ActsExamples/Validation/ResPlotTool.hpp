@@ -21,15 +21,17 @@
 
 namespace ActsExamples {
 
-using Acts::Experimental::AxisVariant;
-using Acts::Experimental::BoostRegularAxis;
-
 /// Tools to make hists to show residual, i.e. smoothed_parameter -
 /// truth_parameter, and pull, i.e. (smoothed_parameter -
 /// truth_parameter)/smoothed_paramter_error, of track parameters at perigee
 /// surface
 class ResPlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using Histogram1 = Acts::Experimental::Histogram1;
+  using Histogram2 = Acts::Experimental::Histogram2;
+
   /// @brief Nested configuration struct
   struct Config {
     /// parameter sets to do plots
@@ -66,25 +68,16 @@ class ResPlotTool {
             const Acts::BoundTrackParameters& fittedParamters);
 
   /// @brief Accessors for histograms (const reference)
-  const std::map<std::string, Acts::Experimental::Histogram1>& res() const {
-    return m_res;
-  }
-  const std::map<std::string, Acts::Experimental::Histogram2>& resVsEta()
-      const {
+  const std::map<std::string, Histogram1>& res() const { return m_res; }
+  const std::map<std::string, Histogram2>& resVsEta() const {
     return m_resVsEta;
   }
-  const std::map<std::string, Acts::Experimental::Histogram2>& resVsPt() const {
-    return m_resVsPt;
-  }
-  const std::map<std::string, Acts::Experimental::Histogram1>& pull() const {
-    return m_pull;
-  }
-  const std::map<std::string, Acts::Experimental::Histogram2>& pullVsEta()
-      const {
+  const std::map<std::string, Histogram2>& resVsPt() const { return m_resVsPt; }
+  const std::map<std::string, Histogram1>& pull() const { return m_pull; }
+  const std::map<std::string, Histogram2>& pullVsEta() const {
     return m_pullVsEta;
   }
-  const std::map<std::string, Acts::Experimental::Histogram2>& pullVsPt()
-      const {
+  const std::map<std::string, Histogram2>& pullVsPt() const {
     return m_pullVsPt;
   }
 
@@ -95,18 +88,18 @@ class ResPlotTool {
   std::unique_ptr<const Acts::Logger> m_logger;
 
   /// Residual distribution
-  std::map<std::string, Acts::Experimental::Histogram1> m_res;
+  std::map<std::string, Histogram1> m_res;
   /// Residual vs eta scatter plot
-  std::map<std::string, Acts::Experimental::Histogram2> m_resVsEta;
+  std::map<std::string, Histogram2> m_resVsEta;
   /// Residual vs pT scatter plot
-  std::map<std::string, Acts::Experimental::Histogram2> m_resVsPt;
+  std::map<std::string, Histogram2> m_resVsPt;
 
   /// Pull distribution
-  std::map<std::string, Acts::Experimental::Histogram1> m_pull;
+  std::map<std::string, Histogram1> m_pull;
   /// Pull vs eta scatter plot
-  std::map<std::string, Acts::Experimental::Histogram2> m_pullVsEta;
+  std::map<std::string, Histogram2> m_pullVsEta;
   /// Pull vs pT scatter plot
-  std::map<std::string, Acts::Experimental::Histogram2> m_pullVsPt;
+  std::map<std::string, Histogram2> m_pullVsPt;
 };
 
 }  // namespace ActsExamples

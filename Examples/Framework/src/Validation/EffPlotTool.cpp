@@ -26,9 +26,6 @@ EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("EffPlotTool", lvl)) {
   ACTS_DEBUG("Initialize the histograms for efficiency plots");
 
-  using Efficiency1 = Acts::Experimental::Efficiency1;
-  using Efficiency2 = Acts::Experimental::Efficiency2;
-
   // 1D efficiencies
   m_efficiencies1D.insert(
       {"trackeff_vs_eta",

@@ -19,12 +19,13 @@
 
 namespace ActsExamples {
 
-using Acts::Experimental::AxisVariant;
-using Acts::Experimental::BoostRegularAxis;
-
 /// Tools to make track quality plots.
 class TrackQualityPlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using ProfileHistogram1 = Acts::Experimental::ProfileHistogram1;
+
   /// @brief The nested configuration struct
   struct Config {
     std::map<std::string, AxisVariant> varBinning = {
@@ -49,8 +50,7 @@ class TrackQualityPlotTool {
             double completeness, double purity);
 
   /// @brief Accessor for profile histograms map (const reference)
-  const std::map<std::string, Acts::Experimental::ProfileHistogram1>& profiles()
-      const {
+  const std::map<std::string, ProfileHistogram1>& profiles() const {
     return m_profiles;
   }
 
@@ -60,7 +60,7 @@ class TrackQualityPlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::map<std::string, Acts::Experimental::ProfileHistogram1> m_profiles;
+  std::map<std::string, ProfileHistogram1> m_profiles;
 };
 
 }  // namespace ActsExamples

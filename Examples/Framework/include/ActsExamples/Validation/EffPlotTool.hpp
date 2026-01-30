@@ -22,15 +22,17 @@
 
 namespace ActsExamples {
 
-using Acts::Experimental::AxisVariant;
-using Acts::Experimental::BoostLogAxis;
-using Acts::Experimental::BoostRegularAxis;
-
 /// Tools to make efficiency plots to show tracking efficiency.
 /// For the moment, the efficiency is taken as the fraction of successfully
 /// smoothed track over all tracks
 class EffPlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostLogAxis = Acts::Experimental::BoostLogAxis;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using Efficiency1 = Acts::Experimental::Efficiency1;
+  using Efficiency2 = Acts::Experimental::Efficiency2;
+
   /// @brief The nested configuration struct
   struct Config {
     std::map<std::string, AxisVariant> varBinning = {
@@ -76,20 +78,16 @@ class EffPlotTool {
             const SimParticleState& truthParticle, double deltaR, bool status);
 
   /// @brief Accessors for efficiency maps (const reference)
-  const std::map<std::string, Acts::Experimental::Efficiency1>& efficiencies1D()
-      const {
+  const std::map<std::string, Efficiency1>& efficiencies1D() const {
     return m_efficiencies1D;
   }
-  const std::map<std::string, Acts::Experimental::Efficiency2>& efficiencies2D()
-      const {
+  const std::map<std::string, Efficiency2>& efficiencies2D() const {
     return m_efficiencies2D;
   }
-  const std::vector<Acts::Experimental::Efficiency1>& trackEffVsEtaInPtRanges()
-      const {
+  const std::vector<Efficiency1>& trackEffVsEtaInPtRanges() const {
     return m_trackEffVsEtaInPtRanges;
   }
-  const std::vector<Acts::Experimental::Efficiency1>&
-  trackEffVsPtInAbsEtaRanges() const {
+  const std::vector<Efficiency1>& trackEffVsPtInAbsEtaRanges() const {
     return m_trackEffVsPtInAbsEtaRanges;
   }
 
@@ -99,10 +97,10 @@ class EffPlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::map<std::string, Acts::Experimental::Efficiency1> m_efficiencies1D;
-  std::map<std::string, Acts::Experimental::Efficiency2> m_efficiencies2D;
-  std::vector<Acts::Experimental::Efficiency1> m_trackEffVsEtaInPtRanges;
-  std::vector<Acts::Experimental::Efficiency1> m_trackEffVsPtInAbsEtaRanges;
+  std::map<std::string, Efficiency1> m_efficiencies1D;
+  std::map<std::string, Efficiency2> m_efficiencies2D;
+  std::vector<Efficiency1> m_trackEffVsEtaInPtRanges;
+  std::vector<Efficiency1> m_trackEffVsPtInAbsEtaRanges;
 };
 
 }  // namespace ActsExamples

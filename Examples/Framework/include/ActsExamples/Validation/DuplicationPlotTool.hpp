@@ -20,9 +20,6 @@
 
 namespace ActsExamples {
 
-using Acts::Experimental::AxisVariant;
-using Acts::Experimental::BoostRegularAxis;
-
 /// Tools to make duplication ratio (formerly called duplication rate) and
 /// duplication number plots to show tracking duplication.
 ///
@@ -32,6 +29,11 @@ using Acts::Experimental::BoostRegularAxis;
 /// 'duplicated'.
 class DuplicationPlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using Efficiency1 = Acts::Experimental::Efficiency1;
+  using ProfileHistogram1 = Acts::Experimental::ProfileHistogram1;
+
   /// @brief The nested configuration struct
   struct Config {
     std::map<std::string, AxisVariant> varBinning = {
@@ -60,12 +62,10 @@ class DuplicationPlotTool {
   void fill(const SimParticleState& truthParticle, std::size_t nMatchedTracks);
 
   /// @brief Accessors for histogram maps (const reference)
-  const std::map<std::string, Acts::Experimental::ProfileHistogram1>& profiles()
-      const {
+  const std::map<std::string, ProfileHistogram1>& profiles() const {
     return m_profiles;
   }
-  const std::map<std::string, Acts::Experimental::Efficiency1>& efficiencies()
-      const {
+  const std::map<std::string, Efficiency1>& efficiencies() const {
     return m_efficiencies;
   }
 
@@ -75,8 +75,8 @@ class DuplicationPlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::map<std::string, Acts::Experimental::ProfileHistogram1> m_profiles;
-  std::map<std::string, Acts::Experimental::Efficiency1> m_efficiencies;
+  std::map<std::string, ProfileHistogram1> m_profiles;
+  std::map<std::string, Efficiency1> m_efficiencies;
 };
 
 }  // namespace ActsExamples

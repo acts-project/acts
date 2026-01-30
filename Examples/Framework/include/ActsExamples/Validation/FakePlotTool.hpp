@@ -20,15 +20,17 @@
 
 namespace ActsExamples {
 
-using Acts::Experimental::AxisVariant;
-using Acts::Experimental::BoostRegularAxis;
-
 /// Tools to make fake ratio plots.
 ///
 /// The fake ratio (formerly called fake rate) is evaluated on all reco tracks.
 /// A track is 'fake' if it's not matched with truth.
 class FakePlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using Efficiency1 = Acts::Experimental::Efficiency1;
+  using Histogram2 = Acts::Experimental::Histogram2;
+
   /// @brief The nested configuration struct
   struct Config {
     std::map<std::string, AxisVariant> varBinning = {
@@ -59,12 +61,10 @@ class FakePlotTool {
             std::size_t nTruthMatchedTracks, std::size_t nFakeTracks);
 
   /// @brief Accessors for histogram maps (const reference)
-  const std::map<std::string, Acts::Experimental::Histogram2>& histograms()
-      const {
+  const std::map<std::string, Histogram2>& histograms() const {
     return m_histograms;
   }
-  const std::map<std::string, Acts::Experimental::Efficiency1>& efficiencies()
-      const {
+  const std::map<std::string, Efficiency1>& efficiencies() const {
     return m_efficiencies;
   }
 
@@ -74,8 +74,8 @@ class FakePlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::map<std::string, Acts::Experimental::Histogram2> m_histograms;
-  std::map<std::string, Acts::Experimental::Efficiency1> m_efficiencies;
+  std::map<std::string, Histogram2> m_histograms;
+  std::map<std::string, Efficiency1> m_efficiencies;
 };
 
 }  // namespace ActsExamples

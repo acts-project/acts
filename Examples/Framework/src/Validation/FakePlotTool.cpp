@@ -21,9 +21,6 @@ FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("FakePlotTool", lvl)) {
   ACTS_DEBUG("Initialize the histograms for fake ratio plots");
 
-  using Histogram2 = Acts::Experimental::Histogram2;
-  using Efficiency1 = Acts::Experimental::Efficiency1;
-
   m_histograms.insert(
       {"nRecoTracks_vs_pT",
        Histogram2(
