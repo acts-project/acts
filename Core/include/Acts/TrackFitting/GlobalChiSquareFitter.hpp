@@ -852,8 +852,8 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          detail::PointwiseMaterialInteraction interaction(state, stepper,
-                                                           navigator);
+          Acts::detail::PointwiseMaterialInteraction interaction(state, stepper,
+                                                                 navigator);
           // We need to evaluate the material to create the correct slab
           const bool slabIsValid =
               interaction.evaluateMaterialSlab(MaterialUpdateMode::FullUpdate);

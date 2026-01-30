@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -22,7 +22,7 @@ namespace Acts {
 /// importing whole tracking geometries from JSON files. In some parts of
 /// the codebase, the existence of a detector element associated to a surface
 /// has a specific meaning (e.g., flags surfaces as sensitive).
-class JsonDetectorElement : public DetectorElementBase {
+class JsonDetectorElement : public SurfacePlacementBase {
  public:
   /// Constructor from JSON surface description
   /// @param jSurface JSON object describing the surface
@@ -38,7 +38,7 @@ class JsonDetectorElement : public DetectorElementBase {
 
   /// Return the thickness of the detector element
   /// @return Thickness value
-  double thickness() const override;
+  double thickness() const;
 
   /// Return the transform for this detector element
   /// @param gctx Geometry context (unused for this implementation)

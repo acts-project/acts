@@ -44,16 +44,70 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
   CHECK_CLOSE_REL(stdDouble, fastDouble, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(Factorial) {
+BOOST_AUTO_TEST_CASE(ProductTests) {
+  static_assert(Acts::product(1u, 1u) == 1u);
+  static_assert(Acts::product(2u, 2u) == 2u);
+  static_assert(Acts::product(3u, 4u) == 12u);
+  static_assert(Acts::product(1u, 5u) == 120u);
+  static_assert(Acts::product(2u, 5u) == 120u);
+  static_assert(Acts::product(3u, 5u) == 60u);
+
+  static_assert(Acts::product(5u, 4u) == 1u);
+
+  static_assert(Acts::product(0u, 0u) == 0u);
+  static_assert(Acts::product(0u, 5u) == 0u);
+
+  // These should fail at compile time
+  // static_assert(Acts::product(std::uint8_t{1}, std::uint8_t{6}));
+  // static_assert(Acts::product(std::uint16_t{1}, std::uint16_t{9}));
+  // static_assert(Acts::product(std::uint32_t{1}, std::uint32_t{13}));
+  // static_assert(Acts::product(std::uint64_t{1}, std::uint64_t{21}));
+
+  // These expressions should fail at runtime
+  // auto fail8  = Acts::product(std::uint8_t{1},  std::uint8_t{6});
+  // auto fail16 = Acts::product(std::uint16_t{1}, std::uint16_t{9});
+  // auto fail32 = Acts::product(std::uint32_t{1}, std::uint32_t{13});
+  // auto fail64 = Acts::product(std::uint64_t{1}, std::uint64_t{21});
+
+  const std::size_t zero{0};
+  const std::size_t one{1};
+  for (std::size_t k = 0; k <= 20; ++k) {
+    BOOST_CHECK_EQUAL(Acts::product(zero, k), zero);
+    BOOST_CHECK_EQUAL(Acts::product(one, k), Acts::factorial(k));
+    BOOST_CHECK_EQUAL(Acts::product(k, k), k);
+
+    for (std::size_t j = 1; j < k; ++j) {
+      BOOST_CHECK_EQUAL(Acts::product(j, k), j * Acts::product(j + one, k));
+      BOOST_CHECK_EQUAL(Acts::product(one, k),
+                        Acts::product(one, j) * Acts::product(j + one, k));
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(FactorialTests) {
   static_assert(Acts::factorial(0u) == 1u);
   static_assert(Acts::factorial(1u) == 1u);
   static_assert(Acts::factorial(2u) == 2u);
+  static_assert(Acts::factorial(5u) == 5u * Acts::factorial(4u));
 
-  for (std::size_t k = 3; k <= 20; ++k) {
-    BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - 1u));
+  // These tests should fail at compile time
+  // static_assert(Acts::factorial(std::uint8_t{6}));
+  // static_assert(Acts::factorial(std::uint16_t{9}));
+  // static_assert(Acts::factorial(std::uint32_t{13}));
+  // static_assert(Acts::factorial(std::uint64_t{21}));
+
+  // These expressions should fail at runtime
+  // auto fail8 = Acts::factorial(std::uint8_t{6});
+  // auto fail16 = Acts::factorial(std::uint16_t{9});
+  // auto fail32 = Acts::factorial(std::uint32_t{13});
+  // auto fail64 = Acts::factorial(std::uint64_t{21});
+
+  const std::size_t one{1};
+  for (std::size_t k = 1; k <= 20; ++k) {
+    BOOST_CHECK_EQUAL(Acts::factorial(k), k * Acts::factorial(k - one));
     for (std::size_t j = 1; j <= k; ++j) {
       BOOST_CHECK_EQUAL(Acts::product(j, k),
-                        Acts::factorial(k) / Acts::factorial(j - 1));
+                        Acts::factorial(k) / Acts::factorial(j - one));
     }
   }
 }
@@ -86,19 +140,38 @@ BOOST_AUTO_TEST_CASE(SumOfIntegers) {
 }
 
 BOOST_AUTO_TEST_CASE(BinomialTests) {
+  static_assert(Acts::binomial(0u, 0u) == 1u);
+
+  static_assert(Acts::binomial(5u, 0u) == 1u);
+  static_assert(Acts::binomial(5u, 1u) == 5u);
+  static_assert(Acts::binomial(5u, 2u) == 10u);
+  static_assert(Acts::binomial(5u, 3u) == 10u);
+  static_assert(Acts::binomial(5u, 4u) == 5u);
+  static_assert(Acts::binomial(5u, 5u) == 1u);
+
+  static_assert(Acts::binomial(10u, 3u) == 120u);
+  static_assert(Acts::binomial(10u, 7u) == 120u);
+  static_assert(Acts::binomial(20ull, 10ull) == 184756ull);
+
+  // This test should fail at compile time
+  // static_assert(Acts::binomial(4u, 5u));
+
   BOOST_CHECK_EQUAL(Acts::binomial(1u, 1u), 1u);
-  for (unsigned n = 2; n <= 10; ++n) {
-    /// Check that the binomial of (n 1 is always n)
-    BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
+  for (unsigned n = 1; n <= 10; ++n) {
+    /// Check that the binomial of (n 0 is always 1)
+    BOOST_CHECK_EQUAL(Acts::binomial(n, 0u), 1);
+    BOOST_CHECK_EQUAL(Acts::binomial(n, n), 1);
+
     for (unsigned k = 1; k <= n - 1u; ++k) {
       /// Use recursive formula
       ///  n      n -1       n -1
       ///     =          +
       ///  k      k -1        k
-      std::cout << "n: " << n << ", k: " << k
-                << ", binom(n,k): " << Acts::binomial(n, k)
-                << ", binom(n-1, k-1): " << Acts::binomial(n - 1, k - 1)
-                << ", binom(n-1,k): " << Acts::binomial(n - 1, k) << std::endl;
+      std::cout << "n: " << n << ", \tk: " << k
+                << ", \tbinom(n, k): " << Acts::binomial(n, k)
+                << ", \tbinom(n-1, k-1): " << Acts::binomial(n - 1, k - 1)
+                << ", \tbinom(n-1, k): " << Acts::binomial(n - 1, k)
+                << std::endl;
       BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n - 1, k - 1) +
                                                   Acts::binomial(n - 1, k));
       BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n, n - k));

@@ -23,7 +23,7 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
   // Fill the grid with surfaces
   std::vector<std::shared_ptr<const Surface>> surfaces = {};
   for (const auto& surface : m_volume.surfaces()) {
-    if (surface.associatedDetectorElement() == nullptr) {
+    if (!surface.isSensitive()) {
       continue;
     }
     surfaces.push_back(surface.getSharedPtr());
