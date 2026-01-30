@@ -91,14 +91,14 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
 
     // Create mean and width histograms with same X binning as the 2D histogram
     int nBinsX = hist2d->GetNbinsX();
-    auto meanHist =
-        std::make_unique<TH1F>((meanPrefix + suffix).c_str(),
-                 (std::string(hist2d->GetTitle()) + " mean").c_str(), nBinsX,
-                 hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
-    auto widthHist =
-        std::make_unique<TH1F>((widthPrefix + suffix).c_str(),
-                 (std::string(hist2d->GetTitle()) + " width").c_str(), nBinsX,
-                 hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
+    auto meanHist = std::make_unique<TH1F>(
+        (meanPrefix + suffix).c_str(),
+        (std::string(hist2d->GetTitle()) + " mean").c_str(), nBinsX,
+        hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
+    auto widthHist = std::make_unique<TH1F>(
+        (widthPrefix + suffix).c_str(),
+        (std::string(hist2d->GetTitle()) + " width").c_str(), nBinsX,
+        hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
 
     // Copy X axis bin edges for variable binning
     if (hist2d->GetXaxis()->GetXbins()->GetSize() > 0) {
@@ -108,26 +108,27 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
 
     // Project each X bin and extract mean/width via Gaussian fit
     for (int j = 1; j <= nBinsX; j++) {
-      TH1D* proj = hist2d->ProjectionY(
-          Form("%s_projy_bin%d", baseName.c_str(), j), j, j);
-      if (proj->GetEntries() > 0) {
-        TFitResultPtr r = proj->Fit("gaus", "QS0");
-        if ((r.Get() != nullptr) && ((r->Status() % 1000) == 0)) {
-          // fill the mean and width into 'j'th bin of the meanHist and
-          // widthHist, respectively
-          meanHist->SetBinContent(j, r->Parameter(1));
-          meanHist->SetBinError(j, r->ParError(1));
-          widthHist->SetBinContent(j, r->Parameter(2));
-          widthHist->SetBinError(j, r->ParError(2));
-        }
+      auto proj = std::unique_ptr<TH1D>(hist2d->ProjectionY(
+          Form("%s_projy_bin%d", baseName.c_str(), j), j, j));
+      if (proj->GetEntries() <= 0) {
+        continue;
       }
-      delete proj;
+
+      TFitResultPtr r = proj->Fit("gaus", "QS0");
+      if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
+        continue;
+      }
+
+      // fill the mean and width into 'j'th bin of the meanHist and
+      // widthHist, respectively
+      meanHist->SetBinContent(j, r->Parameter(1));
+      meanHist->SetBinError(j, r->ParError(1));
+      widthHist->SetBinContent(j, r->Parameter(2));
+      widthHist->SetBinError(j, r->ParError(2));
     }
 
     meanHist->Write();
     widthHist->Write();
-    delete meanHist;
-    delete widthHist;
   };
 
   // Write residual histograms
