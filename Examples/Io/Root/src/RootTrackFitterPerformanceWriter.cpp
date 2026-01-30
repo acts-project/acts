@@ -91,12 +91,12 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
 
     // Create mean and width histograms with same X binning as the 2D histogram
     int nBinsX = hist2d->GetNbinsX();
-    TH1F* meanHist =
-        new TH1F((meanPrefix + suffix).c_str(),
+    auto meanHist =
+        std::make_unique<TH1F>((meanPrefix + suffix).c_str(),
                  (std::string(hist2d->GetTitle()) + " mean").c_str(), nBinsX,
                  hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
-    TH1F* widthHist =
-        new TH1F((widthPrefix + suffix).c_str(),
+    auto widthHist =
+        std::make_unique<TH1F>((widthPrefix + suffix).c_str(),
                  (std::string(hist2d->GetTitle()) + " width").c_str(), nBinsX,
                  hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
 
