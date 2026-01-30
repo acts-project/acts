@@ -61,7 +61,7 @@ void generateStrawSurfaces(
 
       element->surface().assignGeometryId(GeometryIdentifier(id++));
 
-      element->surface().assignDetectorElement(*element);
+      element->surface().assignSurfacePlacement(*element);
 
       strawSurfaces.push_back(element->surface().getSharedPtr());
     }

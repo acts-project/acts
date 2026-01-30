@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   auto detElement =
       std::make_unique<DetectorElementStub>(Transform3::Identity());
 
-  surface->assignDetectorElement(*detElement);
+  surface->assignSurfacePlacement(*detElement);
 
   parentVol->assignGeometryId(GeometryIdentifier{}.withVolume(1));
   parentVol->addSurface(surface);
