@@ -8,42 +8,41 @@
 
 #pragma once
 
-// TODO: update to C++17 style
-// Consider to moving to detail subdirectory
 #include <map>
-#include <string>
+#include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
 
 struct GbtsConnection {
-  GbtsConnection(unsigned int s, unsigned int d);
+  GbtsConnection(std::uint32_t s, std::uint32_t d);
 
-  unsigned int m_src, m_dst;
+  std::uint32_t m_src;
+  std::uint32_t m_dst;
 
-  std::vector<int> m_binTable;
+  std::vector<std::int32_t> m_binTable;
 };
 
 class GbtsConnector {
  public:
   struct LayerGroup {
-    LayerGroup(unsigned int l1Key, const std::vector<const GbtsConnection*>& v)
+    LayerGroup(std::uint32_t l1Key, const std::vector<const GbtsConnection*>& v)
         : m_dst(l1Key), m_sources(v) {};
 
-    unsigned int m_dst;  // the target layer of the group
+    std::uint32_t m_dst{};  //< the target layer of the group
 
     std::vector<const GbtsConnection*>
-        m_sources;  // the source layers of the group
+        m_sources;  //< the source layers of the group
   };
 
  public:
-  GbtsConnector(std::string& inFile, bool LRTmode);
-  ~GbtsConnector();
+  GbtsConnector(std::string& inFile, bool lrtMode);
 
   float m_etaBin{};
 
-  std::map<int, std::vector<struct LayerGroup> > m_layerGroups;
-  std::map<int, std::vector<GbtsConnection*> > m_connMap;
+  std::map<std::int32_t, std::vector<struct LayerGroup>> m_layerGroups;
+  std::map<std::int32_t, std::vector<std::unique_ptr<GbtsConnection>>>
+      m_connMap;
 };
 
 }  // namespace Acts::Experimental
