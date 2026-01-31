@@ -73,17 +73,21 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
     m_hits.resize(m_hits.size() + m_assignBatch);
   }
 
+  m_hits[m_iHit] = identifier;
+  m_iHit += 1;
+  m_nHits += weight;
+
+  // Check for duplicate layers
+  if (m_iLayer != 0 && m_layers[m_iLayer - 1] == layer) {
+    return;
+  }
+
   if (m_iLayer == m_layers.size()) {
     m_layers.resize(m_layers.size() + m_assignBatch);
   }
 
-  m_hits[m_iHit] = identifier;
   m_layers[m_iLayer] = layer;
-
-  m_iHit += 1;
   m_iLayer += 1;
-
-  m_nHits += weight;
   m_nLayers += weight;
 }
 
