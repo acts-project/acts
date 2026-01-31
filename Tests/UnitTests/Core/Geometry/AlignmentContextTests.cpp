@@ -328,6 +328,7 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
                      std::make_shared<DiamondVolumeBounds>(
                          halfX1, halfX2, halfX3, halfY1, halfY2, halfZ)};
 
+  BOOST_CHECK_THROW(alignedVol1.setTransform(volTrf1), std::runtime_error);
   const AlignmentContext defaultContext{};
   /// Check that the transform of the alignable volume is defined by the
   /// placement
@@ -387,6 +388,11 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
         portal.surface->localToGlobalTransform(alignedContext.getContext());
 
     BOOST_CHECK(unAlignedTrf.isApprox(alignedTrf));
+    BOOST_CHECK(
+        (alignedVol1.localToGlobalTransform(defaultContext.getContext()) *
+         rotationDelta)
+            .isApprox(alignedVol1.localToGlobalTransform(
+                alignedContext.getContext())));
   }
 
   // Ensure that multiple fetches of the boundary surfaces result in the same
@@ -399,9 +405,15 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
     BOOST_CHECK_EQUAL(portalSurfaces[portal].surface,
                       secondPortalCall[portal].surface);
   }
-  /// Now move the volume bounds
-  alignedVol1.assignVolumeBounds(std::make_shared<DiamondVolumeBounds>(
-      halfX1, 2. * halfX2, halfX3, halfY1, halfY2, halfZ));
+  // Ensure that the bound values can no longer be updated
+  BOOST_CHECK_THROW(
+      alignedVol1.assignVolumeBounds(std::make_shared<DiamondVolumeBounds>(
+          halfX1, 2. * halfX2, halfX3, halfY1, halfY2, halfZ)),
+      std::runtime_error);
+  // But equivalent bounds can be pushed
+  BOOST_CHECK_NO_THROW(
+      alignedVol1.assignVolumeBounds(std::make_shared<DiamondVolumeBounds>(
+          halfX1, halfX2, halfX3, halfY1, halfY2, halfZ)));
 }
 
 BOOST_AUTO_TEST_SUITE_END();
