@@ -15,42 +15,15 @@ namespace Acts {
 
 SeedContainer2::SeedContainer2() noexcept = default;
 
-SeedContainer2::SeedContainer2(const SeedContainer2 &other) noexcept
-    : m_size(other.m_size) {
-  knownColumns() = other.knownColumns();
-}
+SeedContainer2::SeedContainer2(const SeedContainer2 &other) noexcept = default;
 
-SeedContainer2::SeedContainer2(SeedContainer2 &&other) noexcept
-    : m_size(other.m_size) {
-  knownColumns() = std::move(other).knownColumns();
-
-  other.m_size = 0;
-}
+SeedContainer2::SeedContainer2(SeedContainer2 &&other) noexcept = default;
 
 SeedContainer2 &SeedContainer2::operator=(
-    const SeedContainer2 &other) noexcept {
-  if (this == &other) {
-    return *this;
-  }
+    const SeedContainer2 &other) noexcept = default;
 
-  m_size = other.m_size;
-  knownColumns() = other.knownColumns();
-
-  return *this;
-}
-
-SeedContainer2 &SeedContainer2::operator=(SeedContainer2 &&other) noexcept {
-  if (this == &other) {
-    return *this;
-  }
-
-  m_size = other.m_size;
-  knownColumns() = std::move(other).knownColumns();
-
-  other.m_size = 0;
-
-  return *this;
-}
+SeedContainer2 &SeedContainer2::operator=(SeedContainer2 &&other) noexcept =
+    default;
 
 void SeedContainer2::reserve(std::size_t size,
                              float averageSpacePoints) noexcept {

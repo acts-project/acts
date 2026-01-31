@@ -203,7 +203,7 @@ struct GsfActor {
     // Early return if nothing happens
     if (!haveMaterial && !haveMeasurement) {
       // No hole before first measurement
-      if (result.processedStates > 0 && surface.associatedDetectorElement()) {
+      if (result.processedStates > 0 && surface.isSensitive()) {
         TemporaryStates tmpStates;
         noMeasurementUpdate(state, stepper, navigator, result, tmpStates, true);
       }
@@ -224,13 +224,19 @@ struct GsfActor {
                                                             surface);
     }
 
-    if (haveMaterial) {
+    if (m_cfg.multipleScattering && haveMaterial) {
       if (haveMeasurement) {
-        applyMultipleScattering(state, stepper, navigator,
-                                MaterialUpdateMode::PreUpdate);
+        detail::Gsf::applyMultipleScattering(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::PreUpdate),
+            logger());
       } else {
-        applyMultipleScattering(state, stepper, navigator,
-                                MaterialUpdateMode::FullUpdate);
+        detail::Gsf::applyMultipleScattering(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::FullUpdate),
+            logger());
       }
     }
 
@@ -306,9 +312,12 @@ struct GsfActor {
     }
 
     // If we have only done preUpdate before, now do postUpdate
-    if (haveMaterial && haveMeasurement) {
-      applyMultipleScattering(state, stepper, navigator,
-                              MaterialUpdateMode::PostUpdate);
+    if (m_cfg.multipleScattering && haveMaterial && haveMeasurement) {
+      detail::Gsf::applyMultipleScattering(
+          state, stepper, navigator,
+          detail::determineMaterialUpdateMode(state, navigator,
+                                              MaterialUpdateMode::PostUpdate),
+          logger());
     }
 
     return Result<void>::success();
@@ -344,8 +353,7 @@ struct GsfActor {
     // is thus counted as an outlier
     bool is_valid_measurement = false;
 
-    auto cmps = stepper.componentIterable(state.stepping);
-    for (auto cmp : cmps) {
+    for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
@@ -457,47 +465,6 @@ struct GsfActor {
     updateMultiTrajectory(result, tmpStates, surface);
 
     return Result<void>::success();
-  }
-
-  /// Apply the multiple scattering to the state
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void applyMultipleScattering(propagator_state_t& state,
-                               const stepper_t& stepper,
-                               const navigator_t& navigator,
-                               const MaterialUpdateMode& updateMode =
-                                   MaterialUpdateMode::FullUpdate) const {
-    const auto& surface = *navigator.currentSurface(state.navigation);
-
-    for (auto cmp : stepper.componentIterable(state.stepping)) {
-      auto singleState = cmp.singleState(state);
-      const auto& singleStepper = cmp.singleStepper(stepper);
-
-      detail::PointwiseMaterialInteraction interaction(
-          singleState, singleStepper, navigator);
-      if (interaction.evaluateMaterialSlab(updateMode)) {
-        // In the Gsf we only need to handle the multiple scattering
-        interaction.evaluatePointwiseMaterialInteraction(
-            m_cfg.multipleScattering, false);
-
-        // Screen out material effects info
-        ACTS_VERBOSE("Material effects on surface: " << surface.geometryId()
-                                                     << " at update mode: "
-                                                     << updateMode << " are :");
-        ACTS_VERBOSE("eLoss = "
-                     << interaction.Eloss << ", "
-                     << "variancePhi = " << interaction.variancePhi << ", "
-                     << "varianceTheta = " << interaction.varianceTheta << ", "
-                     << "varianceQoverP = " << interaction.varianceQoverP);
-
-        // Update the state and stepper with material effects
-        interaction.updateState(singleState, singleStepper,
-                                NoiseUpdateMode::addNoise);
-
-        assert(singleState.stepping.cov.array().isFinite().all() &&
-               "covariance not finite after multi scattering");
-      }
-    }
   }
 
   void updateMultiTrajectory(result_type& result,

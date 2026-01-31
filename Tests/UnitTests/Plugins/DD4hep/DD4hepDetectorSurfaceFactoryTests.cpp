@@ -328,11 +328,6 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
   class ExtendedDetectorElement : public ActsPlugins::DD4hepDetectorElement {
    public:
     using ActsPlugins::DD4hepDetectorElement::DD4hepDetectorElement;
-
-    double thickness() const final {
-      // Return a fixed thickness for testing purposes
-      return 42. * UnitConstants::mm;
-    }
   };
 
   auto extendedFactory =
@@ -361,8 +356,6 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
     // Check that the extended detector element is used
     BOOST_CHECK_NE(dynamic_cast<const ExtendedDetectorElement*>(detElem.get()),
                    nullptr);
-    // Check that the thickness is 42 mm
-    CHECK_CLOSE_ABS(detElem->thickness(), 42. * UnitConstants::mm, 1e-10);
   }
 
   // Kill that instance before going into the next test

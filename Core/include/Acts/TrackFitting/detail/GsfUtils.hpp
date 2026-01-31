@@ -13,6 +13,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
@@ -274,7 +275,6 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
                    const TemporaryStates<traj_t> &tmpStates,
                    double weightCutoff) {
   auto cmps = stepper.componentIterable(state.stepping);
-
   for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
     // we set ignored components to missed, so we can remove them after
     // the loop
@@ -358,8 +358,8 @@ void convoluteComponents(
   const Surface &surface = *navigator.currentSurface(state.navigation);
   const Direction direction = state.options.direction;
 
-  auto cmps = stepper.componentIterable(state.stepping);
   double pathXOverX0 = 0.0;
+  auto cmps = stepper.componentIterable(state.stepping);
   for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
     auto proxy = tmpStates.traj.getTrackState(idx);
 
@@ -376,6 +376,26 @@ void convoluteComponents(
   // Store average material seen by the components
   // Should not be too broadly distributed
   sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
+}
+
+/// Apply the multiple scattering to the state
+template <typename propagator_state_t, typename stepper_t, typename navigator_t>
+void applyMultipleScattering(propagator_state_t &state,
+                             const stepper_t &stepper,
+                             const navigator_t &navigator,
+                             const MaterialUpdateMode &updateMode,
+                             const Logger &logger) {
+  for (auto cmp : stepper.componentIterable(state.stepping)) {
+    auto singleState = cmp.singleState(state);
+    const auto &singleStepper = cmp.singleStepper(stepper);
+
+    detail::performMaterialInteraction(singleState, singleStepper, navigator,
+                                       updateMode, NoiseUpdateMode::addNoise,
+                                       true, false, logger);
+
+    assert(singleState.stepping.cov.array().isFinite().all() &&
+           "covariance not finite after multi scattering");
+  }
 }
 
 }  // namespace Gsf
