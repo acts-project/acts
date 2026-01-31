@@ -100,7 +100,7 @@ class Volume : public GeometryObject {
   /// @brief Get the center position of the volume
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return Const reference to the center position vector
-  const Vector3& center(const GeometryContext& gctx) const;
+  Vector3 center(const GeometryContext& gctx) const;
 
   /// @brief Get the center position of the volume
   /// @deprecated: Function deprecated in favour of
