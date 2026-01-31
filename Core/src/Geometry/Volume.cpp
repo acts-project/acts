@@ -69,6 +69,10 @@ Volume& Volume::operator=(const Volume& vol) noexcept {
   return *this;
 }
 
+bool Volume::isAlignable() const {
+  return m_placement != nullptr;
+}
+
 bool Volume::inside(const GeometryContext& gctx, const Vector3& gpos,
                     double tol) const {
   Vector3 posInVolFrame = globalToLocalTransform(gctx) * gpos;
@@ -99,8 +103,7 @@ void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
   // If the volume is instantiated with a placement, the bounds can be updated
   // as long as the portals have not been made. Or the bounds are equivalent
   // with the current bounds
-  if (volumePositioner() != nullptr &&
-      volumePositioner()->nPortalPlacements() &&
+  if (isAlignable() && volumePlacement()->nPortalPlacements() > 0ul &&
       (*m_volumeBounds) != (*volbounds)) {
     throw std::runtime_error(
         "assignVolumeBounds() - Bounds cannot be overwritten if the associated "
@@ -124,16 +127,16 @@ void Volume::update(const GeometryContext& /*gctx*/,
 
 const Transform3& Volume::localToGlobalTransform(
     const GeometryContext& gctx) const {
-  if (volumePositioner() != nullptr) {
-    return volumePositioner()->localToGlobalTransform(gctx);
+  if (isAlignable()) {
+    return volumePlacement()->localToGlobalTransform(gctx);
   }
   assert(m_transform != nullptr);
   return (*m_transform);
 }
 const Transform3& Volume::globalToLocalTransform(
     const GeometryContext& gctx) const {
-  if (volumePositioner() != nullptr) {
-    return volumePositioner()->globalToLocalTransform(gctx);
+  if (isAlignable()) {
+    return volumePlacement()->globalToLocalTransform(gctx);
   }
   assert(m_itransform != nullptr);
   return (*m_itransform);
@@ -172,15 +175,15 @@ std::shared_ptr<VolumeBounds> Volume::volumeBoundsPtr() {
   return m_volumeBounds;
 }
 
-VolumePlacementBase* Volume::volumePositioner() {
+VolumePlacementBase* Volume::volumePlacement() {
   return m_placement;
 }
-const VolumePlacementBase* Volume::volumePositioner() const {
+const VolumePlacementBase* Volume::volumePlacement() const {
   return m_placement;
 }
 
 void Volume::setTransform(const Transform3& transform) {
-  if (volumePositioner() != nullptr) {
+  if (isAlignable()) {
     throw std::runtime_error(
         "setTransform() - Transforms of externally aligned volumes cannot "
         "be overwritten");
@@ -193,8 +196,7 @@ void Volume::setTransform(const Transform3& transform) {
 bool Volume::operator==(const Volume& other) const {
   return ((m_transform != nullptr && other.m_transform != nullptr &&
            m_transform->matrix() == other.m_transform->matrix()) ||
-          (volumePositioner() == other.volumePositioner() &&
-           volumePositioner() != nullptr)) &&
+          (volumePlacement() == other.volumePlacement() && isAlignable())) &&
          (*m_volumeBounds == *other.m_volumeBounds);
 }
 

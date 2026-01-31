@@ -195,9 +195,13 @@ class Volume : public GeometryObject {
                  const ViewConfig& viewConfig) const;
 
   /// @brief Returns the pointer to the associated volume placement (Might be empty)
-  VolumePlacementBase* volumePositioner();
+  VolumePlacementBase* volumePlacement();
+
   /// @brief Returns the pointer to the associated volume placement (Might be empty)
-  const VolumePlacementBase* volumePositioner() const;
+  const VolumePlacementBase* volumePlacement() const;
+
+  /// @brief Returns whether the volume is alignable (I.e. it's constructed with a volumePlacement)
+  bool isAlignable() const;
 
  private:
   /// @brief Transform matrix that positions the volume in 3D space
