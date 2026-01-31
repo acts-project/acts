@@ -15,6 +15,7 @@
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Holders.hpp"
 #include "ActsPlugins/EDM4hep/PodioDynamicColumns.hpp"
 #include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "ActsPodioEdm/Surface.h"
@@ -37,19 +38,22 @@ namespace ActsPlugins {
 /// @addtogroup edm4hep_plugin
 /// @{
 
+template <template <typename> class holder_t = std::unique_ptr>
 class MutablePodioTrackContainer;
+
+template <template <typename> class holder_t = Acts::ConstRefHolder>
 class ConstPodioTrackContainer;
 
 }  // namespace ActsPlugins
 
 namespace Acts {
 
-template <>
-struct IsReadOnlyTrackContainer<ActsPlugins::MutablePodioTrackContainer>
-    : std::false_type {};
+template <template <typename> class holder_t>
+struct IsReadOnlyTrackContainer<
+    ActsPlugins::MutablePodioTrackContainer<holder_t>> : std::false_type {};
 
-template <>
-struct IsReadOnlyTrackContainer<ActsPlugins::ConstPodioTrackContainer>
+template <template <typename> class holder_t>
+struct IsReadOnlyTrackContainer<ActsPlugins::ConstPodioTrackContainer<holder_t>>
     : std::true_type {};
 }  // namespace Acts
 
@@ -167,18 +171,22 @@ class PodioTrackContainerBase {
   std::vector<std::shared_ptr<const Acts::Surface>> m_surfaces;
 };
 
+template <template <typename> class holder_t>
 class MutablePodioTrackContainer : public PodioTrackContainerBase {
  public:
-  explicit MutablePodioTrackContainer(const PodioUtil::ConversionHelper& helper)
-      : PodioTrackContainerBase{helper},
-        m_collection{std::make_unique<ActsPodioEdm::TrackCollection>()} {
+  explicit MutablePodioTrackContainer(
+      const PodioUtil::ConversionHelper& helper,
+      holder_t<ActsPodioEdm::TrackCollection> collection)
+      : PodioTrackContainerBase{helper}, m_collection{std::move(collection)} {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
   MutablePodioTrackContainer(const MutablePodioTrackContainer& other);
   MutablePodioTrackContainer(MutablePodioTrackContainer&& other) = default;
 
-  explicit MutablePodioTrackContainer(const ConstPodioTrackContainer& other);
+  template <template <typename> class other_holder_t>
+  explicit MutablePodioTrackContainer(
+      const ConstPodioTrackContainer<other_holder_t>& other);
 
   // BEGIN INTERFACE HELPER
 
@@ -294,12 +302,35 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
 
   ActsPodioEdm::TrackCollection& trackCollection() { return *m_collection; }
 
-  void releaseInto(podio::Frame& frame, const std::string& suffix = "") {
+  void releaseInto(podio::Frame& frame, const std::string& suffix = "")
+    requires(std::is_same_v<holder_t<ActsPodioEdm::TrackCollection>,
+                            Acts::ValueHolder<ActsPodioEdm::TrackCollection>> ||
+             std::is_same_v<holder_t<ActsPodioEdm::TrackCollection>,
+                            std::unique_ptr<ActsPodioEdm::TrackCollection>> ||
+             std::is_same_v<holder_t<ActsPodioEdm::TrackCollection>,
+                            std::shared_ptr<ActsPodioEdm::TrackCollection>>)
+  {
     std::string s = suffix;
     if (!s.empty()) {
       s = "_" + s;
     }
-    frame.put(std::move(m_collection), "tracks" + s);
+
+    if constexpr (std::is_same_v<
+                      holder_t<ActsPodioEdm::TrackCollection>,
+                      std::unique_ptr<ActsPodioEdm::TrackCollection>>) {
+      frame.put(std::move(m_collection), "tracks" + s);
+    } else if constexpr (std::is_same_v<
+                             holder_t<ActsPodioEdm::TrackCollection>,
+                             std::shared_ptr<ActsPodioEdm::TrackCollection>>) {
+      frame.put(
+          std::unique_ptr<ActsPodioEdm::TrackCollection>(m_collection.get()),
+          "tracks" + s);
+      m_collection.reset();
+    } else {
+      frame.put(std::make_unique<ActsPodioEdm::TrackCollection>(
+                    std::move(*m_collection)),
+                "tracks" + s);
+    }
     m_surfaces.clear();
 
     for (const auto& [key, col] : m_dynamic) {
@@ -326,7 +357,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
  private:
   friend PodioTrackContainerBase;
 
-  std::unique_ptr<ActsPodioEdm::TrackCollection> m_collection;
+  holder_t<ActsPodioEdm::TrackCollection> m_collection;
   std::vector<Acts::HashedString> m_dynamicKeys;
   std::unordered_map<Acts::HashedString,
                      std::unique_ptr<podio_detail::DynamicColumnBase>>
@@ -334,14 +365,16 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
 };
 
 static_assert(
-    Acts::TrackContainerBackend<MutablePodioTrackContainer>,
+    Acts::TrackContainerBackend<MutablePodioTrackContainer<std::unique_ptr>>,
     "MutablePodioTrackContainer does not fulfill TrackContainerBackend");
 
+template <template <typename> class holder_t>
 class ConstPodioTrackContainer : public PodioTrackContainerBase {
  public:
-  ConstPodioTrackContainer(const PodioUtil::ConversionHelper& helper,
-                           const ActsPodioEdm::TrackCollection& collection)
-      : PodioTrackContainerBase{helper}, m_collection{&collection} {
+  ConstPodioTrackContainer(
+      const PodioUtil::ConversionHelper& helper,
+      holder_t<const ActsPodioEdm::TrackCollection> collection)
+      : PodioTrackContainerBase{helper}, m_collection{std::move(collection)} {
     // Not much we can do to recover dynamic columns here
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
@@ -349,6 +382,9 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   ConstPodioTrackContainer(const PodioUtil::ConversionHelper& helper,
                            const podio::Frame& frame,
                            const std::string& suffix = "")
+    requires std::is_same_v<
+        holder_t<const ActsPodioEdm::TrackCollection>,
+        Acts::ConstRefHolder<const ActsPodioEdm::TrackCollection>>
       : PodioTrackContainerBase{helper} {
     std::string s = suffix.empty() ? suffix : "_" + suffix;
     std::string tracksKey = "tracks" + s;
@@ -361,14 +397,16 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
     const auto* collection = frame.get(tracksKey);
 
-    if (const auto* d =
+    const ActsPodioEdm::TrackCollection* d = nullptr;
+    if (const auto* casted =
             dynamic_cast<const ActsPodioEdm::TrackCollection*>(collection);
-        d != nullptr) {
-      m_collection = d;
+        casted != nullptr) {
+      d = casted;
     } else {
       throw std::runtime_error{"Unable to get collection " + tracksKey};
     }
 
+    m_collection = holder_t<const ActsPodioEdm::TrackCollection>{d};
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
     podio_detail::recoverDynamicColumns(frame, tracksKey, m_dynamic);
@@ -414,7 +452,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
  private:
   friend PodioTrackContainerBase;
 
-  const ActsPodioEdm::TrackCollection* m_collection;
+  holder_t<const ActsPodioEdm::TrackCollection> m_collection;
   std::unordered_map<Acts::HashedString,
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
@@ -422,7 +460,8 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 };
 
 static_assert(
-    Acts::ConstTrackContainerBackend<ConstPodioTrackContainer>,
+    Acts::ConstTrackContainerBackend<
+        ConstPodioTrackContainer<Acts::ConstRefHolder>>,
     "ConstPodioTrackContainer does not fulfill ConstTrackContainerBackend");
 
 /// @}
