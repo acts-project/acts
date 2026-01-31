@@ -47,7 +47,7 @@ std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt) {
 
 std::vector<OrientedSurface> VolumeBounds::boundarySurfaces(
     Volume& parentVolume) const {
-  if (!parent.isAlignable()) {
+  if (!parentVolume.isAlignable()) {
     return orientedSurfaces(*parentVolume.m_transform);
   }
   return parentVolume.volumePlacement()->makePortalsAlignable(
