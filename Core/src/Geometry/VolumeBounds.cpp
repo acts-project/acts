@@ -50,19 +50,7 @@ std::vector<OrientedSurface> VolumeBounds::boundarySurfaces(
   if (parentVolume.volumePositioner() == nullptr) {
     return orientedSurfaces(*parentVolume.m_transform);
   }
-  std::vector<OrientedSurface> portalSurfaces =
-      orientedSurfaces(Acts::Transform3::Identity());
-  // It is safe to construct a default geometry context here as the oriented
-  // surfaces have their own transform
-  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
-  for (std::size_t faceIdx = 0lu; faceIdx < portalSurfaces.size(); ++faceIdx) {
-    std::shared_ptr<RegularSurface>& surface = portalSurfaces[faceIdx].surface;
-    // the localToGlobal from the surface is the transform from the portal
-    // frame to the volume center
-    const Acts::Transform3 internalTrf = surface->localToGlobalTransform(gctx);
-    surface = parentVolume.volumePositioner()->makePortalAlignable(
-        faceIdx, internalTrf, std::move(surface));
-  }
-  return portalSurfaces;
+  return parentVolume.volumePositioner()->makePortalsAlignable(
+      orientedSurfaces(Acts::Transform3::Identity()));
 }
 }  // namespace Acts

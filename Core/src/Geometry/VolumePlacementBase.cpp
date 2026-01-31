@@ -8,28 +8,100 @@
 
 #include "Acts/Geometry/VolumePlacementBase.hpp"
 
-#include <cassert>
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+
+#include <format>
+#include <sstream>
 namespace Acts {
 
-std::shared_ptr<RegularSurface> VolumePlacementBase::makePortalAlignable(
-    const std::size_t portalIdx, const Transform3& portalToVolTrf,
-    std::shared_ptr<RegularSurface>&& portalSurface) {
-  // Ensure that the vector of portals is large enough
-  if (portalIdx >= m_portalPlacements.size()) {
-    m_portalPlacements.resize(portalIdx + 1);
-  }
-  // Fetch the registered placement
-  std::unique_ptr<detail::PortalPlacement>& placement =
-      m_portalPlacements[portalIdx];
+VolumePlacementBase::VolumePlacementBase() noexcept = default;
 
-  // If there is none just create it
-  if (!placement) {
-    placement.reset(new detail::PortalPlacement(portalIdx, portalToVolTrf, this,
-                                                std::move(portalSurface)));
-  }
+VolumePlacementBase::VolumePlacementBase(VolumePlacementBase&& other) noexcept
+    : VolumePlacementBase{} {
+  (*this) = std::move(other);
+}
 
-  // Return the cached shared ptr
-  return placement->getSharedPtr();
+VolumePlacementBase& VolumePlacementBase::operator=(
+    VolumePlacementBase&& other) noexcept {
+  if (&other != this) {
+    m_portalPlacements = std::move(other.m_portalPlacements);
+    for (auto& portal : m_portalPlacements) {
+      portal->m_parent = this;
+    }
+  }
+  return (*this);
+}
+
+VolumePlacementBase::PortalVec_t VolumePlacementBase::makePortalsAlignable(
+    PortalVec_t&& portalsToAlign) {
+  // It's safe to use the default geometry context as all incoming portal
+  // surfaces are explicitly requested to have no surface placement and hence
+  // the cached transform is returned
+  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+  const bool callExpand = portalsToAlign.size() != m_portalPlacements.size();
+
+  m_portalPlacements.resize(
+      std::max(portalsToAlign.size(), m_portalPlacements.size()));
+  if (m_portalPlacements.size() != portalsToAlign.size()) {
+    throw std::logic_error(
+        std::format("VolumePlacementBase::makePortalsAlignable() - Has been "
+                    "called previously for a different type of volume bounds. "
+                    "Already registered portals {:} vs incoming portals {:}",
+                    m_portalPlacements.size(), portalsToAlign.size()));
+  }
+  for (std::size_t portalIdx = 0lu; portalIdx < nPortalPlacements();
+       ++portalIdx) {
+    std::shared_ptr<RegularSurface>& portalSurface =
+        portalsToAlign[portalIdx].surface;
+    if (portalSurface->surfacePlacement() != nullptr) {
+      throw std::invalid_argument(std::format(
+          "VolumePlacementBase::makePortalsAlignable() - The {:}-th surface is "
+          "already connected to the alignment system",
+          portalIdx));
+    }
+    // It is expected that the volume bounds are callign the orientedSurfaces
+    // method with an identity transform
+    const Transform3 portalToVolTrf =
+        portalSurface->localToGlobalTransform(gctx);
+    std::unique_ptr<detail::PortalPlacement>& placement =
+        m_portalPlacements[portalIdx];
+    // Just create a new placement which makes the surface alignable
+    if (!placement) {
+      placement.reset(new detail::PortalPlacement(portalIdx, portalToVolTrf,
+                                                  this, portalSurface));
+    } else {
+      // The method has been called previously and it needs to be checked that
+      // the i-th surface is at the same place as the already registered surface
+      if (!portalToVolTrf.isApprox(placement->portalToVolumeCenter())) {
+        throw std::invalid_argument(
+            std::format("VolumePlacementBase::makePortalsAlignable() -  The "
+                        "{:}-th surface does not align with the one from a  "
+                        "previous call:\n -- exist {:}\n -- this call {:}",
+                        portalIdx, toString(placement->portalToVolumeCenter()),
+                        toString(portalToVolTrf)));
+      }
+      if (!(placement->surface().bounds() == portalSurface->bounds())) {
+        std::stringstream sstr{};
+        sstr << "VolumePlacementBase::makePortalsAlignable() -  The bounds for "
+                "the ";
+        sstr << portalIdx
+             << "-th surface differ with the ones from a previous call: \n";
+        sstr << " -- exist: " << placement->surface().bounds() << "\n";
+        sstr << " -- this call: " << portalSurface->bounds();
+        throw std::invalid_argument(sstr.str());
+      }
+      // overwrite the pointer
+      portalSurface = placement->surfacePtr();
+    }
+  }
+  // Before leaving ensure that the client knows it needs to reserve
+  // space for N portals in the cache backend
+  if (callExpand) {
+    expandTransformCache(portalsToAlign.size());
+  }
+  return portalsToAlign;
 }
 
 const detail::PortalPlacement* VolumePlacementBase::portalPlacement(
@@ -42,13 +114,9 @@ const detail::PortalPlacement* VolumePlacementBase::portalPlacement(
 std::size_t VolumePlacementBase::nPortalPlacements() const {
   return m_portalPlacements.size();
 }
-
-void VolumePlacementBase::populateContextWithPortals(
-    GeometryContext& gctx) const {
-  for (const auto& portalPlacement : m_portalPlacements) {
-    cachePortalTransform(gctx, portalPlacement->index(),
-                         portalPlacement->assembleFullTransform(gctx));
-  }
+Transform3 VolumePlacementBase::alignPortal(const GeometryContext& gctx,
+                                            const std::size_t portalIdx) const {
+  assert(portalIdx < m_portalPlacements.size());
+  return m_portalPlacements[portalIdx]->assembleFullTransform(gctx);
 }
-
 }  // namespace Acts

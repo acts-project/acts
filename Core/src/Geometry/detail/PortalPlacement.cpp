@@ -15,7 +15,7 @@ namespace Acts::detail {
 PortalPlacement::PortalPlacement(const std::size_t portalIdx,
                                  const Transform3& portalTrf,
                                  VolumePlacementBase* parent,
-                                 std::shared_ptr<RegularSurface>&& surface)
+                                 std::shared_ptr<RegularSurface> surface)
     : m_interalTrf{portalTrf},
       m_surface{std::move(surface)},
       m_parent{parent},
@@ -54,11 +54,11 @@ const Transform3& PortalPlacement::portalToVolumeCenter() const {
   return m_interalTrf;
 }
 
-std::shared_ptr<RegularSurface> PortalPlacement::getSharedPtr() {
+std::shared_ptr<RegularSurface> PortalPlacement::surfacePtr() {
   return m_surface;
 }
 
-std::shared_ptr<const RegularSurface> PortalPlacement::getSharedPtr() const {
+std::shared_ptr<const RegularSurface> PortalPlacement::surfacePtr() const {
   return m_surface;
 }
 }  // namespace Acts::detail
