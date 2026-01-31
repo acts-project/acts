@@ -47,10 +47,10 @@ std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt) {
 
 std::vector<OrientedSurface> VolumeBounds::boundarySurfaces(
     Volume& parentVolume) const {
-  if (parentVolume.volumePositioner() == nullptr) {
+  if (!parent.isAlignable()) {
     return orientedSurfaces(*parentVolume.m_transform);
   }
-  return parentVolume.volumePositioner()->makePortalsAlignable(
+  return parentVolume.volumePlacement()->makePortalsAlignable(
       orientedSurfaces(Acts::Transform3::Identity()));
 }
 }  // namespace Acts

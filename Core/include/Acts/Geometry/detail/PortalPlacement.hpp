@@ -55,6 +55,13 @@ class PortalPlacement : public SurfacePlacementBase {
   ///        associated volume reference frame
   const Transform3& portalToVolumeCenter() const;
 
+  /// @brief Delete the copy constructor
+  PortalPlacement(const PortalPlacement& other) = delete;
+
+  /// @brief Delete the copy assignment operator
+  PortalPlacement& operator=(const PortalPlacement& other) = delete;
+
+ protected:
   /// @brief Assembles the transform to switch from the portal's frame
   ///        to the experiment's global frame which is essentially the
   ///        same as a call of `localToGlobalTransform` but this method
@@ -63,27 +70,29 @@ class PortalPlacement : public SurfacePlacementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   Transform3 assembleFullTransform(const GeometryContext& gctx) const;
 
-  /// @brief Delete the copy constructor
-  PortalPlacement(const PortalPlacement& other) = delete;
-
-  /// @brief Delete the copy assignment operator
-  PortalPlacement& operator=(const PortalPlacement& other) = delete;
-
- protected:
   /// @brief Constructor to instantiate a PortalPlacement
-  /// @param portalIdx:
-  /// @param portalTrf:
-  /// @param parent:
-  /// @param surface:
+  /// @param portalIdx: Internal index to associated the portal with the
+  ///                   i-th boundary surface of the volume
+  /// @param portalTrf: Transform from the portal's frame into the
+  ///                   volume (I.e. the  orientation of the portal w.r.t.
+  ///                   volume)
+  /// @param parent: Pointer to the parent which is hosting the placement and also
+  ///                providing the final transforms from the portal ->
+  ///                experiment's frame
+  /// @param surface: Pointer to the portal surface itself which is becoming alignable
+  ///                 with the construction of this PortalPlacement
   PortalPlacement(const std::size_t portalIdx, const Transform3& portalTrf,
                   VolumePlacementBase* parent,
                   std::shared_ptr<RegularSurface> surface);
 
  private:
+  /// @brief Orientation of the portal surface w.r.t the volume
   Transform3 m_interalTrf{Transform3::Identity()};
+  /// @brief Pointer to the surface held by the placement
   std::shared_ptr<RegularSurface> m_surface{};
+  /// @brief Pointer to the parent managing this instance
   VolumePlacementBase* m_parent{nullptr};
-
+  /// @brief Internal index of the portal
   std::size_t m_portalIdx{0ul};
 };
 }  // namespace detail

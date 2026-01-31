@@ -131,12 +131,14 @@ inline Surface& AlignableDetectorElement::surface() {
 class AlignableVolumePlacement : public VolumePlacementBase {
  public:
   ///
-  AlignableVolumePlacement(const Transform3& volTrf) : m_locToGlob{volTrf} {}
+  explicit AlignableVolumePlacement(const Transform3& volTrf)
+      : m_locToGlob{volTrf} {}
 
   /// @brief Returns the transformation from the local volume coordinates to
   ///        the experiment's global coordinate system
   /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3& localToGlobalTransform(const GeometryContext& gctx) const {
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const override {
     const auto* alignContext = gctx.get<const AlignmentContext*>();
     if (alignContext != nullptr &&
         alignContext->volumeLocToGlobAlign != nullptr &&
@@ -150,7 +152,8 @@ class AlignableVolumePlacement : public VolumePlacementBase {
   /// @brief Returns the transformation from the experiment's global frame to the
   ///        local volume coordinate system
   /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3& globalToLocalTransform(const GeometryContext& gctx) const {
+  const Transform3& globalToLocalTransform(
+      const GeometryContext& gctx) const override {
     const auto* alignContext = gctx.get<const AlignmentContext*>();
     if (alignContext != nullptr &&
         alignContext->volumeGlobToLocAlign != nullptr &&
@@ -165,8 +168,8 @@ class AlignableVolumePlacement : public VolumePlacementBase {
   ///        global frame for the portal surface associated with the volume
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param portalIdx: Internal index of the portal surface [0 - number of portals)
-  const Transform3& portalLocalToGlobal(const GeometryContext& gctx,
-                                        const std::size_t portalIdx) const {
+  const Transform3& portalLocalToGlobal(
+      const GeometryContext& gctx, const std::size_t portalIdx) const override {
     const auto* alignContext = gctx.get<const AlignmentContext*>();
     if (alignContext != nullptr && alignContext->alignmentIndex < 2 &&
         alignContext->portalAlignments.size() > portalIdx) {
@@ -198,7 +201,7 @@ class AlignableVolumePlacement : public VolumePlacementBase {
   }
 
  private:
-  void expandTransformCache(const std::size_t nPortals) final {
+  void expandTransformCache(const std::size_t nPortals) override {
     AlignmentContext gctx{};
     for (std::size_t portal = 0ul; portal < nPortals; ++portal) {
       m_portalTrfs.push_back(alignPortal(gctx.getContext(), portal));
@@ -328,6 +331,7 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
                      std::make_shared<DiamondVolumeBounds>(
                          halfX1, halfX2, halfX3, halfY1, halfY2, halfZ)};
 
+  BOOST_CHECK_EQUAL(alignedVol1.isAlignable(), true);
   BOOST_CHECK_THROW(alignedVol1.setTransform(volTrf1), std::runtime_error);
   const AlignmentContext defaultContext{};
   /// Check that the transform of the alignable volume is defined by the

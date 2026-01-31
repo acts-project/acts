@@ -19,13 +19,67 @@ namespace Acts {
 class GeometryContext;
 struct OrientedSurface;
 
-/// @brief Interface class to define the backend for alignable volumes
-///        that move coherently with the snesitive surfaces inside
-///        The interface provides the transform from local -> global
-///        coordinates as well as its way back.
-///        To move the oriented surfaces along with the volume itself
-///        the interface needs to provide a factory that creates the
-///        detector elements that are then passed to the oriented surfaces
+/// @brief Interface class to define the transform cache backend for alignable volumes.
+///        Alignable volumes can be dynamically moved by the client code using
+///        the information wrapped into the GeometryContext similar to the
+///        alignable surfaces. The challenge is that the boundary surfaces of
+///        the volume need to move accordingly and that ACTS does not know
+///        anything about the caching of the alignable geometry objects a
+///        priori.
+///
+///        A client-based implementation of the VolumePlacementBase can be
+///        parsed to the constructor of the Volume instead of the fixed
+///        transform. The Volume is then querying its global position from the
+///        VolumePlacements. The associated bonudary surfaces are also
+///        requesting their position in global space. The Volume's transform and
+///        the bounds can the no longer be overwritten at a later stage.
+///
+///        An implementation of the VolumePlacementBase needs to satisfy the
+///        following interface.
+///
+///         1) Transforms switching from the volume's frame into the global
+///            experiment's frame and vice versa:
+///
+///           const Transform3& localToGlobalTransform(const GeometryContext&
+///           gctx) const;
+///
+///           const Transform3& localToGlobalTransform(const GeometryContext&
+///           gctx) const;
+///
+///
+///        2) At some point during the (tracking) volume construction, the
+///           boundary surfaces, also called the portals, are created from
+///           the associated bounds. ACTS ensures that these surfaces are
+///           connected with the VolumePlacement instance. The client code
+///           needs to ensure that  there is enough memory allocated by the
+///           class to cache the associated transforms:
+///
+///              void expandTransformCache(const std::size_t nPortals);
+///
+///           is called after the boundary surfaces are attached to the
+///           placement. The argument tells the client how many transforms need
+///           to be cached.
+///
+///             const Transform3& portalLocalToGlobal(const GeometryContext&
+///             gctx,
+///                                                   const std::size_t
+///                                                   portalIdx) const;
+///
+///           Is called every time when the portal is asking for its position in
+///           space. The portalIdx is the unique index of the portal and assists
+///           the client to return the appropriate transform
+///
+///       3)  Every time when the alignment of the volume is updated, the client
+///           also needs to cache the transforms of the associated surfaces.
+///           After, the central volume has moved, a loop similar to the one
+///           below needs to be implemented:
+///
+///             for (std::size_t p = 0 ; p < nPortalPlacements(); ++p) {
+///                 context.cacheInContext(context.getContext(), p);
+///             }
+///             context.volGlobToLocal = context.volLocToGlobal.inverse();
+///
+
 class VolumePlacementBase {
  public:
   /// @brief Default constructor
@@ -89,7 +143,14 @@ class VolumePlacementBase {
   ///                  placement instance
   virtual void expandTransformCache(const std::size_t nPortals) = 0;
 
-  /// @brief Returns the
+  /// @brief Returns the transform from the portal's frame into the
+  ///        experiment's global frame taking the alignment corrections
+  ///        of the associated volumes into account.
+  ///        @note: The call of this function is only allowed after the
+  ///               volume itself is moved. A swapped call order probably
+  ///               leads to unaligned portals
+  /// @param gctx: The geometry context carrying the current volume alignment
+  ///  @param portalIdx: Index of the portal to align
   Transform3 alignPortal(const GeometryContext& gctx,
                          const std::size_t portalIdx) const;
 
