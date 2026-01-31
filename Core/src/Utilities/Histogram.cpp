@@ -8,6 +8,9 @@
 
 #include "Acts/Utilities/Histogram.hpp"
 
+#include <cassert>
+#include <vector>
+
 namespace Acts::Experimental {
 
 // Projection free functions
@@ -31,6 +34,17 @@ Histogram1 projectionY(const Histogram2& hist2d) {
 
   return Histogram1(hist2d.name() + "_projY", hist2d.title() + " projection Y",
                     axes);
+}
+
+std::vector<double> extractBinEdges(const AxisVariant& axis) {
+  assert(axis.size() > 0 && "Axis must have at least one bin");
+  std::vector<double> edges(axis.size() + 1);
+  for (int i = 0; i < axis.size(); ++i) {
+    edges.at(i) = axis.bin(i).lower();
+  }
+  edges.back() = axis.bin(axis.size() - 1).upper();
+
+  return edges;
 }
 
 }  // namespace Acts::Experimental

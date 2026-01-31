@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/RangeXD.hpp"
+
 #include <array>
 #include <string>
 #include <tuple>
@@ -20,13 +22,16 @@ using BoostVariableAxis = boost::histogram::axis::variable<double, std::string>;
 using BoostRegularAxis =
     boost::histogram::axis::regular<double, boost::histogram::use_default,
                                     std::string>;
+using BoostLogAxis = boost::histogram::axis::regular<
+    double, boost::histogram::axis::transform::log, std::string>;
 
-/// @brief Boost axis variant supporting both variable and regular axes with metadata
+/// @brief Boost axis variant supporting variable, regular, and log-scale axes with metadata
 /// NOTE: It seems not to be possible to combine compile-time fixed number of
 /// axes with boost::histogram::axis::variant. Therefore we use
 /// std::vector<AxisVariant> internally.
 using AxisVariant =
-    boost::histogram::axis::variant<BoostVariableAxis, BoostRegularAxis>;
+    boost::histogram::axis::variant<BoostVariableAxis, BoostRegularAxis,
+                                    BoostLogAxis>;
 
 /// @brief Underlying Boost type for histograms
 using BoostHist = decltype(boost::histogram::make_histogram(
@@ -102,12 +107,15 @@ class ProfileHistogram {
   /// @param title Histogram title (for plotting)
   /// @param axes Array of axes with binning and metadata
   /// @param sampleAxisTitle Title for the sampled axis (profiled quantity)
+  /// @param sampleRange Samples are discarded when outside range
   ProfileHistogram(std::string name, std::string title,
                    const std::array<AxisVariant, Dim>& axes,
-                   std::string sampleAxisTitle)
+                   std::string sampleAxisTitle,
+                   Range1D<double> sampleRange = {})
       : m_name(std::move(name)),
         m_title(std::move(title)),
         m_sampleAxisTitle(std::move(sampleAxisTitle)),
+        m_sampleRange(sampleRange),
         m_hist(boost::histogram::make_profile(axes.begin(), axes.end())) {}
 
   /// Fill profile with values and sample
@@ -115,6 +123,10 @@ class ProfileHistogram {
   /// @param values Bin coordinate values (one per axis)
   /// @param sample Sample value (profiled quantity)
   void fill(const std::array<double, Dim>& values, double sample) {
+    if (!m_sampleRange.contains(sample)) {
+      return;
+    }
+
     std::apply(
         [&](auto... v) { m_hist(v..., boost::histogram::sample(sample)); },
         std::tuple_cat(values));
@@ -139,6 +151,7 @@ class ProfileHistogram {
   std::string m_name;
   std::string m_title;
   std::string m_sampleAxisTitle;
+  Range1D<double> m_sampleRange;
 
   BoostProfileHist m_hist;
 };
@@ -221,5 +234,14 @@ Histogram1 projectionX(const Histogram2& hist2d);
 /// @param hist2d The 2D histogram to project
 /// @return A 1D histogram containing the projection
 Histogram1 projectionY(const Histogram2& hist2d);
+
+/// Extract bin edges from an AxisVariant
+///
+/// Works with all axis types (regular, variable, log) in the variant by
+/// accessing the generic axis interface.
+///
+/// @param axis The axis variant to extract edges from
+/// @return Vector of bin edges (size = nBins + 1)
+std::vector<double> extractBinEdges(const AxisVariant& axis);
 
 }  // namespace Acts::Experimental
