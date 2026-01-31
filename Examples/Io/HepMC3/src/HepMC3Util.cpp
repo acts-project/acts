@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 
 #include <chrono>
@@ -619,6 +620,60 @@ HepMC3Util::NormalizeResult HepMC3Util::normalizeFiles(
   }
 
   return result;
+}
+
+namespace {
+int eventGeneratorIndexImpl(const auto& obj) {
+  return obj
+      .template attribute<HepMC3::IntAttribute>(
+          std::string{HepMC3Util::kEventGeneratorIndexAttribute})
+      ->value();
+}
+}  // namespace
+
+int HepMC3Util::eventGeneratorIndex(const HepMC3::GenParticle& particle) {
+  return eventGeneratorIndexImpl(particle);
+}
+
+int HepMC3Util::eventGeneratorIndex(const HepMC3::GenVertex& vertex) {
+  return eventGeneratorIndexImpl(vertex);
+}
+
+Acts::Vector4 HepMC3Util::convertPosition(const HepMC3::FourVector& vec) {
+  using namespace Acts::UnitLiterals;
+  return Acts::Vector4(vec.x() * 1_mm, vec.y() * 1_mm, vec.z() * 1_mm,
+                       vec.t() * 1_mm);
+}
+
+std::vector<const HepMC3::GenVertex*> HepMC3Util::findHardScatterVertices(
+    const HepMC3::GenEvent& event) {
+  std::vector<const HepMC3::GenVertex*> vertices;
+
+  constexpr double primaryVertexSpatialThreshold = 1 * Acts::UnitConstants::nm;
+
+  for (const auto& vertex : event.vertices()) {
+    // Convention is that idx=0 is hard-scatter
+    if (HepMC3Util::eventGeneratorIndex(*vertex) == 0) {
+      if (vertex->particles_in().empty() ||
+          std::ranges::all_of(vertex->particles_in(), [](const auto& particle) {
+            return particle->status() == HepMC3Util::kBeamParticleStatus;
+          })) {
+        auto it = std::ranges::find_if(vertices, [&](const auto& v) {
+          return (HepMC3Util::convertPosition(v->position()) -
+                  HepMC3Util::convertPosition(vertex->position()))
+                     .template head<3>()
+                     .cwiseAbs()
+                     .maxCoeff() < primaryVertexSpatialThreshold;
+        });
+
+        if (it == vertices.end()) {
+          vertices.push_back(vertex.get());
+        }
+      }
+    }
+  }
+
+  return vertices;
 }
 
 }  // namespace ActsExamples

@@ -114,7 +114,18 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
         genEvent->shift_position_to(vtxPosHepMC);
         genEvent->add_attribute("acts",
                                 std::make_shared<HepMC3::BoolAttribute>(true));
+        auto attr = std::make_shared<HepMC3::IntAttribute>(iGenerate);
+        std::string attrName =
+            std::string(HepMC3Util::kEventGeneratorIndexAttribute);
+        genEvent->add_attribute(attrName, attr);
 
+        for (auto& vertex : genEvent->vertices()) {
+          vertex->add_attribute(attrName, attr);
+        }
+
+        for (auto& particle : genEvent->particles()) {
+          particle->add_attribute(attrName, attr);
+        }
         if (m_cfg.printListing) {
           ACTS_VERBOSE("Generated event:\n"
                        << [&]() {
