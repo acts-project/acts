@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <memory>
 
@@ -32,7 +32,7 @@ namespace ActsPlugins {
 ///
 /// Detector element representative for Geant4 sensitive
 /// elements.
-class Geant4DetectorElement : public Acts::DetectorElementBase {
+class Geant4DetectorElement : public Acts::SurfacePlacementBase {
  public:
   /// Broadcast the context type
   using ContextType = Acts::GeometryContext;
@@ -63,7 +63,7 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
 
   /// Return the thickness of this detector element
   /// @return The thickness value in length units
-  double thickness() const override;
+  virtual double thickness() const;
 
   /// @return to the Geant4 physical volume
   const G4VPhysicalVolume& g4PhysicalVolume() const;

@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Construct a non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
-      [](DetectorElementBase* /*element*/, const GeometryContext& /*gctx*/,
+      [](SurfacePlacementBase* /*element*/, const GeometryContext& /*gctx*/,
          const Transform3& /*transform*/) { return true; };
 
   // Construct the alignment options

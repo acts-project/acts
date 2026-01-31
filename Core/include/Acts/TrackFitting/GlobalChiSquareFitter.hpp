@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -852,11 +853,12 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          detail::PointwiseMaterialInteraction interaction(state, stepper,
-                                                           navigator);
-          // We need to evaluate the material to create the correct slab
-          const bool slabIsValid =
-              interaction.evaluateMaterialSlab(MaterialUpdateMode::FullUpdate);
+          const MaterialSlab slab = Acts::detail::evaluateMaterialSlab(
+              state, stepper, *surface,
+              Acts::detail::determineMaterialUpdateMode(
+                  state, navigator, MaterialUpdateMode::FullUpdate));
+          const bool slabIsValid = !slab.isVacuum();
+
           double invSigma2 = 0.;
           if (slabIsValid) {
             const auto& particle =
@@ -864,7 +866,7 @@ class Gx2Fitter {
 
             const double sigma =
                 static_cast<double>(Acts::computeMultipleScatteringTheta0(
-                    interaction.slab, particle.absolutePdg(), particle.mass(),
+                    slab, particle.absolutePdg(), particle.mass(),
                     static_cast<float>(
                         parametersWithHypothesis->parameters()[eBoundQOverP]),
                     particle.absoluteCharge()));
