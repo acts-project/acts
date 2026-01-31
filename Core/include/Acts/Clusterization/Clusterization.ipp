@@ -246,7 +246,7 @@ void labelClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
   }  // loop on cells
 
   // Second pass: Merge labels based on recorded equivalences
-  int maxNClusters = 0;
+  std::size_t maxNClusters = 0;
   for (Label& lbl : data.labels) {
     lbl = data.ds.findSet(lbl);
     maxNClusters = std::max(maxNClusters, lbl);
