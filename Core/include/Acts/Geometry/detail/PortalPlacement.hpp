@@ -40,10 +40,10 @@ class PortalPlacement : public SurfacePlacementBase {
   Surface& surface() final;
 
   /// @brief Returns the pointer to the hold surface
-  std::shared_ptr<RegularSurface> getSharedPtr();
+  std::shared_ptr<RegularSurface> surfacePtr();
 
   /// @brief Returns the pointer to the hold surface
-  std::shared_ptr<const RegularSurface> getSharedPtr() const;
+  std::shared_ptr<const RegularSurface> surfacePtr() const;
 
   /// @brief Declares the surface object to be non-sensitive
   bool isSensitive() const final;
@@ -63,16 +63,21 @@ class PortalPlacement : public SurfacePlacementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   Transform3 assembleFullTransform(const GeometryContext& gctx) const;
 
+  /// @brief Delete the copy constructor
+  PortalPlacement(const PortalPlacement& other) = delete;
+
+  /// @brief Delete the copy assignment operator
+  PortalPlacement& operator=(const PortalPlacement& other) = delete;
+
  protected:
   /// @brief Constructor to instantiate a PortalPlacement
   /// @param portalIdx:
   /// @param portalTrf:
   /// @param parent:
   /// @param surface:
-
   PortalPlacement(const std::size_t portalIdx, const Transform3& portalTrf,
                   VolumePlacementBase* parent,
-                  std::shared_ptr<RegularSurface>&& surface);
+                  std::shared_ptr<RegularSurface> surface);
 
  private:
   Transform3 m_interalTrf{Transform3::Identity()};
