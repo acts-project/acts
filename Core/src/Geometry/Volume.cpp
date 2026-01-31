@@ -95,6 +95,18 @@ Volume::BoundingBox Volume::orientedBoundingBox() const {
 }
 
 void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
+  assert(volbounds != nullptr);
+  // If the volume is instantiated with a placement, the bounds can be updated
+  // as long as the portals have not been made. Or the bounds are equivalent
+  // with the current bounds
+  if (volumePositioner() != nullptr &&
+      volumePositioner()->nPortalPlacements() &&
+      (*m_volumeBounds) != (*volbounds)) {
+    throw std::runtime_error(
+        "assignVolumeBounds() - Bounds cannot be overwritten if the associated "
+        "VolumePlacement has instantiated boundary surfaces");
+  }
+
   m_volumeBounds = std::move(volbounds);
 }
 

@@ -194,7 +194,9 @@ class Volume : public GeometryObject {
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
                  const ViewConfig& viewConfig) const;
 
+  /// @brief Returns the pointer to the associated volume placement (Might be empty)
   VolumePlacementBase* volumePositioner();
+  /// @brief Returns the pointer to the associated volume placement (Might be empty)
   const VolumePlacementBase* volumePositioner() const;
 
  private:
