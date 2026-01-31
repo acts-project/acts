@@ -8,19 +8,18 @@
 
 #pragma once
 
+#include "ActsPlugins/Hashing/AnnoyForwardDeclarations.hpp"
+
 #include <cstdint>
 
 namespace ActsPlugins {
 /// @addtogroup hashing_plugin
 /// @{
 
-struct HashingTrainingConfig {
-  /// Random seed for Annoy
-  std::uint32_t annoySeed = 123456789;
-
-  /// Number of features to use
-  std::int32_t f = 1;
-};
+using AnnoyMetric = Annoy::AngularEuclidean;
+using AnnoyModel =
+    Annoy::AnnoyIndex<std::uint32_t, float, AnnoyMetric, Annoy::Kiss32Random,
+                      Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
 /// @}
 }  // namespace ActsPlugins

@@ -6,13 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsPlugins/Hashing/HashingAlgorithmConfig.hpp"
-#include "ActsPlugins/Hashing/HashingTrainingConfig.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingTraining.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-
-#include <memory>
-#include <string>
 
 #include <pybind11/pybind11.h>
 
@@ -24,7 +21,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsHashing, hashing) {
   using namespace ActsPython;
 
   {
-    using Config = HashingAlgorithmConfig;
+    using Config = HashingAlgorithm::Config;
     auto c =
         py::class_<Config>(hashing, "HashingAlgorithmConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, bucketSize, zBins, phiBins);
@@ -32,7 +29,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsHashing, hashing) {
   }
 
   {
-    using Config = HashingTrainingConfig;
+    using Config = HashingTraining::Config;
     auto c =
         py::class_<Config>(hashing, "HashingTrainingConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, annoySeed, f);
