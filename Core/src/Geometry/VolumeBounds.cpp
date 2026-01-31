@@ -8,12 +8,13 @@
 
 #include "Acts/Geometry/VolumeBounds.hpp"
 
-std::ostream& Acts::operator<<(std::ostream& sl, const VolumeBounds& vb) {
+#include <cassert>
+namespace Acts {
+std::ostream& operator<<(std::ostream& sl, const VolumeBounds& vb) {
   return vb.toStream(sl);
 }
 
-std::ostream& Acts::operator<<(std::ostream& sl,
-                               const VolumeBounds::BoundsType& bt) {
+std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt) {
   switch (bt) {
     using enum VolumeBounds::BoundsType;
     case eCone:
@@ -43,3 +44,13 @@ std::ostream& Acts::operator<<(std::ostream& sl,
   }
   return sl;
 }
+
+std::vector<OrientedSurface> VolumeBounds::boundarySurfaces(
+    Volume& parentVolume) const {
+  if (!parentVolume.isAlignable()) {
+    return orientedSurfaces(*parentVolume.m_transform);
+  }
+  return parentVolume.volumePlacement()->makePortalsAlignable(
+      orientedSurfaces(Acts::Transform3::Identity()));
+}
+}  // namespace Acts

@@ -34,10 +34,8 @@ SingleTrapezoidPortalShell::SingleTrapezoidPortalShell(TrackingVolume& volume)
   const auto& bounds =
       dynamic_cast<const TrapezoidVolumeBounds&>(m_volume->volumeBounds());
 
-  ACTS_PUSH_IGNORE_DEPRECATED()
   std::vector<OrientedSurface> orientedSurfaces =
-      bounds.orientedSurfaces(m_volume->transform());
-  ACTS_POP_IGNORE_DEPRECATED()
+      bounds.boundarySurfaces(*m_volume);
 
   for (Face face : {NegativeZFaceXY, PositiveZFaceXY, TrapezoidFaceAlpha,
                     TrapezoidFaceBeta, NegativeYFaceZX, PositiveYFaceZX}) {
