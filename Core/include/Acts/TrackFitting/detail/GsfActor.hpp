@@ -19,7 +19,6 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
-#include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -555,52 +554,101 @@ struct GsfActor {
                             const SourceLink& sourceLink) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
-    // Boolean flag, to distinguish measurement and outlier states. This flag
-    // is only modified by the valid-measurement-branch, so only if there
-    // isn't any valid measurement state, the flag stays false and the state
-    // is thus counted as an outlier
-    bool is_valid_measurement = false;
+    // Keep track of all created components for outlier handling
+    std::vector<TrackIndexType> allTips;
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      auto trackStateProxyRes = detail::kalmanHandleMeasurement(
-          *m_cfg.calibrationContext, singleState, singleStepper,
-          m_cfg.extensions, surface, sourceLink, tmpStates.traj,
-          kTrackIndexInvalid, false, logger());
+      // Add a <mask> TrackState entry multi trajectory. This allocates storage
+      // for all components, which we will set later.
+      TrackStatePropMask mask =
+          TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+          TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+      typename traj_t::TrackStateProxy trackStateProxy =
+          tmpStates.traj.makeTrackState(mask, kTrackIndexInvalid);
 
-      if (!trackStateProxyRes.ok()) {
-        return trackStateProxyRes.error();
+      typename traj_t::ConstTrackStateProxy trackStateProxyConst{
+          trackStateProxy};
+
+      // Set the trackStateProxy components with the state from the ongoing
+      // propagation
+      {
+        trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+        // Bind the transported state to the current surface
+        auto res =
+            singleStepper.boundState(singleState.stepping, surface, false);
+        if (!res.ok()) {
+          ACTS_DEBUG("Propagate to surface " << surface.geometryId()
+                                             << " failed: " << res.error());
+          return res.error();
+        }
+        const auto& [boundParams, jacobian, pathLength] = *res;
+
+        // Fill the track state
+        trackStateProxy.predicted() = boundParams.parameters();
+        trackStateProxy.predictedCovariance() = singleState.stepping.cov;
+
+        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.pathLength() = pathLength;
       }
 
-      const auto& trackStateProxy = *trackStateProxyRes;
+      // We have predicted parameters, so calibrate the uncalibrated input
+      // measurement
+      m_cfg.extensions.calibrator(state.geoContext, *m_cfg.calibrationContext,
+                                  sourceLink, trackStateProxy);
 
-      // If at least one component is no outlier, we consider the whole thing
-      // as a measurementState
-      if (trackStateProxy.typeFlags().isMeasurement()) {
-        is_valid_measurement = true;
+      if (!m_cfg.extensions.outlierFinder(trackStateProxyConst)) {
+        // Run Kalman update
+        auto updateRes = m_cfg.extensions.updater(state.geoContext,
+                                                  trackStateProxy, logger());
+        if (!updateRes.ok()) {
+          ACTS_DEBUG("Update step failed: " << updateRes.error());
+          return updateRes.error();
+        }
+
+        tmpStates.tips.push_back(trackStateProxy.index());
+        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
       }
 
-      tmpStates.tips.push_back(trackStateProxy.index());
-      tmpStates.weights[tmpStates.tips.back()] = cmp.weight();
+      allTips.push_back(trackStateProxy.index());
     }
 
-    computePosteriorWeights(tmpStates.traj, tmpStates.tips, tmpStates.weights);
+    const bool isOutlier = tmpStates.tips.empty();
 
-    detail::normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
-      return tmpStates.weights.at(idx);
-    });
+    if (!isOutlier) {
+      computePosteriorWeights(tmpStates.traj, tmpStates.tips,
+                              tmpStates.weights);
+      detail::normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
+        return tmpStates.weights.at(idx);
+      });
+    } else {
+      auto cmps = stepper.componentIterable(state.stepping);
+      for (const auto [cmp, idx] : zip(cmps, allTips)) {
+        typename traj_t::TrackStateProxy trackStateProxy =
+            tmpStates.traj.getTrackState(idx);
+
+        // Set the filtered parameter index to be the same with predicted
+        // parameter
+        trackStateProxy.shareFrom(trackStateProxy,
+                                  TrackStatePropMask::Predicted,
+                                  TrackStatePropMask::Filtered);
+
+        tmpStates.tips.push_back(trackStateProxy.index());
+        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
+      }
+    }
 
     // Do the statistics
     ++result.processedStates;
-
-    // TODO should outlier states also be counted here?
-    if (is_valid_measurement) {
+    if (!isOutlier) {
       ++result.measurementStates;
     }
 
-    updateMultiTrajectory(result, tmpStates, surface);
+    updateMultiTrajectory(
+        result, tmpStates, surface,
+        isOutlier ? TrackStateType::eOutlier : TrackStateType::eMeasurement);
 
     result.lastMeasurementTip = result.currentTip;
     result.lastMeasurementSurface = &surface;
@@ -630,47 +678,61 @@ struct GsfActor {
                                    result_type& result,
                                    TemporaryStates& tmpStates,
                                    bool doCovTransport) const {
-    const auto& surface = *navigator.currentSurface(state.navigation);
-
-    const bool precedingMeasurementExists = result.processedStates > 0;
-
-    // Initialize as true, so that any component can flip it. However, all
-    // components should behave the same
-    bool isHole = true;
+    const Surface& surface = *navigator.currentSurface(state.navigation);
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto& singleState = cmp.state();
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      // There is some redundant checking inside this function, but do this for
-      // now until we measure this is significant
-      auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
-          singleState, singleStepper, surface, tmpStates.traj,
-          kTrackIndexInvalid, doCovTransport, logger(),
-          precedingMeasurementExists);
+      // Add a <mask> TrackState entry multi trajectory. This allocates storage
+      // for all components, which we will set later.
+      TrackStatePropMask mask =
+          TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
+      typename traj_t::TrackStateProxy trackStateProxy =
+          tmpStates.traj.makeTrackState(mask, kTrackIndexInvalid);
 
-      if (!trackStateProxyRes.ok()) {
-        return trackStateProxyRes.error();
-      }
+      // Set the trackStateProxy components with the state from the ongoing
+      // propagation
+      {
+        trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+        // Bind the transported state to the current surface
+        auto res =
+            singleStepper.boundState(singleState, surface, doCovTransport);
+        if (!res.ok()) {
+          return res.error();
+        }
+        const auto& [boundParams, jacobian, pathLength] = *res;
 
-      const auto& trackStateProxy = *trackStateProxyRes;
+        // Fill the track state
+        trackStateProxy.predicted() = boundParams.parameters();
+        trackStateProxy.predictedCovariance() = singleState.cov;
 
-      if (!trackStateProxy.typeFlags().isHole()) {
-        isHole = false;
+        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.pathLength() = pathLength;
+
+        // Set the filtered parameter index to be the same with predicted
+        // parameter
+        trackStateProxy.shareFrom(trackStateProxy,
+                                  TrackStatePropMask::Predicted,
+                                  TrackStatePropMask::Filtered);
       }
 
       tmpStates.tips.push_back(trackStateProxy.index());
-      tmpStates.weights[tmpStates.tips.back()] = cmp.weight();
+      tmpStates.weights[trackStateProxy.index()] = cmp.weight();
     }
 
-    // These things should only be done once for all components
-    if (isHole) {
+    const bool precedingMeasurementExists = result.processedStates > 0;
+    const bool isHole = surface.isSensitive();
+
+    // Do the statistics
+    ++result.processedStates;
+    if (precedingMeasurementExists && isHole) {
       ++result.measurementHoles;
     }
 
-    ++result.processedStates;
-
-    updateMultiTrajectory(result, tmpStates, surface);
+    updateMultiTrajectory(
+        result, tmpStates, surface,
+        isHole ? TrackStateType::eHole : TrackStateType::eNone);
 
     return Result<void>::success();
   }
@@ -695,30 +757,41 @@ struct GsfActor {
     }
   }
 
+  enum class TrackStateType { eMeasurement, eOutlier, eHole, eNone };
+
   void updateMultiTrajectory(result_type& result,
                              const TemporaryStates& tmpStates,
-                             const Surface& surface) const {
+                             const Surface& surface,
+                             TrackStateType type) const {
     using PrtProjector =
         MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
     using FltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
+    const bool isMeasurement = type == TrackStateType::eMeasurement;
+    const bool isOutlier = type == TrackStateType::eOutlier;
+    const bool isHole = type == TrackStateType::eHole;
+
     if (!m_cfg.inReversePass) {
+      const bool hasMaterial = surface.surfaceMaterial() != nullptr;
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
-      const auto isMeasurement = firstCmpProxy.typeFlags().isMeasurement();
 
-      const auto mask =
-          isMeasurement
-              ? TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted |
-                    TrackStatePropMask::Filtered | TrackStatePropMask::Smoothed
-              : TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted;
+      auto mask = TrackStatePropMask::Predicted | TrackStatePropMask::Smoothed;
+      if (isMeasurement) {
+        mask |= TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered;
+      } else if (isOutlier) {
+        mask |= TrackStatePropMask::Calibrated;
+      }
 
       auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
       result.currentTip = proxy.index();
 
       proxy.setReferenceSurface(surface.getSharedPtr());
-      proxy.copyFrom(firstCmpProxy, mask);
+      if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
+        // copy source link, calibrated measurement, and subspace
+        proxy.copyFrom(firstCmpProxy, TrackStatePropMask::Calibrated);
+      }
 
       auto [prtMean, prtCov] =
           mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
@@ -726,18 +799,27 @@ struct GsfActor {
       proxy.predicted() = prtMean;
       proxy.predictedCovariance() = prtCov;
 
+      proxy.typeFlags().setHasParameters();
+      proxy.typeFlags().setHasMaterial(hasMaterial);
+
       if (isMeasurement) {
         auto [fltMean, fltCov] = mergeGaussianMixture(
             tmpStates.tips, surface, m_cfg.mergeMethod,
             FltProjector{tmpStates.traj, tmpStates.weights});
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
-        proxy.smoothed() = BoundVector::Constant(-2);
-        proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
+
+        proxy.typeFlags().setIsMeasurement();
       } else {
         proxy.shareFrom(TrackStatePropMask::Predicted,
                         TrackStatePropMask::Filtered);
       }
+
+      proxy.typeFlags().setIsOutlier(isOutlier);
+      proxy.typeFlags().setIsHole(isHole);
+
+      proxy.smoothed() = BoundVector::Constant(-2);
+      proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
 
     } else {
       assert((result.currentTip != kTrackIndexInvalid && "tip not valid"));
