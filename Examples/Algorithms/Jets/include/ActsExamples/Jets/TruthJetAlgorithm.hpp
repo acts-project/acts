@@ -25,8 +25,7 @@ class PseudoJet;
 namespace ActsExamples {
 struct AlgorithmContext;
 
-using TruthJetContainer =
-    std::vector<ActsPlugins::FastJet::TruthJet<TrackContainer>>;
+using TruthJetContainer = std::vector<ActsPlugins::FastJet::TruthJet>;
 
 class TruthJetAlgorithm final : public IAlgorithm {
  public:

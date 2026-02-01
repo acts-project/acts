@@ -411,8 +411,9 @@ class CombinatorialKalmanFilter {
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
-      materialInteractor(navigator.currentSurface(state.navigation), state,
-                         stepper, navigator, MaterialUpdateStage::PostUpdate);
+      detail::performMaterialInteraction(
+          state, stepper, navigator, MaterialUpdateMode::PostUpdate,
+          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
 
       // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
@@ -470,8 +471,9 @@ class CombinatorialKalmanFilter {
       }
 
       // Update state and stepper with pre material effects
-      materialInteractor(surface, state, stepper, navigator,
-                         MaterialUpdateStage::PreUpdate);
+      detail::performMaterialInteraction(
+          state, stepper, navigator, MaterialUpdateMode::PreUpdate,
+          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
 
       // Bind the transported state to the current surface
       auto boundStateRes = stepper.boundState(state.stepping, *surface, false);
@@ -598,8 +600,9 @@ class CombinatorialKalmanFilter {
       }
 
       // Update state and stepper with post material effects
-      materialInteractor(surface, state, stepper, navigator,
-                         MaterialUpdateStage::PostUpdate);
+      detail::performMaterialInteraction(
+          state, stepper, navigator, MaterialUpdateMode::PostUpdate,
+          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
 
       return Result<void>::success();
     }
@@ -754,67 +757,6 @@ class CombinatorialKalmanFilter {
       trackStateProxy.shareFrom(PM::Predicted, PM::Filtered);
 
       return trackStateProxy.index();
-    }
-
-    /// @brief CombinatorialKalmanFilter actor operation: material interaction
-    ///
-    /// @tparam propagator_state_t is the type of Propagator state
-    /// @tparam stepper_t Type of the stepper
-    /// @tparam navigator_t Type of the navigator
-    ///
-    /// @param surface The surface where the material interaction happens
-    /// @param state The mutable propagator state object
-    /// @param stepper The stepper in use
-    /// @param navigator The navigator in use
-    /// @param updateStage The material update stage
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
-    void materialInteractor(const Surface* surface, propagator_state_t& state,
-                            const stepper_t& stepper,
-                            const navigator_t& navigator,
-                            const MaterialUpdateStage& updateStage) const {
-      if (surface == nullptr) {
-        return;
-      }
-
-      // Indicator if having material
-      bool hasMaterial = false;
-
-      if (surface->surfaceMaterial() != nullptr) {
-        // Prepare relevant input particle properties
-        detail::PointwiseMaterialInteraction interaction(surface, state,
-                                                         stepper);
-        // Evaluate the material properties
-        if (interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
-          // Surface has material at this stage
-          hasMaterial = true;
-
-          // Evaluate the material effects
-          interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
-                                                           energyLoss);
-
-          // Screen out material effects info
-          ACTS_VERBOSE("Material effects on surface: "
-                       << surface->geometryId()
-                       << " at update stage: " << updateStage << " are :");
-          ACTS_VERBOSE("eLoss = "
-                       << interaction.Eloss * interaction.navDir << ", "
-                       << "variancePhi = " << interaction.variancePhi << ", "
-                       << "varianceTheta = " << interaction.varianceTheta
-                       << ", "
-                       << "varianceQoverP = " << interaction.varianceQoverP);
-
-          // Update the state and stepper with material effects
-          interaction.updateState(state, stepper, addNoise);
-        }
-      }
-
-      if (!hasMaterial) {
-        // Screen out message
-        ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
-                                                        << " at update stage: "
-                                                        << updateStage);
-      }
     }
 
     void storeLastActiveBranch(result_type& result) const {
