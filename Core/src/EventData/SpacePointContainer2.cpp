@@ -102,6 +102,20 @@ void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
 
   m_knownColumns = other.m_knownColumns;
   knownColumns() = std::move(other).knownColumns();
+
+  const auto updateKnownColumnPointer =
+      [&]<typename T>(std::string_view name,
+                      std::optional<ColumnHolder<T>> &column) {
+        if (column.has_value()) {
+          m_namedColumns.at(std::string(name)).first = &column.value();
+        }
+      };
+
+  [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+    ((updateKnownColumnPointer(std::get<Is>(knownColumnNames()),
+                               std::get<Is>(knownColumns()))),
+     ...);
+  }(tuple_indices<decltype(knownColumns())>{});
 }
 
 void SpacePointContainer2::reserve(std::uint32_t size,

@@ -232,7 +232,7 @@ class SympyStepper {
   /// @param stype [in] The step size type to be set
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
+    static_cast<void>(direction);
     double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }

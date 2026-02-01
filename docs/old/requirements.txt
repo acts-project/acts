@@ -72,13 +72,13 @@ multidict==6.7.0
     #   yarl
 myst-parser==4.0.1
     # via -r docs/old/requirements.in
-packaging==25.0
+packaging==26.0
     # via sphinx
 propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-pycparser==2.23
+pycparser==3.0
     # via cffi
 pydantic==2.12.5
     # via -r docs/old/requirements.in
@@ -98,7 +98,7 @@ pyyaml==6.0.3
     # via myst-parser
 requests==2.32.5
     # via sphinx
-rich==14.2.0
+rich==14.3.1
     # via
     #   -r docs/old/requirements.in
     #   typer
@@ -113,7 +113,7 @@ sphinx==7.3.7
     #   myst-parser
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
-sphinx-rtd-theme==3.0.2
+sphinx-rtd-theme==3.1.0
     # via -r docs/old/requirements.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx

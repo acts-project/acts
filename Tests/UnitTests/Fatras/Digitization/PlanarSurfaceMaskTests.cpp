@@ -145,7 +145,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(0., 1.))) ^
         bdata::xrange(ntests),
     startR0, startR1, endR0, endR1, index) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   PlanarSurfaceMask psm;
 

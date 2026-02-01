@@ -171,7 +171,7 @@ Transform3 MuonSpacePointDigitizer::toSpacePointFrame(
   assert(volume != nullptr);
   /// Transformation to the common coordinate system of all space points
   const Transform3 parentTrf{AngleAxis3{90._degree, Vector3::UnitZ()} *
-                             volume->itransform() *
+                             volume->globalToLocalTransform(gctx) *
                              hitSurf->localToGlobalTransform(gctx)};
   ACTS_VERBOSE("Transform into space point frame for surface "
                << hitId << " is \n"
@@ -187,7 +187,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   MuonSpacePointContainer outSpacePoints{};
 
-  GeometryContext gctx{};
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   // Prepare output containers
   // need list here for stable addresses
@@ -486,7 +486,7 @@ bool MuonSpacePointDigitizer::isSurfaceToDraw(
     const Acts::GeometryContext& gctx, const Surface& surface,
     const RangeXD<2, double>& canvasBoundaries) const {
   // Draw only active surfaces
-  if (surface.associatedDetectorElement() == nullptr) {
+  if (!surface.isSensitive()) {
     return false;
   }
   // surface position in the frame

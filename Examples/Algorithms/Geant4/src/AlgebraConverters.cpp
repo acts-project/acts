@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 
 #include "CLHEP/Units/SystemOfUnits.h"
+
 namespace {
 constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;

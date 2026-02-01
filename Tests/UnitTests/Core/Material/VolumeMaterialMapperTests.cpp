@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   cfg.length = Vector3(3_m, 1_m, 1_m);
   cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
 
-  GeometryContext gc;
+  auto gc = GeometryContext::dangerouslyDefaultConstruct();
 
   // Build a detector
   CuboidVolumeBuilder cvb(cfg);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
       getDefaultLogger("VolumeMaterialMapper", Logging::VERBOSE));
 
   /// Create some contexts
-  GeometryContext gCtx;
+  auto gCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mfCtx;
 
   /// Now create the mapper state
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   cfg.length = Vector3(3_m, 1_m, 1_m);
   cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
 
-  GeometryContext gc;
+  auto gc = GeometryContext::dangerouslyDefaultConstruct();
 
   // Build a detector
   CuboidVolumeBuilder cvb(cfg);
