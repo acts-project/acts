@@ -216,7 +216,6 @@ class TrackingVolume : public Volume {
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
-
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, const SurfaceVisitType type) const {
     // Define a selection lambda to check whether the surface is
@@ -237,6 +236,7 @@ class TrackingVolume : public Volume {
       }
       return true;
     };
+
     // Combine the user's visitor with the selection
     auto visitorWithSel = [&processSurface, &visitor](const Surface& surface) {
       if (!processSurface(surface)) {
@@ -244,6 +244,7 @@ class TrackingVolume : public Volume {
       }
       visitor(&surface);
     };
+
     apply(overloaded{visitorWithSel,
                      [&visitorWithSel](const Portal& portal) {
                        visitorWithSel(portal.surface());
@@ -265,9 +266,23 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    visitSurfaces(std::forward<visitor_t>(visitor),
-                  restrictToSensitives ? SurfaceVisitType::sensitive
-                                       : SurfaceVisitType::all);
+    auto sensitive = [&visitor](const Surface& surface) {
+      if (surface.geometryId().sensitive() == 0) {
+        return;
+      }
+      visitor(&surface);
+    };
+
+    if (restrictToSensitives) {
+      apply(sensitive);
+    } else {
+      apply(overloaded{
+          sensitive,
+          [&visitor](const Portal& portal) { visitor(&portal.surface()); },
+          [&visitor](const BoundarySurface& bs) {
+            visitor(&bs.surfaceRepresentation());
+          }});
+    }
   }
 
   /// @brief Visit all sensitive surfaces
@@ -281,8 +296,7 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
-    visitSurfaces(std::forward<visitor_t>(visitor),
-                  SurfaceVisitType::sensitive);
+    visitSurfaces(std::forward<visitor_t>(visitor), true);
   }
 
   /// @brief Visit all reachable tracking volumes
