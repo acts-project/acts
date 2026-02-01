@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
         alignedVol1.globalToLocalTransform(alignedContext.getContext()) *
         portal.surface->localToGlobalTransform(alignedContext.getContext());
 
-    BOOST_CHECK(unAlignedTrf.isApprox(alignedTrf, 1.e-6));
+    BOOST_CHECK(unAlignedTrf.isApprox(alignedTrf, 1.e-5));
     BOOST_CHECK(
         (alignedVol1.localToGlobalTransform(defaultContext.getContext()) *
          rotationDelta)

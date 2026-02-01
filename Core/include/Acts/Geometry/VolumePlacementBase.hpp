@@ -85,14 +85,20 @@ class VolumePlacementBase {
   /// @brief Default constructor
   VolumePlacementBase() noexcept;
 
+  /// @brief Virtual default destructor
+  virtual ~VolumePlacementBase();
+
   /// @brief Move constructor
   VolumePlacementBase(VolumePlacementBase&& other) noexcept;
 
   /// @brief Move assignment operator
   VolumePlacementBase& operator=(VolumePlacementBase&& other) noexcept;
 
-  /// @brief Default destructor
-  virtual ~VolumePlacementBase() = default;
+  /// @brief Delete copy constructor
+  VolumePlacementBase(const VolumePlacementBase& other) = delete;
+
+  /// @brief Delete copy assignment operator
+  VolumePlacementBase& operator=(const VolumePlacementBase& other) = delete;
 
   /// @brief Abrivation of the portal surface vector
   using PortalVec_t = std::vector<OrientedSurface>;
@@ -101,7 +107,7 @@ class VolumePlacementBase {
   ///        VolumeBounds and makes them to float with the alignment provided
   ///        by the volume. It then the vector of updated oriented surfaces
   /// @param portalsToAlign: List of portals to align
-  PortalVec_t makePortalsAlignable(PortalVec_t&& portalsToAlign);
+  PortalVec_t makePortalsAlignable(PortalVec_t portalsToAlign);
 
   /// @brief Returns the number of portal placement objects
   std::size_t nPortalPlacements() const;

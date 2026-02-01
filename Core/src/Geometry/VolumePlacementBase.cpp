@@ -17,6 +17,8 @@ namespace Acts {
 
 VolumePlacementBase::VolumePlacementBase() noexcept = default;
 
+VolumePlacementBase::~VolumePlacementBase() = default;
+
 VolumePlacementBase::VolumePlacementBase(VolumePlacementBase&& other) noexcept
     : VolumePlacementBase{} {
   (*this) = std::move(other);
@@ -26,7 +28,7 @@ VolumePlacementBase& VolumePlacementBase::operator=(
     VolumePlacementBase&& other) noexcept {
   if (&other != this) {
     m_portalPlacements = std::move(other.m_portalPlacements);
-    for (auto& portal : m_portalPlacements) {
+    for (const auto& portal : m_portalPlacements) {
       portal->m_parent = this;
     }
   }
@@ -34,7 +36,7 @@ VolumePlacementBase& VolumePlacementBase::operator=(
 }
 
 VolumePlacementBase::PortalVec_t VolumePlacementBase::makePortalsAlignable(
-    PortalVec_t&& portalsToAlign) {
+    PortalVec_t portalsToAlign) {
   // It's safe to use the default geometry context as all incoming portal
   // surfaces are explicitly requested to have no surface placement and hence
   // the cached transform is returned
@@ -114,9 +116,11 @@ const detail::PortalPlacement* VolumePlacementBase::portalPlacement(
 std::size_t VolumePlacementBase::nPortalPlacements() const {
   return m_portalPlacements.size();
 }
+
 Transform3 VolumePlacementBase::alignPortal(const GeometryContext& gctx,
                                             const std::size_t portalIdx) const {
   assert(portalIdx < m_portalPlacements.size());
   return m_portalPlacements[portalIdx]->assembleFullTransform(gctx);
 }
+
 }  // namespace Acts
