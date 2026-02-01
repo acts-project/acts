@@ -127,6 +127,17 @@ class TrackingVolume : public Volume {
                  std::shared_ptr<VolumeBounds> volbounds,
                  const std::string& volumeName = "undefined");
 
+  /// Constructor for a alignable container Volume
+  /// - vacuum filled volume either as a for other tracking volumes
+  ///
+  /// @param placement is the VolumePlacement positioning the volume in the experiment's frame
+  ///                  and also dynamically aligning it
+  /// @param volbounds is the description of the volume boundaries
+  /// @param volumeName is a string identifier
+  TrackingVolume(VolumePlacementBase& placement,
+                 std::shared_ptr<VolumeBounds> volbounds,
+                 const std::string& volumeName = "undefined");
+
   /// Constructor for a full equipped Tracking Volume
   ///
   /// @param transform is the global 3D transform to position the volume in
@@ -138,8 +149,28 @@ class TrackingVolume : public Volume {
   /// container
   /// @param denseVolumeVector  The contained dense volumes
   /// @param volumeName is a string identifier
-  TrackingVolume(
+  explicit TrackingVolume(
       const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+      std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
+      std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,
+      MutableTrackingVolumeVector denseVolumeVector = {},
+      const std::string& volumeName = "undefined");
+
+  /// Constructor for a full equipped alignable Tracking Volume
+  ///
+  /// @param placement is the VolumePlacement positioning the volume in the experiment's frame
+  ///                  and also dynamically aligning it
+  /// @param volumeBounds is the description of the volume boundaries
+  /// @param volumeMaterial is are materials of the tracking volume
+  /// @param staticLayerArray is the confined layer array (optional)
+  /// @param containedVolumeArray are the sub volumes if the volume is a
+  /// container
+  /// @param denseVolumeVector  The contained dense volumes
+  /// @param volumeName is a string identifier
+  explicit TrackingVolume(
+      VolumePlacementBase& placement,
+      std::shared_ptr<VolumeBounds> volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,
@@ -162,6 +193,66 @@ class TrackingVolume : public Volume {
                                              const Vector3& position,
                                              const double tol = 0.) const;
 
+  /// @brief Enumeration to constrain the categories of surfaces to be
+  ///        visited by the surface visitor
+  enum class SurfaceVisitType : std::uint8_t {
+    all = 0,  /// Visit all surfaces that are contained by the tracking volume
+    alignable = 1,  /// Visit all surfaces that can be aligned
+    sensitive = 2,  /// Visit all surfaces where measurements are expected
+    sensitiveAlignable = 3,  /// Visit all surfaces that correspond to
+                             /// algnable detector planes
+    passiveAlignable = 4     /// Visit all surfaces that correspond to alignable
+                             /// portals
+  };
+
+  /// @brief Visit all reachable surfaces
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each reachable surface
+  /// that is found, a selection of the surfaces can be done in the visitor
+  /// @param type: The category of surfaces that shall be processed by the
+  ///              visitor.
+  ///
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
+
+  template <SurfaceVisitor visitor_t>
+  void visitSurfaces(visitor_t&& visitor, const SurfaceVisitType type) const {
+    // Define a selection lambda to check whether the surface is
+    // can be visited or not
+    const auto processSurface = [type](const Surface& surface) {
+      switch (type) {
+        using enum SurfaceVisitType;
+        case all:
+          return true;
+        case alignable:
+          return surface.isAlignable();
+        case sensitive:
+          return surface.isSensitive();
+        case sensitiveAlignable:
+          return surface.isSensitive() && surface.isAlignable();
+        case passiveAlignable:
+          return !surface.isSensitive() && surface.isAlignable();
+      }
+      return true;
+    };
+    // Combine the user's visitor with the selection
+    auto visitorWithSel = [&processSurface, &visitor](const Surface& surface) {
+      if (!processSurface(surface)) {
+        return;
+      }
+      visitor(&surface);
+    };
+    apply(overloaded{visitorWithSel,
+                     [&visitorWithSel](const Portal& portal) {
+                       visitorWithSel(portal.surface());
+                     },
+                     [&visitorWithSel](const BoundarySurface& bs) {
+                       visitorWithSel(bs.surfaceRepresentation());
+                     }});
+  }
+
   /// @brief Visit all reachable surfaces
   ///
   /// @tparam visitor_t Type of the callable visitor
@@ -174,23 +265,9 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    auto sensitive = [&visitor](const Surface& surface) {
-      if (surface.geometryId().sensitive() == 0) {
-        return;
-      }
-      visitor(&surface);
-    };
-
-    if (restrictToSensitives) {
-      apply(sensitive);
-    } else {
-      apply(overloaded{
-          sensitive,
-          [&visitor](const Portal& portal) { visitor(&portal.surface()); },
-          [&visitor](const BoundarySurface& bs) {
-            visitor(&bs.surfaceRepresentation());
-          }});
-    }
+    visitSurfaces(std::forward<visitor_t>(visitor),
+                  restrictToSensitives ? SurfaceVisitType::sensitive
+                                       : SurfaceVisitType::all);
   }
 
   /// @brief Visit all sensitive surfaces
@@ -204,7 +281,8 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
-    visitSurfaces(std::forward<visitor_t>(visitor), true);
+    visitSurfaces(std::forward<visitor_t>(visitor),
+                  SurfaceVisitType::sensitive);
   }
 
   /// @brief Visit all reachable tracking volumes
