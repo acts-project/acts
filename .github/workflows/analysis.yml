@@ -88,9 +88,7 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          CI/dependencies/run.sh .env pip3 install gcovr==7.2
-          && cd build
-          && ../CI/dependencies/run.sh ../.env /usr/bin/python3 ../CI/test_coverage.py
+          CI/dependencies/run.sh .env uv run ../CI/test_coverage.py build
 
       - uses: actions/upload-artifact@v6
         with:
