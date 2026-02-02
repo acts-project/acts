@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
       {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
-  detail::SymmetricKLDistanceMatrix mat(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps, proj);
 
   const auto [i, j] = mat.minDistancePair();
   BOOST_CHECK_EQUAL(std::min(i, j), 1);
@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
   const std::size_t cmp_to_mask = 2;
 
-  detail::SymmetricKLDistanceMatrix mat_full(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_full(cmps, proj);
   mat_full.maskAssociatedDistances(cmp_to_mask);
 
   cmps.erase(cmps.begin() + cmp_to_mask);
-  detail::SymmetricKLDistanceMatrix mat_small(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_small(cmps, proj);
 
   const auto [full_i, full_j] = mat_full.minDistancePair();
   const auto [small_i, small_j] = mat_small.minDistancePair();
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
       {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
-  detail::SymmetricKLDistanceMatrix mat(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps, proj);
 
   {
     const auto [i, j] = mat.minDistancePair();
