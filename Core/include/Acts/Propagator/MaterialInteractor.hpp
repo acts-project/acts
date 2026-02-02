@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -74,40 +74,51 @@ struct MaterialInteractor {
     const Surface* surface = navigator.currentSurface(state.navigation);
 
     // We only have material interactions if there is potential material
-    if (surface && surface->surfaceMaterial()) {
+    if (surface != nullptr && surface->surfaceMaterial()) {
       ACTS_VERBOSE("MaterialInteractor | " << "Found material on surface "
                                            << surface->geometryId());
 
-      // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(state, stepper,
-                                                       navigator);
+      const MaterialSlab slab = detail::evaluateMaterialSlab(
+          state, stepper, navigator,
+          detail::determineMaterialUpdateMode(state, navigator,
+                                              MaterialUpdateMode::FullUpdate));
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (interaction.evaluateMaterialSlab(MaterialUpdateMode::FullUpdate)) {
-        // Evaluate the material effects
-        interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
-                                                         energyLoss);
+      if (!slab.isVacuum()) {
+        // To integrate process noise, we need to transport
+        // the covariance to the current position in space
+        if (state.stepping.covTransport) {
+          stepper.transportCovarianceToCurvilinear(state.stepping);
+        }
+
+        const double initialMomentum = stepper.absoluteMomentum(state.stepping);
+
+        // Apply the material interactions
+        const detail::PointwiseMaterialEffects effects =
+            detail::performMaterialInteraction(state, stepper, slab,
+                                               noiseUpdateMode,
+                                               multipleScattering, energyLoss);
 
         if (energyLoss) {
           using namespace UnitLiterals;
-          ACTS_VERBOSE("MaterialInteractor | "
-                       << interaction.slab << " absPdg=" << interaction.absPdg
-                       << " mass=" << interaction.mass / 1_MeV << "MeV"
-                       << " momentum=" << interaction.momentum / 1_GeV << "GeV"
-                       << " energyloss=" << interaction.Eloss / 1_MeV << "MeV");
-        }
 
-        // To integrate process noise, we need to transport
-        // the covariance to the current position in space
-        if (interaction.performCovarianceTransport) {
-          stepper.transportCovarianceToCurvilinear(state.stepping);
+          const ParticleHypothesis& particleHypothesis =
+              stepper.particleHypothesis(state.stepping);
+          const PdgParticle absPdg = particleHypothesis.absolutePdg();
+          const double mass = particleHypothesis.mass();
+          const double momentum = stepper.absoluteMomentum(state.stepping);
+
+          ACTS_VERBOSE("MaterialInteractor | "
+                       << slab << " absPdg=" << absPdg
+                       << " mass=" << mass / 1_MeV << "MeV"
+                       << " momentum=" << momentum / 1_GeV << "GeV"
+                       << " energyloss=" << effects.eLoss / 1_MeV << "MeV");
         }
-        // Apply the material interactions
-        interaction.updateState(state, stepper, noiseUpdateMode);
 
         // Record the result
-        recordResult(interaction, result);
+        recordResult(state, stepper, navigator, slab, initialMomentum, effects,
+                     result);
       }
     }
 
@@ -120,7 +131,7 @@ struct MaterialInteractor {
       updateResult(state, stepper, result);
     }
 
-    auto volume = navigator.currentVolume(state.navigation);
+    const TrackingVolume* volume = navigator.currentVolume(state.navigation);
 
     // We only have material interactions if there is potential material
     if (volume && volume->volumeMaterial()) {
@@ -136,36 +147,60 @@ struct MaterialInteractor {
         recordResult(interaction, result);
       }
     }
+
     return Result<void>::success();
   }
 
  private:
   /// @brief This function records the material effect
   ///
-  /// @param [in] interaction Interaction cache container
+  /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_t Type of the stepper of the propagation
+  /// @tparam navigator_t Type of the navigator of the propagation
+  ///
+  /// @param [in] state The propagator state
+  /// @param [in] stepper The stepper instance
+  /// @param [in] navigator The navigator instance
+  /// @param [in] slab The material slab
+  /// @param [in] initialMomentum Initial momentum before the interaction
+  /// @param [in] effects The material effects
   /// @param [in, out] result Result storage
-  void recordResult(const detail::PointwiseMaterialInteraction& interaction,
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  void recordResult(const propagator_state_t& state, const stepper_t& stepper,
+                    const navigator_t& navigator, const MaterialSlab& slab,
+                    double initialMomentum,
+                    const detail::PointwiseMaterialEffects& effects,
                     result_type& result) const {
-    result.materialInX0 += interaction.slab.thicknessInX0();
-    result.materialInL0 += interaction.slab.thicknessInL0();
+    result.materialInX0 += slab.thicknessInX0();
+    result.materialInL0 += slab.thicknessInL0();
 
     // Record the interaction if requested
     if (!recordInteractions) {
       return;
     }
 
+    const Vector3 position = stepper.position(state.stepping);
+    const double time = stepper.time(state.stepping);
+    const Vector3 direction = stepper.direction(state.stepping);
+    const double finalMomentum = stepper.absoluteMomentum(state.stepping);
+
+    const Surface* surface = navigator.currentSurface(state.navigation);
+    const double pathCorrection =
+        surface->pathCorrection(state.options.geoContext, position, direction);
+
     MaterialInteraction mi;
-    mi.position = interaction.pos;
-    mi.time = interaction.time;
-    mi.direction = interaction.dir;
-    mi.deltaP = interaction.nextP - interaction.momentum;
-    mi.sigmaPhi2 = interaction.variancePhi;
-    mi.sigmaTheta2 = interaction.varianceTheta;
-    mi.sigmaQoP2 = interaction.varianceQoverP;
-    mi.surface = interaction.surface;
+    mi.position = position;
+    mi.time = time;
+    mi.direction = direction;
+    mi.deltaP = initialMomentum - finalMomentum;
+    mi.sigmaPhi2 = effects.variancePhi;
+    mi.sigmaTheta2 = effects.varianceTheta;
+    mi.sigmaQoP2 = effects.varianceQoverP;
+    mi.surface = surface;
     mi.volume = InteractionVolume();
-    mi.pathCorrection = interaction.pathCorrection;
-    mi.materialSlab = interaction.slab;
+    mi.pathCorrection = pathCorrection;
+    mi.materialSlab = slab;
     result.materialInteractions.push_back(std::move(mi));
   }
 
