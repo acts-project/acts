@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "ActsTests/CommonHelpers/LineSurfaceStub.hpp"
 
 namespace Acts {
@@ -28,7 +28,7 @@ namespace ActsTests {
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
-class DetectorElementStub : public Acts::DetectorElementBase {
+class DetectorElementStub : public Acts::SurfacePlacementBase {
  public:
   /// Default constructor
   DetectorElementStub() = default;
@@ -92,7 +92,7 @@ class DetectorElementStub : public Acts::DetectorElementBase {
   Acts::Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  double thickness() const;
 
   /// Is the detector element a sensitive element
   bool isSensitive() const override { return true; }

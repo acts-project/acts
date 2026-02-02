@@ -95,6 +95,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
     return (m_materialSlab);
   }
 
+  using ISurfaceMaterial::materialSlab;
+
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream

@@ -20,6 +20,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
@@ -65,12 +66,26 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
   if (m_cfg.outputSpacePoints.empty()) {
     throw std::invalid_argument("No output space points were defined");
   }
+  if (m_cfg.outputMeasurements.empty()) {
+    throw std::invalid_argument("Missing measurements output collection");
+  }
+  if (m_cfg.outputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-simulated-hits map output collection");
+  }
+  if (m_cfg.outputSimHitMeasurementsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing particle-to-simulated-hits map output collection");
+  }
   ACTS_DEBUG("Retrieve sim hits and particles from "
              << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
   ACTS_DEBUG("Write produced space points to " << m_cfg.outputSpacePoints);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+  m_outputSimHitMeasurementsMap.initialize(m_cfg.outputSimHitMeasurementsMap);
 }
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
@@ -87,6 +102,7 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
   m_cfg.calibrator =
       std::make_unique<MuonSpacePointCalibrator>(calibCfg, logger().clone());
 
+  gROOT->SetStyle("ATLAS");
   return SUCCESS;
 }
 
@@ -128,6 +144,13 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
+  // Prepare output containers
+  // need list here for stable addresses
+  MeasurementContainer measurements;
+  IndexMultimap<Index> measurementSimHitsMap;
+  measurements.reserve(gotSimHits.size());
+  measurementSimHitsMap.reserve(gotSimHits.size());
+
   using MuonId_t = MuonSpacePoint::MuonId;
   auto rndEngine = m_cfg.randomNumbers->spawnGenerator(ctx);
   /// temporary output container to group the hits per chamber volume
@@ -157,6 +180,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
     // Iterate over all simHits in a single module
     for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
       const auto& simHit = *h;
+      const auto simHitIdx = gotSimHits.index_of(h);
 
       // Convert the hit trajectory into local coordinates
       const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
@@ -235,6 +259,24 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   calibCfg.rpcPhiStripPitch, calibCfg.rpcEtaStripPitch,
                   m_cfg.digitizeTime ? calibCfg.rpcTimeResolution : 0.);
 
+              // Set measurement
+              DigitizedParameters dParameters;
+
+              auto cov = newSp.covariance();
+
+              dParameters.indices.push_back(Acts::eBoundLoc0);
+              dParameters.values.push_back(smearedHit[ePos0]);
+              dParameters.variances.push_back(cov[0]);
+
+              dParameters.indices.push_back(Acts::eBoundLoc1);
+              dParameters.values.push_back(smearedHit[ePos1]);
+              dParameters.variances.push_back(cov[1]);
+
+              auto measurement =
+                  createMeasurement(measurements, moduleGeoId, dParameters);
+              measurementSimHitsMap.emplace_hint(
+                  measurementSimHitsMap.end(), measurement.index(), simHitIdx);
+
               break;
             }
             /// Endcap strips not yet available
@@ -275,7 +317,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
             convertSp = false;
             break;
           }
-          double driftR =
+          double smearedDriftR =
               (*Digitization::Gauss{uncert}(unsmearedR, rndEngine)).first;
 
           // bounds
@@ -283,7 +325,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
           const double maxR = lBounds.get(LineBounds::eR);
           const double maxZ = lBounds.get(LineBounds::eHalfLengthZ);
           /// The generated hit is unphysical
-          if (driftR < 0. || driftR > maxR || std::abs(nominalPos.z()) > maxZ) {
+          if (smearedDriftR < 0. || smearedDriftR > maxR ||
+              std::abs(nominalPos.z()) > maxZ) {
             convertSp = false;
             break;
           }
@@ -300,7 +343,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
           const double sigmaZ = 0.5 * maxZ;
 
-          newSp.setRadius(driftR);
+          const double smearedZ =
+              (*Digitization::Gauss{sigmaZ}(nominalPos.z(), rndEngine)).first;
+
+          newSp.setRadius(smearedDriftR);
           newSp.setCovariance(square(uncert), square(sigmaZ), 0.);
 
           newSp.defineCoordinates(
@@ -316,6 +362,23 @@ ProcessCode MuonSpacePointDigitizer::execute(
           id.setCoordFlags(true, false);
           newSp.setId(id);
 
+          // Set measurement
+          DigitizedParameters dParameters;
+
+          auto cov = newSp.covariance();
+
+          dParameters.indices.push_back(Acts::eBoundLoc0);
+          dParameters.values.push_back(smearedDriftR);
+          dParameters.variances.push_back(cov[0]);
+
+          dParameters.indices.push_back(Acts::eBoundLoc1);
+          dParameters.values.push_back(smearedZ);
+          dParameters.variances.push_back(cov[1]);
+
+          auto measurement =
+              createMeasurement(measurements, moduleGeoId, dParameters);
+          measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                             measurement.index(), simHitIdx);
           break;
         }
         default:
@@ -359,6 +422,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
   }
 
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
+  m_outputMeasurements(ctx, std::move(measurements));
+  m_outputSimHitMeasurementsMap(ctx,
+                                invertIndexMultimap(measurementSimHitsMap));
+  m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
 
   return ProcessCode::SUCCESS;
 }

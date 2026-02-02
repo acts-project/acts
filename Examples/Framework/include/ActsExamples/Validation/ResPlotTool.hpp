@@ -27,6 +27,11 @@ namespace ActsExamples {
 /// surface
 class ResPlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using Histogram1 = Acts::Experimental::Histogram1;
+  using Histogram2 = Acts::Experimental::Histogram2;
+
   /// @brief Nested configuration struct
   struct Config {
     /// parameter sets to do plots
@@ -34,22 +39,17 @@ class ResPlotTool {
                                            "theta", "qop", "t"};
 
     /// Binning info for variables
-    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
-        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
-        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
-        {"Pull", Acts::Experimental::BoostRegularAxis(100, -5, 5, "pull")},
-        {"Residual_d0",
-         Acts::Experimental::BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
-        {"Residual_z0",
-         Acts::Experimental::BoostRegularAxis(100, -0.5, 0.5, "r_{z0} [mm]")},
-        {"Residual_phi", Acts::Experimental::BoostRegularAxis(
-                             100, -0.01, 0.01, "r_{#phi} [rad]")},
-        {"Residual_theta", Acts::Experimental::BoostRegularAxis(
-                               100, -0.01, 0.01, "r_{#theta} [rad]")},
-        {"Residual_qop", Acts::Experimental::BoostRegularAxis(
-                             100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
-        {"Residual_t",
-         Acts::Experimental::BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
+    std::map<std::string, AxisVariant> varBinning = {
+        {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Pull", BoostRegularAxis(100, -5, 5, "pull")},
+        {"Residual_d0", BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
+        {"Residual_z0", BoostRegularAxis(100, -0.5, 0.5, "r_{z0} [mm]")},
+        {"Residual_phi", BoostRegularAxis(100, -0.01, 0.01, "r_{#phi} [rad]")},
+        {"Residual_theta",
+         BoostRegularAxis(100, -0.01, 0.01, "r_{#theta} [rad]")},
+        {"Residual_qop", BoostRegularAxis(100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
+        {"Residual_t", BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
   };
 
   /// Constructor
@@ -68,25 +68,16 @@ class ResPlotTool {
             const Acts::BoundTrackParameters& fittedParamters);
 
   /// @brief Accessors for histograms (const reference)
-  const std::map<std::string, Acts::Experimental::Histogram1>& res() const {
-    return m_res;
-  }
-  const std::map<std::string, Acts::Experimental::Histogram2>& resVsEta()
-      const {
+  const std::map<std::string, Histogram1>& res() const { return m_res; }
+  const std::map<std::string, Histogram2>& resVsEta() const {
     return m_resVsEta;
   }
-  const std::map<std::string, Acts::Experimental::Histogram2>& resVsPt() const {
-    return m_resVsPt;
-  }
-  const std::map<std::string, Acts::Experimental::Histogram1>& pull() const {
-    return m_pull;
-  }
-  const std::map<std::string, Acts::Experimental::Histogram2>& pullVsEta()
-      const {
+  const std::map<std::string, Histogram2>& resVsPt() const { return m_resVsPt; }
+  const std::map<std::string, Histogram1>& pull() const { return m_pull; }
+  const std::map<std::string, Histogram2>& pullVsEta() const {
     return m_pullVsEta;
   }
-  const std::map<std::string, Acts::Experimental::Histogram2>& pullVsPt()
-      const {
+  const std::map<std::string, Histogram2>& pullVsPt() const {
     return m_pullVsPt;
   }
 
@@ -97,18 +88,18 @@ class ResPlotTool {
   std::unique_ptr<const Acts::Logger> m_logger;
 
   /// Residual distribution
-  std::map<std::string, Acts::Experimental::Histogram1> m_res;
+  std::map<std::string, Histogram1> m_res;
   /// Residual vs eta scatter plot
-  std::map<std::string, Acts::Experimental::Histogram2> m_resVsEta;
+  std::map<std::string, Histogram2> m_resVsEta;
   /// Residual vs pT scatter plot
-  std::map<std::string, Acts::Experimental::Histogram2> m_resVsPt;
+  std::map<std::string, Histogram2> m_resVsPt;
 
   /// Pull distribution
-  std::map<std::string, Acts::Experimental::Histogram1> m_pull;
+  std::map<std::string, Histogram1> m_pull;
   /// Pull vs eta scatter plot
-  std::map<std::string, Acts::Experimental::Histogram2> m_pullVsEta;
+  std::map<std::string, Histogram2> m_pullVsEta;
   /// Pull vs pT scatter plot
-  std::map<std::string, Acts::Experimental::Histogram2> m_pullVsPt;
+  std::map<std::string, Histogram2> m_pullVsPt;
 };
 
 }  // namespace ActsExamples

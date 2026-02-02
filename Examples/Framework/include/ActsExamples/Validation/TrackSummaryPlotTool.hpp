@@ -22,13 +22,17 @@ namespace ActsExamples {
 /// Tools to make track info plots to show tracking track info.
 class TrackSummaryPlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using ProfileHistogram1 = Acts::Experimental::ProfileHistogram1;
+
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
-        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
-        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
-        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
-        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
+    std::map<std::string, AxisVariant> varBinning = {
+        {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
     /// Optional prefix for histogram names
     std::string prefix;
   };
@@ -51,36 +55,9 @@ class TrackSummaryPlotTool {
             std::size_t nStates, std::size_t nMeasurements,
             std::size_t nOutliers, std::size_t nHoles, std::size_t nSharedHits);
 
-  /// @brief Accessors for histograms (const reference)
-  const Acts::Experimental::ProfileHistogram1& nStatesVsEta() const {
-    return m_nStatesVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nMeasurementsVsEta() const {
-    return m_nMeasurementsVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nHolesVsEta() const {
-    return m_nHolesVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nOutliersVsEta() const {
-    return m_nOutliersVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nSharedHitsVsEta() const {
-    return m_nSharedHitsVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& nStatesVsPt() const {
-    return m_nStatesVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& nMeasurementsVsPt() const {
-    return m_nMeasurementsVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& nHolesVsPt() const {
-    return m_nHolesVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& nOutliersVsPt() const {
-    return m_nOutliersVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& nSharedHitsVsPt() const {
-    return m_nSharedHitsVsPt;
+  /// @brief Accessor for profile histograms map (const reference)
+  const std::map<std::string, ProfileHistogram1>& profiles() const {
+    return m_profiles;
   }
 
  private:
@@ -89,16 +66,7 @@ class TrackSummaryPlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  Acts::Experimental::ProfileHistogram1 m_nStatesVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nMeasurementsVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nHolesVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nOutliersVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nSharedHitsVsEta;
-  Acts::Experimental::ProfileHistogram1 m_nStatesVsPt;
-  Acts::Experimental::ProfileHistogram1 m_nMeasurementsVsPt;
-  Acts::Experimental::ProfileHistogram1 m_nHolesVsPt;
-  Acts::Experimental::ProfileHistogram1 m_nOutliersVsPt;
-  Acts::Experimental::ProfileHistogram1 m_nSharedHitsVsPt;
+  std::map<std::string, ProfileHistogram1> m_profiles;
 };
 
 }  // namespace ActsExamples

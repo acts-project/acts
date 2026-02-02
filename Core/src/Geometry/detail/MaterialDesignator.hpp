@@ -130,6 +130,8 @@ class CylinderProtoDesignator : public DesignatorBase {
     return std::make_unique<CylinderProtoDesignator>(*this);
   }
 
+  using DesignatorBase::merged;
+
  private:
   void validate(Face face, const DirectedProtoAxis& loc0,
                 const DirectedProtoAxis& loc1, const std::string& prefix) {
@@ -237,6 +239,8 @@ class CuboidProtoDesignator : public DesignatorBase {
     return std::make_unique<CuboidProtoDesignator>(*this);
   }
 
+  using DesignatorBase::merged;
+
  private:
   void validate(Face face, const DirectedProtoAxis& loc0,
                 const DirectedProtoAxis& loc1, const std::string& prefix) {
@@ -332,6 +336,8 @@ class ISurfaceMaterialDesignator : public DesignatorBase {
     return std::make_unique<ISurfaceMaterialDesignator>(*this);
   }
 
+  using DesignatorBase::merged;
+
  private:
   std::vector<std::pair<FaceType, std::shared_ptr<const ISurfaceMaterial>>>
       m_materials;
@@ -376,6 +382,8 @@ class NullDesignator : public DesignatorBase {
       const CuboidHomogeneousMaterialDesignator& other) const override {
     return other.merged(*this);
   }
+
+  using DesignatorBase::merged;
 
   void graphvizLabel(std::ostream& os) const override {
     os << "<br/><i>NullDesignator</i>";

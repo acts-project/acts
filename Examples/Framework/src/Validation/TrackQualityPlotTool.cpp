@@ -35,23 +35,27 @@ namespace ActsExamples {
 TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
                                            Acts::Logging::Level lvl)
     : m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger("TrackQualityPlotTool", lvl)),
-      m_completenessVsPt(makeProfile(m_cfg, "completeness_vs_pT",
-                                     "Completeness", m_cfg.varBinning.at("Pt"),
-                                     "Completeness")),
-      m_completenessVsEta(
-          makeProfile(m_cfg, "completeness_vs_eta", "Completeness",
-                      m_cfg.varBinning.at("Eta"), "Completeness")),
-      m_completenessVsPhi(
-          makeProfile(m_cfg, "completeness_vs_phi", "Completeness",
-                      m_cfg.varBinning.at("Phi"), "Completeness")),
-      m_purityVsPt(makeProfile(m_cfg, "purity_vs_pT", "Purity",
-                               m_cfg.varBinning.at("Pt"), "Purity")),
-      m_purityVsEta(makeProfile(m_cfg, "purity_vs_eta", "Purity",
-                                m_cfg.varBinning.at("Eta"), "Purity")),
-      m_purityVsPhi(makeProfile(m_cfg, "purity_vs_phi", "Purity",
-                                m_cfg.varBinning.at("Phi"), "Purity")) {
+      m_logger(Acts::getDefaultLogger("TrackQualityPlotTool", lvl)) {
   ACTS_DEBUG("Initialize the histograms for track quality plots");
+
+  m_profiles.insert({"completeness_vs_pT",
+                     makeProfile(m_cfg, "completeness_vs_pT", "Completeness",
+                                 m_cfg.varBinning.at("Pt"), "Completeness")});
+  m_profiles.insert({"completeness_vs_eta",
+                     makeProfile(m_cfg, "completeness_vs_eta", "Completeness",
+                                 m_cfg.varBinning.at("Eta"), "Completeness")});
+  m_profiles.insert({"completeness_vs_phi",
+                     makeProfile(m_cfg, "completeness_vs_phi", "Completeness",
+                                 m_cfg.varBinning.at("Phi"), "Completeness")});
+  m_profiles.insert(
+      {"purity_vs_pT", makeProfile(m_cfg, "purity_vs_pT", "Purity",
+                                   m_cfg.varBinning.at("Pt"), "Purity")});
+  m_profiles.insert(
+      {"purity_vs_eta", makeProfile(m_cfg, "purity_vs_eta", "Purity",
+                                    m_cfg.varBinning.at("Eta"), "Purity")});
+  m_profiles.insert(
+      {"purity_vs_phi", makeProfile(m_cfg, "purity_vs_phi", "Purity",
+                                    m_cfg.varBinning.at("Phi"), "Purity")});
 }
 
 void TrackQualityPlotTool::fill(
@@ -62,13 +66,13 @@ void TrackQualityPlotTool::fill(
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  m_completenessVsPt.fill({fit_pT}, completeness);
-  m_completenessVsEta.fill({fit_eta}, completeness);
-  m_completenessVsPhi.fill({fit_phi}, completeness);
+  m_profiles.at("completeness_vs_pT").fill({fit_pT}, completeness);
+  m_profiles.at("completeness_vs_eta").fill({fit_eta}, completeness);
+  m_profiles.at("completeness_vs_phi").fill({fit_phi}, completeness);
 
-  m_purityVsPt.fill({fit_pT}, purity);
-  m_purityVsEta.fill({fit_eta}, purity);
-  m_purityVsPhi.fill({fit_phi}, purity);
+  m_profiles.at("purity_vs_pT").fill({fit_pT}, purity);
+  m_profiles.at("purity_vs_eta").fill({fit_eta}, purity);
+  m_profiles.at("purity_vs_phi").fill({fit_phi}, purity);
 }
 
 }  // namespace ActsExamples

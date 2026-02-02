@@ -22,13 +22,17 @@ namespace ActsExamples {
 /// Tools to make track quality plots.
 class TrackQualityPlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using ProfileHistogram1 = Acts::Experimental::ProfileHistogram1;
+
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
-        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
-        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
-        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
-        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
+    std::map<std::string, AxisVariant> varBinning = {
+        {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
   /// Constructor
@@ -45,24 +49,9 @@ class TrackQualityPlotTool {
   void fill(const Acts::BoundTrackParameters& fittedParameters,
             double completeness, double purity);
 
-  /// @brief Accessors for histograms (const reference)
-  const Acts::Experimental::ProfileHistogram1& completenessVsPt() const {
-    return m_completenessVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& completenessVsEta() const {
-    return m_completenessVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& completenessVsPhi() const {
-    return m_completenessVsPhi;
-  }
-  const Acts::Experimental::ProfileHistogram1& purityVsPt() const {
-    return m_purityVsPt;
-  }
-  const Acts::Experimental::ProfileHistogram1& purityVsEta() const {
-    return m_purityVsEta;
-  }
-  const Acts::Experimental::ProfileHistogram1& purityVsPhi() const {
-    return m_purityVsPhi;
+  /// @brief Accessor for profile histograms map (const reference)
+  const std::map<std::string, ProfileHistogram1>& profiles() const {
+    return m_profiles;
   }
 
  private:
@@ -71,12 +60,7 @@ class TrackQualityPlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  Acts::Experimental::ProfileHistogram1 m_completenessVsPt;
-  Acts::Experimental::ProfileHistogram1 m_completenessVsEta;
-  Acts::Experimental::ProfileHistogram1 m_completenessVsPhi;
-  Acts::Experimental::ProfileHistogram1 m_purityVsPt;
-  Acts::Experimental::ProfileHistogram1 m_purityVsEta;
-  Acts::Experimental::ProfileHistogram1 m_purityVsPhi;
+  std::map<std::string, ProfileHistogram1> m_profiles;
 };
 
 }  // namespace ActsExamples

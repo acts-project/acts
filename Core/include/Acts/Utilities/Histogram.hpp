@@ -235,4 +235,13 @@ Histogram1 projectionX(const Histogram2& hist2d);
 /// @return A 1D histogram containing the projection
 Histogram1 projectionY(const Histogram2& hist2d);
 
+/// Extract bin edges from an AxisVariant
+///
+/// Works with all axis types (regular, variable, log) in the variant by
+/// accessing the generic axis interface.
+///
+/// @param axis The axis variant to extract edges from
+/// @return Vector of bin edges (size = nBins + 1)
+std::vector<double> extractBinEdges(const AxisVariant& axis);
+
 }  // namespace Acts::Experimental

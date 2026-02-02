@@ -26,13 +26,18 @@ namespace ActsExamples {
 /// A track is 'fake' if it's not matched with truth.
 class FakePlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using Efficiency1 = Acts::Experimental::Efficiency1;
+  using Histogram2 = Acts::Experimental::Histogram2;
+
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, Acts::Experimental::AxisVariant> varBinning = {
-        {"Eta", Acts::Experimental::BoostRegularAxis(40, -4, 4, "#eta")},
-        {"Phi", Acts::Experimental::BoostRegularAxis(100, -3.15, 3.15, "#phi")},
-        {"Pt", Acts::Experimental::BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
-        {"Num", Acts::Experimental::BoostRegularAxis(30, -0.5, 29.5, "N")}};
+    std::map<std::string, AxisVariant> varBinning = {
+        {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
   /// Constructor
@@ -55,33 +60,12 @@ class FakePlotTool {
   void fill(const SimParticleState& truthParticle,
             std::size_t nTruthMatchedTracks, std::size_t nFakeTracks);
 
-  /// @brief Accessors for histograms (const reference)
-  const Acts::Experimental::Histogram2& nRecoVsPt() const {
-    return m_nRecoVsPt;
+  /// @brief Accessors for histogram maps (const reference)
+  const std::map<std::string, Histogram2>& histograms() const {
+    return m_histograms;
   }
-  const Acts::Experimental::Histogram2& nTruthMatchedVsPt() const {
-    return m_nTruthMatchedVsPt;
-  }
-  const Acts::Experimental::Histogram2& nFakeVsPt() const {
-    return m_nFakeVsPt;
-  }
-  const Acts::Experimental::Histogram2& nRecoVsEta() const {
-    return m_nRecoVsEta;
-  }
-  const Acts::Experimental::Histogram2& nTruthMatchedVsEta() const {
-    return m_nTruthMatchedVsEta;
-  }
-  const Acts::Experimental::Histogram2& nFakeVsEta() const {
-    return m_nFakeVsEta;
-  }
-  const Acts::Experimental::Efficiency1& fakeRatioVsPt() const {
-    return m_fakeRatioVsPt;
-  }
-  const Acts::Experimental::Efficiency1& fakeRatioVsEta() const {
-    return m_fakeRatioVsEta;
-  }
-  const Acts::Experimental::Efficiency1& fakeRatioVsPhi() const {
-    return m_fakeRatioVsPhi;
+  const std::map<std::string, Efficiency1>& efficiencies() const {
+    return m_efficiencies;
   }
 
  private:
@@ -90,15 +74,8 @@ class FakePlotTool {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  Acts::Experimental::Histogram2 m_nRecoVsPt;
-  Acts::Experimental::Histogram2 m_nTruthMatchedVsPt;
-  Acts::Experimental::Histogram2 m_nFakeVsPt;
-  Acts::Experimental::Histogram2 m_nRecoVsEta;
-  Acts::Experimental::Histogram2 m_nTruthMatchedVsEta;
-  Acts::Experimental::Histogram2 m_nFakeVsEta;
-  Acts::Experimental::Efficiency1 m_fakeRatioVsPt;
-  Acts::Experimental::Efficiency1 m_fakeRatioVsEta;
-  Acts::Experimental::Efficiency1 m_fakeRatioVsPhi;
+  std::map<std::string, Histogram2> m_histograms;
+  std::map<std::string, Efficiency1> m_efficiencies;
 };
 
 }  // namespace ActsExamples
