@@ -547,9 +547,10 @@ struct GsfActor {
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
 
-      auto mask = TrackStatePropMask::Predicted | TrackStatePropMask::Smoothed;
+      auto mask = TrackStatePropMask::Predicted;
       if (type.isMeasurement()) {
-        mask |= TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered;
+        mask |= TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered |
+                TrackStatePropMask::Smoothed;
       } else if (type.isOutlier()) {
         mask |= TrackStatePropMask::Calibrated;
       }
@@ -575,15 +576,17 @@ struct GsfActor {
             FltProjector{tmpStates.traj, tmpStates.weights});
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
+
+        // place sentinel values for smoothed parameters for now. they will be
+        // filled in the backward pass
+        proxy.smoothed() = BoundVector::Constant(-2);
+        proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
       } else {
         proxy.shareFrom(TrackStatePropMask::Predicted,
                         TrackStatePropMask::Filtered);
       }
 
       proxy.typeFlags() = type;
-
-      proxy.smoothed() = BoundVector::Constant(-2);
-      proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
 
     } else {
       assert((result.currentTip != kTrackIndexInvalid && "tip not valid"));
