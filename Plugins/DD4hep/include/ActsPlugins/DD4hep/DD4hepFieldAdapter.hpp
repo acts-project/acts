@@ -31,7 +31,7 @@ class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
 
  public:
   /// Constructor
-  /// @param field DD4hep overlayed field
+  /// @param field DD4hep overlaid field
   explicit DD4hepFieldAdapter(dd4hep::OverlayedField field);
 
   Acts::MagneticFieldProvider::Cache makeCache(

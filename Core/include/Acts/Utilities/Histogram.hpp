@@ -24,13 +24,14 @@ using BoostVariableAxis = boost::histogram::axis::variable<double, std::string>;
 using BoostRegularAxis =
     boost::histogram::axis::regular<double, boost::histogram::use_default,
                                     std::string>;
+/// Logarithmic-scale histogram axis with string metadata
 using BoostLogAxis = boost::histogram::axis::regular<
     double, boost::histogram::axis::transform::log, std::string>;
 
 /// @brief Boost axis variant supporting variable, regular, and log-scale axes with metadata
-/// NOTE: It seems not to be possible to combine compile-time fixed number of
-/// axes with boost::histogram::axis::variant. Therefore we use
-/// std::vector<AxisVariant> internally.
+/// @note It seems not to be possible to combine compile-time fixed number of
+///       axes with `boost::histogram::axis::variant`. Therefore we use
+///       `std::vector<AxisVariant>` internally.
 using AxisVariant =
     boost::histogram::axis::variant<BoostVariableAxis, BoostRegularAxis,
                                     BoostLogAxis>;
