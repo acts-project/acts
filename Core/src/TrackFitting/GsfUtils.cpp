@@ -20,7 +20,7 @@
 
 namespace Acts {
 
-double detail::calculateDeterminant(
+double detail::Gsf::calculateDeterminant(
     const double *fullCalibratedCovariance,
     TrackStateTraits<kMeasurementSizeMax, true>::Covariance predictedCovariance,
     BoundSubspaceIndices projector, unsigned int calibratedSize) {

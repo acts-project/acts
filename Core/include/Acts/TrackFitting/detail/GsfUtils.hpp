@@ -30,7 +30,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts::detail {
+namespace Acts::detail::Gsf {
 
 template <typename component_range_t, typename projector_t>
 bool weightsAreNormalized(const component_range_t &cmps,
@@ -97,8 +97,9 @@ class ScopedGsfInfoPrinterAndChecker {
     [[maybe_unused]] const bool allFinite =
         std::all_of(cmps.begin(), cmps.end(),
                     [](auto cmp) { return std::isfinite(cmp.weight()); });
-    [[maybe_unused]] const bool allNormalized = detail::weightsAreNormalized(
-        cmps, [](const auto &cmp) { return cmp.weight(); });
+    [[maybe_unused]] const bool allNormalized =
+        detail::Gsf::weightsAreNormalized(
+            cmps, [](const auto &cmp) { return cmp.weight(); });
     [[maybe_unused]] const bool zeroComponents =
         m_stepper.numberComponents(m_state.stepping) == 0;
 
@@ -253,8 +254,6 @@ class Updatable {
   const T &val() const { return m_val; }
 };
 
-namespace Gsf {
-
 /// Remove components with low weights and renormalize from the component
 /// cache
 /// TODO This function does not expect normalized components, but this
@@ -294,8 +293,8 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 
   // TODO we have two normalization passes here now, this can probably be
   // optimized
-  detail::normalizeWeights(cmps,
-                           [&](auto cmp) -> double & { return cmp.weight(); });
+  detail::Gsf::normalizeWeights(
+      cmps, [&](auto cmp) -> double & { return cmp.weight(); });
 }
 
 /// Function that updates the stepper from the ComponentCache
@@ -398,6 +397,4 @@ void applyMultipleScattering(propagator_state_t &state,
   }
 }
 
-}  // namespace Gsf
-
-}  // namespace Acts::detail
+}  // namespace Acts::detail::Gsf

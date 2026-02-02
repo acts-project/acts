@@ -23,7 +23,7 @@
 
 #include <map>
 
-namespace Acts::detail {
+namespace Acts::detail::Gsf {
 
 template <typename traj_t>
 struct GsfResult {
@@ -147,8 +147,8 @@ struct GsfActor {
 
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
-                                                         navigator, logger());
+    const ScopedGsfInfoPrinterAndChecker printer(state, stepper, navigator,
+                                                 logger());
 
     // We only need to do something if we are on a surface
     if (!navigator.currentSurface(state.navigation)) {
@@ -162,8 +162,8 @@ struct GsfActor {
     // stepper misbehaves
     [[maybe_unused]] auto stepperComponents =
         stepper.constComponentIterable(state.stepping);
-    assert(detail::weightsAreNormalized(
-        stepperComponents, [](const auto& cmp) { return cmp.weight(); }));
+    assert(weightsAreNormalized(stepperComponents,
+                                [](const auto& cmp) { return cmp.weight(); }));
 
     // All components must have status "on surface". It is however possible,
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
@@ -226,16 +226,16 @@ struct GsfActor {
 
     if (m_cfg.multipleScattering && haveMaterial) {
       if (haveMeasurement) {
-        detail::Gsf::applyMultipleScattering(
+        applyMultipleScattering(
             state, stepper, navigator,
-            detail::determineMaterialUpdateMode(state, navigator,
-                                                MaterialUpdateMode::PreUpdate),
+            determineMaterialUpdateMode(state, navigator,
+                                        MaterialUpdateMode::PreUpdate),
             logger());
       } else {
-        detail::Gsf::applyMultipleScattering(
+        applyMultipleScattering(
             state, stepper, navigator,
-            detail::determineMaterialUpdateMode(state, navigator,
-                                                MaterialUpdateMode::FullUpdate),
+            determineMaterialUpdateMode(state, navigator,
+                                        MaterialUpdateMode::FullUpdate),
             logger());
       }
     }
@@ -256,7 +256,7 @@ struct GsfActor {
         return res.error();
       }
 
-      detail::Gsf::updateStepper(state, stepper, tmpStates, m_cfg.weightCutoff);
+      updateStepper(state, stepper, tmpStates, m_cfg.weightCutoff);
     }
     // We have material, we thus need a component cache since we will
     // convolute the components and later reduce them again before updating
@@ -304,19 +304,17 @@ struct GsfActor {
           static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
       m_cfg.extensions.mixtureReducer(componentCache, finalCmpNumber, surface);
 
-      detail::Gsf::removeLowWeightComponents(componentCache,
-                                             m_cfg.weightCutoff);
+      removeLowWeightComponents(componentCache, m_cfg.weightCutoff);
 
-      detail::Gsf::updateStepper(state, stepper, navigator, componentCache,
-                                 logger());
+      updateStepper(state, stepper, navigator, componentCache, logger());
     }
 
     // If we have only done preUpdate before, now do postUpdate
     if (m_cfg.multipleScattering && haveMaterial && haveMeasurement) {
-      detail::Gsf::applyMultipleScattering(
+      applyMultipleScattering(
           state, stepper, navigator,
-          detail::determineMaterialUpdateMode(state, navigator,
-                                              MaterialUpdateMode::PostUpdate),
+          determineMaterialUpdateMode(state, navigator,
+                                      MaterialUpdateMode::PostUpdate),
           logger());
     }
 
@@ -357,7 +355,7 @@ struct GsfActor {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      auto trackStateProxyRes = detail::kalmanHandleMeasurement(
+      auto trackStateProxyRes = kalmanHandleMeasurement(
           *m_cfg.calibrationContext, singleState, singleStepper,
           m_cfg.extensions, surface, sourceLink, tmpStates.traj,
           kTrackIndexInvalid, false, logger());
@@ -380,7 +378,7 @@ struct GsfActor {
 
     computePosteriorWeights(tmpStates.traj, tmpStates.tips, tmpStates.weights);
 
-    detail::normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
+    normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
       return tmpStates.weights.at(idx);
     });
 
@@ -436,7 +434,7 @@ struct GsfActor {
 
       // There is some redundant checking inside this function, but do this for
       // now until we measure this is significant
-      auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
+      auto trackStateProxyRes = kalmanHandleNoMeasurement(
           singleState, singleStepper, surface, tmpStates.traj,
           kTrackIndexInvalid, doCovTransport, logger(),
           precedingMeasurementExists);
@@ -548,4 +546,4 @@ struct GsfActor {
   }
 };
 
-}  // namespace Acts::detail
+}  // namespace Acts::detail::Gsf
