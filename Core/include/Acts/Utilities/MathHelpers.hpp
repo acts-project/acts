@@ -10,8 +10,8 @@
 
 #include <cassert>
 #include <cmath>
-#include <type_traits>
 #include <stdexcept>
+#include <type_traits>
 
 namespace Acts {
 
