@@ -89,7 +89,7 @@ std::optional<T> findCached(Acts::PdgParticle pdg,
     case eLead:
       return findCachedImpl<T, eLead, type>(map);
     case eKaon0Short:
-      return findCachedImpl<T, eK0S, type>(map);
+      return findCachedImpl<T, eKaon0Short, type>(map);
     case eLambda0:
       return findCachedImpl<T, eLambda0, type>(map);
     default:
