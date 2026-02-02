@@ -42,7 +42,12 @@ target_link_libraries(
 )
 
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
-install(FILES ${_python_dir}/setup.sh DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
+
+if( NOT ACTS_BUILD_PYTHON_WHEEL )
+  # Hardcode installation path since ACTS_PYTHON_INSTALL_DIR points directly
+  # to ${CMAKE_INSTALL_PREFIX}/python/acts for non-wheel builds
+  install(FILES ${_python_dir}/setup.sh DESTINATION "${CMAKE_INSTALL_PREFIX}/python")
+endif()
 
 foreach(f ${py_files})
     set(_target ${_python_dir}/acts/${f})
