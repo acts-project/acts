@@ -3,92 +3,124 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #     "gcovr==8.6",
+#     "rich",
+#     "typer",
 # ]
 # ///
-import sys
-import os
-import subprocess
-import argparse
 import multiprocessing as mp
 import re
+import shutil
+import subprocess
+from pathlib import Path
+
+import typer
+from rich.console import Console
+
+app = typer.Typer(add_completion=False)
+console = Console()
 
 
-if not os.path.exists("CMakeCache.txt"):
-    print("Not in CMake build dir. Not executing")
-    sys.exit(1)
+def locate_executable(name: str, hint: str) -> str:
+    path = shutil.which(name)
+    if not path:
+        console.print(hint, style="red")
+        raise typer.Exit(1)
+    return path
 
 
-def check_output(*args, **kwargs):
-    p = subprocess.Popen(
-        *args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs
+def gcovr_version(gcovr_exe: str) -> tuple[int, int] | None:
+    version_text = subprocess.check_output([gcovr_exe, "--version"], text=True).strip()
+    match = re.match(r"gcovr (\d+)\.(\d+)", version_text)
+    if not match:
+        console.print(
+            f"Unexpected gcovr version output: {version_text}",
+            style="yellow",
+        )
+        return None
+    return (int(match.group(1)), int(match.group(2)))
+
+
+@app.command()
+def main(
+    build_dir: Path = typer.Argument(..., help="CMake build directory"),
+    gcov: str | None = typer.Option(None, "--gcov", help="Path to gcov executable"),
+) -> None:
+    build_dir = build_dir.resolve()
+    if not build_dir.is_dir():
+        console.print(f"Build directory not found: {build_dir}", style="red")
+        raise typer.Exit(1)
+    if not (build_dir / "CMakeCache.txt").exists():
+        console.print(
+            f"Build directory missing CMakeCache.txt: {build_dir}",
+            style="red",
+        )
+        raise typer.Exit(1)
+
+    gcov_exe = gcov or locate_executable(
+        "gcov",
+        "gcov not installed. Install GCC coverage tooling or pass --gcov.",
     )
-    p.wait()
-    stdout, stderr = p.communicate()
-    stdout = stdout.decode("utf-8")
-    return (p.returncode, stdout.strip())
+    gcovr_exe = locate_executable(
+        "gcovr",
+        "gcovr not installed. Use 'uv run --script' or install gcovr.",
+    )
+
+    version = gcovr_version(gcovr_exe)
+    extra_flags: list[str] = []
+    if version is not None:
+        console.print(f"Found gcovr version {version[0]}.{version[1]}")
+        if version < (5, 0):
+            console.print("Consider upgrading to a newer gcovr version.", style="yellow")
+        elif version == (5, 1):
+            console.print(
+                "Version 5.1 does not support parallel processing of gcov data.",
+                style="red",
+            )
+            raise typer.Exit(1)
+        elif version >= (6, 0):
+            extra_flags.append("--exclude-noncode-lines")
+
+    script_dir = Path(__file__).resolve().parent
+    source_dir = script_dir.parent.resolve()
+    coverage_dir = build_dir / "coverage"
+    coverage_dir.mkdir(exist_ok=True)
+
+    source_dir_posix = source_dir.as_posix()
+    excludes = [
+        "-e",
+        f"{source_dir_posix}/Tests/",
+        "-e",
+        r".*json\.hpp",
+        "-e",
+        f"{source_dir_posix}/Python/",
+    ]
+    gcovr = [gcovr_exe]
+
+    gcovr_sonar_cmd = (
+        gcovr
+        + ["-r", str(source_dir)]
+        + ["--gcov-executable", gcov_exe]
+        + ["-j", str(mp.cpu_count())]
+        + ["--merge-mode-functions", "separate"]
+        + excludes
+        + extra_flags
+        + ["--sonarqube", str(coverage_dir / "cov.xml")]
+    )
+    console.print(f"$ {' '.join(gcovr_sonar_cmd)}")
+    subprocess.run(gcovr_sonar_cmd, cwd=build_dir, check=True)
+
+    gcovr_cmd = (
+        gcovr
+        + ["-r", str(source_dir)]
+        + ["-j", str(mp.cpu_count())]
+        + ["--gcov-executable", gcov_exe]
+        + ["--merge-mode-functions", "separate"]
+        + excludes
+        + extra_flags
+    )
+    console.print(f"$ {' '.join(gcovr_cmd)}")
+    subprocess.run(gcovr_cmd, cwd=build_dir, check=True)
 
 
-# call helper function
-def call(cmd):
-    print(" ".join(cmd))
-    try:
-        subprocess.check_call(cmd)
-    except subprocess.CalledProcessError as e:
-        print("Failed, output: ", e.output)
-        raise e
-
-
-p = argparse.ArgumentParser()
-p.add_argument("--gcov", default=check_output(["which", "gcov"])[1])
-args = p.parse_args()
-
-ret, gcovr_exe = check_output(["which", "gcovr"])
-assert ret == 0, "gcovr not installed. Use 'uv run --script' or install gcovr."
-
-ret, gcovr_version_text = check_output(["gcovr", "--version"])
-gcovr_version = tuple(
-    map(int, re.match(r"gcovr (\d+\.\d+)", gcovr_version_text).group(1).split("."))
-)
-
-extra_flags = []
-
-print(f"Found gcovr version {gcovr_version[0]}.{gcovr_version[1]}")
-if gcovr_version < (5,):
-    print("Consider upgrading to a newer gcovr version.")
-elif gcovr_version == (5, 1):
-    assert False and "Version 5.1 does not support parallel processing of gcov data"
-elif gcovr_version >= (6,):
-    extra_flags += ["--exclude-noncode-lines"]
-
-gcovr = [gcovr_exe]
-
-script_dir = os.path.dirname(__file__)
-source_dir = os.path.abspath(os.path.join(script_dir, ".."))
-coverage_dir = os.path.abspath("coverage")
-
-if not os.path.exists(coverage_dir):
-    os.makedirs(coverage_dir)
-
-excludes = ["-e", "../Tests/", "-e", r".*json\.hpp", "-e", "../Python/"]
-
-# create the html report
-call(
-    gcovr
-    + ["-r", source_dir]
-    + ["--gcov-executable", args.gcov]
-    + ["-j", str(mp.cpu_count())]
-    + ["--merge-mode-functions", "separate"]
-    + excludes
-    + extra_flags
-    + ["--sonarqube", "coverage/cov.xml"]
-)
-
-call(
-    gcovr
-    + ["-r", source_dir]
-    + ["-j", str(mp.cpu_count())]
-    + ["--gcov-executable", args.gcov]
-    + ["--merge-mode-functions", "separate"]
-    + excludes
-    + extra_flags
-)
+if __name__ == "__main__":
+    app()
