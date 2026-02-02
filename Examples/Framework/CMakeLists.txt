@@ -1,15 +1,10 @@
 include(ActsTargetLinkLibrariesSystem)
 
-set(ActsExamplesFramework_SOURCES)
-
-acts_add_library(
-    ExamplesFramework
+set(ActsExamplesFramework_SOURCES
     src/EventData/MuonSpacePoint.cpp
     src/EventData/MuonSpacePointCalibrator.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
-    $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:src/Root/ScalingCalibrator.cpp>
-    $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:src/Root/MuonVisualization.cpp>
     src/EventData/SimParticle.cpp
     src/Framework/IAlgorithm.cpp
     src/Framework/SequenceElement.cpp
@@ -29,6 +24,11 @@ acts_add_library(
     src/Validation/TrackClassification.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
+)
+
+acts_add_library(
+    ExamplesFramework
+    ${ActsExamplesFramework_SOURCES}
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
@@ -38,19 +38,26 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesFramework
-    PUBLIC
-        Acts::Fatras
-        Acts::PluginFpeMonitoring
-        Boost::boost
-        $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:ROOT::Core>
-        $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:ROOT::Hist>
-        HepMC3::HepMC3
+    PUBLIC Acts::Fatras Acts::PluginFpeMonitoring Boost::boost HepMC3::HepMC3
 )
 target_compile_definitions(
     ActsExamplesFramework
     PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED
-    PUBLIC $<$<BOOL:${ACTS_BUILD_EXAMPLES_ROOT}>:ACTS_BUILD_EXAMPLES_ROOT>
 )
+
+if(ACTS_BUILD_EXAMPLES_ROOT)
+    target_sources(
+        ActsExamplesFramework
+        PRIVATE src/Root/ScalingCalibrator.cpp src/Root/MuonVisualization.cpp
+    )
+    target_link_libraries(ActsExamplesFramework PUBLIC ROOT::Core ROOT::Hist)
+    set_source_files_properties(
+        src/Framework/Sequencer.cpp
+        TARGET
+        ActsExamplesFramework
+        PROPERTIES COMPILE_DEFINITIONS ACTS_BUILD_EXAMPLES_ROOT
+    )
+endif()
 
 # newer DD4hep version require TBB and search internally for TBB in
 # config-only mode. to avoid mismatches we explicitly search using

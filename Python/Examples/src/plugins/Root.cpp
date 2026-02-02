@@ -281,9 +281,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
   // Calibration
   {
-    py::class_<MeasurementCalibrator, std::shared_ptr<MeasurementCalibrator>>(
-        root, "MeasurementCalibrator");
-
     root.def(
         "makeScalingCalibrator",
         [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
