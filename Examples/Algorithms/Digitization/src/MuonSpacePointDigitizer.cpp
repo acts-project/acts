@@ -102,7 +102,6 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
   m_cfg.calibrator =
       std::make_unique<MuonSpacePointCalibrator>(calibCfg, logger().clone());
 
-  gROOT->SetStyle("ATLAS");
   return SUCCESS;
 }
 
