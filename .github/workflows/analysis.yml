@@ -66,8 +66,7 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          cd build
-          && uv run ../CI/test_coverage.py
+          uv run CI/test_coverage.py build
 
       - uses: actions/upload-artifact@v6
         with:
