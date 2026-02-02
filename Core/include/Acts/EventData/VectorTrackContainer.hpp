@@ -59,6 +59,7 @@ class VectorTrackContainerBase {
 
   // BEGIN INTERFACE HELPER
 
+  /// @cond
   template <bool EnsureConst, typename T>
   static std::any component_impl(T& instance, HashedString key,
                                  IndexType itrack) {
@@ -177,6 +178,8 @@ class VectorTrackContainerBase {
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
+  /// @endcond
+
   // END INTERFACE HELPER
 
   std::vector<IndexType> m_tipIndex;
@@ -224,90 +227,49 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
  public:
   // BEGIN INTERFACE
+  /// @cond
 
-  /// Get component by key and track index
-  /// @param key Hashed string key
-  /// @param itrack Track index
-  /// @return Component as std::any
   std::any component_impl(HashedString key, IndexType itrack) {
     return detail_vtc::VectorTrackContainerBase::component_impl<false>(
         *this, key, itrack);
   }
 
-  /// Get component by key and track index (const)
-  /// @param key Hashed string key
-  /// @param itrack Track index
-  /// @return Component as std::any
   std::any component_impl(HashedString key, IndexType itrack) const {
     return detail_vtc::VectorTrackContainerBase::component_impl<true>(
         *this, key, itrack);
   }
 
-  /// Add a new track
-  /// @return Index of the added track
   IndexType addTrack_impl();
 
-  /// Remove a track from the container
-  /// @param itrack Track index to remove
   void removeTrack_impl(IndexType itrack);
 
-  /// Add a dynamic column
-  /// @tparam T Type of the column
-  /// @param key Column key
   template <typename T>
   constexpr void addColumn_impl(const std::string_view& key) {
     HashedString hashedKey = hashStringDynamic(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
-  /// Get track parameters
-  /// @param itrack Track index
-  /// @return Parameters vector
   Parameters parameters(IndexType itrack) {
     return Parameters{m_params[itrack].data()};
   }
 
-  /// Get track parameters (const)
-  /// @param itrack Track index
-  /// @return Parameters vector
   ConstParameters parameters(IndexType itrack) const {
     return ConstParameters{m_params[itrack].data()};
   }
 
-  /// Get track covariance
-  /// @param itrack Track index
-  /// @return Covariance matrix
   Covariance covariance(IndexType itrack) {
     return Covariance{m_cov[itrack].data()};
   }
 
-  /// Get track covariance (const)
-  /// @param itrack Track index
-  /// @return Covariance matrix
   ConstCovariance covariance(IndexType itrack) const {
     return ConstCovariance{m_cov[itrack].data()};
   }
 
-  /// Copy dynamic column from source
-  /// @param dstIdx Destination track index
-  /// @param key Column key
-  /// @param srcPtr Source pointer as std::any
   void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
                             const std::any& srcPtr);
 
-  /// Ensure dynamic columns match another container
-  /// @param other Other container to match columns from
   void ensureDynamicColumns_impl(
       const detail_vtc::VectorTrackContainerBase& other);
-
-  /// Reserve space for tracks
-  /// @param size Number of tracks to reserve space for
-  void reserve(IndexType size);
-  /// Clear all tracks
-  void clear();
-  /// Get the number of tracks in the container
-  /// @return Number of tracks
-  std::size_t size() const;
 
   /// Set the reference surface for a track
   /// @param itrack Track index
@@ -325,7 +287,19 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
     m_particleHypothesis[itrack] = particleHypothesis;
   }
 
+  /// @endcond
   // END INTERFACE
+
+  /// Reserve space for tracks
+  /// @param size Number of tracks to reserve space for
+  void reserve(IndexType size);
+
+  /// Clear all tracks
+  void clear();
+
+  /// Get the number of tracks in the container
+  /// @return Number of tracks
+  std::size_t size() const;
 };
 
 static_assert(TrackContainerBackend<VectorTrackContainer>,

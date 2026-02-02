@@ -405,9 +405,7 @@ class VectorMultiTrajectory final
       IndexType parIdx) const {
     return ConstTrackStateProxy::ConstParameters{m_params[parIdx].data()};
   }
-  /// @endcond
 
-  /// @cond
   TrackStateProxy::Covariance covariance_impl(IndexType parIdx) {
     return TrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
@@ -416,9 +414,7 @@ class VectorMultiTrajectory final
       IndexType parIdx) const {
     return ConstTrackStateProxy::ConstCovariance{m_cov[parIdx].data()};
   }
-  /// @endcond
 
-  /// @cond
   TrackStateProxy::Covariance jacobian_impl(IndexType istate) {
     IndexType jacIdx = m_index[istate].ijacobian;
     return TrackStateProxy::Covariance{m_jac[jacIdx].data()};
@@ -428,9 +424,7 @@ class VectorMultiTrajectory final
     IndexType jacIdx = m_index[istate].ijacobian;
     return ConstTrackStateProxy::ConstCovariance{m_jac[jacIdx].data()};
   }
-  /// @endcond
 
-  /// @cond
   template <std::size_t measdim>
   TrackStateProxy::Calibrated<measdim> calibrated_impl(IndexType istate) {
     IndexType offset = m_measOffset[istate];
@@ -443,9 +437,7 @@ class VectorMultiTrajectory final
     IndexType offset = m_measOffset[istate];
     return ConstTrackStateProxy::ConstCalibrated<measdim>{&m_meas[offset]};
   }
-  /// @endcond
 
-  /// @cond
   template <std::size_t measdim>
   TrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
       IndexType istate) {
@@ -460,46 +452,23 @@ class VectorMultiTrajectory final
     return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
-  /// @endcond
 
-  /// Add a track state with the given mask and previous index
-  /// @param mask Components to allocate
-  /// @param iprevious Index of the previous track state
-  /// @return Index of the added track state
   IndexType addTrackState_impl(
       TrackStatePropMask mask = TrackStatePropMask::All,
       IndexType iprevious = kInvalid);
 
-  /// Add components to an existing track state
-  /// @param istate Index of the track state
-  /// @param mask Components to add
   void addTrackStateComponents_impl(IndexType istate, TrackStatePropMask mask);
 
-  /// Reserve space for track states
-  /// @param n Number of track states to reserve space for
-  void reserve(std::size_t n);
-
-  /// Share components from one track state to another
-  /// @param iself Index of the destination track state
-  /// @param iother Index of the source track state
-  /// @param shareSource Mask of components to share from source
-  /// @param shareTarget Mask of components to share to target
   void shareFrom_impl(IndexType iself, IndexType iother,
                       TrackStatePropMask shareSource,
                       TrackStatePropMask shareTarget);
 
-  /// Unset components of a track state
-  /// @param target Mask of components to unset
-  /// @param istate Index of the track state
   void unset_impl(TrackStatePropMask target, IndexType istate);
 
-  /// @cond
   bool has_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  /// Get the number of track states
-  /// @return Number of track states
   IndexType size_impl() const { return static_cast<IndexType>(m_index.size()); }
 
   void clear_impl();
@@ -513,24 +482,17 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(
         *this, key, istate);
   }
-  /// @endcond
 
-  /// Add a dynamic column
-  /// @tparam T Column value type
-  /// @param key Column name
   template <typename T>
   void addColumn_impl(std::string_view key) {
     HashedString hashedKey = hashStringDynamic(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
-  /// @cond
   bool hasColumn_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
-  /// @endcond
 
-  /// @cond
   template <typename val_t, typename cov_t>
   void allocateCalibrated_impl(IndexType istate,
                                const Eigen::DenseBase<val_t>& val,
@@ -584,6 +546,10 @@ class VectorMultiTrajectory final
   /// @endcond
 
   // END INTERFACE
+
+  /// Reserve space for track states
+  /// @param n Number of track states to reserve space for
+  void reserve(std::size_t n);
 };
 
 static_assert(
