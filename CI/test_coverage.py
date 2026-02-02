@@ -14,6 +14,7 @@ import subprocess
 from pathlib import Path
 
 import typer
+from typing import Annotated
 from rich.console import Console
 
 app = typer.Typer(add_completion=False)
@@ -40,10 +41,34 @@ def gcovr_version(gcovr_exe: str) -> tuple[int, int] | None:
     return (int(match.group(1)), int(match.group(2)))
 
 
+def validate_coverage_xml(path: Path, schema_path: Path) -> None:
+    if not path.exists():
+        console.print(f"Coverage XML not found: {path}", style="red")
+        raise typer.Exit(1)
+    xmllint = shutil.which("xmllint")
+    if not xmllint:
+        console.print("xmllint not available for XML validation.", style="red")
+        raise typer.Exit(1)
+    if not schema_path.exists():
+        console.print(f"Coverage XSD not found: {schema_path}", style="red")
+        raise typer.Exit(1)
+    cmd = [xmllint, "--noout", "--schema", str(schema_path), str(path)]
+    console.print(f"$ {' '.join(cmd)}")
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as exc:
+        error_output = exc.stderr or exc.stdout or "xmllint failed"
+        console.print(error_output.strip(), style="red")
+        raise typer.Exit(1) from exc
+
+
 @app.command()
 def main(
-    build_dir: Path = typer.Argument(..., help="CMake build directory"),
-    gcov: str | None = typer.Option(None, "--gcov", help="Path to gcov executable"),
+    build_dir: Annotated[Path, typer.Argument(help="CMake build directory")],
+    gcov: Annotated[
+        str | None,
+        typer.Option(None, "--gcov", help="Path to gcov executable"),
+    ] = None,
 ) -> None:
     build_dir = build_dir.resolve()
     if not build_dir.is_dir():
@@ -92,12 +117,16 @@ def main(
         "-e",
         f"{source_dir_posix}/Tests/",
         "-e",
+        r".*/boost/.*",
+        "-e",
         r".*json\.hpp",
         "-e",
         f"{source_dir_posix}/Python/",
     ]
     gcovr = [gcovr_exe]
 
+    coverage_xml_path = coverage_dir / "cov.xml"
+    schema_path = script_dir / "sonar_coverage.xsd"
     gcovr_sonar_cmd = (
         gcovr
         + ["-r", str(source_dir)]
@@ -106,10 +135,11 @@ def main(
         + ["--merge-mode-functions", "separate"]
         + excludes
         + extra_flags
-        + ["--sonarqube", str(coverage_dir / "cov.xml")]
+        + ["--sonarqube", str(coverage_xml_path)]
     )
     console.print(f"$ {' '.join(gcovr_sonar_cmd)}")
     subprocess.run(gcovr_sonar_cmd, cwd=build_dir, check=True)
+    validate_coverage_xml(coverage_xml_path, schema_path)
 
     gcovr_cmd = (
         gcovr
