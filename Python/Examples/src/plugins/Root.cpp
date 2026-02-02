@@ -298,10 +298,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
       return std::function<void(
           const std::string&, const Acts::GeometryContext&,
           const MuonSpacePointBucket&, const SimHitContainer&,
-          const SimParticleContainer&,
-          const std::function<Acts::Transform3(
-              const Acts::GeometryContext&, const Acts::GeometryIdentifier&)>&,
-          const Acts::TrackingGeometry&)>(visualizeMuonSpacePoints);
+          const SimParticleContainer&, const Acts::TrackingGeometry&,
+          const Acts::Logger&)>(visualizeMuonSpacePoints);
     });
   }
 }

@@ -44,14 +44,11 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     bool dumpVisualization{true};
     /// @brief Visualization function (optional, e.g., for ROOT-based visualization)
     /// Takes: outputPath, gctx, bucket, simHits, simParticles,
-    /// toSpacePointFrame, trackingGeometry
-    std::function<void(
-        const std::string&, const Acts::GeometryContext&,
-        const MuonSpacePointBucket&, const SimHitContainer&,
-        const SimParticleContainer&,
-        const std::function<Acts::Transform3(const Acts::GeometryContext&,
-                                             const Acts::GeometryIdentifier&)>&,
-        const Acts::TrackingGeometry&)>
+    /// trackingGeometry, logger
+    std::function<void(const std::string&, const Acts::GeometryContext&,
+                       const MuonSpacePointBucket&, const SimHitContainer&,
+                       const SimParticleContainer&,
+                       const Acts::TrackingGeometry&, const Acts::Logger&)>
         visualizationFunction{};
     /// @brief Applied dead time between two consecutive straw hits
     double strawDeadTime{1. * Acts::UnitConstants::ms};

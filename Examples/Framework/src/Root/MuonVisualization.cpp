@@ -18,7 +18,9 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <cassert>
@@ -100,38 +102,32 @@ RangeXD<2, double> canvasRanges(
 }
 
 /// @brief Returns whether a surface should be drawn on the canvas
-bool isSurfaceToDraw(
-    const Acts::GeometryContext& gctx, const Surface& surface,
-    const RangeXD<2, double>& canvasBoundaries,
-    const std::function<Acts::Transform3(const Acts::GeometryContext&,
-                                         const Acts::GeometryIdentifier&)>&
-        toSpacePointFrame) {
+bool isSurfaceToDraw(const Surface& surface,
+                     const RangeXD<2, double>& canvasBoundaries,
+                     const Vector3& posInFrame) {
   // Draw only active surfaces
   if (surface.associatedDetectorElement() == nullptr) {
     return false;
   }
-  // surface position in the frame
-  const Vector3 pos =
-      toSpacePointFrame(gctx, surface.geometryId()).translation();
   const auto& bounds = surface.bounds();
 
   if (surface.type() == Surface::SurfaceType::Plane) {
     const double hL{halfHeight(bounds)};
     // check whether the surface is inside the visible range
-    const double minZ = std::max(pos.z() - hL, canvasBoundaries.min(0));
-    const double maxZ = std::min(pos.z() + hL, canvasBoundaries.max(0));
+    const double minZ = std::max(posInFrame.z() - hL, canvasBoundaries.min(0));
+    const double maxZ = std::min(posInFrame.z() + hL, canvasBoundaries.max(0));
     // The maximum is below the left side of the strip plane
     // or the minimum is above the right side of the plane
-    return maxZ > pos.z() - hL && minZ < pos.z() + hL &&
-           pos.y() > canvasBoundaries.min(1) &&
-           pos.y() < canvasBoundaries.max(1);
+    return maxZ > posInFrame.z() - hL && minZ < posInFrame.z() + hL &&
+           posInFrame.y() > canvasBoundaries.min(1) &&
+           posInFrame.y() < canvasBoundaries.max(1);
   } else if (surface.type() == Surface::SurfaceType::Straw) {
     const double r = static_cast<const LineBounds&>(bounds).get(LineBounds::eR);
     // Check that the straw surface is well embedded on the canvas
-    return pos.y() - r > canvasBoundaries.min(1) &&
-           pos.y() + r < canvasBoundaries.max(1) &&
-           pos.z() - r > canvasBoundaries.min(0) &&
-           pos.z() + r < canvasBoundaries.max(0);
+    return posInFrame.y() - r > canvasBoundaries.min(1) &&
+           posInFrame.y() + r < canvasBoundaries.max(1) &&
+           posInFrame.z() - r > canvasBoundaries.min(0) &&
+           posInFrame.z() + r < canvasBoundaries.max(0);
   }
 
   return false;
@@ -141,13 +137,34 @@ bool isSurfaceToDraw(
 
 namespace ActsExamples {
 
-void visualizeMuonSpacePoints(
-    const std::string& outputPath, const GeometryContext& gctx,
-    const MuonSpacePointBucket& bucket, const SimHitContainer& simHits,
-    const SimParticleContainer& simParticles,
-    const std::function<Transform3(
-        const GeometryContext&, const GeometryIdentifier&)>& toSpacePointFrame,
-    const TrackingGeometry& trackingGeometry) {
+void visualizeMuonSpacePoints(const std::string& outputPath,
+                              const GeometryContext& gctx,
+                              const MuonSpacePointBucket& bucket,
+                              const SimHitContainer& simHits,
+                              const SimParticleContainer& simParticles,
+                              const TrackingGeometry& trackingGeometry,
+                              const Acts::Logger& logger) {
+  // Helper function to transform from hit frame to space point frame
+  auto toSpacePointFrame = [&](const GeometryIdentifier& hitId) -> Transform3 {
+    const Surface* hitSurf = trackingGeometry.findSurface(hitId);
+    assert(hitSurf != nullptr);
+
+    // Fetch the parent volume to express all points in the same coordinate
+    // system
+    const TrackingVolume* volume =
+        trackingGeometry.findVolume(toChamberId(hitId));
+    assert(volume != nullptr);
+
+    // Transformation to the common coordinate system of all space points
+    const Transform3 parentTrf{AngleAxis3{90._degree, Vector3::UnitZ()} *
+                               volume->globalToLocalTransform(gctx) *
+                               hitSurf->localToGlobalTransform(gctx)};
+    ACTS_VERBOSE("Transform into space point frame for surface "
+                 << hitId << " is \n"
+                 << Acts::toString(parentTrf));
+    return parentTrf;
+  };
+
   auto canvas = std::make_unique<TCanvas>("can", "can", 600, 600);
   canvas->cd();
 
@@ -166,13 +183,11 @@ void visualizeMuonSpacePoints(
   // by the canvas
   const TrackingVolume* chambVolume = trackingGeometry.findVolume(chambId);
   assert(chambVolume != nullptr);
-  chambVolume->apply(overloaded{[&canvasBound, &gctx, &primitives,
-                                 &toSpacePointFrame](const Surface& surface) {
-    if (!isSurfaceToDraw(gctx, surface, canvasBound, toSpacePointFrame)) {
+  chambVolume->apply(overloaded{[&](const Surface& surface) {
+    const Vector3 pos = toSpacePointFrame(surface.geometryId()).translation();
+    if (!isSurfaceToDraw(surface, canvasBound, pos)) {
       return;
     }
-    const Vector3 pos =
-        toSpacePointFrame(gctx, surface.geometryId()).translation();
     const auto& bounds = surface.bounds();
     if (surface.type() == Surface::SurfaceType::Plane) {
       const double hL{halfHeight(bounds)};
@@ -208,7 +223,7 @@ void visualizeMuonSpacePoints(
         (*simPartItr).hypothesis() != ParticleHypothesis::muon()) {
       continue;
     }
-    const auto toSpTrf = toSpacePointFrame(gctx, simHit.geometryId()) *
+    const auto toSpTrf = toSpacePointFrame(simHit.geometryId()) *
                          trackingGeometry.findSurface(simHit.geometryId())
                              ->localToGlobalTransform(gctx)
                              .inverse();

@@ -350,14 +350,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
         assert(chambVolume != nullptr);
         const std::string outputPath = std::format(
             "Event_{}_{}.pdf", ctx.eventNumber, chambVolume->volumeName());
-        m_cfg.visualizationFunction(
-            outputPath, gctx, bucket, m_inputSimHits(ctx),
-            m_inputParticles(ctx),
-            [this, &gctx](const GeometryContext&,
-                          const GeometryIdentifier& hitId) {
-              return toSpacePointFrame(gctx, hitId);
-            },
-            trackingGeometry());
+        m_cfg.visualizationFunction(outputPath, gctx, bucket,
+                                    m_inputSimHits(ctx), m_inputParticles(ctx),
+                                    trackingGeometry(), logger());
       }
       outSpacePoints.push_back(std::move(bucket));
     }

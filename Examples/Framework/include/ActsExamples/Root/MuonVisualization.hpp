@@ -32,16 +32,14 @@ namespace ActsExamples {
 /// @param bucket Space points to visualize
 /// @param simHits Container of simulated hits for drawing truth trajectories
 /// @param simParticles Container of simulated particles
-/// @param toSpacePointFrame Function that transforms from hit frame to space point frame
-///        Takes (gctx, geometryId) and returns the transformation
 /// @param trackingGeometry The tracking geometry to access surfaces and volumes
-void visualizeMuonSpacePoints(
-    const std::string& outputPath, const Acts::GeometryContext& gctx,
-    const MuonSpacePointBucket& bucket, const SimHitContainer& simHits,
-    const SimParticleContainer& simParticles,
-    const std::function<Acts::Transform3(const Acts::GeometryContext&,
-                                         const Acts::GeometryIdentifier&)>&
-        toSpacePointFrame,
-    const Acts::TrackingGeometry& trackingGeometry);
+/// @param logger Logger for diagnostic output
+void visualizeMuonSpacePoints(const std::string& outputPath,
+                              const Acts::GeometryContext& gctx,
+                              const MuonSpacePointBucket& bucket,
+                              const SimHitContainer& simHits,
+                              const SimParticleContainer& simParticles,
+                              const Acts::TrackingGeometry& trackingGeometry,
+                              const Acts::Logger& logger);
 
 }  // namespace ActsExamples
