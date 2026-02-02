@@ -163,8 +163,10 @@ CompositeSpacePointLineFitter::fastFit(
     return result;
   } else if (precResult) {
     if constexpr (fitTime) {
-      result.covariance(toUnderlying(t0), toUnderlying(t0)) =
-          Acts::square(precResult->dT0);
+      if (!m_cfg.fastPreFitter) {
+        result.covariance(toUnderlying(t0), toUnderlying(t0)) =
+            Acts::square(precResult->dT0);
+      }
       result.parameters[toUnderlying(t0)] = precResult->t0;
       if (!withinRange(precResult->t0, FitParIndex::t0)) {
         ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips")
@@ -182,14 +184,16 @@ CompositeSpacePointLineFitter::fastFit(
       return result;
     }
     result.parameters[toUnderlying(y0)] = precResult->y0;
-    result.covariance(toUnderlying(y0), toUnderlying(y0)) =
-        Acts::square(precResult->dY0);
-    result.covariance(toUnderlying(theta), toUnderlying(theta)) =
-        Acts::square(precResult->dTheta);
     result.nDoF = precResult->nDoF;
     result.nIter = precResult->nIter;
     result.chi2 = precResult->chi2;
     result.converged = true;
+    if (!m_cfg.fastPreFitter) {
+      result.covariance(toUnderlying(y0), toUnderlying(y0)) =
+          Acts::square(precResult->dY0);
+      result.covariance(toUnderlying(theta), toUnderlying(theta)) =
+          Acts::square(precResult->dTheta);
+    }
 
     auto firstPrecMeas = std::ranges::find_if(measurements, [](const auto& m) {
       return (fitStraws && m->isStraw()) || (!fitStraws && m->measuresLoc1());
@@ -207,10 +211,14 @@ CompositeSpacePointLineFitter::fastFit(
   if (nonPrecResult) {
     tanAlpha = nonPrecResult->theta;
     result.parameters[toUnderlying(x0)] = nonPrecResult->y0;
-    result.covariance(toUnderlying(x0), toUnderlying(x0)) =
-        Acts::square(nonPrecResult->dY0);
     result.nDoF += nonPrecResult->nDoF;
     result.nIter += nonPrecResult->nIter;
+    if (!m_cfg.fastPreFitter) {
+      result.covariance(toUnderlying(x0), toUnderlying(x0)) =
+          Acts::square(nonPrecResult->dY0);
+      result.covariance(toUnderlying(phi), toUnderlying(phi)) =
+          Acts::square(nonPrecResult->dTheta);
+    }
   }
 
   const Vector postFitDir = makeDirectionFromAxisTangents(tanAlpha, tanBeta);
@@ -371,7 +379,9 @@ CompositeSpacePointLineFitter::fit(
       result.converged = false;
     } else {
       ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit failed.");
-      return result;
+      if (!m_cfg.ignoreFailedPreFit) {
+        return result;
+      }
     }
   }
   // Update the drift signs if no re-calibration per iteration is scheduled
@@ -447,26 +457,30 @@ CompositeSpacePointLineFitter::fit(
     switch (pullCalculator.config().parsToUse.size()) {
       // 2D fit (intercept + inclination angle)
       case 2: {
-        update = updateParameters<2>(pullCalculator.config().parsToUse.front(),
-                                     cache, result.parameters);
+        update =
+            updateParameters<2>(pullCalculator.config().parsToUse.front(),
+                                cache, result.parameters, result.covariance);
         break;
       }
       // 2D fit + time
       case 3: {
-        update = updateParameters<3>(pullCalculator.config().parsToUse.front(),
-                                     cache, result.parameters);
+        update =
+            updateParameters<3>(pullCalculator.config().parsToUse.front(),
+                                cache, result.parameters, result.covariance);
         break;
       }
       // 3D spatial fit (x0, y0, theta, phi)
       case 4: {
-        update = updateParameters<4>(pullCalculator.config().parsToUse.front(),
-                                     cache, result.parameters);
+        update =
+            updateParameters<4>(pullCalculator.config().parsToUse.front(),
+                                cache, result.parameters, result.covariance);
         break;
       }
       // full fit
       case 5: {
-        update = updateParameters<5>(pullCalculator.config().parsToUse.front(),
-                                     cache, result.parameters);
+        update =
+            updateParameters<5>(pullCalculator.config().parsToUse.front(),
+                                cache, result.parameters, result.covariance);
         break;
       }
       default:
@@ -504,37 +518,6 @@ CompositeSpacePointLineFitter::fit(
     result.measurements = fitOpts.calibrator->calibrate(
         fitOpts.calibContext, line.position(), line.direction(), t0,
         result.measurements);
-
-    // Assign the Hessian
-    switch (pullCalculator.config().parsToUse.size()) {
-      // 2D fit (intercept + inclination angle)
-      case 2: {
-        fillCovariance<2>(pullCalculator.config().parsToUse.front(),
-                          cache.hessian, result.covariance);
-        break;
-      }
-      // 2D fit + time
-      case 3: {
-        fillCovariance<3>(pullCalculator.config().parsToUse.front(),
-                          cache.hessian, result.covariance);
-        break;
-      }
-      // 3D spatial fit (x0, y0, theta, phi)
-      case 4: {
-        fillCovariance<4>(pullCalculator.config().parsToUse.front(),
-                          cache.hessian, result.covariance);
-        break;
-      }
-      // full fit
-      case 5: {
-        fillCovariance<5>(pullCalculator.config().parsToUse.front(),
-                          cache.hessian, result.covariance);
-        break;
-      }
-      // No need to warn here -> captured by the fit iterations
-      default:
-        break;
-    }
   }
   return result;
 }
@@ -543,11 +526,13 @@ template <unsigned N>
 CompositeSpacePointLineFitter::UpdateStep
 CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                                                 ChiSqCache& cache,
-                                                ParamVec_t& currentPars) const
+                                                ParamVec_t& currentPars,
+                                                CovMat_t& covariance) const
   requires(N >= 2 && N <= s_nPars)
 {
   auto firstIdx = toUnderlying(firstPar);
   assert(firstIdx + N <= s_nPars);
+  UpdateStep retCode{UpdateStep::goodStep};
   // Current parameters mapped to an Eigen interface
   if constexpr (N == 3) {
     constexpr auto t0Idx = toUnderlying(FitParIndex::t0);
@@ -571,10 +556,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   if (miniGradient.norm() < m_cfg.precCutOff) {
     ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                         << ": Gradient is small enough");
-    if constexpr (N == 3) {
-      std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
-    }
-    return UpdateStep::converged;
+    retCode = UpdateStep::converged;
   }
   // Take out the filled block from the hessian
   Acts::ActsSquareMatrix<N> miniHessian{
@@ -590,22 +572,47 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   // The Hessian can safely be inverted
   if (inverseH) {
     const ActsVector<N> update{(*inverseH) * miniGradient};
-
-    if (update.norm() < m_cfg.precCutOff) {
-      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__ << ": Update "
-                          << toString(update) << " is negligible small.");
-      if constexpr (N == 3) {
-        std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
-      }
-      return UpdateStep::converged;
+    // We compute also the normalized update, defined as the parameter
+    // update expressed in units of the parameter uncertainties. This quantifies
+    // the significance of the update relative to the estimated errors.
+    double normUpdate{0.};
+    for (unsigned i = 0; i < N; ++i) {
+      normUpdate += Acts::square(update[i]) / (*inverseH)(i, i);
     }
+
+    if (std::sqrt(normUpdate) < m_cfg.normPrecCutOff ||
+        update.norm() < m_cfg.precCutOff) {
+      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Update/ Normalized update " << toString(update)
+                          << "/ " << normUpdate << " are negligible small.");
+      retCode = UpdateStep::converged;
+    }
+
+    // If we converged, set the covariance and return (only if Hessian is
+    // invertible)
+    if (retCode == UpdateStep::converged) {
+      covariance.block<N, N>(firstIdx, firstIdx) = *inverseH;
+
+      // swap back t0 component if needed
+      if constexpr (N == 3) {
+        constexpr auto t0Idx = toUnderlying(FitParIndex::t0);
+        covariance.row(2).swap(covariance.row(t0Idx));
+        covariance.col(2).swap(covariance.col(t0Idx));
+        std::swap(currentPars[2], currentPars[t0Idx]);
+      }
+      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Evaluated covariance: \n"
+                          << toString(covariance));
+      return retCode;
+    }
+
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Inverted Hessian \n"
                           << toString(*inverseH) << "\n-> Update parameters by "
                           << toString(update));
     miniPars -= update;
 
-  } else {
+  } else if (retCode != UpdateStep::converged) {
     // Fall back to gradient decent with a fixed damping factor
     const ActsVector<N> update{
         std::min(m_cfg.gradientStep, miniGradient.norm()) *
@@ -619,41 +626,6 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   if constexpr (N == 3) {
     std::swap(currentPars[2], currentPars[toUnderlying(FitParIndex::t0)]);
   }
-  // Check parameter ranges
-
-  return UpdateStep::goodStep;
+  return retCode;
 }
-
-template <unsigned N>
-void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
-                                                   const CovMat_t& hessian,
-                                                   CovMat_t& covariance) const
-  requires(N >= 2 && N <= s_nPars)
-{
-  auto firstIdx = toUnderlying(firstPar);
-  assert(firstIdx + N <= s_nPars);
-
-  Acts::ActsSquareMatrix<N> miniHessian =
-      hessian.block<N, N>(firstIdx, firstIdx).eval();
-
-  auto inverseH = safeInverse(miniHessian);
-  // The Hessian can safely be inverted
-  if (inverseH) {
-    auto covBlock = covariance.block<N, N>(firstIdx, firstIdx);
-    covBlock = *inverseH;
-
-    // swap back t0 component if needed
-    if constexpr (N == 3) {
-      constexpr auto t0Idx = toUnderlying(FitParIndex::t0);
-      covariance(t0Idx, t0Idx) = 1.;
-      covariance.row(2).swap(covariance.row(t0Idx));
-      covariance.col(2).swap(covariance.col(t0Idx));
-    }
-  }
-
-  ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                      << ": Evaluated covariance: \n"
-                      << toString(covariance));
-}
-
 }  // namespace Acts::Experimental
