@@ -88,6 +88,10 @@ std::optional<T> findCached(Acts::PdgParticle pdg,
       return findCachedImpl<T, eAntiProton, type>(map);
     case eLead:
       return findCachedImpl<T, eLead, type>(map);
+    case eK0S:
+      return findCachedImpl<T, eK0S, type>(map);
+    case eLambda0:
+      return findCachedImpl<T, eLambda0, type>(map);
     default:
       return std::nullopt;
   }
@@ -269,6 +273,12 @@ std::optional<std::string_view> Acts::pdgToShortAbsString(PdgParticle pdg) {
   }
   if (pdg == eLead) {
     return "lead";
+  }
+  if (pdg == eK0S) {
+    return "K0S";
+  }
+  if (pdg == eLambda0) {
+    return "Lambda0";
   }
   return std::nullopt;
 }
