@@ -556,6 +556,7 @@ struct GsfActor {
 
     // Keep track of all created components for outlier handling
     std::vector<TrackIndexType> allTips;
+    allTips.reserve(stepper.numberComponents(state.stepping));
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
@@ -646,9 +647,9 @@ struct GsfActor {
       ++result.measurementStates;
     }
 
-    updateMultiTrajectory(
-        result, tmpStates, surface,
-        isOutlier ? TrackStateType::eOutlier : TrackStateType::eMeasurement);
+    updateMultiTrajectory(result, tmpStates, surface,
+                          isOutlier ? TrackStateType().setIsOutlier()
+                                    : TrackStateType().setIsMeasurement());
 
     result.lastMeasurementTip = result.currentTip;
     result.lastMeasurementSurface = &surface;
@@ -732,7 +733,7 @@ struct GsfActor {
 
     updateMultiTrajectory(
         result, tmpStates, surface,
-        isHole ? TrackStateType::eHole : TrackStateType::eNone);
+        isHole ? TrackStateType().setIsHole() : TrackStateType());
 
     return Result<void>::success();
   }
@@ -757,8 +758,6 @@ struct GsfActor {
     }
   }
 
-  enum class TrackStateType { eMeasurement, eOutlier, eHole, eNone };
-
   void updateMultiTrajectory(result_type& result,
                              const TemporaryStates& tmpStates,
                              const Surface& surface,
@@ -768,11 +767,11 @@ struct GsfActor {
     using FltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
-    const bool isMeasurement = type == TrackStateType::eMeasurement;
-    const bool isOutlier = type == TrackStateType::eOutlier;
-    const bool isHole = type == TrackStateType::eHole;
-
     if (!m_cfg.inReversePass) {
+      const bool isMeasurement = type.isMeasurement();
+      const bool isOutlier = type.isOutlier();
+      const bool isHole = type.isHole();
+
       const bool hasMaterial = surface.surfaceMaterial() != nullptr;
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
