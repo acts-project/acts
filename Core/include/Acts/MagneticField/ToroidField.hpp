@@ -106,32 +106,32 @@ class ToroidField final : public MagneticFieldProvider {
   static std::vector<std::array<float, 2>> ectRacetrackRadial(
       float Lrho, float Lz, int nArc, int nStraight, bool close);
 
-  static std::vector<std::array<float, 2>> racetrackRZ(float a, float b,
-                                                       float Lz, int nArc,
-                                                       int nStraight,
-                                                       bool close);
+  static std::vector<std::array<double, 2>> racetrackRZ(double a, double b,
+                                                        double Lz, int nArc,
+                                                        int nStraight,
+                                                        bool close);
 
-  static void buildSegsMidsRZ(const std::vector<std::array<float, 2>>& rz,
-                              std::vector<std::array<float, 2>>& d_rz,
-                              std::vector<std::array<float, 2>>& m_rz);
+  static void buildSegsMidsRZ(const std::vector<std::array<double, 2>>& rz,
+                              std::vector<std::array<double, 2>>& d_rz,
+                              std::vector<std::array<double, 2>>& m_rz);
 
-  static void mapRingToXYZ(float l,
-                           const std::vector<std::array<float, 2>>& m_rz,
-                           const std::vector<std::array<float, 2>>& d_rz,
-                           float phi, int sign, float zShift,
-                           std::vector<std::array<float, 3>>& mids_out,
-                           std::vector<std::array<float, 3>>& segs_out);
+  static void mapRingToXYZ(double l,
+                           const std::vector<std::array<double, 2>>& m_rz,
+                           const std::vector<std::array<double, 2>>& d_rz,
+                           double phi, int sign, double zShift,
+                           std::vector<std::array<double, 3>>& mids_out,
+                           std::vector<std::array<double, 3>>& segs_out);
 
   void buildGeometry();
 
   Config m_cfg;
 
   // Precomputed geometry (float storage; double accumulation)
-  std::vector<std::array<float, 3>> m_segs_barrel;
-  std::vector<std::array<float, 3>> m_mids_barrel;
+  std::vector<std::array<double, 3>> m_segs_barrel;
+  std::vector<std::array<double, 3>> m_mids_barrel;
 
-  std::vector<std::array<float, 3>> m_segs_ect;  // both endcaps combined
-  std::vector<std::array<float, 3>> m_mids_ect;
+  std::vector<std::array<double, 3>> m_segs_ect;  // both endcaps combined
+  std::vector<std::array<double, 3>> m_mids_ect;
 
   void accumulateBarrelField(double X, double Y, double Z, double eps,
                              double pref, double& bx, double& by,
