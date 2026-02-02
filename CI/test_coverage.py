@@ -70,7 +70,9 @@ def main(
     if version is not None:
         console.print(f"Found gcovr version {version[0]}.{version[1]}")
         if version < (5, 0):
-            console.print("Consider upgrading to a newer gcovr version.", style="yellow")
+            console.print(
+                "Consider upgrading to a newer gcovr version.", style="yellow"
+            )
         elif version == (5, 1):
             console.print(
                 "Version 5.1 does not support parallel processing of gcov data.",
