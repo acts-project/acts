@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "gcovr==8.6",
+# ]
+# ///
 import sys
 import os
 import subprocess
@@ -37,7 +43,7 @@ p.add_argument("--gcov", default=check_output(["which", "gcov"])[1])
 args = p.parse_args()
 
 ret, gcovr_exe = check_output(["which", "gcovr"])
-assert ret == 0, "gcovr not installed. Use 'pip install gcovr'."
+assert ret == 0, "gcovr not installed. Use 'uv run --script' or install gcovr."
 
 ret, gcovr_version_text = check_output(["gcovr", "--version"])
 gcovr_version = tuple(
