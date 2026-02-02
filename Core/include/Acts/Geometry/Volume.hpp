@@ -55,6 +55,12 @@ class Volume : public GeometryObject {
   /// @return Reference to this volume for assignment chaining
   Volume& operator=(const Volume& vol);
 
+  /// Move assignment operator
+  ///
+  /// @param other is the other volume to be moved
+  /// @return Reference to this volume for assignment chaining
+  Volume& operator=(Volume&& other) noexcept = default;
+
   /// @brief Get the transformation matrix from the local volume frame
   ///        to the global experiment's frame
   /// @param gctx The current geometry context object, e.g. alignment

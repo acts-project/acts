@@ -87,17 +87,17 @@ readMaps(const std::filesystem::path& path) {
     if (key != nullptr && std::strcmp(key->GetClassName(), "TH2D") == 0) {
       auto [geoId, var] = parseMapKey(key->GetName());
 
-      TH2D hist;
-      key->Read(&hist);
+      auto hist = std::make_unique<TH2D>();
+      key->Read(hist.get());
 
       if (var == "x_offset") {
-        maps[geoId].x_offset = hist;
+        maps[geoId].x_offset = std::move(hist);
       } else if (var == "x_scale") {
-        maps[geoId].x_scale = hist;
+        maps[geoId].x_scale = std::move(hist);
       } else if (var == "y_offset") {
-        maps[geoId].y_offset = hist;
+        maps[geoId].y_offset = std::move(hist);
       } else if (var == "y_scale") {
-        maps[geoId].y_scale = hist;
+        maps[geoId].y_scale = std::move(hist);
       } else {
         throw std::runtime_error("Unrecognized var: " + var);
       }

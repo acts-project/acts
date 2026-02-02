@@ -19,6 +19,7 @@
 #include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <any>
 #include <cassert>
@@ -88,6 +89,16 @@ class VectorMultiTrajectoryBase {
     hist_t hist;
 
     void toStream(std::ostream& os, std::size_t n = 1);
+
+    // This is necessary to make the move constructor and assignment operator
+    // noexcept
+    Statistics() noexcept = default;
+    explicit Statistics(const hist_t& h) noexcept : hist(h) {}
+    explicit Statistics(hist_t&& h) noexcept : hist(std::move(h)) {}
+    Statistics(const Statistics& other) = default;
+    Statistics(Statistics&& other) noexcept = default;
+    Statistics& operator=(const Statistics& other) = default;
+    Statistics& operator=(Statistics&& other) noexcept = default;
   };
 
   template <typename T>
@@ -170,7 +181,7 @@ class VectorMultiTrajectoryBase {
       }
     }
 
-    return Statistics{h};
+    return Statistics(std::move(h));
   }
 
  protected:

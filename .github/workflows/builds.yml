@@ -589,7 +589,7 @@ jobs:
         run: ccache -s
 
       - name: Install wheel
-        run: pip install $(ls *.whl)
+        run: pip install $(./ls *.whl)
 
       - name: Save ccache
         uses: actions/cache/save@v5
