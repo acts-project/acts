@@ -246,13 +246,13 @@ BOOST_AUTO_TEST_CASE(hough_plane_layers_hits) {
   const std::size_t nX = 1;
   const std::size_t nY = 1;
   HoughTransformUtils::HoughPlaneConfig config{nX, nY};
-  HoughTransformUtils::HoughPlane<uint8_t> plane(config);
+  HoughTransformUtils::HoughPlane<std::uint8_t> plane(config);
 
-  uint8_t nHits = 0;
-  static constexpr uint8_t nLayers = 10;
-  for (uint8_t layer = 1; layer <= nLayers; ++layer) {
+  std::uint8_t nHits = 0;
+  static constexpr std::uint8_t nLayers = 10;
+  for (std::uint8_t layer = 1; layer <= nLayers; ++layer) {
     // Add hits equal to the layer number
-    for (uint8_t hit = 0; hit < layer; ++hit) {
+    for (std::uint8_t hit = 0; hit < layer; ++hit) {
       plane.fillBin(0, 0, nHits++, layer);
     }
   }
