@@ -2,7 +2,7 @@ set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
-set(_examples_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}/examples")
+set(_examples_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}/acts/examples")
 set(py_files
     __init__.py
     simulation.py

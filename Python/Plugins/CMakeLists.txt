@@ -1,3 +1,5 @@
+set(_plugins_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}/acts")
+
 # This macro adds the plugin binding as a separate library if configured to be built.
 # The plugin is then added to the _plugins_built list which is propagated to the parent scope
 # and used to populate the __init__.py file automatically.
@@ -11,7 +13,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
         set(_target "ActsPluginsPythonBindings${_name}")
         pybind11_add_module(${_target} src/${_name}.cpp)
 
-        install(TARGETS ${_target} DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
+        install(TARGETS ${_target} DESTINATION ${_plugins_python_install_dir})
 
         set_target_properties(
             ${_target}
@@ -39,7 +41,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
     )
     install(
         FILES ${_python_dir}/acts/${_name_lower}.py
-        DESTINATION ${ACTS_PYTHON_INSTALL_DIR}
+        DESTINATION ${_plugins_python_install_dir}
     )
 endmacro()
 
