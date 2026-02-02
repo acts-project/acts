@@ -57,6 +57,7 @@ def main():
         "odd-digi-smearing-config-notime.json",
         # TODO Mention these files somewhere?
         "generate_particle_data_table.py",
+        "Examples/Python/tests/test_toroidal_field.py",
         "lazy_autodoc.py",
         "codegen/src/codegen/sympy_common.py",
         "CompressedIO.h",
@@ -67,6 +68,8 @@ def main():
         "todo.md",
         "bugs.md",
         "deprecated.md",
+        "acts-version-manager.js",
+        "tex-mml-chtml.js",
     )
 
     suffix_header = (

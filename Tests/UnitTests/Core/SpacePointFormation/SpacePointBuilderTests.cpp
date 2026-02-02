@@ -94,9 +94,9 @@ std::pair<Vector3, Vector3> stripEnds(
 }
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 
 // detector geometry
@@ -121,7 +121,7 @@ std::default_random_engine rng(42);
 BOOST_AUTO_TEST_SUITE(SpacePointFormationSuite)
 
 BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
-  (void)index;
+  static_cast<void>(index);
 
   double phi = 5._degree;
   double theta = 95._degree;

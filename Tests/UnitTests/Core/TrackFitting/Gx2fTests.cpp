@@ -72,7 +72,7 @@ static void drawMeasurements(
     auto lposition = singleMeasurement.parameters;
 
     auto surf = geometry->findSurface(singleMeasurement.m_geometryId);
-    auto transf = surf->transform(geoCtx);
+    auto transf = surf->localToGlobalTransform(geoCtx);
 
     EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
                                      locErrorScale, viewConfig);
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 ACTS_LOCAL_LOGGER(getDefaultLogger("Gx2fTests", logLevel))
 
 // Context objects
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 const CalibrationContext calCtx;
 

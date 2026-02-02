@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -31,11 +31,9 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
-#include <functional>
-#include <limits>
-#include <map>
 #include <memory>
-#include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 namespace Acts {
 
@@ -294,7 +292,7 @@ class KalmanFitter {
     SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
 
     /// Allows retrieving measurements for a surface
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Surface*, SourceLink> inputMeasurements;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -374,7 +372,7 @@ class KalmanFitter {
         ACTS_VERBOSE("Perform " << state.options.direction << " filter step");
         auto res = filter(surface, state, stepper, navigator, result);
         if (!res.ok()) {
-          ACTS_ERROR("Error in " << state.options.direction
+          ACTS_DEBUG("Error in " << state.options.direction
                                  << " filter: " << res.error());
           return res.error();
         }
@@ -408,7 +406,7 @@ class KalmanFitter {
           // Bind the parameter to the target surface
           auto res = stepper.boundState(state.stepping, *targetReached.surface);
           if (!res.ok()) {
-            ACTS_ERROR("Error while acquiring bound state for target surface: "
+            ACTS_DEBUG("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
             return res.error();
           } else {
@@ -448,12 +446,11 @@ class KalmanFitter {
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
       const bool precedingMeasurementExists = result.measurementStates > 0;
-      const bool surfaceIsSensitive =
-          surface->associatedDetectorElement() != nullptr;
+      const bool surfaceIsSensitive = surface->isSensitive();
       const bool surfaceHasMaterial = surface->surfaceMaterial() != nullptr;
 
       // Try to find the surface in the measurement surfaces
-      const auto sourceLinkIt = inputMeasurements.find(surface->geometryId());
+      const auto sourceLinkIt = inputMeasurements.find(surface);
       if (sourceLinkIt != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
@@ -463,8 +460,12 @@ class KalmanFitter {
                                            freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PreUpdate);
+        detail::performMaterialInteraction(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::PreUpdate),
+            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+            logger());
 
         // do the kalman update (no need to perform covTransport here, hence no
         // point in performing globalToLocal correction)
@@ -481,7 +482,7 @@ class KalmanFitter {
         result.lastTrackIndex = trackStateProxy.index();
 
         // Update the stepper if it is not an outlier
-        if (trackStateProxy.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+        if (trackStateProxy.typeFlags().isMeasurement()) {
           // Update the stepping state with filtered parameters
           ACTS_VERBOSE("Filtering step successful, updated parameters are:\n"
                        << trackStateProxy.filtered().transpose());
@@ -496,8 +497,12 @@ class KalmanFitter {
         }
 
         // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PostUpdate);
+        detail::performMaterialInteraction(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::PostUpdate),
+            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+            logger());
         // We count the processed state
         ++result.processedStates;
         // Update the number of holes count only when encountering a
@@ -524,7 +529,7 @@ class KalmanFitter {
         const auto& trackStateProxy = *trackStateProxyRes;
         result.lastTrackIndex = trackStateProxy.index();
 
-        if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+        if (trackStateProxy.typeFlags().isHole()) {
           // Count the missed surface
           result.missedActiveSurfaces.push_back(surface);
         }
@@ -532,68 +537,15 @@ class KalmanFitter {
         ++result.processedStates;
 
         // Update state and stepper with (possible) material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::FullUpdate);
+        detail::performMaterialInteraction(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::FullUpdate),
+            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+            logger());
       }
 
       return Result<void>::success();
-    }
-
-    /// @brief Kalman actor operation: material interaction
-    ///
-    /// @tparam propagator_state_t is the type of Propagator state
-    /// @tparam stepper_t Type of the stepper
-    /// @tparam navigator_t Type of the navigator
-    ///
-    /// @param surface The surface where the material interaction happens
-    /// @param state The mutable propagator state object
-    /// @param stepper The stepper in use
-    /// @param navigator The navigator in use
-    /// @param updateStage The material update stage
-    ///
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
-    void materialInteractor(const Surface* surface, propagator_state_t& state,
-                            const stepper_t& stepper,
-                            const navigator_t& navigator,
-                            const MaterialUpdateStage& updateStage) const {
-      // Protect against null surface
-      if (surface == nullptr) {
-        ACTS_VERBOSE(
-            "Surface is nullptr. Cannot be used for material interaction");
-        return;
-      }
-
-      if (surface->surfaceMaterial() == nullptr) {
-        ACTS_VERBOSE("No material on surface: " << surface->geometryId());
-        return;
-      }
-
-      // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
-
-      if (!interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
-        ACTS_VERBOSE("No material on surface after evaluation: "
-                     << surface->geometryId());
-        return;
-      }
-
-      // Evaluate the material effects
-      interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
-                                                       energyLoss);
-
-      // Screen out material effects info
-      ACTS_VERBOSE("Material effects on surface: " << surface->geometryId()
-                                                   << " at update stage: "
-                                                   << updateStage << " are :");
-      ACTS_VERBOSE("eLoss = "
-                   << interaction.Eloss << ", "
-                   << "variancePhi = " << interaction.variancePhi << ", "
-                   << "varianceTheta = " << interaction.varianceTheta << ", "
-                   << "varianceQoverP = " << interaction.varianceQoverP);
-
-      // Update the state and stepper with material effects
-      interaction.updateState(state, stepper, addNoise);
     }
   };
 
@@ -673,13 +625,11 @@ class KalmanFitter {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << nMeasurements << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Surface*, SourceLink> inputMeasurements;
     for (; it != end; ++it) {
       SourceLink sl = *it;
       const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
-      // @TODO: This can probably change over to surface pointers as keys
-      auto geoId = surface->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      inputMeasurements.try_emplace(surface, std::move(sl));
     }
 
     // Create relevant options for the propagation options
@@ -696,8 +646,8 @@ class KalmanFitter {
     if constexpr (!isDirectNavigator) {
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      for (const auto& [surfaceId, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(*surface);
       }
     } else {
       assert(sSequence != nullptr &&
@@ -731,7 +681,7 @@ class KalmanFitter {
     auto propagatorInitResult =
         m_propagator.initialize(propagatorState, sParameters);
     if (!propagatorInitResult.ok()) {
-      ACTS_ERROR("Propagation initialization failed: "
+      ACTS_DEBUG("Propagation initialization failed: "
                  << propagatorInitResult.error());
       return propagatorInitResult.error();
     }
@@ -744,14 +694,14 @@ class KalmanFitter {
     auto result = m_propagator.propagate(propagatorState);
 
     if (!result.ok()) {
-      ACTS_ERROR("Propagation failed: " << result.error());
+      ACTS_DEBUG("Propagation failed: " << result.error());
       return result.error();
     }
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
     if (!kalmanResult.measurementStates) {
-      ACTS_ERROR("KalmanFilter failed: No measurement states found");
+      ACTS_DEBUG("KalmanFilter failed: No measurement states found");
       return KalmanFitterError::NoMeasurementFound;
     }
 
@@ -800,7 +750,7 @@ class KalmanFitter {
         filter_impl(sParameters, forwardPropagatorOptions, trackContainer);
 
     if (!forwardFilterResult.ok()) {
-      ACTS_ERROR("KalmanFilter failed: "
+      ACTS_DEBUG("KalmanFilter failed: "
                  << forwardFilterResult.error() << ", "
                  << forwardFilterResult.error().message());
       return forwardFilterResult.error();
@@ -837,7 +787,7 @@ class KalmanFitter {
           reverseStartParameters, reversePropagatorOptions, trackContainer);
 
       if (!reverseFilterResult.ok()) {
-        ACTS_ERROR("Reversed KalmanFilter failed: "
+        ACTS_DEBUG("Reversed KalmanFilter failed: "
                    << reverseFilterResult.error() << ", "
                    << reverseFilterResult.error().message());
         return reverseFilterResult.error();
@@ -851,7 +801,7 @@ class KalmanFitter {
 
       if (&firstMeasurementState.referenceSurface() !=
           &reverseLastMeasurementState.referenceSurface()) {
-        ACTS_ERROR(
+        ACTS_DEBUG(
             "Inconsistent reference surfaces between forward and "
             "reversed filtered tracks");
         return Result<TrackProxy>::failure(
@@ -876,7 +826,7 @@ class KalmanFitter {
           kfOptions.geoContext, trackContainer.trackStateContainer(),
           forwardTrack.tipIndex(), logger());
       if (!smoothRes.ok()) {
-        ACTS_ERROR("Smoothing step failed: " << smoothRes.error() << ", "
+        ACTS_DEBUG("Smoothing step failed: " << smoothRes.error() << ", "
                                              << smoothRes.error().message());
         return smoothRes.error();
       }
@@ -890,7 +840,7 @@ class KalmanFitter {
           extrapolationOptions, kfOptions.referenceSurfaceStrategy, logger());
 
       if (!extrapolationResult.ok()) {
-        ACTS_ERROR("Extrapolation to reference surface failed: "
+        ACTS_DEBUG("Extrapolation to reference surface failed: "
                    << extrapolationResult.error() << ", "
                    << extrapolationResult.error().message());
         return extrapolationResult.error();

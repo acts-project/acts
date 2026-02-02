@@ -165,7 +165,7 @@ template <typename fitter_t>
 Acts::Result<void>
 ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     const Acts::GeometryContext& gctx,
-    const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
+    const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
     const ActsAlignment::AlignedTransformUpdater& alignedTransformUpdater,
     ActsAlignment::AlignmentResult& alignResult) const {
   // Update the aligned transform
@@ -173,7 +173,8 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
   for (const auto& [surface, index] : alignResult.idxedAlignSurfaces) {
     // 1. The original transform
     const Acts::Vector3& oldCenter = surface->center(gctx);
-    const Acts::Transform3& oldTransform = surface->transform(gctx);
+    const Acts::Transform3& oldTransform =
+        surface->localToGlobalTransform(gctx);
 
     // 2. The delta transform
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
@@ -315,7 +316,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
       const auto& transform =
-          det->transform(alignOptions.fitOptions.geoContext);
+          det->localToGlobalTransform(alignOptions.fitOptions.geoContext);
       // write it to the result
       alignResult.alignedParameters.emplace(det, transform);
       const auto& translation = transform.translation();

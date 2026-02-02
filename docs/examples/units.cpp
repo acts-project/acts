@@ -80,7 +80,8 @@ void comprehensiveExample() {
 }
 
 void outputConversion() {
-  Acts::GeometryContext gctx;
+  Acts::GeometryContext gctx =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
   Acts::BoundTrackParameters trackPars =
       Acts::BoundTrackParameters::createCurvilinear(
           Acts::Vector4::Zero(), Acts::Vector3::UnitX(), 1, std::nullopt,

@@ -29,16 +29,11 @@ class CuboidPortalShell : public PortalShellBase {
   /// Type alias for cuboid volume bounds face enumeration
   using Face = CuboidVolumeBounds::Face;
 
-  /// Retrieve the portal associated to the given face. Can be nullptr if unset.
-  /// @param face The face to retrieve the portal for
-  /// @return The portal associated to the face
-  virtual Portal* portal(Face face) = 0;
-
   /// Retrieve a shared_ptr for the portal associated to the given face. Can be
   /// nullptr if unset.
   /// @param face The face to retrieve the portal for
   /// @return The portal associated to the face
-  virtual std::shared_ptr<Portal> portalPtr(Face face) = 0;
+  virtual std::shared_ptr<Portal> portal(Face face) = 0;
 
   /// Set the portal associated to the given face.
   /// @param portal The portal to set
@@ -50,7 +45,8 @@ class CuboidPortalShell : public PortalShellBase {
 
   /// @brief Get the transformation matrix for this cuboid portal shell
   /// @return Reference to the transformation matrix
-  virtual const Transform3& transform() const = 0;
+  virtual const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const = 0;
 };
 
 /// Output stream operator for the CuboidPortalShell::Face enum
@@ -71,10 +67,7 @@ class SingleCuboidPortalShell : public CuboidPortalShell {
   std::size_t size() const final;
 
   /// @copydoc CuboidPortalShell::portal
-  Portal* portal(Face face) final;
-
-  /// @copydoc CuboidPortalShell::portalPtr
-  std::shared_ptr<Portal> portalPtr(Face face) final;
+  std::shared_ptr<Portal> portal(Face face) final;
 
   /// @copydoc CuboidPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) final;
@@ -88,8 +81,9 @@ class SingleCuboidPortalShell : public CuboidPortalShell {
   /// @copydoc PortalShellBase::label
   std::string label() const override;
 
-  const Transform3& transform() const override {
-    return m_volume->transform();
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const override {
+    return m_volume->localToGlobalTransform(gctx);
   };
 
  private:
@@ -117,10 +111,7 @@ class CuboidStackPortalShell final : public CuboidPortalShell {
   std::size_t size() const override;
 
   /// @copydoc CuboidPortalShell::portal
-  Portal* portal(Face face) override;
-
-  /// @copydoc CuboidPortalShell::portalPtr
-  std::shared_ptr<Portal> portalPtr(Face face) override;
+  std::shared_ptr<Portal> portal(Face face) override;
 
   /// @copydoc CuboidPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) override;
@@ -137,7 +128,8 @@ class CuboidStackPortalShell final : public CuboidPortalShell {
 
   /// Return the stack's group transform
   /// @return Reference to the transform of the cuboid stack
-  const Transform3& transform() const override;
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const override;
 
  private:
   /// Shell stacking direction in local stack coordinates

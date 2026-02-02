@@ -14,7 +14,7 @@ CMAKE_INSTALL_BINDIR="@CMAKE_INSTALL_BINDIR@"
 CMAKE_INSTALL_LIBDIR="@CMAKE_INSTALL_LIBDIR@"
 PROJECT_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
 PROJECT_BINARY_DIR="@PROJECT_BINARY_DIR@"
-ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS="@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@"
+ACTS_BUILD_PYTHON_BINDINGS="@ACTS_BUILD_PYTHON_BINDINGS@"
 
 # TODO deal with ODD activation in one place
 ODD_PATH="@ODD_SOURCE_DIR@"
@@ -62,7 +62,7 @@ fi
 
 # Make Python bindings available if possible
 # first check if python bindings are enabled then check if the setup.sh file exists
-if [ "${ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS}" = "ON" ]; then
+if [ "${ACTS_BUILD_PYTHON_BINDINGS}" = "ON" ]; then
     if [[ -f "${python_dir}/setup.sh" ]]; then
       source "${python_dir}/setup.sh"
     else

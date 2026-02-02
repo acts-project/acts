@@ -53,7 +53,7 @@ using Acts::VectorHelpers::perp;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 using Covariance = BoundSquareMatrix;
@@ -182,7 +182,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   using CylinderObserver = SurfaceObserver<CylinderSurface>;
   using ActorList = ActorList<CylinderObserver>;
@@ -242,7 +242,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // setup propagation options - the tow step options
   EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
@@ -322,7 +322,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // setup propagation options - 2 setp options
   EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
       Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
       ParticleHypothesis::pion());
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mctx;
 
   {

@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <iostream>
 #include <memory>
@@ -40,7 +40,7 @@ namespace ActsPlugins {
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what if not used with DD4hep?
 ///
-class TGeoDetectorElement : public Acts::DetectorElementBase {
+class TGeoDetectorElement : public Acts::SurfacePlacementBase {
  public:
   using identifier_type = unsigned long long;
   using identifier_diff = long long;
@@ -123,7 +123,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Acts::Transform3& transform(
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
   /// @return Reference to the transformation matrix from local to global coordinates
 
@@ -143,11 +143,13 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
 
   /// Returns the thickness of the module
   /// @return Thickness of the detector element in units of length
-  double thickness() const override;
+  double thickness() const;
 
   /// Return the TGeoNode for back navigation
   /// @return Reference to the underlying TGeoNode
   const TGeoNode& tgeoNode() const { return *m_detElement; }
+  /// Is the detector element a sensitive element
+  bool isSensitive() const final { return true; }
 
  private:
   /// Pointer to TGeoNode (not owned)
@@ -168,7 +170,7 @@ inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {
   return m_identifier;
 }
 
-inline const Acts::Transform3& TGeoDetectorElement::transform(
+inline const Acts::Transform3& TGeoDetectorElement::localToGlobalTransform(
     const Acts::GeometryContext& /*gctx*/) const {
   return m_transform;
 }

@@ -772,7 +772,6 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = index.md \
-                         getting_started.md \
                          groups \
                          pages \
                          examples \
@@ -1162,7 +1161,8 @@ HTML_STYLESHEET        =
 
 HTML_EXTRA_STYLESHEET  = @AWESOME_CSS_DIR@/doxygen-awesome.css \
                          @AWESOME_CSS_DIR@/doxygen-awesome-sidebar-only.css \
-                         @AWESOME_CSS_DIR@/doxygen-awesome-sidebar-only-darkmode-toggle.css
+                         @AWESOME_CSS_DIR@/doxygen-awesome-sidebar-only-darkmode-toggle.css \
+                         @CMAKE_CURRENT_SOURCE_DIR@/custom.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
@@ -1174,7 +1174,10 @@ HTML_EXTRA_STYLESHEET  = @AWESOME_CSS_DIR@/doxygen-awesome.css \
 
 HTML_EXTRA_FILES       = @AWESOME_CSS_DIR@/doxygen-awesome-darkmode-toggle.js \
                          @AWESOME_CSS_DIR@/doxygen-awesome-paragraph-link.js \
-                         @AWESOME_CSS_DIR@/doxygen-awesome-interactive-toc.js
+                         @AWESOME_CSS_DIR@/doxygen-awesome-interactive-toc.js \
+                         @CMAKE_CURRENT_SOURCE_DIR@/tex-mml-chtml.js \
+                         @CMAKE_CURRENT_SOURCE_DIR@/acts-version-manager.js \
+                         @CMAKE_CURRENT_SOURCE_DIR@/acts-version-manager.css
 
 
 HTML_COLORSTYLE        = LIGHT

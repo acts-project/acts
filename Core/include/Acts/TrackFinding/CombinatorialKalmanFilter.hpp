@@ -289,7 +289,7 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE("Perform filter step");
         auto res = filter(surface, state, stepper, navigator, result);
         if (!res.ok()) {
-          ACTS_ERROR("Error in filter: " << res.error().message());
+          ACTS_DEBUG("Error in filter: " << res.error().message());
           return res.error();
         }
 
@@ -323,7 +323,7 @@ class CombinatorialKalmanFilter {
           // Bind the parameter to the target surface
           auto res = stepper.boundState(state.stepping, *targetReached.surface);
           if (!res.ok()) {
-            ACTS_ERROR("Error while acquiring bound state for target surface: "
+            ACTS_DEBUG("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
             return res.error();
           }
@@ -405,14 +405,15 @@ class CombinatorialKalmanFilter {
           state.navigation, stepper.position(state.stepping),
           stepper.direction(state.stepping), state.options.direction);
       if (!navInitRes.ok()) {
-        ACTS_ERROR("Navigation initialization failed: " << navInitRes.error());
+        ACTS_DEBUG("Navigation initialization failed: " << navInitRes.error());
         return navInitRes.error();
       }
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
-      materialInteractor(navigator.currentSurface(state.navigation), state,
-                         stepper, navigator, MaterialUpdateStage::PostUpdate);
+      detail::performMaterialInteraction(
+          state, stepper, navigator, MaterialUpdateMode::PostUpdate,
+          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
 
       // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
@@ -445,7 +446,7 @@ class CombinatorialKalmanFilter {
                         result_type& result) const {
       using PM = TrackStatePropMask;
 
-      bool isSensitive = surface->associatedDetectorElement() != nullptr;
+      bool isSensitive = surface->isSensitive();
       bool hasMaterial = surface->surfaceMaterial() != nullptr;
       bool isMaterialOnly = hasMaterial && !isSensitive;
       bool expectMeasurements = isSensitive;
@@ -470,8 +471,9 @@ class CombinatorialKalmanFilter {
       }
 
       // Update state and stepper with pre material effects
-      materialInteractor(surface, state, stepper, navigator,
-                         MaterialUpdateStage::PreUpdate);
+      detail::performMaterialInteraction(
+          state, stepper, navigator, MaterialUpdateMode::PreUpdate,
+          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
 
       // Bind the transported state to the current surface
       auto boundStateRes = stepper.boundState(state.stepping, *surface, false);
@@ -503,7 +505,7 @@ class CombinatorialKalmanFilter {
         Result<unsigned int> procRes =
             processNewTrackStates(state.geoContext, newTrackStateList, result);
         if (!procRes.ok()) {
-          ACTS_ERROR("Processing of selected track states failed: "
+          ACTS_DEBUG("Processing of selected track states failed: "
                      << procRes.error().message());
           return procRes.error();
         }
@@ -529,7 +531,7 @@ class CombinatorialKalmanFilter {
             // recoverable error returned by track state creator
             expectMeasurements = false;
           } else {
-            ACTS_ERROR("Track state creation failed on surface "
+            ACTS_DEBUG("Track state creation failed on surface "
                        << surface->geometryId() << ": " << tsRes.error());
             return tsRes.error();
           }
@@ -578,12 +580,11 @@ class CombinatorialKalmanFilter {
 
       auto currentState = currentBranch.outermostTrackState();
 
-      if (currentState.typeFlags().test(TrackStateFlag::OutlierFlag)) {
+      if (currentState.typeFlags().isOutlier()) {
         // We don't need to update the stepper given an outlier state
         ACTS_VERBOSE("Outlier state detected on surface "
                      << surface->geometryId());
-      } else if (currentState.typeFlags().test(
-                     TrackStateFlag::MeasurementFlag)) {
+      } else if (currentState.typeFlags().isMeasurement()) {
         // If there are measurement track states on this surface
         // Update stepping state using filtered parameters of last track
         // state on this surface
@@ -599,8 +600,9 @@ class CombinatorialKalmanFilter {
       }
 
       // Update state and stepper with post material effects
-      materialInteractor(surface, state, stepper, navigator,
-                         MaterialUpdateStage::PostUpdate);
+      detail::performMaterialInteraction(
+          state, stepper, navigator, MaterialUpdateMode::PostUpdate,
+          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
 
       return Result<void>::success();
     }
@@ -649,26 +651,24 @@ class CombinatorialKalmanFilter {
       // Update and select from the new branches
       for (TrackProxy newBranch : newBranches) {
         auto trackState = newBranch.outermostTrackState();
-        TrackStateType typeFlags = trackState.typeFlags();
+        TrackStateTypeMap typeFlags = trackState.typeFlags();
 
-        if (typeFlags.test(TrackStateFlag::OutlierFlag)) {
+        if (typeFlags.isOutlier()) {
           // No Kalman update for outlier
           // Set the filtered parameter index to be the same with predicted
           // parameter
           trackState.shareFrom(PM::Predicted, PM::Filtered);
           // Increment number of outliers
           newBranch.nOutliers()++;
-        } else if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
+        } else if (typeFlags.isMeasurement()) {
           // Kalman update
           auto updateRes = extensions.updater(gctx, trackState, *updaterLogger);
           if (!updateRes.ok()) {
-            ACTS_ERROR("Update step failed: " << updateRes.error().message());
+            ACTS_DEBUG("Update step failed: " << updateRes.error().message());
             return updateRes.error();
           }
           ACTS_VERBOSE("Appended measurement track state with tip = "
                        << newBranch.tipIndex());
-          // Set the measurement flag
-          typeFlags.set(TrackStateFlag::MeasurementFlag);
           // Increment number of measurements
           newBranch.nMeasurements()++;
           newBranch.nDoF() += trackState.calibratedSize();
@@ -741,12 +741,15 @@ class CombinatorialKalmanFilter {
       // Set the track state flags
       auto typeFlags = trackStateProxy.typeFlags();
       if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
-        typeFlags.set(TrackStateFlag::MaterialFlag);
+        typeFlags.setHasMaterial();
       }
-      typeFlags.set(TrackStateFlag::ParameterFlag);
+      typeFlags.setHasParameters();
       if (isSensitive) {
-        typeFlags.set(expectMeasurements ? TrackStateFlag::HoleFlag
-                                         : TrackStateFlag::NoExpectedHitFlag);
+        if (expectMeasurements) {
+          typeFlags.setIsHole();
+        } else {
+          typeFlags.setHasNoExpectedHit();
+        }
       }
 
       // Set the filtered parameter index to be the same with predicted
@@ -754,67 +757,6 @@ class CombinatorialKalmanFilter {
       trackStateProxy.shareFrom(PM::Predicted, PM::Filtered);
 
       return trackStateProxy.index();
-    }
-
-    /// @brief CombinatorialKalmanFilter actor operation: material interaction
-    ///
-    /// @tparam propagator_state_t is the type of Propagator state
-    /// @tparam stepper_t Type of the stepper
-    /// @tparam navigator_t Type of the navigator
-    ///
-    /// @param surface The surface where the material interaction happens
-    /// @param state The mutable propagator state object
-    /// @param stepper The stepper in use
-    /// @param navigator The navigator in use
-    /// @param updateStage The material update stage
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
-    void materialInteractor(const Surface* surface, propagator_state_t& state,
-                            const stepper_t& stepper,
-                            const navigator_t& navigator,
-                            const MaterialUpdateStage& updateStage) const {
-      if (surface == nullptr) {
-        return;
-      }
-
-      // Indicator if having material
-      bool hasMaterial = false;
-
-      if (surface->surfaceMaterial() != nullptr) {
-        // Prepare relevant input particle properties
-        detail::PointwiseMaterialInteraction interaction(surface, state,
-                                                         stepper);
-        // Evaluate the material properties
-        if (interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
-          // Surface has material at this stage
-          hasMaterial = true;
-
-          // Evaluate the material effects
-          interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
-                                                           energyLoss);
-
-          // Screen out material effects info
-          ACTS_VERBOSE("Material effects on surface: "
-                       << surface->geometryId()
-                       << " at update stage: " << updateStage << " are :");
-          ACTS_VERBOSE("eLoss = "
-                       << interaction.Eloss * interaction.navDir << ", "
-                       << "variancePhi = " << interaction.variancePhi << ", "
-                       << "varianceTheta = " << interaction.varianceTheta
-                       << ", "
-                       << "varianceQoverP = " << interaction.varianceQoverP);
-
-          // Update the state and stepper with material effects
-          interaction.updateState(state, stepper, addNoise);
-        }
-      }
-
-      if (!hasMaterial) {
-        // Screen out message
-        ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
-                                                        << " at update stage: "
-                                                        << updateStage);
-      }
     }
 
     void storeLastActiveBranch(result_type& result) const {
@@ -903,7 +845,7 @@ class CombinatorialKalmanFilter {
         decltype(propState), BoundTrackParameters, StubPathLimitReached>(
         propState, initialParameters);
     if (!initResult.ok()) {
-      ACTS_ERROR("Propagation initialization failed: " << initResult.error());
+      ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
       return initResult.error();
     }
 
@@ -924,7 +866,7 @@ class CombinatorialKalmanFilter {
         std::move(propState), propagationResult, propOptions, false);
 
     if (!result.ok()) {
-      ACTS_ERROR("Propagation failed: " << result.error() << " "
+      ACTS_DEBUG("Propagation failed: " << result.error() << " "
                                         << result.error().message()
                                         << " with the initial parameters: \n"
                                         << initialParameters.parameters());
@@ -940,7 +882,7 @@ class CombinatorialKalmanFilter {
 
     // Check if track finding finished properly
     if (!combKalmanResult.finished) {
-      ACTS_ERROR("CombinatorialKalmanFilter failed: "
+      ACTS_DEBUG("CombinatorialKalmanFilter failed: "
                  << "Propagation reached max steps "
                  << "with the initial parameters: "
                  << initialParameters.parameters().transpose());

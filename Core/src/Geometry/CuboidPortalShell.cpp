@@ -31,7 +31,7 @@ void CuboidPortalShell::fill(TrackingVolume& volume) {
   using enum CuboidVolumeBounds::Face;
   for (Face face : {NegativeZFace, PositiveZFace, NegativeXFace, PositiveXFace,
                     NegativeYFace, PositiveYFace}) {
-    const auto& portalAtFace = portalPtr(face);
+    const auto& portalAtFace = portal(face);
     if (portalAtFace != nullptr) {
       portalAtFace->fill(volume);
       volume.addPortal(portalAtFace);
@@ -50,8 +50,10 @@ SingleCuboidPortalShell::SingleCuboidPortalShell(TrackingVolume& volume)
   const auto& bounds =
       dynamic_cast<const CuboidVolumeBounds&>(m_volume->volumeBounds());
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   std::vector<OrientedSurface> orientedSurfaces =
       bounds.orientedSurfaces(m_volume->transform());
+  ACTS_POP_IGNORE_DEPRECATED()
 
   auto handle = [&](Face face, std::size_t from) {
     const auto& source = orientedSurfaces.at(from);
@@ -67,11 +69,7 @@ SingleCuboidPortalShell::SingleCuboidPortalShell(TrackingVolume& volume)
   handle(PositiveYFace, positiveFaceZX);
 }
 
-Portal* SingleCuboidPortalShell::portal(Face face) {
-  return portalPtr(face).get();
-}
-
-std::shared_ptr<Portal> SingleCuboidPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> SingleCuboidPortalShell::portal(Face face) {
   return m_portals.at(toUnderlying(face));
 }
 
@@ -164,28 +162,28 @@ CuboidStackPortalShell::CuboidStackPortalShell(
     throw std::invalid_argument("Invalid shell");
   }
 
-  std::ranges::sort(m_shells, [*this](const auto& shellA, const auto& shellB) {
-    switch (m_direction) {
-      case AxisX:
-        return (shellA->transform().translation().x() <
-                shellB->transform().translation().x());
-      case AxisY:
-        return (shellA->transform().translation().y() <
-                shellB->transform().translation().y());
-      case AxisZ:
-        return (shellA->transform().translation().z() <
-                shellB->transform().translation().z());
-      default:
-        throw std::invalid_argument(
-            "CuboidPortalShell: Invalid axis direction");
-    }
-  });
+  std::ranges::sort(
+      m_shells, [*this, &gctx](const auto& shellA, const auto& shellB) {
+        switch (m_direction) {
+          case AxisX:
+            return (shellA->localToGlobalTransform(gctx).translation().x() <
+                    shellB->localToGlobalTransform(gctx).translation().x());
+          case AxisY:
+            return (shellA->localToGlobalTransform(gctx).translation().y() <
+                    shellB->localToGlobalTransform(gctx).translation().y());
+          case AxisZ:
+            return (shellA->localToGlobalTransform(gctx).translation().z() <
+                    shellB->localToGlobalTransform(gctx).translation().z());
+          default:
+            throw std::invalid_argument(
+                "CuboidPortalShell: Invalid axis direction");
+        }
+      });
 
   auto merge = [&](Face face) {
     std::vector<std::shared_ptr<Portal>> portals;
-    std::ranges::transform(
-        m_shells, std::back_inserter(portals),
-        [face](auto* shell) { return shell->portalPtr(face); });
+    std::ranges::transform(m_shells, std::back_inserter(portals),
+                           [face](auto* shell) { return shell->portal(face); });
 
     auto merged = std::accumulate(
         std::next(portals.begin()), portals.end(), portals.front(),
@@ -216,7 +214,7 @@ CuboidStackPortalShell::CuboidStackPortalShell(
       ACTS_VERBOSE("Fusing " << shellA->label() << " and " << shellB->label());
 
       auto fused = std::make_shared<Portal>(Portal::fuse(
-          gctx, *shellA->portalPtr(faceA), *shellB->portalPtr(faceB), logger));
+          gctx, *shellA->portal(faceA), *shellB->portal(faceB), logger));
 
       assert(fused != nullptr && "Invalid fused portal");
       assert(fused->isValid() && "Fused portal is invalid");
@@ -240,15 +238,11 @@ std::size_t CuboidStackPortalShell::size() const {
   return 6;
 }
 
-Portal* CuboidStackPortalShell::portal(Face face) {
-  return portalPtr(face).get();
-}
-
-std::shared_ptr<Portal> CuboidStackPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> CuboidStackPortalShell::portal(Face face) {
   if (face == m_backFace) {
-    return m_shells.back()->portalPtr(face);
+    return m_shells.back()->portal(face);
   } else {
-    return m_shells.front()->portalPtr(face);
+    return m_shells.front()->portal(face);
   }
 }
 
@@ -274,8 +268,9 @@ bool CuboidStackPortalShell::isValid() const {
   });
 }
 
-const Transform3& CuboidStackPortalShell::transform() const {
-  return m_shells.front()->transform();
+const Transform3& CuboidStackPortalShell::localToGlobalTransform(
+    const GeometryContext& gctx) const {
+  return m_shells.front()->localToGlobalTransform(gctx);
 }
 
 std::string CuboidStackPortalShell::label() const {

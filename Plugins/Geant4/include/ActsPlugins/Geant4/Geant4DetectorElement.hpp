@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <memory>
 
@@ -32,7 +32,7 @@ namespace ActsPlugins {
 ///
 /// Detector element representative for Geant4 sensitive
 /// elements.
-class Geant4DetectorElement : public Acts::DetectorElementBase {
+class Geant4DetectorElement : public Acts::SurfacePlacementBase {
  public:
   /// Broadcast the context type
   using ContextType = Acts::GeometryContext;
@@ -49,7 +49,7 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Acts::Transform3& transform(
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
   /// @return Reference to the local-to-global transformation matrix
 
@@ -63,10 +63,12 @@ class Geant4DetectorElement : public Acts::DetectorElementBase {
 
   /// Return the thickness of this detector element
   /// @return The thickness value in length units
-  double thickness() const override;
+  virtual double thickness() const;
 
   /// @return to the Geant4 physical volume
   const G4VPhysicalVolume& g4PhysicalVolume() const;
+  /// Is the detector element a sensitive element
+  bool isSensitive() const final { return true; }
 
  private:
   /// Corresponding Surface

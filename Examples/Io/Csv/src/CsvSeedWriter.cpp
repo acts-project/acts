@@ -9,14 +9,6 @@
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 
 #include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -29,15 +21,14 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::CsvSeedWriter::CsvSeedWriter(
-    const ActsExamples::CsvSeedWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvSeedWriter::CsvSeedWriter(const Config& config, Acts::Logging::Level level)
     : WriterT<TrackParametersContainer>(config.inputTrackParameters,
                                         "CsvSeedWriter", level),
       m_cfg(config) {
@@ -67,9 +58,8 @@ ActsExamples::CsvSeedWriter::CsvSeedWriter(
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
-    const ActsExamples::AlgorithmContext& ctx,
-    const TrackParametersContainer& trackParams) {
+ProcessCode CsvSeedWriter::writeT(const AlgorithmContext& ctx,
+                                  const TrackParametersContainer& trackParams) {
   // Read additional input collections
   const auto& seeds = m_inputSimSeeds(ctx);
   const auto& simHits = m_inputSimHits(ctx);
@@ -198,3 +188,5 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
