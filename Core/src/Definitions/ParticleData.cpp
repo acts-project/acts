@@ -274,8 +274,8 @@ std::optional<std::string_view> Acts::pdgToShortAbsString(PdgParticle pdg) {
   if (pdg == eLead) {
     return "lead";
   }
-  if (pdg == eK0S) {
-    return "K0S";
+  if (pdg == eKaon0Short) {
+    return "Kaon0Short";
   }
   if (pdg == eLambda0) {
     return "Lambda0";
