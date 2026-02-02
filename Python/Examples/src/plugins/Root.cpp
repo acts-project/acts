@@ -93,42 +93,47 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
   // Output
   {
-    // Bindings for the binning in e.g., TrackFinderPerformanceWriter
+    // Bindings for axis variant used in PlotTool configurations
     {
-      py::class_<PlotHelpers::Binning>(root, "Binning")
+      py::class_<Acts::Experimental::AxisVariant>(root, "AxisVariant")
           .def_static(
-              "uniform",
-              [](std::string title, int bins, double bMin, double bMax) {
-                return PlotHelpers::Binning::Uniform(std::move(title), bins,
-                                                     bMin, bMax);
+              "regular",
+              [](unsigned bins, double low, double high,
+                 const std::string& title) {
+                return Acts::Experimental::AxisVariant(
+                    Acts::Experimental::BoostRegularAxis(bins, low, high,
+                                                         title));
               },
-              "title"_a, "bins"_a, "bMin"_a, "bMax"_a)
+              "bins"_a, "low"_a, "high"_a, "title"_a = "")
+          .def_static(
+              "log",
+              [](unsigned bins, double low, double high,
+                 const std::string& title) {
+                return Acts::Experimental::AxisVariant(
+                    Acts::Experimental::BoostLogAxis(bins, low, high, title));
+              },
+              "bins"_a, "low"_a, "high"_a, "title"_a = "")
           .def_static(
               "variable",
-              [](std::string title, std::vector<double> bins) {
-                return PlotHelpers::Binning::Variable(std::move(title),
-                                                      std::move(bins));
+              [](std::vector<double> edges, const std::string& title) {
+                return Acts::Experimental::AxisVariant(
+                    Acts::Experimental::BoostVariableAxis(std::move(edges),
+                                                          title));
               },
-              "title"_a, "bins"_a)
-          .def_static(
-              "logarithmic",
-              [](std::string title, int bins, double bMin, double bMax) {
-                return PlotHelpers::Binning::Logarithmic(std::move(title), bins,
-                                                         bMin, bMax);
-              },
-              "title"_a, "bins"_a, "bMin"_a, "bMax"_a);
+              "edges"_a, "title"_a = "");
 
       py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
-          .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
-               "varBinning"_a);
+          .def(py::init<>())
+          .def_readwrite("varBinning", &EffPlotTool::Config::varBinning);
 
       py::class_<FakePlotTool::Config>(root, "FakePlotToolConfig")
-          .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
-               "varBinning"_a);
+          .def(py::init<>())
+          .def_readwrite("varBinning", &FakePlotTool::Config::varBinning);
 
       py::class_<DuplicationPlotTool::Config>(root, "DuplicationPlotToolConfig")
-          .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
-               "varBinning"_a);
+          .def(py::init<>())
+          .def_readwrite("varBinning",
+                         &DuplicationPlotTool::Config::varBinning);
     }
 
     // ROOT WRITERS

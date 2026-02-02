@@ -10,63 +10,77 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
-namespace Acts::detail {
+namespace Acts {
 
-bool PointwiseMaterialInteraction::evaluateMaterialSlab(
-    MaterialUpdateMode requestedMode) {
-  updateMode = requestedMode;
-  if (surface == startSurface) {
+MaterialUpdateMode detail::determineMaterialUpdateMode(
+    const Surface& surface, const Surface* startSurface,
+    const Surface* targetSurface, MaterialUpdateMode requestedMode) {
+  // Avoid double counting of the material effects at start and target surfaces
+  // by restricting the update mode accordingly
+  MaterialUpdateMode updateMode = requestedMode;
+  if (&surface == startSurface) {
     updateMode &= MaterialUpdateMode::PostUpdate;
-  } else if (surface == targetSurface) {
+  } else if (&surface == targetSurface) {
     updateMode &= MaterialUpdateMode::PreUpdate;
   }
 
-  // Retrieve the material properties
-  const ISurfaceMaterial* material = surface->surfaceMaterial();
-  slab = material->materialSlab(pos, propDir, updateMode);
+  return updateMode;
+}
 
-  // Correct the material properties for non-zero incidence
+MaterialSlab detail::evaluateMaterialSlab(const GeometryContext& geoContext,
+                                          const Surface& surface,
+                                          Direction propagationDirection,
+                                          const Vector3& position,
+                                          const Vector3& direction,
+                                          MaterialUpdateMode updateMode) {
+  const ISurfaceMaterial* material = surface.surfaceMaterial();
+  if (material == nullptr) {
+    return MaterialSlab::Nothing();
+  }
+
+  const double pathCorrection =
+      surface.pathCorrection(geoContext, position, direction);
+  MaterialSlab slab =
+      material->materialSlab(position, propagationDirection, updateMode);
   slab.scaleThickness(pathCorrection);
 
-  return !slab.isVacuum();
+  return slab;
 }
 
-void PointwiseMaterialInteraction::evaluatePointwiseMaterialInteraction(
-    bool multipleScattering, bool energyLoss) {
+detail::PointwiseMaterialEffects detail::computeMaterialEffects(
+    const MaterialSlab& slab, const ParticleHypothesis& particleHypothesis,
+    const Vector3& direction, float qOverP, bool multipleScattering,
+    bool energyLoss, bool covTransport) {
+  PointwiseMaterialEffects result;
+
+  const double mass = particleHypothesis.mass();
+  const PdgParticle absPdg = particleHypothesis.absolutePdg();
+  const double absQ = particleHypothesis.absoluteCharge();
+
   if (energyLoss) {
-    Eloss = computeEnergyLossBethe(slab, mass, qOverP, absQ);
+    result.eLoss = computeEnergyLossBethe(slab, mass, qOverP, absQ);
   }
-  if (performCovarianceTransport) {
-    evaluateCovarianceContributions(multipleScattering, energyLoss);
+
+  if (covTransport) {
+    if (multipleScattering) {
+      const double theta0 =
+          computeMultipleScatteringTheta0(slab, absPdg, mass, qOverP, absQ);
+      // sigmaPhi = theta0 / sin(theta)
+      const double sigmaPhi =
+          theta0 * (direction.norm() / VectorHelpers::perp(direction));
+      result.variancePhi = sigmaPhi * sigmaPhi;
+      // sigmaTheta = theta0
+      result.varianceTheta = theta0 * theta0;
+    }
+    if (energyLoss) {
+      const double sigmaQoverP =
+          computeEnergyLossLandauSigmaQOverP(slab, mass, qOverP, absQ);
+      result.varianceQoverP = sigmaQoverP * sigmaQoverP;
+    }
   }
+
+  return result;
 }
 
-void PointwiseMaterialInteraction::evaluateCovarianceContributions(
-    bool multipleScattering, bool energyLoss) {
-  if (multipleScattering) {
-    const double theta0 =
-        computeMultipleScatteringTheta0(slab, absPdg, mass, qOverP, absQ);
-    // sigmaPhi = theta0 / sin(theta)
-    const double sigmaPhi = theta0 * (dir.norm() / VectorHelpers::perp(dir));
-    variancePhi = sigmaPhi * sigmaPhi;
-    // sigmaTheta = theta0
-    varianceTheta = theta0 * theta0;
-  }
-  if (energyLoss) {
-    const double sigmaQoverP =
-        computeEnergyLossLandauSigmaQOverP(slab, mass, qOverP, absQ);
-    varianceQoverP = sigmaQoverP * sigmaQoverP;
-  }
-}
-
-double PointwiseMaterialInteraction::updateVariance(
-    double variance, double change, NoiseUpdateMode updateMode) {
-  // Add/Subtract the change
-  // Protect the variance against becoming negative
-  return std::max(0.,
-                  variance + std::copysign(change, toUnderlying(updateMode)));
-}
-
-}  // namespace Acts::detail
+}  // namespace Acts
