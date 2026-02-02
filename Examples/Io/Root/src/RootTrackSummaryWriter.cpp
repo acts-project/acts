@@ -252,13 +252,15 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   // Get the event number
   m_eventNr = ctx.eventNumber;
 
-  // Input jets
-  // if (m_cfg.writeJets) {
-  auto& inputJets = m_inputJets(ctx);
-  std::vector<ActsPlugins::FastJet::TruthJet> jets = inputJets;
+  std::vector<ActsPlugins::FastJet::TruthJet> jets;
   std::unordered_map<std::size_t, std::vector<std::int32_t>>
       jetToTrackIndicesMap;
-  //}
+
+  // Fill the jet vector if requested
+  if (m_cfg.writeJets) {
+    auto& inputJets = m_inputJets(ctx);
+    jets = inputJets;
+  }
 
   for (const auto& track : tracks) {
     m_trackNr.push_back(track.index());

@@ -55,7 +55,7 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
     /// Input track-particle matching (optional).
     std::string inputTrackParticleMatching;
     /// Input jet collection (optional).
-    std::string inputJets;
+    std::string inputJets = "output_jets";
     /// Output filename.
     std::string filePath = "tracksummary.root";
     /// Name of the output tree.
