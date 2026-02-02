@@ -69,7 +69,7 @@ class BinnedArrayXD : public BinnedArray<T> {
     for (auto& tap : tapvector) {
       /// check for inside
       if (m_binUtility->inside(tap.second)) {
-        // butil to the array store - if the bingen
+        // butil to the array store - if the binGen
         // dimension is smaller 1,2 it will provide 0
         auto bins = m_binUtility->binTriple(tap.second);
         /// fill the data
