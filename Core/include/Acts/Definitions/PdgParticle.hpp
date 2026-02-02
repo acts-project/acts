@@ -38,7 +38,7 @@ enum PdgParticle : std::int32_t {
   eProton = 2212,
   eAntiProton = -eProton,
   eLead = 1000822080,
-  eK0S = 310,
+  eKaon0Short = 310,
   eLambda0 = 3122,
   eJPsi = 443,   // J/ψ
   eB0 = 511,     // B0 meson (bd)
