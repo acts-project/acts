@@ -14,12 +14,10 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <cmath>
 #include <numbers>
-#include <optional>
 #include <tuple>
 
-namespace Acts::detail {
+namespace Acts::detail::Gsf {
 
 /// Angle descriptions for the combineBoundGaussianMixture function
 template <BoundIndices Idx>
@@ -214,8 +212,8 @@ auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
                           projector_t &&projector = projector_t{}) {
   using R = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
   const auto [mean, cov] =
-      detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-        return detail::gaussianMixtureMeanCov(mixture, projector, desc);
+      angleDescriptionSwitch(surface, [&](const auto &desc) {
+        return gaussianMixtureMeanCov(mixture, projector, desc);
       });
 
   if (method == ComponentMergeMethod::eMean) {
@@ -231,4 +229,4 @@ auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
   }
 }
 
-}  // namespace Acts::detail
+}  // namespace Acts::detail::Gsf
