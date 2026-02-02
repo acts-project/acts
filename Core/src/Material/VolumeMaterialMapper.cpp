@@ -372,9 +372,16 @@ void VolumeMaterialMapper::mapMaterialTrack(
                                                       mState.magFieldContext);
 
   // Now collect the material volume by using the straight line propagator
-  const auto& result = m_propagator.propagate(start, options).value();
-  auto mcResult = result.get<BoundSurfaceCollector::result_type>();
-  auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
+  const auto& result = m_propagator.propagate(start, options);
+  if (!result.ok()) {
+    ACTS_ERROR("Encountered a propagator error for initial parameters : ");
+    ACTS_ERROR(" - Position: " << mTrack.first.first.transpose());
+    ACTS_ERROR(" - Momentum: " << mTrack.first.second.transpose());
+    return;  // Skip track
+  }
+
+  auto mcResult = result.value().get<BoundSurfaceCollector::result_type>();
+  auto mvcResult = result.value().get<MaterialVolumeCollector::result_type>();
 
   auto mappingSurfaces = mcResult.collected;
   auto mappingVolumes = mvcResult.collected;

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -459,8 +460,12 @@ class KalmanFitter {
                                            freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PreUpdate);
+        detail::performMaterialInteraction(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::PreUpdate),
+            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+            logger());
 
         // do the kalman update (no need to perform covTransport here, hence no
         // point in performing globalToLocal correction)
@@ -492,8 +497,12 @@ class KalmanFitter {
         }
 
         // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PostUpdate);
+        detail::performMaterialInteraction(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::PostUpdate),
+            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+            logger());
         // We count the processed state
         ++result.processedStates;
         // Update the number of holes count only when encountering a
@@ -528,68 +537,15 @@ class KalmanFitter {
         ++result.processedStates;
 
         // Update state and stepper with (possible) material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::FullUpdate);
+        detail::performMaterialInteraction(
+            state, stepper, navigator,
+            detail::determineMaterialUpdateMode(state, navigator,
+                                                MaterialUpdateMode::FullUpdate),
+            NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+            logger());
       }
 
       return Result<void>::success();
-    }
-
-    /// @brief Kalman actor operation: material interaction
-    ///
-    /// @tparam propagator_state_t is the type of Propagator state
-    /// @tparam stepper_t Type of the stepper
-    /// @tparam navigator_t Type of the navigator
-    ///
-    /// @param surface The surface where the material interaction happens
-    /// @param state The mutable propagator state object
-    /// @param stepper The stepper in use
-    /// @param navigator The navigator in use
-    /// @param updateStage The material update stage
-    ///
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
-    void materialInteractor(const Surface* surface, propagator_state_t& state,
-                            const stepper_t& stepper,
-                            const navigator_t& navigator,
-                            const MaterialUpdateStage& updateStage) const {
-      // Protect against null surface
-      if (surface == nullptr) {
-        ACTS_VERBOSE(
-            "Surface is nullptr. Cannot be used for material interaction");
-        return;
-      }
-
-      if (surface->surfaceMaterial() == nullptr) {
-        ACTS_VERBOSE("No material on surface: " << surface->geometryId());
-        return;
-      }
-
-      // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
-
-      if (!interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
-        ACTS_VERBOSE("No material on surface after evaluation: "
-                     << surface->geometryId());
-        return;
-      }
-
-      // Evaluate the material effects
-      interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
-                                                       energyLoss);
-
-      // Screen out material effects info
-      ACTS_VERBOSE("Material effects on surface: " << surface->geometryId()
-                                                   << " at update stage: "
-                                                   << updateStage << " are :");
-      ACTS_VERBOSE("eLoss = "
-                   << interaction.Eloss << ", "
-                   << "variancePhi = " << interaction.variancePhi << ", "
-                   << "varianceTheta = " << interaction.varianceTheta << ", "
-                   << "varianceQoverP = " << interaction.varianceQoverP);
-
-      // Update the state and stepper with material effects
-      interaction.updateState(state, stepper, addNoise);
     }
   };
 

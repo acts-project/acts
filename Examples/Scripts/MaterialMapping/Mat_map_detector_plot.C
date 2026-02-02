@@ -116,7 +116,6 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
   std::vector<float> *mat_step_length = 0;
 
   std::vector<std::uint64_t> *sur_id = 0;
-  std::vector<std::int32_t> *sur_type = 0;
 
   std::vector<std::uint64_t> *vol_id = 0;
 
@@ -128,7 +127,6 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
   tree->SetBranchAddress("mat_step_length",&mat_step_length);
 
   tree->SetBranchAddress("sur_id",&sur_id);
-  tree->SetBranchAddress("sur_type",&sur_type);
 
   tree->SetBranchAddress("vol_id",&vol_id);
 

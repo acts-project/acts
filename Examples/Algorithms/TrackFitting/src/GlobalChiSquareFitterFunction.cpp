@@ -84,7 +84,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
 
     const Acts::Experimental::Gx2FitterOptions gx2fOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
-        extensions, options.propOptions, &(*options.referenceSurface),
+        extensions, options.propOptions, options.referenceSurface,
         multipleScattering, energyLoss, freeToBoundCorrection, nUpdateMax,
         relChi2changeCutOff);
 

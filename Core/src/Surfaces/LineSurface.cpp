@@ -26,26 +26,25 @@ namespace Acts {
 
 LineSurface::LineSurface(const Transform3& transform, double radius,
                          double halez)
-    : GeometryObject(),
-      Surface(transform),
+    : Surface(transform),
       m_bounds(std::make_shared<const LineBounds>(radius, halez)) {}
 
 LineSurface::LineSurface(const Transform3& transform,
                          std::shared_ptr<const LineBounds> lbounds)
-    : GeometryObject(), Surface(transform), m_bounds(std::move(lbounds)) {}
+    : Surface(transform), m_bounds(std::move(lbounds)) {}
 
 LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
-                         const DetectorElementBase& detelement)
-    : GeometryObject(), Surface(detelement), m_bounds(std::move(lbounds)) {
+                         const SurfacePlacementBase& placement)
+    : Surface{placement}, m_bounds(std::move(lbounds)) {
   throw_assert(m_bounds, "LineBounds must not be nullptr");
 }
 
 LineSurface::LineSurface(const LineSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, Surface(other), m_bounds(other.m_bounds) {}
 
 LineSurface::LineSurface(const GeometryContext& gctx, const LineSurface& other,
                          const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+    : Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 LineSurface& LineSurface::operator=(const LineSurface& other) {
   if (this != &other) {

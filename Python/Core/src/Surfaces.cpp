@@ -183,7 +183,7 @@ void addSurfaces(py::module_& m) {
              })
         .def("createDisc",
              [](std::shared_ptr<const DiscBounds> bounds,
-                const DetectorElementBase& detelement) {
+                const SurfacePlacementBase& detelement) {
                return Surface::makeShared<DiscSurface>(bounds, detelement);
              })
         .def("createStraw",
@@ -193,7 +193,7 @@ void addSurfaces(py::module_& m) {
              })
         .def("createStraw",
              [](std::shared_ptr<const LineBounds> bounds,
-                const DetectorElementBase& detelement) {
+                const SurfacePlacementBase& detelement) {
                return Surface::makeShared<StrawSurface>(bounds, detelement);
              })
         .def("createPerigee",
@@ -206,7 +206,7 @@ void addSurfaces(py::module_& m) {
                return Surface::makeShared<PlaneSurface>(transform, bounds);
              })
         .def("createPlane", [](std::shared_ptr<const PlanarBounds> pbounds,
-                               const DetectorElementBase& detelement) {
+                               const SurfacePlacementBase& detelement) {
           return Surface::makeShared<PlaneSurface>(pbounds, detelement);
         });
 
