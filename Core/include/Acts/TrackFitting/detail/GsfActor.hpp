@@ -436,9 +436,13 @@ struct GsfActor {
       ++result.measurementStates;
     }
 
-    updateMultiTrajectory(result, tmpStates, surface,
-                          isOutlier ? TrackStateType().setIsOutlier()
-                                    : TrackStateType().setIsMeasurement());
+    updateMultiTrajectory(
+        result, tmpStates, surface,
+        TrackStateType()
+            .setHasParameters()
+            .setHasMaterial(surface.surfaceMaterial() != nullptr)
+            .setHasMeasurement()
+            .setIsOutlier(isOutlier));
 
     result.lastMeasurementTip = result.currentTip;
     result.lastMeasurementSurface = &surface;
@@ -522,7 +526,10 @@ struct GsfActor {
 
     updateMultiTrajectory(
         result, tmpStates, surface,
-        isHole ? TrackStateType().setIsHole() : TrackStateType());
+        TrackStateType()
+            .setHasParameters()
+            .setHasMaterial(surface.surfaceMaterial() != nullptr)
+            .setIsHole(isHole));
 
     return Result<void>::success();
   }
@@ -537,18 +544,13 @@ struct GsfActor {
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
     if (!m_cfg.inReversePass) {
-      const bool isMeasurement = type.isMeasurement();
-      const bool isOutlier = type.isOutlier();
-      const bool isHole = type.isHole();
-
-      const bool hasMaterial = surface.surfaceMaterial() != nullptr;
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
 
       auto mask = TrackStatePropMask::Predicted | TrackStatePropMask::Smoothed;
-      if (isMeasurement) {
+      if (type.isMeasurement()) {
         mask |= TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered;
-      } else if (isOutlier) {
+      } else if (type.isOutlier()) {
         mask |= TrackStatePropMask::Calibrated;
       }
 
@@ -567,24 +569,18 @@ struct GsfActor {
       proxy.predicted() = prtMean;
       proxy.predictedCovariance() = prtCov;
 
-      proxy.typeFlags().setHasParameters();
-      proxy.typeFlags().setHasMaterial(hasMaterial);
-
-      if (isMeasurement) {
+      if (type.isMeasurement()) {
         auto [fltMean, fltCov] = mergeGaussianMixture(
             tmpStates.tips, surface, m_cfg.mergeMethod,
             FltProjector{tmpStates.traj, tmpStates.weights});
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
-
-        proxy.typeFlags().setIsMeasurement();
       } else {
         proxy.shareFrom(TrackStatePropMask::Predicted,
                         TrackStatePropMask::Filtered);
       }
 
-      proxy.typeFlags().setIsOutlier(isOutlier);
-      proxy.typeFlags().setIsHole(isHole);
+      proxy.typeFlags() = type;
 
       proxy.smoothed() = BoundVector::Constant(-2);
       proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
