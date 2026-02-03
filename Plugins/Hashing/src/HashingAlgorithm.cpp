@@ -8,7 +8,6 @@
 
 #include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsPlugins/Hashing/HashingModel.hpp"
@@ -40,26 +39,26 @@ std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
   }
   resultSets.resize(nBins);
 
-  auto layerSelection = [&layerRMin, &layerRMax, &layerZMin, &layerZMax](
-                            double r2, double z) {
-    bool isInside =
+  const auto layerSelection = [&layerRMin, &layerRMax, &layerZMin, &layerZMax](
+                                  const float r2, const float z) {
+    const bool isInside =
         (r2 >= layerRMin * layerRMin && r2 <= layerRMax * layerRMax) &&
         (z >= layerZMin && z <= layerZMax);
     return isInside;
   };
 
-  auto getBinIndexZ = [&zBins, &layerZMin, &layerZMax](const float z) {
+  const auto getBinIndexZ = [&zBins, &layerZMin, &layerZMax](const float z) {
     const float binSize = (layerZMax - layerZMin) / zBins;
     return static_cast<int>((z - layerZMin + 0.5f * binSize) / binSize);
   };
 
-  auto getBinIndexPhi = [&phiBins](const float phi) {
+  const auto getBinIndexPhi = [&phiBins](const float phi) {
     const float binSize = 2 * std::numbers::pi / phiBins;
     return static_cast<int>((phi + std::numbers::pi) / binSize);
   };
 
-  auto getBinIndex = [&zBins, &phiBins, &getBinIndexZ, &getBinIndexPhi](
-                         const float z, const float phi) -> int {
+  const auto getBinIndex = [&zBins, &phiBins, &getBinIndexZ, &getBinIndexPhi](
+                               const float z, const float phi) -> int {
     if (zBins > 0) {
       return getBinIndexZ(z);
     } else if (phiBins > 0) {
@@ -70,9 +69,9 @@ std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
   };
 
   for (const auto spacePoint : spacePoints) {
-    const float x = spacePoint.x() / Acts::UnitConstants::mm;
-    const float y = spacePoint.y() / Acts::UnitConstants::mm;
-    const float z = spacePoint.z() / Acts::UnitConstants::mm;
+    const float x = spacePoint.x();
+    const float y = spacePoint.y();
+    const float z = spacePoint.z();
 
     if (const float r2 = Acts::hypotSquare(x, y); !layerSelection(r2, z)) {
       continue;
@@ -85,6 +84,7 @@ std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
       throw std::runtime_error("binIndex outside of bins covering");
     }
 
+    /// Get the `bucketSize` closest spacePoints
     std::vector<std::uint32_t> neighborSpacePointIndices;
     annoyModel.get_nns_by_item(spacePoint.index(), bucketSize, -1,
                                &neighborSpacePointIndices, nullptr);
@@ -97,7 +97,9 @@ std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
   std::vector<std::vector<Acts::SpacePointIndex2>> result;
   result.reserve(resultSets.size());
   for (const auto& spSet : resultSets) {
-    result.emplace_back(spSet.begin(), spSet.end());
+    if (!spSet.empty()) {
+      result.emplace_back(spSet.begin(), spSet.end());
+    }
   }
   return result;
 }

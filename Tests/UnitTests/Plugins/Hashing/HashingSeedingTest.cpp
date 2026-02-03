@@ -147,7 +147,8 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   for (const auto& bucket : result) {
     BOOST_CHECK_LE(bucket.size(), bucketSize);
     for (const auto& sp : bucket) {
-      BOOST_CHECK_NE(sp, 0);
+      BOOST_CHECK_GE(sp, 0);
+      BOOST_CHECK_LT(sp, testVector.size());
     }
   }
 }
