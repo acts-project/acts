@@ -19,8 +19,6 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
-#include <algorithm>
-#include <array>
 #include <bitset>
 #include <cassert>
 #include <cstring>
@@ -29,10 +27,7 @@
 #include <regex>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <utility>
-#include <variant>
-#include <vector>
 
 #include <TCollection.h>
 #include <TFile.h>

@@ -75,7 +75,7 @@ class AdaptiveMultiVertexFitter {
 
     /// Removes a vertex from trackToVerticesMultiMap
     /// @param vtx Vertex to remove from the multimap along with its track associations
-    void removeVertexFromMultiMap(Vertex& vtx) {
+    void removeVertexFromMultiMap(const Vertex& vtx) {
       for (auto iter = trackToVerticesMultiMap.begin();
            iter != trackToVerticesMultiMap.end();) {
         if (iter->second == &vtx) {

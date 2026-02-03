@@ -61,6 +61,11 @@ class Histogram {
         m_title(std::move(title)),
         m_hist(boost::histogram::make_histogram(axes.begin(), axes.end())) {}
 
+  Histogram(const Histogram& other) = default;
+  Histogram(Histogram&& other) noexcept = default;
+  Histogram& operator=(const Histogram& other) = default;
+  Histogram& operator=(Histogram&& other) noexcept = default;
+
   /// Fill histogram with values
   ///
   /// @param values Values to fill (one per axis)

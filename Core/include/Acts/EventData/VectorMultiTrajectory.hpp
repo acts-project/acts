@@ -19,7 +19,6 @@
 #include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <any>
 #include <cassert>

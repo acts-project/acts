@@ -44,8 +44,21 @@ class Volume : public GeometryObject {
   /// Copy Constructor - with optional shift
   ///
   /// @param vol is the source volume for the copy
+  Volume(const Volume& vol) = default;
+
+  /// Copy Constructor with optional shift
+  ///
+  /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied as : shift * vol.transform()
-  Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
+  /// @deprecated: Constructor deprecated in favour of shifted(const Transform3& shift) const
+  [[deprecated("Use Volume::shifted(const Transform3& shift) const instead.")]]
+  Volume(const Volume& vol, const Transform3& shift);
+
+  /// Shift the volume by a transform
+  ///
+  /// @param shift is the transform to shift the volume by
+  /// @return The shifted volume
+  Volume shifted(const Transform3& shift) const;
 
   ~Volume() noexcept override = default;
 
