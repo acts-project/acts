@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
   const double halfY = 5.;
   RectangleBounds twentyByTenRectangle(halfX, halfY);
   BOOST_CHECK_EQUAL(twentyByTenRectangle.type(),
-                    Acts::SurfaceBounds::eRectangle);
+                    Acts::SurfaceBounds::Rectangle);
 
   // nonsensical bounds are also permitted, but maybe should not be
   const double zeroHalfX = 0.;
@@ -45,11 +45,11 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
   // Initialise with zero dimensions
   RectangleBounds zeroDimensionsRectangle(zeroHalfX, zeroHalfY);
   BOOST_CHECK_EQUAL(zeroDimensionsRectangle.type(),
-                    Acts::SurfaceBounds::eRectangle);
+                    Acts::SurfaceBounds::Rectangle);
 
   // Initialise with infinite dimensions
   RectangleBounds infinite(infHalfX, infHalfY);
-  BOOST_CHECK_EQUAL(infinite.type(), Acts::SurfaceBounds::eRectangle);
+  BOOST_CHECK_EQUAL(infinite.type(), Acts::SurfaceBounds::Rectangle);
 }
 
 /// Recreation

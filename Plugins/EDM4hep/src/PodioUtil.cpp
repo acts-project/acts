@@ -121,7 +121,7 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
       throw std::runtime_error{"Invalid surface type encountered"};
 
     case T::Cone:
-      throw_assert(static_cast<B::BoundsType>(surface.boundsType) == B::eCone,
+      throw_assert(static_cast<B::BoundsType>(surface.boundsType) == B::Cone,
                    "Unexpected bounds type");
       result = Surface::makeShared<ConeSurface>(
           transform, createBounds<ConeBounds>(surface));
@@ -129,7 +129,7 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
 
     case T::Cylinder:
       throw_assert(
-          static_cast<B::BoundsType>(surface.boundsType) == B::eCylinder,
+          static_cast<B::BoundsType>(surface.boundsType) == B::Cylinder,
           "Unexpected bounds type");
       result = Surface::makeShared<CylinderSurface>(
           transform, createBounds<CylinderBounds>(surface));
@@ -141,15 +141,15 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
         default:
           throw std::runtime_error{"Invalid bounds type encountered"};
 
-        case B::eDisc:
+        case B::Disc:
           dBounds = createBounds<RadialBounds>(surface);
           break;
 
-        case B::eAnnulus:
+        case B::Annulus:
           dBounds = createBounds<AnnulusBounds>(surface);
           break;
 
-        case B::eDiscTrapezoid:
+        case B::DiscTrapezoid:
           dBounds = createBounds<DiscTrapezoidBounds>(surface);
           break;
       }
@@ -159,7 +159,7 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
 
     case T::Perigee:
       throw_assert(
-          static_cast<B::BoundsType>(surface.boundsType) == B::eBoundless,
+          static_cast<B::BoundsType>(surface.boundsType) == B::Boundless,
           "Unexpected bounds type");
       result = Surface::makeShared<PerigeeSurface>(transform);
       break;
@@ -170,16 +170,16 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
         default:
           throw std::runtime_error{"Invalid bounds type encountered"};
 
-        case B::eDiamond:
+        case B::Diamond:
           pBounds = createBounds<DiamondBounds>(surface);
           break;
-        case B::eEllipse:
+        case B::Ellipse:
           pBounds = createBounds<EllipseBounds>(surface);
           break;
-        case B::eRectangle:
+        case B::Rectangle:
           pBounds = createBounds<RectangleBounds>(surface);
           break;
-        case B::eConvexPolygon:
+        case B::ConvexPolygon:
           template_switch_lambda<6, 32>(surface.boundValuesSize, [&](auto N) {
             constexpr std::size_t nValues = decltype(N)::value;
             constexpr std::size_t nVertices = nValues / 2;
@@ -195,7 +195,7 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
     }
 
     case T::Straw:
-      throw_assert(static_cast<B::BoundsType>(surface.boundsType) == B::eLine,
+      throw_assert(static_cast<B::BoundsType>(surface.boundsType) == B::Line,
                    "Unexpected bounds type");
       result = Surface::makeShared<StrawSurface>(
           transform, createBounds<LineBounds>(surface));
@@ -203,7 +203,7 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
 
     case T::Curvilinear:
       throw_assert(
-          static_cast<B::BoundsType>(surface.boundsType) == B::eBoundless,
+          static_cast<B::BoundsType>(surface.boundsType) == B::Boundless,
           "Unexpected bounds type");
       result = Surface::makeShared<PlaneSurface>(transform);
       break;

@@ -50,7 +50,7 @@ ActsPlugins::Svg::ProtoSurface ActsPlugins::Svg::SurfaceConverter::convert(
       } else if (surface.type() == Surface::SurfaceType::Disc) {
         // Or disc bounds
         const auto& boundValues = surface.bounds().values();
-        if (surface.bounds().type() == SurfaceBounds::BoundsType::eDisc) {
+        if (surface.bounds().type() == SurfaceBounds::BoundsType::Disc) {
           // The radii
           actsvg::scalar ri = static_cast<actsvg::scalar>(boundValues[0]);
           actsvg::scalar ro = static_cast<actsvg::scalar>(boundValues[1]);
@@ -80,30 +80,30 @@ ActsPlugins::Svg::ProtoSurface ActsPlugins::Svg::SurfaceConverter::convert(
   const auto& boundValues = surface.bounds().values();
   auto bType = surface.bounds().type();
   auto bValues = surface.bounds().values();
-  if (bType == SurfaceBounds::BoundsType::eRectangle) {
+  if (bType == SurfaceBounds::BoundsType::Rectangle) {
     pSurface._type = ProtoSurface::type::e_rectangle;
     // Set the measure
     pSurface._measures = {
         static_cast<actsvg::scalar>(0.5 * (boundValues[2] - boundValues[0])),
         static_cast<actsvg::scalar>(0.5 * (boundValues[3] - boundValues[1]))};
-  } else if (bType == SurfaceBounds::BoundsType::eTrapezoid) {
+  } else if (bType == SurfaceBounds::BoundsType::Trapezoid) {
     pSurface._type = ProtoSurface::type::e_trapez;
     // Set the measure
     pSurface._measures = {static_cast<actsvg::scalar>(boundValues[0]),
                           static_cast<actsvg::scalar>(boundValues[1]),
                           static_cast<actsvg::scalar>(boundValues[2])};
-  } else if (bType == SurfaceBounds::BoundsType::eDiamond) {
+  } else if (bType == SurfaceBounds::BoundsType::Diamond) {
     // Set the measure
     for (const auto& bv : boundValues) {
       pSurface._measures.push_back(static_cast<actsvg::scalar>(bv));
     }
-  } else if (bType == SurfaceBounds::BoundsType::eAnnulus) {
+  } else if (bType == SurfaceBounds::BoundsType::Annulus) {
     pSurface._type = ProtoSurface::type::e_trapez;
     // Set the measure
     for (const auto& bv : boundValues) {
       pSurface._measures.push_back(static_cast<actsvg::scalar>(bv));
     }
-  } else if (bType == SurfaceBounds::BoundsType::eDisc) {
+  } else if (bType == SurfaceBounds::BoundsType::Disc) {
     pSurface._type = ProtoSurface::type::e_disc;
     // Set the openings
     actsvg::scalar ri = static_cast<actsvg::scalar>(boundValues[0]);

@@ -54,7 +54,7 @@ class TrapezoidBounds : public PlanarBounds {
       false);
 
   /// @copydoc SurfaceBounds::type
-  BoundsType type() const final { return eTrapezoid; }
+  BoundsType type() const final { return Trapezoid; }
 
   /// @copydoc SurfaceBounds::values
   std::vector<double> values() const final;

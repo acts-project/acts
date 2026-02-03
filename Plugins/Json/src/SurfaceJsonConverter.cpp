@@ -70,17 +70,17 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
     // Surface is a plane surface
     case Surface::SurfaceType::Plane:
       switch (bType) {
-        case SurfaceBounds::BoundsType::eEllipse:
+        case SurfaceBounds::BoundsType::Ellipse:
           mutableSf = surfaceFromJsonT<PlaneSurface, EllipseBounds>(j);
           break;
-        case SurfaceBounds::BoundsType::eRectangle:
+        case SurfaceBounds::BoundsType::Rectangle:
           mutableSf = surfaceFromJsonT<PlaneSurface, RectangleBounds>(j);
           break;
-        case SurfaceBounds::BoundsType::eTrapezoid:
+        case SurfaceBounds::BoundsType::Trapezoid:
           mutableSf = surfaceFromJsonT<PlaneSurface, TrapezoidBounds>(j);
           break;
 
-        case SurfaceBounds::BoundsType::eBoundless:
+        case SurfaceBounds::BoundsType::Boundless:
           mutableSf = surfaceFromJsonT<PlaneSurface, void>(j);
           break;
         default:
@@ -91,13 +91,13 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
     // Surface is a disc surface
     case Surface::SurfaceType::Disc:
       switch (bType) {
-        case SurfaceBounds::BoundsType::eAnnulus:
+        case SurfaceBounds::BoundsType::Annulus:
           mutableSf = surfaceFromJsonT<DiscSurface, AnnulusBounds>(j);
           break;
-        case SurfaceBounds::BoundsType::eDisc:
+        case SurfaceBounds::BoundsType::Disc:
           mutableSf = surfaceFromJsonT<DiscSurface, RadialBounds>(j);
           break;
-        case SurfaceBounds::BoundsType::eDiscTrapezoid:
+        case SurfaceBounds::BoundsType::DiscTrapezoid:
           mutableSf = surfaceFromJsonT<DiscSurface, DiscTrapezoidBounds>(j);
           break;
         default:

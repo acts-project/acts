@@ -139,7 +139,7 @@ void writeCylinderLayerVolume(LayerVolumeWriter& lvWriter,
   lvDims.volume_id = lv.geometryId().volume();
   lvDims.layer_id = lv.geometryId().layer();
   bool isCylinderLayer = (lv.surfaceRepresentation().bounds().type() ==
-                          Acts::SurfaceBounds::eCylinder);
+                          Acts::SurfaceBounds::Cylinder);
 
   auto lTranslation = transform.translation();
   // Change volume Bound values to r min, r max, z min, z max, phi min,

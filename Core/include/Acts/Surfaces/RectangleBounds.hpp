@@ -66,7 +66,7 @@ class RectangleBounds : public PlanarBounds {
   }
 
   /// @copydoc SurfaceBounds::type
-  BoundsType type() const final { return eRectangle; }
+  BoundsType type() const final { return Rectangle; }
 
   /// @copydoc SurfaceBounds::values
   std::vector<double> values() const final;

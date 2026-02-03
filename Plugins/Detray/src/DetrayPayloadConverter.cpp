@@ -166,20 +166,20 @@ detray::io::mask_payload DetrayPayloadConverter::convertMask(
   switch (bounds.type()) {
     using enum SurfaceBounds::BoundsType;
     using enum detray::io::shape_id;
-    case eAnnulus:
+    case Annulus:
       payload = convertBounds(dynamic_cast<const AnnulusBounds&>(bounds));
       break;
-    case eRectangle:
+    case Rectangle:
       payload = convertBounds(dynamic_cast<const RectangleBounds&>(bounds));
       break;
-    case eCylinder:
+    case Cylinder:
       payload = convertBounds(dynamic_cast<const CylinderBounds&>(bounds),
                               forPortal ? portal_cylinder2 : cylinder2);
       break;
-    case eTrapezoid:
+    case Trapezoid:
       payload = convertBounds(dynamic_cast<const TrapezoidBounds&>(bounds));
       break;
-    case eDisc:
+    case Disc:
       if (auto* radial = dynamic_cast<const RadialBounds*>(&bounds);
           radial != nullptr) {
         payload = convertBounds(*radial);

@@ -93,8 +93,8 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
     return GeoModelConversionError::WrongShapeForConverter;
   }
 
-  if (surfaceA->bounds().type() != Acts::SurfaceBounds::eTrapezoid ||
-      surfaceB->bounds().type() != Acts::SurfaceBounds::eTrapezoid) {
+  if (surfaceA->bounds().type() != Acts::SurfaceBounds::Trapezoid ||
+      surfaceB->bounds().type() != Acts::SurfaceBounds::Trapezoid) {
     return GeoModelConversionError::WrongShapeForConverter;
   }
 

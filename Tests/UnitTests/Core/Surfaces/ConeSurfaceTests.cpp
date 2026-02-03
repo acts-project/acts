@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
                   1e-6);
 
   /// Test bounds
-  BOOST_CHECK_EQUAL(coneSurfaceObject->bounds().type(), SurfaceBounds::eCone);
+  BOOST_CHECK_EQUAL(coneSurfaceObject->bounds().type(), SurfaceBounds::Cone);
 
   /// Test localToGlobal
   Vector2 localPosition{1., std::numbers::pi / 2.};
