@@ -558,11 +558,12 @@ struct GsfActor {
       auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
       result.currentTip = proxy.index();
 
-      proxy.setReferenceSurface(surface.getSharedPtr());
       if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
         // copy source link, calibrated measurement, and subspace
         proxy.copyFrom(firstCmpProxy, TrackStatePropMask::Calibrated);
       }
+      proxy.setReferenceSurface(surface.getSharedPtr());
+      proxy.typeFlags() = type;
 
       auto [prtMean, prtCov] =
           mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
@@ -585,8 +586,6 @@ struct GsfActor {
         proxy.shareFrom(TrackStatePropMask::Predicted,
                         TrackStatePropMask::Filtered);
       }
-
-      proxy.typeFlags() = type;
 
     } else {
       assert((result.currentTip != kTrackIndexInvalid && "tip not valid"));
