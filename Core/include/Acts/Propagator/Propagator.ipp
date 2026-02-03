@@ -16,7 +16,6 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <concepts>
@@ -408,13 +407,6 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
     ACTS_DEBUG("Propagation failed: " << propagationResult.error() << ": "
                                       << propagationResult.error().message());
     return propagationResult.error();
-  }
-
-  // Check that we are actually on the target surface
-  const Surface* currentSurface = m_navigator.currentSurface(state.navigation);
-  if (currentSurface != &target) {
-    ACTS_DEBUG("Target surface was not reached.");
-    return PropagatorError::TargetSurfaceNotReached;
   }
 
   // Get the bound state at the target surface
