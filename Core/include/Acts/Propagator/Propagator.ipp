@@ -411,9 +411,8 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
   }
 
   // Check that we are actually on the target surface
-  if (!target.isOnSurface(state.options.geoContext, state.position,
-                          state.direction, BoundaryTolerance::Infinite(),
-                          state.options.surfaceTolerance)) {
+  const Surface* currentSurface = m_navigator.currentSurface(state.navigation);
+  if (currentSurface != &target) {
     ACTS_DEBUG("Target surface was not reached.");
     return PropagatorError::TargetSurfaceNotReached;
   }
