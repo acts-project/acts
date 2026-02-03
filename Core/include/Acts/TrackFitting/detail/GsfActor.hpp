@@ -288,9 +288,14 @@ struct GsfActor {
       std::vector<ComponentCache>& componentCache = result.componentCache;
       componentCache.clear();
 
+      // Don't apply momentum cut in backward pass right now
+      double effectiveTransverseMomentumCut =
+          m_cfg.inReversePass ? std::numeric_limits<double>::max()
+                              : m_cfg.transverseMomentumCut;
+
       convoluteComponents(state, stepper, navigator, tmpStates,
                           *m_cfg.bethe_heitler_approx, result.betheHeitlerCache,
-                          m_cfg.weightCutoff, m_cfg.transverseMomentumCut,
+                          m_cfg.weightCutoff, effectiveTransverseMomentumCut,
                           componentCache, result.nInvalidBetheHeitler,
                           result.maxPathXOverX0, result.sumPathXOverX0,
                           logger());
