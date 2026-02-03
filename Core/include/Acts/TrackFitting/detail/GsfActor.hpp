@@ -344,9 +344,7 @@ struct GsfActor {
                             const SourceLink& sourceLink) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
-    // Keep track of all created components for outlier handling
-    std::vector<TrackIndexType> allTips;
-    allTips.reserve(stepper.numberComponents(state.stepping));
+    bool isOutlier = true;
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
@@ -398,37 +396,17 @@ struct GsfActor {
           return updateRes.error();
         }
 
-        tmpStates.tips.push_back(trackStateProxy.index());
-        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
+        isOutlier = false;
       }
 
-      allTips.push_back(trackStateProxy.index());
+      tmpStates.tips.push_back(trackStateProxy.index());
+      tmpStates.weights[trackStateProxy.index()] = cmp.weight();
     }
 
-    const bool isOutlier = tmpStates.tips.empty();
-
-    if (!isOutlier) {
-      computePosteriorWeights(tmpStates.traj, tmpStates.tips,
-                              tmpStates.weights);
-      normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
-        return tmpStates.weights.at(idx);
-      });
-    } else {
-      auto cmps = stepper.componentIterable(state.stepping);
-      for (const auto [cmp, idx] : zip(cmps, allTips)) {
-        typename traj_t::TrackStateProxy trackStateProxy =
-            tmpStates.traj.getTrackState(idx);
-
-        // Set the filtered parameter index to be the same with predicted
-        // parameter
-        trackStateProxy.shareFrom(trackStateProxy,
-                                  TrackStatePropMask::Predicted,
-                                  TrackStatePropMask::Filtered);
-
-        tmpStates.tips.push_back(trackStateProxy.index());
-        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
-      }
-    }
+    computePosteriorWeights(tmpStates.traj, tmpStates.tips, tmpStates.weights);
+    normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
+      return tmpStates.weights.at(idx);
+    });
 
     // Do the statistics
     ++result.processedStates;
