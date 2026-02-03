@@ -45,6 +45,10 @@ target_compile_definitions(
     PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED
 )
 
+# Plugin-dependent framework components
+# Note that due to conditional compilation the headers of ROOT/Onnx components
+# get installed regardless of the configuration which could lead to link errors
+# in case one includes these files without building the components.
 if(ACTS_BUILD_EXAMPLES_ROOT)
     target_sources(
         ActsExamplesFramework
@@ -57,6 +61,11 @@ if(ACTS_BUILD_EXAMPLES_ROOT)
         ActsExamplesFramework
         PROPERTIES COMPILE_DEFINITIONS ACTS_BUILD_EXAMPLES_ROOT
     )
+endif()
+
+if(ACTS_BUILD_PLUGIN_ONNX)
+    target_sources(ActsExamplesFramework PRIVATE src/Onnx/NeuralCalibrator.cpp)
+    target_link_libraries(ActsExamplesFramework PUBLIC Acts::PluginOnnx)
 endif()
 
 # newer DD4hep version require TBB and search internally for TBB in

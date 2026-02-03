@@ -106,7 +106,7 @@ bool isSurfaceToDraw(const Surface& surface,
                      const RangeXD<2, double>& canvasBoundaries,
                      const Vector3& posInFrame) {
   // Draw only active surfaces
-  if (surface.associatedDetectorElement() == nullptr) {
+  if (surface.surfacePlacement() == nullptr) {
     return false;
   }
   const auto& bounds = surface.bounds();
