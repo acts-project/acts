@@ -32,6 +32,9 @@
 #include <nlohmann/json.hpp>
 
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 class ISurfaceMaterial;
 class ITrackingGeometryJsonDecorator;
 class IVolumeMaterial;
@@ -62,7 +65,7 @@ class MaterialMapJsonConverter {
   class Config {
    public:
     /// Default geometry context to extract surface transforms
-    GeometryContext context = GeometryContext();
+    GeometryContext context = GeometryContext::dangerouslyDefaultConstruct();
 
     /// Steering to handle sensitive data
     bool processSensitives = true;
@@ -163,4 +166,5 @@ class MaterialMapJsonConverter {
   const Logger& logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace Acts

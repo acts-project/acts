@@ -73,17 +73,21 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
     m_hits.resize(m_hits.size() + m_assignBatch);
   }
 
+  m_hits[m_iHit] = identifier;
+  m_iHit += 1;
+  m_nHits += weight;
+
+  // Check for duplicate layers
+  if (m_iLayer != 0 && m_layers[m_iLayer - 1] == layer) {
+    return;
+  }
+
   if (m_iLayer == m_layers.size()) {
     m_layers.resize(m_layers.size() + m_assignBatch);
   }
 
-  m_hits[m_iHit] = identifier;
   m_layers[m_iLayer] = layer;
-
-  m_iHit += 1;
   m_iLayer += 1;
-
-  m_nHits += weight;
   m_nLayers += weight;
 }
 
@@ -142,6 +146,20 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::reset() {
   // and reset the list of nontrivial bins
   m_iBin = 0;
   m_touchedBins.clear();
+}
+template <class identifier_t>
+void Acts::HoughTransformUtils::HoughPlane<identifier_t>::checkIndices(
+    std::size_t xBin, std::size_t yBin) const {
+  if (xBin >= nBinsX()) {
+    throw std::out_of_range("When accessing HoughPlane, X index " +
+                            std::to_string(xBin) +
+                            " is >= " + std::to_string(nBinsX()));
+  }
+  if (yBin >= nBinsY()) {
+    throw std::out_of_range("When accessing HoughPlane, Y index " +
+                            std::to_string(yBin) +
+                            " is >= " + std::to_string(nBinsY()));
+  }
 }
 
 template <class identifier_t>
@@ -412,4 +430,124 @@ void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
       toExplore.push_back(newCand);
     }
   }
+}
+
+namespace {
+
+template <typename identifier_t>
+bool passWindow(
+    const typename Acts::HoughTransformUtils::HoughPlane<identifier_t>::Index
+        index,
+    const Acts::HoughTransformUtils::HoughPlane<identifier_t>& plane,
+    const Acts::HoughTransformUtils::PeakFinders::SlidingWindowConfig& config) {
+  using YieldType = Acts::HoughTransformUtils::YieldType;
+  auto [xmax, ymax] = index;
+  const YieldType max = plane.nHits(xmax, ymax);
+  // window loopdefininf
+  // this loop needs to be smarter to take care of wrapping
+  for (std::size_t x = xmax - config.xWindowSize;
+       x <= xmax + config.xWindowSize; ++x) {
+    for (std::size_t y = ymax - config.yWindowSize;
+         y <= ymax + config.yWindowSize; ++y) {
+      const float xdist = static_cast<float>(x) - static_cast<float>(xmax);
+      const float ydist = static_cast<float>(y) - static_cast<float>(ymax);
+      const bool above = ydist + 0.1 > xdist;  // upper right corner
+      const YieldType numOfHits = plane.nHits(x, y);
+
+      if (above && numOfHits > max) {
+        return false;
+      }
+
+      if (!above && numOfHits >= max) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template <typename identifier_t>
+typename Acts::HoughTransformUtils::HoughPlane<identifier_t>::Index
+slidingWindowRecenter(
+    const typename Acts::HoughTransformUtils::HoughPlane<identifier_t>::Index
+        index,
+    const Acts::HoughTransformUtils::HoughPlane<identifier_t>& plane,
+    const Acts::HoughTransformUtils::PeakFinders::SlidingWindowConfig& config) {
+  using YieldType = Acts::HoughTransformUtils::YieldType;
+  YieldType xw = 0;
+  YieldType yw = 0;
+  YieldType tot = 0;
+  auto [xcenter, ycenter] = index;
+  YieldType maxValue = plane.nHits(xcenter, ycenter);
+  for (std::size_t x = xcenter - config.xRecenterSize;
+       x <= xcenter + config.xRecenterSize; ++x) {
+    for (std::size_t y = ycenter - config.yRecenterSize;
+         y <= ycenter + config.yRecenterSize; ++y) {
+      const YieldType numOfHits = plane.nHits(x, y);
+      if (numOfHits >= maxValue) {
+        xw += x * numOfHits;
+        yw += y * numOfHits;
+        tot += numOfHits;
+      }
+    }
+  }
+  return {static_cast<std::size_t>(xw / tot),
+          static_cast<std::size_t>(yw / tot)};
+}
+
+}  // namespace
+
+template <typename identifier_t>
+std::vector<typename Acts::HoughTransformUtils::HoughPlane<identifier_t>::Index>
+Acts::HoughTransformUtils::PeakFinders::slidingWindowPeaks(
+    const Acts::HoughTransformUtils::HoughPlane<identifier_t>& plane,
+    const Acts::HoughTransformUtils::PeakFinders::SlidingWindowConfig& config) {
+  using IndexType = Acts::HoughTransformUtils::HoughPlane<identifier_t>::Index;
+  std::vector<IndexType> output;
+
+  for (std::size_t x = config.xWindowSize;
+       x < plane.nBinsX() - config.xWindowSize; ++x) {
+    for (std::size_t y = config.yWindowSize;
+         y < plane.nBinsY() - config.yWindowSize; ++y) {
+      if (plane.nHits(x, y) >= config.threshold) {
+        const IndexType index({x, y});
+        if (passWindow(index, plane, config)) {
+          output.push_back(config.recenter
+                               ? slidingWindowRecenter(index, plane, config)
+                               : index);
+        }
+      }
+    }
+  }
+  return output;
+}
+
+template <typename identifier_t, typename pixel_value_t>
+std::vector<pixel_value_t>
+Acts::HoughTransformUtils::PeakFinders::hitsCountImage(
+    const Acts::HoughTransformUtils::HoughPlane<identifier_t>& plane,
+    typename Acts::HoughTransformUtils::HoughPlane<identifier_t>::Index index,
+    std::size_t xSize, std::size_t ySize,
+    const std::function<pixel_value_t(const HoughPlane<identifier_t>&, int,
+                                      int)>& summaryFunction) {
+  std::vector<pixel_value_t> output;
+  output.reserve((xSize) * (ySize));
+
+  auto [xcenter, ycenter] = index;
+
+  auto isInside = [&plane](int x, int y) -> bool {
+    return 0 <= x && x < static_cast<int>(plane.nBinsX()) && 0 <= y &&
+           y < static_cast<int>(plane.nBinsY());
+  };
+
+  for (std::size_t x = 0; x < xSize; ++x) {
+    for (std::size_t y = 0; y < ySize; ++y) {
+      int xPlaneCoord = x + xcenter - xSize / 2;
+      int yPlaneCoord = y + ycenter - ySize / 2;
+      output.push_back(isInside(xPlaneCoord, yPlaneCoord)
+                           ? summaryFunction(plane, xPlaneCoord, yPlaneCoord)
+                           : pixel_value_t{});
+    }
+  }
+  return output;
 }

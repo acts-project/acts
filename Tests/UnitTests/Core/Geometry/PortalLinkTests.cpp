@@ -57,7 +57,7 @@ std::shared_ptr<TrackingVolume> makeDummyVolume() {
       std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
 }
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 template <typename T>
 std::unique_ptr<T> copy(const std::unique_ptr<T>& p) {

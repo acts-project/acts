@@ -90,7 +90,7 @@ class CylinderProtoDesignator : public DesignatorBase {
     using enum CylinderVolumeBounds::Face;
 
     for (const auto& [face, loc0, loc1] : m_binning) {
-      auto* portal = cylShell->portal(face);
+      auto* portal = cylShell->portal(face).get();
       if (portal == nullptr) {
         ACTS_ERROR(prefix << "Portal is nullptr");
         throw std::runtime_error("Portal is nullptr");
@@ -129,6 +129,8 @@ class CylinderProtoDesignator : public DesignatorBase {
       const NullDesignator& /*other*/) const override {
     return std::make_unique<CylinderProtoDesignator>(*this);
   }
+
+  using DesignatorBase::merged;
 
  private:
   void validate(Face face, const DirectedProtoAxis& loc0,
@@ -197,7 +199,7 @@ class CuboidProtoDesignator : public DesignatorBase {
     using enum CuboidVolumeBounds::Face;
 
     for (const auto& [face, loc0, loc1] : m_binning) {
-      auto* portal = cuboidShell->portal(face);
+      auto* portal = cuboidShell->portal(face).get();
       if (portal == nullptr) {
         ACTS_ERROR(prefix << "Portal is nullptr");
         throw std::runtime_error("Portal is nullptr");
@@ -236,6 +238,8 @@ class CuboidProtoDesignator : public DesignatorBase {
       const NullDesignator& /*other*/) const override {
     return std::make_unique<CuboidProtoDesignator>(*this);
   }
+
+  using DesignatorBase::merged;
 
  private:
   void validate(Face face, const DirectedProtoAxis& loc0,
@@ -287,7 +291,7 @@ class ISurfaceMaterialDesignator : public DesignatorBase {
     }
 
     for (const auto& [face, material] : m_materials) {
-      auto* portal = concreteShell->portal(face);
+      auto* portal = concreteShell->portal(face).get();
       if (portal == nullptr) {
         ACTS_ERROR(prefix << "Portal is nullptr");
         throw std::runtime_error("Portal is nullptr");
@@ -331,6 +335,8 @@ class ISurfaceMaterialDesignator : public DesignatorBase {
       const NullDesignator& /*other*/) const override {
     return std::make_unique<ISurfaceMaterialDesignator>(*this);
   }
+
+  using DesignatorBase::merged;
 
  private:
   std::vector<std::pair<FaceType, std::shared_ptr<const ISurfaceMaterial>>>
@@ -376,6 +382,8 @@ class NullDesignator : public DesignatorBase {
       const CuboidHomogeneousMaterialDesignator& other) const override {
     return other.merged(*this);
   }
+
+  using DesignatorBase::merged;
 
   void graphvizLabel(std::ostream& os) const override {
     os << "<br/><i>NullDesignator</i>";

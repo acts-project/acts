@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(Extendable_) {
 
   // Test the empty list
   detail::Extendable<> nullist{};
-  (void)nullist;
+  static_cast<void>(nullist);
   BOOST_CHECK_EQUAL(std::tuple_size_v<std::tuple<>>, 0u);
 
   detail::Extendable<TypeA> alist;

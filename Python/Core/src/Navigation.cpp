@@ -34,14 +34,16 @@ using namespace Acts;
 namespace ActsPython {
 
 namespace Test {
-class DetectorElementStub : public DetectorElementBase {
+class DetectorElementStub : public SurfacePlacementBase {
  public:
-  DetectorElementStub() : DetectorElementBase() {}
-
-  const Transform3& transform(const GeometryContext& /*gctx*/) const override {
+  DetectorElementStub() = default;
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& /*gctx*/) const override {
     return m_transform;
   }
 
+  /// Is the detector element a sensitive element
+  bool isSensitive() const override { return true; }
   /// Return surface representation - const return pattern
   const Surface& surface() const override {
     throw std::runtime_error("Not implemented");
@@ -50,12 +52,8 @@ class DetectorElementStub : public DetectorElementBase {
   /// Non-const return pattern
   Surface& surface() override { throw std::runtime_error("Not implemented"); }
 
-  /// Returns the thickness of the module
-  /// @return double that indicates the thickness of the module
-  double thickness() const override { return 0; }
-
  private:
-  Transform3 m_transform;
+  Transform3 m_transform{Transform3::Identity()};
 };
 
 }  // namespace Test
@@ -127,12 +125,12 @@ void addNavigation(py::module_& m) {
 
         auto surface = Surface::makeShared<CylinderSurface>(
             Transform3::Identity(), std::make_shared<CylinderBounds>(30, 40));
-        surface->assignDetectorElement(*detElem);
+        surface->assignSurfacePlacement(*detElem);
 
         vol1->addSurface(std::move(surface));
 
         std::unique_ptr<INavigationPolicy> result =
-            self->build(GeometryContext{}, *vol1,
+            self->build(GeometryContext::dangerouslyDefaultConstruct(), *vol1,
                         *getDefaultLogger("Test", Logging::VERBOSE));
       });
 

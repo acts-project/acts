@@ -25,6 +25,8 @@
 
 namespace Acts::detail::Test {
 
+constexpr auto kInvalid = kTrackIndexInvalid;
+
 template <typename factory_t>
 class MultiTrajectoryTestsCommon {
   using ParametersVector = BoundTrackParameters::ParametersVector;
@@ -118,7 +120,7 @@ class MultiTrajectoryTestsCommon {
       BOOST_CHECK_EQUAL(t2.size(), 1);
       auto ts2 = t2.makeTrackState(kMask, ts.index());
       BOOST_CHECK_EQUAL(t2.size(), 2);
-      BOOST_CHECK_EQUAL(ts.previous(), MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_EQUAL(ts.previous(), kInvalid);
       BOOST_CHECK_EQUAL(ts2.previous(), ts.index());
     }
   }
@@ -464,7 +466,7 @@ class MultiTrajectoryTestsCommon {
 
     // use temporary measurement to reset calibrated data
     TestTrackState ttsb(rng, 2u);
-    Acts::GeometryContext gctx;
+    const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
     Acts::CalibrationContext cctx;
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
@@ -863,7 +865,7 @@ class MultiTrajectoryTestsCommon {
     mtj3.template addColumn<std::uint64_t>("counter");
     mtj3.template addColumn<std::uint8_t>("odd");
 
-    for (MultiTrajectoryTraits::IndexType i = 0; i < 10; i++) {
+    for (TrackIndexType i = 0; i < 10; i++) {
       auto ts =
           mtj.getTrackState(mtj.addTrackState(TrackStatePropMask::All, i));
       ts.template component<std::uint64_t>("counter") = i;
@@ -878,7 +880,7 @@ class MultiTrajectoryTestsCommon {
           mtj3.getTrackState(mtj3.addTrackState(TrackStatePropMask::All, i));
       ts3.copyFrom(ts);  // this should work
 
-      BOOST_CHECK_NE(ts3.index(), MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(ts3.index(), kInvalid);
 
       BOOST_CHECK_EQUAL(ts.template component<std::uint64_t>("counter"),
                         ts3.template component<std::uint64_t>("counter"));
@@ -902,7 +904,7 @@ class MultiTrajectoryTestsCommon {
           mtj5.getTrackState(mtj5.addTrackState(TrackStatePropMask::All, 0));
       ts5.copyFrom(ts4);  // this should work
 
-      BOOST_CHECK_NE(ts5.index(), MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(ts5.index(), kInvalid);
 
       BOOST_CHECK_EQUAL(ts4.template component<std::uint64_t>("counter"),
                         ts5.template component<std::uint64_t>("counter"));
@@ -1211,7 +1213,7 @@ class MultiTrajectoryTestsCommon {
     trajectory_t traj = m_factory.create();
     auto ts = traj.makeTrackState(TrackStatePropMask::All);
 
-    BOOST_CHECK_EQUAL(ts.calibratedSize(), MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_EQUAL(ts.calibratedSize(), kInvalid);
 
     auto [par, cov] = generateBoundParametersCovariance(rng, {});
 

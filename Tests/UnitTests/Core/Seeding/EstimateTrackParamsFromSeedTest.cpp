@@ -51,7 +51,7 @@ namespace ActsTests {
 using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 
 // detector geometry

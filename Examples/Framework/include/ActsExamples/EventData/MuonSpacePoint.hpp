@@ -5,21 +5,20 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 
 #include <cstdint>
 #include <iostream>
-#include <memory>
-#include <optional>
 #include <vector>
 
 namespace ActsExamples {
+
 /// @brief Example implementation of a CompositeSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM.
 ///         The space points are expressed in a local frame such that the x-axis
 ///         is parallel to the ATLAS Monitored Drift Tubes (Mdt), the y-axis
@@ -213,4 +212,5 @@ std::ostream& operator<<(std::ostream& ostr,
 /// @brief osteram operator of the Space point
 std::ostream& operator<<(std::ostream& ostr,
                          const ActsExamples::MuonSpacePoint& sp);
+
 }  // namespace ActsExamples

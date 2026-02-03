@@ -1,6 +1,5 @@
 acts_add_library(
     PluginGnn
-    SHARED
     src/GnnPipeline.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp

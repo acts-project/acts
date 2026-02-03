@@ -20,9 +20,10 @@ namespace Acts {
 /// @brief This is the central definition of the Acts
 /// payload object regarding detector calibration
 ///
+/// @ingroup context
+///
 /// It is propagated through the code to allow for event/thread
 /// dependent calibration
-
 class CalibrationContext : public ContextType {
  public:
   /// Inherit all constructors

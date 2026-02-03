@@ -65,9 +65,9 @@ struct InteractionVolumeCollector {
   /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& /*logger*/) const {
     // Retrieve the current volume
     auto currentVolume = navigator.currentVolume(state.navigation);
 
@@ -87,6 +87,7 @@ struct InteractionVolumeCollector {
         (collIt->second).exit = stepper.position(state.stepping);
       }
     }
+    return Result<void>::success();
   }
 };
 

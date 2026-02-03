@@ -35,6 +35,8 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
 
 /// Sort function which sorts dd4hep::DetElement by their ID
 /// @param [in,out] det the dd4hep::DetElements to be sorted
@@ -116,7 +118,8 @@ std::unique_ptr<const Acts::TrackingGeometry> convertDD4hepDetector(
     double defaultLayerThickness = Acts::UnitConstants::fm,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors = sortDetElementsByID,
-    const Acts::GeometryContext& gctx = Acts::GeometryContext(),
+    const Acts::GeometryContext& gctx =
+        Acts::GeometryContext::dangerouslyDefaultConstruct(),
     std::shared_ptr<const Acts::IMaterialDecorator> matDecorator = nullptr,
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<Acts::GeometryIdentifierHook>(),
@@ -213,4 +216,5 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
                           std::vector<dd4hep::DetElement>& layers,
                           const Acts::Logger& logger);
 
+/// @}
 }  // namespace ActsPlugins
