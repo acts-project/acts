@@ -27,7 +27,7 @@ class SurfaceStub : public Acts::RegularSurface {
   SurfaceStub(const Acts::GeometryContext& gctx, const SurfaceStub& sf,
               const Acts::Transform3& transf)
       : Acts::GeometryObject(), Acts::RegularSurface(gctx, sf, transf) {}
-  explicit SurfaceStub(const Acts::DetectorElementBase& detelement)
+  explicit SurfaceStub(const Acts::SurfacePlacementBase& detelement)
       : Acts::GeometryObject(), Acts::RegularSurface(detelement) {}
 
   ~SurfaceStub() override = default;
@@ -38,12 +38,12 @@ class SurfaceStub : public Acts::RegularSurface {
   /// Return method for the normal vector of the surface
   Acts::Vector3 normal(const Acts::GeometryContext& /*gctx*/,
                        const Acts::Vector3& /*position*/) const final {
-    return Acts::Vector3{0., 0., 0.};
+    return Acts::Vector3::Zero();
   }
 
   Acts::Vector3 normal(const Acts::GeometryContext& /*gctx*/,
                        const Acts::Vector2& /*lposition*/) const final {
-    return Acts::Vector3{0., 0., 0.};
+    return Acts::Vector3::Zero();
   }
 
   using Acts::RegularSurface::normal;
@@ -57,7 +57,7 @@ class SurfaceStub : public Acts::RegularSurface {
   Acts::Vector3 localToGlobal(const Acts::GeometryContext& /*gctx*/,
                               const Acts::Vector2& /*lpos*/
   ) const final {
-    return Acts::Vector3(0., 0., 0.);
+    return Acts::Vector3::Zero();
   }
 
   using Acts::RegularSurface::localToGlobal;
@@ -81,8 +81,7 @@ class SurfaceStub : public Acts::RegularSurface {
   /// Inherited from GeometryObject base
   Acts::Vector3 referencePosition(const Acts::GeometryContext& /*txt*/,
                                   Acts::AxisDirection /*bValue*/) const final {
-    const Acts::Vector3 v{0., 0., 0.};
-    return v;
+    return Acts::Vector3::Zero();
   }
 
   /// Surface intersction

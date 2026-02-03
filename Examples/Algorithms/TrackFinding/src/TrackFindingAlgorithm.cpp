@@ -26,7 +26,6 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -40,13 +39,11 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <cmath>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
-#include <system_error>
 #include <unordered_map>
 #include <utility>
 
@@ -219,8 +216,8 @@ class BranchStopper {
     if (!(m_cfg.pixelVolumeIds.empty() && m_cfg.stripVolumeIds.empty())) {
       auto& branchState = branchStateAccessor(track);
       // count both holes and outliers as holes for pixel/strip counts
-      if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
-          trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+      if (trackState.typeFlags().isHole() ||
+          trackState.typeFlags().isOutlier()) {
         auto volumeId = trackState.referenceSurface().geometryId().volume();
         if (Acts::rangeContainsValue(m_cfg.pixelVolumeIds, volumeId)) {
           ++branchState.nPixelHoles;
@@ -522,14 +519,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         std::optional<Acts::VectorMultiTrajectory::TrackStateProxy>
             firstMeasurementOpt;
         for (auto trackState : trackCandidate.trackStatesReversed()) {
-          bool isMeasurement = trackState.typeFlags().test(
-              Acts::TrackStateFlag::MeasurementFlag);
-          bool isOutlier =
-              trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
           // We are excluding non measurement states and outlier here. Those can
           // decrease resolution because only the smoothing corrected the very
           // first prediction as filtering is not possible.
-          if (isMeasurement && !isOutlier) {
+          if (trackState.typeFlags().isMeasurement()) {
             firstMeasurementOpt = trackState;
           }
         }
@@ -739,7 +732,7 @@ void TrackFindingAlgorithm::computeSharedHits(
 
   for (auto track : tracks) {
     for (auto state : track.trackStatesReversed()) {
-      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!state.typeFlags().isMeasurement()) {
         continue;
       }
 
@@ -757,19 +750,17 @@ void TrackFindingAlgorithm::computeSharedHits(
 
       // if already used, control if first track state has been marked
       // as shared
-      int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
-      int indexFirstState = firstStateOnTheHit.at(hitIndex);
+      std::size_t indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
+      std::size_t indexFirstState = firstStateOnTheHit.at(hitIndex);
 
       auto firstState = tracks.getTrack(indexFirstTrack)
                             .container()
                             .trackStateContainer()
                             .getTrackState(indexFirstState);
-      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
-        firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
-      }
+      firstState.typeFlags().setIsSharedHit();
 
       // Decorate this track state
-      state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+      state.typeFlags().setIsSharedHit();
     }
   }
 }

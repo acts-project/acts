@@ -8,13 +8,9 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiComponentTrackParameters.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
-#include "Acts/TrackFitting/detail/GsfUtils.hpp"
 
-namespace Acts::detail {
+namespace Acts::detail::Gsf {
 
 /// Computes the Kullback-Leibler distance between two components as shown in
 /// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
@@ -171,4 +167,4 @@ class SymmetricKLDistanceMatrix {
   }
 };
 
-}  // namespace Acts::detail
+}  // namespace Acts::detail::Gsf

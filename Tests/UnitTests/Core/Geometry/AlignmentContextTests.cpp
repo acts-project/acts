@@ -51,7 +51,7 @@ struct AlignmentContext {
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
-class AlignableDetectorElement : public DetectorElementBase {
+class AlignableDetectorElement : public SurfacePlacementBase {
  public:
   // Deleted default constructor
   AlignableDetectorElement() = delete;
@@ -65,10 +65,10 @@ class AlignableDetectorElement : public DetectorElementBase {
   AlignableDetectorElement(std::shared_ptr<const Transform3> transform,
                            const std::shared_ptr<const PlanarBounds>& pBounds,
                            double thickness)
-      : DetectorElementBase(),
-        m_elementTransform(std::move(transform)),
+      : m_elementTransform(std::move(transform)),
         m_elementThickness(thickness) {
     m_elementSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
+    m_elementSurface->assignThickness(thickness);
   }
 
   ///  Destructor
@@ -79,7 +79,8 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @note this is called from the surface().transform() in the PROXY mode
-  const Transform3& transform(const GeometryContext& gctx) const override;
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const override;
 
   /// Return surface associated with this detector element
   const Surface& surface() const override;
@@ -88,7 +89,10 @@ class AlignableDetectorElement : public DetectorElementBase {
   Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  double thickness() const;
+
+  /// Is the detector element a sensitive element
+  bool isSensitive() const override { return true; }
 
  private:
   /// the transform for positioning in 3D space
@@ -99,7 +103,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   double m_elementThickness{0.};
 };
 
-inline const Transform3& AlignableDetectorElement::transform(
+inline const Transform3& AlignableDetectorElement::localToGlobalTransform(
     const GeometryContext& gctx) const {
   auto alignContext = gctx.get<AlignmentContext>();
   if (alignContext.alignmentStore != nullptr &&
@@ -170,12 +174,12 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   GeometryContext positiveContext{AlignmentContext{alignmentStore, 1}};
 
   // Test the transforms
-  BOOST_CHECK(alignedSurface.transform(defaultContext)
+  BOOST_CHECK(alignedSurface.localToGlobalTransform(defaultContext)
                   .isApprox(Transform3::Identity()));
-  BOOST_CHECK(
-      alignedSurface.transform(negativeContext).isApprox(negativeTransform));
-  BOOST_CHECK(
-      alignedSurface.transform(positiveContext).isApprox(positiveTransform));
+  BOOST_CHECK(alignedSurface.localToGlobalTransform(negativeContext)
+                  .isApprox(negativeTransform));
+  BOOST_CHECK(alignedSurface.localToGlobalTransform(positiveContext)
+                  .isApprox(positiveTransform));
 
   // Test the centers
   BOOST_CHECK_EQUAL(alignedSurface.center(defaultContext), nominalCenter);

@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
@@ -17,19 +16,16 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
-#include "Acts/Utilities/Zip.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <numbers>
 #include <random>
 
@@ -83,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 
   double Bz = 2_T;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
@@ -128,7 +124,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
 
   double Bz = 2_T;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, planePar);
@@ -188,7 +184,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
 
   double Bz = 2_T;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
@@ -223,7 +219,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
 
   double Bz = 2_T;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   EDM4hepUtil::detail::Parameters converted =
       EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
@@ -319,19 +315,16 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
       auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
       double crit = r(rng);
       if (crit < 0.1) {
-        ts.typeFlags().set(TrackStateFlag::HoleFlag);
-        continue;
+        ts.typeFlags().setIsHole();
       } else if (crit < 0.2) {
-        ts.typeFlags().set(TrackStateFlag::OutlierFlag);
-        continue;
+        ts.typeFlags().setIsOutlier();
       } else if (crit < 0.3) {
-        ts.typeFlags().set(TrackStateFlag::SharedHitFlag);
+        ts.typeFlags().setIsSharedHit();
       } else if (crit < 0.4) {
-        ts.typeFlags().set(TrackStateFlag::MaterialFlag);
-        continue;
+        ts.typeFlags().setIsMaterial();
+      } else {
+        ts.typeFlags().setIsMeasurement();
       }
-
-      ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
 
       auto [par, cov] = genParams();
       ts.smoothed() = par;
@@ -346,7 +339,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   edm4hep::TrackCollection edm4hepTracks;
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   double Bz = 3_T;
 
@@ -401,9 +394,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
            readTsIt != read.trackStatesReversed().end()) {
       BOOST_TEST_INFO_SCOPE("TS: #" << tsi);
       auto nextMeas = std::find_if(
-          origTsIt, orig.trackStatesReversed().end(), [](const auto& ts) {
-            return ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
-          });
+          origTsIt, orig.trackStatesReversed().end(),
+          [](const auto& ts) { return ts.typeFlags().isMeasurement(); });
       BOOST_CHECK(nextMeas != orig.trackStatesReversed().end());
       origTsIt = nextMeas;
       auto origTs = *origTsIt;

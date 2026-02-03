@@ -32,32 +32,26 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 ConeSurface::ConeSurface(const ConeSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 ConeSurface::ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
                          const Transform3& shift)
-    : GeometryObject(),
-      RegularSurface(gctx, other, shift),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 ConeSurface::ConeSurface(const Transform3& transform, double alpha,
                          bool symmetric)
-    : GeometryObject(),
-      RegularSurface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric)) {}
 
 ConeSurface::ConeSurface(const Transform3& transform, double alpha, double zmin,
                          double zmax, double halfPhi)
-    : GeometryObject(),
-      RegularSurface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi)) {
 }
 
 ConeSurface::ConeSurface(const Transform3& transform,
                          std::shared_ptr<const ConeBounds> cbounds)
-    : GeometryObject(),
-      RegularSurface(transform),
-      m_bounds(std::move(cbounds)) {
+    : RegularSurface(transform), m_bounds(std::move(cbounds)) {
   throw_assert(m_bounds, "ConeBounds must not be nullptr");
 }
 
@@ -90,7 +84,7 @@ ConeSurface& ConeSurface::operator=(const ConeSurface& other) {
 }
 
 Vector3 ConeSurface::rotSymmetryAxis(const GeometryContext& gctx) const {
-  return transform(gctx).matrix().block<3, 1>(0, 2);
+  return localToGlobalTransform(gctx).matrix().block<3, 1>(0, 2);
 }
 
 RotationMatrix3 ConeSurface::referenceFrame(
@@ -120,13 +114,13 @@ Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,
   double r = lposition[1] * bounds().tanAlpha();
   double phi = lposition[0] / r;
   Vector3 loc3Dframe(r * std::cos(phi), r * std::sin(phi), lposition[1]);
-  return transform(gctx) * loc3Dframe;
+  return localToGlobalTransform(gctx) * loc3Dframe;
 }
 
 Result<Vector2> ConeSurface::globalToLocal(const GeometryContext& gctx,
                                            const Vector3& position,
                                            double tolerance) const {
-  Vector3 loc3Dframe = transform(gctx).inverse() * position;
+  Vector3 loc3Dframe = localToGlobalTransform(gctx).inverse() * position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > tolerance) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -139,14 +133,14 @@ double ConeSurface::pathCorrection(const GeometryContext& gctx,
                                    const Vector3& position,
                                    const Vector3& direction) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  Vector3 posLocal = transform(gctx).inverse() * position;
+  Vector3 posLocal = localToGlobalTransform(gctx).inverse() * position;
   double phi = VectorHelpers::phi(posLocal);
   double sgn = -std::copysign(1., posLocal.z());
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3 normalC(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
                   sgn * sinAlpha);
-  normalC = transform(gctx).linear() * normalC;
+  normalC = localToGlobalTransform(gctx).linear() * normalC;
   // Back to the global frame
   double cAlpha = normalC.dot(direction);
   return std::abs(1. / cAlpha);
@@ -165,14 +159,14 @@ Vector3 ConeSurface::normal(const GeometryContext& gctx,
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3 localNormal(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
                       sgn * sinAlpha);
-  return Vector3(transform(gctx).linear() * localNormal);
+  return Vector3(localToGlobalTransform(gctx).linear() * localNormal);
 }
 
 Vector3 ConeSurface::normal(const GeometryContext& gctx,
                             const Vector3& position) const {
   // get it into the cylinder frame if needed
   // @todo respect opening angle
-  Vector3 pos3D = transform(gctx).inverse() * position;
+  Vector3 pos3D = localToGlobalTransform(gctx).inverse() * position;
   pos3D.z() = 0;
   return pos3D.normalized();
 }
@@ -197,7 +191,7 @@ Polyhedron ConeSurface::polyhedronRepresentation(
         "Polyhedron representation of boundless surface is not possible");
   }
 
-  auto ctransform = transform(gctx);
+  auto ctransform = localToGlobalTransform(gctx);
 
   // The tip - created only once and only, if it is not a cut-off cone
   bool tipExists = false;
@@ -261,7 +255,7 @@ detail::RealQuadraticEquation ConeSurface::intersectionSolver(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
   // Transform into the local frame
-  Transform3 invTrans = transform(gctx).inverse();
+  Transform3 invTrans = localToGlobalTransform(gctx).inverse();
   Vector3 point1 = invTrans * position;
   Vector3 dir1 = invTrans.linear() * direction;
 
@@ -314,7 +308,7 @@ MultiIntersection3D ConeSurface::intersect(
     status2 = IntersectionStatus::unreachable;
   }
 
-  const auto& tf = transform(gctx);
+  const auto& tf = localToGlobalTransform(gctx);
   // Set the intersection
   Intersection3D first(tf * solution1, qe.first, status1);
   Intersection3D second(tf * solution2, qe.second, status2);
@@ -333,7 +327,7 @@ AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
-  const auto& rotation = transform(gctx).rotation();
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   // The local frame x/y/z axis
   const auto& localXAxis = rotation.col(0);
   const auto& localYAxis = rotation.col(1);
@@ -382,7 +376,7 @@ ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
-  const auto& sTransform = transform(gctx);
+  const auto& sTransform = localToGlobalTransform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);

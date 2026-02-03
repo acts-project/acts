@@ -4,7 +4,6 @@ set(ActsExamplesFramework_SOURCES)
 
 acts_add_library(
     ExamplesFramework
-    SHARED
     src/EventData/MuonSpacePoint.cpp
     src/EventData/MuonSpacePointCalibrator.cpp
     src/EventData/Measurement.cpp
@@ -21,7 +20,6 @@ acts_add_library(
     src/Utilities/EventDataTransforms.cpp
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
-    src/Utilities/Helpers.cpp
     src/Utilities/ParametricParticleGenerator.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
@@ -46,7 +44,6 @@ target_link_libraries(
         ROOT::Core
         ROOT::Hist
         HepMC3::HepMC3
-    PRIVATE std::filesystem
 )
 target_compile_definitions(
     ActsExamplesFramework

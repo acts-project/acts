@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesDigitization
-    SHARED
     src/DigitizationAlgorithm.cpp
     src/DigitizationConfig.cpp
     src/DigitizationCoordinatesConverter.cpp

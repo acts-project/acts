@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesIoHepMC3
-    SHARED
     src/HepMC3Reader.cpp
     src/HepMC3Writer.cpp
     src/HepMC3InputConverter.cpp

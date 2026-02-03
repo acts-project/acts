@@ -14,10 +14,15 @@
 namespace Acts {
 
 /// Error codes for navigator operations
+/// @ingroup errors
 enum class NavigatorError {
   // ensure all values are non-zero
+  /// We did not end up inside the volume.
   NotInsideExpectedVolume = 1,
+  /// Stepper not on surface
   NotOnExpectedSurface = 2,
+  /// No start volume could be resolved
+  NoStartVolume = 3,
 };
 
 /// Create error code from NavigatorError

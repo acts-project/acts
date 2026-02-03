@@ -12,6 +12,7 @@
 
 #include "GeoModelKernel/GeoMaterial.h"
 #include "GeoModelKernel/Units.h"
+
 namespace {
 constexpr double s_densityCnvFactor = 1. / GeoModelKernelUnits::gram;
 }

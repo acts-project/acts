@@ -34,6 +34,8 @@
 #include <podio/Frame.h>
 
 namespace ActsPlugins {
+/// @addtogroup edm4hep_plugin
+/// @{
 
 class MutablePodioTrackContainer;
 class ConstPodioTrackContainer;
@@ -55,24 +57,23 @@ namespace ActsPlugins {
 
 class PodioTrackContainerBase {
  public:
-  using IndexType = Acts::MultiTrajectoryTraits::IndexType;
-  static constexpr auto kInvalid = Acts::MultiTrajectoryTraits::kInvalid;
-  static constexpr auto MeasurementSizeMax =
-      Acts::MultiTrajectoryTraits::MeasurementSizeMax;
+  using IndexType = Acts::TrackIndexType;
+  static constexpr auto kInvalid = Acts::kTrackIndexInvalid;
+  static constexpr auto MeasurementSizeMax = Acts::kMeasurementSizeMax;
 
   using Parameters =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               false>::CoefficientsMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                false>::CoefficientsMap;
   using Covariance =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               false>::CovarianceMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                false>::CovarianceMap;
 
   using ConstParameters =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               true>::CoefficientsMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                true>::CoefficientsMap;
   using ConstCovariance =
-      typename Acts::detail_lt::FixedSizeTypes<Acts::eBoundSize,
-                                               true>::CovarianceMap;
+      typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
+                                                true>::CovarianceMap;
 
  protected:
   explicit PodioTrackContainerBase(const PodioUtil::ConversionHelper& helper)
@@ -424,4 +425,5 @@ static_assert(
     Acts::ConstTrackContainerBackend<ConstPodioTrackContainer>,
     "ConstPodioTrackContainer does not fulfill ConstTrackContainerBackend");
 
+/// @}
 }  // namespace ActsPlugins
