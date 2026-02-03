@@ -397,6 +397,10 @@ struct GsfActor {
         }
 
         isOutlier = false;
+      } else {
+        trackStateProxy.shareFrom(trackStateProxy,
+                                  TrackStatePropMask::Predicted,
+                                  TrackStatePropMask::Filtered);
       }
 
       tmpStates.tips.push_back(trackStateProxy.index());
