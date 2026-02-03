@@ -10,11 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 
 #include <unordered_map>
 
