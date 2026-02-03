@@ -233,10 +233,15 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     set(ACTS_PYTHON_INSTALL_DIR "acts")
 else()
     # GNU-like installation paths, e.g. lib/, include/, ...
+<<<<<<< HEAD
     if(PROJECT_IS_TOP_LEVEL)
         include(GNUInstallDirs)
     endif()
     set(ACTS_PYTHON_INSTALL_DIR "python")
+=======
+    include(GNUInstallDirs)
+    set(ACTS_PYTHON_INSTALL_DIR "python/acts")
+>>>>>>> b4fbae60e (centrally managed python install directory)
 endif()
 
 include(ActsCompilerOptions) # default compile options

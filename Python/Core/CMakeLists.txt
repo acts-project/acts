@@ -4,7 +4,7 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(py_files __init__.py _adapter.py)
-set(_core_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}/acts")
+set(_core_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}")
 
 pybind11_add_module(ActsPythonBindings src/CoreModuleEntry.cpp)
 
@@ -43,7 +43,10 @@ target_link_libraries(
 )
 
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
-install(FILES ${_python_dir}/setup.sh DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
+install(
+    FILES ${_python_dir}/setup.sh
+    DESTINATION ${ACTS_PYTHON_INSTALL_DIR}/../
+)
 
 foreach(f ${py_files})
     set(_target ${_python_dir}/acts/${f})
