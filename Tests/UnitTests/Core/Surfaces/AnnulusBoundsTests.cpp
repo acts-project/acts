@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
 
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(aBounds.type(), SurfaceBounds::eAnnulus);
+  BOOST_CHECK_EQUAL(aBounds.type(), SurfaceBounds::Annulus);
 
   /// Test positions inside/outside
   // - start from cartesian (from test drawing)

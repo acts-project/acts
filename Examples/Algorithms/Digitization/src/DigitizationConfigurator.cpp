@@ -81,7 +81,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
 
         switch (sBounds.type()) {
           // The module is a rectangle module
-          case Acts::SurfaceBounds::eRectangle: {
+          case Acts::SurfaceBounds::Rectangle: {
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::AxisDirection::AxisX) {
               double minX = boundValues[Acts::RectangleBounds::eMinX];
@@ -109,7 +109,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
           } break;
 
           // The module is a trapezoid module
-          case Acts::SurfaceBounds::eTrapezoid: {
+          case Acts::SurfaceBounds::Trapezoid: {
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::AxisDirection::AxisX) {
               double maxX = std::max(
@@ -137,7 +137,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
           } break;
 
           // The module is an annulus module
-          case Acts::SurfaceBounds::eAnnulus: {
+          case Acts::SurfaceBounds::Annulus: {
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::AxisDirection::AxisR) {
               double minR = boundValues[Acts::AnnulusBounds::eMinR];
@@ -169,7 +169,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
           } break;
 
           // The module is a Disc Trapezoid
-          case Acts::SurfaceBounds::eDiscTrapezoid: {
+          case Acts::SurfaceBounds::DiscTrapezoid: {
             double minR = boundValues[Acts::DiscTrapezoidBounds::eMinR];
             double maxR = boundValues[Acts::DiscTrapezoidBounds::eMaxR];
 
@@ -206,7 +206,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
 
           } break;
 
-          case Acts::SurfaceBounds::eDisc: {
+          case Acts::SurfaceBounds::Disc: {
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::AxisDirection::AxisR) {
               double minR = boundValues[Acts::RadialBounds::eMinR];

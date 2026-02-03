@@ -104,7 +104,7 @@ Polyhedron PlaneSurface::polyhedronRepresentation(
       vertices.push_back(localToGlobalTransform(gctx) *
                          Vector3(v2D.x(), v2D.y(), 0.));
     }
-    bool isEllipse = bounds().type() == SurfaceBounds::eEllipse;
+    bool isEllipse = bounds().type() == SurfaceBounds::Ellipse;
     bool innerExists = false, coversFull = false;
     if (isEllipse) {
       exactPolyhedron = false;

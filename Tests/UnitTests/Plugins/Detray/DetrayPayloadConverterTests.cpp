@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
   {
     class MockDiscBounds final : public Acts::SurfaceBounds {
      public:
-      BoundsType type() const final { return BoundsType::eDisc; }
+      BoundsType type() const final { return BoundsType::Disc; }
       bool isCartesian() const final { return true; }
       SquareMatrix2 boundToCartesianJacobian(
           const Vector2& /*lposition*/) const final {

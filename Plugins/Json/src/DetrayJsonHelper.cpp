@@ -25,32 +25,32 @@ std::tuple<unsigned int, std::vector<double>> maskFromBounds(
   unsigned int type = 13u;
   std::vector<double> boundaries = bValues;
   // Special treatment for some portals
-  if (portal && bType == SurfaceBounds::BoundsType::eCylinder) {
+  if (portal && bType == SurfaceBounds::BoundsType::Cylinder) {
     boundaries = {bValues.at(0u), -bValues.at(1u), bValues.at(1u)};
     type = 4u;
   } else {
     switch (bType) {
-      case SurfaceBounds::BoundsType::eAnnulus: {
+      case SurfaceBounds::BoundsType::Annulus: {
         type = 0u;
       } break;
-      case SurfaceBounds::BoundsType::eRectangle: {
+      case SurfaceBounds::BoundsType::Rectangle: {
         type = 5u;
         // ACTS: eMinX = 0, eMinY = 1, eMaxX = 2, eMaxY = 3,
         // detray: e_half_x, e_half_y
         boundaries = std::vector{0.5 * (bValues.at(2) - bValues.at(0)),
                                  0.5 * (bValues.at(3) - bValues.at(1))};
       } break;
-      case SurfaceBounds::BoundsType::eCylinder: {
+      case SurfaceBounds::BoundsType::Cylinder: {
         boundaries =
             std::vector{bValues.at(0u), -bValues.at(1u), bValues.at(1u)};
         type = 2u;
       } break;
-      case SurfaceBounds::BoundsType::eTrapezoid: {
+      case SurfaceBounds::BoundsType::Trapezoid: {
         type = 7u;
         boundaries = std::vector{bValues.at(0u), bValues.at(1u), bValues.at(2u),
                                  1 / (2 * bValues.at(2u))};
       } break;
-      case SurfaceBounds::BoundsType::eDisc: {
+      case SurfaceBounds::BoundsType::Disc: {
         boundaries = std::vector{bValues[0u], bValues[1u]};
         type = 6u;
       } break;

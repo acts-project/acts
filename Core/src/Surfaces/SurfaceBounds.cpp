@@ -60,46 +60,46 @@ std::ostream& operator<<(std::ostream& os,
                          const SurfaceBounds::BoundsType& bt) {
   switch (bt) {
     using enum SurfaceBounds::BoundsType;
-    case eCone:
+    case Cone:
       os << "Cone";
       break;
-    case eCylinder:
+    case Cylinder:
       os << "Cylinder";
       break;
-    case eDiamond:
+    case Diamond:
       os << "Diamond";
       break;
-    case eDisc:
+    case Disc:
       os << "Disc";
       break;
-    case eEllipse:
+    case Ellipse:
       os << "Ellipse";
       break;
-    case eLine:
+    case Line:
       os << "Line";
       break;
-    case eRectangle:
+    case Rectangle:
       os << "Rectangle";
       break;
-    case eTrapezoid:
+    case Trapezoid:
       os << "Trapezoid";
       break;
-    case eTriangle:
+    case Triangle:
       os << "Triangle";
       break;
-    case eDiscTrapezoid:
+    case DiscTrapezoid:
       os << "DiscTrapezoid";
       break;
-    case eConvexPolygon:
+    case ConvexPolygon:
       os << "ConvexPolygon";
       break;
-    case eAnnulus:
+    case Annulus:
       os << "Annulus";
       break;
-    case eBoundless:
+    case Boundless:
       os << "Boundless";
       break;
-    case eOther:
+    case Other:
       os << "Other";
       break;
   }

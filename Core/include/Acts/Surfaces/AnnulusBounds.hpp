@@ -66,7 +66,7 @@ class AnnulusBounds : public DiscBounds {
   explicit AnnulusBounds(const std::array<double, eSize>& values) noexcept(
       false);
 
-  BoundsType type() const final { return eAnnulus; }
+  BoundsType type() const final { return Annulus; }
 
   /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return false; }

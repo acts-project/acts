@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsConstruction) {
 
   /// Test construction with defining half lengths
   BOOST_CHECK_EQUAL(TrapezoidBounds(minHalfX, maxHalfX, halfY).type(),
-                    SurfaceBounds::eTrapezoid);
+                    SurfaceBounds::Trapezoid);
   /// Copy constructor
   TrapezoidBounds original(minHalfX, maxHalfX, halfY);
   TrapezoidBounds copied(original);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
   TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
 
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.type(), SurfaceBounds::eTrapezoid);
+  BOOST_CHECK_EQUAL(trapezoidBoundsObject.type(), SurfaceBounds::Trapezoid);
 
   /// Test minHalflengthX
   BOOST_CHECK_EQUAL(

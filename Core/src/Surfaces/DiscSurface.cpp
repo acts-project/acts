@@ -151,8 +151,8 @@ Polyhedron DiscSurface::polyhedronRepresentation(
   bool fullDisc = m_bounds->coversFullAzimuth();
   bool toCenter = m_bounds->rMin() < s_onSurfaceTolerance;
   // If you have bounds you can create a polyhedron representation
-  bool exactPolyhedron = (m_bounds->type() == SurfaceBounds::eDiscTrapezoid);
-  bool addCentreFromConvexFace = (m_bounds->type() != SurfaceBounds::eAnnulus);
+  bool exactPolyhedron = (m_bounds->type() == SurfaceBounds::DiscTrapezoid);
+  bool addCentreFromConvexFace = (m_bounds->type() != SurfaceBounds::Annulus);
   if (m_bounds) {
     auto vertices2D = m_bounds->vertices(quarterSegments);
     vertices.reserve(vertices2D.size() + 1);

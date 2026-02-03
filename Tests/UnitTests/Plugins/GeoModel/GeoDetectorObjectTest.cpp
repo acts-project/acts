@@ -62,7 +62,7 @@ void test(const GeoModelDetectorObjectFactory::Cache& cache, GeoDims geoDims) {
                     lineBounds->get(LineBounds::eHalfLengthZ));
       }
       // rectangle Surface check corner position without trf
-      if (sbounds.type() == SurfaceBounds::eRectangle) {
+      if (sbounds.type() == SurfaceBounds::Rectangle) {
         double csxmin = sbounds.values()[0];
         double csymin = sbounds.values()[1];
         double csxmax = sbounds.values()[2];
@@ -73,7 +73,7 @@ void test(const GeoModelDetectorObjectFactory::Cache& cache, GeoDims geoDims) {
         BOOST_CHECK(geoDims.boxI[1] == csymax);
       }
       // trap Surface without trf
-      if (sbounds.type() == SurfaceBounds::eTrapezoid) {
+      if (sbounds.type() == SurfaceBounds::Trapezoid) {
         const auto* trapBounds = dynamic_cast<const TrapezoidBounds*>(&sbounds);
         std::vector<Vector2> trapVerts = trapBounds->vertices();
 
