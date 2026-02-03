@@ -123,6 +123,10 @@ def main(
         r".*json\.hpp",
         "-e",
         f"{source_dir_posix}/Python/",
+        "-e",
+        f"{build_dir}/_deps/.*",
+        "-e",
+        f"{source_dir_posix}/dependencies/.*",
     ]
     gcovr = [gcovr_exe]
 
