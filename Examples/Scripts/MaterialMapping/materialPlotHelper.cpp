@@ -37,21 +37,25 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   return os;
 }
 
-std::unordered_map<std::uint64_t, json> load_geometry_file(std::string geometry_file) {
+std::unordered_map<std::uint64_t, json> load_geometry_file(
+    std::string geometry_file) {
   json geom;
   {
     std::ifstream gj(geometry_file);
     if (!gj.good()) {
       std::cerr << "WARNING: " << geometry_file << " not found." << std::endl;
     } else {
-      try { gj >> geom; } catch (...) {
-        std::cerr << "WARNING: Failed to parse " << geometry_file << "." << std::endl;
+      try {
+        gj >> geom;
+      } catch (...) {
+        std::cerr << "WARNING: Failed to parse " << geometry_file << "."
+                  << std::endl;
       }
     }
   }
   std::unordered_map<std::uint64_t, json> surface_bounds;
-  const auto &entries = geom["Surfaces"]["entries"];
-  for (const auto &entry : entries) {
+  const auto& entries = geom["Surfaces"]["entries"];
+  for (const auto& entry : entries) {
     std::uint64_t gid = entry["value"]["geo_id"].get<std::uint64_t>();
     surface_bounds[gid] = entry["value"]["bounds"];
   }
