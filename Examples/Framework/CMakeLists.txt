@@ -79,7 +79,3 @@ if(NOT TBB_FOUND)
 endif()
 
 target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
-
-acts_compile_headers(ExamplesFramework GLOB "include/**/*.hpp")
-
-add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)
