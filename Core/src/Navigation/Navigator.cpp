@@ -8,6 +8,7 @@
 
 #include "Acts/Propagator/Navigator.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Propagator/NavigatorError.hpp"
@@ -476,7 +477,13 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
       policyState, logger());
 
   ACTS_VERBOSE(volInfo(state) << "Current policy says navigation sequence is "
-                              << (isValid ? "valid" : "invalid"));
+                              << (isValid ? "VALID" : "INVALID"));
+
+  ACTS_VERBOSE(volInfo(state)
+               << "Current candidate index is "
+               << (state.navCandidateIndex.has_value()
+                       ? std::to_string(state.navCandidateIndex.value())
+                       : "n/a"));
 
   if (!isValid || !state.navCandidateIndex.has_value()) {
     // first time, resolve the candidates
@@ -623,7 +630,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     std::ostringstream os;
     os << "Navigation candidates: " << state.navCandidates.size() << "\n";
     for (auto& candidate : state.navCandidates) {
-      os << " -- " << candidate << "\n";
+      os << " -- " << candidate << " at "
+         << candidate.pathLength() / UnitConstants::mm << "mm\n";
     }
 
     logger().log(Logging::VERBOSE, os.str());
