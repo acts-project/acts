@@ -51,7 +51,7 @@ Usage : xmllint [options] XMLfiles ...
 	--nsclean : remove redundant namespace declarations
 	--testIO : test user I/O support
 	--catalogs : use SGML catalogs from $SGML_CATALOG_FILES
-	             otherwise XML Catalogs starting from 
+	             otherwise XML Catalogs starting from
 	         file:///etc/xml/catalog are activated by default
 	--nocatalogs: deactivate all catalogs
 	--auto : generate a small doc on the fly
@@ -59,7 +59,7 @@ Usage : xmllint [options] XMLfiles ...
 	--noxincludenode : same but do not generate XInclude nodes
 	--nofixup-base-uris : do not fixup xml:base uris
 	--loaddtd : fetch external DTD
-	--dtdattr : loaddtd + populate the tree with inherited attributes 
+	--dtdattr : loaddtd + populate the tree with inherited attributes
 	--stream : use the streaming interface to process very large files
 	--walker : create a reader and walk though the resulting doc
 	--pattern pattern_value : test the pattern support
