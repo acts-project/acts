@@ -39,6 +39,7 @@
 #include <atomic>
 #include <cmath>
 #include <cstdlib>
+#include <format>
 #include <memory>
 #include <numbers>
 #include <string>
