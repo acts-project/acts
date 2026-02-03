@@ -18,6 +18,8 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingTraining.hpp"
 
 #include <memory>
 #include <string>
@@ -276,6 +278,8 @@ class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
   Acts::BroadTripletSeedFilter::Config m_filterConfig;
   std::unique_ptr<const Acts::Logger> m_filterLogger;
   std::optional<Acts::TripletSeeder> m_seedFinder;
+  std::optional<ActsPlugins::HashingTraining> m_hashingTraining;
+  std::optional<ActsPlugins::HashingAlgorithm> m_hashingAlgorithm;
 
   Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector{
       Acts::DelegateFuncTag<voidSpacePointSelector>{}};
