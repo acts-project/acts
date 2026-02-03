@@ -66,7 +66,7 @@ class NavigationPolicyStateManager {
 
   NavigationPolicyState currentState() {
     if (m_stateStack.empty()) {
-      return {};  // Emtpy state as sentinel
+      return {};  // Empty state as sentinel
     }
     return NavigationPolicyState{*this, m_stateStack.size() - 1};
   }
