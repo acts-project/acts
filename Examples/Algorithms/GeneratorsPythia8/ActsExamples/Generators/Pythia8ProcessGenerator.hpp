@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -23,11 +24,14 @@
 
 namespace Pythia8 {
 class Pythia;
-}
+class Event;
+}  // namespace Pythia8
 
 namespace ActsExamples {
 
 struct Pythia8GeneratorImpl;
+
+using Pythia8EventSelector = std::function<bool(const Pythia8::Event&)>;
 
 class Pythia8Generator : public ParticlesGenerator {
  public:
@@ -52,9 +56,10 @@ class Pythia8Generator : public ParticlesGenerator {
     double spatialVertexThreshold = 1.0 * Acts::UnitConstants::um;
     /// Random seed for the initialization stage of Pythia8
     unsigned int initializationSeed = 42;
-
     /// Direct HepMC3 output (for debugging)
     std::optional<std::filesystem::path> writeHepMC3 = std::nullopt;
+    /// Event selection functions
+    std::vector<Pythia8EventSelector> eventSelectors;
   };
 
   Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl);

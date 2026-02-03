@@ -127,17 +127,41 @@ std::shared_ptr<HepMC3::GenEvent> Pythia8Generator::operator()(
 
   m_impl->m_pythia8RndmEngine->setRandomEngine(rng);
 
-  {
-    ActsPlugins::FpeMonitor mon{0};  // disable all FPEs while we're in Pythia8
-    m_pythia8->next();
-  }
+  bool accepted = false;
+  unsigned int trials = 0;
+  // While loop over event selection
+  do {
+    {
+      ActsPlugins::FpeMonitor mon{
+          0};  // disable all FPEs while we're in Pythia8
+      m_pythia8->next();
+    }
 
-  if (m_cfg.printShortEventListing) {
-    m_pythia8->process.list();
-  }
-  if (m_cfg.printLongEventListing) {
-    m_pythia8->event.list();
-  }
+    if (m_cfg.printShortEventListing) {
+      m_pythia8->process.list();
+    }
+    if (m_cfg.printLongEventListing) {
+      m_pythia8->event.list();
+    }
+
+    auto& event = m_pythia8->event;
+    if (m_cfg.eventSelectors.empty()) {
+      accepted = true;
+    } else {
+      ++trials;
+      accepted =
+          std::all_of(m_cfg.eventSelectors.begin(), m_cfg.eventSelectors.end(),
+                      [&event](const Pythia8EventSelector& selector) {
+                        return selector(event);
+                      });
+    }
+    if (trials % 1000 == 0 && trials > 0) {
+      ACTS_WARNING("Pythia8Generator: more than "
+                   << trials
+                   << " trials to satisfy "
+                      "event selection criteria. Continuing anyway.");
+    }
+  } while (not accepted);
 
   auto genEvent = std::make_shared<HepMC3::GenEvent>();
   genEvent->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
