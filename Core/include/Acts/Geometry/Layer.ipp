@@ -20,7 +20,7 @@ inline SurfaceArray* Layer::surfaceArray() {
   return const_cast<SurfaceArray*>(m_surfaceArray.get());
 }
 
-inline double Layer::thickness() const {
+inline double Layer::layerThickness() const {
   return m_layerThickness;
 }
 
@@ -72,7 +72,7 @@ inline bool Layer::isOnLayer(const GeometryContext& gctx,
                              const Vector3& position,
                              const BoundaryTolerance& boundaryTolerance) const {
   if (m_representingVolume != nullptr) {
-    return m_representingVolume->inside(position);
+    return m_representingVolume->inside(gctx, position);
   }
   return surfaceRepresentation().isOnSurface(gctx, position, Vector3::Zero(),
                                              boundaryTolerance);

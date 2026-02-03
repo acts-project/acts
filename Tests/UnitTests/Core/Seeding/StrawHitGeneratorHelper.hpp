@@ -5,7 +5,9 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
+
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
@@ -206,7 +208,7 @@ class SpCalibrator {
     const double x = normDriftTime(t);
     double v{0.0};
     for (std::size_t n = 1; n < s_TtoRcoeffs.size(); ++n) {
-      v += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyUn(x, n, 1u);
+      v += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyTn(x, n, 1u);
     }
     return v * s_timeNormFactor;
   }
@@ -215,7 +217,7 @@ class SpCalibrator {
     const double x = normDriftTime(t);
     double a{0.0};
     for (std::size_t n = 2; n < s_TtoRcoeffs.size(); ++n) {
-      a += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyUn(x, n, 2u);
+      a += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyTn(x, n, 2u);
     }
     return a * Acts::square(s_timeNormFactor);
   }
@@ -250,47 +252,55 @@ class SpCalibrator {
     }
     return s;
   }
+  /// @brief Provide a fast estimate of the time of flight of the particle. Used in the Fast Fitter.
+  /// @param measurement: measurement. It should be a straw measurement
+  double fastToF(const FitTestSpacePoint& measurement) const {
+    return (m_localToGlobal * measurement.localPosition()).norm() /
+           PhysicalConstants::c;
+  }
   /// @brief Provide the calibrated drift radius given the straw measurement and time offset
   ///        Needed for the Fast Fitter.
-  /// @param ctx: Calibration context (Needed by conept interface)
+  /// @param ctx: Calibration context (Needed by concept interface)
   /// @param measurement: measurement. It should be a straw measurement
   /// @param timeOffSet: Offset in the time of arrival
-  static double driftRadius(const Acts::CalibrationContext& /*ctx*/,
-                            const FitTestSpacePoint& measurement,
-                            const double timeOffSet) {
+  double driftRadius(const Acts::CalibrationContext& /*ctx*/,
+                     const FitTestSpacePoint& measurement,
+                     const double timeOffSet) const {
     if (!measurement.isStraw() || !measurement.isGood()) {
       return 0.;
     }
-    return driftRadius(Acts::abs(measurement.time() - timeOffSet));
+    return driftRadius(measurement.time() - timeOffSet - fastToF(measurement));
   }
   /// @brief Provide the drift velocity given the straw measurent and time offset
   ///        Needed for the Fast Fitter.
-  /// @param ctx: Calibration context (Needed by conept interface)
+  /// @param ctx: Calibration context (Needed by concept interface)
   /// @param measurement: measurement
   /// @param timeOffSet: Offset in the time of arrival
-  static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
-                              const FitTestSpacePoint& measurement,
-                              const double timeOffSet) {
+  double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
+                       const FitTestSpacePoint& measurement,
+                       const double timeOffSet) const {
     if (!measurement.isStraw() || !measurement.isGood()) {
       return 0.;
     }
-    return driftVelocity(Acts::abs(measurement.time() - timeOffSet));
+    return driftVelocity(measurement.time() - timeOffSet -
+                         fastToF(measurement));
   }
   /// @brief Provide the drift acceleration given the straw measurent and time offset
   ///        Needed for the Fast Fitter.
-  /// @param ctx: Calibration context (Needed by conept interface)
+  /// @param ctx: Calibration context (Needed by concept interface)
   /// @param measurement: measurement
   /// @param timeOffSet: Offset in the time of arrival
-  static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
-                                  const FitTestSpacePoint& measurement,
-                                  const double timeOffSet) {
+  double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
+                           const FitTestSpacePoint& measurement,
+                           const double timeOffSet) const {
     if (!measurement.isStraw() || !measurement.isGood()) {
       return 0.;
     }
-    return driftAcceleration(Acts::abs(measurement.time() - timeOffSet));
+    return driftAcceleration(measurement.time() - timeOffSet -
+                             fastToF(measurement));
   }
   /// @brief Compute the distance of the point of closest approach of a straw measurement
-  /// @param ctx: Calibration context (Needed by conept interface)
+  /// @param ctx: Calibration context (Needed by concept interface)
   /// @param trackPos: Position of the track at z=0.
   /// @param trackDir: Direction of the track in the local frame
   /// @param measurement: Measurement
@@ -317,18 +327,18 @@ class SpCalibrator {
       const double driftTime{copySp->time() - timeOffSet -
                              closestApproachDist(trackPos, trackDir, sp) /
                                  PhysicalConstants::c};
-      if (driftTime < 0) {
+      if (driftTime > s_minDriftTime && driftTime < s_maxDriftTime) {
+        copySp->updateStatus(true);
+        copySp->updateDriftR(driftRadius(driftTime));
+      } else {
         copySp->updateStatus(false);
         copySp->updateDriftR(0.);
-      } else {
-        copySp->updateStatus(true);
-        copySp->updateDriftR(Acts::abs(driftRadius(driftTime)));
       }
     }
     return copySp;
   }
   /// @brief Calibrate a set of straw measurements using the best known estimate on a straight line track
-  /// @param ctx: Calibration context (Needed by conept interface)
+  /// @param ctx: Calibration context (Needed by concept interface)
   /// @param trackPos: Position of the track at z=0.
   /// @param trackDir: Direction of the track in the local frame
   /// @param timeOffSet: Offset in the time of arrival (To be implemented)
@@ -342,7 +352,7 @@ class SpCalibrator {
         uncalibCont, std::back_inserter(calibMeas), [&](const auto& calibMe) {
           return calibrate(ctx, trackPos, trackDir, timeOffSet, *calibMe);
         });
-    return uncalibCont;
+    return calibMeas;
   }
   /// @brief Updates the sign of the Straw's drift radii indicating that they are on the left (-1)
   ///        or right side (+1) of the track line
@@ -360,7 +370,7 @@ class SpCalibrator {
     }
   }
   /// @brief Provide the drift velocity given the straw measurent after being calibrated
-  /// @param ctx: Calibration context (Needed by conept interface)
+  /// @param ctx: Calibration context (Needed by concept interface)
   /// @param measurement: measurement
   static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
                               const FitTestSpacePoint& measurement) {
@@ -370,7 +380,7 @@ class SpCalibrator {
     return driftVelocity(driftTime(Acts::abs(measurement.driftRadius())));
   }
   /// @brief Provide the drift acceleration given the straw measurent after being calibrated
-  /// @param ctx: Calibration context (Needed by conept interface)
+  /// @param ctx: Calibration context (Needed by concept interface)
   /// @param measurement: measurement
   static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
                                   const FitTestSpacePoint& measurement) {
@@ -391,7 +401,10 @@ static_assert(
 
 /// @brief Split the composite space point container into straw and strip measurements
 class SpSorter {
- public:
+ protected:
+  /// @brief Protected constructor to instantiate the SpSorter.
+  /// @param hits: List of space points to sort per layer
+  /// @param calibrator: Space point calibrator to recalibrate the hits
   SpSorter(const Container_t& hits, const SpCalibrator* calibrator)
       : m_calibrator{calibrator} {
     for (const auto& spPtr : hits) {
@@ -402,9 +415,14 @@ class SpSorter {
       pushMe[spPtr->layer()].push_back(spPtr);
     }
   }
-  const std::vector<Container_t>& strawHits() const { return m_straws; }
-  const std::vector<Container_t>& stripHits() const { return m_strips; }
 
+ public:
+  /// @brief Return the sorted straw hits
+  const std::vector<Container_t>& strawHits() const { return m_straws; }
+  /// @brief Returns the sorted strip hits
+  const std::vector<Container_t>& stripHits() const { return m_strips; }
+  /// @brief Returns whether the candidate space point is a good hit or not
+  /// @param testPoint: Hit to test
   bool goodCandidate(const FitTestSpacePoint& testPoint) const {
     return testPoint.isGood();
   }
@@ -417,7 +435,7 @@ class SpSorter {
   /// @param dir: Direction of the candidate seed line
   /// @param t0: Offse in the time of arrival of the particle
   /// @param testSp: Reference to the straw space point to test
-  double candidatePull(const CalibrationContext& /* cctx*/, const Vector3& pos,
+  double candidateChi2(const CalibrationContext& /* cctx*/, const Vector3& pos,
                        const Vector3& dir, const double /*t0*/,
                        const FitTestSpacePoint& testSp) const {
     return CompSpacePointAuxiliaries::chi2Term(pos, dir, testSp);
@@ -440,6 +458,9 @@ class SpSorter {
                    const std::size_t upperLayer) const {
     return lowerLayer >= upperLayer;
   }
+  double strawRadius(const FitTestSpacePoint& /*testSp*/) const {
+    return 15._mm;
+  }
 
  private:
   const SpCalibrator* m_calibrator{nullptr};
@@ -461,8 +482,9 @@ Line_t generateLine(RandomEngine& engine, const Logger& logger) {
   linePars[toUnderlying(ParIndex::y0)] = uniform{-500., 500.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
       uniform{5_degree, 175_degree}(engine);
-  if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
-      3_degree) {
+  if ((Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
+       10._degree) ||
+      (Acts::abs(linePars[toUnderlying(ParIndex::phi)]) < 15._degree)) {
     return generateLine(engine, logger);
   }
   Line_t line{linePars};
@@ -539,7 +561,7 @@ class MeasurementGenerator {
     /// Number of overall tubelayers
     constexpr std::size_t nTubeLayers = nLayersPerMl * 2;
     /// Position in z of the first tube layer
-    constexpr double chamberDistance = 3._m;
+    constexpr double chamberDistance = 5._m;
     /// Radius of each straw
     constexpr double tubeRadius = 15._mm;
     /// Distance between the first <nLayersPerMl> layers and the second pack
@@ -628,10 +650,16 @@ class MeasurementGenerator {
                   tube, smearedR, SpCalibrator::driftUncert(smearedR),
                   twinUncert));
           sp->setLayer(i_layer);
-          sp->updateTime(SpCalibrator::driftTime(sp->driftRadius()) + t0 +
-                         calibrator.closestApproachDist(line.position(),
-                                                        line.direction(), *sp) /
-                             PhysicalConstants::c);
+          const double driftTime{SpCalibrator::driftTime(sp->driftRadius())};
+          const double tof{calibrator.closestApproachDist(
+                               line.position(), line.direction(), *sp) /
+                           PhysicalConstants::c};
+          sp->updateTime(driftTime + t0 + tof);
+          ACTS_VERBOSE("spawn() - Created "
+                       << toString(*sp) << ", t: " << sp->time() / 1._ns
+                       << " ns"
+                       << ", tDrift: " << driftTime / 1._ns << " ns"
+                       << ", ToF: " << tof / 1._ns << " ns.");
         }
       }
     }

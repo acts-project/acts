@@ -13,6 +13,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <memory>
 #include <numbers>
 #include <numeric>
 #include <utility>
@@ -21,26 +23,33 @@
 namespace Acts::Experimental {
 
 SeedFinderGbts::SeedFinderGbts(
-    SeedFinderGbtsConfig config, const GbtsGeometry* gbtsGeo,
+    SeedFinderGbtsConfig config, std::unique_ptr<GbtsGeometry> gbtsGeo,
     const std::vector<TrigInDetSiLayer>* layerGeometry,
     std::unique_ptr<const Acts::Logger> logger)
     : m_config(std::move(config)),
-      m_geo(gbtsGeo),
-      m_storage(std::make_unique<GNN_DataStorage>(*m_geo, m_config)),
+      m_geo(std::move(gbtsGeo)),
       m_layerGeometry(layerGeometry),
-      m_logger(std::move(logger)) {}
+      m_logger(std::move(logger)) {
+  m_config.phiSliceWidth = 2 * std::numbers::pi / m_config.nMaxPhiSlice;
 
-SeedContainer2 SeedFinderGbts::CreateSeeds(
+  m_mlLut = parseGbtsMLLookupTable(m_config.lutInputFile);
+}
+
+SeedContainer2 SeedFinderGbts::createSeeds(
     const RoiDescriptor& roi,
-    const SPContainerComponentsType& SpContainerComponents, int max_layers) {
+    const SPContainerComponentsType& SpContainerComponents,
+    int max_layers) const {
+  std::unique_ptr<GbtsDataStorage> storage =
+      std::make_unique<GbtsDataStorage>(m_geo, m_config, m_mlLut);
+
   SeedContainer2 SeedContainer;
-  std::vector<std::vector<GNN_Node>> node_storage =
-      CreateNodes(SpContainerComponents, max_layers);
+  std::vector<std::vector<GbtsNode>> node_storage =
+      createNodes(SpContainerComponents, max_layers);
   unsigned int nPixelLoaded = 0;
   unsigned int nStripLoaded = 0;
 
   for (std::size_t l = 0; l < node_storage.size(); l++) {
-    const std::vector<GNN_Node>& nodes = node_storage[l];
+    const std::vector<GbtsNode>& nodes = node_storage[l];
 
     if (nodes.empty()) {
       continue;
@@ -49,25 +58,24 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
     bool is_pixel = true;
     if (is_pixel) {  // placeholder for now until strip hits are added in
 
-      nPixelLoaded += m_storage->loadPixelGraphNodes(l, nodes, m_config.useML);
+      nPixelLoaded += storage->loadPixelGraphNodes(l, nodes, m_config.useML);
 
     } else {
-      nStripLoaded += m_storage->loadStripGraphNodes(l, nodes);
+      nStripLoaded += storage->loadStripGraphNodes(l, nodes);
     }
   }
   ACTS_DEBUG("Loaded " << nPixelLoaded << " pixel spacepoints and "
                        << nStripLoaded << " strip spacepoints");
 
-  m_storage->sortByPhi();
+  storage->sortByPhi();
 
-  m_storage->initializeNodes(m_config.useML);
+  storage->initializeNodes(m_config.useML);
 
-  m_config.phiSliceWidth = 2 * std::numbers::pi / m_config.nMaxPhiSlice;
-  m_storage->generatePhiIndexing(1.5f * m_config.phiSliceWidth);
+  storage->generatePhiIndexing(1.5f * m_config.phiSliceWidth);
 
-  std::vector<GNN_Edge> edgeStorage;
+  std::vector<GbtsEdge> edgeStorage;
 
-  std::pair<int, int> graphStats = buildTheGraph(roi, m_storage, edgeStorage);
+  std::pair<int, int> graphStats = buildTheGraph(roi, storage, edgeStorage);
 
   ACTS_DEBUG("Created graph with " << graphStats.first << " edges and "
                                    << graphStats.second << " edge links");
@@ -114,35 +122,65 @@ SeedContainer2 SeedFinderGbts::CreateSeeds(
   return SeedContainer;
 }
 
-std::vector<std::vector<SeedFinderGbts::GNN_Node>> SeedFinderGbts::CreateNodes(
-    const auto& container, int MaxLayers) {
-  std::vector<std::vector<SeedFinderGbts::GNN_Node>> node_storage(MaxLayers);
+GbtsMLLookupTable SeedFinderGbts::parseGbtsMLLookupTable(
+    const std::string& lutInputFile) {
+  GbtsMLLookupTable mlLUT{};
+  if (m_config.useML) {
+    if (lutInputFile.empty()) {
+      throw std::runtime_error("Cannot find ML predictor LUT file");
+    } else {
+      mlLUT.reserve(100);
+      std::ifstream ifs(std::string(lutInputFile).c_str());
+
+      if (!ifs.is_open()) {
+        throw std::runtime_error("Failed to open LUT file");
+      }
+
+      float cl_width{}, min1{}, max1{}, min2{}, max2{};
+
+      while (ifs >> cl_width >> min1 >> max1 >> min2 >> max2) {
+        std::array<float, 5> lut_line = {cl_width, min1, max1, min2, max2};
+        mlLUT.emplace_back(lut_line);
+      }
+      if (!ifs.eof()) {
+        // ended if parse error present, not clean EOF
+
+        throw std::runtime_error("Stopped reading LUT file due to parse error");
+      }
+
+      ifs.close();
+    }
+  }
+  return mlLUT;
+}
+
+std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
+    const SPContainerComponentsType& container, int MaxLayers) const {
+  std::vector<std::vector<GbtsNode>> node_storage(MaxLayers);
   // reserve for better efficiency
 
   for (auto& v : node_storage) {
-    v.reserve(100000);
+    v.reserve(10000);
   }
 
   for (auto sp : std::get<0>(container)) {
     // for every sp in container,
     // add its variables to node_storage organised by layer
-    int layer = sp.extra(std::get<1>(container));
+    std::uint16_t layer = sp.extra(std::get<1>(container));
 
     // add node to storage
-    SeedFinderGbts::GNN_Node& node = node_storage[layer].emplace_back(layer);
+    GbtsNode& node = node_storage[layer].emplace_back(layer);
 
     // fill the node with spacepoint variables
 
-    node.m_x = sp.x();
-    node.m_y = sp.y();
-    node.m_z = sp.z();
-    node.m_r = sp.r();
-    node.m_phi = sp.phi();
-    node.m_idx =
-        sp.index();  // change node so that is uses SpacePointIndex2 (doesn't
-                     // affect code but i guess it looks cleaner)
-    node.m_pcw = sp.extra(std::get<2>(container));
-    node.m_locPosY = sp.extra(std::get<3>(container));
+    node.x() = sp.x();
+    node.y() = sp.y();
+    node.z() = sp.z();
+    node.r() = sp.r();
+    node.phi() = sp.phi();
+    node.sp_idx() = sp.index();
+    node.pixelClusterWidth() = sp.extra(std::get<2>(container));
+    node.localPositionY() = sp.extra(std::get<3>(container));
   }
 
   return node_storage;
@@ -505,7 +543,7 @@ int SeedFinderGbts::runCCA(int nEdges,
 }
 
 void SeedFinderGbts::extractSeedsFromTheGraph(
-    int maxLevel, int nEdges, int nHits, std::vector<GNN_Edge>& edgeStorage,
+    int maxLevel, int nEdges, int nHits, std::vector<GbtsEdge>& edgeStorage,
     std::vector<seedProperties>& vSeedCandidates) const {
   vSeedCandidates.clear();
 
@@ -519,12 +557,12 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
     return;
   }
 
-  std::vector<GNN_Edge*> vSeeds;
+  std::vector<GbtsEdge*> vSeeds;
 
   vSeeds.reserve(nEdges / 2);
 
   for (int edgeIndex = 0; edgeIndex < nEdges; edgeIndex++) {
-    GNN_Edge* pS = &(edgeStorage.at(edgeIndex));
+    GbtsEdge* pS = &(edgeStorage.at(edgeIndex));
 
     if (pS->m_level < minLevel) {
       continue;
@@ -537,7 +575,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
     return;
   }
 
-  std::sort(vSeeds.begin(), vSeeds.end(), GNN_Edge::CompareLevel());
+  std::sort(vSeeds.begin(), vSeeds.end(), GbtsEdge::CompareLevel());
 
   // backtracking
 
@@ -552,7 +590,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
 
     GbtsEdgeState rs(false);
 
-    tFilter.followTrack(pS, rs);
+    tFilter.followTrack(*pS, rs);
 
     if (!rs.m_initialized) {
       continue;
@@ -564,9 +602,9 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
 
     float seed_eta = std::abs(-std::log(pS->m_p[0]));
 
-    std::vector<const GNN_Node*> vN;
+    std::vector<const GbtsNode*> vN;
 
-    for (std::vector<GNN_Edge*>::reverse_iterator sIt = rs.m_vs.rbegin();
+    for (std::vector<GbtsEdge*>::reverse_iterator sIt = rs.m_vs.rbegin();
          sIt != rs.m_vs.rend(); ++sIt) {
       if (seed_eta > m_config.edge_mask_min_eta) {
         (*sIt)->m_level = -1;  // mark as collected

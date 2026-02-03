@@ -5,7 +5,7 @@ A replacement for the ambiguity solver and a filtering algorithm for seeds are a
 
 ## Onnx plugin
 
-To be able to perform neural network (NN) models' inferences in C++, ACTS uses [ONNX Runtime](https://onnxruntime.ai/). An interface to use ONNX Runtime has been implemented as an ACTS plugin; to use it, you will need to compile ACTS with the `ACTS_PLUGIN_ONNX` option. For more details on how to export your model to ONNX, please see the documentation on their [website](https://onnxruntime.ai/docs/).
+To be able to perform neural network (NN) models' inferences in C++, ACTS uses [ONNX Runtime](https://onnxruntime.ai/). An interface to use ONNX Runtime has been implemented as an ACTS plugin; to use it, you will need to compile ACTS with the `-DACTS_BUILD_PLUGIN_ONNX=ON` option. For more details on how to export your model to ONNX, please see the documentation on their [website](https://onnxruntime.ai/docs/).
 
 ### OnnxRuntimeBase
 

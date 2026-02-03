@@ -50,7 +50,7 @@ struct HitSurfaceSelector {
   /// Check if the surface should be used.
   bool operator()(const Acts::Surface &surface) const {
     // sensitive/material are not mutually exclusive
-    bool isSensitive = surface.associatedDetectorElement() != nullptr;
+    bool isSensitive = surface.isSensitive();
     bool isMaterial = surface.surfaceMaterial() != nullptr;
     // passive should be an orthogonal category
     bool isPassive = !(isSensitive || isMaterial);

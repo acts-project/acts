@@ -17,12 +17,11 @@
 
 namespace Acts {
 
-/// @class BinnedSurfaceMaterial
+/// @ingroup material
 ///
-/// It extends the @c ISurfaceMaterial base class and is an array pf
+/// It extends the @ref ISurfaceMaterial base class and is an array pf
 /// MaterialSlab. This is not memory optimised as every bin
 /// holds one material property object.
-
 class BinnedSurfaceMaterial : public ISurfaceMaterial {
  public:
   /// Default Constructor - deleted
@@ -105,6 +104,8 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   const MaterialSlab& materialSlab(const Vector3& gp) const final;
 
+  using ISurfaceMaterial::materialSlab;
+
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param sl The output stream to write to
   /// @return Reference to the output stream after writing
@@ -119,7 +120,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
 };
 
 inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
-  return (m_binUtility);
+  return m_binUtility;
 }
 
 inline const MaterialSlabMatrix& BinnedSurfaceMaterial::fullMaterial() const {

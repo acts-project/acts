@@ -80,7 +80,7 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
       // loop over layers
       for (auto& layIter : layers) {
         // estimate the offset
-        layerThickness = layIter->thickness();
+        layerThickness = layIter->layerThickness();
         layerValue = layIter->referencePositionValue(gctx, aDir);
         // register the new boundaries in the step vector
         boundaries.push_back(layerValue - 0.5 * layerThickness);
@@ -228,7 +228,7 @@ std::shared_ptr<Surface> LayerArrayCreator::createNavigationSurface(
     auto cylinderBounds =
         std::make_shared<CylinderBounds>(navigationR, halflengthZ);
     navigationSurface = Surface::makeShared<CylinderSurface>(
-        layerSurface.transform(gctx), cylinderBounds);
+        layerSurface.localToGlobalTransform(gctx), cylinderBounds);
   } else {
     ACTS_WARNING("Not implemented.");
   }

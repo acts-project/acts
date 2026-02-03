@@ -14,6 +14,8 @@
 #include <onnxruntime_cxx_api.h>
 
 namespace ActsPlugins {
+/// @addtogroup onnx_plugin
+/// @{
 
 /// Type alias for network batch input data structure
 using NetworkBatchInput =
@@ -70,4 +72,5 @@ class OnnxRuntimeBase {
   std::vector<std::vector<std::int64_t>> m_outputNodeDims;
 };
 
+/// @}
 }  // namespace ActsPlugins

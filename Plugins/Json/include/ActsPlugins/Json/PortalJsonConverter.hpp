@@ -19,8 +19,6 @@
 #include <tuple>
 #include <vector>
 
-// Custom Json encoder/decoders
-
 namespace Acts {
 
 class Surface;
@@ -30,6 +28,8 @@ class DetectorVolume;
 class Portal;
 }  // namespace Experimental
 
+/// @addtogroup json_plugin
+/// @{
 namespace PortalJsonConverter {
 
 struct Options {
@@ -97,4 +97,6 @@ std::shared_ptr<Experimental::Portal> fromJson(
         detectorVolumes);
 
 }  // namespace PortalJsonConverter
+
+/// @}
 }  // namespace Acts

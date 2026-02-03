@@ -173,7 +173,7 @@ def test_coordinate_converter(trk_geo):
     converter = acts.examples.DigitizationCoordinatesConverter(digiCfg)
 
     def test_surface(surface):
-        gctx = acts.GeometryContext()
+        gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
         geo_id = surface.geometryId.value
         geo_center = surface.center(gctx)
         x, y, z = geo_center[0], geo_center[1], geo_center[2]

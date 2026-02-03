@@ -19,7 +19,7 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
-GeometryContext gctx = GeometryContext();
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 BOOST_AUTO_TEST_CASE(DiamondVolumeBoundsCreation) {
@@ -132,28 +132,28 @@ BOOST_AUTO_TEST_CASE(DiamondBoundarySurfaces) {
   using enum DiamondVolumeBounds::BoundValues;
 
   auto pFaceXY = surfaces[toUnderlying(PositiveZFaceXY)]
-                     .surface->transform(gctx)
+                     .surface->localToGlobalTransform(gctx)
                      .rotation();
   BOOST_CHECK(pFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(pFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(pFaceXY.col(2).isApprox(zaxis));
 
   auto nFaceXY = surfaces[toUnderlying(NegativeZFaceXY)]
-                     .surface->transform(gctx)
+                     .surface->localToGlobalTransform(gctx)
                      .rotation();
   BOOST_CHECK(nFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(nFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(nFaceXY.col(2).isApprox(zaxis));
 
   auto pFaceXZ = surfaces[toUnderlying(PositiveYFaceZX)]
-                     .surface->transform(gctx)
+                     .surface->localToGlobalTransform(gctx)
                      .rotation();
   BOOST_CHECK(pFaceXZ.col(0).isApprox(zaxis));
   BOOST_CHECK(pFaceXZ.col(1).isApprox(xaxis));
   BOOST_CHECK(pFaceXZ.col(2).isApprox(yaxis));
 
   auto nFaceXZ = surfaces[toUnderlying(NegativeYFaceZX)]
-                     .surface->transform(gctx)
+                     .surface->localToGlobalTransform(gctx)
                      .rotation();
   BOOST_CHECK(nFaceXZ.col(0).isApprox(zaxis));
   BOOST_CHECK(nFaceXZ.col(1).isApprox(xaxis));
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundarySurfaces) {
   // beta angle)
 
   auto pFaceYZ23 = surfaces[toUnderlying(PositiveXFaceYZ23)]
-                       .surface->transform(gctx)
+                       .surface->localToGlobalTransform(gctx)
                        .rotation();
 
   // use the vertices to check the expected rotation
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundarySurfaces) {
   // this is expected to be rotated by the beta angle (angle between x3 and x2
   // edges) along z axis
   auto nFaceYZ23 = surfaces[toUnderlying(NegativeXFaceYZ23)]
-                       .surface->transform(gctx)
+                       .surface->localToGlobalTransform(gctx)
                        .rotation();
   vertA = Vector3(-polygonBounds.get(eHalfLengthX3),
                   polygonBounds.get(eLengthY2), 0.);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundarySurfaces) {
   // these are the face surfaces in negative y attached to x1 and x2 (rotation
   // with alpha angle)
   auto pFaceYZ12 = surfaces[toUnderlying(PositiveXFaceYZ12)]
-                       .surface->transform(gctx)
+                       .surface->localToGlobalTransform(gctx)
                        .rotation();
 
   vertA = Vector3(polygonBounds.get(eHalfLengthX1),
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundarySurfaces) {
   BOOST_CHECK(pFaceYZ12.col(2).isApprox(vecAB.cross(-zaxis)));
 
   auto nFaceYZ12 = surfaces[toUnderlying(NegativeXFaceYZ12)]
-                       .surface->transform(gctx)
+                       .surface->localToGlobalTransform(gctx)
                        .rotation();
   vertA = Vector3(-polygonBounds.get(eHalfLengthX1),
                   -polygonBounds.get(eLengthY1), 0.);

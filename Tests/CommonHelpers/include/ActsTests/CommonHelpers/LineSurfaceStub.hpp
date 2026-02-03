@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -28,9 +29,9 @@ class LineSurfaceStub : public Acts::LineSurface {
         Acts::LineSurface(htrans, std::move(lbounds)) { /*nop */ }
 
   LineSurfaceStub(std::shared_ptr<const Acts::LineBounds> lbounds,
-                  const Acts::DetectorElementBase& detelement)
+                  const Acts::SurfacePlacementBase& placement)
       : Acts::GeometryObject(),
-        Acts::LineSurface(std::move(lbounds), detelement) { /* nop */ }
+        Acts::LineSurface(std::move(lbounds), placement) { /* nop */ }
 
   LineSurfaceStub(const LineSurfaceStub& ls)
       : Acts::GeometryObject(), Acts::LineSurface(ls) { /* nop */ }

@@ -8,42 +8,37 @@
 
 #include "ActsExamples/Io/Csv/CsvSpacePointsBucketWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <cstddef>
-#include <ios>
-#include <optional>
-#include <stdexcept>
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvSpacePointsBucketWriter::CsvSpacePointsBucketWriter(
-    const ActsExamples::CsvSpacePointsBucketWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvSpacePointsBucketWriter::CsvSpacePointsBucketWriter(
+    const Config& config, Acts::Logging::Level level)
     : WriterT(config.inputBuckets, "CsvSpacePointsBucketWriter", level),
       m_cfg(config) {}
 
-ActsExamples::CsvSpacePointsBucketWriter::~CsvSpacePointsBucketWriter() =
-    default;
+CsvSpacePointsBucketWriter::~CsvSpacePointsBucketWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::CsvSpacePointsBucketWriter::finalize() {
+ProcessCode CsvSpacePointsBucketWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvSpacePointsBucketWriter::writeT(
+ProcessCode CsvSpacePointsBucketWriter::writeT(
     const AlgorithmContext& ctx,
     const std::vector<SimSpacePointContainer>& buckets) {
   // Open per-event file for all components
   std::string pathBucket =
       perEventFilepath(m_cfg.outputDir, "buckets.csv", ctx.eventNumber);
 
-  ActsExamples::NamedTupleCsvWriter<SpacePointBucketData> writerBucket(
-      pathBucket, m_cfg.outputPrecision);
+  NamedTupleCsvWriter<SpacePointBucketData> writerBucket(pathBucket,
+                                                         m_cfg.outputPrecision);
 
   SpacePointBucketData bucketData{};
 
@@ -72,5 +67,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointsBucketWriter::writeT(
     bucketIdx++;
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
