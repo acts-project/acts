@@ -122,7 +122,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
     const AlgorithmContext& ctx, const MuonSpacePointContainer& hits) {
   std::lock_guard lock{m_mutex};
   m_eventId = ctx.eventNumber;
-  const Acts::GeometryContext gctx{};
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
   for (const auto& [counter, bucket] : enumerate(hits)) {
     for (const MuonSpacePoint& writeMe : bucket) {
       ACTS_VERBOSE("Dump space point " << writeMe);
@@ -160,7 +160,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
           m_cfg.trackingGeometry->findVolume(toChamberId(writeMe.geometryId()));
       assert(chambVol != nullptr);
 
-      const Vector3 globPos = chambVol->transform() *
+      const Vector3 globPos = chambVol->localToGlobalTransform(gctx) *
                               AngleAxis3{-90._degree, Vector3::UnitZ()} *
                               writeMe.localPosition();
       castPush(m_globalPosX, globPos.x());

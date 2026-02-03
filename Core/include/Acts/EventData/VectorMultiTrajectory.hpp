@@ -19,7 +19,6 @@
 #include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <any>
 #include <cassert>
@@ -122,7 +121,7 @@ class VectorMultiTrajectoryBase {
     for (IndexType i = 0; i < instance.size(); i++) {
       auto ts = instance.getTrackState(i);
 
-      bool isMeas = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
+      bool isMeas = ts.typeFlags().hasMeasurement();
 
       h("count", isMeas);
 
@@ -327,7 +326,6 @@ class VectorMultiTrajectoryBase {
 
   // END INTERFACE HELPER
 
- public:
   IndexType calibratedSize_impl(IndexType istate) const {
     return m_index[istate].measdim;
   }
@@ -389,11 +387,7 @@ class VectorMultiTrajectory final
 
  public:
   VectorMultiTrajectory() = default;
-  VectorMultiTrajectory(const VectorMultiTrajectory& other)
-      : VectorMultiTrajectoryBase{other} {}
-
-  VectorMultiTrajectory(VectorMultiTrajectory&& other) noexcept
-      : VectorMultiTrajectoryBase{std::move(other)} {}
+  using VectorMultiTrajectoryBase::VectorMultiTrajectoryBase;
 
   Statistics statistics() const {
     return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
@@ -474,7 +468,7 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const { return m_index.size(); }
+  IndexType size_impl() const { return static_cast<IndexType>(m_index.size()); }
 
   void clear_impl();
 
@@ -574,16 +568,13 @@ class ConstVectorMultiTrajectory final
  public:
   ConstVectorMultiTrajectory() = default;
 
-  ConstVectorMultiTrajectory(const ConstVectorMultiTrajectory& other)
-      : VectorMultiTrajectoryBase{other} {}
+  using VectorMultiTrajectoryBase::VectorMultiTrajectoryBase;
 
   explicit ConstVectorMultiTrajectory(const VectorMultiTrajectory& other)
       : VectorMultiTrajectoryBase{other} {}
 
   explicit ConstVectorMultiTrajectory(VectorMultiTrajectory&& other)
       : VectorMultiTrajectoryBase{std::move(other)} {}
-
-  ConstVectorMultiTrajectory(ConstVectorMultiTrajectory&&) = default;
 
   Statistics statistics() const {
     return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
@@ -625,7 +616,7 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const { return m_index.size(); }
+  IndexType size_impl() const { return static_cast<IndexType>(m_index.size()); }
 
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(

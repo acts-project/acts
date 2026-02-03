@@ -366,17 +366,24 @@ class GridPortalLink : public PortalLinkBase {
 
  protected:
   /// Helper function to check consistency for grid on a cylinder surface
+  /// @param grid the grid to check
+  /// @param direction The binning direction
   /// @param cyl The cylinder surface
-  void checkConsistency(const CylinderSurface& cyl) const;
+  static void checkConsistency(const IGrid& grid, AxisDirection direction,
+                               const CylinderSurface& cyl);
 
   /// Helper function to check consistency for grid on a disc surface
+  /// @param grid the grid to check
+  /// @param direction The binning direction
   /// @param disc The disc surface
-  void checkConsistency(const DiscSurface& disc) const;
-
+  static void checkConsistency(const IGrid& grid, AxisDirection direction,
+                               const DiscSurface& disc);
   /// Helper function to check consistency for grid on a plane surface
+  /// @param grid the grid to check
+  /// @param direction The binning direction
   /// @param plane The plane surface
-  void checkConsistency(const PlaneSurface& plane) const;
-
+  static void checkConsistency(const IGrid& grid, AxisDirection direction,
+                               const PlaneSurface& plane);
   /// Expand a 1D grid to a 2D one for a cylinder surface
   /// @param surface The cylinder surface
   /// @param other The axis to use for the missing direction,
@@ -449,7 +456,7 @@ class GridPortalLinkT : public GridPortalLink {
 
     if (const auto* cylinder =
             dynamic_cast<const CylinderSurface*>(m_surface.get())) {
-      checkConsistency(*cylinder);
+      checkConsistency(m_grid, direction, *cylinder);
 
       if (direction == AxisRPhi) {
         m_projection = &projection<CylinderSurface, AxisRPhi>;
@@ -461,7 +468,7 @@ class GridPortalLinkT : public GridPortalLink {
 
     } else if (const auto* disc =
                    dynamic_cast<const DiscSurface*>(m_surface.get())) {
-      checkConsistency(*disc);
+      checkConsistency(m_grid, direction, *disc);
 
       if (direction == AxisR) {
         m_projection = &projection<DiscSurface, AxisR>;
@@ -472,7 +479,7 @@ class GridPortalLinkT : public GridPortalLink {
       }
     } else if (const auto* plane =
                    dynamic_cast<const PlaneSurface*>(m_surface.get())) {
-      checkConsistency(*plane);
+      checkConsistency(m_grid, direction, *plane);
 
       if (direction == AxisX) {
         m_projection = &projection<PlaneSurface, AxisX>;

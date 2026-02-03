@@ -16,6 +16,7 @@
 #include "ActsPlugins/GeoModel/detail/GeoTrdConverter.hpp"
 #include "ActsPlugins/GeoModel/detail/GeoTubeConverter.hpp"
 
+#include <GeoModelHelpers/GeoShapeUtils.h>
 #include <GeoModelKernel/GeoShapeShift.h>
 #include <GeoModelKernel/GeoTube.h>
 
@@ -25,47 +26,20 @@ namespace ActsPlugins::detail {
 
 namespace {
 
-template <typename ContainedShape, typename Converter, typename Surface,
-          typename Bounds>
+template <typename ContainedShape, typename Converter>
 Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
                                       const GeoShapeShift& geoShift,
                                       const Transform3& absTransform,
                                       SurfaceBoundFactory& boundFactory,
                                       bool sensitive) {
-  const GeometryContext gctx{};
-  auto trd = dynamic_cast<const ContainedShape*>(geoShift.getOp());
+  auto* trd = dynamic_cast<const ContainedShape*>(geoShift.getOp());
 
   if (trd == nullptr) {
     return GeoModelConversionError::WrongShapeForConverter;
-    ;
   }
 
-  const Transform3& shift = geoShift.getX();
-
-  const auto& conversionRes =
-      Converter{}(geoPV, *trd, absTransform * shift, boundFactory, sensitive);
-  if (!conversionRes.ok()) {
-    return conversionRes.error();
-  }
-  auto [el, surface] = conversionRes.value();
-
-  // Use knowledge from GeoTrdConverter to make shared bounds object
-  const auto& bounds = static_cast<const Bounds&>(surface->bounds());
-  auto sharedBounds = boundFactory.makeBounds<Bounds>(bounds);
-
-  // TODO this procedure could be stripped from all converters because it is
-  // pretty generic
-  if (!sensitive) {
-    auto newSurface = Surface::template makeShared<Surface>(
-        surface->localToGlobalTransform(gctx), sharedBounds);
-    return std::make_tuple(nullptr, newSurface);
-  }
-
-  auto newEl = GeoModelDetectorElement::createDetectorElement<Surface>(
-      el->physicalVolume(), sharedBounds, el->localToGlobalTransform(gctx),
-      el->thickness());
-  auto newSurface = newEl->surface().getSharedPtr();
-  return std::make_tuple(newEl, newSurface);
+  return Converter{}(geoPV, *trd, absTransform * geoShift.getX(), boundFactory,
+                     sensitive);
 }
 
 }  // namespace
@@ -74,26 +48,16 @@ Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
     const PVConstLink& geoPV, const GeoShapeShift& geoShift,
     const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
     bool sensitive) const {
-  auto r = impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
-      geoPV, geoShift, absTransform, boundFactory, sensitive);
-
-  if (r.ok()) {
-    return r;
-  }
-
-  r = impl<GeoBox, detail::GeoBoxConverter, PlaneSurface, RectangleBounds>(
-      geoPV, geoShift, absTransform, boundFactory, sensitive);
-
-  if (r.ok()) {
-    return r;
-  }
-
-  // For now this does straw by default
-  r = impl<GeoTube, detail::GeoTubeConverter, StrawSurface, LineBounds>(
-      geoPV, geoShift, absTransform, boundFactory, sensitive);
-
-  if (r.ok()) {
-    return r;
+  const auto opType = geoShift.getOp()->typeID();
+  if (opType == GeoTrd::getClassTypeID()) {
+    return impl<GeoTrd, detail::GeoTrdConverter>(geoPV, geoShift, absTransform,
+                                                 boundFactory, sensitive);
+  } else if (opType == GeoBox::getClassTypeID()) {
+    return impl<GeoBox, detail::GeoBoxConverter>(geoPV, geoShift, absTransform,
+                                                 boundFactory, sensitive);
+  } else if (opType == GeoTube::getClassTypeID()) {
+    return impl<GeoTube, detail::GeoTubeConverter>(
+        geoPV, geoShift, absTransform, boundFactory, sensitive);
   }
 
   return GeoModelConversionError::WrongShapeForConverter;

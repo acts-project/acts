@@ -10,7 +10,9 @@
 
 #include <cassert>
 #include <cmath>
+#include <stdexcept>
 #include <type_traits>
+
 namespace Acts {
 
 /// @brief Returns the absolute of a number
@@ -99,17 +101,42 @@ template <std::integral T>
 constexpr T sumUpToN(const T N) {
   return N * (N + 1) / 2;
 }
-/// @brief Calculates the factorial of a number
-///        N!= N*(N-1)....*3*2*1
-/// @param upperN: Upper factor until which the factorial is calculated
-/// @param lowerN: Optional argument to remove the first factors from the calculation
-/// @return Factorial result
-template <std::integral T>
-constexpr T factorial(const T upperN, const T lowerN = 1) {
-  constexpr T one = 1;
-  const T& limit = std::max(one, lowerN);
-  return upperN >= limit ? upperN * factorial(upperN - 1, limit) : one;
+
+/// @brief Calculates the product of all integers
+///        within the given integer range
+///           (nLower)(nLower+1)(...)(upper-1)(upper)
+///        If lowerN is bigger than upperN, the function
+///        returns one
+/// @param lowerN: Lower range of the product calculation
+/// @param upperN: Upper range of the product calculation
+/// @return Product result
+template <std::unsigned_integral T>
+constexpr T product(const T lowerN, const T upperN) {
+  if (lowerN == T{0}) {
+    return T{0};
+  }
+
+  T value{1};
+  for (T iter = lowerN; iter <= upperN; ++iter) {
+    if (std::is_constant_evaluated() &&
+        value > std::numeric_limits<T>::max() / iter) {
+      throw std::overflow_error("product overflow");
+    }
+    assert(value <= std::numeric_limits<T>::max() / iter);
+
+    value *= iter;
+  }
+
+  return value;
 }
+
+/// @brief Calculate the the factorial of an integer
+/// @param N: Number of which the factorial is to be calculated
+template <std::unsigned_integral T>
+constexpr T factorial(const T N) {
+  return product<T>(1, N);
+}
+
 /// @brief Calculate the binomial coefficient
 ///              n        n!
 ///                 =  --------
@@ -117,9 +144,14 @@ constexpr T factorial(const T upperN, const T lowerN = 1) {
 /// @param n Upper value in binomial coefficient
 /// @param k Lower value in binomial coefficient
 /// @return Binomial coefficient n choose k
-template <std::integral T>
+template <std::unsigned_integral T>
 constexpr T binomial(const T n, const T k) {
-  return factorial<T>(n, n - k + 1) / factorial<T>(k);
+  if (std::is_constant_evaluated() && k > n) {
+    throw std::overflow_error("k must be <= n");
+  }
+  assert(k <= n && "k must be <= n");
+
+  return product<T>(n - k + 1, n) / factorial<T>(k);
 }
 
 }  // namespace Acts

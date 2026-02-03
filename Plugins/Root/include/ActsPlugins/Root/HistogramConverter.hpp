@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/Histogram.hpp"
 
+#include <vector>
+
 class TEfficiency;
 class TH1F;
 class TH2F;

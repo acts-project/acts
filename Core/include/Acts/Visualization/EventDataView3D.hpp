@@ -10,15 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -27,7 +22,6 @@
 #include <cmath>
 #include <cstddef>
 #include <numbers>
-#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -136,7 +130,8 @@ struct EventDataView3D {
   template <typename parameters_t>
   static inline void drawBoundTrackParameters(
       IVisualization3D& helper, const parameters_t& parameters,
-      const GeometryContext& gctx = GeometryContext(),
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& parConfig = s_viewParameter,
@@ -224,7 +219,8 @@ struct EventDataView3D {
   static void drawMultiTrajectory(
       IVisualization3D& helper, const traj_t& multiTraj,
       const std::size_t& entryIndex,
-      const GeometryContext& gctx = GeometryContext(),
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& surfaceConfig = s_viewSensitive,
@@ -240,7 +236,7 @@ struct EventDataView3D {
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states
-      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!state.typeFlags().hasMeasurement()) {
         return true;
       }
 

@@ -86,7 +86,7 @@ struct GaussianSumFitter {
   using GsfNavigator = typename propagator_t::Navigator;
 
   /// The actor type
-  using GsfActor = detail::GsfActor<traj_t>;
+  using GsfActor = detail::Gsf::GsfActor<traj_t>;
 
   /// @brief The fit function for the Direct navigator
   /// @param begin Iterator to the start of source links
@@ -171,8 +171,7 @@ struct GaussianSumFitter {
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
           propOptions.navigation.insertExternalSurface(
-              options.extensions.surfaceAccessor(SourceLink{*it})
-                  ->geometryId());
+              *options.extensions.surfaceAccessor(*it));
         }
       }
 
@@ -194,8 +193,7 @@ struct GaussianSumFitter {
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
           propOptions.navigation.insertExternalSurface(
-              options.extensions.surfaceAccessor(SourceLink{*it})
-                  ->geometryId());
+              *options.extensions.surfaceAccessor(*it));
         }
       }
 
@@ -245,8 +243,9 @@ struct GaussianSumFitter {
     // Check if the start parameters are on the start surface
     IntersectionStatus intersectionStatusStartSurface =
         sParameters.referenceSurface()
-            .intersect(GeometryContext{},
-                       sParameters.position(GeometryContext{}),
+            .intersect(GeometryContext::dangerouslyDefaultConstruct(),
+                       sParameters.position(
+                           GeometryContext::dangerouslyDefaultConstruct()),
                        sParameters.direction(), BoundaryTolerance::None())
             .closest()
             .status();
@@ -488,14 +487,13 @@ struct GaussianSumFitter {
              fwdGsfResult.currentTip)) {
       const bool found =
           rangeContainsValue(foundBwd, &state.referenceSurface());
-      if (!found && state.typeFlags().test(MeasurementFlag)) {
-        state.typeFlags().set(OutlierFlag);
-        state.typeFlags().reset(MeasurementFlag);
+      if (!found && state.typeFlags().isMeasurement()) {
+        state.typeFlags().setIsOutlier();
         state.unset(TrackStatePropMask::Smoothed);
       }
 
       measurementStatesFinal +=
-          static_cast<std::size_t>(state.typeFlags().test(MeasurementFlag));
+          static_cast<std::size_t>(state.typeFlags().isMeasurement());
     }
 
     if (measurementStatesFinal == 0) {
@@ -508,7 +506,7 @@ struct GaussianSumFitter {
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
 
-      const auto [finalPars, finalCov] = detail::mergeGaussianMixture(
+      const auto [finalPars, finalCov] = detail::Gsf::mergeGaussianMixture(
           params.components(), params.referenceSurface(),
           options.componentMergeMethod, [](auto& t) {
             return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));

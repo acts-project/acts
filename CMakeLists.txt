@@ -284,7 +284,8 @@ set(_acts_actsvg_version 0.4.56)
 set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
-set(_acts_edm4hep_version 0.10.5)
+set(_acts_edm4hep_version 1.0)
+set(_acts_edm4hep_fallback_version 0.10.5)
 set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
@@ -410,6 +411,14 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
+if(ACTS_BUILD_PYTHON_BINDINGS)
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
+    if(ACTS_USE_SYSTEM_PYBIND11)
+        find_package(pybind11 CONFIG REQUIRED)
+    else()
+        add_subdirectory(thirdparty/pybind11)
+    endif()
+endif()
 if(ACTS_BUILD_PLUGIN_ACTSVG)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
@@ -419,7 +428,7 @@ if(ACTS_BUILD_PLUGIN_ACTSVG)
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
     # Explicitly find python so we can more easily override the version
-    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
     find_package(
         DD4hep
         ${_acts_dd4hep_version}
@@ -457,6 +466,14 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL)
     find_package(GeoModelIO ${GeoModelCore_VERSION} REQUIRED EXACT CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_ROOT)
+    # In the ATLAS build, the ROOT find_package call does not find VDT unless these variables are set.
+    # This should not affect other environments.
+    find_package(VDT)
+    if(VDT_FOUND)
+        set(VDT_INCLUDE_DIR "${VDT_INCLUDE_DIR}" CACHE PATH "")
+        set(VDT_LIBRARY "${VDT_vdt_LIBRARY}" CACHE FILEPATH "")
+    endif()
+
     find_package(
         ROOT
         ${_acts_root_version}
@@ -502,7 +519,14 @@ if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP)
-    find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
+    find_package(EDM4HEP ${_acts_edm4hep_version} CONFIG)
+    if(NOT EDM4HEP_FOUND)
+        message(
+            STATUS
+            "EDM4hep not found, trying version ${_acts_edm4hep_fallback_version}"
+        )
+        find_package(EDM4HEP ${_acts_edm4hep_fallback_version} CONFIG REQUIRED)
+    endif()
     find_package(podio ${_acts_podio_version} CONFIG)
     if(NOT podio_FOUND)
         message(
@@ -598,14 +622,6 @@ if(ACTS_BUILD_EXAMPLES)
         )
         check_root_compatibility()
     endif()
-    if(ACTS_BUILD_PYTHON_BINDINGS)
-        find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-        if(ACTS_USE_SYSTEM_PYBIND11)
-            find_package(pybind11 CONFIG REQUIRED)
-        else()
-            add_subdirectory(thirdparty/pybind11)
-        endif()
-    endif()
     if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
         find_package(
             DD4hep
@@ -652,8 +668,8 @@ if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
     add_subdirectory(Tests)
 endif()
 
-# documentation
-add_subdirectory_if(docs ACTS_BUILD_DOCS)
+# documentation, adding unconditionally but will only set up docs build if configured
+add_subdirectory(docs)
 
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)

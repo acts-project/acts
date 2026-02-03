@@ -23,7 +23,7 @@
 
 using namespace Acts;
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 namespace ActsTests {
 

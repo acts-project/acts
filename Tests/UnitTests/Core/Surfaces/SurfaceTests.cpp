@@ -48,7 +48,7 @@ using namespace Acts;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   SurfaceStub surface(detElement);
 
   // associatedDetectorElement
-  BOOST_CHECK_EQUAL(surface.associatedDetectorElement(), &detElement);
+  BOOST_CHECK_EQUAL(surface.surfacePlacement(), &detElement);
 
   // test associatelayer, associatedLayer
   surface.associateLayer(*pLayer);

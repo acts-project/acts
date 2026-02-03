@@ -35,7 +35,7 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   std::vector<std::shared_ptr<const Surface>> surfaces;
   surfaces.reserve(volume.surfaces().size());
   for (const auto& surface : volume.surfaces()) {
-    if (surface.associatedDetectorElement() == nullptr) {
+    if (!surface.isSensitive()) {
       continue;
     }
     surfaces.push_back(surface.getSharedPtr());

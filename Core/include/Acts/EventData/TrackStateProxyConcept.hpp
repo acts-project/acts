@@ -23,6 +23,7 @@
 namespace Acts {
 
 namespace detail {
+
 using Parameters = Eigen::Map<BoundVector>;
 using Covariance = Eigen::Map<BoundMatrix>;
 
@@ -161,7 +162,7 @@ concept TrackStateProxyConcept =
 
       { cv.pathLength() } -> std::same_as<double>;
 
-      { cv.typeFlags() } -> std::same_as<ConstTrackStateType>;
+      { cv.typeFlags() } -> std::same_as<ConstTrackStateTypeMap>;
     };
 
 template <typename T>
@@ -201,7 +202,7 @@ concept ConstTrackStateProxyConcept =
 
       { v.pathLength() } -> std::same_as<double>;
 
-      { v.typeFlags() } -> std::same_as<ConstTrackStateType>;
+      { v.typeFlags() } -> std::same_as<ConstTrackStateTypeMap>;
     };
 
 template <typename T>
@@ -261,6 +262,7 @@ concept MutableTrackStateProxyConcept =
 
       { v.pathLength() } -> std::same_as<double&>;
 
-      { v.typeFlags() } -> std::same_as<TrackStateType>;
+      { v.typeFlags() } -> std::same_as<MutableTrackStateTypeMap>;
     };
+
 }  // namespace Acts
