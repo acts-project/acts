@@ -290,9 +290,10 @@ struct GsfActor {
 
       convoluteComponents(state, stepper, navigator, tmpStates,
                           *m_cfg.bethe_heitler_approx, result.betheHeitlerCache,
-                          m_cfg.weightCutoff, m_cfg.transverseMomentumCut, componentCache,
-                          result.nInvalidBetheHeitler, result.maxPathXOverX0,
-                          result.sumPathXOverX0, logger());
+                          m_cfg.weightCutoff, m_cfg.transverseMomentumCut,
+                          componentCache, result.nInvalidBetheHeitler,
+                          result.maxPathXOverX0, result.sumPathXOverX0,
+                          logger());
 
       // return success here, checkAbort should stop propagation gracefully
       if (componentCache.empty()) {

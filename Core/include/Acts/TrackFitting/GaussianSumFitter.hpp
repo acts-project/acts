@@ -351,8 +351,8 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("- visited surfaces: " << fwdGsfResult.visitedSurfaces.size());
     ACTS_VERBOSE("- processed states: " << fwdGsfResult.processedStates);
     ACTS_VERBOSE("- measurement states: " << fwdGsfResult.measurementStates);
-    ACTS_VERBOSE("- num components last state: " << fwdGsfResult.lastMeasurementComponents.size());
-
+    ACTS_VERBOSE("- num components last state: "
+                 << fwdGsfResult.lastMeasurementComponents.size());
 
     std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler.val();
     double maxPathXOverX0 = fwdGsfResult.maxPathXOverX0.val();

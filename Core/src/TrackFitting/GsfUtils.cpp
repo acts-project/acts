@@ -69,7 +69,8 @@ double detail::Gsf::applyBetheHeitler(
     Direction direction, const BoundTrackParameters &initialParameters,
     double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
-    double weightCutoff, double transverseMomentumCut, std::vector<GsfComponent> &componentCache,
+    double weightCutoff, double transverseMomentumCut,
+    std::vector<GsfComponent> &componentCache,
     Updatable<std::size_t> &nInvalidBetheHeitler,
     Updatable<double> &maxPathXOverX0, const Logger &logger) {
   const double initialMomentum = initialParameters.absoluteMomentum();
@@ -132,7 +133,8 @@ double detail::Gsf::applyBetheHeitler(
     assert(initialMomentum + delta_p > 0. && "new momentum must be > 0");
 
     // Apply pT cut here to avoid const of expansion and merging later
-    const auto pT = (initialMomentum + delta_p) * std::sin(newPars[eBoundTheta]);
+    const auto pT =
+        (initialMomentum + delta_p) * std::sin(newPars[eBoundTheta]);
     if (pT < transverseMomentumCut) {
       ACTS_VERBOSE("Skip new component with pT=" << pT << " GeV");
       continue;
