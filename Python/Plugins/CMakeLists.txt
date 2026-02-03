@@ -1,4 +1,4 @@
-set(_plugins_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}/acts")
+set(_plugins_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}")
 
 # This macro adds the plugin binding as a separate library if configured to be built.
 # The plugin is then added to the _plugins_built list which is propagated to the parent scope

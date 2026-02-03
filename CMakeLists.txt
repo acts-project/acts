@@ -234,7 +234,7 @@ if(ACTS_BUILD_PYTHON_WHEEL)
 else()
     # GNU-like installation paths, e.g. lib/, include/, ...
     include(GNUInstallDirs)
-    set(ACTS_PYTHON_INSTALL_DIR "python")
+    set(ACTS_PYTHON_INSTALL_DIR "python/acts")
 endif()
 
 include(ActsCompilerOptions) # default compile options
