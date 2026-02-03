@@ -444,7 +444,6 @@ BOOST_AUTO_TEST_CASE(ConeValidityPolicy_MagneticField) {
     const auto& info =
         result.value().template get<StepCollector::this_result>();
 
-    // Optional trajectory visualization
     const auto& positions = info.position;
     if (!positions.empty()) {
       ObjVisualization3D trajVis;
@@ -455,15 +454,17 @@ BOOST_AUTO_TEST_CASE(ConeValidityPolicy_MagneticField) {
     }
 
     ObjVisualization3D srfVis;
-    for (const auto* srf : info.surfaces) {
-      std::cout << srf->toString(gctx) << std::endl;
-      if (srf->type() != Surface::Plane ||
-          srf->bounds().type() != SurfaceBounds::eRectangle) {
-        continue;
+    if (!info.surfaces.empty()) {
+      for (const auto* srf : info.surfaces) {
+        std::cout << srf->toString(gctx) << std::endl;
+        if (srf->type() != Surface::Plane ||
+            srf->bounds().type() != SurfaceBounds::eRectangle) {
+          continue;
+        }
+        srf->visualize(srfVis, gctx);
       }
-      srf->visualize(srfVis, gctx);
+      srfVis.write(tmp.path() / std::format("surfaces_{}.obj", label));
     }
-    srfVis.write(tmp.path() / std::format("surfaces_{}.obj", label));
 
     return counter->load();
   };

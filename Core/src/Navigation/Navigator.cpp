@@ -250,8 +250,6 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
 bool Navigator::checkTargetValid(State& state, const Vector3& position,
                                  const Vector3& direction) const {
   ACTS_VERBOSE(volInfo(state) << "Entering Navigator::checkTargetValid.");
-  static_cast<void>(position);
-  static_cast<void>(direction);
 
   if (state.navigationStage == Stage::initial) {
     return false;
@@ -543,8 +541,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     ACTS_ERROR(volInfo(state) << "No navigation policy found for volume "
                               << state.currentVolume->geometryId()
                               << ". Cannot resolve navigation candidates.");
-    // @TODO: Should this be an exception?
-    return;
+    throw std::runtime_error(
+        "Navigator: No navigation policy found for current volume.");
   }
 
   auto policyState = state.policyStateManager.currentState();

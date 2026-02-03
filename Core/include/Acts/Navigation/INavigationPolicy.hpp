@@ -80,10 +80,10 @@ class NavigationPolicyStateManager {
   }
 
  private:
+  friend class NavigationPolicyState;
+
   // We might want to extend this to a stack
   std::vector<std::any> m_stateStack;
-
-  friend class NavigationPolicyState;
 };
 
 inline std::any& NavigationPolicyState::payload() {
