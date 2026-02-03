@@ -164,7 +164,7 @@ detray::io::mask_payload DetrayPayloadConverter::convertMask(
   detray::io::mask_payload payload;
 
   switch (bounds.type()) {
-    using enum SurfaceBounds::BoundsType;
+    using enum SurfaceBounds::Type;
     using enum detray::io::shape_id;
     case Annulus:
       payload = convertBounds(dynamic_cast<const AnnulusBounds&>(bounds));

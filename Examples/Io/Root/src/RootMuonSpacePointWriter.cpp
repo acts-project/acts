@@ -172,7 +172,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
       Acts::Vector3 lowEdge{Vector3::Zero()};
       Acts::Vector3 highEdge{Vector3::Zero()};
       switch (bounds.type()) {
-        using enum Acts::SurfaceBounds::BoundsType;
+        using enum Acts::SurfaceBounds::Type;
         case Line: {
           const auto& lBounds = static_cast<const LineBounds&>(bounds);
           const double l = lBounds.get(LineBounds::eHalfLengthZ);

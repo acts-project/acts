@@ -167,7 +167,7 @@ class SurfaceBounds {
   }
 };
 
-/// Stream operator for SurfaceBounds::BoundsType
+/// Stream operator for SurfaceBounds::Type
 std::ostream& operator<<(std::ostream& os, const SurfaceBounds::Type& bt);
 
 }  // namespace Acts

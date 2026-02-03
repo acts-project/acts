@@ -19,38 +19,39 @@ namespace Acts::DetrayJsonHelper {
 
 std::tuple<unsigned int, std::vector<double>> maskFromBounds(
     const Acts::SurfaceBounds& sBounds, bool portal) {
-  SurfaceBounds::BoundsType bType = sBounds.type();
+  using enum SurfaceBounds::Type;
+  SurfaceBounds::Type bType = sBounds.type();
   std::vector<double> bValues = sBounds.values();
   // Return value
   unsigned int type = 13u;
   std::vector<double> boundaries = bValues;
   // Special treatment for some portals
-  if (portal && bType == SurfaceBounds::BoundsType::Cylinder) {
+  if (portal && bType == Cylinder) {
     boundaries = {bValues.at(0u), -bValues.at(1u), bValues.at(1u)};
     type = 4u;
   } else {
     switch (bType) {
-      case SurfaceBounds::BoundsType::Annulus: {
+      case Annulus: {
         type = 0u;
       } break;
-      case SurfaceBounds::BoundsType::Rectangle: {
+      case Rectangle: {
         type = 5u;
         // ACTS: eMinX = 0, eMinY = 1, eMaxX = 2, eMaxY = 3,
         // detray: e_half_x, e_half_y
         boundaries = std::vector{0.5 * (bValues.at(2) - bValues.at(0)),
                                  0.5 * (bValues.at(3) - bValues.at(1))};
       } break;
-      case SurfaceBounds::BoundsType::Cylinder: {
+      case Cylinder: {
         boundaries =
             std::vector{bValues.at(0u), -bValues.at(1u), bValues.at(1u)};
         type = 2u;
       } break;
-      case SurfaceBounds::BoundsType::Trapezoid: {
+      case Trapezoid: {
         type = 7u;
         boundaries = std::vector{bValues.at(0u), bValues.at(1u), bValues.at(2u),
                                  1 / (2 * bValues.at(2u))};
       } break;
-      case SurfaceBounds::BoundsType::Disc: {
+      case Disc: {
         boundaries = std::vector{bValues[0u], bValues[1u]};
         type = 6u;
       } break;
