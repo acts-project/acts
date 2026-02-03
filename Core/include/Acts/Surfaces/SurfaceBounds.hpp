@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 
 #include <cmath>
 #include <ostream>
@@ -30,7 +31,7 @@ class SurfaceBounds {
   /// @enum BoundsType
   /// This is nested to the SurfaceBounds, as also VolumeBounds will have
   /// Bounds Type.
-  enum BoundsType : int {
+  enum class BoundsType : int {
     eCone = 0,
     eCylinder = 1,
     eDiamond = 2,
@@ -46,6 +47,8 @@ class SurfaceBounds {
     eBoundless = 12,
     eOther = 13
   };
+
+  using enum BoundsType;
 
   virtual ~SurfaceBounds() = default;
 
@@ -147,4 +150,13 @@ class SurfaceBounds {
   }
 };
 
+/// Stream operator for SurfaceBounds::BoundsType
+std::ostream& operator<<(std::ostream& os, const SurfaceBounds::BoundsType& bt);
+
 }  // namespace Acts
+
+namespace std {
+template <>
+struct formatter<Acts::SurfaceBounds::BoundsType>
+    : Acts::detail::OstreamFormatter {};
+}  // namespace std
