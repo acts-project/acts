@@ -23,6 +23,8 @@ enum class PropagatorError {
   StepCountLimitReached,
   /// Propagation reached the configured maximum number of next target calls
   NextTargetLimitReached,
+  /// Propagation did not reach the target surface
+  TargetSurfaceNotReached,
 };
 
 /// Create error code from PropagatorError
