@@ -193,9 +193,9 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   state.stage = PropagatorStage::postPropagation;
 
   // Post-stepping call to the actor list
-  auto postPropagationResult =
-      state.options.actorList.act(state, m_stepper, m_navigator, logger());
-  if (!postPropagationResult.ok()) {
+  if (auto postPropagationResult =
+          state.options.actorList.act(state, m_stepper, m_navigator, logger());
+      !postPropagationResult.ok()) {
     ACTS_DEBUG("Post-propagation actor call failed: "
                << postPropagationResult.error() << ": "
                << postPropagationResult.error().message());
@@ -359,8 +359,9 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
   ThisResultType result{};
   moveStateToResult(state, result);
 
-  const Surface* currentSurface = m_navigator.currentSurface(state.navigation);
-  if (createFinalParameters && currentSurface == nullptr) {
+  if (const Surface* currentSurface =
+          m_navigator.currentSurface(state.navigation);
+      createFinalParameters && currentSurface == nullptr) {
     if (!m_stepper.prepareCurvilinearState(state.stepping)) {
       // information to compute curvilinearState is incomplete.
       ACTS_DEBUG("Failed to prepare curvilinear state.");
