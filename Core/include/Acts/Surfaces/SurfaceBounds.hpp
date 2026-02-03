@@ -32,20 +32,35 @@ class SurfaceBounds {
   /// This is nested to the SurfaceBounds, as also VolumeBounds will have
   /// Bounds Type.
   enum class BoundsType : int {
-    eCone = 0,
-    eCylinder = 1,
-    eDiamond = 2,
-    eDisc = 3,
-    eEllipse = 4,
-    eLine = 5,
-    eRectangle = 6,
-    eTrapezoid = 7,
-    eTriangle = 8,
+    eCone [[deprecated("Use the enum ::Cone instead")]] = 0,
+    eCylinder [[deprecated("Use the enum ::Cylinder instead")]] = 1,
+    eDiamond [[deprecated("Use the enum ::Diamond instead")]] = 2,
+    eDisc [[deprecated("Use the enum ::Disc instead")]] = 3,
+    eEllipse [[deprecated("Use the enum ::Ellipse instead")]] = 4,
+    eLine [[deprecated("Use the enum ::Line instead")]] = 5,
+    eRectangle [[deprecated("Use the enum ::Rectangle instead")]] = 6,
+    eTrapezoid [[deprecated("Use the enum ::Trapezoid instead")]] = 7,
+    eTriangle [[deprecated("Use the enum ::Triangle instead")]] = 8,
     eDiscTrapezoid = 9,
-    eConvexPolygon = 10,
-    eAnnulus = 11,
-    eBoundless = 12,
-    eOther = 13
+    eConvexPolygon [[deprecated("Use the enum ::ConvexPolygon instead")]] = 10,
+    eAnnulus [[deprecated("Use the enum ::Annulus instead")]] = 11,
+    eBoundless [[deprecated("Use the enum ::Boundless instead")]] = 12,
+    eOther [[deprecated("Use the enum ::Other instead")]] = 13,
+
+    Cone = 0,
+    Cylinder = 1,
+    Diamond = 2,
+    Disc = 3,
+    Ellipse = 4,
+    Line = 5,
+    Rectangle = 6,
+    Trapezoid = 7,
+    Triangle = 8,
+    DiscTrapezoid = 9,
+    ConvexPolygon = 10,
+    Annulus = 11,
+    Boundless = 12,
+    Other = 13
   };
 
   using enum BoundsType;
