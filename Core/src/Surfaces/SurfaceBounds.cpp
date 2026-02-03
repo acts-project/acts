@@ -56,10 +56,9 @@ bool SurfaceBounds::inside(const Vector2& lposition,
   return boundaryTolerance.isTolerated(distance, boundToCartesian);
 }
 
-std::ostream& operator<<(std::ostream& os,
-                         const SurfaceBounds::BoundsType& bt) {
+std::ostream& operator<<(std::ostream& os, const SurfaceBounds::Type& bt) {
   switch (bt) {
-    using enum SurfaceBounds::BoundsType;
+    using enum SurfaceBounds::Type;
     case Cone:
       os << "Cone";
       break;

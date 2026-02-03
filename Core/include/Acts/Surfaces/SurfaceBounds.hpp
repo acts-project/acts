@@ -31,7 +31,7 @@ class SurfaceBounds {
   /// @enum BoundsType
   /// This is nested to the SurfaceBounds, as also VolumeBounds will have
   /// Bounds Type.
-  enum class BoundsType : int {
+  enum class Type : int {
     eCone [[deprecated("Use the enum ::Cone instead")]] = 0,
     eCylinder [[deprecated("Use the enum ::Cylinder instead")]] = 1,
     eDiamond [[deprecated("Use the enum ::Diamond instead")]] = 2,
@@ -63,13 +63,15 @@ class SurfaceBounds {
     Other = 13
   };
 
-  using enum BoundsType;
+  using BoundsType [[deprecated("Use the enum class Type instead")]] = Type;
+
+  using enum Type;
 
   virtual ~SurfaceBounds() = default;
 
   /// Return the bounds type - for persistency optimization
   /// @return the bounds type
-  virtual BoundsType type() const = 0;
+  virtual Type type() const = 0;
 
   /// Check if the bound coordinates are cartesian
   /// @return true if the bound coordinates are cartesian
@@ -166,12 +168,11 @@ class SurfaceBounds {
 };
 
 /// Stream operator for SurfaceBounds::BoundsType
-std::ostream& operator<<(std::ostream& os, const SurfaceBounds::BoundsType& bt);
+std::ostream& operator<<(std::ostream& os, const SurfaceBounds::Type& bt);
 
 }  // namespace Acts
 
 namespace std {
 template <>
-struct formatter<Acts::SurfaceBounds::BoundsType>
-    : Acts::detail::OstreamFormatter {};
+struct formatter<Acts::SurfaceBounds::Type> : Acts::detail::OstreamFormatter {};
 }  // namespace std
