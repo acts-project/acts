@@ -30,6 +30,8 @@
 #include "ActsPlugins/Json/DetrayJsonHelper.hpp"
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 
+#include <format>
+
 void Acts::to_json(nlohmann::json& j,
                    const Acts::SurfaceAndMaterialWithContext& surface) {
   toJson(j, std::get<0>(surface), std::get<2>(surface));
@@ -82,9 +84,8 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
           mutableSf = surfaceFromJsonT<PlaneSurface, void>(j);
           break;
         default:
-          throw std::invalid_argument("Invalid bounds type " +
-                                      std::to_string(bType) +
-                                      " for plane surface");
+          throw std::invalid_argument(
+              std::format("Invalid bounds type {} for plane surface", bType));
       }
       break;
     // Surface is a disc surface
@@ -100,9 +101,8 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
           mutableSf = surfaceFromJsonT<DiscSurface, DiscTrapezoidBounds>(j);
           break;
         default:
-          throw std::invalid_argument("Invalid bounds type " +
-                                      std::to_string(bType) +
-                                      " for disc surface");
+          throw std::invalid_argument(
+              std::format("Invalid bounds type {} for disc surface", bType));
       }
       break;
     // Surface is a cylinder surface

@@ -56,4 +56,54 @@ bool SurfaceBounds::inside(const Vector2& lposition,
   return boundaryTolerance.isTolerated(distance, boundToCartesian);
 }
 
+std::ostream& Acts::operator<<(std::ostream& os,
+                               const SurfaceBounds::BoundsType& bt) {
+  switch (bt) {
+    using enum SurfaceBounds::BoundsType;
+    case eCone:
+      os << "Cone";
+      break;
+    case eCylinder:
+      os << "Cylinder";
+      break;
+    case eDiamond:
+      os << "Diamond";
+      break;
+    case eDisc:
+      os << "Disc";
+      break;
+    case eEllipse:
+      os << "Ellipse";
+      break;
+    case eLine:
+      os << "Line";
+      break;
+    case eRectangle:
+      os << "Rectangle";
+      break;
+    case eTrapezoid:
+      os << "Trapezoid";
+      break;
+    case eTriangle:
+      os << "Triangle";
+      break;
+    case eDiscTrapezoid:
+      os << "DiscTrapezoid";
+      break;
+    case eConvexPolygon:
+      os << "ConvexPolygon";
+      break;
+    case eAnnulus:
+      os << "Annulus";
+      break;
+    case eBoundless:
+      os << "Boundless";
+      break;
+    case eOther:
+      os << "Other";
+      break;
+  }
+  return os;
+}
+
 }  // namespace Acts

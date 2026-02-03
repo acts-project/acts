@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -95,7 +96,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
       &data.bound_param6};
 
   const auto& bounds = surface.bounds();
-  data.bounds_type = static_cast<int>(bounds.type());
+  data.bounds_type = toUnderlying(bounds.type());
   auto boundValues = bounds.values();
 
   if (boundValues.size() > dataBoundParameters.size()) {
