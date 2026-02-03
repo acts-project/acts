@@ -91,6 +91,7 @@ jobs:
           CI/dependencies/run.sh .env uv run ../CI/test_coverage.py build
 
       - uses: actions/upload-artifact@v6
+        if: always()
         with:
           name: coverage-build
           path: build
