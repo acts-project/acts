@@ -13,8 +13,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-import typer
 from typing import Annotated
+
+import typer
 from rich.console import Console
 
 app = typer.Typer(add_completion=False)
@@ -67,7 +68,7 @@ def main(
     build_dir: Annotated[Path, typer.Argument(help="CMake build directory")],
     gcov: Annotated[
         str | None,
-        typer.Option(None, "--gcov", help="Path to gcov executable"),
+        typer.Option(help="Path to gcov executable"),
     ] = None,
 ) -> None:
     build_dir = build_dir.resolve()
