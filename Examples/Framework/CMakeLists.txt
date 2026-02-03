@@ -1,6 +1,7 @@
 include(ActsTargetLinkLibrariesSystem)
 
-set(ActsExamplesFramework_SOURCES
+acts_add_library(
+    ExamplesFramework
     src/EventData/MuonSpacePoint.cpp
     src/EventData/MuonSpacePointCalibrator.cpp
     src/EventData/Measurement.cpp
@@ -24,11 +25,6 @@ set(ActsExamplesFramework_SOURCES
     src/Validation/TrackClassification.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
-)
-
-acts_add_library(
-    ExamplesFramework
-    ${ActsExamplesFramework_SOURCES}
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
