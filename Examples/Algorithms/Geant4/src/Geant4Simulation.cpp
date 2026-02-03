@@ -123,6 +123,8 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
   // Register the input particle read handle
   eventStore().inputParticles = &m_inputParticles;
 
+  eventStore().geoContext = ctx.geoContext;
+
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   {
     ActsPlugins::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4

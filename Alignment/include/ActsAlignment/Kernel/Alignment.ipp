@@ -165,7 +165,7 @@ template <typename fitter_t>
 Acts::Result<void>
 ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     const Acts::GeometryContext& gctx,
-    const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
+    const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
     const ActsAlignment::AlignedTransformUpdater& alignedTransformUpdater,
     ActsAlignment::AlignmentResult& alignResult) const {
   // Update the aligned transform

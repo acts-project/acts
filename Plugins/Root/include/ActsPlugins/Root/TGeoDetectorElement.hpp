@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <iostream>
 #include <memory>
@@ -40,7 +40,7 @@ namespace ActsPlugins {
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what if not used with DD4hep?
 ///
-class TGeoDetectorElement : public Acts::DetectorElementBase {
+class TGeoDetectorElement : public Acts::SurfacePlacementBase {
  public:
   using identifier_type = unsigned long long;
   using identifier_diff = long long;
@@ -143,7 +143,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
 
   /// Returns the thickness of the module
   /// @return Thickness of the detector element in units of length
-  double thickness() const override;
+  double thickness() const;
 
   /// Return the TGeoNode for back navigation
   /// @return Reference to the underlying TGeoNode

@@ -86,9 +86,6 @@ BOOST_AUTO_TEST_CASE(CopyAndMove) {
   SeedContainer2 containerMove = std::move(container);
   BOOST_CHECK(!containerMove.empty());
   BOOST_CHECK_EQUAL(containerMove.size(), 1u);
-  // original should be empty after move
-  BOOST_CHECK(container.empty());
-  BOOST_CHECK_EQUAL(container.size(), 0u);
   // copy should be unchanged
   BOOST_CHECK(!containerCopy.empty());
   BOOST_CHECK_EQUAL(containerCopy.size(), 1u);

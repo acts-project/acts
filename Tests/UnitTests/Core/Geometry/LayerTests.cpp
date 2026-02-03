@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(LayerProperties) {
   /// surfaceArray()
   BOOST_CHECK_EQUAL(layerStub.surfaceArray(), nullptr);
   /// thickness()
-  BOOST_CHECK_EQUAL(layerStub.thickness(), thickness);
+  BOOST_CHECK_EQUAL(layerStub.layerThickness(), thickness);
   // onLayer() is templated; can't find implementation!
   /// isOnLayer() (delegates to the Surface 'isOnSurface()')
   const Vector3 pos{0.0, 0.0, 0.0};

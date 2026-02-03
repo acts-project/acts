@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <stdexcept>
 #include <type_traits>
 
 namespace Acts {
@@ -100,32 +101,42 @@ template <std::integral T>
 constexpr T sumUpToN(const T N) {
   return N * (N + 1) / 2;
 }
+
 /// @brief Calculates the product of all integers
 ///        within the given integer range
-///           (nLower)(nLower +1)(...)(upper-1)(upper)
+///           (nLower)(nLower+1)(...)(upper-1)(upper)
 ///        If lowerN is bigger than upperN, the function
 ///        returns one
 /// @param lowerN: Lower range of the product calculation
 /// @param upperN: Upper range of the product calculation
-/// @return Factorial result
+/// @return Product result
 template <std::unsigned_integral T>
 constexpr T product(const T lowerN, const T upperN) {
-  if (lowerN == static_cast<T>(0)) {
-    return 0;
+  if (lowerN == T{0}) {
+    return T{0};
   }
+
   T value{1};
-  for (T iter = std::max(static_cast<T>(2), lowerN); iter <= upperN; ++iter) {
-    assert(value * iter > value);
+  for (T iter = lowerN; iter <= upperN; ++iter) {
+    if (std::is_constant_evaluated() &&
+        value > std::numeric_limits<T>::max() / iter) {
+      throw std::overflow_error("product overflow");
+    }
+    assert(value <= std::numeric_limits<T>::max() / iter);
+
     value *= iter;
   }
+
   return value;
 }
+
 /// @brief Calculate the the factorial of an integer
 /// @param N: Number of which the factorial is to be calculated
 template <std::unsigned_integral T>
 constexpr T factorial(const T N) {
   return product<T>(1, N);
 }
+
 /// @brief Calculate the binomial coefficient
 ///              n        n!
 ///                 =  --------
@@ -135,7 +146,11 @@ constexpr T factorial(const T N) {
 /// @return Binomial coefficient n choose k
 template <std::unsigned_integral T>
 constexpr T binomial(const T n, const T k) {
-  assert(k <= n);
+  if (std::is_constant_evaluated() && k > n) {
+    throw std::overflow_error("k must be <= n");
+  }
+  assert(k <= n && "k must be <= n");
+
   return product<T>(n - k + 1, n) / factorial<T>(k);
 }
 

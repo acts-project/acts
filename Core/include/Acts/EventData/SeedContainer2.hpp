@@ -270,20 +270,6 @@ class SeedContainer2 {
   std::shared_ptr<const SpacePointContainer2> m_sharedConstSpacePointContainer;
   SpacePointContainer2 *m_mutableSpacePointContainer{nullptr};
   const SpacePointContainer2 *m_constSpacePointContainer{nullptr};
-
-  auto knownColumns() & noexcept {
-    return std::tie(m_spacePointOffsets, m_spacePointCounts, m_qualities,
-                    m_vertexZs, m_spacePoints);
-  }
-  auto knownColumns() const & noexcept {
-    return std::tie(m_spacePointOffsets, m_spacePointCounts, m_qualities,
-                    m_vertexZs, m_spacePoints);
-  }
-  auto knownColumns() && noexcept {
-    return std::tuple(std::move(m_spacePointOffsets),
-                      std::move(m_spacePointCounts), std::move(m_qualities),
-                      std::move(m_vertexZs), std::move(m_spacePoints));
-  }
 };
 
 }  // namespace Acts
