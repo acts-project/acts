@@ -73,7 +73,7 @@ class ConeBounds : public SurfaceBounds {
   explicit ConeBounds(const std::array<double, eSize>& values) noexcept(false);
 
   /// @copydoc SurfaceBounds::type
-  BoundsType type() const final { return Cone; }
+  Type type() const final { return Cone; }
 
   /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return true; }

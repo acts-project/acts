@@ -86,7 +86,7 @@ class CylinderBounds : public SurfaceBounds {
   }
 
   /// @copydoc SurfaceBounds::type
-  BoundsType type() const final { return Cylinder; }
+  Type type() const final { return Cylinder; }
 
   /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return true; }
