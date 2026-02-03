@@ -50,7 +50,7 @@ if(ACTS_BUILD_EXAMPLES_ROOT)
         ActsExamplesFramework
         PRIVATE src/Root/ScalingCalibrator.cpp src/Root/MuonVisualization.cpp
     )
-    target_link_libraries(ActsExamplesFramework PUBLIC ROOT::Core ROOT::Hist)
+    target_link_libraries(ActsExamplesFramework PUBLIC ROOT::Core ROOT::Hist ROOT::Graf ROOT::Gpad)
     set_source_files_properties(
         src/Framework/Sequencer.cpp
         TARGET
