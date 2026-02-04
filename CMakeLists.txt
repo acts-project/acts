@@ -180,12 +180,7 @@ set_option_if(
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
-set_option_if(
-    ACTS_BUILD_PLUGIN_ROOT
-    ACTS_BUILD_PLUGIN_DD4HEP
-    OR
-    ACTS_BUILD_EXAMPLES
-)
+set_option_if(ACTS_BUILD_PLUGIN_ROOT ACTS_BUILD_PLUGIN_DD4HEP)
 set_option_if(
     ACTS_BUILD_PLUGIN_IDENTIFICATION
     ACTS_BUILD_PLUGIN_ROOT
@@ -597,7 +592,11 @@ if(ACTS_BUILD_EXAMPLES)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
+    if(ACTS_BUILD_EXAMPLES_ROOT)
+      find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG COMPONENTS search rootIO)
+    else()
+      find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG COMPONENTS search)
+    endif()
 
     # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
     if(${HEPMC3_VERSION} VERSION_LESS 3.2.6)

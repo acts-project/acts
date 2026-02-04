@@ -88,7 +88,7 @@ if(${HEPMC3_VERSION} VERSION_GREATER_EQUAL 3.2.7)
 endif()
 
 message(CHECK_START "Examples HepMC3 IO: checking for ROOT IO")
-if(TARGET HepMC3::rootIO)
+if(ACTS_BUILD_EXAMPLES_ROOT AND TARGET HepMC3::rootIO)
     message(CHECK_PASS "found")
     target_link_libraries(ActsExamplesIoHepMC3 PRIVATE HepMC3::rootIO)
     target_compile_definitions(
