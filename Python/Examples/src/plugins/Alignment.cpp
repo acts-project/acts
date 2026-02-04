@@ -203,7 +203,16 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
            py::arg("level") = Acts::Logging::INFO);
 
   m.def(
+      "surfacePlacement",
+      [](const Acts::Surface& s) { return s.surfacePlacement(); },
+      py::arg("surface"), py::return_value_policy::reference);
+  
+  // Deprecated: kept for backward compatibility
+  m.def(
       "associatedDetectorElement",
-      [](const Acts::Surface& s) { return s.associatedDetectorElement(); },
+      [](const Acts::Surface& s) {
+        const auto* placement = s.surfacePlacement();
+        return placement ? dynamic_cast<const Acts::DetectorElementBase*>(placement) : nullptr;
+      },
       py::arg("surface"), py::return_value_policy::reference);
 }

@@ -50,8 +50,8 @@ class MutableGeoIdAlignmentStore : public GeoIdAlignmentStore {
 /// Use makeAlignedTransformUpdater() to create a functional updater
 inline ActsAlignment::AlignedTransformUpdater alignedTransformUpdater =
     ActsAlignment::AlignedTransformUpdater(
-        [](Acts::DetectorElementBase*
-           /*detElement*/,
+        [](Acts::SurfacePlacementBase*
+           /*placement*/,
            const Acts::GeometryContext& /*gctx*/, const Acts::Transform3&
            /*aTransform*/) -> bool {
           // Default no-op updater
@@ -91,15 +91,15 @@ inline ActsAlignment::AlignedTransformUpdater alignedTransformUpdater =
 inline ActsAlignment::AlignedTransformUpdater makeAlignedTransformUpdater(
     std::shared_ptr<MutableGeoIdAlignmentStore> store) {
   return ActsAlignment::AlignedTransformUpdater(
-      [store](Acts::DetectorElementBase* detElement,
+      [store](Acts::SurfacePlacementBase* placement,
               const Acts::GeometryContext& /*gctx*/,
               const Acts::Transform3& aTransform) -> bool {
-        if (store == nullptr || detElement == nullptr) {
+        if (store == nullptr || placement == nullptr) {
           return false;
         }
 
-        // Get the geometry ID from the detector element's surface
-        const Acts::Surface& surface = detElement->surface();
+        // Get the geometry ID from the surface placement's surface
+        const Acts::Surface& surface = placement->surface();
         Acts::GeometryIdentifier geoId = surface.geometryId();
 
         // Update the store with the new aligned transform
@@ -122,15 +122,15 @@ inline ActsAlignment::AlignedTransformUpdater makeAlignedTransformUpdater(
         std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>>
         transformMap) {
   return ActsAlignment::AlignedTransformUpdater(
-      [transformMap](Acts::DetectorElementBase* detElement,
+      [transformMap](Acts::SurfacePlacementBase* placement,
                      const Acts::GeometryContext& /*gctx*/,
                      const Acts::Transform3& aTransform) -> bool {
-        if (transformMap == nullptr || detElement == nullptr) {
+        if (transformMap == nullptr || placement == nullptr) {
           return false;
         }
 
-        // Get the geometry ID from the detector element's surface
-        const Acts::Surface& surface = detElement->surface();
+        // Get the geometry ID from the surface placement's surface
+        const Acts::Surface& surface = placement->surface();
         Acts::GeometryIdentifier geoId = surface.geometryId();
 
         // Store the aligned transform in the map
