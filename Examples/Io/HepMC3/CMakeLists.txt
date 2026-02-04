@@ -10,16 +10,12 @@ acts_add_library(
 )
 target_include_directories(
     ActsExamplesIoHepMC3
-    SYSTEM
-    PUBLIC ${HEPMC3_INCLUDE_DIR}
-)
-target_include_directories(
-    ActsExamplesIoHepMC3
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
 target_link_libraries(
     ActsExamplesIoHepMC3
-    PUBLIC Acts::ExamplesFramework ${HEPMC3_LIBRARIES}
+    PUBLIC Acts::ExamplesFramework HepMC3::HepMC3 
     PRIVATE Acts::Fatras nlohmann_json::nlohmann_json
 )
 
