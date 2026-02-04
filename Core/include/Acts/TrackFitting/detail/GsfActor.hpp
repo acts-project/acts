@@ -526,47 +526,53 @@ struct GsfActor {
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
     if (!m_cfg.inReversePass) {
+      assert(!tmpStates.tips.empty() &&
+             "No components to update multi-trajectory");
+
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
 
-      auto mask = TrackStatePropMask::Predicted;
+      auto combinedStateMask = TrackStatePropMask::Predicted;
       if (type.isMeasurement()) {
-        mask |= TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered |
-                TrackStatePropMask::Smoothed;
+        combinedStateMask |= TrackStatePropMask::Calibrated |
+                             TrackStatePropMask::Filtered |
+                             TrackStatePropMask::Smoothed;
       } else if (type.isOutlier()) {
-        mask |= TrackStatePropMask::Calibrated;
+        combinedStateMask |= TrackStatePropMask::Calibrated;
       }
+      auto combinedState = result.fittedStates->makeTrackState(
+          combinedStateMask, result.currentTip);
+      result.currentTip = combinedState.index();
 
-      auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
-      result.currentTip = proxy.index();
-
+      // copy chi2, path length, surface
+      auto copyMask = TrackStatePropMask::None;
       if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-        // copy source link, calibrated measurement, and subspace
-        proxy.copyFrom(firstCmpProxy, TrackStatePropMask::Calibrated);
+        // also copy source link, calibrated measurement, and subspace
+        copyMask |= TrackStatePropMask::Calibrated;
       }
-      proxy.setReferenceSurface(surface.getSharedPtr());
-      proxy.typeFlags() = type;
+      combinedState.copyFrom(firstCmpProxy, copyMask);
+      combinedState.typeFlags() = type;
 
       auto [prtMean, prtCov] =
           mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
                                PrtProjector{tmpStates.traj, tmpStates.weights});
-      proxy.predicted() = prtMean;
-      proxy.predictedCovariance() = prtCov;
+      combinedState.predicted() = prtMean;
+      combinedState.predictedCovariance() = prtCov;
 
       if (type.isMeasurement()) {
         auto [fltMean, fltCov] = mergeGaussianMixture(
             tmpStates.tips, surface, m_cfg.mergeMethod,
             FltProjector{tmpStates.traj, tmpStates.weights});
-        proxy.filtered() = fltMean;
-        proxy.filteredCovariance() = fltCov;
+        combinedState.filtered() = fltMean;
+        combinedState.filteredCovariance() = fltCov;
 
         // place sentinel values for smoothed parameters for now. they will be
         // filled in the backward pass
-        proxy.smoothed() = BoundVector::Constant(-2);
-        proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
+        combinedState.smoothed() = BoundVector::Constant(-2);
+        combinedState.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
       } else {
-        proxy.shareFrom(TrackStatePropMask::Predicted,
-                        TrackStatePropMask::Filtered);
+        combinedState.shareFrom(TrackStatePropMask::Predicted,
+                                TrackStatePropMask::Filtered);
       }
 
     } else {
