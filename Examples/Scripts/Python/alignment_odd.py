@@ -10,7 +10,8 @@ import sys
 
 import acts
 import acts.examples
-from acts.examples import AlignmentDecorator
+import acts.examples.alignment
+from acts.examples.alignment import AlignmentDecorator
 
 u = acts.UnitConstants
 
@@ -511,13 +512,13 @@ def setupMisalignment(
         # ===== Apply LocalShift using AlignmentGenerator =====
         # LocalShift applies translation in local coordinate system
         if tx != 0:
-            lShiftX = acts.examples.AlignmentGeneratorLocalShift()
+            lShiftX = acts.examples.alignment.AlignmentGeneratorLocalShift()
             lShiftX.axisDirection = acts.AxisDirection.AxisX
             lShiftX.shift = shift_local_x
             lShiftX(trf)  # Apply local shift along X axis
 
         if ty != 0:
-            lShiftY = acts.examples.AlignmentGeneratorLocalShift()
+            lShiftY = acts.examples.alignment.AlignmentGeneratorLocalShift()
             lShiftY.axisDirection = acts.AxisDirection.AxisY
             lShiftY.shift = shift_local_y
             lShiftY(trf)  # Apply local shift along Y axis
@@ -529,7 +530,7 @@ def setupMisalignment(
         current_rotation = trf.rotation
 
         if rz != 0:
-            lRotZ = acts.examples.AlignmentGeneratorLocalRotation()
+            lRotZ = acts.examples.alignment.AlignmentGeneratorLocalRotation()
             # Local Z axis in global coordinates = third column of rotation matrix
             local_z_axis = acts.Vector3(
                 current_rotation[0, 2], current_rotation[1, 2], current_rotation[2, 2]
@@ -675,7 +676,7 @@ def runAlignment(
         shift_mag_mm=shift_mag_mm,
         rotation_mag_rad=rotation_mag_rad,
     )
-    mutableStore = acts.examples.MutableGeoIdAlignmentStore(geoIdMap)
+    mutableStore = acts.examples.alignment.MutableGeoIdAlignmentStore(geoIdMap)
 
     # Configure AlignmentDecorator (IOV can be set to global interval)
     cfg = AlignmentDecorator.Config()
@@ -794,14 +795,16 @@ def runAlignment(
     det_elements = []
 
     def visit(surface: acts.Surface) -> bool:
-        de = acts.examples.associatedDetectorElement(surface)
-        if de is not None:
+        # Use surfacePlacement instead of associatedDetectorElement
+        # because DetectorElementBase is not registered in Python bindings
+        placement = acts.examples.alignment.surfacePlacement(surface)
+        if placement is not None:
             gid = surface.geometryId
             # Use same filter as misalignment
             if match_surface_to_filter(
                 gid, target_volume, target_layer, target_sensitive, target_extra
             ):
-                det_elements.append(de)
+                det_elements.append(placement)
         return True
 
     trackingGeometry.visitSurfaces(visit)
@@ -817,7 +820,7 @@ def runAlignment(
         print(f"Alignment element count matches misaligned elements")
 
     # Configure AlignmentAlgorithm
-    aal_cfg = acts.examples.AlignmentAlgorithmConfig()
+    aal_cfg = acts.examples.alignment.AlignmentAlgorithmConfig()
     aal_cfg.inputMeasurements = "measurements"
     aal_cfg.inputProtoTracks = "truth_particle_tracks"
     aal_cfg.inputInitialTrackParameters = "estimatedparameters"
@@ -829,12 +832,12 @@ def runAlignment(
     aal_cfg.deltaChi2ONdfCutOff = (5, 0.00001)
 
     # Create AlignedTransformUpdater, it will update mutableStore after each iteration
-    aal_cfg.alignedTransformUpdater = acts.examples.makeAlignedTransformUpdater(
+    aal_cfg.alignedTransformUpdater = acts.examples.alignment.makeAlignedTransformUpdater(
         mutableStore
     )
 
     aal_cfg.alignedDetElements = det_elements
-    aal_cfg.align = acts.examples.makeAlignmentFunction(
+    aal_cfg.align = acts.examples.alignment.makeAlignmentFunction(
         trackingGeometry, field, acts.logging.INFO
     )
     aal_cfg.maxNumIterations = 100  # Reasonable number of iterations
@@ -843,7 +846,7 @@ def runAlignment(
         i: int(alignment_dof) for i in range(aal_cfg.maxNumIterations)
     }
 
-    alignment_algo = acts.examples.AlignmentAlgorithm(aal_cfg, acts.logging.INFO)
+    alignment_algo = acts.examples.alignment.AlignmentAlgorithm(aal_cfg, acts.logging.INFO)
     s.addAlgorithm(alignment_algo)
 
     # Run the sequencer
@@ -862,8 +865,9 @@ def runAlignment(
     aligned_surfaces = []
 
     def visit(surface: acts.Surface) -> bool:
-        de = acts.examples.associatedDetectorElement(surface)
-        if de is not None:
+        # Use surfacePlacement to check if surface has a placement
+        placement = acts.examples.alignment.surfacePlacement(surface)
+        if placement is not None:
             gid = surface.geometryId
             # Use same filter as misalignment
             if match_surface_to_filter(
@@ -1068,7 +1072,7 @@ def runReconstruction(
             geoIdMap[gid] = trf
 
         print(f"\nTotal detector elements loaded: {len(geoIdMap)}")
-        mutableStore = acts.examples.MutableGeoIdAlignmentStore(geoIdMap)
+        mutableStore = acts.examples.alignment.MutableGeoIdAlignmentStore(geoIdMap)
 
         cfg = AlignmentDecorator.Config()
         cfg.iovStores = [((0, 1_000_000), mutableStore)]  # Effective for all events
