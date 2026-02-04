@@ -19,11 +19,10 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
-
-class TCanvas;
 
 namespace ActsExamples {
 
@@ -36,6 +35,24 @@ namespace ActsExamples {
 /// given station.
 class MuonHoughSeeder final : public IAlgorithm {
  public:
+  /// @brief Abbrivation of the HoughPlane_t
+  using HoughPlane_t =
+      Acts::HoughTransformUtils::HoughPlane<const MuonSpacePoint*>;
+  /// @brief Abbrivation of the PeakFinder
+  using PeakFinder_t = Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
+      const MuonSpacePoint*>;
+  /// @brief Abbrivation of the PeakFinder configuration object
+  using PeakFinderCfg_t =
+      Acts::HoughTransformUtils::PeakFinders::IslandsAroundMaxConfig;
+  /// @brief Abbrivation of the HoughMaximum type returned by the PeakFinder
+  using Maximum_t = PeakFinder_t::Maximum;
+  /// @brief Abbrivation of the HoughMaximum vector
+  using MaximumVec_t = std::vector<Maximum_t>;
+  /// @brief Abbrivation of the HoughTransform axis utils
+  using AxisRange_t = Acts::HoughTransformUtils::HoughAxisRanges;
+  /// @brief Abbrivation of the space point id
+  using MuonId = MuonSpacePoint::MuonId;
+
   /// @brief Configuration object of the Hough seeder
   struct Config {
     /// @brief Container name of the truth segments (used for validation)
@@ -56,6 +73,15 @@ class MuonHoughSeeder final : public IAlgorithm {
     unsigned nBinsTanPhi = 10;
     /// @brief Number of bins in x0 space (omplementary to tan (phi))
     unsigned nBinsX0 = 10;
+    /// @brief Visualize the Hough plane maxima
+    bool dumpVisualization{false};
+    /// @brief Visualization function (optional, e.g., for ROOT-based visualization)
+    /// Takes: outputPath, bucketId, maxima, plane, axis, truthSegments, logger
+    std::function<void(const std::string&, const MuonId&,
+                       const MaximumVec_t&, const HoughPlane_t&,
+                       const AxisRange_t&, const MuonSegmentContainer&,
+                       const Acts::Logger&)>
+        visualizationFunction{};
   };
 
   MuonHoughSeeder(Config cfg, Acts::Logging::Level lvl);
@@ -66,31 +92,11 @@ class MuonHoughSeeder final : public IAlgorithm {
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
-  ProcessCode initialize() final;
-  ProcessCode finalize() final;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
  private:
-  /// @brief Abbrivation of the HoughPlane_t
-  using HoughPlane_t =
-      Acts::HoughTransformUtils::HoughPlane<const MuonSpacePoint*>;
-  /// @brief Abbrivation of the PeakFinder
-  using PeakFinder_t = Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
-      const MuonSpacePoint*>;
-  /// @brief Abbrivation of the PeakFinder configuration object
-  using PeakFinderCfg_t =
-      Acts::HoughTransformUtils::PeakFinders::IslandsAroundMaxConfig;
-  /// @brief Abbrivation of the HoughMaximum type returned by the PeakFinder
-  using Maximum_t = PeakFinder_t::Maximum;
-  /// @brief Abbrivation of the HoughMaximum vector
-  using MaximumVec_t = std::vector<Maximum_t>;
-  /// @brief Abbrivation of the HoughTransform axis utils
-  using AxisRange_t = Acts::HoughTransformUtils::HoughAxisRanges;
-  /// @brief Abbrivation of the space point id
-  using MuonId = MuonSpacePoint::MuonId;
-
   /// @brief Find eta maxima from the space point bucket and fills them into a new
   ///        maximum container
   /// @param ctx: Algorithm context needed for the display of the truth-parameters
@@ -105,10 +111,10 @@ class MuonHoughSeeder final : public IAlgorithm {
                                             MuonHoughMaxContainer&& etaMaxima,
                                             HoughPlane_t& plane) const;
 
-  /// @brief Displays the found maxima onto a TCanvas
+  /// @brief Dispatches visualization of the found maxima via the configured
+  ///        visualization function (no-op if not configured)
   /// @param ctx: Algorithm context to fetch the truth segment parameters
-  /// @param bucketId: identifier of the bucket to display on the Canvas and also
-  ///                  to determine whether it's an eta / phi maximum
+  /// @param bucketId: identifier of the bucket and whether it's an eta / phi maximum
   /// @param maxima: List of maxima from the PeakFinder
   /// @param plane: Filled hough plane
   /// @param axis: Axis range needed to interpret the hough binning
@@ -125,8 +131,6 @@ class MuonHoughSeeder final : public IAlgorithm {
   ReadDataHandle<MuonSpacePointContainer> m_inputSpacePoints{
       this, "InputSpacePoints"};
   WriteDataHandle<MuonHoughMaxContainer> m_outputMaxima{this, "OutputHoughMax"};
-  /// use ROOT for visualisation
-  std::unique_ptr<TCanvas> m_outCanvas;
 };
 
 }  // namespace ActsExamples

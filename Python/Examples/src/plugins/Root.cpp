@@ -35,6 +35,7 @@
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
+#include "ActsExamples/Root/MuonHoughVisualization.hpp"
 #include "ActsExamples/Root/MuonVisualization.hpp"
 #include "ActsExamples/Root/ScalingCalibrator.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -297,6 +298,20 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
           const MuonSpacePointBucket&, const SimHitContainer&,
           const SimParticleContainer&, const Acts::TrackingGeometry&,
           const Acts::Logger&)>(visualizeMuonSpacePoints);
+    });
+  }
+
+  // Muon Hough visualization
+  {
+    root.def("makeMuonHoughVisualizationFunction", []() {
+      return std::function<void(
+          const std::string&, const MuonSpacePoint::MuonId&,
+          const std::vector<Acts::HoughTransformUtils::PeakFinders::
+                                IslandsAroundMax<const MuonSpacePoint*>::Maximum>&,
+          const Acts::HoughTransformUtils::HoughPlane<const MuonSpacePoint*>&,
+          const Acts::HoughTransformUtils::HoughAxisRanges&,
+          const MuonSegmentContainer&,
+          const Acts::Logger&)>(visualizeMuonHoughMaxima);
     });
   }
 }
