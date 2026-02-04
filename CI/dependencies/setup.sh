@@ -252,7 +252,7 @@ start_section "Prepare python environment"
 "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
   "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
-  "${venv_dir}/bin/python3" -m pip install histcmp==0.8.1 matplotlib
+  "${venv_dir}/bin/python3" -m pip install histcmp==0.8.2 matplotlib
   "${venv_dir}/bin/python3" -m pip install pytest-md-report
 fi
 checkpoint "Python environment prepared"
