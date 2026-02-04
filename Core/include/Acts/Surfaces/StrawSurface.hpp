@@ -34,8 +34,9 @@ class StrawSurface : public LineSurface {
   friend class Surface;
 
  protected:
-  /// @brief Implement all constructors from the mother class
+  /// @cond
   using LineSurface::LineSurface;
+  /// @endcond
 
  public:
   /// Return the surface type

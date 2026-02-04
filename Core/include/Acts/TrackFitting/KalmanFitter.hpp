@@ -186,6 +186,7 @@ struct KalmanFitterOptions {
   FreeToBoundCorrection freeToBoundCorrection;
 };
 
+/// Result payload returned by the Kalman fitter.
 template <typename traj_t>
 struct KalmanFitterResult {
   /// Fitted states that the actor has handled.

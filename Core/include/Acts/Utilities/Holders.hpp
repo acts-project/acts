@@ -22,19 +22,34 @@ namespace Acts {
 /// The referenced backend must outlive the holder.
 template <typename T>
 struct RefHolder {
+  /// Element type
   using element_type = T;
 
+  /// Pointer to the referenced object
   T* ptr;
 
+  /// Constructor from pointer
+  /// @param _ptr Pointer to the object
   explicit RefHolder(T* _ptr) : ptr{_ptr} {}
+  /// Constructor from reference
+  /// @param ref Reference to the object
   explicit RefHolder(T& ref) : ptr{&ref} {}
 
+  /// Dereference operator
+  /// @return Const reference to the object
   const T& operator*() const { return *ptr; }
+  /// Dereference operator
+  /// @return Reference to the object
   T& operator*() { return *ptr; }
 
+  /// Arrow operator
+  /// @return Const pointer to the object
   const T* operator->() const { return ptr; }
+  /// Arrow operator
+  /// @return Pointer to the object
   T* operator->() { return ptr; }
 
+  /// Bool conversion operator
   explicit operator bool() const { return ptr != nullptr; }
 };
 
@@ -44,17 +59,28 @@ struct RefHolder {
 /// The referenced backend must outlive the holder.
 template <typename T>
 struct ConstRefHolder {
+  /// Element type
   using element_type = std::add_const_t<T>;
 
+  /// Pointer to the referenced object
   const T* ptr;
 
+  /// Constructor from pointer
+  /// @param _ptr Pointer to the object
   explicit ConstRefHolder(const T* _ptr) : ptr{_ptr} {}
+  /// Constructor from reference
+  /// @param ref Reference to the object
   explicit ConstRefHolder(const T& ref) : ptr{&ref} {}
 
+  /// Dereference operator
+  /// @return Reference to the object
   const T& operator*() const { return *ptr; }
 
+  /// Arrow operator
+  /// @return Pointer to the object
   const T* operator->() const { return ptr; }
 
+  /// Bool conversion operator
   explicit operator bool() const { return ptr != nullptr; }
 };
 
@@ -64,13 +90,17 @@ struct ConstRefHolder {
 /// The backend is moved into the holder and owned for its lifetime.
 template <typename T>
 struct ValueHolder {
+  /// Element type
   using element_type = T;
 
+  /// Stored value
   T val;
 
   // Let's be clear with the user that we take the ownership
   // Only require rvalues and avoid hidden copies
   ValueHolder(T& _val) = delete;
+  /// Constructor from rvalue
+  /// @param _val Value to move into the holder
   // @FIXME: Ideally we want this to be explicit, but cannot be explicit,
   // because using an explicit constructor and a deduction guide leads to
   // a SEGFAULT in GCC11 (an up?). Re-evaluate down the line
@@ -78,12 +108,21 @@ struct ValueHolder {
 
   // Does it make sense to allow copy operations?
 
+  /// Dereference operator
+  /// @return Const reference to the value
   const T& operator*() const { return val; }
+  /// Dereference operator
+  /// @return Reference to the value
   T& operator*() { return val; }
 
+  /// Arrow operator
+  /// @return Const pointer to the value
   const T* operator->() const { return &val; }
+  /// Arrow operator
+  /// @return Pointer to the value
   T* operator->() { return &val; }
 
+  /// Bool conversion operator
   explicit operator bool() const { return true; }
 };
 

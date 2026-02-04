@@ -22,6 +22,7 @@
 
 namespace Acts {
 
+/// Orthogonal range-search based seed finder.
 template <typename external_spacepoint_t>
 class SeedFinderOrthogonal {
  public:
@@ -66,8 +67,11 @@ class SeedFinderOrthogonal {
       delete;
   SeedFinderOrthogonal<external_spacepoint_t> &operator=(
       const SeedFinderOrthogonal<external_spacepoint_t> &) = delete;
+  /// Move constructor
   SeedFinderOrthogonal(
       SeedFinderOrthogonal<external_spacepoint_t> &&) noexcept = default;
+  /// Move assignment operator
+  /// @return Reference to this object
   SeedFinderOrthogonal<external_spacepoint_t> &operator=(
       SeedFinderOrthogonal<external_spacepoint_t> &&) noexcept = default;
 

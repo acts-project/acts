@@ -27,16 +27,23 @@
 namespace Acts {
 class IVisualization3D;
 
+/// View configuration for track parameters
 static ViewConfig s_viewParameter = {.color = {0, 0, 255}};
+/// View configuration for measurements
 static ViewConfig s_viewMeasurement = {.color = {255, 102, 0}};
+/// View configuration for predicted states
 static ViewConfig s_viewPredicted = {.color = {51, 204, 51}};
+/// View configuration for filtered states
 static ViewConfig s_viewFiltered = {.color = {255, 255, 0}};
+/// View configuration for smoothed states
 static ViewConfig s_viewSmoothed = {.color = {0, 102, 25}};
 
+/// Utilities to visualize event data in 3D.
 struct EventDataView3D {
   /// Helper to find the eigen values and corr angle
   ///
   /// @param covariance The covariance matrix
+  /// @return Array containing [eigenvalue0, eigenvalue1, theta]
   static inline std::array<double, 3> decomposeCovariance(
       const ActsSquareMatrix<2>& covariance) {
     double c00 = covariance(eBoundLoc0, eBoundLoc0);
@@ -63,6 +70,7 @@ struct EventDataView3D {
   /// @param offset The out of plane offset for visibility
   /// @param lposition The local anker point of the ellipse
   /// @param transform The transform to global
+  /// @return Vector of 3D points representing the ellipse
   static inline std::vector<Vector3> createEllipse(
       double lambda0, double lambda1, double theta, std::size_t lseg,
       double offset, const Vector2& lposition = Vector2(0., 0.),
