@@ -12,11 +12,15 @@
 
 #include <algorithm>
 
+namespace Acts {
+
+namespace {
+
 template <typename proj_t, typename angle_desc_t>
 void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
                               std::size_t maxCmpsAfterMerge, const proj_t &proj,
                               const angle_desc_t &desc) {
-  Acts::detail::SymmetricKLDistanceMatrix distances(cmpCache, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix distances(cmpCache, proj);
 
   auto remainingComponents = cmpCache.size();
 
@@ -47,11 +51,13 @@ void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
   assert(cmpCache.size() == maxCmpsAfterMerge && "size mismatch");
 }
 
-namespace Acts {
+}  // namespace
 
-void reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
-                                 std::size_t maxCmpsAfterMerge,
-                                 const Surface & /*surface*/) {
+}  // namespace Acts
+
+void Acts::reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
+                                       std::size_t maxCmpsAfterMerge,
+                                       const Surface & /*surface*/) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
@@ -62,9 +68,9 @@ void reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
   cmpCache.resize(maxCmpsAfterMerge);
 }
 
-void reduceMixtureWithKLDistance(std::vector<Acts::GsfComponent> &cmpCache,
-                                 std::size_t maxCmpsAfterMerge,
-                                 const Surface &surface) {
+void Acts::reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
+                                       std::size_t maxCmpsAfterMerge,
+                                       const Surface &surface) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
@@ -73,9 +79,7 @@ void reduceMixtureWithKLDistance(std::vector<Acts::GsfComponent> &cmpCache,
 
   // We must differ between surface types, since there can be different
   // local coordinates
-  detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
+  detail::Gsf::angleDescriptionSwitch(surface, [&](const auto &desc) {
     reduceWithKLDistanceImpl(cmpCache, maxCmpsAfterMerge, proj, desc);
   });
 }
-
-}  // namespace Acts
