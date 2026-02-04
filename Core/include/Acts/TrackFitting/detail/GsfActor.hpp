@@ -546,7 +546,7 @@ struct GsfActor {
 
       // copy chi2, path length, surface
       auto copyMask = TrackStatePropMask::None;
-      if (ACTS_CHECK_BIT(copyMask, TrackStatePropMask::Calibrated)) {
+      if (ACTS_CHECK_BIT(combinedStateMask, TrackStatePropMask::Calibrated)) {
         // also copy source link, calibrated measurement, and subspace
         copyMask |= TrackStatePropMask::Calibrated;
       }
