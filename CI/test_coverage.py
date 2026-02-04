@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+import shlex
 
 from typing import Annotated
 
@@ -70,6 +71,10 @@ def main(
         str | None,
         typer.Option(help="Path to gcov executable"),
     ] = None,
+    jobs: Annotated[
+        int, typer.Option("--jobs", "-j", help="Number of parallel jobs")
+    ] = mp.cpu_count(),
+    verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False,
 ) -> None:
     build_dir = build_dir.resolve()
     if not build_dir.is_dir():
@@ -108,6 +113,9 @@ def main(
         elif version >= (6, 0):
             extra_flags.append("--exclude-noncode-lines")
 
+    if verbose:
+        extra_flags.append("--verbose")
+
     script_dir = Path(__file__).resolve().parent
     source_dir = script_dir.parent.resolve()
     coverage_dir = build_dir / "coverage"
@@ -126,7 +134,7 @@ def main(
         "-e",
         f"{build_dir}.*",
         "-e",
-        "dependencies/.*",
+        f"{source_dir_posix}/dependencies/.*",
     ]
     gcovr = [gcovr_exe]
 
@@ -136,27 +144,15 @@ def main(
         gcovr
         + ["-r", str(source_dir)]
         + ["--gcov-executable", gcov_exe]
-        + ["-j", str(mp.cpu_count())]
+        + ["-j", str(jobs)]
         + ["--merge-mode-functions", "separate"]
         + excludes
         + extra_flags
         + ["--sonarqube", str(coverage_xml_path)]
     )
-    console.print(f"$ {' '.join(gcovr_sonar_cmd)}")
+    console.print(f"$ {shlex.join(gcovr_sonar_cmd)}")
     subprocess.run(gcovr_sonar_cmd, cwd=build_dir, check=True)
     validate_coverage_xml(coverage_xml_path, schema_path)
-
-    gcovr_cmd = (
-        gcovr
-        + ["-r", str(source_dir)]
-        + ["-j", str(mp.cpu_count())]
-        + ["--gcov-executable", gcov_exe]
-        + ["--merge-mode-functions", "separate"]
-        + excludes
-        + extra_flags
-    )
-    console.print(f"$ {' '.join(gcovr_cmd)}")
-    subprocess.run(gcovr_cmd, cwd=build_dir, check=True)
 
 
 if __name__ == "__main__":
