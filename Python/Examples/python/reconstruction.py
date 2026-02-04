@@ -466,7 +466,7 @@ def addSeeding(
                 connectorInputConfigFile,
                 lutInputConfigFile,
             )
-        elif seedingAlgorithm == SeedingAlgorithm.Hashing:
+        elif seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
             logger.info("Using Hashing seeding")
             seeds, buckets = addHashingSeeding(
                 s,
@@ -588,7 +588,7 @@ def addSeeding(
             )
             s.addWriter(csvSeedWriter)
 
-            if seedingAlgorithm == SeedingAlgorithm.Hashing:
+            if seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
                 s.addWriter(
                     acts.examples.CsvSpacePointsBucketWriter(
                         level=logLevel,
@@ -1180,7 +1180,6 @@ def addHashingSeeding(
     seedFinderConfigArg: SeedFinderConfigArg,
     seedFinderOptionsArg: SeedFinderOptionsArg,
     seedFilterConfigArg: SeedFilterConfigArg,
-    spacePointGridConfigArg: SpacePointGridConfigArg,
     hashingTrainingConfigArg: HashingTrainingConfigArg,
     hashingAlgorithmConfigArg: HashingAlgorithmConfigArg,
     logLevel: acts.logging.Level = None,
@@ -1227,20 +1226,6 @@ def addHashingSeeding(
             rMax=seedFinderConfigArg.r[1],
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
-            phiMin=spacePointGridConfigArg.phi[0],
-            phiMax=spacePointGridConfigArg.phi[1],
-            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
-            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
-            zBinEdges=spacePointGridConfigArg.zBinEdges,
-            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
-            rMinMiddle=None,
-            rMaxMiddle=None,
-            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
-            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
-            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
-            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
-            deltaZMin=None,
-            deltaZMax=None,
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
@@ -1263,15 +1248,15 @@ def addHashingSeeding(
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
-            annoySeed=seedingAlgorithmConfigArg.annoySeed,
-            f=seedingAlgorithmConfigArg.f,
-            bucketSize=seedingAlgorithmConfigArg.bucketSize,
-            zBins=seedingAlgorithmConfigArg.zBins,
-            phiBins=seedingAlgorithmConfigArg.phiBins,
-            layerRMin=seedingAlgorithmConfigArg.layerRMin,
-            layerRMax=seedingAlgorithmConfigArg.layerRMax,
-            layerZMin=seedingAlgorithmConfigArg.layerZMin,
-            layerZMax=seedingAlgorithmConfigArg.layerZMax,
+            annoySeed=hashingTrainingConfigArg.annoySeed,
+            f=hashingTrainingConfigArg.f,
+            bucketSize=hashingAlgorithmConfigArg.bucketSize,
+            zBins=hashingAlgorithmConfigArg.zBins,
+            phiBins=hashingAlgorithmConfigArg.phiBins,
+            layerRMin=None,
+            layerRMax=None,
+            layerZMin=None,
+            layerZMax=None,
         ),
     )
     sequence.addAlgorithm(seedingAlg)
