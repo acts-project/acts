@@ -570,36 +570,12 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         m_nUpdatesGx2f.push_back(-1);
       }
     }
-
-    if (m_cfg.writeJets) {
-      // Find the closest jet to this track and associate if within minDeltaR
-      double minDeltaR = 0.4;
-      std::int32_t closestJetIndex = -1;
-
-      for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
-        Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
-        Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
-
-        Acts::Vector4 track_4mom = track.fourMomentum();
-        Acts::Vector3 track_3mom{track_4mom[0], track_4mom[1], track_4mom[2]};
-
-        // Calculate deltaR between track and jet
-        auto drTrackJet = Acts::VectorHelpers::deltaR(jet_3mom, track_3mom);
-
-        if (drTrackJet < minDeltaR) {
-          minDeltaR = drTrackJet;
-          closestJetIndex = ijet;
-        }
-      }
-      if (closestJetIndex != -1) {
-        jetToTrackIndicesMap[closestJetIndex].push_back(track.index());
-      }
-    }
   }
 
   if (m_cfg.writeJets) {
     // Loop over jets and fill jet kinematic variables
     for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
+      m_nJets.push_back(jets.size());
       Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
       Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
 
@@ -609,27 +585,13 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
       m_jet_eta.push_back(std::atanh(std::cos(jet_theta)));
       m_jet_phi.push_back(phi(jet_4mom));
       m_jet_label.push_back(static_cast<int>(jets[ijet].jetLabel()));
-
-      // For each jet, collect associated tracks
-      std::size_t nTracksAssociated = 0;
-      std::vector<Acts::AnyConstTrackProxy> associatedTracks = {};
-      auto search = jetToTrackIndicesMap.find(ijet);
-      if (search != jetToTrackIndicesMap.end()) {
-        nTracksAssociated = search->second.size();
-        ACTS_VERBOSE("Jet " << ijet << " has " << nTracksAssociated
-                            << " associated tracks with indices:");
-        for (auto trackIdx : search->second) {
-          ACTS_VERBOSE("  Track index: " << trackIdx);
-          auto constTrack = tracks.getTrack(trackIdx);
-          Acts::AnyConstTrackProxy trackProxy(constTrack);
-          associatedTracks.push_back(trackProxy);
-        }
+      if (jets[ijet].associatedTracks().empty()) {
+        ACTS_WARNING("Jet " << ijet
+                                 << " has no associated tracks! Make sure you "
+                                    "have run the track-jet association.");
+      } else {
+        m_ntracks_per_jets.push_back(jets[ijet].associatedTracks().size());
       }
-      if (nTracksAssociated > 0) {
-        m_ntracks_per_jets.push_back(nTracksAssociated);
-      }
-      jets[ijet].setAssociatedTracks(associatedTracks);
-      m_nJets.push_back(jets.size());
     }
   }
 
