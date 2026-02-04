@@ -130,7 +130,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
 
-  m_sequenceElements.push_back({element});
+  m_sequenceElements.emplace_back(element);
 
   ACTS_INFO("Add " << element->typeName() << " '" << element->name() << "'");
 
@@ -670,6 +670,10 @@ std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
 ActsPlugins::FpeMonitor::Result Sequencer::fpeResult() const {
   ActsPlugins::FpeMonitor::Result merged;
   for (auto& [alg, fpe] : m_sequenceElements) {
+    if (!fpe) {
+      throw std::runtime_error("FPE result not found for algorithm " +
+                               alg->name());
+    }
     merged.merge(std::accumulate(
         fpe->begin(), fpe->end(), ActsPlugins::FpeMonitor::Result{},
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); }));

@@ -169,7 +169,8 @@ class Sequencer {
     std::shared_ptr<SequenceElement> sequenceElement;
     std::unique_ptr<
         tbb::enumerable_thread_specific<ActsPlugins::FpeMonitor::Result>>
-        fpeResult{};
+        fpeResult = std::make_unique<
+            tbb::enumerable_thread_specific<ActsPlugins::FpeMonitor::Result>>();
   };
 
   Config m_cfg;
