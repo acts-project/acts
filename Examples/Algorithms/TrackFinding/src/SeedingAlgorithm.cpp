@@ -22,8 +22,6 @@
 #include <ostream>
 #include <stdexcept>
 
-#include <Eigen/Eigenvalues>
-
 using namespace Acts::HashedStringLiteral;
 
 namespace ActsExamples {

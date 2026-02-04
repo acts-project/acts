@@ -382,7 +382,8 @@ def addSeeding(
             s, trackingGeometry, geoSelectionConfigFile, logLevel
         )
         
-        addHoughVertexFinding(s, outputDirRoot=outputDirRoot)
+        if seedingAlgorithmConfigArg.fittedHoughVertices:
+            addHoughVertexFinding(s, outputDirRoot=outputDirRoot)
 
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
