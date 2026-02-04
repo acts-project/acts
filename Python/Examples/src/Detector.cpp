@@ -8,9 +8,9 @@
 
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/DetectorCommons/StructureSelector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"

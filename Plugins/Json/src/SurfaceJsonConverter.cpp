@@ -37,15 +37,13 @@ void Acts::to_json(nlohmann::json& j,
 }
 
 void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
-  Acts::GeometryContext gctx =
-      Acts::GeometryContext::dangerouslyDefaultConstruct();
+  Acts::GeometryContext gctx;
   j = SurfaceJsonConverter::toJson(gctx, surface);
 }
 
 void Acts::to_json(nlohmann::json& j,
                    const std::shared_ptr<const Acts::Surface>& surface) {
-  Acts::GeometryContext gctx =
-      Acts::GeometryContext::dangerouslyDefaultConstruct();
+  Acts::GeometryContext gctx;
   j = SurfaceJsonConverter::toJson(gctx, *surface);
 }
 
@@ -148,7 +146,7 @@ nlohmann::json Acts::SurfaceJsonConverter::toJson(const GeometryContext& gctx,
                                                   const Options& options) {
   nlohmann::json jSurface;
   const auto& sBounds = surface.bounds();
-  const auto sTransform = surface.localToGlobalTransform(gctx);
+  const auto sTransform = surface.transform(gctx);
 
   jSurface["transform"] =
       Transform3JsonConverter::toJson(sTransform, options.transformOptions);
@@ -159,6 +157,16 @@ nlohmann::json Acts::SurfaceJsonConverter::toJson(const GeometryContext& gctx,
   if (surface.surfaceMaterial() != nullptr && options.writeMaterial) {
     jSurface["material"] = nlohmann::json(surface.surfaceMaterial());
   }
+
+  if (options.writeVertices) {
+    nlohmann::json jSurfaceVertices = nlohmann::json::array();
+    const auto sVertices = surface.polyhedronRepresentation(gctx).vertices;
+    for (const auto& vertex : sVertices) {
+      jSurfaceVertices.push_back(
+          std::array<double, 3u>{vertex.x(), vertex.y(), vertex.z()});
+    }
+    jSurface["vertices"] = jSurfaceVertices;
+  }
   return jSurface;
 }
 
@@ -167,7 +175,7 @@ nlohmann::json Acts::SurfaceJsonConverter::toJsonDetray(
     const Options& options) {
   nlohmann::json jSurface;
   const auto& sBounds = surface.bounds();
-  const auto sTransform = surface.localToGlobalTransform(gctx);
+  const auto sTransform = surface.transform(gctx);
 
   jSurface["transform"] =
       Transform3JsonConverter::toJson(sTransform, options.transformOptions);
