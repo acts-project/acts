@@ -87,7 +87,7 @@ class PortalPlacement : public SurfacePlacementBase {
 
  private:
   /// @brief Orientation of the portal surface w.r.t the volume
-  Transform3 m_interalTrf{Transform3::Identity()};
+  Transform3 m_portalToVolumeCenter{Transform3::Identity()};
   /// @brief Pointer to the surface held by the placement
   std::shared_ptr<RegularSurface> m_surface{};
   /// @brief Pointer to the parent managing this instance
