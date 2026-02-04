@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+# Example script to run ITk seed finding based on CSV spacepoints
 
 import os
-import argparse
 import tempfile
 
 import pathlib, acts, acts.root
@@ -141,10 +141,6 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
 
 
 if "__main__" == __name__:
-    p = argparse.ArgumentParser(
-        description="Example script to run ITk seed finding based on CSV spacepoints",
-    )
-
     geo_dir = pathlib.Path("acts-itk")
     outputDir = pathlib.Path.cwd() / "itk_output"
 
