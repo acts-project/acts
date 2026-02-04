@@ -255,7 +255,7 @@ HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
 ProcessCode HashingPrototypeSeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   Acts::DoubletSeedFinder::Config bottomDoubletFinderConfig;
-  bottomDoubletFinderConfig.spacePointsSortedByRadius = false;
+  bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
   bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
                                             ? m_cfg.deltaRMin
@@ -317,8 +317,8 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
       Acts::SpacePointColumns::ZR | Acts::SpacePointColumns::VarianceZ |
       Acts::SpacePointColumns::VarianceR | Acts::SpacePointColumns::Phi);
 
+  // create and train the hashing model
   AnnoyModel hashingModel = createModel(m_cfg.f, m_cfg.annoySeed);
-
   for (const auto& sp : spacePoints) {
     // check if the space point passes the selection
     if (!m_spacePointSelector(sp)) {
@@ -342,16 +342,24 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
 
     newSp.phi() = phi;
   }
-
   buildModel(hashingModel);
 
+  // create buckets based on hashing model
   std::vector<std::vector<Acts::SpacePointIndex2>> buckets =
       computeSpacePointsBuckets(hashingModel, coreSpacePoints, m_cfg.bucketSize,
                                 m_cfg.zBins, m_cfg.phiBins, m_cfg.layerRMin,
                                 m_cfg.layerRMax, m_cfg.layerZMin,
                                 m_cfg.layerZMax);
+
   ACTS_DEBUG("Created " << buckets.size() << " buckets  from "
                         << coreSpacePoints.size() << " space points");
+
+  // sort buckets by radius
+  for (auto& bucket : buckets) {
+    std::ranges::sort(bucket, {}, [&](const Acts::SpacePointIndex2& spIndex) {
+      return coreSpacePoints.at(spIndex).zr()[1];
+    });
+  }
 
   std::set<Acts::Seed<SimSpacePoint>, SeedComparison> uniqueSeeds;
 
