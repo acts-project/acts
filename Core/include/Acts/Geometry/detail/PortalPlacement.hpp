@@ -22,7 +22,7 @@ class PortalPlacement : public SurfacePlacementBase {
  public:
   /// @brief Allow the VolumePlacementBase as only class to construct
   ///        the portal placement
-  friend class Acts::VolumePlacementBase;
+  friend class VolumePlacementBase;
 
   /// @brief Returns the transform to switch from the portal reference
   ///       frame into the experiment's global frame taking the alignment
