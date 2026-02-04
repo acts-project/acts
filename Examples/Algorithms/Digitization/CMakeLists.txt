@@ -16,7 +16,6 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesDigitization
     PUBLIC Acts::ExamplesFramework
-    PRIVATE ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
 
 acts_compile_headers(ExamplesDigitization GLOB "include/**/*.hpp")
