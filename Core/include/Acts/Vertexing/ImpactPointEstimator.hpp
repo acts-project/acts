@@ -22,19 +22,19 @@
 
 namespace Acts {
 
+/// Impact parameters and their uncertainties with optional timing.
 struct ImpactParametersAndSigma {
-  // Impact parameters ...
+  /// Transverse impact parameter
   double d0 = 0.;
+  /// Longitudinal impact parameter
   double z0 = 0.;
-  // ... and their standard deviations wrt a vertex, e.g.:
-  // sigmaD0 = sqrt(Var(X) + Var(Y) + Var(d0)),
-  // where X and Y are the x- and y-coordinate of the vertex
+  /// Uncertainty on transverse impact parameter
   double sigmaD0 = 0.;
+  /// Uncertainty on longitudinal impact parameter
   double sigmaZ0 = 0.;
-  // Absolute difference in time between the vertex and the track at the 2D PCA
-  // ...
+  /// Time difference at the 2D PCA
   std::optional<double> deltaT = std::nullopt;
-  // ... and standard deviation wrt a vertex
+  /// Uncertainty on time difference
   std::optional<double> sigmaDeltaT = std::nullopt;
 };
 
@@ -52,6 +52,7 @@ class ImpactPointEstimator {
     MagneticFieldProvider::Cache fieldCache;
   };
 
+  /// Configuration settings for the impact point estimator.
   struct Config {
     /// @brief Config constructor if magnetic field is present
     ///

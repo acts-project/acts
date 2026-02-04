@@ -35,10 +35,15 @@ class Table {
   /// Text alignment options for table columns.
   enum class Alignment { Left, Right, Center };
 
+  /// Column definition used for layout and formatting.
   struct Column {
+    /// Column header text
     std::string header;
+    /// Format string for column values
     std::string format;
+    /// Column alignment
     Alignment alignment;
+    /// Column width in characters
     std::size_t width = 0;
   };
 
