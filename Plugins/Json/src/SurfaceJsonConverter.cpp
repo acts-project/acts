@@ -37,15 +37,13 @@ void Acts::to_json(nlohmann::json& j,
 }
 
 void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
-  Acts::GeometryContext gctx =
-      Acts::GeometryContext::dangerouslyDefaultConstruct();
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   j = SurfaceJsonConverter::toJson(gctx, surface);
 }
 
 void Acts::to_json(nlohmann::json& j,
                    const std::shared_ptr<const Acts::Surface>& surface) {
-  Acts::GeometryContext gctx =
-      Acts::GeometryContext::dangerouslyDefaultConstruct();
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   j = SurfaceJsonConverter::toJson(gctx, *surface);
 }
 
@@ -158,6 +156,16 @@ nlohmann::json Acts::SurfaceJsonConverter::toJson(const GeometryContext& gctx,
   jSurface["geo_id"] = surface.geometryId().value();
   if (surface.surfaceMaterial() != nullptr && options.writeMaterial) {
     jSurface["material"] = nlohmann::json(surface.surfaceMaterial());
+  }
+
+  if (options.writeVertices) {
+    nlohmann::json jSurfaceVertices = nlohmann::json::array();
+    const auto sVertices = surface.polyhedronRepresentation(gctx).vertices;
+    for (const auto& vertex : sVertices) {
+      jSurfaceVertices.push_back(
+          std::array<double, 3u>{vertex.x(), vertex.y(), vertex.z()});
+    }
+    jSurface["vertices"] = jSurfaceVertices;
   }
   return jSurface;
 }

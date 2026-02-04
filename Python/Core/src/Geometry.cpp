@@ -61,6 +61,18 @@ struct GeometryIdentifierHookBinding : public GeometryIdentifierHook {
   }
 };
 
+struct SensitiveSurfaceSelector {
+  std::vector<const Surface*> surfaces = {};
+
+  /// @param surface is the test surface
+  void operator()(const Surface* surface) {
+    if (surface->surfacePlacement() != nullptr &&
+        !rangeContainsValue(surfaces, surface)) {
+      surfaces.push_back(surface);
+    }
+  }
+};
+
 struct MaterialSurfaceSelector {
   std::vector<const Surface*> surfaces = {};
 
@@ -193,8 +205,8 @@ void addGeometry(py::module_& m) {
   }
 
   {
-    py::class_<SurfacePlacementBase, std::shared_ptr<SurfacePlacementBase>>(
-        m, "SurfacePlacementBase");
+    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
+        m, "DetectorElementBase");
   }
 
   {
@@ -228,6 +240,12 @@ void addGeometry(py::module_& m) {
                    self.visitSurfaces(func);
                  })
             .def("geoIdSurfaceMap", &TrackingGeometry::geoIdSurfaceMap)
+            .def("extractSensitiveSurfaces",
+                 [](TrackingGeometry& self) {
+                   SensitiveSurfaceSelector selector;
+                   self.visitSurfaces(selector, false);
+                   return selector.surfaces;
+                 })
             .def("extractMaterialSurfaces",
                  [](TrackingGeometry& self) {
                    MaterialSurfaceSelector selector;

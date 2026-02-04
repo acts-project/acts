@@ -11,9 +11,11 @@
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 #include "ActsPlugins/Json/JsonSurfacesReader.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <fstream>
 #include <memory>
 #include <string>
 
@@ -54,15 +56,43 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
   }
 
   {
-    auto sjOptions =
-        py::class_<JsonSurfacesReader::Options>(json, "SurfaceJsonOptions")
-            .def(py::init<>());
-    ACTS_PYTHON_STRUCT(sjOptions, inputFile, jsonEntryPath);
+    auto sjOptions = py::class_<SurfaceJsonConverter::Options>(
+                         json, "SurfaceJsonConverterOptions")
+                         .def(py::init<>());
+    ACTS_PYTHON_STRUCT(sjOptions, transformOptions, writeMaterial,
+                       writeVertices, portal);
 
-    json.def("readSurfaceHierarchyMapFromJson",
-             JsonSurfacesReader::readHierarchyMap);
+    json.def("surfaceToJson", &SurfaceJsonConverter::toJson, py::arg("gctx"),
+             py::arg("surface"),
+             py::arg("options") = SurfaceJsonConverter::Options{});
 
-    json.def("readSurfaceVectorFromJson", JsonSurfacesReader::readVector);
+    json.def(
+        "writeSurfaceVector",
+        [](const GeometryContext& gctx,
+           const std::vector<std::shared_ptr<const Surface>>& surfaces,
+           const SurfaceJsonConverter::Options& options,
+           const std::string& fileName) {
+          nlohmann::json jSurfaces = nlohmann::json::array();
+          for (const auto& surface : surfaces) {
+            jSurfaces.push_back(
+                SurfaceJsonConverter::toJson(gctx, *surface, options));
+          }
+          std::ofstream out(fileName);
+          out << jSurfaces.dump(2);
+        },
+        py::arg("gctx"), py::arg("surfaces"), py::arg("options"),
+        py::arg("fileName"));
+  }
+
+  {
+    auto srjOptions = py::class_<JsonSurfacesReader::Options>(
+                          json, "SurfaceReaderJsonOptions")
+                          .def(py::init<>());
+    ACTS_PYTHON_STRUCT(srjOptions, inputFile, jsonEntryPath);
+
+    json.def("readSurfaceHierarchyMap", JsonSurfacesReader::readHierarchyMap);
+
+    json.def("readSurfaceVector", JsonSurfacesReader::readVector);
 
     py::class_<JsonDetectorElement, SurfacePlacementBase,
                std::shared_ptr<JsonDetectorElement>>(json,
@@ -71,7 +101,6 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
           return self.surface().getSharedPtr();
         });
 
-    json.def("readDetectorElementsFromJson",
-             JsonSurfacesReader::readDetectorElements);
+    json.def("readDetectorElements", JsonSurfacesReader::readDetectorElements);
   }
 }
