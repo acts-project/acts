@@ -19,8 +19,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
-#include <vector>
 
 namespace ActsExamples {
 
@@ -59,68 +57,6 @@ class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
     float deltaRMinBottom = std::numeric_limits<float>::quiet_NaN();
     /// Maximum radial distance between bottom-middle doublet components
     float deltaRMaxBottom = std::numeric_limits<float>::quiet_NaN();
-
-    // Seeding parameters used in the space-point grid creation and bin finding
-
-    /// minimum extension of sensitive detector layer relevant for seeding as
-    /// distance from x=y=0 (i.e. in r)
-    /// WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
-    /// which will make seeding very slow!
-    float rMin = 0 * Acts::UnitConstants::mm;
-    /// maximum extension of sensitive detector layer relevant for seeding as
-    /// distance from x=y=0 (i.e. in r)
-    float rMax = 600 * Acts::UnitConstants::mm;
-    /// minimum extension of sensitive detector layer relevant for seeding in
-    /// negative direction in z
-    float zMin = -2800 * Acts::UnitConstants::mm;
-    /// maximum extension of sensitive detector layer relevant for seeding in
-    /// positive direction in z
-    float zMax = 2800 * Acts::UnitConstants::mm;
-    /// minimum phi value for phiAxis construction
-    float phiMin = -std::numbers::pi_v<float>;
-    /// maximum phi value for phiAxis construction
-    float phiMax = std::numbers::pi_v<float>;
-    /// Multiplicator for the number of phi-bins. The minimum number of phi-bins
-    /// depends on min_pt, magnetic field: 2*pi/(minPT particle phi-deflection).
-    /// phiBinDeflectionCoverage is a multiplier for this number. If
-    /// numPhiNeighbors (in the configuration of the BinFinders) is configured
-    /// to return 1 neighbor on either side of the current phi-bin (and you want
-    /// to cover the full phi-range of minPT), leave this at 1.
-    int phiBinDeflectionCoverage = 1;
-    /// maximum number of phi bins
-    int maxPhiBins = 10000;
-
-    /// vector containing the map of z bins in the top and bottom layers
-    std::vector<std::pair<int, int>> zBinNeighborsTop;
-    std::vector<std::pair<int, int>> zBinNeighborsBottom;
-    /// number of phiBin neighbors at each side of the current bin that will be
-    /// used to search for SPs
-    int numPhiNeighbors = 1;
-
-    /// Vector containing the z-bin edges for non equidistant binning in z
-    std::vector<float> zBinEdges;
-
-    /// Order of z bins to loop over when searching for SPs
-    std::vector<std::size_t> zBinsCustomLooping;
-
-    // Seeding parameters used to define the region of interest for middle
-    // space-point
-
-    /// Radial range for middle space-point
-    /// The range can be defined manually with (rMinMiddle, rMaxMiddle). If
-    /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP
-    /// is empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
-    float rMinMiddle = 60 * Acts::UnitConstants::mm;
-    float rMaxMiddle = 120 * Acts::UnitConstants::mm;
-    /// If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP
-    /// can be used to define a fixed r range for each z bin: {{rMin, rMax},
-    /// ...}
-    bool useVariableMiddleSPRange = false;
-    /// Range defined in vector for each z bin
-    std::vector<std::vector<float>> rRangeMiddleSP;
-
-    float deltaRMiddleMinSPRange = 10 * Acts::UnitConstants::mm;
-    float deltaRMiddleMaxSPRange = 10 * Acts::UnitConstants::mm;
 
     // Seeding parameters used to define the cuts on space-point doublets
 

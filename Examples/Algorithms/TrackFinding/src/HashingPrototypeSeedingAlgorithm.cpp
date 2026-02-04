@@ -223,16 +223,6 @@ HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
-  // check that the bins required in the custom bin looping
-  // are contained in the bins defined by the total number of edges
-  for (std::size_t i : m_cfg.zBinsCustomLooping) {
-    if (i >= m_cfg.zBinEdges.size()) {
-      throw std::invalid_argument(
-          "Inconsistent config zBinsCustomLooping does not contain a subset "
-          "of bins defined by zBinEdges");
-    }
-  }
-
   if (m_cfg.useExtraCuts) {
     // This function will be applied to select space points during grid filling
     m_spacePointSelector.connect<itkFastTrackingSPselect>();
