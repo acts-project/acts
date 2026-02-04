@@ -8,68 +8,12 @@
 
 #pragma once
 
+#include "Acts/Clusterization/DisjointSet.hpp"
+
 #include <memory>
 #include <vector>
 
-#include <boost/pending/disjoint_sets.hpp>
-
 namespace Acts::Ccl {
-using Label = int;
-constexpr Label NO_LABEL = 0;
-}  // namespace Acts::Ccl
-
-namespace Acts::Ccl {
-// Simple wrapper around boost::disjoint_sets. In theory, could use
-// boost::vector_property_map and use boost::disjoint_sets without
-// wrapping, but it's way slower
-class DisjointSets {
- public:
-  explicit DisjointSets(std::size_t initial_size = 128)
-      : m_defaultSize(initial_size),
-        m_size(initial_size),
-        m_rank(m_size),
-        m_parent(m_size),
-        m_ds(&m_rank[0], &m_parent[0]) {}
-
-  Acts::Ccl::Label makeSet() {
-    // Empirically, m_size = 128 seems to be good default. If we
-    // exceed this, take a performance hit and do the right thing.
-    while (m_globalId >= m_size) {
-      m_size *= 2;
-      m_rank.resize(m_size);
-      m_parent.resize(m_size);
-      m_ds = boost::disjoint_sets<std::size_t*, std::size_t*>(&m_rank[0],
-                                                              &m_parent[0]);
-    }
-    m_ds.make_set(m_globalId);
-    return static_cast<Acts::Ccl::Label>(m_globalId++);
-  }
-
-  void unionSet(std::size_t x, std::size_t y) { m_ds.union_set(x, y); }
-  Acts::Ccl::Label findSet(std::size_t x) {
-    return static_cast<Acts::Ccl::Label>(m_ds.find_set(x));
-  }
-
-  void clear() {
-    m_size = m_defaultSize;
-    m_rank.clear();
-    m_parent.clear();
-    m_rank.resize(m_size);
-    m_parent.resize(m_size);
-    m_globalId = 1;
-    m_ds = boost::disjoint_sets<std::size_t*, std::size_t*>(&m_rank[0],
-                                                            &m_parent[0]);
-  }
-
- private:
-  std::size_t m_defaultSize{128};
-  std::size_t m_globalId = 1;
-  std::size_t m_size{m_defaultSize};
-  std::vector<std::size_t> m_rank;
-  std::vector<std::size_t> m_parent;
-  boost::disjoint_sets<std::size_t*, std::size_t*> m_ds;
-};
-
 struct ClusteringData {
   void clear() {
     labels.clear();
