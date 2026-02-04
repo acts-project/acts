@@ -343,9 +343,9 @@ def addSeeding(
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     hashingTrainingConfigArg : HashingTrainingConfigArg(annoySeed, f)
-                                Defaults specified in Plugins/Hashing/include/ActsPlugins/Hashing/HashingTrainingConfig.hpp
+                                Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
-                                Defaults specified in Plugins/Hashing/include/ActsPlugins/Hashing/HashingAlgorithmConfig.hpp
+                                Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
     truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
         Currently only deltaR=(min,max) range specified here.
     particleHypothesis : Optional[acts.ParticleHypothesis]
