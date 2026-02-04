@@ -319,7 +319,7 @@ TruthJetContainer TruthJetAlgorithm::trackJetMatching(
     const ConstTrackContainer& tracks, TruthJetContainer& jets) const {
   std::unordered_map<std::size_t, std::vector<std::int32_t>>
       jetToTrackIndicesMap;
-  // Implementation of track-jet matching can be added here
+
   for (auto track : tracks) {
     // Find the closest jet to this track and associate if within minDeltaR
     double minDeltaR = 0.4;
@@ -361,13 +361,6 @@ TruthJetContainer TruthJetAlgorithm::trackJetMatching(
       }
     }
     jets[ijet].setAssociatedTracks(associatedTracks);
-  }
-
-  /// Example check if jets now have associated tracks
-  for (int ijet = 0; ijet < jets.size(); ++ijet) {
-    ACTS_VERBOSE("Jet " << ijet << " has "
-                        << jets[ijet].associatedTracks().size()
-                        << " associated tracks after matching.");
   }
   return jets;
 }
