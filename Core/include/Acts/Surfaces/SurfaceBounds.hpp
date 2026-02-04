@@ -28,7 +28,6 @@ namespace Acts {
 ///
 class SurfaceBounds {
  public:
-  /// @enum BoundsType
   /// This is nested to the SurfaceBounds, as also VolumeBounds will have
   /// Bounds Type.
   enum class Type : int {
