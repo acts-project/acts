@@ -829,7 +829,7 @@ def runAlignment(
     # Set trackingGeometry (for surfaceAccessor)
     aal_cfg.trackingGeometry = trackingGeometry
     aal_cfg.chi2ONdfCutOff = 0.1
-    aal_cfg.deltaChi2ONdfCutOff = (5, 0.00001)
+    aal_cfg.deltaChi2ONdfCutOff = (5, 0.0001)
 
     # Create AlignedTransformUpdater, it will update mutableStore after each iteration
     aal_cfg.alignedTransformUpdater = acts.examples.alignment.makeAlignedTransformUpdater(
@@ -840,7 +840,7 @@ def runAlignment(
     aal_cfg.align = acts.examples.alignment.makeAlignmentFunction(
         trackingGeometry, field, acts.logging.INFO
     )
-    aal_cfg.maxNumIterations = 100  # Reasonable number of iterations
+    aal_cfg.maxNumIterations = 1  # Reasonable number of iterations
     aal_cfg.maxNumTracks = 100000
     aal_cfg.iterationState = {
         i: int(alignment_dof) for i in range(aal_cfg.maxNumIterations)
@@ -859,7 +859,7 @@ def runAlignment(
     # Extract aligned transforms from mutableStore after alignment
     aligned_record = []
     transform_map = mutableStore.getTransformMap()
-    gctx = acts.GeometryContext()
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
 
     # Collect surfaces that were aligned (same filter as misalignment)
     aligned_surfaces = []
@@ -1161,7 +1161,7 @@ def runReconstruction(
     s.addWhiteboardAlias("tracks", "selected-tracks")
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        acts.examples.root.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -1173,7 +1173,7 @@ def runReconstruction(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        acts.examples.root.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -1183,7 +1183,7 @@ def runReconstruction(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        acts.examples.root.RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
