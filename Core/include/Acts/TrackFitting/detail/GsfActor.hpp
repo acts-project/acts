@@ -15,6 +15,7 @@
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
@@ -92,6 +93,9 @@ struct GsfActor {
 
     /// When to discard components
     double weightCutoff = 1.0e-4;
+
+    /// Minimum transverse momentum (in GeV) for components
+    double transverseMomentumCut = 0.0;  // GeV, no cut by default
 
     /// When this option is enabled, material information on all surfaces is
     /// ignored. This disables the component convolution as well as the handling
@@ -284,18 +288,23 @@ struct GsfActor {
       std::vector<ComponentCache>& componentCache = result.componentCache;
       componentCache.clear();
 
+      // Don't apply momentum cut in backward pass right now
+      double effectiveTransverseMomentumCut =
+          m_cfg.inReversePass ? std::numeric_limits<double>::max()
+                              : m_cfg.transverseMomentumCut;
+
       convoluteComponents(state, stepper, navigator, tmpStates,
                           *m_cfg.bethe_heitler_approx, result.betheHeitlerCache,
-                          m_cfg.weightCutoff, componentCache,
-                          result.nInvalidBetheHeitler, result.maxPathXOverX0,
-                          result.sumPathXOverX0, logger());
+                          m_cfg.weightCutoff, effectiveTransverseMomentumCut,
+                          componentCache, result.nInvalidBetheHeitler,
+                          result.maxPathXOverX0, result.sumPathXOverX0,
+                          logger());
 
+      // return success here, checkAbort should stop propagation gracefully
       if (componentCache.empty()) {
-        ACTS_WARNING(
-            "No components left after applying energy loss. "
-            "Is the weight cutoff "
-            << m_cfg.weightCutoff << " too high?");
-        ACTS_WARNING("Return to propagator without applying energy loss");
+        stepper.clearComponents(state.stepping);
+        ACTS_VERBOSE(
+            "All components removed by cuts (weight or momentum cutoff)");
         return Result<void>::success();
       }
 
@@ -304,6 +313,8 @@ struct GsfActor {
           static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
       m_cfg.extensions.mixtureReducer(componentCache, finalCmpNumber, surface);
 
+      // TODO: can weight cutoff even happen here, since we apply it above?
+      // maybe remove this line in a subsequent PR
       removeLowWeightComponents(componentCache, m_cfg.weightCutoff);
 
       updateStepper(state, stepper, navigator, componentCache, logger());
@@ -323,15 +334,18 @@ struct GsfActor {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, const result_type& result,
+  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
-      ACTS_VERBOSE("Stop navigation because all measurements are found");
+      ACTS_VERBOSE("Stop propagation because all measurements are found");
       return true;
     }
-
+    if (stepper.numberComponents(state.stepping) == 0) {
+      ACTS_VERBOSE("Stop propagation because no components are left");
+      return true;
+    }
     return false;
   }
 
@@ -366,6 +380,15 @@ struct GsfActor {
 
       const auto& trackStateProxy = *trackStateProxyRes;
 
+      const auto& params = trackStateProxy.parameters();
+      const auto p = stepper.particleHypothesis(state.stepping)
+                         .extractMomentum(params[eBoundQOverP]);
+      const auto pT = p * std::sin(params[eBoundTheta]);
+      if (pT < m_cfg.transverseMomentumCut) {
+        ACTS_VERBOSE("Skip component with pT=" << pT << " after Kalman update");
+        continue;
+      }
+
       // If at least one component is no outlier, we consider the whole thing
       // as a measurementState
       if (trackStateProxy.typeFlags().isMeasurement()) {
@@ -374,6 +397,12 @@ struct GsfActor {
 
       tmpStates.tips.push_back(trackStateProxy.index());
       tmpStates.weights[tmpStates.tips.back()] = cmp.weight();
+    }
+
+    // If all components were removed, return error
+    if (tmpStates.tips.empty()) {
+      stepper.clearComponents(state.stepping);
+      return GsfError::NoComponentsLeft;
     }
 
     computePosteriorWeights(tmpStates.traj, tmpStates.tips, tmpStates.weights);
@@ -541,6 +570,7 @@ struct GsfActor {
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
+    m_cfg.transverseMomentumCut = options.transverseMomentumCut;
     m_cfg.mergeMethod = options.componentMergeMethod;
     m_cfg.calibrationContext = &options.calibrationContext.get();
   }

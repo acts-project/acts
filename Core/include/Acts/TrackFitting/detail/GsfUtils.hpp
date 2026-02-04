@@ -338,7 +338,8 @@ double applyBetheHeitler(
     Direction direction, const BoundTrackParameters &initialParameters,
     double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
-    double weightCutoff, std::vector<GsfComponent> &componentCache,
+    double weightCutoff, double transverseMomentumCut,
+    std::vector<GsfComponent> &componentCache,
     Updatable<std::size_t> &nInvalidBetheHeitler,
     Updatable<double> &maxPathXOverX0, const Logger &logger);
 
@@ -349,7 +350,8 @@ void convoluteComponents(
     const navigator_t &navigator, const TemporaryStates<traj_t> &tmpStates,
     const BetheHeitlerApprox &betheHeitlerApprox,
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
-    double weightCutoff, std::vector<GsfComponent> &componentCache,
+    double weightCutoff, double transverseMomentumCut,
+    std::vector<GsfComponent> &componentCache,
     Updatable<std::size_t> &nInvalidBetheHeitler,
     Updatable<double> &maxPathXOverX0, Updatable<double> &sumPathXOverX0,
     const Logger &logger) {
@@ -368,8 +370,9 @@ void convoluteComponents(
 
     pathXOverX0 += applyBetheHeitler(
         geoContext, surface, direction, bound, tmpStates.weights.at(idx),
-        betheHeitlerApprox, betheHeitlerCache, weightCutoff, componentCache,
-        nInvalidBetheHeitler, maxPathXOverX0, logger);
+        betheHeitlerApprox, betheHeitlerCache, weightCutoff,
+        transverseMomentumCut, componentCache, nInvalidBetheHeitler,
+        maxPathXOverX0, logger);
   }
 
   // Store average material seen by the components

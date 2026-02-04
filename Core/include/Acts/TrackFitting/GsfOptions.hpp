@@ -120,6 +120,8 @@ struct GsfOptions {
 
   double weightCutoff = 1.e-4;
 
+  double transverseMomentumCut = 0.0;  // GeV, no cut by default
+
   bool abortOnError = false;
 
   bool disableAllMaterialHandling = false;

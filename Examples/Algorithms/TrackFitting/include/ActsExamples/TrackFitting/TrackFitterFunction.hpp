@@ -94,6 +94,8 @@ enum class MixtureReductionAlgorithm { weightCut, KLDistance };
 /// @param betheHeitlerApprox The object that encapsulates the approximation.
 /// @param maxComponents number of maximum components in the track state
 /// @param weightCutoff when to drop components
+/// @param transverseMomentumCut minimum transverse momentum (in GeV) for
+/// components
 /// @param componentMergeMethod How to merge a mixture to a single set of
 /// parameters and covariance
 /// @param mixtureReductionAlgorithm How to reduce the number of components
@@ -106,6 +108,7 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     const std::shared_ptr<const Acts::BetheHeitlerApprox>& betheHeitlerApprox,
     std::size_t maxComponents, double weightCutoff,
+    double transverseMomentumCut,
     Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
     double reverseFilteringCovarianceScaling, const Acts::Logger& logger);

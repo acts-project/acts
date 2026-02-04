@@ -24,6 +24,7 @@ enum class GsfError {
   NoMeasurementStatesCreatedBackward,
   /// No measurement states in the final trajectory
   NoMeasurementStatesCreatedFinal,
+  NoComponentsLeft
 };
 
 /// Create error code from @ref GsfError
