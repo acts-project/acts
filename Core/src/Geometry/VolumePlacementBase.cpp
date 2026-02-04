@@ -63,7 +63,7 @@ VolumePlacementBase::PortalVec_t VolumePlacementBase::makePortalsAlignable(
           "already connected to the alignment system",
           portalIdx));
     }
-    // It is expected that the volume bounds are callign the orientedSurfaces
+    // It is expected that the volume bounds are calling the orientedSurfaces
     // method with an identity transform
     const Transform3 portalToVolTrf =
         portalSurface->localToGlobalTransform(gctx);
