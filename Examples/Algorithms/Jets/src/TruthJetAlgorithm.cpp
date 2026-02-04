@@ -65,8 +65,7 @@ ActsPlugins::FastJet::JetLabel jetLabelFromHadronType(
 ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Initialize the output container
-  std::vector<ActsPlugins::FastJet::TruthJet<TrackContainer>>
-      outputJetContainer{};
+  std::vector<ActsPlugins::FastJet::TruthJet> outputJetContainer{};
 
   Acts::ScopedTimer globalTimer("TruthJetAlgorithm", logger(),
                                 Acts::Logging::DEBUG);
@@ -265,8 +264,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
       // Initialize truth jet for storing in the output container
       Acts::Vector4 jetFourMom{jet.px(), jet.py(), jet.pz(), jet.e()};
-      ActsPlugins::FastJet::TruthJet<TrackContainer> truthJet(jetFourMom,
-                                                              jetLabel);
+      ActsPlugins::FastJet::TruthJet truthJet(jetFourMom, jetLabel);
 
       std::vector<fastjet::PseudoJet> jetConstituents = jet.constituents();
       std::vector<int> constituentIndices;

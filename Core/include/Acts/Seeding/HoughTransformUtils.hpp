@@ -6,14 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/// This file implements the tools for a hough transform.
-
 #pragma once
 
 #include "Acts/Utilities/Grid.hpp"
 
 #include <array>
 #include <span>
+#include <stdexcept>
 #include <unordered_set>
 
 namespace Acts::HoughTransformUtils {
@@ -37,7 +36,7 @@ using LineParametrisation =
 
 /// @brief struct to define the ranges of the hough histogram.
 /// Used to move between parameter and bin index coordinates.
-/// Disconnected from the hough plane binning to be able to re-use
+/// Disconnected from the hough plane binning to be able to reuse
 /// a plane with a given binning for several parameter ranges
 struct HoughAxisRanges {
   /// Minimum value of the first hough coordinate
@@ -144,7 +143,7 @@ class HoughCell {
 
 /// @brief Configuration - number of bins in each axis.
 /// The Hough plane is agnostic of how the bins map to
-/// coordinates, allowing to re-use a plane for several
+/// coordinates, allowing to reuse a plane for several
 /// (sub) detectors of different dimensions if the bin number
 /// remains applicable
 struct HoughPlaneConfig {
@@ -199,17 +198,21 @@ class HoughPlane {
   /// @brief get the layers with hits in one cell of the histogram
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
-  /// @return the set of layer indices that have hits for this cell
-  std::unordered_set<unsigned> layers(std::size_t xBin,
-                                      std::size_t yBin) const {
-    return m_houghHist.atLocalBins({xBin, yBin}).layers();
+  /// @return the layer indices that have hits for this cell
+  /// @throws out of range if indices are not within plane limits
+  std::span<const unsigned, std::dynamic_extent> layers(
+      std::size_t xBin, std::size_t yBin) const {
+    checkIndices(xBin, yBin);
+    return m_houghHist.atLocalBins({xBin, yBin}).getLayers();
   }
 
   /// @brief get the (weighted) number of layers  with hits in one cell of the histogram
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighed) number of layers that have hits for this cell
+  /// @throws out of range if indices are not within plane limits
   YieldType nLayers(std::size_t xBin, std::size_t yBin) const {
+    checkIndices(xBin, yBin);
     return m_houghHist.atLocalBins({xBin, yBin}).nLayers();
   }
 
@@ -218,8 +221,10 @@ class HoughPlane {
   /// @param yBin: bin index in the second coordinate
   /// @return the list of identifiers of the hits for this cell
   /// Can include duplicates if a hit was filled more than once
+  /// @throws out of range if indices are not within plane limits
   std::span<const identifier_t, std::dynamic_extent> hitIds(
       std::size_t xBin, std::size_t yBin) const {
+    checkIndices(xBin, yBin);
     return m_houghHist.atLocalBins({xBin, yBin}).getHits();
   }
   /// @brief get the identifiers of all hits in one cell of the histogram
@@ -227,8 +232,10 @@ class HoughPlane {
   /// @param yBin: bin index in the second coordinate
   /// @return the list of identifiers of the hits for this cell
   /// Guaranteed to not duplicate identifiers
+  /// @throws out of range if indices are not within plane limits
   std::unordered_set<const identifier_t> uniqueHitIds(std::size_t xBin,
                                                       std::size_t yBin) const {
+    checkIndices(xBin, yBin);
     const auto hits_span = m_houghHist.atLocalBins({xBin, yBin}).getHits();
     return std::unordered_set<identifier_t>(hits_span.begin(), hits_span.end());
   }
@@ -236,7 +243,9 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighted) number of hits for this cell
+  /// @throws out of range if indices are not within plane limits
   YieldType nHits(std::size_t xBin, std::size_t yBin) const {
+    checkIndices(xBin, yBin);
     return m_houghHist.atLocalBins({xBin, yBin}).nHits();
   }
 
@@ -300,7 +309,6 @@ class HoughPlane {
     return m_maxLocLayers;
   }
 
- private:
   /// @brief Helper method to fill a bin of the hough histogram.
   /// Updates the internal helper data structures (maximum tracker etc).
   /// @param binX: bin number along x
@@ -311,6 +319,7 @@ class HoughPlane {
   void fillBin(std::size_t binX, std::size_t binY,
                const identifier_t& identifier, unsigned layer, double w = 1.0f);
 
+ private:
   YieldType m_maxHits = 0.0f;    // track the maximum number of hits seen
   YieldType m_maxLayers = 0.0f;  // track the maximum number of layers seen
 
@@ -328,6 +337,9 @@ class HoughPlane {
 
   HoughPlaneConfig m_cfg;  // the configuration object
   HoughHist m_houghHist;   // the histogram data object
+
+  /// @brief check if indices are are valid
+  void checkIndices(std::size_t x, std::size_t y) const;
 };
 
 /// example peak finders.
@@ -432,7 +444,7 @@ class IslandsAroundMax {
   /// @param inMaximum: List of cells found in the island. Incrementally populated by calls to the method
   /// @param toExplore: List of the global Bin indices of neighbour cell candidates left to explore. Method will not do anything once this is empty
   /// @param threshold: the threshold to apply to check if a cell should be added to an island
-  /// @param yieldMap: A map of the hit content of above-threshold cells. Used cells will be set to empty content to avoid re-use by subsequent calls
+  /// @param yieldMap: A map of the hit content of above-threshold cells. Used cells will be set to empty content to avoid reuse by subsequent calls
   void extendMaximum(const HoughPlane<identifier_t>& houghPlane,
                      std::vector<std::array<std::size_t, 2>>& inMaximum,
                      std::vector<std::size_t>& toExplore, YieldType threshold,
@@ -446,6 +458,71 @@ class IslandsAroundMax {
       std::make_pair(-1, 0),  std::make_pair(1, 0),  std::make_pair(-1, 1),
       std::make_pair(0, 1),   std::make_pair(1, 1)};
 };
+
+/// @brief Peak finder using sliding window algorithm.
+/// First it finds peaks by scanning all space for cells with number of hits
+/// above threshold. Then applies sliding window (SW) logic to eliminate peaks
+/// when maxima are adjacent leaving only one of them in a window. This SW
+/// implementation requires that none on the upper right corner are above peak
+/// and none in bottom left corner is below or equal to the peak. It can be
+/// illustrated as follows for window size of 1:
+///
+///
+///  <= <= <=
+///   <  O <=
+///   <  <  <
+///
+/// Then the algorithm collects maxima in a window (possibly of different size)
+/// and calculates peak position using weighted average.
+
+struct SlidingWindowConfig {
+  /// peak threshold, cell content is compared with it using >= operator
+  std::size_t threshold = 3;
+  /// size of the window in x direction for sliding window
+  std::size_t xWindowSize = 2;
+  /// size of the window in y direction for sliding window
+  std::size_t yWindowSize = 2;
+  /// perform re-centering
+  bool recenter = true;
+  /// size of the window in x direction for recentering, this should be
+  /// typically <= window size
+  std::size_t xRecenterSize = 3;
+  /// size of the window in y direction for recentering, this should be
+  /// typically <= window size
+  std::size_t yRecenterSize = 3;
+};
+
+/// @brief Obtain peaks list in Hough space using Sliding Window algorithm
+/// @tparam identifier_t Hough plane content
+/// @param plane Hough plane to work on
+/// @param config algorithm configuration
+/// @return list of indices (pairs of numbers)
+template <typename identifier_t>
+std::vector<typename HoughPlane<identifier_t>::Index> slidingWindowPeaks(
+    const HoughPlane<identifier_t>& plane, const SlidingWindowConfig& config);
+
+/// @brief Obtain an image around the peak
+/// @tparam identifier_t Hough plane content
+/// @param plane Hough plane to work on
+/// @param index peak center
+/// @param xSize number of cells around the peak in x direction
+/// @param ySize number of cells around the peak in y direction
+/// @param summaryFunction function constructing pixel content, default is just number of hits in cell
+///        Other implementations may take into account layers
+/// @return the vector with count of hits starting from lower left to upper right corner of rectangular window
+/// The "image" is always of the same size, if it would happen to be outside of
+/// Hough plane the content is padded with zeros
+template <typename identifier_t, typename pixel_value_t = unsigned char>
+std::vector<pixel_value_t> hitsCountImage(
+    const HoughPlane<identifier_t>& plane,
+    typename HoughPlane<identifier_t>::Index index, std::size_t xSize,
+    std::size_t ySize,
+    const std::function<pixel_value_t(const HoughPlane<identifier_t>&, int,
+                                      int)>& summaryFunction =
+        [](const HoughPlane<identifier_t>& plane, int x, int y) {
+          return static_cast<pixel_value_t>(plane.nHits(x, y));
+        });
+
 }  // namespace PeakFinders
 }  // namespace Acts::HoughTransformUtils
 

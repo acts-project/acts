@@ -57,7 +57,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
  public:
   using AlignmentResult = Acts::Result<ActsAlignment::AlignmentResult>;
   using AlignmentParameters =
-      std::unordered_map<Acts::DetectorElementBase*, Acts::Transform3>;
+      std::unordered_map<Acts::SurfacePlacementBase*, Acts::Transform3>;
   /// Alignment function that takes sets of input measurements, initial
   /// trackstate and alignment options and returns some alignment-specific
   /// result.
@@ -101,7 +101,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
     /// The aligned transform updater
     ActsAlignment::AlignedTransformUpdater alignedTransformUpdater;
     /// The surfaces (with detector elements) to be aligned
-    std::vector<Acts::DetectorElementBase*> alignedDetElements;
+    std::vector<Acts::SurfacePlacementBase*> alignedDetElements;
     /// The alignment mask at each iteration
     std::map<unsigned int, std::bitset<6>> iterationState;
     /// Cutoff value for average chi2/ndf

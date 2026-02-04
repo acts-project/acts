@@ -90,8 +90,8 @@ void addTrackFinding(py::module& mex) {
   {
     using Config = Acts::Experimental::SeedFinderGbtsConfig;
     auto c = py::class_<Config>(mex, "SeedFinderGbtsConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, ConnectorInputFile, phiSliceWidth,
-                       nMaxPhiSlice);
+    ACTS_PYTHON_STRUCT(c, minPt, connectorInputFile, phiSliceWidth,
+                       nMaxPhiSlice, lutInputFile);
     patchKwargsConstructor(c);
   }
 

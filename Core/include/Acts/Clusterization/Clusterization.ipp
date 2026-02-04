@@ -18,11 +18,10 @@
 namespace Acts::Ccl {
 
 template <typename Cluster>
-void reserve(Cluster& /*cl*/, std::size_t /*n*/) {}
-
-template <Acts::Ccl::CanReserve Cluster>
 void reserve(Cluster& cl, std::size_t n) {
-  clusterReserve(cl, n);
+  if constexpr (Acts::Ccl::CanReserve<Cluster>) {
+    clusterReserve(cl, n);
+  }
 }
 
 template <typename Cell, std::size_t GridDim>

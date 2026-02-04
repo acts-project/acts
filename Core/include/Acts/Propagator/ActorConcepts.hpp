@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/Result.hpp"
+
 #include <concepts>
 #include <type_traits>
 #include <utility>
@@ -28,8 +30,8 @@ concept ActorHasActWithoutResult = requires(
     const actor_t& a, propagator_state_t& state, const stepper_t& stepper,
     const navigator_t& navigator, Args&&... args) {
   {
-    a.act(state, stepper, navigator, std::move<Args>(args)...)
-  } -> std::same_as<void>;
+    a.act(state, stepper, navigator, std::forward<Args>(args)...)
+  } -> std::same_as<Result<void>>;
 };
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
@@ -40,9 +42,30 @@ concept ActorHasActWithResult =
              const stepper_t& stepper, const navigator_t& navigator,
              typename actor_t::result_type& result, Args&&... args) {
       {
-        a.act(state, stepper, navigator, result, std::move<Args>(args)...)
-      } -> std::same_as<void>;
+        a.act(state, stepper, navigator, result, std::forward<Args>(args)...)
+      } -> std::same_as<Result<void>>;
     };
+
+template <typename actor_t, typename propagator_state_t, typename stepper_t,
+          typename navigator_t, typename... Args>
+concept ActorHasOldVoidInterface =
+    // Check without result parameter (for actors without result_type)
+    requires(const actor_t& a, propagator_state_t& state,
+             const stepper_t& stepper, const navigator_t& navigator,
+             Args&&... args) {
+      {
+        a.act(state, stepper, navigator, std::forward<Args>(args)...)
+      } -> std::same_as<void>;
+    } ||
+    // Check with result parameter (for actors with result_type)
+    (ActorHasResult<actor_t> &&
+     requires(const actor_t& a, propagator_state_t& state,
+              const stepper_t& stepper, const navigator_t& navigator,
+              typename actor_t::result_type& result, Args&&... args) {
+       {
+         a.act(state, stepper, navigator, result, std::forward<Args>(args)...)
+       } -> std::same_as<void>;
+     });
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
@@ -58,7 +81,7 @@ concept ActorHasAbortWithoutResult = requires(
     const actor_t& a, propagator_state_t& state, const stepper_t& stepper,
     const navigator_t& navigator, Args&&... args) {
   {
-    a.checkAbort(state, stepper, navigator, std::move<Args>(args)...)
+    a.checkAbort(state, stepper, navigator, std::forward<Args>(args)...)
   } -> std::same_as<bool>;
 };
 
@@ -71,7 +94,7 @@ concept ActorHasAbortWithResult =
              typename actor_t::result_type& result, Args&&... args) {
       {
         a.checkAbort(state, stepper, navigator, result,
-                     std::move<Args>(args)...)
+                     std::forward<Args>(args)...)
       } -> std::same_as<bool>;
     };
 
@@ -85,8 +108,11 @@ concept ActorHasAbort =
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
-concept Actor =
-    ActorHasAct<actor_t, propagator_state_t, stepper_t, navigator_t, Args...> ||
-    ActorHasAbort<actor_t, propagator_state_t, stepper_t, navigator_t, Args...>;
+concept Actor = (ActorHasAct<actor_t, propagator_state_t, stepper_t,
+                             navigator_t, Args...> ||
+                 ActorHasAbort<actor_t, propagator_state_t, stepper_t,
+                               navigator_t, Args...>) &&
+                !ActorHasOldVoidInterface<actor_t, propagator_state_t,
+                                          stepper_t, navigator_t, Args...>;
 
 }  // namespace Acts

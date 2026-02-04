@@ -208,7 +208,7 @@ struct TrackStateCreator {
         selectorResult =
             measurementSelector(trackStateCandidates, isOutlier, logger);
     if (!selectorResult.ok()) {
-      ACTS_ERROR("Selection of calibrated measurements failed: "
+      ACTS_DEBUG("Selection of calibrated measurements failed: "
                  << selectorResult.error().message());
       resultTrackStateList =
           ResultTrackStateList::failure(selectorResult.error());
@@ -278,16 +278,16 @@ struct TrackStateCreator {
       trackState.copyFrom(candidateTrackState, mask, false);
 
       auto typeFlags = trackState.typeFlags();
-      typeFlags.set(TrackStateFlag::ParameterFlag);
-      typeFlags.set(TrackStateFlag::MeasurementFlag);
+      typeFlags.setHasParameters();
+      typeFlags.setHasMeasurement();
       if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
-        typeFlags.set(TrackStateFlag::MaterialFlag);
+        typeFlags.setHasMaterial();
       }
       if (isOutlier) {
         // propagate information that this is an outlier state
         ACTS_VERBOSE(
             "Creating outlier track state with tip = " << trackState.index());
-        typeFlags.set(TrackStateFlag::OutlierFlag);
+        typeFlags.setIsOutlier();
       }
 
       trackStateList.push_back(trackState.index());

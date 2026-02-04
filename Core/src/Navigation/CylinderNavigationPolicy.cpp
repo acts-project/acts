@@ -80,8 +80,9 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
   ACTS_VERBOSE("CylinderNavigationPolicy created for volume "
                << volume.volumeName());
 
-  if (!volume.transform().linear().isApprox(SquareMatrix3::Identity())) {
-    m_itransform = volume.transform().inverse();
+  if (!volume.localToGlobalTransform(gctx).linear().isApprox(
+          SquareMatrix3::Identity())) {
+    m_itransform = volume.globalToLocalTransform(gctx);
   }
 
   // Since the volume does not store the shell assignment, we have to recover
@@ -106,8 +107,8 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
     if (const auto* radBounds =
             dynamic_cast<const RadialBounds*>(&portal.surface().bounds());
         radBounds != nullptr) {
-      Transform3 localTransform =
-          m_volume->transform().inverse() * portal.surface().transform(gctx);
+      Transform3 localTransform = m_volume->globalToLocalTransform(gctx) *
+                                  portal.surface().localToGlobalTransform(gctx);
       Vector3 localPosition = localTransform.translation();
       double localZ = localPosition.z();
       if (std::abs(localZ - m_halfLengthZ) < s_onSurfaceTolerance) {
@@ -154,7 +155,7 @@ void CylinderNavigationPolicy::initializeCandidates(
     pos = *m_itransform * args.position;
     dir = m_itransform->linear() * args.direction;
   } else {
-    pos = args.position - m_volume->transform().translation();
+    pos = args.position - m_volume->center(gctx);
     dir = args.direction;
   }
 

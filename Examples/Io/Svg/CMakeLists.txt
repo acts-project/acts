@@ -1,4 +1,4 @@
-acts_add_library(ExamplesIoSvg SHARED src/SvgTrackingGeometryWriter.cpp)
+acts_add_library(ExamplesIoSvg src/SvgTrackingGeometryWriter.cpp)
 target_include_directories(
     ActsExamplesIoSvg
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

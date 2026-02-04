@@ -15,7 +15,6 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
@@ -24,17 +23,16 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <functional>
 #include <iterator>
-#include <list>
 #include <stdexcept>
 #include <vector>
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
-    const ActsExamples::CsvMeasurementReader::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvMeasurementReader::CsvMeasurementReader(const Config& config,
+                                           Acts::Logging::Level level)
     : m_cfg(config),
       m_eventsRange(
           determineEventFilesRange(m_cfg.inputDir, "measurements.csv")),
@@ -68,13 +66,12 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   }
 }
 
-std::string ActsExamples::CsvMeasurementReader::CsvMeasurementReader::name()
-    const {
+std::string CsvMeasurementReader::CsvMeasurementReader::name() const {
   return "CsvMeasurementReader";
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::CsvMeasurementReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> CsvMeasurementReader::availableEvents()
+    const {
   return m_eventsRange;
 }
 
@@ -97,8 +94,8 @@ struct CompareHitId {
 };
 
 struct CompareGeometryId {
-  bool operator()(const ActsExamples::MeasurementData& left,
-                  const ActsExamples::MeasurementData& right) const {
+  bool operator()(const MeasurementData& left,
+                  const MeasurementData& right) const {
     return left.geometry_id < right.geometry_id;
   }
 };
@@ -107,8 +104,8 @@ template <typename Data>
 inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
     const std::vector<std::string>& optionalColumns, std::size_t event) {
-  std::string path = ActsExamples::perEventFilepath(inputDir, filename, event);
-  ActsExamples::NamedTupleCsvReader<Data> reader(path, optionalColumns);
+  std::string path = perEventFilepath(inputDir, filename, event);
+  NamedTupleCsvReader<Data> reader(path, optionalColumns);
 
   std::vector<Data> everything;
   Data one;
@@ -119,19 +116,18 @@ inline std::vector<Data> readEverything(
   return everything;
 }
 
-std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
+std::vector<MeasurementData> readMeasurementsByGeometryId(
     const std::string& inputDir, std::size_t event) {
   // geometry_id and t are optional columns
-  auto measurements = readEverything<ActsExamples::MeasurementData>(
+  auto measurements = readEverything<MeasurementData>(
       inputDir, "measurements.csv", {"geometry_id", "t"}, event);
   // sort same way they will be sorted in the output container
   std::ranges::sort(measurements, CompareGeometryId{});
   return measurements;
 }
 
-ActsExamples::ClusterContainer makeClusters(
-    const std::unordered_multimap<std::size_t, ActsExamples::CellData>&
-        cellDataMap,
+ClusterContainer makeClusters(
+    const std::unordered_multimap<std::size_t, CellData>& cellDataMap,
     std::size_t nMeasurements) {
   using namespace ActsExamples;
   ClusterContainer clusters;
@@ -181,8 +177,7 @@ ActsExamples::ClusterContainer makeClusters(
 
 }  // namespace
 
-ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
-    const ActsExamples::AlgorithmContext& ctx) {
+ProcessCode CsvMeasurementReader::read(const AlgorithmContext& ctx) {
   // hit_id in the files is not required to be neither continuous nor
   // monotonic. internally, we want continuous indices within [0,#hits)
   // to simplify data handling. to be able to perform this mapping we first
@@ -203,9 +198,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   // Safe long as we have single particle to sim hit association
   measurementSimHitsMap.reserve(measurementData.size());
 
-  auto measurementSimHitLinkData =
-      readEverything<ActsExamples::MeasurementSimHitLink>(
-          m_cfg.inputDir, "measurement-simhit-map.csv", {}, ctx.eventNumber);
+  auto measurementSimHitLinkData = readEverything<MeasurementSimHitLink>(
+      m_cfg.inputDir, "measurement-simhit-map.csv", {}, ctx.eventNumber);
   for (auto mshLink : measurementSimHitLinkData) {
     measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                        mshLink.measurement_id, mshLink.hit_id);
@@ -300,16 +294,16 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   /////////////////////////
 
   if (m_cfg.outputClusters.empty()) {
-    return ActsExamples::ProcessCode::SUCCESS;
+    return ProcessCode::SUCCESS;
   }
 
-  std::vector<ActsExamples::CellData> cellData;
+  std::vector<CellData> cellData;
 
   // This allows seamless import of files created with an older version where
   // the measurement_id-column is still named hit_id
   try {
-    cellData = readEverything<ActsExamples::CellData>(
-        m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
+    cellData = readEverything<CellData>(m_cfg.inputDir, "cells.csv",
+                                        {"timestamp"}, ctx.eventNumber);
   } catch (std::runtime_error& e) {
     // Rethrow exception if it is not about the measurement_id-column
     if (std::string(e.what()).find("Missing header column 'measurement_id'") ==
@@ -317,7 +311,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       throw;
     }
 
-    const auto oldCellData = readEverything<ActsExamples::CellDataLegacy>(
+    const auto oldCellData = readEverything<CellDataLegacy>(
         m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
 
     auto fromLegacy = [](const CellDataLegacy& old) {
@@ -330,7 +324,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
                    fromLegacy);
   }
 
-  std::unordered_multimap<std::size_t, ActsExamples::CellData> cellDataMap;
+  std::unordered_multimap<std::size_t, CellData> cellDataMap;
   for (const auto& cd : cellData) {
     cellDataMap.emplace(cd.measurement_id, cd);
   }
@@ -338,5 +332,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   auto clusters = makeClusters(cellDataMap, orderedMeasurements.size());
   m_outputClusters(ctx, std::move(clusters));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

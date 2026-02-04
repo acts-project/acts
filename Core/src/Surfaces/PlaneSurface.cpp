@@ -34,18 +34,16 @@
 namespace Acts {
 
 PlaneSurface::PlaneSurface(const PlaneSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                            const PlaneSurface& other,
                            const Transform3& transform)
-    : GeometryObject(),
-      RegularSurface(gctx, other, transform),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, transform), m_bounds(other.m_bounds) {}
 
 PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-                           const DetectorElementBase& detelement)
-    : RegularSurface(detelement), m_bounds(std::move(pbounds)) {
+                           const SurfacePlacementBase& placement)
+    : RegularSurface{placement}, m_bounds(std::move(pbounds)) {
   // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "PlaneBounds must not be nullptr");
 }
@@ -68,13 +66,13 @@ Surface::SurfaceType PlaneSurface::type() const {
 
 Vector3 PlaneSurface::localToGlobal(const GeometryContext& gctx,
                                     const Vector2& lposition) const {
-  return transform(gctx) * Vector3(lposition[0], lposition[1], 0.);
+  return localToGlobalTransform(gctx) * Vector3(lposition[0], lposition[1], 0.);
 }
 
 Result<Vector2> PlaneSurface::globalToLocal(const GeometryContext& gctx,
                                             const Vector3& position,
                                             double tolerance) const {
-  Vector3 loc3Dframe = transform(gctx).inverse() * position;
+  Vector3 loc3Dframe = localToGlobalTransform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
@@ -103,7 +101,8 @@ Polyhedron PlaneSurface::polyhedronRepresentation(
     auto vertices2D = m_bounds->vertices(quarterSegments);
     vertices.reserve(vertices2D.size() + 1);
     for (const auto& v2D : vertices2D) {
-      vertices.push_back(transform(gctx) * Vector3(v2D.x(), v2D.y(), 0.));
+      vertices.push_back(localToGlobalTransform(gctx) *
+                         Vector3(v2D.x(), v2D.y(), 0.));
     }
     bool isEllipse = bounds().type() == SurfaceBounds::eEllipse;
     bool innerExists = false, coversFull = false;
@@ -146,7 +145,7 @@ Vector3 PlaneSurface::normal(const GeometryContext& gctx,
 }
 
 Vector3 PlaneSurface::normal(const GeometryContext& gctx) const {
-  return transform(gctx).linear().col(2);
+  return localToGlobalTransform(gctx).linear().col(2);
 }
 
 Vector3 PlaneSurface::referencePosition(const GeometryContext& gctx,
@@ -166,7 +165,7 @@ MultiIntersection3D PlaneSurface::intersect(
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
   // Get the contextual transform
-  const auto& gctxTransform = transform(gctx);
+  const auto& gctxTransform = localToGlobalTransform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
@@ -198,8 +197,7 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   ACTS_VERBOSE("Merging plane surfaces in " << axisDirectionName(direction)
                                             << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "PlaneSurface::merge: surfaces are "
                                   "associated with a detector element");

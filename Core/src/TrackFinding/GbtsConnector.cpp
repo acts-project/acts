@@ -21,19 +21,26 @@ namespace Acts::Experimental {
 GbtsConnection::GbtsConnection(unsigned int s, unsigned int d)
     : m_src(s), m_dst(d) {}
 
-GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
+GbtsConnector::GbtsConnector(std::string& inFile, bool LRTmode) {
   m_connMap.clear();
   m_layerGroups.clear();
 
   int nLinks{};
 
-  inFile >> nLinks >> m_etaBin;
+  std::ifstream input_ifstream(inFile.c_str(), std::ifstream::in);
+
+  if (!input_ifstream.is_open()) {
+    throw std::runtime_error("connection file not found");
+  }
+
+  input_ifstream >> nLinks >> m_etaBin;
 
   for (int l = 0; l < nLinks; l++) {
     unsigned int stage{}, lIdx{}, src{}, dst{}, nEntries{};
     int height{}, width{};
 
-    inFile >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
+    input_ifstream >> lIdx >> stage >> src >> dst >> height >> width >>
+        nEntries;
 
     GbtsConnection* pC = new GbtsConnection(src, dst);
 
@@ -41,7 +48,7 @@ GbtsConnector::GbtsConnector(std::ifstream& inFile, bool LRTmode) {
 
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        inFile >> dummy;  // pC->m_binTable[j+i*width];
+        input_ifstream >> dummy;  // pC->m_binTable[j+i*width];
       }
     }
 

@@ -19,7 +19,9 @@
 
 namespace Acts {
 
-/// @class ProtoSurfaceMaterial
+/// @addtogroup material
+/// @{
+
 ///
 /// @brief proxy to SurfaceMaterial hand over BinUtility or other suitable
 /// binning description
@@ -93,6 +95,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
     return (m_materialSlab);
   }
 
+  using ISurfaceMaterial::materialSlab;
+
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream
@@ -111,12 +115,15 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 };
 
 /// @brief Type alias for a prototype surface material using BinUtility
-/// @details A surface material implementation that uses BinUtility for binning
+/// A surface material implementation that uses BinUtility for binning
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
 /// @brief Type alias for a prototype surface material using a grid of ProtoAxis
-/// @details A surface material implementation that uses a vector of ProtoAxis for grid-based binning
+/// A surface material implementation that uses a vector of ProtoAxis for
+/// grid-based binning
 using ProtoGridSurfaceMaterial =
     ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
+
+/// @}
 
 }  // namespace Acts
