@@ -35,5 +35,5 @@ if(ACTS_BUILD_EXAMPLES_HASHING)
         PRIVATE src/HashingPrototypeSeedingAlgorithm.cpp
     )
 
-    target_link_libraries(ActsExamplesTrackFinding PUBLIC Acts::PluginHashing)
+    target_link_libraries(ActsExamplesTrackFinding PUBLIC Annoy)
 endif()

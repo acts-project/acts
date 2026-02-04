@@ -9,17 +9,13 @@
 #pragma once
 
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
-#include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
 #include "Acts/Seeding2/TripletSeeder.hpp"
-#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
-#include "ActsPlugins/Hashing/HashingTraining.hpp"
 
 #include <memory>
 #include <string>
@@ -271,15 +267,10 @@ class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::CylindricalSpacePointGrid2::Config m_gridConfig;
 
-  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
-  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
   Acts::BroadTripletSeedFilter::Config m_filterConfig;
   std::unique_ptr<const Acts::Logger> m_filterLogger;
   std::optional<Acts::TripletSeeder> m_seedFinder;
-  std::optional<ActsPlugins::HashingTraining> m_hashingTraining;
-  std::optional<ActsPlugins::HashingAlgorithm> m_hashingAlgorithm;
 
   Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector{
       Acts::DelegateFuncTag<voidSpacePointSelector>{}};
@@ -292,16 +283,6 @@ class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
                                                             "InputSpacePoints"};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-
-  /// Get the proper radius validity range given a middle space point candidate.
-  /// In case the radius range changes according to the z-bin we need to
-  /// retrieve the proper range. We can do this computation only once, since all
-  /// the middle space point candidates belong to the same z-bin
-  /// @param spM space point candidate to be used as middle SP in a seed
-  /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin
-  std::pair<float, float> retrieveRadiusRangeForMiddle(
-      const Acts::ConstSpacePointProxy2& spM,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
 };
 
 }  // namespace ActsExamples
