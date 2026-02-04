@@ -32,6 +32,8 @@ class TruthJetAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input particles collection.
     std::string inputTruthParticles;
+    /// Input tracks collection.
+    std::string inputTracks;
     /// Output jets collection.
     std::string outputJets;
     /// Minimum jet pT.
@@ -52,6 +54,8 @@ class TruthJetAlgorithm final : public IAlgorithm {
     double jetLabelingHadronPtMin = 5 * Acts::UnitConstants::GeV;
     /// Only label HS hadrons
     bool jetLabelingHSHadronsOnly = true;
+    /// Enable track-jet matching
+    bool doTrackJetMatching = true;
   };
 
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
@@ -59,12 +63,16 @@ class TruthJetAlgorithm final : public IAlgorithm {
   ProcessCode execute(const AlgorithmContext& ctx) const override;
   ProcessCode finalize() override;
 
+  TruthJetContainer trackJetMatching(const ConstTrackContainer& tracks,
+                                     TruthJetContainer& jets) const;
+
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
   ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
       this, "inputTruthParticles"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "inputTracks"};
   WriteDataHandle<TruthJetContainer> m_outputJets{this, "outputJets"};
 };
 
