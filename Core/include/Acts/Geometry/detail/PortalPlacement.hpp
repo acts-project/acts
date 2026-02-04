@@ -33,7 +33,7 @@ class PortalPlacement : public SurfacePlacementBase {
 
   /// @brief Returns the const reference to portal surface connected with
   ///        this placement instance
-  const Surface& surface() const final;
+  const RegularSurface& surface() const final;
 
   /// @brief Returns the mutable reference to portal surface connected with
   ///        this placement instance
