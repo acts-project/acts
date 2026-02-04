@@ -95,9 +95,9 @@ struct Neutral {
   }
 
   /// Compare for equality.
-  ///
   /// This is always `true` as `Neutral` has no internal state.
-  /// Must be available to provide a consistent interface.
+  /// @param rhs The Neutral to compare to
+  /// @return True if the two Neutral objects are equal, false otherwise
   constexpr bool operator==(const Neutral& rhs) const noexcept = default;
 };
 
@@ -147,9 +147,9 @@ struct SinglyCharged {
   }
 
   /// Compare for equality.
-  ///
   /// This is always `true` as `SinglyCharged` has no internal state.
-  /// Must be available to provide a consistent interface.
+  /// @param rhs The SinglyCharged to compare to
+  /// @return True if the two SinglyCharged objects are equal, false otherwise
   constexpr bool operator==(const SinglyCharged& rhs) const noexcept = default;
 };
 
@@ -196,6 +196,8 @@ class NonNeutralCharge {
   }
 
   /// Compare for equality.
+  /// @param rhs The NonNeutralCharge to compare to
+  /// @return True if the two NonNeutralCharge objects are equal, false otherwise
   constexpr bool operator==(const NonNeutralCharge& rhs) const noexcept =
       default;
 
@@ -251,6 +253,8 @@ class AnyCharge {
   }
 
   /// Compare for equality.
+  /// @param rhs The AnyCharge to compare to
+  /// @return True if the two AnyCharge objects are equal, false otherwise
   constexpr bool operator==(const AnyCharge& rhs) const noexcept = default;
 
  private:

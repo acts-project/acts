@@ -64,9 +64,22 @@ class Histogram {
         m_title(std::move(title)),
         m_hist(boost::histogram::make_histogram(axes.begin(), axes.end())) {}
 
+  /// Copy constructor
+  /// @param other The other histogram to copy from
   Histogram(const Histogram& other) = default;
+
+  /// Move constructor
+  /// @param other The other histogram to move from
   Histogram(Histogram&& other) noexcept = default;
+
+  /// Copy assignment operator
+  /// @param other The other histogram to copy from
+  /// @return The copied histogram
   Histogram& operator=(const Histogram& other) = default;
+
+  /// Move assignment operator
+  /// @param other The other histogram to move from
+  /// @return The moved histogram
   Histogram& operator=(Histogram&& other) noexcept = default;
 
   /// Fill histogram with values

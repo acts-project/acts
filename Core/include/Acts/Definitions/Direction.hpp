@@ -110,6 +110,8 @@ class Direction final {
   std::string toString() const;
 
   /// Check if two directions are equal
+  /// @param rhs The Direction to compare to
+  /// @return True if the two Directions are equal, false otherwise
   constexpr bool operator==(const Direction& rhs) const noexcept = default;
 
   /// Stream operator for Direction
