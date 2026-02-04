@@ -311,7 +311,7 @@ if __name__ == "__main__":
         default=20,
     )
     parser.add_argument("--maxSeedsPerSpM", type=int, default=1000)
-    parser.add_argument("--seedingAlgorithm", type=str, default="Hashing")
+    parser.add_argument("--seedingAlgorithm", type=str, default="HashingPrototype")
     parser.add_argument("--saveFiles", type=bool, default=True)
     parser.add_argument("--annoySeed", type=int, default=123456789)
     parser.add_argument("--zBins", type=int, default=100000)
@@ -408,9 +408,8 @@ if __name__ == "__main__":
             absEta=(None, eta),
             nMeasurementsMin=6,
         ),
-        outputDirRoot=outputDir,
-        writeTrajectories=False,
         twoWay=False,
+        outputDirRoot=outputDir,
     )
 
     s.run()

@@ -22,15 +22,15 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsHashing, hashing) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HashingPrototypeSeedingAlgorithm, hashing,
       "HashingPrototypeSeedingAlgorithm", inputSpacePoints, outputSeeds,
-      bFieldInZ, minPt, cotThetaMax, impactMax, deltaRMin, deltaRMax,
-      deltaRMinTop, deltaRMaxTop, deltaRMinBottom, deltaRMaxBottom, deltaZMin,
-      deltaZMax, interactionPointCut, collisionRegionMin, collisionRegionMax,
-      helixCutTolerance, sigmaScattering, radLengthPerSeed, toleranceParam,
-      deltaInvHelixDiameter, compatSeedWeight, impactWeightFactor,
-      zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit, seedWeightIncrement,
-      numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
-      forwardSeedConfirmationRange, maxSeedsPerSpMConf,
-      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts,
-      annoySeed, f, bucketSize, zBins, phiBins, layerRMin, layerRMax, layerZMin,
-      layerZMax);
+      outputBuckets, bFieldInZ, minPt, cotThetaMax, impactMax, deltaRMin,
+      deltaRMax, deltaRMinTop, deltaRMaxTop, deltaRMinBottom, deltaRMaxBottom,
+      deltaZMin, deltaZMax, interactionPointCut, collisionRegionMin,
+      collisionRegionMax, helixCutTolerance, sigmaScattering, radLengthPerSeed,
+      toleranceParam, deltaInvHelixDiameter, compatSeedWeight,
+      impactWeightFactor, zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit,
+      seedWeightIncrement, numSeedIncrement, seedConfirmation,
+      centralSeedConfirmationRange, forwardSeedConfirmationRange,
+      maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf,
+      useDeltaRinsteadOfTopRadius, useExtraCuts, annoySeed, f, bucketSize,
+      zBins, phiBins, layerRMin, layerRMax, layerZMin, layerZMax);
 }

@@ -30,6 +30,8 @@ class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
     std::string inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
+    /// Output buckets collection.
+    std::string outputBuckets;
 
     // General seeding parameters
 
@@ -219,6 +221,8 @@ class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
                                                             "InputSpacePoints"};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<std::vector<SimSpacePointContainer>> m_outputBuckets{
+      this, "OutputBuckets"};
 };
 
 }  // namespace ActsExamples

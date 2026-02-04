@@ -475,7 +475,6 @@ def addSeeding(
                 seedFinderConfigArg,
                 seedFinderOptionsArg,
                 seedFilterConfigArg,
-                spacePointGridConfigArg,
                 hashingTrainingConfigArg,
                 hashingAlgorithmConfigArg,
                 logLevel,
@@ -1195,6 +1194,7 @@ def addHashingSeeding(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
+        outputBuckets="spacepoint_buckets",
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
             minPt=seedFinderConfigArg.minPt,
@@ -1223,9 +1223,6 @@ def addHashingSeeding(
                 else seedFinderConfigArg.deltaRBottomSP[1]
             ),
             rMin=seedFinderConfigArg.r[0],
-            rMax=seedFinderConfigArg.r[1],
-            zMin=seedFinderConfigArg.z[0],
-            zMax=seedFinderConfigArg.z[1],
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],

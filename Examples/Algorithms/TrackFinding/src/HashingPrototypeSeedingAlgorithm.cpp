@@ -142,15 +142,14 @@ std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
   };
 
   for (const auto spacePoint : spacePoints) {
-    const float x = spacePoint.x();
-    const float y = spacePoint.y();
-    const float z = spacePoint.z();
+    const float z = spacePoint.zr()[0];
+    const float r = spacePoint.zr()[1];
+    const float r2 = r * r;
+    const float phi = spacePoint.phi();
 
-    if (const float r2 = Acts::hypotSquare(x, y); !layerSelection(r2, z)) {
+    if (!layerSelection(r2, z)) {
       continue;
     }
-
-    const float phi = std::atan2(y, x);
 
     const int binIndex = getBinIndex(z, phi);
     if (binIndex < 0 || static_cast<std::uint32_t>(binIndex) >= nBins) {
@@ -222,6 +221,7 @@ HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
       m_cfg(std::move(cfg)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
+  m_outputBuckets.initialize(m_cfg.outputBuckets);
 
   if (m_cfg.useExtraCuts) {
     // This function will be applied to select space points during grid filling
@@ -315,7 +315,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
   Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::XY |
       Acts::SpacePointColumns::ZR | Acts::SpacePointColumns::VarianceZ |
-      Acts::SpacePointColumns::VarianceR);
+      Acts::SpacePointColumns::VarianceR | Acts::SpacePointColumns::Phi);
 
   AnnoyModel hashingModel = createModel(m_cfg.f, m_cfg.annoySeed);
 
@@ -339,6 +339,8 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
     const float eta = Acts::AngleHelpers::etaFromTheta(
         std::atan2(newSp.zr()[1], newSp.zr()[0]));
     trainModel(hashingModel, newSp.index(), phi, eta);
+
+    newSp.phi() = phi;
   }
 
   buildModel(hashingModel);
@@ -389,7 +391,21 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
 
   ACTS_DEBUG("Total unique seeds created: " << uniqueSeeds.size());
 
+  std::vector<SimSpacePointContainer> outputBuckets;
+  for (const auto& bucket : buckets) {
+    SimSpacePointContainer spContainer;
+    for (const auto& spIndex : bucket) {
+      const auto& sp = *coreSpacePoints.at(spIndex)
+                            .sourceLinks()[0]
+                            .get<const SimSpacePoint*>();
+      spContainer.push_back(sp);
+    }
+    outputBuckets.push_back(std::move(spContainer));
+  }
+
   m_outputSeeds(ctx, SimSeedContainer(uniqueSeeds.begin(), uniqueSeeds.end()));
+  m_outputBuckets(ctx, std::move(outputBuckets));
+
   return ProcessCode::SUCCESS;
 }
 
