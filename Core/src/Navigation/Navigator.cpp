@@ -538,9 +538,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
   const INavigationPolicy* policy = state.currentVolume->navigationPolicy();
   if (policy == nullptr) {
-    ACTS_ERROR(volInfo(state) << "No navigation policy found for volume "
-                              << state.currentVolume->geometryId()
-                              << ". Cannot resolve navigation candidates.");
+    ACTS_ERROR(volInfo(state) << "No navigation policy found for volume. "
+                                 "Cannot resolve navigation candidates.");
     throw std::runtime_error(
         "Navigator: No navigation policy found for current volume.");
   }
