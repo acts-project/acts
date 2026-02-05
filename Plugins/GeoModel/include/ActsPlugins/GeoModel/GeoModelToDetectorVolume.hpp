@@ -5,12 +5,13 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Utilities/BoundFactory.hpp"
-#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
-#include "GeoModelKernel/GeoDefinitions.h"
+#include <GeoModelKernel/GeoFullPhysVol.h>
+
 class GeoShape;
 
 namespace ActsPlugins::GeoModel {
@@ -21,8 +22,9 @@ namespace ActsPlugins::GeoModel {
 /// @brief Calculates the absolute volume position w.r.t. the world node
 ///        This is only possible, if the volume is not shared in multiple
 ///        branches of the GeoModelTree.
-/// @param physVol: Reference to the physical volume from which the position
-///                 shall be calculated
+/// @param physVol Reference to the physical volume from which the position
+///                shall be calculated
+/// @return The transform representing the volume position in space
 Acts::Transform3 volumePosInSpace(const PVConstLink& physVol);
 /// @brief Converts a GeoShape into a bounded volume. For the supported shape types and the
 ///        chosen strategie please consult the cpp file. May throw an exception

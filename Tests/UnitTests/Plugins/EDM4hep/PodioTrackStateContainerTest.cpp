@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   BOOST_CHECK(!t2.hasReferenceSurface());
   BOOST_CHECK(t3.hasReferenceSurface());
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   const auto& ext = t1.referenceSurface();
   BOOST_CHECK_NE(&ext, free.get());

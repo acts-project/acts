@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   // construct with thickness:
   auto pConeLayerWithThickness =
       ConeLayer::create(pTransform, pCone, nullptr, thickness);
-  BOOST_CHECK_EQUAL(pConeLayerWithThickness->thickness(), thickness);
+  BOOST_CHECK_EQUAL(pConeLayerWithThickness->layerThickness(), thickness);
   // with an approach descriptor...
   std::unique_ptr<ApproachDescriptor> ad(
       new GenericApproachDescriptor(aSurfaces));

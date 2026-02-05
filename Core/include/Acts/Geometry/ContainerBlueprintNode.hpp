@@ -142,10 +142,12 @@ class ContainerBlueprintNode : public BlueprintNode {
  protected:
   /// Make the volume stack for the container. This is called by the build
   /// method and is implemented by the derived classes.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volumes The volumes to stack
   /// @param logger The logger to use
   /// @return The volume stack
-  virtual std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
+  virtual std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
+                                                 std::vector<Volume*>& volumes,
                                                  const Logger& logger) = 0;
 
   /// Get the type name of the container. This is used for the debug output
@@ -241,6 +243,7 @@ class ContainerBlueprintNode : public BlueprintNode {
       m_gaps;
 };
 
+/// Container blueprint node stacking cylindrical volumes.
 class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
  public:
   using ContainerBlueprintNode::ContainerBlueprintNode;
@@ -265,14 +268,17 @@ class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
       const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
+  std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
+                                         std::vector<Volume*>& volumes,
                                          const Logger& logger) override;
 
  protected:
+  /// @brief Type name for cylinder container
   inline static const std::string s_typeName = "Cylinder";
   const std::string& typeName() const override;
 };
 
+/// Container blueprint node stacking cuboid volumes.
 class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
  public:
   using ContainerBlueprintNode::ContainerBlueprintNode;
@@ -297,10 +303,12 @@ class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
       const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
+  std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
+                                         std::vector<Volume*>& volumes,
                                          const Logger& logger) override;
 
  protected:
+  /// @brief Type name for cuboid container
   inline static const std::string s_typeName = "Cuboid";
   const std::string& typeName() const override;
 };

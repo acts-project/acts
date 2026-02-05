@@ -10,15 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -27,22 +22,28 @@
 #include <cmath>
 #include <cstddef>
 #include <numbers>
-#include <optional>
 #include <vector>
 
 namespace Acts {
 class IVisualization3D;
 
+/// View configuration for track parameters
 static ViewConfig s_viewParameter = {.color = {0, 0, 255}};
+/// View configuration for measurements
 static ViewConfig s_viewMeasurement = {.color = {255, 102, 0}};
+/// View configuration for predicted states
 static ViewConfig s_viewPredicted = {.color = {51, 204, 51}};
+/// View configuration for filtered states
 static ViewConfig s_viewFiltered = {.color = {255, 255, 0}};
+/// View configuration for smoothed states
 static ViewConfig s_viewSmoothed = {.color = {0, 102, 25}};
 
+/// Utilities to visualize event data in 3D.
 struct EventDataView3D {
   /// Helper to find the eigen values and corr angle
   ///
   /// @param covariance The covariance matrix
+  /// @return Array containing [eigenvalue0, eigenvalue1, theta]
   static inline std::array<double, 3> decomposeCovariance(
       const ActsSquareMatrix<2>& covariance) {
     double c00 = covariance(eBoundLoc0, eBoundLoc0);
@@ -69,6 +70,7 @@ struct EventDataView3D {
   /// @param offset The out of plane offset for visibility
   /// @param lposition The local anker point of the ellipse
   /// @param transform The transform to global
+  /// @return Vector of 3D points representing the ellipse
   static inline std::vector<Vector3> createEllipse(
       double lambda0, double lambda1, double theta, std::size_t lseg,
       double offset, const Vector2& lposition = Vector2(0., 0.),
@@ -136,7 +138,8 @@ struct EventDataView3D {
   template <typename parameters_t>
   static inline void drawBoundTrackParameters(
       IVisualization3D& helper, const parameters_t& parameters,
-      const GeometryContext& gctx = GeometryContext(),
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& parConfig = s_viewParameter,
@@ -224,7 +227,8 @@ struct EventDataView3D {
   static void drawMultiTrajectory(
       IVisualization3D& helper, const traj_t& multiTraj,
       const std::size_t& entryIndex,
-      const GeometryContext& gctx = GeometryContext(),
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& surfaceConfig = s_viewSensitive,
@@ -240,7 +244,7 @@ struct EventDataView3D {
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states
-      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!state.typeFlags().hasMeasurement()) {
         return true;
       }
 

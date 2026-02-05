@@ -5,9 +5,10 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
-#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -21,7 +22,7 @@ namespace Acts {
 /// importing whole tracking geometries from JSON files. In some parts of
 /// the codebase, the existence of a detector element associated to a surface
 /// has a specific meaning (e.g., flags surfaces as sensitive).
-class JsonDetectorElement : public DetectorElementBase {
+class JsonDetectorElement : public SurfacePlacementBase {
  public:
   /// Constructor from JSON surface description
   /// @param jSurface JSON object describing the surface
@@ -37,12 +38,15 @@ class JsonDetectorElement : public DetectorElementBase {
 
   /// Return the thickness of the detector element
   /// @return Thickness value
-  double thickness() const override;
+  double thickness() const;
 
   /// Return the transform for this detector element
   /// @param gctx Geometry context (unused for this implementation)
   /// @return Transform matrix for this detector element
-  const Transform3 &transform(const GeometryContext &gctx) const override;
+  const Transform3 &localToGlobalTransform(
+      const GeometryContext &gctx) const override;
+
+  bool isSensitive() const override { return true; }
 
  private:
   std::shared_ptr<Surface> m_surface;
@@ -51,4 +55,5 @@ class JsonDetectorElement : public DetectorElementBase {
 };
 
 /// @}
+
 }  // namespace Acts

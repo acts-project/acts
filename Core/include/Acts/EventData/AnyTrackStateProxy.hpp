@@ -25,10 +25,13 @@
 #include <memory>
 #include <ranges>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 namespace Acts {
 
+/// Type-erased track state proxy for any trajectory backend.
+/// @tparam read_only True for const access, false for mutable access.
 template <bool read_only>
 class AnyTrackStateProxy;
 
@@ -136,8 +139,119 @@ class TrackStateHandlerMutableBase : public TrackStateHandlerConstBase {
 };
 
 template <typename trajectory_t>
-class TrackStateHandler final : public TrackStateHandlerMutableBase {
-  using MultiTrajectoryType = MultiTrajectory<trajectory_t>;
+struct TrackStateHandlerTraits {
+  using Trajectory = std::remove_const_t<trajectory_t>;
+  using MultiTrajectoryType = MultiTrajectory<Trajectory>;
+  static constexpr bool ReadOnly =
+      std::is_const_v<trajectory_t> || MultiTrajectoryType::ReadOnly;
+};
+
+template <typename trajectory_t,
+          bool read_only = TrackStateHandlerTraits<trajectory_t>::ReadOnly>
+class TrackStateHandler;
+
+template <typename trajectory_t>
+class TrackStateHandler<trajectory_t, true> final
+    : public TrackStateHandlerConstBase {
+  using MultiTrajectoryType =
+      typename TrackStateHandlerTraits<trajectory_t>::MultiTrajectoryType;
+
+ public:
+  static const TrackStateHandler& instance() {
+    static const TrackStateHandler s_instance;
+    return s_instance;
+  }
+
+  TrackIndexType calibratedSize(const void* container,
+                                TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->calibratedSize(index);
+  }
+
+  ConstParametersMap parameters(const void* container,
+                                TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->parameters(index);
+  }
+
+  ConstCovarianceMap covariance(const void* container,
+                                TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->covariance(index);
+  }
+
+  const double* calibratedData(const void* container,
+                               TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->template calibrated<eBoundSize>(index).data();
+  }
+
+  const double* calibratedCovarianceData(const void* container,
+                                         TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->template calibratedCovariance<eBoundSize>(index).data();
+  }
+
+  const Surface* referenceSurface(const void* container,
+                                  TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->referenceSurface(index);
+  }
+
+  bool hasReferenceSurface(const void* container,
+                           TrackIndexType index) const override {
+    return referenceSurface(container, index) != nullptr;
+  }
+
+  SourceLink getUncalibratedSourceLink(const void* container,
+                                       TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->getUncalibratedSourceLink(index);
+  }
+
+  ConstCovarianceMap jacobian(const void* container,
+                              TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->jacobian(index);
+  }
+
+  bool has(const void* container, TrackIndexType index,
+           HashedString key) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->has(key, index);
+  }
+
+  std::any component(const void* container, TrackIndexType index,
+                     HashedString key) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->self().component_impl(key, index);
+  }
+
+  bool hasColumn(const void* container, HashedString key) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->hasColumn(key);
+  }
+
+ private:
+  TrackStateHandler() = default;
+};
+
+template <typename trajectory_t>
+class TrackStateHandler<trajectory_t, false> final
+    : public TrackStateHandlerMutableBase {
+  using MultiTrajectoryType =
+      typename TrackStateHandlerTraits<trajectory_t>::MultiTrajectoryType;
 
  public:
   static const TrackStateHandler& instance() {
@@ -309,6 +423,10 @@ class TrackStateHandler final : public TrackStateHandlerMutableBase {
 
 }  // namespace detail_anytstate
 
+/// Type-erased track state proxy for any trajectory backend.
+///
+/// Provides the TrackStateProxy interface by delegating to a runtime handler.
+/// @tparam read_only True for const access, false for mutable access.
 template <bool read_only>
 class AnyTrackStateProxy
     : public TrackStateProxyCommon<AnyTrackStateProxy<read_only>, read_only> {
@@ -319,29 +437,42 @@ class AnyTrackStateProxy
   using IndexType = Acts::TrackIndexType;
 
  public:
+  /// Whether this proxy provides read-only or mutable access
   static constexpr bool ReadOnly = read_only;
 
+  /// Mutable track state proxy type
   using MutableTrackState = AnyTrackStateProxy<false>;
+  /// Const track state proxy type
   using ConstTrackState = AnyTrackStateProxy<true>;
+  /// Const proxy type alias
   using ConstProxyType = AnyTrackStateProxy<true>;
 
+  /// Mutable parameters map type
   using ParametersMap =
       detail_anytstate::TrackStateHandlerConstBase::ParametersMap;
+  /// Const parameters map type
   using ConstParametersMap =
       detail_anytstate::TrackStateHandlerConstBase::ConstParametersMap;
+  /// Mutable covariance map type
   using CovarianceMap =
       detail_anytstate::TrackStateHandlerConstBase::CovarianceMap;
+  /// Const covariance map type
   using ConstCovarianceMap =
       detail_anytstate::TrackStateHandlerConstBase::ConstCovarianceMap;
+  /// Mutable effective calibrated map type
   using MutableEffectiveCalibratedMap =
       detail_anytstate::TrackStateHandlerConstBase::EffectiveCalibratedMap;
+  /// Const effective calibrated map type
   using ConstEffectiveCalibratedMap =
       detail_anytstate::TrackStateHandlerConstBase::ConstEffectiveCalibratedMap;
+  /// Mutable effective calibrated covariance map type
   using MutableEffectiveCalibratedCovarianceMap = detail_anytstate::
       TrackStateHandlerConstBase::EffectiveCalibratedCovarianceMap;
+  /// Const effective calibrated covariance map type
   using ConstEffectiveCalibratedCovarianceMap = detail_anytstate::
       TrackStateHandlerConstBase::ConstEffectiveCalibratedCovarianceMap;
 
+  /// Container pointer type
   using ContainerPointer = std::conditional_t<ReadOnly, const void*, void*>;
 
   using Base::allocateCalibrated;
@@ -577,26 +708,40 @@ class AnyTrackStateProxy
   }
 
  protected:
+  /// Access const parameters at specific index
+  /// @param parIndex Parameter index
+  /// @return Const parameters map
   ConstParametersMap parametersAtIndex(IndexType parIndex) const {
     return constHandler()->parameters(containerPtr(), parIndex);
   }
 
+  /// Access mutable parameters at specific index
+  /// @param parIndex Parameter index
+  /// @return Mutable parameters map
   ParametersMap parametersAtIndexMutable(IndexType parIndex) const
     requires(!ReadOnly)
   {
     return mutableHandler()->parameters(mutableContainerPtr(), parIndex);
   }
 
+  /// Access const covariance at specific index
+  /// @param covIndex Covariance index
+  /// @return Const covariance map
   ConstCovarianceMap covarianceAtIndex(IndexType covIndex) const {
     return constHandler()->covariance(containerPtr(), covIndex);
   }
 
+  /// Access mutable covariance at specific index
+  /// @param covIndex Covariance index
+  /// @return Mutable covariance map
   CovarianceMap covarianceAtIndexMutable(IndexType covIndex) const
     requires(!ReadOnly)
   {
     return mutableHandler()->covariance(mutableContainerPtr(), covIndex);
   }
 
+  /// Access mutable calibrated measurement data
+  /// @return Pointer to mutable calibrated data
   double* calibratedDataMutable()
     requires(!ReadOnly)
   {
@@ -604,10 +749,14 @@ class AnyTrackStateProxy
                                                    m_index);
   }
 
+  /// Access const calibrated measurement data
+  /// @return Pointer to const calibrated data
   const double* calibratedData() const {
     return constHandler()->calibratedData(containerPtr(), m_index);
   }
 
+  /// Access mutable calibrated measurement covariance data
+  /// @return Pointer to mutable calibrated covariance data
   double* calibratedCovarianceDataMutable()
     requires(!ReadOnly)
   {
@@ -615,6 +764,8 @@ class AnyTrackStateProxy
         mutableContainerPtr(), m_index);
   }
 
+  /// Access const calibrated measurement covariance data
+  /// @return Pointer to const calibrated covariance data
   const double* calibratedCovarianceData() const {
     return constHandler()->calibratedCovarianceData(containerPtr(), m_index);
   }
@@ -647,7 +798,9 @@ class AnyTrackStateProxy
   const detail_anytstate::TrackStateHandlerConstBase* m_handler{};
 };
 
+/// Type alias for a const track state proxy
 using AnyConstTrackStateProxy = AnyTrackStateProxy<true>;
+/// Type alias for a mutable track state proxy
 using AnyMutableTrackStateProxy = AnyTrackStateProxy<false>;
 
 static_assert(ConstTrackStateProxyConcept<AnyConstTrackStateProxy>);

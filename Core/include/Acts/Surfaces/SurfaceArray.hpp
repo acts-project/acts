@@ -116,6 +116,7 @@ class SurfaceArray {
   /// @tparam Axes The axes used for the grid
   template <class Axis1, class Axis2>
   struct SurfaceGridLookup : ISurfaceGridLookup {
+    /// Grid type storing surface vectors with two axes
     using Grid_t = Grid<SurfaceVector, Axis1, Axis2>;
 
     /// Construct a surface grid lookup
@@ -203,7 +204,7 @@ class SurfaceArray {
     /// @param bin the global bin index
     /// @return The bin center
     Vector3 getBinCenter(std::size_t bin) const override {
-      GeometryContext gctx;
+      auto gctx = GeometryContext::dangerouslyDefaultConstruct();
       return getBinCenterImpl(gctx, bin);
     }
 
@@ -355,7 +356,7 @@ class SurfaceArray {
 
     std::size_t findGlobalBin(const Vector3& position, const Vector3& direction,
                               double tolerance) const {
-      GeometryContext gctx;
+      auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
       const Intersection3D intersection =
           m_representative

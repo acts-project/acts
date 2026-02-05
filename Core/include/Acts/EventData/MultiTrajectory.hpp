@@ -35,7 +35,7 @@ class MultiTrajectory;
 class Surface;
 
 namespace detail_anytstate {
-template <typename trajectory_t>
+template <typename trajectory_t, bool read_only>
 class TrackStateHandler;
 }  // namespace detail_anytstate
 
@@ -177,7 +177,7 @@ class MultiTrajectory {
   friend class TrackStateProxy<Derived, MeasurementSizeMax, false>;
   template <bool R>
   friend class AnyTrackStateProxy;
-  template <typename T>
+  template <typename T, bool R>
   friend class detail_anytstate::TrackStateHandler;
   template <typename T>
   friend class MultiTrajectory;
@@ -460,23 +460,35 @@ class MultiTrajectory {
     return self().has_impl(key, istate);
   }
 
+  /// Get parameters for a track state
+  /// @param parIdx The parameter index
+  /// @return Parameters vector
   typename TrackStateProxy::Parameters parameters(IndexType parIdx)
     requires(!ReadOnly)
   {
     return self().parameters_impl(parIdx);
   }
 
+  /// Get parameters for a track state (const)
+  /// @param parIdx The parameter index
+  /// @return Const parameters vector
   typename ConstTrackStateProxy::ConstParameters parameters(
       IndexType parIdx) const {
     return self().parameters_impl(parIdx);
   }
 
+  /// Get covariance for a track state
+  /// @param covIdx The covariance index
+  /// @return Covariance matrix
   typename TrackStateProxy::Covariance covariance(IndexType covIdx)
     requires(!ReadOnly)
   {
     return self().covariance_impl(covIdx);
   }
 
+  /// Get covariance for a track state (const)
+  /// @param covIdx The covariance index
+  /// @return Const covariance matrix
   typename ConstTrackStateProxy::ConstCovariance covariance(
       IndexType covIdx) const {
     return self().covariance_impl(covIdx);

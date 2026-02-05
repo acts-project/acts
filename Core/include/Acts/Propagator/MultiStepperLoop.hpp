@@ -43,20 +43,19 @@ namespace detail {
 struct MaxMomentumComponent {
   template <typename component_range_t>
   auto operator()(const component_range_t& cmps) const {
-    return std::max_element(cmps.begin(), cmps.end(),
-                            [&](const auto& a, const auto& b) {
-                              return std::abs(a.state.pars[eFreeQOverP]) >
-                                     std::abs(b.state.pars[eFreeQOverP]);
-                            });
+    return std::ranges::max_element(cmps, [&](const auto& a, const auto& b) {
+      return std::abs(a.state.pars[eFreeQOverP]) >
+             std::abs(b.state.pars[eFreeQOverP]);
+    });
   }
 };
 
 struct MaxWeightComponent {
   template <typename component_range_t>
   auto operator()(const component_range_t& cmps) {
-    return std::max_element(
-        cmps.begin(), cmps.end(),
-        [&](const auto& a, const auto& b) { return a.weight < b.weight; });
+    return std::ranges::max_element(cmps, [&](const auto& a, const auto& b) {
+      return a.weight < b.weight;
+    });
   }
 };
 
@@ -174,6 +173,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @brief How many components can this stepper manage?
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
+  /// Configuration for the multi-stepper loop.
   struct Config : public SingleStepper::Config {
     /// Limits the number of steps after at least one component reached the
     /// surface
@@ -181,14 +181,10 @@ class MultiStepperLoop : public single_stepper_t {
   };
 
   struct Options : public SingleOptions {
-    Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
-        : SingleOptions(gctx, mctx) {}
-
-    void setPlainOptions(const StepperPlainOptions& options) {
-      static_cast<StepperPlainOptions&>(*this) = options;
-    }
+    using SingleOptions::SingleOptions;
   };
 
+  /// State container for multi-component stepping.
   struct State {
     /// The struct that stores the individual components
     struct Component {
@@ -207,6 +203,7 @@ class MultiStepperLoop : public single_stepper_t {
           : state(std::move(state_)), weight(weight_), status(status_) {}
     };
 
+    /// Options for the propagation
     Options options;
 
     /// Particle hypothesis
@@ -215,8 +212,11 @@ class MultiStepperLoop : public single_stepper_t {
     /// The components of which the state consists
     SmallVector<Component> components;
 
+    /// Whether to transport covariance
     bool covTransport = false;
+    /// Accumulated path length
     double pathAccumulated = 0.;
+    /// Number of steps taken
     std::size_t steps = 0;
 
     /// Step-limit counter which limits the number of steps when one component
@@ -390,12 +390,12 @@ class MultiStepperLoop : public single_stepper_t {
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   void removeMissedComponents(State& state) const {
-    auto new_end = std::remove_if(
-        state.components.begin(), state.components.end(), [](const auto& cmp) {
+    auto [beg, end] =
+        std::ranges::remove_if(state.components, [](const auto& cmp) {
           return cmp.status == IntersectionStatus::unreachable;
         });
 
-    state.components.erase(new_end, state.components.end());
+    state.components.erase(beg, end);
   }
 
   /// Reweight the components
@@ -640,11 +640,12 @@ class MultiStepperLoop : public single_stepper_t {
   /// step sizes correctly.
   /// @return Smallest step size among all components for the requested type
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
-    return std::min_element(state.components.begin(), state.components.end(),
-                            [=](const auto& a, const auto& b) {
-                              return std::abs(a.state.stepSize.value(stype)) <
-                                     std::abs(b.state.stepSize.value(stype));
-                            })
+    return std::ranges::min_element(
+               state.components,
+               [=](const auto& a, const auto& b) {
+                 return std::abs(a.state.stepSize.value(stype)) <
+                        std::abs(b.state.stepSize.value(stype));
+               })
         ->state.stepSize.value(stype);
   }
 
@@ -704,7 +705,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @param [in, out] state The stepping state (thread-local cache)
   /// @return true if nothing is missing after this call, false otherwise.
   bool prepareCurvilinearState(State& state) const {
-    (void)state;
+    static_cast<void>(state);
     return true;
   }
 

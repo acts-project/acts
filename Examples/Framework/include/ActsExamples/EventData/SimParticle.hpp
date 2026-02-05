@@ -49,8 +49,9 @@ class SimParticle final {
   SimParticle(SimBarcode particleId, Acts::PdgParticle pdg)
       : m_initial(particleId, pdg), m_final(particleId, pdg) {}
 
-  SimParticle(const SimParticleState& initial, const SimParticleState& final)
-      : m_initial(initial), m_final(final) {
+  SimParticle(const SimParticleState& initial,
+              const SimParticleState& finalState)
+      : m_initial(initial), m_final(finalState) {
     if (m_initial.particleId() != m_final.particleId()) {
       throw std::invalid_argument("Particle id mismatch");
     }

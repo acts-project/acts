@@ -19,13 +19,14 @@
 
 namespace Acts {
 
+/// Mutable state shared across seed filter steps.
 struct SeedFilterState {
-  // longitudinal impact parameter as defined by bottom and middle space point
+  /// Longitudinal impact parameter as defined by bottom and middle space point
   float zOrigin = 0;
-  // number of minimum top SPs in seed confirmation
+  /// Number of minimum top SPs in seed confirmation
   std::size_t nTopSeedConf = 0;
-  // radius of bottom component of seed that is used to define the number of
-  // compatible top required
+  /// Radius of bottom component of seed that is used to define the number of
+  /// compatible top required
   float rMaxSeedConf = std::numeric_limits<float>::max();  // UnitConstants::mm
 };
 

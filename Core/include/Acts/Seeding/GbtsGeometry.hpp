@@ -12,18 +12,32 @@
 #include "Acts/TrackFinding/GbtsConnector.hpp"
 
 #include <cmath>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
+/// Lightweight silicon layer description for GBTs geometry.
 class TrigInDetSiLayer {
  public:
+  /// Combined subdetector ID.
   int m_subdet;  // combined ID
-  int m_type;    // 0: barrel, +/-n : endcap
+  /// Layer type (0: barrel, +/-n: endcap).
+  int m_type;  // 0: barrel, +/-n : endcap
+  /// Reference coordinate (z for barrel, r for endcap).
   float m_refCoord;
-  float m_minBound, m_maxBound;
+  /// Minimum boundary coordinate.
+  float m_minBound;
+  /// Maximum boundary coordinate.
+  float m_maxBound;
 
+  /// Constructor.
+  /// @param subdet Subdetector identifier
+  /// @param type Layer type (0: barrel, +/-n: endcap)
+  /// @param center Reference coordinate
+  /// @param min Minimum boundary
+  /// @param max Maximum boundary
   TrigInDetSiLayer(int subdet, short int type, float center, float min,
                    float max)
       : m_subdet(subdet),
@@ -33,67 +47,146 @@ class TrigInDetSiLayer {
         m_maxBound(max) {}
 };
 
+/// Layer helper with eta-bin access for GBTs seeding.
 class GbtsLayer {
  public:
-  GbtsLayer(const TrigInDetSiLayer& ls, float ew, int bin0);
-  ~GbtsLayer();
+  /// Constructor
+  /// @param ls Silicon layer descriptor
+  /// @param ew Eta bin width
+  /// @param bin0 Starting bin index
+  GbtsLayer(const TrigInDetSiLayer& ls, float ew, std::int32_t bin0);
 
+  // accessors
+  /// Get eta bin for given z and r coordinates
+  /// @param zh Z coordinate
+  /// @param rh Radius coordinate
+  /// @return Eta bin index
   int getEtaBin(float zh, float rh) const;
 
+  /// Get minimum radius for bin index
+  /// @param idx Bin index
+  /// @return Minimum radius for the bin
   float getMinBinRadius(int idx) const;
+
+  /// Get maximum radius for bin index
+  /// @param idx Bin index
+  /// @return Maximum radius for the bin
   float getMaxBinRadius(int idx) const;
 
-  int num_bins() const { return m_bins.size(); }
+  /// Get number of bins
+  /// @return Number of bins
+  std::int32_t numOfBins() const { return m_bins.size(); }
 
+  /// Get bins
+  /// @return Vector of bin indices
+  const std::vector<std::int32_t>& getBins() const { return m_bins; }
+
+  /// Get layer
+  /// @return Pointer to the silicon layer
+  const TrigInDetSiLayer* getLayer() const { return m_layer; }
+
+  /// Verify bin compatibility
+  /// @param pL Other layer to compare with
+  /// @param b1 First bin index
+  /// @param b2 Second bin index
+  /// @param min_z0 Minimum z0 coordinate
+  /// @param max_z0 Maximum z0 coordinate
+  /// @return True if bins are compatible
   bool verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
                  float max_z0) const;
 
-  const TrigInDetSiLayer& m_layer;
-  std::vector<int> m_bins;  // eta-bin indices
+ protected:
+  /// Layer
+  const TrigInDetSiLayer* m_layer{};
+  /// Eta-bin indices
+  std::vector<std::int32_t> m_bins;
+  /// Minimum radius per bin
   std::vector<float> m_minRadius;
+  /// Maximum radius per bin
   std::vector<float> m_maxRadius;
+  /// Minimum bin coordinate
   std::vector<float> m_minBinCoord;
+  /// Maximum bin coordinate
   std::vector<float> m_maxBinCoord;
 
-  float m_minEta, m_maxEta, m_etaBin;
-
- protected:
-  float m_etaBinWidth;
-
-  float m_r1, m_z1, m_r2, m_z2;
-  int m_nBins;
+  /// Minimum eta
+  float m_minEta{};
+  /// Maximum eta
+  float m_maxEta{};
+  /// Eta bin
+  float m_etaBin{};
+  /// Eta bin width
+  float m_etaBinWidth{};
+  /// First radius coordinate
+  float m_r1{};
+  /// First z coordinate
+  float m_z1{};
+  /// Second radius coordinate
+  float m_r2{};
+  /// Second z coordinate
+  float m_z2{};
+  /// Number of bins
+  std::int32_t m_nBins{};
 };
 
+/// Geometry helper built from silicon layers and connectors.
 class GbtsGeometry {
  public:
+  /// Constructor
+  /// @param layers Silicon layers for geometry
+  /// @param conn Connector for layer connections
   GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
                const std::unique_ptr<GbtsConnector>& conn);
-  ~GbtsGeometry();
 
-  const GbtsLayer* getGbtsLayerByKey(unsigned int key) const;
-  const GbtsLayer* getGbtsLayerByIndex(int idx) const;
+  /// Get layer by key
+  /// @param key Layer key
+  /// @return Pointer to layer or nullptr
+  const GbtsLayer* getGbtsLayerByKey(std::uint32_t key) const;
+  /// Get layer by index
+  /// @param idx Layer index
+  /// @return Pointer to layer or nullptr
+  const GbtsLayer* getGbtsLayerByIndex(std::int32_t idx) const;
 
+  /// Get layer key by index
+  /// @param idx Layer index
+  /// @return Layer key
   inline unsigned int getGbtsLayerKeyByIndex(int idx) const {
     return m_layerKeys[idx];
   }
 
+  /// Get number of eta bins
+  /// @return Number of eta bins
   int num_bins() const { return m_nEtaBins; }
+  /// Get number of layers
+  /// @return Number of layers
   unsigned int num_layers() const { return m_layArray.size(); }
-  const std::vector<std::pair<int, std::vector<int> > >& bin_groups() const {
+  /// Get bin groups
+  /// @return Bin groups vector
+  const std::vector<std::pair<int, std::vector<int>>>& bin_groups() const {
     return m_binGroups;
   }
 
  protected:
+  /// Add new layer
+  /// @param l Silicon layer to add
+  /// @param bin0 Starting bin index
+  /// @return Pointer to the newly added layer
   const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, int bin0);
 
-  float m_etaBinWidth;
+  /// Eta bin width
+  float m_etaBinWidth{};
 
+  /// Layer map
   std::map<unsigned int, GbtsLayer*> m_layMap;
-  std::vector<GbtsLayer*> m_layArray;
+  /// Layer array
+  std::vector<std::unique_ptr<GbtsLayer>> m_layArray;
+  /// Layer keys
   std::vector<unsigned int> m_layerKeys;
+  /// Number of eta bins
   int m_nEtaBins{};
 
-  std::vector<std::pair<int, std::vector<int> > > m_binGroups;
+  /// Bin groups
+  std::vector<std::pair<int, std::vector<int>>> m_binGroups;
 };
 
 }  // namespace Acts::Experimental

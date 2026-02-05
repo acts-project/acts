@@ -24,6 +24,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <format>
 #include <typeinfo>
@@ -79,7 +80,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   // while the NSWs container will stack them in Z.
   std::array<CylinderContainerBlueprintNode*,
              Acts::toUnderlying(SecondContainerIdx::nSecondContainers)>
-      SecondContainers{};
+      secondContainers{};
 
   // Helper lambda to retrieve the first-level container
   auto retrieveFirstContainer = [&cyl, &FirstContainers, &configureContainer](
@@ -97,9 +98,9 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   };
 
   // Helper lambda to retrieve the second-level container
-  auto retrieveSecondContainer = [&retrieveFirstContainer, &SecondContainers,
+  auto retrieveSecondContainer = [&retrieveFirstContainer, &secondContainers,
                                   &configureContainer](bool isBarrel) {
-    auto& container = SecondContainers[Acts::toUnderlying(
+    auto& container = secondContainers[Acts::toUnderlying(
         isBarrel ? SecondContainerIdx::Barrel : SecondContainerIdx::NSWs)];
     if (container == nullptr) {
       auto& centralContainer =
@@ -145,9 +146,9 @@ GeoModelMuonMockupBuilder::trackingGeometry(
 
     ACTS_DEBUG("Building nodes for station " << station << " with geoId "
                                              << geoIdNode);
-    auto stationNode =
-        processStation(std::span(&*it, std::distance(it, rangeEnd)), station,
-                       isBarrel, *m_cfg.volumeBoundFactory, geoIdNode);
+    auto stationNode = processStation(
+        gctx, std::span(std::to_address(it), std::distance(it, rangeEnd)),
+        station, isBarrel, *m_cfg.volumeBoundFactory, geoIdNode);
 
     // Attach station node to the proper container
     const FirstContainerIdx firstContIdx = getFirstContainerIdx(currentIdx);
@@ -167,10 +168,10 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   }
   return trackingGeometry;
 }
-
 GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
-    const std::span<Box_t> boundingBoxes, const std::string& station,
-    const bool isBarrel, Acts::VolumeBoundFactory& boundFactory,
+    const Acts::GeometryContext& gctx, const std::span<Box_t> boundingBoxes,
+    const std::string& station, const bool isBarrel,
+    Acts::VolumeBoundFactory& boundFactory,
     const Acts::GeometryIdentifier& geoId) const {
   if (boundingBoxes.empty()) {
     ACTS_DEBUG("No chambers could be found for station" << station);
@@ -186,7 +187,7 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
   cylBounds bounds{};
   std::size_t volNum{1};
   for (const auto& box : boundingBoxes) {
-    auto parent = box.fullPhysVol->getParent().get();
+    const GeoVPhysVol* parent = box.fullPhysVol->getParent();
     if (parent == nullptr) {
       throw std::domain_error(std::format(
           "processStation() No parent found for chamber {} in station {}",
@@ -205,13 +206,11 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
           *parentVolume, std::format("{:}_Chamber_{:d}", station, volNum));
       chamberVolume->assignGeometryId(geoId.withVolume(volNum));
 
-      ACTS_VERBOSE("New parent: " << chamberVolume->volumeName()
-                                  << " from box: " << box.name
-                                  << ", Id: " << chamberVolume->geometryId()
-                                  << ", center: " << chamberVolume->center().x()
-                                  << ", " << chamberVolume->center().y() << ", "
-                                  << chamberVolume->center().z() << ", bounds: "
-                                  << chamberVolume->volumeBounds());
+      ACTS_VERBOSE("New parent: "
+                   << chamberVolume->volumeName() << " from box: " << box.name
+                   << ", Id: " << chamberVolume->geometryId() << ", center: "
+                   << Acts::toString(chamberVolume->center(gctx))
+                   << ", bounds: " << chamberVolume->volumeBounds());
 
       // update bounds
       if (isBarrel) {
@@ -223,7 +222,7 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
               chamberVolume->volumeName(),
               static_cast<int>(chamberVolume->volumeBounds().type())));
         }
-        updateBounds<Acts::VolumeBounds::eCuboid>(*chamberVolume, bounds);
+        updateBounds<Acts::VolumeBounds::eCuboid>(gctx, *chamberVolume, bounds);
       } else {
         if (chamberVolume->volumeBounds().type() !=
             Acts::VolumeBounds::eTrapezoid) {
@@ -233,14 +232,16 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
               chamberVolume->volumeName(),
               static_cast<int>(chamberVolume->volumeBounds().type())));
         }
-        updateBounds<Acts::VolumeBounds::eTrapezoid>(*chamberVolume, bounds);
+        updateBounds<Acts::VolumeBounds::eTrapezoid>(gctx, *chamberVolume,
+                                                     bounds);
       }
 
-      it = chamberVolumes
-               .emplace(parent, std::make_pair(std::make_shared<Node_t>(
-                                                   std::move(chamberVolume)),
-                                               volNum++))
-               .first;
+      it =
+          chamberVolumes
+              .try_emplace(parent, std::make_pair(std::make_shared<Node_t>(
+                                                      std::move(chamberVolume)),
+                                                  volNum++))
+              .first;
     }
     // We add the box to the parent node
     NodePtr_t& chamberNode = it->second.first;
@@ -249,7 +250,7 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
           "processStation() -- Found null chamber node for parent {}",
           parent->getLogVol()->getName()));
     }
-    auto trVol = buildChildChamber(box, boundFactory);
+    auto trVol = buildChildChamber(gctx, box, boundFactory);
     trVol->assignGeometryId(geoId.withVolume(it->second.second)
                                 .withExtra(chamberNode->children().size() + 1));
 
@@ -288,7 +289,8 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
 
 std::unique_ptr<Acts::TrackingVolume>
 GeoModelMuonMockupBuilder::buildChildChamber(
-    const Box_t& box, Acts::VolumeBoundFactory& boundFactory) const {
+    const Acts::GeometryContext& gctx, const Box_t& box,
+    Acts::VolumeBoundFactory& boundFactory) const {
   std::unique_ptr<Acts::TrackingVolume> trVol{nullptr};
 
   // use dedicated builder for MDT multilayers
@@ -322,7 +324,7 @@ GeoModelMuonMockupBuilder::buildChildChamber(
 
     mwCfg.name = box.name;
     mwCfg.mlSurfaces = box.surfaces;
-    mwCfg.transform = box.volume->transform();
+    mwCfg.transform = box.volume->localToGlobalTransform(gctx);
     auto& sb = box.surfaces.front()->bounds();
     auto lineBounds = dynamic_cast<const Acts::LineBounds*>(&sb);
     if (lineBounds == nullptr) {
@@ -352,9 +354,10 @@ GeoModelMuonMockupBuilder::buildChildChamber(
   return trVol;
 }
 template <Acts::VolumeBounds::BoundsType VolBounds_t>
-void GeoModelMuonMockupBuilder::updateBounds(const Acts::TrackingVolume& volume,
+void GeoModelMuonMockupBuilder::updateBounds(const Acts::GeometryContext& gctx,
+                                             const Acts::TrackingVolume& volume,
                                              cylBounds& bounds) const {
-  const Acts::Vector3& center{volume.center()};
+  const Acts::Vector3& center{volume.center(gctx)};
   const double rCenter{Acts::fastHypot(center.x(), center.y())};
   const auto volBounds{volume.volumeBounds().values()};
   double rMin{0.0};

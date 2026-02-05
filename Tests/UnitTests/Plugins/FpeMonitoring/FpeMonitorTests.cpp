@@ -18,27 +18,27 @@ namespace {
 __attribute__((noinline)) void divbyzero() {
   volatile float j = 0.0;
   volatile float r = 123 / j;
-  (void)r;
+  static_cast<void>(r);
 }
 
 __attribute__((noinline)) void overflow() {
   std::cout << "PRE OVERFLOW" << std::endl;
   volatile float j = std::numeric_limits<float>::max();
   volatile float r = j * j;
-  (void)r;
+  static_cast<void>(r);
   std::cout << "POST OVERFLOW" << std::endl;
 }
 
 __attribute__((noinline)) void invalid() {
   volatile float j = -1;
   volatile float r = std::sqrt(j);
-  (void)r;
+  static_cast<void>(r);
 }
 
 __attribute__((noinline)) void invalid2() {
   volatile float k = 0;
   volatile float p = k / 0.0;
-  (void)p;
+  static_cast<void>(p);
 }
 
 }  // namespace

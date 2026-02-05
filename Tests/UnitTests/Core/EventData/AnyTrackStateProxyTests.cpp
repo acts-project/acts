@@ -51,6 +51,24 @@ BOOST_FIXTURE_TEST_CASE(WrapTrackStateProxy, TestTrackStateFixture) {
   BOOST_CHECK_EQUAL(anyState.index(), proxy.index());
 }
 
+BOOST_FIXTURE_TEST_CASE(ConstructFromReadOnlyTrackStateProxy,
+                        TestTrackStateFixture) {
+  auto track = container.makeTrack();
+  auto state = container.trackStateContainer().makeTrackState();
+  track.tipIndex() = state.index();
+  state.predicted() = ActsVector<eBoundSize>::Ones();
+
+  TrackContainer constContainer{ConstVectorTrackContainer{trackContainer},
+                                ConstVectorMultiTrajectory{trajectory}};
+
+  auto constState =
+      constContainer.trackStateContainer().getTrackState(state.index());
+  AnyConstTrackStateProxy anyState(constState);
+
+  BOOST_CHECK_EQUAL(anyState.index(), state.index());
+  BOOST_CHECK_CLOSE(anyState.predicted()[eBoundLoc0], 1.0, 1e-6);
+}
+
 BOOST_FIXTURE_TEST_CASE(AccessFiltered, TestTrackStateFixture) {
   auto track = container.makeTrack();
   auto state = container.trackStateContainer().makeTrackState();
@@ -508,23 +526,24 @@ BOOST_FIXTURE_TEST_CASE(TypeFlags, TestTrackStateFixture) {
   AnyMutableTrackStateProxy anyState(state);
 
   // Set type flags through the original proxy
-  state.typeFlags().set(TrackStateFlag::MeasurementFlag);
-  state.typeFlags().set(TrackStateFlag::OutlierFlag);
+  state.typeFlags().setIsOutlier();
 
   // Access typeFlags through AnyTrackStateProxy
   auto flags = anyState.typeFlags();
-  BOOST_CHECK(flags.test(TrackStateFlag::MeasurementFlag));
-  BOOST_CHECK(flags.test(TrackStateFlag::OutlierFlag));
-  BOOST_CHECK(!flags.test(TrackStateFlag::HoleFlag));
+  BOOST_CHECK(flags.hasMeasurement());
+  BOOST_CHECK(!flags.isMeasurement());
+  BOOST_CHECK(flags.isOutlier());
+  BOOST_CHECK(!flags.isHole());
 
   // Modify typeFlags through AnyTrackStateProxy
-  anyState.typeFlags().set(TrackStateFlag::HoleFlag);
-  BOOST_CHECK(state.typeFlags().test(TrackStateFlag::HoleFlag));
+  anyState.typeFlags().setIsHole();
 
-  // Verify the state has all flags through original proxy
-  BOOST_CHECK(state.typeFlags().test(TrackStateFlag::MeasurementFlag));
-  BOOST_CHECK(state.typeFlags().test(TrackStateFlag::OutlierFlag));
-  BOOST_CHECK(state.typeFlags().test(TrackStateFlag::HoleFlag));
+  // Access typeFlags through AnyTrackStateProxy
+  flags = anyState.typeFlags();
+  BOOST_CHECK(!flags.hasMeasurement());
+  BOOST_CHECK(!flags.isMeasurement());
+  BOOST_CHECK(!flags.isOutlier());
+  BOOST_CHECK(flags.isHole());
 }
 
 BOOST_FIXTURE_TEST_CASE(ComponentAccessWithStringKeys, TestTrackStateFixture) {

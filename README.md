@@ -29,7 +29,8 @@ cmake --build <build>
 ```
 
 For more details, e.g. specific versions and additional dependencies, have a
-look at the [getting started guide](docs/getting_started.md). If you find a bug,
+look at the ["Building ACTS"
+guide](https://acts-project.github.io/building_acts.html). If you find a bug,
 have a feature request, or want to contribute to ACTS, have a look at the
 [contribution guidelines](CONTRIBUTING.md).
 
@@ -43,10 +44,11 @@ and subject to the semantic versioning rules. The details are outlined in the
 
 ## Repository organization
 
-The repository contains all code of the ACTS projects, not just the core library
-that a physics experiment is expected to use as part of its reconstruction code.
-All optional components are disabled by default. Please see the
-[getting started guide](docs/getting_started.md) on how-to enable them.
+The repository contains all code of the ACTS projects, not just the core
+library that a physics experiment is expected to use as part of its
+reconstruction code. All optional components are disabled by default. Please
+see the ["Building ACTS" guide](https://acts-project.github.io/building_acts.html)
+on how-to enable them.
 
 
 | *Folder*     | *include path*                              | *Namespace*       | *Python module*          |

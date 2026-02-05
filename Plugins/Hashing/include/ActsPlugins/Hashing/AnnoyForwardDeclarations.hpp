@@ -26,7 +26,9 @@ namespace ActsPlugins {
 /// @addtogroup hashing_plugin
 /// @{
 
+/// Metric type for Annoy index
 using AnnoyMetric = Annoy::AngularEuclidean;
+/// Annoy index type with single-threaded build policy
 using AnnoyModel =
     Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
                       Annoy::AnnoyIndexSingleThreadedBuildPolicy>;

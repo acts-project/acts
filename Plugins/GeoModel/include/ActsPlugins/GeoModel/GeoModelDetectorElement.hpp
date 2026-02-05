@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <memory>
 
@@ -35,7 +35,7 @@ namespace ActsPlugins {
 ///
 /// Detector element representative for GeoModel based
 /// sensitive elements.
-class GeoModelDetectorElement : public Acts::DetectorElementBase {
+class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
  public:
   /// Broadcast the context type
   using ContextType = Acts::GeometryContext;
@@ -80,34 +80,45 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Acts::Transform3& transform(
+  /// @return The local to global transform
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
 
   /// Return the nominal - non-contextual transform
+  /// @return The nominal transform
   const Acts::Transform3& nominalTransform() const;
 
   /// Return surface associated with this detector element
+  /// @return The surface
   const Acts::Surface& surface() const override;
 
   /// Non-const access to surface associated with this detector element
+  /// @return The surface
   Acts::Surface& surface() override;
 
   /// Return the thickness of this detector element
-  double thickness() const override;
+  /// @return The thickness
+  double thickness() const;
 
   /// @return to the Geant4 physical volume
   PVConstLink physicalVolume() const;
 
   /// Get the name of the logical volume
+  /// @return The logical volume name
   const std::string& logVolName() const;
 
   /// Get the string identifier of the corresponding database entry
   /// Note: This is not by defnitition a unique identifier, there can be
   /// several detector elements created from a single database entry.
+  /// @return The database entry name
   const std::string& databaseEntryName() const { return m_entryName; };
 
   /// Set the corresponding database entry string
+  /// @param n The database entry name
   void setDatabaseEntryName(const std::string& n) { m_entryName = n; };
+  /// Is the detector element a sensitive element
+  /// @return True if sensitive
+  bool isSensitive() const final { return true; }
 
  protected:
   /// Attach a surface
@@ -115,6 +126,9 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
   /// @param surface The surface to attach
   void attachSurface(std::shared_ptr<Acts::Surface> surface) {
     m_surface = std::move(surface);
+    assert(m_surface != nullptr);
+    m_surface->assignThickness(thickness());
+    m_surface->assignSurfacePlacement(*this);
   }
 
  private:
@@ -124,7 +138,7 @@ class GeoModelDetectorElement : public Acts::DetectorElementBase {
   /// The surface
   std::shared_ptr<Acts::Surface> m_surface;
   /// The global transformation before the volume
-  Acts::Transform3 m_surfaceTransform;
+  Acts::Transform3 m_surfaceTransform{Acts::Transform3::Identity()};
   ///  Thickness of this detector element
   double m_thickness{0.};
 };

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -36,7 +37,6 @@
 
 #include <functional>
 #include <limits>
-#include <map>
 #include <memory>
 #include <type_traits>
 #include <unordered_map>
@@ -190,52 +190,53 @@ struct Gx2FitterOptions {
   double relChi2changeCutOff = 1e-7;
 };
 
+/// Result container for a global chi-square fit.
 template <typename traj_t>
 struct Gx2FitterResult {
-  // Fitted states that the actor has handled.
+  /// Fitted states that the actor has handled.
   traj_t* fittedStates{nullptr};
 
-  // This is the index of the 'tip' of the track stored in multitrajectory.
-  // This corresponds to the last measurement state in the multitrajectory.
-  // Since this KF only stores one trajectory, it is unambiguous.
-  // Acts::TrackTraits::kInvalid is the start of a trajectory.
+  /// This is the index of the 'tip' of the track stored in multitrajectory.
+  /// This corresponds to the last measurement state in the multitrajectory.
+  /// Since this KF only stores one trajectory, it is unambiguous.
+  /// Acts::TrackTraits::kInvalid is the start of a trajectory.
   std::size_t lastMeasurementIndex = Acts::kTrackIndexInvalid;
 
-  // This is the index of the 'tip' of the states stored in multitrajectory.
-  // This corresponds to the last state in the multitrajectory.
-  // Since this KF only stores one trajectory, it is unambiguous.
-  // Acts::TrackTraits::kInvalid is the start of a trajectory.
+  /// This is the index of the 'tip' of the states stored in multitrajectory.
+  /// This corresponds to the last state in the multitrajectory.
+  /// Since this KF only stores one trajectory, it is unambiguous.
+  /// Acts::TrackTraits::kInvalid is the start of a trajectory.
   std::size_t lastTrackIndex = Acts::kTrackIndexInvalid;
 
-  // The optional Parameters at the provided surface
+  /// The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
 
-  // Counter for states with non-outlier measurements
+  /// Counter for states with non-outlier measurements
   std::size_t measurementStates = 0;
 
-  // Counter for measurements holes
-  // A hole correspond to a surface with an associated detector element with no
-  // associated measurement. Holes are only taken into account if they are
-  // between the first and last measurements.
+  /// Counter for measurements holes
+  /// A hole correspond to a surface with an associated detector element with no
+  /// associated measurement. Holes are only taken into account if they are
+  /// between the first and last measurements.
   std::size_t measurementHoles = 0;
 
-  // Counter for handled states
+  /// Counter for handled states
   std::size_t processedStates = 0;
 
-  // Counter for handled measurements
+  /// Counter for handled measurements
   std::size_t processedMeasurements = 0;
 
-  // Indicator if track fitting has been done
+  /// Indicator if track fitting has been done
   bool finished = false;
 
-  // Measurement surfaces without hits
+  /// Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
-  // Measurement surfaces handled in both forward and
-  // backward filtering
+  /// Measurement surfaces handled in both forward and
+  /// backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
-  // Count how many surfaces have been hit
+  /// Count how many surfaces have been hit
   std::size_t surfaceCount = 0;
 };
 
@@ -549,9 +550,8 @@ void fillGx2fSystem(
     const GeometryIdentifier geoId = trackState.referenceSurface().geometryId();
     ACTS_DEBUG("Start to investigate trackState on surface " << geoId);
     const auto typeFlags = trackState.typeFlags();
-    const bool stateHasMeasurement =
-        typeFlags.test(TrackStateFlag::MeasurementFlag);
-    const bool stateHasMaterial = typeFlags.test(TrackStateFlag::MaterialFlag);
+    const bool stateHasMeasurement = typeFlags.hasMeasurement();
+    const bool stateHasMaterial = typeFlags.hasMaterial();
 
     // First we figure out, if we would need to look into material
     // surfaces at all. Later, we also check, if the material slab is
@@ -625,6 +625,7 @@ void fillGx2fSystem(
 /// @param scatteringMap Map of geometry identifiers to scattering properties,
 ///        containing scattering angles and validation status
 /// @param logger A logger instance
+/// @return Number of valid material states in the track
 template <TrackProxyConcept track_proxy_t>
 std::size_t countMaterialStates(
     const track_proxy_t track,
@@ -635,7 +636,7 @@ std::size_t countMaterialStates(
   ACTS_DEBUG("Count the valid material surfaces.");
   for (const auto& trackState : track.trackStates()) {
     const auto typeFlags = trackState.typeFlags();
-    const bool stateHasMaterial = typeFlags.test(TrackStateFlag::MaterialFlag);
+    const bool stateHasMaterial = typeFlags.hasMaterial();
 
     if (!stateHasMaterial) {
       continue;
@@ -664,6 +665,7 @@ std::size_t countMaterialStates(
 /// column-pivoting Householder QR decomposition for numerical stability.
 ///
 /// @param extendedSystem All parameters of the current equation system
+/// @return Delta parameters for the GX2F update
 Eigen::VectorXd computeGx2fDeltaParams(const Gx2fSystem& extendedSystem);
 
 /// @brief Update parameters (and scattering angles if applicable)
@@ -754,7 +756,7 @@ class Gx2Fitter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
+    const std::unordered_map<const Surface*, SourceLink>* inputMeasurements{};
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = false;
@@ -838,8 +840,7 @@ class Gx2Fitter {
       const GeometryIdentifier geoId = surface->geometryId();
       ACTS_DEBUG("Surface " << geoId << " detected.");
 
-      const bool surfaceIsSensitive =
-          (surface->associatedDetectorElement() != nullptr);
+      const bool surfaceIsSensitive = surface->isSensitive();
       const bool surfaceHasMaterial = (surface->surfaceMaterial() != nullptr);
       // First we figure out, if we would need to look into material surfaces at
       // all. Later, we also check, if the material slab is valid, otherwise we
@@ -855,11 +856,12 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          Acts::detail::PointwiseMaterialInteraction interaction(surface, state,
-                                                                 stepper);
-          // We need to evaluate the material to create the correct slab
-          const bool slabIsValid = interaction.evaluateMaterialSlab(
-              state, navigator, MaterialUpdateStage::FullUpdate);
+          const MaterialSlab slab = Acts::detail::evaluateMaterialSlab(
+              state, stepper, *surface,
+              Acts::detail::determineMaterialUpdateMode(
+                  state, navigator, MaterialUpdateMode::FullUpdate));
+          const bool slabIsValid = !slab.isVacuum();
+
           double invSigma2 = 0.;
           if (slabIsValid) {
             const auto& particle =
@@ -867,7 +869,7 @@ class Gx2Fitter {
 
             const double sigma =
                 static_cast<double>(Acts::computeMultipleScatteringTheta0(
-                    interaction.slab, particle.absolutePdg(), particle.mass(),
+                    slab, particle.absolutePdg(), particle.mass(),
                     static_cast<float>(
                         parametersWithHypothesis->parameters()[eBoundQOverP]),
                     particle.absoluteCharge()));
@@ -890,7 +892,7 @@ class Gx2Fitter {
       }
 
       // Here we handle all measurements
-      if (auto sourceLinkIt = inputMeasurements->find(geoId);
+      if (auto sourceLinkIt = inputMeasurements->find(surface);
           sourceLinkIt != inputMeasurements->end()) {
         ACTS_DEBUG("    The surface contains a measurement.");
 
@@ -961,13 +963,13 @@ class Gx2Fitter {
 
         // Get and set the type flags
         auto typeFlags = trackStateProxy.typeFlags();
-        typeFlags.set(TrackStateFlag::ParameterFlag);
+        typeFlags.setHasParameters();
         if (surfaceHasMaterial) {
-          typeFlags.set(TrackStateFlag::MaterialFlag);
+          typeFlags.setHasMaterial();
         }
 
         // Set the measurement type flag
-        typeFlags.set(TrackStateFlag::MeasurementFlag);
+        typeFlags.setIsMeasurement();
         // We count the processed measurement
         ++result.processedMeasurements;
 
@@ -1056,15 +1058,15 @@ class Gx2Fitter {
 
         // Get and set the type flags
         auto typeFlags = trackStateProxy.typeFlags();
-        typeFlags.set(TrackStateFlag::ParameterFlag);
-        typeFlags.set(TrackStateFlag::MaterialFlag);
+        typeFlags.setHasParameters();
+        typeFlags.setHasMaterial();
 
         // Set hole only, if we are on a sensitive surface and had
         // measurements before (no holes before the first measurement)
         const bool precedingMeasurementExists = (result.measurementStates > 0);
         if (surfaceIsSensitive && precedingMeasurementExists) {
           ACTS_DEBUG("    Surface is also sensitive. Marked as hole.");
-          typeFlags.set(TrackStateFlag::HoleFlag);
+          typeFlags.setIsHole();
 
           // Count the missed surface
           result.missedActiveSurfaces.push_back(surface);
@@ -1132,16 +1134,16 @@ class Gx2Fitter {
 
         // Get and set the type flags
         auto typeFlags = trackStateProxy.typeFlags();
-        typeFlags.set(TrackStateFlag::ParameterFlag);
+        typeFlags.setHasParameters();
         if (surfaceHasMaterial) {
           ACTS_DEBUG("    It is material.");
-          typeFlags.set(TrackStateFlag::MaterialFlag);
+          typeFlags.setHasMaterial();
         }
 
         // Set hole only, if we are on a sensitive surface
         if (surfaceIsSensitive && precedingMeasurementExists) {
           ACTS_DEBUG("    It is a hole.");
-          typeFlags.set(TrackStateFlag::HoleFlag);
+          typeFlags.setIsHole();
           // Count the missed surface
           result.missedActiveSurfaces.push_back(surface);
         }
@@ -1200,12 +1202,11 @@ class Gx2Fitter {
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Surface*, SourceLink> inputMeasurements{};
 
     for (; it != end; ++it) {
-      SourceLink sl = *it;
-      auto geoId = gx2fOptions.extensions.surfaceAccessor(sl)->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      inputMeasurements.try_emplace(gx2fOptions.extensions.surfaceAccessor(*it),
+                                    *it);
     }
 
     // Store, if we want to do multiple scattering. We still need to pass this
@@ -1263,8 +1264,8 @@ class Gx2Fitter {
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      for (const auto& [surfaceId, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1281,7 +1282,7 @@ class Gx2Fitter {
       auto propagatorInitResult =
           m_propagator.initialize(propagatorState, params);
       if (!propagatorInitResult.ok()) {
-        ACTS_ERROR("Propagation initialization failed: "
+        ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
         return propagatorInitResult.error();
       }
@@ -1301,7 +1302,7 @@ class Gx2Fitter {
                                   propagatorOptions, false);
 
       if (!result.ok()) {
-        ACTS_ERROR("Propagation failed: " << result.error());
+        ACTS_DEBUG("Propagation failed: " << result.error());
         return result.error();
       }
 
@@ -1429,8 +1430,8 @@ class Gx2Fitter {
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      for (const auto& [surfaceId, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1447,7 +1448,7 @@ class Gx2Fitter {
       auto propagatorInitResult =
           m_propagator.initialize(propagatorState, params);
       if (!propagatorInitResult.ok()) {
-        ACTS_ERROR("Propagation initialization failed: "
+        ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
         return propagatorInitResult.error();
       }
@@ -1467,7 +1468,7 @@ class Gx2Fitter {
                                   propagatorOptions, false);
 
       if (!result.ok()) {
-        ACTS_ERROR("Propagation failed: " << result.error());
+        ACTS_DEBUG("Propagation failed: " << result.error());
         return result.error();
       }
 
@@ -1593,7 +1594,7 @@ class Gx2Fitter {
       auto propagatorInitResult =
           m_propagator.initialize(propagatorState, params);
       if (!propagatorInitResult.ok()) {
-        ACTS_ERROR("Propagation initialization failed: "
+        ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
         return propagatorInitResult.error();
       }
@@ -1609,7 +1610,7 @@ class Gx2Fitter {
                                   propagatorOptions, false);
 
       if (!result.ok()) {
-        ACTS_ERROR("Propagation failed: " << result.error());
+        ACTS_DEBUG("Propagation failed: " << result.error());
         return result.error();
       }
 

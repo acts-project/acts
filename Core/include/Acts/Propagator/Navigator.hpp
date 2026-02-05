@@ -94,7 +94,8 @@ class Navigator {
   using NavigationCandidates =
       boost::container::small_vector<NavigationTarget, 10>;
 
-  using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
+  /// Type alias for external surfaces container
+  using ExternalSurfaces = std::vector<GeometryIdentifier>;
 
   /// Type alias for geometry version enumeration
   using GeometryVersion = TrackingGeometry::GeometryVersion;
@@ -138,14 +139,32 @@ class Navigator {
 
     /// Externally provided surfaces - these are tried to be hit
     ExternalSurfaces externalSurfaces = {};
+    /// Surfaces that are not part of the tracking geometry
+    std::vector<const Surface*> freeSurfaces = {};
 
     /// Insert an external surface to be considered during navigation
-    /// @param geoid Geometry identifier of the surface to insert
-    void insertExternalSurface(GeometryIdentifier geoid) {
-      externalSurfaces.insert(
-          std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+    /// @param surface: The surface to add to the list
+    void insertExternalSurface(const Surface& surface) {
+      if (surface.geometryId() != GeometryIdentifier{}) {
+        externalSurfaces.push_back(surface.geometryId());
+      } else {
+        freeSurfaces.push_back(&surface);
+      }
     }
-
+    /// @brief Delegate to decide whether free surfaces are appended to the navigation
+    ///        stream given the current volume and the track coordinates. If the
+    ///        delegate is set, it is called in each candidate resolution step
+    ///        for each surface that has not been marked as reached yet.
+    /// @param gctx: Current geometry context carrying the alignment information
+    /// @param currentVol: The current tracking volume in which the propagator resides
+    /// @param pos: Position of the track in global coordinates
+    /// @param dir: Direction vector of the track
+    /// @param surface: Free surface candidate to test
+    using FreeSurfaceSelctor_t = Delegate<bool(
+        const GeometryContext& gctx, const TrackingVolume& currentVol,
+        const Vector3& pos, const Vector3& dir, const Surface& candidate)>;
+    /// Delegate for selecting free surfaces during navigation
+    FreeSurfaceSelctor_t freeSurfaceSelector{};
     /// Set the plain navigation options
     /// @param options The plain navigator options to set
     void setPlainOptions(const NavigatorPlainOptions& options) {
@@ -189,6 +208,14 @@ class Navigator {
     /// the current candidate index of the navigation state
     std::optional<std::size_t> navCandidateIndex;
 
+    /// Free candidates not part of the tracking geometry.
+    //  They are stored as a pair of surface pointer
+    /// and a boolean indicating whether the surface has already been
+    /// reached during propagation
+    std::vector<std::pair<const Surface*, bool>> freeCandidates{};
+
+    /// Get reference to current navigation surface
+    /// @return Reference to current navigation target
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
@@ -209,6 +236,7 @@ class Navigator {
       return navCandidates.at(navCandidateIndex.value());
     }
 
+    /// Volume where the navigation started
     const TrackingVolume* startVolume = nullptr;
     /// Layer where the navigation started
     const Layer* startLayer = nullptr;
@@ -263,6 +291,11 @@ class Navigator {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
+      // Set the surface reached switches back to false
+      std::ranges::for_each(freeCandidates,
+                            [](std::pair<const Surface*, bool>& freeSurface) {
+                              freeSurface.second = false;
+                            });
     }
   };
 

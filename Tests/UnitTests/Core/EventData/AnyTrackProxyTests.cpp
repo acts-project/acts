@@ -31,7 +31,7 @@ using namespace Acts::UnitLiterals;
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
 
-const GeometryContext gctx;
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 // Helper to create a test track with some data
 template <typename track_container_t>
@@ -115,6 +115,24 @@ BOOST_AUTO_TEST_CASE(ConstructFromConstTrackProxy) {
   AnyConstTrackProxy anyTrack(constTrack);
 
   BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
+}
+
+BOOST_AUTO_TEST_CASE(ConstructFromReadOnlyTrackContainer) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer tc{vtc, mtj};
+
+  auto track = tc.makeTrack();
+  fillTestTrack<decltype(tc)>(track);
+
+  TrackContainer constTc{ConstVectorTrackContainer{vtc},
+                         ConstVectorMultiTrajectory{mtj}};
+  auto constTrack = constTc.getTrack(track.index());
+
+  AnyConstTrackProxy anyTrack(constTrack);
+
+  BOOST_CHECK_EQUAL(anyTrack.index(), track.index());
+  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundLoc0), 1.0, 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(AccessIndices) {

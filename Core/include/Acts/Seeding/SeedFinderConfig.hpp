@@ -235,22 +235,30 @@ struct SeedFinderConfig {
   }
 };
 
+/// Frequently changing options for seed finding.
 struct SeedFinderOptions {
-  // location of beam in x,y plane.
-  // used as offset for Space Points
+  /// Location of beam in x,y plane, used as offset for space points
   Vector2 beamPos{0 * UnitConstants::mm, 0 * UnitConstants::mm};
-  // field induction
+  /// Magnetic field strength in z-direction
   float bFieldInZ = 2 * UnitConstants::T;
 
-  // derived quantities
+  /// Derived quantity: pT per helix radius
   float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
+  /// Derived quantity: minimum helix diameter squared
   float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
+  /// Derived quantity: pT squared per radius
   float pT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  /// Derived quantity: sigma pT squared per radius
   float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  /// Derived quantity: multiple scattering squared
   float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
 
+  /// Whether values are in internal units
   bool isInInternalUnits = true;
 
+  /// Calculate derived quantities from configuration
+  /// @param config The seeding configuration
+  /// @return Options with derived quantities calculated
   template <typename Config>
   SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
     using namespace UnitLiterals;

@@ -55,12 +55,30 @@ class Volume : public GeometryObject {
   /// @return Reference to this volume for assignment chaining
   Volume& operator=(const Volume& vol);
 
+  /// @brief Get the transformation matrix from the local volume frame
+  ///        to the global experiment's frame
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The local to global transformation matrix
+  const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
+
+  /// @brief Get the transformation matrix from the global experiment's
+  //         frame to the local volume frame
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The global to local transformation matrix
+  const Transform3& globalToLocalTransform(const GeometryContext& gctx) const;
+
   /// @brief Get the transform matrix that positions the volume in 3D space
+  /// @deprecated: Function deprecated in favour of localToGlobalTransform
   /// @return Const reference to the transform matrix
+  [[deprecated(
+      "Use localToGlobalTransform(const GeometryContext& gctx) instead.")]]
   const Transform3& transform() const;
 
   /// @brief Get the inverse transform matrix of the volume
+  /// @deprecated: Function deprecated in favour of globalToLocalTransform
   /// @return Const reference to the inverse transform matrix
+  [[deprecated(
+      "Use globalToLocalTransform(const GeometryContext& gctx) instead.")]]
   const Transform3& itransform() const;
 
   /// @brief Set the transform matrix for the volume and update internal state
@@ -68,7 +86,15 @@ class Volume : public GeometryObject {
   void setTransform(const Transform3& transform);
 
   /// @brief Get the center position of the volume
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @return Const reference to the center position vector
+  const Vector3& center(const GeometryContext& gctx) const;
+
+  /// @brief Get the center position of the volume
+  /// @deprecated: Function deprecated in favour of
+  ///               center(const GeometryContext& gctx)
+  /// @return Const reference to the center position vector
+  [[deprecated("Use center(const GeometryContext& gctx) instead.")]]
   const Vector3& center() const;
 
   /// @brief Get the volume bounds that define the shape of the volume
@@ -92,10 +118,12 @@ class Volume : public GeometryObject {
   void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds);
 
   /// Set the volume bounds and optionally also update the volume transform
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volbounds The volume bounds to be assigned
   /// @param transform The transform to be assigned, can be optional
   /// @param logger A logger object to log messages
-  virtual void update(std::shared_ptr<VolumeBounds> volbounds,
+  virtual void update(const GeometryContext& gctx,
+                      std::shared_ptr<VolumeBounds> volbounds,
                       std::optional<Transform3> transform = std::nullopt,
                       const Logger& logger = Acts::getDummyLogger());
 
@@ -112,12 +140,27 @@ class Volume : public GeometryObject {
 
   /// Inside() method for checks
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos is the position to be checked
   /// @param tol is the tolerance parameter
   ///
   /// @return boolean indicator if the position is inside
-  bool inside(const Vector3& gpos, double tol = 0.) const;
+  bool inside(const GeometryContext& gctx, const Vector3& gpos,
+              double tol = 0.) const;
 
+  /// Inside() method for checks
+  ///
+  /// @param gpos is the position to be checked
+  /// @param tol is the tolerance parameter
+  /// @deprecated: Function deprecated in favour of
+  ///               inside(const GeometryContext& gctx, const Vector3& gpos,
+  ///               double tol = 0.)
+  ///
+  /// @return boolean indicator if the position is inside
+  [[deprecated(
+      "Use inside(const GeometryContext& gctx, const Vector3& gpos, double tol "
+      "= 0.) instead.")]]
+  bool inside(const Vector3& gpos, double tol = 0.) const;
   /// The binning position method
   /// - as default the center is given, but may be overloaded
   ///

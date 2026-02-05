@@ -256,7 +256,7 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
   }
 
   std::stringstream ss;
-  ss << surface.toStream({});
+  ss << surface.toStream(GeometryContext::dangerouslyDefaultConstruct());
   throw std::invalid_argument(
       "Bin adjustment not implemented for this surface yet:\n" + ss.str());
 }

@@ -17,11 +17,21 @@ body = """
 {% else %}\
     # [unreleased]
 {% endif %}\
-{% for group, commits in commits | group_by(attribute="group") %}
+{% set breaking = commits | filter(attribute="breaking", value=true) %}
+{% if breaking | length > 0 %}
+## 🚨 BREAKING CHANGES
+{% for commit in breaking %}
+  - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
+      {{ commit.message | upper_first }}\
+      {% if commit.remote.username %} by @{{ commit.remote.username }}{%- endif %} \
+{% endfor %}
+{% endif %}
+{% set non_breaking = commits | filter(attribute="breaking", value=false) %}
+{% for group, commits in non_breaking | group_by(attribute="group") %}
     ## {{ group | striptags | trim | upper_first }}
     {% for commit in commits %}
+        {% if commit.breaking %} {% continue %} {% endif %}\
         - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
-            {% if commit.breaking %} 🚨 **BREAKING**: {% endif %}\
             {{ commit.message | upper_first }}\
             {% if commit.remote.username %} by @{{ commit.remote.username }}{%- endif %}\
     {% endfor %}

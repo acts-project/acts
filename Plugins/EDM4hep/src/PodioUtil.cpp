@@ -63,7 +63,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
     result.identifier = identifier.value();
   } else {
     result.identifier = kNoIdentifier;
-    assert(surface.associatedDetectorElement() == nullptr &&
+    assert(!surface.isSensitive() &&
            "Unidentified surface does not have detector element");
     // @TODO: Surface type is not well-defined for curvilinear surface: looks like any plane surface
     result.surfaceType = surface.type();
@@ -85,7 +85,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
 
     // This is safe ONLY(!) if there is no associated detector element, since
     // the surface will not inspect the geometry context at all by itself.
-    GeometryContext gctx;
+    GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
     trf = surface.localToGlobalTransform(gctx).matrix();
   }
 

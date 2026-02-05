@@ -8,22 +8,16 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxyCommon.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cstddef>
-#include <ranges>
-#include <span>
 
 #include <Eigen/Core>
 
@@ -32,6 +26,8 @@ namespace Acts {
 template <typename derived_t>
 class MultiTrajectory;
 
+/// Type-erased track state proxy for any trajectory backend.
+/// @tparam read_only True for const access, false for mutable access.
 template <bool read_only>
 class AnyTrackStateProxy;
 
@@ -735,42 +731,62 @@ class TrackStateProxy
   bool hasColumn(HashedString key) const { return container().hasColumn(key); }
 
  protected:
+  /// Get parameters at given index
+  /// @param parIndex Index of parameters
+  /// @return Const parameters
   ConstParameters parametersAtIndex(IndexType parIndex) const {
     return m_traj->parameters(parIndex);
   }
 
+  /// Get mutable parameters at given index
+  /// @param parIndex Index of parameters
+  /// @return Mutable parameters
   Parameters parametersAtIndexMutable(IndexType parIndex)
     requires(!ReadOnly)
   {
     return m_traj->parameters(parIndex);
   }
 
+  /// Get covariance at given index
+  /// @param covIndex Index of covariance
+  /// @return Const covariance
   ConstCovariance covarianceAtIndex(IndexType covIndex) const {
     return m_traj->covariance(covIndex);
   }
 
+  /// Get mutable covariance at given index
+  /// @param covIndex Index of covariance
+  /// @return Mutable covariance
   Covariance covarianceAtIndexMutable(IndexType covIndex)
     requires(!ReadOnly)
   {
     return m_traj->covariance(covIndex);
   }
 
+  /// Get mutable pointer to calibrated measurement data
+  /// @return Pointer to calibrated data array
   double* calibratedDataMutable()
     requires(!ReadOnly)
   {
     return m_traj->template calibrated<M>(m_istate).data();
   }
 
+  /// Get const pointer to calibrated measurement data
+  /// @return Const pointer to calibrated data array
   const double* calibratedData() const {
     return m_traj->template calibrated<M>(m_istate).data();
   }
 
+  /// Get mutable pointer to calibrated covariance data
+  /// @return Pointer to calibrated covariance array
   double* calibratedCovarianceDataMutable()
     requires(!ReadOnly)
   {
     return m_traj->template calibratedCovariance<M>(m_istate).data();
   }
 
+  /// Get const pointer to calibrated covariance data
+  /// @return Const pointer to calibrated covariance array
   const double* calibratedCovarianceData() const {
     return m_traj->template calibratedCovariance<M>(m_istate).data();
   }

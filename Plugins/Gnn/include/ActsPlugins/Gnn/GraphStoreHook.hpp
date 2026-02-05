@@ -14,8 +14,10 @@ namespace ActsPlugins {
 /// @addtogroup gnn_plugin
 /// @{
 
+/// Hook for storing graph data during GNN pipeline execution
 class GraphStoreHook : public GnnHook {
  public:
+  /// Graph data structure (edges, edge features)
   using Graph = std::pair<std::vector<std::int64_t>, std::vector<float>>;
 
  private:
@@ -24,9 +26,14 @@ class GraphStoreHook : public GnnHook {
  public:
   GraphStoreHook();
 
+  /// @brief Store graph data during pipeline execution
+  /// @param tensors Pipeline tensor data
+  /// @param execCtx Execution context
   void operator()(const PipelineTensors &tensors,
                   const ExecutionContext &execCtx) const override;
 
+  /// @brief Get the stored graph data
+  /// @return Reference to the stored graph
   const Graph &storedGraph() const { return *m_storedGraph; }
 };
 
