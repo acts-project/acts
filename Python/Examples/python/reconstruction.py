@@ -2384,7 +2384,9 @@ def addVertexFitting(
     tracks: Optional[str] = "tracks",
     trackParameters: Optional[str] = None,
     outputProtoVertices: str = "protovertices",
-    outputVertices: str = "fittedVertices",
+    outputVertices: str = "vertices",
+    outputVertexTruthMatching="vertex_truth_matching",
+    outputTruthVertexMatching="truth_vertex_matching",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     maxIterations: Optional[int] = None,
     initialVariances: Optional[List[float]] = None,
@@ -2521,8 +2523,8 @@ def addVertexFitting(
             inputTracks=tracks,
             inputParticles=inputParticles,
             inputTrackParticleMatching="track_particle_matching",
-            outputVertexTruthMatching="vertex_truth_matching",
-            outputTruthVertexMatching="truth_vertex_matching",
+            outputVertexTruthMatching=outputVertexTruthMatching,
+            outputTruthVertexMatching=outputTruthVertexMatching,
         )
     )
 
@@ -2552,7 +2554,7 @@ def addVertexFitting(
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
-                inputVertexTruthMatching="vertex_truth_matching",
+                inputVertexTruthMatching=outputVertexTruthMatching,
                 bField=field,
                 writeTrackInfo=writeTrackInfo,
                 treeName="vertexing",
