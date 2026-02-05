@@ -23,22 +23,33 @@ namespace ActsPlugins::Svg {
 /// @brief Style struct
 struct Style {
   // Fill parameters
+  /// RGB fill color
   std::array<int, 3> fillColor = {255, 255, 255};
+  /// Fill opacity
   double fillOpacity = 1.;
 
   // Highlight parameters
+  /// RGB highlight color
   std::array<int, 3> highlightColor = {0, 0, 0};
+  /// Highlight event names
   std::vector<std::string> highlights = {};
 
+  /// Stroke width
   double strokeWidth = 0.5;
+  /// RGB stroke color
   std::array<int, 3> strokeColor = {0, 0, 0};
 
+  /// Highlight stroke width
   double highlightStrokeWidth = 2;
+  /// RGB highlight stroke color
   std::array<int, 3> highlightStrokeColor = {0, 0, 0};
 
+  /// Stroke dash array pattern
   std::vector<int> strokeDasharray = {};
 
+  /// Font size in pixels
   unsigned int fontSize = 14u;
+  /// RGB font color
   std::array<int, 3> fontColor = {0};
 
   /// Number of segments to approximate a quarter of a circle

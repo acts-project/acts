@@ -19,11 +19,14 @@ constexpr Label NO_LABEL = 0;
 }  // namespace Acts::Ccl
 
 namespace Acts::Ccl {
-// Simple wrapper around boost::disjoint_sets. In theory, could use
-// boost::vector_property_map and use boost::disjoint_sets without
-// wrapping, but it's way slower
+/// Wrapper around `boost::disjoint_sets` used by the clustering helpers.
+///
+/// Avoids the overhead of `boost::vector_property_map` while keeping the
+/// interface small for the clustering workflow.
 class DisjointSets {
  public:
+  /// @brief Constructor
+  /// @param initial_size Initial size of the disjoint sets
   explicit DisjointSets(std::size_t initial_size = 128)
       : m_defaultSize(initial_size),
         m_size(initial_size),
@@ -31,6 +34,8 @@ class DisjointSets {
         m_parent(m_size),
         m_ds(&m_rank[0], &m_parent[0]) {}
 
+  /// @brief Create a new set
+  /// @return The label of the new set
   Acts::Ccl::Label makeSet() {
     // Empirically, m_size = 128 seems to be good default. If we
     // exceed this, take a performance hit and do the right thing.
@@ -45,11 +50,18 @@ class DisjointSets {
     return static_cast<Acts::Ccl::Label>(m_globalId++);
   }
 
+  /// @brief Union two sets
+  /// @param x First set
+  /// @param y Second set
   void unionSet(std::size_t x, std::size_t y) { m_ds.union_set(x, y); }
+  /// @brief Find the representative of a set
+  /// @param x Element to find
+  /// @return The label of the set containing x
   Acts::Ccl::Label findSet(std::size_t x) {
     return static_cast<Acts::Ccl::Label>(m_ds.find_set(x));
   }
 
+  /// @brief Clear all sets and reset to initial state
   void clear() {
     m_size = m_defaultSize;
     m_rank.clear();
@@ -70,15 +82,20 @@ class DisjointSets {
   boost::disjoint_sets<std::size_t*, std::size_t*> m_ds;
 };
 
+/// Collection of mutable data used by clustering utilities.
 struct ClusteringData {
+  /// Clear all clustering data
   void clear() {
     labels.clear();
     nClusters.clear();
     ds.clear();
   }
 
+  /// Cluster labels for each cell
   std::vector<Acts::Ccl::Label> labels{};
+  /// Number of cells per cluster
   std::vector<std::size_t> nClusters{};
+  /// Disjoint sets data structure for clustering
   Acts::Ccl::DisjointSets ds{};
 };
 
@@ -113,21 +130,32 @@ enum class ConnectResult {
   eDuplicate    // Found duplicate cell, throw an exception
 };
 
-// Default connection type for 2-D grids: 4- or 8-cell connectivity
+/// Default connection type for 2-D grids with 4- or 8-cell connectivity.
 template <typename Cell>
   requires(Acts::Ccl::HasRetrievableColumnInfo<Cell> &&
            Acts::Ccl::HasRetrievableRowInfo<Cell>)
 struct Connect2D {
+  /// Whether to use 8-cell connectivity (true) or 4-cell connectivity (false)
   bool conn8{true};
   Connect2D() = default;
+  /// @brief Constructor
+  /// @param commonCorner Whether cells sharing only a corner are considered connected
   explicit Connect2D(bool commonCorner) : conn8{commonCorner} {}
+  /// @brief Check if two cells are connected
+  /// @param ref Reference cell
+  /// @param iter Candidate cell
+  /// @return Connection result
   virtual ConnectResult operator()(const Cell& ref, const Cell& iter) const;
   virtual ~Connect2D() = default;
 };
 
-// Default connection type for 1-D grids: 2-cell connectivity
+/// Default connection type for 1-D grids with 2-cell connectivity.
 template <Acts::Ccl::HasRetrievableColumnInfo Cell>
 struct Connect1D {
+  /// @brief Check if two cells are connected
+  /// @param ref Reference cell
+  /// @param iter Candidate cell
+  /// @return Connection result
   virtual ConnectResult operator()(const Cell& ref, const Cell& iter) const;
   virtual ~Connect1D() = default;
 };
@@ -139,13 +167,17 @@ struct DefaultConnect {
                 "Only grid dimensions of 1 or 2 are supported");
 };
 
+/// Default connection type for 1-D grids.
 template <typename Cell>
 struct DefaultConnect<Cell, 1> : public Connect1D<Cell> {
   ~DefaultConnect() override = default;
 };
 
+/// Default connection type for 2-D grids.
 template <typename Cell>
 struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
+  /// @brief Constructor
+  /// @param commonCorner Whether cells sharing only a corner are considered connected
   explicit DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
   DefaultConnect() = default;
   ~DefaultConnect() override = default;
