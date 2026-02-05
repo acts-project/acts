@@ -66,7 +66,7 @@ struct SeedFinderGbtsConfig {
   /// Apply RZ cuts on doublets.
   bool doubletFilterRZ = true;  // bool applies new Z cuts on doublets
   //// Maximum number of Gbts edges/doublets.
-  std::int32_t nMaxEdges = 2000000;  // max number of Gbts edges/doublets
+  std::uint32_t nMaxEdges = 2000000;  // max number of Gbts edges/doublets
   /// Minimum delta radius between layers.
   float minDeltaRadius = 2.0;
 

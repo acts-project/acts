@@ -38,7 +38,7 @@ SeedFinderGbts::SeedFinderGbts(
 SeedContainer2 SeedFinderGbts::createSeeds(
     const RoiDescriptor& roi,
     const SPContainerComponentsType& SpContainerComponents,
-    std::int32_t maxLayers) const {
+    std::uint32_t maxLayers) const {
   std::unique_ptr<GbtsDataStorage> storage =
       std::make_unique<GbtsDataStorage>(m_geo, m_config, m_mlLut);
 
@@ -85,7 +85,7 @@ SeedContainer2 SeedFinderGbts::createSeeds(
     ACTS_WARNING("Missing edges or edge connections");
   }
 
-  std::int32_t maxLevel = runCCA(graphStats.first, edgeStorage);
+  std::uint32_t maxLevel = runCCA(graphStats.first, edgeStorage);
 
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
@@ -154,8 +154,8 @@ GbtsMLLookupTable SeedFinderGbts::parseGbtsMLLookupTable(
 }
 
 std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
-    const SPContainerComponentsType& container, std::int32_t MaxLayers) const {
-  std::vector<std::vector<GbtsNode>> node_storage(MaxLayers);
+    const SPContainerComponentsType& container, std::uint32_t maxLayers) const {
+  std::vector<std::vector<GbtsNode>> node_storage(maxLayers);
   // reserve for better efficiency
 
   for (auto& v : node_storage) {
@@ -209,7 +209,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
   float tripletPtMin = 0.8f * m_config.minPt;
 
   // to re-scale original tunings done for the 900 MeV pT cut
-  const float pt_scale = (0.9f * UnitConstants::GeV) / m_config.minPt;
+  const float ptScale = (0.9f * UnitConstants::GeV) / m_config.minPt;
 
   float maxCurv = m_config.ptCoeff / tripletPtMin;
 
@@ -220,8 +220,8 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
   // new settings for curvature cuts
   if (!m_config.useOldTunings && !m_config.lrtMode) {
-    maxKappa_high_eta = 4.75e-4f * pt_scale;
-    maxKappa_low_eta = 3.75e-4f * pt_scale;
+    maxKappa_high_eta = 4.75e-4f * ptScale;
+    maxKappa_low_eta = 3.75e-4f * ptScale;
   }
 
   const float dphi_coeff = m_config.lrtMode ? 1.0f * maxCurv : 0.68f * maxCurv;
@@ -233,7 +233,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
   edgeStorage.reserve(m_config.nMaxEdges);
 
-  std::int32_t nEdges = 0;
+  std::uint32_t nEdges = 0;
 
   for (const auto& bg : m_geo->binGroups()) {  // loop over bin groups
 
@@ -262,18 +262,16 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
           deltaPhi = min_deltaPhi + dphi_coeff * abs_dr;
         } else {
           if (abs_dr < 60.0) {
-            deltaPhi = 0.002f + 4.33e-4f * pt_scale * abs_dr;
+            deltaPhi = 0.002f + 4.33e-4f * ptScale * abs_dr;
           } else {
-            deltaPhi = 0.015f + 2.2e-4f * pt_scale * abs_dr;
+            deltaPhi = 0.015f + 2.2e-4f * ptScale * abs_dr;
           }
         }
       }
 
       std::uint32_t first_it = 0;
-
-      for (std::uint32_t n1Idx = 0; n1Idx < B1.m_vn.size();
-           n1Idx++) {  // loop over nodes in Layer 1
-
+      // loop over nodes in Layer 1
+      for (std::uint32_t n1Idx = 0; n1Idx < B1.m_vn.size(); ++n1Idx) {
         std::vector<std::uint32_t>& v1In = B1.m_in[n1Idx];
 
         if (v1In.size() >= gbtsMaxSegPerNode) {
@@ -291,10 +289,9 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
         float minPhi = phi1 - deltaPhi;
         float maxPhi = phi1 + deltaPhi;
 
+        // sliding window over nodes in Layer 2
         for (std::uint32_t n2PhiIdx = first_it;
-             n2PhiIdx < B2.m_vPhiNodes.size();
-             n2PhiIdx++) {  // sliding window over nodes in Layer 2
-
+             n2PhiIdx < B2.m_vPhiNodes.size(); n2PhiIdx++) {
           float phi2 = B2.m_vPhiNodes[n2PhiIdx].first;
 
           if (phi2 < minPhi) {
@@ -414,7 +411,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
               v1In.push_back(nEdges);
             }
 
-            std::int32_t outEdgeIdx = nEdges;
+            std::uint32_t outEdgeIdx = nEdges;
 
             float uat_2 = 1.f / exp_eta;
             float Phi2 = phi2 + dPhi2;
@@ -472,17 +469,17 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
   return std::make_pair(nEdges, nConnections);
 }
 
-std::int32_t SeedFinderGbts::runCCA(std::int32_t nEdges,
+std::int32_t SeedFinderGbts::runCCA(std::uint32_t nEdges,
                                     std::vector<GbtsEdge>& edgeStorage) const {
-  constexpr std::int32_t maxIter = 15;
+  constexpr std::uint32_t maxIter = 15;
 
   std::int32_t maxLevel = 0;
 
-  std::int32_t iter = 0;
+  std::uint32_t iter = 0;
 
   std::vector<GbtsEdge*> v_old;
 
-  for (std::int32_t edgeIndex = 0; edgeIndex < nEdges; edgeIndex++) {
+  for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
     GbtsEdge* pS = &(edgeStorage[edgeIndex]);
     if (pS->m_nNei == 0) {
       continue;
@@ -501,26 +498,26 @@ std::int32_t SeedFinderGbts::runCCA(std::int32_t nEdges,
     v_new.clear();
 
     for (auto pS : v_old) {
-      std::int32_t next_level = pS->m_level;
+      std::int32_t nextLevel = pS->m_level;
 
-      for (std::int32_t nIdx = 0; nIdx < pS->m_nNei; nIdx++) {
+      for (std::uint32_t nIdx = 0; nIdx < pS->m_nNei; ++nIdx) {
         std::uint32_t nextEdgeIdx = pS->m_vNei[nIdx];
 
         GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
 
         if (pS->m_level == pN->m_level) {
-          next_level = pS->m_level + 1;
+          nextLevel = pS->m_level + 1;
           v_new.push_back(pS);
           break;
         }
       }
 
-      pS->m_next = next_level;  // proposal
+      pS->m_next = nextLevel;  // proposal
     }
 
     // update
 
-    std::int32_t nChanges = 0;
+    std::uint32_t nChanges = 0;
 
     for (auto pS : v_new) {
       if (pS->m_next != pS->m_level) {
@@ -544,12 +541,12 @@ std::int32_t SeedFinderGbts::runCCA(std::int32_t nEdges,
 }
 
 void SeedFinderGbts::extractSeedsFromTheGraph(
-    std::int32_t maxLevel, std::int32_t nEdges, std::int32_t nHits,
+    std::uint32_t maxLevel, std::uint32_t nEdges, std::int32_t nHits,
     std::vector<GbtsEdge>& edgeStorage,
     std::vector<SeedProperties>& vSeedCandidates) const {
   vSeedCandidates.clear();
 
-  std::int32_t minLevel = 3;  // a triplet + 2 confirmation
+  std::uint32_t minLevel = 3;  // a triplet + 2 confirmation
 
   if (m_config.lrtMode) {
     minLevel = 2;  // a triplet + 1 confirmation
@@ -563,10 +560,10 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
 
   vSeeds.reserve(nEdges / 2);
 
-  for (std::int32_t edgeIndex = 0; edgeIndex < nEdges; edgeIndex++) {
+  for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
     GbtsEdge* pS = &(edgeStorage.at(edgeIndex));
 
-    if (pS->m_level < minLevel) {
+    if (pS->m_level < static_cast<std::int32_t>(minLevel)) {
       continue;
     }
 
@@ -598,7 +595,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
       continue;
     }
 
-    if (static_cast<std::int32_t>(rs.m_vs.size()) < minLevel) {
+    if (minLevel > static_cast<std::uint32_t>(rs.m_vs.size())) {
       continue;
     }
 
@@ -627,7 +624,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
 
     vSpIdx.resize(vN.size());
 
-    for (std::uint32_t k = 0; k < vN.size(); k++) {
+    for (std::uint32_t k = 0; k < vN.size(); ++k) {
       vSpIdx[k] = vN[k]->sp_idx();
     }
 
@@ -644,21 +641,21 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
 
   std::iota(vTrackIds.begin(), vTrackIds.end(), 1);
 
-  std::vector<std::int32_t> H2T(nHits + 1, 0);  // hit to track associations
+  std::vector<std::uint32_t> h2t(nHits + 1, 0);  // hit to track associations
 
-  std::int32_t seedIdx = 0;
+  std::uint32_t seedIdx = 0;
 
   for (const auto& seed : vSeedCandidates) {
     for (const auto& h : seed.spacepoints) {  // loop over spacepoints indices
 
-      std::uint32_t hit_id = h + 1;
+      std::uint32_t hitId = h + 1;
 
-      std::int32_t tid = H2T[hit_id];
-      std::int32_t trackId = vTrackIds[seedIdx];
+      std::uint32_t tid = h2t[hitId];
+      std::uint32_t trackId = vTrackIds[seedIdx];
 
       if (tid == 0 || tid > trackId) {  // un-used hit or used by a lesser track
 
-        H2T[hit_id] = trackId;  // overwrite
+        h2t[hitId] = trackId;  // overwrite
       }
     }
 
@@ -666,16 +663,16 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   }
 
   for (std::uint32_t trackIdx = 0; trackIdx < vSeedCandidates.size();
-       trackIdx++) {
-    std::int32_t nTotal = vSeedCandidates[trackIdx].spacepoints.size();
-    std::int32_t nOther = 0;
+       ++trackIdx) {
+    std::uint32_t nTotal = vSeedCandidates[trackIdx].spacepoints.size();
+    std::uint32_t nOther = 0;
 
-    std::int32_t trackId = vTrackIds[trackIdx];
+    std::uint32_t trackId = vTrackIds[trackIdx];
 
     for (const auto& h : vSeedCandidates[trackIdx].spacepoints) {
-      std::uint32_t hit_id = h + 1;
+      std::uint32_t hitId = h + 1;
 
-      std::int32_t tid = H2T[hit_id];
+      std::uint32_t tid = h2t[hitId];
 
       if (tid != trackId) {  // taken by a better candidate
         nOther++;

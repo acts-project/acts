@@ -78,14 +78,15 @@ class SeedFinderGbts {
   SeedContainer2 createSeeds(
       const RoiDescriptor& roi,
       const SPContainerComponentsType& SpContainerComponents,
-      std::int32_t maxLayers) const;
+      std::uint32_t maxLayers) const;
 
   /// Create graph nodes from spacepoints.
   /// @param container Spacepoint container components
   /// @param MaxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(
-      const SPContainerComponentsType& container, std::int32_t maxLayers) const;
+      const SPContainerComponentsType& container,
+      std::uint32_t maxLayers) const;
 
   /// Parse machine learning lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
@@ -105,7 +106,7 @@ class SeedFinderGbts {
   /// @param nEdges Number of edges in the graph
   /// @param edgeStorage Storage containing graph edges
   /// @return Number of connected components found
-  std::int32_t runCCA(std::int32_t nEdges,
+  std::int32_t runCCA(std::uint32_t nEdges,
                       std::vector<GbtsEdge>& edgeStorage) const;
 
   /// Extract seed candidates from the graph.
@@ -115,7 +116,7 @@ class SeedFinderGbts {
   /// @param edgeStorage Storage containing edges
   /// @param vSeedCandidates Output vector for seed candidates
   void extractSeedsFromTheGraph(
-      std::int32_t maxLevel, std::int32_t nEdges, std::int32_t nHits,
+      std::uint32_t maxLevel, std::uint32_t nEdges, std::int32_t nHits,
       std::vector<GbtsEdge>& edgeStorage,
       std::vector<SeedProperties>& vSeedCandidates) const;
 
