@@ -26,7 +26,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
   m_connMap.clear();
   m_layerGroups.clear();
 
-  std::int32_t nLinks{};
+  std::uint32_t nLinks{};
 
   std::ifstream input_ifstream(inFile.c_str(), std::ifstream::in);
 
@@ -36,26 +36,30 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
 
   input_ifstream >> nLinks >> m_etaBin;
 
-  for (std::int32_t l = 0; l < nLinks; l++) {
-    std::uint32_t stage{}, lIdx{}, src{}, dst{}, nEntries{};
-    std::int32_t height{}, width{};
+  for (std::uint32_t l = 0; l < nLinks; l++) {
+    std::uint32_t stage{};
+    std::uint32_t lIdx{};
+    std::uint32_t src{};
+    std::uint32_t dst{};
+    std::uint32_t nEntries{};
+    std::uint32_t height{};
+    std::uint32_t width{};
 
     input_ifstream >> lIdx >> stage >> src >> dst >> height >> width >>
         nEntries;
 
-    std::unique_ptr<GbtsConnection> pC =
-        std::make_unique<GbtsConnection>(src, dst);
+    auto pC = std::make_unique<GbtsConnection>(src, dst);
 
-    std::int32_t dummy{};
+    std::uint32_t dummy{};
 
-    for (std::int32_t i = 0; i < height; i++) {
-      for (std::int32_t j = 0; j < width; j++) {
-        input_ifstream >> dummy;  // pC->m_binTable[j+i*width];
+    for (std::uint32_t i = 0; i < height; ++i) {
+      for (std::uint32_t j = 0; j < width; ++j) {
+        input_ifstream >> dummy;
       }
     }
 
-    std::int32_t srcvol_id = src / 1000;
-    std::int32_t dstvol_id = dst / 1000;
+    std::uint32_t srcvol_id = src / 1000;
+    std::uint32_t dstvol_id = dst / 1000;
 
     bool srcIsStrip = (srcvol_id == 13 || srcvol_id == 12 || srcvol_id == 14);
     bool dstIsStrip = (dstvol_id == 13 || dstvol_id == 12 || dstvol_id == 14);
@@ -69,9 +73,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
       }
     }
 
-    std::map<std::int32_t,
-             std::vector<std::unique_ptr<GbtsConnection>>>::iterator it =
-        m_connMap.find(stage);
+    auto it = m_connMap.find(stage);
 
     if (it == m_connMap.end()) {
       std::vector<std::unique_ptr<GbtsConnection>> v;
@@ -94,7 +96,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
     }
   }
 
-  std::int32_t stageCounter = 0;
+  std::uint32_t stageCounter = 0;
 
   while (!lConns.empty()) {
     std::unordered_map<std::uint32_t, std::pair<std::int32_t, std::int32_t>>
@@ -105,8 +107,8 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
       if (entryIt != mCounter.end()) {
         (*entryIt).second.first++;
       } else {
-        std::int32_t nDst = 1;
-        std::int32_t nSrc = 0;
+        std::uint32_t nDst = 1;
+        std::uint32_t nSrc = 0;
         mCounter.insert(
             std::make_pair(conn->m_dst, std::make_pair(nDst, nSrc)));
       }
@@ -115,8 +117,8 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
       if (entryIt != mCounter.end()) {
         (*entryIt).second.second++;
       } else {
-        std::int32_t nDst = 0;
-        std::int32_t nSrc = 1;
+        std::uint32_t nDst = 0;
+        std::uint32_t nSrc = 1;
         mCounter.insert(
             std::make_pair(conn->m_src, std::make_pair(nDst, nSrc)));
       }
@@ -155,15 +157,12 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
 
   // create layer groups
 
-  std::int32_t currentStage = 0;
+  std::uint32_t currentStage = 0;
 
   // the doublet making is done using "outside-in" approach hence the reverse
   // iterations
 
-  for (std::map<std::int32_t,
-                std::vector<const GbtsConnection*>>::reverse_iterator it =
-           newConnMap.rbegin();
-       it != newConnMap.rend(); ++it, currentStage++) {
+  for (auto it = newConnMap.rbegin(); it != newConnMap.rend(); ++it) {
     const std::vector<const GbtsConnection*>& vConn = (*it).second;
 
     // loop over links, extract all connections for the stage, group sources by
@@ -193,6 +192,8 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
     }
 
     m_layerGroups.insert(std::make_pair(currentStage, lgv));
+
+    currentStage++;
   }
 
   newConnMap.clear();
