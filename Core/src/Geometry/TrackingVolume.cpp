@@ -37,6 +37,26 @@
 namespace Acts {
 
 TrackingVolume::TrackingVolume(
+    VolumePlacementBase& placement, std::shared_ptr<VolumeBounds> volumeBounds,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    std::unique_ptr<const LayerArray> staticLayerArray,
+    std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
+    MutableTrackingVolumeVector denseVolumeVector,
+    const std::string& volumeName)
+    : Volume(placement, std::move(volumeBounds)),
+      m_confinedLayers(std::move(staticLayerArray)),
+      m_confinedVolumes(std::move(containedVolumeArray)),
+      m_confinedDenseVolumes({}),
+      m_volumeMaterial(std::move(volumeMaterial)),
+      m_name(volumeName) {
+  createBoundarySurfaces();
+  interlinkLayers();
+  connectDenseBoundarySurfaces(denseVolumeVector);
+
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
+}
+
+TrackingVolume::TrackingVolume(
     const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
@@ -64,6 +84,12 @@ TrackingVolume::TrackingVolume(const Volume& volume,
 
   m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
+
+TrackingVolume::TrackingVolume(VolumePlacementBase& placement,
+                               std::shared_ptr<VolumeBounds> volbounds,
+                               const std::string& volumeName)
+    : TrackingVolume(placement, std::move(volbounds), nullptr, nullptr, nullptr,
+                     {}, volumeName) {}
 
 TrackingVolume::TrackingVolume(const Transform3& transform,
                                std::shared_ptr<VolumeBounds> volbounds,
@@ -160,7 +186,7 @@ void TrackingVolume::createBoundarySurfaces() {
   using Boundary = BoundarySurfaceT<TrackingVolume>;
 
   // Transform Surfaces To BoundarySurfaces
-  auto orientedSurfaces = Volume::volumeBounds().orientedSurfaces(m_transform);
+  auto orientedSurfaces = volumeBounds().boundarySurfaces(*this);
 
   m_boundarySurfaces.reserve(orientedSurfaces.size());
   for (auto& osf : orientedSurfaces) {
