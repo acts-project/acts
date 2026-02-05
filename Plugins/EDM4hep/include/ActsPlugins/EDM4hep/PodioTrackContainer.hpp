@@ -215,9 +215,8 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   /// Constructor from reference (for RefHolder)
   /// @param helper Conversion helper
   /// @param collection Track collection reference
-  explicit MutablePodioTrackContainer(
-      const PodioUtil::ConversionHelper& helper,
-      ActsPodioEdm::TrackCollection& collection)
+  explicit MutablePodioTrackContainer(const PodioUtil::ConversionHelper& helper,
+                                      ActsPodioEdm::TrackCollection& collection)
     requires std::is_same_v<holder_t<ActsPodioEdm::TrackCollection>,
                             Acts::RefHolder<ActsPodioEdm::TrackCollection>>
       : PodioTrackContainerBase{helper}, m_collection{collection} {
@@ -409,9 +408,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     requires(std::is_same_v<holder_t<ActsPodioEdm::TrackCollection>,
                             Acts::ValueHolder<ActsPodioEdm::TrackCollection>> ||
              std::is_same_v<holder_t<ActsPodioEdm::TrackCollection>,
-                            std::unique_ptr<ActsPodioEdm::TrackCollection>> ||
-             std::is_same_v<holder_t<ActsPodioEdm::TrackCollection>,
-                            std::shared_ptr<ActsPodioEdm::TrackCollection>>)
+                            std::unique_ptr<ActsPodioEdm::TrackCollection>>)
   {
     std::string s = suffix;
     if (!s.empty()) {
@@ -422,13 +419,6 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
                       holder_t<ActsPodioEdm::TrackCollection>,
                       std::unique_ptr<ActsPodioEdm::TrackCollection>>) {
       frame.put(std::move(m_collection), "tracks" + s);
-    } else if constexpr (std::is_same_v<
-                             holder_t<ActsPodioEdm::TrackCollection>,
-                             std::shared_ptr<ActsPodioEdm::TrackCollection>>) {
-      frame.put(
-          std::unique_ptr<ActsPodioEdm::TrackCollection>(m_collection.get()),
-          "tracks" + s);
-      m_collection.reset();
     } else {
       frame.put(std::make_unique<ActsPodioEdm::TrackCollection>(
                     std::move(*m_collection)),
@@ -504,8 +494,8 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
                            const podio::Frame& frame,
                            const std::string& suffix = "")
     requires std::is_same_v<
-        holder_t<const ActsPodioEdm::TrackCollection>,
-        Acts::ConstRefHolder<const ActsPodioEdm::TrackCollection>>
+                 holder_t<const ActsPodioEdm::TrackCollection>,
+                 Acts::ConstRefHolder<const ActsPodioEdm::TrackCollection>>
       : PodioTrackContainerBase{helper},
         m_collection{*getTrackCollectionFromFrame(frame, suffix)} {
     std::string s = suffix.empty() ? suffix : "_" + suffix;
