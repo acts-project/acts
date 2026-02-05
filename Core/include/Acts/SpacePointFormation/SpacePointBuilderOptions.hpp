@@ -21,11 +21,12 @@ using ParamCovAccessor =
     std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
         const SourceLink&)>;
 
+/// Options controlling space point construction.
 struct SpacePointBuilderOptions {
-  // ends of strip pairs
+  /// Ends of strip pairs
   std::pair<std::pair<Vector3, Vector3>, std::pair<Vector3, Vector3>>
       stripEndsPair;
-  // accessor of local position and covariance from source link
+  /// Accessor of local position and covariance from source link
   ParamCovAccessor paramCovAccessor;
   /// vertex position
   Vector3 vertex = {0., 0., 0.};
@@ -35,8 +36,9 @@ struct SpacePointBuilderOptions {
   double stripLengthGapTolerance = 0.01;
 };
 
+/// Options for validating strip pair candidates.
 struct StripPairOptions {
-  // accessor of local position and covariance from source link
+  /// Accessor for local position and covariance from source link
   ParamCovAccessor paramCovAccessor;
   /// vertex position
   Vector3 vertex = {0., 0., 0.};

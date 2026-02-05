@@ -266,6 +266,7 @@ class LineSurface : public Surface {
   /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const final;
   /// This method returns the shared_ptr to the LineBounds
+  /// @return Shared pointer to the line bounds
   const std::shared_ptr<const LineBounds>& boundsPtr() const;
   /// Overwrite the existing surface bounds with new ones
   /// @param newBounds: Pointer to the new bounds

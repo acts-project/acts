@@ -32,6 +32,7 @@ namespace ActsPlugins {
 /// and writing.
 class RootMaterialTrackIo {
  public:
+  /// Configuration struct for material track I/O
   struct Config {
     /// Whether to store pre- and post-step information
     bool prePostStepInfo = false;

@@ -181,54 +181,88 @@ static_assert(std::is_trivially_copy_constructible_v<Intersection2D>);
 static_assert(std::is_trivially_move_constructible_v<Intersection2D>);
 static_assert(std::is_trivially_move_assignable_v<Intersection2D>);
 
+/// Index type for intersections
 using IntersectionIndex = std::uint8_t;
+/// Maximum number of intersections that can be stored
 static constexpr IntersectionIndex s_maximumNumberOfIntersections = 2;
 
+/// Container for up to two intersections in a given dimension.
 template <unsigned int DIM>
 class MultiIntersection {
  public:
+  /// Intersection type for this dimension
   using IntersectionType = Intersection<DIM>;
+  /// Pair of intersection and its index
   using IndexedIntersection = std::pair<IntersectionType, IntersectionIndex>;
 
+  /// Container type for storing intersections
   using Container =
       std::array<IntersectionType, s_maximumNumberOfIntersections>;
 
+  /// Size type for indexing
   using size_type = IntersectionIndex;
 
+  /// Construct from single intersection
+  /// @param intersection The intersection
   constexpr explicit MultiIntersection(
       const IntersectionType& intersection) noexcept
       : m_intersections{intersection, IntersectionType::Invalid()}, m_size{1} {}
+  /// Construct from two intersections
+  /// @param intersection1 The first intersection
+  /// @param intersection2 The second intersection
   constexpr MultiIntersection(const IntersectionType& intersection1,
                               const IntersectionType& intersection2) noexcept
       : m_intersections{intersection1, intersection2}, m_size{2} {}
 
+  /// Copy constructor
   constexpr MultiIntersection(const MultiIntersection&) noexcept = default;
+  /// Move constructor
   constexpr MultiIntersection(MultiIntersection&&) noexcept = default;
+  /// Copy assignment operator
+  /// @return Reference to this object
   constexpr MultiIntersection& operator=(const MultiIntersection&) noexcept =
       default;
+  /// Move assignment operator
+  /// @return Reference to this object
   constexpr MultiIntersection& operator=(MultiIntersection&&) noexcept =
       default;
 
+  /// Access intersection by index
+  /// @param index The index of the intersection
+  /// @return Reference to the intersection
   constexpr const IntersectionType& operator[](IntersectionIndex index) const {
     return m_intersections[index];
   }
 
+  /// Access intersection at index with bounds checking
+  /// @param index The index of the intersection
+  /// @return Reference to the intersection
   constexpr const IntersectionType& at(IntersectionIndex index) const {
     return m_intersections.at(index);
   }
 
+  /// Get the number of intersections
+  /// @return The number of intersections
   constexpr IntersectionIndex size() const noexcept { return m_size; }
 
+  /// Get begin iterator
+  /// @return Iterator to the beginning
   constexpr auto begin() const noexcept {
     return std::span(m_intersections.data(), m_size).begin();
   }
+  /// Get end iterator
+  /// @return Iterator to the end
   constexpr auto end() const noexcept {
     return std::span(m_intersections.data(), m_size).end();
   }
 
+  /// Get closest intersection
+  /// @return The closest intersection
   constexpr IntersectionType closest() const noexcept {
     return closestWithIndex().first;
   }
+  /// Get closest intersection with its index
+  /// @return Pair of intersection and its index
   constexpr IndexedIntersection closestWithIndex() const noexcept {
     auto min = std::ranges::min_element(m_intersections,
                                         IntersectionType::closestOrder);
@@ -236,9 +270,13 @@ class MultiIntersection {
                       std::distance(m_intersections.begin(), min))};
   }
 
+  /// Get closest forward intersection
+  /// @return The closest forward intersection
   constexpr IntersectionType closestForward() const noexcept {
     return closestForwardWithIndex().first;
   }
+  /// Get closest forward intersection with its index
+  /// @return Pair of intersection and its index
   constexpr IndexedIntersection closestForwardWithIndex() const noexcept {
     auto min = std::ranges::min_element(m_intersections,
                                         IntersectionType::closestForwardOrder);
@@ -251,7 +289,9 @@ class MultiIntersection {
   IntersectionIndex m_size{};
 };
 
+/// Container for up to two 2D intersections
 using MultiIntersection2D = MultiIntersection<2>;
+/// Container for up to two 3D intersections
 using MultiIntersection3D = MultiIntersection<3>;
 
 static_assert(std::is_trivially_copy_constructible_v<MultiIntersection2D>);

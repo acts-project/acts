@@ -77,8 +77,11 @@ class DoubletsForMiddleSp {
   /// @return Const reference to cotTheta values vector
   const std::vector<float>& cotTheta() const { return m_cotTheta; }
 
+  /// Pair of doublet index and cotTheta value.
   struct IndexAndCotTheta {
+    /// Doublet index
     Index index{};
+    /// Cotangent of theta
     float cotTheta{};
   };
 
@@ -100,24 +103,48 @@ class DoubletsForMiddleSp {
     });
   }
 
+  /// Proxy accessor for a single doublet entry.
   class Proxy {
    public:
+    /// Constructor
+    /// @param container Pointer to the doublet container
+    /// @param index Index of the doublet
     Proxy(const DoubletsForMiddleSp* container, Index index)
         : m_container(container), m_index(index) {}
 
+    /// Get the doublet container
+    /// @return Reference to the container
     const DoubletsForMiddleSp& container() const { return *m_container; }
+    /// Get the doublet index
+    /// @return The index
     Index index() const { return m_index; }
 
+    /// Get space point index pair
+    /// @return The space point index
     SpacePointIndex2 spacePointIndex() const {
       return m_container->m_spacePoints[m_index];
     }
 
+    /// Get cotangent of theta
+    /// @return The cotTheta value
     float cotTheta() const { return m_container->m_cotTheta[m_index]; }
+    /// Get er value
+    /// @return The er value
     float er() const { return m_container->m_er_iDeltaR[m_index][0]; }
+    /// Get inverse delta r
+    /// @return The inverse delta r value
     float iDeltaR() const { return m_container->m_er_iDeltaR[m_index][1]; }
+    /// Get u coordinate
+    /// @return The u value
     float u() const { return m_container->m_uv[m_index][0]; }
+    /// Get v coordinate
+    /// @return The v value
     float v() const { return m_container->m_uv[m_index][1]; }
+    /// Get x coordinate
+    /// @return The x value
     float x() const { return m_container->m_xy[m_index][0]; }
+    /// Get y coordinate
+    /// @return The y value
     float y() const { return m_container->m_xy[m_index][1]; }
 
    private:
@@ -166,9 +193,11 @@ class DoubletsForMiddleSp {
   /// @return Const iterator past the last doublet
   const_iterator end() const { return const_iterator(*this, size()); }
 
+  /// Range view over doublets in the container.
   class Range : public detail::ContainerRange<Range, Range, DoubletsForMiddleSp,
                                               Index, true> {
    public:
+    /// Base class type alias
     using Base =
         detail::ContainerRange<Range, Range, DoubletsForMiddleSp, Index, true>;
 
@@ -185,19 +214,23 @@ class DoubletsForMiddleSp {
     return Range(*this, range);
   }
 
+  /// Subset view of doublets addressed by indices.
   class Subset
       : public detail::ContainerSubset<Subset, Subset, DoubletsForMiddleSp,
                                        Proxy, Index, true> {
    public:
+    /// Base class type alias
     using Base = detail::ContainerSubset<Subset, Subset, DoubletsForMiddleSp,
                                          Proxy, Index, true>;
 
     using Base::Base;
   };
+  /// Subset view of doublets addressed by index and cotTheta pairs.
   class Subset2
       : public detail::ContainerSubset<Subset2, Subset2, DoubletsForMiddleSp,
                                        Proxy2, IndexAndCotTheta, true> {
    public:
+    /// Base class type alias
     using Base = detail::ContainerSubset<Subset2, Subset2, DoubletsForMiddleSp,
                                          Proxy2, IndexAndCotTheta, true>;
 
@@ -227,6 +260,7 @@ class DoubletsForMiddleSp {
   std::vector<std::array<float, 2>> m_xy;
 };
 
+/// Derived quantities for the middle space point in a doublet.
 struct MiddleSpInfo {
   /// minus one over radius of middle SP
   float uIP{};

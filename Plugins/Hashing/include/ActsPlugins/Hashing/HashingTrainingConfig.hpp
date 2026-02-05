@@ -14,6 +14,7 @@ namespace ActsPlugins {
 /// @addtogroup hashing_plugin
 /// @{
 
+/// Configuration for hashing training
 struct HashingTrainingConfig {
   /// Random seed for Annoy
   std::uint32_t annoySeed = 123456789;
