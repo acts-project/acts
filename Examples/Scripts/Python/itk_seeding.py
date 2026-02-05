@@ -14,7 +14,7 @@ from acts.examples.reconstruction import (
     addStandardSeeding,
 )
 
-from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
+from acts.examples.itk import InputSpacePointsType
 
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
