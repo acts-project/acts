@@ -314,3 +314,11 @@ datatypes:
         void setCov(float val, E enumI, E enumJ) {
           setCov(val, findSubspaceIndex(enumI), findSubspaceIndex(enumJ));
         }
+
+
+links:
+  ActsPodioEdm::TrackStateHitLink:
+    Description: "A link between a TrackState and a TrackerHit"
+    Author: "Paul Gessinger, CERN"
+    From: ActsPodioEdm::TrackState
+    To: ActsPodioEdm::TrackerHitLocal
