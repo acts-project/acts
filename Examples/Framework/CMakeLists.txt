@@ -21,6 +21,7 @@ acts_add_library(
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
     src/Utilities/ParametricParticleGenerator.cpp
+    src/Utilities/VertexTruthUtility.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
     src/Validation/FakePlotTool.cpp

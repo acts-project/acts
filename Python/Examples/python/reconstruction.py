@@ -2435,6 +2435,7 @@ def addVertexFitting(
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
         CsvVertexWriter,
+        VertexTruthMatcher,
     )
     from acts.examples.root import RootVertexNTupleWriter
 
@@ -2513,6 +2514,18 @@ def addVertexFitting(
     else:
         raise RuntimeError("Invalid finder argument")
 
+    s.addAlgorithm(
+        VertexTruthMatcher(
+            level=customLogLevel(),
+            inputVertices=outputVertices,
+            inputTracks=tracks,
+            inputParticles=inputParticles,
+            inputTrackParticleMatching="track_particle_matching",
+            outputVertexTruthMatching="vertex_truth_matching",
+            outputTruthVertexMatching="truth_vertex_matching",
+        )
+    )
+
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
         if not outputDirCsv.exists():
@@ -2539,6 +2552,7 @@ def addVertexFitting(
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
+                inputVertexTruthMatching="vertex_truth_matching",
                 bField=field,
                 writeTrackInfo=writeTrackInfo,
                 treeName="vertexing",
