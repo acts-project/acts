@@ -21,6 +21,7 @@ namespace Acts {
 /// single volumes with polygon shape or stacked (multiple) volumes (TODO)
 class DiamondPortalShell : public PortalShellBase {
  public:
+  /// Type alias for the face enumeration
   using Face = DiamondVolumeBounds::Face;
 
   using enum DiamondVolumeBounds::Face;

@@ -56,6 +56,7 @@ namespace ActsPlugins {
 /// If the flag is set to true the r-axis grid values will be set to
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
+/// @return Interpolated magnetic field map in R-Z coordinates
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>>>
@@ -106,6 +107,7 @@ makeMagneticFieldMapRzFromRoot(
 /// If the flag is set to true the z-axis grid values will be set to
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
+/// @return Interpolated magnetic field map in X-Y-Z coordinates
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>,
