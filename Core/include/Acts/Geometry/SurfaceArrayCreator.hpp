@@ -74,14 +74,24 @@ class SurfaceArrayCreator {
   friend struct ActsTests::SurfaceArrayCreatorFixture;
   friend class SurfaceArray;
 
+  /// Prototype axis definition for surface binning.
   struct ProtoAxis {
+    /// Binning type (equidistant or variable)
     BinningType bType = BinningType::equidistant;
+    /// Axis direction for binning
     AxisDirection axisDir = AxisDirection::AxisX;
+    /// Number of bins
     std::size_t nBins = 0;
+    /// Minimum value of the axis
     AxisScalar min = 0;
+    /// Maximum value of the axis
     AxisScalar max = 0;
+    /// Bin edges for variable binning
     std::vector<AxisScalar> binEdges;
 
+    /// Get the bin index for a given value
+    /// @param x The value to find the bin for
+    /// @return The bin index
     std::size_t getBin(AxisScalar x) const {
       if (binEdges.empty()) {
         // equidistant
@@ -96,7 +106,7 @@ class SurfaceArrayCreator {
     }
   };
 
-  // Configuration struct
+  /// Configuration options for the surface array creator.
   struct Config {
     /// Type-erased function which determines whether two surfaces are
     /// supposed to be considered equivalent in terms of the binning

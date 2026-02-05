@@ -14,6 +14,7 @@ namespace ActsPlugins {
 /// @addtogroup hashing_plugin
 /// @{
 
+/// Configuration for the hashing algorithm
 struct HashingAlgorithmConfig {
   /// Size of the buckets = number of spacepoints in the bucket
   std::uint32_t bucketSize = 10;
@@ -24,8 +25,11 @@ struct HashingAlgorithmConfig {
 
   /// Layer selection
   double layerRMin = 25;
+  /// Maximum radial extent of the layer
   double layerRMax = 40;
+  /// Minimum z extent of the layer
   double layerZMin = -550;
+  /// Maximum z extent of the layer
   double layerZMax = 550;
 };
 

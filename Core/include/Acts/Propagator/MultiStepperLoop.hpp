@@ -173,6 +173,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @brief How many components can this stepper manage?
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
+  /// Configuration for the multi-stepper loop.
   struct Config : public SingleStepper::Config {
     /// Limits the number of steps after at least one component reached the
     /// surface
@@ -183,6 +184,7 @@ class MultiStepperLoop : public single_stepper_t {
     using SingleOptions::SingleOptions;
   };
 
+  /// State container for multi-component stepping.
   struct State {
     /// The struct that stores the individual components
     struct Component {
@@ -201,6 +203,7 @@ class MultiStepperLoop : public single_stepper_t {
           : state(std::move(state_)), weight(weight_), status(status_) {}
     };
 
+    /// Options for the propagation
     Options options;
 
     /// Particle hypothesis
@@ -209,8 +212,11 @@ class MultiStepperLoop : public single_stepper_t {
     /// The components of which the state consists
     SmallVector<Component> components;
 
+    /// Whether to transport covariance
     bool covTransport = false;
+    /// Accumulated path length
     double pathAccumulated = 0.;
+    /// Number of steps taken
     std::size_t steps = 0;
 
     /// Step-limit counter which limits the number of steps when one component

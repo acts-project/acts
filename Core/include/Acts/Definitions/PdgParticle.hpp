@@ -54,6 +54,8 @@ enum PdgParticle : std::int32_t {
 };
 
 /// Convert an anti-particle to its particle and leave particles as-is.
+/// @param pdg The PDG particle code
+/// @return The absolute PDG particle code
 static constexpr PdgParticle makeAbsolutePdgParticle(PdgParticle pdg) {
   const auto value = static_cast<std::int32_t>(pdg);
   return static_cast<PdgParticle>((0 <= value) ? value : -value);
@@ -62,6 +64,8 @@ static constexpr PdgParticle makeAbsolutePdgParticle(PdgParticle pdg) {
 /// Check if the PDG belongs to a nucleus, i.e. if it has 10 digits.
 /// See PDG section "Monte Carlo Particle Numbering Scheme", point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
+/// @param pdg The PDG particle code
+/// @return True if the PDG code represents a nucleus
 static constexpr bool isNucleus(PdgParticle pdg) {
   const auto value = static_cast<std::int32_t>(pdg);
   return std::abs(value) > 1e9;
@@ -71,6 +75,8 @@ static constexpr bool isNucleus(PdgParticle pdg) {
 /// a form 10LZZZAAAI, where I is isomer level; I=0 is the ground state.
 /// See PDG section "Monte Carlo Particle Numbering Scheme", point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
+/// @param pdg The PDG particle code of the nucleus
+/// @return The PDG particle code of the nucleus in its ground state
 static constexpr PdgParticle makeNucleusGroundState(PdgParticle pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
@@ -85,6 +91,8 @@ static constexpr PdgParticle makeNucleusGroundState(PdgParticle pdg) {
 /// atomic number, I is isomer level. See PDG section "Monte Carlo Particle
 /// Numbering Scheme" , point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
+/// @param pdg The PDG particle code of the nucleus
+/// @return A pair containing the proton number (Z) and atomic number (A)
 static constexpr std::pair<std::int32_t, std::int32_t> extractNucleusZandA(
     PdgParticle pdg) {
   if (!isNucleus(pdg)) {
@@ -114,6 +122,10 @@ enum class HadronType {
   Unknown = 12
 };
 
+/// Stream operator for HadronType
+/// @param os Output stream
+/// @param hadron The hadron type to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, HadronType hadron);
 
 /// Parse a PdgParticle from a particle name string.

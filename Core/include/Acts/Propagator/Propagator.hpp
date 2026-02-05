@@ -96,6 +96,8 @@ class Propagator final
   static_assert(BoundTrackParametersConcept<StepperBoundTrackParameters>,
                 "Stepper bound track parameters do not fulfill bound "
                 "parameters concept.");
+  static_assert(std::copy_constructible<StepperBoundTrackParameters>,
+                "return track parameter type must be copy-constructible");
 
   using Jacobian = BoundMatrix;
   using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;

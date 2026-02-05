@@ -32,14 +32,18 @@
 
 namespace Acts {
 
+/// Sentinel value for space points without timing information
 static constexpr float NoTime = std::numeric_limits<float>::quiet_NaN();
 
 class SpacePointContainer2;
 template <bool read_only>
 class SpacePointProxy2;
+/// Mutable proxy to a space point allowing modification
 using MutableSpacePointProxy2 = SpacePointProxy2<false>;
+/// Const proxy to a space point for read-only access
 using ConstSpacePointProxy2 = SpacePointProxy2<true>;
 
+/// Enumeration of available columns for space point data storage
 enum class SpacePointColumns : std::uint32_t {
   None = 0,  ///< No columns
 
@@ -70,6 +74,7 @@ enum class SpacePointColumns : std::uint32_t {
       TopStripVector | BottomStripVector | StripCenterDistance | TopStripCenter,
 };
 
+/// Enable bitwise operators for SpacePointColumns enum
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(SpacePointColumns);
 
 /// A container for space points, which can hold additional columns of data
@@ -864,18 +869,23 @@ class SpacePointContainer2 {
   /// @return Const iterator pointing past the last space point
   const_iterator end() const noexcept { return const_iterator(*this, size()); }
 
+  /// Range facade over contiguous index spans.
   template <bool read_only>
   class Range
       : public Acts::detail::ContainerRange<Range<read_only>, Range<true>,
                                             SpacePointContainer2, Index,
                                             read_only> {
    public:
+    /// Base class type
     using Base =
         Acts::detail::ContainerRange<Range<read_only>, Range<true>,
                                      SpacePointContainer2, Index, read_only>;
 
     using Base::Base;
 
+    /// Zip this range with additional columns
+    /// @param columns Additional columns to zip with the range
+    /// @return Zipped range with additional columns
     template <typename... Ts>
     auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
       return Base::container().zip(Base::range(), columns...);
@@ -899,6 +909,7 @@ class SpacePointContainer2 {
     return ConstRange(*this, range);
   }
 
+  /// Subset facade over arbitrary index sets.
   template <bool read_only>
   class Subset : public Acts::detail::ContainerSubset<
                      Subset<read_only>, Subset<true>, SpacePointContainer2,
@@ -906,6 +917,7 @@ class SpacePointContainer2 {
                                         MutableSpacePointProxy2>,
                      SpacePointIndex2, read_only> {
    public:
+    /// Base class type
     using Base = Acts::detail::ContainerSubset<
         Subset<read_only>, Subset<true>, SpacePointContainer2,
         std::conditional_t<read_only, ConstSpacePointProxy2,
@@ -914,6 +926,9 @@ class SpacePointContainer2 {
 
     using Base::Base;
 
+    /// Zip this subset with additional columns
+    /// @param columns Additional columns to zip with the subset
+    /// @return Zipped subset with additional columns
     template <typename... Ts>
     auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
       return Base::container().zip(Base::subset(), columns...);

@@ -15,21 +15,29 @@
 
 namespace Acts {
 
+/// Options for Ridders-based covariance propagation.
 template <typename propagator_t, typename actor_list_t = ActorList<>>
 struct RiddersPropagatorOptions
     : public propagator_t::template Options<actor_list_t> {
+  /// Base type
   using base_type = propagator_t::template Options<actor_list_t>;
 
+  /// Stepper options type
   using stepper_options_type = typename base_type::stepper_options_type;
+  /// Navigator options type
   using navigator_options_type = typename base_type::navigator_options_type;
+  /// Actor list type
   using actor_list_type = actor_list_t;
 
   /// PropagatorOptions with context
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
   RiddersPropagatorOptions(const GeometryContext& gctx,
                            const MagneticFieldContext& mctx)
       : base_type(gctx, mctx) {}
 
   /// PropagatorOptions with context and plain options
+  /// @param pOptions Plain propagator options
   explicit RiddersPropagatorOptions(const PropagatorPlainOptions& pOptions)
       : base_type(pOptions) {}
 
@@ -40,6 +48,7 @@ struct RiddersPropagatorOptions
   /// @tparam extended_actor_list_t Type of the new actor list
   ///
   /// @param extendedActorList The new actor list to be used (internally)
+  /// @return New options with extended actor list
   template <typename extended_actor_list_t>
   RiddersPropagatorOptions<propagator_t, extended_actor_list_t> extend(
       extended_actor_list_t extendedActorList) const {

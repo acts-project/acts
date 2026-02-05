@@ -44,14 +44,22 @@ class AtlasStepper {
   /// Type alias for bound state (parameters, jacobian, path length)
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 
+  /// Configuration for constructing an AtlasStepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Stepper options extending plain stepper settings.
   struct Options : public StepperPlainOptions {
+    /// Constructor from context objects
+    /// @param gctx Geometry context
+    /// @param mctx Magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain options
+    /// @param options Plain stepper options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }

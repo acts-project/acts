@@ -163,6 +163,7 @@ class CylinderSurface : public RegularSurface {
   const CylinderBounds& bounds() const final;
 
   /// This method returns the shared_ptr to the CylinderBounds
+  /// @return Shared pointer to the cylinder bounds
   const std::shared_ptr<const CylinderBounds>& boundsPtr() const;
   /// Overwrite the existing surface bounds with new ones
   /// @param newBounds: Pointer to the new bounds
