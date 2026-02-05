@@ -14,6 +14,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
@@ -23,7 +24,6 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
-#include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -371,7 +371,7 @@ class KalmanFitter {
         // -> Fill track state information & update stepper information
 
         ACTS_VERBOSE("Perform " << state.options.direction << " filter step");
-        auto res = filter(surface, state, stepper, navigator, result);
+        auto res = filter(*surface, state, stepper, navigator, result);
         if (!res.ok()) {
           ACTS_DEBUG("Error in " << state.options.direction
                                  << " filter: " << res.error());
@@ -443,21 +443,21 @@ class KalmanFitter {
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    Result<void> filter(const Surface* surface, propagator_state_t& state,
+    Result<void> filter(const Surface& surface, propagator_state_t& state,
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
       const bool precedingMeasurementExists = result.measurementStates > 0;
-      const bool surfaceIsSensitive = surface->isSensitive();
-      const bool surfaceHasMaterial = surface->surfaceMaterial() != nullptr;
+      const bool surfaceIsSensitive = surface.isSensitive();
+      const bool surfaceHasMaterial = surface.surfaceMaterial() != nullptr;
 
       // Try to find the surface in the measurement surfaces
-      const auto sourceLinkIt = inputMeasurements.find(surface);
+      const auto sourceLinkIt = inputMeasurements.find(&surface);
       if (sourceLinkIt != inputMeasurements.end()) {
         // Screen output message
-        ACTS_VERBOSE("Measurement surface " << surface->geometryId()
+        ACTS_VERBOSE("Measurement surface " << surface.geometryId()
                                             << " detected.");
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface,
+        stepper.transportCovarianceToBound(state.stepping, surface,
                                            freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
@@ -468,18 +468,75 @@ class KalmanFitter {
             NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
             logger());
 
-        // do the kalman update (no need to perform covTransport here, hence no
-        // point in performing globalToLocal correction)
-        const auto trackStateProxyRes = detail::kalmanHandleMeasurement(
-            *calibrationContext, state, stepper, extensions, *surface,
-            sourceLinkIt->second, *result.fittedStates, result.lastTrackIndex,
-            false, logger());
+        // Create a track state with the desired components
+        TrackStatePropMask mask =
+            TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+            TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+        typename traj_t::TrackStateProxy trackStateProxy =
+            result.fittedStates->makeTrackState(mask, result.lastTrackIndex);
 
-        if (!trackStateProxyRes.ok()) {
-          return trackStateProxyRes.error();
+        typename traj_t::ConstTrackStateProxy trackStateProxyConst{
+            trackStateProxy};
+
+        // Set the trackStateProxy components with the state from the ongoing
+        // propagation
+        trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+        // Bind the transported state to the current surface
+        auto res = stepper.boundState(state.stepping, surface, false,
+                                      freeToBoundCorrection);
+        if (!res.ok()) {
+          ACTS_DEBUG("Propagate to surface " << surface.geometryId()
+                                             << " failed: " << res.error());
+          return res.error();
+        }
+        const auto& [boundParams, jacobian, pathLength] = *res;
+
+        // Fill the track state
+        trackStateProxy.predicted() = boundParams.parameters();
+        trackStateProxy.predictedCovariance() = state.stepping.cov;
+
+        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.pathLength() = pathLength;
+
+        // We have predicted parameters, so calibrate the uncalibrated input
+        // measurement
+        extensions.calibrator(state.geoContext, *calibrationContext,
+                              sourceLinkIt->second, trackStateProxy);
+
+        // Get and set the type flags
+        auto typeFlags = trackStateProxy.typeFlags();
+        typeFlags.setHasParameters();
+        if (surface.surfaceMaterial() != nullptr) {
+          typeFlags.setHasMaterial();
         }
 
-        const auto& trackStateProxy = *trackStateProxyRes;
+        // Check if the state is an outlier.
+        // If not:
+        // - run Kalman update
+        // - tag it as a measurement
+        // - update the stepping state.
+        // Else, just tag it as an outlier
+        if (!extensions.outlierFinder(trackStateProxyConst)) {
+          // Run Kalman update
+          auto updateRes =
+              extensions.updater(state.geoContext, trackStateProxy, logger());
+          if (!updateRes.ok()) {
+            ACTS_DEBUG("Update step failed: " << updateRes.error());
+            return updateRes.error();
+          }
+          // Set the measurement type flag
+          typeFlags.setIsMeasurement();
+        } else {
+          ACTS_VERBOSE(
+              "Filtering step successful. But measurement is determined "
+              "to be an outlier. Stepping state is not updated.");
+          // Set the outlier type flag
+          typeFlags.setIsOutlier();
+          trackStateProxy.shareFrom(trackStateProxy,
+                                    TrackStatePropMask::Predicted,
+                                    TrackStatePropMask::Filtered);
+        }
+
         result.lastTrackIndex = trackStateProxy.index();
 
         // Update the stepper if it is not an outlier
@@ -492,7 +549,7 @@ class KalmanFitter {
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),
                          trackStateProxy.filtered(),
-                         trackStateProxy.filteredCovariance(), *surface);
+                         trackStateProxy.filteredCovariance(), surface);
           // We count the state with measurement
           ++result.measurementStates;
         }
@@ -518,21 +575,62 @@ class KalmanFitter {
         // We only create track states here if there is already measurement
         // detected or if the surface has material (no holes before the first
         // measurement)
-        const auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
-            state.stepping, stepper, *surface, *result.fittedStates,
-            result.lastTrackIndex, true, logger(), precedingMeasurementExists,
-            freeToBoundCorrection);
 
-        if (!trackStateProxyRes.ok()) {
-          return trackStateProxyRes.error();
+        // Create a track state with the desired components
+        TrackStatePropMask mask =
+            TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
+        typename traj_t::TrackStateProxy trackStateProxy =
+            result.fittedStates->makeTrackState(mask, result.lastTrackIndex);
+
+        // Set the trackStateProxy components with the state from the ongoing
+        // propagation
+        trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+        // Bind the transported state to the current surface
+        auto res = stepper.boundState(state.stepping, surface, true,
+                                      freeToBoundCorrection);
+        if (!res.ok()) {
+          return res.error();
+        }
+        const auto& [boundParams, jacobian, pathLength] = *res;
+
+        // Fill the track state
+        trackStateProxy.predicted() = boundParams.parameters();
+        trackStateProxy.predictedCovariance() = state.stepping.cov;
+
+        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.pathLength() = pathLength;
+
+        // Set the filtered parameter index to be the same with predicted
+        // parameter
+        trackStateProxy.shareFrom(trackStateProxy,
+                                  TrackStatePropMask::Predicted,
+                                  TrackStatePropMask::Filtered);
+
+        // Set the track state flags
+        auto typeFlags = trackStateProxy.typeFlags();
+        typeFlags.setHasParameters();
+
+        if (surfaceHasMaterial) {
+          typeFlags.setHasMaterial();
         }
 
-        const auto& trackStateProxy = *trackStateProxyRes;
+        if (surfaceIsSensitive && precedingMeasurementExists) {
+          ACTS_VERBOSE("Detected hole on " << surface.geometryId());
+          // If the surface is sensitive, set the hole type flag
+          typeFlags.setIsHole();
+        } else if (surfaceIsSensitive) {
+          ACTS_VERBOSE("Skip hole (no preceding measurements) on surface "
+                       << surface.geometryId());
+        } else if (surfaceHasMaterial) {
+          ACTS_VERBOSE("Detected in-sensitive surface "
+                       << surface.geometryId());
+        }
+
         result.lastTrackIndex = trackStateProxy.index();
 
         if (trackStateProxy.typeFlags().isHole()) {
           // Count the missed surface
-          result.missedActiveSurfaces.push_back(surface);
+          result.missedActiveSurfaces.push_back(&surface);
         }
 
         ++result.processedStates;
