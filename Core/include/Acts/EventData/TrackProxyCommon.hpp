@@ -36,7 +36,11 @@ inline constexpr HashedString kNextKey = hashString("next");
 template <typename Derived, typename index_t, bool read_only>
 class TrackProxyCommon {
  protected:
+  /// Cast to derived type
+  /// @return Reference to the derived proxy
   constexpr Derived& derived() { return static_cast<Derived&>(*this); }
+  /// Cast to derived type
+  /// @return Const reference to the derived proxy
   constexpr const Derived& derived() const {
     return static_cast<const Derived&>(*this);
   }
@@ -46,11 +50,13 @@ class TrackProxyCommon {
   using IndexType = index_t;
 
   /// Get the tip index, i.e. the entry point into the track state container.
+  /// @return The tip index
   IndexType tipIndex() const {
     return derived().template component<IndexType, detail_tp::kTipIndexKey>();
   }
 
   /// Get a mutable reference to the tip index.
+  /// @return Mutable reference to the tip index
   IndexType& tipIndex()
     requires(!read_only)
   {
@@ -58,11 +64,13 @@ class TrackProxyCommon {
   }
 
   /// Get the stem index, i.e. the innermost track state in the track.
+  /// @return The stem index
   IndexType stemIndex() const {
     return derived().template component<IndexType, detail_tp::kStemIndexKey>();
   }
 
   /// Get a mutable reference to the stem index.
+  /// @return Mutable reference to the stem index
   IndexType& stemIndex()
     requires(!read_only)
   {
@@ -70,12 +78,14 @@ class TrackProxyCommon {
   }
 
   /// Return the number of measurements assigned to this track.
+  /// @return The number of measurements
   unsigned int nMeasurements() const {
     return derived()
         .template component<unsigned int, detail_tp::kMeasurementsKey>();
   }
 
   /// Return a mutable reference to the number of measurements.
+  /// @return Mutable reference to the number of measurements
   unsigned int& nMeasurements()
     requires(!read_only)
   {
@@ -84,11 +94,13 @@ class TrackProxyCommon {
   }
 
   /// Return the number of holes on this track.
+  /// @return The number of holes
   unsigned int nHoles() const {
     return derived().template component<unsigned int, detail_tp::kHolesKey>();
   }
 
   /// Return a mutable reference to the number of holes.
+  /// @return Mutable reference to the number of holes
   unsigned int& nHoles()
     requires(!read_only)
   {
@@ -96,12 +108,14 @@ class TrackProxyCommon {
   }
 
   /// Return the number of outliers for this track.
+  /// @return The number of outliers
   unsigned int nOutliers() const {
     return derived()
         .template component<unsigned int, detail_tp::kOutliersKey>();
   }
 
   /// Return a mutable reference to the number of outliers.
+  /// @return Mutable reference to the number of outliers
   unsigned int& nOutliers()
     requires(!read_only)
   {
@@ -110,12 +124,14 @@ class TrackProxyCommon {
   }
 
   /// Return the number of shared hits for this track.
+  /// @return The number of shared hits
   unsigned int nSharedHits() const {
     return derived()
         .template component<unsigned int, detail_tp::kSharedHitsKey>();
   }
 
   /// Return a mutable reference to the number of shared hits.
+  /// @return Mutable reference to the number of shared hits
   unsigned int& nSharedHits()
     requires(!read_only)
   {
@@ -124,11 +140,13 @@ class TrackProxyCommon {
   }
 
   /// Return the local chi-squared contribution.
+  /// @return The chi-squared value
   float chi2() const {
     return derived().template component<float, detail_tp::kChi2Key>();
   }
 
   /// Return a mutable reference to the local chi-squared contribution.
+  /// @return Mutable reference to the chi-squared value
   float& chi2()
     requires(!read_only)
   {
@@ -136,11 +154,13 @@ class TrackProxyCommon {
   }
 
   /// Return the number of degrees of freedom.
+  /// @return The number of degrees of freedom
   unsigned int nDoF() const {
     return derived().template component<unsigned int, detail_tp::kNdfKey>();
   }
 
   /// Return a mutable reference to the number of degrees of freedom.
+  /// @return Mutable reference to the number of degrees of freedom
   unsigned int& nDoF()
     requires(!read_only)
   {

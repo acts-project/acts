@@ -77,11 +77,13 @@ class Volume : public GeometryObject {
   /// @brief Get the transformation matrix from the local volume frame
   ///        to the global experiment's frame
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The local to global transformation matrix
   const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
 
   /// @brief Get the transformation matrix from the global experiment's
   //         frame to the local volume frame
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The global to local transformation matrix
   const Transform3& globalToLocalTransform(const GeometryContext& gctx) const;
 
   /// @brief Get the transform matrix that positions the volume in 3D space

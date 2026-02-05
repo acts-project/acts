@@ -15,22 +15,32 @@ namespace ActsPlugins {
 /// @addtogroup hashing_plugin
 /// @{
 
+/// Training algorithm for hashing models
 template <typename SpacePointContainer>
 class HashingTrainingAlgorithm {
  public:
+  /// Configuration type
   using Config = HashingTrainingConfig;
 
+  /// Constructor
+  /// @param cfg Configuration parameters
   explicit HashingTrainingAlgorithm(const Config &cfg);
 
   HashingTrainingAlgorithm() = default;
   HashingTrainingAlgorithm(
       const HashingTrainingAlgorithm<SpacePointContainer> &) = delete;
+  /// Assignment operator
+  /// @return Reference to this object
   HashingTrainingAlgorithm<SpacePointContainer> &operator=(
       const HashingTrainingAlgorithm<SpacePointContainer> &) = default;
 
+  /// Train and return the Annoy model
+  /// @param spacePoints Space points for training
+  /// @return Trained Annoy model
   AnnoyModel execute(SpacePointContainer spacePoints) const;
 
-  // / Get readonly access to the config parameters
+  /// Get readonly access to the config parameters
+  /// @return Configuration parameters
   const Config &config() const { return m_cfg; }
 
  private:

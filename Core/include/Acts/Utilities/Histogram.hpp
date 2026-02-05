@@ -18,17 +18,20 @@
 
 namespace Acts::Experimental {
 
+/// Variable-width histogram axis with string metadata
 using BoostVariableAxis = boost::histogram::axis::variable<double, std::string>;
+/// Regular-width histogram axis with string metadata
 using BoostRegularAxis =
     boost::histogram::axis::regular<double, boost::histogram::use_default,
                                     std::string>;
+/// Logarithmic-scale histogram axis with string metadata
 using BoostLogAxis = boost::histogram::axis::regular<
     double, boost::histogram::axis::transform::log, std::string>;
 
 /// @brief Boost axis variant supporting variable, regular, and log-scale axes with metadata
-/// NOTE: It seems not to be possible to combine compile-time fixed number of
-/// axes with boost::histogram::axis::variant. Therefore we use
-/// std::vector<AxisVariant> internally.
+/// @note It seems not to be possible to combine compile-time fixed number of
+///       axes with `boost::histogram::axis::variant`. Therefore we use
+///       `std::vector<AxisVariant>` internally.
 using AxisVariant =
     boost::histogram::axis::variant<BoostVariableAxis, BoostRegularAxis,
                                     BoostLogAxis>;
@@ -74,15 +77,19 @@ class Histogram {
   }
 
   /// Get histogram name
+  /// @return The histogram name
   const std::string& name() const { return m_name; }
 
   /// Get histogram title
+  /// @return The histogram title
   const std::string& title() const { return m_title; }
 
   /// Get number of dimensions (compile-time constant)
+  /// @return The number of dimensions
   static constexpr std::size_t rank() { return Dim; }
 
   /// Direct access to boost::histogram (for converters and tests)
+  /// @return The underlying boost histogram
   const BoostHist& histogram() const { return m_hist; }
 
  private:
@@ -94,6 +101,7 @@ class Histogram {
 
 /// Type aliases for common dimensions
 using Histogram1 = Histogram<1>;
+/// 2D histogram
 using Histogram2 = Histogram<2>;
 
 /// @brief Multi-dimensional profile histogram using boost::histogram
@@ -138,18 +146,23 @@ class ProfileHistogram {
   }
 
   /// Get histogram name
+  /// @return The histogram name
   const std::string& name() const { return m_name; }
 
   /// Get histogram title
+  /// @return The histogram title
   const std::string& title() const { return m_title; }
 
   /// Get number of dimensions (compile-time constant)
+  /// @return The number of dimensions
   static constexpr std::size_t rank() { return Dim; }
 
   /// Get title of the sample axis
+  /// @return The sample axis title
   const std::string& sampleAxisTitle() const { return m_sampleAxisTitle; }
 
   /// Direct access to boost::histogram (for converters and tests)
+  /// @return The underlying boost profile histogram
   const BoostProfileHist& histogram() const { return m_hist; }
 
  private:
@@ -202,18 +215,23 @@ class Efficiency {
   }
 
   /// Get histogram name
+  /// @return The histogram name
   const std::string& name() const { return m_name; }
 
   /// Get histogram title
+  /// @return The histogram title
   const std::string& title() const { return m_title; }
 
   /// Get number of dimensions (compile-time constant)
+  /// @return The histogram dimension
   static constexpr std::size_t rank() { return Dim; }
 
   /// Access to accepted histogram (for converters and tests)
+  /// @return The accepted histogram
   const BoostHist& acceptedHistogram() const { return m_accepted; }
 
   /// Access to total histogram (for converters and tests)
+  /// @return The total histogram
   const BoostHist& totalHistogram() const { return m_total; }
 
  private:
@@ -226,6 +244,7 @@ class Efficiency {
 
 /// Type aliases for common dimensions
 using Efficiency1 = Efficiency<1>;
+/// 2D efficiency histogram
 using Efficiency2 = Efficiency<2>;
 
 /// Project a 2D histogram onto the X axis (axis 0)
