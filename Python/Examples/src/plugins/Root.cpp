@@ -134,6 +134,22 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
           .def(py::init<>())
           .def_readwrite("varBinning",
                          &DuplicationPlotTool::Config::varBinning);
+
+      py::class_<ResPlotTool::Config>(root, "ResPlotToolConfig")
+          .def(py::init<>())
+          .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
+
+      py::class_<TrackQualityPlotTool::Config>(root,
+                                               "TrackQualityPlotToolConfig")
+          .def(py::init<>())
+          .def_readwrite("varBinning",
+                         &TrackQualityPlotTool::Config::varBinning);
+
+      py::class_<TrackSummaryPlotTool::Config>(root,
+                                               "TrackSummaryPlotToolConfig")
+          .def(py::init<>())
+          .def_readwrite("varBinning",
+                         &TrackSummaryPlotTool::Config::varBinning);
     }
 
     // ROOT WRITERS
@@ -264,8 +280,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         inputTrackParticleMatching, inputParticleTrackMatching,
         inputParticleMeasurementsMap, filePath, fileMode, effPlotToolConfig,
         fakePlotToolConfig, duplicationPlotToolConfig,
-        trackSummaryPlotToolConfig, subDetectorTrackSummaryVolumes,
-        writeMatchingDetails);
+        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
+        subDetectorTrackSummaryVolumes, writeMatchingDetails);
 
     ACTS_PYTHON_DECLARE_WRITER(RootNuclearInteractionParametersWriter, root,
                                "RootNuclearInteractionParametersWriter",
