@@ -130,7 +130,7 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, z when extremas and
+  /// - create an array in a cylinder, binned in phi, z when extrema and
   /// bin numbers are known
   /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -152,7 +152,7 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, z when extremas and bin
+  /// - create an array in a cylinder, binned in phi, z when extrema and bin
   /// numbers are unknown - this method goes through the surfaces and finds
   /// out the needed information
   /// @warning This function requires the cylinder aligned with the z-axis
@@ -175,7 +175,7 @@ class SurfaceArrayCreator {
       const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
-  /// - create an array on a disc, binned in r, phi when extremas and
+  /// - create an array on a disc, binned in r, phi when extrema and
   /// bin numbers are known
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -199,7 +199,7 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, r when extremas and bin
+  /// - create an array in a cylinder, binned in phi, r when extrema and bin
   /// numbers are unknown - this method goes through the surfaces and finds
   /// out the needed information
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -344,7 +344,7 @@ class SurfaceArrayCreator {
                                Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
-  /// Creates a equidistant @c ProtoAxis when the extremas and the bin number
+  /// Creates a equidistant @c ProtoAxis when the extrema and the bin number
   /// are
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
