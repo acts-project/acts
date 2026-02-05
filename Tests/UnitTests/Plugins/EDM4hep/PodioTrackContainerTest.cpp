@@ -143,15 +143,22 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
   ParticleHypothesis pHypo = ParticleHypothesis::pion();
 
   {
-    auto tsc = std::make_shared<MutablePodioTrackStateContainer<>>(
+    MutablePodioTrackStateContainer tsc{
         helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
         std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-        std::make_unique<ActsPodioEdm::JacobianCollection>());
-    auto ptc = std::make_shared<MutablePodioTrackContainer<>>(
-        helper, std::make_unique<ActsPodioEdm::TrackCollection>());
-    ActsPodioEdm::TrackCollection& tracks = ptc->trackCollection();
+        std::make_unique<ActsPodioEdm::JacobianCollection>()};
+    MutablePodioTrackContainer ptc{
+        helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
+    ActsPodioEdm::TrackCollection& tracks = ptc.trackCollection();
 
-    TrackContainer tc{*ptc, *tsc};
+    TrackContainer tc{ptc, tsc};
+    // check that the deduced type is correct
+    static_assert(
+        std::is_same_v<
+            decltype(tc),
+            TrackContainer<MutablePodioTrackContainer<std::unique_ptr>,
+                           MutablePodioTrackStateContainer<std::unique_ptr>,
+                           RefHolder>>);
 
     BOOST_CHECK(!tc.hasColumn("int_column"_hash));
     BOOST_CHECK(!tc.hasColumn("float_column"_hash));
@@ -247,8 +254,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     t2.component<float, "float_column"_hash>() = 42.4f;
     t3.component<float, "float_column"_hash>() = -98.9f;
 
-    ptc->releaseInto(frame);
-    tsc->releaseInto(frame);
+    ptc.releaseInto(frame);
+    tsc.releaseInto(frame);
 
     BOOST_REQUIRE_NE(frame.get("tracks"), nullptr);
     BOOST_CHECK_EQUAL(frame.get("tracks")->size(), 3);
@@ -260,11 +267,17 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
   }
 
   {
-    auto tsc = std::make_shared<ConstPodioTrackStateContainer<>>(helper, frame);
-    auto ptc = std::make_shared<ConstPodioTrackContainer<>>(helper, frame);
+    ConstPodioTrackStateContainer tsc{helper, frame};
+    ConstPodioTrackContainer ptc{helper, frame};
     // const ActsPodioEdm::TrackCollection& tracks = ptc->trackCollection();
 
-    TrackContainer tc{*ptc, *tsc};
+    TrackContainer tc{ptc, tsc};
+    static_assert(
+        std::is_same_v<
+            decltype(tc),
+            TrackContainer<ConstPodioTrackContainer<Acts::ConstRefHolder>,
+                           ConstPodioTrackStateContainer<Acts::ConstRefHolder>,
+                           Acts::RefHolder>>);
 
     BOOST_CHECK(tc.hasColumn("int_column"_hash));
     BOOST_CHECK(tc.hasColumn("float_column"_hash));
@@ -329,22 +342,22 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
   mtj.addColumn<std::uint64_t>("ts_counter");
   mtj.addColumn<std::uint8_t>("ts_odd");
 
-  auto tsc2 = std::make_shared<MutablePodioTrackStateContainer<>>(
+  MutablePodioTrackStateContainer tsc2{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>());
-  auto ptc2 = std::make_shared<MutablePodioTrackContainer<>>(
-      helper, std::make_unique<ActsPodioEdm::TrackCollection>());
-  TrackContainer tc2{*ptc2, *tsc2};
+      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+  MutablePodioTrackContainer ptc2{
+      helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
+  TrackContainer tc2{ptc2, tsc2};
   // doesn't have the dynamic column
 
-  auto tsc3 = std::make_shared<MutablePodioTrackStateContainer<>>(
+  MutablePodioTrackStateContainer tsc3{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>());
-  auto ptc3 = std::make_shared<MutablePodioTrackContainer<>>(
-      helper, std::make_unique<ActsPodioEdm::TrackCollection>());
-  TrackContainer tc3{*ptc3, *tsc3};
+      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+  MutablePodioTrackContainer ptc3{
+      helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
+  TrackContainer tc3{ptc3, tsc3};
 
   tc3.addColumn<std::uint64_t>("counter");
   tc3.addColumn<std::uint8_t>("odd");
@@ -407,26 +420,24 @@ BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
 
   // Test external collection constructor (non-owning via RefHolder)
   ActsPodioEdm::TrackCollection externalTracks;
-  auto externalContainer =
-      std::make_shared<MutablePodioTrackContainer<Acts::RefHolder>>(
-          helper, externalTracks);
+  MutablePodioTrackContainer externalContainer{helper, externalTracks};
 
   // Add a track to the external container
-  auto track = externalContainer->addTrack_impl();
+  auto track = externalContainer.addTrack_impl();
   BOOST_CHECK_EQUAL(track, 0);
-  BOOST_CHECK_EQUAL(externalContainer->size_impl(), 1);
+  BOOST_CHECK_EQUAL(externalContainer.size_impl(), 1);
   BOOST_CHECK_EQUAL(externalTracks.size(), 1);
 
   // Test owned collection constructor (default using std::unique_ptr)
-  auto ownedContainer = std::make_shared<MutablePodioTrackContainer<>>(
-      helper, std::make_unique<ActsPodioEdm::TrackCollection>());
-  track = ownedContainer->addTrack_impl();
+  MutablePodioTrackContainer ownedContainer{
+      helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
+  track = ownedContainer.addTrack_impl();
   BOOST_CHECK_EQUAL(track, 0);
-  BOOST_CHECK_EQUAL(ownedContainer->size_impl(), 1);
+  BOOST_CHECK_EQUAL(ownedContainer.size_impl(), 1);
 
   // Test that releaseInto works for owned collection
   podio::Frame frame;
-  BOOST_CHECK_NO_THROW(ownedContainer->releaseInto(frame, ""));
+  BOOST_CHECK_NO_THROW(ownedContainer.releaseInto(frame, ""));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
