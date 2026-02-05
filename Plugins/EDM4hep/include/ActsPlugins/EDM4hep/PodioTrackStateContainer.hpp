@@ -84,6 +84,26 @@ class PodioTrackStateContainerBase {
       typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
                                                 true>::CovarianceMap;
 
+  /// Calibrated measurement vector type
+  template <std::size_t M>
+  using Calibrated =
+      typename Acts::detail_tsp::FixedSizeTypes<M, false>::CoefficientsMap;
+
+  /// Const calibrated measurement vector type
+  template <std::size_t M>
+  using ConstCalibrated =
+      typename Acts::detail_tsp::FixedSizeTypes<M, true>::CoefficientsMap;
+
+  /// Calibrated measurement covariance matrix type
+  template <std::size_t M>
+  using CalibratedCovariance =
+      typename Acts::detail_tsp::FixedSizeTypes<M, false>::CovarianceMap;
+
+  /// Const calibrated measurement covariance matrix type
+  template <std::size_t M>
+  using ConstCalibratedCovariance =
+      typename Acts::detail_tsp::FixedSizeTypes<M, true>::CovarianceMap;
+
  protected:
   /// Check if a component exists for a track state
   /// @param instance Container instance
@@ -337,11 +357,8 @@ class ConstPodioTrackStateContainer final
   /// @param index Track state index
   /// @return Calibrated measurement
   template <std::size_t measdim>
-  typename Acts::MultiTrajectory<ConstPodioTrackStateContainer<holder_t>>::
-      ConstTrackStateProxy::template ConstCalibrated<measdim>
-      calibrated_impl(IndexType index) const {
-    return typename Acts::MultiTrajectory<ConstPodioTrackStateContainer<
-        holder_t>>::ConstTrackStateProxy::template ConstCalibrated<measdim>{
+  ConstCalibrated<measdim> calibrated_impl(IndexType index) const {
+    return ConstCalibrated<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
@@ -349,13 +366,10 @@ class ConstPodioTrackStateContainer final
   /// @param index Track state index
   /// @return Calibrated measurement covariance
   template <std::size_t measdim>
-  typename Acts::MultiTrajectory<ConstPodioTrackStateContainer<holder_t>>::
-      ConstTrackStateProxy::template ConstCalibratedCovariance<measdim>
-      calibratedCovariance_impl(IndexType index) const {
-    return typename Acts::MultiTrajectory<
-        ConstPodioTrackStateContainer<holder_t>>::ConstTrackStateProxy::
-        template ConstCalibratedCovariance<measdim>{
-            m_collection->at(index).getData().measurementCovariance.data()};
+  ConstCalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType index) const {
+    return ConstCalibratedCovariance<measdim>{
+        m_collection->at(index).getData().measurementCovariance.data()};
   }
 
   /// Get number of track states
@@ -529,11 +543,8 @@ class MutablePodioTrackStateContainer final
   /// @param index Track state index
   /// @return Const calibrated measurement vector
   template <std::size_t measdim>
-  typename Acts::MultiTrajectory<MutablePodioTrackStateContainer<holder_t>>::
-      ConstTrackStateProxy::template ConstCalibrated<measdim>
-      calibrated_impl(IndexType index) const {
-    return typename Acts::MultiTrajectory<MutablePodioTrackStateContainer<
-        holder_t>>::ConstTrackStateProxy::template ConstCalibrated<measdim>{
+  ConstCalibrated<measdim> calibrated_impl(IndexType index) const {
+    return ConstCalibrated<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
@@ -542,11 +553,8 @@ class MutablePodioTrackStateContainer final
   /// @param index Track state index
   /// @return Mutable calibrated measurement vector
   template <std::size_t measdim>
-  typename Acts::MultiTrajectory<MutablePodioTrackStateContainer<holder_t>>::
-      TrackStateProxy::template Calibrated<measdim>
-      calibrated_impl(IndexType index) {
-    return typename Acts::MultiTrajectory<MutablePodioTrackStateContainer<
-        holder_t>>::TrackStateProxy::template Calibrated<measdim>{
+  Calibrated<measdim> calibrated_impl(IndexType index) {
+    return Calibrated<measdim>{
         PodioUtil::getDataMutable(m_collection->at(index)).measurement.data()};
   }
 
@@ -555,13 +563,10 @@ class MutablePodioTrackStateContainer final
   /// @param index Track state index
   /// @return Const calibrated covariance matrix
   template <std::size_t measdim>
-  typename Acts::MultiTrajectory<MutablePodioTrackStateContainer<holder_t>>::
-      ConstTrackStateProxy::template ConstCalibratedCovariance<measdim>
-      calibratedCovariance_impl(IndexType index) const {
-    return typename Acts::MultiTrajectory<
-        MutablePodioTrackStateContainer<holder_t>>::ConstTrackStateProxy::
-        template ConstCalibratedCovariance<measdim>{
-            m_collection->at(index).getData().measurementCovariance.data()};
+  ConstCalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType index) const {
+    return ConstCalibratedCovariance<measdim>{
+        m_collection->at(index).getData().measurementCovariance.data()};
   }
 
   /// Get calibrated measurement covariance (mutable version)
@@ -569,11 +574,8 @@ class MutablePodioTrackStateContainer final
   /// @param index Track state index
   /// @return Mutable calibrated covariance matrix
   template <std::size_t measdim>
-  typename Acts::MultiTrajectory<MutablePodioTrackStateContainer<holder_t>>::
-      TrackStateProxy::template CalibratedCovariance<measdim>
-      calibratedCovariance_impl(IndexType index) {
-    return typename Acts::MultiTrajectory<MutablePodioTrackStateContainer<
-        holder_t>>::TrackStateProxy::template CalibratedCovariance<measdim>{
+  CalibratedCovariance<measdim> calibratedCovariance_impl(IndexType index) {
+    return CalibratedCovariance<measdim>{
         PodioUtil::getDataMutable(m_collection->at(index))
             .measurementCovariance.data()};
   }
@@ -997,9 +999,10 @@ static_assert(Acts::MutableMultiTrajectoryBackend<
               "TrackStateContainerBackend");
 
 /// Deduction guide: when passing collection references, deduce RefHolder
-MutablePodioTrackStateContainer(
-    PodioUtil::ConversionHelper&, ActsPodioEdm::TrackStateCollection&,
-    ActsPodioEdm::BoundParametersCollection&, ActsPodioEdm::JacobianCollection&)
+MutablePodioTrackStateContainer(PodioUtil::ConversionHelper&,
+                                ActsPodioEdm::TrackStateCollection&,
+                                ActsPodioEdm::BoundParametersCollection&,
+                                ActsPodioEdm::JacobianCollection&)
     -> MutablePodioTrackStateContainer<Acts::RefHolder>;
 
 template <template <typename> class holder_t>
