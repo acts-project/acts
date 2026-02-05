@@ -109,7 +109,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
-        extensions, options.propOptions, &(*options.referenceSurface));
+        extensions, options.propOptions, options.referenceSurface);
 
     kfOptions.referenceSurfaceStrategy =
         Acts::TrackExtrapolationStrategy::first;

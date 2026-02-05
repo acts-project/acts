@@ -27,11 +27,11 @@ Volume::Volume(const Transform3& transform,
       m_volumeBounds(std::move(volbounds)) {}
 
 Volume::Volume(const Volume& vol, const Transform3& shift)
-    : GeometryObject(),
-      m_transform(shift * vol.m_transform),
-      m_itransform(m_transform.inverse()),
-      m_center(m_transform.translation()),
-      m_volumeBounds(vol.m_volumeBounds) {}
+    : Volume(vol.shifted(shift)) {}
+
+Volume Volume::shifted(const Transform3& shift) const {
+  return Volume(shift * m_transform, m_volumeBounds);
+}
 
 Vector3 Volume::referencePosition(const GeometryContext& gctx,
                                   AxisDirection aDir) const {
