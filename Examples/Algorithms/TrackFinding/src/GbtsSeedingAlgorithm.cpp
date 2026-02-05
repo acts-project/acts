@@ -299,20 +299,20 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     auto actsJointId = actsVolId * 100 + actsLayId;
     // here the key needs to be pair of(vol*100+lay, 0)
     auto key = ActsIDs{actsJointId, 0};
-    auto Find = m_cfg.actsGbtsMap.find(key);
+    auto find = m_cfg.actsGbtsMap.find(key);
     // initialise first to avoid FLTUND later
     std::uint32_t gbtsId = 0;
     // new map, item is pair want first
-    gbtsId = std::get<0>(Find->second);
+    gbtsId = std::get<0>(find->second);
     // if end then make new key of (vol*100+lay, modid)
-    if (Find == m_cfg.actsGbtsMap.end()) {
+    if (find == m_cfg.actsGbtsMap.end()) {
       key = ActsIDs{actsJointId, mod_id};  // mod ID
-      Find = m_cfg.actsGbtsMap.find(key);
-      gbtsId = std::get<0>(Find->second);
+      find = m_cfg.actsGbtsMap.find(key);
+      gbtsId = std::get<0>(find->second);
     }
 
     std::int16_t barrelEc = 0;  // a variable that says if barrrel, 0 = barrel
-    std::uint32_t etaMod = std::get<1>(Find->second);
+    std::uint32_t etaMod = std::get<1>(find->second);
 
     // assign barrelEc depending on Gbts_layer
     if (79 < gbtsId && gbtsId < 85) {  // 80s, barrel
@@ -372,7 +372,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
 
       // so layer ID refers to actual index and not size of vector
       std::uint32_t layerID = countVector.size() - 1;
-      std::get<2>(Find->second) = layerID;
+      std::get<2>(find->second) = layerID;
       m_LayeridMap.insert({combined_id, layerID});
     }
     // look up for every combined ID to see if it has a layer
@@ -380,7 +380,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     if (FindLayer == m_LayeridMap.end()) {
       ACTS_WARNING("No assigned Layer ID for combined ID: " << combined_id);
     } else {
-      std::get<2>(Find->second) = FindLayer->second;
+      std::get<2>(find->second) = FindLayer->second;
     }
 
     // add to file each time,
