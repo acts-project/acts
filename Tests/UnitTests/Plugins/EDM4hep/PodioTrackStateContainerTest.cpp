@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
     t1.setReferenceSurface(free);
 
-    auto t2 = c.makeTrackState(TrackStatePropMask::All, t1.index());
+    auto t2 = c->makeTrackState(TrackStatePropMask::All, t1.index());
     t2.predicted() = tv2;
     t2.predictedCovariance() = cov2;
 
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
     t2.jacobian() = cov2;
 
-    auto t3 = c.makeTrackState();
+    auto t3 = c->makeTrackState();
     t3.setReferenceSurface(reg);
 
     t1.component<std::int32_t, "int_column"_hash>() = -11;
