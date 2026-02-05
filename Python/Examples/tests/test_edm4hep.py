@@ -700,6 +700,55 @@ def test_edm4hep_tracks_reader(tmp_path):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 @pytest.mark.slow
+def test_edm4hep_podio_track_output_converter(tmp_path):
+    """
+    Test for PodioTrackOutputConverter.
+
+    Note: This test is a placeholder pending ConversionHelper implementation.
+
+    The algorithm:
+    - Reads ConstTrackContainer from the whiteboard
+    - Creates PodioTrackContainer backends with externally owned collections
+    - Copies all tracks using the copyFrom() API
+    - Writes collections to the event store
+
+    Example usage:
+
+    ```python
+    from acts.examples.edm4hep import PodioTrackOutputConverter, PodioWriter
+
+    # Create conversion helper (detector-specific)
+    helper = MyConversionHelper(trackingGeometry)
+
+    # Configure converter
+    config = acts.examples.PodioTrackOutputConverterConfig()
+    config.inputTracks = "tracks"
+    config.outputTracks = "podio_tracks"
+
+    converter = PodioTrackOutputConverter(
+        config=config,
+        helper=helper,
+        level=acts.logging.VERBOSE
+    )
+    s.addAlgorithm(converter)
+
+    # Write to file
+    s.addWriter(
+        PodioWriter(
+            level=acts.logging.VERBOSE,
+            outputPath=str(output_file),
+            category="events",
+            collections=converter.collections(),
+        )
+    )
+    ```
+    """
+    # Test is currently a placeholder pending ConversionHelper implementation
+    pass
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_reader(ddsim_input):
     from acts.examples.edm4hep import PodioReader
 
