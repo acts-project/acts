@@ -57,6 +57,7 @@ namespace Acts {
 /// If the flag is set to true the r-axis grid values will be set to
 /// {-1,0,1} and the BFieldValues will be set to {3,2,3}.
 /// @param delimiter The delimiter used in the text file to separate values
+/// @return Interpolated magnetic field map in R-Z coordinates
 InterpolatedBFieldMap<
     Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
 makeMagneticFieldMapRzFromText(
@@ -106,6 +107,7 @@ makeMagneticFieldMapRzFromText(
 /// If the flag is set to true the z-axis grid values will be set to
 /// {-1,0,1} and the BFieldValues will be set to {3,2,3}.
 /// @param delimiter The delimiter used in the text file to separate values
+/// @return Interpolated magnetic field map in X-Y-Z coordinates
 InterpolatedBFieldMap<
     Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
          Axis<AxisType::Equidistant>>>
