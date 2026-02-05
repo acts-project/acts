@@ -30,8 +30,8 @@ namespace ActsExamples {
 
 class GbtsSeedingAlgorithm final : public IAlgorithm {
  public:
-  using Acts_IDs = std::array<std::uint64_t, 2>;
-  using Gbts_IDs = std::array<std::uint32_t, 3>;
+  using ActsIDs = std::array<std::uint64_t, 2>;
+  using GbtsIDs = std::array<std::uint32_t, 3>;
   struct Config {
     // this is used to initialise the handle that points to the container of
     // spacepoints
@@ -57,7 +57,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
     // conversion between ACTS labelling of volume, layer and modules to that
     // used by GBTS
-    mutable std::map<Acts_IDs, Gbts_IDs> actsGbtsMap;
+    mutable std::map<ActsIDs, GbtsIDs> actsGbtsMap;
 
     bool fill_module_csv = false;
 
@@ -82,12 +82,12 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
   // own class functions
   // make the map between ACTS geometry ID's and GBTS geometry ID's
-  std::map<Acts_IDs, Gbts_IDs> makeActsGbtsMap() const;
+  std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
 
   // make the container that holds spacepoints that have been given
   // all the variables needed for GBTS algorithm to run
   Acts::Experimental::SPContainerComponentsType makeSpContainer(
-      const AlgorithmContext &ctx, std::map<Acts_IDs, Gbts_IDs> map) const;
+      const AlgorithmContext &ctx, std::map<ActsIDs, GbtsIDs> map) const;
 
   // makes the geometry objects used by GBTS that correspond to the objects in
   // the connection table for ease these are sometimes called "logical layers"

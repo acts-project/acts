@@ -72,7 +72,7 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   auto SpContainerComponents = makeSpContainer(ctx, m_cfg.actsGbtsMap);
 
   // used to reserve size of nodes 2D vector in core
-  std::int32_t max_layers = m_LayeridMap.size();
+  std::uint32_t max_layers = m_LayeridMap.size();
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
@@ -117,10 +117,10 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-std::map<ActsExamples::GbtsSeedingAlgorithm::Acts_IDs,
-         ActsExamples::GbtsSeedingAlgorithm::Gbts_IDs>
+std::map<ActsExamples::GbtsSeedingAlgorithm::ActsIDs,
+         ActsExamples::GbtsSeedingAlgorithm::GbtsIDs>
 ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
-  std::map<Acts_IDs, Gbts_IDs> actsToGbtsMap;
+  std::map<ActsIDs, GbtsIDs> actsToGbtsMap;
 
   // prepare the acts to gbts mapping file
   // 0 in this file refers to no Gbts ID
@@ -139,7 +139,7 @@ ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
     parsedCsv.push_back(parsedRow);
   }
 
-  // file in format ACTS_vol,ACTS_lay,ACTS_mod,Gbts_id
+  // file in format ACTS_vol,ACTS_lay,ACTS_mod,gbtsId
   for (auto i : parsedCsv) {
     std::uint32_t actsVol = stoi(i[0]);
     std::uint32_t actsLay = stoi(i[1]);
@@ -147,11 +147,11 @@ ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
     std::uint32_t gbts = stoi(i[5]);
     std::uint32_t etaMod = stoi(i[6]);
     std::uint32_t actsJoint = actsVol * 100 + actsLay;
-    Acts_IDs ActsId{static_cast<std::uint64_t>(actsJoint),
-                    static_cast<std::uint64_t>(actsMod)};
-    Gbts_IDs GbtsId{static_cast<std::uint32_t>(gbts),
-                    static_cast<std::uint32_t>(etaMod), 0};
-    actsToGbtsMap.insert({{ActsId}, {GbtsId}});
+    ActsIDs actsId{static_cast<std::uint64_t>(actsJoint),
+                   static_cast<std::uint64_t>(actsMod)};
+    GbtsIDs gbtsId{static_cast<std::uint32_t>(gbts),
+                   static_cast<std::uint32_t>(etaMod), 0};
+    actsToGbtsMap.insert({{actsId}, {gbtsId}});
   }
 
   return actsToGbtsMap;
@@ -159,7 +159,7 @@ ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
 
 Acts::Experimental::SPContainerComponentsType
 ActsExamples::GbtsSeedingAlgorithm::makeSpContainer(
-    const AlgorithmContext &ctx, std::map<Acts_IDs, Gbts_IDs> map) const {
+    const AlgorithmContext &ctx, std::map<ActsIDs, GbtsIDs> map) const {
   // new seeding container test
   // initialise input spacepoints from handle and define new container
   const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
@@ -170,7 +170,7 @@ ActsExamples::GbtsSeedingAlgorithm::makeSpContainer(
       Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
 
   // add new column for layer ID and clusterwidth
-  auto LayerColoumn = coreSpacePoints.createColumn<std::uint32_t>("LayerID");
+  auto LayerColoumn = coreSpacePoints.createColumn<std::uint32_t>("layerID");
   auto ClusterWidthColoumn =
       coreSpacePoints.createColumn<float>("Cluster_Width");
   auto LocalPositionColoumn =
@@ -208,18 +208,18 @@ ActsExamples::GbtsSeedingAlgorithm::makeSpContainer(
     auto actsJointId = actsVolId * 100 + actsLayId;
 
     // here the key needs to be pair of(vol*100+lay, 0)
-    Acts_IDs key{static_cast<std::uint64_t>(actsJointId), 0};
-    auto Find = map.find(key);
+    ActsIDs key{static_cast<std::uint64_t>(actsJointId), 0};
+    auto find = map.find(key);
 
     // if end then make new key of (vol*100+lay, modid)
-    if (Find == map.end()) {
-      key = Acts_IDs{static_cast<std::uint64_t>(actsJointId),
-                     static_cast<std::uint64_t>(actsModId)};  // mod ID
-      Find = map.find(key);
+    if (find == map.end()) {
+      key = ActsIDs{static_cast<std::uint64_t>(actsJointId),
+                    static_cast<std::uint64_t>(actsModId)};  // mod ID
+      find = map.find(key);
     }
 
     // warning if key not in map
-    if (Find == map.end()) {
+    if (find == map.end()) {
       ACTS_WARNING("Key not found in Gbts map for volume id: "
                    << actsVolId << " and layer id: " << actsLayId);
       continue;
@@ -227,9 +227,9 @@ ActsExamples::GbtsSeedingAlgorithm::makeSpContainer(
 
     // now should be pixel with Gbts ID:
     // new map the item is a pair so want first from it
-    std::uint32_t Gbts_id = std::get<0>(Find->second);
+    std::uint32_t gbtsId = std::get<0>(find->second);
 
-    if (Gbts_id == 0) {
+    if (gbtsId == 0) {
       ACTS_WARNING("No assigned Gbts ID for key for volume id: "
                    << actsVolId << " and layer id: " << actsLayId);
     }
@@ -245,13 +245,13 @@ ActsExamples::GbtsSeedingAlgorithm::makeSpContainer(
     newSp.z() = spacePoint.z();
     newSp.r() = spacePoint.r();
     newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
-    newSp.extra(LayerColoumn) = std::get<2>(Find->second);
+    newSp.extra(LayerColoumn) = std::get<2>(find->second);
     // false input as this is not available in examples
     newSp.extra(ClusterWidthColoumn) = 0;
     newSp.extra(LocalPositionColoumn) = 0;
   }
 
-  ACTS_VERBOSE("Space point collection successfully assigned LayerID's");
+  ACTS_VERBOSE("Space point collection successfully assigned layerID's");
 
   return std::make_tuple(std::move(coreSpacePoints), LayerColoumn.asConst(),
                          ClusterWidthColoumn.asConst(),
@@ -260,10 +260,10 @@ ActsExamples::GbtsSeedingAlgorithm::makeSpContainer(
 
 std::vector<Acts::Experimental::TrigInDetSiLayer>
 ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
-  std::vector<Acts::Experimental::TrigInDetSiLayer> input_vector{};
-  std::vector<std::size_t> count_vector{};
+  std::vector<Acts::Experimental::TrigInDetSiLayer> inputVector{};
+  std::vector<std::size_t> countVector{};
 
-  m_cfg.trackingGeometry->visitSurfaces([this, &input_vector, &count_vector](
+  m_cfg.trackingGeometry->visitSurfaces([this, &inputVector, &countVector](
                                             const Acts::Surface *surface) {
     Acts::GeometryIdentifier geoid = surface->geometryId();
     auto actsVolId = geoid.volume();
@@ -298,32 +298,32 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     // convert to Gbts ID
     auto actsJointId = actsVolId * 100 + actsLayId;
     // here the key needs to be pair of(vol*100+lay, 0)
-    auto key = Acts_IDs{actsJointId, 0};
+    auto key = ActsIDs{actsJointId, 0};
     auto Find = m_cfg.actsGbtsMap.find(key);
     // initialise first to avoid FLTUND later
-    std::uint32_t Gbts_id = 0;
+    std::uint32_t gbtsId = 0;
     // new map, item is pair want first
-    Gbts_id = std::get<0>(Find->second);
+    gbtsId = std::get<0>(Find->second);
     // if end then make new key of (vol*100+lay, modid)
     if (Find == m_cfg.actsGbtsMap.end()) {
-      key = Acts_IDs{actsJointId, mod_id};  // mod ID
+      key = ActsIDs{actsJointId, mod_id};  // mod ID
       Find = m_cfg.actsGbtsMap.find(key);
-      Gbts_id = std::get<0>(Find->second);
+      gbtsId = std::get<0>(Find->second);
     }
 
-    std::int16_t barrel_ec = 0;  // a variable that says if barrrel, 0 = barrel
-    std::uint32_t eta_mod = std::get<1>(Find->second);
+    std::int16_t barrelEc = 0;  // a variable that says if barrrel, 0 = barrel
+    std::uint32_t etaMod = std::get<1>(Find->second);
 
-    // assign barrel_ec depending on Gbts_layer
-    if (79 < Gbts_id && Gbts_id < 85) {  // 80s, barrel
-      barrel_ec = 0;
-    } else if (89 < Gbts_id && Gbts_id < 99) {  // 90s positive
-      barrel_ec = 2;
+    // assign barrelEc depending on Gbts_layer
+    if (79 < gbtsId && gbtsId < 85) {  // 80s, barrel
+      barrelEc = 0;
+    } else if (89 < gbtsId && gbtsId < 99) {  // 90s positive
+      barrelEc = 2;
     } else {  // 70s negative
-      barrel_ec = -2;
+      barrelEc = -2;
     }
 
-    if (barrel_ec == 0) {
+    if (barrelEc == 0) {
       rc = sqrt(center(0) * center(0) +
                 center(1) * center(1));  // barrel center in r
       // bounds of z
@@ -348,32 +348,32 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
       }
     }
 
-    std::int32_t combined_id = Gbts_id * 1000 + eta_mod;
+    std::int32_t combined_id = gbtsId * 1000 + etaMod;
 
     auto current_index =
-        find_if(input_vector.begin(), input_vector.end(),
+        find_if(inputVector.begin(), inputVector.end(),
                 [combined_id](auto n) { return n.m_subdet == combined_id; });
-    if (current_index != input_vector.end()) {  // not end so does exist
-      std::size_t index = std::distance(input_vector.begin(), current_index);
-      input_vector[index].m_refCoord += rc;
-      input_vector[index].m_minBound += minBound;
-      input_vector[index].m_maxBound += maxBound;
-      count_vector[index] += 1;  // increase count at the index
+    if (current_index != inputVector.end()) {  // not end so does exist
+      std::size_t index = std::distance(inputVector.begin(), current_index);
+      inputVector[index].m_refCoord += rc;
+      inputVector[index].m_minBound += minBound;
+      inputVector[index].m_maxBound += maxBound;
+      countVector[index] += 1;  // increase count at the index
 
     } else {  // end so doesn't exists
       // make new if one with Gbts ID doesn't exist:
-      Acts::Experimental::TrigInDetSiLayer new_Gbts_ID(combined_id, barrel_ec,
+      Acts::Experimental::TrigInDetSiLayer new_Gbts_ID(combined_id, barrelEc,
                                                        rc, minBound, maxBound);
-      input_vector.push_back(new_Gbts_ID);
+      inputVector.push_back(new_Gbts_ID);
       // so the element exists and not divinding by 0
-      count_vector.push_back(1);
+      countVector.push_back(1);
 
       // tracking the index of each TrigInDetSiLayer as there added
 
       // so layer ID refers to actual index and not size of vector
-      std::uint32_t LayerID = count_vector.size() - 1;
-      std::get<2>(Find->second) = LayerID;
-      m_LayeridMap.insert({combined_id, LayerID});
+      std::uint32_t layerID = countVector.size() - 1;
+      std::get<2>(Find->second) = layerID;
+      m_LayeridMap.insert({combined_id, layerID});
     }
     // look up for every combined ID to see if it has a layer
     auto FindLayer = m_LayeridMap.find(combined_id);
@@ -392,19 +392,19 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
       fout << actsVolId << ", "                                    // vol
            << actsLayId << ", "                                    // lay
            << mod_id << ", "                                       // module
-           << Gbts_id << ","                                       // Gbts id
-           << eta_mod << ","                                       // eta_mod
+           << gbtsId << ","                                        // Gbts id
+           << etaMod << ","                                        // etaMod
            << center(2) << ", "                                    // z
            << sqrt(center(0) * center(0) + center(1) * center(1))  // r
            << "\n";
     }
   });
 
-  for (std::size_t i = 0; i < input_vector.size(); i++) {
-    input_vector[i].m_refCoord = input_vector[i].m_refCoord / count_vector[i];
+  for (std::size_t i = 0; i < inputVector.size(); i++) {
+    inputVector[i].m_refCoord = inputVector[i].m_refCoord / countVector[i];
   }
 
-  return input_vector;
+  return inputVector;
 }
 
 void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
