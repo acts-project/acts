@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(EncodeDecodeIndices) {
   // Test empty span
   {
     std::vector<std::uint8_t> indices = {};
-    auto encoded = EDM4hepUtil::detail::encodeIndices(indices);
+    std::uint32_t encoded = EDM4hepUtil::detail::encodeIndices(indices);
     auto decoded = EDM4hepUtil::detail::decodeIndices(encoded);
     BOOST_CHECK_EQUAL(decoded.size(), 0);
   }
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(EncodeDecodeIndices) {
   // Test single value
   {
     std::vector<std::uint8_t> indices = {3};
-    auto encoded = EDM4hepUtil::detail::encodeIndices(indices);
+    std::uint32_t encoded = EDM4hepUtil::detail::encodeIndices(indices);
     auto decoded = EDM4hepUtil::detail::decodeIndices(encoded);
     BOOST_CHECK_EQUAL(decoded.size(), 1);
     BOOST_CHECK_EQUAL(decoded.at(0), 3);

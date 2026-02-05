@@ -105,7 +105,7 @@ void packCovariance(const SquareMatrix<6>& from, float* to) {
   for (int i = 0; i < from.rows(); i++) {
     for (int j = 0; j <= i; j++) {
       std::size_t k = (i + 1) * i / 2 + j;
-      to[k] = from(i, j);
+      to[k] = static_cast<float>(from(i, j));
     }
   }
 }
@@ -295,6 +295,21 @@ void writeVertex(const Vertex& vertex, edm4hep::MutableVertex to) {
 }
 
 namespace detail {
+/// Encode a list of bound parameter indices into a 32-bit integer.
+///
+/// This function bit-packs up to 6 parameter indices (each 0-5 corresponding to
+/// eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta, eBoundQOverP, eBoundTime)
+/// into a single 32-bit unsigned integer for storage in EDM4hep format.
+///
+/// Bit layout:
+///   - Bits 0-3:   Number of indices (size)
+///   - Bits 4-7:   First index
+///   - Bits 8-11:  Second index
+///   - Bits 12-15: Third index
+///   - (and so on, up to 6 indices total)
+///
+/// @param indices Span of parameter indices to encode (max 6 elements)
+/// @return Packed 32-bit unsigned integer containing all indices
 std::uint32_t encodeIndices(std::span<const std::uint8_t> indices) {
   if (indices.size() > eBoundSize) {
     throw std::runtime_error(
@@ -311,12 +326,20 @@ std::uint32_t encodeIndices(std::span<const std::uint8_t> indices) {
       throw std::runtime_error(
           "Index out of range: can only encode indices up to 4 bits (0-15)");
     }
-    result |= (index << shift);
+    result |= (static_cast<std::uint32_t>(index) << shift);
     shift += 4;
   }
   return result;
 }
 
+/// Decode a 32-bit integer back into a list of bound parameter indices.
+///
+/// This function unpacks a bit-packed integer (created by encodeIndices) back
+/// into the original list of parameter indices. See encodeIndices for the bit
+/// layout specification.
+///
+/// @param type Packed 32-bit unsigned integer containing encoded indices
+/// @return Vector of decoded parameter indices (0-5 for each bound parameter)
 boost::container::static_vector<std::uint8_t, eBoundSize> decodeIndices(
     std::uint32_t type) {
   boost::container::static_vector<std::uint8_t, eBoundSize> result;
@@ -350,7 +373,7 @@ void writeMeasurement(const GeometryContext& gctx,
         "Size mismatch between parameters and covariance matrix");
   }
 
-  std::size_t dim = static_cast<std::size_t>(parameters.size());
+  auto dim = static_cast<std::size_t>(parameters.size());
 
   if (cellId != 0) {
     to.setCellID(cellId);
@@ -371,16 +394,17 @@ void writeMeasurement(const GeometryContext& gctx,
   }
 
   if (time != indices.end()) {
-    to.setTime(parameters[std::distance(indices.begin(), time)] /
-               Acts::UnitConstants::ns);
+    std::size_t timeOffset = std::distance(indices.begin(), time);
+    to.setTime(
+        static_cast<float>(parameters[timeOffset] / Acts::UnitConstants::ns));
   }
 
   for (double value : std::span{parameters.data(), dim}) {
-    to.addToMeasurement(value);
+    to.addToMeasurement(static_cast<float>(value));
   }
 
   for (double value : std::span{covariance.data(), dim * dim}) {
-    to.addToCovariance(value);
+    to.addToCovariance(static_cast<float>(value));
   }
 }
 
