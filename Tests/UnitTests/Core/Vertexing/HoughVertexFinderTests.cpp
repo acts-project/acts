@@ -30,7 +30,6 @@ struct SpacePoint4HVFT {
   double x() const { return m_x; }
   double y() const { return m_y; }
   double z() const { return m_z; }
-  double r() const { return std::sqrt(m_x * m_x + m_y * m_y); }
 };
 
 /// @brief Provides random double number between $from and $to
