@@ -379,4 +379,89 @@ BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
   BOOST_CHECK_NO_THROW(ownedContainer->releaseInto(frame, ""));
 }
 
+BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
+  using namespace HashedStringLiteral;
+
+  MapHelper helper;
+
+  // Create a mutable container with some data
+  auto mutableContainer = std::make_shared<MutablePodioTrackStateContainer<>>(
+      helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+      std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+      std::make_unique<ActsPodioEdm::JacobianCollection>());
+
+  // Add some track states
+  mutableContainer->addColumn<std::int32_t>("test_column");
+  auto ts1 = mutableContainer->addTrackState_impl();
+  auto ts2 = mutableContainer->addTrackState_impl();
+
+  BoundVector tv1;
+  tv1 << 1, 2, 3, 4, 5, 6;
+  mutableContainer->getTrackState(ts1).predicted() = tv1;
+  mutableContainer->getTrackState(ts1)
+      .template component<std::int32_t, "test_column"_hash>() = 42;
+
+  BoundVector tv2;
+  tv2 << 7, 8, 9, 10, 11, 12;
+  mutableContainer->getTrackState(ts2).predicted() = tv2;
+  mutableContainer->getTrackState(ts2)
+      .template component<std::int32_t, "test_column"_hash>() = 99;
+
+  BOOST_CHECK_EQUAL(mutableContainer->size_impl(), 2);
+
+  // Test copy constructor from mutable to const
+  auto constContainerCopy =
+      std::make_shared<ConstPodioTrackStateContainer<>>(*mutableContainer);
+
+  BOOST_CHECK_EQUAL(constContainerCopy->size_impl(), 2);
+  BOOST_CHECK(constContainerCopy->hasColumn("test_column"_hash));
+  BOOST_CHECK_EQUAL(constContainerCopy->getTrackState(ts1).predicted(), tv1);
+  BOOST_CHECK_EQUAL(constContainerCopy->getTrackState(ts2).predicted(), tv2);
+  BOOST_CHECK_EQUAL(
+      (constContainerCopy->getTrackState(ts1)
+           .template component<std::int32_t, "test_column"_hash>()),
+      42);
+  BOOST_CHECK_EQUAL(
+      (constContainerCopy->getTrackState(ts2)
+           .template component<std::int32_t, "test_column"_hash>()),
+      99);
+
+  // Original mutable container should still be valid
+  BOOST_CHECK_EQUAL(mutableContainer->size_impl(), 2);
+
+  // Test move constructor from mutable to const
+  // Create a new mutable container for moving
+  auto mutableContainer2 = std::make_shared<MutablePodioTrackStateContainer<>>(
+      helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+      std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+      std::make_unique<ActsPodioEdm::JacobianCollection>());
+
+  mutableContainer2->addColumn<std::int32_t>("test_column");
+  ts1 = mutableContainer2->addTrackState_impl();
+  ts2 = mutableContainer2->addTrackState_impl();
+  mutableContainer2->getTrackState(ts1).predicted() = tv1;
+  mutableContainer2->getTrackState(ts1)
+      .template component<std::int32_t, "test_column"_hash>() = 42;
+  mutableContainer2->getTrackState(ts2).predicted() = tv2;
+  mutableContainer2->getTrackState(ts2)
+      .template component<std::int32_t, "test_column"_hash>() = 99;
+
+  // Move construct
+  auto constContainerMove = std::make_shared<ConstPodioTrackStateContainer<>>(
+      std::move(*mutableContainer2));
+
+  BOOST_CHECK_EQUAL(constContainerMove->size_impl(), 2);
+  BOOST_CHECK(constContainerMove->hasColumn("test_column"_hash));
+  BOOST_CHECK_EQUAL(constContainerMove->getTrackState(ts1).predicted(), tv1);
+  BOOST_CHECK_EQUAL(constContainerMove->getTrackState(ts2).predicted(), tv2);
+  BOOST_CHECK_EQUAL(
+      (constContainerMove->getTrackState(ts1)
+           .template component<std::int32_t, "test_column"_hash>()),
+      42);
+  BOOST_CHECK_EQUAL(
+      (constContainerMove->getTrackState(ts2)
+           .template component<std::int32_t, "test_column"_hash>()),
+      99);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

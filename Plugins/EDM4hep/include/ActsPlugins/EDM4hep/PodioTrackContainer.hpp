@@ -212,6 +212,18 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
+  /// Constructor from reference (for RefHolder)
+  /// @param helper Conversion helper
+  /// @param collection Track collection reference
+  explicit MutablePodioTrackContainer(
+      const PodioUtil::ConversionHelper& helper,
+      ActsPodioEdm::TrackCollection& collection)
+    requires std::is_same_v<holder_t<ActsPodioEdm::TrackCollection>,
+                            Acts::RefHolder<ActsPodioEdm::TrackCollection>>
+      : PodioTrackContainerBase{helper}, m_collection{collection} {
+    populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
+  }
+
   /// Copy constructor
   /// @param other Source container
   MutablePodioTrackContainer(const MutablePodioTrackContainer& other);
@@ -464,6 +476,11 @@ static_assert(
     Acts::TrackContainerBackend<MutablePodioTrackContainer<std::unique_ptr>>,
     "MutablePodioTrackContainer does not fulfill TrackContainerBackend");
 
+/// Deduction guide: when passing a collection reference, deduce RefHolder
+MutablePodioTrackContainer(const PodioUtil::ConversionHelper&,
+                           ActsPodioEdm::TrackCollection&)
+    -> MutablePodioTrackContainer<Acts::RefHolder>;
+
 /// Read-only track container backend using podio for storage
 template <template <typename> class holder_t>
 class ConstPodioTrackContainer : public PodioTrackContainerBase {
@@ -489,30 +506,12 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     requires std::is_same_v<
         holder_t<const ActsPodioEdm::TrackCollection>,
         Acts::ConstRefHolder<const ActsPodioEdm::TrackCollection>>
-      : PodioTrackContainerBase{helper} {
+      : PodioTrackContainerBase{helper},
+        m_collection{*getTrackCollectionFromFrame(frame, suffix)} {
     std::string s = suffix.empty() ? suffix : "_" + suffix;
     std::string tracksKey = "tracks" + s;
 
-    std::vector<std::string> available = frame.getAvailableCollections();
-    if (!Acts::rangeContainsValue(available, tracksKey)) {
-      throw std::runtime_error{"Track collection '" + tracksKey +
-                               "' not found in frame"};
-    }
-
-    const auto* collection = frame.get(tracksKey);
-
-    const ActsPodioEdm::TrackCollection* d = nullptr;
-    if (const auto* casted =
-            dynamic_cast<const ActsPodioEdm::TrackCollection*>(collection);
-        casted != nullptr) {
-      d = casted;
-    } else {
-      throw std::runtime_error{"Unable to get collection " + tracksKey};
-    }
-
-    m_collection = holder_t<const ActsPodioEdm::TrackCollection>{d};
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
-
     podio_detail::recoverDynamicColumns(frame, tracksKey, m_dynamic);
   }
 
@@ -580,6 +579,35 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
  private:
   friend PodioTrackContainerBase;
+
+  /// Helper function to get track collection from frame
+  /// @param frame Podio frame
+  /// @param suffix Collection name suffix
+  /// @return Pointer to track collection
+  static const ActsPodioEdm::TrackCollection* getTrackCollectionFromFrame(
+      const podio::Frame& frame, const std::string& suffix) {
+    std::string s = suffix.empty() ? suffix : "_" + suffix;
+    std::string tracksKey = "tracks" + s;
+
+    std::vector<std::string> available = frame.getAvailableCollections();
+    if (!Acts::rangeContainsValue(available, tracksKey)) {
+      throw std::runtime_error{"Track collection '" + tracksKey +
+                               "' not found in frame"};
+    }
+
+    const auto* collection = frame.get(tracksKey);
+
+    const ActsPodioEdm::TrackCollection* d = nullptr;
+    if (const auto* casted =
+            dynamic_cast<const ActsPodioEdm::TrackCollection*>(collection);
+        casted != nullptr) {
+      d = casted;
+    } else {
+      throw std::runtime_error{"Unable to get collection " + tracksKey};
+    }
+
+    return d;
+  }
 
   holder_t<const ActsPodioEdm::TrackCollection> m_collection;
   std::unordered_map<Acts::HashedString,
