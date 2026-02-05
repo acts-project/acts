@@ -512,6 +512,10 @@ class TrackingVolume : public Volume {
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
 
+  /// @cond
+  using Volume::visualize;
+  /// @endcond
+
   /// Access the navigation policy if any that is registered on this volume
   /// @return a pointer to the navigation policy, or nullptr if none is set
   const INavigationPolicy* navigationPolicy() const;
