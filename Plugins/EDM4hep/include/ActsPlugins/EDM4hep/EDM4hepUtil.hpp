@@ -124,12 +124,12 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 
   auto setParameters = [](edm4hep::TrackState& trackState,
                           const detail::Parameters& params) {
-    trackState.D0 = params.values[0];
-    trackState.Z0 = params.values[1];
-    trackState.phi = params.values[2];
-    trackState.tanLambda = params.values[3];
-    trackState.omega = params.values[4];
-    trackState.time = params.values[5];
+    trackState.D0 = static_cast<float>(params.values[0]);
+    trackState.Z0 = static_cast<float>(params.values[1]);
+    trackState.phi = static_cast<float>(params.values[2]);
+    trackState.tanLambda = static_cast<float>(params.values[3]);
+    trackState.omega = static_cast<float>(params.values[4]);
+    trackState.time = static_cast<float>(params.values[5]);
 
     if (params.covariance) {
       detail::packCovariance(params.covariance.value(),
@@ -140,8 +140,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   ACTS_VERBOSE("Converting " << track.nTrackStates() << " track states");
 
   for (const auto& state : track.trackStatesReversed()) {
-    auto typeFlags = state.typeFlags();
-    if (!typeFlags.isMeasurement()) {
+    if (!state.typeFlags().isMeasurement()) {
       continue;
     }
 
@@ -167,9 +166,9 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
     // Converted parameters are relative to an ad-hoc perigee surface created at
     // the hit location
     auto center = converted.surface->center(gctx);
-    trackState.referencePoint.x = center.x();
-    trackState.referencePoint.y = center.y();
-    trackState.referencePoint.z = center.z();
+    trackState.referencePoint.x = static_cast<float>(center.x());
+    trackState.referencePoint.y = static_cast<float>(center.y());
+    trackState.referencePoint.z = static_cast<float>(center.z());
     ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
   }
   outTrackStates.front().location = edm4hep::TrackState::AtLastHit;
@@ -200,13 +199,13 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   // track itself, but if that's not a perigee surface, another ad-hoc perigee
   // at the position will be created.
   auto center = converted.surface->center(gctx);
-  ipState.referencePoint.x = center.x();
-  ipState.referencePoint.y = center.y();
-  ipState.referencePoint.z = center.z();
+  ipState.referencePoint.x = static_cast<float>(center.x());
+  ipState.referencePoint.y = static_cast<float>(center.y());
+  ipState.referencePoint.z = static_cast<float>(center.z());
 
   ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
 
-  for (auto& trackState : outTrackStates) {
+  for (const auto& trackState : outTrackStates) {
     to.addToTrackStates(trackState);
   }
 }
@@ -225,8 +224,7 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
 
   std::optional<edm4hep::TrackState> ipState;
 
-  auto unpack =
-      [](const edm4hep::TrackState& trackState) -> detail::Parameters {
+  auto unpack = [](const edm4hep::TrackState& trackState) {
     detail::Parameters params;
     params.covariance = BoundMatrix::Zero();
     params.values = BoundVector::Zero();
