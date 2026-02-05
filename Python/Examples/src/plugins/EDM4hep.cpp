@@ -16,7 +16,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
-#include "ActsExamples/Io/EDM4hep/TrackContainerToPodioConverter.hpp"
+#include "ActsExamples/Io/EDM4hep/PodioTrackOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/PodioMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
@@ -142,18 +142,17 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
 
   {
     using Helper = ActsPlugins::PodioUtil::ConversionHelper;
-    py::class_<TrackContainerToPodioConverter, PodioOutputConverter,
-               std::shared_ptr<TrackContainerToPodioConverter>>(
-        m, "TrackContainerToPodioConverter")
-        .def(py::init<const TrackContainerToPodioConverter::Config&,
+    py::class_<PodioTrackOutputConverter, PodioOutputConverter,
+               std::shared_ptr<PodioTrackOutputConverter>>(
+        m, "PodioTrackOutputConverter")
+        .def(py::init<const PodioTrackOutputConverter::Config&,
                       std::shared_ptr<Helper>, Acts::Logging::Level>(),
              py::arg("config"), py::arg("helper"), py::arg("level"))
-        .def_property_readonly("config",
-                               &TrackContainerToPodioConverter::config);
+        .def_property_readonly("config", &PodioTrackOutputConverter::config);
 
     auto config =
-        py::class_<TrackContainerToPodioConverter::Config>(
-            m, "TrackContainerToPodioConverterConfig")
+        py::class_<PodioTrackOutputConverter::Config>(
+            m, "PodioTrackOutputConverterConfig")
             .def(py::init<>());
     ACTS_PYTHON_STRUCT(config, inputTracks, outputTracks);
   }
