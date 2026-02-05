@@ -105,11 +105,17 @@ struct CombinatorialKalmanFilterOptions {
   bool skipPrePropagationUpdate = false;
 };
 
+/// Result container for the combinatorial Kalman filter actor.
+///
+/// @tparam track_container_t Type of the track container storing results
 template <typename track_container_t>
 struct CombinatorialKalmanFilterResult {
+  /// Track state container backend type
   using TrackStateContainerBackend =
       typename track_container_t::TrackStateContainerBackend;
+  /// Track proxy type
   using TrackProxy = typename track_container_t::TrackProxy;
+  /// Track state proxy type
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
 
   /// The track container to store the found tracks

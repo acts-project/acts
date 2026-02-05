@@ -52,31 +52,47 @@ class BoundaryTolerance {
 
   struct NoneParams {};
 
+  /// Parameters for absolute Euclidean boundary tolerance.
   struct AbsoluteEuclideanParams {
+    /// Tolerance value
     double tolerance{};
   };
 
+  /// Parameters for chi2 boundary tolerance in bound coordinates.
   struct Chi2BoundParams {
+    /// Maximum chi2 value
     double maxChi2{};
+    /// Weight matrix stored as flat array
     std::array<double, 4> weight{};
 
+    /// Get weight matrix as Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<SquareMatrix2> weightMatrix() {
       return Eigen::Map<SquareMatrix2>(weight.data());
     }
 
+    /// Get weight matrix as const Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<const SquareMatrix2> weightMatrix() const {
       return Eigen::Map<const SquareMatrix2>(weight.data());
     }
   };
 
+  /// Parameters for chi2 boundary tolerance in Cartesian coordinates.
   struct Chi2CartesianParams {
+    /// Maximum chi2 value
     double maxChi2{};
+    /// Weight matrix stored as flat array
     std::array<double, 4> weight{};
 
+    /// Get weight matrix as Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<SquareMatrix2> weightMatrix() {
       return Eigen::Map<SquareMatrix2>(weight.data());
     }
 
+    /// Get weight matrix as const Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<const SquareMatrix2> weightMatrix() const {
       return Eigen::Map<const SquareMatrix2>(weight.data());
     }

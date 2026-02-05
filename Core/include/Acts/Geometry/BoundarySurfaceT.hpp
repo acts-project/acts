@@ -172,6 +172,7 @@ class BoundarySurfaceT {
 };
 
 class TrackingVolume;
+/// Type alias for boundary surface with TrackingVolume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
 
 }  // namespace Acts

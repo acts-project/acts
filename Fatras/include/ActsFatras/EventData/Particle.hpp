@@ -406,6 +406,10 @@ class Particle {
   ParticleOutcome m_outcome = ParticleOutcome::Alive;
 };
 
+/// Print particle to output stream
+/// @param os Output stream
+/// @param particle Particle to print
+/// @return Output stream
 std::ostream &operator<<(std::ostream &os, const Particle &particle);
 
 }  // namespace ActsFatras

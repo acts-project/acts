@@ -21,9 +21,13 @@ class Logger;
 /// stream
 class TryAllNavigationPolicy final : public INavigationPolicy {
  public:
+  /// Configuration for the try-all navigation policy
   struct Config {
+    /// Whether to include portal surfaces
     bool portals = true;
+    /// Whether to include sensitive surfaces
     bool sensitives = true;
+    /// Whether to include passive surfaces
     bool passives = true;
   };
 

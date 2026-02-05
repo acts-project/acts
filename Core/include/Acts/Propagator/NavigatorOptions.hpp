@@ -15,15 +15,19 @@ namespace Acts {
 class GeometryContext;
 class Surface;
 
+/// Plain navigator options carrying geometry context and surfaces.
 struct NavigatorPlainOptions {
   /// NavigatorPlainOptions with context
+  /// @param gctx The geometry context
   explicit NavigatorPlainOptions(const GeometryContext &gctx)
       : geoContext(gctx) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
 
+  /// Start surface for navigation
   const Surface *startSurface{};
+  /// Target surface for navigation
   const Surface *targetSurface{};
 };
 
