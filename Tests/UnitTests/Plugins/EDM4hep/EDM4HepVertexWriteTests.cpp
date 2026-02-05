@@ -77,8 +77,7 @@ BOOST_AUTO_TEST_CASE(WriteVertex) {
                                                edm4hep::FourMomCoords::z),
                     covariance(eFreePos2, eFreePos2));
 
-  if constexpr (EDM4hepUtil::detail::edm4hepVertexHasTime<
-                    edm4hep::MutableVertex>) {
+  if constexpr (EDM4hepUtil::detail::kEdm4hepVertexHasTime) {
     BOOST_CHECK_EQUAL(to.getPosition()[3], 42);
     BOOST_CHECK_EQUAL(to.getCovMatrix().getValue(edm4hep::FourMomCoords::t,
                                                  edm4hep::FourMomCoords::t),

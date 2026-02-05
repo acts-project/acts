@@ -324,13 +324,13 @@ class SimHitAssociation {
 /// @}
 
 namespace detail {
-
 /// Support for both EDM4hep versions where the vertex position is a 3 or 4
 /// vector
-template <typename T>
-constexpr bool edm4hepVertexHasTime = std::is_same_v<
-    edm4hep::Vector4f,
-    std::remove_cvref_t<decltype(std::declval<T>().getPosition())>>;
+constexpr bool kEdm4hepVertexHasTime =
+    std::is_same_v<edm4hep::Vector4f,
+                   decltype(std::declval<edm4hep::Vertex>().getPosition())> &&
+    std::is_same_v<edm4hep::CovMatrix4f,
+                   decltype(std::declval<edm4hep::Vertex>().getCovMatrix())>;
 
 }  // namespace detail
 

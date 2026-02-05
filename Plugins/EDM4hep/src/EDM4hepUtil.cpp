@@ -12,9 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include <ActsPodioEdm/MutableTrackerHitLocal.h>
 
@@ -260,7 +258,7 @@ void writeVertex(const Vertex& vertex, edm4hep::MutableVertex to) {
   auto writeVertex = [&]<typename T>(const Vertex& vertex, T& to)
     requires(std::is_same_v<T, edm4hep::MutableVertex>)
   {
-    if constexpr (detail::edm4hepVertexHasTime<edm4hep::MutableVertex>) {
+    if constexpr (detail::kEdm4hepVertexHasTime) {
       Vector4 pos = vertex.fullPosition();
       to.setPosition({static_cast<float>(pos[eFreePos0]),
                       static_cast<float>(pos[eFreePos1]),
