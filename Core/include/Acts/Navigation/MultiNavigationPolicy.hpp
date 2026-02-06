@@ -128,7 +128,8 @@ class MultiNavigationPolicy final : public INavigationPolicy {
     stateManager.pushState<State>(std::move(states));
   }
 
-  /// Remove the states for this policy and all child policies from the state manager
+  /// Remove the states for this policy and all child policies from the state
+  /// manager
   /// @param stateManager The state manager to pop the states from
   /// @param logger Logger for debug output
   void popState(NavigationPolicyStateManager& stateManager,
