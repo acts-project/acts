@@ -21,7 +21,7 @@ using namespace Acts::Experimental;
 
 namespace ActsPlugins {
 
-TH1F* toRoot(const Histogram1& boostHist) {
+std::unique_ptr<TH1F> toRoot(const Histogram1& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& axis = bh.axis(0);
 
@@ -29,8 +29,9 @@ TH1F* toRoot(const Histogram1& boostHist) {
   std::vector<double> edges = extractBinEdges(axis);
 
   // Create ROOT histogram with variable binning
-  TH1F* rootHist = new TH1F(boostHist.name().c_str(), boostHist.title().c_str(),
-                            static_cast<int>(axis.size()), edges.data());
+  auto rootHist = std::make_unique<TH1F>(boostHist.name().c_str(),
+                                         boostHist.title().c_str(), axis.size(),
+                                         edges.data());
 
   // Copy bin contents from boost to ROOT
   for (auto&& x : boost::histogram::indexed(bh)) {
@@ -38,7 +39,7 @@ TH1F* toRoot(const Histogram1& boostHist) {
     double content = *x;
 
     // ROOT bin numbering starts at 1 (bin 0 is underflow)
-    int rootBinIndex = static_cast<int>(x.index(0)) + 1;
+    int rootBinIndex = x.index(0) + 1;
     rootHist->SetBinContent(rootBinIndex, content);
   }
 
@@ -48,7 +49,7 @@ TH1F* toRoot(const Histogram1& boostHist) {
   return rootHist;
 }
 
-TH2F* toRoot(const Histogram2& boostHist) {
+std::unique_ptr<TH2F> toRoot(const Histogram2& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& xAxis = bh.axis(0);
   const auto& yAxis = bh.axis(1);
@@ -60,9 +61,9 @@ TH2F* toRoot(const Histogram2& boostHist) {
   std::vector<double> yEdges = extractBinEdges(yAxis);
 
   // Create ROOT histogram with 2D variable binning
-  TH2F* rootHist = new TH2F(boostHist.name().c_str(), boostHist.title().c_str(),
-                            static_cast<int>(xAxis.size()), xEdges.data(),
-                            static_cast<int>(yAxis.size()), yEdges.data());
+  auto rootHist = std::make_unique<TH2F>(
+      boostHist.name().c_str(), boostHist.title().c_str(), xAxis.size(),
+      xEdges.data(), yAxis.size(), yEdges.data());
 
   // Copy bin contents from boost to ROOT
   for (auto&& x : boost::histogram::indexed(bh)) {
@@ -71,8 +72,8 @@ TH2F* toRoot(const Histogram2& boostHist) {
 
     // ROOT bin numbering starts at 1 (bin 0 is underflow)
     // indexed() gives us 0-based bin indices for each axis
-    int rootXBin = static_cast<int>(x.index(0)) + 1;
-    int rootYBin = static_cast<int>(x.index(1)) + 1;
+    int rootXBin = x.index(0) + 1;
+    int rootYBin = x.index(1) + 1;
     rootHist->SetBinContent(rootXBin, rootYBin, content);
   }
 
@@ -83,7 +84,7 @@ TH2F* toRoot(const Histogram2& boostHist) {
   return rootHist;
 }
 
-TProfile* toRoot(const ProfileHistogram1& boostProfile) {
+std::unique_ptr<TProfile> toRoot(const ProfileHistogram1& boostProfile) {
   const auto& bh = boostProfile.histogram();
   const auto& axis = bh.axis(0);
 
@@ -91,9 +92,9 @@ TProfile* toRoot(const ProfileHistogram1& boostProfile) {
   std::vector<double> edges = extractBinEdges(axis);
 
   // Create ROOT TProfile with variable binning
-  TProfile* rootProfile =
-      new TProfile(boostProfile.name().c_str(), boostProfile.title().c_str(),
-                   static_cast<int>(axis.size()), edges.data());
+  auto rootProfile = std::make_unique<TProfile>(boostProfile.name().c_str(),
+                                                boostProfile.title().c_str(),
+                                                axis.size(), edges.data());
 
   // Enable sum of weights squared storage for proper error calculation
   rootProfile->Sumw2();
@@ -109,7 +110,7 @@ TProfile* toRoot(const ProfileHistogram1& boostProfile) {
     const Accumulator& acc = *x;
 
     // ROOT bin numbering starts at 1 (bin 0 is underflow)
-    int rootBinIndex = static_cast<int>(x.index(0)) + 1;
+    int rootBinIndex = x.index(0) + 1;
 
     double count = acc.count();
 
@@ -158,7 +159,7 @@ TProfile* toRoot(const ProfileHistogram1& boostProfile) {
   return rootProfile;
 }
 
-TEfficiency* toRoot(const Efficiency1& boostEff) {
+std::unique_ptr<TEfficiency> toRoot(const Efficiency1& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& axis = accepted.axis(0);
@@ -167,17 +168,17 @@ TEfficiency* toRoot(const Efficiency1& boostEff) {
   std::vector<double> edges = extractBinEdges(axis);
 
   // Create accepted and total TH1F histograms
-  TH1F* acceptedHist =
-      new TH1F((boostEff.name() + "_accepted").c_str(), "Passed",
-               static_cast<int>(axis.size()), edges.data());
+  auto acceptedHist =
+      std::make_unique<TH1F>((boostEff.name() + "_accepted").c_str(), "Passed",
+                             axis.size(), edges.data());
 
-  TH1F* totalHist = new TH1F((boostEff.name() + "_total").c_str(), "Total",
-                             static_cast<int>(axis.size()), edges.data());
+  auto totalHist = std::make_unique<TH1F>((boostEff.name() + "_total").c_str(),
+                                          "Total", axis.size(), edges.data());
 
   // Fill histograms with counts
   for (int i = 0; i < axis.size(); ++i) {
-    double acceptedCount = static_cast<double>(accepted.at(i));
-    double totalCount = static_cast<double>(total.at(i));
+    auto acceptedCount = static_cast<double>(accepted.at(i));
+    auto totalCount = static_cast<double>(total.at(i));
 
     acceptedHist->SetBinContent(i + 1, acceptedCount);
     totalHist->SetBinContent(i + 1, totalCount);
@@ -185,18 +186,14 @@ TEfficiency* toRoot(const Efficiency1& boostEff) {
 
   // Create TEfficiency from the two histograms
   // TEfficiency takes ownership of the histograms
-  TEfficiency* rootEff = new TEfficiency(*acceptedHist, *totalHist);
+  auto rootEff = std::make_unique<TEfficiency>(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
-
-  // Clean up temporary histograms (TEfficiency made copies)
-  delete acceptedHist;
-  delete totalHist;
 
   return rootEff;
 }
 
-TEfficiency* toRoot(const Efficiency2& boostEff) {
+std::unique_ptr<TEfficiency> toRoot(const Efficiency2& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& xAxis = accepted.axis(0);
@@ -209,20 +206,19 @@ TEfficiency* toRoot(const Efficiency2& boostEff) {
   std::vector<double> yEdges = extractBinEdges(yAxis);
 
   // Create accepted and total TH2F histograms
-  TH2F* acceptedHist =
-      new TH2F((boostEff.name() + "_accepted").c_str(), "Accepted",
-               static_cast<int>(xAxis.size()), xEdges.data(),
-               static_cast<int>(yAxis.size()), yEdges.data());
+  auto acceptedHist = std::make_unique<TH2F>(
+      (boostEff.name() + "_accepted").c_str(), "Accepted", xAxis.size(),
+      xEdges.data(), yAxis.size(), yEdges.data());
 
-  TH2F* totalHist = new TH2F((boostEff.name() + "_total").c_str(), "Total",
-                             static_cast<int>(xAxis.size()), xEdges.data(),
-                             static_cast<int>(yAxis.size()), yEdges.data());
+  auto totalHist = std::make_unique<TH2F>((boostEff.name() + "_total").c_str(),
+                                          "Total", xAxis.size(), xEdges.data(),
+                                          yAxis.size(), yEdges.data());
 
   // Fill histograms with counts
   for (int i = 0; i < xAxis.size(); ++i) {
     for (int j = 0; j < yAxis.size(); ++j) {
-      double acceptedCount = static_cast<double>(accepted.at(i, j));
-      double totalCount = static_cast<double>(total.at(i, j));
+      auto acceptedCount = static_cast<double>(accepted.at(i, j));
+      auto totalCount = total.at(i, j);
 
       acceptedHist->SetBinContent(i + 1, j + 1, acceptedCount);
       totalHist->SetBinContent(i + 1, j + 1, totalCount);
@@ -231,13 +227,9 @@ TEfficiency* toRoot(const Efficiency2& boostEff) {
 
   // Create TEfficiency from the two histograms
   // TEfficiency takes ownership of the histograms
-  TEfficiency* rootEff = new TEfficiency(*acceptedHist, *totalHist);
+  auto rootEff = std::make_unique<TEfficiency>(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
-
-  // Clean up temporary histograms (TEfficiency made copies)
-  delete acceptedHist;
-  delete totalHist;
 
   return rootEff;
 }
