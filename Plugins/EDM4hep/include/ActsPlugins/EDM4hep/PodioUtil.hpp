@@ -79,6 +79,8 @@ constexpr int kNoSurface = -1;
 /// @ingroup edm4hep_plugin
 class ConversionHelper {
  public:
+  virtual ~ConversionHelper() = default;
+
   /// Convert surface to identifier
   /// @param surface The surface to convert
   /// @return Optional identifier for the surface
@@ -92,13 +94,21 @@ class ConversionHelper {
 
   /// Convert source link to identifier
   /// @param sl The source link to convert
-  /// @return Identifier for the source link
-  virtual Identifier sourceLinkToIdentifier(const Acts::SourceLink& sl) = 0;
+  /// @return Optional identifier for the source link
+  /// @note If this returns `std::nullopt`, the source link is not expressible as an identifier
+  virtual std::optional<Identifier> sourceLinkToIdentifier(
+      [[maybe_unused]] const Acts::SourceLink& sl) const {
+    return std::nullopt;
+  }
+
   /// Convert identifier to source link
   /// @param identifier The identifier to convert
-  /// @return Source link for the identifier
-  virtual Acts::SourceLink identifierToSourceLink(
-      Identifier identifier) const = 0;
+  /// @note If this returns `std::nullopt`, the source link is not expressible as an identifier
+  /// @return Optional source link for the identifier
+  virtual std::optional<Acts::SourceLink> identifierToSourceLink(
+      [[maybe_unused]] Identifier identifier) const {
+    return std::nullopt;
+  }
 };
 
 std::shared_ptr<const Acts::Surface> convertSurfaceFromPodio(

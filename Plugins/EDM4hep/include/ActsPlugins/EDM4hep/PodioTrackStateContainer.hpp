@@ -430,8 +430,10 @@ class ConstPodioTrackStateContainer final
   /// @param istate Track state index
   /// @return Uncalibrated source link
   Acts::SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
-    return m_helper.get().identifierToSourceLink(
-        m_collection->at(istate).getData().uncalibratedIdentifier);
+    return m_helper.get()
+        .identifierToSourceLink(
+            m_collection->at(istate).getData().uncalibratedIdentifier)
+        .value();
   }
 
   /// Get reference surface for a track state
@@ -879,7 +881,7 @@ class MutablePodioTrackStateContainer final
   void setUncalibratedSourceLink_impl(IndexType istate,
                                       const Acts::SourceLink& sourceLink) {
     PodioUtil::Identifier id =
-        m_helper.get().sourceLinkToIdentifier(sourceLink);
+        m_helper.get().sourceLinkToIdentifier(sourceLink).value();
     auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
     data.uncalibratedIdentifier = id;
   }
@@ -906,8 +908,10 @@ class MutablePodioTrackStateContainer final
   /// @param istate Track state index
   /// @return Uncalibrated source link
   Acts::SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
-    return m_helper.get().identifierToSourceLink(
-        m_collection->at(istate).getData().uncalibratedIdentifier);
+    return m_helper.get()
+        .identifierToSourceLink(
+            m_collection->at(istate).getData().uncalibratedIdentifier)
+        .value();
   }
 
   /// Get the reference surface for a track state

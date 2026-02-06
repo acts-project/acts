@@ -49,13 +49,13 @@ class NullHelper : public PodioUtil::ConversionHelper {
     return nullptr;
   }
 
-  SourceLink identifierToSourceLink(
+  std::optional<SourceLink> identifierToSourceLink(
       PodioUtil::Identifier /*identifier*/) const override {
     return SourceLink{0};
   }
 
-  PodioUtil::Identifier sourceLinkToIdentifier(
-      const SourceLink& /*sourceLink*/) override {
+  std::optional<PodioUtil::Identifier> sourceLinkToIdentifier(
+      const SourceLink& /*sourceLink*/) const override {
     return 0;
   }
 };
@@ -79,17 +79,22 @@ struct MapHelper : public NullHelper {
     return it->second;
   }
 
-  PodioUtil::Identifier sourceLinkToIdentifier(const SourceLink& sl) override {
-    sourceLinks.push_back(sl);
-    return sourceLinks.size() - 1;
+  std::optional<PodioUtil::Identifier> sourceLinkToIdentifier(
+      const SourceLink& sl) const override {
+    sourceLinks->push_back(sl);
+    return sourceLinks->size() - 1;
   }
 
-  SourceLink identifierToSourceLink(PodioUtil::Identifier id) const override {
-    return sourceLinks.at(id);
+  std::optional<SourceLink> identifierToSourceLink(
+      PodioUtil::Identifier id) const override {
+    return sourceLinks->at(id);
   }
 
   std::unordered_map<PodioUtil::Identifier, const Surface*> surfaces;
-  std::vector<SourceLink> sourceLinks;
+  // This is a bit of a hack to work around the conversion helper methods being
+  // const
+  std::unique_ptr<std::vector<SourceLink>> sourceLinks =
+      std::make_unique<std::vector<SourceLink>>();
 };
 
 struct Factory {
