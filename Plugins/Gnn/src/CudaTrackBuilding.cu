@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <sstream>
+
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsPlugins/Gnn/CudaTrackBuilding.hpp"
 #include "ActsPlugins/Gnn/detail/ConnectedComponents.cuh"
@@ -124,11 +126,23 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   ACTS_DEBUG("Bounds size: " << bounds.size());
-  ACTS_DEBUG("Bounds: " << bounds.at(0) << ", " << bounds.at(1) << ", "
-                        << bounds.at(2) << ", ..., "
-                        << bounds.at(numberLabels - 2) << ", "
-                        << bounds.at(numberLabels - 1) << ", "
-                        << bounds.at(numberLabels));
+  ACTS_DEBUG("Bounds: " << [&] {
+    std::ostringstream oss;
+    const auto n = bounds.size();
+    for (std::size_t i = 0; i < std::min<std::size_t>(n, 3); ++i) {
+      if (i > 0) {
+        oss << ", ";
+      }
+      oss << bounds[i];
+    }
+    if (n > 6) {
+      oss << ", ...";
+    }
+    for (std::size_t i = (n > 6 ? n - 3 : 3); i < n; ++i) {
+      oss << ", " << bounds[i];
+    }
+    return oss.str();
+  }());
 
   std::vector<std::vector<int>> trackCandidates;
   trackCandidates.reserve(numberLabels);
