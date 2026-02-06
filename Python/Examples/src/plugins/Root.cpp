@@ -35,7 +35,6 @@
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
-#include "ActsExamples/Root/MuonHoughVisualization.hpp"
 #include "ActsExamples/Root/MuonVisualization.hpp"
 #include "ActsExamples/Root/ScalingCalibrator.hpp"
 #include "ActsPython/Utilities/Macros.hpp"

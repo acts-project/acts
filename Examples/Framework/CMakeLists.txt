@@ -49,7 +49,6 @@ if(ACTS_BUILD_EXAMPLES_ROOT)
     target_sources(
         ActsExamplesFramework
         PRIVATE src/Root/ScalingCalibrator.cpp src/Root/MuonVisualization.cpp
-               src/Root/MuonHoughVisualization.cpp
     )
     target_link_libraries(ActsExamplesFramework PUBLIC ROOT::Core ROOT::Hist ROOT::Graf ROOT::Gpad)
     set_source_files_properties(
