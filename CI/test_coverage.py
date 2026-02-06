@@ -149,7 +149,7 @@ def generate(
         + ["-r", str(source_dir)]
         + ["--gcov-executable", gcov_exe]
         + ["-j", str(jobs)]
-        # + ["--merge-mode-functions", "separate"]
+        + ["--merge-mode-functions", "separate"]
         + excludes
         + extra_flags
         + ["--sonarqube", str(raw_xml_path)]
