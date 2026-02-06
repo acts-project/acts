@@ -246,25 +246,9 @@ template <typename component_range_t, typename projector_t>
 std::tuple<BoundVector, BoundSquareMatrix> mergeGaussianMixture(
     const component_range_t &cmps, const projector_t &projector,
     const Surface &surface, ComponentMergeMethod method) {
-  const auto [mean, cov] =
-      angleDescriptionSwitch(surface, [&](const auto &angleDesc) {
-        return mergeGaussianMixtureMeanCov(cmps, projector, angleDesc);
-      });
-
-  if (method == ComponentMergeMethod::eMean) {
-    return {mean, cov};
-  } else if (method == ComponentMergeMethod::eMaxWeight) {
-    const auto maxWeightIt =
-        std::ranges::max_element(cmps, {}, [&](const auto &cmp) {
-          const auto &[weight_l, pars_l, cov_l] = projector(cmp);
-          return weight_l;
-        });
-    const auto &[weight_l, pars_l, cov_l] = projector(*maxWeightIt);
-
-    return {pars_l, cov};
-  } else {
-    throw std::logic_error("Invalid component merge method");
-  }
+  return angleDescriptionSwitch(surface, [&](const auto &desc) {
+    return mergeGaussianMixture(cmps, projector, desc, method);
+  });
 }
 
 /// @brief Class representing a symmetric distance matrix
