@@ -667,12 +667,6 @@ class AnyTrackStateProxy
                                           std::move(surface));
   }
 
-  /// Check whether an uncalibrated source link is attached.
-  /// @return True if a valid uncalibrated source link exists.
-  bool hasUncalibratedSourceLink() const {
-    return constHandler()->hasUncalibratedSourceLink(containerPtr(), m_index);
-  }
-
   /// Retrieve the original, uncalibrated source link.
   /// @return Copy of the stored source link.
   SourceLink getUncalibratedSourceLink() const {
