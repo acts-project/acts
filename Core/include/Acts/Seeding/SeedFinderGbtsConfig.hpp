@@ -12,6 +12,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 
+#include <cstdint>
 #include <string>
 
 namespace Acts::Experimental {
