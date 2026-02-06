@@ -702,49 +702,126 @@ def test_edm4hep_tracks_reader(tmp_path):
 @pytest.mark.slow
 def test_edm4hep_podio_track_output_converter(tmp_path):
     """
-    Test for PodioTrackOutputConverter.
+        Test for PodioTrackOutputConverter.
+    <<<<<<<<<<< conflict 1 of 2
+    %%%%%%%%%%% diff from: uqtypuvt 62cdaf8c "change conversion helper interface: sourcelinks not always convertible to identifier" (parents of rebased revision)
+    \\\\\\\\\\\        to: uqtypuvt a287e713 "change conversion helper interface: sourcelinks not always convertible to identifier" (rebase destination)
+    -
+    +
+         Note: This test is a placeholder pending ConversionHelper implementation.
+    -
+    +
+         The algorithm:
+         - Reads ConstTrackContainer from the whiteboard
+         - Creates PodioTrackContainer backends with externally owned collections
+         - Copies all tracks using the copyFrom() API
+         - Writes collections to the event store
+    -
+    +
+         Example usage:
+    -
+    +
+         ```python
+         from acts.examples.edm4hep import PodioTrackOutputConverter, PodioWriter
+    -
+    +
+         # Create conversion helper (detector-specific)
+         helper = MyConversionHelper(trackingGeometry)
+    -
+    +
+         # Configure converter
+         config = acts.examples.PodioTrackOutputConverterConfig()
+         config.inputTracks = "tracks"
+         config.outputTracks = "podio_tracks"
+    -
+    +
+    +++++++++++ tvullrpn bfc050b9 "minimal function converter with indices" (rebased revision)
 
-    Note: This test is a placeholder pending ConversionHelper implementation.
+        This test verifies that ConstTrackContainer can be successfully converted to
+        PodioTrackContainer format and written to a PODIO file. It uses the DD4hep-based
+        ConversionHelper for surface/sourcelink mapping.
 
-    The algorithm:
-    - Reads ConstTrackContainer from the whiteboard
-    - Creates PodioTrackContainer backends with externally owned collections
-    - Copies all tracks using the copyFrom() API
-    - Writes collections to the event store
+        The test:
+        1. Sets up a simple detector and tracking geometry
+        2. Runs truth tracking to generate tracks
+        3. Uses PodioTrackOutputConverter to write tracks in PODIO format
+        4. Verifies the output file is created and contains valid data
 
-    Example usage:
+        This tests the native ACTS EDM4hep format which preserves all track states
+        and dynamic columns, unlike the standard EDM4hep conversion.
+    """
+    from acts.examples.edm4hep import (
+        PodioTrackOutputConverter,
+        PodioWriter,
+    )
+    from truth_tracking_kalman import runTruthTrackingKalman
 
-    ```python
-    from acts.examples.edm4hep import PodioTrackOutputConverter, PodioWriter
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    # Create conversion helper (detector-specific)
-    helper = MyConversionHelper(trackingGeometry)
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Configs/generic-digi-smearing-config.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
 
-    # Configure converter
-    config = acts.examples.PodioTrackOutputConverterConfig()
-    config.inputTracks = "tracks"
-    config.outputTracks = "podio_tracks"
+    out = tmp_path / "podio_tracks.root"
 
+    # Create converter
     converter = PodioTrackOutputConverter(
-        config=config,
-        helper=helper,
-        level=acts.logging.VERBOSE
+        level=acts.logging.VERBOSE,
+        inputTracks="kf_tracks",
+        outputTracks="ActsPodioTracks",
+        inputMeasurements="measurements",
     )
     s.addAlgorithm(converter)
-
     # Write to file
     s.addWriter(
         PodioWriter(
             level=acts.logging.VERBOSE,
-            outputPath=str(output_file),
+            outputPath=str(out),
             category="events",
-            collections=converter.collections(),
+            collections=converter.collections,
         )
     )
-    ```
-    """
-    # Test is currently a placeholder pending ConversionHelper implementation
-    pass
+    s.run()
+
+    assert os.path.isfile(out), f"File {out} does not exist"
+    assert os.stat(out).st_size > 200, f"File {out} is too small"
+
+    if not podioEnabled:
+        import warnings
+
+        warnings.warn(
+            "edm4hep output checks were skipped, because podio was not on the python path"
+        )
+        return
+
+    from podio.root_io import Reader
+
+    reader = Reader(str(out))
+
+    num_tracks = 0
+    num_track_states = 0
+
+    for frame in reader.get("events"):
+        tracks = frame.get("ActsPodioTracks")
+        num_tracks += len(tracks)
+        track_states = frame.get("ActsPodioTracks_trackStates")
+        num_track_states += len(track_states)
+
+    assert num_tracks > 0, "No tracks were written"
+    assert num_track_states > 0, "No track states were written"
+    print(f"Successfully wrote {num_tracks} tracks")
 
 
 @pytest.mark.edm4hep

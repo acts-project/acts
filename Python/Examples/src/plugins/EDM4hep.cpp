@@ -8,6 +8,7 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/DD4hepPodioConversionHelper.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryOutputConverter.hpp"
@@ -52,18 +53,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
 
   py::class_<PodioInputConverter, IAlgorithm,
              std::shared_ptr<PodioInputConverter>>(m, "PodioInputConverter");
-
-  // ConversionHelper bindings
-  py::class_<ActsPlugins::PodioUtil::ConversionHelper,
-             std::shared_ptr<ActsPlugins::PodioUtil::ConversionHelper>>(
-      m, "PodioConversionHelper");
-
-  py::class_<DD4hepPodioConversionHelper,
-             ActsPlugins::PodioUtil::ConversionHelper,
-             std::shared_ptr<DD4hepPodioConversionHelper>>(
-      m, "DD4hepPodioConversionHelper")
-      .def(py::init<std::shared_ptr<const Acts::TrackingGeometry>>(),
-           py::arg("trackingGeometry"));
 
   {
     auto [alg, config] =
@@ -153,19 +142,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
   }
 
   {
-    using Helper = ActsPlugins::PodioUtil::ConversionHelper;
-    py::class_<PodioTrackOutputConverter, PodioOutputConverter,
-               std::shared_ptr<PodioTrackOutputConverter>>(
-        m, "PodioTrackOutputConverter")
-        .def(py::init<const PodioTrackOutputConverter::Config&,
-                      std::shared_ptr<Helper>, Acts::Logging::Level>(),
-             py::arg("config"), py::arg("helper"), py::arg("level"))
-        .def_property_readonly("config", &PodioTrackOutputConverter::config);
-
-    auto config =
-        py::class_<PodioTrackOutputConverter::Config>(
-            m, "PodioTrackOutputConverterConfig")
-            .def(py::init<>());
-    ACTS_PYTHON_STRUCT(config, inputTracks, outputTracks);
+    auto [alg, config] =
+        declareAlgorithm<PodioTrackOutputConverter, PodioOutputConverter>(
+            m, "PodioTrackOutputConverter");
+    ACTS_PYTHON_STRUCT(config, inputTracks, outputTracks, inputMeasurements);
   }
 }

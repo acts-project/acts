@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
@@ -39,16 +41,18 @@ class PodioTrackOutputConverter : public PodioOutputConverter {
     std::string inputTracks;
     /// Output track collection in podio format
     std::string outputTracks = "tracks";
+    /// Input measurement collection
+    std::string inputMeasurements;
+
+    /// DD4hep detector
+    std::shared_ptr<DD4hepDetector> detector;
   };
 
   /// Constructor
   /// @param config is the configuration object
-  /// @param helper is the conversion helper for surface/sourcelink mapping
   /// @param level is the output logging level
   explicit PodioTrackOutputConverter(
-      const Config& config,
-      std::shared_ptr<ActsPlugins::PodioUtil::ConversionHelper> helper,
-      Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -63,9 +67,9 @@ class PodioTrackOutputConverter : public PodioOutputConverter {
  private:
   Config m_cfg;
 
-  std::shared_ptr<ActsPlugins::PodioUtil::ConversionHelper> m_helper;
-
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
 
   CollectionBaseWriteHandle m_outputTracks{this, "OutputTracks"};
   CollectionBaseWriteHandle m_outputTrackStates{this, "OutputTrackStates"};

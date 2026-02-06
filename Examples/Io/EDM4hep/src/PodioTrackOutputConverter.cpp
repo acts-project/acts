@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Utilities/Holders.hpp"
+#include "ActsExamples/Io/EDM4hep/DD4hepPodioConversionHelper.hpp"
 #include "ActsPlugins/EDM4hep/PodioTrackContainer.hpp"
 #include "ActsPlugins/EDM4hep/PodioTrackStateContainer.hpp"
 #include "ActsPlugins/EDM4hep/PodioUtil.hpp"
@@ -22,26 +23,20 @@
 
 namespace ActsExamples {
 
-PodioTrackOutputConverter::PodioTrackOutputConverter(
-    const Config& config,
-    std::shared_ptr<ActsPlugins::PodioUtil::ConversionHelper> helper,
-    Acts::Logging::Level level)
-    : PodioOutputConverter("PodioTrackOutputConverter", level),
-      m_cfg(config),
-      m_helper(std::move(helper)) {
+PodioTrackOutputConverter::PodioTrackOutputConverter(const Config& config,
+                                                     Acts::Logging::Level level)
+    : PodioOutputConverter("PodioTrackOutputConverter", level), m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks collection");
   }
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing output tracks collection");
   }
-  if (!m_helper) {
-    throw std::invalid_argument("Missing conversion helper");
-  }
 
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
   m_outputTrackStates.initialize(m_cfg.outputTracks + "_trackStates");
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
 }
 
 ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
@@ -51,6 +46,9 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
 
   ACTS_VERBOSE("Converting " << inputTracks.size()
                              << " tracks to Podio format");
+
+  const auto& inputMeasurements = m_inputMeasurements(context);
+  DD4hepPodioConversionHelper helper(*m_cfg.detector, inputMeasurements);
 
   // Create external Podio collections that we'll own and write to the event
   // store
@@ -62,11 +60,10 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
   auto jacsCollection = std::make_unique<ActsPodioEdm::JacobianCollection>();
 
   // Create Podio backends using RefHolder for externally owned collections
-  ActsPlugins::MutablePodioTrackStateContainer<Acts::RefHolder>
-      trackStateContainer(*m_helper, *trackStateCollection, *paramsCollection,
-                          *jacsCollection);
-  ActsPlugins::MutablePodioTrackContainer<Acts::RefHolder> trackContainer(
-      *m_helper, *trackCollection);
+  ActsPlugins::MutablePodioTrackStateContainer trackStateContainer(
+      helper, *trackStateCollection, *paramsCollection, *jacsCollection);
+  ActsPlugins::MutablePodioTrackContainer trackContainer(helper,
+                                                         *trackCollection);
 
   // Wrap in Acts TrackContainer
   Acts::TrackContainer outputTracks{trackContainer, trackStateContainer};
@@ -81,6 +78,23 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
 
   ACTS_VERBOSE("Copied " << outputTracks.size() << " tracks with "
                          << trackStateContainer.size() << " track states");
+
+  // SANITY CHECK!
+  // @TODO: Make this configurable or remove it altogether
+  for (const auto& outputTrack : outputTracks) {
+    for (const auto& ts : outputTrack.trackStates()) {
+      if (ts.hasUncalibratedSourceLink()) {
+        auto sourceLink = ts.getUncalibratedSourceLink();
+        auto indexSourceLink = sourceLink.get<IndexSourceLink>();
+        if (indexSourceLink.index() >= inputMeasurements.size()) {
+          throw std::runtime_error("TrackState for track index " +
+                                   std::to_string(outputTrack.index()) +
+                                   " references a measurement that is not "
+                                   "present in the measurement container");
+        }
+      }
+    }
+  }
 
   // Write collections to event store
   m_outputTracks(context, std::move(trackCollection));
