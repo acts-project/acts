@@ -94,6 +94,7 @@ class Navigator {
   using NavigationCandidates =
       boost::container::small_vector<NavigationTarget, 10>;
 
+  /// Type alias for external surfaces container
   using ExternalSurfaces = std::vector<GeometryIdentifier>;
 
   /// Type alias for geometry version enumeration
@@ -162,6 +163,7 @@ class Navigator {
     using FreeSurfaceSelctor_t = Delegate<bool(
         const GeometryContext& gctx, const TrackingVolume& currentVol,
         const Vector3& pos, const Vector3& dir, const Surface& candidate)>;
+    /// Delegate for selecting free surfaces during navigation
     FreeSurfaceSelctor_t freeSurfaceSelector{};
     /// Set the plain navigation options
     /// @param options The plain navigator options to set
@@ -212,6 +214,8 @@ class Navigator {
     /// reached during propagation
     std::vector<std::pair<const Surface*, bool>> freeCandidates{};
 
+    /// Get reference to current navigation surface
+    /// @return Reference to current navigation target
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
@@ -232,6 +236,7 @@ class Navigator {
       return navCandidates.at(navCandidateIndex.value());
     }
 
+    /// Volume where the navigation started
     const TrackingVolume* startVolume = nullptr;
     /// Layer where the navigation started
     const Layer* startLayer = nullptr;

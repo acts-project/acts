@@ -63,13 +63,13 @@ option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_ALGEBRAPLUGINS "If we want to setup algebra-plugins" ON)
+option(ACTS_SETUP_ALGEBRAPLUGINS "If we want to set up algebra-plugins" ON)
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_COVFIE "If we want to setup covfie" ON)
+option(ACTS_SETUP_COVFIE "If we want to set up covfie" ON)
 option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_DETRAY "If we want to setup detray" ON)
+option(ACTS_SETUP_DETRAY "If we want to set up detray" ON)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_VECMEM "If we want to setup vecmem" ON)
+option(ACTS_SETUP_VECMEM "If we want to set up vecmem" ON)
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
@@ -228,7 +228,9 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     set(ACTS_PYTHON_INSTALL_DIR "acts")
 else()
     # GNU-like installation paths, e.g. lib/, include/, ...
-    include(GNUInstallDirs)
+    if(PROJECT_IS_TOP_LEVEL)
+        include(GNUInstallDirs)
+    endif()
     set(ACTS_PYTHON_INSTALL_DIR "python")
 endif()
 
@@ -236,28 +238,15 @@ include(ActsCompilerOptions) # default compile options
 include(ActsComponentsHelpers) # handle components via add_..._if commands
 include(ActsStaticAnalysis)
 
-# function that tests if the root installation is compatible
-function(check_root_compatibility)
-    get_target_property(
-        ROOT_INCLUDE_DIR
-        ROOT::Core
-        INTERFACE_INCLUDE_DIRECTORIES
+if(PROJECT_IS_TOP_LEVEL)
+    # place build products in `<build>/bin` and `<build>/lib` for simple use
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
+        "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
     )
-    set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
-    #yolo
-    #check_cxx_source_compiles(" #include <string>\n #include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
-    #if(NOT ROOT_COMPATIBILITY_CHECK)
-    #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
-    #endif()
-endfunction()
-
-# place build products in `<build>/bin` and `<build>/lib` for simple use
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-    "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
-)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
-    "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
-)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
+        "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
+    )
+endif()
 
 # This needs to happen before we set up any targets
 if(ACTS_FORCE_ASSERTIONS)
@@ -476,7 +465,6 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         CONFIG
         COMPONENTS Geom Graf Tree RIO Hist
     )
-    check_root_compatibility()
 endif()
 if(ACTS_BUILD_ANALYSIS_APPS)
     find_package(
@@ -486,7 +474,6 @@ if(ACTS_BUILD_ANALYSIS_APPS)
         CONFIG
         COMPONENTS Geom Graf
     )
-    check_root_compatibility()
 endif()
 if(ACTS_BUILD_PLUGIN_GNN)
     if(ACTS_GNN_ENABLE_CUDA)
@@ -619,7 +606,6 @@ if(ACTS_BUILD_EXAMPLES)
             CONFIG
             COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
         )
-        check_root_compatibility()
     endif()
     if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
         find_package(

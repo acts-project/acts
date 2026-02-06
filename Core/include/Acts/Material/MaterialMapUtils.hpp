@@ -31,7 +31,7 @@ namespace Acts {
 
 class Material;
 
-/// Method to setup the MaterialMapper
+/// Method to set up the MaterialMapper
 /// @param [in] materialVectorToGridMapper Function mapping the vector of
 /// material to the map of material values
 ///
@@ -74,7 +74,7 @@ materialMapperRZ(
     const std::vector<Acts::Material>& material,
     double lengthUnit = UnitConstants::mm);
 
-/// Method to setup the MaterialLookup
+/// Method to set up the MaterialLookup
 /// @param [in] materialVectorToGridMapper Function mapping the vector of
 /// material to the map of material values
 ///
