@@ -21,8 +21,3 @@ std::string Acts::Direction::toString() const {
       std::abort();
   }
 }
-
-std::ostream& Acts::operator<<(std::ostream& os, Direction dir) {
-  os << dir.toString();
-  return os;
-}

@@ -1693,7 +1693,7 @@ def addCKFTracks(
             absEtaEdges=[cutSets[0].absEtaMin] + [c.absEta[1] for c in tslist],
         )
 
-    # Setup the track finding algorithm with CKF
+    # Set up the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(

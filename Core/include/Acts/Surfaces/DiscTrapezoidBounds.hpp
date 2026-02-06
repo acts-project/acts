@@ -48,7 +48,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param minR inner radius
   /// @param maxR outer radius
   /// @param avgPhi average phi value
-  /// @param stereo optional stero angle applied
+  /// @param stereo optional stereo angle applied
   explicit DiscTrapezoidBounds(double halfXminR, double halfXmaxR, double minR,
                                double maxR,
                                double avgPhi = std::numbers::pi / 2.,
