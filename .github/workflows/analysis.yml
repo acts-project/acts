@@ -88,7 +88,7 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          CI/dependencies/run.sh .env uv run ../CI/test_coverage.py build --verbose
+          CI/dependencies/run.sh .env uv run ../CI/test_coverage.py generate build --filter
 
       - uses: actions/upload-artifact@v6
         if: always()
