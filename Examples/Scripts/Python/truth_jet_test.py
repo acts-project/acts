@@ -235,7 +235,8 @@ def make_sequencer(
         s,
         TruthJetConfig(
             inputTruthParticles="particles_generated",
-            # inputTracks="",
+            inputTracks="tracks",
+            doTrackJetMatching=True,
             outputJets="output_jets",
             jetPtMin=10 * u.GeV,
         ),
