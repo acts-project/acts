@@ -137,8 +137,21 @@ def generate(
     coverage_dir = build_dir / "coverage"
     coverage_dir.mkdir(exist_ok=True)
 
-    # don't seem to be working
-    excludes = []
+    source_dir_posix = source_dir.as_posix()
+    excludes = [
+        "-e",
+        f"{source_dir_posix}/Tests/",
+        "-e",
+        r".*/boost/.*",
+        "-e",
+        r".*json\.hpp",
+        "-e",
+        f"{source_dir_posix}/Python/",
+        "-e",
+        f".*{build_dir.name}.*",
+        "-e",
+        ".*dependencies.*",
+    ]
     gcovr = [gcovr_exe]
 
     coverage_xml_path = coverage_dir / "cov.xml"
