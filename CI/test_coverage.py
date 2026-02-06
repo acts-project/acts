@@ -86,7 +86,9 @@ def generate(
     verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False,
     filter_xml: Annotated[
         bool,
-        typer.Option("--filter/--no-filter", help="Filter the coverage XML after generation"),
+        typer.Option(
+            "--filter/--no-filter", help="Filter the coverage XML after generation"
+        ),
     ] = False,
 ) -> None:
     """Generate a SonarQube coverage XML report from a CMake build directory using gcovr."""
