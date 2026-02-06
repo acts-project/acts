@@ -205,6 +205,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
  public:
   /// Constructor
   /// @param helper Conversion helper
+  /// @param collection Track collection
   explicit MutablePodioTrackContainer(
       const PodioUtil::ConversionHelper& helper,
       holder_t<ActsPodioEdm::TrackCollection> collection)

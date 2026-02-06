@@ -460,6 +460,9 @@ class MutablePodioTrackStateContainer final
  public:
   /// Constructor
   /// @param helper Conversion helper
+  /// @param trackStates Track states collection
+  /// @param params Parameters collection
+  /// @param jacs Jacobians collection
   explicit MutablePodioTrackStateContainer(
       PodioUtil::ConversionHelper& helper,
       holder_t<ActsPodioEdm::TrackStateCollection> trackStates,
