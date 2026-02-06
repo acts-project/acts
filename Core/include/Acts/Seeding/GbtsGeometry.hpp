@@ -88,8 +88,8 @@ class GbtsLayer {
   /// @param pL Other layer to compare with
   /// @param b1 First bin index
   /// @param b2 Second bin index
-  /// @param min_z0 Minimum z0 coordinate
-  /// @param max_z0 Maximum z0 coordinate
+  /// @param minZ0 Minimum z0 coordinate
+  /// @param maxZ0 Maximum z0 coordinate
   /// @return True if bins are compatible
   bool verifyBin(const GbtsLayer* pL, std::uint32_t b1, std::uint32_t b2,
                  float minZ0, float maxZ0) const;

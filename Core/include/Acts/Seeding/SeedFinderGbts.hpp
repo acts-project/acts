@@ -73,7 +73,7 @@ class SeedFinderGbts {
   /// Create seeds from spacepoints in a region of interest.
   /// @param roi Region of interest descriptor
   /// @param SpContainerComponents Spacepoint container components
-  /// @param max_layers Maximum number of layers
+  /// @param maxLayers Maximum number of layers
   /// @return Container with generated seeds
   SeedContainer2 createSeeds(
       const RoiDescriptor& roi,
@@ -82,7 +82,7 @@ class SeedFinderGbts {
 
   /// Create graph nodes from spacepoints.
   /// @param container Spacepoint container components
-  /// @param MaxLayers Maximum number of layers
+  /// @param maxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(
       const SPContainerComponentsType& container,
