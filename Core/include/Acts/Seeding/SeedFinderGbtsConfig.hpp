@@ -33,7 +33,7 @@ struct SeedFinderGbtsConfig {
   /// Enable Large Radius Tracking mode.
   bool lrtMode = false;
   /// Use machine learning features (e.g., cluster width).
-  bool useML = false;  // use cluster width
+  bool useML = false;
   /// Match seeds before creating them.
   bool matchBeforeCreate = false;
   /// Use legacy tuning parameters.
@@ -43,39 +43,34 @@ struct SeedFinderGbtsConfig {
   /// Tau ratio precut threshold.
   float tau_ratio_precut = 0.009f;
   /// Eta bin width override (0 uses default from connection file).
-  /// specify non-zero to override eta bin width from connection file
-  /// (default 0.2 in createLinkingScheme.py)
+  float etaBinOverride =
+      0.0f;  // specify non-zero to override eta bin width from connection file
+             // (default 0.2 in createLinkingScheme.py)
+
   /// Maximum number of phi slices.
-  float etaBinOverride = 0.0f;
-  /// used to calculate phi slices
+  float nMaxPhiSlice = 53;  // used to calculate phi slices
   /// Minimum transverse momentum.
-  float nMaxPhiSlice = 53;
   float minPt = 1.0f * UnitConstants::GeV;
   /// Phi slice width (derived in CreateSeeds function).
-  /// derived in CreatSeeds function
-  float phiSliceWidth{};
+  float phiSliceWidth{};  // derived in CreatSeeds function
 
   // graph building options
   /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of 2*T).
-
-  // ~0.3*B/2 - assumes nominal field of 2*T
-  double ptCoeff =
-      0.29997 * 1.9972 / 2.0;  // ~0.3*B/2 - assumes nominal field of 2*T
-  //// Use eta binning from geometry structure.
-  bool useEtaBinning = true;  /// bool to use eta binning from geometry structure
+  double ptCoeff = 0.29997 * 1.9972 / 2.0;
+  /// Use eta binning from geometry structure.
+  bool useEtaBinning = true;
   /// Apply RZ cuts on doublets.
-  bool doubletFilterRZ = true;  // bool applies new Z cuts on doublets
-  //// Maximum number of Gbts edges/doublets.
-  std::uint32_t nMaxEdges = 2000000;  // max number of Gbts edges/doublets
+  bool doubletFilterRZ = true;
+  /// Maximum number of Gbts edges/doublets.
+  std::uint32_t nMaxEdges = 2000000;
   /// Minimum delta radius between layers.
   float minDeltaRadius = 2.0;
 
   // GbtsTrackingFilter options
-
   /// Multiple scattering sigma (for 900 MeV track at eta=0).
-  float sigmaMS = 0.016;  // for 900 MeV track at eta=0
+  float sigmaMS = 0.016;
   /// Radiation length fraction per layer (2.5% per layer).
-  float radLen = 0.025;  // 2.5% per layer
+  float radLen = 0.025;
 
   /// Measurement uncertainty in x direction.
   float sigma_x = 0.08;
@@ -100,13 +95,13 @@ struct SeedFinderGbtsConfig {
   /// Maximum longitudinal impact parameter.
   float max_z0 = 170.0;
 
-  // extractSeedsFromTheGraph()
+  // Seed extraction options
   /// Minimum eta for edge masking.
   float edge_mask_min_eta = 1.5;
   /// Threshold for hit sharing between seeds.
   float hit_share_threshold = 0.49;
 
-  // GbtsDataStorage
+  // GbtsDataStorage options
   /// Maximum endcap cluster width.
   float max_endcap_clusterwidth = 0.35;
 
