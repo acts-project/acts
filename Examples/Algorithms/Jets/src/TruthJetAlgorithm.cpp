@@ -301,10 +301,10 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
   if (m_cfg.doTrackJetMatching) {
     const ConstTrackContainer& tracks = m_inputTracks(ctx);
-    m_outputJets(ctx, trackJetMatching(tracks, outputJetContainer));
-  } else {
-    m_outputJets(ctx, std::move(outputJetContainer));
+    trackJetMatching(tracks, outputJetContainer);
   }
+
+  m_outputJets(ctx, std::move(outputJetContainer));
 
   return ProcessCode::SUCCESS;
 }
