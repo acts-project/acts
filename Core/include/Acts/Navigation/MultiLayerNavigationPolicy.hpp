@@ -29,8 +29,9 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   /// Type alias for indexed surfaces navigation updater
   using IndexedUpdatorType = IndexGrid<GridType>;
 
+  /// Configuration for multilayer navigation behavior.
   struct Config {
-    // The binning expansion for grid neighbor lookups
+    /// The binning expansion for grid neighbor lookups
     std::vector<std::size_t> binExpansion = {0u, 0u};
   };
 

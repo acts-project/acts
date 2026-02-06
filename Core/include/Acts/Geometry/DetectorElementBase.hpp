@@ -52,6 +52,7 @@ class DetectorElementBase : public SurfacePlacementBase {
   virtual double thickness() const = 0;
   /// Returns whether the detector element corresponds to a sensitive
   /// surface on which measurements are expressed
+  /// @return true, always sensitive
   bool isSensitive() const override { return true; }
 };
 

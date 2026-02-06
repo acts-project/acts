@@ -45,6 +45,7 @@ class CylindricalSpacePointGrid2 {
   /// Type alias for binned group over the cylindrical grid
   using BinnedGroupType = BinnedGroup<GridType>;
 
+  /// Configuration parameters for the cylindrical space point grid.
   struct Config {
     /// minimum pT
     float minPt = 0 * UnitConstants::MeV;
@@ -84,13 +85,17 @@ class CylindricalSpacePointGrid2 {
     int maxPhiBins = 10000;
     /// enable non equidistant binning in z
     std::vector<float> zBinEdges{};
+    /// enable non equidistant binning in r
     std::vector<float> rBinEdges{};
 
     /// magnetic field
     float bFieldInZ = 0 * UnitConstants::T;
 
+    /// bin finder for bottom space points
     std::optional<GridBinFinder<3ul>> bottomBinFinder;
+    /// bin finder for top space points
     std::optional<GridBinFinder<3ul>> topBinFinder;
+    /// navigation structure for the grid
     std::array<std::vector<std::size_t>, 3ul> navigation;
   };
 

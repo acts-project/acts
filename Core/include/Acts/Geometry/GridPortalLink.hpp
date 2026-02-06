@@ -304,7 +304,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @note The returned pointer can be nullptr, if the grids
   ///       given are not mergeable, because their binnings are
   ///       not compatible. This is not an error case, and needs
-  ///       to be handled by th caller! Invalid input is handled
+  ///       to be handled by the caller! Invalid input is handled
   ///       via exceptions.
   static std::unique_ptr<PortalLinkBase> merge(
       const GridPortalLink& a, const GridPortalLink& b, AxisDirection direction,
