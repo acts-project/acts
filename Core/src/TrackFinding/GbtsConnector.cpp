@@ -14,6 +14,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <unordered_map>
 
@@ -162,8 +163,8 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
   // the doublet making is done using "outside-in" approach hence the reverse
   // iterations
 
-  for (auto it = newConnMap.rbegin(); it != newConnMap.rend(); ++it) {
-    const std::vector<const GbtsConnection*>& vConn = (*it).second;
+  for (const auto& it : std::views::reverse(newConnMap)) {
+    const std::vector<const GbtsConnection*>& vConn = it.second;
 
     // loop over links, extract all connections for the stage, group sources by
     // L1 (dst) index
