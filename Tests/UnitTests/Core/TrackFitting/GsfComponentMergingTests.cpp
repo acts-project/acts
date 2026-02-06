@@ -254,12 +254,12 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   std::mt19937 gen(42);
   std::vector<GsfComponent> cmps(2);
 
-  cmps[0].boundPars << 1.0, 1.0;
-  cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
+  cmps[0].boundPars.head<2>() << 1.0, 1.0;
+  cmps[0].boundCov.topLeftCorner<2, 2>() << 1.0, 0.0, 0.0, 1.0;
   cmps[0].weight = 0.5;
 
-  cmps[1].boundPars << -2.0, -2.0;
-  cmps[1].boundCov << 1.0, 1.0, 1.0, 2.0;
+  cmps[1].boundPars.head<2>() << -2.0, -2.0;
+  cmps[1].boundCov.topLeftCorner<2, 2>() << 1.0, 1.0, 1.0, 2.0;
   cmps[1].weight = 0.5;
 
   const auto samples = sampleFromMultivariate(cmps, 10000, gen);
@@ -274,18 +274,16 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
 }
 
 BOOST_AUTO_TEST_CASE(test_with_data_circular) {
-  const std::shared_ptr<PlaneSurface> surface =
-      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
-
   std::mt19937 gen(42);
   std::vector<GsfComponent> cmps(2);
 
-  cmps[0].boundPars << 175_degree, 5_degree;
-  cmps[0].boundCov << 20_degree, 0.0, 0.0, 20_degree;
+  cmps[0].boundPars.head<2>() << 175_degree, 5_degree;
+  cmps[0].boundCov.topLeftCorner<2, 2>() << 20_degree, 0.0, 0.0, 20_degree;
   cmps[0].weight = 0.5;
 
-  cmps[1].boundPars << -175_degree, -5_degree;
-  cmps[1].boundCov << 20_degree, 20_degree, 20_degree, 40_degree;
+  cmps[1].boundPars.head<2>() << -175_degree, -5_degree;
+  cmps[1].boundCov.topLeftCorner<2, 2>() << 20_degree, 20_degree, 20_degree,
+      40_degree;
   cmps[1].weight = 0.5;
 
   const auto samples = sampleFromMultivariate(cmps, 10000, gen);
@@ -293,15 +291,17 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   const auto boundCov_data = boundCov(
       samples, mean_data, [](const BoundVector &a, const BoundVector &b) {
         BoundVector res = BoundVector::Zero();
-        for (unsigned int i = 0; i < eBoundSize; ++i) {
+        for (unsigned int i = 0; i < 2; ++i) {
           res[i] =
               detail::difference_periodic(a[i], b[i], 2 * std::numbers::pi);
         }
         return res;
       });
 
+  using detail::Gsf::CyclicAngle;
+  const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
   const auto [mean_test, boundCov_test] = detail::Gsf::mergeGaussianMixture(
-      cmps, *surface, ComponentMergeMethod::eMean);
+      cmps, std::identity{}, d, ComponentMergeMethod::eMean);
 
   BOOST_CHECK(std::abs(detail::difference_periodic(
                   mean_data[0], mean_test[0], 2 * std::numbers::pi)) < 1.e-1);
