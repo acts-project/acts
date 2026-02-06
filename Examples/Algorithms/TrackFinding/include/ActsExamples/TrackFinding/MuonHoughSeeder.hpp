@@ -77,10 +77,9 @@ class MuonHoughSeeder final : public IAlgorithm {
     bool dumpVisualization{false};
     /// @brief Visualization function (optional, e.g., for ROOT-based visualization)
     /// Takes: outputPath, bucketId, maxima, plane, axis, truthSegments, logger
-    std::function<void(const std::string&, const MuonId&,
-                       const MaximumVec_t&, const HoughPlane_t&,
-                       const AxisRange_t&, const MuonSegmentContainer&,
-                       const Acts::Logger&)>
+    std::function<void(const std::string&, const MuonId&, const MaximumVec_t&,
+                       const HoughPlane_t&, const AxisRange_t&,
+                       const MuonSegmentContainer&, const Acts::Logger&)>
         visualizationFunction{};
   };
 

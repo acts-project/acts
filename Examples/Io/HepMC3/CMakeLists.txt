@@ -15,7 +15,7 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesIoHepMC3
-    PUBLIC Acts::ExamplesFramework HepMC3::HepMC3 
+    PUBLIC Acts::ExamplesFramework HepMC3::HepMC3
     PRIVATE Acts::Fatras nlohmann_json::nlohmann_json
 )
 

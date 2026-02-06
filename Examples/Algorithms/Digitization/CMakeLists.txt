@@ -13,9 +13,6 @@ target_include_directories(
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-target_link_libraries(
-    ActsExamplesDigitization
-    PUBLIC Acts::ExamplesFramework
-)
+target_link_libraries(ActsExamplesDigitization PUBLIC Acts::ExamplesFramework)
 
 acts_compile_headers(ExamplesDigitization GLOB "include/**/*.hpp")

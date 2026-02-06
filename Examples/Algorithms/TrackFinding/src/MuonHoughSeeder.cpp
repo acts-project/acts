@@ -246,11 +246,11 @@ void MuonHoughSeeder::displayMaxima(const AlgorithmContext& ctx,
     return;
   }
   const MuonSegmentContainer& gotTruthSegs = m_inputTruthSegs(ctx);
-  const std::string outputPath = std::format(
-      "HoughHistogram_{}_{}_{}_{}_{}.pdf",
-      MuonId::toString(bucketId.msStation()),
-      MuonId::toString(bucketId.side()), bucketId.sector(),
-      bucketId.measuresEta() ? "eta" : "phi", ctx.eventNumber);
+  const std::string outputPath =
+      std::format("HoughHistogram_{}_{}_{}_{}_{}.pdf",
+                  MuonId::toString(bucketId.msStation()),
+                  MuonId::toString(bucketId.side()), bucketId.sector(),
+                  bucketId.measuresEta() ? "eta" : "phi", ctx.eventNumber);
   m_cfg.visualizationFunction(outputPath, bucketId, maxima, plane, axis,
                               gotTruthSegs, logger());
 }

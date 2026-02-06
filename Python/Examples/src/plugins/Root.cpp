@@ -321,12 +321,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     root.def("makeMuonHoughVisualizationFunction", []() {
       return std::function<void(
           const std::string&, const MuonSpacePoint::MuonId&,
-          const std::vector<Acts::HoughTransformUtils::PeakFinders::
-                                IslandsAroundMax<const MuonSpacePoint*>::Maximum>&,
+          const std::vector<
+              Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
+                  const MuonSpacePoint*>::Maximum>&,
           const Acts::HoughTransformUtils::HoughPlane<const MuonSpacePoint*>&,
           const Acts::HoughTransformUtils::HoughAxisRanges&,
-          const MuonSegmentContainer&,
-          const Acts::Logger&)>(visualizeMuonHoughMaxima);
+          const MuonSegmentContainer&, const Acts::Logger&)>(
+          visualizeMuonHoughMaxima);
     });
   }
 }

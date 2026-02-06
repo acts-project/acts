@@ -255,9 +255,8 @@ void visualizeMuonSpacePoints(const std::string& outputPath,
 
 void visualizeMuonHoughMaxima(
     const std::string& outputPath, const MuonSpacePoint::MuonId& bucketId,
-    const std::vector<Acts::HoughTransformUtils::PeakFinders::
-                          IslandsAroundMax<const MuonSpacePoint*>::Maximum>&
-        maxima,
+    const std::vector<Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
+        const MuonSpacePoint*>::Maximum>& maxima,
     const Acts::HoughTransformUtils::HoughPlane<const MuonSpacePoint*>& plane,
     const Acts::HoughTransformUtils::HoughAxisRanges& axis,
     const MuonSegmentContainer& truthSegments, const Acts::Logger& logger) {
