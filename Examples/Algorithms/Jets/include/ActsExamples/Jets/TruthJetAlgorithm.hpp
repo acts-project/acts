@@ -55,7 +55,7 @@ class TruthJetAlgorithm final : public IAlgorithm {
     /// Only label HS hadrons
     bool jetLabelingHSHadronsOnly = true;
     /// Enable track-jet matching
-    bool doTrackJetMatching = true;
+    bool doTrackJetMatching;
   };
 
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);

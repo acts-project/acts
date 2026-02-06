@@ -61,8 +61,14 @@ ParticleSelectorConfig = namedtuple(
 
 TruthJetConfig = namedtuple(
     "TruthJetConfig",
-    ["inputTruthParticles", "inputTracks", "outputJets", "jetPtMin"],
-    defaults=[None, None, None, None],
+    [
+        "inputTruthParticles",
+        "inputTracks",
+        "outputJets",
+        "doTrackJetMatching",
+        "jetPtMin",
+    ],
+    defaults=[None, None, None, False, None],
 )
 
 
@@ -100,6 +106,7 @@ def _getTruthJetKWargs(config: TruthJetConfig) -> dict:
         "inputTruthParticles": config.inputTruthParticles,
         "inputTracks": config.inputTracks,
         "outputJets": config.outputJets,
+        "doTrackJetMatching": config.doTrackJetMatching,
         "jetPtMin": config.jetPtMin,
     }
 
