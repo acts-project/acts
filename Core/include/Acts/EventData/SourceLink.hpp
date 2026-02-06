@@ -25,13 +25,24 @@
 namespace Acts {
 
 /// @ingroup eventdata_measurement
+/// Type-erased source link wrapper.
 class SourceLink final {
   using any_type = AnyBase<ACTS_SOURCELINK_SBO_SIZE>;
 
  public:
+  /// Copy constructor
+  /// @param other Source link to copy from
   SourceLink(const SourceLink& other) = default;
+  /// Move constructor
+  /// @param other Source link to move from
   SourceLink(SourceLink&& other) = default;
+  /// Copy assignment operator
+  /// @param other Source link to copy from
+  /// @return Reference to this source link
   SourceLink& operator=(const SourceLink& other) = default;
+  /// Move assignment operator
+  /// @param other Source link to move from
+  /// @return Reference to this source link
   SourceLink& operator=(SourceLink&& other) = default;
 
   /// Constructor from concrete source link
@@ -65,33 +76,53 @@ class SourceLink final {
   any_type m_upstream{};
 };
 
+/// Iterator adapter returning SourceLink wrappers.
 template <typename T>
 struct SourceLinkAdapterIterator {
+  /// The base iterator type
   using BaseIterator = T;
 
+  /// Iterator category
   using iterator_category = typename BaseIterator::iterator_category;
+  /// Value type
   using value_type = typename BaseIterator::value_type;
+  /// Difference type
   using difference_type = typename BaseIterator::difference_type;
+  /// Pointer type
   using pointer = typename BaseIterator::pointer;
+  /// Reference type
   using reference = typename BaseIterator::reference;
 
+  /// Constructor from base iterator
+  /// @param iterator Base iterator to wrap
   explicit SourceLinkAdapterIterator(T iterator) : m_iterator{iterator} {}
 
+  /// Pre-increment operator
+  /// @return Reference to this iterator
   SourceLinkAdapterIterator& operator++() {
     ++m_iterator;
     return *this;
   }
 
+  /// Equality comparison operator
+  /// @param other Iterator to compare with
+  /// @return True if iterators are equal
   bool operator==(const SourceLinkAdapterIterator& other) const {
     return m_iterator == other.m_iterator;
   }
 
+  /// Dereference operator
+  /// @return Wrapped source link
   Acts::SourceLink operator*() const { return Acts::SourceLink{*m_iterator}; }
 
+  /// Difference operator
+  /// @param other Iterator to compute difference with
+  /// @return Distance between iterators
   auto operator-(const SourceLinkAdapterIterator& other) const {
     return m_iterator - other.m_iterator;
   }
 
+  /// Underlying iterator
   BaseIterator m_iterator;
 };
 

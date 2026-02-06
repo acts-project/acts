@@ -301,11 +301,9 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   }
 
   if (m_cfg.doTrackJetMatching) {
-    auto trackMatchedJets = trackJetMatching(tracks, outputJetContainer);
-    m_outputJets(ctx, std::move(trackMatchedJets));
-  } else {
-    m_outputJets(ctx, std::move(outputJetContainer));
+    trackJetMatching(tracks, outputJetContainer);
   }
+  m_outputJets(ctx, std::move(outputJetContainer));
 
   return ProcessCode::SUCCESS;
 }

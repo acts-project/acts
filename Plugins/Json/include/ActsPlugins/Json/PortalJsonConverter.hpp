@@ -32,6 +32,7 @@ class Portal;
 /// @{
 namespace PortalJsonConverter {
 
+/// Configuration for portal json conversion.
 struct Options {
   /// Options how to write the surface out
   SurfaceJsonConverter::Options surfaceOptions =

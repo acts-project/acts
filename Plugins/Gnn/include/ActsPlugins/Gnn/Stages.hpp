@@ -34,6 +34,7 @@ struct PipelineTensors {
   std::optional<Tensor<float>> edgeScores;
 };
 
+/// Base class for graph construction algorithms
 class GraphConstructionBase {
  public:
   /// Perform the graph construction
@@ -53,6 +54,7 @@ class GraphConstructionBase {
   virtual ~GraphConstructionBase() = default;
 };
 
+/// @brief Base class for edge classification stage in GNN pipeline
 class EdgeClassificationBase {
  public:
   /// Perform edge classification
@@ -67,6 +69,7 @@ class EdgeClassificationBase {
   virtual ~EdgeClassificationBase() = default;
 };
 
+/// Base class for track building implementations
 class TrackBuildingBase {
  public:
   /// Perform track building
