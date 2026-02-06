@@ -46,6 +46,7 @@ class CompositeSpacePointLineFitter {
   template <CompositeSpacePointContainer Cont_t>
   using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
 
+  /// Number of fit parameters
   static constexpr auto s_nPars = toUnderlying(FitParIndex::nPars);
   /// @brief Vector containing the 5 straight segment line parameters
   using ParamVec_t = std::array<double, s_nPars>;
@@ -55,6 +56,10 @@ class CompositeSpacePointLineFitter {
   struct Config {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
     double precCutOff{1.e-7};
+    /// @brief If the parameter change normalized to their uncertainties is below the cutOff the fit is converged.
+    //         For negative cut-offs this convergence schema is effectively
+    //         deactivated
+    double normPrecCutOff{1.e-2};
     /// @brief Gradient decent step size if the Hessian is singular
     double gradientStep{1.e-4};
     /// @brief Number of iterations
@@ -70,6 +75,9 @@ class CompositeSpacePointLineFitter {
     double badFastChi2SignSwap{5.};
     /// @brief Switch to use the fast fitter as pre-fitter. The flag useFastFitter needs to be enabled
     bool fastPreFitter{true};
+    /// @brief Switch to try the full fit when the fast pre-fitter fails. The flags useFastFitter
+    ///        and fastPreFitter have to be enabled
+    bool ignoreFailedPreFit{false};
     /// @brief Use the second derivative in the residual calculation
     bool useHessian{false};
     /// @brief Flag toggling whether the along the wire component of straws shall be calculated
@@ -87,6 +95,7 @@ class CompositeSpacePointLineFitter {
     /// @brief Allowed parameter ranges. If the lower interval edge is higher than the upper
     ///        edge, the parameters are unbound
     using RangeArray = std::array<std::array<double, 2>, s_nPars>;
+    /// Allowed parameter ranges
     RangeArray ranges{
         filledArray<std::array<double, 2>, s_nPars>(std::array{1., -1.})};
     /// @brief Overwrite the set of parameters to use, if it's absolutely necessary
@@ -98,12 +107,18 @@ class CompositeSpacePointLineFitter {
     /// @brief Default constructor
     FitParameters() = default;
     /// @brief Copy constructor
+    /// @param other The parameters to copy
     FitParameters(const FitParameters& other) = default;
     /// @brief Move constructor
+    /// @param other The parameters to move
     FitParameters(FitParameters&& other) = default;
     /// @brief Copy assignment operator
+    /// @param other The parameters to copy
+    /// @return Reference to this object
     FitParameters& operator=(const FitParameters& other) = default;
     /// @brief Move assignment operator
+    /// @param other The parameters to move
+    /// @return Reference to this object
     FitParameters& operator=(FitParameters&& other) = default;
     /// @brief Ostream operator
     friend std::ostream& operator<<(std::ostream& ostr,
@@ -112,6 +127,7 @@ class CompositeSpacePointLineFitter {
       return ostr;
     }
     /// @brief Print function
+    /// @param ostr Output stream
     void print(std::ostream& ostr) const;
     /// @brief Local straight line parameters
     ParamVec_t parameters{filledArray<double, s_nPars>(0)};
@@ -180,16 +196,19 @@ class CompositeSpacePointLineFitter {
       std::unique_ptr<const Logger> logger = getDefaultLogger(
           "CompositeSpacePointLineFitter", Logging::Level::INFO));
   /// @brief Returns the instantiated configuration object
+  /// @return The configuration object
   const Config& config() const { return m_cfg; }
   /// @brief Classify measurements according to whether they measure
   ///        loc0, loc1, time or are straw measurements
   /// @param measurements: Collection of composite space points of interest
+  /// @return Degrees of freedom counts
   template <CompositeSpacePointContainer Cont_t>
   DoFcounts countDoF(const Cont_t& measurements) const;
   /// @brief Classify measurements according to whether they measure
   ///        loc0, loc1, time or are straw measurements
   /// @param measurements: Collection of composite space points of interest
   /// @param selector: Delegate to sort out the invalid measurements
+  /// @return Degrees of freedom counts
   template <CompositeSpacePointContainer Cont_t>
   DoFcounts countDoF(const Cont_t& measurements,
                      const Selector_t<SpacePoint_t<Cont_t>>& selector) const;
@@ -198,10 +217,12 @@ class CompositeSpacePointLineFitter {
   ///        extracted from the hit counts.
   /// @param hitCounts: Filled array representing the degrees of freedom for
   ///                   nonBending, bending, timeStrip, and straw measurement
+  /// @return Vector of fit parameter indices
   std::vector<FitParIndex> extractFitablePars(const DoFcounts& hitCounts) const;
   /// @brief Fit a line to a set of Composite space point measurements.
   /// @param fitOpts: Auxiliary object carrying all necessary input
   ///                 needed to execute the fit
+  /// @return Fit result
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
   FitResult<Cont_t> fit(FitOptions<Cont_t, Calibrator_t>&& fitOpts) const;
@@ -271,7 +292,8 @@ class CompositeSpacePointLineFitter {
   FastFitResult fastNonPrecFit(const Cont_t& measurements) const;
   /// @brief Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was
-  ///        sufficiently small such that the fit is converged
+  ///        sufficiently small such that the fit is converged. If converged,
+  ///        the covariance of the fit result is directly filled
   /// @tparam N: Number of fitted parameters. Either 1 intercept + 1 angle (2D), 2D + time,
   ///            both intercepts & angles, all 5 straight line parameters
   /// @param firstPar: The first fitted straight line parameter in the parameter vector
@@ -279,23 +301,13 @@ class CompositeSpacePointLineFitter {
   /// @param cache: Evaluated chi2 & derivatives needed to calculate the update step via
   ///               Newton's method
   /// @param currentPars: Mutable referebce to the line parameter values at the current iteration
-  template <unsigned N>
-  UpdateStep updateParameters(const FitParIndex firstPar, ChiSqCache& cache,
-                              ParamVec_t& currentPars) const
-    requires(N >= 2 && N <= s_nPars);
-
-  /// @brief Copies the inverse of the chi2's Hessian
-  ///        to the covariance matrix of the fit
-  /// @tparam N: Number of fitted parameters. Either 1 intercept + 1 angle (2D), 2D + time,
-  ///            both intercepts & angles, all 5 straight line parameters
-  /// @param firstPar: The first fitted straight line parameter in the parameter vector
-  ///                  Toggles between x0 + phi vs y0 + theta fits
-  /// @param hessian: Reference to the Hessian matrix
   /// @param covariance: Reference to the covariance matrix
   template <unsigned N>
-  void fillCovariance(const FitParIndex firstPar, const CovMat_t& hessian,
-                      CovMat_t& covariance) const
+  UpdateStep updateParameters(const FitParIndex firstPar, ChiSqCache& cache,
+                              ParamVec_t& currentPars,
+                              CovMat_t& covariance) const
     requires(N >= 2 && N <= s_nPars);
+
   /// @brief Reference to the logger object
   const Logger& logger() const { return *m_logger; }
 

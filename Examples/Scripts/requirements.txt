@@ -62,13 +62,13 @@ numpy==2.4.1
     #   scipy
     #   uhi
     #   uproot
-packaging==25.0
+packaging==26.0
     # via
     #   awkward
     #   matplotlib
     #   mplhep
     #   uproot
-pandas==2.3.3
+pandas==3.0.0
     # via -r Examples/Scripts/requirements.in
 pillow==12.1.0
     # via matplotlib
@@ -78,17 +78,15 @@ pydantic-core==2.41.5
     # via pydantic
 pygments==2.19.2
     # via rich
-pyparsing==3.3.1
+pyparsing==3.3.2
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
     #   matplotlib
     #   pandas
-pytz==2025.2
-    # via pandas
 pyyaml==6.0.3
     # via -r Examples/Scripts/requirements.in
-rich==14.2.0
+rich==14.3.1
     # via
     #   -r Examples/Scripts/requirements.in
     #   typer
@@ -108,8 +106,6 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-tzdata==2025.3
-    # via pandas
 uhi==1.0.0
     # via
     #   histoprint

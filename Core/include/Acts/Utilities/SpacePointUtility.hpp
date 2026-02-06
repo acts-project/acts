@@ -60,10 +60,11 @@ struct SpacePointParameters {
 };
 
 /// @class SpacePointUtility
-///
+/// Utility helper for space point calculations.
 class SpacePointUtility {
  public:
   /// Constructor
+  /// @param cfg Configuration for the space point builder
   explicit SpacePointUtility(SpacePointBuilderConfig cfg)
       : m_config(std::move(cfg)) {}
 

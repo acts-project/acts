@@ -108,7 +108,7 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
     // Direct definition of a child surface
     if (x_passive_xml.hasChild(_Unicode(tubs))) {
       xml_comp_t x_tubs_t = x_passive_xml.child(_Unicode(tubs));
-      // Crete the corresponding detector element
+      // Create the corresponding detector element
       DetElement passiveElement(layerName + "_passiveEl", x_layer.id());
       Tube passiveShape(layerName + "_shape", x_tubs_t.rmin(), x_tubs_t.rmax(),
                         x_tubs_t.dz());
@@ -286,7 +286,7 @@ static Ref_t create_barrel_detector(Detector &dd, xml_h xml,
       xml_comp_t x_det_layer = layer;
       auto layerElement =
           addCylinderLayer(dd, detectorAssembly, x_det_layer, sens, layerID++);
-      // Add is to the detector element
+      // Add the layer element to the detector element
       detectorElement.add(layerElement);
     }
   }

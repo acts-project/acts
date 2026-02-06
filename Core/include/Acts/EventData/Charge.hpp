@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ChargeConcept.hpp"
 
@@ -96,12 +95,10 @@ struct Neutral {
   }
 
   /// Compare for equality.
-  ///
   /// This is always `true` as `Neutral` has no internal state.
-  /// Must be available to provide a consistent interface.
-  friend constexpr bool operator==(Neutral /*lhs*/, Neutral /*rhs*/) noexcept {
-    return true;
-  }
+  /// @param rhs The Neutral to compare to
+  /// @return True if the two Neutral objects are equal, false otherwise
+  constexpr bool operator==(const Neutral& rhs) const noexcept = default;
 };
 
 static_assert(ChargeConcept<Neutral>, "Neutral does not fulfill ChargeConcept");
@@ -129,7 +126,7 @@ struct SinglyCharged {
   /// @param qOverP Charge over momentum
   /// @return Signed elementary charge (+e or -e)
   constexpr float extractCharge(double qOverP) const noexcept {
-    return std::copysign(UnitConstants::e, qOverP);
+    return static_cast<float>(std::copysign(UnitConstants::e, qOverP));
   }
 
   /// Extract momentum magnitude from q/p
@@ -150,13 +147,10 @@ struct SinglyCharged {
   }
 
   /// Compare for equality.
-  ///
   /// This is always `true` as `SinglyCharged` has no internal state.
-  /// Must be available to provide a consistent interface.
-  friend constexpr bool operator==(SinglyCharged /*lhs*/,
-                                   SinglyCharged /*rhs*/) noexcept {
-    return true;
-  }
+  /// @param rhs The SinglyCharged to compare to
+  /// @return True if the two SinglyCharged objects are equal, false otherwise
+  constexpr bool operator==(const SinglyCharged& rhs) const noexcept = default;
 };
 
 static_assert(ChargeConcept<SinglyCharged>,
@@ -183,7 +177,7 @@ class NonNeutralCharge {
   /// @param qOverP Charge over momentum
   /// @return Signed charge with correct magnitude
   constexpr float extractCharge(double qOverP) const noexcept {
-    return std::copysign(m_absQ, qOverP);
+    return static_cast<float>(std::copysign(m_absQ, qOverP));
   }
   /// Extract momentum magnitude from q/p
   /// @param qOverP Charge over momentum
@@ -202,10 +196,10 @@ class NonNeutralCharge {
   }
 
   /// Compare for equality.
-  friend constexpr bool operator==(NonNeutralCharge lhs,
-                                   NonNeutralCharge rhs) noexcept {
-    return lhs.m_absQ == rhs.m_absQ;
-  }
+  /// @param rhs The NonNeutralCharge to compare to
+  /// @return True if the two NonNeutralCharge objects are equal, false otherwise
+  constexpr bool operator==(const NonNeutralCharge& rhs) const noexcept =
+      default;
 
  private:
   float m_absQ{};
@@ -240,13 +234,13 @@ class AnyCharge {
   /// @param qOverP Charge over momentum
   /// @return Signed charge with correct magnitude (0 for neutral)
   constexpr float extractCharge(double qOverP) const noexcept {
-    return std::copysign(m_absQ, qOverP);
+    return static_cast<float>(std::copysign(m_absQ, qOverP));
   }
   /// Extract momentum magnitude from q/p
   /// @param qOverP Charge over momentum
   /// @return Momentum magnitude (handles both charged and neutral particles)
   constexpr double extractMomentum(double qOverP) const noexcept {
-    return (m_absQ != 0.0f) ? extractCharge(qOverP) / qOverP : 1.0f / qOverP;
+    return (m_absQ != 0.0f) ? extractCharge(qOverP) / qOverP : 1.0 / qOverP;
   }
 
   /// Compute q/p from momentum and signed charge
@@ -255,13 +249,13 @@ class AnyCharge {
   /// @return Charge over momentum (handles both charged and neutral particles)
   constexpr double qOverP(double momentum, float signedQ) const noexcept {
     assert(std::abs(signedQ) == m_absQ && "inconsistent charge");
-    return (m_absQ != 0.0f) ? signedQ / momentum : 1.0f / momentum;
+    return (m_absQ != 0.0f) ? signedQ / momentum : 1.0 / momentum;
   }
 
   /// Compare for equality.
-  friend constexpr bool operator==(AnyCharge lhs, AnyCharge rhs) noexcept {
-    return lhs.m_absQ == rhs.m_absQ;
-  }
+  /// @param rhs The AnyCharge to compare to
+  /// @return True if the two AnyCharge objects are equal, false otherwise
+  constexpr bool operator==(const AnyCharge& rhs) const noexcept = default;
 
  private:
   float m_absQ{};

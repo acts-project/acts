@@ -1301,7 +1301,7 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     assert Path(required_files["moduleMapPath"] + ".triplets.root").exists()
     assert Path(required_files["gnnModel"]).exists()
 
-    # Setup ODD detector
+    # Set up ODD detector
     detector = getOpenDataDetector()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     seq = Sequencer(events=5, numThreads=1)

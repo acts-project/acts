@@ -8,8 +8,6 @@
 
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 
-#include <functional>
-
 namespace Acts {
 
 std::tuple<BoundVector, BoundSquareMatrix> detail::Gsf::mergeGaussianMixture(

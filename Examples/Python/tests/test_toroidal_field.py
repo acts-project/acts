@@ -36,23 +36,15 @@ if HAS_GEOMODEL:
     except ImportError:
         pass
 
-try:
-    import acts.acts_toroidal_field
-
-    TOROIDAL_FIELD_AVAILABLE = True
-except ImportError:
-    TOROIDAL_FIELD_AVAILABLE = False
-
 u = acts.UnitConstants
 
 
-@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_basic():
-    """Test basic ToroidalField functionality."""
+    """Test basic ToroidField functionality."""
 
     # Test default configuration
-    config = acts.acts_toroidal_field.Config()
-    field = acts.acts_toroidal_field.ToroidalField(config)
+    config = acts.ToroidField.Config()
+    field = acts.ToroidField(config)
     assert field is not None
 
     # Test field at origin
@@ -71,18 +63,17 @@ def test_toroidal_field_basic():
     )
 
 
-@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_custom():
-    """Test ToroidalField with custom parameters."""
+    """Test ToroidField with custom parameters."""
 
-    config = acts.acts_toroidal_field.Config()
+    config = acts.ToroidField.Config()
 
     # Customize barrel configuration
     config.barrel.R_in = 5.0
     config.barrel.R_out = 9.0
     config.barrel.I = 15000.0
 
-    field = acts.acts_toroidal_field.ToroidalField(config)
+    field = acts.ToroidField(config)
     assert field is not None
 
     # Test field calculation
@@ -99,12 +90,11 @@ def test_toroidal_field_custom():
     assert field_value[2] is not None
 
 
-@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_symmetry():
     """Test that the field has expected symmetries."""
 
-    config = acts.acts_toroidal_field.Config()
-    field = acts.acts_toroidal_field.ToroidalField(config)
+    config = acts.ToroidField.Config()
+    field = acts.ToroidField(config)
     ctx = acts.MagneticFieldContext()
     cache = field.makeCache(ctx)
 
@@ -125,12 +115,11 @@ def test_toroidal_field_symmetry():
     assert abs(mag1 - mag2) / max(mag1, mag2, 1e-10) < 0.1  # Within 10%
 
 
-@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_regions():
     """Test field behavior in different regions (barrel vs endcap)."""
 
-    config = acts.acts_toroidal_field.Config()
-    field = acts.acts_toroidal_field.ToroidalField(config)
+    config = acts.ToroidField.Config()
+    field = acts.ToroidField(config)
     ctx = acts.MagneticFieldContext()
     cache = field.makeCache(ctx)
 
@@ -153,24 +142,23 @@ def test_toroidal_field_regions():
     assert mag_endcap > 0.0
 
 
-@pytest.mark.skipif(not TOROIDAL_FIELD_AVAILABLE, reason="ToroidalField not available")
 def test_toroidal_field_configuration():
     """Test configuration classes."""
 
     # Test BarrelConfig
-    barrel_config = acts.acts_toroidal_field.BarrelConfig()
+    barrel_config = acts.ToroidField.BarrelConfig()
     assert barrel_config.R_in > 0
     assert barrel_config.R_out > barrel_config.R_in
     assert barrel_config.I > 0
 
-    # Test ECTConfig
-    ect_config = acts.acts_toroidal_field.ECTConfig()
+    # Test EctConfig
+    ect_config = acts.ToroidField.EctConfig()
     assert ect_config.R_in > 0
     assert ect_config.R_out > ect_config.R_in
     assert ect_config.I > 0
 
     # Test LayoutConfig
-    layout_config = acts.acts_toroidal_field.LayoutConfig()
+    layout_config = acts.ToroidField.LayoutConfig()
     assert layout_config.nCoils > 0
     assert layout_config.nArc > 0
     assert layout_config.nStraight > 0
@@ -178,12 +166,9 @@ def test_toroidal_field_configuration():
 
 if __name__ == "__main__":
     # Run basic tests if called directly
-    if TOROIDAL_FIELD_AVAILABLE:
-        test_toroidal_field_basic()
-        test_toroidal_field_custom()
-        test_toroidal_field_symmetry()
-        test_toroidal_field_regions()
-        test_toroidal_field_configuration()
-        print("All ToroidalField tests passed!")
-    else:
-        print("ToroidalField not available - skipping tests")
+    test_toroidal_field_basic()
+    test_toroidal_field_custom()
+    test_toroidal_field_symmetry()
+    test_toroidal_field_regions()
+    test_toroidal_field_configuration()
+    print("All ToroidField tests passed!")

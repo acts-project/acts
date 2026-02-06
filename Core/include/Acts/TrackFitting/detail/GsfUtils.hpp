@@ -8,10 +8,18 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <array>
 #include <cassert>
@@ -249,5 +257,148 @@ class Updatable {
 
   const T &val() const { return m_val; }
 };
+
+/// Remove components with low weights and renormalize from the component
+/// cache
+/// TODO This function does not expect normalized components, but this
+/// could be redundant work...
+void removeLowWeightComponents(std::vector<GsfComponent> &cmps,
+                               double weightCutoff);
+
+template <typename traj_t>
+struct TemporaryStates {
+  traj_t traj;
+  std::vector<TrackIndexType> tips;
+  std::map<TrackIndexType, double> weights;
+};
+
+/// Function that updates the stepper from the MultiTrajectory
+template <typename traj_t, typename propagator_state_t, typename stepper_t>
+void updateStepper(propagator_state_t &state, const stepper_t &stepper,
+                   const TemporaryStates<traj_t> &tmpStates,
+                   double weightCutoff) {
+  auto cmps = stepper.componentIterable(state.stepping);
+  for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
+    // we set ignored components to missed, so we can remove them after
+    // the loop
+    if (tmpStates.weights.at(idx) < weightCutoff) {
+      cmp.status() = IntersectionStatus::unreachable;
+      continue;
+    }
+
+    auto proxy = tmpStates.traj.getTrackState(idx);
+
+    cmp.pars() = MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy);
+    cmp.cov() = proxy.filteredCovariance();
+    cmp.weight() = tmpStates.weights.at(idx);
+  }
+
+  stepper.removeMissedComponents(state.stepping);
+
+  // TODO we have two normalization passes here now, this can probably be
+  // optimized
+  detail::Gsf::normalizeWeights(
+      cmps, [&](auto cmp) -> double & { return cmp.weight(); });
+}
+
+/// Function that updates the stepper from the ComponentCache
+template <typename propagator_state_t, typename stepper_t, typename navigator_t>
+void updateStepper(propagator_state_t &state, const stepper_t &stepper,
+                   const navigator_t &navigator,
+                   const std::vector<GsfComponent> &componentCache,
+                   const Logger &logger) {
+  const auto &surface = *navigator.currentSurface(state.navigation);
+
+  // Clear components before adding new ones
+  stepper.clearComponents(state.stepping);
+
+  // Finally loop over components
+  for (const auto &[weight, pars, cov] : componentCache) {
+    // Add the component to the stepper
+    BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
+                               stepper.particleHypothesis(state.stepping));
+
+    auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
+
+    if (!res.ok()) {
+      ACTS_ERROR("Error adding component to MultiStepper");
+      continue;
+    }
+
+    auto &cmp = *res;
+    auto freeParams = cmp.pars();
+    cmp.jacToGlobal() = surface.boundToFreeJacobian(
+        state.geoContext, freeParams.template segment<3>(eFreePos0),
+        freeParams.template segment<3>(eFreeDir0));
+    cmp.pathAccumulated() = state.stepping.pathAccumulated;
+    cmp.jacobian() = BoundMatrix::Identity();
+    cmp.derivative() = FreeVector::Zero();
+    cmp.jacTransport() = FreeMatrix::Identity();
+  }
+}
+
+double applyBetheHeitler(
+    const GeometryContext &geoContext, const Surface &surface,
+    Direction direction, const BoundTrackParameters &initialParameters,
+    double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
+    std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
+    double weightCutoff, std::vector<GsfComponent> &componentCache,
+    Updatable<std::size_t> &nInvalidBetheHeitler,
+    Updatable<double> &maxPathXOverX0, const Logger &logger);
+
+template <typename traj_t, typename propagator_state_t, typename stepper_t,
+          typename navigator_t>
+void convoluteComponents(
+    propagator_state_t &state, const stepper_t &stepper,
+    const navigator_t &navigator, const TemporaryStates<traj_t> &tmpStates,
+    const BetheHeitlerApprox &betheHeitlerApprox,
+    std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
+    double weightCutoff, std::vector<GsfComponent> &componentCache,
+    Updatable<std::size_t> &nInvalidBetheHeitler,
+    Updatable<double> &maxPathXOverX0, Updatable<double> &sumPathXOverX0,
+    const Logger &logger) {
+  const GeometryContext &geoContext = state.options.geoContext;
+  const Surface &surface = *navigator.currentSurface(state.navigation);
+  const Direction direction = state.options.direction;
+
+  double pathXOverX0 = 0.0;
+  auto cmps = stepper.componentIterable(state.stepping);
+  for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
+    auto proxy = tmpStates.traj.getTrackState(idx);
+
+    BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
+                               proxy.filtered(), proxy.filteredCovariance(),
+                               stepper.particleHypothesis(state.stepping));
+
+    pathXOverX0 += applyBetheHeitler(
+        geoContext, surface, direction, bound, tmpStates.weights.at(idx),
+        betheHeitlerApprox, betheHeitlerCache, weightCutoff, componentCache,
+        nInvalidBetheHeitler, maxPathXOverX0, logger);
+  }
+
+  // Store average material seen by the components
+  // Should not be too broadly distributed
+  sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
+}
+
+/// Apply the multiple scattering to the state
+template <typename propagator_state_t, typename stepper_t, typename navigator_t>
+void applyMultipleScattering(propagator_state_t &state,
+                             const stepper_t &stepper,
+                             const navigator_t &navigator,
+                             const MaterialUpdateMode &updateMode,
+                             const Logger &logger) {
+  for (auto cmp : stepper.componentIterable(state.stepping)) {
+    auto singleState = cmp.singleState(state);
+    const auto &singleStepper = cmp.singleStepper(stepper);
+
+    detail::performMaterialInteraction(singleState, singleStepper, navigator,
+                                       updateMode, NoiseUpdateMode::addNoise,
+                                       true, false, logger);
+
+    assert(singleState.stepping.cov.array().isFinite().all() &&
+           "covariance not finite after multi scattering");
+  }
+}
 
 }  // namespace Acts::detail::Gsf
