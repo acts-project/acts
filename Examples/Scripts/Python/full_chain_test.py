@@ -373,19 +373,20 @@ def full_chain(args):
     for d in decorators:
         s.addContextDecorator(d)
 
-    # not used with ParticleGun
-    preSelectParticles = ParticleSelectorConfig(
-        rho=(0.0 * u.mm, rhoMax),
-        absZ=(0.0 * u.mm, 1.0 * u.m),
-        eta=etaRange,
-        pt=(150 * u.MeV, None) if not args.edm4hep else (None, None),
-    )
-
     if args.edm4hep:
         import acts.examples.edm4hep
 
-        edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
-            inputPath=str(args.edm4hep),
+        s.addReader(
+            acts.examples.edm4hep.PodioReader(
+                level=acts.logging.DEBUG,
+                inputPath=str(args.edm4hep),
+                outputFrame="events",
+                category="events",
+            )
+        )
+
+        edm4hepReader = acts.examples.edm4hep.EDM4hepSimInputConverter(
+            inputFrame="events",
             inputSimHits=[
                 "PixelBarrelReadout",
                 "PixelEndcapReadout",
@@ -397,16 +398,30 @@ def full_chain(args):
             outputParticlesGenerator="particles_generated",
             outputParticlesSimulation="particles_simulated",
             outputSimHits="simhits",
-            graphvizOutput="graphviz",
+            outputSimVertices="vertices_truth",
             dd4hepDetector=detector,
             trackingGeometry=trackingGeometry,
-            sortSimHitsInTime=True,
-            level=acts.logging.INFO,
+            sortSimHitsInTime=False,
+            particleRMax=1080 * u.mm,
+            particleZ=(-3030 * u.mm, 3030 * u.mm),
+            particlePtMin=150 * u.MeV,
+            level=acts.logging.DEBUG,
         )
-        s.addReader(edm4hepReader)
-        s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
+        s.addAlgorithm(edm4hepReader)
 
-        addSimParticleSelection(s, preSelectParticles)
+        s.addWhiteboardAlias(
+            "particles", edm4hepReader.config.outputParticlesSimulation
+        )
+
+        addSimParticleSelection(
+            s,
+            ParticleSelectorConfig(
+                rho=(0.0 * u.mm, rhoMax),
+                absZ=(0.0 * u.mm, 1.0 * u.m),
+                eta=etaRange,
+                removeNeutral=True,
+            ),
+        )
 
     else:
 
@@ -467,7 +482,15 @@ def full_chain(args):
                 outputDirRoot=outputDirRoot,
                 outputDirCsv=outputDirCsv,
             )
-            addGenParticleSelection(s, preSelectParticles)
+            addGenParticleSelection(
+                s,
+                ParticleSelectorConfig(
+                    rho=(0.0 * u.mm, rhoMax),
+                    absZ=(0.0 * u.mm, 1.0 * u.m),
+                    eta=etaRange,
+                    pt=(150 * u.MeV, None),
+                ),
+            )
 
         if not args.geant4:
             from acts.examples.simulation import addFatras
@@ -621,7 +644,7 @@ def full_chain(args):
         ckfConfig = ckfConfig._replace(
             chi2CutOffMeasurement=15.0,
             chi2CutOffOutlier=25.0,
-            numMeasurementsCutOff=10,
+            numMeasurementsCutOff=2,
         )
     else:
         # fmt: off
@@ -753,6 +776,7 @@ def full_chain(args):
             field,
             vertexFinder=VertexFinder.AMVF,
             outputDirRoot=outputDirLessRoot,
+            outputDirCsv=outputDirLessCsv,
         )
 
     return s
