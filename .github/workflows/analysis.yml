@@ -75,16 +75,20 @@ jobs:
           name: coverage-build
           path: build
 
-      - name: Save PR number to file
+      - name: Save PR metadata
         if: github.event_name == 'pull_request'
-        run: echo -n ${{ github.event.number }} > PR_NUMBER.txt
+        run: |
+          echo -n ${{ github.event.number }} > PR_NUMBER.txt
+          echo -n ${{ github.event.pull_request.head.sha }} > PR_SHA.txt
 
-      - name: Persist PR number
+      - name: Persist PR metadata
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v6
         with:
-          name: PR_NUMBER
-          path: PR_NUMBER.txt
+          name: PR_metadata
+          path: |
+            PR_NUMBER.txt
+            PR_SHA.txt
 
   build_performance:
     runs-on: ubuntu-latest
