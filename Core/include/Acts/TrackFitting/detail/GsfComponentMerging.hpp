@@ -259,17 +259,15 @@ class SymmetricKLDistanceMatrix {
   Array m_distances;
   Mask m_mask;
   std::vector<std::pair<std::size_t, std::size_t>> m_mapToPair;
-  std::size_t m_numberComponents;
+  std::size_t m_numberComponents{};
 
   template <typename array_t, typename setter_t>
-  void setAssociated(std::size_t n, array_t &array, setter_t &&setter) {
+  void setAssociated(std::size_t n, array_t &array, const setter_t &setter) {
     const auto indexConst = (n - 1) * n / 2;
-
     // Rows
     for (auto i = 0ul; i < n; ++i) {
       array[indexConst + i] = setter(n, i);
     }
-
     // Columns
     for (auto i = n + 1; i < m_numberComponents; ++i) {
       array[(i - 1) * i / 2 + n] = setter(n, i);
@@ -304,9 +302,9 @@ class SymmetricKLDistanceMatrix {
         m_mask(Mask::Ones(cmps.size() * (cmps.size() - 1) / 2)),
         m_mapToPair(m_distances.size()),
         m_numberComponents(cmps.size()) {
-    for (auto i = 1ul; i < m_numberComponents; ++i) {
-      const auto indexConst = (i - 1) * i / 2;
-      for (auto j = 0ul; j < i; ++j) {
+    for (std::size_t i = 1; i < m_numberComponents; ++i) {
+      const std::size_t indexConst = (i - 1) * i / 2;
+      for (std::size_t j = 0; j < i; ++j) {
         m_mapToPair.at(indexConst + j) = {i, j};
         m_distances[indexConst + j] =
             computeSymmetricKlDivergence(cmps[i], cmps[j]);
@@ -314,7 +312,7 @@ class SymmetricKLDistanceMatrix {
     }
   }
 
-  auto at(std::size_t i, std::size_t j) const {
+  double at(std::size_t i, std::size_t j) const {
     return m_distances[i * (i - 1) / 2 + j];
   }
 
@@ -331,12 +329,13 @@ class SymmetricKLDistanceMatrix {
     setAssociated(n, m_mask, [&](std::size_t, std::size_t) { return false; });
   }
 
-  auto minDistancePair() const {
-    auto min = std::numeric_limits<double>::max();
+  std::pair<std::size_t, std::size_t> minDistancePair() const {
+    double min = std::numeric_limits<double>::max();
     std::size_t idx = 0;
 
-    for (auto i = 0l; i < m_distances.size(); ++i) {
-      if (auto new_min = std::min(min, m_distances[i]);
+    for (std::size_t i = 0; i < static_cast<std::size_t>(m_distances.size());
+         ++i) {
+      if (double new_min = std::min(min, m_distances[i]);
           m_mask[i] && new_min < min) {
         min = new_min;
         idx = i;
