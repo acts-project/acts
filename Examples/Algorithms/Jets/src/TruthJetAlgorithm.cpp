@@ -314,8 +314,8 @@ ProcessCode ActsExamples::TruthJetAlgorithm::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-void TruthJetAlgorithm::trackJetMatching(
-    const ConstTrackContainer& tracks, TruthJetContainer& jets) const {
+void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
+                                         TruthJetContainer& jets) const {
   std::unordered_map<std::size_t, std::vector<std::int32_t>>
       jetToTrackIndicesMap;
 
@@ -361,7 +361,6 @@ void TruthJetAlgorithm::trackJetMatching(
     }
     jets[ijet].setAssociatedTracks(associatedTracks);
   }
-  return jets;
 }
 
 }  // namespace ActsExamples
