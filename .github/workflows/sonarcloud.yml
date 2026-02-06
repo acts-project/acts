@@ -138,6 +138,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
         with:
           args: >
+            --define sonar.verbose=true
             --define sonar.cfamily.compile-commands=build/compile_commands.json
             --define sonar.coverageReportPaths=build/coverage/cov.xml
             --define sonar.projectVersion=${{ steps.next_version.outputs.content }}
@@ -154,6 +155,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
         with:
           args: >
+            --define sonar.verbose=true
             --define sonar.cfamily.compile-commands=build/compile_commands.json
             --define sonar.coverageReportPaths=build/coverage/cov.xml
             --define sonar.projectVersion=${{ steps.next_version.outputs.content }}
