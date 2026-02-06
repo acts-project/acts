@@ -24,13 +24,23 @@ class Navigator;
 
 class NavigationPolicyStateManager;
 
+/// Wrapper class for a navigation policy state stored in the state manager.
+/// This class provides type-safe access to the underlying state through
+/// the `as<T>()` method. The state is stored as a type-erased std::any
+/// in the NavigationPolicyStateManager.
 class NavigationPolicyState {
  public:
+  /// Cast the state to a specific type
+  /// @tparam T The type to cast to
+  /// @return Reference to the state as type T
   template <typename T>
   T& as() {
     return std::any_cast<T&>(payload());
   }
 
+  /// Cast the state to a specific type (const version)
+  /// @tparam T The type to cast to
+  /// @return Const reference to the state as type T
   template <typename T>
   const T& as() const {
     return std::any_cast<T&>(payload());
@@ -38,6 +48,8 @@ class NavigationPolicyState {
 
   NavigationPolicyState() = default;
 
+  /// Check if the state is empty (not associated with a manager)
+  /// @return True if the state is empty, false otherwise
   bool empty() const { return m_manager == nullptr; }
 
  private:
@@ -54,8 +66,17 @@ class NavigationPolicyState {
   friend class NavigationPolicyStateManager;
 };
 
+/// Manager class for navigation policy states. Maintains a stack of
+/// type-erased states and provides access to the current state.
+/// Navigation policies use this manager to push and pop their states
+/// during navigation.
 class NavigationPolicyStateManager {
  public:
+  /// Push a new state onto the stack and construct it in-place
+  /// @tparam T The type of state to create
+  /// @tparam Args The types of the constructor arguments
+  /// @param args Arguments to forward to the state constructor
+  /// @return Reference to the newly created state
   template <typename T, typename... Args>
   T& pushState(Args&&... args) {
     std::any& state = m_stateStack.emplace_back();
@@ -64,6 +85,8 @@ class NavigationPolicyStateManager {
 
   friend class Navigator;
 
+  /// Get the current (top) state from the stack
+  /// @return NavigationPolicyState wrapper for the current state, or empty state if stack is empty
   NavigationPolicyState currentState() {
     if (m_stateStack.empty()) {
       return {};  // Empty state as sentinel
@@ -71,6 +94,8 @@ class NavigationPolicyStateManager {
     return NavigationPolicyState{*this, m_stateStack.size() - 1};
   }
 
+  /// Remove the current state from the stack
+  /// @throws std::runtime_error if the stack is empty
   void popState() {
     if (m_stateStack.empty()) {
       throw std::runtime_error(
@@ -179,9 +204,15 @@ class INavigationPolicy {
     visitor(*this);
   }
 
-  virtual bool isValid(const GeometryContext& /*gctx*/,
-                       const NavigationArguments /*args*/,
-                       NavigationPolicyState& /*state*/,
+  /// Check if the policy is in a valid state for navigation
+  /// @param gctx The geometry context
+  /// @param args The navigation arguments
+  /// @param state The navigation policy state to check
+  /// @param logger Logger for debug output
+  /// @return True if the policy state is valid, false otherwise
+  virtual bool isValid([[maybe_unused]] const GeometryContext& gctx,
+                       [[maybe_unused]] const NavigationArguments args,
+                       [[maybe_unused]] NavigationPolicyState& state,
                        const Logger& logger) const {
     ACTS_VERBOSE("Default navigation policy isValid check. (always true)");
     return true;
@@ -189,8 +220,13 @@ class INavigationPolicy {
 
   struct EmptyState {};
 
-  virtual void createState(const GeometryContext& /*gctx*/,
-                           const NavigationArguments /*args*/,
+  /// Create and initialize the state for this policy
+  /// @param gctx The geometry context
+  /// @param args The navigation arguments
+  /// @param stateManager The state manager to push the new state onto
+  /// @param logger Logger for debug output
+  virtual void createState([[maybe_unused]] const GeometryContext& gctx,
+                           [[maybe_unused]] const NavigationArguments args,
                            NavigationPolicyStateManager& stateManager,
                            const Logger& logger) const {
     ACTS_VERBOSE(
@@ -198,6 +234,9 @@ class INavigationPolicy {
     stateManager.pushState<EmptyState>();
   }
 
+  /// Remove the state for this policy from the state manager
+  /// @param stateManager The state manager to pop the state from
+  /// @param logger Logger for debug output
   virtual void popState(NavigationPolicyStateManager& stateManager,
                         const Logger& logger) const {
     // By default, we didn't push anything, so we don't need to poop anything

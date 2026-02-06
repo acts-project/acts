@@ -55,10 +55,19 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   void visit(const std::function<void(const INavigationPolicy&)>& visitor)
       const override;
 
+  /// State structure for MultiNavigationPolicy
+  /// Holds the states for all contained child policies
   struct State {
+    /// Vector of navigation policy states, one for each child policy
     std::vector<NavigationPolicyState> policyStates;
   };
 
+  /// Check if all child policies are in a valid state
+  /// @param gctx The geometry context
+  /// @param args The navigation arguments
+  /// @param state The navigation policy state to check
+  /// @param logger Logger for debug output
+  /// @return True if all child policy states are valid, false otherwise
   bool isValid(const GeometryContext& gctx, const NavigationArguments args,
                NavigationPolicyState& state,
                const Logger& logger) const override {
@@ -85,6 +94,11 @@ class MultiNavigationPolicy final : public INavigationPolicy {
     return true;
   }
 
+  /// Create and initialize states for this policy and all child policies
+  /// @param gctx The geometry context
+  /// @param args The navigation arguments
+  /// @param stateManager The state manager to push the new states onto
+  /// @param logger Logger for debug output
   void createState(const GeometryContext& gctx, const NavigationArguments args,
                    NavigationPolicyStateManager& stateManager,
                    const Logger& logger) const override {
@@ -114,6 +128,9 @@ class MultiNavigationPolicy final : public INavigationPolicy {
     stateManager.pushState<State>(std::move(states));
   }
 
+  /// Remove the states for this policy and all child policies from the state manager
+  /// @param stateManager The state manager to pop the states from
+  /// @param logger Logger for debug output
   void popState(NavigationPolicyStateManager& stateManager,
                 const Logger& logger) const override {
     // By default, we didn't push anything, so we don't need to pop anything
