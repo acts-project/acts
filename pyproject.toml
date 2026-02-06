@@ -8,7 +8,7 @@ dynamic = ["version"]
 
 [tool.scikit-build]
 wheel.packages = [] # Manage installation with cmake
-wheel.exclude = ["**.a", "**.sh", "**.cmake"]
+wheel.exclude = ["**.a", "**.sh", "**.cmake", "**.hpp"]
 wheel.license-files = ["LICENSE"]
 build-dir = "build/{wheel_tag}"
 build.verbose = true
