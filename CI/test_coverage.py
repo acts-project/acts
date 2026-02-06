@@ -132,9 +132,9 @@ def main(
         "-e",
         f"{source_dir_posix}/Python/",
         "-e",
-        f".*/{build_dir.name}.*",
+        f".*{build_dir.name}.*",
         "-e",
-        ".*/dependencies.*",
+        ".*dependencies.*",
     ]
     gcovr = [gcovr_exe]
 
