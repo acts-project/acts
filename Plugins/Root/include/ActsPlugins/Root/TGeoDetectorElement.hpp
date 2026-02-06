@@ -42,8 +42,11 @@ namespace ActsPlugins {
 ///
 class TGeoDetectorElement : public Acts::SurfacePlacementBase {
  public:
+  /// Identifier type
   using identifier_type = unsigned long long;
+  /// Identifier difference type
   using identifier_diff = long long;
+  /// Identifier alias
   using Identifier = identifier_type;
 
   /// Broadcast the context type
@@ -123,23 +126,23 @@ class TGeoDetectorElement : public Acts::SurfacePlacementBase {
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return Reference to the transformation matrix from local to global coordinates
   const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
-  /// @return Reference to the transformation matrix from local to global coordinates
 
   /// Return the nominal - non-contextual transform
-  const Acts::Transform3& nominalTransform() const;
   /// @return Reference to the nominal transformation matrix
+  const Acts::Transform3& nominalTransform() const;
 
   /// Return surface associated with this detector element
-  const Acts::Surface& surface() const override;
   /// @return Const reference to the surface
+  const Acts::Surface& surface() const override;
 
   /// Return surface associated with this detector element
   ///
   /// @note this is the non-const access
-  Acts::Surface& surface() override;
   /// @return Mutable reference to the surface
+  Acts::Surface& surface() override;
 
   /// Returns the thickness of the module
   /// @return Thickness of the detector element in units of length
@@ -149,6 +152,7 @@ class TGeoDetectorElement : public Acts::SurfacePlacementBase {
   /// @return Reference to the underlying TGeoNode
   const TGeoNode& tgeoNode() const { return *m_detElement; }
   /// Is the detector element a sensitive element
+  /// @return Always true for this detector element type
   bool isSensitive() const final { return true; }
 
  private:

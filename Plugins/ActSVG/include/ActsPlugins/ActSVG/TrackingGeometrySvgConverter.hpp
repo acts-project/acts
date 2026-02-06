@@ -41,9 +41,12 @@ struct Options {
 /// @ingroup actsvg_plugin
 /// State object to collect geometry-wise information
 struct State {
+  /// XY cross section views
   std::vector<actsvg::svg::object> xyCrossSection;
+  /// ZR cross section views
   std::vector<actsvg::svg::object> zrCrossSection;
 
+  /// Final rendered views
   std::vector<actsvg::svg::object> finalViews;
 };
 
@@ -74,13 +77,17 @@ void convert(const Acts::GeometryContext& gctx,
 /// @ingroup actsvg_plugin
 namespace TrackingGeometryProjections {
 
-/// @ingroup actsvg_plugin
+/// Options for tracking geometry projections
 struct Options {
+  /// Prefix for output names
   std::string prefix = "";
 
+  /// Tracking geometry converter options
   TrackingGeometryConverter::Options trackingGeometryOptions;
 
+  /// RZ axes ranges
   std::array<std::array<double, 2>, 2> rzAxes;
+  /// RZ eta line positions
   std::vector<double> rzEtaLines;
 };
 

@@ -153,8 +153,8 @@ class DD4hepLayerBuilder : public Acts::ILayerBuilder {
   Config getConfiguration() const;
 
   /// set logging instance
-  void setLogger(std::unique_ptr<const Acts::Logger> logger);
   /// @param logger The logger instance to set
+  void setLogger(std::unique_ptr<const Acts::Logger> logger);
 
  private:
   /// configuration object

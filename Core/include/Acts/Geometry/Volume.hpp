@@ -44,8 +44,21 @@ class Volume : public GeometryObject {
   /// Copy Constructor - with optional shift
   ///
   /// @param vol is the source volume for the copy
+  Volume(const Volume& vol) = default;
+
+  /// Copy Constructor with optional shift
+  ///
+  /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied as : shift * vol.transform()
-  Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
+  /// @deprecated: Constructor deprecated in favour of shifted(const Transform3& shift) const
+  [[deprecated("Use Volume::shifted(const Transform3& shift) const instead.")]]
+  Volume(const Volume& vol, const Transform3& shift);
+
+  /// Shift the volume by a transform
+  ///
+  /// @param shift is the transform to shift the volume by
+  /// @return The shifted volume
+  Volume shifted(const Transform3& shift) const;
 
   ~Volume() noexcept override = default;
 
@@ -55,14 +68,22 @@ class Volume : public GeometryObject {
   /// @return Reference to this volume for assignment chaining
   Volume& operator=(const Volume& vol);
 
+  /// Move assignment operator
+  ///
+  /// @param other is the other volume to be moved
+  /// @return Reference to this volume for assignment chaining
+  Volume& operator=(Volume&& other) noexcept = default;
+
   /// @brief Get the transformation matrix from the local volume frame
   ///        to the global experiment's frame
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The local to global transformation matrix
   const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
 
   /// @brief Get the transformation matrix from the global experiment's
   //         frame to the local volume frame
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The global to local transformation matrix
   const Transform3& globalToLocalTransform(const GeometryContext& gctx) const;
 
   /// @brief Get the transform matrix that positions the volume in 3D space

@@ -63,7 +63,9 @@
   };                                                                           \
   __local_acts_logger logger(log_object);
 
-// Debug level agnostic implementation of the ACTS_XYZ logging macros
+/// Log a message at the specified level
+/// @param level The logging level
+/// @param x The message to log
 #define ACTS_LOG(level, x)           \
   do {                               \
     if (logger().doPrint(level)) {   \

@@ -80,35 +80,44 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The local to global transform
   const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
 
   /// Return the nominal - non-contextual transform
+  /// @return The nominal transform
   const Acts::Transform3& nominalTransform() const;
 
   /// Return surface associated with this detector element
+  /// @return The surface
   const Acts::Surface& surface() const override;
 
   /// Non-const access to surface associated with this detector element
+  /// @return The surface
   Acts::Surface& surface() override;
 
   /// Return the thickness of this detector element
+  /// @return The thickness
   double thickness() const;
 
   /// @return to the Geant4 physical volume
   PVConstLink physicalVolume() const;
 
   /// Get the name of the logical volume
+  /// @return The logical volume name
   const std::string& logVolName() const;
 
   /// Get the string identifier of the corresponding database entry
   /// Note: This is not by defnitition a unique identifier, there can be
   /// several detector elements created from a single database entry.
+  /// @return The database entry name
   const std::string& databaseEntryName() const { return m_entryName; };
 
   /// Set the corresponding database entry string
+  /// @param n The database entry name
   void setDatabaseEntryName(const std::string& n) { m_entryName = n; };
   /// Is the detector element a sensitive element
+  /// @return True if sensitive
   bool isSensitive() const final { return true; }
 
  protected:
