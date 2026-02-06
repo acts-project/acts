@@ -8,18 +8,30 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <cmath>
-#include <numbers>
-#include <optional>
+#include <stdexcept>
 #include <tuple>
 
 namespace Acts::detail {
+
+/// Reduce Gaussian mixture
+///
+/// @param mixture The mixture iterable
+/// @param surface The surface, on which the bound state is
+/// @param method How to reduce the mixture
+///
+/// @return parameters and covariance as tuple
+std::tuple<BoundVector, BoundSquareMatrix> mergeGaussianMixture(
+    std::span<const GsfComponent> mixture, const Surface &surface,
+    ComponentMergeMethod method);
+
+GsfComponent mergeTwoComponents(const GsfComponent &a, const GsfComponent &b,
+                                const Surface &surface);
 
 /// Angle descriptions for the combineBoundGaussianMixture function
 template <BoundIndices Idx>
@@ -51,43 +63,44 @@ struct AngleDescription<Surface::Cylinder> {
       std::tuple<CyclicRadiusAngle<eBoundLoc0>, CyclicAngle<eBoundPhi>>;
 };
 
-// Helper function that encapsulates a switch-case to select the correct angle
-// description dependent on the surface
+/// Helper function that encapsulates a switch-case to select the correct angle
+/// description dependent on the surface
 template <typename Callable>
 auto angleDescriptionSwitch(const Surface &surface, Callable &&callable) {
   switch (surface.type()) {
     case Surface::Cylinder: {
-      auto desc = AngleDescription<Surface::Cylinder>::Desc{};
+      AngleDescription<Surface::Cylinder>::Desc desc{};
       const auto &bounds =
           static_cast<const CylinderSurface &>(surface).bounds();
       std::get<0>(desc).constant = bounds.get(CylinderBounds::eR);
       return callable(desc);
     }
     case Surface::Disc: {
-      auto desc = AngleDescription<Surface::Disc>::Desc{};
+      AngleDescription<Surface::Disc>::Desc desc{};
       return callable(desc);
     }
     default: {
-      auto desc = AngleDescription<Surface::Plane>::Desc{};
+      AngleDescription<Surface::Plane>::Desc desc{};
       return callable(desc);
     }
   }
 }
 
-template <int D, typename components_t, typename projector_t,
+template <typename component_range_t, typename projector_t,
           typename angle_desc_t>
-auto gaussianMixtureCov(const components_t components,
-                        const ActsVector<D> &mean, double sumOfWeights,
-                        projector_t &&projector,
-                        const angle_desc_t &angleDesc) {
-  ActsSquareMatrix<D> cov = ActsSquareMatrix<D>::Zero();
+BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
+                                    const projector_t &proj,
+                                    const BoundVector &mean,
+                                    double sumOfWeights,
+                                    const angle_desc_t &angleDesc) {
+  BoundMatrix cov = BoundMatrix::Zero();
 
-  for (const auto &cmp : components) {
-    const auto &[weight_l, pars_l, cov_l] = projector(cmp);
+  for (const auto &cmp : cmps) {
+    const auto &[weight_l, pars_l, cov_l] = proj(cmp);
 
     cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
 
-    ActsVector<D> diff = pars_l - mean;
+    BoundVector diff = pars_l - mean;
 
     // Apply corrections for cyclic coordinates
     auto handleCyclicCov = [&l = pars_l, &m = mean, &diff = diff](auto desc) {
@@ -96,7 +109,6 @@ auto gaussianMixtureCov(const components_t components,
                                            2 * std::numbers::pi) *
                        desc.constant;
     };
-
     std::apply([&](auto... dsc) { (handleCyclicCov(dsc), ...); }, angleDesc);
 
     cov += weight_l * diff * diff.transpose();
@@ -118,58 +130,29 @@ auto gaussianMixtureCov(const components_t components,
 /// mean or in cartesian coordinates. This implements a approximation, which
 /// only works well for close components.
 ///
-/// @tparam components_t A range of components
-/// @tparam projector_t A projector, which maps the component to a
-/// std::tuple< weight, mean, std::optional< cov > >
 /// @tparam angle_desc_t A angle description object which defines the cyclic
 /// angles in the bound parameters
-template <typename components_t, typename projector_t = std::identity,
-          typename angle_desc_t = AngleDescription<Surface::Plane>::Desc>
-auto gaussianMixtureMeanCov(const components_t components,
-                            projector_t &&projector = projector_t{},
-                            const angle_desc_t &angleDesc = angle_desc_t{}) {
-  // Extract the first component
-  const auto &[beginWeight, beginPars, beginCov] =
-      projector(components.front());
-
-  // Assert type properties
-  using ParsType = std::decay_t<decltype(beginPars)>;
-  using CovType = std::decay_t<decltype(beginCov)>;
-  using WeightType = std::decay_t<decltype(beginWeight)>;
-
-  constexpr int D = ParsType::RowsAtCompileTime;
-  EIGEN_STATIC_ASSERT_VECTOR_ONLY(ParsType);
-  EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(CovType, D, D);
-  static_assert(std::is_floating_point_v<WeightType>);
-
-  // gcc 8 does not like this statement somehow. We must handle clang here since
-  // it defines __GNUC__ as 4.
-#if defined(__GNUC__) && __GNUC__ < 9 && !defined(__clang__)
-  // No check
-#else
-  std::apply(
-      [&](auto... d) { static_assert((std::less<int>{}(d.idx, D) && ...)); },
-      angleDesc);
-#endif
-
-  // Define the return type
-  using RetType = std::tuple<ActsVector<D>, ActsSquareMatrix<D>>;
-
+template <typename component_range_t, typename projector_t,
+          typename angle_desc_t>
+std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
+    const component_range_t &cmps, projector_t &&proj,
+    const angle_desc_t &angleDesc) {
   // Early return in case of range with length 1
-  if (components.size() == 1) {
-    return RetType{beginPars / beginWeight, beginCov / beginWeight};
+  if (cmps.size() == 1) {
+    const auto &[beginWeight, beginPars, beginCov] = proj(cmps.front());
+    return {beginPars / beginWeight, beginCov / beginWeight};
   }
 
   // Do the (circular) mean with complex arithmetic.
   // For normal values, just keep the real values. For angles, use the complex
   // phase. Weighting then transparently happens by multiplying a real-valued
   // weight.
-  using CVec = Eigen::Matrix<std::complex<double>, D, 1>;
+  using CVec = Eigen::Matrix<std::complex<double>, eBoundSize, 1>;
   CVec cMean = CVec::Zero();
-  WeightType sumOfWeights{0.0};
+  double sumOfWeights{0.0};
 
-  for (const auto &cmp : components) {
-    const auto &[weight_l, pars_l, cov_l] = projector(cmp);
+  for (const auto &cmp : cmps) {
+    const auto &[weight_l, pars_l, cov_l] = proj(cmp);
 
     CVec pars_l_c = pars_l;
 
@@ -184,7 +167,7 @@ auto gaussianMixtureMeanCov(const components_t components,
 
   cMean /= sumOfWeights;
 
-  ActsVector<D> mean = cMean.real();
+  BoundVector mean = cMean.real();
 
   auto getArg = [&](auto desc) {
     mean[desc.idx] = desc.constant * std::arg(cMean[desc.idx]);
@@ -192,42 +175,35 @@ auto gaussianMixtureMeanCov(const components_t components,
   std::apply([&](auto... dsc) { (getArg(dsc), ...); }, angleDesc);
 
   // MARK: fpeMaskBegin(FLTUND, 1, #2347)
-  const auto cov =
-      gaussianMixtureCov(components, mean, sumOfWeights, projector, angleDesc);
+  const auto cov = mergeGaussianMixtureCov(
+      cmps, std::forward<projector_t>(proj), mean, sumOfWeights, angleDesc);
   // MARK: fpeMaskEnd(FLTUND)
 
-  return RetType{mean, cov};
+  return {mean, cov};
 }
 
-/// Reduce Gaussian mixture
-///
-/// @param mixture The mixture iterable
-/// @param surface The surface, on which the bound state is
-/// @param method How to reduce the mixture
-/// @param projector How to project a element of the iterable to something
-/// like a std::tuple< double, BoundVector, BoundMatrix >
-///
-/// @return parameters and covariance as std::tuple< BoundVector, BoundMatrix >
-template <typename mixture_t, typename projector_t = std::identity>
-auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
-                          ComponentMergeMethod method,
-                          projector_t &&projector = projector_t{}) {
-  using R = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
+template <typename component_range_t, typename projector_t>
+std::tuple<BoundVector, BoundSquareMatrix> mergeGaussianMixture(
+    const component_range_t &cmps, projector_t &&proj, const Surface &surface,
+    ComponentMergeMethod method) {
   const auto [mean, cov] =
-      detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-        return detail::gaussianMixtureMeanCov(mixture, projector, desc);
+      angleDescriptionSwitch(surface, [&](const auto &desc) {
+        return mergeGaussianMixtureMeanCov(cmps, proj, desc);
       });
 
   if (method == ComponentMergeMethod::eMean) {
-    return R{mean, cov};
-  } else {
-    const auto maxWeightIt = std::max_element(
-        mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
-          return std::get<0>(projector(a)) < std::get<0>(projector(b));
+    return {mean, cov};
+  } else if (method == ComponentMergeMethod::eMaxWeight) {
+    const auto maxWeightIt =
+        std::ranges::max_element(cmps, {}, [&](const auto &cmp) {
+          const auto &[weight_l, pars_l, cov_l] = proj(cmp);
+          return weight_l;
         });
-    const BoundVector meanMaxWeight = std::get<1>(projector(*maxWeightIt));
+    const auto &[weight_l, pars_l, cov_l] = proj(*maxWeightIt);
 
-    return R{meanMaxWeight, cov};
+    return {pars_l, cov};
+  } else {
+    throw std::logic_error("Invalid component merge method");
   }
 }
 

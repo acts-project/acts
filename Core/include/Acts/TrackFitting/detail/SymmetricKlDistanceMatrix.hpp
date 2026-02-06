@@ -8,24 +8,21 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiComponentTrackParameters.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
-#include "Acts/TrackFitting/detail/GsfUtils.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
+
+#include <iomanip>
+#include <span>
 
 namespace Acts::detail {
 
 /// Computes the Kullback-Leibler distance between two components as shown in
 /// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
-template <typename component_t, typename component_projector_t>
-auto computeSymmetricKlDivergence(const component_t &a, const component_t &b,
-                                  const component_projector_t &proj) {
-  using namespace Acts;
-  const auto parsA = proj(a).boundPars[eBoundQOverP];
-  const auto parsB = proj(b).boundPars[eBoundQOverP];
-  const auto covA = proj(a).boundCov(eBoundQOverP, eBoundQOverP);
-  const auto covB = proj(b).boundCov(eBoundQOverP, eBoundQOverP);
+auto computeSymmetricKlDivergence(const GsfComponent &a,
+                                  const GsfComponent &b) {
+  const auto parsA = a.boundPars[eBoundQOverP];
+  const auto parsB = b.boundPars[eBoundQOverP];
+  const auto covA = a.boundCov(eBoundQOverP, eBoundQOverP);
+  const auto covB = b.boundCov(eBoundQOverP, eBoundQOverP);
 
   assert(covA != 0.0);
   assert(std::isfinite(covA));
@@ -38,30 +35,6 @@ auto computeSymmetricKlDivergence(const component_t &a, const component_t &b,
   assert(kl >= 0.0 && "kl-divergence must be non-negative");
 
   return kl;
-}
-
-template <typename component_t, typename component_projector_t,
-          typename angle_desc_t>
-auto mergeComponents(const component_t &a, const component_t &b,
-                     const component_projector_t &proj,
-                     const angle_desc_t &angle_desc) {
-  assert(proj(a).weight >= 0.0 && proj(b).weight >= 0.0 &&
-         "non-positive weight");
-
-  std::array range = {std::ref(proj(a)), std::ref(proj(b))};
-  const auto refProj = [](auto &c) {
-    return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
-  };
-
-  auto [mergedPars, mergedCov] =
-      gaussianMixtureMeanCov(range, refProj, angle_desc);
-
-  component_t ret = a;
-  proj(ret).boundPars = mergedPars;
-  proj(ret).boundCov = mergedCov;
-  proj(ret).weight = proj(a).weight + proj(b).weight;
-
-  return ret;
 }
 
 /// @brief Class representing a symmetric distance matrix
@@ -90,9 +63,7 @@ class SymmetricKLDistanceMatrix {
   }
 
  public:
-  template <typename component_t, typename projector_t>
-  SymmetricKLDistanceMatrix(const std::vector<component_t> &cmps,
-                            const projector_t &proj)
+  explicit SymmetricKLDistanceMatrix(std::span<const GsfComponent> cmps)
       : m_distances(Array::Zero(cmps.size() * (cmps.size() - 1) / 2)),
         m_mask(Mask::Ones(cmps.size() * (cmps.size() - 1) / 2)),
         m_mapToPair(m_distances.size()),
@@ -102,7 +73,7 @@ class SymmetricKLDistanceMatrix {
       for (auto j = 0ul; j < i; ++j) {
         m_mapToPair.at(indexConst + j) = {i, j};
         m_distances[indexConst + j] =
-            computeSymmetricKlDivergence(cmps[i], cmps[j], proj);
+            computeSymmetricKlDivergence(cmps[i], cmps[j]);
       }
     }
   }
@@ -111,14 +82,12 @@ class SymmetricKLDistanceMatrix {
     return m_distances[i * (i - 1) / 2 + j];
   }
 
-  template <typename component_t, typename projector_t>
   void recomputeAssociatedDistances(std::size_t n,
-                                    const std::vector<component_t> &cmps,
-                                    const projector_t &proj) {
+                                    std::span<const GsfComponent> cmps) {
     assert(cmps.size() == m_numberComponents && "size mismatch");
 
     setAssociated(n, m_distances, [&](std::size_t i, std::size_t j) {
-      return computeSymmetricKlDivergence(cmps[i], cmps[j], proj);
+      return computeSymmetricKlDivergence(cmps[i], cmps[j]);
     });
   }
 

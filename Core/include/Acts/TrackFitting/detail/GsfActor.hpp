@@ -16,6 +16,7 @@
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
@@ -71,8 +72,6 @@ template <typename traj_t>
 struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
-
-  using ComponentCache = GsfComponent;
 
   /// Broadcast the result_type
   using result_type = GsfResult<traj_t>;
@@ -281,7 +280,7 @@ struct GsfActor {
       }
 
       // Reuse memory over all calls to the Actor in a single propagation
-      std::vector<ComponentCache>& componentCache = result.componentCache;
+      std::vector<GsfComponent>& componentCache = result.componentCache;
       componentCache.clear();
 
       convoluteComponents(state, stepper, navigator, tmpStates, componentCache,
@@ -334,7 +333,7 @@ struct GsfActor {
   void convoluteComponents(propagator_state_t& state, const stepper_t& stepper,
                            const navigator_t& navigator,
                            const TemporaryStates& tmpStates,
-                           std::vector<ComponentCache>& componentCache,
+                           std::vector<GsfComponent>& componentCache,
                            result_type& result) const {
     auto cmps = stepper.componentIterable(state.stepping);
     double pathXOverX0 = 0.0;
@@ -360,7 +359,7 @@ struct GsfActor {
                            const navigator_t& navigator,
                            const BoundTrackParameters& old_bound,
                            const double old_weight,
-                           std::vector<ComponentCache>& componentCache,
+                           std::vector<GsfComponent>& componentCache,
                            result_type& result) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
@@ -453,7 +452,7 @@ struct GsfActor {
   /// cache
   /// TODO This function does not expect normalized components, but this
   /// could be redundant work...
-  void removeLowWeightComponents(std::vector<ComponentCache>& cmps) const {
+  void removeLowWeightComponents(std::vector<GsfComponent>& cmps) const {
     auto proj = [](auto& cmp) -> double& { return cmp.weight; };
 
     detail::normalizeWeights(cmps, proj);
@@ -509,7 +508,7 @@ struct GsfActor {
             typename navigator_t>
   void updateStepper(propagator_state_t& state, const stepper_t& stepper,
                      const navigator_t& navigator,
-                     const std::vector<ComponentCache>& componentCache) const {
+                     const std::vector<GsfComponent>& componentCache) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
     // Clear components before adding new ones
@@ -737,16 +736,16 @@ struct GsfActor {
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
 
-      auto [prtMean, prtCov] =
-          mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
-                               PrtProjector{tmpStates.traj, tmpStates.weights});
+      auto [prtMean, prtCov] = mergeGaussianMixture(
+          tmpStates.tips, PrtProjector{tmpStates.traj, tmpStates.weights},
+          surface, m_cfg.mergeMethod);
       proxy.predicted() = prtMean;
       proxy.predictedCovariance() = prtCov;
 
       if (isMeasurement) {
         auto [fltMean, fltCov] = mergeGaussianMixture(
-            tmpStates.tips, surface, m_cfg.mergeMethod,
-            FltProjector{tmpStates.traj, tmpStates.weights});
+            tmpStates.tips, FltProjector{tmpStates.traj, tmpStates.weights},
+            surface, m_cfg.mergeMethod);
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
         proxy.smoothed() = BoundVector::Constant(-2);
@@ -761,21 +760,23 @@ struct GsfActor {
 
       result.fittedStates->applyBackwards(
           result.currentTip, [&](auto trackState) {
-            auto fSurface = &trackState.referenceSurface();
-            if (fSurface == &surface) {
-              result.surfacesVisitedBwdAgain.push_back(&surface);
-
-              if (trackState.hasSmoothed()) {
-                const auto [smtMean, smtCov] = mergeGaussianMixture(
-                    tmpStates.tips, surface, m_cfg.mergeMethod,
-                    FltProjector{tmpStates.traj, tmpStates.weights});
-
-                trackState.smoothed() = smtMean;
-                trackState.smoothedCovariance() = smtCov;
-              }
-              return false;
+            if (&trackState.referenceSurface() != &surface) {
+              return true;
             }
-            return true;
+
+            result.surfacesVisitedBwdAgain.push_back(&surface);
+
+            if (trackState.hasSmoothed()) {
+              const auto [smtMean, smtCov] = mergeGaussianMixture(
+                  tmpStates.tips,
+                  FltProjector{tmpStates.traj, tmpStates.weights}, surface,
+                  m_cfg.mergeMethod);
+
+              trackState.smoothed() = smtMean;
+              trackState.smoothedCovariance() = smtCov;
+            }
+
+            return false;
           });
     }
   }

@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -47,14 +48,6 @@
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-
-// Describes a component of a D-dimensional gaussian component
-template <int D>
-struct DummyComponent {
-  double weight = 0;
-  Acts::ActsVector<D> boundPars{};
-  Acts::ActsSquareMatrix<D> boundCov{};
-};
 
 // A Multivariate distribution object working in the same way as the
 // distributions in the standard library
@@ -85,10 +78,9 @@ class MultivariateNormalDistribution {
 };
 
 // Sample data from a multi-component multivariate distribution
-template <int D>
-auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
+auto sampleFromMultivariate(const std::vector<GsfComponent> &cmps,
                             std::size_t n_samples, std::mt19937 &gen) {
-  using MultiNormal = MultivariateNormalDistribution<double, D>;
+  using MultiNormal = MultivariateNormalDistribution<double, eBoundSize>;
 
   std::vector<MultiNormal> dists;
   std::vector<double> weights;
@@ -104,16 +96,15 @@ auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
     return dists[n](gen);
   };
 
-  std::vector<ActsVector<D>> samples(n_samples);
+  std::vector<BoundVector> samples(n_samples);
   std::generate(samples.begin(), samples.end(), sample);
 
   return samples;
 }
 
 // Simple arithmetic mean computation
-template <int D>
-auto mean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
-  ActsVector<D> mean = ActsVector<D>::Zero();
+auto mean(const std::vector<BoundVector> &samples) -> BoundVector {
+  BoundVector mean = BoundVector::Zero();
 
   for (const auto &x : samples) {
     mean += x;
@@ -124,21 +115,20 @@ auto mean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
 
 // A method to compute the circular mean, since the normal arithmetic mean
 // doesn't work for angles in general
-template <int D>
-auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
-  ActsVector<D> x = ActsVector<D>::Zero();
-  ActsVector<D> y = ActsVector<D>::Zero();
+auto circularMean(const std::vector<BoundVector> &samples) -> BoundVector {
+  BoundVector x = BoundVector::Zero();
+  BoundVector y = BoundVector::Zero();
 
   for (const auto &s : samples) {
-    for (int i = 0; i < D; ++i) {
+    for (unsigned int i = 0; i < eBoundSize; ++i) {
       x[i] += std::cos(s[i]);
       y[i] += std::sin(s[i]);
     }
   }
 
-  ActsVector<D> mean = ActsVector<D>::Zero();
+  BoundVector mean = BoundVector::Zero();
 
-  for (int i = 0; i < D; ++i) {
+  for (unsigned int i = 0; i < eBoundSize; ++i) {
     mean[i] = std::atan2(y[i], x[i]);
   }
 
@@ -147,12 +137,10 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
 
 // This general boundCovariance estimator can be equipped with a custom
 // subtraction object to enable circular behaviour
-template <int D, typename subtract_t = std::minus<ActsVector<D>>>
-auto boundCov(const std::vector<ActsVector<D>> &samples,
-              const ActsVector<D> &mu,
-              const subtract_t &sub = subtract_t{}) -> ActsSquareMatrix<D> {
-  ActsSquareMatrix<D> boundCov = ActsSquareMatrix<D>::Zero();
-
+template <typename subtract_t = std::minus<BoundVector>>
+auto boundCov(const std::vector<BoundVector> &samples, const BoundVector &mu,
+              const subtract_t &sub = subtract_t{}) -> BoundSquareMatrix {
+  BoundSquareMatrix boundCov = BoundSquareMatrix::Zero();
   for (const auto &smpl : samples) {
     boundCov += sub(smpl, mu) * sub(smpl, mu).transpose();
   }
@@ -163,7 +151,7 @@ auto boundCov(const std::vector<ActsVector<D>> &samples,
 // This function computes the mean of a bound gaussian mixture by converting
 // them to cartesian coordinates, computing the mean, and converting back to
 // bound.
-BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
+BoundVector meanFromFree(std::vector<GsfComponent> &cmps,
                          const Surface &surface) {
   // Specially handle LOC0, since the free mean would not be on the surface
   // likely
@@ -217,21 +205,18 @@ using LocPosArray = std::array<std::pair<double, double>, 4>;
 
 // Test the combination for a surface type. The local positions are given from
 // the outside since their meaning differs between surface types
-template <typename angle_description_t>
-void test_surface(const Surface &surface, const angle_description_t &desc,
-                  const LocPosArray &loc_pos, double expectedError) {
-  const auto proj = std::identity{};
-
+void test_surface(const Surface &surface, const LocPosArray &loc_pos,
+                  double expectedError) {
   for (auto phi : {-175_degree, 0_degree, 175_degree}) {
     for (auto theta : {5_degree, 90_degree, 175_degree}) {
       // Go create mixture with 4 cmps
-      std::vector<DummyComponent<eBoundSize>> cmps;
+      std::vector<GsfComponent> cmps;
 
       auto p_it = loc_pos.begin();
 
       for (auto dphi : {-10_degree, 10_degree}) {
         for (auto dtheta : {-5_degree, 5_degree}) {
-          DummyComponent<eBoundSize> a;
+          GsfComponent a;
           a.weight = 1. / 4.;
           a.boundPars = BoundVector::Ones();
           a.boundPars[eBoundLoc0] *= p_it->first;
@@ -248,8 +233,8 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
         }
       }
 
-      const auto [mean_approx, cov_approx] =
-          detail::gaussianMixtureMeanCov(cmps, proj, desc);
+      const auto [mean_approx, cov_approx] = detail::mergeGaussianMixture(
+          cmps, surface, ComponentMergeMethod::eMean);
 
       const auto mean_ref = meanFromFree(cmps, surface);
 
@@ -263,8 +248,11 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(test_with_data) {
+  const std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
+
   std::mt19937 gen(42);
-  std::vector<DummyComponent<2>> cmps(2);
+  std::vector<GsfComponent> cmps(2);
 
   cmps[0].boundPars << 1.0, 1.0;
   cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
@@ -279,15 +267,18 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto boundCov_data = boundCov(samples, mean_data);
 
   const auto [mean_test, boundCov_test] =
-      detail::gaussianMixtureMeanCov(cmps, std::identity{}, std::tuple<>{});
+      detail::mergeGaussianMixture(cmps, *surface, ComponentMergeMethod::eMean);
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_with_data_circular) {
+  const std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
+
   std::mt19937 gen(42);
-  std::vector<DummyComponent<2>> cmps(2);
+  std::vector<GsfComponent> cmps(2);
 
   cmps[0].boundPars << 175_degree, 5_degree;
   cmps[0].boundCov << 20_degree, 0.0, 0.0, 20_degree;
@@ -299,18 +290,18 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
 
   const auto samples = sampleFromMultivariate(cmps, 10000, gen);
   const auto mean_data = circularMean(samples);
-  const auto boundCov_data = boundCov(samples, mean_data, [](auto a, auto b) {
-    Vector2 res = Vector2::Zero();
-    for (int i = 0; i < 2; ++i) {
-      res[i] = detail::difference_periodic(a[i], b[i], 2 * std::numbers::pi);
-    }
-    return res;
-  });
+  const auto boundCov_data = boundCov(
+      samples, mean_data, [](const BoundVector &a, const BoundVector &b) {
+        BoundVector res = BoundVector::Zero();
+        for (unsigned int i = 0; i < eBoundSize; ++i) {
+          res[i] =
+              detail::difference_periodic(a[i], b[i], 2 * std::numbers::pi);
+        }
+        return res;
+      });
 
-  using detail::CyclicAngle;
-  const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
   const auto [mean_test, boundCov_test] =
-      detail::gaussianMixtureMeanCov(cmps, std::identity{}, d);
+      detail::mergeGaussianMixture(cmps, *surface, ComponentMergeMethod::eMean);
 
   BOOST_CHECK(std::abs(detail::difference_periodic(
                   mean_data[0], mean_test[0], 2 * std::numbers::pi)) < 1.e-1);
@@ -320,14 +311,12 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
 }
 
 BOOST_AUTO_TEST_CASE(test_plane_surface) {
-  const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
-
   const std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
 
   const LocPosArray p{{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
 
-  test_surface(*surface, desc, p, 1.e-2);
+  test_surface(*surface, p, 1.e-2);
 }
 
 BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
@@ -346,7 +335,7 @@ BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
   auto desc = detail::AngleDescription<Surface::Cylinder>::Desc{};
   std::get<0>(desc).constant = r;
 
-  test_surface(*surface, desc, p, 1.e-2);
+  test_surface(*surface, p, 1.e-2);
 }
 
 BOOST_AUTO_TEST_CASE(test_disc_surface) {
@@ -360,14 +349,10 @@ BOOST_AUTO_TEST_CASE(test_disc_surface) {
 
   const LocPosArray p{{{r1, phi1}, {r2, phi2}, {r1, phi2}, {r2, phi1}}};
 
-  const auto desc = detail::AngleDescription<Surface::Disc>::Desc{};
-
-  test_surface(*surface, desc, p, 1.e-2);
+  test_surface(*surface, p, 1.e-2);
 }
 
 BOOST_AUTO_TEST_CASE(test_perigee_surface) {
-  const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
-
   const auto surface = Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0});
 
   const auto z = 5;
@@ -376,7 +361,7 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
   const LocPosArray p{{{d, z}, {d, -z}, {2 * d, z}, {2 * d, -z}}};
 
   // Here we expect a very bad approximation
-  test_surface(*surface, desc, p, 1.1);
+  test_surface(*surface, p, 1.1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

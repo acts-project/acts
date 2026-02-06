@@ -8,12 +8,9 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiComponentTrackParameters.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -22,7 +19,6 @@
 #include <cstddef>
 #include <iomanip>
 #include <map>
-#include <numeric>
 #include <ostream>
 #include <tuple>
 #include <vector>
